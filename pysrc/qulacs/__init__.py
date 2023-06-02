@@ -1,1 +1,1 @@
-from qulacs_core import add, StateVector
+from qulacs_core import StateVectorCpu

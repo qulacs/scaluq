@@ -1,8 +1,5 @@
 #include <pybind11/pybind11.h>
 
-#include "state_vector.hpp"
+#include <cpusim/state_vector_cpu.hpp>
 
-PYBIND11_MODULE(qulacs_core, m)
-{
-    pybind11::class_<StateVector>(m, "StateVector");
-}
+PYBIND11_MODULE(qulacs_core, m) { pybind11::class_<StateVectorCpu>(m, "StateVectorCpu"); }
