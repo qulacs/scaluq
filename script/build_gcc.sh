@@ -15,5 +15,5 @@ CMAKE_OPS="-D CMAKE_C_COMPILER=$GCC_COMMAND
   -D USE_TEST=${USE_TEST}"
 
 mkdir -p ./build
-cmake -B build -G "Unix Makefiles" ${CMAKE_OPS}
-make -C build -j $(nproc)
+cmake -B build -G Ninja ${CMAKE_OPS}
+ninja -C build -j $(nproc)
