@@ -33,8 +33,8 @@ jobs:
       - name: Setup cmake
         uses: lukka/get-cmake@latest
 
-      - name: Setup Ninja
-        run: sudo apt install ninja-build
+      - name: Install boost, Ninja
+        run: sudo apt install libboost-dev ninja-build
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -42,12 +42,9 @@ jobs:
           key: "${{ github.job }}-ubuntu-20.04"
           verbose: 2
 
-      - name: Install boost
-        run: sudo apt install libboost-dev
-
       - name: Install qulacs for Ubuntu
         run: ./script/build_gcc.sh
 
       - name: Test in Ubuntu
         run: |
-          make test -C build -j $(nproc)
+          ninja test -C build -j $(nproc)
