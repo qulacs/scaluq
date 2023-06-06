@@ -14,15 +14,16 @@
 	"customizations": {
 		"vscode": {
 			"settings": {
-				"python.linting.enabled": true,
-				"python.linting.pylintEnabled": false,
-				"python.linting.flake8Enabled": true,
-				"python.formatting.provider": "black",
 				"editor.formatOnSave": true,
 				"editor.codeActionsOnSave": {
 					"source.organizeImports": true
 				},
 				"editor.defaultFormatter": "xaver.clang-format",
+				"files.insertFinalNewline": true,
+				"python.linting.enabled": true,
+				"python.linting.pylintEnabled": false,
+				"python.linting.flake8Enabled": true,
+				"python.formatting.provider": "black",
 				"python.linting.mypyEnabled": true,
 				"python.terminal.activateEnvironment": false,
 				// CAVEAT: you need to restart after building qulacs to take effect.
@@ -37,8 +38,7 @@
 				"ms-vscode.cmake-tools",
 				"ms-python.python",
 				"ms-python.vscode-pylance",
-				"xaver.clang-format",
-				"GitHub.copilot-nightly"
+				"xaver.clang-format"
 			]
 		}
 	},

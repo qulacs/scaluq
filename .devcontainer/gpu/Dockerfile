@@ -16,13 +16,11 @@ RUN apt-get update \
     clang-format \
     cmake \
     curl \
-    doxygen \
     gdb \
     libboost-dev \
     libpython3-dev \
     manpages \
     man-db \
-    pandoc \
     python3 \
     python3-distutils \
     python3-pip \

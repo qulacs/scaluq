@@ -16,6 +16,7 @@ if(NOT DEFINED USE_TEST)
 endif(NOT DEFINED USE_TEST)
 
 message(STATUS "USE_PYTHON = ${USE_PYTHON}")
+message(STATUS "USE_TEST = ${USE_TEST}")
 
 ### Fetch dependencies ###
 # Eigen
