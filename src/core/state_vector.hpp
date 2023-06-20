@@ -1,6 +1,6 @@
 #pragma once
 
-#include "type.hpp"
+#include "types.hpp"
 
 class StateVector {
 public:

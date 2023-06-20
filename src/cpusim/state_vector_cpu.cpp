@@ -1,6 +1,6 @@
 #include "state_vector_cpu.hpp"
 
-#include <core/type.hpp>
+#include <core/types.hpp>
 
 StateVectorCpu::StateVectorCpu(UINT n_qubits)
     : _n_qubits(n_qubits),
