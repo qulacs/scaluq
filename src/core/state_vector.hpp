@@ -9,4 +9,6 @@ public:
     virtual int dim() const = 0;
 
     virtual Complex& operator[](const int index) = 0;
+
+    virtual const Complex& operator[](const int index) const = 0;
 };

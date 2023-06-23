@@ -15,4 +15,6 @@ public:
     int dim() const override;
 
     Complex& operator[](const int index) override;
+
+    const Complex& operator[](const int index) const override;
 };

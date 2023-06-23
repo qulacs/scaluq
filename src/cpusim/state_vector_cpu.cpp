@@ -14,3 +14,7 @@ UINT StateVectorCpu::n_qubits() const { return this->_n_qubits; }
 int StateVectorCpu::dim() const { return this->_dim; }
 
 Complex& StateVectorCpu::operator[](const int index) { return this->_amplitudes[index]; }
+
+const Complex& StateVectorCpu::operator[](const int index) const {
+    return this->_amplitudes[index];
+}
