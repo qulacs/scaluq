@@ -4,6 +4,7 @@ add_library(cpusim)
 
 target_sources(cpusim PRIVATE
     gate_one_qubit.cpp
+    omp_manager.cpp
     state_vector_cpu.cpp
     update_x.cpp
 )

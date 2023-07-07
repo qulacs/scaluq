@@ -2,7 +2,15 @@
 
 #include "update_ops.hpp"
 
+#ifdef OPENMP
+#include "omp_manager.hpp"
+#endif
+
 void x_gate(UINT target_qubit_index, StateVectorCpu& state) {
+#ifdef OPENMP
+    OmpManager::get_instance().set_num_threads(state.dim(), 13);
+#endif
+
     const int mask = (1ULL << target_qubit_index);
     const int mask_low = mask - 1;
     const int mask_high = ~mask_low;
@@ -34,4 +42,8 @@ void x_gate(UINT target_qubit_index, StateVectorCpu& state) {
             state[basis_index_1 + 1] = temp1;
         }
     }
+
+#ifdef OPENMP
+    OmpManager::get_instance().reset_num_threads();
+#endif
 }
