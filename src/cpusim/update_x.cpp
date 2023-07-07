@@ -8,6 +8,9 @@ void x_gate(UINT target_qubit_index, StateVectorCpu& state) {
     const int mask_high = ~mask_low;
     if (target_qubit_index == 0) {
         int basis_index = 0;
+#ifdef OPENMP
+#pragma omp parallel for
+#endif
         for (basis_index = 0; basis_index < state.dim(); basis_index += 2) {
             Complex temp = state[basis_index];
             state[basis_index] = state[basis_index + 1];
@@ -16,6 +19,9 @@ void x_gate(UINT target_qubit_index, StateVectorCpu& state) {
     } else {
         int state_index = 0;
         const int loop_dim = state.dim() / 2;
+#ifdef OPENMP
+#pragma omp parallel for
+#endif
         for (state_index = 0; state_index < loop_dim; state_index += 2) {
             const int basis_index_0 = (state_index & mask_low) + ((state_index & mask_high) << 1);
             const int basis_index_1 = basis_index_0 + mask;

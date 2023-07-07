@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 3.11)
 
 project(qulacs)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-
 include(FetchContent)
 
 ### Define variables ###
+if(NOT DEFINED USE_OMP)
+    set(USE_OMP Yes)
+endif(NOT DEFINED USE_OMP)
 if(NOT DEFINED USE_PYTHON)
     set(USE_PYTHON No)
 endif(NOT DEFINED USE_PYTHON)
@@ -63,6 +63,41 @@ if(USE_TEST)
 else()
     message(STATUS "Skip downloding googletest")
 endif(USE_TEST)
+
+if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+    set(WARNING_CPP "-Wall -Wdate-time -Wendif-labels -Werror=format=2 \
+        -Werror=missing-declarations -Werror=overflow -Werror=return-type -Wextra \
+        -Wfloat-equal -Wimplicit-fallthrough=5 -Winit-self -Wlogical-op \
+        -Wmissing-include-dirs -Wmissing-noreturn -Wpointer-arith -Wredundant-decls \
+        -Wshadow -Wstrict-aliasing=2 -Wsuggest-attribute=noreturn -Wwrite-strings \
+        -fdiagnostics-color=auto ")
+    # -Werror=undef is eliminated due to conflict with boost
+elseif ((${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
+    set(WARNING_CPP "-Wall -Wdate-time -Wendif-labels -Werror=format=2 \
+        -Werror=missing-declarations -Werror=overflow -Werror=return-type -Wextra \
+        -Wfloat-equal -Wimplicit-fallthrough -Winit-self \
+        -Wmissing-include-dirs -Wmissing-noreturn -Wpointer-arith -Wredundant-decls \
+        -Wshadow -Wstrict-aliasing=2 -Wwrite-strings \
+        -fdiagnostics-color=auto ")
+endif()
+
+### Compiler options ###
+if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
+    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD_REQUIRED True)
+	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+    # Enable pthread
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+
+    # Enable openmp
+	if(USE_OMP)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+        add_compile_definitions(OPENMP)
+    endif()
+endif()
 
 ### Add subdirectories ###
 add_subdirectory(src)
