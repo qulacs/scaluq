@@ -66,19 +66,19 @@ endif(USE_TEST)
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     set(WARNING_CPP "-Wall -Wdate-time -Wendif-labels -Werror=format=2 \
-        -Werror=missing-declarations -Werror=overflow -Werror=return-type -Wextra \
-        -Wfloat-equal -Wimplicit-fallthrough=5 -Winit-self -Wlogical-op \
-        -Wmissing-include-dirs -Wmissing-noreturn -Wpointer-arith -Wredundant-decls \
+        -Werror=missing-declarations -Werror=return-type -Wextra \
+        -Wfloat-equal -Wimplicit-fallthrough=5 -Wlogical-op \
+        -Wmissing-include-dirs -Wpointer-arith -Wredundant-decls \
         -Wshadow -Wstrict-aliasing=2 -Wsuggest-attribute=noreturn -Wwrite-strings \
-        -fdiagnostics-color=auto ")
+        -fdiagnostics-color=auto -fstrict-aliasing")
     # -Werror=undef is eliminated due to conflict with boost
 elseif ((${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
     set(WARNING_CPP "-Wall -Wdate-time -Wendif-labels -Werror=format=2 \
-        -Werror=missing-declarations -Werror=overflow -Werror=return-type -Wextra \
-        -Wfloat-equal -Wimplicit-fallthrough -Winit-self \
-        -Wmissing-include-dirs -Wmissing-noreturn -Wpointer-arith -Wredundant-decls \
+        -Werror=missing-declarations -Werror=return-type -Wextra \
+        -Wfloat-equal -Wimplicit-fallthrough \
+        -Wmissing-include-dirs -Wpointer-arith -Wredundant-decls \
         -Wshadow -Wstrict-aliasing=2 -Wwrite-strings \
-        -fdiagnostics-color=auto ")
+        -fdiagnostics-color=auto -fstrict-aliasing")
 endif()
 
 ### Compiler options ###
@@ -88,13 +88,11 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
 	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
     # Enable pthread
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
     # Enable openmp
-	if(USE_OMP)
+    if(USE_OMP)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
         add_compile_definitions(OPENMP)
     endif()
 endif()

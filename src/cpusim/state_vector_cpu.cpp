@@ -14,7 +14,7 @@ StateVectorCpu StateVectorCpu::Haar_random_state(UINT n_qubits) {
     StateVectorCpu state_vector(n_qubits);
     Random rng;
     for (int i = 0; i < state_vector.dim(); i++) {
-        state_vector[i] = Complex(rng.uniform(), rng.uniform());
+        state_vector[i] = Complex(rng.normal(), rng.normal());
     }
     state_vector.normalize();
     return state_vector;
