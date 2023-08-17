@@ -1,8 +1,7 @@
 #pragma once
 
+#include <core/types.hpp>
 #include <random>
-
-#include "types.hpp"
 
 class Random {
     std::uniform_real_distribution<double> uniform_dist;

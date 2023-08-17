@@ -1,8 +1,7 @@
 #pragma once
 
+#include <core/types.hpp>
 #include <cpusim/state_vector_cpu.hpp>
-
-#include "types.hpp"
 
 class QuantumGate {
 public:

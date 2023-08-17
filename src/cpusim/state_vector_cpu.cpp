@@ -1,7 +1,7 @@
-#include "state_vector_cpu.hpp"
-
-#include <core/random.hpp>
 #include <core/types.hpp>
+#include <cpusim/state_vector_cpu.hpp>
+
+#include "../core/internal/random.hpp"
 
 StateVectorCpu::StateVectorCpu(UINT n_qubits)
     : _n_qubits(n_qubits),

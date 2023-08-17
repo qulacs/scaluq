@@ -13,4 +13,4 @@ target_link_libraries(cpusim_test PRIVATE
     GTest::gtest_main
     Eigen3::Eigen
 )
-target_include_directories(cpusim_test PRIVATE ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(cpusim_test PRIVATE ${PROJECT_SOURCE_DIR}/include)

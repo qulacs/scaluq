@@ -1,9 +1,9 @@
 #include <cpusim/state_vector_cpu.hpp>
 
-#include "update_ops.hpp"
+#include "internal/update_ops.hpp"
 
 #ifdef OPENMP
-#include "omp_manager.hpp"
+#include "internal/omp_manager.hpp"
 #endif
 
 void x_gate(UINT target_qubit_index, StateVectorCpu& state) {

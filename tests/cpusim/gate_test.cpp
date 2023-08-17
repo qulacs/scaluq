@@ -3,7 +3,6 @@
 #include <Eigen/Core>
 #include <core/gate.hpp>
 #include <core/gate_one_qubit.hpp>
-#include <core/random.hpp>
 #include <core/types.hpp>
 #include <cpusim/state_vector_cpu.hpp>
 #include <functional>
