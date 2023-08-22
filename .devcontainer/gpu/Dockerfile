@@ -21,6 +21,7 @@ RUN apt-get update \
     libpython3-dev \
     manpages \
     man-db \
+    ninja-build \
     python3 \
     python3-distutils \
     python3-pip \
