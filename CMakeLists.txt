@@ -115,3 +115,23 @@ if(USE_TEST)
         COMMAND cpusim_test
     )
 endif(USE_TEST)
+
+# format
+find_program(CLANG_FORMAT "clang-format")
+if(CLANG_FORMAT)
+    file(GLOB_RECURSE ALL_CXX_SOURCE_FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.[ch]pp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.[ch]
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/*.[ch]pp
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/*.[ch]
+        ${CMAKE_CURRENT_SOURCE_DIR}/python/*.[ch]pp
+        ${CMAKE_CURRENT_SOURCE_DIR}/python/*.[ch]
+    )
+    add_custom_target(
+        format
+        COMMAND clang-format
+		-style=file
+        -i
+        ${ALL_CXX_SOURCE_FILES}
+    )
+endif()

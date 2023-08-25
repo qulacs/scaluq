@@ -19,6 +19,7 @@ RUN apt-get update \
     gdb \
     cmake \
     libboost-dev \
+    ninja-build \
     && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 USER vscode
