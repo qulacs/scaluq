@@ -16,6 +16,7 @@ ENV PYTHONPATH="${PROJECT_DIR}/build:${PYTHONPATH}"
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     clang-format \
+    git \
     gdb \
     cmake \
     libboost-dev \
@@ -26,3 +27,10 @@ USER vscode
 
 RUN pip install -U pip \
     && pip install black flake8 openfermion mypy pybind11-stubgen
+
+RUN git clone --recursive https://github.com/kokkos/kokkos.git /tmp/kokkos --depth 1 && \
+    mkdir /tmp/kokkos/build && \
+    cd /tmp/kokkos/build && \
+    cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/kokkos-build && \
+    make install && \
+    cp -r /tmp/kokkos-build/include /usr/local/include/kokkos

@@ -30,7 +30,8 @@
 				"python.terminal.activateEnvironment": false,
 				// CAVEAT: you need to restart after building qulacs to take effect.
 				"C_Cpp.default.includePath": [
-					"include",
+					"src",
+					"/usr/local/include/kokkos",
 					"/usr/local/include/python3.9"
 				],
 				// To highlight GPU code in VSCode.

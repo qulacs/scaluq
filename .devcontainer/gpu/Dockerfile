@@ -16,6 +16,7 @@ RUN apt-get update \
     clang-format \
     cmake \
     curl \
+    git \
     gdb \
     libboost-dev \
     libpython3-dev \
@@ -30,3 +31,10 @@ RUN apt-get update \
 
 RUN pip install -U pip \
     && pip install black flake8 openfermion mypy pybind11-stubgen
+
+RUN git clone --recursive https://github.com/kokkos/kokkos.git /tmp/kokkos --depth 1 && \
+    mkdir /tmp/kokkos/build && \
+    cd /tmp/kokkos/build && \
+    cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/kokkos-build && \
+    make install && \
+    cp -r /tmp/kokkos-build/include /usr/local/include/kokkos
