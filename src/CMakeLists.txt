@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.11)
 
-add_subdirectory(core)
+add_library(qulacs)
 
-if(USE_KOKKOS)
-    add_subdirectory(kokkossim)
-else()
-    add_subdirectory(cpusim)
-endif()
+target_sources(qulacs PRIVATE
+    gate/gate_one_qubit.cpp
+    gate/update_ops_one_qubit.cpp
+    state/state_vector.cpp
+    util/random.cpp
+)
+target_link_libraries(qulacs PRIVATE core Kokkos::kokkos)
+target_include_directories(qulacs PRIVATE ${PROJECT_SOURCE_DIR}/src)

@@ -11,9 +11,6 @@ endif(NOT DEFINED USE_OMP)
 if(NOT DEFINED USE_CUDA)
     set(USE_CUDA No)
 endif(NOT DEFINED USE_CUDA)
-if(NOT DEFINED USE_KOKKOS)
-    set(USE_KOKKOS No)
-endif(NOT DEFINED USE_KOKKOS)
 if(NOT DEFINED USE_PYTHON)
     set(USE_PYTHON No)
 endif(NOT DEFINED USE_PYTHON)
@@ -21,28 +18,22 @@ if(NOT DEFINED USE_TEST)
     set(USE_TEST Yes)
 endif(NOT DEFINED USE_TEST)
 
-if(USE_CUDA AND NOT USE_KOKKOS)
-    message(FATAL_ERROR "Using CUDA without Kokkos is not supported.")
-endif(USE_CUDA AND NOT USE_KOKKOS)
-
 message(STATUS "USE_PYTHON = ${USE_PYTHON}")
 message(STATUS "USE_TEST = ${USE_TEST}")
 
 ### Fetch dependencies ###
 # Kokkos
-if(USE_KOKKOS)
-    FetchContent_Declare(
-        kokkos_fetch
-        GIT_REPOSITORY https://github.com/kokkos/kokkos
-        GIT_TAG 4.1.00
-    )
-    FetchContent_GetProperties(kokkos_fetch)
-    if(NOT kokkos_fetch_POPULATED)
-        message(STATUS "Fetch Kokkos for parallel execution")
-        FetchContent_Populate(kokkos_fetch)
-        add_subdirectory(${kokkos_fetch_SOURCE_DIR})
-    endif(NOT kokkos_fetch_POPULATED)
-endif(USE_KOKKOS)
+FetchContent_Declare(
+    kokkos_fetch
+    GIT_REPOSITORY https://github.com/kokkos/kokkos
+    GIT_TAG 4.1.00
+)
+FetchContent_GetProperties(kokkos_fetch)
+if(NOT kokkos_fetch_POPULATED)
+    message(STATUS "Fetch Kokkos for parallel execution")
+    FetchContent_Populate(kokkos_fetch)
+    add_subdirectory(${kokkos_fetch_SOURCE_DIR})
+endif(NOT kokkos_fetch_POPULATED)
 
 # Eigen
 FetchContent_Declare(
@@ -90,15 +81,13 @@ else()
 endif(USE_TEST)
 
 ### Kokkos options ###
-if (USE_KOKKOS)
-    set(Kokkos_ENABLE_SERIAL Yes)
-    if(USE_OMP)
-        set(Kokkos_ENABLE_OPENMP Yes)
-    endif(USE_OMP)
-    if(USE_CUDA)
-        set(Kokkos_ENABLE_CUDA Yes)
-    endif(USE_CUDA)
-endif(USE_KOKKOS)
+set(Kokkos_ENABLE_SERIAL Yes)
+if(USE_OMP)
+    set(Kokkos_ENABLE_OPENMP Yes)
+endif(USE_OMP)
+if(USE_CUDA)
+    set(Kokkos_ENABLE_CUDA Yes)
+endif(USE_CUDA)
 
 ### Compile Warnings ###
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")

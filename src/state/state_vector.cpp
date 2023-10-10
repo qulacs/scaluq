@@ -1,9 +1,6 @@
-#include "state_vector_kokkos.hpp"
+#include "state_vector.hpp"
 
-#include <core/random.hpp>
-#include <core/types.hpp>
-
-StateVectorKokkos::StateVectorKokkos(UINT n_qubits)
+StateVector::StateVector(UINT n_qubits)
     : _n_qubits(n_qubits),
       _dim(1 << n_qubits),
       _amplitudes(Kokkos::View<Complex*>("state", this->_dim)) {
