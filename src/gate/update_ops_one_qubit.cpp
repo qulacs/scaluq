@@ -14,3 +14,11 @@ void x_gate(UINT target_qubit_index, StateVector& state) {
             Kokkos::Experimental::swap(state[i], state[i | (1ULL << target_qubit_index)]);
         });
 }
+
+void y_gate(UINT target_qubit_index, StateVector& state) {}
+
+void z_gate(UINT target_qubit_index, StateVector& state) {
+    const UINT n_qubits = state.n_qubits();
+    const UINT low_mask = (1ULL << target_qubit_index) - 1;
+    const UINT high_mask = ~low_mask;
+}
