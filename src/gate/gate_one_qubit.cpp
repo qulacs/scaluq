@@ -2,6 +2,8 @@
 
 #include "update_ops.hpp"
 
+PauliX::PauliX(UINT target) : _target(target){};
+
 void PauliX::update_quantum_state(StateVector& state_vector) const {
     x_gate(this->_target, state_vector);
 }
