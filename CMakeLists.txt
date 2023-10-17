@@ -137,8 +137,8 @@ endif(USE_TEST)
 if(USE_TEST)
     add_custom_target(
         test
-        DEPENDS cpusim_test
-        COMMAND cpusim_test
+        DEPENDS qulacs2023_test
+        COMMAND qulacs2023_test
     )
 endif(USE_TEST)
 
