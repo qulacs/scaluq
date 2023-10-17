@@ -23,8 +23,6 @@ RUN apt-get update \
     ninja-build \
     && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
-USER vscode
-
 RUN pip install -U pip \
     && pip install black flake8 openfermion mypy pybind11-stubgen
 
@@ -34,3 +32,5 @@ RUN git clone --recursive https://github.com/kokkos/kokkos.git /tmp/kokkos --dep
     cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/kokkos-build && \
     make install && \
     cp -r /tmp/kokkos-build/include /usr/local/include/kokkos
+
+USER vscode

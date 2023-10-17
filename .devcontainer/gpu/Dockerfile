@@ -38,3 +38,5 @@ RUN git clone --recursive https://github.com/kokkos/kokkos.git /tmp/kokkos --dep
     cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/kokkos-build && \
     make install && \
     cp -r /tmp/kokkos-build/include /usr/local/include/kokkos
+
+USER vscode

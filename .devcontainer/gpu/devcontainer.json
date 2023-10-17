@@ -32,7 +32,9 @@
 				"C_Cpp.default.includePath": [
 					"src",
 					"/usr/local/include/kokkos",
-					"/usr/local/include/python3.9"
+					"/usr/local/include/python3.9",
+					"build/_deps/eigen_fetch-src",
+					"build/_deps/googletest_fetch-src/googletest/include"
 				],
 				// To highlight GPU code in VSCode.
 				"C_Cpp.default.defines": ["_USE_GPU"]
