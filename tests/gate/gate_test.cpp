@@ -8,6 +8,7 @@
 #include <types.hpp>
 #include <util/random.hpp>
 
+#include "../kokkos_environment.hpp"
 #include "util.hpp"
 
 const auto eps = 1e-12;

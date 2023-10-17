@@ -8,5 +8,5 @@ target_sources(qulacs2023 PRIVATE
     state/state_vector.cpp
     util/random.cpp
 )
-target_link_libraries(qulacs2023 PRIVATE core Kokkos::kokkos)
+target_link_libraries(qulacs2023 PRIVATE Kokkos::kokkos)
 target_include_directories(qulacs2023 PRIVATE ${PROJECT_SOURCE_DIR}/src)

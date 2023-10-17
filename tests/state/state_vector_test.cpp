@@ -2,9 +2,11 @@
 
 #include <state/state_vector.hpp>
 
+#include "../kokkos_environment.hpp"
+
 const double eps = 1e-12;
 
-TEST(StateTest, HaarRandomStateNorm) {
+TEST(StateVectorTest, HaarRandomStateNorm) {
     const int n_tries = 20;
     for (int n = 1; n <= n_tries; n++) {
         const auto state = StateVector::Haar_random_state(n);
