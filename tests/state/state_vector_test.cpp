@@ -2,7 +2,7 @@
 
 #include <state/state_vector.hpp>
 
-#include "../kokkos_environment.hpp"
+#include "../test_environment.hpp"
 
 const double eps = 1e-12;
 
