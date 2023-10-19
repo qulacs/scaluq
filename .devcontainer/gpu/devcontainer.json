@@ -34,14 +34,14 @@
 					"/usr/local/include/kokkos",
 					"/usr/local/include/python3.9",
 					"build/_deps/eigen_fetch-src",
-					"build/_deps/googletest_fetch-src/googletest/include"
+					"build/_deps/googletest_fetch-src/googletest/include",
+					"build/_deps/pybind11_fetch-src/include"
 				],
-				// To highlight GPU code in VSCode.
-				"C_Cpp.default.defines": ["_USE_GPU"]
+				"C_Cpp.default.cppStandard": "c++20"
 			},
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
-				"ms-vscode.cpptools",
+				"ms-vscode.cpptools-extension-pack",
 				"ms-vscode.cmake-tools",
 				"ms-python.python",
 				"ms-python.vscode-pylance",
