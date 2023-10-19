@@ -32,7 +32,7 @@
 				"C_Cpp.default.includePath": [
 					"qulacs",
 					"/usr/local/include/kokkos",
-					"/usr/local/include/python3.9",
+					"/usr/include/python3.8",
 					"build/_deps/eigen_fetch-src",
 					"build/_deps/googletest_fetch-src/googletest/include",
 					"build/_deps/pybind11_fetch-src/include"
