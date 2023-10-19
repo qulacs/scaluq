@@ -1,13 +1,14 @@
 #include <gtest/gtest.h>
 
 #include <Eigen/Core>
-#include <core/gate.hpp>
-#include <core/gate_one_qubit.hpp>
-#include <core/random.hpp>
-#include <core/types.hpp>
-#include <cpusim/state_vector_cpu.hpp>
 #include <functional>
+#include <gate/gate.hpp>
+#include <gate/gate_one_qubit.hpp>
+#include <state/state_vector.hpp>
+#include <types.hpp>
+#include <util/random.hpp>
 
+#include "../test_environment.hpp"
 #include "util.hpp"
 
 const auto eps = 1e-12;

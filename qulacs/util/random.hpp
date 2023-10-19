@@ -2,7 +2,7 @@
 
 #include <random>
 
-#include "types.hpp"
+#include "../types.hpp"
 
 class Random {
     std::uniform_real_distribution<double> uniform_dist;
