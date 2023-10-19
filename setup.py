@@ -85,6 +85,7 @@ class CMakeBuild(build_ext):
             "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=" + archive_dir,
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + extdir,
             "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=" + bindir,
+            "-DCMAKE_POSITION_INDEPENDENT_CODE=Yes",
             "-DPYTHON_EXECUTABLE=" + sys.executable,
             "-DPYTHON_SETUP_FLAG:STR=Yes",
             "-DUSE_GPU:STR=No",

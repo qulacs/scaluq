@@ -28,7 +28,7 @@
 				"python.terminal.activateEnvironment": false,
 				// CAVEAT: you need to restart after building qulacs to take effect.
 				"C_Cpp.default.includePath": [
-					"src",
+					"qulacs",
 					"/usr/local/include/kokkos",
 					"/usr/local/include/python3.9",
 					"build/_deps/eigen_fetch-src",

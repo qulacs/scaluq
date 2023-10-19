@@ -124,7 +124,7 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
 endif()
 
 ### Add subdirectories ###
-add_subdirectory(src)
+add_subdirectory(qulacs)
 if(USE_PYTHON)
     add_subdirectory(python)
 endif(USE_PYTHON)
@@ -137,8 +137,8 @@ endif(USE_TEST)
 if(USE_TEST)
     add_custom_target(
         test
-        DEPENDS qulacs2023_test
-        COMMAND qulacs2023_test
+        DEPENDS qulacs_test
+        COMMAND qulacs_test
     )
 endif(USE_TEST)
 
@@ -146,8 +146,8 @@ endif(USE_TEST)
 find_program(CLANG_FORMAT "clang-format")
 if(CLANG_FORMAT)
     file(GLOB_RECURSE ALL_CXX_SOURCE_FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.[ch]pp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.[ch]
+        ${CMAKE_CURRENT_SOURCE_DIR}/qulacs/*.[ch]pp
+        ${CMAKE_CURRENT_SOURCE_DIR}/qulacs/*.[ch]
         ${CMAKE_CURRENT_SOURCE_DIR}/test/*.[ch]pp
         ${CMAKE_CURRENT_SOURCE_DIR}/test/*.[ch]
         ${CMAKE_CURRENT_SOURCE_DIR}/python/*.[ch]pp
