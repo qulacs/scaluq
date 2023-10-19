@@ -50,11 +50,11 @@ class CMakeBuild(build_ext):
         if opt_flags:
             cmake_args += ["-DOPT_FLAGS=" + opt_flags]
 
-        if os.getenv("USE_GPU"):
-            cmake_args += ["-DUSE_GPU:STR=" + os.getenv("USE_GPU")]
+        if os.getenv("QULACS_USE_GPU"):
+            cmake_args += ["-DQULACS_USE_GPU:STR=" + os.getenv("QULACS_USE_GPU")]
 
-        if os.getenv("USE_OMP"):
-            cmake_args += ["-DUSE_OMP:STR=" + os.getenv("USE_OMP")]
+        if os.getenv("QULACS_USE_OMP"):
+            cmake_args += ["-DQULACS_USE_OMP:STR=" + os.getenv("QULACS_USE_OMP")]
 
         env = os.environ.copy()
         env["CXXFLAGS"] = '{} -DVERSION_INFO=\\"{}\\"'.format(
@@ -88,8 +88,8 @@ class CMakeBuild(build_ext):
             "-DCMAKE_POSITION_INDEPENDENT_CODE=Yes",
             "-DPYTHON_EXECUTABLE=" + sys.executable,
             "-DPYTHON_SETUP_FLAG:STR=Yes",
-            "-DUSE_GPU:STR=No",
-            "-DUSE_PYTHON=Yes",
+            "-DQULACS_USE_GPU:STR=No",
+            "-DQULACS_USE_PYTHON=Yes",
         ]
 
         cfg = "Debug" if self.debug else "Release"
