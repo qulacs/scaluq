@@ -21,7 +21,7 @@ public:
 
     Kokkos::View<Complex*>& amplitudes_raw();
     
-    const Kokkos::View<Complex*>& amplitudes_raw() const
+    const Kokkos::View<Complex*>& amplitudes_raw() const;
 
     const std::vector<Complex>& amplitudes() const;
 

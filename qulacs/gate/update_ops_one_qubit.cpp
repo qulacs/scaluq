@@ -2,8 +2,8 @@
 #include <Kokkos_StdAlgorithms.hpp>
 
 #include "../types.hpp"
-#include "update_ops.hpp"
 #include "constant.hpp"
+#include "update_ops.hpp"
 
 void i_gate(UINT target_qubit_index, StateVector& state) {}
 
@@ -27,8 +27,8 @@ void y_gate(UINT target_qubit_index, StateVector& state) {
     Kokkos::parallel_for(
         1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
             UINT i = (it & high_mask) << 1 | (it & low_mask);
-            state[i] *= -im;
-            state[i | (1ULL << target_qubit_index)] *= im;
+            state[i] *= -1.i;
+            state[i | (1ULL << target_qubit_index)] *= 1.i;
             Kokkos::Experimental::swap(state[i], state[i | (1ULL << target_qubit_index)]);
         });
 }
@@ -40,7 +40,7 @@ void z_gate(UINT target_qubit_index, StateVector& state) {
     Kokkos::parallel_for(
         1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
             UINT i = (it & high_mask) << 1 | (it & low_mask);
-            state[i | (1ULL << target_qubit_index)] *= -1;
+            state[i | (1ULL << target_qubit_index)] *= -1.0;
         });
 }
 
@@ -48,14 +48,13 @@ void h_gate(UINT target_qubit_index, StateVector& state) {
     const UINT n_qubits = state.n_qubits();
     const UINT low_mask = (1ULL << target_qubit_index) - 1;
     const UINT high_mask = ~low_mask;
-    const double inv_sqrt2 = 1.0 / std::sqrt(2.0);  
     Kokkos::parallel_for(
         1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
             UINT i = (it & high_mask) << 1 | (it & low_mask);
             Complex a = state[i];
             Complex b = state[i | (1ULL << target_qubit_index)];
-            state[i] = inv_sqrt2 * (a + b);
-            state[i | (1ULL << target_qubit_index)] = inv_sqrt2 * (a - b);
+            state[i] = (a + b) * INVERSE_SQRT2;
+            state[i | (1ULL << target_qubit_index)] = (a - b) * INVERSE_SQRT2;
         });
 }
 

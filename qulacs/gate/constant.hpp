@@ -17,6 +17,9 @@
 //! square root of 2
 #define SQRT2 1.414213562373095
 
+//! inverse square root of 2
+#define INVERSE_SQRT2 0.707106781186547
+
 //! cosine pi/8
 #define COSPI8 0.923879532511287
 
