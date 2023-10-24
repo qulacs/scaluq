@@ -22,6 +22,10 @@ UINT n_qubits() const { return this->_n_qubits; }
 
 UINT dim() const { return this->_dim; }
 
+Kokkos::View<Complex*>& StateVector::amplitudes_raw() { return this->_amplitudes; }
+
+const Kokkos::View<Complex*>& StateVector::amplitudes_raw() const { return this->_amplitudes; }
+
 const std::vector<Complex>& amplitudes() const { return this->_amplitudes; }
 
 Complex& StateVector::operator[](const int index) { return this->_amplitudes[index]; }

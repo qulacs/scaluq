@@ -68,3 +68,27 @@ void sqrtXdag::update_quantum_state(StateVector& state_vector) const {
     sqrtxdag_gate(this->_target, state_vector);
 }
 
+sqrtY::sqrtY(UINT target) : _target(target){};
+
+void sqrtY::update_quantum_state(StateVector& state_vector) const {
+    sqrty_gate(this->_target, state_vector);
+}
+
+sqrtYdag::sqrtYdag(UINT target) : _target(target){};
+
+void sqrtYdag::update_quantum_state(StateVector& state_vector) const {
+    sqrtydag_gate(this->_target, state_vector);
+}
+
+P0::P0(UINT target) : _target(target){};
+
+void p0_gate::update_quantum_state(StateVector& state_vector) const {
+    p0_gate(this->_target, state_vector);
+}
+
+P1::P1(UINT target) : _target(target){};
+
+void p1_gate::update_quantum_state(StateVector& state_vector) const {
+    p1_gate(this->_target, state_vector);
+}
+

@@ -100,3 +100,42 @@ public:
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
+
+class sqrtY : public QuantumGate {
+    UINT _target;
+
+public:
+    sqrtY(UINT target) : _target(target){};
+
+    void update_quantum_state(StateVector& state_vector) const override;
+};
+
+class sqrtYdag : public QuantumGate {
+    UINT _target;
+
+public:
+    sqrtYdag(UINT target) : _target(target){};
+
+    void update_quantum_state(StateVector& state_vector) const override;
+};
+
+class P0 : public QuantumGate {
+    UINT _target;
+
+public:
+    P0(UINT target) : _target(target){};
+
+    void update_quantum_state(StateVector& state_vector) const override;
+};
+
+class P1 : public QuantumGate {
+    UINT _target;
+
+public:
+    P1(UINT target) : _target(target){};
+
+    void update_quantum_state(StateVector& state_vector) const override;
+};
+
+
+
