@@ -9,27 +9,44 @@
 class PauliOperator {
     std::vector<UINT> _target_qubit_list, _pauli_id_list;
     Complex _coef;
+    UINT _bit_flip_mask, _phase_flip_mask, _global_phase_90rot_count;
 
 public:
-    PauliOperator(const std::string_view& pauli_string, Complex coef);
+    PauliOperator(Complex coef = 1.);
+    PauliOperator(std::string_view pauli_string, Complex coef = 1.);
     PauliOperator(const std::vector<UINT>& target_qubit_list,
-                  std::vector<UINT>& pauli_id_list,
-                  Complex coef);
-    PauliOperator(const std::vector<UINT>& pauli_id_par_qubit, Complex coef);
+                  const std::vector<UINT>& pauli_id_list,
+                  Complex coef = 1.);
+    PauliOperator(const std::vector<UINT>& pauli_id_par_qubit, Complex coef = 1.);
+    PauliOperator(UINT bit_flip_mask,
+                  UINT phase_flip_mask,
+                  UINT global_phase_90rot_count,
+                  Complex coef = 1.);
 
-    [[nodiscard]] Complex get_coef() const;
+    [[nodiscard]] inline Complex get_coef() const { return _coef; }
+    [[nodiscard]] inline const std::vector<UINT>& get_target_qubit_list() const {
+        return _target_qubit_list;
+    }
+    [[nodiscard]] inline const std::vector<UINT>& get_pauli_id_list() const {
+        return _pauli_id_list;
+    }
+    [[nodiscard]] inline std::tuple<UINT, UINT, UINT> get_XZ_mask_representation() const {
+        return {_bit_flip_mask, _phase_flip_mask, _global_phase_90rot_count};
+    }
     [[nodiscard]] std::string get_pauli_string() const;
 
-    void change_coef(Complex new_coef);
+    inline void change_coef(Complex new_coef) { _coef = new_coef; }
     void add_single_pauli(UINT target_qubit, UINT pauli_id);
 
     [[nodiscard]] Complex get_expectation_value(const StateVector& state_vector) const;
     [[nodiscard]] Complex get_transition_amplitude(const StateVector& state_vector_bra,
                                                    const StateVector& state_vector_ket) const;
 
+    [[nodiscard]] PauliOperator operator*(const PauliOperator& target) const;
     PauliOperator& operator*=(const PauliOperator& target);
-    PauliOperator operator*(const PauliOperator& target) const;
 
-    PauliOperator& operator*=(Complex target);
-    PauliOperator operator*(Complex target) const;
+    inline PauliOperator& operator*=(Complex target) { _coef *= target; };
+    [[nodiscard]] inline PauliOperator operator*(Complex target) const {
+        return PauliOperator(*this) * target;
+    }
 };
