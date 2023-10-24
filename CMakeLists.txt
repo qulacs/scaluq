@@ -5,21 +5,21 @@ project(qulacs)
 include(FetchContent)
 
 ### Define variables ###
-if(NOT DEFINED USE_OMP)
-    set(USE_OMP Yes)
-endif(NOT DEFINED USE_OMP)
-if(NOT DEFINED USE_CUDA)
-    set(USE_CUDA No)
-endif(NOT DEFINED USE_CUDA)
-if(NOT DEFINED USE_PYTHON)
-    set(USE_PYTHON No)
-endif(NOT DEFINED USE_PYTHON)
-if(NOT DEFINED USE_TEST)
-    set(USE_TEST Yes)
-endif(NOT DEFINED USE_TEST)
+if(NOT DEFINED QULACS_USE_OMP)
+    set(QULACS_USE_OMP Yes)
+endif(NOT DEFINED QULACS_USE_OMP)
+if(NOT DEFINED QULACS_USE_CUDA)
+    set(QULACS_USE_CUDA No)
+endif(NOT DEFINED QULACS_USE_CUDA)
+if(NOT DEFINED QULACS_USE_PYTHON)
+    set(QULACS_USE_PYTHON No)
+endif(NOT DEFINED QULACS_USE_PYTHON)
+if(NOT DEFINED QULACS_USE_TEST)
+    set(QULACS_USE_TEST Yes)
+endif(NOT DEFINED QULACS_USE_TEST)
 
-message(STATUS "USE_PYTHON = ${USE_PYTHON}")
-message(STATUS "USE_TEST = ${USE_TEST}")
+message(STATUS "QULACS_USE_PYTHON = ${QULACS_USE_PYTHON}")
+message(STATUS "QULACS_USE_TEST = ${QULACS_USE_TEST}")
 
 ### Fetch dependencies ###
 # Kokkos
@@ -49,7 +49,7 @@ if(NOT eigen_fetch_POPULATED)
 endif(NOT eigen_fetch_POPULATED)
 
 # pybind11
-if(USE_PYTHON)
+if(QULACS_USE_PYTHON)
     FetchContent_Declare(
         pybind11_fetch
         GIT_REPOSITORY https://github.com/pybind/pybind11
@@ -61,10 +61,10 @@ if(USE_PYTHON)
         FetchContent_Populate(pybind11_fetch)
         add_subdirectory(${pybind11_fetch_SOURCE_DIR})
     endif(NOT pybind11_fetch_POPULATED)
-endif(USE_PYTHON)
+endif(QULACS_USE_PYTHON)
 
 # Google test
-if(USE_TEST)
+if(QULACS_USE_TEST)
     FetchContent_Declare(
         googletest_fetch
         GIT_REPOSITORY https://github.com/google/googletest
@@ -78,16 +78,16 @@ if(USE_TEST)
     endif()
 else()
     message(STATUS "Skip downloding googletest")
-endif(USE_TEST)
+endif(QULACS_USE_TEST)
 
 ### Kokkos options ###
 set(Kokkos_ENABLE_SERIAL Yes)
-if(USE_OMP)
+if(QULACS_USE_OMP)
     set(Kokkos_ENABLE_OPENMP Yes)
-endif(USE_OMP)
-if(USE_CUDA)
+endif(QULACS_USE_OMP)
+if(QULACS_USE_CUDA)
     set(Kokkos_ENABLE_CUDA Yes)
-endif(USE_CUDA)
+endif(QULACS_USE_CUDA)
 
 ### Compile Warnings ###
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
@@ -109,7 +109,7 @@ endif()
 
 ### Compiler options ###
 if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
-    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD 20)
     set(CMAKE_CXX_STANDARD_REQUIRED True)
 	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -117,37 +117,37 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
     # Enable openmp
-    if(USE_OMP)
+    if(QULACS_USE_OMP)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
         add_compile_definitions(OPENMP)
     endif()
 endif()
 
 ### Add subdirectories ###
-add_subdirectory(src)
-if(USE_PYTHON)
+add_subdirectory(qulacs)
+if(QULACS_USE_PYTHON)
     add_subdirectory(python)
-endif(USE_PYTHON)
-if(USE_TEST)
+endif(QULACS_USE_PYTHON)
+if(QULACS_USE_TEST)
     add_subdirectory(tests)
-endif(USE_TEST)
+endif(QULACS_USE_TEST)
 
 ### Custom target ###
 # test
-if(USE_TEST)
+if(QULACS_USE_TEST)
     add_custom_target(
         test
-        DEPENDS cpusim_test
-        COMMAND cpusim_test
+        DEPENDS qulacs_test
+        COMMAND qulacs_test
     )
-endif(USE_TEST)
+endif(QULACS_USE_TEST)
 
 # format
 find_program(CLANG_FORMAT "clang-format")
 if(CLANG_FORMAT)
     file(GLOB_RECURSE ALL_CXX_SOURCE_FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.[ch]pp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.[ch]
+        ${CMAKE_CURRENT_SOURCE_DIR}/qulacs/*.[ch]pp
+        ${CMAKE_CURRENT_SOURCE_DIR}/qulacs/*.[ch]
         ${CMAKE_CURRENT_SOURCE_DIR}/test/*.[ch]pp
         ${CMAKE_CURRENT_SOURCE_DIR}/test/*.[ch]
         ${CMAKE_CURRENT_SOURCE_DIR}/python/*.[ch]pp

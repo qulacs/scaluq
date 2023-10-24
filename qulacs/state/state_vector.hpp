@@ -20,13 +20,20 @@ public:
     UINT dim() const;
 
     Kokkos::View<Complex*>& amplitudes_raw();
+<<<<<<< HEAD:src/state/state_vector.hpp
     
     const Kokkos::View<Complex*>& amplitudes_raw() const
+=======
+    const Kokkos::View<Complex*>& amplitudes_raw() const;
+>>>>>>> origin/15-c++20:qulacs/state/state_vector.hpp
 
     const std::vector<Complex>& amplitudes() const;
 
     Complex& operator[](const int index);
+<<<<<<< HEAD:src/state/state_vector.hpp
     
+=======
+>>>>>>> origin/15-c++20:qulacs/state/state_vector.hpp
     const Complex& operator[](const int index) const;
 
     double compute_squared_norm() const;

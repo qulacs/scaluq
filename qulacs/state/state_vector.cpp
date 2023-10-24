@@ -8,6 +8,7 @@ StateVector::StateVector(UINT n_qubits)
     this->_amplitudes[0] = 1.0 + 0.0i;
 }
 
+<<<<<<< HEAD:src/state/state_vector.cpp
 static StateVector Haar_random_state(UINT n_qubits) const {
     StateVector state_vector(n_qubits);
     Random rng;
@@ -48,3 +49,7 @@ void StateVector::normalize() {
         amplitude /= norm;
     }
 }
+=======
+Kokkos::View<Complex*>& StateVector::amplitudes_raw() { return this->_amplitudes; }
+const Kokkos::View<Complex*>& StateVector::amplitudes_raw() const { return this->_amplitudes; }
+>>>>>>> origin/15-c++20:qulacs/state/state_vector.cpp
