@@ -9,7 +9,7 @@
 class PauliOperator {
     std::vector<UINT> _target_qubit_list, _pauli_id_list;
     Complex _coef;
-    UINT _bit_flip_mask, _phase_flip_mask, _global_phase_90rot_count;
+    UINT _bit_flip_mask, _phase_flip_mask;
 
 public:
     PauliOperator(Complex coef = 1.);
@@ -18,10 +18,7 @@ public:
                   const std::vector<UINT>& pauli_id_list,
                   Complex coef = 1.);
     PauliOperator(const std::vector<UINT>& pauli_id_par_qubit, Complex coef = 1.);
-    PauliOperator(UINT bit_flip_mask,
-                  UINT phase_flip_mask,
-                  UINT global_phase_90rot_count,
-                  Complex coef = 1.);
+    PauliOperator(UINT bit_flip_mask, UINT phase_flip_mask, Complex coef = 1.);
 
     [[nodiscard]] inline Complex get_coef() const { return _coef; }
     [[nodiscard]] inline const std::vector<UINT>& get_target_qubit_list() const {
@@ -30,8 +27,8 @@ public:
     [[nodiscard]] inline const std::vector<UINT>& get_pauli_id_list() const {
         return _pauli_id_list;
     }
-    [[nodiscard]] inline std::tuple<UINT, UINT, UINT> get_XZ_mask_representation() const {
-        return {_bit_flip_mask, _phase_flip_mask, _global_phase_90rot_count};
+    [[nodiscard]] inline std::tuple<UINT, UINT> get_XZ_mask_representation() const {
+        return {_bit_flip_mask, _phase_flip_mask};
     }
     [[nodiscard]] std::string get_pauli_string() const;
 
