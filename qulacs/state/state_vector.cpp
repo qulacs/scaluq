@@ -8,7 +8,7 @@ StateVector::StateVector(UINT n_qubits)
     this->_amplitudes[0] = 1.0 + 0.0i;
 }
 
-static StateVector Haar_random_state(UINT n_qubits) const {
+static StateVector StateVector::Haar_random_state(UINT n_qubits) const {
     StateVector state_vector(n_qubits);
     Random rng;
     for (int i = 0; i < state_vector.dim(); i++) {
@@ -18,9 +18,9 @@ static StateVector Haar_random_state(UINT n_qubits) const {
     return state_vector;
 }
 
-UINT n_qubits() const { return this->_n_qubits; }
+UINT StateVector::n_qubits() const { return this->_n_qubits; }
 
-UINT dim() const { return this->_dim; }
+UINT StateVector::dim() const { return this->_dim; }
 
 Kokkos::View<Complex*>& StateVector::amplitudes_raw() { return this->_amplitudes; }
 
