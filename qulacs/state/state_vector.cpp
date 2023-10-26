@@ -28,9 +28,9 @@ const Kokkos::View<Complex*>& StateVector::amplitudes_raw() const { return this-
 
 const std::vector<Complex>& amplitudes() const { return this->_amplitudes; }
 
-Complex& StateVector::operator[](const int index) { return this->_amplitudes[index]; }
+Complex& StateVector::operator[](const int index) & { return this->_amplitudes[index]; }
 
-const Complex& StateVector::operator[](const int index) const {
+const Complex& StateVector::operator[](const int index) const& {
     return this->_amplitudes[index];
 }
 

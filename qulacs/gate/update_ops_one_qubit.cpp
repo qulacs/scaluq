@@ -27,8 +27,8 @@ void y_gate(UINT target_qubit_index, StateVector& state) {
     Kokkos::parallel_for(
         1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
             UINT i = (it & high_mask) << 1 | (it & low_mask);
-            state[i] *= -1.i;
-            state[i | (1ULL << target_qubit_index)] *= 1.i;
+            state[i] *= im;
+            state[i | (1ULL << target_qubit_index)] *= -im;
             Kokkos::Experimental::swap(state[i], state[i | (1ULL << target_qubit_index)]);
         });
 }

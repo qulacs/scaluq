@@ -25,9 +25,9 @@ public:
 
     const std::vector<Complex>& amplitudes() const;
 
-    Complex& operator[](const int index);
+    Complex& operator[](const int index) &;
     
-    const Complex& operator[](const int index) const;
+    const Complex& operator[](const int index) const&;
 
     double compute_squared_norm() const;
 
