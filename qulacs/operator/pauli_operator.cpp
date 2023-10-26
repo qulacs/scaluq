@@ -27,7 +27,7 @@ PauliOperator::PauliOperator(std::string_view pauli_string, Complex coef)
 
 PauliOperator::PauliOperator(const std::vector<UINT>& target_qubit_list,
                              const std::vector<UINT>& pauli_id_list,
-                             Complex coef = 1.)
+                             Complex coef)
     : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
     if (target_qubit_list.size() != pauli_id_list.size()) {
         throw std::runtime_error(
@@ -38,7 +38,7 @@ PauliOperator::PauliOperator(const std::vector<UINT>& target_qubit_list,
     }
 }
 
-PauliOperator::PauliOperator(UINT bit_flip_mask, UINT phase_flip_mask, Complex coef = 1.)
+PauliOperator::PauliOperator(UINT bit_flip_mask, UINT phase_flip_mask, Complex coef)
     : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
     UINT num_y = 0;
     for (UINT target_idx = 0; target_idx < sizeof(UINT) * 8; ++target_idx) {
@@ -91,7 +91,7 @@ Complex PauliOperator::get_expectation_value(const StateVector& state_vector) co
         Kokkos::parallel_reduce(
             "expectation_value",
             state_vector.dim(),
-            KOKKOS_LAMBDA(const UINT& state_idx, double& sum) {
+            KOKKOS_CLASS_LAMBDA(const UINT& state_idx, double& sum) {
                 double tmp = std::norm(amplitudes[state_idx]);
                 if (std::popcount(state_idx & _phase_flip_mask) & 1) tmp = -tmp;
                 sum += tmp;
@@ -108,7 +108,7 @@ Complex PauliOperator::get_expectation_value(const StateVector& state_vector) co
     Kokkos::parallel_reduce(
         "expectation_value",
         state_vector.dim() >> 1,
-        KOKKOS_LAMBDA(const UINT& state_idx, UINT& sum) {
+        KOKKOS_CLASS_LAMBDA(const UINT& state_idx, double& sum) {
             UINT basis_0 = (state_idx & upper_mask) << 1 | (state_idx & lower_mask);
             UINT basis_1 = basis_0 ^ _bit_flip_mask;
             double tmp =
@@ -132,7 +132,7 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
         Kokkos::parallel_reduce(
             "expectation_value",
             state_vector_bra.dim(),
-            KOKKOS_LAMBDA(const UINT& state_idx, Complex& sum) {
+            KOKKOS_CLASS_LAMBDA(const UINT& state_idx, Complex& sum) {
                 Complex tmp = std::conj(amplitudes_bra[state_idx]) * amplitudes_ket[state_idx];
                 if (std::popcount(state_idx & _phase_flip_mask) & 1) tmp = -tmp;
                 sum += tmp;
@@ -149,7 +149,7 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
     Kokkos::parallel_reduce(
         "expectation_value",
         state_vector_bra.dim() >> 1,
-        KOKKOS_LAMBDA(const UINT& state_idx, Complex& sum) {
+        KOKKOS_CLASS_LAMBDA(const UINT& state_idx, Complex& sum) {
             UINT basis_0 = (state_idx & upper_mask) << 1 | (state_idx & lower_mask);
             UINT basis_1 = basis_0 ^ _bit_flip_mask;
             Complex tmp1 =

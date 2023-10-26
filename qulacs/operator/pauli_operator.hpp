@@ -42,7 +42,10 @@ public:
     [[nodiscard]] PauliOperator operator*(const PauliOperator& target) const;
     PauliOperator& operator*=(const PauliOperator& target);
 
-    inline PauliOperator& operator*=(Complex target) { _coef *= target; };
+    inline PauliOperator& operator*=(Complex target) {
+        _coef *= target;
+        return *this;
+    };
     [[nodiscard]] inline PauliOperator operator*(Complex target) const {
         return PauliOperator(*this) * target;
     }
