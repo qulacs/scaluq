@@ -21,15 +21,16 @@ void x_gate(UINT target_qubit_index, StateVector& state) {
 
 void y_gate(UINT target_qubit_index, StateVector& state) {
     const UINT n_qubits = state.n_qubits();
+    auto amplitudes = state.amplitudes_raw();
     const UINT low_mask = (1ULL << target_qubit_index) - 1;
     const UINT high_mask = ~low_mask;
     const Complex im(0, 1);
     Kokkos::parallel_for(
         1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
             UINT i = (it & high_mask) << 1 | (it & low_mask);
-            state[i] *= im;
-            state[i | (1ULL << target_qubit_index)] *= -im;
-            Kokkos::Experimental::swap(state[i], state[i | (1ULL << target_qubit_index)]);
+            amplitudes[i] *= im;
+            amplitudes[i | (1ULL << target_qubit_index)] *= -im;
+            Kokkos::Experimental::swap(amplitudes[i], amplitudes[i | (1ULL << target_qubit_index)]);
         });
 }
 
