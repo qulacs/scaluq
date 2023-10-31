@@ -2,6 +2,7 @@
 
 #include "update_ops.hpp"
 
+namespace qulacs {
 void Identity::update_quantum_state(StateVector& state_vector) const {
     i_gate(this->_target, state_vector);
 }
@@ -73,4 +74,4 @@ void RY::update_quantum_state(StateVector& state_vector) const {
 void RZ::update_quantum_state(StateVector& state_vector) const {
     rz_gate(this->_target, -(this->_angle), state_vector);
 }
-
+}  // namespace qulacs

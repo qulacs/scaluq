@@ -5,6 +5,7 @@
 
 #include "../types.hpp"
 
+namespace qulacs {
 class StateVector {
     UINT _n_qubits;
     UINT _dim;
@@ -20,16 +21,15 @@ public:
     UINT dim() const;
 
     Kokkos::View<Complex*>& amplitudes_raw();
-    
     const Kokkos::View<Complex*>& amplitudes_raw() const;
 
     const std::vector<Complex>& amplitudes() const;
 
-    Complex& operator[](const int index) &;
-    
-    const Complex& operator[](const int index) const&;
+    Complex& operator[](const int index);
+    const Complex& operator[](const int index) const;
 
     double compute_squared_norm() const;
 
     void normalize();
 };
+}  // namespace qulacs

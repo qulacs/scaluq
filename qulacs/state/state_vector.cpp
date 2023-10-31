@@ -2,6 +2,7 @@
 
 #include "../util/random.hpp"
 
+namespace qulacs {
 StateVector::StateVector(UINT n_qubits)
     : _n_qubits(n_qubits),
       _dim(1 << n_qubits),
@@ -47,3 +48,4 @@ void StateVector::normalize() {
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& it) { this->_amplitudes[it] /= norm; });
 }
+}  // namespace qulacs

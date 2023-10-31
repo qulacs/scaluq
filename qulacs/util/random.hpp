@@ -4,6 +4,7 @@
 
 #include "../types.hpp"
 
+namespace qulacs {
 class Random {
     std::uniform_real_distribution<double> uniform_dist;
     std::normal_distribution<double> normal_dist;
@@ -22,3 +23,4 @@ public:
 
     std::uint32_t int32();
 };
+}  // namespace qulacs

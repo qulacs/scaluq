@@ -4,6 +4,7 @@
 #include "../state/state_vector.hpp"
 #include "../types.hpp"
 
+namespace qulacs {
 void i_gate(UINT target_qubit_index, StateVector& state);
 
 void x_gate(UINT target_qubit_index, StateVector& state);
@@ -39,3 +40,4 @@ void rx_gate(UINT target_qubit_index, double angle, StateVector& state);
 void ry_gate(UINT target_qubit_index, double angle, StateVector& state);
 
 void rz_gate(UINT target_qubit_index, double angle, StateVector& state);
+}

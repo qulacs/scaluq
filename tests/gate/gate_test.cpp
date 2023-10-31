@@ -11,6 +11,7 @@
 #include "../test_environment.hpp"
 #include "util.hpp"
 
+namespace qulacs {
 const auto eps = 1e-12;
 
 template <class QuantumGateConstructor>
@@ -39,3 +40,4 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matr
 }
 
 TEST(GateTest, ApplySingleQubitGate) { run_random_gate_apply<PauliX>(5, make_X); }
+}  // namespace qulacs
