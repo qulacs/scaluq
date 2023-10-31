@@ -4,6 +4,7 @@
 #include "../types.hpp"
 #include "update_ops.hpp"
 
+namespace qulacs {
 void x_gate(UINT target_qubit_index, StateVector& state) {
     const UINT n_qubits = state.n_qubits();
     auto amplitudes = state.amplitudes_raw();
@@ -15,3 +16,4 @@ void x_gate(UINT target_qubit_index, StateVector& state) {
             Kokkos::Experimental::swap(amplitudes[i], amplitudes[i | (1ULL << target_qubit_index)]);
         });
 }
+}  // namespace qulacs

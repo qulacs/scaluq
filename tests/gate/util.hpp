@@ -5,6 +5,7 @@
 #include <Eigen/Core>
 #include <types.hpp>
 
+namespace qulacs {
 static Eigen::MatrixXcd kronecker_product(const Eigen::MatrixXcd& lhs,
                                           const Eigen::MatrixXcd& rhs) {
     Eigen::MatrixXcd result(lhs.rows() * rhs.rows(), lhs.cols() * rhs.cols());
@@ -80,3 +81,4 @@ static Eigen::MatrixXcd make_2x2_matrix(const Eigen::dcomplex a00,
 }
 
 static Eigen::MatrixXcd make_X() { return make_2x2_matrix(0, 1, 1, 0); }
+}  // namespace qulacs

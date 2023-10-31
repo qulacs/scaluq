@@ -1,5 +1,6 @@
 #include "state_vector.hpp"
 
+namespace qulacs {
 StateVector::StateVector(UINT n_qubits)
     : _n_qubits(n_qubits),
       _dim(1 << n_qubits),
@@ -9,3 +10,4 @@ StateVector::StateVector(UINT n_qubits)
 
 Kokkos::View<Complex*>& StateVector::amplitudes_raw() { return this->_amplitudes; }
 const Kokkos::View<Complex*>& StateVector::amplitudes_raw() const { return this->_amplitudes; }
+}  // namespace qulacs
