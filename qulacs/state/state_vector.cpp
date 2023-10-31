@@ -28,9 +28,9 @@ Kokkos::View<Complex*>& StateVector::amplitudes_raw() { return this->_amplitudes
 
 const Kokkos::View<Complex*>& StateVector::amplitudes_raw() const { return this->_amplitudes; }
 
-Complex& StateVector::operator[](const int index) & { return this->_amplitudes[index]; }
+Complex& StateVector::operator[](const int index) { return this->_amplitudes[index]; }
 
-const Complex& StateVector::operator[](const int index) const& { return this->_amplitudes[index]; }
+const Complex& StateVector::operator[](const int index) const { return this->_amplitudes[index]; }
 
 double StateVector::compute_squared_norm() const {
     double norm = 0.;

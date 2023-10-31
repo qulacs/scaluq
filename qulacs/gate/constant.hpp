@@ -5,6 +5,7 @@
 
 #include "../types.hpp"
 
+namespace qulacs {
 //! PI value
 #ifndef PI
 #ifdef M_PI
@@ -54,3 +55,4 @@ extern const Complex PROJ_1_MATRIX[4];
 extern const Complex PHASE_90ROT[4];
 //! complex values for exp(-j * i*pi/4 )
 extern const Complex PHASE_M90ROT[4];
+}  // namespace qulacs

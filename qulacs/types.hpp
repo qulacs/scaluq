@@ -4,7 +4,7 @@
 #include <cstdint>
 
 namespace qulacs {
-using UINT = std::std::uint64_t;
+using UINT = std::uint64_t;
 
 using Complex = std::complex<double>;
 using namespace std::complex_literals;
