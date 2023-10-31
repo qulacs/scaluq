@@ -137,5 +137,34 @@ public:
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
+class RX : public QuantumGate {
+    UINT _target;
+    double _angle;
+
+public:
+    RX(UINT target, double angle) : _target(target), _angle(angle){};
+
+    void update_quantum_state(StateVector& state_vector) const override;
+};
+
+class RY : public QuantumGate {
+    UINT _target;
+    double _angle;
+
+public:
+    RY(UINT target, double angle) : _target(target), _angle(angle){};
+
+    void update_quantum_state(StateVector& state_vector) const override;
+};
+
+class RZ : public QuantumGate {
+    UINT _target;
+    double _angle;
+
+public:
+    RZ(UINT target, double angle) : _target(target), _angle(angle){};
+
+    void update_quantum_state(StateVector& state_vector) const override;
+};
 
 

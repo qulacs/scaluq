@@ -9,9 +9,9 @@ void i_gate(UINT target_qubit_index, StateVector& state) {}
 
 void x_gate(UINT target_qubit_index, StateVector& state) {
     const UINT n_qubits = state.n_qubits();
-    auto amplitudes = state.amplitudes_raw();
     const UINT low_mask = (1ULL << target_qubit_index) - 1;
     const UINT high_mask = ~low_mask;
+    auto amplitudes = state.amplitudes_raw();
     Kokkos::parallel_for(
         1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
             UINT i = (it & high_mask) << 1 | (it & low_mask);
@@ -21,24 +21,23 @@ void x_gate(UINT target_qubit_index, StateVector& state) {
 
 void y_gate(UINT target_qubit_index, StateVector& state) {
     const UINT n_qubits = state.n_qubits();
-    auto amplitudes = state.amplitudes_raw();
     const UINT low_mask = (1ULL << target_qubit_index) - 1;
     const UINT high_mask = ~low_mask;
-    const Complex im(0, 1);
+    auto amplitudes = state.amplitudes_raw();
     Kokkos::parallel_for(
         1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
             UINT i = (it & high_mask) << 1 | (it & low_mask);
-            amplitudes[i] *= im;
-            amplitudes[i | (1ULL << target_qubit_index)] *= -im;
+            amplitudes[i] *= 1.i;
+            amplitudes[i | (1ULL << target_qubit_index)] *= -1.i;
             Kokkos::Experimental::swap(amplitudes[i], amplitudes[i | (1ULL << target_qubit_index)]);
         });
 }
 
 void z_gate(UINT target_qubit_index, StateVector& state) {
     const UINT n_qubits = state.n_qubits();
-    auto amplitudes = state.amplitudes_raw();
     const UINT low_mask = (1ULL << target_qubit_index) - 1;
     const UINT high_mask = ~low_mask;
+    auto amplitudes = state.amplitudes_raw();
     Kokkos::parallel_for(
         1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
             UINT i = (it & high_mask) << 1 | (it & low_mask);
@@ -48,9 +47,9 @@ void z_gate(UINT target_qubit_index, StateVector& state) {
 
 void h_gate(UINT target_qubit_index, StateVector& state) {
     const UINT n_qubits = state.n_qubits();
-    auto amplitudes = state.amplitudes_raw();
     const UINT low_mask = (1ULL << target_qubit_index) - 1;
     const UINT high_mask = ~low_mask;
+    auto amplitudes = state.amplitudes_raw();
     Kokkos::parallel_for(
         1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
             UINT i = (it & high_mask) << 1 | (it & low_mask);
@@ -61,12 +60,11 @@ void h_gate(UINT target_qubit_index, StateVector& state) {
         });
 }
 
-void single_qubit_phase_gate(
-    UINT target_qubit_index, Complex phase, StateVector& state) {
+void single_qubit_phase_gate(UINT target_qubit_index, Complex phase, StateVector& state) {
     const UINT n_qubits = state.n_qubits();
-    auto amplitudes = state.amplitudes_raw();
     const UINT low_mask = (1ULL << target_qubit_index) - 1;
     const UINT high_mask = ~low_mask;
+    auto amplitudes = state.amplitudes_raw();
     Kokkos::parallel_for(
         1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
             UINT i = (it & high_mask) << 1 | (it & low_mask);
@@ -78,7 +76,7 @@ void s_gate(UINT target_qubit_index, StateVector& state) {
     single_qubit_phase_gate(target_qubit_index, Complex(0, 1), state);
 }
 
-void s_dag_gate(UINT target_qubit_index, StateVector& state) {
+void sdag_gate(UINT target_qubit_index, StateVector& state) {
     single_qubit_phase_gate(target_qubit_index, Complex(0, -1), state);
 }
 
@@ -86,16 +84,17 @@ void t_gate(UINT target_qubit_index, StateVector& state) {
     single_qubit_phase_gate(target_qubit_index, Complex(1.0 / M_SQRT2, 1.0 / M_SQRT2), state);
 }
 
-void t_dag_gate(UINT target_qubit_index, StateVector& state) {
+void tdag_gate(UINT target_qubit_index, StateVector& state) {
     single_qubit_phase_gate(target_qubit_index, Complex(1.0 / M_SQRT2, -1.0 / M_SQRT2), state);
 }
 
-void single_qubit_dense_matrix_gate(
-    UINT target_qubit_index, const Complex matrix[4], StateVector& state) {
+void single_qubit_dense_matrix_gate(UINT target_qubit_index,
+                                    const Complex matrix[4],
+                                    StateVector& state) {
     const UINT n_qubits = state.n_qubits();
-    auto amplitudes = state.amplitudes_raw();
     const UINT low_mask = (1ULL << target_qubit_index) - 1;
     const UINT high_mask = ~low_mask;
+    auto amplitudes = state.amplitudes_raw();
     Kokkos::parallel_for(
         1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
             UINT i = (it & high_mask) << 1 | (it & low_mask);
@@ -128,4 +127,37 @@ void p0_gate(UINT target_qubit_index, StateVector& state) {
 
 void p1_gate(UINT target_qubit_index, StateVector& state) {
     single_qubit_dense_matrix_gate(target_qubit_index, PROJ_1_MATRIX, state);
+}
+
+void rx_gate(UINT target_qubit_index, double angle, StateVector& state) {
+    const double cosval = cos(angle / 2.);
+    const double sinval = sin(angle / 2.);
+    Complex matrix[4] = {cosval, 1.i * sinval, 1.i * sinval, cosval};
+    single_qubit_dense_matrix_gate(target_qubit_index, matrix, state);
+}
+
+void ry_gate(UINT target_qubit_index, double angle, StateVector& state) {
+    const double cosval = cos(angle / 2.);
+    const double sinval = sin(angle / 2.);
+    Complex matrix[4] = {cosval, sinval, -sinval, cosval};
+    single_qubit_dense_matrix_gate(target_qubit_index, matrix, state);
+}
+
+void single_qubit_diagonal_matrix_gate(UINT target_qubit_index,
+                                       const Complex diagonal_matrix[2],
+                                       StateVector& state) {
+    UINT mask = 1ULL << target_qubit_index;
+    auto amplitudes = state.amplitudes_raw();
+    Kokkos::parallel_for(
+        state.dim(), KOKKOS_LAMBDA(const UINT& it) {
+            int bitval = ((it & mask) != 0);
+            amplitudes[it] *= diagonal_matrix[bitval];
+        });
+}
+
+void rz_gate(UINT target_qubit_index, double angle, StateVector& state) {
+    const double cosval = cos(angle / 2.);
+    const double sinval = sin(angle / 2.);
+    Complex diagonal_matrix[2] = {cosval + 1.i * sinval, cosval - 1.i * sinval};
+    single_qubit_diagonal_matrix_gate(target_qubit_index, diagonal_matrix, state);
 }

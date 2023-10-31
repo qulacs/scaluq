@@ -62,3 +62,15 @@ void P1::update_quantum_state(StateVector& state_vector) const {
     p1_gate(this->_target, state_vector);
 }
 
+void RX::update_quantum_state(StateVector& state_vector) const {
+    rx_gate(this->_target, -(this->_angle), state_vector);
+}
+
+void RY::update_quantum_state(StateVector& state_vector) const {
+    ry_gate(this->_target, -(this->_angle), state_vector);
+}
+
+void RZ::update_quantum_state(StateVector& state_vector) const {
+    rz_gate(this->_target, -(this->_angle), state_vector);
+}
+

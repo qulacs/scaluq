@@ -33,3 +33,9 @@ void sqrtydag_gate(UINT target_qubit_index, StateVector& state);
 void p0_gate(UINT target_qubit_index, StateVector& state);
 
 void p1_gate(UINT target_qubit_index, StateVector& state);
+
+void rx_gate(UINT target_qubit_index, double angle, StateVector& state);
+
+void ry_gate(UINT target_qubit_index, double angle, StateVector& state);
+
+void rz_gate(UINT target_qubit_index, double angle, StateVector& state);
