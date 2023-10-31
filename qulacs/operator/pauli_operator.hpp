@@ -31,6 +31,9 @@ public:
         return {_bit_flip_mask, _phase_flip_mask};
     }
     [[nodiscard]] std::string get_pauli_string() const;
+    [[nodiscard]] inline PauliOperator get_dagger() const {
+        return PauliOperator(_target_qubit_list, _pauli_id_list, std::conj(_coef));
+    }
 
     inline void change_coef(Complex new_coef) { _coef = new_coef; }
     void add_single_pauli(UINT target_qubit, UINT pauli_id);
