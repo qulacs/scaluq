@@ -2,6 +2,7 @@
 
 #include "gate.hpp"
 
+namespace qulacs {
 class PauliX : public QuantumGate {
     UINT _target;
 
@@ -10,3 +11,4 @@ public:
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
+}  // namespace qulacs
