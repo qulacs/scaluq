@@ -32,5 +32,7 @@
 *.app
 
 *.egg-info
+/.mypy_cache
 /.vscode
+/bin
 /build
