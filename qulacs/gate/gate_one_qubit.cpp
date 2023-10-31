@@ -64,14 +64,14 @@ void P1::update_quantum_state(StateVector& state_vector) const {
 }
 
 void RX::update_quantum_state(StateVector& state_vector) const {
-    rx_gate(this->_target, -(this->_angle), state_vector);
+    rx_gate(this->_target, this->_angle, state_vector);
 }
 
 void RY::update_quantum_state(StateVector& state_vector) const {
-    ry_gate(this->_target, -(this->_angle), state_vector);
+    ry_gate(this->_target, this->_angle, state_vector);
 }
 
 void RZ::update_quantum_state(StateVector& state_vector) const {
-    rz_gate(this->_target, -(this->_angle), state_vector);
+    rz_gate(this->_target, this->_angle, state_vector);
 }
 }  // namespace qulacs
