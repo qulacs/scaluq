@@ -2,6 +2,7 @@
 
 #include "constant.hpp"
 
+namespace qulacs {
 PauliOperator::PauliOperator(Complex coef) : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {}
 
 PauliOperator::PauliOperator(std::string_view pauli_string, Complex coef)
@@ -189,3 +190,5 @@ PauliOperator& PauliOperator::operator*=(const PauliOperator& target) {
     *this = *this * target;
     return *this;
 };
+
+}  // namespace qulacs

@@ -4,6 +4,7 @@
 
 #include "test_environment.hpp"
 
+namespace qulacs {
 const double eps = 1e-12;
 
 TEST(DummyTest, Dummy) {
@@ -13,3 +14,4 @@ TEST(DummyTest, Dummy) {
         ASSERT_EQ(state.amplitudes_raw().size(), 1ULL << n);
     }
 }
+}  // namespace qulacs

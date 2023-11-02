@@ -4,6 +4,7 @@
 
 #include "../test_environment.hpp"
 
+namespace qulacs {
 const double eps = 1e-12;
 
 TEST(StateVectorTest, HaarRandomStateNorm) {
@@ -13,3 +14,4 @@ TEST(StateVectorTest, HaarRandomStateNorm) {
         ASSERT_NEAR(state.compute_squared_norm(), 1., eps);
     }
 }
+}  // namespace qulacs

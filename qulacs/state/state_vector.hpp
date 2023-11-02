@@ -5,6 +5,7 @@
 
 #include "../types.hpp"
 
+namespace qulacs {
 class StateVector {
     UINT _n_qubits;
     UINT _dim;
@@ -31,3 +32,4 @@ public:
 
     void normalize();
 };
+}  // namespace qulacs

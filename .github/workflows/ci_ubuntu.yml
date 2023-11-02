@@ -33,8 +33,8 @@ jobs:
       - name: Setup cmake
         uses: lukka/get-cmake@latest
 
-      - name: Install boost, Ninja
-        run: sudo apt install libboost-dev ninja-build
+      - name: Install Ninja
+        run: sudo apt install ninja-build
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2

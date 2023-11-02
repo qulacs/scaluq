@@ -6,6 +6,7 @@
 #include "../state/state_vector.hpp"
 #include "../types.hpp"
 
+namespace qulacs {
 class PauliOperator {
     std::vector<UINT> _target_qubit_list, _pauli_id_list;
     Complex _coef;
@@ -53,3 +54,5 @@ public:
         return PauliOperator(*this) * target;
     }
 };
+
+}  // namespace qulacs

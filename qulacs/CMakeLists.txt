@@ -6,6 +6,7 @@ target_sources(qulacs PRIVATE
     gate/gate_one_qubit.cpp
     gate/update_ops_one_qubit.cpp
     operator/pauli_operator.cpp
+    gate/constant.cpp
     state/state_vector.cpp
     util/random.cpp
 )
