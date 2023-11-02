@@ -3,6 +3,10 @@
 #include <operator/pauli_operator.hpp>
 #include <state/state_vector.hpp>
 
+#include "../test_environment.hpp"
+
+using namespace qulacs;
+
 TEST(PauliOperatorTest, ContainsExtraWhitespace) {
     PauliOperator expected = PauliOperator("X 0", 1.0);
     PauliOperator pauli_whitespace = PauliOperator("X 0 ", 1.0);
@@ -25,7 +29,7 @@ TEST(PauliOperatorTest, PauliQubitOverflow) {
     std::string Pauli_string = "X 0 X 1 X 3";
     PauliOperator pauli = PauliOperator(Pauli_string, coef);
     StateVector state = StateVector::Haar_random_state(n);
-    EXPECT_THROW(pauli.get_expectation_value(state), std::runtime_error);
+    EXPECT_THROW(auto exp = pauli.get_expectation_value(state), std::runtime_error);
 }
 
 TEST(PauliOperatorTest, BrokenPauliStringA) {

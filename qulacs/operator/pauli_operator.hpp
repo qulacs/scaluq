@@ -5,12 +5,13 @@
 
 #include "../state/state_vector.hpp"
 #include "../types.hpp"
+#include "../util/bit_vector.hpp"
 
 namespace qulacs {
 class PauliOperator {
     std::vector<UINT> _target_qubit_list, _pauli_id_list;
     Complex _coef;
-    UINT _bit_flip_mask, _phase_flip_mask;
+    BitVector _bit_flip_mask, _phase_flip_mask;
 
 public:
     PauliOperator(Complex coef = 1.);
@@ -19,7 +20,9 @@ public:
                   const std::vector<UINT>& pauli_id_list,
                   Complex coef = 1.);
     PauliOperator(const std::vector<UINT>& pauli_id_par_qubit, Complex coef = 1.);
-    PauliOperator(UINT bit_flip_mask, UINT phase_flip_mask, Complex coef = 1.);
+    PauliOperator(const BitVector& bit_flip_mask,
+                  const BitVector& phase_flip_mask,
+                  Complex coef = 1.);
 
     [[nodiscard]] inline Complex get_coef() const { return _coef; }
     [[nodiscard]] inline const std::vector<UINT>& get_target_qubit_list() const {
@@ -28,12 +31,17 @@ public:
     [[nodiscard]] inline const std::vector<UINT>& get_pauli_id_list() const {
         return _pauli_id_list;
     }
-    [[nodiscard]] inline std::tuple<UINT, UINT> get_XZ_mask_representation() const {
+    [[nodiscard]] inline std::tuple<const BitVector&, const BitVector&> get_XZ_mask_representation()
+        const {
         return {_bit_flip_mask, _phase_flip_mask};
     }
     [[nodiscard]] std::string get_pauli_string() const;
     [[nodiscard]] inline PauliOperator get_dagger() const {
         return PauliOperator(_target_qubit_list, _pauli_id_list, std::conj(_coef));
+    }
+    [[nodiscard]] UINT get_qubit_count() const {
+        if (_target_qubit_list.empty()) return 0;
+        return std::ranges::max(_target_qubit_list);
     }
 
     inline void change_coef(Complex new_coef) { _coef = new_coef; }
