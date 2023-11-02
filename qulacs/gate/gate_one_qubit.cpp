@@ -3,23 +3,23 @@
 #include "update_ops.hpp"
 
 namespace qulacs {
-void Identity::update_quantum_state(StateVector& state_vector) const {
+void I::update_quantum_state(StateVector& state_vector) const {
     i_gate(this->_target, state_vector);
 }
 
-void PauliX::update_quantum_state(StateVector& state_vector) const {
+void X::update_quantum_state(StateVector& state_vector) const {
     x_gate(this->_target, state_vector);
 }
 
-void PauliY::update_quantum_state(StateVector& state_vector) const {
+void Y::update_quantum_state(StateVector& state_vector) const {
     y_gate(this->_target, state_vector);
 }
 
-void PauliZ::update_quantum_state(StateVector& state_vector) const {
+void Z::update_quantum_state(StateVector& state_vector) const {
     z_gate(this->_target, state_vector);
 }
 
-void Hadamard::update_quantum_state(StateVector& state_vector) const {
+void H::update_quantum_state(StateVector& state_vector) const {
     h_gate(this->_target, state_vector);
 }
 
@@ -64,14 +64,14 @@ void P1::update_quantum_state(StateVector& state_vector) const {
 }
 
 void RX::update_quantum_state(StateVector& state_vector) const {
-    rx_gate(this->_target, -(this->_angle), state_vector);
+    rx_gate(this->_target, this->_angle, state_vector);
 }
 
 void RY::update_quantum_state(StateVector& state_vector) const {
-    ry_gate(this->_target, -(this->_angle), state_vector);
+    ry_gate(this->_target, this->_angle, state_vector);
 }
 
 void RZ::update_quantum_state(StateVector& state_vector) const {
-    rz_gate(this->_target, -(this->_angle), state_vector);
+    rz_gate(this->_target, this->_angle, state_vector);
 }
 }  // namespace qulacs

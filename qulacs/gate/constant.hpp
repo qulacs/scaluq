@@ -1,31 +1,24 @@
 #pragma once
 
-#define _USE_MATH_DEFINES
-#include <cmath>
+#include <numbers>
 
 #include "../types.hpp"
 
 namespace qulacs {
 //! PI value
-#ifndef PI
-#ifdef M_PI
-#define PI M_PI
-#else
-#define PI 3.141592653589793
-#endif
-#endif
+constexpr double PI = std::numbers::pi;
 
 //! square root of 2
-#define SQRT2 1.414213562373095
+constexpr double SQRT2 = std::numbers::sqrt2;
 
 //! inverse square root of 2
-#define INVERSE_SQRT2 0.707106781186547
+constexpr double INVERSE_SQRT2 = 0.707106781186547;
 
 //! cosine pi/8
-#define COSPI8 0.923879532511287
+constexpr double COSPI8 = 0.923879532511287;
 
 //! sine pi/8
-#define SINPI8 0.382683432365090
+constexpr double SINPI8 = 0.382683432365090;
 
 //! list of Pauli matrix I,X,Y,Z
 extern const Complex PAULI_MATRIX[4][4];

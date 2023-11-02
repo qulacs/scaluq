@@ -3,47 +3,47 @@
 #include "gate.hpp"
 
 namespace qulacs {
-class Identity : public QuantumGate {
+class I : public QuantumGate {
     UINT _target;
 
 public:
-    Identity(UINT target) : _target(target){};
+    I(UINT target) : _target(target){};
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class PauliX : public QuantumGate {
+class X : public QuantumGate {
     UINT _target;
 
 public:
-    PauliX(UINT target) : _target(target){};
+    X(UINT target) : _target(target){};
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class PauliY : public QuantumGate {
+class Y : public QuantumGate {
     UINT _target;
 
 public:
-    PauliY(UINT target) : _target(target){};
+    Y(UINT target) : _target(target){};
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class PauliZ : public QuantumGate {
+class Z : public QuantumGate {
     UINT _target;
 
 public:
-    PauliZ(UINT target) : _target(target){};
+    Z(UINT target) : _target(target){};
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class Hadamard : public QuantumGate {
+class H : public QuantumGate {
     UINT _target;
 
 public:
-    Hadamard(UINT target) : _target(target){};
+    H(UINT target) : _target(target){};
 
     void update_quantum_state(StateVector& state_vector) const override;
 };

@@ -133,14 +133,14 @@ void p1_gate(UINT target_qubit_index, StateVector& state) {
 void rx_gate(UINT target_qubit_index, double angle, StateVector& state) {
     const double cosval = cos(angle / 2.);
     const double sinval = sin(angle / 2.);
-    Complex matrix[4] = {cosval, 1.i * sinval, 1.i * sinval, cosval};
+    Complex matrix[4] = {cosval, -1.i * sinval, -1.i * sinval, cosval};
     single_qubit_dense_matrix_gate(target_qubit_index, matrix, state);
 }
 
 void ry_gate(UINT target_qubit_index, double angle, StateVector& state) {
     const double cosval = cos(angle / 2.);
     const double sinval = sin(angle / 2.);
-    Complex matrix[4] = {cosval, sinval, -sinval, cosval};
+    Complex matrix[4] = {cosval, -sinval, sinval, cosval};
     single_qubit_dense_matrix_gate(target_qubit_index, matrix, state);
 }
 
@@ -159,7 +159,7 @@ void single_qubit_diagonal_matrix_gate(UINT target_qubit_index,
 void rz_gate(UINT target_qubit_index, double angle, StateVector& state) {
     const double cosval = cos(angle / 2.);
     const double sinval = sin(angle / 2.);
-    Complex diagonal_matrix[2] = {cosval + 1.i * sinval, cosval - 1.i * sinval};
+    Complex diagonal_matrix[2] = {cosval - 1.i * sinval, cosval + 1.i * sinval};
     single_qubit_diagonal_matrix_gate(target_qubit_index, diagonal_matrix, state);
 }
 }  // namespace qulacs
