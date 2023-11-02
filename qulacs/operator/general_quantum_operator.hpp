@@ -30,7 +30,9 @@ public:
 
     [[nodiscard]] Complex solve_gound_state_eigenvalue_by_arnoldi_method(const StateVector& state,
                                                                          UINT iter_count,
-                                                                         Complex mu = 0.) const;
+                                                                         Complex mu) const;
+    [[nodiscard]] Complex solve_gound_state_eigenvalue_by_arnoldi_method(const StateVector& state,
+                                                                         UINT iter_count) const;
     [[nodiscard]] Complex solve_gound_state_eigenvalue_by_power_method(const StateVector& state,
                                                                        UINT iter_count,
                                                                        Complex mu = 0.) const;

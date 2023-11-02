@@ -51,6 +51,10 @@ GeneralQuantumOperator GeneralQuantumOperator::get_dagger() const {
 }
 
 Complex GeneralQuantumOperator::get_expectation_value(const StateVector& state_vector) const {
+    if (_n_qubits > state_vector.n_qubits()) {
+        throw std::runtime_error(
+            "GeneralQuantumOperator::get_expectation_value: n_qubits of state_vector is too small");
+    }
     Complex res;
     Kokkos::parallel_reduce(
         "expectation_value",
@@ -63,6 +67,16 @@ Complex GeneralQuantumOperator::get_expectation_value(const StateVector& state_v
 }
 Complex GeneralQuantumOperator::get_transition_amplitude(
     const StateVector& state_vector_bra, const StateVector& state_vector_ket) const {
+    if (state_vector_bra.n_qubits() != state_vector_ket.n_qubits()) {
+        throw std::runtime_error(
+            "GeneralQuantumOperator::get_transition_amplitude: n_qubits of state_vector_bra and "
+            "state_vector_ket must be same");
+    }
+    if (_n_qubits > state_vector_bra.n_qubits()) {
+        throw std::runtime_error(
+            "GeneralQuantumOperator::get_transition_amplitude: n_qubits of state_vector is too "
+            "small");
+    }
     Complex res;
     Kokkos::parallel_reduce(
         "expectation_value",
@@ -74,5 +88,8 @@ Complex GeneralQuantumOperator::get_transition_amplitude(
         res);
     return res;
 }
+
+Complex GeneralQuantumOperator::solve_gound_state_eigenvalue_by_arnoldi_method(
+    const StateVector& state, UINT iter_count, Complex mu) const {}
 
 }  // namespace qulacs
