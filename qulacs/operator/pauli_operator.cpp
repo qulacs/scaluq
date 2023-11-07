@@ -51,7 +51,7 @@ PauliOperator::PauliOperator(const BitVector& bit_flip_mask,
     if (auto msb = phase_flip_mask.msb();
         msb != std::numeric_limits<UINT>::max() && max_target < msb)
         max_target = msb;
-    for (UINT target_idx = 0; target_idx < max_target; target_idx++) {
+    for (UINT target_idx = 0; target_idx <= max_target; target_idx++) {
         if (!bit_flip_mask[target_idx]) {
             if (!phase_flip_mask[target_idx])
                 continue;
@@ -90,8 +90,12 @@ void PauliOperator::add_single_pauli(UINT target_qubit, UINT pauli_id) {
         throw std::runtime_error(
             "PauliOperator::add_single_pauli: You cannot add single pauli twice for same qubit.");
     }
-    if (pauli_id == 1 || pauli_id == 2) _bit_flip_mask[target_qubit] ^= true;
-    if (pauli_id == 2 || pauli_id == 3) _phase_flip_mask[target_qubit] ^= true;
+    if (pauli_id == 1 || pauli_id == 2) {
+        _bit_flip_mask[target_qubit] = true;
+    }
+    if (pauli_id == 2 || pauli_id == 3) {
+        _phase_flip_mask[target_qubit] = true;
+    }
 }
 
 Complex PauliOperator::get_expectation_value(const StateVector& state_vector) const {

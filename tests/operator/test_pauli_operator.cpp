@@ -77,9 +77,9 @@ struct PauliTestParam {
     PauliOperator expected;
 
     PauliTestParam(const std::string& test_name,
-                   const PauliOperator op1,
-                   const PauliOperator op2,
-                   const PauliOperator expected)
+                   const PauliOperator& op1,
+                   const PauliOperator& op2,
+                   const PauliOperator& expected)
         : test_name(test_name), op1(op1), op2(op2), expected(expected) {}
 };
 

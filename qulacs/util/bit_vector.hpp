@@ -10,14 +10,14 @@ class BitVector {
 public:
     constexpr static UINT BIT_SIZE = sizeof(UINT) * 8;
 
-    BitVector(UINT sz = 0) : _data((sz + BIT_SIZE - 1) / BIT_SIZE) {}
+    BitVector(UINT sz = 1) : _data((sz + BIT_SIZE - 1) / BIT_SIZE) {}
 
     [[nodiscard]] inline const std::vector<UINT>& data_raw() const { return _data; }
     [[nodiscard]] inline std::vector<UINT>& data_raw() { return _data; }
 
     [[nodiscard]] inline bool get(UINT idx) const {
         if (idx >= _data.size() * BIT_SIZE) return false;
-        return _data[idx / BIT_SIZE] >> (idx % BIT_SIZE);
+        return _data[idx / BIT_SIZE] >> (idx % BIT_SIZE) & 1ULL;
     }
     inline void set(UINT idx, bool b) {
         if (idx >= _data.size() * BIT_SIZE) _data.resize(idx / BIT_SIZE + 1);
