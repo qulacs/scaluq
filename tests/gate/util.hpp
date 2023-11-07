@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <Eigen/Core>
+#include <state/state_vector.hpp>
 #include <types.hpp>
 
 namespace qulacs {
