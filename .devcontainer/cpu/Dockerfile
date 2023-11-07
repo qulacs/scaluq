@@ -16,6 +16,7 @@ ENV PYTHONPATH="${PROJECT_DIR}/build:${PYTHONPATH}"
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     clang-format \
+    g++-10 \
     git \
     gdb \
     cmake \
