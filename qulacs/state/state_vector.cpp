@@ -14,37 +14,6 @@ inline static UINT insert_zero_to_basis_index(UINT basis_index, UINT basis_mask,
     return temp_basis + basis_index % basis_mask;
 }
 
-double marginal_prob(const std::vector<UINT>& sorted_target_qubit_index_list,
-                     const std::vector<UINT>& measured_value_list,
-                     UINT target_qubit_index_count,
-                     const Kokkos::View<Complex*>& state,
-                     UINT dim) {
-    UINT loop_dim = dim >> target_qubit_index_count;
-    double sum = 0.;
-
-    // Create views on the device
-    auto d_sorted_target_qubit_index_list =
-        convert_host_vector_to_device_view(sorted_target_qubit_index_list);
-    auto d_measured_value_list = convert_host_vector_to_device_view(measured_value_list);
-
-    Kokkos::parallel_reduce(
-        "marginal_prob",
-        Kokkos::RangePolicy<>(0, loop_dim),
-        KOKKOS_LAMBDA(const UINT& i, double& lsum) {
-            UINT basis = i;
-            for (UINT cursor = 0; cursor < target_qubit_index_count; cursor++) {
-                UINT insert_index = d_sorted_target_qubit_index_list[cursor];
-                UINT mask = 1ULL << insert_index;
-                basis = insert_zero_to_basis_index(basis, mask, insert_index);
-                basis ^= mask * d_measured_value_list[cursor];
-            }
-            lsum += std::norm(state[basis]);
-        },
-        sum);
-
-    return sum;
-}
-
 StateVector::StateVector(UINT n_qubits)
     : _n_qubits(n_qubits),
       _dim(1 << n_qubits),
@@ -65,7 +34,7 @@ void StateVector::set_computational_basis(UINT basis) {
     _amplitudes[basis] = 1;
 }
 
-StateVector StateVector::Haar_random_state(UINT n_qubits, uint64_t seed) {
+StateVector StateVector::Haar_random_state(UINT n_qubits, UINT seed) {
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
     StateVector state(n_qubits);
     Kokkos::parallel_for(
@@ -77,8 +46,6 @@ StateVector StateVector::Haar_random_state(UINT n_qubits, uint64_t seed) {
     state.normalize();
     return state;
 }
-
-StateVector StateVector::Haar_random_state(UINT n_qubits) { return Haar_random_state(n_qubits, 0); }
 
 UINT StateVector::n_qubits() const { return this->_n_qubits; }
 
@@ -123,6 +90,7 @@ double StateVector::get_zero_probability(UINT target_qubit_index) const {
     const UINT mask = 1ULL << target_qubit_index;
     double sum = 0.;
     Kokkos::parallel_reduce(
+        "zero_prob",
         loop_dim,
         KOKKOS_CLASS_LAMBDA(const int i, double& lsum) {
             UINT basis_0 = insert_zero_to_basis_index(i, mask, target_qubit_index);
@@ -144,13 +112,121 @@ double StateVector::get_marginal_probability(const std::vector<UINT>& measured_v
             target_value.push_back(measured_value);
         }
     }
-    return marginal_prob(target_index, target_value, (UINT)target_index.size(), _amplitudes, _dim);
+
+    UINT loop_dim = _dim >> target_index.size();
+    double sum = 0.;
+
+    // Create views on the device
+    auto d_sorted_target_qubit_index_list = convert_host_vector_to_device_view(target_index);
+    auto d_measured_value_list = convert_host_vector_to_device_view(target_value);
+
+    Kokkos::parallel_reduce(
+        "marginal_prob",
+        Kokkos::RangePolicy<>(0, loop_dim),
+        KOKKOS_CLASS_LAMBDA(const UINT& i, double& lsum) {
+            UINT basis = i;
+            for (UINT cursor = 0; cursor < d_sorted_target_qubit_index_list.size(); cursor++) {
+                UINT insert_index = d_sorted_target_qubit_index_list[cursor];
+                UINT mask = 1ULL << insert_index;
+                basis = insert_zero_to_basis_index(basis, mask, insert_index);
+                basis ^= mask * d_measured_value_list[cursor];
+            }
+            lsum += std::norm(this->_amplitudes[basis]);
+        },
+        sum);
+
+    return sum;
+}
+
+double StateVector::get_entropy() const {
+    double ent = 0;
+    const double eps = 1e-15;
+    Kokkos::parallel_reduce(
+        "get_entropy",
+        _dim,
+        KOKKOS_CLASS_LAMBDA(const UINT& idx, double& lsum) {
+            double prob = std::norm(_amplitudes[idx]);
+            prob = (prob > eps) ? prob : eps;
+            lsum += -prob * std::log(prob);
+        },
+        ent);
+    return ent;
+}
+
+void StateVector::add_state(const StateVector& state) {
+    Kokkos::parallel_for(
+        this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] += state[i]; });
 }
 
 void StateVector::add_state_with_coef(const Complex& coef, const StateVector& state) {
     Kokkos::parallel_for(
         this->_dim,
         KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] += coef * state[i]; });
+}
+
+void StateVector::multiply_coef(const Complex& coef) {
+    Kokkos::parallel_for(
+        this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] *= coef; });
+}
+
+void StateVector::multiply_elementwise_function(const std::function<Complex(UINT)>& func) {
+    Kokkos::parallel_for(
+        this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] *= func(i); });
+}
+
+/**
+ * 未テスト！
+ */
+std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
+    Kokkos::vector<double> stacked_prob(_dim + 1, 0);
+    Kokkos::parallel_scan(
+        "compute_stacked_prob",
+        _dim,
+        KOKKOS_CLASS_LAMBDA(const int& i, double& update, const bool final) {
+            double prob = std::norm(_amplitudes[i]);
+            if (final) {
+                stacked_prob[i + 1] = update + prob;
+            }
+            update += prob;
+        });
+
+    Kokkos::View<UINT*> result("result", sampling_count);
+    Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
+    Kokkos::parallel_for(
+        sampling_count, KOKKOS_CLASS_LAMBDA(const UINT& i) {
+            auto rand_gen = rand_pool.get_state();
+            double r = rand_gen.drand(0., 1.);
+
+            result[i] = stacked_prob.lower_bound(0, _dim + 1, r);
+            // std::cout << r << " " << result[i] << std::endl;
+            rand_pool.free_state(rand_gen);
+        });
+
+    return convert_device_view_to_host_vector<UINT>(result);
+}
+
+std::string StateVector::to_string() const {
+    std::stringstream os;
+    os << " *** Quantum State ***" << std::endl;
+    os << " * Qubit Count : " << _n_qubits << std::endl;
+    os << " * Dimension   : " << _dim << std::endl;
+    os << " * State vector : \n";
+    for (UINT i = 0; i < _dim; ++i) {
+        os << _amplitudes[i] << std::endl;
+    }
+    return os.str();
+}
+
+std::ostream& operator<<(std::ostream& os, const StateVector& state) {
+    os << state.to_string();
+    return os;
+}
+
+std::string StateVector::get_device_name() const {
+#ifdef KOKKOS_ENABLE_CUDA
+    return "gpu";
+#endif
+    return "cpu";
 }
 
 }  // namespace qulacs

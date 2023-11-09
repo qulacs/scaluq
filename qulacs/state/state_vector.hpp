@@ -2,6 +2,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
+#include <Kokkos_Vector.hpp>
 #include <vector>
 
 #include "../types.hpp"
@@ -13,13 +14,13 @@ class StateVector {
     Kokkos::View<Complex*> _amplitudes;
 
 public:
+    StateVector() = default;
     StateVector(UINT n_qubits);
 
     /**
      * @param seed The seed value for the random number generator. If omitted, 0 is used.
      */
-    static StateVector Haar_random_state(UINT n_qubits, uint64_t seed);
-    static StateVector Haar_random_state(UINT n_qubits);
+    static StateVector Haar_random_state(UINT n_qubits, UINT seed = 0);
 
     /**
      * @brief zero-fill
@@ -46,7 +47,19 @@ public:
 
     double get_zero_probability(UINT target_qubit_index) const;
     double get_marginal_probability(const std::vector<UINT>& measured_values) const;
+    double get_entropy() const;
 
+    void add_state(const StateVector& state);
     void add_state_with_coef(const Complex& coef, const StateVector& state);
+    void multiply_coef(const Complex& coef);
+    void multiply_elementwise_function(const std::function<Complex(UINT)>& func);
+
+    std::vector<UINT> sampling(UINT sampling_count, UINT seed = 0) const;
+
+    std::string to_string() const;
+
+    friend std::ostream& operator<<(std::ostream& os, const StateVector& state);
+
+    std::string get_device_name() const;
 };
 }  // namespace qulacs
