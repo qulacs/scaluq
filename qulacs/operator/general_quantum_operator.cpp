@@ -55,14 +55,10 @@ Complex GeneralQuantumOperator::get_expectation_value(const StateVector& state_v
         throw std::runtime_error(
             "GeneralQuantumOperator::get_expectation_value: n_qubits of state_vector is too small");
     }
-    Complex res;
-    Kokkos::parallel_reduce(
-        "expectation_value",
-        _operator_list.size(),
-        KOKKOS_CLASS_LAMBDA(const UINT& operator_idx, Complex& sum) {
-            sum += _operator_list[operator_idx].get_expectation_value(state_vector);
-        },
-        res);
+    Complex res = 0.;
+    for (const PauliOperator& pauli : _operator_list) {
+        res += pauli.get_expectation_value(state_vector);
+    }
     return res;
 }
 Complex GeneralQuantumOperator::get_transition_amplitude(
@@ -88,8 +84,5 @@ Complex GeneralQuantumOperator::get_transition_amplitude(
         res);
     return res;
 }
-
-Complex GeneralQuantumOperator::solve_gound_state_eigenvalue_by_arnoldi_method(
-    const StateVector& state, UINT iter_count, Complex mu) const {}
 
 }  // namespace qulacs

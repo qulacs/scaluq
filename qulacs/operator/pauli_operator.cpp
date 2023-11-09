@@ -110,7 +110,6 @@ Complex PauliOperator::get_expectation_value(const StateVector& state_vector) co
     if (bit_flip_mask == 0) {
         double res;
         Kokkos::parallel_reduce(
-            "expectation_value",
             state_vector.dim(),
             KOKKOS_CLASS_LAMBDA(const UINT& state_idx, double& sum) {
                 double tmp = std::norm(amplitudes[state_idx]);
@@ -127,13 +126,12 @@ Complex PauliOperator::get_expectation_value(const StateVector& state_vector) co
     Complex global_phase = PHASE_90ROT[global_phase_90rot_count % 4];
     double res;
     Kokkos::parallel_reduce(
-        "expectation_value",
         state_vector.dim() >> 1,
         KOKKOS_CLASS_LAMBDA(const UINT& state_idx, double& sum) {
             UINT basis_0 = (state_idx & upper_mask) << 1 | (state_idx & lower_mask);
             UINT basis_1 = basis_0 ^ bit_flip_mask;
             double tmp =
-                std::real(std::conj(amplitudes[basis_0]) * amplitudes[basis_1] * global_phase * 2.);
+                std::real(amplitudes[basis_0] * std::conj(amplitudes[basis_1]) * global_phase * 2.);
             if (std::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
             sum += tmp;
         },
@@ -158,7 +156,6 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
     if (bit_flip_mask == 0) {
         Complex res;
         Kokkos::parallel_reduce(
-            "expectation_value",
             state_vector_bra.dim(),
             KOKKOS_CLASS_LAMBDA(const UINT& state_idx, Complex& sum) {
                 Complex tmp = std::conj(amplitudes_bra[state_idx]) * amplitudes_ket[state_idx];
@@ -175,7 +172,6 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
     Complex global_phase = PHASE_90ROT[global_phase_90rot_count % 4];
     Complex res;
     Kokkos::parallel_reduce(
-        "expectation_value",
         state_vector_bra.dim() >> 1,
         KOKKOS_CLASS_LAMBDA(const UINT& state_idx, Complex& sum) {
             UINT basis_0 = (state_idx & upper_mask) << 1 | (state_idx & lower_mask);
