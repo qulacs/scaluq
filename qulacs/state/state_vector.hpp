@@ -23,7 +23,8 @@ public:
     /**
      * @param seed The seed value for the random number generator. If omitted, 0 is used.
      */
-    static StateVector Haar_random_state(UINT n_qubits, UINT seed = 0);
+    static StateVector Haar_random_state(UINT n_qubits, UINT seed);
+    static StateVector Haar_random_state(UINT n_qubits);
 
     /**
      * @brief zero-fill
@@ -60,6 +61,8 @@ public:
     std::vector<UINT> sampling(UINT sampling_count, UINT seed = 0) const;
 
     std::string to_string() const;
+
+    void load(const std::vector<Complex>& other);
 
     friend std::ostream& operator<<(std::ostream& os, const StateVector& state);
 

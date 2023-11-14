@@ -59,6 +59,20 @@ StateVector StateVector::Haar_random_state(UINT n_qubits, UINT seed) {
     return state;
 }
 
+StateVector StateVector::Haar_random_state(UINT n_qubits) {
+    std::random_device rd;
+    Kokkos::Random_XorShift64_Pool<> rand_pool(rd());
+    StateVector state(n_qubits);
+    Kokkos::parallel_for(
+        state._dim, KOKKOS_LAMBDA(const int i) {
+            auto rand_gen = rand_pool.get_state();
+            state._amplitudes[i] = Complex(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
+            rand_pool.free_state(rand_gen);
+        });
+    state.normalize();
+    return state;
+}
+
 UINT StateVector::n_qubits() const { return this->_n_qubits; }
 
 UINT StateVector::dim() const { return this->_dim; }
@@ -68,11 +82,7 @@ Kokkos::View<Complex*>& StateVector::amplitudes_raw() { return this->_amplitudes
 const Kokkos::View<Complex*>& StateVector::amplitudes_raw() const { return this->_amplitudes; }
 
 std::vector<Complex> StateVector::amplitudes() const {
-    std::vector<Complex> host_vector(_dim);
-    auto host_mirror_view = Kokkos::create_mirror_view(_amplitudes);
-    Kokkos::deep_copy(host_mirror_view, _amplitudes);
-    std::copy(host_mirror_view.data(), host_mirror_view.data() + _dim, host_vector.begin());
-    return host_vector;
+    return convert_device_view_to_host_vector(_amplitudes);
 }
 
 Complex& StateVector::operator[](const int index) { return this->_amplitudes[index]; }
@@ -229,6 +239,15 @@ std::string StateVector::to_string() const {
         os << _amplitudes[i] << std::endl;
     }
     return os.str();
+}
+
+void StateVector::load(const std::vector<Complex>& other) {
+    if (other.size() != _dim) {
+        throw InvalidStateVectorSizeException(
+            "Error: QuantumStateCpu::load(vector<Complex>&): invalid "
+            "length of state");
+    }
+    _amplitudes = convert_host_vector_to_device_view(other);
 }
 
 std::ostream& operator<<(std::ostream& os, const StateVector& state) {
