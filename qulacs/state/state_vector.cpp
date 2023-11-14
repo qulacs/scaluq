@@ -21,6 +21,13 @@ StateVector::StateVector(UINT n_qubits)
     set_zero_state();
 }
 
+StateVector& StateVector::operator=(const StateVector& other) {
+    _n_qubits = other.n_qubits();
+    _dim = other.dim();
+    Kokkos::deep_copy(_amplitudes, other.amplitudes_raw());
+    return *this;
+}
+
 void StateVector::set_zero_state() {
     Kokkos::deep_copy(_amplitudes, 0);
     _amplitudes[0] = 1;
@@ -195,10 +202,7 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
     Kokkos::parallel_for(
         sampling_count, KOKKOS_CLASS_LAMBDA(const UINT& i) {
             auto rand_gen = rand_pool.get_state();
-            double r = rand_gen.drand(0., 1.);
-
-            result[i] = stacked_prob.lower_bound(0, _dim + 1, r);
-            // std::cout << r << " " << result[i] << std::endl;
+            result[i] = stacked_prob.lower_bound(0, _dim + 1, rand_gen.drand(0., 1.)) - 1;
             rand_pool.free_state(rand_gen);
         });
 

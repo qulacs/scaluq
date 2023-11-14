@@ -17,6 +17,8 @@ public:
     StateVector() = default;
     StateVector(UINT n_qubits);
 
+    StateVector& operator=(const StateVector& other);
+
     /**
      * @param seed The seed value for the random number generator. If omitted, 0 is used.
      */

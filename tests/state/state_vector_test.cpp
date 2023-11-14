@@ -111,4 +111,13 @@ TEST(StateVectorTest, SamplingSuperpositionState) {
     ASSERT_GE(pass_count, test_count - 1);
 }
 
+TEST(StateVectorTest, ExecutionSpaceTest) {
+    StateVector tmp;
+#ifdef __CUDA_ARCH__
+    ASSERT_EQ(tmp.get_device_name(), "gpu");
+#else
+    ASSERT_EQ(tmp.get_device_name(), "cpu");
+#endif
+}
+
 }  // namespace qulacs
