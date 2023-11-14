@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "../types.hpp"
+#include "../util/exception.hpp"
 
 namespace qulacs {
 class StateVector {

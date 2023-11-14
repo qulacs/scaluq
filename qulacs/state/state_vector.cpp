@@ -37,7 +37,12 @@ void StateVector::set_zero_norm_state() { Kokkos::deep_copy(_amplitudes, 0); }
 
 void StateVector::set_computational_basis(UINT basis) {
     Kokkos::deep_copy(_amplitudes, 0);
-    assert(basis < _dim);  // TODO ちゃんと例外を投げる
+    if (basis >= _dim) {
+        throw MatrixIndexOutOfRangeException(
+            "Error: StateVector::set_computational_basis(UINT): "
+            "index of "
+            "computational basis must be smaller than 2^qubit_count");
+    }
     _amplitudes[basis] = 1;
 }
 
@@ -92,7 +97,11 @@ void StateVector::normalize() {
 }
 
 double StateVector::get_zero_probability(UINT target_qubit_index) const {
-    assert(target_qubit_index < _dim);  // TODO ちゃんと例外を投げる
+    if (target_qubit_index >= _n_qubits) {
+        throw QubitIndexOutOfRangeException(
+            "Error: StateVector::get_zero_probability(UINT): index "
+            "of target qubit must be smaller than qubit_count");
+    }
     const UINT loop_dim = _dim / 2;
     const UINT mask = 1ULL << target_qubit_index;
     double sum = 0.;
@@ -108,7 +117,12 @@ double StateVector::get_zero_probability(UINT target_qubit_index) const {
 }
 
 double StateVector::get_marginal_probability(const std::vector<UINT>& measured_values) const {
-    assert(measured_values.size() == this->_n_qubits);
+    if (measured_values.size() != _n_qubits) {
+        throw InvalidQubitCountException(
+            "Error: "
+            "StateVector::get_marginal_probability(vector<UINT>): "
+            "the length of measured_values must be equal to qubit_count");
+    }
 
     std::vector<UINT> target_index;
     std::vector<UINT> target_value;
@@ -123,20 +137,19 @@ double StateVector::get_marginal_probability(const std::vector<UINT>& measured_v
     UINT loop_dim = _dim >> target_index.size();
     double sum = 0.;
 
-    // Create views on the device
-    auto d_sorted_target_qubit_index_list = convert_host_vector_to_device_view(target_index);
-    auto d_measured_value_list = convert_host_vector_to_device_view(target_value);
+    auto d_target_index = convert_host_vector_to_device_view(target_index);
+    auto d_target_value = convert_host_vector_to_device_view(target_value);
 
     Kokkos::parallel_reduce(
         "marginal_prob",
         Kokkos::RangePolicy<>(0, loop_dim),
         KOKKOS_CLASS_LAMBDA(const UINT& i, double& lsum) {
             UINT basis = i;
-            for (UINT cursor = 0; cursor < d_sorted_target_qubit_index_list.size(); cursor++) {
-                UINT insert_index = d_sorted_target_qubit_index_list[cursor];
+            for (UINT cursor = 0; cursor < d_target_index.size(); cursor++) {
+                UINT insert_index = d_target_index[cursor];
                 UINT mask = 1ULL << insert_index;
                 basis = insert_zero_to_basis_index(basis, mask, insert_index);
-                basis ^= mask * d_measured_value_list[cursor];
+                basis ^= mask * d_target_value[cursor];
             }
             lsum += std::norm(this->_amplitudes[basis]);
         },
@@ -181,9 +194,6 @@ void StateVector::multiply_elementwise_function(const std::function<Complex(UINT
         this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] *= func(i); });
 }
 
-/**
- * 未テスト！
- */
 std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
     Kokkos::vector<double> stacked_prob(_dim + 1, 0);
     Kokkos::parallel_scan(
