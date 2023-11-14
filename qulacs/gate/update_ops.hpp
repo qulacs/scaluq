@@ -40,4 +40,8 @@ void rx_gate(UINT target_qubit_index, double angle, StateVector& state);
 void ry_gate(UINT target_qubit_index, double angle, StateVector& state);
 
 void rz_gate(UINT target_qubit_index, double angle, StateVector& state);
-}
+
+void cnot_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& state);
+
+void cz_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& state);
+}  // namespace qulacs
