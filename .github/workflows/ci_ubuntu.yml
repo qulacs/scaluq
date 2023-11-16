@@ -15,7 +15,7 @@ on:
       - "*.md"
 
 jobs:
-  gcc8-build:
+  gcc10-build:
     name: GCC10 build
     strategy:
       matrix:
