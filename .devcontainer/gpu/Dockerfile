@@ -8,7 +8,13 @@ ENV PROJECT_DIR="/workspaces/qulacs"
 ENV PYTHONPATH="${PROJECT_DIR}/dist:${PYTHONPATH}"
 ENV PYTHONPATH="${PROJECT_DIR}/build:${PYTHONPATH}"
 
-RUN apt-get update \
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:ubuntu-toolchain-r/test && \
+    apt-get update && \
+    apt-get install -y gcc-10 g++-10 && \
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100 \
     # Remove imagemagick due to https://security-tracker.debian.org/tracker/CVE-2019-10131, which is done in Microsoft's devcontainer image.
     && apt-get purge -y imagemagick imagemagick-6-common \
     && apt-get install -y --no-install-recommends \

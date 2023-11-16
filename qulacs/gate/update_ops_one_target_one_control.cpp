@@ -47,4 +47,5 @@ void cz_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& sta
             ((it & high_mask) << 2) | control_mask | target_mask;
             amplitudes[i] *= -1;
         });
+}
 }  // namespace qulacs
