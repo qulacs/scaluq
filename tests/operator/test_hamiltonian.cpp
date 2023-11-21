@@ -7,10 +7,10 @@
 
 using namespace qulacs;
 
-std::pair<QuantumOperator, Eigen::MatrixXcd> generate_random_observable_with_eigen(UINT n,
-                                                                                   Random& random) {
+std::pair<Operator, Eigen::MatrixXcd> generate_random_observable_with_eigen(UINT n,
+                                                                            Random& random) {
     UINT dim = 1ULL << n;
-    QuantumOperator rand_observable(n);
+    Operator rand_observable(n);
     Eigen::MatrixXcd test_rand_observable = Eigen::MatrixXcd::Zero(dim, dim);
 
     UINT term_count = random.int32() % 10 + 1;

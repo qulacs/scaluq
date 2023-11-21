@@ -7,9 +7,9 @@
 #include "pauli_operator.hpp"
 
 namespace qulacs {
-class QuantumOperator {
+class Operator {
 public:
-    QuantumOperator(UINT n_qubits);
+    Operator(UINT n_qubits);
 
     [[nodiscard]] inline bool is_hermitian() { return _is_hermitian; }
     [[nodiscard]] inline UINT n_qubits() { return _n_qubits; }
@@ -22,7 +22,7 @@ public:
     void add_operator(PauliOperator&& mpt);
     void add_random_operator(const UINT operator_count = 1);
 
-    [[nodiscard]] QuantumOperator get_dagger() const;
+    [[nodiscard]] Operator get_dagger() const;
 
     [[nodiscard]] Complex get_expectation_value(const StateVector& state_vector) const;
     [[nodiscard]] Complex get_transition_amplitude(const StateVector& state_vector_bra,
