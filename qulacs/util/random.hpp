@@ -15,12 +15,12 @@ public:
 
     Random(UINT seed);
 
-    double uniform();
+    [[nodiscard]] double uniform();
 
-    double normal();
+    [[nodiscard]] double normal();
 
-    UINT int64();
+    [[nodiscard]] UINT int64();
 
-    std::uint32_t int32();
+    [[nodiscard]] std::uint32_t int32();
 };
 }  // namespace qulacs

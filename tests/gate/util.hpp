@@ -80,5 +80,60 @@ static Eigen::MatrixXcd make_2x2_matrix(const Eigen::dcomplex a00,
     return m;
 }
 
+static Eigen::MatrixXcd make_I() { return Eigen::MatrixXcd::Identity(2, 2); }
+
 static Eigen::MatrixXcd make_X() { return make_2x2_matrix(0, 1, 1, 0); }
+
+static Eigen::MatrixXcd make_Y() { return make_2x2_matrix(0, -1.i, 1.i, 0); }
+
+static Eigen::MatrixXcd make_Z() { return make_2x2_matrix(1, 0, 0, -1); }
+
+static Eigen::MatrixXcd make_H() {
+    return make_2x2_matrix(1 / sqrt(2.), 1 / sqrt(2.), 1 / sqrt(2.), -1 / sqrt(2.));
+}
+
+static Eigen::MatrixXcd make_S() { return make_2x2_matrix(1, 0, 0, 1.i); }
+
+static Eigen::MatrixXcd make_Sdag() { return make_2x2_matrix(1, 0, 0, -1.i); }
+
+static Eigen::MatrixXcd make_T() { return make_2x2_matrix(1, 0, 0, (1. + 1.i) / sqrt(2.)); }
+
+static Eigen::MatrixXcd make_Tdag() { return make_2x2_matrix(1, 0, 0, (1. - 1.i) / sqrt(2.)); }
+
+static Eigen::MatrixXcd make_sqrtX() {
+    return make_2x2_matrix(0.5 + 0.5i, 0.5 - 0.5i, 0.5 - 0.5i, 0.5 + 0.5i);
+}
+
+static Eigen::MatrixXcd make_sqrtY() {
+    return make_2x2_matrix(0.5 + 0.5i, -0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i);
+}
+
+static Eigen::MatrixXcd make_sqrtXdag() {
+    return make_2x2_matrix(0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i, 0.5 - 0.5i);
+}
+
+static Eigen::MatrixXcd make_sqrtYdag() {
+    return make_2x2_matrix(0.5 - 0.5i, 0.5 - 0.5i, -0.5 + 0.5i, 0.5 - 0.5i);
+}
+
+static Eigen::MatrixXcd make_P0() { return make_2x2_matrix(1, 0, 0, 0); }
+
+static Eigen::MatrixXcd make_P1() { return make_2x2_matrix(0, 0, 0, 1); }
+
+static Eigen::MatrixXcd make_RX(double angle) {
+    return make_2x2_matrix(std::cos(angle / 2),
+                           -1i * std::sin(angle / 2),
+                           -1i * std::sin(angle / 2),
+                           std::cos(angle / 2));
+}
+
+static Eigen::MatrixXcd make_RY(double angle) {
+    return make_2x2_matrix(
+        std::cos(angle / 2), -std::sin(angle / 2), std::sin(angle / 2), std::cos(angle / 2));
+}
+
+static Eigen::MatrixXcd make_RZ(double angle) {
+    return make_2x2_matrix(std::exp(-1i * (angle / 2)), 0, 0, std::exp(1i * (angle / 2)));
+}
+
 }  // namespace qulacs

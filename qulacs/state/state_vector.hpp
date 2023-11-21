@@ -14,7 +14,7 @@ class StateVector {
 public:
     StateVector(UINT n_qubits);
 
-    static StateVector Haar_random_state(UINT n_qubits);
+    [[nodiscard]] static StateVector Haar_random_state(UINT n_qubits);
 
     [[nodiscard]] UINT n_qubits() const;
 
