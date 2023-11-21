@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.12)
 
 project(qulacs)
 
@@ -20,6 +20,22 @@ endif(NOT DEFINED QULACS_USE_TEST)
 
 message(STATUS "QULACS_USE_PYTHON = ${QULACS_USE_PYTHON}")
 message(STATUS "QULACS_USE_TEST = ${QULACS_USE_TEST}")
+
+### Kokkos options ###
+set(Kokkos_ENABLE_SERIAL Yes)
+if(QULACS_USE_OMP)
+    set(Kokkos_ENABLE_OPENMP Yes)
+endif(QULACS_USE_OMP)
+if(QULACS_USE_CUDA)
+    set(Kokkos_ENABLE_CUDA Yes)
+    find_program(CUDA_NVCC_EXECUTABLE nvcc)
+    if(CUDA_NVCC_EXECUTABLE)
+        set(CMAKE_CUDA_COMPILER_WRAPPER ${CUDA_NVCC_EXECUTABLE})
+        message(STATUS "Using nvcc_wrapper for CUDA compilation")
+    else()
+        message(SEND_ERROR "nvcc not found")
+    endif()
+endif(QULACS_USE_CUDA)
 
 ### Fetch dependencies ###
 # Kokkos
@@ -80,15 +96,6 @@ else()
     message(STATUS "Skip downloding googletest")
 endif(QULACS_USE_TEST)
 
-### Kokkos options ###
-set(Kokkos_ENABLE_SERIAL Yes)
-if(QULACS_USE_OMP)
-    set(Kokkos_ENABLE_OPENMP Yes)
-endif(QULACS_USE_OMP)
-if(QULACS_USE_CUDA)
-    set(Kokkos_ENABLE_CUDA Yes)
-endif(QULACS_USE_CUDA)
-
 ### Compile Warnings ###
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     set(WARNING_CPP "-Wall -Wdate-time -Wendif-labels -Werror=format=2 \
@@ -109,12 +116,12 @@ endif()
 
 ### Compiler options ###
 if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
-    set(CMAKE_CXX_STANDARD 20)
-    set(CMAKE_CXX_STANDARD_REQUIRED True)
-	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+    add_compile_options("-std=c++20")
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
     # Enable pthread
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
     # Enable openmp
     if(QULACS_USE_OMP)
