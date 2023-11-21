@@ -20,7 +20,7 @@ std::array<Complex, 4> get_IBMQ_matrix(double theta, double phi, double lambda) 
     return matrix;
 }
 
-void u1_gate(UINT target_qubit_index, std::array<Complex, 4> matrix, StateVector& state) {
-    
+void u_gate(UINT target_qubit_index, std::array<Complex, 4> matrix, StateVector& state) {
+    single_qubit_dense_matrix_gate(target_qubit_index, matrix, state);
 }
 }  // namespace qulacs
