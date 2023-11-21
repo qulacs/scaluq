@@ -21,6 +21,15 @@ endif(NOT DEFINED QULACS_USE_TEST)
 message(STATUS "QULACS_USE_PYTHON = ${QULACS_USE_PYTHON}")
 message(STATUS "QULACS_USE_TEST = ${QULACS_USE_TEST}")
 
+### Kokkos options ###
+set(Kokkos_ENABLE_SERIAL Yes)
+if(QULACS_USE_OMP)
+    set(Kokkos_ENABLE_OPENMP Yes)
+endif(QULACS_USE_OMP)
+if(QULACS_USE_CUDA)
+    set(Kokkos_ENABLE_CUDA Yes)
+endif(QULACS_USE_CUDA)
+
 ### Fetch dependencies ###
 # Kokkos
 FetchContent_Declare(
@@ -79,15 +88,6 @@ if(QULACS_USE_TEST)
 else()
     message(STATUS "Skip downloding googletest")
 endif(QULACS_USE_TEST)
-
-### Kokkos options ###
-set(Kokkos_ENABLE_SERIAL Yes)
-if(QULACS_USE_OMP)
-    set(Kokkos_ENABLE_OPENMP Yes)
-endif(QULACS_USE_OMP)
-if(QULACS_USE_CUDA)
-    set(Kokkos_ENABLE_CUDA Yes)
-endif(QULACS_USE_CUDA)
 
 ### Compile Warnings ###
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
