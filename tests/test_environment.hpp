@@ -10,6 +10,6 @@ class TestEnvironment : public testing::Environment {
     void TearDown() override { Kokkos::finalize(); }
 };
 
-auto kokkos_environment_this_variable_is_not_used =
+inline auto kokkos_environment_this_variable_is_not_used =
     testing::AddGlobalTestEnvironment(new TestEnvironment());
 }  // namespace qulacs

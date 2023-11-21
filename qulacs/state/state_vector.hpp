@@ -14,21 +14,21 @@ class StateVector {
 public:
     StateVector(UINT n_qubits);
 
-    static StateVector Haar_random_state(UINT n_qubits);
+    [[nodiscard]] static StateVector Haar_random_state(UINT n_qubits);
 
-    UINT n_qubits() const;
+    [[nodiscard]] UINT n_qubits() const;
 
-    UINT dim() const;
+    [[nodiscard]] UINT dim() const;
 
-    Kokkos::View<Complex*>& amplitudes_raw();
-    const Kokkos::View<Complex*>& amplitudes_raw() const;
+    [[nodiscard]] Kokkos::View<Complex*>& amplitudes_raw();
+    [[nodiscard]] const Kokkos::View<Complex*>& amplitudes_raw() const;
 
-    const std::vector<Complex>& amplitudes() const;
+    [[nodiscard]] const std::vector<Complex>& amplitudes() const;
 
-    Complex& operator[](const int index);
-    const Complex& operator[](const int index) const;
+    [[nodiscard]] Complex& operator[](const int index);
+    [[nodiscard]] const Complex& operator[](const int index) const;
 
-    double compute_squared_norm() const;
+    [[nodiscard]] double compute_squared_norm() const;
 
     void normalize();
 };
