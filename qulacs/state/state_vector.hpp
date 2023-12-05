@@ -56,7 +56,6 @@ public:
     void add_state(const StateVector& state);
     void add_state_with_coef(const Complex& coef, const StateVector& state);
     void multiply_coef(const Complex& coef);
-    void multiply_elementwise_function(const std::function<Complex(UINT)>& func);
 
     std::vector<UINT> sampling(UINT sampling_count, UINT seed = 0) const;
 
@@ -65,7 +64,5 @@ public:
     void load(const std::vector<Complex>& other);
 
     friend std::ostream& operator<<(std::ostream& os, const StateVector& state);
-
-    std::string get_device_name() const;
 };
 }  // namespace qulacs

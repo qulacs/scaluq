@@ -9,9 +9,23 @@ namespace qulacs {
  * Insert 0 to qubit_index-th bit of basis_index. basis_mask must be 1ULL <<
  * qubit_index.
  */
-inline static UINT insert_zero_to_basis_index(UINT basis_index, UINT basis_mask, UINT qubit_index) {
+KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
+                                                       UINT basis_mask,
+                                                       UINT qubit_index) {
     UINT temp_basis = (basis_index >> qubit_index) << (qubit_index + 1);
     return temp_basis + basis_index % basis_mask;
+}
+
+inline void write_to_device_at_index(StateVector& v, const int index, const Complex& c) {
+    Kokkos::View<Complex, Kokkos::HostSpace> host_view("single_value");
+    host_view() = c;
+    Kokkos::deep_copy(Kokkos::subview(v.amplitudes_raw(), index), host_view());
+}
+
+inline Complex read_from_device_at_index(StateVector& v, const int index) {
+    Kokkos::View<Complex, Kokkos::HostSpace> host_view("single_value");
+    Kokkos::deep_copy(host_view, Kokkos::subview(v.amplitudes_raw(), index));
+    return host_view();
 }
 
 StateVector::StateVector(UINT n_qubits)
@@ -30,20 +44,20 @@ StateVector& StateVector::operator=(const StateVector& other) {
 
 void StateVector::set_zero_state() {
     Kokkos::deep_copy(_amplitudes, 0);
-    _amplitudes[0] = 1;
+    write_to_device_at_index(*this, 0, 1);
 }
 
 void StateVector::set_zero_norm_state() { Kokkos::deep_copy(_amplitudes, 0); }
 
 void StateVector::set_computational_basis(UINT basis) {
-    Kokkos::deep_copy(_amplitudes, 0);
     if (basis >= _dim) {
         throw MatrixIndexOutOfRangeException(
             "Error: StateVector::set_computational_basis(UINT): "
             "index of "
             "computational basis must be smaller than 2^qubit_count");
     }
-    _amplitudes[basis] = 1;
+    Kokkos::deep_copy(_amplitudes, 0);
+    write_to_device_at_index(*this, basis, 1);
 }
 
 StateVector StateVector::Haar_random_state(UINT n_qubits, UINT seed) {
@@ -93,9 +107,7 @@ double StateVector::compute_squared_norm() const {
     double norm = 0.;
     Kokkos::parallel_reduce(
         this->_dim,
-        KOKKOS_CLASS_LAMBDA(const UINT& it, double& tmp) {
-            tmp += std::norm(this->_amplitudes[it]);
-        },
+        KOKKOS_CLASS_LAMBDA(const UINT& it, double& tmp) { tmp += norm2(this->_amplitudes[it]); },
         norm);
     return norm;
 }
@@ -120,7 +132,7 @@ double StateVector::get_zero_probability(UINT target_qubit_index) const {
         loop_dim,
         KOKKOS_CLASS_LAMBDA(const int i, double& lsum) {
             UINT basis_0 = insert_zero_to_basis_index(i, mask, target_qubit_index);
-            lsum += std::norm(this->_amplitudes[basis_0]);
+            lsum += norm2(this->_amplitudes[basis_0]);
         },
         sum);
     return sum;
@@ -152,7 +164,7 @@ double StateVector::get_marginal_probability(const std::vector<UINT>& measured_v
 
     Kokkos::parallel_reduce(
         "marginal_prob",
-        Kokkos::RangePolicy<>(0, loop_dim),
+        loop_dim,
         KOKKOS_CLASS_LAMBDA(const UINT& i, double& lsum) {
             UINT basis = i;
             for (UINT cursor = 0; cursor < d_target_index.size(); cursor++) {
@@ -161,7 +173,7 @@ double StateVector::get_marginal_probability(const std::vector<UINT>& measured_v
                 basis = insert_zero_to_basis_index(basis, mask, insert_index);
                 basis ^= mask * d_target_value[cursor];
             }
-            lsum += std::norm(this->_amplitudes[basis]);
+            lsum += norm2(this->_amplitudes[basis]);
         },
         sum);
 
@@ -175,23 +187,24 @@ double StateVector::get_entropy() const {
         "get_entropy",
         _dim,
         KOKKOS_CLASS_LAMBDA(const UINT& idx, double& lsum) {
-            double prob = std::norm(_amplitudes[idx]);
+            double prob = norm2(_amplitudes[idx]);
             prob = (prob > eps) ? prob : eps;
-            lsum += -prob * std::log(prob);
+            lsum += -prob * Kokkos::log(prob);
         },
         ent);
     return ent;
 }
 
 void StateVector::add_state(const StateVector& state) {
+    auto amp = state.amplitudes_raw();
     Kokkos::parallel_for(
-        this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] += state[i]; });
+        this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] += amp[i]; });
 }
 
 void StateVector::add_state_with_coef(const Complex& coef, const StateVector& state) {
+    auto amp = state.amplitudes_raw();
     Kokkos::parallel_for(
-        this->_dim,
-        KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] += coef * state[i]; });
+        this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] += coef * amp[i]; });
 }
 
 void StateVector::multiply_coef(const Complex& coef) {
@@ -199,18 +212,14 @@ void StateVector::multiply_coef(const Complex& coef) {
         this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] *= coef; });
 }
 
-void StateVector::multiply_elementwise_function(const std::function<Complex(UINT)>& func) {
-    Kokkos::parallel_for(
-        this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] *= func(i); });
-}
-
 std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
-    Kokkos::vector<double> stacked_prob(_dim + 1, 0);
+    Kokkos::View<double*> stacked_prob("prob", _dim + 1);
+    Kokkos::deep_copy(stacked_prob, 0);
     Kokkos::parallel_scan(
         "compute_stacked_prob",
         _dim,
         KOKKOS_CLASS_LAMBDA(const int& i, double& update, const bool final) {
-            double prob = std::norm(_amplitudes[i]);
+            double prob = norm2(this->_amplitudes[i]);
             if (final) {
                 stacked_prob[i + 1] = update + prob;
             }
@@ -222,21 +231,31 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
     Kokkos::parallel_for(
         sampling_count, KOKKOS_CLASS_LAMBDA(const UINT& i) {
             auto rand_gen = rand_pool.get_state();
-            result[i] = stacked_prob.lower_bound(0, _dim + 1, rand_gen.drand(0., 1.)) - 1;
+            double r = rand_gen.drand(0., 1.);
+            UINT lo = 0, hi = stacked_prob.size();
+            while (hi - lo > 1) {
+                UINT mid = (lo + hi) / 2;
+                if (stacked_prob[mid] > r) {
+                    hi = mid;
+                } else {
+                    lo = mid;
+                }
+            }
+            result[i] = lo;
             rand_pool.free_state(rand_gen);
         });
-
     return convert_device_view_to_host_vector<UINT>(result);
 }
 
 std::string StateVector::to_string() const {
     std::stringstream os;
+    auto amp = this->amplitudes();
     os << " *** Quantum State ***" << std::endl;
     os << " * Qubit Count : " << _n_qubits << std::endl;
     os << " * Dimension   : " << _dim << std::endl;
     os << " * State vector : \n";
     for (UINT i = 0; i < _dim; ++i) {
-        os << _amplitudes[i] << std::endl;
+        os << amp[i] << std::endl;
     }
     return os.str();
 }
@@ -253,13 +272,6 @@ void StateVector::load(const std::vector<Complex>& other) {
 std::ostream& operator<<(std::ostream& os, const StateVector& state) {
     os << state.to_string();
     return os;
-}
-
-std::string StateVector::get_device_name() const {
-#ifdef KOKKOS_ENABLE_CUDA
-    return "gpu";
-#endif
-    return "cpu";
 }
 
 }  // namespace qulacs

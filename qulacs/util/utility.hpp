@@ -7,6 +7,10 @@
 
 namespace qulacs {
 
+KOKKOS_INLINE_FUNCTION double norm2(const Complex& z) {
+    return z.real() * z.real() + z.imag() * z.imag();
+}
+
 // Host std::vector を Device Kokkos::View に変換する関数
 template <typename T>
 Kokkos::View<T*, Kokkos::DefaultExecutionSpace> convert_host_vector_to_device_view(
