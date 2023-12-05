@@ -143,4 +143,16 @@ static Eigen::MatrixXcd make_U(double theta, double phi, double lambda) {
                            std::exp(1i * phi) * std::exp(1i * lambda) * std::cos(theta / 2.));
 }
 
+static Eigen::MatrixXcd make_CNOT() {
+    Eigen::MatrixXcd m(4, 4);
+    m << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0;
+    return m;
+}
+
+static Eigen::MatrixXcd make_CZ() {
+    Eigen::MatrixXcd m(4, 4);
+    m << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1;
+    return m;
+}
+
 }  // namespace qulacs

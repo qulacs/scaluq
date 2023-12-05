@@ -66,7 +66,8 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd(double)
 }
 
 template <class QuantumGateConstructor>
-void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd(double, double, double)> matrix_factory) {
+void run_random_gate_apply(UINT n_qubits,
+                           std::function<Eigen::MatrixXcd(double, double, double)> matrix_factory) {
     const int dim = 1ULL << n_qubits;
     Random random;
 
@@ -81,14 +82,14 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd(double,
         const double phi = M_PI * random.uniform();
         const double lambda = M_PI * random.uniform();
         const QuantumGateConstructor gate;
-        if(typeid(QuantumGateConstructor) == typeid(U1)){
+        if (typeid(QuantumGateConstructor) == typeid(U1)) {
             theta = 0;
             phi = 0;
             gate = QuantumGateConstructor(lambda);
-        } else if(typeid(QuantumGateConstructor) == typeid(U2)){
+        } else if (typeid(QuantumGateConstructor) == typeid(U2)) {
             theta = M_PI / 2;
             gate = QuantumGateConstructor(phi, lambda);
-        } else if(typeid(QuantumGateConstructor) == typeid(U3)){
+        } else if (typeid(QuantumGateConstructor) == typeid(U3)) {
             gate = QuantumGateConstructor(theta, phi, lambda);
         } else {
             throw std::runtime_error("Invalid gate type");
@@ -127,4 +128,6 @@ TEST(GateTest, ApplyRZ) { run_random_gate_apply<RZ>(5, make_RZ); }
 TEST(GateTest, ApplyU1) { run_random_gate_apply<U1>(5, make_U); }
 TEST(GateTest, ApplyU2) { run_random_gate_apply<U2>(5, make_U); }
 TEST(GateTest, ApplyU3) { run_random_gate_apply<U3>(5, make_U); }
+TEST(GateTest, ApplyCNOT) { run_random_gate_apply<CNOT>(5, make_CNOT); }
+TEST(GateTest, ApplyCZ) { run_random_gate_apply<CZ>(5, make_CZ); }
 }  // namespace qulacs
