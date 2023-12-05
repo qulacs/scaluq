@@ -136,4 +136,13 @@ static Eigen::MatrixXcd make_RZ(double angle) {
     return make_2x2_matrix(std::exp(-1i * (angle / 2)), 0, 0, std::exp(1i * (angle / 2)));
 }
 
+static Eigen::MatrixXcd make_U(double theta, double phi, double lambda) {
+    double expval1 = std::exp(1i * phi);
+    double expval2 = std::exp(1i * lambda);
+    double cosval = std::cos(theta / 2.);
+    double sinval = std::sin(theta / 2.);
+    return make_2x2_matrix(std::cos(theta / 2.), -std::exp(1i * lambda) * std::sin(theta / 2.), 
+        std::exp(1i * phi) * std::sin(theta / 2.), std::exp(1i * phi) * std::exp(1i * lambda) * std::cos(theta / 2.));
+}
+
 }  // namespace qulacs

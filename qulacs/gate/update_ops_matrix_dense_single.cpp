@@ -16,8 +16,8 @@ void single_qubit_dense_matrix_gate(UINT target_qubit_index,
         state.dim() - 1, KOKKOS_LAMBDA(const UINT it) {
             UINT basis_0 = (it & mask_low) + ((it & mask_high) << 1);
             UINT basis_1 = basis_0 + mask;
-            Complex val0 = state[basis_0];
-            Complex val1 = state[basis_1];
+            Complex val0 = amplitudes[basis_0];
+            Complex val1 = amplitudes[basis_1];
             Complex res0 = matrix[0] * val0 + matrix[1] * val1;
             Complex res1 = matrix[2] * val0 + matrix[3] * val1;
             amplitudes[basis_0] = res0;
