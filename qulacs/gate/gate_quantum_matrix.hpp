@@ -2,9 +2,9 @@
 
 #include <vector>
 
+#include "constant.hpp"
 #include "gate.hpp"
 #include "update_ops.hpp"
-#include "constant.hpp"
 
 namespace qulacs {
 class U1 : public QuantumGate {
@@ -24,7 +24,7 @@ class U2 : public QuantumGate {
     std::array<Complex, 4> _matrix;
 
 public:
-    U2(UINT target, UINT lambda, UINT phi) : _target(target), _phi(phi), _lambda(lambda) {
+    U2(UINT target, UINT phi, UINT lambda) : _target(target), _phi(phi), _lambda(lambda) {
         _matrix = get_IBMQ_matrix(PI / 2.0, phi, lambda);
     };
     void update_quantum_state(StateVector& state_vector) const override;
@@ -36,7 +36,8 @@ class U3 : public QuantumGate {
     std::array<Complex, 4> _matrix;
 
 public:
-    U3(UINT target, UINT theta, UINT lambda, UINT phi) : _target(target), _theta(theta), _phi(phi), _lambda(lambda) {
+    U3(UINT target, UINT theta, UINT phi, UINT lambda)
+        : _target(target), _theta(theta), _phi(phi), _lambda(lambda) {
         _matrix = get_IBMQ_matrix(theta, phi, lambda);
     };
     void update_quantum_state(StateVector& state_vector) const override;
