@@ -20,11 +20,8 @@ public:
 
     StateVector& operator=(const StateVector& other);
 
-    /**
-     * @param seed The seed value for the random number generator. If omitted, 0 is used.
-     */
-    static StateVector Haar_random_state(UINT n_qubits, UINT seed);
-    static StateVector Haar_random_state(UINT n_qubits);
+    [[nodiscard]] static StateVector Haar_random_state(UINT n_qubits, UINT seed);
+    [[nodiscard]] static StateVector Haar_random_state(UINT n_qubits);
 
     /**
      * @brief zero-fill
@@ -33,33 +30,33 @@ public:
     void set_zero_norm_state();
     void set_computational_basis(UINT basis);
 
-    UINT n_qubits() const;
+    [[nodiscard]] UINT n_qubits() const;
 
-    UINT dim() const;
+    [[nodiscard]] UINT dim() const;
 
-    Kokkos::View<Complex*>& amplitudes_raw();
-    const Kokkos::View<Complex*>& amplitudes_raw() const;
+    [[nodiscard]] Kokkos::View<Complex*>& amplitudes_raw();
+    [[nodiscard]] const Kokkos::View<Complex*>& amplitudes_raw() const;
 
-    std::vector<Complex> amplitudes() const;
+    [[nodiscard]] std::vector<Complex> amplitudes() const;
 
-    Complex& operator[](const int index);
-    const Complex& operator[](const int index) const;
+    [[nodiscard]] Complex& operator[](const int index);
+    [[nodiscard]] const Complex& operator[](const int index) const;
 
-    double compute_squared_norm() const;
+    [[nodiscard]] double compute_squared_norm() const;
 
     void normalize();
 
-    double get_zero_probability(UINT target_qubit_index) const;
-    double get_marginal_probability(const std::vector<UINT>& measured_values) const;
-    double get_entropy() const;
+    [[nodiscard]] double get_zero_probability(UINT target_qubit_index) const;
+    [[nodiscard]] double get_marginal_probability(const std::vector<UINT>& measured_values) const;
+    [[nodiscard]] double get_entropy() const;
 
     void add_state(const StateVector& state);
     void add_state_with_coef(const Complex& coef, const StateVector& state);
     void multiply_coef(const Complex& coef);
 
-    std::vector<UINT> sampling(UINT sampling_count, UINT seed = 0) const;
+    [[nodiscard]] std::vector<UINT> sampling(UINT sampling_count, UINT seed = 0) const;
 
-    std::string to_string() const;
+    [[nodiscard]] std::string to_string() const;
 
     void load(const std::vector<Complex>& other);
 
