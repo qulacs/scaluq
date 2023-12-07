@@ -1,6 +1,6 @@
 #include "gate_one_control_one_target.hpp"
 
-#include "update_ops_one_target_one_control.hpp"
+#include "update_ops.hpp"
 
 namespace qulacs {
 void CNOT::update_quantum_state(StateVector& state_vector) const {
