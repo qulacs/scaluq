@@ -41,7 +41,6 @@ public:
 
     [[nodiscard]] Complex& operator[](const int index);
     [[nodiscard]] const Complex& operator[](const int index) const;
-
     [[nodiscard]] double compute_squared_norm() const;
 
     void normalize();

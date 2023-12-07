@@ -90,7 +90,7 @@ void tdag_gate(UINT target_qubit_index, StateVector& state) {
 }
 
 void single_qubit_dense_matrix_gate(UINT target_qubit_index,
-                                    const Complex matrix[4],
+                                    const std::array<Complex, 4> matrix,
                                     StateVector& state) {
     const UINT n_qubits = state.n_qubits();
     const UINT low_mask = (1ULL << target_qubit_index) - 1;
@@ -133,14 +133,14 @@ void p1_gate(UINT target_qubit_index, StateVector& state) {
 void rx_gate(UINT target_qubit_index, double angle, StateVector& state) {
     const double cosval = cos(angle / 2.);
     const double sinval = sin(angle / 2.);
-    Complex matrix[4] = {cosval, -1.i * sinval, -1.i * sinval, cosval};
+    std::array<Complex, 4> matrix = {cosval, -1.i * sinval, -1.i * sinval, cosval};
     single_qubit_dense_matrix_gate(target_qubit_index, matrix, state);
 }
 
 void ry_gate(UINT target_qubit_index, double angle, StateVector& state) {
     const double cosval = cos(angle / 2.);
     const double sinval = sin(angle / 2.);
-    Complex matrix[4] = {cosval, -sinval, sinval, cosval};
+    std::array<Complex, 4> matrix = {cosval, -sinval, sinval, cosval};
     single_qubit_dense_matrix_gate(target_qubit_index, matrix, state);
 }
 
