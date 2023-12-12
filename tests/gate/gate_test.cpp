@@ -83,22 +83,19 @@ void run_random_gate_apply(UINT n_qubits,
         const double theta = M_PI * random.uniform();
         const double phi = M_PI * random.uniform();
         const double lambda = M_PI * random.uniform();
-        const QuantumGateConstructor gate;
         if (typeid(QuantumGateConstructor) == typeid(U1)) {
             theta = 0;
             phi = 0;
-            gate = QuantumGateConstructor(lambda);
         } else if (typeid(QuantumGateConstructor) == typeid(U2)) {
             theta = M_PI / 2;
-            gate = QuantumGateConstructor(phi, lambda);
         } else if (typeid(QuantumGateConstructor) == typeid(U3)) {
-            gate = QuantumGateConstructor(theta, phi, lambda);
         } else {
             throw std::runtime_error("Invalid gate type");
         }
 
         const auto matrix = matrix_factory(theta, phi, lambda);
         const UINT target = random.int64() % n_qubits;
+        const QuantumGateConstructor gate(target, theta, phi, lambda);
         gate.update_quantum_state(state);
 
         test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
