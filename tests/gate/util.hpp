@@ -28,9 +28,9 @@ static Eigen::MatrixXcd get_expanded_eigen_matrix_with_identity(
 
 static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CNOT(
     UINT control_qubit_index, UINT target_qubit_index, UINT qubit_count) {
-    ITYPE dim = 1ULL << qubit_count;
+    UINT dim = 1ULL << qubit_count;
     Eigen::MatrixXcd result = Eigen::MatrixXcd::Zero(dim, dim);
-    for (ITYPE ind = 0; ind < dim; ++ind) {
+    for (UINT ind = 0; ind < dim; ++ind) {
         if (ind & (1ULL << control_qubit_index)) {
             result(ind, ind ^ (1ULL << target_qubit_index)) = 1;
         } else {
@@ -42,9 +42,9 @@ static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CNOT(
 
 static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CZ(
     UINT control_qubit_index, UINT target_qubit_index, UINT qubit_count) {
-    ITYPE dim = 1ULL << qubit_count;
+    UINT dim = 1ULL << qubit_count;
     Eigen::MatrixXcd result = Eigen::MatrixXcd::Zero(dim, dim);
-    for (ITYPE ind = 0; ind < dim; ++ind) {
+    for (UINT ind = 0; ind < dim; ++ind) {
         if ((ind & (1ULL << control_qubit_index)) != 0 &&
             (ind & (1ULL << target_qubit_index)) != 0) {
             result(ind, ind) = -1;
@@ -57,9 +57,9 @@ static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CZ(
 
 static Eigen::MatrixXcd get_eigen_matrix_full_qubit_SWAP(
     UINT target_qubit_index1, UINT target_qubit_index2, UINT qubit_count) {
-    ITYPE dim = 1ULL << qubit_count;
+    UINT dim = 1ULL << qubit_count;
     Eigen::MatrixXcd result = Eigen::MatrixXcd::Zero(dim, dim);
-    for (ITYPE ind = 0; ind < dim; ++ind) {
+    for (UINT ind = 0; ind < dim; ++ind) {
         bool flag1, flag2;
         flag1 = (ind & (1ULL << target_qubit_index1)) != 0;
         flag2 = (ind & (1ULL << target_qubit_index2)) != 0;

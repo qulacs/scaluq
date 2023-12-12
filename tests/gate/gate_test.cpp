@@ -107,16 +107,15 @@ void run_random_gate_apply(UINT n_qubits,
     }
 }
 
-void run_random_gate_apply_two_qubit(UINT n_qubits> matrix_factory) {
-    const auto matrix = matrix_factory();
+void run_random_gate_apply_two_qubit(UINT n_qubits) {
     const int dim = 1ULL << n_qubits;
     Random random;
     std::vector<std::pair<QuantumGate*, 
         std::function<Eigen::MatrixXcd(UINT, UINT, UINT)>>>
-        funclist;
-    funclist.push_back(
+        func_list;
+    func_list.push_back(
         std::make_pair(CNOT, get_eigen_matrix_full_qubit_CNOT));
-    funclist.push_back(
+    func_list.push_back(
         std::make_pair(CZ, get_eigen_matrix_full_qubit_CZ));
 
     Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
@@ -144,8 +143,8 @@ void run_random_gate_apply_two_qubit(UINT n_qubits> matrix_factory) {
         }
     }
 
-    funclist.clear();
-    funclist.push_back(
+    func_list.clear();
+    func_list.push_back(
         std::make_pair(SWAP, get_eigen_matrix_full_qubit_SWAP));
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
