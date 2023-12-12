@@ -83,12 +83,12 @@ void run_random_gate_apply(UINT n_qubits,
         double theta = M_PI * random.uniform();
         double phi = M_PI * random.uniform();
         double lambda = M_PI * random.uniform();
-        if (typeid(QuantumGateConstructor) == typeid(U1)) {
+        if (contexpr(std::is_same_v<QuantumGateConstructor, U1>)) {
             theta = 0;
             phi = 0;
-        } else if (typeid(QuantumGateConstructor) == typeid(U2)) {
+        } else if (contexpr(std::is_same_v<QuantumGateConstructor, U2>)) {
             theta = M_PI / 2;
-        } else if (typeid(QuantumGateConstructor) == typeid(U3)) {
+        } else if (contexpr(std::is_same_v<QuantumGateConstructor, U3>)) {
         } else {
             throw std::runtime_error("Invalid gate type");
         }
