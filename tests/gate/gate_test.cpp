@@ -6,6 +6,7 @@
 #include <gate/gate_one_control_one_target.hpp>
 #include <gate/gate_one_qubit.hpp>
 #include <gate/gate_quantum_matrix.hpp>
+#include <gate/gate_two_qubit.cpp>
 #include <state/state_vector.hpp>
 #include <types.hpp>
 #include <util/random.hpp>
@@ -83,12 +84,12 @@ void run_random_gate_apply(UINT n_qubits,
         double theta = M_PI * random.uniform();
         double phi = M_PI * random.uniform();
         double lambda = M_PI * random.uniform();
-        if (constexpr(std::is_same_v<QuantumGateConstructor, U1>)) {
+        if constexpr(std::is_same_v<QuantumGateConstructor, U1>) {
             theta = 0;
             phi = 0;
-        } else if (constexpr(std::is_same_v<QuantumGateConstructor, U2>)) {
+        } else if constexpr(std::is_same_v<QuantumGateConstructor, U2>) {
             theta = M_PI / 2;
-        } else if (constexpr(std::is_same_v<QuantumGateConstructor, U3>)) {
+        } else if constexpr(std::is_same_v<QuantumGateConstructor, U3>) {
         } else {
             throw std::runtime_error("Invalid gate type");
         }
@@ -125,7 +126,7 @@ void run_random_gate_apply_two_qubit(UINT n_qubits, std::function<Eigen::MatrixX
         const QuantumGateConstructor gate(target, control);
         gate.update_quantum_state(state);
 
-        test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
+        test_state = get_expanded_eigen_matrix_with_identity_two_qubit(target, matrix, n_qubits) * test_state;
 
         for (int i = 0; i < dim; i++) {
             ASSERT_NEAR(std::abs(state[i] - test_state[i]), 0, eps);

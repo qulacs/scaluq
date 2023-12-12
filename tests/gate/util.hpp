@@ -26,6 +26,15 @@ static Eigen::MatrixXcd get_expanded_eigen_matrix_with_identity(
     return kronecker_product(kronecker_product(right_identity, one_qubit_matrix), left_identity);
 }
 
+static Eigen::MatrixXcd get_expanded_eigen_matrix_with_identity_two_qubit(
+    UINT target_qubit_index, const Eigen::MatrixXcd& two_qubit_matrix, UINT qubit_count) {
+    const int left_dim = 1ULL << target_qubit_index;
+    const int right_dim = 1ULL << (qubit_count - target_qubit_index - 2);
+    auto left_identity = Eigen::MatrixXcd::Identity(left_dim, left_dim);
+    auto right_identity = Eigen::MatrixXcd::Identity(right_dim, right_dim);
+    return kronecker_product(kronecker_product(right_identity, two_qubit_matrix), left_identity);
+}
+
 #define ASSERT_STATE_NEAR(state, other, eps) \
     ASSERT_PRED_FORMAT3(_assert_state_near, state, other, eps)
 
