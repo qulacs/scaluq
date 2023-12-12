@@ -107,8 +107,8 @@ void run_random_gate_apply(UINT n_qubits,
 }
 
 template <class QuantumGateConstructor>
-void run_random_gate_apply_two_qubit(UINT n_qubits,
-                           std::function<Eigen::MatrixXcd()> matrix_factory) {
+void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matrix_factory) {
+    const auto matrix = matrix_factory();
     const int dim = 1ULL << n_qubits;
     Random random;
 
@@ -119,9 +119,8 @@ void run_random_gate_apply_two_qubit(UINT n_qubits,
             test_state[i] = state[i];
         }
 
-        const auto matrix = matrix_factory();
-        const UINT target = random.int64() % n_qubits;
-        const UINT control = random.int64() % n_qubits;
+        UINT target = random.int64() % n_qubits;
+        UINT control = random.int64() % n_qubits;
         if(target == control) target = (target + 1) % n_qubits;
         const QuantumGateConstructor gate(target, control);
         gate.update_quantum_state(state);
