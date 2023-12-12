@@ -154,7 +154,7 @@ TEST(GateTest, ApplyRZ) { run_random_gate_apply<RZ>(5, make_RZ); }
 TEST(GateTest, ApplyU1) { run_random_gate_apply<U1>(5, make_U); }
 TEST(GateTest, ApplyU2) { run_random_gate_apply<U2>(5, make_U); }
 TEST(GateTest, ApplyU3) { run_random_gate_apply<U3>(5, make_U); }
-TEST(GateTest, ApplyCNOT) { run_random_gate_apply_two_qubit(5, make_CNOT); }
-TEST(GateTest, ApplyCZ) { run_random_gate_apply_two_qubit(5, make_CZ); }
-TEST(GateTest, ApplySWAP) { run_random_gate_apply_two_qubit(5, make_SWAP); }
+TEST(GateTest, ApplyCNOT) { run_random_gate_apply_two_qubit<CNOT>(5, make_CNOT); }
+TEST(GateTest, ApplyCZ) { run_random_gate_apply_two_qubit<CZ>(5, make_CZ); }
+TEST(GateTest, ApplySWAP) { run_random_gate_apply_two_qubit<SWAP>(5, make_SWAP); }
 }  // namespace qulacs
