@@ -3,7 +3,9 @@
 #include <Eigen/Core>
 #include <functional>
 #include <gate/gate.hpp>
+#include <gate/gate_one_control_one_target.hpp>
 #include <gate/gate_one_qubit.hpp>
+#include <gate/gate_quantum_matrix.hpp>
 #include <state/state_vector.hpp>
 #include <types.hpp>
 #include <util/random.hpp>
