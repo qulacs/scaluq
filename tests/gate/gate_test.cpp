@@ -107,29 +107,67 @@ void run_random_gate_apply(UINT n_qubits,
     }
 }
 
-template <class QuantumGateConstructor>
-void run_random_gate_apply_two_qubit(UINT n_qubits, std::function<Eigen::MatrixXcd()> matrix_factory) {
+void run_random_gate_apply_two_qubit(UINT n_qubits> matrix_factory) {
     const auto matrix = matrix_factory();
     const int dim = 1ULL << n_qubits;
     Random random;
+    std::vector<std::pair<QuantumGate*, 
+        std::function<Eigen::MatrixXcd(UINT, UINT, UINT)>>>
+        funclist;
+    funclist.push_back(
+        std::make_pair(CNOT, get_eigen_matrix_full_qubit_CNOT));
+    funclist.push_back(
+        std::make_pair(CZ, get_eigen_matrix_full_qubit_CZ));
 
     Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
-        for (int i = 0; i < dim; i++) {
-            test_state[i] = state[i];
+        for(auto func_mat : func_list){
+            for (int i = 0; i < dim; i++) {
+                test_state[i] = state[i];
+            }
+
+            UINT target = random.int64() % n_qubits;
+            UINT control = random.int64() % n_qubits;
+            if(target == control) target = (target + 1) % n_qubits;
+            auto gate_class = func_mat.first;
+            auto func_eig = func_mat.second;
+            auto gate = gate_class(target, control);
+            gate.update_quantum_state(state);
+
+            Eigen::MatrixXcd test_mat = func_eig(control, target, n_qubits);
+            test_state = test_mat * test_state;
+
+            for (int i = 0; i < dim; i++) {
+                ASSERT_NEAR(std::abs(state[i] - test_state[i]), 0, eps);
+            }
         }
+    }
 
-        UINT target = random.int64() % n_qubits;
-        UINT control = random.int64() % n_qubits;
-        if(target == control) target = (target + 1) % n_qubits;
-        const QuantumGateConstructor gate(target, control);
-        gate.update_quantum_state(state);
+    funclist.clear();
+    funclist.push_back(
+        std::make_pair(SWAP, get_eigen_matrix_full_qubit_SWAP));
+    for (int repeat = 0; repeat < 10; repeat++) {
+        auto state = StateVector::Haar_random_state(n_qubits);
+        for(auto func_mat : func_list){
+            for (int i = 0; i < dim; i++) {
+                test_state[i] = state[i];
+            }
 
-        test_state = get_expanded_eigen_matrix_with_identity_two_qubit(target, matrix, n_qubits) * test_state;
+            UINT target = random.int64() % n_qubits;
+            UINT control = random.int64() % n_qubits;
+            if(target == control) target = (target + 1) % n_qubits;
+            auto gate_class = func_mat.first;
+            auto func_eig = func_mat.second;
+            auto gate = gate_class(target, control);
+            gate.update_quantum_state(state);
 
-        for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs(state[i] - test_state[i]), 0, eps);
+            Eigen::MatrixXcd test_mat = func_eig(control, target, n_qubits);
+            test_state = test_mat * test_state;
+
+            for (int i = 0; i < dim; i++) {
+                ASSERT_NEAR(std::abs(state[i] - test_state[i]), 0, eps);
+            }
         }
     }
 }
@@ -155,7 +193,5 @@ TEST(GateTest, ApplyRZ) { run_random_gate_apply<RZ>(5, make_RZ); }
 TEST(GateTest, ApplyU1) { run_random_gate_apply<U1>(5, make_U); }
 TEST(GateTest, ApplyU2) { run_random_gate_apply<U2>(5, make_U); }
 TEST(GateTest, ApplyU3) { run_random_gate_apply<U3>(5, make_U); }
-TEST(GateTest, ApplyCNOT) { run_random_gate_apply_two_qubit<CNOT>(5, make_CNOT); }
-TEST(GateTest, ApplyCZ) { run_random_gate_apply_two_qubit<CZ>(5, make_CZ); }
-TEST(GateTest, ApplySWAP) { run_random_gate_apply_two_qubit<SWAP>(5, make_SWAP); }
+TEST(GateTest, ApplyTwoQubit) { run_random_gate_apply_two_qubit(5); }
 }  // namespace qulacs
