@@ -80,9 +80,9 @@ void run_random_gate_apply(UINT n_qubits,
             test_state[i] = state[i];
         }
 
-        const double theta = M_PI * random.uniform();
-        const double phi = M_PI * random.uniform();
-        const double lambda = M_PI * random.uniform();
+        double theta = M_PI * random.uniform();
+        double phi = M_PI * random.uniform();
+        double lambda = M_PI * random.uniform();
         if (typeid(QuantumGateConstructor) == typeid(U1)) {
             theta = 0;
             phi = 0;
@@ -95,7 +95,7 @@ void run_random_gate_apply(UINT n_qubits,
 
         const auto matrix = matrix_factory(theta, phi, lambda);
         const UINT target = random.int64() % n_qubits;
-        const QuantumGateConstructor gate(target, theta, phi, lambda);
+        const U3 gate(target, theta, phi, lambda);
         gate.update_quantum_state(state);
 
         test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
