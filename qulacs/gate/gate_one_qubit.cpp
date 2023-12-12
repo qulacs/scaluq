@@ -74,4 +74,9 @@ void RY::update_quantum_state(StateVector& state_vector) const {
 void RZ::update_quantum_state(StateVector& state_vector) const {
     rz_gate(this->_target, this->_angle, state_vector);
 }
+
+Gate S::get_inverse() const { return std::make_unique<Sdag>(_target); }
+Gate T::get_inverse() const { return std::make_unique<Tdag>(_target); }
+Gate sqrtX::get_inverse() const { return std::make_unique<sqrtXdag>(_target); }
+Gate sqrtY::get_inverse() const { return std::make_unique<sqrtYdag>(_target); }
 }  // namespace qulacs

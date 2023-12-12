@@ -116,8 +116,7 @@ endif()
 
 ### Compiler options ###
 if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
-
-    add_compile_options("-std=c++20")
+    set(CMAKE_CXX_STANDARD 20)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
     # Enable pthread

@@ -88,7 +88,7 @@ public:
     std::vector<UINT> get_control_qubit_list() const override { return {}; };
 
     Gate copy() const override { return std::make_unique<S>(*this); }
-    Gate get_inverse() const override { return std::make_unique<Sdag>(_target); }
+    Gate get_inverse() const override;
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -118,7 +118,7 @@ public:
     std::vector<UINT> get_control_qubit_list() const override { return {}; };
 
     Gate copy() const override { return std::make_unique<T>(*this); }
-    Gate get_inverse() const override { return std::make_unique<Tdag>(_target); }
+    Gate get_inverse() const override;
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -148,7 +148,7 @@ public:
     std::vector<UINT> get_control_qubit_list() const override { return {}; };
 
     Gate copy() const override { return std::make_unique<sqrtX>(*this); }
-    Gate get_inverse() const override { return std::make_unique<sqrtXdag>(_target); }
+    Gate get_inverse() const override;
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -178,7 +178,7 @@ public:
     std::vector<UINT> get_control_qubit_list() const override { return {}; };
 
     Gate copy() const override { return std::make_unique<sqrtY>(*this); }
-    Gate get_inverse() const override { return std::make_unique<sqrtYdag>(_target); }
+    Gate get_inverse() const override;
 
     void update_quantum_state(StateVector& state_vector) const override;
 };

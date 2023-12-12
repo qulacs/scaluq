@@ -5,7 +5,7 @@
 namespace qulacs {
 void Circuit::add_gate(Gate gate) {
     check_gate_is_valid(*gate);
-    _gate_list.push_back(gate);
+    _gate_list.push_back(std::move(gate));
 }
 
 void Circuit::update_quantum_state(StateVector& state) const {
