@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.21)
 
 project(qulacs)
 
@@ -21,6 +21,39 @@ endif(NOT DEFINED QULACS_USE_TEST)
 message(STATUS "QULACS_USE_PYTHON = ${QULACS_USE_PYTHON}")
 message(STATUS "QULACS_USE_TEST = ${QULACS_USE_TEST}")
 
+### Compile Warnings ###
+if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+    set(WARNING_CPP "-Wall -Wdate-time -Wendif-labels -Werror=format=2 \
+        -Werror=missing-declarations -Werror=return-type -Wextra \
+        -Wfloat-equal -Wimplicit-fallthrough=5 -Wlogical-op \
+        -Wmissing-include-dirs -Wpointer-arith -Wredundant-decls \
+        -Wshadow -Wstrict-aliasing=2 -Wsuggest-attribute=noreturn -Wwrite-strings \
+        -fdiagnostics-color=auto -fstrict-aliasing")
+    # -Werror=undef is eliminated due to conflict with boost
+elseif ((${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
+    set(WARNING_CPP "-Wall -Wdate-time -Wendif-labels -Werror=format=2 \
+        -Werror=missing-declarations -Werror=return-type -Wextra \
+        -Wfloat-equal -Wimplicit-fallthrough \
+        -Wmissing-include-dirs -Wpointer-arith -Wredundant-decls \
+        -Wshadow -Wstrict-aliasing=2 -Wwrite-strings \
+        -fdiagnostics-color=auto -fstrict-aliasing")
+endif()
+
+### Compiler options ###
+if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
+    set(CMAKE_CXX_STANDARD 20)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+    # Enable pthread
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+
+    # Enable openmp
+    if(QULACS_USE_OMP)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+        add_compile_definitions(OPENMP)
+    endif()
+endif()
+
 ### Kokkos options ###
 set(Kokkos_ENABLE_SERIAL Yes)
 if(QULACS_USE_OMP)
@@ -28,6 +61,7 @@ if(QULACS_USE_OMP)
 endif(QULACS_USE_OMP)
 if(QULACS_USE_CUDA)
     set(Kokkos_ENABLE_CUDA Yes)
+    set(Kokkos_ARCH_VOLTA70 Yes)
     find_program(CUDA_NVCC_EXECUTABLE nvcc)
     if(CUDA_NVCC_EXECUTABLE)
         set(CMAKE_CUDA_COMPILER_WRAPPER ${CUDA_NVCC_EXECUTABLE})
@@ -42,7 +76,7 @@ endif(QULACS_USE_CUDA)
 FetchContent_Declare(
     kokkos_fetch
     GIT_REPOSITORY https://github.com/kokkos/kokkos
-    GIT_TAG 4.1.00
+    GIT_TAG 4.2.00
 )
 FetchContent_GetProperties(kokkos_fetch)
 if(NOT kokkos_fetch_POPULATED)
@@ -95,40 +129,6 @@ if(QULACS_USE_TEST)
 else()
     message(STATUS "Skip downloding googletest")
 endif(QULACS_USE_TEST)
-
-### Compile Warnings ###
-if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
-    set(WARNING_CPP "-Wall -Wdate-time -Wendif-labels -Werror=format=2 \
-        -Werror=missing-declarations -Werror=return-type -Wextra \
-        -Wfloat-equal -Wimplicit-fallthrough=5 -Wlogical-op \
-        -Wmissing-include-dirs -Wpointer-arith -Wredundant-decls \
-        -Wshadow -Wstrict-aliasing=2 -Wsuggest-attribute=noreturn -Wwrite-strings \
-        -fdiagnostics-color=auto -fstrict-aliasing")
-    # -Werror=undef is eliminated due to conflict with boost
-elseif ((${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
-    set(WARNING_CPP "-Wall -Wdate-time -Wendif-labels -Werror=format=2 \
-        -Werror=missing-declarations -Werror=return-type -Wextra \
-        -Wfloat-equal -Wimplicit-fallthrough \
-        -Wmissing-include-dirs -Wpointer-arith -Wredundant-decls \
-        -Wshadow -Wstrict-aliasing=2 -Wwrite-strings \
-        -fdiagnostics-color=auto -fstrict-aliasing")
-endif()
-
-### Compiler options ###
-if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
-
-    add_compile_options("-std=c++20")
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-    # Enable pthread
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-
-    # Enable openmp
-    if(QULACS_USE_OMP)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
-        add_compile_definitions(OPENMP)
-    endif()
-endif()
 
 ### Add subdirectories ###
 add_subdirectory(qulacs)

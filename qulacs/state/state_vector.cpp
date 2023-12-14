@@ -37,7 +37,7 @@ double StateVector::compute_squared_norm() const {
     Kokkos::parallel_reduce(
         this->_dim,
         KOKKOS_CLASS_LAMBDA(const UINT& it, double& tmp) {
-            tmp += std::norm(this->_amplitudes[it]);
+            tmp += Kokkos::norm2(this->_amplitudes[it]);
         },
         norm);
     return norm;
