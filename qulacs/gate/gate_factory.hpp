@@ -3,6 +3,7 @@
 #include "gate/gate.hpp"
 #include "gate/gate_one_control_one_target.hpp"
 #include "gate/gate_one_qubit.hpp"
+#include "gate/gate_quantum_matrix.hpp"
 
 namespace qulacs {
 namespace gate {
@@ -24,6 +25,13 @@ Gate P1(UINT target) { return std::make_unique<qulacs::P1>(target); }
 Gate RX(UINT target, double angle) { return std::make_unique<qulacs::RX>(target, angle); }
 Gate RY(UINT target, double angle) { return std::make_unique<qulacs::RY>(target, angle); }
 Gate RZ(UINT target, double angle) { return std::make_unique<qulacs::RZ>(target, angle); }
+Gate U1(UINT target, double lambda) { return std::make_unique<qulacs::U1>(target, lambda); }
+Gate U2(UINT target, double phi, double lambda) {
+    return std::make_unique<qulacs::U2>(target, phi, lambda);
+}
+Gate U3(UINT target, double theta, double phi, double lambda) {
+    return std::make_unique<qulacs::U3>(target, theta, phi, lambda);
+}
 Gate CNOT(UINT control, UINT target) { return std::make_unique<qulacs::CNOT>(control, target); }
 Gate CZ(UINT control, UINT target) { return std::make_unique<qulacs::CZ>(control, target); }
 }  // namespace gate

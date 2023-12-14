@@ -16,9 +16,9 @@ ENV PYTHONPATH="${PROJECT_DIR}/build:${PYTHONPATH}"
 RUN apt-get update && \
     apt-get install -y software-properties-common && \
     apt-get update && \
-    apt-get install -y gcc-10 g++-10 && \
-    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 && \
-    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100 \
+    apt-get install -y gcc-11 g++-11 && \
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100 \
     && apt-get install -y --no-install-recommends \
     clang-format \
     git \

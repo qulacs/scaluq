@@ -1,6 +1,7 @@
 #include "circuit.hpp"
 
 #include <Kokkos_Vector.hpp>
+#include <ranges>
 
 namespace qulacs {
 void Circuit::add_gate(Gate gate) {

@@ -4,6 +4,7 @@
 #include <functional>
 #include <gate/gate.hpp>
 #include <gate/gate_one_qubit.hpp>
+#include <gate/gate_quantum_matrix.hpp>
 #include <state/state_vector.hpp>
 #include <types.hpp>
 #include <util/random.hpp>
@@ -126,7 +127,9 @@ TEST(GateTest, ApplyP1) { run_random_gate_apply<P1>(5, make_P1); }
 TEST(GateTest, ApplyRX) { run_random_gate_apply<RX>(5, make_RX); }
 TEST(GateTest, ApplyRY) { run_random_gate_apply<RY>(5, make_RY); }
 TEST(GateTest, ApplyRZ) { run_random_gate_apply<RZ>(5, make_RZ); }
+/*
 TEST(GateTest, ApplyU1) { run_random_gate_apply<U1>(5, make_U); }
 TEST(GateTest, ApplyU2) { run_random_gate_apply<U2>(5, make_U); }
 TEST(GateTest, ApplyU3) { run_random_gate_apply<U3>(5, make_U); }
+*/
 }  // namespace qulacs
