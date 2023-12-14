@@ -1,6 +1,7 @@
 #include "state_vector.hpp"
 
 #include "../util/random.hpp"
+#include "../util/utility.hpp"
 
 namespace qulacs {
 StateVector::StateVector(UINT n_qubits)
@@ -36,9 +37,7 @@ double StateVector::compute_squared_norm() const {
     double norm = 0.;
     Kokkos::parallel_reduce(
         this->_dim,
-        KOKKOS_CLASS_LAMBDA(const UINT& it, double& tmp) {
-            tmp += Kokkos::norm2(this->_amplitudes[it]);
-        },
+        KOKKOS_CLASS_LAMBDA(const UINT& it, double& tmp) { tmp += norm2(this->_amplitudes[it]); },
         norm);
     return norm;
 }

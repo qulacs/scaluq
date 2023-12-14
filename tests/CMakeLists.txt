@@ -4,7 +4,7 @@ enable_testing()
 
 add_executable(qulacs_test EXCLUDE_FROM_ALL
     gate/gate_test.cpp
-    #state/state_vector_test.cpp
+    state/state_vector_test.cpp
 )
 
 target_link_libraries(qulacs_test PRIVATE
