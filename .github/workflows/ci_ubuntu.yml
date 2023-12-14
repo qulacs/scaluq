@@ -96,6 +96,13 @@ jobs:
         with:
           cuda: "12.2.0"
           method: "network"
+      
+      - name: Show installed Compiler version
+        run: |
+          nvcc --version
+          gcc --version
+          g++ --version
+          cmake --version
 
       - name: Install qulacs for Ubuntu
         run: ./script/build_gcc.sh
