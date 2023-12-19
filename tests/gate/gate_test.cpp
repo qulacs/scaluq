@@ -142,6 +142,7 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
         }
     }
 
+    func_eig = get_eigen_matrix_full_qubit_SWAP;
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
         for (int i = 0; i < dim; i++) {
