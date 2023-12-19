@@ -125,10 +125,10 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
             UINT control = random.int64() % n_qubits;
             if (target == control) target = (target + 1) % n_qubits;
             if (g == 0) {
-                *gate = CNOT(control, target);
+                gate = new CNOT(control, target);
                 func_eig = get_eigen_matrix_full_qubit_CNOT;
             } else {
-                *gate = CZ(control, target);
+                gate = new CZ(control, target);
                 func_eig = get_eigen_matrix_full_qubit_CZ;
             }
             gate->update_quantum_state(state);
@@ -140,6 +140,7 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
                 ASSERT_NEAR(std::abs(state[i] - test_state[i]), 0, eps);
             }
         }
+        delete gate;
     }
 
     func_eig = get_eigen_matrix_full_qubit_SWAP;
@@ -152,7 +153,7 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
         UINT target = random.int64() % n_qubits;
         UINT control = random.int64() % n_qubits;
         if (target == control) target = (target + 1) % n_qubits;
-        *gate = SWAP(control, target);
+        gate = new SWAP(control, target);
         gate->update_quantum_state(state);
 
         Eigen::MatrixXcd test_mat = func_eig(control, target, n_qubits);
@@ -162,6 +163,7 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
             ASSERT_NEAR(std::abs(state[i] - test_state[i]), 0, eps);
         }
     }
+    delete gate;
 }
 
 TEST(GateTest, ApplyI) { run_random_gate_apply<I>(5, make_I); }
