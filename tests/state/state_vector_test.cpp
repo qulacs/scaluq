@@ -82,7 +82,7 @@ TEST(StateVectorTest, AddState) {
     StateVector state2(StateVector::Haar_random_state(n));
     auto vec1 = state1.amplitudes();
     auto vec2 = state2.amplitudes();
-    state1.add_state(state2);
+    state1.add_state_vector(state2);
     auto new_vec = state1.amplitudes();
 
     for (UINT i = 0; i < state1.dim(); ++i) {
@@ -99,7 +99,7 @@ TEST(StateVectorTest, AddStateWithCoef) {
     auto vec1 = state1.amplitudes();
     auto vec2 = state2.amplitudes();
 
-    state1.add_state_with_coef(coef, state2);
+    state1.add_state_vector_with_coef(coef, state2);
     auto new_vec = state1.amplitudes();
 
     for (UINT i = 0; i < state1.dim(); ++i) {
@@ -134,7 +134,7 @@ TEST(StateVectorTest, GetZeroProbability) {
     for (UINT i = 2; i <= 10; ++i) {
         StateVector tmp_state(n);
         tmp_state.set_computational_basis(i);
-        state.add_state_with_coef(std::sqrt(i), tmp_state);
+        state.add_state_vector_with_coef(std::sqrt(i), tmp_state);
     }
     state.normalize();
     ASSERT_NEAR(state.get_zero_probability(0), 30.0 / 55.0, eps);
@@ -198,7 +198,7 @@ TEST(StateVectorTest, SamplingSuperpositionState) {
         for (UINT i = 1; i <= 4; ++i) {
             StateVector tmp_state(n);
             tmp_state.set_computational_basis(i);
-            state.add_state_with_coef(1 << i, tmp_state);
+            state.add_state_vector_with_coef(1 << i, tmp_state);
         }
         state.normalize();
         std::vector<size_t> res = state.sampling(nshot);

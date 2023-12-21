@@ -6,14 +6,12 @@
 namespace qulacs {
 
 /**
- * Insert 0 to qubit_index-th bit of basis_index. basis_mask must be 1ULL <<
- * qubit_index.
+ * Insert 0 to insert_index-th bit of basis_index.
  */
-KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
-                                                       UINT basis_mask,
-                                                       UINT qubit_index) {
-    UINT temp_basis = (basis_index >> qubit_index) << (qubit_index + 1);
-    return temp_basis + basis_index % basis_mask;
+KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index, UINT insert_index) {
+    UINT mask = (1ULL << insert_index) - 1;
+    UINT temp_basis = (basis_index >> insert_index) << (insert_index + 1);
+    return temp_basis | (basis_index & mask);
 }
 
 inline void write_to_device_at_index(StateVector& v, const int index, const Complex& c) {
@@ -51,7 +49,7 @@ void StateVector::set_zero_norm_state() { Kokkos::deep_copy(_amplitudes, 0); }
 
 void StateVector::set_computational_basis(UINT basis) {
     if (basis >= _dim) {
-        throw MatrixIndexOutOfRangeException(
+        throw std::runtime_error(
             "Error: StateVector::set_computational_basis(UINT): "
             "index of "
             "computational basis must be smaller than 2^qubit_count");
@@ -120,18 +118,17 @@ void StateVector::normalize() {
 
 double StateVector::get_zero_probability(UINT target_qubit_index) const {
     if (target_qubit_index >= _n_qubits) {
-        throw QubitIndexOutOfRangeException(
+        throw std::runtime_error(
             "Error: StateVector::get_zero_probability(UINT): index "
             "of target qubit must be smaller than qubit_count");
     }
     const UINT loop_dim = _dim / 2;
-    const UINT mask = 1ULL << target_qubit_index;
     double sum = 0.;
     Kokkos::parallel_reduce(
         "zero_prob",
         loop_dim,
         KOKKOS_CLASS_LAMBDA(const int i, double& lsum) {
-            UINT basis_0 = insert_zero_to_basis_index(i, mask, target_qubit_index);
+            UINT basis_0 = insert_zero_to_basis_index(i, target_qubit_index);
             lsum += norm2(this->_amplitudes[basis_0]);
         },
         sum);
@@ -140,7 +137,7 @@ double StateVector::get_zero_probability(UINT target_qubit_index) const {
 
 double StateVector::get_marginal_probability(const std::vector<UINT>& measured_values) const {
     if (measured_values.size() != _n_qubits) {
-        throw InvalidQubitCountException(
+        throw std::runtime_error(
             "Error: "
             "StateVector::get_marginal_probability(vector<UINT>): "
             "the length of measured_values must be equal to qubit_count");
@@ -169,9 +166,8 @@ double StateVector::get_marginal_probability(const std::vector<UINT>& measured_v
             UINT basis = i;
             for (UINT cursor = 0; cursor < d_target_index.size(); cursor++) {
                 UINT insert_index = d_target_index[cursor];
-                UINT mask = 1ULL << insert_index;
-                basis = insert_zero_to_basis_index(basis, mask, insert_index);
-                basis ^= mask * d_target_value[cursor];
+                basis = insert_zero_to_basis_index(basis, insert_index);
+                basis ^= d_target_value[cursor] << insert_index;
             }
             lsum += norm2(this->_amplitudes[basis]);
         },
@@ -195,13 +191,13 @@ double StateVector::get_entropy() const {
     return ent;
 }
 
-void StateVector::add_state(const StateVector& state) {
+void StateVector::add_state_vector(const StateVector& state) {
     auto amp = state.amplitudes_raw();
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] += amp[i]; });
 }
 
-void StateVector::add_state_with_coef(const Complex& coef, const StateVector& state) {
+void StateVector::add_state_vector_with_coef(const Complex& coef, const StateVector& state) {
     auto amp = state.amplitudes_raw();
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] += coef * amp[i]; });
@@ -262,7 +258,7 @@ std::string StateVector::to_string() const {
 
 void StateVector::load(const std::vector<Complex>& other) {
     if (other.size() != _dim) {
-        throw InvalidStateVectorSizeException(
+        throw std::runtime_error(
             "Error: QuantumStateCpu::load(vector<Complex>&): invalid "
             "length of state");
     }

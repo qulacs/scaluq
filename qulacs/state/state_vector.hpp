@@ -3,10 +3,10 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
 #include <Kokkos_Vector.hpp>
+#include <stdexcept>
 #include <vector>
 
 #include "../types.hpp"
-#include "../util/exception.hpp"
 
 namespace qulacs {
 class StateVector {
@@ -49,8 +49,8 @@ public:
     [[nodiscard]] double get_marginal_probability(const std::vector<UINT>& measured_values) const;
     [[nodiscard]] double get_entropy() const;
 
-    void add_state(const StateVector& state);
-    void add_state_with_coef(const Complex& coef, const StateVector& state);
+    void add_state_vector(const StateVector& state);
+    void add_state_vector_with_coef(const Complex& coef, const StateVector& state);
     void multiply_coef(const Complex& coef);
 
     [[nodiscard]] std::vector<UINT> sampling(UINT sampling_count, UINT seed = 0) const;
