@@ -1,5 +1,6 @@
 #include "gate/constant.hpp"
 #include "gate/gate.hpp"
+#include "gate/gate_npair_qubit.hpp"
 #include "gate/gate_one_control_one_target.hpp"
 #include "gate/gate_one_qubit.hpp"
 #include "gate/gate_quantum_matrix.hpp"

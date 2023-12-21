@@ -54,4 +54,9 @@ void single_qubit_dense_matrix_gate(UINT target_qubit_index,
 void u_gate(UINT target_qubit_index, std::array<Complex, 4> matrix, StateVector& state);
 
 void swap_gate(UINT target1, UINT target2, StateVector& state);
+
+void fusedswap_gate(UINT target_qubit_index_0,
+                    UINT target_qubit_index_1,
+                    UINT block_size,
+                    StateVector& state);
 }  // namespace qulacs

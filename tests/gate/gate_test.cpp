@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <functional>
 #include <gate/gate.hpp>
+#include <gate/gate_npair_qubit.hpp>
 #include <gate/gate_one_control_one_target.hpp>
 #include <gate/gate_one_qubit.hpp>
 #include <gate/gate_quantum_matrix.hpp>
@@ -166,6 +167,26 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
     delete gate;
 }
 
+void run_random_gate_apply_fused(UINT n_qubits, UINT target0, UINT target1, UINT block_size) {
+    const UINT dim = 1ULL << n_qubits;
+    StateVector state_ref = StateVector::Haar_random_state(n_qubits);
+    StateVector state = state_ref;
+    QuantumGate* swap_gate;
+
+    // update "state_ref" using SWAP gate
+    for (UINT i = 0; i < block_size; i++) {
+        swap_gate = new SWAP(target0 + i, target1 + i);
+        swap_gate->update_quantum_state(state_ref);
+        delete swap_gate;
+    }
+
+    swap_gate = new FusedSWAP(target0, target1, block_size);
+    swap_gate->update_quantum_state(state);
+    for (UINT i = 0; i < dim; i++) {
+        ASSERT_NEAR(std::abs(state[i] - state_ref[i]), 0, eps);
+    }
+}
+
 TEST(GateTest, ApplyI) { run_random_gate_apply<I>(5, make_I); }
 TEST(GateTest, ApplyX) { run_random_gate_apply<X>(5, make_X); }
 TEST(GateTest, ApplyY) { run_random_gate_apply<Y>(5, make_Y); }
@@ -188,4 +209,17 @@ TEST(GateTest, ApplyU1) { run_random_gate_apply<U1>(5, make_U); }
 TEST(GateTest, ApplyU2) { run_random_gate_apply<U2>(5, make_U); }
 TEST(GateTest, ApplyU3) { run_random_gate_apply<U3>(5, make_U); }
 TEST(GateTest, ApplyTwoQubit) { run_random_gate_apply_two_qubit(5); }
+TEST(GateTest, ApplyFused) {
+    UINT n_qubits = 10;
+    for (UINT t0 = 0; t0 < n_qubits; t0++) {
+        for (UINT t1 = 0; t1 < n_qubits; t1++) {
+            if (t0 == t1) continue;
+            UINT max_bs =
+                std::min((t0 < t1) ? (t1 - t0) : (t0 - t1), std::min(n_qubits - t0, n_qubits - t1));
+            for (UINT bs = 1; bs <= max_bs; bs++) {
+                run_random_gate_apply_fused(n_qubits, t0, t1, bs);
+            }
+        }
+    }
+}
 }  // namespace qulacs
