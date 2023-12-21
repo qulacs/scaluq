@@ -14,4 +14,4 @@ void U2::update_quantum_state(StateVector& state_vector) const {
 void U3::update_quantum_state(StateVector& state_vector) const {
     u_gate(this->_target, this->_matrix, state_vector);
 }
-} // namespace qulacs
+}  // namespace qulacs
