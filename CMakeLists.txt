@@ -17,6 +17,9 @@ endif(NOT DEFINED QULACS_USE_PYTHON)
 if(NOT DEFINED QULACS_USE_TEST)
     set(QULACS_USE_TEST ON)
 endif(NOT DEFINED QULACS_USE_TEST)
+if(NOT DEFINED QULACS_USE_EXE)
+    set(QULACS_USE_EXE ON)
+endif(NOT DEFINED QULACS_USE_EXE)
 
 message(STATUS "QULACS_USE_PYTHON = ${QULACS_USE_PYTHON}")
 message(STATUS "QULACS_USE_TEST = ${QULACS_USE_TEST}")
@@ -138,6 +141,9 @@ endif(QULACS_USE_PYTHON)
 if(QULACS_USE_TEST)
     add_subdirectory(tests)
 endif(QULACS_USE_TEST)
+if(QULACS_USE_EXE)
+    add_subdirectory(exe)
+endif(QULACS_USE_EXE)
 
 ### Custom target ###
 # test

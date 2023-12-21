@@ -21,8 +21,8 @@ void cnot_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& s
     auto amplitudes = state.amplitudes_raw();
     Kokkos::parallel_for(
         1ULL << (n_qubits - 2), KOKKOS_LAMBDA(const UINT& it) {
-            UINT i = (it & low_mask) | ((it & mid_mask) << 1) | 
-            ((it & high_mask) << 2) | control_mask;
+            UINT i =
+                (it & low_mask) | ((it & mid_mask) << 1) | ((it & high_mask) << 2) | control_mask;
             UINT j = i | target_mask;
             Kokkos::Experimental::swap(amplitudes[i], amplitudes[j]);
         });
@@ -43,8 +43,8 @@ void cz_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& sta
     auto amplitudes = state.amplitudes_raw();
     Kokkos::parallel_for(
         1ULL << (n_qubits - 2), KOKKOS_LAMBDA(const UINT& it) {
-            UINT i = (it & low_mask) | ((it & mid_mask) << 1) | 
-            ((it & high_mask) << 2) | control_mask | target_mask;
+            UINT i = (it & low_mask) | ((it & mid_mask) << 1) | ((it & high_mask) << 2) |
+                     control_mask | target_mask;
             amplitudes[i] *= -1;
         });
 }
