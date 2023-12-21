@@ -39,7 +39,7 @@ void fusedswap_gate(UINT target_qubit_index_0,
                               ((jblk_head + kblk_masked) << lower_index);
                     Kokkos::parallel_for(
                         iblk_dim, KOKKOS_LAMBDA(const UINT& i) {
-                            Kokkos::Experimental::swap(amplitudes[si], amplitudes[ti]);
+                            Kokkos::Experimental::swap(amplitudes[si + i], amplitudes[ti + i]);
                         });
                 });
         });
