@@ -14,7 +14,7 @@ matrix_2_2 get_IBMQ_matrix(double theta, double phi, double lambda) {
     return {cos_val, -exp_val2 * sin_val, exp_val1 * sin_val, exp_val1 * exp_val2 * cos_val};
 }
 
-void u_gate(UINT target_qubit_index, matrix_2_2 matrix, StateVector& state) {
+void u_gate(UINT target_qubit_index, const matrix_2_2& matrix, StateVector& state) {
     single_qubit_dense_matrix_gate(target_qubit_index, matrix, state);
 }
 }  // namespace qulacs

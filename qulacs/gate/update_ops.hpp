@@ -51,5 +51,5 @@ void single_qubit_dense_matrix_gate(UINT target_qubit_index,
                                     const matrix_2_2& matrix,
                                     StateVector& state);
 
-void u_gate(UINT target_qubit_index, matrix_2_2 matrix, StateVector& state);
+void u_gate(UINT target_qubit_index, const matrix_2_2& matrix, StateVector& state);
 }  // namespace qulacs
