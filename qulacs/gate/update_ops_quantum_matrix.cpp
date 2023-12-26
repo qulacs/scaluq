@@ -7,17 +7,11 @@
 
 namespace qulacs {
 matrix_2_2 get_IBMQ_matrix(double theta, double phi, double lambda) {
-    matrix_2_2 matrix;
-    Complex im = Complex(0, 1);
-    Complex exp_val1 = Kokkos::exp(im * phi);
-    Complex exp_val2 = Kokkos::exp(im * lambda);
+    Complex exp_val1 = Kokkos::exp(Complex(0, phi));
+    Complex exp_val2 = Kokkos::exp(Complex(0, lambda));
     Complex cos_val = Kokkos::cos(theta / 2.);
     Complex sin_val = Kokkos::sin(theta / 2.);
-    matrix.val[0][0] = cos_val;
-    matrix.val[0][1] = -exp_val2 * sin_val;
-    matrix.val[1][0] = exp_val1 * sin_val;
-    matrix.val[1][1] = exp_val1 * exp_val2 * cos_val;
-    return matrix;
+    return {cos_val, -exp_val2 * sin_val, exp_val1 * sin_val, exp_val1 * exp_val2 * cos_val};
 }
 
 void u_gate(UINT target_qubit_index, matrix_2_2 matrix, StateVector& state) {
