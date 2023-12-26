@@ -89,23 +89,6 @@ void tdag_gate(UINT target_qubit_index, StateVector& state) {
     single_qubit_phase_gate(target_qubit_index, Complex(1.0 / M_SQRT2, -1.0 / M_SQRT2), state);
 }
 
-void single_qubit_dense_matrix_gate(UINT target_qubit_index,
-                                    const std::array<Complex, 4> matrix,
-                                    StateVector& state) {
-    const UINT n_qubits = state.n_qubits();
-    const UINT low_mask = (1ULL << target_qubit_index) - 1;
-    const UINT high_mask = ~low_mask;
-    auto amplitudes = state.amplitudes_raw();
-    Kokkos::parallel_for(
-        1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
-            UINT i = (it & high_mask) << 1 | (it & low_mask);
-            Complex cval_0 = amplitudes[i];
-            Complex cval_1 = amplitudes[i | (1ULL << target_qubit_index)];
-            amplitudes[i] = matrix[0] * cval_0 + matrix[1] * cval_1;
-            amplitudes[i | (1ULL << target_qubit_index)] = matrix[2] * cval_0 + matrix[3] * cval_1;
-        });
-}
-
 void sqrtx_gate(UINT target_qubit_index, StateVector& state) {
     single_qubit_dense_matrix_gate(target_qubit_index, SQRT_X_GATE_MATRIX, state);
 }

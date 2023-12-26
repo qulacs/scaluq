@@ -13,7 +13,7 @@ void single_qubit_dense_matrix_gate(UINT target_qubit_index,
     const UINT mask_high = ~mask_low;
     auto amplitudes = state.amplitudes_raw();
     Kokkos::parallel_for(
-        state.dim() - 1, KOKKOS_LAMBDA(const UINT it) {
+        state.dim() / 2, KOKKOS_LAMBDA(const UINT it) {
             UINT basis_0 = (it & mask_low) + ((it & mask_high) << 1);
             UINT basis_1 = basis_0 + mask;
             Complex val0 = amplitudes[basis_0];

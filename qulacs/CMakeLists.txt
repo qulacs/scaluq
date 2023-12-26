@@ -6,12 +6,14 @@ target_sources(qulacs PRIVATE
     gate/gate_npair_qubit.cpp
     gate/gate_one_control_one_target.cpp
     gate/gate_one_qubit.cpp
+    gate/gate_pauli.cpp
     gate/gate_quantum_matrix.cpp
     gate/gate_two_qubit.cpp
-    gate/update_ops_matrix_dense_single.cpp
+    gate/update_ops_dense_matrix.cpp
     gate/update_ops_npair_qubit.cpp
-    gate/update_ops_one_qubit.cpp
     gate/update_ops_one_control_one_target.cpp
+    gate/update_ops_one_qubit.cpp
+    gate/update_ops_pauli.cpp
     gate/update_ops_quantum_matrix.cpp
     gate/update_ops_two_qubit.cpp
     state/state_vector.cpp
