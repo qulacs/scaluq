@@ -25,18 +25,20 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matr
     Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
+        auto state_cp = state.amplitudes();
         for (int i = 0; i < dim; i++) {
-            test_state[i] = state[i];
+            test_state[i] = state_cp[i];
         }
 
         const UINT target = random.int64() % n_qubits;
         const QuantumGateConstructor gate(target);
         gate.update_quantum_state(state);
+        state_cp = state.amplitudes();
 
         test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
         }
     }
 }
@@ -49,8 +51,9 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd(double)
     Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
+        auto state_cp = state.amplitudes();
         for (int i = 0; i < dim; i++) {
-            test_state[i] = state[i];
+            test_state[i] = state_cp[i];
         }
 
         const double angle = M_PI * random.uniform();
@@ -58,11 +61,12 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd(double)
         const UINT target = random.int64() % n_qubits;
         const QuantumGateConstructor gate(target, angle);
         gate.update_quantum_state(state);
+        state_cp = state.amplitudes();
 
         test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
         }
     }
 }
