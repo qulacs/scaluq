@@ -1,11 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
 
-add_library(qulacs)
-
-target_compile_options(qulacs PRIVATE
-    -Wall -Wextra -Wunused-parameter -Wshadow -pedantic
-    -Wsign-compare -Wtype-limits -Wuninitialized)
-
 target_sources(qulacs PRIVATE
     gate/gate_one_control_one_target.cpp
     gate/gate_one_qubit.cpp

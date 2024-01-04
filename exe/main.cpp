@@ -6,7 +6,7 @@ using namespace qulacs;
 
 void run() {
     auto state = StateVector::Haar_random_state(3);
-    for (int i = 0; i < state.dim(); i++) {
+    for (UINT i = 0; i < state.dim(); i++) {
         std::cout << state[i] << std::endl;
     }
 }
