@@ -38,7 +38,7 @@ TEST(StateVectorTest, ZeroNormState) {
     state.set_zero_norm_state();
     auto state_cp = state.amplitudes();
 
-    for (int i = 0; i < state.dim(); ++i) {
+    for (UINT i = 0; i < state.dim(); ++i) {
         ASSERT_EQ((CComplex)state_cp[i], CComplex(0, 0));
     }
 }
@@ -50,7 +50,7 @@ TEST(StateVectorTest, ComputationalBasisState) {
     state.set_computational_basis(31);
     auto state_cp = state.amplitudes();
 
-    for (int i = 0; i < state.dim(); ++i) {
+    for (UINT i = 0; i < state.dim(); ++i) {
         if (i == 31) {
             ASSERT_EQ((CComplex)state_cp[i], CComplex(1, 0));
         } else {

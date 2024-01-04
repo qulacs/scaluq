@@ -13,7 +13,7 @@ void cnot_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& s
     auto [min_qubit_index, max_qubit_index] =
         Kokkos::minmax(control_qubit_index, target_qubit_index);
     const UINT low_mask = (1ULL << min_qubit_index) - 1;
-    const UINT mid_mask = (1ULL << (max_qubit_index - 1) - 1) ^ low_mask;
+    const UINT mid_mask = ((1ULL << (max_qubit_index - 1)) - 1) ^ low_mask;
     const UINT high_mask = ~(low_mask | mid_mask);
 
     auto amplitudes = state.amplitudes_raw();
@@ -33,7 +33,7 @@ void cz_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& sta
     auto [min_qubit_index, max_qubit_index] =
         Kokkos::minmax(control_qubit_index, target_qubit_index);
     const UINT low_mask = (1ULL << min_qubit_index) - 1;
-    const UINT mid_mask = (1ULL << (max_qubit_index - 1) - 1) ^ low_mask;
+    const UINT mid_mask = ((1ULL << (max_qubit_index - 1)) - 1) ^ low_mask;
     const UINT high_mask = ~(low_mask | mid_mask);
 
     auto amplitudes = state.amplitudes_raw();

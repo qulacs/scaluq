@@ -20,7 +20,7 @@ public:
 };
 class U2 : public QuantumGate {
     UINT _target;
-    double _lambda, _phi;
+    double _phi, _lambda;
     matrix_2_2 _matrix;
 
 public:
@@ -32,7 +32,7 @@ public:
 
 class U3 : public QuantumGate {
     UINT _target;
-    double _theta, _lambda, _phi;
+    double _theta, _phi, _lambda;
     matrix_2_2 _matrix;
 
 public:

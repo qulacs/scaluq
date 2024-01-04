@@ -6,7 +6,7 @@
 #include "update_ops.hpp"
 
 namespace qulacs {
-void i_gate(UINT target_qubit_index, StateVector& state) {}
+void i_gate(UINT, StateVector&) {}
 
 void x_gate(UINT target_qubit_index, StateVector& state) {
     const UINT n_qubits = state.n_qubits();
