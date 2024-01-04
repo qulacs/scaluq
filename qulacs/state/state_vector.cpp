@@ -33,13 +33,6 @@ StateVector::StateVector(UINT n_qubits)
     set_zero_state();
 }
 
-StateVector& StateVector::operator=(const StateVector& other) {
-    _n_qubits = other.n_qubits();
-    _dim = other.dim();
-    Kokkos::deep_copy(_amplitudes, other.amplitudes_raw());
-    return *this;
-}
-
 void StateVector::set_zero_state() {
     Kokkos::deep_copy(_amplitudes, 0);
     write_to_device_at_index(*this, 0, 1);

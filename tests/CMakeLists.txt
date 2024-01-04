@@ -7,6 +7,10 @@ add_executable(qulacs_test EXCLUDE_FROM_ALL
     state/state_vector_test.cpp
 )
 
+target_compile_options(qulacs_test PRIVATE
+    -Wall -Wextra -Wunused-parameter -Wshadow -pedantic
+    -Wsign-compare -Wtype-limits -Wuninitialized)
+
 target_link_libraries(qulacs_test PRIVATE
     qulacs
     Kokkos::kokkos

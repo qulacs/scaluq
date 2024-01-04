@@ -16,8 +16,9 @@ class StateVector {
 public:
     StateVector() = default;
     StateVector(UINT n_qubits);
+    StateVector(const StateVector& other) = default;
 
-    StateVector& operator=(const StateVector& other);
+    StateVector& operator=(const StateVector& other) = default;
 
     [[nodiscard]] static StateVector Haar_random_state(UINT n_qubits, UINT seed);
     [[nodiscard]] static StateVector Haar_random_state(UINT n_qubits);
