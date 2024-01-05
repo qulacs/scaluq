@@ -9,10 +9,10 @@ namespace qulacs {
 std::array<Complex, 4> get_IBMQ_matrix(double theta, double phi, double lambda) {
     std::array<Complex, 4> matrix;
     Complex im = Complex(0, 1);
-    Complex exp_val1 = std::exp(im * phi);
-    Complex exp_val2 = std::exp(im * lambda);
-    Complex cos_val = std::cos(theta / 2.);
-    Complex sin_val = std::sin(theta / 2.);
+    Complex exp_val1 = Kokkos::exp(im * phi);
+    Complex exp_val2 = Kokkos::exp(im * lambda);
+    Complex cos_val = Kokkos::cos(theta / 2.);
+    Complex sin_val = Kokkos::sin(theta / 2.);
     matrix[0] = cos_val;
     matrix[1] = -exp_val2 * sin_val;
     matrix[2] = exp_val1 * sin_val;

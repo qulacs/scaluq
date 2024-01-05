@@ -15,8 +15,10 @@
 #include "../test_environment.hpp"
 #include "util.hpp"
 
-namespace qulacs {
+using namespace qulacs;
+
 const auto eps = 1e-12;
+using CComplex = std::complex<double>;
 
 template <class QuantumGateConstructor>
 void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matrix_factory) {
@@ -38,7 +40,7 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matr
         test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs(state[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((CComplex)state[i] - test_state[i]), 0, eps);
         }
     }
 }
@@ -64,7 +66,7 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd(double)
         test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs(state[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((CComplex)state[i] - test_state[i]), 0, eps);
         }
     }
 }
@@ -103,10 +105,11 @@ void run_random_gate_apply(UINT n_qubits,
         test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs(state[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((CComplex)state[i] - test_state[i]), 0, eps);
         }
     }
 }
+*/
 
 void run_random_gate_apply_two_qubit(UINT n_qubits) {
     const int dim = 1ULL << n_qubits;

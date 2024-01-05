@@ -15,29 +15,27 @@ on:
       - "*.md"
 
 jobs:
-  gcc10-build:
-    name: GCC10 build
+  gcc11-build:
+    name: GCC11 build
     strategy:
       matrix:
         python-version: ["3.10"]
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-22.04"
     env:
       CXX_COMPILER: "/usr/lib/ccache/g++"
       C_COMPILER: "/usr/lib/ccache/gcc"
-      QULACS_OPT_FLAGS: "-mtune=haswell -march=haswell -mfpmath=both"
-      COVERAGE: "Yes"
-      USE_TEST: "Yes"
+      QULACS_USE_TEST: "Yes"
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install gcc-10/g++-10
+      - name: Install gcc-11/g++-11
         run: |
-              sudo apt-get update && \
-              sudo apt-get install -y software-properties-common && \
-              sudo apt-get update && \
-              sudo apt-get install -y gcc-10 g++-10 && \
-              sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 && \
-              sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100 \
+          sudo apt update && \
+          sudo apt install -y software-properties-common && \
+          sudo apt update && \
+          sudo apt install -y gcc-11 g++-11 && \
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 && \
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
 
       - name: Setup cmake
         uses: lukka/get-cmake@latest
@@ -48,8 +46,63 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: "${{ github.job }}-ubuntu-20.04"
+          key: "${{ github.job }}-ubuntu-22.04"
           verbose: 2
+
+      - name: Install qulacs for Ubuntu
+        run: ./script/build_gcc.sh
+
+      - name: Test in Ubuntu
+        run: |
+          ninja test -C build -j $(nproc)
+
+  nvcc-build:
+    name: NVCC build
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+    runs-on: "ubuntu-22.04"
+    env:
+      CXX_COMPILER: "/usr/lib/ccache/g++"
+      C_COMPILER: "/usr/lib/ccache/gcc"
+      QULACS_USE_TEST: "Yes"
+      QULACS_USE_CUDA: "Yes"
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install gcc-11/g++-11
+        run: |
+          sudo apt update && \
+          sudo apt install -y software-properties-common && \
+          sudo apt update && \
+          sudo apt install -y gcc-11 g++-11 && \
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 && \
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
+
+      - name: Setup cmake
+        uses: lukka/get-cmake@latest
+
+      - name: Install Ninja
+        run: sudo apt install ninja-build
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: "${{ github.job }}-ubuntu-22.04"
+          verbose: 2
+      
+      - name: Install CUDA toolkit
+        uses: Jimver/cuda-toolkit@v0.2.11
+        with:
+          cuda: "12.2.0"
+          method: "network"
+      
+      - name: Show installed Compiler version
+        run: |
+          nvcc --version
+          gcc --version
+          g++ --version
+          cmake --version
 
       - name: Install qulacs for Ubuntu
         run: ./script/build_gcc.sh
