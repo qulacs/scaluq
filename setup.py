@@ -41,17 +41,8 @@ class CMakeBuild(build_ext):
     def build_extension(self, ext):
         build_args, cmake_args = self._generate_args(ext)
 
-        if self.opt_flags is not None:
-            opt_flags = self.opt_flags
-        elif os.getenv("QULACS_OPT_FLAGS"):
-            opt_flags = os.getenv("QULACS_OPT_FLAGS")
-        else:
-            opt_flags = None
-        if opt_flags:
-            cmake_args += ["-DOPT_FLAGS=" + opt_flags]
-
-        if os.getenv("QULACS_USE_GPU"):
-            cmake_args += ["-DQULACS_USE_GPU:STR=" + os.getenv("QULACS_USE_GPU")]
+        if os.getenv("QULACS_USE_CUDA"):
+            cmake_args += ["-DQULACS_USE_CUDA:STR=" + os.getenv("QULACS_USE_CUDA")]
 
         if os.getenv("QULACS_USE_OMP"):
             cmake_args += ["-DQULACS_USE_OMP:STR=" + os.getenv("QULACS_USE_OMP")]
@@ -85,11 +76,11 @@ class CMakeBuild(build_ext):
             "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=" + archive_dir,
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + extdir,
             "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=" + bindir,
-            "-DCMAKE_POSITION_INDEPENDENT_CODE=Yes",
+            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
             "-DPYTHON_EXECUTABLE=" + sys.executable,
-            "-DPYTHON_SETUP_FLAG:STR=Yes",
-            "-DQULACS_USE_GPU:STR=No",
-            "-DQULACS_USE_PYTHON=Yes",
+            "-DPYTHON_SETUP_FLAG:STR=ON",
+            "-DQULACS_USE_CUDA:STR=OFF",
+            "-DQULACS_USE_PYTHON=ON",
         ]
 
         cfg = "Debug" if self.debug else "Release"

@@ -1,5 +1,5 @@
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <state/state_vector.hpp>
 
-PYBIND11_MODULE(qulacs_core, m) { pybind11::class_<StateVector>(m, "StateVector"); }
+NB_MODULE(qulacs_core, m) { nb::class_<StateVector>(m, "StateVector"); }
