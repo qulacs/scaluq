@@ -50,7 +50,7 @@ jobs:
           verbose: 2
 
       - name: Install qulacs for Ubuntu
-        run: ./script/build_gcc.sh
+        run: CMAKE_BUILD_TYPE=Debug ./script/build_gcc.sh
 
       - name: Test in Ubuntu
         run: |
@@ -106,7 +106,5 @@ jobs:
 
       - name: Install qulacs for Ubuntu
         run: ./script/build_gcc.sh
-
-      - name: Test in Ubuntu
-        run: |
-          ninja test -C build -j $(nproc)
+      
+      # GitHub Actions cannot run CUDA program

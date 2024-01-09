@@ -45,13 +45,13 @@ void cnot_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& s
 
 void cz_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& state);
 
-std::array<Complex, 4> get_IBMQ_matrix(double _theta, double _phi, double _lambda);
+matrix_2_2 get_IBMQ_matrix(double _theta, double _phi, double _lambda);
 
 void single_qubit_dense_matrix_gate(UINT target_qubit_index,
-                                    std::array<Complex, 4> matrix,
+                                    const matrix_2_2& matrix,
                                     StateVector& state);
 
-void u_gate(UINT target_qubit_index, std::array<Complex, 4> matrix, StateVector& state);
+void u_gate(UINT target_qubit_index, const matrix_2_2& matrix, StateVector& state);
 
 void swap_gate(UINT target1, UINT target2, StateVector& state);
 

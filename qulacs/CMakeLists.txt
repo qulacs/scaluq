@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
 
-add_library(qulacs)
-
 target_sources(qulacs PRIVATE
     gate/gate_npair_qubit.cpp
     gate/gate_one_control_one_target.cpp

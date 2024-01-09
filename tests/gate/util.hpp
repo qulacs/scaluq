@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <Eigen/Core>
+#include <state/state_vector.hpp>
 #include <types.hpp>
 
 namespace qulacs {
@@ -89,7 +90,7 @@ static testing::AssertionResult _assert_state_near(const char* state1_name,
                << "Dimension of " << state2_name << " is " << state2.dim() << ".";
     }
 
-    for (int i = 0; i < state1.dim(); i++) {
+    for (UINT i = 0; i < state1.dim(); i++) {
         const double real_diff =
             std::fabs(state1.amplitudes()[i].real() - state2.amplitudes()[i].real());
         if (real_diff > eps) {

@@ -24,39 +24,6 @@ endif(NOT DEFINED QULACS_USE_EXE)
 message(STATUS "QULACS_USE_PYTHON = ${QULACS_USE_PYTHON}")
 message(STATUS "QULACS_USE_TEST = ${QULACS_USE_TEST}")
 
-### Compile Warnings ###
-if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
-    set(WARNING_CPP "-Wall -Wdate-time -Wendif-labels -Werror=format=2 \
-        -Werror=missing-declarations -Werror=return-type -Wextra \
-        -Wfloat-equal -Wimplicit-fallthrough=5 -Wlogical-op \
-        -Wmissing-include-dirs -Wpointer-arith -Wredundant-decls \
-        -Wshadow -Wstrict-aliasing=2 -Wsuggest-attribute=noreturn -Wwrite-strings \
-        -fdiagnostics-color=auto -fstrict-aliasing")
-    # -Werror=undef is eliminated due to conflict with boost
-elseif ((${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
-    set(WARNING_CPP "-Wall -Wdate-time -Wendif-labels -Werror=format=2 \
-        -Werror=missing-declarations -Werror=return-type -Wextra \
-        -Wfloat-equal -Wimplicit-fallthrough \
-        -Wmissing-include-dirs -Wpointer-arith -Wredundant-decls \
-        -Wshadow -Wstrict-aliasing=2 -Wwrite-strings \
-        -fdiagnostics-color=auto -fstrict-aliasing")
-endif()
-
-### Compiler options ###
-if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
-    set(CMAKE_CXX_STANDARD 20)
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-    # Enable pthread
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-
-    # Enable openmp
-    if(QULACS_USE_OMP)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
-        add_compile_definitions(OPENMP)
-    endif()
-endif()
-
 ### Kokkos options ###
 set(Kokkos_ENABLE_SERIAL ON CACHE BOOL "Enable Kokkos Serial backend")
 if(QULACS_USE_OMP)
@@ -132,6 +99,32 @@ if(QULACS_USE_TEST)
 else()
     message(STATUS "Skip downloding googletest")
 endif(QULACS_USE_TEST)
+
+add_library(qulacs)
+
+### Compiler options ###
+if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
+    # Standard
+    target_compile_features(qulacs PUBLIC cxx_std_20)
+    
+    # Warning
+    target_compile_options(qulacs PUBLIC
+        -Wall -Wextra -Wunused-parameter -Wshadow -pedantic
+        -Wsign-compare -Wtype-limits -Wuninitialized)
+
+    # Enable pthread
+    target_compile_options(qulacs PUBLIC -pthread)
+
+    # Enable openmp
+    if(QULACS_USE_OMP)
+        target_compile_options(qulacs PUBLIC -fopenmp)
+        target_compile_definitions(qulacs PUBLIC OPENMP)
+    endif()
+    
+    # Debug options
+    target_compile_options(qulacs PUBLIC $<$<CONFIG:Debug>:-O0 -g -fsanitize=address,undefined>)
+    target_link_options(qulacs PUBLIC $<$<CONFIG:Debug>:-fsanitize=address,undefined>)
+endif()
 
 ### Add subdirectories ###
 add_subdirectory(qulacs)
