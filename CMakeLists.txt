@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.21)
 
 project(qulacs)
 
@@ -6,28 +6,39 @@ include(FetchContent)
 
 ### Define variables ###
 if(NOT DEFINED QULACS_USE_OMP)
-    set(QULACS_USE_OMP Yes)
+    set(QULACS_USE_OMP ON)
 endif(NOT DEFINED QULACS_USE_OMP)
 if(NOT DEFINED QULACS_USE_CUDA)
-    set(QULACS_USE_CUDA No)
+    set(QULACS_USE_CUDA OFF)
 endif(NOT DEFINED QULACS_USE_CUDA)
 if(NOT DEFINED QULACS_USE_PYTHON)
-    set(QULACS_USE_PYTHON No)
+    set(QULACS_USE_PYTHON OFF)
 endif(NOT DEFINED QULACS_USE_PYTHON)
 if(NOT DEFINED QULACS_USE_TEST)
-    set(QULACS_USE_TEST Yes)
+    set(QULACS_USE_TEST ON)
 endif(NOT DEFINED QULACS_USE_TEST)
+if(NOT DEFINED QULACS_USE_EXE)
+    set(QULACS_USE_EXE ON)
+endif(NOT DEFINED QULACS_USE_EXE)
 
 message(STATUS "QULACS_USE_PYTHON = ${QULACS_USE_PYTHON}")
 message(STATUS "QULACS_USE_TEST = ${QULACS_USE_TEST}")
 
 ### Kokkos options ###
-set(Kokkos_ENABLE_SERIAL Yes)
+set(Kokkos_ENABLE_SERIAL ON CACHE BOOL "Enable Kokkos Serial backend")
 if(QULACS_USE_OMP)
-    set(Kokkos_ENABLE_OPENMP Yes)
+    set(Kokkos_ENABLE_OPENMP ON CACHE BOOL "Enable Kokkos OpenMP backend")
 endif(QULACS_USE_OMP)
 if(QULACS_USE_CUDA)
-    set(Kokkos_ENABLE_CUDA Yes)
+    set(Kokkos_ENABLE_CUDA ON CACHE BOOL "Enable Kokkos CUDA backend")
+    set(Kokkos_ARCH_PASCAL61 ON CACHE BOOL "Enable Kokkos CUDA Pascal61 architecture")
+    find_program(CUDA_NVCC_EXECUTABLE nvcc)
+    if(CUDA_NVCC_EXECUTABLE)
+        set(CMAKE_CUDA_COMPILER_WRAPPER ${CUDA_NVCC_EXECUTABLE})
+        message(STATUS "Using nvcc_wrapper for CUDA compilation")
+    else()
+        message(SEND_ERROR "nvcc not found")
+    endif()
 endif(QULACS_USE_CUDA)
 
 ### Fetch dependencies ###
@@ -35,7 +46,7 @@ endif(QULACS_USE_CUDA)
 FetchContent_Declare(
     kokkos_fetch
     GIT_REPOSITORY https://github.com/kokkos/kokkos
-    GIT_TAG 4.1.00
+    GIT_TAG 4.2.00
 )
 FetchContent_GetProperties(kokkos_fetch)
 if(NOT kokkos_fetch_POPULATED)
@@ -89,38 +100,30 @@ else()
     message(STATUS "Skip downloding googletest")
 endif(QULACS_USE_TEST)
 
-### Compile Warnings ###
-if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
-    set(WARNING_CPP "-Wall -Wdate-time -Wendif-labels -Werror=format=2 \
-        -Werror=missing-declarations -Werror=return-type -Wextra \
-        -Wfloat-equal -Wimplicit-fallthrough=5 -Wlogical-op \
-        -Wmissing-include-dirs -Wpointer-arith -Wredundant-decls \
-        -Wshadow -Wstrict-aliasing=2 -Wsuggest-attribute=noreturn -Wwrite-strings \
-        -fdiagnostics-color=auto -fstrict-aliasing")
-    # -Werror=undef is eliminated due to conflict with boost
-elseif ((${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
-    set(WARNING_CPP "-Wall -Wdate-time -Wendif-labels -Werror=format=2 \
-        -Werror=missing-declarations -Werror=return-type -Wextra \
-        -Wfloat-equal -Wimplicit-fallthrough \
-        -Wmissing-include-dirs -Wpointer-arith -Wredundant-decls \
-        -Wshadow -Wstrict-aliasing=2 -Wwrite-strings \
-        -fdiagnostics-color=auto -fstrict-aliasing")
-endif()
+add_library(qulacs)
 
 ### Compiler options ###
 if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
-    set(CMAKE_CXX_STANDARD 20)
-    set(CMAKE_CXX_STANDARD_REQUIRED True)
-	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    # Standard
+    target_compile_features(qulacs PUBLIC cxx_std_20)
+    
+    # Warning
+    target_compile_options(qulacs PUBLIC
+        -Wall -Wextra -Wunused-parameter -Wshadow -pedantic
+        -Wsign-compare -Wtype-limits -Wuninitialized)
 
     # Enable pthread
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+    target_compile_options(qulacs PUBLIC -pthread)
 
     # Enable openmp
     if(QULACS_USE_OMP)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
-        add_compile_definitions(OPENMP)
+        target_compile_options(qulacs PUBLIC -fopenmp)
+        target_compile_definitions(qulacs PUBLIC OPENMP)
     endif()
+    
+    # Debug options
+    target_compile_options(qulacs PUBLIC $<$<CONFIG:Debug>:-O0 -g -fsanitize=address,undefined>)
+    target_link_options(qulacs PUBLIC $<$<CONFIG:Debug>:-fsanitize=address,undefined>)
 endif()
 
 ### Add subdirectories ###
@@ -131,6 +134,9 @@ endif(QULACS_USE_PYTHON)
 if(QULACS_USE_TEST)
     add_subdirectory(tests)
 endif(QULACS_USE_TEST)
+if(QULACS_USE_EXE)
+    add_subdirectory(exe)
+endif(QULACS_USE_EXE)
 
 ### Custom target ###
 # test
