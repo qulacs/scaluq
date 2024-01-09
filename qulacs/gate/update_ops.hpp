@@ -44,4 +44,10 @@ void rz_gate(UINT target_qubit_index, double angle, StateVector& state);
 void cnot_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& state);
 
 void cz_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& state);
+
+std::array<Complex, 4> get_IBMQ_matrix(double _theta, double _phi, double _lambda);
+
+void single_qubit_dense_matrix_gate(UINT target_qubit_index, std::array<Complex, 4> matrix, StateVector& state);
+
+void u_gate(UINT target_qubit_index, std::array<Complex, 4> matrix, StateVector& state);
 }  // namespace qulacs
