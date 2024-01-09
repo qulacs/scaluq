@@ -109,7 +109,6 @@ void run_random_gate_apply(UINT n_qubits,
         }
     }
 }
-*/
 
 void run_random_gate_apply_two_qubit(UINT n_qubits) {
     const int dim = 1ULL << n_qubits;
@@ -225,4 +224,3 @@ TEST(GateTest, ApplyFused) {
         }
     }
 }
-}  // namespace qulacs
