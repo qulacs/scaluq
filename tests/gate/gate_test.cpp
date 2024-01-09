@@ -84,8 +84,9 @@ void run_random_gate_apply(UINT n_qubits,
     Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
+        auto state_cp = state.amplitudes();
         for (int i = 0; i < dim; i++) {
-            test_state[i] = state[i];
+            test_state[i] = state_cp[i];
         }
 
         double theta = M_PI * random.uniform();
@@ -105,11 +106,12 @@ void run_random_gate_apply(UINT n_qubits,
         const UINT target = random.int64() % n_qubits;
         const U3 gate(target, theta, phi, lambda);
         gate.update_quantum_state(state);
+        state_cp = state.amplitudes();
 
         test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
         }
     }
 }
@@ -124,6 +126,7 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
         for (int g = 0; g < 2; g++) {
+            auto state_cp = state.amplitudes();
             for (int i = 0; i < dim; i++) {
                 test_state[i] = state[i];
             }
@@ -139,12 +142,13 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
                 func_eig = get_eigen_matrix_full_qubit_CZ;
             }
             gate->update_quantum_state(state);
+            state_cp = state.amplitudes();
 
             Eigen::MatrixXcd test_mat = func_eig(control, target, n_qubits);
             test_state = test_mat * test_state;
 
             for (int i = 0; i < dim; i++) {
-                ASSERT_NEAR(std::abs(state[i] - test_state[i]), 0, eps);
+                ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
             }
         }
         delete gate;
@@ -153,8 +157,9 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
     func_eig = get_eigen_matrix_full_qubit_SWAP;
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
+        auto state_cp = state.amplitudes();
         for (int i = 0; i < dim; i++) {
-            test_state[i] = state[i];
+            test_state[i] = state_cp[i];
         }
 
         UINT target = random.int64() % n_qubits;
@@ -162,12 +167,13 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
         if (target == control) target = (target + 1) % n_qubits;
         gate = new SWAP(control, target);
         gate->update_quantum_state(state);
+        state_cp = state.amplitudes();
 
         Eigen::MatrixXcd test_mat = func_eig(control, target, n_qubits);
         test_state = test_mat * test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs(state[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
         }
     }
     delete gate;
@@ -185,11 +191,15 @@ void run_random_gate_apply_fused(UINT n_qubits, UINT target0, UINT target1, UINT
         swap_gate->update_quantum_state(state_ref);
         delete swap_gate;
     }
+    auto state_ref_cp = state_ref.amplitudes();
 
     swap_gate = new FusedSWAP(target0, target1, block_size);
     swap_gate->update_quantum_state(state);
+    delete swap_gate;
+    auto state_cp = state.amplitudes();
+
     for (UINT i = 0; i < dim; i++) {
-        ASSERT_NEAR(std::abs(state[i] - state_ref[i]), 0, eps);
+        ASSERT_NEAR(std::abs((CComplex)state_cp[i] - (CComplex)state_ref_cp[i]), 0, eps);
     }
 }
 
