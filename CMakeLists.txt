@@ -68,19 +68,20 @@ if(NOT eigen_fetch_POPULATED)
     add_subdirectory(${eigen_fetch_SOURCE_DIR})
 endif(NOT eigen_fetch_POPULATED)
 
-# pybind11
+# nanobind
 if(QULACS_USE_PYTHON)
+    find_package(Python3 COMPONENTS Interpreter Development.Module REQUIRED)
     FetchContent_Declare(
-        pybind11_fetch
-        GIT_REPOSITORY https://github.com/pybind/pybind11
-        GIT_TAG v2.10.0
+        nanobind_fetch
+        GIT_REPOSITORY https://github.com/wjakob/nanobind
+        GIT_TAG v1.8.0
     )
-    FetchContent_GetProperties(pybind11_fetch)
-    if(NOT pybind11_fetch_POPULATED)
-        message(STATUS "Fetch pybind11 for python-binding")
-        FetchContent_Populate(pybind11_fetch)
-        add_subdirectory(${pybind11_fetch_SOURCE_DIR})
-    endif(NOT pybind11_fetch_POPULATED)
+    FetchContent_GetProperties(nanobind_fetch)
+    if(NOT nanobind_fetch_POPULATED)
+        message(STATUS "Fetch nanobind for python-binding")
+        FetchContent_Populate(nanobind_fetch)
+        add_subdirectory(${nanobind_fetch_SOURCE_DIR})
+    endif(NOT nanobind_fetch_POPULATED)
 endif(QULACS_USE_PYTHON)
 
 # Google test
@@ -138,7 +139,14 @@ if(QULACS_USE_EXE)
     add_subdirectory(exe)
 endif(QULACS_USE_EXE)
 
-### Custom target ###
+# python
+if(QULACS_USE_PYTHON)
+    add_custom_target(
+        python
+        DEPENDS qulacs_core
+    )
+endif(QULACS_USE_PYTHON)
+
 # test
 if(QULACS_USE_TEST)
     add_custom_target(
