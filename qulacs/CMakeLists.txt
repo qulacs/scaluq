@@ -1,10 +1,12 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.11)
+
+add_library(qulacs)
 
 target_sources(qulacs PRIVATE
     gate/gate_one_control_one_target.cpp
     gate/gate_one_qubit.cpp
     gate/gate_quantum_matrix.cpp
-    gate/update_ops_matrix_dense.cpp
+    gate/update_ops_matrix_dense_single.cpp
     gate/update_ops_one_qubit.cpp
     gate/update_ops_one_target_one_control.cpp
     gate/update_ops_quantum_matrix.cpp
