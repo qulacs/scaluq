@@ -27,7 +27,8 @@ KOKKOS_INLINE_FUNCTION
 double SINPI8() { return 0.382683432365090; }
 
 //! identity matrix
-matrix_2_2 I_GATE = {1, 0, 0, 1};
+KOKKOS_INLINE_FUNCTION
+matrix_2_2 I_GATE() { return {1, 0, 0, 1}; };
 //! Pauli matrix X
 matrix_2_2 X_GATE = {0, 1, 1, 0};
 //! Pauli matrix Y
