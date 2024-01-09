@@ -37,7 +37,7 @@ public:
     }
     [[nodiscard]] std::string get_pauli_string() const;
     [[nodiscard]] inline PauliOperator get_dagger() const {
-        return PauliOperator(_target_qubit_list, _pauli_id_list, std::conj(_coef));
+        return PauliOperator(_target_qubit_list, _pauli_id_list, Kokkos::conj(_coef));
     }
     [[nodiscard]] UINT get_qubit_count() const {
         if (_target_qubit_list.empty()) return 0;
@@ -46,6 +46,8 @@ public:
 
     inline void change_coef(Complex new_coef) { _coef = new_coef; }
     void add_single_pauli(UINT target_qubit, UINT pauli_id);
+
+    void apply_to_state(StateVector& state_vector) const;
 
     [[nodiscard]] Complex get_expectation_value(const StateVector& state_vector) const;
     [[nodiscard]] Complex get_transition_amplitude(const StateVector& state_vector_bra,

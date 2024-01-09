@@ -98,6 +98,44 @@ void PauliOperator::add_single_pauli(UINT target_qubit, UINT pauli_id) {
     }
 }
 
+void PauliOperator::apply_to_state(StateVector& state_vector) const {
+    if (state_vector.n_qubits() < get_qubit_count()) {
+        throw std::runtime_error(
+            "PauliOperator::apply_to_state: n_qubits of state_vector is too small to apply the "
+            "operator");
+    }
+    const auto& amplitudes = state_vector.amplitudes_raw();
+    UINT bit_flip_mask = _bit_flip_mask.data_raw()[0];
+    UINT phase_flip_mask = _phase_flip_mask.data_raw()[0];
+    if (bit_flip_mask == 0) {
+        Kokkos::parallel_for(
+            state_vector.dim(), KOKKOS_CLASS_LAMBDA(const UINT& state_idx) {
+                if (std::popcount(state_idx & phase_flip_mask) & 1) {
+                    amplitudes[state_idx] *= -_coef;
+                } else {
+                    amplitudes[state_idx] *= _coef;
+                }
+            });
+        return;
+    }
+    UINT pivot = sizeof(UINT) * 8 - std::countl_zero(bit_flip_mask) - 1;
+    UINT lower_mask = (1ULL << pivot) - 1;
+    UINT upper_mask = ~lower_mask;
+    UINT global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
+    Complex global_phase = PHASE_90ROT.val[global_phase_90rot_count % 4];
+    Kokkos::parallel_for(
+        state_vector.dim() >> 1, KOKKOS_CLASS_LAMBDA(const UINT& state_idx) {
+            UINT basis_0 = (state_idx & upper_mask) << 1 | (state_idx & lower_mask);
+            UINT basis_1 = basis_0 ^ bit_flip_mask;
+            Complex tmp1 = amplitudes[basis_0] * global_phase;
+            Complex tmp2 = amplitudes[basis_1] * global_phase;
+            if (std::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
+            if (std::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
+            amplitudes[basis_0] = tmp1 * _coef;
+            amplitudes[basis_1] = tmp2 * _coef;
+        });
+}
+
 Complex PauliOperator::get_expectation_value(const StateVector& state_vector) const {
     if (state_vector.n_qubits() < get_qubit_count()) {
         throw std::runtime_error(
@@ -112,7 +150,7 @@ Complex PauliOperator::get_expectation_value(const StateVector& state_vector) co
         Kokkos::parallel_reduce(
             state_vector.dim(),
             KOKKOS_CLASS_LAMBDA(const UINT& state_idx, double& sum) {
-                double tmp = std::norm(amplitudes[state_idx]);
+                double tmp = (Kokkos::conj(amplitudes[state_idx]) * amplitudes[state_idx]).real();
                 if (std::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
                 sum += tmp;
             },
@@ -123,15 +161,15 @@ Complex PauliOperator::get_expectation_value(const StateVector& state_vector) co
     UINT lower_mask = (1ULL << pivot) - 1;
     UINT upper_mask = ~lower_mask;
     UINT global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex global_phase = PHASE_90ROT[global_phase_90rot_count % 4];
+    Complex global_phase = PHASE_90ROT.val[global_phase_90rot_count % 4];
     double res;
     Kokkos::parallel_reduce(
         state_vector.dim() >> 1,
         KOKKOS_CLASS_LAMBDA(const UINT& state_idx, double& sum) {
             UINT basis_0 = (state_idx & upper_mask) << 1 | (state_idx & lower_mask);
             UINT basis_1 = basis_0 ^ bit_flip_mask;
-            double tmp =
-                std::real(amplitudes[basis_0] * std::conj(amplitudes[basis_1]) * global_phase * 2.);
+            double tmp = Kokkos::real(amplitudes[basis_0] * Kokkos::conj(amplitudes[basis_1]) *
+                                      global_phase * 2.);
             if (std::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
             sum += tmp;
         },
@@ -158,7 +196,7 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
         Kokkos::parallel_reduce(
             state_vector_bra.dim(),
             KOKKOS_CLASS_LAMBDA(const UINT& state_idx, Complex& sum) {
-                Complex tmp = std::conj(amplitudes_bra[state_idx]) * amplitudes_ket[state_idx];
+                Complex tmp = Kokkos::conj(amplitudes_bra[state_idx]) * amplitudes_ket[state_idx];
                 if (std::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
                 sum += tmp;
             },
@@ -169,7 +207,7 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
     UINT lower_mask = (1ULL << pivot) - 1;
     UINT upper_mask = ~lower_mask;
     UINT global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex global_phase = PHASE_90ROT[global_phase_90rot_count % 4];
+    Complex global_phase = PHASE_90ROT.val[global_phase_90rot_count % 4];
     Complex res;
     Kokkos::parallel_reduce(
         state_vector_bra.dim() >> 1,
@@ -177,10 +215,10 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
             UINT basis_0 = (state_idx & upper_mask) << 1 | (state_idx & lower_mask);
             UINT basis_1 = basis_0 ^ bit_flip_mask;
             Complex tmp1 =
-                std::conj(amplitudes_bra[basis_1]) * amplitudes_ket[basis_0] * global_phase;
+                Kokkos::conj(amplitudes_bra[basis_1]) * amplitudes_ket[basis_0] * global_phase;
             if (std::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
             Complex tmp2 =
-                std::conj(amplitudes_bra[basis_0]) * amplitudes_ket[basis_1] * global_phase;
+                Kokkos::conj(amplitudes_bra[basis_0]) * amplitudes_ket[basis_1] * global_phase;
             if (std::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
             sum += tmp1 + tmp2;
         },
@@ -206,7 +244,7 @@ PauliOperator PauliOperator::operator*(const PauliOperator& target) const {
     if (extra_90rot_cnt < 0) extra_90rot_cnt += 4;
     return PauliOperator(_bit_flip_mask ^ target._bit_flip_mask,
                          _phase_flip_mask ^ target._phase_flip_mask,
-                         _coef * target._coef * PHASE_90ROT[extra_90rot_cnt]);
+                         _coef * target._coef * PHASE_90ROT.val[extra_90rot_cnt]);
 }
 
 PauliOperator& PauliOperator::operator*=(const PauliOperator& target) {

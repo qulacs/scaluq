@@ -48,6 +48,12 @@ Operator Operator::get_dagger() const {
     return quantum_operator;
 }
 
+void Operator::apply_to_state(StateVector& state_vector) const {
+    for (const PauliOperator& pauli : _operator_list) {
+        pauli.apply_to_state(state_vector);
+    }
+}
+
 Complex Operator::get_expectation_value(const StateVector& state_vector) const {
     if (_n_qubits > state_vector.n_qubits()) {
         throw std::runtime_error(

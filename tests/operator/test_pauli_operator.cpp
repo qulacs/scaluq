@@ -7,6 +7,8 @@
 
 using namespace qulacs;
 
+const double eps = 1e-12;
+
 TEST(PauliOperatorTest, ContainsExtraWhitespace) {
     PauliOperator expected = PauliOperator("X 0", 1.0);
     PauliOperator pauli_whitespace = PauliOperator("X 0 ", 1.0);

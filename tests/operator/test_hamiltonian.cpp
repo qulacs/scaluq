@@ -7,6 +7,8 @@
 
 using namespace qulacs;
 
+const double eps = 1e-12;
+
 std::pair<Operator, Eigen::MatrixXcd> generate_random_observable_with_eigen(UINT n,
                                                                             Random& random) {
     UINT dim = 1ULL << n;

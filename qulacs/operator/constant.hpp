@@ -3,5 +3,7 @@
 #include "../types.hpp"
 
 namespace qulacs {
-constexpr Complex PHASE_90ROT[4] = {1., 1.i, -1., -1.i};
-}
+struct {
+    Complex val[4];
+} PHASE_90ROT = {1., Complex(0., 1.), -1., Complex(0., -1.)};
+}  // namespace qulacs

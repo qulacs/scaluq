@@ -24,6 +24,8 @@ public:
 
     [[nodiscard]] Operator get_dagger() const;
 
+    [[nodiscard]] void apply_to_state(StateVector& state_vector) const;
+
     [[nodiscard]] Complex get_expectation_value(const StateVector& state_vector) const;
     [[nodiscard]] Complex get_transition_amplitude(const StateVector& state_vector_bra,
                                                    const StateVector& state_vector_ket) const;
@@ -36,8 +38,6 @@ public:
     [[nodiscard]] Complex solve_gound_state_eigenvalue_by_power_method(const StateVector& state,
                                                                        UINT iter_count,
                                                                        Complex mu = 0.) const;
-
-    [[nodiscard]] StateVector apply_to_state(const StateVector& state_vector) const;
 
 private:
     std::vector<PauliOperator> _operator_list;
