@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.2.0-devel-ubuntu20.04
+FROM nvidia/cuda:12.2.0-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -10,24 +10,19 @@ ENV PYTHONPATH="${PROJECT_DIR}/build:${PYTHONPATH}"
 
 RUN apt-get update && \
     apt-get install -y software-properties-common && \
-    apt-get update && \
-    apt-get install -y gcc-10 g++-10 && \
-    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 && \
-    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100 \
+    apt-get install -y gcc-11 g++-11 && \
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100 \
     # Remove imagemagick due to https://security-tracker.debian.org/tracker/CVE-2019-10131, which is done in Microsoft's devcontainer image.
     && apt-get purge -y imagemagick imagemagick-6-common \
     && apt-get install -y --no-install-recommends \
     ca-certificates \
     clang-format \
-    g++-10 \
-    cmake \
     curl \
     git \
     gdb \
     libboost-dev \
     libpython3-dev \
-    manpages \
-    man-db \
     ninja-build \
     python3 \
     python3-distutils \
@@ -37,6 +32,13 @@ RUN apt-get update && \
 
 RUN pip install -U pip \
     && pip install black flake8 openfermion mypy pybind11-stubgen
+
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.28.0/cmake-3.28.0-Linux-x86_64.sh -q -O /tmp/cmake-install.sh && \
+    chmod u+x /tmp/cmake-install.sh && \
+    mkdir /opt/cmake-3.28.0 && \
+    /tmp/cmake-install.sh --skip-license --prefix=/opt/cmake-3.28.0 && \
+    rm /tmp/cmake-install.sh && \
+    ln -s /opt/cmake-3.28.0/bin/* /usr/local/bin
 
 RUN git clone --recursive https://github.com/kokkos/kokkos.git /tmp/kokkos --depth 1 && \
     mkdir /tmp/kokkos/build && \
