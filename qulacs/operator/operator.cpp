@@ -42,14 +42,14 @@ void Operator::add_random_operator(UINT operator_count) {
 
 Operator Operator::get_dagger() const {
     Operator quantum_operator(_n_qubits);
-    for (auto pauli : this->_operator_list) {
+    for (const auto& pauli : this->_operator_list) {
         quantum_operator.add_operator(pauli.get_dagger());
     }
     return quantum_operator;
 }
 
 void Operator::apply_to_state(StateVector& state_vector) const {
-    for (const PauliOperator& pauli : _operator_list) {
+    for (const auto& pauli : _operator_list) {
         pauli.apply_to_state(state_vector);
     }
 }
@@ -60,7 +60,7 @@ Complex Operator::get_expectation_value(const StateVector& state_vector) const {
             "Operator::get_expectation_value: n_qubits of state_vector is too small");
     }
     Complex res = 0.;
-    for (const PauliOperator& pauli : _operator_list) {
+    for (const auto& pauli : _operator_list) {
         res += pauli.get_expectation_value(state_vector);
     }
     return res;
@@ -78,7 +78,7 @@ Complex Operator::get_transition_amplitude(const StateVector& state_vector_bra,
             "small");
     }
     Complex res;
-    for (const PauliOperator& pauli : _operator_list) {
+    for (const auto& pauli : _operator_list) {
         res += pauli.get_transition_amplitude(state_vector_bra, state_vector_ket);
     }
     return res;
