@@ -21,6 +21,8 @@ if(NOT DEFINED QULACS_USE_EXE)
     set(QULACS_USE_EXE ON)
 endif(NOT DEFINED QULACS_USE_EXE)
 
+set(BUILD_SHARED_LIBS ON CACHE BOOL "Build project as a shared library for dynamic linking")
+
 message(STATUS "QULACS_USE_PYTHON = ${QULACS_USE_PYTHON}")
 message(STATUS "QULACS_USE_TEST = ${QULACS_USE_TEST}")
 
@@ -70,7 +72,7 @@ endif(NOT eigen_fetch_POPULATED)
 
 # nanobind
 if(QULACS_USE_PYTHON)
-    find_package(Python3 COMPONENTS Interpreter Development.Module REQUIRED)
+    find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
     FetchContent_Declare(
         nanobind_fetch
         GIT_REPOSITORY https://github.com/wjakob/nanobind
