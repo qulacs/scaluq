@@ -24,7 +24,7 @@ public:
 
     [[nodiscard]] Operator get_dagger() const;
 
-    [[nodiscard]] void apply_to_state(StateVector& state_vector) const;
+    void apply_to_state(StateVector& state_vector) const;
 
     [[nodiscard]] Complex get_expectation_value(const StateVector& state_vector) const;
     [[nodiscard]] Complex get_transition_amplitude(const StateVector& state_vector_bra,
