@@ -3,6 +3,11 @@
 #include "update_ops.hpp"
 
 namespace qulacs {
+GatePtr S::get_inverse() const { return std::make_unique<Sdag>(_target); }
+GatePtr T::get_inverse() const { return std::make_unique<Tdag>(_target); }
+GatePtr sqrtX::get_inverse() const { return std::make_unique<sqrtXdag>(_target); }
+GatePtr sqrtY::get_inverse() const { return std::make_unique<sqrtYdag>(_target); }
+
 void I::update_quantum_state(StateVector& state_vector) const {
     i_gate(this->_target, state_vector);
 }
