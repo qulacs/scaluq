@@ -98,8 +98,6 @@ public:
 };
 
 class T : public QuantumGateOneQubit {
-    UINT _target;
-
 public:
     T(UINT target) : QuantumGateOneQubit(target){};
 
