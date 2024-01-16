@@ -122,7 +122,7 @@ void PauliOperator::apply_to_state(StateVector& state_vector) const {
     UINT lower_mask = (1ULL << pivot) - 1;
     UINT upper_mask = ~lower_mask;
     UINT global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex global_phase = PHASE_90ROT.val[global_phase_90rot_count % 4];
+    Complex global_phase = PHASE_90ROT().val[global_phase_90rot_count % 4];
     Kokkos::parallel_for(
         state_vector.dim() >> 1, KOKKOS_CLASS_LAMBDA(const UINT& state_idx) {
             UINT basis_0 = (state_idx & upper_mask) << 1 | (state_idx & lower_mask);
@@ -161,7 +161,7 @@ Complex PauliOperator::get_expectation_value(const StateVector& state_vector) co
     UINT lower_mask = (1ULL << pivot) - 1;
     UINT upper_mask = ~lower_mask;
     UINT global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex global_phase = PHASE_90ROT.val[global_phase_90rot_count % 4];
+    Complex global_phase = PHASE_90ROT().val[global_phase_90rot_count % 4];
     double res;
     Kokkos::parallel_reduce(
         state_vector.dim() >> 1,
@@ -207,7 +207,7 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
     UINT lower_mask = (1ULL << pivot) - 1;
     UINT upper_mask = ~lower_mask;
     UINT global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex global_phase = PHASE_90ROT.val[global_phase_90rot_count % 4];
+    Complex global_phase = PHASE_90ROT().val[global_phase_90rot_count % 4];
     Complex res;
     Kokkos::parallel_reduce(
         state_vector_bra.dim() >> 1,
@@ -244,7 +244,7 @@ PauliOperator PauliOperator::operator*(const PauliOperator& target) const {
     if (extra_90rot_cnt < 0) extra_90rot_cnt += 4;
     return PauliOperator(_bit_flip_mask ^ target._bit_flip_mask,
                          _phase_flip_mask ^ target._phase_flip_mask,
-                         _coef * target._coef * PHASE_90ROT.val[extra_90rot_cnt]);
+                         _coef * target._coef * PHASE_90ROT().val[extra_90rot_cnt]);
 }
 
 PauliOperator& PauliOperator::operator*=(const PauliOperator& target) {
