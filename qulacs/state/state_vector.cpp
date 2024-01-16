@@ -258,6 +258,14 @@ void StateVector::load(const std::vector<Complex>& other) {
     _amplitudes = convert_host_vector_to_device_view(other);
 }
 
+StateVector StateVector::copy() const {
+    StateVector new_vec(_n_qubits);
+    auto new_amp = new_vec.amplitudes_raw();
+    Kokkos::parallel_for(
+        _dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { new_amp[i] = _amplitudes[i]; });
+    return new_vec;
+}
+
 std::ostream& operator<<(std::ostream& os, const StateVector& state) {
     os << state.to_string();
     return os;
