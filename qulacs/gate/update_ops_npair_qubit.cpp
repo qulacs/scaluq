@@ -14,8 +14,10 @@ void fusedswap_gate(UINT target_qubit_index_0,
     UINT upper_index, lower_index;
     upper_index = std::max(target_qubit_index_0, target_qubit_index_1);
     lower_index = std::min(target_qubit_index_0, target_qubit_index_1);
-    assert(upper_index > (lower_index + block_size - 1));
-    assert(n_qubits > (upper_index + block_size - 1));
+    if (n_qubits > (upper_index + block_size - 1)) {
+        throw std::runtime_error(
+            "FusedSwap: num of qubits must be bigger than upper_index + block_size - 1");
+    }
     const UINT mask_block = (1 << block_size) - 1;
     auto amplitudes = state.amplitudes_raw();
     const UINT kblk_mask = mask_block << upper_index;
