@@ -52,4 +52,20 @@ void single_qubit_dense_matrix_gate(UINT target_qubit_index,
                                     StateVector& state);
 
 void u_gate(UINT target_qubit_index, const matrix_2_2& matrix, StateVector& state);
+
+void swap_gate(UINT target1, UINT target2, StateVector& state);
+
+void fusedswap_gate(UINT target_qubit_index_0,
+                    UINT target_qubit_index_1,
+                    UINT block_size,
+                    StateVector& state);
+
+void pauli_gate(std::vector<UINT> target_qubit_index_list,
+                std::vector<UINT> pauli_id_index,
+                StateVector& state);
+
+void pauli_rotation_gate(std::vector<UINT> target_qubit_index_list,
+                         std::vector<UINT> pauli_id_index,
+                         double angle,
+                         StateVector& state);
 }  // namespace qulacs
