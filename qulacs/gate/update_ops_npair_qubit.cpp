@@ -14,7 +14,7 @@ void fusedswap_gate(UINT target_qubit_index_0,
     UINT upper_index, lower_index;
     upper_index = std::max(target_qubit_index_0, target_qubit_index_1);
     lower_index = std::min(target_qubit_index_0, target_qubit_index_1);
-    if (n_qubits > (upper_index + block_size - 1)) {
+    if (n_qubits <= (upper_index + block_size - 1)) {
         throw std::runtime_error(
             "FusedSwap: num of qubits must be bigger than upper_index + block_size - 1");
     }
