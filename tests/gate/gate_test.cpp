@@ -183,7 +183,7 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
 void run_random_gate_apply_fused(UINT n_qubits, UINT target0, UINT target1, UINT block_size) {
     const UINT dim = 1ULL << n_qubits;
     StateVector state_ref = StateVector::Haar_random_state(n_qubits);
-    StateVector state = state_ref;
+    StateVector state = state_ref.copy();
 
     // update "state_ref" using SWAP gate
     for (UINT i = 0; i < block_size; i++) {
@@ -197,7 +197,7 @@ void run_random_gate_apply_fused(UINT n_qubits, UINT target0, UINT target1, UINT
     QuantumGate* fused_swap_gate;
     fused_swap_gate = new FusedSWAP(target0, target1, block_size);
     fused_swap_gate->update_quantum_state(state);
-    delete fused_swap_gate;
+    delete fused_swap_gate; 
     auto state_cp = state.amplitudes();
 
     for (UINT i = 0; i < dim; i++) {
