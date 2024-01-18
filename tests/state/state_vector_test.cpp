@@ -31,6 +31,15 @@ TEST(StateVectorTest, HaarRandomStateNorm) {
     }
 }
 
+TEST(StateVectorTest, CopyState) {
+    const int n = 5;
+    const auto state = StateVector::Haar_random_state(n);
+    StateVector state_cp = state.copy();
+    auto vec1 = state.amplitudes();
+    auto vec2 = state_cp.amplitudes();
+    ASSERT_EQ(vec1, vec2);
+}
+
 TEST(StateVectorTest, ZeroNormState) {
     const UINT n = 5;
 
