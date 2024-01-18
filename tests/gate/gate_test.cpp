@@ -3,7 +3,7 @@
 #include <Eigen/Core>
 #include <functional>
 #include <gate/gate.hpp>
-#include <gate/gate_one_qubit.hpp>
+#include <gate/gate_factory.hpp>
 #include <state/state_vector.hpp>
 #include <types.hpp>
 #include <util/random.hpp>
@@ -16,7 +16,7 @@ using namespace qulacs;
 const auto eps = 1e-12;
 using CComplex = std::complex<double>;
 
-template <class QuantumGateConstructor>
+template <Gate (*QuantumGateConstructor)(UINT)>
 void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matrix_factory) {
     const auto matrix = matrix_factory();
     const int dim = 1ULL << n_qubits;
@@ -31,7 +31,7 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matr
         }
 
         const UINT target = random.int64() % n_qubits;
-        const QuantumGateConstructor gate(target);
+        const Gate gate = QuantumGateConstructor(target);
         gate.update_quantum_state(state);
         state_cp = state.amplitudes();
 
@@ -43,7 +43,7 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matr
     }
 }
 
-template <class QuantumGateConstructor>
+template <Gate (*QuantumGateConstructor)(UINT, double)>
 void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd(double)> matrix_factory) {
     const int dim = 1ULL << n_qubits;
     Random random;
@@ -59,7 +59,7 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd(double)
         const double angle = M_PI * random.uniform();
         const auto matrix = matrix_factory(angle);
         const UINT target = random.int64() % n_qubits;
-        const QuantumGateConstructor gate(target, angle);
+        const Gate gate = QuantumGateConstructor(target, angle);
         gate.update_quantum_state(state);
         state_cp = state.amplitudes();
 

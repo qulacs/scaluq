@@ -5,13 +5,13 @@
 #include "gate.hpp"
 
 namespace qulacs {
-class QuantumGateOneControlOneTarget : public QuantumGate {
+namespace internal {
+class OneControlOneTargetGateBase : public GateBase {
 protected:
     UINT _control, _target;
 
 public:
-    QuantumGateOneControlOneTarget(UINT control, UINT target)
-        : _control(control), _target(target){};
+    OneControlOneTargetGateBase(UINT control, UINT target) : _control(control), _target(target){};
 
     UINT control() const { return _control; }
     UINT target() const { return _target; }
@@ -20,23 +20,24 @@ public:
     std::vector<UINT> get_control_qubit_list() const override { return {_control}; };
 };
 
-class CNOT : public QuantumGateOneControlOneTarget {
+class CNOTGate : public OneControlOneTargetGateBase {
 public:
-    CNOT(UINT control, UINT target) : QuantumGateOneControlOneTarget(control, target) {}
+    CNOTGate(UINT control, UINT target) : OneControlOneTargetGateBase(control, target) {}
 
-    GatePtr copy() const override { return std::make_unique<CNOT>(*this); }
-    GatePtr get_inverse() const override { return std::make_unique<CNOT>(*this); }
+    GatePtr copy() const override { return std::make_unique<CNOTGate>(*this); }
+    GatePtr get_inverse() const override { return std::make_unique<CNOTGate>(*this); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class CZ : public QuantumGateOneControlOneTarget {
+class CZGate : public OneControlOneTargetGateBase {
 public:
-    CZ(UINT control, UINT target) : QuantumGateOneControlOneTarget(control, target) {}
+    CZGate(UINT control, UINT target) : OneControlOneTargetGateBase(control, target) {}
 
-    GatePtr copy() const override { return std::make_unique<CZ>(*this); }
-    GatePtr get_inverse() const override { return std::make_unique<CZ>(*this); }
+    GatePtr copy() const override { return std::make_unique<CZGate>(*this); }
+    GatePtr get_inverse() const override { return std::make_unique<CZGate>(*this); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
+}  // namespace internal
 }  // namespace qulacs

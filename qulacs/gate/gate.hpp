@@ -4,11 +4,14 @@
 #include "../types.hpp"
 
 namespace qulacs {
-using GatePtr = std::unique_ptr<class QuantumGate>;
+namespace internal {
+using GatePtr = std::unique_ptr<class GateBase>;
+}
 
-class QuantumGate {
+namespace internal {
+class GateBase {
 public:
-    virtual ~QuantumGate() = default;
+    virtual ~GateBase() = default;
 
     [[nodiscard]] virtual std::vector<UINT> get_target_qubit_list() const = 0;
     [[nodiscard]] virtual std::vector<UINT> get_control_qubit_list() const = 0;
@@ -26,4 +29,29 @@ public:
 
     virtual void update_quantum_state(StateVector& state_vector) const = 0;
 };
+
+template <typename T>
+concept GateImpl = std::derived_from<T, GateBase>;
+
+class GateFactory;
+}  // namespace internal
+
+class Gate {
+    friend class internal::GateFactory;
+
+private:
+    internal::GatePtr _gate_ptr;
+    Gate(internal::GatePtr&& gate_ptr) : _gate_ptr(std::move(gate_ptr)) {}
+
+public:
+    std::vector<UINT> get_control_qubit_list() const { return _gate_ptr->get_control_qubit_list(); }
+    std::vector<UINT> get_target_qubit_list() const { return _gate_ptr->get_target_qubit_list(); }
+    UINT n_qubits() const { return _gate_ptr->n_qubits(); }
+    Gate copy() const { return _gate_ptr->copy(); }
+    Gate get_inverse() const { return _gate_ptr->get_inverse(); }
+    void update_quantum_state(StateVector& state_vector) const {
+        _gate_ptr->update_quantum_state(state_vector);
+    }
+};
+
 }  // namespace qulacs

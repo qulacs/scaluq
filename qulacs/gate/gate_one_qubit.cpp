@@ -3,80 +3,82 @@
 #include "update_ops.hpp"
 
 namespace qulacs {
-GatePtr S::get_inverse() const { return std::make_unique<Sdag>(_target); }
-GatePtr T::get_inverse() const { return std::make_unique<Tdag>(_target); }
-GatePtr sqrtX::get_inverse() const { return std::make_unique<sqrtXdag>(_target); }
-GatePtr sqrtY::get_inverse() const { return std::make_unique<sqrtYdag>(_target); }
+namespace internal {
+GatePtr SGate::get_inverse() const { return std::make_unique<SdagGate>(_target); }
+GatePtr TGate::get_inverse() const { return std::make_unique<TdagGate>(_target); }
+GatePtr sqrtXGate::get_inverse() const { return std::make_unique<sqrtXdagGate>(_target); }
+GatePtr sqrtYGate::get_inverse() const { return std::make_unique<sqrtYdagGate>(_target); }
 
-void I::update_quantum_state(StateVector& state_vector) const {
+void IGate::update_quantum_state(StateVector& state_vector) const {
     i_gate(this->_target, state_vector);
 }
 
-void X::update_quantum_state(StateVector& state_vector) const {
+void XGate::update_quantum_state(StateVector& state_vector) const {
     x_gate(this->_target, state_vector);
 }
 
-void Y::update_quantum_state(StateVector& state_vector) const {
+void YGate::update_quantum_state(StateVector& state_vector) const {
     y_gate(this->_target, state_vector);
 }
 
-void Z::update_quantum_state(StateVector& state_vector) const {
+void ZGate::update_quantum_state(StateVector& state_vector) const {
     z_gate(this->_target, state_vector);
 }
 
-void H::update_quantum_state(StateVector& state_vector) const {
+void HGate::update_quantum_state(StateVector& state_vector) const {
     h_gate(this->_target, state_vector);
 }
 
-void S::update_quantum_state(StateVector& state_vector) const {
+void SGate::update_quantum_state(StateVector& state_vector) const {
     s_gate(this->_target, state_vector);
 }
 
-void Sdag::update_quantum_state(StateVector& state_vector) const {
+void SdagGate::update_quantum_state(StateVector& state_vector) const {
     sdag_gate(this->_target, state_vector);
 }
 
-void T::update_quantum_state(StateVector& state_vector) const {
+void TGate::update_quantum_state(StateVector& state_vector) const {
     t_gate(this->_target, state_vector);
 }
 
-void Tdag::update_quantum_state(StateVector& state_vector) const {
+void TdagGate::update_quantum_state(StateVector& state_vector) const {
     tdag_gate(this->_target, state_vector);
 }
 
-void sqrtX::update_quantum_state(StateVector& state_vector) const {
+void sqrtXGate::update_quantum_state(StateVector& state_vector) const {
     sqrtx_gate(this->_target, state_vector);
 }
 
-void sqrtXdag::update_quantum_state(StateVector& state_vector) const {
+void sqrtXdagGate::update_quantum_state(StateVector& state_vector) const {
     sqrtxdag_gate(this->_target, state_vector);
 }
 
-void sqrtY::update_quantum_state(StateVector& state_vector) const {
+void sqrtYGate::update_quantum_state(StateVector& state_vector) const {
     sqrty_gate(this->_target, state_vector);
 }
 
-void sqrtYdag::update_quantum_state(StateVector& state_vector) const {
+void sqrtYdagGate::update_quantum_state(StateVector& state_vector) const {
     sqrtydag_gate(this->_target, state_vector);
 }
 
-void P0::update_quantum_state(StateVector& state_vector) const {
+void P0Gate::update_quantum_state(StateVector& state_vector) const {
     p0_gate(this->_target, state_vector);
 }
 
-void P1::update_quantum_state(StateVector& state_vector) const {
+void P1Gate::update_quantum_state(StateVector& state_vector) const {
     p1_gate(this->_target, state_vector);
 }
 
-void RX::update_quantum_state(StateVector& state_vector) const {
+void RXGate::update_quantum_state(StateVector& state_vector) const {
     rx_gate(this->_target, this->_angle, state_vector);
 }
 
-void RY::update_quantum_state(StateVector& state_vector) const {
+void RYGate::update_quantum_state(StateVector& state_vector) const {
     ry_gate(this->_target, this->_angle, state_vector);
 }
 
-void RZ::update_quantum_state(StateVector& state_vector) const {
+void RZGate::update_quantum_state(StateVector& state_vector) const {
     rz_gate(this->_target, this->_angle, state_vector);
 }
+}  // namespace internal
 }  // namespace qulacs

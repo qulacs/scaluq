@@ -6,33 +6,57 @@
 #include "gate/gate_quantum_matrix.hpp"
 
 namespace qulacs {
-namespace gate {
-GatePtr I(UINT target) { return std::make_unique<qulacs::I>(target); }
-GatePtr X(UINT target) { return std::make_unique<qulacs::X>(target); }
-GatePtr Y(UINT target) { return std::make_unique<qulacs::Y>(target); }
-GatePtr Z(UINT target) { return std::make_unique<qulacs::Z>(target); }
-GatePtr H(UINT target) { return std::make_unique<qulacs::H>(target); }
-GatePtr S(UINT target) { return std::make_unique<qulacs::S>(target); }
-GatePtr Sdag(UINT target) { return std::make_unique<qulacs::Sdag>(target); }
-GatePtr T(UINT target) { return std::make_unique<qulacs::T>(target); }
-GatePtr Tdag(UINT target) { return std::make_unique<qulacs::Tdag>(target); }
-GatePtr sqrtX(UINT target) { return std::make_unique<qulacs::sqrtX>(target); }
-GatePtr sqrtXdag(UINT target) { return std::make_unique<qulacs::sqrtXdag>(target); }
-GatePtr sqrtY(UINT target) { return std::make_unique<qulacs::sqrtY>(target); }
-GatePtr sqrtYdag(UINT target) { return std::make_unique<qulacs::sqrtYdag>(target); }
-GatePtr P0(UINT target) { return std::make_unique<qulacs::P0>(target); }
-GatePtr P1(UINT target) { return std::make_unique<qulacs::P1>(target); }
-GatePtr RX(UINT target, double angle) { return std::make_unique<qulacs::RX>(target, angle); }
-GatePtr RY(UINT target, double angle) { return std::make_unique<qulacs::RY>(target, angle); }
-GatePtr RZ(UINT target, double angle) { return std::make_unique<qulacs::RZ>(target, angle); }
-GatePtr U1(UINT target, double lambda) { return std::make_unique<qulacs::U1>(target, lambda); }
-GatePtr U2(UINT target, double phi, double lambda) {
-    return std::make_unique<qulacs::U2>(target, phi, lambda);
+namespace internal {
+class GateFactory {
+public:
+    template <GateImpl T, typename... Args>
+    static Gate create_gate(Args... args) {
+        return {std::make_unique<T>(args...)};
+    }
+};
+}  // namespace internal
+
+Gate I(UINT target) { return internal::GateFactory::create_gate<internal::IGate>(target); }
+Gate X(UINT target) { return internal::GateFactory::create_gate<internal::XGate>(target); }
+Gate Y(UINT target) { return internal::GateFactory::create_gate<internal::YGate>(target); }
+Gate Z(UINT target) { return internal::GateFactory::create_gate<internal::ZGate>(target); }
+Gate H(UINT target) { return internal::GateFactory::create_gate<internal::HGate>(target); }
+Gate S(UINT target) { return internal::GateFactory::create_gate<internal::SGate>(target); }
+Gate Sdag(UINT target) { return internal::GateFactory::create_gate<internal::SdagGate>(target); }
+Gate T(UINT target) { return internal::GateFactory::create_gate<internal::TGate>(target); }
+Gate Tdag(UINT target) { return internal::GateFactory::create_gate<internal::TdagGate>(target); }
+Gate sqrtX(UINT target) { return internal::GateFactory::create_gate<internal::sqrtXGate>(target); }
+Gate sqrtXdag(UINT target) {
+    return internal::GateFactory::create_gate<internal::sqrtXdagGate>(target);
 }
-GatePtr U3(UINT target, double theta, double phi, double lambda) {
-    return std::make_unique<qulacs::U3>(target, theta, phi, lambda);
+Gate sqrtY(UINT target) { return internal::GateFactory::create_gate<internal::sqrtYGate>(target); }
+Gate sqrtYdag(UINT target) {
+    return internal::GateFactory::create_gate<internal::sqrtYdagGate>(target);
 }
-GatePtr CNOT(UINT control, UINT target) { return std::make_unique<qulacs::CNOT>(control, target); }
-GatePtr CZ(UINT control, UINT target) { return std::make_unique<qulacs::CZ>(control, target); }
-}  // namespace gate
+Gate P0(UINT target) { return internal::GateFactory::create_gate<internal::P0Gate>(target); }
+Gate P1(UINT target) { return internal::GateFactory::create_gate<internal::P1Gate>(target); }
+Gate RX(UINT target, double angle) {
+    return internal::GateFactory::create_gate<internal::RXGate>(target, angle);
+}
+Gate RY(UINT target, double angle) {
+    return internal::GateFactory::create_gate<internal::RYGate>(target, angle);
+}
+Gate RZ(UINT target, double angle) {
+    return internal::GateFactory::create_gate<internal::RZGate>(target, angle);
+}
+Gate U1(UINT target, double lambda) {
+    return internal::GateFactory::create_gate<internal::U1Gate>(target, lambda);
+}
+Gate U2(UINT target, double phi, double lambda) {
+    return internal::GateFactory::create_gate<internal::U2Gate>(target, phi, lambda);
+}
+Gate U3(UINT target, double theta, double phi, double lambda) {
+    return internal::GateFactory::create_gate<internal::U3Gate>(target, theta, phi, lambda);
+}
+Gate CNOT(UINT control, UINT target) {
+    return internal::GateFactory::create_gate<internal::CNOTGate>(control, target);
+}
+Gate CZ(UINT control, UINT target) {
+    return internal::GateFactory::create_gate<internal::CZGate>(control, target);
+}
 }  // namespace qulacs
