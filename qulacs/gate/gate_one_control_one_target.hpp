@@ -20,24 +20,27 @@ public:
     std::vector<UINT> get_control_qubit_list() const override { return {_control}; };
 };
 
-class CNOTGate : public OneControlOneTargetGateBase {
+class CNOTGateImpl : public OneControlOneTargetGateBase {
 public:
-    CNOTGate(UINT control, UINT target) : OneControlOneTargetGateBase(control, target) {}
+    CNOTGateImpl(UINT control, UINT target) : OneControlOneTargetGateBase(control, target) {}
 
-    GatePtr copy() const override { return std::make_unique<CNOTGate>(*this); }
-    GatePtr get_inverse() const override { return std::make_unique<CNOTGate>(*this); }
+    Gate copy() const override { return std::make_shared<CNOTGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<CNOTGateImpl>(*this); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class CZGate : public OneControlOneTargetGateBase {
+class CZGateImpl : public OneControlOneTargetGateBase {
 public:
-    CZGate(UINT control, UINT target) : OneControlOneTargetGateBase(control, target) {}
+    CZGateImpl(UINT control, UINT target) : OneControlOneTargetGateBase(control, target) {}
 
-    GatePtr copy() const override { return std::make_unique<CZGate>(*this); }
-    GatePtr get_inverse() const override { return std::make_unique<CZGate>(*this); }
+    Gate copy() const override { return std::make_shared<CZGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<CZGateImpl>(*this); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 }  // namespace internal
+
+using CNOTGate = internal::GatePtr<internal::CNOTGateImpl>;
+using CZGate = internal::GatePtr<internal::CZGateImpl>;
 }  // namespace qulacs

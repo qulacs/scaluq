@@ -32,7 +32,7 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matr
 
         const UINT target = random.int64() % n_qubits;
         const Gate gate = QuantumGateConstructor(target);
-        gate.update_quantum_state(state);
+        gate->update_quantum_state(state);
         state_cp = state.amplitudes();
 
         test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
@@ -60,7 +60,7 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd(double)
         const auto matrix = matrix_factory(angle);
         const UINT target = random.int64() % n_qubits;
         const Gate gate = QuantumGateConstructor(target, angle);
-        gate.update_quantum_state(state);
+        gate->update_quantum_state(state);
         state_cp = state.amplitudes();
 
         test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;

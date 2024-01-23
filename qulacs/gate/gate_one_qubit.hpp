@@ -27,188 +27,207 @@ public:
     double angle() const { return _angle; }
 };
 
-class IGate : public OneQubitGateBase {
+class IGateImpl : public OneQubitGateBase {
 public:
-    IGate(UINT target) : OneQubitGateBase(target){};
+    IGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    GatePtr copy() const override { return std::make_unique<IGate>(*this); }
-    GatePtr get_inverse() const override { return std::make_unique<IGate>(*this); }
+    Gate copy() const override { return std::make_shared<IGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<IGateImpl>(*this); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class XGate : public OneQubitGateBase {
+class XGateImpl : public OneQubitGateBase {
 public:
-    XGate(UINT target) : OneQubitGateBase(target){};
+    XGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    GatePtr copy() const override { return std::make_unique<XGate>(*this); }
-    GatePtr get_inverse() const override { return std::make_unique<XGate>(*this); }
+    Gate copy() const override { return std::make_shared<XGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<XGateImpl>(*this); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class YGate : public OneQubitGateBase {
+class YGateImpl : public OneQubitGateBase {
 public:
-    YGate(UINT target) : OneQubitGateBase(target){};
+    YGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    GatePtr copy() const override { return std::make_unique<YGate>(*this); }
-    GatePtr get_inverse() const override { return std::make_unique<YGate>(*this); }
+    Gate copy() const override { return std::make_shared<YGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<YGateImpl>(*this); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class ZGate : public OneQubitGateBase {
+class ZGateImpl : public OneQubitGateBase {
 public:
-    ZGate(UINT target) : OneQubitGateBase(target){};
+    ZGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    GatePtr copy() const override { return std::make_unique<ZGate>(*this); }
-    GatePtr get_inverse() const override { return std::make_unique<ZGate>(*this); }
+    Gate copy() const override { return std::make_shared<ZGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<ZGateImpl>(*this); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class HGate : public OneQubitGateBase {
+class HGateImpl : public OneQubitGateBase {
 public:
-    HGate(UINT target) : OneQubitGateBase(target){};
+    HGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    GatePtr copy() const override { return std::make_unique<HGate>(*this); }
-    GatePtr get_inverse() const override { return std::make_unique<HGate>(*this); }
+    Gate copy() const override { return std::make_shared<HGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<HGateImpl>(*this); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class SGate : public OneQubitGateBase {
+class SGateImpl : public OneQubitGateBase {
 public:
-    SGate(UINT target) : OneQubitGateBase(target){};
+    SGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    GatePtr copy() const override { return std::make_unique<SGate>(*this); }
-    GatePtr get_inverse() const override;
+    Gate copy() const override { return std::make_shared<SGateImpl>(*this); }
+    Gate get_inverse() const override;
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class SdagGate : public OneQubitGateBase {
+class SdagGateImpl : public OneQubitGateBase {
 public:
-    SdagGate(UINT target) : OneQubitGateBase(target){};
+    SdagGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    GatePtr copy() const override { return std::make_unique<SdagGate>(*this); }
-    GatePtr get_inverse() const override { return std::make_unique<SGate>(_target); }
+    Gate copy() const override { return std::make_shared<SdagGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<SGateImpl>(_target); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class TGate : public OneQubitGateBase {
+class TGateImpl : public OneQubitGateBase {
 public:
-    TGate(UINT target) : OneQubitGateBase(target){};
+    TGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    GatePtr copy() const override { return std::make_unique<TGate>(*this); }
-    GatePtr get_inverse() const override;
+    Gate copy() const override { return std::make_shared<TGateImpl>(*this); }
+    Gate get_inverse() const override;
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class TdagGate : public OneQubitGateBase {
+class TdagGateImpl : public OneQubitGateBase {
 public:
-    TdagGate(UINT target) : OneQubitGateBase(target){};
+    TdagGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    GatePtr copy() const override { return std::make_unique<TdagGate>(*this); }
-    GatePtr get_inverse() const override { return std::make_unique<TGate>(_target); }
+    Gate copy() const override { return std::make_shared<TdagGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<TGateImpl>(_target); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class sqrtXGate : public OneQubitGateBase {
+class sqrtXGateImpl : public OneQubitGateBase {
 public:
-    sqrtXGate(UINT target) : OneQubitGateBase(target){};
+    sqrtXGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    GatePtr copy() const override { return std::make_unique<sqrtXGate>(*this); }
-    GatePtr get_inverse() const override;
+    Gate copy() const override { return std::make_shared<sqrtXGateImpl>(*this); }
+    Gate get_inverse() const override;
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class sqrtXdagGate : public OneQubitGateBase {
+class sqrtXdagGateImpl : public OneQubitGateBase {
 public:
-    sqrtXdagGate(UINT target) : OneQubitGateBase(target){};
+    sqrtXdagGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    GatePtr copy() const override { return std::make_unique<sqrtXdagGate>(*this); }
-    GatePtr get_inverse() const override { return std::make_unique<sqrtXGate>(_target); }
+    Gate copy() const override { return std::make_shared<sqrtXdagGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<sqrtXGateImpl>(_target); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class sqrtYGate : public OneQubitGateBase {
+class sqrtYGateImpl : public OneQubitGateBase {
 public:
-    sqrtYGate(UINT target) : OneQubitGateBase(target){};
+    sqrtYGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    GatePtr copy() const override { return std::make_unique<sqrtYGate>(*this); }
-    GatePtr get_inverse() const override;
+    Gate copy() const override { return std::make_shared<sqrtYGateImpl>(*this); }
+    Gate get_inverse() const override;
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class sqrtYdagGate : public OneQubitGateBase {
+class sqrtYdagGateImpl : public OneQubitGateBase {
 public:
-    sqrtYdagGate(UINT target) : OneQubitGateBase(target){};
+    sqrtYdagGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    GatePtr copy() const override { return std::make_unique<sqrtYdagGate>(*this); }
-    GatePtr get_inverse() const override { return std::make_unique<sqrtYGate>(_target); }
+    Gate copy() const override { return std::make_shared<sqrtYdagGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<sqrtYGateImpl>(_target); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class P0Gate : public OneQubitGateBase {
+class P0GateImpl : public OneQubitGateBase {
 public:
-    P0Gate(UINT target) : OneQubitGateBase(target){};
+    P0GateImpl(UINT target) : OneQubitGateBase(target){};
 
-    GatePtr copy() const override { return std::make_unique<P0Gate>(*this); }
-    GatePtr get_inverse() const override {
+    Gate copy() const override { return std::make_shared<P0GateImpl>(*this); }
+    Gate get_inverse() const override {
         throw std::runtime_error("P0::get_inverse: Projection gate doesn't have inverse gate");
     }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class P1Gate : public OneQubitGateBase {
+class P1GateImpl : public OneQubitGateBase {
 public:
-    P1Gate(UINT target) : OneQubitGateBase(target){};
+    P1GateImpl(UINT target) : OneQubitGateBase(target){};
 
-    GatePtr copy() const override { return std::make_unique<P1Gate>(*this); }
-    GatePtr get_inverse() const override {
+    Gate copy() const override { return std::make_shared<P1GateImpl>(*this); }
+    Gate get_inverse() const override {
         throw std::runtime_error("P1::get_inverse: Projection gate doesn't have inverse gate");
     }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class RXGate : public OneQubitRotationGateBase {
+class RXGateImpl : public OneQubitRotationGateBase {
 public:
-    RXGate(UINT target, double angle) : OneQubitRotationGateBase(target, angle){};
+    RXGateImpl(UINT target, double angle) : OneQubitRotationGateBase(target, angle){};
 
-    GatePtr copy() const override { return std::make_unique<RXGate>(*this); }
-    GatePtr get_inverse() const override { return std::make_unique<RXGate>(_target, -_angle); }
+    Gate copy() const override { return std::make_shared<RXGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<RXGateImpl>(_target, -_angle); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class RYGate : public OneQubitRotationGateBase {
+class RYGateImpl : public OneQubitRotationGateBase {
 public:
-    RYGate(UINT target, double angle) : OneQubitRotationGateBase(target, angle){};
+    RYGateImpl(UINT target, double angle) : OneQubitRotationGateBase(target, angle){};
 
-    GatePtr copy() const override { return std::make_unique<RYGate>(*this); }
-    GatePtr get_inverse() const override { return std::make_unique<RYGate>(_target, -_angle); }
+    Gate copy() const override { return std::make_shared<RYGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<RYGateImpl>(_target, -_angle); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class RZGate : public OneQubitRotationGateBase {
+class RZGateImpl : public OneQubitRotationGateBase {
 public:
-    RZGate(UINT target, double angle) : OneQubitRotationGateBase(target, angle){};
+    RZGateImpl(UINT target, double angle) : OneQubitRotationGateBase(target, angle){};
 
-    GatePtr copy() const override { return std::make_unique<RZGate>(*this); }
-    GatePtr get_inverse() const override { return std::make_unique<RZGate>(_target, -_angle); }
+    Gate copy() const override { return std::make_shared<RZGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<RZGateImpl>(_target, -_angle); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 }  // namespace internal
+
+using IGate = internal::GatePtr<internal::IGateImpl>;
+using XGate = internal::GatePtr<internal::XGateImpl>;
+using YGate = internal::GatePtr<internal::YGateImpl>;
+using ZGate = internal::GatePtr<internal::ZGateImpl>;
+using HGate = internal::GatePtr<internal::HGateImpl>;
+using SGate = internal::GatePtr<internal::SGateImpl>;
+using SdagGate = internal::GatePtr<internal::SdagGateImpl>;
+using TGate = internal::GatePtr<internal::TGateImpl>;
+using TdagGate = internal::GatePtr<internal::TdagGateImpl>;
+using sqrtXGate = internal::GatePtr<internal::sqrtXGateImpl>;
+using sqrtXdagGate = internal::GatePtr<internal::sqrtXdagGateImpl>;
+using sqrtYGate = internal::GatePtr<internal::sqrtYGateImpl>;
+using sqrtYdagGate = internal::GatePtr<internal::sqrtYdagGateImpl>;
+using P0Gate = internal::GatePtr<internal::P0GateImpl>;
+using P1Gate = internal::GatePtr<internal::P1GateImpl>;
+using RXGate = internal::GatePtr<internal::RXGateImpl>;
+using RYGate = internal::GatePtr<internal::RYGateImpl>;
+using RZGate = internal::GatePtr<internal::RZGateImpl>;
 }  // namespace qulacs

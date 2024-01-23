@@ -4,11 +4,11 @@
 
 namespace qulacs {
 namespace internal {
-void CNOTGate::update_quantum_state(StateVector& state_vector) const {
+void CNOTGateImpl::update_quantum_state(StateVector& state_vector) const {
     cnot_gate(this->_control, this->_target, state_vector);
 }
 
-void CZGate::update_quantum_state(StateVector& state_vector) const {
+void CZGateImpl::update_quantum_state(StateVector& state_vector) const {
     cz_gate(this->_control, this->_target, state_vector);
 }
 }  // namespace internal
