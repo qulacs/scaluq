@@ -33,9 +33,11 @@ public:
 template <GateImpl T>
 class GatePtr {
     friend class GateFactory;
+    template <GateImpl U>
+    friend class GatePtr;
 
 private:
-    std::shared_ptr<internal::GateBase> _gate_ptr;
+    std::shared_ptr<T> _gate_ptr;
 
 public:
     template <GateImpl U>
@@ -51,9 +53,9 @@ public:
         }
     }
     template <GateImpl U>
-    GatePtr(const GatePtr& gate) : GatePtr(gate->_gate_ptr) {}
+    GatePtr(const GatePtr<U>& gate) : GatePtr(gate._gate_ptr) {}
 
-    GateBase* operator->() const { return _gate_ptr.get(); }
+    T* operator->() const { return _gate_ptr.get(); }
 };
 }  // namespace internal
 
