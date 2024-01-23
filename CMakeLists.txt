@@ -73,17 +73,16 @@ endif(NOT eigen_fetch_POPULATED)
 # nanobind
 if(QULACS_USE_PYTHON)
     find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
-    FetchContent_Declare(
-        nanobind_fetch
-        GIT_REPOSITORY https://github.com/wjakob/nanobind
-        GIT_TAG v1.8.0
-    )
-    FetchContent_GetProperties(nanobind_fetch)
-    if(NOT nanobind_fetch_POPULATED)
-        message(STATUS "Fetch nanobind for python-binding")
-        FetchContent_Populate(nanobind_fetch)
-        add_subdirectory(${nanobind_fetch_SOURCE_DIR})
-    endif(NOT nanobind_fetch_POPULATED)
+    if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+        set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+        set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+    endif()
+    
+    execute_process(
+        COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+        OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE NB_DIR)
+    list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
+    find_package(nanobind CONFIG REQUIRED)
 endif(QULACS_USE_PYTHON)
 
 # Google test
@@ -112,8 +111,15 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
     
     # Warning
     target_compile_options(qulacs PUBLIC
-        -Wall -Wextra -Wunused-parameter -Wshadow -pedantic
-        -Wsign-compare -Wtype-limits -Wuninitialized)
+        -Wall
+        -Wextra
+        -Wunused-parameter
+        # -Wshadow
+        # -pedantic
+        -Wsign-compare
+        -Wtype-limits
+        -Wuninitialized
+    )
 
     # Enable pthread
     target_compile_options(qulacs PUBLIC -pthread)

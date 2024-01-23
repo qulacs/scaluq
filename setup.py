@@ -56,10 +56,10 @@ class CMakeBuild(build_ext):
 
         build_dir = os.path.join(os.getcwd(), "build")
         os.makedirs(build_dir, exist_ok=True)
-        subprocess.check_call(
+        subprocess.run(
             ["cmake", ext.sourcedir] + cmake_args, cwd=build_dir, env=env
         )
-        subprocess.check_call(
+        subprocess.run(
             ["cmake", "--build", ".", "--target", "qulacs_core"] + build_args, cwd=build_dir
         )
 

@@ -39,7 +39,7 @@ dev = [
     "flake8",
     "openfermion",
     "mypy",
-    "pybind11-stubgen"
+    "nanobind"
 ]
 
 test = [
