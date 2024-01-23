@@ -28,7 +28,7 @@ public:
     [[nodiscard]] virtual Gate get_inverse() const = 0;
 
     virtual void update_quantum_state(StateVector& state_vector) const = 0;
-    virtual ~QuantumGate() {}
+    virtual ~GateBase() {}
 };
 
 template <GateImpl T>

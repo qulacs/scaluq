@@ -1,8 +1,10 @@
 #pragma once
 
+#include "gate/gate_npair_qubit.hpp"
 #include "gate/gate_one_control_one_target.hpp"
 #include "gate/gate_one_qubit.hpp"
 #include "gate/gate_quantum_matrix.hpp"
+#include "gate/gate_two_qubit.hpp"
 
 namespace qulacs {
 namespace internal {
@@ -65,5 +67,12 @@ Gate CNOT(UINT control, UINT target) {
 }
 Gate CZ(UINT control, UINT target) {
     return internal::GateFactory::create_gate<internal::CZGateImpl>(control, target);
+}
+Gate SWAP(UINT target1, UINT target2) {
+    return internal::GateFactory::create_gate<internal::SWAPGateImpl>(target1, target2);
+}
+Gate FusedSWAP(UINT qubit_index1, UINT qubit_index2, UINT block_size) {
+    return internal::GateFactory::create_gate<internal::FusedSWAPGateImpl>(
+        qubit_index1, qubit_index2, block_size);
 }
 }  // namespace qulacs
