@@ -58,6 +58,7 @@ public:
     [[nodiscard]] std::string to_string() const;
 
     void load(const std::vector<Complex>& other);
+    [[nodiscard]] StateVector copy() const;
 
     friend std::ostream& operator<<(std::ostream& os, const StateVector& state);
 };
