@@ -31,7 +31,7 @@ TEST(PauliOperatorTest, PauliQubitOverflow) {
     std::string Pauli_string = "X 0 X 1 X 3";
     PauliOperator pauli = PauliOperator(Pauli_string, coef);
     StateVector state = StateVector::Haar_random_state(n);
-    EXPECT_THROW(auto exp = pauli.get_expectation_value(state), std::runtime_error);
+    EXPECT_THROW((void)pauli.get_expectation_value(state), std::runtime_error);
 }
 
 TEST(PauliOperatorTest, BrokenPauliStringA) {
@@ -78,11 +78,11 @@ struct PauliTestParam {
     PauliOperator op2;
     PauliOperator expected;
 
-    PauliTestParam(const std::string& test_name,
-                   const PauliOperator& op1,
-                   const PauliOperator& op2,
-                   const PauliOperator& expected)
-        : test_name(test_name), op1(op1), op2(op2), expected(expected) {}
+    PauliTestParam(const std::string& test_name_,
+                   const PauliOperator& op1_,
+                   const PauliOperator& op2_,
+                   const PauliOperator& expected_)
+        : test_name(test_name_), op1(op1_), op2(op2_), expected(expected_) {}
 };
 
 std::ostream& operator<<(std::ostream& stream, const PauliTestParam& p) {
@@ -154,12 +154,12 @@ INSTANTIATE_TEST_CASE_P(
     PauliOperatorMultiplyTest,
     []() {
         double coef = 2.0;
-        unsigned int MAX_TERM = 100;
+        UINT MAX_TERM = 100;
         std::string pauli_string_x = "";
         std::string pauli_string_y = "";
         std::string pauli_string_z = "";
 
-        for (int i = 0; i < MAX_TERM; i++) {
+        for (UINT i = 0; i < MAX_TERM; i++) {
             pauli_string_x += "X " + std::to_string(i);
             pauli_string_y += "Y " + std::to_string(i);
             pauli_string_z += "Z " + std::to_string(i);

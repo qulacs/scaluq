@@ -64,6 +64,7 @@ public:
 
     using ConstReference = _Reference<true>;
     using Reference = _Reference<false>;
+
     [[nodiscard]] inline ConstReference operator[](int idx) const {
         return ConstReference(*this, idx);
     }
@@ -99,6 +100,27 @@ public:
         return *this;
     }
     inline BitVector operator-(const BitVector& rhs) const { return BitVector(*this) -= rhs; }
+
+    inline auto operator<=>(const BitVector& other) {
+        UINT sz = std::max(_data.size(), other._data.size());
+        for (UINT i = sz; i-- != 0;) {
+            UINT l = i >= _data.size() ? 0ULL : _data[i];
+            UINT r = i >= other._data.size() ? 0ULL : other._data[i];
+            if (l < r) return -1;
+            if (l > r) return 1;
+            if (i == 0) break;
+        }
+        return 0;
+    }
+    inline bool operator==(const BitVector& other) {
+        UINT sz = std::max(_data.size(), other._data.size());
+        for (UINT i = sz; i-- != 0;) {
+            UINT l = i >= _data.size() ? 0ULL : _data[i];
+            UINT r = i >= other._data.size() ? 0ULL : other._data[i];
+            if (l != r) return false;
+        }
+        return true;
+    }
 
     inline bool empty() const {
         return std::ranges::all_of(_data, [](UINT x) { return x == 0; });
