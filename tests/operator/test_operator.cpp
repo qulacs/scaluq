@@ -136,3 +136,28 @@ TEST(OperatorTest, MultiCoefTest) {
         ASSERT_NEAR(Kokkos::abs(exp1 * coef - exp), 0, eps);
     }
 }
+
+TEST(OperatorTest, Optimize) {
+    Operator op(2);
+    op.add_operator(PauliOperator("X 0 Y 1", 1.));
+    op.add_operator(PauliOperator("Y 0 Z 1", 2.));
+    op.add_operator(PauliOperator("Z 1", 3.));
+    op.add_operator(PauliOperator("X 0 Y 1", 4.));
+    op.add_operator(PauliOperator("Z 1", 4.));
+    op.add_operator(PauliOperator("X 0 Y 1", 5.));
+    op.optimize();
+    std::vector<std::pair<std::string, Complex>> expected = {
+        {"X 0 Y 1", 10.}, {"Y 0 Z 1", 2.}, {"Z 1", 7.}};
+    const auto& terms = op.terms();
+    std::vector<std::pair<std::string, Complex>> test;
+    for (const auto& pauli : op.terms()) {
+        test.emplace_back(pauli.get_pauli_string(), pauli.get_coef());
+    }
+    std::ranges::sort(expected, [](const auto& l, const auto& r) { return l.first < r.first; });
+    std::ranges::sort(test, [](const auto& l, const auto& r) { return l.first < r.first; });
+    ASSERT_EQ(expected.size(), test.size());
+    for (UINT i = 0; i < expected.size(); i++) {
+        ASSERT_EQ(expected[i].first, test[i].first);
+        ASSERT_NEAR(Kokkos::abs(expected[i].second - test[i].second), 0, eps);
+    }
+}

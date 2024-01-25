@@ -55,7 +55,7 @@ void Operator::add_random_operator(UINT operator_count, UINT seed) {
 void Operator::optimize() {
     std::map<std::tuple<BitVector, BitVector>, Complex> pauli_and_coef;
     for (const auto& pauli : _terms) {
-        pauli_and_coef[pauli.get_XZ_mask_representation()] = pauli.get_coef();
+        pauli_and_coef[pauli.get_XZ_mask_representation()] += pauli.get_coef();
     }
     _terms.clear();
     for (const auto& [mask, coef] : pauli_and_coef) {
