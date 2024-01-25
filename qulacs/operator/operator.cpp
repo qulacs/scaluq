@@ -33,7 +33,7 @@ void Operator::add_random_operator(UINT operator_count) {
         std::vector<UINT> target_qubit_list(_n_qubits), pauli_id_list(_n_qubits);
         for (UINT qubit_idx = 0; qubit_idx < _n_qubits; qubit_idx++) {
             target_qubit_list[qubit_idx] = qubit_idx;
-            pauli_id_list[qubit_idx] = _random.int32() & 11;
+            pauli_id_list[qubit_idx] = _random.int32() & 0b11;
         }
         Complex coef = _random.uniform() * 2. - 1.;
         this->add_operator(PauliOperator(target_qubit_list, pauli_id_list, coef));
@@ -45,10 +45,22 @@ void Operator::add_random_operator(UINT operator_count, UINT seed) {
         std::vector<UINT> target_qubit_list(_n_qubits), pauli_id_list(_n_qubits);
         for (UINT qubit_idx = 0; qubit_idx < _n_qubits; qubit_idx++) {
             target_qubit_list[qubit_idx] = qubit_idx;
-            pauli_id_list[qubit_idx] = random.int32() & 11;
+            pauli_id_list[qubit_idx] = random.int32() & 0b11;
         }
         Complex coef = random.uniform() * 2. - 1.;
         this->add_operator(PauliOperator(target_qubit_list, pauli_id_list, coef));
+    }
+}
+
+void Operator::optimize() {
+    std::map<std::tuple<BitVector, BitVector>, Complex> pauli_and_coef;
+    for (const auto& pauli : _terms) {
+        pauli_and_coef[pauli.get_XZ_mask_representation()] = pauli.get_coef();
+    }
+    _terms.clear();
+    for (const auto& [mask, coef] : pauli_and_coef) {
+        const auto& [x_mask, z_mask] = mask;
+        _terms.emplace_back(x_mask, z_mask, coef);
     }
 }
 

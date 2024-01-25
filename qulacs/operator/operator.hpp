@@ -21,7 +21,12 @@ public:
     void add_random_operator(const UINT operator_count = 1);
     void add_random_operator(const UINT operator_count, UINT seed);
 
+    void optimize();
+
     [[nodiscard]] Operator get_dagger() const;
+
+    // not implemented yet
+    void get_matrix() const;
 
     void apply_to_state(StateVector& state_vector) const;
 
@@ -29,11 +34,11 @@ public:
     [[nodiscard]] Complex get_transition_amplitude(const StateVector& state_vector_bra,
                                                    const StateVector& state_vector_ket) const;
 
-    // not implemented
+    // not implemented yet
     [[nodiscard]] Complex solve_gound_state_eigenvalue_by_arnoldi_method(const StateVector& state,
                                                                          UINT iter_count,
                                                                          Complex mu = 0.) const;
-    // not implemented
+    // not implemented yet
     [[nodiscard]] Complex solve_gound_state_eigenvalue_by_power_method(const StateVector& state,
                                                                        UINT iter_count,
                                                                        Complex mu = 0.) const;

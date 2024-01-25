@@ -14,7 +14,7 @@ class PauliOperator {
     BitVector _bit_flip_mask, _phase_flip_mask;
 
 public:
-    PauliOperator(Complex coef = 1.);
+    explicit PauliOperator(Complex coef = 1.);
     PauliOperator(std::string_view pauli_string, Complex coef = 1.);
     PauliOperator(const std::vector<UINT>& target_qubit_list,
                   const std::vector<UINT>& pauli_id_list,

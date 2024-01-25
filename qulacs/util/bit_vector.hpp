@@ -101,18 +101,17 @@ public:
     }
     inline BitVector operator-(const BitVector& rhs) const { return BitVector(*this) -= rhs; }
 
-    inline auto operator<=>(const BitVector& other) {
+    inline std::weak_ordering operator<=>(const BitVector& other) const {
         UINT sz = std::max(_data.size(), other._data.size());
         for (UINT i = sz; i-- != 0;) {
             UINT l = i >= _data.size() ? 0ULL : _data[i];
             UINT r = i >= other._data.size() ? 0ULL : other._data[i];
-            if (l < r) return -1;
-            if (l > r) return 1;
+            if (l != r) return l <=> r;
             if (i == 0) break;
         }
-        return 0;
+        return std::weak_ordering::equivalent;
     }
-    inline bool operator==(const BitVector& other) {
+    inline bool operator==(const BitVector& other) const {
         UINT sz = std::max(_data.size(), other._data.size());
         for (UINT i = sz; i-- != 0;) {
             UINT l = i >= _data.size() ? 0ULL : _data[i];
