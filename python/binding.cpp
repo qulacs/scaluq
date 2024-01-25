@@ -5,7 +5,7 @@
 namespace nb = nanobind;
 using namespace qulacs;
 
-NB_MODULE(qulacs_core, qulacs2023) {
+NB_MODULE(qulacs_core, m) {
     nb::class_<StateVector>(m, "StateVector")
         .def(nb::init<>())
         .def(nb::init<UINT>())

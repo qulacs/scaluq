@@ -1,15 +1,16 @@
 [build-system]
-requires = ["wheel", "setuptools", "setuptools_scm[toml]"]
-build-backend = "setuptools.build_meta"
+requires = ["scikit-build-core >=0.4.3", "nanobind >=1.3.2"]
+build-backend = "scikit_build_core.build"
 
 [project]
-dynamic = ["version"]
 name = "qulacs2023"
+version = "1.0.0"
 description = "Quantum circuit simulator for research"
 authors = [
     { name = "Qulacs-Osaka", email = "qulacs.osaka@gmail.com" }
 ]
 readme = "README.md"
+requires-python = ">=3.8"
 license = { file = "LICENSE" }
 dependencies = []
 classifiers = [
@@ -24,11 +25,12 @@ classifiers = [
     "Topic :: Communications :: Email"
 ]
 
-[tool.setuptools.dynamic]
-version = {attr = "qulacs._version.__version__"}
-
-[tool.setuptools_scm]
-write_to = "pysrc/qulacs/_version.py"
+[tool.scikit-build]
+minimum-version = "0.4"
+# Setuptools-style build caching in a local directory
+build-dir = "build/{wheel_tag}"
+# Build stable ABI wheels for CPython 3.12+
+wheel.py-api = "cp312"
 
 [project.urls]
 homepage = "http://www.qulacs.org"

@@ -11,9 +11,6 @@ endif(NOT DEFINED QULACS_USE_OMP)
 if(NOT DEFINED QULACS_USE_CUDA)
     set(QULACS_USE_CUDA OFF)
 endif(NOT DEFINED QULACS_USE_CUDA)
-if(NOT DEFINED QULACS_USE_PYTHON)
-    set(QULACS_USE_PYTHON OFF)
-endif(NOT DEFINED QULACS_USE_PYTHON)
 if(NOT DEFINED QULACS_USE_TEST)
     set(QULACS_USE_TEST ON)
 endif(NOT DEFINED QULACS_USE_TEST)
@@ -23,7 +20,7 @@ endif(NOT DEFINED QULACS_USE_EXE)
 
 set(BUILD_SHARED_LIBS ON CACHE BOOL "Build project as a shared library for dynamic linking")
 
-message(STATUS "QULACS_USE_PYTHON = ${QULACS_USE_PYTHON}")
+message(STATUS "SKBUILD = ${SKBUILD}")
 message(STATUS "QULACS_USE_TEST = ${QULACS_USE_TEST}")
 
 ### Kokkos options ###
@@ -71,8 +68,10 @@ if(NOT eigen_fetch_POPULATED)
 endif(NOT eigen_fetch_POPULATED)
 
 # nanobind
-if(QULACS_USE_PYTHON)
-    find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
+if(SKBUILD)
+    find_package(Python 3.8
+        REQUIRED COMPONENTS Interpreter Development.Module
+        OPTIONAL_COMPONENTS Development.SABIModule)
     if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
         set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
         set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
@@ -83,7 +82,7 @@ if(QULACS_USE_PYTHON)
         OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE NB_DIR)
     list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
     find_package(nanobind CONFIG REQUIRED)
-endif(QULACS_USE_PYTHON)
+endif(SKBUILD)
 
 # Google test
 if(QULACS_USE_TEST)
@@ -137,9 +136,9 @@ endif()
 
 ### Add subdirectories ###
 add_subdirectory(qulacs)
-if(QULACS_USE_PYTHON)
+if(SKBUILD)
     add_subdirectory(python)
-endif(QULACS_USE_PYTHON)
+endif(SKBUILD)
 if(QULACS_USE_TEST)
     add_subdirectory(tests)
 endif(QULACS_USE_TEST)
@@ -148,12 +147,12 @@ if(QULACS_USE_EXE)
 endif(QULACS_USE_EXE)
 
 # python
-if(QULACS_USE_PYTHON)
+if(SKBUILD)
     add_custom_target(
         python
         DEPENDS qulacs_core
     )
-endif(QULACS_USE_PYTHON)
+endif(SKBUILD)
 
 # test
 if(QULACS_USE_TEST)
