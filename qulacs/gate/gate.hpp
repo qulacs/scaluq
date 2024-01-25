@@ -40,6 +40,8 @@ private:
     std::shared_ptr<T> _gate_ptr;
 
 public:
+    GatePtr() = default;
+    GatePtr(const GatePtr& gate) = default;
     template <GateImpl U>
     GatePtr(const std::shared_ptr<U>& gate_ptr) {
         if constexpr (std::is_same_v<T, U>) {
