@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 target_sources(qulacs PRIVATE
+    circuit/circuit.cpp
     gate/gate_npair_qubit.cpp
     gate/gate_one_control_one_target.cpp
     gate/gate_one_qubit.cpp
