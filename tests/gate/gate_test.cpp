@@ -88,12 +88,6 @@ void run_random_gate_apply_IBMQ(
             double theta = M_PI * random.uniform();
             double phi = M_PI * random.uniform();
             double lambda = M_PI * random.uniform();
-            if (gate_type == 0) {
-                theta = 0;
-                phi = 0;
-            } else if (gate_type == 1) {
-                theta = M_PI / 2;
-            }
             const auto matrix = matrix_factory(theta, phi, lambda);
             const UINT target = random.int64() % n_qubits;
             Gate gate;
