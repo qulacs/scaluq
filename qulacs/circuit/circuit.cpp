@@ -1,11 +1,52 @@
 #include "circuit.hpp"
 
 #include <ranges>
+#include <span>
 
 namespace qulacs {
+UINT Circuit::calculate_depth() const {
+    std::vector<UINT> filled_step(_n_qubits, 0ULL);
+    for (const auto& gate : _gate_list) {
+        std::vector<UINT> control_qubits = gate->get_control_qubit_list();
+        std::vector<UINT> target_qubits = gate->get_control_qubit_list();
+        UINT max_step_amount_target_qubits = 0;
+        for (UINT control : control_qubits) {
+            if (max_step_amount_target_qubits < filled_step[control]) {
+                max_step_amount_target_qubits = filled_step[control];
+            }
+        }
+        for (UINT target : control_qubits) {
+            if (max_step_amount_target_qubits < filled_step[target]) {
+                max_step_amount_target_qubits = filled_step[target];
+            }
+        }
+        for (UINT control : control_qubits) {
+            filled_step[control] = max_step_amount_target_qubits + 1;
+        }
+        for (UINT target : target_qubits) {
+            filled_step[target] = max_step_amount_target_qubits + 1;
+        }
+    }
+    return *std::ranges::max_element(filled_step);
+}
+
 void Circuit::add_gate(const Gate& gate) {
     check_gate_is_valid(gate);
-    _gate_list.push_back(gate);
+    _gate_list.push_back(gate->copy());
+}
+void Circuit::add_gate(Gate&& gate) {
+    check_gate_is_valid(gate);
+    _gate_list.push_back(std::move(gate));
+}
+void Circuit::add_circuit(const Circuit& circuit) {
+    for (const auto& gate : circuit._gate_list) {
+        add_gate(gate);
+    }
+}
+void Circuit::add_circuit(Circuit&& circuit) {
+    for (auto&& gate : circuit._gate_list) {
+        add_gate(std::move(gate));
+    }
 }
 
 void Circuit::update_quantum_state(StateVector& state) const {
