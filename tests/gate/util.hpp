@@ -27,6 +27,53 @@ static Eigen::MatrixXcd get_expanded_eigen_matrix_with_identity(
     return kronecker_product(kronecker_product(right_identity, one_qubit_matrix), left_identity);
 }
 
+static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CNOT(
+    UINT control_qubit_index, UINT target_qubit_index, UINT qubit_count) {
+    UINT dim = 1ULL << qubit_count;
+    Eigen::MatrixXcd result = Eigen::MatrixXcd::Zero(dim, dim);
+    for (UINT ind = 0; ind < dim; ++ind) {
+        if (ind & (1ULL << control_qubit_index)) {
+            result(ind, ind ^ (1ULL << target_qubit_index)) = 1;
+        } else {
+            result(ind, ind) = 1;
+        }
+    }
+    return result;
+}
+
+static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CZ(
+    UINT control_qubit_index, UINT target_qubit_index, UINT qubit_count) {
+    UINT dim = 1ULL << qubit_count;
+    Eigen::MatrixXcd result = Eigen::MatrixXcd::Zero(dim, dim);
+    for (UINT ind = 0; ind < dim; ++ind) {
+        if ((ind & (1ULL << control_qubit_index)) != 0 &&
+            (ind & (1ULL << target_qubit_index)) != 0) {
+            result(ind, ind) = -1;
+        } else {
+            result(ind, ind) = 1;
+        }
+    }
+    return result;
+}
+
+static Eigen::MatrixXcd get_eigen_matrix_full_qubit_SWAP(
+    UINT target_qubit_index1, UINT target_qubit_index2, UINT qubit_count) {
+    UINT dim = 1ULL << qubit_count;
+    Eigen::MatrixXcd result = Eigen::MatrixXcd::Zero(dim, dim);
+    for (UINT ind = 0; ind < dim; ++ind) {
+        bool flag1, flag2;
+        flag1 = (ind & (1ULL << target_qubit_index1)) != 0;
+        flag2 = (ind & (1ULL << target_qubit_index2)) != 0;
+        if (flag1 ^ flag2) {
+            result(ind, ind ^ (1ULL << target_qubit_index1) ^
+                            (1ULL << target_qubit_index2)) = 1;
+        } else {
+            result(ind, ind) = 1;
+        }
+    }
+    return result;
+}
+
 #define ASSERT_STATE_NEAR(state, other, eps) \
     ASSERT_PRED_FORMAT3(_assert_state_near, state, other, eps)
 
@@ -143,5 +190,4 @@ static Eigen::MatrixXcd make_U(double theta, double phi, double lambda) {
                            std::exp(1i * phi) * std::sin(theta / 2.),
                            std::exp(1i * phi) * std::exp(1i * lambda) * std::cos(theta / 2.));
 }
-
 }  // namespace qulacs

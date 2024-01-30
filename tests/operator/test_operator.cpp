@@ -148,7 +148,6 @@ TEST(OperatorTest, Optimize) {
     op.optimize();
     std::vector<std::pair<std::string, Complex>> expected = {
         {"X 0 Y 1", 10.}, {"Y 0 Z 1", 2.}, {"Z 1", 7.}};
-    const auto& terms = op.terms();
     std::vector<std::pair<std::string, Complex>> test;
     for (const auto& pauli : op.terms()) {
         test.emplace_back(pauli.get_pauli_string(), pauli.get_coef());
