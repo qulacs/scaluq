@@ -57,7 +57,12 @@ public:
     template <GateImpl U>
     GatePtr(const GatePtr<U>& gate) : GatePtr(gate._gate_ptr) {}
 
-    T* operator->() const { return _gate_ptr.get(); }
+    T* operator->() const {
+        if (!_gate_ptr) {
+            throw std::runtime_error("GatePtr::operator->(): Gate is Null");
+        }
+        return _gate_ptr.get();
+    }
 };
 }  // namespace internal
 
