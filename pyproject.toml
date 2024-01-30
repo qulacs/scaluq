@@ -12,7 +12,10 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.8"
 license = { file = "LICENSE" }
-dependencies = []
+dependencies = [
+    "scikit_build",
+    "nanobind"
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
@@ -40,8 +43,7 @@ dev = [
     "black",
     "flake8",
     "openfermion",
-    "mypy",
-    "nanobind"
+    "mypy"
 ]
 
 test = [
@@ -50,8 +52,7 @@ test = [
 
 ci = [
     "openfermion",
-    "mypy",
-    "pybind11-stubgen"
+    "mypy"
 ]
 
 doc = [
