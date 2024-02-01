@@ -1,7 +1,6 @@
 #include "circuit.hpp"
 
 #include <ranges>
-#include <span>
 
 namespace qulacs {
 UINT Circuit::calculate_depth() const {
