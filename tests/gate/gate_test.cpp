@@ -71,10 +71,8 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd(double)
     }
 }
 
-/*
-template <class QuantumGateConstructor>
-void run_random_gate_apply(UINT n_qubits,
-                           std::function<Eigen::MatrixXcd(double, double, double)> matrix_factory) {
+void run_random_gate_apply_IBMQ(
+    UINT n_qubits, std::function<Eigen::MatrixXcd(double, double, double)> matrix_factory) {
     const int dim = 1ULL << n_qubits;
     Random random;
 
@@ -82,37 +80,42 @@ void run_random_gate_apply(UINT n_qubits,
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
         auto state_cp = state.amplitudes();
-        for (int i = 0; i < dim; i++) {
-            test_state[i] = state_cp[i];
-        }
+        for (int gate_type = 0; gate_type < 3; gate_type++) {
+            for (int i = 0; i < dim; i++) {
+                test_state[i] = state_cp[i];
+            }
 
-        double theta = M_PI * random.uniform();
-        double phi = M_PI * random.uniform();
-        double lambda = M_PI * random.uniform();
-        if constexpr (std::is_same_v<QuantumGateConstructor, U1>) {
-            theta = 0;
-            phi = 0;
-        } else if constexpr (std::is_same_v<QuantumGateConstructor, U2>) {
-            theta = M_PI / 2;
-        } else if constexpr (std::is_same_v<QuantumGateConstructor, U3>) {
-        } else {
-            throw std::runtime_error("Invalid gate type");
-        }
+            double theta = M_PI * random.uniform();
+            double phi = M_PI * random.uniform();
+            double lambda = M_PI * random.uniform();
+            if (gate_type == 0) {
+                theta = 0;
+                phi = 0;
+            } else if (gate_type == 1) {
+                theta = M_PI / 2;
+            }
+            const auto matrix = matrix_factory(theta, phi, lambda);
+            const UINT target = random.int64() % n_qubits;
+            Gate gate;
+            if (gate_type == 0) {
+                gate = U1(target, lambda);
+            } else if (gate_type == 1) {
+                gate = U2(target, phi, lambda);
+            } else {
+                gate = U3(target, theta, phi, lambda);
+            }
+            gate->update_quantum_state(state);
+            state_cp = state.amplitudes();
 
-        const auto matrix = matrix_factory(theta, phi, lambda);
-        const UINT target = random.int64() % n_qubits;
-        const U3 gate(target, theta, phi, lambda);
-        gate.update_quantum_state(state);
-        state_cp = state.amplitudes();
+            test_state =
+                get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
 
-        test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
-
-        for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            for (int i = 0; i < dim; i++) {
+                ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            }
         }
     }
 }
-*/
 
 void run_random_gate_apply_two_qubit(UINT n_qubits) {
     const int dim = 1ULL << n_qubits;
@@ -214,11 +217,9 @@ TEST(GateTest, ApplyP1) { run_random_gate_apply<P1>(5, make_P1); }
 TEST(GateTest, ApplyRX) { run_random_gate_apply<RX>(5, make_RX); }
 TEST(GateTest, ApplyRY) { run_random_gate_apply<RY>(5, make_RY); }
 TEST(GateTest, ApplyRZ) { run_random_gate_apply<RZ>(5, make_RZ); }
-/*
-TEST(GateTest, ApplyU1) { run_random_gate_apply<U1>(5, make_U); }
-TEST(GateTest, ApplyU2) { run_random_gate_apply<U2>(5, make_U); }
-TEST(GateTest, ApplyU3) { run_random_gate_apply<U3>(5, make_U); }
-*/
+
+TEST(GateTest, ApplyIBMQ) { run_random_gate_apply_IBMQ(5, make_U); }
+
 TEST(GateTest, ApplyTwoQubit) { run_random_gate_apply_two_qubit(5); }
 TEST(GateTest, ApplyFused) {
     UINT n_qubits = 10;
