@@ -18,8 +18,6 @@ if(NOT DEFINED QULACS_USE_EXE)
     set(QULACS_USE_EXE ON)
 endif(NOT DEFINED QULACS_USE_EXE)
 
-set(BUILD_SHARED_LIBS ON CACHE BOOL "Build project as a shared library for dynamic linking")
-
 message(STATUS "SKBUILD = ${SKBUILD}")
 message(STATUS "QULACS_USE_TEST = ${QULACS_USE_TEST}")
 
@@ -52,6 +50,7 @@ if(NOT kokkos_fetch_POPULATED)
     message(STATUS "Fetch Kokkos for parallel execution")
     FetchContent_Populate(kokkos_fetch)
     add_subdirectory(${kokkos_fetch_SOURCE_DIR})
+    set_property(TARGET kokkoscore PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif(NOT kokkos_fetch_POPULATED)
 
 # Eigen
@@ -102,6 +101,7 @@ else()
 endif(QULACS_USE_TEST)
 
 add_library(qulacs)
+set_property(TARGET qulacs PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 ### Compiler options ###
 if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))

@@ -35,4 +35,6 @@ NB_MODULE(qulacs_core, m) {
     m.def("Haar_random_state",
           static_cast<StateVector (*)(UINT, UINT)>(&StateVector::Haar_random_state));
     m.def("Haar_random_state", static_cast<StateVector (*)(UINT)>(&StateVector::Haar_random_state));
+    m.def("initialize", [] { Kokkos::initialize(); });
+    m.def("finialize", &Kokkos::finalize);
 }
