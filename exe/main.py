@@ -1,4 +1,9 @@
-from qulacs2023.qulacs_core import StateVector
+from qulacs2023.qulacs_core import *
 
-a = StateVector(5)
-print(a)
+def main():
+    a = StateVector(5)
+    print(a)
+
+initialize()
+main()
+finalize()
