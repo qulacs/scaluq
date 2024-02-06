@@ -1,4 +1,4 @@
-from qulacs2023.qulacs_core import *
+from qulacs2023 import *
 
 def main():
     a = StateVector(5)
