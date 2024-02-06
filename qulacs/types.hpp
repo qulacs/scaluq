@@ -6,7 +6,11 @@
 
 namespace qulacs {
 
-inline void initialize() { Kokkos::initialize(); }
+using InitializationSettings = Kokkos::InitializationSettings;
+
+inline void initialize(const InitializationSettings& settings = InitializationSettings()) {
+    Kokkos::initialize(settings);
+}
 inline void finalize() { Kokkos::finalize(); }
 
 using UINT = std::uint64_t;
