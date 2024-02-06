@@ -5,6 +5,9 @@ enable_testing()
 add_executable(qulacs_test EXCLUDE_FROM_ALL
     circuit/circuit_test.cpp
     gate/gate_test.cpp
+    #state/state_vector_test.cpp
+    operator/test_pauli_operator.cpp
+    operator/test_operator.cpp
     state/state_vector_test.cpp
 )
 

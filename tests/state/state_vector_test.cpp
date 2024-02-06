@@ -9,7 +9,7 @@
 
 using CComplex = std::complex<double>;
 
-namespace qulacs {
+using namespace qulacs;
 
 const double eps = 1e-12;
 
@@ -242,5 +242,3 @@ TEST(StateVectorTest, SamplingComputationalBasis) {
         ASSERT_TRUE(res[i] == 100);
     }
 }
-
-}  // namespace qulacs
