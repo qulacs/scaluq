@@ -5,11 +5,8 @@
 using namespace std::complex_literals;
 
 #include <types.hpp>
+#include <util/random.hpp>
 using namespace qulacs;
-
-// random
-static UINT rand_int(UINT max) { return rand() % max; }
-static double rand_real() { return (rand() % RAND_MAX) / ((double)RAND_MAX); }
 
 // obtain single dense matrix
 static Eigen::MatrixXcd get_eigen_matrix_single_Pauli(UINT pauli_id) {
@@ -32,10 +29,11 @@ static Eigen::MatrixXcd get_eigen_matrix_random_single_qubit_unitary() {
     Z = get_eigen_matrix_single_Pauli(3);
 
     double icoef, xcoef, ycoef, zcoef, norm;
-    icoef = rand_real();
-    xcoef = rand_real();
-    ycoef = rand_real();
-    zcoef = rand_real();
+    Random random;
+    icoef = random.uniform();
+    xcoef = random.uniform();
+    ycoef = random.uniform();
+    zcoef = random.uniform();
     norm = sqrt(icoef * icoef + xcoef + xcoef + ycoef * ycoef + zcoef * zcoef);
     icoef /= norm;
     xcoef /= norm;
@@ -46,8 +44,9 @@ static Eigen::MatrixXcd get_eigen_matrix_random_single_qubit_unitary() {
 static Eigen::VectorXcd get_eigen_diagonal_matrix_random_multi_qubit_unitary(UINT qubit_count) {
     UINT dim = (1ULL) << qubit_count;
     auto vec = Eigen::VectorXcd(dim);
+    Random random;
     for (UINT i = 0; i < dim; ++i) {
-        double angle = rand_real() * 2 * 3.14159;
+        double angle = random.uniform() * 2 * 3.14159;
         vec[i] = cos(angle) + 1.i * sin(angle);
     }
     return vec;
