@@ -1,3 +1,6 @@
+#pragma once
+
+#include "circuit/circuit.hpp"
 #include "gate/constant.hpp"
 #include "gate/gate.hpp"
 #include "gate/gate_npair_qubit.hpp"
