@@ -42,8 +42,11 @@ homepage = "http://www.qulacs.org"
 dev = [
     "black",
     "flake8",
-    "openfermion",
+    "isort",
     "mypy"
+    "nanobind",
+    "nanobind-stubgen",
+    "openfermion",
 ]
 
 test = [
@@ -51,8 +54,12 @@ test = [
 ]
 
 ci = [
+    "black",
+    "flake8,
+    "isort",
+    "mypy",
+    "nanobind-stubgen",
     "openfermion",
-    "mypy"
 ]
 
 doc = [

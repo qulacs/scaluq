@@ -52,6 +52,9 @@ jobs:
       - name: Install qulacs for Ubuntu
         run: CMAKE_BUILD_TYPE=Debug ./script/build_gcc.sh
 
+      - name: Install qulacs Python module
+        run: pip install .[ci]
+
       - name: Check stubs
         run: |
           ./script/update_stubs.h
