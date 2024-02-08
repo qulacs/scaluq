@@ -57,7 +57,7 @@ jobs:
 
       - name: Check stubs
         run: |
-          ./script/update_stubs.h
+          ./script/update_stubs.sh
           diff=$(git diff)
           echo -n "$diff"
           test $(echo -n "$diff" | wc -l) -eq 0
