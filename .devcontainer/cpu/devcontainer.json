@@ -33,7 +33,8 @@
 					"/usr/local/include/python3.9",
 					"build/_deps/eigen_fetch-src",
 					"build/_deps/googletest_fetch-src/googletest/include",
-					"build/_deps/pybind11_fetch-src/include"
+					"/usr/local/lib/python3.10/dist-packages/nanobind/include",
+					"/usr/include/python3.10"
 				],
 				"C_Cpp.default.cppStandard": "c++20"
 			},
