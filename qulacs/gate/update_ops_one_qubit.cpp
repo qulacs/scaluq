@@ -90,27 +90,27 @@ void tdag_gate(UINT target_qubit_index, StateVector& state) {
 }
 
 void sqrtx_gate(UINT target_qubit_index, StateVector& state) {
-    single_qubit_dense_matrix_gate(target_qubit_index, SQRT_X_GATE_MATRIX, state);
+    single_qubit_dense_matrix_gate(target_qubit_index, SQRT_X_GATE_MATRIX(), state);
 }
 
 void sqrtxdag_gate(UINT target_qubit_index, StateVector& state) {
-    single_qubit_dense_matrix_gate(target_qubit_index, SQRT_X_DAG_GATE_MATRIX, state);
+    single_qubit_dense_matrix_gate(target_qubit_index, SQRT_X_DAG_GATE_MATRIX(), state);
 }
 
 void sqrty_gate(UINT target_qubit_index, StateVector& state) {
-    single_qubit_dense_matrix_gate(target_qubit_index, SQRT_Y_GATE_MATRIX, state);
+    single_qubit_dense_matrix_gate(target_qubit_index, SQRT_Y_GATE_MATRIX(), state);
 }
 
 void sqrtydag_gate(UINT target_qubit_index, StateVector& state) {
-    single_qubit_dense_matrix_gate(target_qubit_index, SQRT_Y_DAG_GATE_MATRIX, state);
+    single_qubit_dense_matrix_gate(target_qubit_index, SQRT_Y_DAG_GATE_MATRIX(), state);
 }
 
 void p0_gate(UINT target_qubit_index, StateVector& state) {
-    single_qubit_dense_matrix_gate(target_qubit_index, PROJ_0_MATRIX, state);
+    single_qubit_dense_matrix_gate(target_qubit_index, PROJ_0_MATRIX(), state);
 }
 
 void p1_gate(UINT target_qubit_index, StateVector& state) {
-    single_qubit_dense_matrix_gate(target_qubit_index, PROJ_1_MATRIX, state);
+    single_qubit_dense_matrix_gate(target_qubit_index, PROJ_1_MATRIX(), state);
 }
 
 void rx_gate(UINT target_qubit_index, double angle, StateVector& state) {

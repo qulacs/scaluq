@@ -43,7 +43,7 @@ dev = [
     "black",
     "flake8",
     "isort",
-    "mypy"
+    "mypy",
     "nanobind",
     "nanobind-stubgen",
     "openfermion"
@@ -55,7 +55,7 @@ test = [
 
 ci = [
     "black",
-    "flake8,
+    "flake8",
     "isort",
     "mypy",
     "nanobind-stubgen",

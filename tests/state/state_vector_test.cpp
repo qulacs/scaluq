@@ -1,14 +1,15 @@
 #include <gtest/gtest.h>
 
 #include <Eigen/Core>
-#include <Kokkos_Core.hpp>
-#include <numeric>
+#include <cmath>
 #include <state/state_vector.hpp>
 
 #include "../test_environment.hpp"
 #include "util/utility.hpp"
 
-namespace qulacs {
+using CComplex = std::complex<double>;
+
+using namespace qulacs;
 
 const double eps = 1e-12;
 
@@ -17,7 +18,7 @@ bool same_state(const StateVector& s1, const StateVector& s2) {
     auto s2_cp = s2.amplitudes();
     assert(s1.n_qubits() == s2.n_qubits());
     for (UINT i = 0; i < s1.dim(); ++i) {
-        if (Kokkos::abs(s1_cp[i] - s2_cp[i]) > eps) return false;
+        if (std::abs((CComplex)s1_cp[i] - (CComplex)s2_cp[i]) > eps) return false;
     }
     return true;
 };
@@ -30,6 +31,15 @@ TEST(StateVectorTest, HaarRandomStateNorm) {
     }
 }
 
+TEST(StateVectorTest, CopyState) {
+    const int n = 5;
+    const auto state = StateVector::Haar_random_state(n);
+    StateVector state_cp = state.copy();
+    auto vec1 = state.amplitudes();
+    auto vec2 = state_cp.amplitudes();
+    ASSERT_EQ(vec1, vec2);
+}
+
 TEST(StateVectorTest, ZeroNormState) {
     const UINT n = 5;
 
@@ -38,7 +48,7 @@ TEST(StateVectorTest, ZeroNormState) {
     auto state_cp = state.amplitudes();
 
     for (UINT i = 0; i < state.dim(); ++i) {
-        ASSERT_EQ(state_cp[i], Complex(0, 0));
+        ASSERT_EQ((CComplex)state_cp[i], CComplex(0, 0));
     }
 }
 
@@ -51,9 +61,9 @@ TEST(StateVectorTest, ComputationalBasisState) {
 
     for (UINT i = 0; i < state.dim(); ++i) {
         if (i == 31) {
-            ASSERT_EQ(state_cp[i], Complex(1, 0));
+            ASSERT_EQ((CComplex)state_cp[i], CComplex(1, 0));
         } else {
-            ASSERT_EQ(state_cp[i], Complex(0, 0));
+            ASSERT_EQ((CComplex)state_cp[i], CComplex(0, 0));
         }
     }
 }
@@ -86,13 +96,14 @@ TEST(StateVectorTest, AddState) {
     auto new_vec = state1.amplitudes();
 
     for (UINT i = 0; i < state1.dim(); ++i) {
-        ASSERT_NEAR(new_vec[i].real(), vec1[i].real() + vec2[i].real(), eps);
-        ASSERT_NEAR(new_vec[i].imag(), vec1[i].imag() + vec2[i].imag(), eps);
+        CComplex res = new_vec[i], val = (CComplex)vec1[i] + (CComplex)vec2[i];
+        ASSERT_NEAR(res.real(), val.real(), eps);
+        ASSERT_NEAR(res.imag(), val.imag(), eps);
     }
 }
 
 TEST(StateVectorTest, AddStateWithCoef) {
-    const std::complex<double> coef(2.5, 1.3);
+    const CComplex coef(2.5, 1.3);
     const UINT n = 10;
     StateVector state1(StateVector::Haar_random_state(n));
     StateVector state2(StateVector::Haar_random_state(n));
@@ -103,18 +114,15 @@ TEST(StateVectorTest, AddStateWithCoef) {
     auto new_vec = state1.amplitudes();
 
     for (UINT i = 0; i < state1.dim(); ++i) {
-        ASSERT_NEAR(new_vec[i].real(),
-                    vec1[i].real() + coef.real() * vec2[i].real() - coef.imag() * vec2[i].imag(),
-                    eps);
-        ASSERT_NEAR(new_vec[i].imag(),
-                    vec1[i].imag() + coef.real() * vec2[i].imag() + coef.imag() * vec2[i].real(),
-                    eps);
+        CComplex res = new_vec[i], val = (CComplex)vec1[i] + coef * (CComplex)vec2[i];
+        ASSERT_NEAR(res.real(), val.real(), eps);
+        ASSERT_NEAR(res.imag(), val.imag(), eps);
     }
 }
 
 TEST(StateVectorTest, MultiplyCoef) {
     const UINT n = 10;
-    const Complex coef(0.5, 0.2);
+    const CComplex coef(0.5, 0.2);
 
     StateVector state(StateVector::Haar_random_state(n));
     auto vec = state.amplitudes();
@@ -122,8 +130,9 @@ TEST(StateVectorTest, MultiplyCoef) {
     auto new_vec = state.amplitudes();
 
     for (UINT i = 0; i < state.dim(); ++i) {
-        ASSERT_NEAR(new_vec[i].real(), (coef * vec[i]).real(), eps);
-        ASSERT_NEAR(new_vec[i].imag(), (coef * vec[i]).imag(), eps);
+        CComplex res = new_vec[i], val = coef * (CComplex)vec[i];
+        ASSERT_NEAR(res.real(), val.real(), eps);
+        ASSERT_NEAR(res.imag(), val.imag(), eps);
     }
 }
 
@@ -154,12 +163,13 @@ TEST(StateVectorTest, EntropyCalculation) {
         auto state_cp = state.amplitudes();
         ASSERT_NEAR(state.compute_squared_norm(), 1, eps);
         Eigen::VectorXcd test_state(dim);
-        for (UINT i = 0; i < dim; ++i) test_state[i] = (Complex)state_cp[i];
+        for (UINT i = 0; i < dim; ++i) test_state[i] = (CComplex)state_cp[i];
 
         for (UINT target = 0; target < n; ++target) {
             double ent = 0;
             for (UINT ind = 0; ind < dim; ++ind) {
-                double prob = norm2(test_state[ind]);
+                CComplex z = test_state[ind];
+                double prob = z.real() * z.real() + z.imag() * z.imag();
                 if (prob > eps) ent += -prob * log(prob);
             }
             ASSERT_NEAR(ent, state.get_entropy(), eps);
@@ -232,5 +242,3 @@ TEST(StateVectorTest, SamplingComputationalBasis) {
         ASSERT_TRUE(res[i] == 100);
     }
 }
-
-}  // namespace qulacs
