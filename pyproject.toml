@@ -46,7 +46,7 @@ dev = [
     "mypy"
     "nanobind",
     "nanobind-stubgen",
-    "openfermion",
+    "openfermion"
 ]
 
 test = [
@@ -59,7 +59,7 @@ ci = [
     "isort",
     "mypy",
     "nanobind-stubgen",
-    "openfermion",
+    "openfermion"
 ]
 
 doc = [
