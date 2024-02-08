@@ -4,6 +4,6 @@ def main():
     a = StateVector(5)
     print(a)
 
-initialize()
+initialize(InitializationSettings().set_num_threads(8))
 main()
 finalize()
