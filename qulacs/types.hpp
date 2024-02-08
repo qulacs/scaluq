@@ -5,6 +5,14 @@
 #include <cstdint>
 
 namespace qulacs {
+
+using InitializationSettings = Kokkos::InitializationSettings;
+
+inline void initialize(const InitializationSettings& settings = InitializationSettings()) {
+    Kokkos::initialize(settings);
+}
+inline void finalize() { Kokkos::finalize(); }
+
 using UINT = std::uint64_t;
 
 using Complex = Kokkos::complex<double>;
