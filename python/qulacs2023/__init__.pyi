@@ -4,18 +4,41 @@ from typing import (Any, Callable, Iterable, Optional, Sequence, Typing, Union,
 
 import qulacs2023
 
-def Haar_random_state(arg: int, /) -> qulacs2023.qulacs_core.StateVector:
+class Gate:
     """
-    Haar_random_state(arg: int, /) -> qulacs2023.qulacs_core.StateVector
+    None
     """
-    ...
 
-@overload
-def Haar_random_state(arg0: int, arg1: int, /) -> qulacs2023.qulacs_core.StateVector:
+    def __init__(*args, **kwargs):
+        """
+        Initialize self.  See help(type(self)) for accurate signature.
+        """
+        ...
+
+    def copy(self) -> qulacs2023.qulacs_core.Gate: ...
+    def get_control_qubit_list(self) -> list[int]: ...
+    def get_inverse(self) -> qulacs2023.qulacs_core.Gate: ...
+    def get_target_qubit_list(self) -> list[int]: ...
+    def update_quantum_state(
+        self, arg: qulacs2023.qulacs_core.StateVector, /
+    ) -> None: ...
+
+def I(arg: int, /) -> qulacs2023.qulacs_core.Gate: ...
+
+class IGate:
     """
-    Haar_random_state(arg0: int, arg1: int, /) -> qulacs2023.qulacs_core.StateVector
+    None
     """
-    ...
+
+    def __init__(self, arg: qulacs2023.qulacs_core.Gate, /) -> None: ...
+    def copy(self) -> qulacs2023.qulacs_core.Gate: ...
+    def get_control_qubit_list(self) -> list[int]: ...
+    def get_inverse(self) -> qulacs2023.qulacs_core.Gate: ...
+    def get_target_qubit_list(self) -> list[int]: ...
+    def target(self) -> int: ...
+    def update_quantum_state(
+        self, arg: qulacs2023.qulacs_core.StateVector, /
+    ) -> None: ...
 
 class InitializationSettings:
     """
@@ -73,6 +96,21 @@ class StateVector:
     """
     None
     """
+
+    def Haar_random_state(arg: int, /) -> qulacs2023.qulacs_core.StateVector:
+        """
+        Haar_random_state(arg: int, /) -> qulacs2023.qulacs_core.StateVector
+        """
+        ...
+
+    @overload
+    def Haar_random_state(
+        arg0: int, arg1: int, /
+    ) -> qulacs2023.qulacs_core.StateVector:
+        """
+        Haar_random_state(arg0: int, arg1: int, /) -> qulacs2023.qulacs_core.StateVector
+        """
+        ...
 
     def __init__(self, arg: qulacs2023.qulacs_core.StateVector) -> None:
         """

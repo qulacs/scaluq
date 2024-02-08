@@ -2,7 +2,7 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
-#include <state/state_vector.hpp>
+#include <all.hpp>
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -90,13 +90,16 @@ NB_MODULE(qulacs_core, m) {
         .def("has_tools_args", &InitializationSettings::has_tools_args)
         .def("get_tools_args", &InitializationSettings::get_tools_args);
 
-    m.def("initialize", &qulacs::initialize, "settings"_a = InitializationSettings());
-    m.def("finalize", &qulacs::finalize);
+    m.def("initialize", &initialize, "settings"_a = InitializationSettings());
+    m.def("finalize", &finalize);
 
     nb::class_<StateVector>(m, "StateVector")
         .def(nb::init<>())
         .def(nb::init<UINT>())
         .def(nb::init<const StateVector &>())
+        .def_static("Haar_random_state",
+                    nb::overload_cast<UINT, UINT>(&StateVector::Haar_random_state))
+        .def_static("Haar_random_state", nb::overload_cast<UINT>(&StateVector::Haar_random_state))
         .def("set_zero_state", &StateVector::set_zero_state)
         .def("set_zero_norm_state", &StateVector::set_zero_norm_state)
         .def("set_computational_basis", &StateVector::set_computational_basis)
@@ -119,7 +122,30 @@ NB_MODULE(qulacs_core, m) {
              [](StateVector &s, int index, const Complex &value) { s[index] = value; })
         .def("__str__", &StateVector::to_string);
 
-    m.def("Haar_random_state",
-          static_cast<StateVector (*)(UINT, UINT)>(&StateVector::Haar_random_state));
-    m.def("Haar_random_state", static_cast<StateVector (*)(UINT)>(&StateVector::Haar_random_state));
+    nb::class_<Gate>(m, "Gate")
+        .def("get_target_qubit_list",
+             [](const Gate &gate) { return gate->get_target_qubit_list(); })
+        .def("get_control_qubit_list",
+             [](const Gate &gate) { return gate->get_control_qubit_list(); })
+        .def("copy", [](const Gate &gate) { return gate->copy(); })
+        .def("get_inverse", [](const Gate &gate) { return gate->get_inverse(); })
+        .def("update_quantum_state", [](const Gate &gate, StateVector &state_vector) {
+            gate->update_quantum_state(state_vector);
+        });
+
+    nb::class_<IGate>(m, "IGate")
+        .def(nb::init<const Gate &>())
+        .def("get_target_qubit_list",
+             [](const IGate &gate) { return gate->get_target_qubit_list(); })
+        .def("get_control_qubit_list",
+             [](const IGate &gate) { return gate->get_control_qubit_list(); })
+        .def("copy", [](const IGate &gate) { return gate->copy(); })
+        .def("get_inverse", [](const IGate &gate) { return gate->get_inverse(); })
+        .def("update_quantum_state",
+             [](const IGate &gate, StateVector &state_vector) {
+                 gate->update_quantum_state(state_vector);
+             })
+        .def("target", [](const IGate &gate) { return gate->target(); });
+
+    m.def("I", &I);
 }
