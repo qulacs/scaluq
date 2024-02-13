@@ -122,30 +122,97 @@ NB_MODULE(qulacs_core, m) {
              [](StateVector &s, int index, const Complex &value) { s[index] = value; })
         .def("__str__", &StateVector::to_string);
 
-    nb::class_<Gate>(m, "Gate")
-        .def("get_target_qubit_list",
-             [](const Gate &gate) { return gate->get_target_qubit_list(); })
-        .def("get_control_qubit_list",
-             [](const Gate &gate) { return gate->get_control_qubit_list(); })
-        .def("copy", [](const Gate &gate) { return gate->copy(); })
-        .def("get_inverse", [](const Gate &gate) { return gate->get_inverse(); })
-        .def("update_quantum_state", [](const Gate &gate, StateVector &state_vector) {
-            gate->update_quantum_state(state_vector);
-        });
+#define DEF_GATE(GATE_TYPE)                                                                 \
+    nb::class_<GATE_TYPE>(m, #GATE_TYPE)                                                    \
+        .def("get_target_qubit_list",                                                       \
+             [](const GATE_TYPE &gate) { return gate->get_target_qubit_list(); })           \
+        .def("get_control_qubit_list",                                                      \
+             [](const GATE_TYPE &gate) { return gate->get_control_qubit_list(); })          \
+        .def("copy", [](const GATE_TYPE &gate) { return gate->copy(); })                    \
+        .def("get_inverse", [](const GATE_TYPE &gate) { return gate->get_inverse(); })      \
+        .def("update_quantum_state", [](const GATE_TYPE &gate, StateVector &state_vector) { \
+            gate->update_quantum_state(state_vector);                                       \
+        })
 
-    nb::class_<IGate>(m, "IGate")
-        .def(nb::init<const Gate &>())
-        .def("get_target_qubit_list",
-             [](const IGate &gate) { return gate->get_target_qubit_list(); })
-        .def("get_control_qubit_list",
-             [](const IGate &gate) { return gate->get_control_qubit_list(); })
-        .def("copy", [](const IGate &gate) { return gate->copy(); })
-        .def("get_inverse", [](const IGate &gate) { return gate->get_inverse(); })
-        .def("update_quantum_state",
-             [](const IGate &gate, StateVector &state_vector) {
-                 gate->update_quantum_state(state_vector);
-             })
-        .def("target", [](const IGate &gate) { return gate->target(); });
+    DEF_GATE(Gate);
 
-    m.def("I", &I);
+#define DEF_ONE_QUBIT_GATE(GATE_TYPE) \
+    DEF_GATE(GATE_TYPE).def("target", [](const GATE_TYPE &gate) { return gate->target(); })
+
+    DEF_ONE_QUBIT_GATE(IGate);
+    DEF_ONE_QUBIT_GATE(XGate);
+    DEF_ONE_QUBIT_GATE(YGate);
+    DEF_ONE_QUBIT_GATE(ZGate);
+    DEF_ONE_QUBIT_GATE(HGate);
+    DEF_ONE_QUBIT_GATE(SGate);
+    DEF_ONE_QUBIT_GATE(SdagGate);
+    DEF_ONE_QUBIT_GATE(TGate);
+    DEF_ONE_QUBIT_GATE(TdagGate);
+    DEF_ONE_QUBIT_GATE(sqrtXGate);
+    DEF_ONE_QUBIT_GATE(sqrtXdagGate);
+    DEF_ONE_QUBIT_GATE(sqrtYGate);
+    DEF_ONE_QUBIT_GATE(sqrtYdagGate);
+    DEF_ONE_QUBIT_GATE(P0Gate);
+    DEF_ONE_QUBIT_GATE(P1Gate);
+
+#define DEF_ONE_QUBIT_ROTATION_GATE(GATE_TYPE) \
+    DEF_ONE_QUBIT_GATE(GATE_TYPE).def("angle", [](const GATE_TYPE &gate) { return gate->angle(); })
+
+    DEF_ONE_QUBIT_ROTATION_GATE(RXGate);
+    DEF_ONE_QUBIT_ROTATION_GATE(RYGate);
+    DEF_ONE_QUBIT_ROTATION_GATE(RZGate);
+
+    DEF_GATE(U1Gate).def("lambda_", [](const U1Gate &gate) { return gate->lambda(); });
+    DEF_GATE(U2Gate)
+        .def("phi", [](const U2Gate &gate) { return gate->phi(); })
+        .def("lambda_", [](const U2Gate &gate) { return gate->lambda(); });
+    DEF_GATE(U3Gate)
+        .def("theta", [](const U3Gate &gate) { return gate->theta(); })
+        .def("phi", [](const U3Gate &gate) { return gate->phi(); })
+        .def("lambda_", [](const U3Gate &gate) { return gate->lambda(); });
+
+#define DEF_ONE_CONTROL_ONE_TARGET_GATE(GATE_TYPE)                             \
+    DEF_GATE(GATE_TYPE)                                                        \
+        .def("control", [](const GATE_TYPE &gate) { return gate->control(); }) \
+        .def("target", [](const GATE_TYPE &gate) { return gate->target(); })
+
+    DEF_ONE_CONTROL_ONE_TARGET_GATE(CNOTGate);
+    DEF_ONE_CONTROL_ONE_TARGET_GATE(CZGate);
+
+    DEF_GATE(SWAPGate)
+        .def("target1", [](const SWAPGate &gate) { return gate->target1(); })
+        .def("target2", [](const SWAPGate &gate) { return gate->target2(); });
+
+    DEF_GATE(FusedSWAPGate)
+        .def("qubit_index1", [](const FusedSWAPGate &gate) { return gate->qubit_index1(); })
+        .def("qubit_index2", [](const FusedSWAPGate &gate) { return gate->qubit_index2(); })
+        .def("block_size", [](const FusedSWAPGate &gate) { return gate->block_size(); });
+
+#define DEF_GATE_FACTORY(GATE_NAME) m.def(#GATE_NAME, &GATE_NAME)
+
+    DEF_GATE_FACTORY(I);
+    DEF_GATE_FACTORY(X);
+    DEF_GATE_FACTORY(Y);
+    DEF_GATE_FACTORY(Z);
+    DEF_GATE_FACTORY(H);
+    DEF_GATE_FACTORY(S);
+    DEF_GATE_FACTORY(Sdag);
+    DEF_GATE_FACTORY(T);
+    DEF_GATE_FACTORY(Tdag);
+    DEF_GATE_FACTORY(sqrtX);
+    DEF_GATE_FACTORY(sqrtXdag);
+    DEF_GATE_FACTORY(sqrtY);
+    DEF_GATE_FACTORY(sqrtYdag);
+    DEF_GATE_FACTORY(P0);
+    DEF_GATE_FACTORY(P1);
+    DEF_GATE_FACTORY(RX);
+    DEF_GATE_FACTORY(RY);
+    DEF_GATE_FACTORY(RZ);
+    DEF_GATE_FACTORY(U1);
+    DEF_GATE_FACTORY(U2);
+    DEF_GATE_FACTORY(U3);
+    DEF_GATE_FACTORY(CNOT);
+    DEF_GATE_FACTORY(CZ);
+    DEF_GATE_FACTORY(SWAP);
+    DEF_GATE_FACTORY(FusedSWAP);
 }
