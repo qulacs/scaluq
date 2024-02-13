@@ -22,7 +22,8 @@ TEST(CircuitTest, CircuitBasic) {
     StateVector state = StateVector::Haar_random_state(n);
     Eigen::VectorXcd state_eigen(dim);
 
-    for (UINT i = 0; i < dim; ++i) state_eigen[i] = state[i];
+    auto state_cp = state.amplitudes();
+    for (UINT i = 0; i < dim; ++i) state_eigen[i] = state_cp[i];
 
     Circuit circuit(n);
     UINT target, target_sub;
@@ -156,8 +157,10 @@ TEST(CircuitTest, CircuitBasic) {
     */
 
     circuit.update_quantum_state(state);
+
+    state_cp = state.amplitudes();
     for (UINT i = 0; i < dim; ++i)
-        ASSERT_NEAR(std::abs(state_eigen[i] - (CComplex)state[i]), 0, eps);
+        ASSERT_NEAR(std::abs(state_eigen[i] - (CComplex)state_cp[i]), 0, eps);
 }
 
 TEST(CircuitTest, CircuitRev) {
@@ -167,8 +170,9 @@ TEST(CircuitTest, CircuitRev) {
     Random random;
 
     StateVector state = StateVector::Haar_random_state(n);
+    auto state_cp = state.amplitudes();
     Eigen::VectorXcd state_eigen(dim);
-    for (UINT i = 0; i < dim; ++i) state_eigen[i] = state[i];
+    for (UINT i = 0; i < dim; ++i) state_eigen[i] = state_cp[i];
 
     Circuit circuit(n);
     UINT target, target_sub;
@@ -252,6 +256,6 @@ TEST(CircuitTest, CircuitRev) {
     auto revcircuit = circuit.get_inverse();
 
     revcircuit.update_quantum_state(state);
-
-    for (UINT i = 0; i < dim; ++i) ASSERT_NEAR(abs(state_eigen[i] - (CComplex)state[i]), 0, eps);
+    state_cp = state.amplitudes();
+    for (UINT i = 0; i < dim; ++i) ASSERT_NEAR(abs(state_eigen[i] - (CComplex)state_cp[i]), 0, eps);
 }
