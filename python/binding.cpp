@@ -215,4 +215,17 @@ NB_MODULE(qulacs_core, m) {
     DEF_GATE_FACTORY(CZ);
     DEF_GATE_FACTORY(SWAP);
     DEF_GATE_FACTORY(FusedSWAP);
+
+    nb::class_<Circuit>(m, "Circuit")
+        .def(nb::init<UINT>())
+        .def("n_qubits", &Circuit::n_qubits)
+        .def("gate_list", &Circuit::gate_list)
+        .def("gate_count", &Circuit::gate_count)
+        .def("get", nb::overload_cast<UINT>(&Circuit::get))
+        .def("calculate_depth", &Circuit::calculate_depth)
+        .def("add_gate", nb::overload_cast<const Gate &>(&Circuit::add_gate))
+        .def("add_circuit", nb::overload_cast<const Circuit &>(&Circuit::add_circuit))
+        .def("update_quantum_state", &Circuit::update_quantum_state)
+        .def("copy", &Circuit::copy)
+        .def("get_inverse", &Circuit::get_inverse);
 }
