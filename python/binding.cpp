@@ -124,6 +124,7 @@ NB_MODULE(qulacs_core, m) {
 
 #define DEF_GATE(GATE_TYPE)                                                                 \
     nb::class_<GATE_TYPE>(m, #GATE_TYPE)                                                    \
+        .def(nb::init<Gate>())                                                              \
         .def("get_target_qubit_list",                                                       \
              [](const GATE_TYPE &gate) { return gate->get_target_qubit_list(); })           \
         .def("get_control_qubit_list",                                                      \
@@ -228,4 +229,54 @@ NB_MODULE(qulacs_core, m) {
         .def("update_quantum_state", &Circuit::update_quantum_state)
         .def("copy", &Circuit::copy)
         .def("get_inverse", &Circuit::get_inverse);
+
+    nb::class_<PauliOperator>(m, "PauliOperator")
+        .def(nb::init<Complex>(), "coef"_a = 1.)
+        .def(nb::init<const std::vector<UINT> &, const std::vector<UINT> &, Complex>(),
+             "target_qubit_list"_a,
+             "pauli_id_list"_a,
+             "coef"_a = 1.)
+        // cannot capture init<const std::vector<UINT>&, Complex> because num or arguments are same
+        .def(
+            "__init__",
+            [](PauliOperator *t,
+               nb::int_ bit_flip_mask_py,
+               nb::int_ phase_flip_mask_py,
+               Complex coef) {
+                BitVector bit_flip_mask(0), phase_flip_mask(0);
+                const nb::int_ mask(~0ULL);
+                auto &bit_flip_raw = bit_flip_mask.data_raw();
+                assert(bit_flip_raw.empty());
+                while (bit_flip_mask_py) {
+                    bit_flip_raw.push_back((UINT)nb::int_(bit_flip_mask_py & mask));
+                    bit_flip_mask_py >>= nb::int_(64);
+                }
+                auto &phase_flip_raw = phase_flip_mask.data_raw();
+                assert(phase_flip_raw.empty());
+                while (phase_flip_mask_py) {
+                    phase_flip_raw.push_back((UINT)nb::int_(phase_flip_mask_py & mask));
+                    phase_flip_mask_py >>= nb::int_(64);
+                }
+                new (t) PauliOperator(bit_flip_mask, phase_flip_mask, coef);
+            },
+            "bit_flip_mask"_a,
+            "phase_flip_mask"_a,
+            "coef"_a = 1.)
+        .def("get_coef", &PauliOperator::get_coef)
+        .def("get_target_qubit_list", &PauliOperator::get_target_qubit_list)
+        .def("get_pauli_id_list", &PauliOperator::get_pauli_id_list)
+        .def("get_XZ_mask_representation", [](const PauliOperator &pauli) {
+            const auto &[x_mask, z_mask] = pauli.get_XZ_mask_representation();
+            const auto &x_raw = x_mask.data_raw();
+            nb::int_ x_mask_py(0);
+            for (UINT i = 0; i < x_raw.size(); ++i) {
+                x_mask_py |= nb::int_(x_raw[i]) << nb::int_(64 * i);
+            }
+            const auto &z_raw = z_mask.data_raw();
+            nb::int_ z_mask_py(0);
+            for (UINT i = 0; i < z_raw.size(); ++i) {
+                z_mask_py |= nb::int_(z_raw[i]) << nb::int_(64 * i);
+            }
+            return std::make_tuple(x_mask_py, z_mask_py);
+        });
 }
