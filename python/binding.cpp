@@ -120,9 +120,6 @@ NB_MODULE(qulacs_core, m) {
         .def("sampling", &StateVector::sampling)
         .def("to_string", &StateVector::to_string)
         .def("load", &StateVector::load)
-        .def("__getitem__", [](const StateVector &s, int index) { return s[index]; })
-        .def("__setitem__",
-             [](StateVector &s, int index, const Complex &value) { s[index] = value; })
         .def("__str__", &StateVector::to_string);
 
 #define DEF_GATE(GATE_TYPE)                                                                 \
