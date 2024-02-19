@@ -54,7 +54,7 @@ jobs:
 
       - name: Test in Ubuntu
         run: |
-          ninja test -C build -j $(nproc)
+          OMP_PROC_BIND=false ninja test -C build -j $(nproc)
 
   nvcc-build:
     name: NVCC build
