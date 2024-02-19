@@ -1,5 +1,8 @@
 #include <nanobind/nanobind.h>
+#include <nanobind/operators.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/string_view.h>
+#include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
 
 #include <all.hpp>
@@ -236,7 +239,8 @@ NB_MODULE(qulacs_core, m) {
              "target_qubit_list"_a,
              "pauli_id_list"_a,
              "coef"_a = 1.)
-        // cannot capture init<const std::vector<UINT>&, Complex> because num or arguments are same
+        .def(nb::init<std::string_view, Complex>(), "pauli_string"_a, "coef"_a = 1.)
+        .def(nb::init<const std::vector<UINT> &, Complex>(), "pauli_id_par_qubit"_a, "coef"_a = 1.)
         .def(
             "__init__",
             [](PauliOperator *t,
@@ -247,13 +251,13 @@ NB_MODULE(qulacs_core, m) {
                 const nb::int_ mask(~0ULL);
                 auto &bit_flip_raw = bit_flip_mask.data_raw();
                 assert(bit_flip_raw.empty());
-                while (bit_flip_mask_py) {
+                while (bit_flip_mask_py > nb::int_(0)) {
                     bit_flip_raw.push_back((UINT)nb::int_(bit_flip_mask_py & mask));
                     bit_flip_mask_py >>= nb::int_(64);
                 }
                 auto &phase_flip_raw = phase_flip_mask.data_raw();
                 assert(phase_flip_raw.empty());
-                while (phase_flip_mask_py) {
+                while (phase_flip_mask_py > nb::int_(0)) {
                     phase_flip_raw.push_back((UINT)nb::int_(phase_flip_mask_py & mask));
                     phase_flip_mask_py >>= nb::int_(64);
                 }
@@ -265,18 +269,64 @@ NB_MODULE(qulacs_core, m) {
         .def("get_coef", &PauliOperator::get_coef)
         .def("get_target_qubit_list", &PauliOperator::get_target_qubit_list)
         .def("get_pauli_id_list", &PauliOperator::get_pauli_id_list)
-        .def("get_XZ_mask_representation", [](const PauliOperator &pauli) {
-            const auto &[x_mask, z_mask] = pauli.get_XZ_mask_representation();
-            const auto &x_raw = x_mask.data_raw();
-            nb::int_ x_mask_py(0);
-            for (UINT i = 0; i < x_raw.size(); ++i) {
-                x_mask_py |= nb::int_(x_raw[i]) << nb::int_(64 * i);
-            }
-            const auto &z_raw = z_mask.data_raw();
-            nb::int_ z_mask_py(0);
-            for (UINT i = 0; i < z_raw.size(); ++i) {
-                z_mask_py |= nb::int_(z_raw[i]) << nb::int_(64 * i);
-            }
-            return std::make_tuple(x_mask_py, z_mask_py);
-        });
+        .def("get_XZ_mask_representation",
+             [](const PauliOperator &pauli) {
+                 const auto &[x_mask, z_mask] = pauli.get_XZ_mask_representation();
+                 const auto &x_raw = x_mask.data_raw();
+                 nb::int_ x_mask_py(0);
+                 for (UINT i = 0; i < x_raw.size(); ++i) {
+                     x_mask_py |= nb::int_(x_raw[i]) << nb::int_(64 * i);
+                 }
+                 const auto &z_raw = z_mask.data_raw();
+                 nb::int_ z_mask_py(0);
+                 for (UINT i = 0; i < z_raw.size(); ++i) {
+                     z_mask_py |= nb::int_(z_raw[i]) << nb::int_(64 * i);
+                 }
+                 return std::make_tuple(x_mask_py, z_mask_py);
+             })
+        .def("get_pauli_string", &PauliOperator::get_pauli_string)
+        .def("get_dagger", &PauliOperator::get_dagger)
+        .def("get_qubit_count", &PauliOperator::get_qubit_count)
+        .def("change_coef", &PauliOperator::change_coef)
+        .def("add_single_pauli", &PauliOperator::add_single_pauli)
+        .def("apply_to_state", &PauliOperator::apply_to_state)
+        .def("get_expectation_value", &PauliOperator::get_expectation_value)
+        .def("get_transition_amplitude", &PauliOperator::get_transition_amplitude)
+        .def(nb::self * nb::self)
+        .def(nb::self *= nb::self)
+        .def(nb::self *= Complex())
+        .def(nb::self * Complex());
+
+    nb::class_<Operator>(m, "Operator")
+        .def(nb::init<UINT>())
+        .def("is_hermitian", &Operator::is_hermitian)
+        .def("n_qubits", &Operator::n_qubits)
+        .def("terms", &Operator::terms)
+        .def("to_string", &Operator::to_string)
+        .def("add_operator", nb::overload_cast<const PauliOperator &>(&Operator::add_operator))
+        .def("add_random_operator",
+             nb::overload_cast<UINT>(&Operator::add_random_operator),
+             "operator_count"_a = 1)
+        .def("add_random_operator", nb::overload_cast<UINT, UINT>(&Operator::add_random_operator))
+        .def("optimize", &Operator::optimize)
+        .def("get_dagger", &Operator::get_dagger)
+        .def("apply_to_state", &Operator::apply_to_state)
+        .def("get_expectation_value", &Operator::get_expectation_value)
+        .def("get_transition_amplitude", &Operator::get_transition_amplitude)
+        .def(nb::self *= Complex())
+        .def(nb::self * Complex())
+        .def(+nb::self)
+        .def(-nb::self)
+        .def(nb::self += nb::self)
+        .def(nb::self + nb::self)
+        .def(nb::self -= nb::self)
+        .def(nb::self - nb::self)
+        .def(nb::self * nb::self)
+        .def(nb::self *= nb::self)
+        .def(nb::self += PauliOperator())
+        .def(nb::self + PauliOperator())
+        .def(nb::self -= PauliOperator())
+        .def(nb::self - PauliOperator())
+        .def(nb::self *= PauliOperator())
+        .def(nb::self * PauliOperator());
 }
