@@ -199,6 +199,51 @@ void run_random_gate_apply_fused(UINT n_qubits, UINT target0, UINT target1, UINT
     }
 }
 
+void run_random_gate_apply_Pauli(
+    UINT n_qubits, std::function<Eigen::MatrixXcd(double, double, double)> matrix_factory) {
+    const int dim = 1ULL << n_qubits;
+    Random random;
+
+    for (int repeat = 0; repeat < 10; repeat++) {
+        auto state = StateVector::Haar_random_state(n_qubits);
+        auto state_cp = state.amplitudes();
+        for (int gate_type = 0; gate_type < 3; gate_type++) {
+            for (int i = 0; i < dim; i++) {
+                test_state[i] = state_cp[i];
+            }
+
+            double theta = M_PI * random.uniform();
+            double phi = M_PI * random.uniform();
+            double lambda = M_PI * random.uniform();
+            if (gate_type == 0) {
+                theta = 0;
+                phi = 0;
+            } else if (gate_type == 1) {
+                theta = M_PI / 2;
+            }
+            const auto matrix = matrix_factory(theta, phi, lambda);
+            const UINT target = random.int64() % n_qubits;
+            Gate gate;
+            if (gate_type == 0) {
+                gate = U1(target, lambda);
+            } else if (gate_type == 1) {
+                gate = U2(target, phi, lambda);
+            } else {
+                gate = U3(target, theta, phi, lambda);
+            }
+            gate->update_quantum_state(state);
+            state_cp = state.amplitudes();
+
+            test_state =
+                get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
+
+            for (int i = 0; i < dim; i++) {
+                ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            }
+        }
+    }
+}
+
 TEST(GateTest, ApplyI) { run_random_gate_apply<I>(5, make_I); }
 TEST(GateTest, ApplyX) { run_random_gate_apply<X>(5, make_X); }
 TEST(GateTest, ApplyY) { run_random_gate_apply<Y>(5, make_Y); }
