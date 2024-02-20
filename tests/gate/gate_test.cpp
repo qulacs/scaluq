@@ -230,7 +230,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         }
 
         PauliOperator pauli(target_vec, pauli_id_vec, 1.0);
-        Gate pauli_gate = PauliGate(&pauli);
+        Gate pauli_gate = Pauli(&pauli);
         pauli_gate->update_quantum_state(state);
 
         auto state_cp = state.amplitudes();
@@ -293,7 +293,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         }
 
         PauliOperator pauli(target_vec, pauli_id_vec, 1.0);
-        Gate pauli_gate = PauliRotationGate(&pauli, angle);
+        Gate pauli_gate = PauliRotation(&pauli, angle);
         pauli_gate->update_quantum_state(state);
 
         auto state_cp = state.amplitudes();

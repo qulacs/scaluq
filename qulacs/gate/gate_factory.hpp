@@ -94,10 +94,10 @@ inline Gate FusedSWAP(UINT qubit_index1, UINT qubit_index2, UINT block_size) {
     return internal::GateFactory::create_gate<internal::FusedSWAPGateImpl>(
         qubit_index1, qubit_index2, block_size);
 }
-inline Gate PauliGate(PauliOperator* pauli) {
+inline Gate Pauli(PauliOperator* pauli) {
     return internal::GateFactory::create_gate<internal::PauliGateImpl>(pauli);
 }
-inline Gate PauliRotationGate(PauliOperator* pauli, double angle) {
+inline Gate PauliRotation(PauliOperator* pauli, double angle) {
     return internal::GateFactory::create_gate<internal::PauliRotationGateImpl>(pauli, angle);
 }
 }  // namespace qulacs
