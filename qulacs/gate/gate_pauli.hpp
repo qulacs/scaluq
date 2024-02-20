@@ -22,7 +22,7 @@ public:
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
     Gate copy() const override { return std::make_shared<PauliGateImpl>(*this); }
-    Gate get_inverse() const override { return std::make_shared<PauliGateImpl>(*this); }
+    Gate get_inverse() const override;
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -44,7 +44,7 @@ public:
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
     Gate copy() const override { return std::make_shared<PauliRotationGateImpl>(*this); }
-    Gate get_inverse() const override { return std::make_shared<PauliRotationGateImpl>(*this); }
+    Gate get_inverse() const override;
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
