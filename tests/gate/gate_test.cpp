@@ -129,7 +129,7 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
             Gate gate;
             auto state_cp = state.amplitudes();
             for (int i = 0; i < dim; i++) {
-                test_state[i] = state[i];
+                test_state[i] = state_cp[i];
             }
 
             UINT target = random.int64() % n_qubits;
