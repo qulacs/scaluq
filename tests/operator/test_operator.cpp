@@ -56,8 +56,9 @@ TEST(OperatorTest, CheckExpectationValue) {
             generate_random_observable_with_eigen(n, random);
 
         auto state = StateVector::Haar_random_state(n);
+        auto state_cp = state.amplitudes();
         Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
-        for (UINT i = 0; i < dim; ++i) test_state[i] = state[i];
+        for (UINT i = 0; i < dim; ++i) test_state[i] = state_cp[i];
 
         Complex res = rand_observable.get_expectation_value(state);
         Complex test_res = (test_state.adjoint() * test_rand_observable * test_state)(0, 0);
@@ -77,11 +78,13 @@ TEST(OperatorTest, CheckTransitionAmplitude) {
             generate_random_observable_with_eigen(n, random);
 
         auto state_bra = StateVector::Haar_random_state(n);
+        auto state_bra_cp = state_bra.amplitudes();
         Eigen::VectorXcd test_state_bra = Eigen::VectorXcd::Zero(dim);
-        for (UINT i = 0; i < dim; ++i) test_state_bra[i] = state_bra[i];
+        for (UINT i = 0; i < dim; ++i) test_state_bra[i] = state_bra_cp[i];
         auto state_ket = StateVector::Haar_random_state(n);
+        auto state_ket_cp = state_ket.amplitudes();
         Eigen::VectorXcd test_state_ket = Eigen::VectorXcd::Zero(dim);
-        for (UINT i = 0; i < dim; ++i) test_state_ket[i] = state_ket[i];
+        for (UINT i = 0; i < dim; ++i) test_state_ket[i] = state_ket_cp[i];
 
         Complex res = rand_observable.get_transition_amplitude(state_bra, state_ket);
         Complex test_res = (test_state_bra.adjoint() * test_rand_observable * test_state_ket)(0, 0);
