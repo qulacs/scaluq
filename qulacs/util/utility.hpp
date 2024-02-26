@@ -1,4 +1,5 @@
 #include <Kokkos_Core.hpp>
+#include <Kokkos_StdAlgorithms.hpp>
 #include <algorithm>  // For std::copy
 #include <iostream>
 #include <vector>
@@ -10,13 +11,31 @@ namespace qulacs {
 namespace internal {
 
 /**
- * Insert 0 to insert_index-th bit of basis_index.
+ * Inserts a 0 bit at a specified index in basis_index.
+ * Example: insert_zero_to_basis_index(0b1001, 1) -> 0b10001.
+ *                                                        ^
  */
 KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index, UINT insert_index) {
     UINT mask = (1ULL << insert_index) - 1;
     UINT temp_basis = (basis_index >> insert_index) << (insert_index + 1);
     return temp_basis | (basis_index & mask);
 }
+
+/**
+ * Inserts two 0 bits at specified indexes in basis_index.
+ * Example: insert_zero_to_basis_index(0b11001, 1, 5) -> 0b1010001.
+ *                                                          ^   ^
+ */
+KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
+                                                       UINT insert_index1,
+                                                       UINT insert_index2) {
+    auto [lidx, uidx] = Kokkos::minmax(insert_index1, insert_index2);
+    UINT lmask = (1ULL << lidx) - 1;
+    UINT umask = (1ULL << uidx) - 1;
+    basis_index = ((basis_index >> lidx) << (lidx + 1)) | (basis_index & lmask);
+    return ((basis_index >> uidx) << (uidx + 1)) | (basis_index & umask);
+}
+
 }  // namespace internal
 
 KOKKOS_INLINE_FUNCTION double norm2(const Complex& z) {

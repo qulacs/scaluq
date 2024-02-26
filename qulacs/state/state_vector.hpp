@@ -44,8 +44,13 @@ public:
 
     [[nodiscard]] UINT dim() const;
 
-    [[nodiscard]] Kokkos::View<Complex*>& amplitudes_raw();
-    [[nodiscard]] const Kokkos::View<Complex*>& amplitudes_raw() const;
+    [[nodiscard]] KOKKOS_INLINE_FUNCTION Kokkos::View<Complex*>& _raw() {
+        return this->_amplitudes;
+    }
+
+    [[nodiscard]] KOKKOS_INLINE_FUNCTION const Kokkos::View<Complex*>& _raw() const {
+        return this->_amplitudes;
+    }
 
     [[nodiscard]] std::vector<Complex> amplitudes() const;
 

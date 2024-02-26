@@ -86,7 +86,7 @@ TEST(StateVectorTest, HaarRandomStateSameSeed) {
     }
 }
 
-TEST(StateVectorTest, StateTest_HaarRandomStateWithoutSeed) {
+TEST(StateVectorTest, HaarRandomStateWithoutSeed) {
     const UINT n = 10, m = 5;
     for (UINT i = 0; i < m; ++i) {
         StateVector state1(StateVector::Haar_random_state(n)),

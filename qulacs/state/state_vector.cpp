@@ -45,7 +45,7 @@ void StateVector::set_computational_basis(UINT basis) {
 StateVector StateVector::Haar_random_state(UINT n_qubits, UINT seed) {
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
     StateVector state(n_qubits);
-    auto amp = state.amplitudes_raw();
+    auto amp = state._raw();
     Kokkos::parallel_for(
         state._dim, KOKKOS_LAMBDA(const UINT& i) {
             auto rand_gen = rand_pool.get_state();
@@ -60,7 +60,7 @@ StateVector StateVector::Haar_random_state(UINT n_qubits) {
     std::random_device rd;
     Kokkos::Random_XorShift64_Pool<> rand_pool(rd());
     StateVector state(n_qubits);
-    auto amp = state.amplitudes_raw();
+    auto amp = state._raw();
     Kokkos::parallel_for(
         state._dim, KOKKOS_LAMBDA(const UINT& i) {
             auto rand_gen = rand_pool.get_state();
@@ -74,10 +74,6 @@ StateVector StateVector::Haar_random_state(UINT n_qubits) {
 UINT StateVector::n_qubits() const { return this->_n_qubits; }
 
 UINT StateVector::dim() const { return this->_dim; }
-
-Kokkos::View<Complex*>& StateVector::amplitudes_raw() { return this->_amplitudes; }
-
-const Kokkos::View<Complex*>& StateVector::amplitudes_raw() const { return this->_amplitudes; }
 
 std::vector<Complex> StateVector::amplitudes() const {
     return convert_device_view_to_host_vector(_amplitudes);
@@ -174,13 +170,13 @@ double StateVector::get_entropy() const {
 }
 
 void StateVector::add_state_vector(const StateVector& state) {
-    auto amp = state.amplitudes_raw();
+    auto amp = state._raw();
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] += amp[i]; });
 }
 
 void StateVector::add_state_vector_with_coef(const Complex& coef, const StateVector& state) {
-    auto amp = state.amplitudes_raw();
+    auto amp = state._raw();
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] += coef * amp[i]; });
 }
@@ -249,7 +245,7 @@ void StateVector::load(const std::vector<Complex>& other) {
 
 StateVector StateVector::copy() const {
     StateVector new_vec(_n_qubits);
-    auto new_amp = new_vec.amplitudes_raw();
+    auto new_amp = new_vec._raw();
     Kokkos::parallel_for(
         _dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { new_amp[i] = _amplitudes[i]; });
     return new_vec;
