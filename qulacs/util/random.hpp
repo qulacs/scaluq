@@ -11,9 +11,7 @@ class Random {
     std::mt19937_64 mt;
 
 public:
-    Random();
-
-    Random(UINT seed);
+    Random(UINT seed = std::random_device()());
 
     [[nodiscard]] double uniform();
 

@@ -53,20 +53,6 @@ StateVector StateVector::Haar_random_state(UINT n_qubits, UINT seed) {
     return state;
 }
 
-StateVector StateVector::Haar_random_state(UINT n_qubits) {
-    std::random_device rd;
-    Kokkos::Random_XorShift64_Pool<> rand_pool(rd());
-    StateVector state(n_qubits);
-    Kokkos::parallel_for(
-        state._dim, KOKKOS_LAMBDA(const UINT& i) {
-            auto rand_gen = rand_pool.get_state();
-            state._raw[i] = Complex(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
-            rand_pool.free_state(rand_gen);
-        });
-    state.normalize();
-    return state;
-}
-
 UINT StateVector::n_qubits() const { return this->_n_qubits; }
 
 UINT StateVector::dim() const { return this->_dim; }

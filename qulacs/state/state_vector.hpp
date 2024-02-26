@@ -2,6 +2,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
+#include <random>
 #include <stdexcept>
 #include <vector>
 
@@ -30,8 +31,8 @@ public:
      */
     [[nodiscard]] Complex get_amplitude_at_index(const UINT& index) const;
 
-    [[nodiscard]] static StateVector Haar_random_state(UINT n_qubits, UINT seed);
-    [[nodiscard]] static StateVector Haar_random_state(UINT n_qubits);
+    [[nodiscard]] static StateVector Haar_random_state(UINT n_qubits,
+                                                       UINT seed = std::random_device()());
 
     /**
      * @brief zero-fill
@@ -58,7 +59,8 @@ public:
     void add_state_vector_with_coef(const Complex& coef, const StateVector& state);
     void multiply_coef(const Complex& coef);
 
-    [[nodiscard]] std::vector<UINT> sampling(UINT sampling_count, UINT seed = 0) const;
+    [[nodiscard]] std::vector<UINT> sampling(UINT sampling_count,
+                                             UINT seed = std::random_device()()) const;
 
     [[nodiscard]] std::string to_string() const;
 

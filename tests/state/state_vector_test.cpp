@@ -3,9 +3,10 @@
 #include <Eigen/Core>
 #include <cmath>
 #include <state/state_vector.hpp>
+#include <util/utility.hpp>
 
 #include "../test_environment.hpp"
-#include "util/utility.hpp"
+#include "../util/util.hpp"
 
 using CComplex = std::complex<double>;
 

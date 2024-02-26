@@ -28,17 +28,6 @@ void Operator::add_operator(PauliOperator&& mpt) {
     }
     this->_terms.emplace_back(std::move(mpt));
 }
-void Operator::add_random_operator(UINT operator_count) {
-    for (UINT operator_idx = 0; operator_idx < operator_count; operator_idx++) {
-        std::vector<UINT> target_qubit_list(_n_qubits), pauli_id_list(_n_qubits);
-        for (UINT qubit_idx = 0; qubit_idx < _n_qubits; qubit_idx++) {
-            target_qubit_list[qubit_idx] = qubit_idx;
-            pauli_id_list[qubit_idx] = _random.int32() & 0b11;
-        }
-        Complex coef = _random.uniform() * 2. - 1.;
-        this->add_operator(PauliOperator(target_qubit_list, pauli_id_list, coef));
-    }
-}
 void Operator::add_random_operator(UINT operator_count, UINT seed) {
     Random random(seed);
     for (UINT operator_idx = 0; operator_idx < operator_count; operator_idx++) {
