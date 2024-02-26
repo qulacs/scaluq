@@ -68,15 +68,4 @@ std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device
     return host_vector;
 }
 
-#define _CHECK_GT(val1, val2) _check_gt(val1, val2, #val1, #val2, __FILE__, __LINE__)
-template <typename T>
-static std::string _check_gt(
-    T val1, T val2, std::string val1_name, std::string val2_name, std::string file, UINT line) {
-    if (val1 > val2) return "";
-    std::stringstream error_message_stream;
-    error_message_stream << file << ":" << line << ": Failure\n"
-                         << "Expected: (" << val1_name << ") > (" << val2_name
-                         << "), actual: " << val1 << " vs " << val2 << "\n";
-    return error_message_stream.str();
-}
 };  // namespace qulacs
