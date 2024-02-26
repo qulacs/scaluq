@@ -61,17 +61,17 @@ std::vector<Complex> StateVector::amplitudes() const {
     return convert_device_view_to_host_vector(_raw);
 }
 
-double StateVector::compute_squared_norm() const {
+double StateVector::get_squared_norm() const {
     double norm = 0.;
     Kokkos::parallel_reduce(
         this->_dim,
-        KOKKOS_CLASS_LAMBDA(const UINT& it, double& tmp) { tmp += norm2(this->_raw[it]); },
+        KOKKOS_CLASS_LAMBDA(const UINT& it, double& tmp) { tmp += squared_norm(this->_raw[it]); },
         norm);
     return norm;
 }
 
 void StateVector::normalize() {
-    const auto norm = std::sqrt(this->compute_squared_norm());
+    const auto norm = std::sqrt(this->get_squared_norm());
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& it) { this->_raw[it] /= norm; });
 }
@@ -88,7 +88,7 @@ double StateVector::get_zero_probability(UINT target_qubit_index) const {
         _dim >> 1,
         KOKKOS_CLASS_LAMBDA(const UINT& i, double& lsum) {
             UINT basis_0 = internal::insert_zero_to_basis_index(i, target_qubit_index);
-            lsum += norm2(this->_raw[basis_0]);
+            lsum += squared_norm(this->_raw[basis_0]);
         },
         sum);
     return sum;
@@ -126,7 +126,7 @@ double StateVector::get_marginal_probability(const std::vector<UINT>& measured_v
                 basis = internal::insert_zero_to_basis_index(basis, insert_index);
                 basis ^= d_target_value[cursor] << insert_index;
             }
-            lsum += norm2(this->_raw[basis]);
+            lsum += squared_norm(this->_raw[basis]);
         },
         sum);
 
@@ -140,7 +140,7 @@ double StateVector::get_entropy() const {
         "get_entropy",
         _dim,
         KOKKOS_CLASS_LAMBDA(const UINT& idx, double& lsum) {
-            double prob = norm2(_raw[idx]);
+            double prob = squared_norm(_raw[idx]);
             prob = (prob > eps) ? prob : eps;
             lsum += -prob * Kokkos::log(prob);
         },
@@ -170,7 +170,7 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
         "compute_stacked_prob",
         _dim,
         KOKKOS_CLASS_LAMBDA(const UINT& i, double& update, const bool final) {
-            double prob = norm2(this->_raw[i]);
+            double prob = squared_norm(this->_raw[i]);
             if (final) {
                 stacked_prob[i + 1] = update + prob;
             }

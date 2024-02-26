@@ -40,7 +40,7 @@ KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
 
 }  // namespace internal
 
-KOKKOS_INLINE_FUNCTION double norm2(const Complex& z) {
+KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
     return z.real() * z.real() + z.imag() * z.imag();
 }
 
