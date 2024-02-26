@@ -233,7 +233,7 @@ std::string StateVector::to_string() const {
 void StateVector::load(const std::vector<Complex>& other) {
     if (other.size() != _dim) {
         throw std::runtime_error(
-            "Error: QuantumStateCpu::load(vector<Complex>&): invalid "
+            "Error: StateVector::load(vector<Complex>&): invalid "
             "length of state");
     }
     _amplitudes = convert_host_vector_to_device_view(other);
