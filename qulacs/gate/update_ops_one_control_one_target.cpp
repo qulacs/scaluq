@@ -13,8 +13,7 @@ void cnot_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& s
             UINT i =
                 internal::insert_zero_to_basis_index(it, target_qubit_index, control_qubit_index);
             i |= 1ULL << control_qubit_index;
-            Kokkos::Experimental::swap(state._raw()[i],
-                                       state._raw()[i | (1ULL << target_qubit_index)]);
+            Kokkos::Experimental::swap(state._raw[i], state._raw[i | (1ULL << target_qubit_index)]);
         });
 }
 
@@ -25,7 +24,7 @@ void cz_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& sta
                 internal::insert_zero_to_basis_index(it, target_qubit_index, control_qubit_index);
             i |= 1ULL << control_qubit_index;
             i |= 1ULL << target_qubit_index;
-            state._raw()[i] *= -1;
+            state._raw[i] *= -1;
         });
 }
 }  // namespace qulacs

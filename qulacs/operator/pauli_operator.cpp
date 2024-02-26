@@ -119,9 +119,9 @@ void PauliOperator::apply_to_state(StateVector& state_vector) const {
         Kokkos::parallel_for(
             state_vector.dim(), KOKKOS_LAMBDA(const UINT& state_idx) {
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
-                    state_vector._raw()[state_idx] *= -coef;
+                    state_vector._raw[state_idx] *= -coef;
                 } else {
-                    state_vector._raw()[state_idx] *= coef;
+                    state_vector._raw[state_idx] *= coef;
                 }
             });
         return;
@@ -133,12 +133,12 @@ void PauliOperator::apply_to_state(StateVector& state_vector) const {
         state_vector.dim() >> 1, KOKKOS_LAMBDA(const UINT& state_idx) {
             UINT basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             UINT basis_1 = basis_0 ^ bit_flip_mask;
-            Complex tmp1 = state_vector._raw()[basis_0] * global_phase;
-            Complex tmp2 = state_vector._raw()[basis_1] * global_phase;
+            Complex tmp1 = state_vector._raw[basis_0] * global_phase;
+            Complex tmp2 = state_vector._raw[basis_1] * global_phase;
             if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
             if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
-            state_vector._raw()[basis_0] = tmp1 * coef;
-            state_vector._raw()[basis_1] = tmp2 * coef;
+            state_vector._raw[basis_0] = tmp1 * coef;
+            state_vector._raw[basis_1] = tmp2 * coef;
         });
 }
 
@@ -156,7 +156,7 @@ Complex PauliOperator::get_expectation_value(const StateVector& state_vector) co
             state_vector.dim(),
             KOKKOS_LAMBDA(const UINT& state_idx, double& sum) {
                 double tmp =
-                    (Kokkos::conj(state_vector._raw()[state_idx]) * state_vector._raw()[state_idx])
+                    (Kokkos::conj(state_vector._raw[state_idx]) * state_vector._raw[state_idx])
                         .real();
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
                 sum += tmp;
@@ -173,9 +173,8 @@ Complex PauliOperator::get_expectation_value(const StateVector& state_vector) co
         KOKKOS_LAMBDA(const UINT& state_idx, double& sum) {
             UINT basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             UINT basis_1 = basis_0 ^ bit_flip_mask;
-            double tmp =
-                Kokkos::real(state_vector._raw()[basis_0] *
-                             Kokkos::conj(state_vector._raw()[basis_1]) * global_phase * 2.);
+            double tmp = Kokkos::real(state_vector._raw[basis_0] *
+                                      Kokkos::conj(state_vector._raw[basis_1]) * global_phase * 2.);
             if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
             sum += tmp;
         },
@@ -193,8 +192,8 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
             "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to apply "
             "the operator");
     }
-    const auto& amplitudes_bra = state_vector_bra._raw();
-    const auto& amplitudes_ket = state_vector_ket._raw();
+    const auto& amplitudes_bra = state_vector_bra._raw;
+    const auto& amplitudes_ket = state_vector_ket._raw;
     UINT bit_flip_mask = _bit_flip_mask.data_raw()[0];
     UINT phase_flip_mask = _phase_flip_mask.data_raw()[0];
     if (bit_flip_mask == 0) {

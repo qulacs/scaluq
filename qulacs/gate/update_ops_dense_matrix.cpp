@@ -13,12 +13,12 @@ void single_qubit_dense_matrix_gate(UINT target_qubit_index,
         state.dim() >> 1, KOKKOS_LAMBDA(const UINT it) {
             UINT basis_0 = internal::insert_zero_to_basis_index(it, target_qubit_index);
             UINT basis_1 = basis_0 | (1ULL << target_qubit_index);
-            Complex val0 = state._raw()[basis_0];
-            Complex val1 = state._raw()[basis_1];
+            Complex val0 = state._raw[basis_0];
+            Complex val1 = state._raw[basis_1];
             Complex res0 = matrix.val[0][0] * val0 + matrix.val[0][1] * val1;
             Complex res1 = matrix.val[1][0] * val0 + matrix.val[1][1] * val1;
-            state._raw()[basis_0] = res0;
-            state._raw()[basis_1] = res1;
+            state._raw[basis_0] = res0;
+            state._raw[basis_1] = res1;
         });
 }
 }  // namespace qulacs

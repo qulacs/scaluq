@@ -11,9 +11,9 @@ namespace qulacs {
 class StateVector {
     UINT _n_qubits;
     UINT _dim;
-    Kokkos::View<Complex*> _amplitudes;
 
 public:
+    Kokkos::View<Complex*> _raw;
     StateVector() = default;
     StateVector(UINT n_qubits);
     StateVector(const StateVector& other) = default;
@@ -43,14 +43,6 @@ public:
     [[nodiscard]] UINT n_qubits() const;
 
     [[nodiscard]] UINT dim() const;
-
-    [[nodiscard]] KOKKOS_INLINE_FUNCTION Kokkos::View<Complex*>& _raw() {
-        return this->_amplitudes;
-    }
-
-    [[nodiscard]] KOKKOS_INLINE_FUNCTION const Kokkos::View<Complex*>& _raw() const {
-        return this->_amplitudes;
-    }
 
     [[nodiscard]] std::vector<Complex> amplitudes() const;
 

@@ -27,7 +27,7 @@ void fusedswap_gate(UINT target_qubit_index_0,
             const UINT jblk = (i & jblk_mask) >> lower_index;
             if (jblk > kblk) {
                 const UINT j = (i & else_mask) | jblk << upper_index | kblk << lower_index;
-                Kokkos::Experimental::swap(state._raw()[i], state._raw()[j]);
+                Kokkos::Experimental::swap(state._raw[i], state._raw[j]);
             }
         });
 }
