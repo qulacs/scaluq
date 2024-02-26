@@ -45,11 +45,10 @@ void StateVector::set_computational_basis(UINT basis) {
 StateVector StateVector::Haar_random_state(UINT n_qubits, UINT seed) {
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
     StateVector state(n_qubits);
-    auto amp = state._raw();
     Kokkos::parallel_for(
         state._dim, KOKKOS_LAMBDA(const UINT& i) {
             auto rand_gen = rand_pool.get_state();
-            amp[i] = Complex(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
+            state._amplitudes[i] = Complex(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
             rand_pool.free_state(rand_gen);
         });
     state.normalize();
@@ -60,11 +59,10 @@ StateVector StateVector::Haar_random_state(UINT n_qubits) {
     std::random_device rd;
     Kokkos::Random_XorShift64_Pool<> rand_pool(rd());
     StateVector state(n_qubits);
-    auto amp = state._raw();
     Kokkos::parallel_for(
         state._dim, KOKKOS_LAMBDA(const UINT& i) {
             auto rand_gen = rand_pool.get_state();
-            amp[i] = Complex(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
+            state._amplitudes[i] = Complex(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
             rand_pool.free_state(rand_gen);
         });
     state.normalize();
@@ -100,11 +98,10 @@ double StateVector::get_zero_probability(UINT target_qubit_index) const {
             "Error: StateVector::get_zero_probability(UINT): index "
             "of target qubit must be smaller than qubit_count");
     }
-    const UINT loop_dim = _dim / 2;
     double sum = 0.;
     Kokkos::parallel_reduce(
         "zero_prob",
-        loop_dim,
+        _dim >> 1,
         KOKKOS_CLASS_LAMBDA(const UINT& i, double& lsum) {
             UINT basis_0 = internal::insert_zero_to_basis_index(i, target_qubit_index);
             lsum += norm2(this->_amplitudes[basis_0]);
@@ -131,15 +128,13 @@ double StateVector::get_marginal_probability(const std::vector<UINT>& measured_v
         }
     }
 
-    UINT loop_dim = _dim >> target_index.size();
     double sum = 0.;
-
     auto d_target_index = convert_host_vector_to_device_view(target_index);
     auto d_target_value = convert_host_vector_to_device_view(target_value);
 
     Kokkos::parallel_reduce(
         "marginal_prob",
-        loop_dim,
+        _dim >> target_index.size(),
         KOKKOS_CLASS_LAMBDA(const UINT& i, double& lsum) {
             UINT basis = i;
             for (UINT cursor = 0; cursor < d_target_index.size(); cursor++) {
@@ -170,15 +165,16 @@ double StateVector::get_entropy() const {
 }
 
 void StateVector::add_state_vector(const StateVector& state) {
-    auto amp = state._raw();
     Kokkos::parallel_for(
-        this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] += amp[i]; });
+        this->_dim,
+        KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] += state._amplitudes[i]; });
 }
 
 void StateVector::add_state_vector_with_coef(const Complex& coef, const StateVector& state) {
-    auto amp = state._raw();
     Kokkos::parallel_for(
-        this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_amplitudes[i] += coef * amp[i]; });
+        this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) {
+            this->_amplitudes[i] += coef * state._amplitudes[i];
+        });
 }
 
 void StateVector::multiply_coef(const Complex& coef) {
@@ -245,9 +241,7 @@ void StateVector::load(const std::vector<Complex>& other) {
 
 StateVector StateVector::copy() const {
     StateVector new_vec(_n_qubits);
-    auto new_amp = new_vec._raw();
-    Kokkos::parallel_for(
-        _dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { new_amp[i] = _amplitudes[i]; });
+    Kokkos::deep_copy(new_vec._amplitudes, _amplitudes);
     return new_vec;
 }
 
