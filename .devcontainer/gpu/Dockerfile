@@ -31,7 +31,7 @@ RUN apt-get update && \
     && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 RUN pip install -U pip \
-    && pip install black flake8 openfermion mypy pybind11-stubgen
+    && pip install black flake8 isort openfermion mypy nanobind scikit_build nanobind-stubgen
 
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.28.0/cmake-3.28.0-Linux-x86_64.sh -q -O /tmp/cmake-install.sh && \
     chmod u+x /tmp/cmake-install.sh && \

@@ -58,7 +58,7 @@ public:
     Operator& operator-=(const PauliOperator& pauli) { return *this += pauli * -1; }
     Operator operator-(const PauliOperator& pauli) const { return Operator(*this) -= pauli; }
     Operator& operator*=(const PauliOperator& pauli);
-    Operator operator*(const PauliOperator& pauli) { return Operator(*this) *= pauli; }
+    Operator operator*(const PauliOperator& pauli) const { return Operator(*this) *= pauli; }
 
 private:
     std::vector<PauliOperator> _terms;

@@ -48,6 +48,14 @@ PauliOperator::PauliOperator(const std::vector<UINT>& target_qubit_list,
     }
 }
 
+PauliOperator::PauliOperator(const std::vector<UINT>& pauli_id_par_qubit, Complex coef)
+    : _coef(coef) {
+    for (UINT target_index = 0; target_index < pauli_id_par_qubit.size(); ++target_index) {
+        UINT pauli_id = pauli_id_par_qubit[target_index];
+        if (pauli_id != 0) add_single_pauli(target_index, pauli_id);
+    }
+}
+
 PauliOperator::PauliOperator(const BitVector& bit_flip_mask,
                              const BitVector& phase_flip_mask,
                              Complex coef)
