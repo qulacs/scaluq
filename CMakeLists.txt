@@ -11,9 +11,6 @@ endif(NOT DEFINED QULACS_USE_OMP)
 if(NOT DEFINED QULACS_USE_CUDA)
     set(QULACS_USE_CUDA OFF)
 endif(NOT DEFINED QULACS_USE_CUDA)
-if(NOT DEFINED QULACS_USE_PYTHON)
-    set(QULACS_USE_PYTHON OFF)
-endif(NOT DEFINED QULACS_USE_PYTHON)
 if(NOT DEFINED QULACS_USE_TEST)
     set(QULACS_USE_TEST ON)
 endif(NOT DEFINED QULACS_USE_TEST)
@@ -21,7 +18,7 @@ if(NOT DEFINED QULACS_USE_EXE)
     set(QULACS_USE_EXE ON)
 endif(NOT DEFINED QULACS_USE_EXE)
 
-message(STATUS "QULACS_USE_PYTHON = ${QULACS_USE_PYTHON}")
+message(STATUS "SKBUILD = ${SKBUILD}")
 message(STATUS "QULACS_USE_TEST = ${QULACS_USE_TEST}")
 
 ### Kokkos options ###
@@ -53,6 +50,7 @@ if(NOT kokkos_fetch_POPULATED)
     message(STATUS "Fetch Kokkos for parallel execution")
     FetchContent_Populate(kokkos_fetch)
     add_subdirectory(${kokkos_fetch_SOURCE_DIR})
+    set_property(TARGET kokkoscore PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif(NOT kokkos_fetch_POPULATED)
 
 # Eigen
@@ -68,20 +66,22 @@ if(NOT eigen_fetch_POPULATED)
     add_subdirectory(${eigen_fetch_SOURCE_DIR})
 endif(NOT eigen_fetch_POPULATED)
 
-# pybind11
-if(QULACS_USE_PYTHON)
-    FetchContent_Declare(
-        pybind11_fetch
-        GIT_REPOSITORY https://github.com/pybind/pybind11
-        GIT_TAG v2.10.0
-    )
-    FetchContent_GetProperties(pybind11_fetch)
-    if(NOT pybind11_fetch_POPULATED)
-        message(STATUS "Fetch pybind11 for python-binding")
-        FetchContent_Populate(pybind11_fetch)
-        add_subdirectory(${pybind11_fetch_SOURCE_DIR})
-    endif(NOT pybind11_fetch_POPULATED)
-endif(QULACS_USE_PYTHON)
+# nanobind
+if(SKBUILD)
+    find_package(Python 3.8
+        REQUIRED COMPONENTS Interpreter Development.Module
+        OPTIONAL_COMPONENTS Development.SABIModule)
+    if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+        set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+        set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+    endif()
+    
+    execute_process(
+        COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+        OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE NB_DIR)
+    list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
+    find_package(nanobind CONFIG REQUIRED)
+endif(SKBUILD)
 
 # Google test
 if(QULACS_USE_TEST)
@@ -101,6 +101,7 @@ else()
 endif(QULACS_USE_TEST)
 
 add_library(qulacs)
+set_property(TARGET qulacs PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 ### Compiler options ###
 if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
@@ -109,8 +110,15 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
     
     # Warning
     target_compile_options(qulacs PUBLIC
-        -Wall -Wextra -Wunused-parameter -Wshadow -pedantic
-        -Wsign-compare -Wtype-limits -Wuninitialized)
+        -Wall
+        -Wextra
+        -Wunused-parameter
+        # -Wshadow
+        # -pedantic
+        -Wsign-compare
+        -Wtype-limits
+        -Wuninitialized
+    )
 
     # Enable pthread
     target_compile_options(qulacs PUBLIC -pthread)
@@ -128,9 +136,9 @@ endif()
 
 ### Add subdirectories ###
 add_subdirectory(qulacs)
-if(QULACS_USE_PYTHON)
+if(SKBUILD)
     add_subdirectory(python)
-endif(QULACS_USE_PYTHON)
+endif(SKBUILD)
 if(QULACS_USE_TEST)
     add_subdirectory(tests)
 endif(QULACS_USE_TEST)
@@ -138,7 +146,14 @@ if(QULACS_USE_EXE)
     add_subdirectory(exe)
 endif(QULACS_USE_EXE)
 
-### Custom target ###
+# python
+if(SKBUILD)
+    add_custom_target(
+        python
+        DEPENDS qulacs_core
+    )
+endif(SKBUILD)
+
 # test
 if(QULACS_USE_TEST)
     add_custom_target(

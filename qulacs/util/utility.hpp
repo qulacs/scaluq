@@ -7,6 +7,18 @@
 
 namespace qulacs {
 
+namespace internal {
+
+/**
+ * Insert 0 to insert_index-th bit of basis_index.
+ */
+KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index, UINT insert_index) {
+    UINT mask = (1ULL << insert_index) - 1;
+    UINT temp_basis = (basis_index >> insert_index) << (insert_index + 1);
+    return temp_basis | (basis_index & mask);
+}
+}  // namespace internal
+
 KOKKOS_INLINE_FUNCTION double norm2(const Complex& z) {
     return z.real() * z.real() + z.imag() * z.imag();
 }

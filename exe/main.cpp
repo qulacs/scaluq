@@ -17,7 +17,12 @@ using CComplex = std::complex<double>;
 
 void run_random_gate_apply_pauli(UINT);
 
-void run() { run_random_gate_apply_pauli(3); }
+void run() {
+    auto state = StateVector::Haar_random_state(3);
+    for (UINT i = 0; i < state.dim(); i++) {
+        // std::cout << state[i] << std::endl;
+    }
+}
 
 int main() {
     Kokkos::initialize();

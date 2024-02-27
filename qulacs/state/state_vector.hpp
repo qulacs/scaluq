@@ -20,6 +20,16 @@ public:
 
     StateVector& operator=(const StateVector& other) = default;
 
+    /**
+     * @attention Very slow. You should use load() instead if you can.
+     */
+    void set_amplitude_at_index(const UINT& index, const Complex& c);
+
+    /**
+     * @attention Very slow. You should use amplitudes() instead if you can.
+     */
+    [[nodiscard]] Complex get_amplitude_at_index(const UINT& index) const;
+
     [[nodiscard]] static StateVector Haar_random_state(UINT n_qubits, UINT seed);
     [[nodiscard]] static StateVector Haar_random_state(UINT n_qubits);
 
@@ -39,8 +49,6 @@ public:
 
     [[nodiscard]] std::vector<Complex> amplitudes() const;
 
-    [[nodiscard]] Complex& operator[](const int index);
-    [[nodiscard]] const Complex& operator[](const int index) const;
     [[nodiscard]] double compute_squared_norm() const;
 
     void normalize();
