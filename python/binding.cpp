@@ -103,6 +103,8 @@ NB_MODULE(qulacs_core, m) {
         .def_static("Haar_random_state",
                     nb::overload_cast<UINT, UINT>(&StateVector::Haar_random_state))
         .def_static("Haar_random_state", nb::overload_cast<UINT>(&StateVector::Haar_random_state))
+        .def("set_amplitude_at_index", &StateVector::set_amplitude_at_index)
+        .def("get_amplitude_at_index", &StateVector::get_amplitude_at_index)
         .def("set_zero_state", &StateVector::set_zero_state)
         .def("set_zero_norm_state", &StateVector::set_zero_norm_state)
         .def("set_computational_basis", &StateVector::set_computational_basis)
