@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.21)
 
-pybind11_add_module(qulacs_core SHARED EXCLUDE_FROM_ALL binding.cpp)
-target_link_libraries(qulacs_core PRIVATE Kokkos::kokkos)
-target_link_libraries(qulacs_core PUBLIC qulacs)
+
+message(STATUS "Building library for python...")
+
+nanobind_add_module(qulacs_core STABLE_ABI binding.cpp)
+target_link_libraries(qulacs_core PRIVATE qulacs Kokkos::kokkos)
 target_include_directories(qulacs_core PRIVATE ${PROJECT_SOURCE_DIR}/qulacs)
+install(TARGETS qulacs_core LIBRARY DESTINATION qulacs2023)

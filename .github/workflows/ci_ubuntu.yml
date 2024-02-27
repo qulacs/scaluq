@@ -52,9 +52,19 @@ jobs:
       - name: Install qulacs for Ubuntu
         run: CMAKE_BUILD_TYPE=Debug ./script/build_gcc.sh
 
+      - name: Install qulacs Python module
+        run: pip install .[ci]
+
+      - name: Check stubs
+        run: |
+          ./script/update_stubs.sh
+          diff=$(git diff)
+          echo -n "$diff"
+          test $(echo -n "$diff" | wc -l) -eq 0
+
       - name: Test in Ubuntu
         run: |
-          ninja test -C build -j $(nproc)
+          OMP_PROC_BIND=false ninja test -C build -j $(nproc)
 
   nvcc-build:
     name: NVCC build
