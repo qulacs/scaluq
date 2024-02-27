@@ -5,27 +5,6 @@
 
 namespace qulacs {
 
-/**
- * Insert 0 to insert_index-th bit of basis_index.
- */
-KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index, UINT insert_index) {
-    UINT mask = (1ULL << insert_index) - 1;
-    UINT temp_basis = (basis_index >> insert_index) << (insert_index + 1);
-    return temp_basis | (basis_index & mask);
-}
-
-inline void write_to_device_at_index(StateVector& v, const int index, const Complex& c) {
-    Kokkos::View<Complex, Kokkos::HostSpace> host_view("single_value");
-    host_view() = c;
-    Kokkos::deep_copy(Kokkos::subview(v.amplitudes_raw(), index), host_view());
-}
-
-inline Complex read_from_device_at_index(StateVector& v, const int index) {
-    Kokkos::View<Complex, Kokkos::HostSpace> host_view("single_value");
-    Kokkos::deep_copy(host_view, Kokkos::subview(v.amplitudes_raw(), index));
-    return host_view();
-}
-
 StateVector::StateVector(UINT n_qubits)
     : _n_qubits(n_qubits),
       _dim(1 << n_qubits),
@@ -33,9 +12,21 @@ StateVector::StateVector(UINT n_qubits)
     set_zero_state();
 }
 
+void StateVector::set_amplitude_at_index(const UINT& index, const Complex& c) {
+    Kokkos::View<Complex, Kokkos::HostSpace> host_view("single_value");
+    host_view() = c;
+    Kokkos::deep_copy(Kokkos::subview(_amplitudes, index), host_view());
+}
+
+Complex StateVector::get_amplitude_at_index(const UINT& index) const {
+    Kokkos::View<Complex, Kokkos::HostSpace> host_view("single_value");
+    Kokkos::deep_copy(host_view, Kokkos::subview(_amplitudes, index));
+    return host_view();
+}
+
 void StateVector::set_zero_state() {
     Kokkos::deep_copy(_amplitudes, 0);
-    write_to_device_at_index(*this, 0, 1);
+    set_amplitude_at_index(0, 1);
 }
 
 void StateVector::set_zero_norm_state() { Kokkos::deep_copy(_amplitudes, 0); }
@@ -48,16 +39,17 @@ void StateVector::set_computational_basis(UINT basis) {
             "computational basis must be smaller than 2^qubit_count");
     }
     Kokkos::deep_copy(_amplitudes, 0);
-    write_to_device_at_index(*this, basis, 1);
+    set_amplitude_at_index(basis, 1);
 }
 
 StateVector StateVector::Haar_random_state(UINT n_qubits, UINT seed) {
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
     StateVector state(n_qubits);
+    auto amp = state.amplitudes_raw();
     Kokkos::parallel_for(
-        state._dim, KOKKOS_LAMBDA(const int i) {
+        state._dim, KOKKOS_LAMBDA(const UINT& i) {
             auto rand_gen = rand_pool.get_state();
-            state._amplitudes[i] = Complex(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
+            amp[i] = Complex(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
             rand_pool.free_state(rand_gen);
         });
     state.normalize();
@@ -68,10 +60,11 @@ StateVector StateVector::Haar_random_state(UINT n_qubits) {
     std::random_device rd;
     Kokkos::Random_XorShift64_Pool<> rand_pool(rd());
     StateVector state(n_qubits);
+    auto amp = state.amplitudes_raw();
     Kokkos::parallel_for(
-        state._dim, KOKKOS_LAMBDA(const int i) {
+        state._dim, KOKKOS_LAMBDA(const UINT& i) {
             auto rand_gen = rand_pool.get_state();
-            state._amplitudes[i] = Complex(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
+            amp[i] = Complex(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
             rand_pool.free_state(rand_gen);
         });
     state.normalize();
@@ -89,10 +82,6 @@ const Kokkos::View<Complex*>& StateVector::amplitudes_raw() const { return this-
 std::vector<Complex> StateVector::amplitudes() const {
     return convert_device_view_to_host_vector(_amplitudes);
 }
-
-Complex& StateVector::operator[](const int index) { return this->_amplitudes[index]; }
-
-const Complex& StateVector::operator[](const int index) const { return this->_amplitudes[index]; }
 
 double StateVector::compute_squared_norm() const {
     double norm = 0.;
@@ -120,8 +109,8 @@ double StateVector::get_zero_probability(UINT target_qubit_index) const {
     Kokkos::parallel_reduce(
         "zero_prob",
         loop_dim,
-        KOKKOS_CLASS_LAMBDA(const int i, double& lsum) {
-            UINT basis_0 = insert_zero_to_basis_index(i, target_qubit_index);
+        KOKKOS_CLASS_LAMBDA(const UINT& i, double& lsum) {
+            UINT basis_0 = internal::insert_zero_to_basis_index(i, target_qubit_index);
             lsum += norm2(this->_amplitudes[basis_0]);
         },
         sum);
@@ -159,7 +148,7 @@ double StateVector::get_marginal_probability(const std::vector<UINT>& measured_v
             UINT basis = i;
             for (UINT cursor = 0; cursor < d_target_index.size(); cursor++) {
                 UINT insert_index = d_target_index[cursor];
-                basis = insert_zero_to_basis_index(basis, insert_index);
+                basis = internal::insert_zero_to_basis_index(basis, insert_index);
                 basis ^= d_target_value[cursor] << insert_index;
             }
             lsum += norm2(this->_amplitudes[basis]);
@@ -207,7 +196,7 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
     Kokkos::parallel_scan(
         "compute_stacked_prob",
         _dim,
-        KOKKOS_CLASS_LAMBDA(const int& i, double& update, const bool final) {
+        KOKKOS_CLASS_LAMBDA(const UINT& i, double& update, const bool final) {
             double prob = norm2(this->_amplitudes[i]);
             if (final) {
                 stacked_prob[i + 1] = update + prob;
@@ -218,7 +207,7 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
     Kokkos::View<UINT*> result("result", sampling_count);
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
     Kokkos::parallel_for(
-        sampling_count, KOKKOS_CLASS_LAMBDA(const UINT& i) {
+        sampling_count, KOKKOS_LAMBDA(const UINT& i) {
             auto rand_gen = rand_pool.get_state();
             double r = rand_gen.drand(0., 1.);
             UINT lo = 0, hi = stacked_prob.size();
@@ -239,9 +228,9 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
 std::string StateVector::to_string() const {
     std::stringstream os;
     auto amp = this->amplitudes();
-    os << " *** Quantum State ***" << std::endl;
-    os << " * Qubit Count : " << _n_qubits << std::endl;
-    os << " * Dimension   : " << _dim << std::endl;
+    os << " *** Quantum State ***\n";
+    os << " * Qubit Count : " << _n_qubits << '\n';
+    os << " * Dimension   : " << _dim << '\n';
     os << " * State vector : \n";
     for (UINT i = 0; i < _dim; ++i) {
         os << amp[i] << std::endl;
