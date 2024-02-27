@@ -210,7 +210,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         auto state_bef = state.copy();
 
         std::vector<UINT> target_vec, pauli_id_vec;
-        for (int target = 0; target < n_qubits; target++) {
+        for (UINT target = 0; target < n_qubits; target++) {
             target_vec.emplace_back(target);
             pauli_id_vec.emplace_back(random.int64() % n_qubits);
 
@@ -237,7 +237,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         auto test_state_cp = test_state.amplitudes();
 
         // check if the state is updated correctly
-        for (int i = 0; i < dim; i++) {
+        for (UINT i = 0; i < dim; i++) {
             ASSERT_NEAR(std::abs((CComplex)(state_cp[i] - test_state_cp[i])), 0, eps);
         }
 
@@ -247,7 +247,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         state_cp = state.amplitudes();
 
         // check if the state is restored correctly
-        for (int i = 0; i < dim; i++) {
+        for (UINT i = 0; i < dim; i++) {
             ASSERT_NEAR(std::abs((CComplex)(state_cp[i] - state_bef_cp[i])), 0, eps);
         }
     }
@@ -259,18 +259,18 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         auto state_bef = state.copy();
         Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
 
-        for (int i = 0; i < dim; i++) {
+        for (UINT i = 0; i < dim; i++) {
             test_state[i] = state_cp[i];
         }
 
         const double angle = M_PI * random.uniform();
         std::vector<UINT> target_vec, pauli_id_vec;
-        for (int target = 0; target < n_qubits; target++) {
+        for (UINT target = 0; target < n_qubits; target++) {
             target_vec.emplace_back(target);
             pauli_id_vec.emplace_back(random.int64() % n_qubits);
         }
 
-        Eigen::VectorXcd matrix;
+        Eigen::MatrixXcd matrix;
         if (pauli_id_vec[n_qubits - 1] == 0) {
             matrix = make_I();
         } else if (pauli_id_vec[n_qubits - 1] == 1) {
@@ -280,7 +280,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         } else if (pauli_id_vec[n_qubits - 1] == 3) {
             matrix = make_RZ(angle);
         }
-        for (int i = n_qubits - 2; i >= 0; i--) {
+        for (UINT i = n_qubits - 2; i >= 0; i--) {
             if (pauli_id_vec[i] == 0) {
                 matrix = kronecker_product(make_I(), matrix);
             } else if (pauli_id_vec[i] == 1) {
@@ -296,10 +296,10 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         Gate pauli_gate = PauliRotation(&pauli, angle);
         pauli_gate->update_quantum_state(state);
 
-        auto state_cp = state.amplitudes();
+        state_cp = state.amplitudes();
         test_state = matrix * test_state;
         // check if the state is updated correctly
-        for (int i = 0; i < dim; i++) {
+        for (UINT i = 0; i < dim; i++) {
             ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
         }
 
@@ -308,7 +308,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         state_cp = state.amplitudes();
         auto state_bef_cp = state_bef.amplitudes();
         // check if the state is restored correctly
-        for (int i = 0; i < dim; i++) {
+        for (UINT i = 0; i < dim; i++) {
             ASSERT_NEAR(std::abs((CComplex)(state_cp[i] - state_bef_cp[i])), 0, eps);
         }
     }
