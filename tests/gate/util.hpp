@@ -10,8 +10,8 @@ namespace qulacs {
 static Eigen::MatrixXcd kronecker_product(const Eigen::MatrixXcd& lhs,
                                           const Eigen::MatrixXcd& rhs) {
     Eigen::MatrixXcd result(lhs.rows() * rhs.rows(), lhs.cols() * rhs.cols());
-    for (int i = 0; i < lhs.cols(); i++) {
-        for (int j = 0; j < lhs.rows(); j++) {
+    for (int i = 0; i < lhs.rows(); i++) {
+        for (int j = 0; j < lhs.cols(); j++) {
             result.block(i * rhs.rows(), j * rhs.cols(), rhs.rows(), rhs.cols()) = lhs(i, j) * rhs;
         }
     }
@@ -27,8 +27,9 @@ static Eigen::MatrixXcd get_expanded_eigen_matrix_with_identity(
     return kronecker_product(kronecker_product(right_identity, one_qubit_matrix), left_identity);
 }
 
-static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CNOT(
-    UINT control_qubit_index, UINT target_qubit_index, UINT qubit_count) {
+static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CNOT(UINT control_qubit_index,
+                                                         UINT target_qubit_index,
+                                                         UINT qubit_count) {
     UINT dim = 1ULL << qubit_count;
     Eigen::MatrixXcd result = Eigen::MatrixXcd::Zero(dim, dim);
     for (UINT ind = 0; ind < dim; ++ind) {
@@ -41,8 +42,9 @@ static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CNOT(
     return result;
 }
 
-static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CZ(
-    UINT control_qubit_index, UINT target_qubit_index, UINT qubit_count) {
+static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CZ(UINT control_qubit_index,
+                                                       UINT target_qubit_index,
+                                                       UINT qubit_count) {
     UINT dim = 1ULL << qubit_count;
     Eigen::MatrixXcd result = Eigen::MatrixXcd::Zero(dim, dim);
     for (UINT ind = 0; ind < dim; ++ind) {
@@ -56,8 +58,9 @@ static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CZ(
     return result;
 }
 
-static Eigen::MatrixXcd get_eigen_matrix_full_qubit_SWAP(
-    UINT target_qubit_index1, UINT target_qubit_index2, UINT qubit_count) {
+static Eigen::MatrixXcd get_eigen_matrix_full_qubit_SWAP(UINT target_qubit_index1,
+                                                         UINT target_qubit_index2,
+                                                         UINT qubit_count) {
     UINT dim = 1ULL << qubit_count;
     Eigen::MatrixXcd result = Eigen::MatrixXcd::Zero(dim, dim);
     for (UINT ind = 0; ind < dim; ++ind) {
@@ -65,8 +68,7 @@ static Eigen::MatrixXcd get_eigen_matrix_full_qubit_SWAP(
         flag1 = (ind & (1ULL << target_qubit_index1)) != 0;
         flag2 = (ind & (1ULL << target_qubit_index2)) != 0;
         if (flag1 ^ flag2) {
-            result(ind, ind ^ (1ULL << target_qubit_index1) ^
-                            (1ULL << target_qubit_index2)) = 1;
+            result(ind, ind ^ (1ULL << target_qubit_index1) ^ (1ULL << target_qubit_index2)) = 1;
         } else {
             result(ind, ind) = 1;
         }

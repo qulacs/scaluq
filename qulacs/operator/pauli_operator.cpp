@@ -122,17 +122,17 @@ void PauliOperator::apply_to_state(StateVector& state_vector) const {
     UINT lower_mask = (1ULL << pivot) - 1;
     UINT upper_mask = ~lower_mask;
     UINT global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex global_phase = PHASE_90ROT().val[global_phase_90rot_count % 4];
+    Complex global_phase = PHASE_M90ROT().val[global_phase_90rot_count % 4];
     Kokkos::parallel_for(
         state_vector.dim() >> 1, KOKKOS_CLASS_LAMBDA(const UINT& state_idx) {
             UINT basis_0 = (state_idx & upper_mask) << 1 | (state_idx & lower_mask);
             UINT basis_1 = basis_0 ^ bit_flip_mask;
             Complex tmp1 = amplitudes[basis_0] * global_phase;
             Complex tmp2 = amplitudes[basis_1] * global_phase;
-            if (std::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
-            if (std::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
-            amplitudes[basis_0] = tmp1 * _coef;
-            amplitudes[basis_1] = tmp2 * _coef;
+            if (std::popcount(basis_0 & phase_flip_mask) & 1) tmp2 = -tmp2;
+            if (std::popcount(basis_1 & phase_flip_mask) & 1) tmp1 = -tmp1;
+            amplitudes[basis_0] = tmp2 * _coef;
+            amplitudes[basis_1] = tmp1 * _coef;
         });
 }
 
