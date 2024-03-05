@@ -2,6 +2,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
+#include <random>
 #include <stdexcept>
 #include <vector>
 
@@ -11,9 +12,9 @@ namespace qulacs {
 class StateVector {
     UINT _n_qubits;
     UINT _dim;
-    Kokkos::View<Complex*> _amplitudes;
 
 public:
+    Kokkos::View<Complex*> _raw;
     StateVector() = default;
     StateVector(UINT n_qubits);
     StateVector(const StateVector& other) = default;
@@ -30,8 +31,8 @@ public:
      */
     [[nodiscard]] Complex get_amplitude_at_index(const UINT& index) const;
 
-    [[nodiscard]] static StateVector Haar_random_state(UINT n_qubits, UINT seed);
-    [[nodiscard]] static StateVector Haar_random_state(UINT n_qubits);
+    [[nodiscard]] static StateVector Haar_random_state(UINT n_qubits,
+                                                       UINT seed = std::random_device()());
 
     /**
      * @brief zero-fill
@@ -44,12 +45,9 @@ public:
 
     [[nodiscard]] UINT dim() const;
 
-    [[nodiscard]] Kokkos::View<Complex*>& amplitudes_raw();
-    [[nodiscard]] const Kokkos::View<Complex*>& amplitudes_raw() const;
-
     [[nodiscard]] std::vector<Complex> amplitudes() const;
 
-    [[nodiscard]] double compute_squared_norm() const;
+    [[nodiscard]] double get_squared_norm() const;
 
     void normalize();
 
@@ -61,7 +59,8 @@ public:
     void add_state_vector_with_coef(const Complex& coef, const StateVector& state);
     void multiply_coef(const Complex& coef);
 
-    [[nodiscard]] std::vector<UINT> sampling(UINT sampling_count, UINT seed = 0) const;
+    [[nodiscard]] std::vector<UINT> sampling(UINT sampling_count,
+                                             UINT seed = std::random_device()()) const;
 
     [[nodiscard]] std::string to_string() const;
 
