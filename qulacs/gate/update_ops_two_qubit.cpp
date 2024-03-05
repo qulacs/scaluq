@@ -6,6 +6,7 @@
 #include "update_ops.hpp"
 
 namespace qulacs {
+namespace internal {
 void swap_gate(UINT target0, UINT target1, StateVector& state) {
     UINT n_qubits = state.n_qubits();
     UINT mask_0 = 1ULL << target0;
@@ -27,4 +28,5 @@ void swap_gate(UINT target0, UINT target1, StateVector& state) {
             Kokkos::Experimental::swap(amplitudes[basis_index_0], amplitudes[basis_index_1]);
         });
 }
+}  // namespace internal
 }  // namespace qulacs

@@ -6,7 +6,8 @@
 #include "update_ops.hpp"
 
 namespace qulacs {
-void cnot_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& state) {
+namespace internal {
+void cx_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& state) {
     const UINT n_qubits = state.n_qubits();
     const UINT target_mask = 1ULL << target_qubit_index;
     const UINT control_mask = 1ULL << control_qubit_index;
@@ -46,4 +47,5 @@ void cz_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& sta
             amplitudes[i] *= -1;
         });
 }
+}  // namespace internal
 }  // namespace qulacs

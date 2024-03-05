@@ -6,8 +6,8 @@ namespace qulacs {
 namespace internal {
 Gate SGateImpl::get_inverse() const { return std::make_shared<SdagGateImpl>(_target); }
 Gate TGateImpl::get_inverse() const { return std::make_shared<TdagGateImpl>(_target); }
-Gate sqrtXGateImpl::get_inverse() const { return std::make_shared<sqrtXdagGateImpl>(_target); }
-Gate sqrtYGateImpl::get_inverse() const { return std::make_shared<sqrtYdagGateImpl>(_target); }
+Gate SqrtXGateImpl::get_inverse() const { return std::make_shared<SqrtXdagGateImpl>(_target); }
+Gate SqrtYGateImpl::get_inverse() const { return std::make_shared<SqrtYdagGateImpl>(_target); }
 
 void IGateImpl::update_quantum_state(StateVector& state_vector) const {
     i_gate(this->_target, state_vector);
@@ -45,19 +45,19 @@ void TdagGateImpl::update_quantum_state(StateVector& state_vector) const {
     tdag_gate(this->_target, state_vector);
 }
 
-void sqrtXGateImpl::update_quantum_state(StateVector& state_vector) const {
+void SqrtXGateImpl::update_quantum_state(StateVector& state_vector) const {
     sqrtx_gate(this->_target, state_vector);
 }
 
-void sqrtXdagGateImpl::update_quantum_state(StateVector& state_vector) const {
+void SqrtXdagGateImpl::update_quantum_state(StateVector& state_vector) const {
     sqrtxdag_gate(this->_target, state_vector);
 }
 
-void sqrtYGateImpl::update_quantum_state(StateVector& state_vector) const {
+void SqrtYGateImpl::update_quantum_state(StateVector& state_vector) const {
     sqrty_gate(this->_target, state_vector);
 }
 
-void sqrtYdagGateImpl::update_quantum_state(StateVector& state_vector) const {
+void SqrtYdagGateImpl::update_quantum_state(StateVector& state_vector) const {
     sqrtydag_gate(this->_target, state_vector);
 }
 

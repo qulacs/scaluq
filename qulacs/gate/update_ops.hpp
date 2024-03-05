@@ -5,6 +5,7 @@
 #include "../types.hpp"
 
 namespace qulacs {
+namespace internal {
 void i_gate(UINT target_qubit_index, StateVector& state);
 
 void x_gate(UINT target_qubit_index, StateVector& state);
@@ -41,7 +42,7 @@ void ry_gate(UINT target_qubit_index, double angle, StateVector& state);
 
 void rz_gate(UINT target_qubit_index, double angle, StateVector& state);
 
-void cnot_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& state);
+void cx_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& state);
 
 void cz_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& state);
 
@@ -68,4 +69,5 @@ void pauli_rotation_gate(std::vector<UINT> target_qubit_index_list,
                          std::vector<UINT> pauli_id_index,
                          double angle,
                          StateVector& state);
+}  // namespace internal
 }  // namespace qulacs

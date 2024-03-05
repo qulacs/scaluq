@@ -6,6 +6,7 @@
 #include "update_ops.hpp"
 
 namespace qulacs {
+namespace internal {
 void i_gate(UINT, StateVector&) {}
 
 void x_gate(UINT target_qubit_index, StateVector& state) {
@@ -145,4 +146,5 @@ void rz_gate(UINT target_qubit_index, double angle, StateVector& state) {
     diagonal_matrix_2_2 diag = {cosval - Complex(0, sinval), cosval + Complex(0, sinval)};
     single_qubit_diagonal_matrix_gate(target_qubit_index, diag, state);
 }
+}  // namespace internal
 }  // namespace qulacs
