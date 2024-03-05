@@ -38,12 +38,6 @@ KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
     return ((basis_index >> uidx) << (uidx + 1)) | (basis_index & umask);
 }
 
-}  // namespace internal
-
-KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
-    return z.real() * z.real() + z.imag() * z.imag();
-}
-
 // Host std::vector を Device Kokkos::View に変換する関数
 template <typename T>
 Kokkos::View<T*, Kokkos::DefaultExecutionSpace> convert_host_vector_to_device_view(
@@ -66,6 +60,12 @@ std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device
     Kokkos::deep_copy(host_view, device_view);
     std::copy(host_view.data(), host_view.data() + host_view.extent(0), host_vector.begin());
     return host_vector;
+}
+
+}  // namespace internal
+
+KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
+    return z.real() * z.real() + z.imag() * z.imag();
 }
 
 };  // namespace qulacs

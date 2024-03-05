@@ -58,7 +58,7 @@ UINT StateVector::n_qubits() const { return this->_n_qubits; }
 UINT StateVector::dim() const { return this->_dim; }
 
 std::vector<Complex> StateVector::amplitudes() const {
-    return convert_device_view_to_host_vector(_raw);
+    return internal::convert_device_view_to_host_vector(_raw);
 }
 
 double StateVector::get_squared_norm() const {
@@ -113,8 +113,8 @@ double StateVector::get_marginal_probability(const std::vector<UINT>& measured_v
     }
 
     double sum = 0.;
-    auto d_target_index = convert_host_vector_to_device_view(target_index);
-    auto d_target_value = convert_host_vector_to_device_view(target_value);
+    auto d_target_index = internal::convert_host_vector_to_device_view(target_index);
+    auto d_target_value = internal::convert_host_vector_to_device_view(target_value);
 
     Kokkos::parallel_reduce(
         "marginal_prob",
@@ -195,7 +195,7 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
             result[i] = lo;
             rand_pool.free_state(rand_gen);
         });
-    return convert_device_view_to_host_vector<UINT>(result);
+    return internal::convert_device_view_to_host_vector<UINT>(result);
 }
 
 std::string StateVector::to_string() const {
@@ -217,7 +217,7 @@ void StateVector::load(const std::vector<Complex>& other) {
             "Error: StateVector::load(vector<Complex>&): invalid "
             "length of state");
     }
-    _raw = convert_host_vector_to_device_view(other);
+    _raw = internal::convert_host_vector_to_device_view(other);
 }
 
 StateVector StateVector::copy() const {
