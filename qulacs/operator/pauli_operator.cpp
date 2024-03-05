@@ -138,8 +138,8 @@ void PauliOperator::apply_to_state(StateVector& state_vector) const {
             UINT basis_1 = basis_0 ^ bit_flip_mask;
             Complex tmp1 = amplitudes[basis_0] * global_phase;
             Complex tmp2 = amplitudes[basis_1] * global_phase;
-            if (std::popcount(basis_0 & phase_flip_mask) & 1) tmp2 = -tmp2;
-            if (std::popcount(basis_1 & phase_flip_mask) & 1) tmp1 = -tmp1;
+            if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp2 = -tmp2;
+            if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp1 = -tmp1;
             amplitudes[basis_0] = tmp2 * _coef;
             amplitudes[basis_1] = tmp1 * _coef;
         });

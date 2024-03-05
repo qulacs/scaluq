@@ -6,11 +6,16 @@
 namespace qulacs {
 namespace internal {
 
-Gate PauliGateImpl::get_inverse() const { return std::make_shared<PauliGateImpl>(*this); }
+Gate PauliGateImpl::get_inverse() const {
+    PauliOperator pauli(
+        this->get_target_qubit_list(), this->get_pauli_id_list(), this->_pauli->get_coef());
+    return std::make_shared<PauliGateImpl>(pauli);
+}
 
 Gate PauliRotationGateImpl::get_inverse() const {
-    return std::make_shared<PauliRotationGateImpl>(
-        PauliRotationGateImpl(this->_pauli, -(this->_angle)));
+    PauliOperator pauli(
+        this->get_target_qubit_list(), this->get_pauli_id_list(), this->_pauli->get_coef());
+    return std::make_shared<PauliRotationGateImpl>(pauli, -(this->_angle));
 }
 
 void PauliGateImpl::update_quantum_state(StateVector& state_vector) const {
