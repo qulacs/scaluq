@@ -100,7 +100,7 @@ NB_MODULE(qulacs_core, m) {
         .def(nb::init<>())
         .def(nb::init<UINT>())
         .def(nb::init<const StateVector &>())
-        .def(
+        .def_static(
             "Haar_random_state",
             [](UINT n_qubits, nb::object seed) {
                 if (seed.is_none()) {
@@ -109,6 +109,7 @@ NB_MODULE(qulacs_core, m) {
                     return StateVector::Haar_random_state(n_qubits, nb::cast<UINT>(seed));
                 }
             },
+            "n_qubits"_a,
             "seed"_a = nb::none())
         .def("set_amplitude_at_index", &StateVector::set_amplitude_at_index)
         .def("get_amplitude_at_index", &StateVector::get_amplitude_at_index)
@@ -135,6 +136,7 @@ NB_MODULE(qulacs_core, m) {
                     return state.sampling(sampling_count, nb::cast<UINT>(seed));
                 }
             },
+            "sampling_count"_a,
             "seed"_a = nb::none())
         .def("to_string", &StateVector::to_string)
         .def("load", &StateVector::load)
