@@ -18,16 +18,15 @@ void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& 
     const double cosval = cos(-angle / 2);
     const double sinval = sin(-angle / 2);
     const Complex coef = pauli.get_coef();
-    const auto& amplitudes = state.amplitudes_raw();
     if (bit_flip_mask == 0) {
         Kokkos::parallel_for(
             state.dim(), KOKKOS_LAMBDA(const UINT& state_idx) {
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
-                    amplitudes[state_idx] *= cosval - Complex(0, 1) * sinval;
+                    state._raw[state_idx] *= cosval - Complex(0, sinval);
                 } else {
-                    amplitudes[state_idx] *= cosval + Complex(0, 1) * sinval;
+                    state._raw[state_idx] *= cosval + Complex(0, sinval);
                 }
-                amplitudes[state_idx] *= coef;
+                state._raw[state_idx] *= coef;
             });
         return;
     } else {
@@ -41,20 +40,20 @@ void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& 
                 int bit_parity_1 = Kokkos::popcount(basis_1 & phase_flip_mask) % 2;
 
                 // fetch values
-                Complex cval_0 = amplitudes[basis_0];
-                Complex cval_1 = amplitudes[basis_1];
+                Complex cval_0 = state._raw[basis_0];
+                Complex cval_1 = state._raw[basis_1];
 
                 // set values
-                amplitudes[basis_0] =
+                state._raw[basis_0] =
                     cosval * cval_0 +
                     Complex(0, 1) * sinval * cval_1 *
                         (PHASE_M90ROT()).val[(global_phase_90_rot_count + bit_parity_0 * 2) % 4];
-                amplitudes[basis_1] =
+                state._raw[basis_1] =
                     cosval * cval_1 +
                     Complex(0, 1) * sinval * cval_0 *
                         (PHASE_M90ROT()).val[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
-                amplitudes[basis_0] *= coef;
-                amplitudes[basis_1] *= coef;
+                state._raw[basis_0] *= coef;
+                state._raw[basis_1] *= coef;
             });
     }
 }

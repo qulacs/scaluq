@@ -1,6 +1,7 @@
 #include "pauli_operator.hpp"
 
 #include "../constant.hpp"
+#include "../util/utility.hpp"
 
 namespace qulacs {
 PauliOperator::PauliOperator(Complex coef) : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {}
