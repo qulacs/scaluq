@@ -4,19 +4,20 @@
 #include "../constant.hpp"
 #include "../operator/pauli_operator.hpp"
 #include "../types.hpp"
+#include "../util/utility.hpp"
 #include "update_ops.hpp"
 
 namespace qulacs {
-void pauli_gate(PauliOperator* pauli, StateVector& state) { pauli->apply_to_state(state); }
+void pauli_gate(const PauliOperator& pauli, StateVector& state) { pauli.apply_to_state(state); }
 
-void pauli_rotation_gate(PauliOperator* pauli, double angle, StateVector& state) {
-    auto [bit_flip_mask_vector, phase_flip_mask_vector] = pauli->get_XZ_mask_representation();
+void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& state) {
+    auto [bit_flip_mask_vector, phase_flip_mask_vector] = pauli.get_XZ_mask_representation();
     UINT bit_flip_mask = bit_flip_mask_vector.data_raw()[0];
     UINT phase_flip_mask = phase_flip_mask_vector.data_raw()[0];
     UINT global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     const double cosval = cos(-angle / 2);
     const double sinval = sin(-angle / 2);
-    const Complex coef = pauli->get_coef();
+    const Complex coef = pauli.get_coef();
     const auto& amplitudes = state.amplitudes_raw();
     if (bit_flip_mask == 0) {
         Kokkos::parallel_for(
@@ -30,12 +31,10 @@ void pauli_rotation_gate(PauliOperator* pauli, double angle, StateVector& state)
             });
         return;
     } else {
-        const UINT mask = 1 << bit_flip_mask_vector.msb();
-        const UINT mask_low = mask - 1;
-        const UINT mask_high = ~mask_low;
+        const UINT insert_idx = bit_flip_mask_vector.msb();
         Kokkos::parallel_for(
             state.dim() / 2, KOKKOS_LAMBDA(const UINT& state_idx) {
-                UINT basis_0 = (state_idx & mask_low) + ((state_idx & mask_high) << 1);
+                UINT basis_0 = internal::insert_zero_to_basis_index(state_idx, insert_idx);
                 UINT basis_1 = basis_0 ^ bit_flip_mask;
 
                 int bit_parity_0 = Kokkos::popcount(basis_0 & phase_flip_mask) % 2;

@@ -61,7 +61,7 @@ void fusedswap_gate(UINT target_qubit_index_0,
                     UINT block_size,
                     StateVector& state);
 
-void pauli_gate(PauliOperator* pauli, StateVector& state);
+void pauli_gate(const PauliOperator& pauli, StateVector& state);
 
-void pauli_rotation_gate(PauliOperator* pauli, double angle, StateVector& state);
+void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& state);
 }  // namespace qulacs

@@ -8,13 +8,13 @@ namespace internal {
 
 Gate PauliGateImpl::get_inverse() const {
     PauliOperator pauli(
-        this->get_target_qubit_list(), this->get_pauli_id_list(), this->_pauli->get_coef());
+        this->get_target_qubit_list(), this->get_pauli_id_list(), this->_pauli.get_coef());
     return std::make_shared<PauliGateImpl>(pauli);
 }
 
 Gate PauliRotationGateImpl::get_inverse() const {
     PauliOperator pauli(
-        this->get_target_qubit_list(), this->get_pauli_id_list(), this->_pauli->get_coef());
+        this->get_target_qubit_list(), this->get_pauli_id_list(), this->_pauli.get_coef());
     return std::make_shared<PauliRotationGateImpl>(pauli, -(this->_angle));
 }
 

@@ -266,62 +266,62 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
     }
 
     // Test for PauliRotationGate
-    // for (int repeat = 0; repeat < 10; repeat++) {
-    //     StateVector state = StateVector::Haar_random_state(n_qubits);
-    //     auto state_cp = state.amplitudes();
-    //     auto state_bef = state.copy();
-    //     assert(test_state.size() == state_cp.size());
-    //     for (UINT i = 0; i < dim; i++) {
-    //         test_state[i] = state_cp[i];
-    //     }
-    //     const double angle = M_PI * random.uniform();
-    //     std::vector<UINT> target_vec, pauli_id_vec;
-    //     for (UINT target = 0; target < n_qubits; target++) {
-    //         target_vec.emplace_back(target);
-    //         pauli_id_vec.emplace_back(random.int64() % 4);
-    //     }
+    for (int repeat = 0; repeat < 10; repeat++) {
+        StateVector state = StateVector::Haar_random_state(n_qubits);
+        auto state_cp = state.amplitudes();
+        auto state_bef = state.copy();
+        assert(test_state.size() == state_cp.size());
+        for (UINT i = 0; i < dim; i++) {
+            test_state[i] = state_cp[i];
+        }
+        const double angle = M_PI * random.uniform();
+        std::vector<UINT> target_vec, pauli_id_vec;
+        for (UINT target = 0; target < n_qubits; target++) {
+            target_vec.emplace_back(target);
+            pauli_id_vec.emplace_back(random.int64() % 4);
+        }
 
-    //     if (pauli_id_vec[0] == 0) {
-    //         matrix = make_I();
-    //     } else if (pauli_id_vec[0] == 1) {
-    //         matrix = make_X();
-    //     } else if (pauli_id_vec[0] == 2) {
-    //         matrix = make_Y();
-    //     } else if (pauli_id_vec[0] == 3) {
-    //         matrix = make_Z();
-    //     }
-    //     for (int i = 1; i < n_qubits; i++) {
-    //         if (pauli_id_vec[i] == 0) {
-    //             matrix = kronecker_product(make_I(), matrix);
-    //         } else if (pauli_id_vec[i] == 1) {
-    //             matrix = kronecker_product(make_X(), matrix);
-    //         } else if (pauli_id_vec[i] == 2) {
-    //             matrix = kronecker_product(make_Y(), matrix);
-    //         } else if (pauli_id_vec[i] == 3) {
-    //             matrix = kronecker_product(make_Z(), matrix);
-    //         }
-    //     }
-    //     matrix = std::cos(angle / 2) * Eigen::MatrixXcd::Identity(dim, dim) -
-    //              Complex(0, 1) * std::sin(angle / 2) * matrix;
-    //     PauliOperator pauli(target_vec, pauli_id_vec, 1.0);
-    //     Gate pauli_gate = PauliRotation(pauli, angle);
-    //     pauli_gate->update_quantum_state(state);
-    //     state_cp = state.amplitudes();
-    //     test_state = matrix * test_state;
-    //     assert(state_cp.size() == test_state.size());
-    //     // check if the state is updated correctly
-    //     for (UINT i = 0; i < dim; i++) {
-    //         ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
-    //     }
-    //     Gate pauli_gate_inv = pauli_gate->get_inverse();
-    //     pauli_gate_inv->update_quantum_state(state);
-    //     state_cp = state.amplitudes();
-    //     auto state_bef_cp = state_bef.amplitudes();
-    //     // check if the state is restored correctly
-    //     for (UINT i = 0; i < dim; i++) {
-    //         ASSERT_NEAR(std::abs((CComplex)(state_cp[i] - state_bef_cp[i])), 0, eps);
-    //     }
-    // }
+        if (pauli_id_vec[0] == 0) {
+            matrix = make_I();
+        } else if (pauli_id_vec[0] == 1) {
+            matrix = make_X();
+        } else if (pauli_id_vec[0] == 2) {
+            matrix = make_Y();
+        } else if (pauli_id_vec[0] == 3) {
+            matrix = make_Z();
+        }
+        for (int i = 1; i < n_qubits; i++) {
+            if (pauli_id_vec[i] == 0) {
+                matrix = kronecker_product(make_I(), matrix);
+            } else if (pauli_id_vec[i] == 1) {
+                matrix = kronecker_product(make_X(), matrix);
+            } else if (pauli_id_vec[i] == 2) {
+                matrix = kronecker_product(make_Y(), matrix);
+            } else if (pauli_id_vec[i] == 3) {
+                matrix = kronecker_product(make_Z(), matrix);
+            }
+        }
+        matrix = std::cos(angle / 2) * Eigen::MatrixXcd::Identity(dim, dim) -
+                 Complex(0, 1) * std::sin(angle / 2) * matrix;
+        PauliOperator pauli(target_vec, pauli_id_vec, 1.0);
+        Gate pauli_gate = PauliRotation(pauli, angle);
+        pauli_gate->update_quantum_state(state);
+        state_cp = state.amplitudes();
+        test_state = matrix * test_state;
+        assert(state_cp.size() == test_state.size());
+        // check if the state is updated correctly
+        for (UINT i = 0; i < dim; i++) {
+            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+        }
+        Gate pauli_gate_inv = pauli_gate->get_inverse();
+        pauli_gate_inv->update_quantum_state(state);
+        state_cp = state.amplitudes();
+        auto state_bef_cp = state_bef.amplitudes();
+        // check if the state is restored correctly
+        for (UINT i = 0; i < dim; i++) {
+            ASSERT_NEAR(std::abs((CComplex)(state_cp[i] - state_bef_cp[i])), 0, eps);
+        }
+    }
 }
 
 TEST(GateTest, ApplyI) { run_random_gate_apply<I>(5, make_I); }

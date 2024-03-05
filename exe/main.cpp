@@ -99,7 +99,7 @@ void test_idx(PauliOperator* pauli, StateVector& state) {
 }
 
 void run() {
-    UINT n_qubits = 5;
+    UINT n_qubits = 10;
     auto state = StateVector::Haar_random_state(n_qubits);
     vector<UINT> pauli_ids, targets;
     for (UINT i = 0; i < n_qubits; i++) {
