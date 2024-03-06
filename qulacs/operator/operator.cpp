@@ -55,7 +55,7 @@ void Operator::optimize() {
 
 Operator Operator::get_dagger() const {
     Operator quantum_operator(_n_qubits);
-    for (const auto& pauli : this->_terms) {
+    for (const auto& pauli : _terms) {
         quantum_operator.add_operator(pauli.get_dagger());
     }
     return quantum_operator;
