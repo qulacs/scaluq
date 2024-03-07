@@ -10,6 +10,7 @@ namespace internal {
 inline void check_qubit_within_bounds(const StateVector& state, UINT op_qubit) {
     if (op_qubit >= state.n_qubits()) [[unlikely]] {
         throw std::runtime_error(
+            "Error: Gate::update_quantum_state(StateVector& state): "
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
