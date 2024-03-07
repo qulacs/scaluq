@@ -1,4 +1,7 @@
+#pragma once
+
 #include <Kokkos_Core.hpp>
+#include <Kokkos_StdAlgorithms.hpp>
 #include <algorithm>  // For std::copy
 #include <iostream>
 #include <vector>
@@ -10,17 +13,29 @@ namespace qulacs {
 namespace internal {
 
 /**
- * Insert 0 to insert_index-th bit of basis_index.
+ * Inserts a 0 bit at a specified index in basis_index.
+ * Example: insert_zero_to_basis_index(0b1001, 1) -> 0b10001.
+ *                                                        ^
  */
 KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index, UINT insert_index) {
     UINT mask = (1ULL << insert_index) - 1;
     UINT temp_basis = (basis_index >> insert_index) << (insert_index + 1);
     return temp_basis | (basis_index & mask);
 }
-}  // namespace internal
 
-KOKKOS_INLINE_FUNCTION double norm2(const Complex& z) {
-    return z.real() * z.real() + z.imag() * z.imag();
+/**
+ * Inserts two 0 bits at specified indexes in basis_index.
+ * Example: insert_zero_to_basis_index(0b11001, 1, 5) -> 0b1010001.
+ *                                                          ^   ^
+ */
+KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
+                                                       UINT insert_index1,
+                                                       UINT insert_index2) {
+    auto [lidx, uidx] = Kokkos::minmax(insert_index1, insert_index2);
+    UINT lmask = (1ULL << lidx) - 1;
+    UINT umask = (1ULL << uidx) - 1;
+    basis_index = ((basis_index >> lidx) << (lidx + 1)) | (basis_index & lmask);
+    return ((basis_index >> uidx) << (uidx + 1)) | (basis_index & umask);
 }
 
 // Host std::vector を Device Kokkos::View に変換する関数
@@ -47,15 +62,10 @@ std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device
     return host_vector;
 }
 
-#define _CHECK_GT(val1, val2) _check_gt(val1, val2, #val1, #val2, __FILE__, __LINE__)
-template <typename T>
-static std::string _check_gt(
-    T val1, T val2, std::string val1_name, std::string val2_name, std::string file, UINT line) {
-    if (val1 > val2) return "";
-    std::stringstream error_message_stream;
-    error_message_stream << file << ":" << line << ": Failure\n"
-                         << "Expected: (" << val1_name << ") > (" << val2_name
-                         << "), actual: " << val1 << " vs " << val2 << "\n";
-    return error_message_stream.str();
+}  // namespace internal
+
+KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
+    return z.real() * z.real() + z.imag() * z.imag();
 }
+
 };  // namespace qulacs

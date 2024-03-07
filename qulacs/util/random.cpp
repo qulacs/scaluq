@@ -1,12 +1,7 @@
 #include "random.hpp"
 
 namespace qulacs {
-Random::Random() : uniform_dist(0, 1), normal_dist(0, 1) {
-    std::random_device rd;
-    mt.seed(rd());
-}
-
-Random::Random(UINT seed) : Random() { this->mt.seed(seed); }
+Random::Random(UINT seed) : mt(seed), uniform_dist(0, 1), normal_dist(0, 1) {}
 
 double Random::uniform() { return this->uniform_dist(this->mt); }
 
