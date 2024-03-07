@@ -6,6 +6,13 @@
 
 namespace qulacs {
 namespace internal {
+inline void check_qubit_within_bounds(const StateVector& state, UINT op_qubit) {
+    if (op_qubit >= state.n_qubits()) [[unlikely]] {
+        throw std::runtime_error(
+            "Target/Control qubit exceeds the number of qubits in the system.");
+    }
+}
+
 void i_gate(UINT target_qubit_index, StateVector& state);
 
 void x_gate(UINT target_qubit_index, StateVector& state);
