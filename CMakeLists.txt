@@ -132,8 +132,8 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
     endif()
     
     # Debug options
-    target_compile_options(qulacs PUBLIC $<$<CONFIG:Debug>:-O0 -g -fsanitize=address,undefined>)
-    target_link_options(qulacs PUBLIC $<$<CONFIG:Debug>:-fsanitize=address,undefined>)
+    target_compile_options(qulacs PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
+    target_link_options(qulacs PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
 endif()
 
 ### Add subdirectories ###
