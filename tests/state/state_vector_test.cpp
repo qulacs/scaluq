@@ -3,9 +3,10 @@
 #include <Eigen/Core>
 #include <cmath>
 #include <state/state_vector.hpp>
+#include <util/utility.hpp>
 
 #include "../test_environment.hpp"
-#include "util/utility.hpp"
+#include "../util/util.hpp"
 
 using CComplex = std::complex<double>;
 
@@ -27,7 +28,7 @@ TEST(StateVectorTest, HaarRandomStateNorm) {
     const int n_tries = 20;
     for (int n = 1; n <= n_tries; n++) {
         const auto state = StateVector::Haar_random_state(n);
-        ASSERT_NEAR(state.compute_squared_norm(), 1., eps);
+        ASSERT_NEAR(state.get_squared_norm(), 1., eps);
     }
 }
 
@@ -86,7 +87,7 @@ TEST(StateVectorTest, HaarRandomStateSameSeed) {
     }
 }
 
-TEST(StateVectorTest, StateTest_HaarRandomStateWithoutSeed) {
+TEST(StateVectorTest, HaarRandomStateWithoutSeed) {
     const UINT n = 10, m = 5;
     for (UINT i = 0; i < m; ++i) {
         StateVector state1(StateVector::Haar_random_state(n)),
@@ -170,7 +171,7 @@ TEST(StateVectorTest, EntropyCalculation) {
     for (UINT rep = 0; rep < max_repeat; ++rep) {
         state = StateVector::Haar_random_state(n);
         auto state_cp = state.amplitudes();
-        ASSERT_NEAR(state.compute_squared_norm(), 1, eps);
+        ASSERT_NEAR(state.get_squared_norm(), 1, eps);
         Eigen::VectorXcd test_state(dim);
         for (UINT i = 0; i < dim; ++i) test_state[i] = (CComplex)state_cp[i];
 
@@ -193,7 +194,7 @@ TEST(StateVectorTest, GetMarginalProbability) {
     auto state_cp = state.amplitudes();
     std::vector<double> probs;
     for (UINT i = 0; i < dim; ++i) {
-        probs.push_back(norm2(state_cp[i]));
+        probs.push_back(squared_norm(state_cp[i]));
     }
     ASSERT_NEAR(state.get_marginal_probability({0, 0}), probs[0], eps);
     ASSERT_NEAR(state.get_marginal_probability({1, 0}), probs[1], eps);

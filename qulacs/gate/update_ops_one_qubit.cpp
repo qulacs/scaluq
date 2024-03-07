@@ -4,72 +4,53 @@
 #include "../types.hpp"
 #include "constant.hpp"
 #include "update_ops.hpp"
+#include "util/utility.hpp"
 
 namespace qulacs {
 void i_gate(UINT, StateVector&) {}
 
 void x_gate(UINT target_qubit_index, StateVector& state) {
-    const UINT n_qubits = state.n_qubits();
-    const UINT low_mask = (1ULL << target_qubit_index) - 1;
-    const UINT high_mask = ~low_mask;
-    auto amplitudes = state.amplitudes_raw();
     Kokkos::parallel_for(
-        1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
-            UINT i = (it & high_mask) << 1 | (it & low_mask);
-            Kokkos::Experimental::swap(amplitudes[i], amplitudes[i | (1ULL << target_qubit_index)]);
+        state.dim() >> 1, KOKKOS_LAMBDA(const UINT& it) {
+            UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
+            Kokkos::Experimental::swap(state._raw[i], state._raw[i | (1ULL << target_qubit_index)]);
         });
 }
 
 void y_gate(UINT target_qubit_index, StateVector& state) {
-    const UINT n_qubits = state.n_qubits();
-    const UINT low_mask = (1ULL << target_qubit_index) - 1;
-    const UINT high_mask = ~low_mask;
-    auto amplitudes = state.amplitudes_raw();
     Kokkos::parallel_for(
-        1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
-            UINT i = (it & high_mask) << 1 | (it & low_mask);
-            amplitudes[i] *= Complex(0, 1);
-            amplitudes[i | (1ULL << target_qubit_index)] *= Complex(0, -1);
-            Kokkos::Experimental::swap(amplitudes[i], amplitudes[i | (1ULL << target_qubit_index)]);
+        state.dim() >> 1, KOKKOS_LAMBDA(const UINT& it) {
+            UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
+            state._raw[i] *= Complex(0, 1);
+            state._raw[i | (1ULL << target_qubit_index)] *= Complex(0, -1);
+            Kokkos::Experimental::swap(state._raw[i], state._raw[i | (1ULL << target_qubit_index)]);
         });
 }
 
 void z_gate(UINT target_qubit_index, StateVector& state) {
-    const UINT n_qubits = state.n_qubits();
-    const UINT low_mask = (1ULL << target_qubit_index) - 1;
-    const UINT high_mask = ~low_mask;
-    auto amplitudes = state.amplitudes_raw();
     Kokkos::parallel_for(
-        1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
-            UINT i = (it & high_mask) << 1 | (it & low_mask);
-            amplitudes[i | (1ULL << target_qubit_index)] *= -1.0;
+        state.dim() >> 1, KOKKOS_LAMBDA(const UINT& it) {
+            UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
+            state._raw[i | (1ULL << target_qubit_index)] *= Complex(-1, 0);
         });
 }
 
 void h_gate(UINT target_qubit_index, StateVector& state) {
-    const UINT n_qubits = state.n_qubits();
-    const UINT low_mask = (1ULL << target_qubit_index) - 1;
-    const UINT high_mask = ~low_mask;
-    auto amplitudes = state.amplitudes_raw();
     Kokkos::parallel_for(
-        1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
-            UINT i = (it & high_mask) << 1 | (it & low_mask);
-            Complex a = amplitudes[i];
-            Complex b = amplitudes[i | (1ULL << target_qubit_index)];
-            amplitudes[i] = (a + b) * INVERSE_SQRT2();
-            amplitudes[i | (1ULL << target_qubit_index)] = (a - b) * INVERSE_SQRT2();
+        state.dim() >> 1, KOKKOS_LAMBDA(const UINT& it) {
+            UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
+            Complex a = state._raw[i];
+            Complex b = state._raw[i | (1ULL << target_qubit_index)];
+            state._raw[i] = (a + b) * INVERSE_SQRT2();
+            state._raw[i | (1ULL << target_qubit_index)] = (a - b) * INVERSE_SQRT2();
         });
 }
 
 void single_qubit_phase_gate(UINT target_qubit_index, Complex phase, StateVector& state) {
-    const UINT n_qubits = state.n_qubits();
-    const UINT low_mask = (1ULL << target_qubit_index) - 1;
-    const UINT high_mask = ~low_mask;
-    auto amplitudes = state.amplitudes_raw();
     Kokkos::parallel_for(
-        1ULL << (n_qubits - 1), KOKKOS_LAMBDA(const UINT& it) {
-            UINT i = (it & high_mask) << 1 | (it & low_mask);
-            amplitudes[i | (1ULL << target_qubit_index)] *= phase;
+        state.dim() >> 1, KOKKOS_LAMBDA(const UINT& it) {
+            UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
+            state._raw[i | (1ULL << target_qubit_index)] *= phase;
         });
 }
 
@@ -116,7 +97,7 @@ void p1_gate(UINT target_qubit_index, StateVector& state) {
 void rx_gate(UINT target_qubit_index, double angle, StateVector& state) {
     const double cosval = cos(angle / 2.);
     const double sinval = sin(angle / 2.);
-    matrix_2_2 matrix = {cosval, -Complex(0, sinval), -Complex(0, sinval), cosval};
+    matrix_2_2 matrix = {cosval, Complex(0, -sinval), Complex(0, -sinval), cosval};
     single_qubit_dense_matrix_gate(target_qubit_index, matrix, state);
 }
 
@@ -130,19 +111,16 @@ void ry_gate(UINT target_qubit_index, double angle, StateVector& state) {
 void single_qubit_diagonal_matrix_gate(UINT target_qubit_index,
                                        const diagonal_matrix_2_2 diag,
                                        StateVector& state) {
-    UINT mask = 1ULL << target_qubit_index;
-    auto amplitudes = state.amplitudes_raw();
     Kokkos::parallel_for(
         state.dim(), KOKKOS_LAMBDA(const UINT& it) {
-            int bitval = ((it & mask) != 0);
-            amplitudes[it] *= diag.val[bitval];
+            state._raw[it] *= diag.val[(it >> target_qubit_index) & 1];
         });
 }
 
 void rz_gate(UINT target_qubit_index, double angle, StateVector& state) {
     const double cosval = cos(angle / 2.);
     const double sinval = sin(angle / 2.);
-    diagonal_matrix_2_2 diag = {cosval - Complex(0, sinval), cosval + Complex(0, sinval)};
+    diagonal_matrix_2_2 diag = {Complex(cosval, -sinval), Complex(cosval, sinval)};
     single_qubit_diagonal_matrix_gate(target_qubit_index, diag, state);
 }
 }  // namespace qulacs

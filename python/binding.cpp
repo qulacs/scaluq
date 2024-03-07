@@ -1,5 +1,6 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
+#include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/tuple.h>
@@ -100,9 +101,14 @@ NB_MODULE(qulacs_core, m) {
         .def(nb::init<>())
         .def(nb::init<UINT>())
         .def(nb::init<const StateVector &>())
-        .def_static("Haar_random_state",
-                    nb::overload_cast<UINT, UINT>(&StateVector::Haar_random_state))
-        .def_static("Haar_random_state", nb::overload_cast<UINT>(&StateVector::Haar_random_state))
+        .def_static(
+            "Haar_random_state",
+            [](UINT n_qubits, std::optional<UINT> seed) {
+                return StateVector::Haar_random_state(n_qubits,
+                                                      seed.value_or(std::random_device{}()));
+            },
+            "n_qubits"_a,
+            "seed"_a = std::nullopt)
         .def("set_amplitude_at_index", &StateVector::set_amplitude_at_index)
         .def("get_amplitude_at_index", &StateVector::get_amplitude_at_index)
         .def("set_zero_state", &StateVector::set_zero_state)
@@ -111,7 +117,7 @@ NB_MODULE(qulacs_core, m) {
         .def("amplitudes", &StateVector::amplitudes)
         .def("n_qubits", &StateVector::n_qubits)
         .def("dim", &StateVector::dim)
-        .def("compute_squared_norm", &StateVector::compute_squared_norm)
+        .def("get_squared_norm", &StateVector::get_squared_norm)
         .def("normalize", &StateVector::normalize)
         .def("get_zero_probability", &StateVector::get_zero_probability)
         .def("get_marginal_probability", &StateVector::get_marginal_probability)
@@ -119,7 +125,13 @@ NB_MODULE(qulacs_core, m) {
         .def("add_state_vector", &StateVector::add_state_vector)
         .def("add_state_vector_with_coef", &StateVector::add_state_vector_with_coef)
         .def("multiply_coef", &StateVector::multiply_coef)
-        .def("sampling", &StateVector::sampling)
+        .def(
+            "sampling",
+            [](const StateVector &state, UINT sampling_count, std::optional<UINT> seed) {
+                return state.sampling(sampling_count, seed.value_or(std::random_device{}()));
+            },
+            "sampling_count"_a,
+            "seed"_a = std::nullopt)
         .def("to_string", &StateVector::to_string)
         .def("load", &StateVector::load)
         .def("__str__", &StateVector::to_string);
@@ -303,10 +315,14 @@ NB_MODULE(qulacs_core, m) {
         .def("terms", &Operator::terms)
         .def("to_string", &Operator::to_string)
         .def("add_operator", nb::overload_cast<const PauliOperator &>(&Operator::add_operator))
-        .def("add_random_operator",
-             nb::overload_cast<UINT>(&Operator::add_random_operator),
-             "operator_count"_a = 1)
-        .def("add_random_operator", nb::overload_cast<UINT, UINT>(&Operator::add_random_operator))
+        .def(
+            "add_random_operator",
+            [](Operator &op, UINT operator_count, std::optional<UINT> seed) {
+                return op.add_random_operator(operator_count,
+                                              seed.value_or(std::random_device{}()));
+            },
+            "operator_count"_a,
+            "seed"_a = std::nullopt)
         .def("optimize", &Operator::optimize)
         .def("get_dagger", &Operator::get_dagger)
         .def("apply_to_state", &Operator::apply_to_state)

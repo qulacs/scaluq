@@ -1,5 +1,6 @@
 #pragma once
 
+#include <random>
 #include <vector>
 
 #include "../types.hpp"
@@ -18,8 +19,7 @@ public:
 
     void add_operator(const PauliOperator& mpt);
     void add_operator(PauliOperator&& mpt);
-    void add_random_operator(const UINT operator_count = 1);
-    void add_random_operator(const UINT operator_count, UINT seed);
+    void add_random_operator(const UINT operator_count = 1, UINT seed = std::random_device()());
 
     void optimize();
 
@@ -64,6 +64,5 @@ private:
     std::vector<PauliOperator> _terms;
     UINT _n_qubits;
     bool _is_hermitian;
-    Random _random;
 };
 }  // namespace qulacs
