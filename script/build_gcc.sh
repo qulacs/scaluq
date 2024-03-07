@@ -17,6 +17,10 @@ CMAKE_OPS="-D CMAKE_CXX_COMPILER=${GXX_COMMAND} \
   -D QULACS_USE_CUDA=${QULACS_USE_CUDA} \
   -D QULACS_USE_TEST=${QULACS_USE_TEST}"
 
+if [ -n "${QULACS_CUDA_ARCH:-""}" ]; then
+  CMAKE_OPS="${CMAKE_OPS} -D QULACS_CUDA_ARCH=${QULACS_CUDA_ARCH}"
+fi
+
 mkdir -p ./build
 cmake -B build -G Ninja ${CMAKE_OPS}
 ninja -C build -j $(nproc)

@@ -28,7 +28,9 @@ if(QULACS_USE_OMP)
 endif(QULACS_USE_OMP)
 if(QULACS_USE_CUDA)
     set(Kokkos_ENABLE_CUDA ON CACHE BOOL "Enable Kokkos CUDA backend")
-    set(Kokkos_ARCH_PASCAL61 ON CACHE BOOL "Enable Kokkos CUDA Pascal61 architecture")
+    if(DEFINED QULACS_CUDA_ARCH)
+        set(Kokkos_ARCH_${QULACS_CUDA_ARCH} ON)
+    endif(DEFINED QULACS_CUDA_ARCH)
     find_program(CUDA_NVCC_EXECUTABLE nvcc)
     if(CUDA_NVCC_EXECUTABLE)
         set(CMAKE_CUDA_COMPILER_WRAPPER ${CUDA_NVCC_EXECUTABLE})
@@ -130,8 +132,8 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
     endif()
     
     # Debug options
-    target_compile_options(qulacs PUBLIC $<$<CONFIG:Debug>:-O0 -g -fsanitize=address,undefined>)
-    target_link_options(qulacs PUBLIC $<$<CONFIG:Debug>:-fsanitize=address,undefined>)
+    target_compile_options(qulacs PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
+    target_link_options(qulacs PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
 endif()
 
 ### Add subdirectories ###
