@@ -50,7 +50,7 @@ jobs:
           verbose: 2
 
       - name: Install qulacs for Ubuntu
-        run: CMAKE_BUILD_TYPE=Debug QULACS_CUDA_ARCH=PASCAL61 ./script/build_gcc.sh
+        run: CMAKE_BUILD_TYPE=Debug ./script/build_gcc.sh
 
       - name: Install qulacs Python module
         run: pip install .[ci]
@@ -77,6 +77,7 @@ jobs:
       C_COMPILER: "/usr/lib/ccache/gcc"
       QULACS_USE_TEST: "Yes"
       QULACS_USE_CUDA: "Yes"
+      QULACS_CUDA_ARCH: "PASCAL61"
     steps:
       - uses: actions/checkout@v3
 
