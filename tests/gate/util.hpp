@@ -58,7 +58,7 @@ static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CZ(UINT control_qubit_index,
     return result;
 }
 
-static Eigen::MatrixXcd get_eigen_matrix_full_qubit_SWAP(UINT target_qubit_index1,
+static Eigen::MatrixXcd get_eigen_matrix_full_qubit_Swap(UINT target_qubit_index1,
                                                          UINT target_qubit_index2,
                                                          UINT qubit_count) {
     UINT dim = 1ULL << qubit_count;
