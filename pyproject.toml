@@ -35,6 +35,11 @@ build-dir = "build/{wheel_tag}"
 # Build stable ABI wheels for CPython 3.12+
 wheel.py-api = "cp312"
 
+[tool.scikit-build.cmake.define]
+QULACS_USE_OMP = {env="QULACS_USE_OMP", default="Yes"}
+QULACS_USE_CUDA = {env="QULACS_USE_CUDA", default="No"}
+QULACS_CUDA_ARCH = {env="QULACS_CUDA_ARCH"}
+
 [project.urls]
 homepage = "http://www.qulacs.org"
 
