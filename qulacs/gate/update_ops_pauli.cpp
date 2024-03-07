@@ -8,6 +8,7 @@
 #include "update_ops.hpp"
 
 namespace qulacs {
+namespace internal {
 void pauli_gate(const PauliOperator& pauli, StateVector& state) { pauli.apply_to_state(state); }
 
 void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& state) {
@@ -60,4 +61,5 @@ void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& 
     }
 }
 
+}  // namespace internal
 }  // namespace qulacs
