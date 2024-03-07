@@ -1,7 +1,7 @@
 #include "pauli_operator.hpp"
 
-#include "constant.hpp"
-#include "util/utility.hpp"
+#include "../constant.hpp"
+#include "../util/utility.hpp"
 
 namespace qulacs {
 PauliOperator::PauliOperator(Complex coef) : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {}
@@ -128,17 +128,17 @@ void PauliOperator::apply_to_state(StateVector& state_vector) const {
     }
     UINT pivot = sizeof(UINT) * 8 - std::countl_zero(bit_flip_mask) - 1;
     UINT global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex global_phase = PHASE_90ROT().val[global_phase_90rot_count % 4];
+    Complex global_phase = PHASE_M90ROT().val[global_phase_90rot_count % 4];
     Kokkos::parallel_for(
         state_vector.dim() >> 1, KOKKOS_LAMBDA(const UINT& state_idx) {
             UINT basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             UINT basis_1 = basis_0 ^ bit_flip_mask;
             Complex tmp1 = state_vector._raw[basis_0] * global_phase;
             Complex tmp2 = state_vector._raw[basis_1] * global_phase;
-            if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
-            if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
-            state_vector._raw[basis_0] = tmp1 * coef;
-            state_vector._raw[basis_1] = tmp2 * coef;
+            if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp2 = -tmp2;
+            if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp1 = -tmp1;
+            state_vector._raw[basis_0] = tmp2 * coef;
+            state_vector._raw[basis_1] = tmp1 * coef;
         });
 }
 

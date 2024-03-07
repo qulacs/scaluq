@@ -1,16 +1,10 @@
 #pragma once
 
 #include "circuit/circuit.hpp"
-#include "gate/constant.hpp"
+#include "constant.hpp"
 #include "gate/gate.hpp"
 #include "gate/gate_factory.hpp"
-#include "gate/gate_npair_qubit.hpp"
-#include "gate/gate_one_control_one_target.hpp"
-#include "gate/gate_one_qubit.hpp"
-#include "gate/gate_quantum_matrix.hpp"
-#include "gate/gate_two_qubit.hpp"
 #include "gate/update_ops.hpp"
-#include "operator/constant.hpp"
 #include "operator/operator.hpp"
 #include "operator/pauli_operator.hpp"
 #include "state/state_vector.hpp"

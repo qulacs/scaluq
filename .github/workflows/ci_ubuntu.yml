@@ -77,6 +77,7 @@ jobs:
       C_COMPILER: "/usr/lib/ccache/gcc"
       QULACS_USE_TEST: "Yes"
       QULACS_USE_CUDA: "Yes"
+      QULACS_CUDA_ARCH: "PASCAL61"
     steps:
       - uses: actions/checkout@v3
 

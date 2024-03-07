@@ -10,8 +10,8 @@ namespace qulacs {
 static Eigen::MatrixXcd kronecker_product(const Eigen::MatrixXcd& lhs,
                                           const Eigen::MatrixXcd& rhs) {
     Eigen::MatrixXcd result(lhs.rows() * rhs.rows(), lhs.cols() * rhs.cols());
-    for (int i = 0; i < lhs.cols(); i++) {
-        for (int j = 0; j < lhs.rows(); j++) {
+    for (int i = 0; i < lhs.rows(); i++) {
+        for (int j = 0; j < lhs.cols(); j++) {
             result.block(i * rhs.rows(), j * rhs.cols(), rhs.rows(), rhs.cols()) = lhs(i, j) * rhs;
         }
     }
@@ -58,7 +58,7 @@ static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CZ(UINT control_qubit_index,
     return result;
 }
 
-static Eigen::MatrixXcd get_eigen_matrix_full_qubit_Swap(UINT target_qubit_index1,
+static Eigen::MatrixXcd get_eigen_matrix_full_qubit_SWAP(UINT target_qubit_index1,
                                                          UINT target_qubit_index2,
                                                          UINT qubit_count) {
     UINT dim = 1ULL << qubit_count;

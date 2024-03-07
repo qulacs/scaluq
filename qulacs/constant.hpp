@@ -3,7 +3,7 @@
 #include <array>
 #include <numbers>
 
-#include "../types.hpp"
+#include "types.hpp"
 
 namespace qulacs {
 //! PI value
@@ -90,9 +90,9 @@ matrix_2_2 PROJ_0_MATRIX() { return {1, 0, 0, 0}; }
 KOKKOS_INLINE_FUNCTION
 matrix_2_2 PROJ_1_MATRIX() { return {0, 0, 0, 1}; }
 //! complex values for exp(j * i*pi/4 )
-// KOKKOS_INLINE_FUNCTION
-// matrix_2_2 PHASE_90ROT() { return {1., Complex(0, 1), -1, Complex(0, -1)}; }
+KOKKOS_INLINE_FUNCTION
+array_4 PHASE_90ROT() { return {1., Complex(0, 1), -1, Complex(0, -1)}; }
 //! complex values for exp(-j * i*pi/4 )
-// KOKKOS_INLINE_FUNCTION
-// matrix_2_2 PHASE_M90ROT() { return {1., Complex(0, -1), -1, Complex(0, 1)}; }
+KOKKOS_INLINE_FUNCTION
+array_4 PHASE_M90ROT() { return {1., Complex(0, -1), -1, Complex(0, 1)}; }
 }  // namespace qulacs
