@@ -68,4 +68,4 @@ KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
     return z.real() * z.real() + z.imag() * z.imag();
 }
 
-};  // namespace qulacs
+}  // namespace qulacs

@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "../operator/pauli_operator.hpp"
 #include "../state/state_vector.hpp"
 #include "../types.hpp"
 
@@ -60,12 +61,7 @@ void fusedswap_gate(UINT target_qubit_index_0,
                     UINT block_size,
                     StateVector& state);
 
-void pauli_gate(std::vector<UINT> target_qubit_index_list,
-                std::vector<UINT> pauli_id_index,
-                StateVector& state);
+void pauli_gate(const PauliOperator& pauli, StateVector& state);
 
-void pauli_rotation_gate(std::vector<UINT> target_qubit_index_list,
-                         std::vector<UINT> pauli_id_index,
-                         double angle,
-                         StateVector& state);
+void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& state);
 }  // namespace qulacs

@@ -1,14 +1,21 @@
-#include <iostream>
+#include <gtest/gtest.h>
 
-#include "state/state_vector.hpp"
+#include <Eigen/Core>
+#include <functional>
+#include <iostream>
+#include <types.hpp>
+#include <util/random.hpp>
+
+#include "../qulacs/all.hpp"
+#include "../qulacs/util/utility.hpp"
+#include "../tests/gate/util.hpp"
 
 using namespace qulacs;
+using namespace std;
 
 void run() {
-    auto state = StateVector::Haar_random_state(3);
-    for (UINT i = 0; i < state.dim(); i++) {
-        // std::cout << state[i] << std::endl;
-    }
+    UINT n_qubits = 5;
+    auto state = StateVector::Haar_random_state(n_qubits);
 }
 
 int main() {

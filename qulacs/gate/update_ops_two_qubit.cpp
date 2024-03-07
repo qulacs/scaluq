@@ -2,7 +2,7 @@
 #include <Kokkos_StdAlgorithms.hpp>
 
 #include "../types.hpp"
-#include "constant.hpp"
+#include "../constant.hpp"
 #include "update_ops.hpp"
 #include "util/utility.hpp"
 

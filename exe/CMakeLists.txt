@@ -6,6 +6,7 @@ function(exe name)
         qulacs
         Eigen3::Eigen
         Kokkos::kokkos
+        GTest::gtest_main
     )
     target_include_directories(${name} PRIVATE ${PROJECT_SOURCE_DIR}/qulacs)
 endfunction()

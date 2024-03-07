@@ -3,6 +3,7 @@
 #include "gate/gate_npair_qubit.hpp"
 #include "gate/gate_one_control_one_target.hpp"
 #include "gate/gate_one_qubit.hpp"
+#include "gate/gate_pauli.hpp"
 #include "gate/gate_quantum_matrix.hpp"
 #include "gate/gate_two_qubit.hpp"
 
@@ -92,5 +93,11 @@ inline Gate SWAP(UINT target1, UINT target2) {
 inline Gate FusedSWAP(UINT qubit_index1, UINT qubit_index2, UINT block_size) {
     return internal::GateFactory::create_gate<internal::FusedSWAPGateImpl>(
         qubit_index1, qubit_index2, block_size);
+}
+inline Gate Pauli(const PauliOperator& pauli) {
+    return internal::GateFactory::create_gate<internal::PauliGateImpl>(pauli);
+}
+inline Gate PauliRotation(const PauliOperator& pauli, double angle) {
+    return internal::GateFactory::create_gate<internal::PauliRotationGateImpl>(pauli, angle);
 }
 }  // namespace qulacs
