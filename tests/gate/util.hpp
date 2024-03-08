@@ -18,6 +18,10 @@ static Eigen::MatrixXcd kronecker_product(const Eigen::MatrixXcd& lhs,
     return result;
 }
 
+static Eigen::MatrixXcd get_eigen_matrix_identity(UINT qubit_count) {
+    return Eigen::MatrixXcd::Identity(1ULL << qubit_count, 1ULL << qubit_count);
+}
+
 static Eigen::MatrixXcd get_expanded_eigen_matrix_with_identity(
     UINT target_qubit_index, const Eigen::MatrixXcd& one_qubit_matrix, UINT qubit_count) {
     const int left_dim = 1ULL << target_qubit_index;

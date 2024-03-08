@@ -16,6 +16,56 @@ using namespace qulacs;
 const auto eps = 1e-12;
 using CComplex = std::complex<double>;
 
+template <Gate (*QuantumGateConstructor)()>
+void run_random_gate_apply(UINT n_qubits) {
+    const int dim = 1ULL << n_qubits;
+
+    Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
+    for (int repeat = 0; repeat < 10; repeat++) {
+        auto state = StateVector::Haar_random_state(n_qubits);
+        auto state_cp = state.amplitudes();
+        for (int i = 0; i < dim; i++) {
+            test_state[i] = state_cp[i];
+        }
+
+        const Gate gate = QuantumGateConstructor();
+        gate->update_quantum_state(state);
+        state_cp = state.amplitudes();
+
+        test_state = get_eigen_matrix_identity(n_qubits) * test_state;
+
+        for (int i = 0; i < dim; i++) {
+            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+        }
+    }
+}
+
+template <Gate (*QuantumGateConstructor)(double)>
+void run_random_gate_apply(UINT n_qubits) {
+    const int dim = 1ULL << n_qubits;
+    Random random;
+
+    Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
+    for (int repeat = 0; repeat < 10; repeat++) {
+        auto state = StateVector::Haar_random_state(n_qubits);
+        auto state_cp = state.amplitudes();
+        for (int i = 0; i < dim; i++) {
+            test_state[i] = state_cp[i];
+        }
+
+        const double angle = M_PI * random.uniform();
+        const Gate gate = QuantumGateConstructor(angle);
+        gate->update_quantum_state(state);
+        state_cp = state.amplitudes();
+
+        test_state = get_eigen_matrix_identity(n_qubits) * std::polar(angle) * test_state;
+
+        for (int i = 0; i < dim; i++) {
+            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+        }
+    }
+}
+
 template <Gate (*QuantumGateConstructor)(UINT)>
 void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matrix_factory) {
     const auto matrix = matrix_factory();
@@ -324,7 +374,8 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
     }
 }
 
-TEST(GateTest, ApplyI) { run_random_gate_apply<I>(5, make_I); }
+TEST(GateTest, ApplyI) { run_random_gate_apply<I>(5); }
+TEST(GateTest, ApplyGlobalPhase) { run_random_gate_apply<GlobalPhase>(5); }
 TEST(GateTest, ApplyX) { run_random_gate_apply<X>(5, make_X); }
 TEST(GateTest, ApplyY) { run_random_gate_apply<Y>(5, make_Y); }
 TEST(GateTest, ApplyZ) { run_random_gate_apply<Z>(5, make_Z); }
