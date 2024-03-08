@@ -86,7 +86,194 @@ class Gate:
     None
     """
 
-    def __init__(self, arg: qulacs2023.qulacs_core.Gate) -> None: ...
+    def __init__(self, arg: qulacs2023.qulacs_core.FusedSwapGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.FusedSwapGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.Gate) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.Gate) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.IGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.IGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.GlobalPhaseGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.GlobalPhaseGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.XGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.XGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.YGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.YGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.ZGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.ZGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.HGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.HGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.SGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.SGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.SdagGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.SdagGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.TGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.TGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.TdagGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.TdagGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.SqrtXGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.SqrtXGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.SqrtXdagGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.SqrtXdagGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.SqrtYGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.SqrtYGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.SqrtYdagGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.SqrtYdagGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.P0Gate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.P0Gate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.P1Gate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.P1Gate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.RXGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.RXGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.RYGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.RYGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.RZGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.RZGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.U1Gate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.U1Gate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.U2Gate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.U2Gate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.U3Gate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.U3Gate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.CXGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.CXGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.CZGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.CZGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.SwapGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.SwapGate, /) -> None
+        """
+        ...
+
     def copy(self) -> qulacs2023.qulacs_core.Gate: ...
     def gate_type(self) -> qulacs2023.qulacs_core.GateType: ...
     def get_control_qubit_list(self) -> list[int]: ...
