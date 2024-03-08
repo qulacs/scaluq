@@ -82,6 +82,10 @@ public:
         _matrix.val[1][1] = matrix[1][1];
     }
 
+    std::array<std::array<Complex, 2>, 2> matrix() {
+        return {_matrix.val[0][0], _matrix.val[0][1], _matrix.val[1][0], _matrix.val[1][1]};
+    }
+
     Gate copy() const override { return std::make_shared<OneQubitMatrixGateImpl>(*this); }
     Gate get_inverse() const override {
         return std::make_shared<OneQubitMatrixGateImpl>(
@@ -110,6 +114,16 @@ public:
         }
     }
 
+    std::array<std::array<Complex, 4>, 4> matrix() {
+        std::array<std::array<Complex, 4>, 4> matrix;
+        for (UINT i : std::views::iota(4)) {
+            for (UINT j : std::views::iota(4)) {
+                matrix[i][j] = _matrix.val[i][j];
+            }
+        }
+        return matrix;
+    }
+
     Gate copy() const override { return std::make_shared<TwoQubitMatrixGateImpl>(*this); }
     Gate get_inverse() const override {
         std::array<std::array<Complex, 4>, 4> matrix_dag;
@@ -128,6 +142,6 @@ public:
 using U1Gate = internal::GatePtr<internal::U1GateImpl>;
 using U2Gate = internal::GatePtr<internal::U2GateImpl>;
 using U3Gate = internal::GatePtr<internal::U3GateImpl>;
-using OneQubitMatrixGate = internal::GatePtr<internal::OneQubitGateBase>;
-using TwoQubitMatrixGate = internal::GatePtr<internal::TwoQubitGateBase>;
+using OneQubitMatrixGate = internal::GatePtr<internal::OneQubitMatrixGateImpl>;
+using TwoQubitMatrixGate = internal::GatePtr<internal::TwoQubitMatrixGateImpl>;
 }  // namespace qulacs
