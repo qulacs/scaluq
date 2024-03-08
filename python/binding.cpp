@@ -136,9 +136,40 @@ NB_MODULE(qulacs_core, m) {
         .def("load", &StateVector::load)
         .def("__str__", &StateVector::to_string);
 
+    nb::enum_<GateType>(m, "GateType")
+        .value("I", GateType::I)
+        .value("GlobalPhase", GateType::GlobalPhase)
+        .value("X", GateType::X)
+        .value("Y", GateType::Y)
+        .value("Z", GateType::Z)
+        .value("H", GateType::H)
+        .value("S", GateType::S)
+        .value("Sdag", GateType::Sdag)
+        .value("T", GateType::T)
+        .value("Tdag", GateType::Tdag)
+        .value("SqrtX", GateType::SqrtX)
+        .value("SqrtXdag", GateType::SqrtXdag)
+        .value("SqrtY", GateType::SqrtY)
+        .value("SqrtYdag", GateType::SqrtYdag)
+        .value("P0", GateType::P0)
+        .value("P1", GateType::P1)
+        .value("RX", GateType::RX)
+        .value("RY", GateType::RY)
+        .value("RZ", GateType::RZ)
+        .value("U1", GateType::U1)
+        .value("U2", GateType::U2)
+        .value("U3", GateType::U3)
+        .value("CX", GateType::CX)
+        .value("CZ", GateType::CZ)
+        .value("Swap", GateType::Swap)
+        .value("FusedSwap", GateType::FusedSwap)
+        .value("Pauli", GateType::Pauli)
+        .value("PauliRotation", GateType::PauliRotation);
+
 #define DEF_GATE(GATE_TYPE)                                                                 \
     nb::class_<GATE_TYPE>(m, #GATE_TYPE)                                                    \
         .def(nb::init<Gate>())                                                              \
+        .def("gate_type", &GATE_TYPE::gate_type)                                            \
         .def("get_target_qubit_list",                                                       \
              [](const GATE_TYPE &gate) { return gate->get_target_qubit_list(); })           \
         .def("get_control_qubit_list",                                                      \
@@ -149,7 +180,33 @@ NB_MODULE(qulacs_core, m) {
             gate->update_quantum_state(state_vector);                                       \
         })
 
-    DEF_GATE(Gate);
+    DEF_GATE(Gate)
+        .def(nb::init<IGate>())
+        .def(nb::init<GlobalPhaseGate>())
+        .def(nb::init<XGate>())
+        .def(nb::init<YGate>())
+        .def(nb::init<ZGate>())
+        .def(nb::init<HGate>())
+        .def(nb::init<SGate>())
+        .def(nb::init<SdagGate>())
+        .def(nb::init<TGate>())
+        .def(nb::init<TdagGate>())
+        .def(nb::init<SqrtXGate>())
+        .def(nb::init<SqrtXdagGate>())
+        .def(nb::init<SqrtYGate>())
+        .def(nb::init<SqrtYdagGate>())
+        .def(nb::init<P0Gate>())
+        .def(nb::init<P1Gate>())
+        .def(nb::init<RXGate>())
+        .def(nb::init<RYGate>())
+        .def(nb::init<RZGate>())
+        .def(nb::init<U1Gate>())
+        .def(nb::init<U2Gate>())
+        .def(nb::init<U3Gate>())
+        .def(nb::init<CXGate>())
+        .def(nb::init<CZGate>())
+        .def(nb::init<SwapGate>())
+        .def(nb::init<FusedSwapGate>());
 
     DEF_GATE(IGate);
     DEF_GATE(GlobalPhaseGate).def("phase", [](const GlobalPhaseGate &gate) {
