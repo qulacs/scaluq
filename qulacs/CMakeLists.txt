@@ -8,6 +8,7 @@ target_sources(qulacs PRIVATE
     gate/gate_pauli.cpp
     gate/gate_quantum_matrix.cpp
     gate/gate_two_qubit.cpp
+    gate/gate_zero_qubit.cpp
     gate/update_ops_dense_matrix.cpp
     gate/update_ops_npair_qubit.cpp
     gate/update_ops_one_control_one_target.cpp
@@ -15,6 +16,7 @@ target_sources(qulacs PRIVATE
     gate/update_ops_pauli.cpp
     gate/update_ops_quantum_matrix.cpp
     gate/update_ops_two_qubit.cpp
+    gate/update_ops_zero_qubit.cpp
     operator/pauli_operator.cpp
     operator/operator.cpp
     state/state_vector.cpp

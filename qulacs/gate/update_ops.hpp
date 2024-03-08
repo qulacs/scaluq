@@ -6,7 +6,9 @@
 #include "../types.hpp"
 
 namespace qulacs {
-void i_gate(UINT target_qubit_index, StateVector& state);
+void i_gate(StateVector& state);
+
+void global_phase_gate(double angle, StateVector& state);
 
 void x_gate(UINT target_qubit_index, StateVector& state);
 

@@ -7,8 +7,6 @@
 #include "util/utility.hpp"
 
 namespace qulacs {
-void i_gate(UINT, StateVector&) {}
-
 void x_gate(UINT target_qubit_index, StateVector& state) {
     Kokkos::parallel_for(
         state.dim() >> 1, KOKKOS_LAMBDA(const UINT& it) {

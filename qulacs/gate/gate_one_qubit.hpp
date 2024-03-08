@@ -27,16 +27,6 @@ public:
     double angle() const { return _angle; }
 };
 
-class IGateImpl : public OneQubitGateBase {
-public:
-    IGateImpl(UINT target) : OneQubitGateBase(target){};
-
-    Gate copy() const override { return std::make_shared<IGateImpl>(*this); }
-    Gate get_inverse() const override { return std::make_shared<IGateImpl>(*this); }
-
-    void update_quantum_state(StateVector& state_vector) const override;
-};
-
 class XGateImpl : public OneQubitGateBase {
 public:
     XGateImpl(UINT target) : OneQubitGateBase(target){};
@@ -212,7 +202,6 @@ public:
 };
 }  // namespace internal
 
-using IGate = internal::GatePtr<internal::IGateImpl>;
 using XGate = internal::GatePtr<internal::XGateImpl>;
 using YGate = internal::GatePtr<internal::YGateImpl>;
 using ZGate = internal::GatePtr<internal::ZGateImpl>;
