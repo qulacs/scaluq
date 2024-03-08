@@ -159,9 +159,11 @@ NB_MODULE(qulacs_core, m) {
         .value("U1", GateType::U1)
         .value("U2", GateType::U2)
         .value("U3", GateType::U3)
+        .value("OneQubitMatrix", GateType::OneQubitMatrix)
         .value("CX", GateType::CX)
         .value("CZ", GateType::CZ)
         .value("Swap", GateType::Swap)
+        .value("TwoQubitMatrix", GateType::TwoQubitMatrix)
         .value("FusedSwap", GateType::FusedSwap)
         .value("Pauli", GateType::Pauli)
         .value("PauliRotation", GateType::PauliRotation);
@@ -203,9 +205,11 @@ NB_MODULE(qulacs_core, m) {
         .def(nb::init<U1Gate>())
         .def(nb::init<U2Gate>())
         .def(nb::init<U3Gate>())
+        .def(nb::init<OneQubitMatrixGate>())
         .def(nb::init<CXGate>())
         .def(nb::init<CZGate>())
         .def(nb::init<SwapGate>())
+        .def(nb::init<TwoQubitMatrixGate>())
         .def(nb::init<FusedSwapGate>());
 
     DEF_GATE(IGate);
@@ -247,6 +251,8 @@ NB_MODULE(qulacs_core, m) {
         .def("phi", [](const U3Gate &gate) { return gate->phi(); })
         .def("lambda_", [](const U3Gate &gate) { return gate->lambda(); });
 
+    DEF_GATE(OneQubitMatrixGate);
+
 #define DEF_ONE_CONTROL_ONE_TARGET_GATE(GATE_TYPE)                             \
     DEF_GATE(GATE_TYPE)                                                        \
         .def("control", [](const GATE_TYPE &gate) { return gate->control(); }) \
@@ -258,6 +264,8 @@ NB_MODULE(qulacs_core, m) {
     DEF_GATE(SwapGate)
         .def("target1", [](const SwapGate &gate) { return gate->target1(); })
         .def("target2", [](const SwapGate &gate) { return gate->target2(); });
+
+    DEF_GATE(TwoQubitMatrixGate);
 
     DEF_GATE(FusedSwapGate)
         .def("qubit_index1", [](const FusedSwapGate &gate) { return gate->qubit_index1(); })

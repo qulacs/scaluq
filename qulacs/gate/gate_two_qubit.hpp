@@ -6,17 +6,23 @@
 
 namespace qulacs {
 namespace internal {
-class SwapGateImpl : public GateBase {
+class TwoQubitGateBase : public GateBase {
+protected:
     UINT _target1, _target2;
 
 public:
-    SwapGateImpl(UINT target1, UINT target2) : _target1(target1), _target2(target2){};
+    TwoQubitGateBase(UINT target1, UINT target2) : _target1(target1), _target2(target2){};
 
     UINT target1() const { return _target1; }
     UINT target2() const { return _target2; }
 
     std::vector<UINT> get_target_qubit_list() const override { return {_target1, _target2}; }
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
+};
+
+class SwapGateImpl : public TwoQubitGateBase {
+public:
+    SwapGateImpl(UINT target1, UINT target2) : TwoQubitGateBase(target1, target2) {}
 
     Gate copy() const override { return std::make_shared<SwapGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<SwapGateImpl>(*this); }

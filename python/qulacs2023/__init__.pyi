@@ -254,6 +254,13 @@ class Gate:
         ...
 
     @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.OneQubitMatrixGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.OneQubitMatrixGate, /) -> None
+        """
+        ...
+
+    @overload
     def __init__(self, arg: qulacs2023.qulacs_core.CXGate, /) -> None:
         """
         __init__(self, arg: qulacs2023.qulacs_core.CXGate, /) -> None
@@ -271,6 +278,13 @@ class Gate:
     def __init__(self, arg: qulacs2023.qulacs_core.SwapGate, /) -> None:
         """
         __init__(self, arg: qulacs2023.qulacs_core.SwapGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.TwoQubitMatrixGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.TwoQubitMatrixGate, /) -> None
         """
         ...
 
@@ -299,6 +313,8 @@ class GateType(Enum):
     H: Any
 
     I: Any
+
+    OneQubitMatrix: Any
 
     P0: Any
 
@@ -331,6 +347,8 @@ class GateType(Enum):
     T: Any
 
     Tdag: Any
+
+    TwoQubitMatrix: Any
 
     U1: Any
 
@@ -448,6 +466,21 @@ class InitializationSettings:
     def set_tune_internals(
         self, arg: bool, /
     ) -> qulacs2023.qulacs_core.InitializationSettings: ...
+
+class OneQubitMatrixGate:
+    """
+    None
+    """
+
+    def __init__(self, arg: qulacs2023.qulacs_core.Gate, /) -> None: ...
+    def copy(self) -> qulacs2023.qulacs_core.Gate: ...
+    def gate_type(self) -> qulacs2023.qulacs_core.GateType: ...
+    def get_control_qubit_list(self) -> list[int]: ...
+    def get_inverse(self) -> qulacs2023.qulacs_core.Gate: ...
+    def get_target_qubit_list(self) -> list[int]: ...
+    def update_quantum_state(
+        self, arg: qulacs2023.qulacs_core.StateVector, /
+    ) -> None: ...
 
 class Operator:
     """
@@ -846,6 +879,21 @@ class TdagGate:
     def get_inverse(self) -> qulacs2023.qulacs_core.Gate: ...
     def get_target_qubit_list(self) -> list[int]: ...
     def target(self) -> int: ...
+    def update_quantum_state(
+        self, arg: qulacs2023.qulacs_core.StateVector, /
+    ) -> None: ...
+
+class TwoQubitMatrixGate:
+    """
+    None
+    """
+
+    def __init__(self, arg: qulacs2023.qulacs_core.Gate, /) -> None: ...
+    def copy(self) -> qulacs2023.qulacs_core.Gate: ...
+    def gate_type(self) -> qulacs2023.qulacs_core.GateType: ...
+    def get_control_qubit_list(self) -> list[int]: ...
+    def get_inverse(self) -> qulacs2023.qulacs_core.Gate: ...
+    def get_target_qubit_list(self) -> list[int]: ...
     def update_quantum_state(
         self, arg: qulacs2023.qulacs_core.StateVector, /
     ) -> None: ...

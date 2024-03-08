@@ -63,6 +63,11 @@ void single_qubit_dense_matrix_gate(UINT target_qubit_index,
                                     const matrix_2_2& matrix,
                                     StateVector& state);
 
+void double_qubit_dense_matrix_gate(UINT target0,
+                                    UINT target1,
+                                    const matrix_4_4& matrix,
+                                    StateVector& state);
+
 void u_gate(UINT target_qubit_index, const matrix_2_2& matrix, StateVector& state);
 
 void swap_gate(UINT target1, UINT target2, StateVector& state);
