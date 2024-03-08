@@ -152,8 +152,8 @@ NB_MODULE(qulacs_core, m) {
     DEF_GATE(Gate);
 
     DEF_GATE(IGate);
-    DEF_GATE(GlobalPhaseGate).def("angle", [](const GlobalPhaseGate &gate) {
-        return gate->angle();
+    DEF_GATE(GlobalPhaseGate).def("phase", [](const GlobalPhaseGate &gate) {
+        return gate->phase();
     });
 
 #define DEF_ONE_QUBIT_GATE(GATE_TYPE) \

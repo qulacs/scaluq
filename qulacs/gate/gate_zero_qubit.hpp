@@ -24,15 +24,15 @@ public:
 
 class GlobalPhaseGateImpl : public ZeroQubitGateBase {
 protected:
-    double _angle;
+    double _phase;
 
 public:
-    GlobalPhaseGateImpl(double angle) : ZeroQubitGateBase(), _angle(angle){};
+    GlobalPhaseGateImpl(double phase) : ZeroQubitGateBase(), _phase(phase){};
 
-    [[nodiscard]] double angle() const { return _angle; }
+    [[nodiscard]] double phase() const { return _phase; }
 
     Gate copy() const override { return std::make_shared<GlobalPhaseGateImpl>(*this); }
-    Gate get_inverse() const override { return std::make_shared<GlobalPhaseGateImpl>(-_angle); }
+    Gate get_inverse() const override { return std::make_shared<GlobalPhaseGateImpl>(-_phase); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };

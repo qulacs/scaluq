@@ -20,8 +20,8 @@ public:
 }  // namespace internal
 
 inline Gate I() { return internal::GateFactory::create_gate<internal::IGateImpl>(); }
-inline Gate GlobalPhase(double angle) {
-    return internal::GateFactory::create_gate<internal::GlobalPhaseGateImpl>(angle);
+inline Gate GlobalPhase(double phase) {
+    return internal::GateFactory::create_gate<internal::GlobalPhaseGateImpl>(phase);
 }
 inline Gate X(UINT target) {
     return internal::GateFactory::create_gate<internal::XGateImpl>(target);
