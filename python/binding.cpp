@@ -167,10 +167,10 @@ NB_MODULE(qulacs_core, m) {
     DEF_ONE_QUBIT_GATE(SdagGate);
     DEF_ONE_QUBIT_GATE(TGate);
     DEF_ONE_QUBIT_GATE(TdagGate);
-    DEF_ONE_QUBIT_GATE(sqrtXGate);
-    DEF_ONE_QUBIT_GATE(sqrtXdagGate);
-    DEF_ONE_QUBIT_GATE(sqrtYGate);
-    DEF_ONE_QUBIT_GATE(sqrtYdagGate);
+    DEF_ONE_QUBIT_GATE(SqrtXGate);
+    DEF_ONE_QUBIT_GATE(SqrtXdagGate);
+    DEF_ONE_QUBIT_GATE(SqrtYGate);
+    DEF_ONE_QUBIT_GATE(SqrtYdagGate);
     DEF_ONE_QUBIT_GATE(P0Gate);
     DEF_ONE_QUBIT_GATE(P1Gate);
 
@@ -195,17 +195,17 @@ NB_MODULE(qulacs_core, m) {
         .def("control", [](const GATE_TYPE &gate) { return gate->control(); }) \
         .def("target", [](const GATE_TYPE &gate) { return gate->target(); })
 
-    DEF_ONE_CONTROL_ONE_TARGET_GATE(CNOTGate);
+    DEF_ONE_CONTROL_ONE_TARGET_GATE(CXGate);
     DEF_ONE_CONTROL_ONE_TARGET_GATE(CZGate);
 
-    DEF_GATE(SWAPGate)
-        .def("target1", [](const SWAPGate &gate) { return gate->target1(); })
-        .def("target2", [](const SWAPGate &gate) { return gate->target2(); });
+    DEF_GATE(SwapGate)
+        .def("target1", [](const SwapGate &gate) { return gate->target1(); })
+        .def("target2", [](const SwapGate &gate) { return gate->target2(); });
 
-    DEF_GATE(FusedSWAPGate)
-        .def("qubit_index1", [](const FusedSWAPGate &gate) { return gate->qubit_index1(); })
-        .def("qubit_index2", [](const FusedSWAPGate &gate) { return gate->qubit_index2(); })
-        .def("block_size", [](const FusedSWAPGate &gate) { return gate->block_size(); });
+    DEF_GATE(FusedSwapGate)
+        .def("qubit_index1", [](const FusedSwapGate &gate) { return gate->qubit_index1(); })
+        .def("qubit_index2", [](const FusedSwapGate &gate) { return gate->qubit_index2(); })
+        .def("block_size", [](const FusedSwapGate &gate) { return gate->block_size(); });
 
 #define DEF_GATE_FACTORY(GATE_NAME) m.def(#GATE_NAME, &GATE_NAME)
 
@@ -219,10 +219,10 @@ NB_MODULE(qulacs_core, m) {
     DEF_GATE_FACTORY(Sdag);
     DEF_GATE_FACTORY(T);
     DEF_GATE_FACTORY(Tdag);
-    DEF_GATE_FACTORY(sqrtX);
-    DEF_GATE_FACTORY(sqrtXdag);
-    DEF_GATE_FACTORY(sqrtY);
-    DEF_GATE_FACTORY(sqrtYdag);
+    DEF_GATE_FACTORY(SqrtX);
+    DEF_GATE_FACTORY(SqrtXdag);
+    DEF_GATE_FACTORY(SqrtY);
+    DEF_GATE_FACTORY(SqrtYdag);
     DEF_GATE_FACTORY(P0);
     DEF_GATE_FACTORY(P1);
     DEF_GATE_FACTORY(RX);
@@ -231,10 +231,10 @@ NB_MODULE(qulacs_core, m) {
     DEF_GATE_FACTORY(U1);
     DEF_GATE_FACTORY(U2);
     DEF_GATE_FACTORY(U3);
-    DEF_GATE_FACTORY(CNOT);
+    DEF_GATE_FACTORY(CX);
     DEF_GATE_FACTORY(CZ);
-    DEF_GATE_FACTORY(SWAP);
-    DEF_GATE_FACTORY(FusedSWAP);
+    DEF_GATE_FACTORY(Swap);
+    DEF_GATE_FACTORY(FusedSwap);
 
     nb::class_<Circuit>(m, "Circuit")
         .def(nb::init<UINT>())

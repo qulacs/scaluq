@@ -107,42 +107,42 @@ public:
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class sqrtXGateImpl : public OneQubitGateBase {
+class SqrtXGateImpl : public OneQubitGateBase {
 public:
-    sqrtXGateImpl(UINT target) : OneQubitGateBase(target){};
+    SqrtXGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    Gate copy() const override { return std::make_shared<sqrtXGateImpl>(*this); }
+    Gate copy() const override { return std::make_shared<SqrtXGateImpl>(*this); }
     Gate get_inverse() const override;
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class sqrtXdagGateImpl : public OneQubitGateBase {
+class SqrtXdagGateImpl : public OneQubitGateBase {
 public:
-    sqrtXdagGateImpl(UINT target) : OneQubitGateBase(target){};
+    SqrtXdagGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    Gate copy() const override { return std::make_shared<sqrtXdagGateImpl>(*this); }
-    Gate get_inverse() const override { return std::make_shared<sqrtXGateImpl>(_target); }
+    Gate copy() const override { return std::make_shared<SqrtXdagGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<SqrtXGateImpl>(_target); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class sqrtYGateImpl : public OneQubitGateBase {
+class SqrtYGateImpl : public OneQubitGateBase {
 public:
-    sqrtYGateImpl(UINT target) : OneQubitGateBase(target){};
+    SqrtYGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    Gate copy() const override { return std::make_shared<sqrtYGateImpl>(*this); }
+    Gate copy() const override { return std::make_shared<SqrtYGateImpl>(*this); }
     Gate get_inverse() const override;
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class sqrtYdagGateImpl : public OneQubitGateBase {
+class SqrtYdagGateImpl : public OneQubitGateBase {
 public:
-    sqrtYdagGateImpl(UINT target) : OneQubitGateBase(target){};
+    SqrtYdagGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    Gate copy() const override { return std::make_shared<sqrtYdagGateImpl>(*this); }
-    Gate get_inverse() const override { return std::make_shared<sqrtYGateImpl>(_target); }
+    Gate copy() const override { return std::make_shared<SqrtYdagGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<SqrtYGateImpl>(_target); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -210,10 +210,10 @@ using SGate = internal::GatePtr<internal::SGateImpl>;
 using SdagGate = internal::GatePtr<internal::SdagGateImpl>;
 using TGate = internal::GatePtr<internal::TGateImpl>;
 using TdagGate = internal::GatePtr<internal::TdagGateImpl>;
-using sqrtXGate = internal::GatePtr<internal::sqrtXGateImpl>;
-using sqrtXdagGate = internal::GatePtr<internal::sqrtXdagGateImpl>;
-using sqrtYGate = internal::GatePtr<internal::sqrtYGateImpl>;
-using sqrtYdagGate = internal::GatePtr<internal::sqrtYdagGateImpl>;
+using SqrtXGate = internal::GatePtr<internal::SqrtXGateImpl>;
+using SqrtXdagGate = internal::GatePtr<internal::SqrtXdagGateImpl>;
+using SqrtYGate = internal::GatePtr<internal::SqrtYGateImpl>;
+using SqrtYdagGate = internal::GatePtr<internal::SqrtYdagGateImpl>;
 using P0Gate = internal::GatePtr<internal::P0GateImpl>;
 using P1Gate = internal::GatePtr<internal::P1GateImpl>;
 using RXGate = internal::GatePtr<internal::RXGateImpl>;

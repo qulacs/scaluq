@@ -32,7 +32,7 @@ void run_random_gate_apply(UINT n_qubits) {
         gate->update_quantum_state(state);
         state_cp = state.amplitudes();
 
-        test_state = get_eigen_matrix_identity(n_qubits) * test_state;
+        test_state = test_state;
 
         for (int i = 0; i < dim; i++) {
             ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
@@ -58,7 +58,7 @@ void run_random_gate_apply(UINT n_qubits) {
         gate->update_quantum_state(state);
         state_cp = state.amplitudes();
 
-        test_state = get_eigen_matrix_identity(n_qubits) * std::polar(angle) * test_state;
+        test_state = std::polar(1., angle) * test_state;
 
         for (int i = 0; i < dim; i++) {
             ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
@@ -186,8 +186,8 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
             UINT control = random.int64() % n_qubits;
             if (target == control) target = (target + 1) % n_qubits;
             if (g == 0) {
-                gate = CNOT(control, target);
-                func_eig = get_eigen_matrix_full_qubit_CNOT;
+                gate = CX(control, target);
+                func_eig = get_eigen_matrix_full_qubit_CX;
             } else {
                 gate = CZ(control, target);
                 func_eig = get_eigen_matrix_full_qubit_CZ;
@@ -204,7 +204,7 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
         }
     }
 
-    func_eig = get_eigen_matrix_full_qubit_SWAP;
+    func_eig = get_eigen_matrix_full_qubit_Swap;
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
         auto state_cp = state.amplitudes();
@@ -215,7 +215,7 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
         UINT target = random.int64() % n_qubits;
         UINT control = random.int64() % n_qubits;
         if (target == control) target = (target + 1) % n_qubits;
-        auto gate = SWAP(control, target);
+        auto gate = Swap(control, target);
         gate->update_quantum_state(state);
         state_cp = state.amplitudes();
 
@@ -233,14 +233,14 @@ void run_random_gate_apply_fused(UINT n_qubits, UINT target0, UINT target1, UINT
     StateVector state_ref = StateVector::Haar_random_state(n_qubits);
     StateVector state = state_ref.copy();
 
-    // update "state_ref" using SWAP gate
+    // update "state_ref" using Swap gate
     for (UINT i = 0; i < block_size; i++) {
-        auto swap_gate = SWAP(target0 + i, target1 + i);
+        auto swap_gate = Swap(target0 + i, target1 + i);
         swap_gate->update_quantum_state(state_ref);
     }
     auto state_ref_cp = state_ref.amplitudes();
 
-    auto fused_swap_gate = FusedSWAP(target0, target1, block_size);
+    auto fused_swap_gate = FusedSwap(target0, target1, block_size);
     fused_swap_gate->update_quantum_state(state);
     auto state_cp = state.amplitudes();
 
@@ -384,10 +384,10 @@ TEST(GateTest, ApplyS) { run_random_gate_apply<S>(5, make_S); }
 TEST(GateTest, ApplySdag) { run_random_gate_apply<Sdag>(5, make_Sdag); }
 TEST(GateTest, ApplyT) { run_random_gate_apply<T>(5, make_T); }
 TEST(GateTest, ApplyTdag) { run_random_gate_apply<Tdag>(5, make_Tdag); }
-TEST(GateTest, ApplySqrtX) { run_random_gate_apply<sqrtX>(5, make_sqrtX); }
-TEST(GateTest, ApplySqrtY) { run_random_gate_apply<sqrtY>(5, make_sqrtY); }
-TEST(GateTest, ApplySqrtXdag) { run_random_gate_apply<sqrtXdag>(5, make_sqrtXdag); }
-TEST(GateTest, ApplySqrtYdag) { run_random_gate_apply<sqrtYdag>(5, make_sqrtYdag); }
+TEST(GateTest, ApplySqrtX) { run_random_gate_apply<SqrtX>(5, make_SqrtX); }
+TEST(GateTest, ApplySqrtY) { run_random_gate_apply<SqrtY>(5, make_SqrtY); }
+TEST(GateTest, ApplySqrtXdag) { run_random_gate_apply<SqrtXdag>(5, make_SqrtXdag); }
+TEST(GateTest, ApplySqrtYdag) { run_random_gate_apply<SqrtYdag>(5, make_SqrtYdag); }
 TEST(GateTest, ApplyP0) { run_random_gate_apply<P0>(5, make_P0); }
 TEST(GateTest, ApplyP1) { run_random_gate_apply<P1>(5, make_P1); }
 TEST(GateTest, ApplyRX) { run_random_gate_apply<RX>(5, make_RX); }
