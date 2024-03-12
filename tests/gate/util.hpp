@@ -27,9 +27,9 @@ static Eigen::MatrixXcd get_expanded_eigen_matrix_with_identity(
     return kronecker_product(kronecker_product(right_identity, one_qubit_matrix), left_identity);
 }
 
-static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CNOT(UINT control_qubit_index,
-                                                         UINT target_qubit_index,
-                                                         UINT qubit_count) {
+static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CX(UINT control_qubit_index,
+                                                       UINT target_qubit_index,
+                                                       UINT qubit_count) {
     UINT dim = 1ULL << qubit_count;
     Eigen::MatrixXcd result = Eigen::MatrixXcd::Zero(dim, dim);
     for (UINT ind = 0; ind < dim; ++ind) {
@@ -58,7 +58,7 @@ static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CZ(UINT control_qubit_index,
     return result;
 }
 
-static Eigen::MatrixXcd get_eigen_matrix_full_qubit_SWAP(UINT target_qubit_index1,
+static Eigen::MatrixXcd get_eigen_matrix_full_qubit_Swap(UINT target_qubit_index1,
                                                          UINT target_qubit_index2,
                                                          UINT qubit_count) {
     UINT dim = 1ULL << qubit_count;
@@ -150,19 +150,19 @@ static Eigen::MatrixXcd make_T() { return make_2x2_matrix(1, 0, 0, (1. + 1.i) / 
 
 static Eigen::MatrixXcd make_Tdag() { return make_2x2_matrix(1, 0, 0, (1. - 1.i) / sqrt(2.)); }
 
-static Eigen::MatrixXcd make_sqrtX() {
+static Eigen::MatrixXcd make_SqrtX() {
     return make_2x2_matrix(0.5 + 0.5i, 0.5 - 0.5i, 0.5 - 0.5i, 0.5 + 0.5i);
 }
 
-static Eigen::MatrixXcd make_sqrtY() {
+static Eigen::MatrixXcd make_SqrtY() {
     return make_2x2_matrix(0.5 + 0.5i, -0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i);
 }
 
-static Eigen::MatrixXcd make_sqrtXdag() {
+static Eigen::MatrixXcd make_SqrtXdag() {
     return make_2x2_matrix(0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i, 0.5 - 0.5i);
 }
 
-static Eigen::MatrixXcd make_sqrtYdag() {
+static Eigen::MatrixXcd make_SqrtYdag() {
     return make_2x2_matrix(0.5 - 0.5i, 0.5 - 0.5i, -0.5 + 0.5i, 0.5 - 0.5i);
 }
 

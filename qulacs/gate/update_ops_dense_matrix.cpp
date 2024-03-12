@@ -6,6 +6,7 @@
 #include "util/utility.hpp"
 
 namespace qulacs {
+namespace internal {
 void single_qubit_dense_matrix_gate(UINT target_qubit_index,
                                     const matrix_2_2& matrix,
                                     StateVector& state) {
@@ -21,4 +22,5 @@ void single_qubit_dense_matrix_gate(UINT target_qubit_index,
             state._raw[basis_1] = res1;
         });
 }
+}  // namespace internal
 }  // namespace qulacs

@@ -4,7 +4,9 @@
 
 namespace qulacs {
 namespace internal {
-void FusedSWAPGateImpl::update_quantum_state(StateVector& state_vector) const {
+void FusedSwapGateImpl::update_quantum_state(StateVector& state_vector) const {
+    check_qubit_within_bounds(state_vector, this->_qubit_index1 + this->_block_size - 1);
+    check_qubit_within_bounds(state_vector, this->_qubit_index2 + this->_block_size - 1);
     fusedswap_gate(this->_qubit_index1, this->_qubit_index2, this->_block_size, state_vector);
 }
 }  // namespace internal
