@@ -230,7 +230,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         } else if (pauli_id_vec[0] == 3) {
             matrix = make_Z();
         }
-        for (int i = 1; i < n_qubits; i++) {
+        for (int i = 1; i < (int)n_qubits; i++) {
             if (pauli_id_vec[i] == 0) {
                 matrix = kronecker_product(make_I(), matrix);
             } else if (pauli_id_vec[i] == 1) {
@@ -270,7 +270,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         StateVector state = StateVector::Haar_random_state(n_qubits);
         auto state_cp = state.amplitudes();
         auto state_bef = state.copy();
-        assert(test_state.size() == state_cp.size());
+        assert(test_state.size() == (int)state_cp.size());
         for (UINT i = 0; i < dim; i++) {
             test_state[i] = state_cp[i];
         }
@@ -290,7 +290,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         } else if (pauli_id_vec[0] == 3) {
             matrix = make_Z();
         }
-        for (int i = 1; i < n_qubits; i++) {
+        for (int i = 1; i < (int)n_qubits; i++) {
             if (pauli_id_vec[i] == 0) {
                 matrix = kronecker_product(make_I(), matrix);
             } else if (pauli_id_vec[i] == 1) {
@@ -308,7 +308,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         pauli_gate->update_quantum_state(state);
         state_cp = state.amplitudes();
         test_state = matrix * test_state;
-        assert(state_cp.size() == test_state.size());
+        assert((int)state_cp.size() == test_state.size());
         // check if the state is updated correctly
         for (UINT i = 0; i < dim; i++) {
             ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
