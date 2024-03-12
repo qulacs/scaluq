@@ -8,7 +8,6 @@
 
 #include "../qulacs/all.hpp"
 #include "../qulacs/util/utility.hpp"
-#include "../tests/gate/util.hpp"
 
 using namespace qulacs;
 using namespace std;

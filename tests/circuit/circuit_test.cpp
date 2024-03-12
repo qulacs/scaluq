@@ -4,7 +4,7 @@
 
 #include <Eigen/Core>
 
-#include "../gate/util.hpp"
+#include "../util/util.hpp"
 #include "gate/gate_factory.hpp"
 #include "util/random.hpp"
 

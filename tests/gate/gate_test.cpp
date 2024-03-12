@@ -9,7 +9,7 @@
 #include <util/random.hpp>
 
 #include "../test_environment.hpp"
-#include "util.hpp"
+#include "../util/util.hpp"
 
 using namespace qulacs;
 
