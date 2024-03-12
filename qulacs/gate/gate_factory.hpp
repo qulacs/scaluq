@@ -86,6 +86,7 @@ inline Gate U3(UINT target, double theta, double phi, double lambda) {
 inline Gate CX(UINT control, UINT target) {
     return internal::GateFactory::create_gate<internal::CXGateImpl>(control, target);
 }
+auto& CNot = CX;
 inline Gate CZ(UINT control, UINT target) {
     return internal::GateFactory::create_gate<internal::CZGateImpl>(control, target);
 }
