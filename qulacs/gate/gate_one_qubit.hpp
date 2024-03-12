@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../constant.hpp"
 #include "gate.hpp"
 
 namespace qulacs {
@@ -200,6 +201,58 @@ public:
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
+
+class U1GateImpl : public OneQubitGateBase {
+    double _lambda;
+
+public:
+    U1GateImpl(UINT target, double lambda) : OneQubitGateBase(target), _lambda(lambda) {}
+
+    double lambda() const { return _lambda; }
+
+    Gate copy() const override { return std::make_shared<U1GateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<U1GateImpl>(_target, -_lambda); }
+
+    void update_quantum_state(StateVector& state_vector) const override;
+};
+class U2GateImpl : public OneQubitGateBase {
+    double _phi, _lambda;
+    matrix_2_2 _matrix;
+
+public:
+    U2GateImpl(UINT target, double phi, double lambda)
+        : OneQubitGateBase(target), _phi(phi), _lambda(lambda) {}
+
+    double phi() const { return _phi; }
+    double lambda() const { return _lambda; }
+
+    Gate copy() const override { return std::make_shared<U2GateImpl>(*this); }
+    Gate get_inverse() const override {
+        return std::make_shared<U2GateImpl>(_target, -_lambda - PI(), -_phi + PI());
+    }
+
+    void update_quantum_state(StateVector& state_vector) const override;
+};
+
+class U3GateImpl : public OneQubitGateBase {
+    double _theta, _phi, _lambda;
+    matrix_2_2 _matrix;
+
+public:
+    U3GateImpl(UINT target, double theta, double phi, double lambda)
+        : OneQubitGateBase(target), _theta(theta), _phi(phi), _lambda(lambda) {}
+
+    double theta() const { return _theta; }
+    double phi() const { return _phi; }
+    double lambda() const { return _lambda; }
+
+    Gate copy() const override { return std::make_shared<U3GateImpl>(*this); }
+    Gate get_inverse() const override {
+        return std::make_shared<U3GateImpl>(_target, -_theta, -_lambda, -_phi);
+    }
+
+    void update_quantum_state(StateVector& state_vector) const override;
+};
 }  // namespace internal
 
 using XGate = internal::GatePtr<internal::XGateImpl>;
@@ -219,4 +272,7 @@ using P1Gate = internal::GatePtr<internal::P1GateImpl>;
 using RXGate = internal::GatePtr<internal::RXGateImpl>;
 using RYGate = internal::GatePtr<internal::RYGateImpl>;
 using RZGate = internal::GatePtr<internal::RZGateImpl>;
+using U1Gate = internal::GatePtr<internal::U1GateImpl>;
+using U2Gate = internal::GatePtr<internal::U2GateImpl>;
+using U3Gate = internal::GatePtr<internal::U3GateImpl>;
 }  // namespace qulacs

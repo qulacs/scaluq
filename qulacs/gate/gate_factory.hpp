@@ -1,10 +1,10 @@
 #pragma once
 
+#include "gate/gate_matrix.hpp"
 #include "gate/gate_npair_qubit.hpp"
 #include "gate/gate_one_control_one_target.hpp"
 #include "gate/gate_one_qubit.hpp"
 #include "gate/gate_pauli.hpp"
-#include "gate/gate_quantum_matrix.hpp"
 #include "gate/gate_two_qubit.hpp"
 #include "gate/gate_zero_qubit.hpp"
 
