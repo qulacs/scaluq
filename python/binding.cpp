@@ -206,7 +206,9 @@ NB_MODULE(qulacs_core, m) {
         .def(nb::init<CXGate>())
         .def(nb::init<CZGate>())
         .def(nb::init<SwapGate>())
-        .def(nb::init<FusedSwapGate>());
+        .def(nb::init<FusedSwapGate>())
+        .def(nb::init<PauliGate>())
+        .def(nb::init<PauliRotationGate>());
 
     DEF_GATE(IGate);
     DEF_GATE(GlobalPhaseGate).def("phase", [](const GlobalPhaseGate &gate) {
@@ -264,6 +266,9 @@ NB_MODULE(qulacs_core, m) {
         .def("qubit_index2", [](const FusedSwapGate &gate) { return gate->qubit_index2(); })
         .def("block_size", [](const FusedSwapGate &gate) { return gate->block_size(); });
 
+    DEF_GATE(PauliGate);
+    DEF_GATE(PauliRotationGate);
+
 #define DEF_GATE_FACTORY(GATE_NAME) m.def(#GATE_NAME, &GATE_NAME)
 
     DEF_GATE_FACTORY(I);
@@ -292,6 +297,8 @@ NB_MODULE(qulacs_core, m) {
     DEF_GATE_FACTORY(CZ);
     DEF_GATE_FACTORY(Swap);
     DEF_GATE_FACTORY(FusedSwap);
+    DEF_GATE_FACTORY(Pauli);
+    DEF_GATE_FACTORY(PauliRotation);
 
     nb::class_<Circuit>(m, "Circuit")
         .def(nb::init<UINT>())

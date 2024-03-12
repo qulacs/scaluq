@@ -86,9 +86,9 @@ class Gate:
     None
     """
 
-    def __init__(self, arg: qulacs2023.qulacs_core.FusedSwapGate, /) -> None:
+    def __init__(self, arg: qulacs2023.qulacs_core.PauliRotationGate, /) -> None:
         """
-        __init__(self, arg: qulacs2023.qulacs_core.FusedSwapGate, /) -> None
+        __init__(self, arg: qulacs2023.qulacs_core.PauliRotationGate, /) -> None
         """
         ...
 
@@ -271,6 +271,20 @@ class Gate:
     def __init__(self, arg: qulacs2023.qulacs_core.SwapGate, /) -> None:
         """
         __init__(self, arg: qulacs2023.qulacs_core.SwapGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.FusedSwapGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.FusedSwapGate, /) -> None
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: qulacs2023.qulacs_core.PauliGate, /) -> None:
+        """
+        __init__(self, arg: qulacs2023.qulacs_core.PauliGate, /) -> None
         """
         ...
 
@@ -512,6 +526,25 @@ class P1Gate:
         self, arg: qulacs2023.qulacs_core.StateVector, /
     ) -> None: ...
 
+def Pauli(
+    arg: qulacs2023.qulacs_core.PauliOperator, /
+) -> qulacs2023.qulacs_core.Gate: ...
+
+class PauliGate:
+    """
+    None
+    """
+
+    def __init__(self, arg: qulacs2023.qulacs_core.Gate, /) -> None: ...
+    def copy(self) -> qulacs2023.qulacs_core.Gate: ...
+    def gate_type(self) -> qulacs2023.qulacs_core.GateType: ...
+    def get_control_qubit_list(self) -> list[int]: ...
+    def get_inverse(self) -> qulacs2023.qulacs_core.Gate: ...
+    def get_target_qubit_list(self) -> list[int]: ...
+    def update_quantum_state(
+        self, arg: qulacs2023.qulacs_core.StateVector, /
+    ) -> None: ...
+
 class PauliOperator:
     """
     None
@@ -577,6 +610,25 @@ class PauliOperator:
         arg1: qulacs2023.qulacs_core.StateVector,
         /,
     ) -> complex: ...
+
+def PauliRotation(
+    arg0: qulacs2023.qulacs_core.PauliOperator, arg1: float, /
+) -> qulacs2023.qulacs_core.Gate: ...
+
+class PauliRotationGate:
+    """
+    None
+    """
+
+    def __init__(self, arg: qulacs2023.qulacs_core.Gate, /) -> None: ...
+    def copy(self) -> qulacs2023.qulacs_core.Gate: ...
+    def gate_type(self) -> qulacs2023.qulacs_core.GateType: ...
+    def get_control_qubit_list(self) -> list[int]: ...
+    def get_inverse(self) -> qulacs2023.qulacs_core.Gate: ...
+    def get_target_qubit_list(self) -> list[int]: ...
+    def update_quantum_state(
+        self, arg: qulacs2023.qulacs_core.StateVector, /
+    ) -> None: ...
 
 def RX(arg0: int, arg1: float, /) -> qulacs2023.qulacs_core.Gate: ...
 
