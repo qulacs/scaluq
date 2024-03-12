@@ -7,6 +7,7 @@
 #include "util/utility.hpp"
 
 namespace qulacs {
+namespace internal {
 void swap_gate(UINT target0, UINT target1, StateVector& state) {
     Kokkos::parallel_for(
         1ULL << (state.n_qubits() - 2), KOKKOS_LAMBDA(const UINT& it) {
@@ -15,4 +16,5 @@ void swap_gate(UINT target0, UINT target1, StateVector& state) {
                                        state._raw[basis | (1ULL << target1)]);
         });
 }
+}  // namespace internal
 }  // namespace qulacs

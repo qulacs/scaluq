@@ -7,11 +7,11 @@
 
 namespace qulacs {
 namespace internal {
-class FusedSWAPGateImpl : public GateBase {
+class FusedSwapGateImpl : public GateBase {
     UINT _qubit_index1, _qubit_index2, _block_size;
 
 public:
-    FusedSWAPGateImpl(UINT qubit_index1, UINT qubit_index2, UINT block_size)
+    FusedSwapGateImpl(UINT qubit_index1, UINT qubit_index2, UINT block_size)
         : _qubit_index1(qubit_index1), _qubit_index2(qubit_index2), _block_size(block_size) {
         UINT upper_index = std::max(qubit_index1, qubit_index2);
         UINT lower_index = std::min(qubit_index1, qubit_index2);
@@ -35,12 +35,12 @@ public:
     }
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
-    Gate copy() const override { return std::make_shared<FusedSWAPGateImpl>(*this); }
-    Gate get_inverse() const override { return std::make_shared<FusedSWAPGateImpl>(*this); }
+    Gate copy() const override { return std::make_shared<FusedSwapGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<FusedSwapGateImpl>(*this); }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
 }  // namespace internal
 
-using FusedSWAPGate = internal::GatePtr<internal::FusedSWAPGateImpl>;
+using FusedSwapGate = internal::GatePtr<internal::FusedSwapGateImpl>;
 }  // namespace qulacs

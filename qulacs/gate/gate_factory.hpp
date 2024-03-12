@@ -6,6 +6,7 @@
 #include "gate/gate_pauli.hpp"
 #include "gate/gate_quantum_matrix.hpp"
 #include "gate/gate_two_qubit.hpp"
+#include "gate/gate_zero_qubit.hpp"
 
 namespace qulacs {
 namespace internal {
@@ -18,8 +19,9 @@ public:
 };
 }  // namespace internal
 
-inline Gate I(UINT target) {
-    return internal::GateFactory::create_gate<internal::IGateImpl>(target);
+inline Gate I() { return internal::GateFactory::create_gate<internal::IGateImpl>(); }
+inline Gate GlobalPhase(double phase) {
+    return internal::GateFactory::create_gate<internal::GlobalPhaseGateImpl>(phase);
 }
 inline Gate X(UINT target) {
     return internal::GateFactory::create_gate<internal::XGateImpl>(target);
@@ -45,17 +47,17 @@ inline Gate T(UINT target) {
 inline Gate Tdag(UINT target) {
     return internal::GateFactory::create_gate<internal::TdagGateImpl>(target);
 }
-inline Gate sqrtX(UINT target) {
-    return internal::GateFactory::create_gate<internal::sqrtXGateImpl>(target);
+inline Gate SqrtX(UINT target) {
+    return internal::GateFactory::create_gate<internal::SqrtXGateImpl>(target);
 }
-inline Gate sqrtXdag(UINT target) {
-    return internal::GateFactory::create_gate<internal::sqrtXdagGateImpl>(target);
+inline Gate SqrtXdag(UINT target) {
+    return internal::GateFactory::create_gate<internal::SqrtXdagGateImpl>(target);
 }
-inline Gate sqrtY(UINT target) {
-    return internal::GateFactory::create_gate<internal::sqrtYGateImpl>(target);
+inline Gate SqrtY(UINT target) {
+    return internal::GateFactory::create_gate<internal::SqrtYGateImpl>(target);
 }
-inline Gate sqrtYdag(UINT target) {
-    return internal::GateFactory::create_gate<internal::sqrtYdagGateImpl>(target);
+inline Gate SqrtYdag(UINT target) {
+    return internal::GateFactory::create_gate<internal::SqrtYdagGateImpl>(target);
 }
 inline Gate P0(UINT target) {
     return internal::GateFactory::create_gate<internal::P0GateImpl>(target);
@@ -81,17 +83,18 @@ inline Gate U2(UINT target, double phi, double lambda) {
 inline Gate U3(UINT target, double theta, double phi, double lambda) {
     return internal::GateFactory::create_gate<internal::U3GateImpl>(target, theta, phi, lambda);
 }
-inline Gate CNOT(UINT control, UINT target) {
-    return internal::GateFactory::create_gate<internal::CNOTGateImpl>(control, target);
+inline Gate CX(UINT control, UINT target) {
+    return internal::GateFactory::create_gate<internal::CXGateImpl>(control, target);
 }
+inline auto& CNot = CX;
 inline Gate CZ(UINT control, UINT target) {
     return internal::GateFactory::create_gate<internal::CZGateImpl>(control, target);
 }
-inline Gate SWAP(UINT target1, UINT target2) {
-    return internal::GateFactory::create_gate<internal::SWAPGateImpl>(target1, target2);
+inline Gate Swap(UINT target1, UINT target2) {
+    return internal::GateFactory::create_gate<internal::SwapGateImpl>(target1, target2);
 }
-inline Gate FusedSWAP(UINT qubit_index1, UINT qubit_index2, UINT block_size) {
-    return internal::GateFactory::create_gate<internal::FusedSWAPGateImpl>(
+inline Gate FusedSwap(UINT qubit_index1, UINT qubit_index2, UINT block_size) {
+    return internal::GateFactory::create_gate<internal::FusedSwapGateImpl>(
         qubit_index1, qubit_index2, block_size);
 }
 inline Gate Pauli(const PauliOperator& pauli) {
