@@ -209,7 +209,7 @@ TEST(StateVectorTest, GetMarginalProbability) {
 
 TEST(StateVectorTest, SamplingSuperpositionState) {
     const UINT n = 10;
-    const UINT nshot = 1024;
+    const UINT nshot = 65536;
     const UINT test_count = 10;
     UINT pass_count = 0;
     for (UINT test_i = 0; test_i < test_count; test_i++) {
