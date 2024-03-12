@@ -9,11 +9,6 @@ Gate TGateImpl::get_inverse() const { return std::make_shared<TdagGateImpl>(_tar
 Gate SqrtXGateImpl::get_inverse() const { return std::make_shared<SqrtXdagGateImpl>(_target); }
 Gate SqrtYGateImpl::get_inverse() const { return std::make_shared<SqrtYdagGateImpl>(_target); }
 
-void IGateImpl::update_quantum_state(StateVector& state_vector) const {
-    check_qubit_within_bounds(state_vector, this->_target);
-    i_gate(this->_target, state_vector);
-}
-
 void XGateImpl::update_quantum_state(StateVector& state_vector) const {
     check_qubit_within_bounds(state_vector, this->_target);
     x_gate(this->_target, state_vector);

@@ -6,6 +6,7 @@
 #include "gate/gate_pauli.hpp"
 #include "gate/gate_quantum_matrix.hpp"
 #include "gate/gate_two_qubit.hpp"
+#include "gate/gate_zero_qubit.hpp"
 
 namespace qulacs {
 namespace internal {
@@ -18,8 +19,9 @@ public:
 };
 }  // namespace internal
 
-inline Gate I(UINT target) {
-    return internal::GateFactory::create_gate<internal::IGateImpl>(target);
+inline Gate I() { return internal::GateFactory::create_gate<internal::IGateImpl>(); }
+inline Gate GlobalPhase(double phase) {
+    return internal::GateFactory::create_gate<internal::GlobalPhaseGateImpl>(phase);
 }
 inline Gate X(UINT target) {
     return internal::GateFactory::create_gate<internal::XGateImpl>(target);

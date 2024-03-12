@@ -151,10 +151,14 @@ NB_MODULE(qulacs_core, m) {
 
     DEF_GATE(Gate);
 
+    DEF_GATE(IGate);
+    DEF_GATE(GlobalPhaseGate).def("phase", [](const GlobalPhaseGate &gate) {
+        return gate->phase();
+    });
+
 #define DEF_ONE_QUBIT_GATE(GATE_TYPE) \
     DEF_GATE(GATE_TYPE).def("target", [](const GATE_TYPE &gate) { return gate->target(); })
 
-    DEF_ONE_QUBIT_GATE(IGate);
     DEF_ONE_QUBIT_GATE(XGate);
     DEF_ONE_QUBIT_GATE(YGate);
     DEF_ONE_QUBIT_GATE(ZGate);
@@ -206,6 +210,7 @@ NB_MODULE(qulacs_core, m) {
 #define DEF_GATE_FACTORY(GATE_NAME) m.def(#GATE_NAME, &GATE_NAME)
 
     DEF_GATE_FACTORY(I);
+    DEF_GATE_FACTORY(GlobalPhase);
     DEF_GATE_FACTORY(X);
     DEF_GATE_FACTORY(Y);
     DEF_GATE_FACTORY(Z);
