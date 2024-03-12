@@ -179,11 +179,11 @@ static Eigen::MatrixXcd make_SqrtY() {
     return make_2x2_matrix(0.5 + 0.5i, -0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i);
 }
 
-inline Eigen::MatrixXcd make_sqrtXdag() {
+inline Eigen::MatrixXcd make_SqrtXdag() {
     return make_2x2_matrix(0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i, 0.5 - 0.5i);
 }
 
-inline Eigen::MatrixXcd make_sqrtYdag() {
+inline Eigen::MatrixXcd make_SqrtYdag() {
     return make_2x2_matrix(0.5 - 0.5i, 0.5 - 0.5i, -0.5 + 0.5i, 0.5 - 0.5i);
 }
 
