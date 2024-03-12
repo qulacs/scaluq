@@ -170,6 +170,8 @@ inline Eigen::MatrixXcd make_H() {
 }
 static Eigen::MatrixXcd make_S() { return make_2x2_matrix(1, 0, 0, 1.i); }
 static Eigen::MatrixXcd make_T() { return make_2x2_matrix(1, 0, 0, (1. + 1.i) / sqrt(2.)); }
+inline Eigen::MatrixXcd make_Sdag() { return make_2x2_matrix(1, 0, 0, -1.i); }
+inline Eigen::MatrixXcd make_Tdag() { return make_2x2_matrix(1, 0, 0, (1. - 1.i) / sqrt(2.)); }
 static Eigen::MatrixXcd make_SqrtX() {
     return make_2x2_matrix(0.5 + 0.5i, 0.5 - 0.5i, 0.5 - 0.5i, 0.5 + 0.5i);
 }
