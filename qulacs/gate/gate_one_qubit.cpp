@@ -93,5 +93,20 @@ void RZGateImpl::update_quantum_state(StateVector& state_vector) const {
     check_qubit_within_bounds(state_vector, this->_target);
     rz_gate(this->_target, this->_angle, state_vector);
 }
+
+void U1GateImpl::update_quantum_state(StateVector& state_vector) const {
+    check_qubit_within_bounds(state_vector, this->_target);
+    u1_gate(this->_target, this->_lambda, state_vector);
+}
+
+void U2GateImpl::update_quantum_state(StateVector& state_vector) const {
+    check_qubit_within_bounds(state_vector, this->_target);
+    u2_gate(this->_target, this->_phi, this->_lambda, state_vector);
+}
+
+void U3GateImpl::update_quantum_state(StateVector& state_vector) const {
+    check_qubit_within_bounds(state_vector, this->_target);
+    u3_gate(this->_target, this->_theta, this->_phi, this->_lambda, state_vector);
+}
 }  // namespace internal
 }  // namespace qulacs

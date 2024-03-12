@@ -33,9 +33,11 @@ class RZGateImpl;
 class U1GateImpl;
 class U2GateImpl;
 class U3GateImpl;
+class OneQubitMatrixGateImpl;
 class CXGateImpl;
 class CZGateImpl;
 class SwapGateImpl;
+class TwoQubitMatrixGateImpl;
 class FusedSwapGateImpl;
 class PauliGateImpl;
 class PauliRotationGateImpl;
@@ -69,9 +71,11 @@ enum class GateType {
     U1,
     U2,
     U3,
+    OneQubitMatrix,
     CX,
     CZ,
     Swap,
+    TwoQubitMatrix,
     FusedSwap,
     Pauli,
     PauliRotation
@@ -102,14 +106,19 @@ constexpr GateType get_gate_type() {
     if constexpr (std::is_same_v<T, internal::U1GateImpl>) return GateType::U1;
     if constexpr (std::is_same_v<T, internal::U2GateImpl>) return GateType::U2;
     if constexpr (std::is_same_v<T, internal::U3GateImpl>) return GateType::U3;
+    if constexpr (std::is_same_v<T, internal::OneQubitMatrixGateImpl>)
+        return GateType::OneQubitMatrix;
     if constexpr (std::is_same_v<T, internal::CXGateImpl>) return GateType::CX;
     if constexpr (std::is_same_v<T, internal::CZGateImpl>) return GateType::CZ;
     if constexpr (std::is_same_v<T, internal::SwapGateImpl>) return GateType::Swap;
+    if constexpr (std::is_same_v<T, internal::TwoQubitMatrixGateImpl>)
+        return GateType::TwoQubitMatrix;
     if constexpr (std::is_same_v<T, internal::FusedSwapGateImpl>) return GateType::FusedSwap;
     if constexpr (std::is_same_v<T, internal::PauliGateImpl>) return GateType::Pauli;
     if constexpr (std::is_same_v<T, internal::PauliRotationGateImpl>)
         return GateType::PauliRotation;
     static_assert("unknown GateImpl");
+    return GateType::Unknown;
 }
 
 namespace internal {
