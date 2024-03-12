@@ -232,6 +232,7 @@ NB_MODULE(qulacs_core, m) {
     DEF_GATE_FACTORY(U2);
     DEF_GATE_FACTORY(U3);
     DEF_GATE_FACTORY(CX);
+    m.def("CNot", &CX);
     DEF_GATE_FACTORY(CZ);
     DEF_GATE_FACTORY(Swap);
     DEF_GATE_FACTORY(FusedSwap);

@@ -4,6 +4,7 @@ from typing import (Any, Callable, Iterable, Optional, Sequence, Typing, Union,
 
 import qulacs2023.qulacs_core
 
+def CNot(arg0: int, arg1: int, /) -> qulacs2023.qulacs_core.Gate: ...
 def CX(arg0: int, arg1: int, /) -> qulacs2023.qulacs_core.Gate: ...
 
 class CXGate:
