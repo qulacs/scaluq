@@ -6,7 +6,7 @@ target_sources(qulacs PRIVATE
     gate/gate_one_control_one_target.cpp
     gate/gate_one_qubit.cpp
     gate/gate_pauli.cpp
-    gate/gate_quantum_matrix.cpp
+    gate/gate_matrix.cpp
     gate/gate_two_qubit.cpp
     gate/gate_zero_qubit.cpp
     gate/update_ops_dense_matrix.cpp
