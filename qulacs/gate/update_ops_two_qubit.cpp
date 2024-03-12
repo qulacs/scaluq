@@ -1,8 +1,8 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
 
-#include "../types.hpp"
 #include "../constant.hpp"
+#include "../types.hpp"
 #include "update_ops.hpp"
 #include "util/utility.hpp"
 
