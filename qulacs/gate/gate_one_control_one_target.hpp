@@ -20,12 +20,12 @@ public:
     std::vector<UINT> get_control_qubit_list() const override { return {_control}; };
 };
 
-class CNOTGateImpl : public OneControlOneTargetGateBase {
+class CXGateImpl : public OneControlOneTargetGateBase {
 public:
-    CNOTGateImpl(UINT control, UINT target) : OneControlOneTargetGateBase(control, target) {}
+    CXGateImpl(UINT control, UINT target) : OneControlOneTargetGateBase(control, target) {}
 
-    Gate copy() const override { return std::make_shared<CNOTGateImpl>(*this); }
-    Gate get_inverse() const override { return std::make_shared<CNOTGateImpl>(*this); }
+    Gate copy() const override { return std::make_shared<CXGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<CXGateImpl>(*this); }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(4, 4);
         mat << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0;
@@ -51,6 +51,6 @@ public:
 };
 }  // namespace internal
 
-using CNOTGate = internal::GatePtr<internal::CNOTGateImpl>;
+using CXGate = internal::GatePtr<internal::CXGateImpl>;
 using CZGate = internal::GatePtr<internal::CZGateImpl>;
 }  // namespace qulacs

@@ -7,8 +7,7 @@
 #include "util/utility.hpp"
 
 namespace qulacs {
-void i_gate(UINT, StateVector&) {}
-
+namespace internal {
 void x_gate(UINT target_qubit_index, StateVector& state) {
     Kokkos::parallel_for(
         state.dim() >> 1, KOKKOS_LAMBDA(const UINT& it) {
@@ -123,4 +122,5 @@ void rz_gate(UINT target_qubit_index, double angle, StateVector& state) {
     diagonal_matrix_2_2 diag = {Complex(cosval, -sinval), Complex(cosval, sinval)};
     single_qubit_diagonal_matrix_gate(target_qubit_index, diag, state);
 }
+}  // namespace internal
 }  // namespace qulacs

@@ -32,6 +32,10 @@ struct matrix_2_2 {
     Complex val[2][2];
 };
 
+struct matrix_4_4 {
+    Complex val[4][4];
+};
+
 struct diagonal_matrix_2_2 {
     Complex val[2];
 };

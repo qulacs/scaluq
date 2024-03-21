@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../constant.hpp"
 #include "gate.hpp"
 
 namespace qulacs {
@@ -25,21 +26,6 @@ public:
     OneQubitRotationGateBase(UINT target, double angle) : OneQubitGateBase(target), _angle(angle){};
 
     double angle() const { return _angle; }
-};
-
-class IGateImpl : public OneQubitGateBase {
-public:
-    IGateImpl(UINT target) : OneQubitGateBase(target){};
-
-    Gate copy() const override { return std::make_shared<IGateImpl>(*this); }
-    Gate get_inverse() const override { return std::make_shared<IGateImpl>(*this); }
-    std::optional<ComplexMatrix> get_matrix() const override {
-        ComplexMatrix mat(2, 2);
-        mat << 1, 0, 0, 1;
-        return mat;
-    }
-
-    void update_quantum_state(StateVector& state_vector) const override;
 };
 
 class XGateImpl : public OneQubitGateBase {
@@ -163,11 +149,11 @@ public:
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class sqrtXGateImpl : public OneQubitGateBase {
+class SqrtXGateImpl : public OneQubitGateBase {
 public:
-    sqrtXGateImpl(UINT target) : OneQubitGateBase(target){};
+    SqrtXGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    Gate copy() const override { return std::make_shared<sqrtXGateImpl>(*this); }
+    Gate copy() const override { return std::make_shared<SqrtXGateImpl>(*this); }
     Gate get_inverse() const override;
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
@@ -178,12 +164,12 @@ public:
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class sqrtXdagGateImpl : public OneQubitGateBase {
+class SqrtXdagGateImpl : public OneQubitGateBase {
 public:
-    sqrtXdagGateImpl(UINT target) : OneQubitGateBase(target){};
+    SqrtXdagGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    Gate copy() const override { return std::make_shared<sqrtXdagGateImpl>(*this); }
-    Gate get_inverse() const override { return std::make_shared<sqrtXGateImpl>(_target); }
+    Gate copy() const override { return std::make_shared<SqrtXdagGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<SqrtXGateImpl>(_target); }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i, 0.5 - 0.5i;
@@ -193,11 +179,11 @@ public:
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class sqrtYGateImpl : public OneQubitGateBase {
+class SqrtYGateImpl : public OneQubitGateBase {
 public:
-    sqrtYGateImpl(UINT target) : OneQubitGateBase(target){};
+    SqrtYGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    Gate copy() const override { return std::make_shared<sqrtYGateImpl>(*this); }
+    Gate copy() const override { return std::make_shared<SqrtYGateImpl>(*this); }
     Gate get_inverse() const override;
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
@@ -208,12 +194,12 @@ public:
     void update_quantum_state(StateVector& state_vector) const override;
 };
 
-class sqrtYdagGateImpl : public OneQubitGateBase {
+class SqrtYdagGateImpl : public OneQubitGateBase {
 public:
-    sqrtYdagGateImpl(UINT target) : OneQubitGateBase(target){};
+    SqrtYdagGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    Gate copy() const override { return std::make_shared<sqrtYdagGateImpl>(*this); }
-    Gate get_inverse() const override { return std::make_shared<sqrtYGateImpl>(_target); }
+    Gate copy() const override { return std::make_shared<SqrtYdagGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<SqrtYGateImpl>(_target); }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 0.5 - 0.5i, 0.5 - 0.5i, -0.5 + 0.5i, 0.5 - 0.5i;
@@ -303,9 +289,60 @@ public:
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
+
+class U1GateImpl : public OneQubitGateBase {
+    double _lambda;
+
+public:
+    U1GateImpl(UINT target, double lambda) : OneQubitGateBase(target), _lambda(lambda) {}
+
+    double lambda() const { return _lambda; }
+
+    Gate copy() const override { return std::make_shared<U1GateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<U1GateImpl>(_target, -_lambda); }
+
+    void update_quantum_state(StateVector& state_vector) const override;
+};
+class U2GateImpl : public OneQubitGateBase {
+    double _phi, _lambda;
+    matrix_2_2 _matrix;
+
+public:
+    U2GateImpl(UINT target, double phi, double lambda)
+        : OneQubitGateBase(target), _phi(phi), _lambda(lambda) {}
+
+    double phi() const { return _phi; }
+    double lambda() const { return _lambda; }
+
+    Gate copy() const override { return std::make_shared<U2GateImpl>(*this); }
+    Gate get_inverse() const override {
+        return std::make_shared<U2GateImpl>(_target, -_lambda - PI(), -_phi + PI());
+    }
+
+    void update_quantum_state(StateVector& state_vector) const override;
+};
+
+class U3GateImpl : public OneQubitGateBase {
+    double _theta, _phi, _lambda;
+    matrix_2_2 _matrix;
+
+public:
+    U3GateImpl(UINT target, double theta, double phi, double lambda)
+        : OneQubitGateBase(target), _theta(theta), _phi(phi), _lambda(lambda) {}
+
+    double theta() const { return _theta; }
+    double phi() const { return _phi; }
+    double lambda() const { return _lambda; }
+
+    Gate copy() const override { return std::make_shared<U3GateImpl>(*this); }
+    Gate get_inverse() const override {
+        return std::make_shared<U3GateImpl>(_target, -_theta, -_lambda, -_phi);
+    }
+
+    void update_quantum_state(StateVector& state_vector) const override;
+};
 }  // namespace internal
 
-using IGate = internal::GatePtr<internal::IGateImpl>;
 using XGate = internal::GatePtr<internal::XGateImpl>;
 using YGate = internal::GatePtr<internal::YGateImpl>;
 using ZGate = internal::GatePtr<internal::ZGateImpl>;
@@ -314,13 +351,16 @@ using SGate = internal::GatePtr<internal::SGateImpl>;
 using SdagGate = internal::GatePtr<internal::SdagGateImpl>;
 using TGate = internal::GatePtr<internal::TGateImpl>;
 using TdagGate = internal::GatePtr<internal::TdagGateImpl>;
-using sqrtXGate = internal::GatePtr<internal::sqrtXGateImpl>;
-using sqrtXdagGate = internal::GatePtr<internal::sqrtXdagGateImpl>;
-using sqrtYGate = internal::GatePtr<internal::sqrtYGateImpl>;
-using sqrtYdagGate = internal::GatePtr<internal::sqrtYdagGateImpl>;
+using SqrtXGate = internal::GatePtr<internal::SqrtXGateImpl>;
+using SqrtXdagGate = internal::GatePtr<internal::SqrtXdagGateImpl>;
+using SqrtYGate = internal::GatePtr<internal::SqrtYGateImpl>;
+using SqrtYdagGate = internal::GatePtr<internal::SqrtYdagGateImpl>;
 using P0Gate = internal::GatePtr<internal::P0GateImpl>;
 using P1Gate = internal::GatePtr<internal::P1GateImpl>;
 using RXGate = internal::GatePtr<internal::RXGateImpl>;
 using RYGate = internal::GatePtr<internal::RYGateImpl>;
 using RZGate = internal::GatePtr<internal::RZGateImpl>;
+using U1Gate = internal::GatePtr<internal::U1GateImpl>;
+using U2Gate = internal::GatePtr<internal::U2GateImpl>;
+using U3Gate = internal::GatePtr<internal::U3GateImpl>;
 }  // namespace qulacs

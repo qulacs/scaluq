@@ -4,7 +4,7 @@
 
 #include <Eigen/Core>
 
-#include "../gate/util.hpp"
+#include "../util/util.hpp"
 #include "gate/gate_factory.hpp"
 #include "util/random.hpp"
 
@@ -65,22 +65,22 @@ TEST(CircuitTest, CircuitBasic) {
         get_expanded_eigen_matrix_with_identity(target, make_T().adjoint(), n) * state_eigen;
 
     target = random.int32() % n;
-    circuit.add_gate(sqrtX(target));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_sqrtX(), n) * state_eigen;
+    circuit.add_gate(SqrtX(target));
+    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_SqrtX(), n) * state_eigen;
 
     target = random.int32() % n;
-    circuit.add_gate(sqrtXdag(target));
+    circuit.add_gate(SqrtXdag(target));
     state_eigen =
-        get_expanded_eigen_matrix_with_identity(target, make_sqrtX().adjoint(), n) * state_eigen;
+        get_expanded_eigen_matrix_with_identity(target, make_SqrtX().adjoint(), n) * state_eigen;
 
     target = random.int32() % n;
-    circuit.add_gate(sqrtY(target));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_sqrtY(), n) * state_eigen;
+    circuit.add_gate(SqrtY(target));
+    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_SqrtY(), n) * state_eigen;
 
     target = random.int32() % n;
-    circuit.add_gate(sqrtYdag(target));
+    circuit.add_gate(SqrtYdag(target));
     state_eigen =
-        get_expanded_eigen_matrix_with_identity(target, make_sqrtY().adjoint(), n) * state_eigen;
+        get_expanded_eigen_matrix_with_identity(target, make_SqrtY().adjoint(), n) * state_eigen;
 
     target = random.int32() % n;
     circuit.add_gate(P0(target));
@@ -108,8 +108,8 @@ TEST(CircuitTest, CircuitBasic) {
     target = random.int32() % n;
     target_sub = random.int32() % (n - 1);
     if (target_sub >= target) target_sub++;
-    circuit.add_gate(CNOT(target, target_sub));
-    state_eigen = get_eigen_matrix_full_qubit_CNOT(target, target_sub, n) * state_eigen;
+    circuit.add_gate(CX(target, target_sub));
+    state_eigen = get_eigen_matrix_full_qubit_CX(target, target_sub, n) * state_eigen;
 
     target = random.int32() % n;
     target_sub = random.int32() % (n - 1);
@@ -120,8 +120,8 @@ TEST(CircuitTest, CircuitBasic) {
     target = random.int32() % n;
     target_sub = random.int32() % (n - 1);
     if (target_sub >= target) target_sub++;
-    circuit.add_gate(SWAP(target, target_sub));
-    state_eigen = get_eigen_matrix_full_qubit_SWAP(target, target_sub, n) * state_eigen;
+    circuit.add_gate(Swap(target, target_sub));
+    state_eigen = get_eigen_matrix_full_qubit_Swap(target, target_sub, n) * state_eigen;
 
     target = random.int32() % n;
     circuit.add_gate(U1(target, M_PI));
@@ -203,16 +203,16 @@ TEST(CircuitTest, CircuitRev) {
     circuit.add_gate(Tdag(target));
 
     target = random.int32() % n;
-    circuit.add_gate(sqrtX(target));
+    circuit.add_gate(SqrtX(target));
 
     target = random.int32() % n;
-    circuit.add_gate(sqrtXdag(target));
+    circuit.add_gate(SqrtXdag(target));
 
     target = random.int32() % n;
-    circuit.add_gate(sqrtY(target));
+    circuit.add_gate(SqrtY(target));
 
     target = random.int32() % n;
-    circuit.add_gate(sqrtYdag(target));
+    circuit.add_gate(SqrtYdag(target));
 
     target = random.int32() % n;
     angle = random.uniform() * 3.14159;
@@ -229,7 +229,7 @@ TEST(CircuitTest, CircuitRev) {
     target = random.int32() % n;
     target_sub = random.int32() % (n - 1);
     if (target_sub >= target) target_sub++;
-    circuit.add_gate(CNOT(target, target_sub));
+    circuit.add_gate(CX(target, target_sub));
 
     target = random.int32() % n;
     target_sub = random.int32() % (n - 1);
@@ -239,7 +239,7 @@ TEST(CircuitTest, CircuitRev) {
     target = random.int32() % n;
     target_sub = random.int32() % (n - 1);
     if (target_sub >= target) target_sub++;
-    circuit.add_gate(SWAP(target, target_sub));
+    circuit.add_gate(Swap(target, target_sub));
 
     /*
     Observable observable(n);
