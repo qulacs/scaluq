@@ -26,7 +26,7 @@ jobs:
       C_COMPILER: "/usr/lib/ccache/gcc"
       QULACS_USE_TEST: "Yes"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install gcc-11/g++-11
         run: |
@@ -79,7 +79,7 @@ jobs:
       QULACS_USE_CUDA: "Yes"
       QULACS_CUDA_ARCH: "PASCAL61"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install gcc-11/g++-11
         run: |

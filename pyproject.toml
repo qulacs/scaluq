@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "qulacs2023"
-version = "1.0.0"
+version = "0.0.0"
 description = "Quantum circuit simulator for research"
 authors = [
     { name = "Qulacs-Osaka", email = "qulacs.osaka@gmail.com" }
