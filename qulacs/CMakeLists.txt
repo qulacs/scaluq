@@ -20,5 +20,8 @@ target_sources(qulacs PRIVATE
     state/state_vector.cpp
     util/random.cpp
 )
-target_link_libraries(qulacs PRIVATE Kokkos::kokkos)
+target_link_libraries(
+    qulacs PRIVATE Kokkos::kokkos
+    Eigen3::Eigen
+)
 target_include_directories(qulacs PRIVATE ${PROJECT_SOURCE_DIR}/qulacs)

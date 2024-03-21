@@ -22,6 +22,15 @@ public:
 
     Gate copy() const override { return std::make_shared<U1GateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<U1GateImpl>(_target, -_lambda); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat = ComplexMatrix::Identity(2, 2);
+        for (UINT i = 0; i < 2; ++i) {
+            for (UINT j = 0; j < 2; ++j) {
+                mat(i, j) = this->_matrix.val[i][j];
+            }
+        }
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };

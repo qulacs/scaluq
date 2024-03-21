@@ -33,6 +33,11 @@ public:
 
     Gate copy() const override { return std::make_shared<IGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<IGateImpl>(*this); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << 1, 0, 0, 1;
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -43,6 +48,11 @@ public:
 
     Gate copy() const override { return std::make_shared<XGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<XGateImpl>(*this); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << 0, 1, 1, 0;
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -53,6 +63,11 @@ public:
 
     Gate copy() const override { return std::make_shared<YGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<YGateImpl>(*this); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << 0, -1i, 1i, 0;
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -63,6 +78,11 @@ public:
 
     Gate copy() const override { return std::make_shared<ZGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<ZGateImpl>(*this); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << 1, 0, 0, -1;
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -73,6 +93,12 @@ public:
 
     Gate copy() const override { return std::make_shared<HGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<HGateImpl>(*this); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << 1, 1, 1, -1;
+        mat /= std::sqrt(2);
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -83,6 +109,11 @@ public:
 
     Gate copy() const override { return std::make_shared<SGateImpl>(*this); }
     Gate get_inverse() const override;
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << 1, 0, 0, 1i;
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -93,6 +124,11 @@ public:
 
     Gate copy() const override { return std::make_shared<SdagGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<SGateImpl>(_target); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << 1, 0, 0, -1i;
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -103,6 +139,11 @@ public:
 
     Gate copy() const override { return std::make_shared<TGateImpl>(*this); }
     Gate get_inverse() const override;
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << 1, 0, 0, (1. + 1i) / std::sqrt(2);
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -113,6 +154,11 @@ public:
 
     Gate copy() const override { return std::make_shared<TdagGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<TGateImpl>(_target); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << 1, 0, 0, (1. - 1.i) / std::sqrt(2);
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -123,6 +169,11 @@ public:
 
     Gate copy() const override { return std::make_shared<sqrtXGateImpl>(*this); }
     Gate get_inverse() const override;
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << 0.5 + 0.5i, 0.5 - 0.5i, 0.5 - 0.5i, 0.5 + 0.5i;
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -133,6 +184,11 @@ public:
 
     Gate copy() const override { return std::make_shared<sqrtXdagGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<sqrtXGateImpl>(_target); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << 0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i, 0.5 - 0.5i;
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -143,6 +199,11 @@ public:
 
     Gate copy() const override { return std::make_shared<sqrtYGateImpl>(*this); }
     Gate get_inverse() const override;
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << 0.5 + 0.5i, -0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i;
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -153,6 +214,11 @@ public:
 
     Gate copy() const override { return std::make_shared<sqrtYdagGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<sqrtYGateImpl>(_target); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << 0.5 - 0.5i, 0.5 - 0.5i, -0.5 + 0.5i, 0.5 - 0.5i;
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -164,6 +230,11 @@ public:
     Gate copy() const override { return std::make_shared<P0GateImpl>(*this); }
     Gate get_inverse() const override {
         throw std::runtime_error("P0::get_inverse: Projection gate doesn't have inverse gate");
+    }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << 1, 0, 0, 0;
+        return mat;
     }
 
     void update_quantum_state(StateVector& state_vector) const override;
@@ -177,6 +248,11 @@ public:
     Gate get_inverse() const override {
         throw std::runtime_error("P1::get_inverse: Projection gate doesn't have inverse gate");
     }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << 0, 0, 0, 1;
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -187,6 +263,12 @@ public:
 
     Gate copy() const override { return std::make_shared<RXGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<RXGateImpl>(_target, -_angle); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << std::cos(_angle / 2), -1i * std::sin(_angle / 2), -1i * std::sin(_angle / 2),
+            std::cos(_angle / 2);
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -197,6 +279,12 @@ public:
 
     Gate copy() const override { return std::make_shared<RYGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<RYGateImpl>(_target, -_angle); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << std::cos(_angle / 2), -std::sin(_angle / 2), std::sin(_angle / 2),
+            std::cos(_angle / 2);
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -207,6 +295,11 @@ public:
 
     Gate copy() const override { return std::make_shared<RZGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<RZGateImpl>(_target, -_angle); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << std::exp(-0.5i * _angle), 0, 0, std::exp(0.5i * _angle);
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };

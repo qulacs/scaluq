@@ -26,6 +26,11 @@ public:
 
     Gate copy() const override { return std::make_shared<CNOTGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<CNOTGateImpl>(*this); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(4, 4);
+        mat << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0;
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -36,6 +41,11 @@ public:
 
     Gate copy() const override { return std::make_shared<CZGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<CZGateImpl>(*this); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(4, 4);
+        mat << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1;
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
