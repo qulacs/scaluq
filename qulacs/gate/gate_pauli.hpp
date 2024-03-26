@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "../operator/pauli_operator.hpp"
-#include "../util/utility.hpp"
 #include "gate.hpp"
 
 namespace qulacs {
@@ -22,7 +21,7 @@ public:
 
     Gate copy() const override { return std::make_shared<PauliGateImpl>(_pauli); }
     Gate get_inverse() const override;
-    std::optional<ComplexMatrix> get_matrix() const override { return get_pauli_matrix(_pauli); }
+    std::optional<ComplexMatrix> get_matrix() const override;
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -43,13 +42,7 @@ public:
 
     Gate copy() const override { return std::make_shared<PauliRotationGateImpl>(_pauli, _angle); }
     Gate get_inverse() const override;
-    std::optional<ComplexMatrix> get_matrix() const override {
-        ComplexMatrix mat = get_pauli_matrix(_pauli).value();
-        std::complex<double> imag_unit(0, 1);
-        mat = cos(_angle / 2) * ComplexMatrix::Identity(mat.rows(), mat.cols()) +
-              imag_unit * sin(_angle / 2) * mat;
-        return mat;
-    }
+    std::optional<ComplexMatrix> get_matrix() const override;
 
     void update_quantum_state(StateVector& state_vector) const override;
 };

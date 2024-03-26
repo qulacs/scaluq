@@ -2,6 +2,7 @@
 
 #include "../operator/pauli_operator.hpp"
 #include "../tests/util/util.hpp"
+#include "../util/utility.hpp"
 #include "update_ops.hpp"
 
 namespace qulacs {
@@ -11,6 +12,18 @@ Gate PauliGateImpl::get_inverse() const { return std::make_shared<PauliGateImpl>
 
 Gate PauliRotationGateImpl::get_inverse() const {
     return std::make_shared<PauliRotationGateImpl>(this->_pauli, -(this->_angle));
+}
+
+std::optional<ComplexMatrix> PauliGateImpl::get_matrix() const {
+    return get_pauli_matrix(this->_pauli);
+}
+
+std::optional<ComplexMatrix> PauliRotationGateImpl::get_matrix() const {
+    ComplexMatrix mat = get_pauli_matrix(this->_pauli).value();
+    std::complex<double> imag_unit(0, 1);
+    mat = cos(_angle / 2) * ComplexMatrix::Identity(mat.rows(), mat.cols()) +
+          imag_unit * sin(_angle / 2) * mat;
+    return mat;
 }
 
 void PauliGateImpl::update_quantum_state(StateVector& state_vector) const {
