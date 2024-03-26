@@ -1,7 +1,6 @@
 #include "gate_pauli.hpp"
 
 #include "../operator/pauli_operator.hpp"
-#include "../tests/gate/util.hpp"
 #include "../tests/util/util.hpp"
 #include "update_ops.hpp"
 
