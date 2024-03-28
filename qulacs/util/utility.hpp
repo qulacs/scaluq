@@ -62,15 +62,10 @@ KOKKOS_INLINE_FUNCTION std::optional<ComplexMatrix> get_pauli_matrix(PauliOperat
         rot90_count);
     std::vector<CPPCTYPE> rot = {1, -1.i, -1, 1.i};
     UINT matrix_dim = 1ULL << pauli_id_list.size();
-    Kokkos::parallel_for(
-        Kokkos::RangePolicy<Kokkos::OpenMP>(0, matrix_dim), KOKKOS_LAMBDA(const UINT& index) {
-            const CPPCTYPE sign = 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
-            mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
-        });
-    // for (int index = 0; index < matrix_dim; index++) {
-    //     const CPPCTYPE sign = 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
-    //     mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
-    // }
+    for (int index = 0; index < matrix_dim; index++) {
+        const CPPCTYPE sign = 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
+        mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
+    }
     return mat;
 }
 
