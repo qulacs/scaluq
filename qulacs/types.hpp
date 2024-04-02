@@ -20,9 +20,9 @@ using UINT = std::uint64_t;
 using Complex = Kokkos::complex<double>;
 using namespace std::complex_literals;
 
-using CPPCTYPE = std::complex<double>;
-using ComplexMatrix = Eigen::Matrix<CPPCTYPE, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
-using SparseComplexMatrix = Eigen::SparseMatrix<CPPCTYPE>;
+using StdComplex = std::complex<double>;
+using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex>;
 
 struct array_4 {
     Complex val[4];

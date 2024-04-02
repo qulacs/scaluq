@@ -303,6 +303,7 @@ public:
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, std::exp(1i * _lambda);
+        return mat;
     }
 
     void update_quantum_state(StateVector& state_vector) const override;

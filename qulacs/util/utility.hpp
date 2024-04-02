@@ -39,7 +39,7 @@ KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
     return ((basis_index >> uidx) << (uidx + 1)) | (basis_index & umask);
 }
 
-KOKKOS_INLINE_FUNCTION std::optional<ComplexMatrix> get_pauli_matrix(PauliOperator pauli) {
+inline std::optional<ComplexMatrix> get_pauli_matrix(PauliOperator pauli) {
     ComplexMatrix mat;
     std::vector<UINT> pauli_id_list = pauli.get_pauli_id_list();
     UINT flip_mask, phase_mask, rot90_count;
@@ -60,10 +60,10 @@ KOKKOS_INLINE_FUNCTION std::optional<ComplexMatrix> get_pauli_matrix(PauliOperat
         flip_mask,
         phase_mask,
         rot90_count);
-    std::vector<CPPCTYPE> rot = {1, -1.i, -1, 1.i};
+    std::vector<StdComplex> rot = {1, -1.i, -1, 1.i};
     UINT matrix_dim = 1ULL << pauli_id_list.size();
-    for (int index = 0; index < matrix_dim; index++) {
-        const CPPCTYPE sign = 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
+    for (UINT index = 0; index < matrix_dim; index++) {
+        const StdComplex sign = 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
         mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
     }
     return mat;
