@@ -1,7 +1,5 @@
 import os
 
-import qulacs2023
-
 project = 'scaluq'
 copyright = '2024, Fuji Lab.'
 author = 'Fuji Lab.'
