@@ -8,7 +8,7 @@ sphinx:
   configuration: tutorials/conf.py
 
 python:
-  version: 3.7
+  version: 3.12
   install:
     - requirements: ./tutorials/requirements.txt
     - method: pip
