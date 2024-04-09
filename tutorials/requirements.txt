@@ -1,0 +1,5 @@
+nanobind-stubgen
+black
+isort
+sphinx
+sphinx-autoapi
