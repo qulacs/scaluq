@@ -2,6 +2,7 @@ import os
 import subprocess
 
 subprocess.run("nanobind-stubgen qulacs2023 --out '../../typings'", shell=True, check=True)
+subprocess.run("rm -f ../../typings/__init__.pyi", shell=True, check=True)
 
 project = 'scaluq'
 copyright = '2024, Fuji Lab.'
