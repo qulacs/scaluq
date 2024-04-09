@@ -2,9 +2,9 @@ FROM nvidia/cuda:12.2.0-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-ENV PROJECT_DIR="/workspaces/qulacs"
-# Add build artifact to PYTHONPATH and python can find qulacs.
-# Egg file name might vary depending on qulacs and python version.
+ENV PROJECT_DIR="/workspaces/scaluq"
+# Add build artifact to PYTHONPATH and python can find scaluq.
+# Egg file name might vary depending on scaluq and python version.
 ENV PYTHONPATH="${PROJECT_DIR}/dist:${PYTHONPATH}"
 ENV PYTHONPATH="${PROJECT_DIR}/build:${PYTHONPATH}"
 

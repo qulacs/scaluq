@@ -6,10 +6,10 @@
 #include <types.hpp>
 #include <util/random.hpp>
 
-#include "../qulacs/all.hpp"
-#include "../qulacs/util/utility.hpp"
+#include "../scaluq/all.hpp"
+#include "../scaluq/util/utility.hpp"
 
-using namespace qulacs;
+using namespace scaluq;
 using namespace std;
 
 void run() {

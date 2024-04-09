@@ -24,7 +24,7 @@ jobs:
     env:
       CXX_COMPILER: "/usr/lib/ccache/g++"
       C_COMPILER: "/usr/lib/ccache/gcc"
-      QULACS_USE_TEST: "Yes"
+      SCALUQ_USE_TEST: "Yes"
     steps:
       - uses: actions/checkout@v4
 
@@ -49,7 +49,7 @@ jobs:
           key: "${{ github.job }}-ubuntu-22.04"
           verbose: 2
 
-      - name: Install qulacs for Ubuntu
+      - name: Install scaluq for Ubuntu
         run: CMAKE_BUILD_TYPE=Debug ./script/build_gcc.sh
 
       - name: Check format
@@ -59,7 +59,7 @@ jobs:
           echo -n "$diff"
           test $(echo -n "$diff" | wc -l) -eq 0
 
-      - name: Install qulacs Python module
+      - name: Install scaluq Python module
         run: pip install .[ci]
 
       - name: Check stubs
@@ -82,9 +82,9 @@ jobs:
     env:
       CXX_COMPILER: "/usr/lib/ccache/g++"
       C_COMPILER: "/usr/lib/ccache/gcc"
-      QULACS_USE_TEST: "Yes"
-      QULACS_USE_CUDA: "Yes"
-      QULACS_CUDA_ARCH: "PASCAL61"
+      SCALUQ_USE_TEST: "Yes"
+      SCALUQ_USE_CUDA: "Yes"
+      SCALUQ_CUDA_ARCH: "PASCAL61"
     steps:
       - uses: actions/checkout@v4
 
@@ -122,7 +122,7 @@ jobs:
           g++ --version
           cmake --version
 
-      - name: Install qulacs for Ubuntu
+      - name: Install scaluq for Ubuntu
         run: ./script/build_gcc.sh
       
       # GitHub Actions cannot run CUDA program

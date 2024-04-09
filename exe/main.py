@@ -1,4 +1,4 @@
-from qulacs2023 import *
+from scaluq import *
 
 def main():
     a = PauliOperator([0, 60, 2], [2, 3, 1])

@@ -8,7 +8,7 @@
 #include "gate/gate_factory.hpp"
 #include "util/random.hpp"
 
-using namespace qulacs;
+using namespace scaluq;
 
 const auto eps = 1e-12;
 using CComplex = std::complex<double>;
