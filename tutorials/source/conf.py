@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-subprocess.run('../../script/update_stubs.sh', shell=True, check=True)
+subprocess.run("nanobind-stubgen qulacs2023 --out './typings'", shell=True, check=True)
 
 project = 'scaluq'
 copyright = '2024, Fuji Lab.'
