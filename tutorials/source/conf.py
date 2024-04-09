@@ -1,4 +1,7 @@
 import os
+import subprocess
+
+subprocess.run('../../script/update_stubs.sh', shell=True, check=True)
 
 project = 'scaluq'
 copyright = '2024, Fuji Lab.'
@@ -8,7 +11,6 @@ release = '0.0.1'
 extensions = [
     "sphinx.ext.napoleon",
     'autoapi.extension',
-    'sphinx.ext.githubpages',
 ]
 
 autoapi_type = "python"
