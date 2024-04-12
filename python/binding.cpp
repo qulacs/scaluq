@@ -1,5 +1,6 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
+#include <nanobind/stl/array.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
@@ -64,7 +65,12 @@ NAMESPACE_END(detail)
 NAMESPACE_END(NB_NAMESPACE)
 
 NB_MODULE(scaluq_core, m) {
-    nb::class_<InitializationSettings>(m, "InitializationSettings")
+    nb::class_<InitializationSettings>(
+        m,
+        "InitializationSettings",
+        "Wrapper class of Kokkos's InitializationSettings\nSee details: "
+        "https://kokkos.org/kokkos-core-wiki/API/core/initialize_finalize/"
+        "InitializationSettings.html")
         .def(nb::init<>())
         .def("set_num_threads", &InitializationSettings::set_num_threads)
         .def("has_num_threads", &InitializationSettings::has_num_threads)
@@ -94,13 +100,25 @@ NB_MODULE(scaluq_core, m) {
         .def("has_tools_args", &InitializationSettings::has_tools_args)
         .def("get_tools_args", &InitializationSettings::get_tools_args);
 
-    m.def("initialize", &initialize, "settings"_a = InitializationSettings());
-    m.def("finalize", &finalize);
+    m.def("initialize",
+          &initialize,
+          "settings"_a = InitializationSettings(),
+          "**You must call this before any scaluq function.** Initialize the Kokkos execution "
+          "environment.");
+    m.def(
+        "finalize", &finalize, "Terminate the Kokkos execution environment. Release the resources");
+    m.def("is_initialized", &is_initialized, "Return true if initialize() is already called");
+    m.def("is_finalized", &is_initialized, "Return true if finalize() is already called");
 
-    nb::class_<StateVector>(m, "StateVector")
-        .def(nb::init<>())
-        .def(nb::init<UINT>())
-        .def(nb::init<const StateVector &>())
+    nb::class_<StateVector>(
+        m,
+        "StateVector",
+        "Vector representation of quantum state.\n[note] Qubit index is "
+        "start from 0. The amplitudes that ith qubit is b_i ∈ {0, 1} has an index of Σ(b_i 2^i).")
+        .def(nb::init<UINT>(),
+             "Construct state vector with specified qubits, initialized with computational "
+             "basis |0...0>")
+        .def(nb::init<const StateVector &>(), "Constructing state vector by copying other state")
         .def_static(
             "Haar_random_state",
             [](UINT n_qubits, std::optional<UINT> seed) {
@@ -108,32 +126,61 @@ NB_MODULE(scaluq_core, m) {
                                                       seed.value_or(std::random_device{}()));
             },
             "n_qubits"_a,
-            "seed"_a = std::nullopt)
-        .def("set_amplitude_at_index", &StateVector::set_amplitude_at_index)
-        .def("get_amplitude_at_index", &StateVector::get_amplitude_at_index)
-        .def("set_zero_state", &StateVector::set_zero_state)
-        .def("set_zero_norm_state", &StateVector::set_zero_norm_state)
-        .def("set_computational_basis", &StateVector::set_computational_basis)
-        .def("amplitudes", &StateVector::amplitudes)
-        .def("n_qubits", &StateVector::n_qubits)
-        .def("dim", &StateVector::dim)
-        .def("get_squared_norm", &StateVector::get_squared_norm)
-        .def("normalize", &StateVector::normalize)
-        .def("get_zero_probability", &StateVector::get_zero_probability)
-        .def("get_marginal_probability", &StateVector::get_marginal_probability)
-        .def("get_entropy", &StateVector::get_entropy)
-        .def("add_state_vector", &StateVector::add_state_vector)
-        .def("add_state_vector_with_coef", &StateVector::add_state_vector_with_coef)
-        .def("multiply_coef", &StateVector::multiply_coef)
+            "seed"_a = std::nullopt,
+            "Constructing state vector with Haar random state. If seed is not specified, the value "
+            "from random device is used.")
+        .def("set_amplitude_at_index",
+             &StateVector::set_amplitude_at_index,
+             "Manually set amplitude at one index.")
+        .def("get_amplitude_at_index",
+             &StateVector::get_amplitude_at_index,
+             "Get amplitude at one index.\n[note] If you want to get all amplitudes, you should "
+             "use StateVector::amplitudes()")
+        .def("set_zero_state",
+             &StateVector::set_zero_state,
+             "initialize with computational basis |00...0>")
+        .def("set_zero_norm_state",
+             &StateVector::set_zero_norm_state,
+             "initialize with 0(null vector)")
+        .def("set_computational_basis",
+             &StateVector::set_computational_basis,
+             "initialize with computational basis |basis>")
+        .def("amplitudes", &StateVector::amplitudes, "Get all amplitudes with as List[complex]")
+        .def("n_qubits", &StateVector::n_qubits, "Get num of qubits")
+        .def("dim", &StateVector::dim, "Get dimension of the vector (=2^`n_qubits`)")
+        .def("get_squared_norm",
+             &StateVector::get_squared_norm,
+             "Get squared norm of the state. <ψ|ψ>")
+        .def("normalize",
+             &StateVector::normalize,
+             "Normalize state (let <ψ|ψ> = 1 by multiplying coef)")
+        .def("get_zero_probability",
+             &StateVector::get_zero_probability,
+             "Get the probability to observe |0> at specified index")
+        .def("get_marginal_probability",
+             &StateVector::get_marginal_probability,
+             "get the marginal probability to observe as specified. Specify the result as n-length "
+             "list. `0` and `1` represent the qubit is observed and get the value. `2` represents "
+             "the qubit is not observed.")
+        .def("get_entropy", &StateVector::get_entropy, "Get the entropy of the vector")
+        .def("add_state_vector",
+             &StateVector::add_state_vector,
+             "Add other state vector and make superposition. += |`state`>")
+        .def("add_state_vector_with_coef",
+             &StateVector::add_state_vector_with_coef,
+             "add other state vector with multiplying the coef and make superposition. += "
+             "`coef`|`state`>")
+        .def("multiply_coef", &StateVector::multiply_coef, "Multiply coef.")
         .def(
             "sampling",
             [](const StateVector &state, UINT sampling_count, std::optional<UINT> seed) {
                 return state.sampling(sampling_count, seed.value_or(std::random_device{}()));
             },
             "sampling_count"_a,
-            "seed"_a = std::nullopt)
-        .def("to_string", &StateVector::to_string)
-        .def("load", &StateVector::load)
+            "seed"_a = std::nullopt,
+            "Sampling specified times. Result is list[int] with the `sampling_count` length.")
+        .def("to_string", &StateVector::to_string, "Information as str")
+        .def("load", &StateVector::load, "Load amplitudes of List[int] with `dim` length")
         .def("__str__", &StateVector::to_string);
 
     nb::enum_<GateType>(m, "GateType")

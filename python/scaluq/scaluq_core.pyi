@@ -416,7 +416,8 @@ class IGate:
 
 class InitializationSettings:
     """
-    None
+    Wrapper class of Kokkos's InitializationSettings
+    See details: https://kokkos.org/kokkos-core-wiki/API/core/initialize_finalize/InitializationSettings.html
     """
 
     def __init__(self) -> None: ...
@@ -477,12 +478,7 @@ class OneQubitMatrixGate:
     def get_control_qubit_list(self) -> list[int]: ...
     def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
     def get_target_qubit_list(self) -> list[int]: ...
-    def matrix(*args, **kwargs):
-        """
-        matrix(self) -> std::array<std::array<Kokkos::complex<double>, 2ul>, 2ul>
-        """
-        ...
-
+    def matrix(self) -> list[list[complex]]: ...
     def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
 
 class Operator:
@@ -791,29 +787,28 @@ class SqrtYdagGate:
 
 class StateVector:
     """
-    None
+    Vector representation of quantum state.
+    [note] Qubit index is start from 0. The amplitudes that ith qubit is b_i ∈ {0, 1} has an index of Σ(b_i 2^i).
     """
 
     def Haar_random_state(
         n_qubits: int, seed: Optional[int] = None
-    ) -> scaluq.scaluq_core.StateVector: ...
-    def __init__(self, arg: scaluq.scaluq_core.StateVector) -> None:
+    ) -> scaluq.scaluq_core.StateVector:
         """
-        __init__(self, arg: scaluq.scaluq_core.StateVector) -> None
+        Constructing state vector with Haar random state. If seed is not specified, the value from random device is used.
         """
         ...
 
-    @overload
-    def __init__(self) -> None:
+    def __init__(self, arg: scaluq.scaluq_core.StateVector) -> None:
         """
-        __init__(self) -> None
+        Constructing state vector by copying other state
         """
         ...
 
     @overload
     def __init__(self, arg: int, /) -> None:
         """
-        __init__(self, arg: int, /) -> None
+        Construct state vector with specified qubits, initialized with computational basis |0...0>
         """
         ...
 
@@ -821,24 +816,65 @@ class StateVector:
     def add_state_vector_with_coef(
         self, arg0: complex, arg1: scaluq.scaluq_core.StateVector, /
     ) -> None: ...
-    def amplitudes(self) -> list[complex]: ...
-    def dim(self) -> int: ...
-    def get_amplitude_at_index(self, arg: int, /) -> complex: ...
+    def amplitudes(self) -> list[complex]:
+        """
+        Get all amplitudes with as List[complex]
+        """
+        ...
+
+    def dim(self) -> int:
+        """
+        Get dimension of the vector (=2^(n_qubits))
+        """
+        ...
+
+    def get_amplitude_at_index(self, arg: int, /) -> complex:
+        """
+        Get amplitude at one index.
+        [note] If you want to get all amplitudes, you should use StateVector::amplitudes()
+        """
+        ...
+
     def get_entropy(self) -> float: ...
     def get_marginal_probability(self, arg: list[int], /) -> float: ...
     def get_squared_norm(self) -> float: ...
     def get_zero_probability(self, arg: int, /) -> float: ...
     def load(self, arg: list[complex], /) -> None: ...
     def multiply_coef(self, arg: complex, /) -> None: ...
-    def n_qubits(self) -> int: ...
+    def n_qubits(self) -> int:
+        """
+        Get num of qubits
+        """
+        ...
+
     def normalize(self) -> None: ...
     def sampling(
         self, sampling_count: int, seed: Optional[int] = None
     ) -> list[int]: ...
-    def set_amplitude_at_index(self, arg0: int, arg1: complex, /) -> None: ...
-    def set_computational_basis(self, arg: int, /) -> None: ...
-    def set_zero_norm_state(self) -> None: ...
-    def set_zero_state(self) -> None: ...
+    def set_amplitude_at_index(self, arg0: int, arg1: complex, /) -> None:
+        """
+        Manually set amplitude at one index.
+        """
+        ...
+
+    def set_computational_basis(self, arg: int, /) -> None:
+        """
+        initialize with computational basis |basis>
+        """
+        ...
+
+    def set_zero_norm_state(self) -> None:
+        """
+        initialize with 0(null vector)
+        """
+        ...
+
+    def set_zero_state(self) -> None:
+        """
+        initialize with computational basis |00...0>
+        """
+        ...
+
     def to_string(self) -> str: ...
 
 def Swap(arg0: int, arg1: int, /) -> scaluq.scaluq_core.Gate: ...
@@ -1007,5 +1043,26 @@ class ZGate:
     def target(self) -> int: ...
     def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
 
-def finalize() -> None: ...
-def initialize(settings: scaluq.scaluq_core.InitializationSettings = ...) -> None: ...
+def finalize() -> None:
+    """
+    Terminate the Kokkos execution environment. Release the resources
+    """
+    ...
+
+def initialize(settings: scaluq.scaluq_core.InitializationSettings = ...) -> None:
+    """
+    **You must call this before any scaluq function.** Initialize the Kokkos execution environment.
+    """
+    ...
+
+def is_finalized() -> bool:
+    """
+    Return true if finalize() is already called
+    """
+    ...
+
+def is_initialized() -> bool:
+    """
+    Return true if initialize() is already called
+    """
+    ...
