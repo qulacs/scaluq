@@ -12,7 +12,7 @@
 
 namespace nb = nanobind;
 using namespace nb::literals;
-using namespace qulacs;
+using namespace scaluq;
 
 NAMESPACE_BEGIN(NB_NAMESPACE)
 NAMESPACE_BEGIN(detail)
@@ -65,7 +65,7 @@ struct type_caster<Kokkos::complex<T>> {
 NAMESPACE_END(detail)
 NAMESPACE_END(NB_NAMESPACE)
 
-NB_MODULE(qulacs_core, m) {
+NB_MODULE(scaluq_core, m) {
     nb::class_<InitializationSettings>(m, "InitializationSettings")
         .def(nb::init<>())
         .def("set_num_threads", &InitializationSettings::set_num_threads)

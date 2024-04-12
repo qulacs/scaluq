@@ -11,7 +11,7 @@
 #include "../test_environment.hpp"
 #include "../util/util.hpp"
 
-using namespace qulacs;
+using namespace scaluq;
 
 const auto eps = 1e-12;
 using CComplex = std::complex<double>;

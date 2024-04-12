@@ -6,7 +6,7 @@ using namespace std::complex_literals;
 
 #include <types.hpp>
 #include <util/random.hpp>
-using namespace qulacs;
+using namespace scaluq;
 
 #define _CHECK_GT(val1, val2) _check_gt(val1, val2, #val1, #val2, __FILE__, __LINE__)
 template <typename T>

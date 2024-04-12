@@ -1,4 +1,4 @@
-from qulacs2023 import *
+from scaluq import *
 
 def main():
     state = StateVector(2)
