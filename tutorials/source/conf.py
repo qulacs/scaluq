@@ -1,7 +1,3 @@
-import subprocess
-
-subprocess.run("nanobind-stubgen qulacs2023 --out '../../typings'", shell=True, check=True)
-
 project = 'scaluq'
 copyright = '2024, Fuji Lab.'
 author = 'Fuji Lab.'
@@ -19,7 +15,7 @@ autoapi_keep_files = True
 # So, we give priority to `*.pyi`.
 # https://github.com/readthedocs/sphinx-autoapi/issues/243#issuecomment-684190179
 autoapi_file_patterns = ["*.pyi", "*.py"]
-autoapi_dirs = ["../../typings/qulacs2023"]
+autoapi_dirs = ["../../python/qulacs2023"]
 autoapi_add_toctree_entry = True
 
 autoapi_template_dir = "_templates/autoapi"
@@ -33,6 +29,8 @@ autoapi_options = [
 
 templates_path = ["_templates"]
 html_static_path = ["_static"]
+
+html_theme = "sphinx_rtd_theme"
 
 # `version` is only used for local build.
 # On Read the Docs, the latest version is `latest`` and the specific version
