@@ -1,3 +1,9 @@
+import subprocess
+
+subprocess.run("mkdir stub", shell = True, check = True)
+subprocess.run("cp ../../python/qulacs2023/qulacs_core.pyi ./stub/qulacs2023.py", shell = True, check = True)
+subprocess.run("sed -i 's/qulacs2023.qulacs_core/qulacs2023/g' ./stub/qulacs2023.py", shell = True, check=True)
+
 project = 'scaluq'
 copyright = '2024, Fuji Lab.'
 author = 'Fuji Lab.'
@@ -11,11 +17,8 @@ extensions = [
 autoapi_type = "python"
 autoapi_keep_files = True
 
-# The order of `autoapi_file_patterns`` specifies the order of preference for reading files.
-# So, we give priority to `*.pyi`.
-# https://github.com/readthedocs/sphinx-autoapi/issues/243#issuecomment-684190179
-autoapi_file_patterns = ["*.pyi", "*.py"]
-autoapi_dirs = ["../../python/qulacs2023"]
+autoapi_file_patterns = ["*.py"]
+autoapi_dirs = ["./stub"]
 autoapi_add_toctree_entry = True
 
 autoapi_template_dir = "_templates/autoapi"
