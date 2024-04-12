@@ -324,7 +324,9 @@ public:
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
-        mat << 1., 0, 0, std::exp(1i * _phi) * std::exp(1i * _lambda);
+        mat << std::cos(PI() / 2.), -std::exp(1i * _lambda) * std::sin(PI() / 2.),
+            std::exp(1i * _phi) * std::sin(PI() / 2.),
+            std::exp(1i * _phi) * std::exp(1i * _lambda) * std::cos(PI() / 2.);
         return mat;
     }
 
