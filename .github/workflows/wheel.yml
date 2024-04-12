@@ -65,4 +65,4 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
           TWINE_USERNAME: "__token__"
-          TWINE_PASSWORD: ${{ secrets.TESTPYPI_TOKEN_QULACS2023 }}
+          TWINE_PASSWORD: ${{ secrets.TESTPYPI_TOKEN_SCALUQ }}

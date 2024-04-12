@@ -28,9 +28,9 @@
 				"python.linting.flake8Enabled": true,
 				"python.formatting.provider": "black",
 				"python.terminal.activateEnvironment": false,
-				// CAVEAT: you need to restart after building qulacs to take effect.
+				// CAVEAT: you need to restart after building scaluq to take effect.
 				"C_Cpp.default.includePath": [
-					"qulacs",
+					"scaluq",
 					"/usr/local/include/kokkos",
 					"/usr/include/python3.8",
 					"build/_deps/eigen_fetch-src",
@@ -63,8 +63,8 @@
 
 	// Required by `mounts`.
 	// c.f. https://code.visualstudio.com/remote/advancedcontainers/improve-performance#_use-a-targeted-named-volume
-	"workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/qulacs,type=bind,consistency=cached",
-	"workspaceFolder": "/workspaces/qulacs",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/scaluq,type=bind,consistency=cached",
+	"workspaceFolder": "/workspaces/scaluq",
 	"mounts": [
 		"source=${localWorkspaceFolderBasename}-build,target=${containerWorkspaceFolder}/build,type=volume"
 	],

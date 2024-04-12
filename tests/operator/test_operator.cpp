@@ -5,7 +5,7 @@
 #include "../test_environment.hpp"
 #include "../util/util.hpp"
 
-using namespace qulacs;
+using namespace scaluq;
 
 const double eps = 1e-12;
 

@@ -10,7 +10,7 @@
 
 using CComplex = std::complex<double>;
 
-using namespace qulacs;
+using namespace scaluq;
 
 const double eps = 1e-12;
 

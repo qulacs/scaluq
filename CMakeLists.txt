@@ -1,36 +1,36 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(qulacs)
+project(scaluq)
 
 include(FetchContent)
 
 ### Define variables ###
-if(NOT DEFINED QULACS_USE_OMP)
-    set(QULACS_USE_OMP ON)
-endif(NOT DEFINED QULACS_USE_OMP)
-if(NOT DEFINED QULACS_USE_CUDA)
-    set(QULACS_USE_CUDA OFF)
-endif(NOT DEFINED QULACS_USE_CUDA)
-if(NOT DEFINED QULACS_USE_TEST)
-    set(QULACS_USE_TEST ON)
-endif(NOT DEFINED QULACS_USE_TEST)
-if(NOT DEFINED QULACS_USE_EXE)
-    set(QULACS_USE_EXE ON)
-endif(NOT DEFINED QULACS_USE_EXE)
+if(NOT DEFINED SCALUQ_USE_OMP)
+    set(SCALUQ_USE_OMP ON)
+endif(NOT DEFINED SCALUQ_USE_OMP)
+if(NOT DEFINED SCALUQ_USE_CUDA)
+    set(SCALUQ_USE_CUDA OFF)
+endif(NOT DEFINED SCALUQ_USE_CUDA)
+if(NOT DEFINED SCALUQ_USE_TEST)
+    set(SCALUQ_USE_TEST ON)
+endif(NOT DEFINED SCALUQ_USE_TEST)
+if(NOT DEFINED SCALUQ_USE_EXE)
+    set(SCALUQ_USE_EXE ON)
+endif(NOT DEFINED SCALUQ_USE_EXE)
 
 message(STATUS "SKBUILD = ${SKBUILD}")
-message(STATUS "QULACS_USE_TEST = ${QULACS_USE_TEST}")
+message(STATUS "SCALUQ_USE_TEST = ${SCALUQ_USE_TEST}")
 
 ### Kokkos options ###
 set(Kokkos_ENABLE_SERIAL ON CACHE BOOL "Enable Kokkos Serial backend")
-if(QULACS_USE_OMP)
+if(SCALUQ_USE_OMP)
     set(Kokkos_ENABLE_OPENMP ON CACHE BOOL "Enable Kokkos OpenMP backend")
-endif(QULACS_USE_OMP)
-if(QULACS_USE_CUDA)
+endif(SCALUQ_USE_OMP)
+if(SCALUQ_USE_CUDA)
     set(Kokkos_ENABLE_CUDA ON CACHE BOOL "Enable Kokkos CUDA backend")
-    if(DEFINED QULACS_CUDA_ARCH)
-        set(Kokkos_ARCH_${QULACS_CUDA_ARCH} ON)
-    endif(DEFINED QULACS_CUDA_ARCH)
+    if(DEFINED SCALUQ_CUDA_ARCH)
+        set(Kokkos_ARCH_${SCALUQ_CUDA_ARCH} ON)
+    endif(DEFINED SCALUQ_CUDA_ARCH)
     find_program(CUDA_NVCC_EXECUTABLE nvcc)
     if(CUDA_NVCC_EXECUTABLE)
         set(CMAKE_CUDA_COMPILER_WRAPPER ${CUDA_NVCC_EXECUTABLE})
@@ -38,7 +38,7 @@ if(QULACS_USE_CUDA)
     else()
         message(SEND_ERROR "nvcc not found")
     endif()
-endif(QULACS_USE_CUDA)
+endif(SCALUQ_USE_CUDA)
 
 ### Fetch dependencies ###
 # Kokkos
@@ -86,7 +86,7 @@ if(SKBUILD)
 endif(SKBUILD)
 
 # Google test
-if(QULACS_USE_TEST)
+if(SCALUQ_USE_TEST)
     FetchContent_Declare(
         googletest_fetch
         GIT_REPOSITORY https://github.com/google/googletest
@@ -100,18 +100,18 @@ if(QULACS_USE_TEST)
     endif()
 else()
     message(STATUS "Skip downloding googletest")
-endif(QULACS_USE_TEST)
+endif(SCALUQ_USE_TEST)
 
-add_library(qulacs)
-set_property(TARGET qulacs PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(scaluq)
+set_property(TARGET scaluq PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 ### Compiler options ###
 if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
     # Standard
-    target_compile_features(qulacs PUBLIC cxx_std_20)
+    target_compile_features(scaluq PUBLIC cxx_std_20)
     
     # Warning
-    target_compile_options(qulacs PUBLIC
+    target_compile_options(scaluq PUBLIC
         -Wall
         -Wextra
         -Wunused-parameter
@@ -123,54 +123,54 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
     )
 
     # Enable pthread
-    target_compile_options(qulacs PUBLIC -pthread)
+    target_compile_options(scaluq PUBLIC -pthread)
 
     # Enable openmp
-    if(QULACS_USE_OMP)
-        target_compile_options(qulacs PUBLIC -fopenmp)
-        target_compile_definitions(qulacs PUBLIC OPENMP)
+    if(SCALUQ_USE_OMP)
+        target_compile_options(scaluq PUBLIC -fopenmp)
+        target_compile_definitions(scaluq PUBLIC OPENMP)
     endif()
     
     # Debug options
-    target_compile_options(qulacs PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
-    target_link_options(qulacs PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
+    target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
+    target_link_options(scaluq PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
 endif()
 
 ### Add subdirectories ###
-add_subdirectory(qulacs)
+add_subdirectory(scaluq)
 if(SKBUILD)
     add_subdirectory(python)
 endif(SKBUILD)
-if(QULACS_USE_TEST)
+if(SCALUQ_USE_TEST)
     add_subdirectory(tests)
-endif(QULACS_USE_TEST)
-if(QULACS_USE_EXE)
+endif(SCALUQ_USE_TEST)
+if(SCALUQ_USE_EXE)
     add_subdirectory(exe)
-endif(QULACS_USE_EXE)
+endif(SCALUQ_USE_EXE)
 
 # python
 if(SKBUILD)
     add_custom_target(
         python
-        DEPENDS qulacs_core
+        DEPENDS scaluq_core
     )
 endif(SKBUILD)
 
 # test
-if(QULACS_USE_TEST)
+if(SCALUQ_USE_TEST)
     add_custom_target(
         test
-        DEPENDS qulacs_test
-        COMMAND qulacs_test
+        DEPENDS scaluq_test
+        COMMAND scaluq_test
     )
-endif(QULACS_USE_TEST)
+endif(SCALUQ_USE_TEST)
 
 # format
 find_program(CLANG_FORMAT "clang-format")
 if(CLANG_FORMAT)
     file(GLOB_RECURSE ALL_CXX_SOURCE_FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/qulacs/*.[ch]pp
-        ${CMAKE_CURRENT_SOURCE_DIR}/qulacs/*.[ch]
+        ${CMAKE_CURRENT_SOURCE_DIR}/scaluq/*.[ch]pp
+        ${CMAKE_CURRENT_SOURCE_DIR}/scaluq/*.[ch]
         ${CMAKE_CURRENT_SOURCE_DIR}/test/*.[ch]pp
         ${CMAKE_CURRENT_SOURCE_DIR}/test/*.[ch]
         ${CMAKE_CURRENT_SOURCE_DIR}/python/*.[ch]pp

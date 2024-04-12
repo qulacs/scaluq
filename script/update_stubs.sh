@@ -2,8 +2,8 @@
 
 set -eux
 
-nanobind-stubgen qulacs2023 --out './typings'
-cp -R typings/qulacs2023/* python/qulacs2023/
+nanobind-stubgen scaluq --out './typings'
+cp -R typings/scaluq/* python/scaluq/
 find python/ -name __init__.pyi | sed -e 's/__init__.pyi/py.typed/' | xargs touch
 
 black python/
