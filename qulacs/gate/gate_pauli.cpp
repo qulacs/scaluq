@@ -1,7 +1,7 @@
 #include "gate_pauli.hpp"
 
 #include "../operator/pauli_operator.hpp"
-#include "../tests/util/util.hpp"
+#include "../types.hpp"
 #include "../util/utility.hpp"
 #include "update_ops.hpp"
 
@@ -20,9 +20,9 @@ std::optional<ComplexMatrix> PauliGateImpl::get_matrix() const {
 
 std::optional<ComplexMatrix> PauliRotationGateImpl::get_matrix() const {
     ComplexMatrix mat = get_pauli_matrix(this->_pauli).value();
-    std::complex<double> imag_unit(0, 1);
-    mat = cos(_angle / 2) * ComplexMatrix::Identity(mat.rows(), mat.cols()) +
-          imag_unit * sin(_angle / 2) * mat;
+    StdComplex imag_unit(0, 1);
+    mat = cos(-_angle / 2) * ComplexMatrix::Identity(mat.rows(), mat.cols()) +
+          imag_unit * sin(-_angle / 2) * mat;
     return mat;
 }
 

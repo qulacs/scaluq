@@ -310,7 +310,6 @@ public:
 };
 class U2GateImpl : public OneQubitGateBase {
     double _phi, _lambda;
-    matrix_2_2 _matrix;
 
 public:
     U2GateImpl(UINT target, double phi, double lambda)
@@ -325,8 +324,7 @@ public:
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
-        mat << this->_matrix.val[0][0], this->_matrix.val[0][1], this->_matrix.val[1][0],
-            this->_matrix.val[1][1];
+        mat << 1., 0, 0, std::exp(1i * _phi) * std::exp(1i * _lambda);
         return mat;
     }
 
@@ -335,7 +333,6 @@ public:
 
 class U3GateImpl : public OneQubitGateBase {
     double _theta, _phi, _lambda;
-    matrix_2_2 _matrix;
 
 public:
     U3GateImpl(UINT target, double theta, double phi, double lambda)
@@ -351,8 +348,9 @@ public:
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
-        mat << this->_matrix.val[0][0], this->_matrix.val[0][1], this->_matrix.val[1][0],
-            this->_matrix.val[1][1];
+        mat << std::cos(_theta / 2.), -std::exp(1i * _lambda) * std::sin(_theta / 2.),
+            std::exp(1i * _phi) * std::sin(_theta / 2.),
+            std::exp(1i * _phi) * std::exp(1i * _lambda) * std::cos(_theta / 2.);
         return mat;
     }
 

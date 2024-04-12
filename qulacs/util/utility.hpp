@@ -6,7 +6,7 @@
 #include <iostream>
 #include <vector>
 
-#include "../all.hpp"
+#include "../operator/pauli_operator.hpp"
 #include "../types.hpp"
 
 namespace qulacs {
