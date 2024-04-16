@@ -12,6 +12,7 @@
 namespace nb = nanobind;
 using namespace nb::literals;
 using namespace scaluq;
+using namespace std::string_literals;
 
 NAMESPACE_BEGIN(NB_NAMESPACE)
 NAMESPACE_BEGIN(detail)
@@ -68,7 +69,7 @@ NB_MODULE(scaluq_core, m) {
     nb::class_<InitializationSettings>(
         m,
         "InitializationSettings",
-        "Wrapper class of Kokkos's InitializationSettings\nSee details: "
+        "Wrapper class of Kokkos's InitializationSettings.\nSee details: "
         "https://kokkos.org/kokkos-core-wiki/API/core/initialize_finalize/"
         "InitializationSettings.html")
         .def(nb::init<>())
@@ -107,8 +108,8 @@ NB_MODULE(scaluq_core, m) {
           "environment.");
     m.def(
         "finalize", &finalize, "Terminate the Kokkos execution environment. Release the resources");
-    m.def("is_initialized", &is_initialized, "Return true if initialize() is already called");
-    m.def("is_finalized", &is_initialized, "Return true if finalize() is already called");
+    m.def("is_initialized", &is_initialized, "Return true if initialize() is already called".);
+    m.def("is_finalized", &is_initialized, "Return true if finalize() is already called.");
 
     nb::class_<StateVector>(
         m,
@@ -117,8 +118,8 @@ NB_MODULE(scaluq_core, m) {
         "start from 0. The amplitudes that ith qubit is b_i ∈ {0, 1} has an index of Σ(b_i 2^i).")
         .def(nb::init<UINT>(),
              "Construct state vector with specified qubits, initialized with computational "
-             "basis |0...0>")
-        .def(nb::init<const StateVector &>(), "Constructing state vector by copying other state")
+             "basis |0...0>.")
+        .def(nb::init<const StateVector &>(), "Constructing state vector by copying other state.")
         .def_static(
             "Haar_random_state",
             [](UINT n_qubits, std::optional<UINT> seed) {
@@ -135,41 +136,41 @@ NB_MODULE(scaluq_core, m) {
         .def("get_amplitude_at_index",
              &StateVector::get_amplitude_at_index,
              "Get amplitude at one index.\n[note] If you want to get all amplitudes, you should "
-             "use StateVector::amplitudes()")
+             "use StateVector::amplitudes().")
         .def("set_zero_state",
              &StateVector::set_zero_state,
-             "initialize with computational basis |00...0>")
+             "Initialize with computational basis |00...0>.")
         .def("set_zero_norm_state",
              &StateVector::set_zero_norm_state,
-             "initialize with 0(null vector)")
+             "Initialize with 0 (null vector).")
         .def("set_computational_basis",
              &StateVector::set_computational_basis,
-             "initialize with computational basis |basis>")
-        .def("amplitudes", &StateVector::amplitudes, "Get all amplitudes with as List[complex]")
-        .def("n_qubits", &StateVector::n_qubits, "Get num of qubits")
-        .def("dim", &StateVector::dim, "Get dimension of the vector (=2^`n_qubits`)")
+             "Initialize with computational basis |basis>.")
+        .def("amplitudes", &StateVector::amplitudes, "Get all amplitudes with as List[complex].")
+        .def("n_qubits", &StateVector::n_qubits, "Get num of qubits.")
+        .def("dim", &StateVector::dim, "Get dimension of the vector (=2^`n_qubits`).")
         .def("get_squared_norm",
              &StateVector::get_squared_norm,
-             "Get squared norm of the state. <ψ|ψ>")
+             "Get squared norm of the state. <ψ|ψ>.")
         .def("normalize",
              &StateVector::normalize,
-             "Normalize state (let <ψ|ψ> = 1 by multiplying coef)")
+             "Normalize state (let <ψ|ψ> = 1 by multiplying coef).")
         .def("get_zero_probability",
              &StateVector::get_zero_probability,
-             "Get the probability to observe |0> at specified index")
+             "Get the probability to observe |0> at specified index.")
         .def("get_marginal_probability",
              &StateVector::get_marginal_probability,
-             "get the marginal probability to observe as specified. Specify the result as n-length "
+             "Get the marginal probability to observe as specified. Specify the result as n-length "
              "list. `0` and `1` represent the qubit is observed and get the value. `2` represents "
              "the qubit is not observed.")
-        .def("get_entropy", &StateVector::get_entropy, "Get the entropy of the vector")
+        .def("get_entropy", &StateVector::get_entropy, "Get the entropy of the vector.")
         .def("add_state_vector",
              &StateVector::add_state_vector,
-             "Add other state vector and make superposition. += |`state`>")
+             "Add other state vector and make superposition. += |`state`>.")
         .def("add_state_vector_with_coef",
              &StateVector::add_state_vector_with_coef,
              "add other state vector with multiplying the coef and make superposition. += "
-             "`coef`|`state`>")
+             "`coef`|`state`>".)
         .def("multiply_coef", &StateVector::multiply_coef, "Multiply coef.")
         .def(
             "sampling",
@@ -179,11 +180,11 @@ NB_MODULE(scaluq_core, m) {
             "sampling_count"_a,
             "seed"_a = std::nullopt,
             "Sampling specified times. Result is list[int] with the `sampling_count` length.")
-        .def("to_string", &StateVector::to_string, "Information as str")
-        .def("load", &StateVector::load, "Load amplitudes of List[int] with `dim` length")
-        .def("__str__", &StateVector::to_string);
+        .def("to_string", &StateVector::to_string, "Information as str.")
+        .def("load", &StateVector::load, "Load amplitudes of List[int] with `dim` length.")
+        .def("__str__", &StateVector::to_string, "Information as str.");
 
-    nb::enum_<GateType>(m, "GateType")
+    nb::enum_<GateType>(m, "GateType", "enum of Gate Type")
         .value("I", GateType::I)
         .value("GlobalPhase", GateType::GlobalPhase)
         .value("X", GateType::X)
@@ -215,123 +216,203 @@ NB_MODULE(scaluq_core, m) {
         .value("Pauli", GateType::Pauli)
         .value("PauliRotation", GateType::PauliRotation);
 
-#define DEF_GATE(GATE_TYPE)                                                                 \
-    nb::class_<GATE_TYPE>(m, #GATE_TYPE)                                                    \
-        .def(nb::init<Gate>())                                                              \
-        .def("gate_type", &GATE_TYPE::gate_type)                                            \
-        .def("get_target_qubit_list",                                                       \
-             [](const GATE_TYPE &gate) { return gate->get_target_qubit_list(); })           \
-        .def("get_control_qubit_list",                                                      \
-             [](const GATE_TYPE &gate) { return gate->get_control_qubit_list(); })          \
-        .def("copy", [](const GATE_TYPE &gate) { return gate->copy(); })                    \
-        .def("get_inverse", [](const GATE_TYPE &gate) { return gate->get_inverse(); })      \
-        .def("update_quantum_state", [](const GATE_TYPE &gate, StateVector &state_vector) { \
-            gate->update_quantum_state(state_vector);                                       \
-        })
+#define DEF_GATE_BASE(GATE_TYPE, DESCRIPTION)                                                      \
+    nb::class_<GATE_TYPE>(m, #GATE_TYPE, DESCRIPTION)                                              \
+        .def("gate_type", &GATE_TYPE::gate_type, "Get gate_type as GateType enum.")                \
+        .def(                                                                                      \
+            "get_target_qubit_list",                                                               \
+            [](const GATE_TYPE &gate) { return gate->get_target_qubit_list(); },                   \
+            "Get target qubits as List[int] (control qubits is not included).")                    \
+        .def(                                                                                      \
+            "get_control_qubit_list",                                                              \
+            [](const GATE_TYPE &gate) { return gate->get_control_qubit_list(); },                  \
+            "Get control qubits as List[int].")                                                    \
+        .def(                                                                                      \
+            "copy", [](const GATE_TYPE &gate) { return gate->copy(); }, "Copy gate as Gate type.") \
+        .def(                                                                                      \
+            "get_inverse",                                                                         \
+            [](const GATE_TYPE &gate) { return gate->get_inverse(); },                             \
+            "Generate inverse gate as Gate type. If not exists, return None.")                     \
+        .def(                                                                                      \
+            "update_quantum_state",                                                                \
+            [](const GATE_TYPE &gate, StateVector &state_vector) {                                 \
+                gate->update_quantum_state(state_vector);                                          \
+            },                                                                                     \
+            "Apply gate to the StateVector. StateVector in args is directly updated.")
 
-    DEF_GATE(Gate)
-        .def(nb::init<IGate>())
-        .def(nb::init<GlobalPhaseGate>())
-        .def(nb::init<XGate>())
-        .def(nb::init<YGate>())
-        .def(nb::init<ZGate>())
-        .def(nb::init<HGate>())
-        .def(nb::init<SGate>())
-        .def(nb::init<SdagGate>())
-        .def(nb::init<TGate>())
-        .def(nb::init<TdagGate>())
-        .def(nb::init<SqrtXGate>())
-        .def(nb::init<SqrtXdagGate>())
-        .def(nb::init<SqrtYGate>())
-        .def(nb::init<SqrtYdagGate>())
-        .def(nb::init<P0Gate>())
-        .def(nb::init<P1Gate>())
-        .def(nb::init<RXGate>())
-        .def(nb::init<RYGate>())
-        .def(nb::init<RZGate>())
-        .def(nb::init<U1Gate>())
-        .def(nb::init<U2Gate>())
-        .def(nb::init<U3Gate>())
-        .def(nb::init<OneQubitMatrixGate>())
-        .def(nb::init<CXGate>())
-        .def(nb::init<CZGate>())
-        .def(nb::init<SwapGate>())
-        .def(nb::init<TwoQubitMatrixGate>())
-        .def(nb::init<FusedSwapGate>())
-        .def(nb::init<PauliGate>())
-        .def(nb::init<PauliRotationGate>());
+#define DEF_GATE(GATE_TYPE, DESCRIPTION)                                                       \
+    DEF_GATE_BASE(                                                                             \
+        GATE_TYPE,                                                                             \
+        (std::string)DESCRIPTION +                                                             \
+            "\n[note] Upcast is required to use gate-general functions (ex: add to Circuit).") \
+        .def(nb::init<Gate>())
 
-    DEF_GATE(IGate);
-    DEF_GATE(GlobalPhaseGate).def("phase", [](const GlobalPhaseGate &gate) {
-        return gate->phase();
-    });
+    DEF_GATE_BASE(
+        Gate,
+        "General class of QuantumGate.\n[note] Downcast to requred to use gate-specific functions.")
+        .def(nb::init<IGate>(), "Upcast from IGate.")
+        .def(nb::init<GlobalPhaseGate>(), "Upcast from GlobalPhaseGate.")
+        .def(nb::init<XGate>(), "Upcast from XGate.")
+        .def(nb::init<YGate>(), "Upcast from YGate.")
+        .def(nb::init<ZGate>(), "Upcast from ZGate.")
+        .def(nb::init<HGate>(), "Upcast from HGate.")
+        .def(nb::init<SGate>(), "Upcast from SGate.")
+        .def(nb::init<SdagGate>(), "Upcast from SdagGate.")
+        .def(nb::init<TGate>(), "Upcast from TGate.")
+        .def(nb::init<TdagGate>(), "Upcast from TdagGate.")
+        .def(nb::init<SqrtXGate>(), "Upcast from SqrtXGate.")
+        .def(nb::init<SqrtXdagGate>(), "Upcast from SqrtXdagGate.")
+        .def(nb::init<SqrtYGate>(), "Upcast from SqrtYGate.")
+        .def(nb::init<SqrtYdagGate>(), "Upcast from SqrtYdagGate.")
+        .def(nb::init<P0Gate>(), "Upcast from P0Gate.")
+        .def(nb::init<P1Gate>(), "Upcast from P1Gate.")
+        .def(nb::init<RXGate>(), "Upcast from RXGate.")
+        .def(nb::init<RYGate>(), "Upcast from RYGate.")
+        .def(nb::init<RZGate>(), "Upcast from RZGate.")
+        .def(nb::init<U1Gate>(), "Upcast from U1Gate.")
+        .def(nb::init<U2Gate>(), "Upcast from U2Gate.")
+        .def(nb::init<U3Gate>(), "Upcast from U3Gate.")
+        .def(nb::init<OneQubitMatrixGate>(), "Upcast from OneQubitMatrixGate.")
+        .def(nb::init<CXGate>(), "Upcast from CXGate.")
+        .def(nb::init<CZGate>(), "Upcast from CZGate.")
+        .def(nb::init<SwapGate>(), "Upcast from SwapGate.")
+        .def(nb::init<TwoQubitMatrixGate>(), "Upcast from TwoQubitMatrixGate.")
+        .def(nb::init<FusedSwapGate>(), "Upcast from FusedSwapGate.")
+        .def(nb::init<PauliGate>(), "Upcast from PauliGate.")
+        .def(nb::init<PauliRotationGate>()),
+        "Upcast from PauliRotationGate.";
 
-#define DEF_ONE_QUBIT_GATE(GATE_TYPE) \
-    DEF_GATE(GATE_TYPE).def("target", [](const GATE_TYPE &gate) { return gate->target(); })
+    DEF_GATE(IGate, "Specific class of Pauli-I gate.");
+    DEF_GATE(GlobalPhaseGate,
+             "Specific class of gate, which rotate global phase, represented as e^(i `phase`) I.")
+        .def(
+            "phase",
+            [](const GlobalPhaseGate &gate) { return gate->phase(); },
+            "Get `phase` property");
 
-    DEF_ONE_QUBIT_GATE(XGate);
-    DEF_ONE_QUBIT_GATE(YGate);
-    DEF_ONE_QUBIT_GATE(ZGate);
-    DEF_ONE_QUBIT_GATE(HGate);
-    DEF_ONE_QUBIT_GATE(SGate);
-    DEF_ONE_QUBIT_GATE(SdagGate);
-    DEF_ONE_QUBIT_GATE(TGate);
-    DEF_ONE_QUBIT_GATE(TdagGate);
-    DEF_ONE_QUBIT_GATE(SqrtXGate);
-    DEF_ONE_QUBIT_GATE(SqrtXdagGate);
-    DEF_ONE_QUBIT_GATE(SqrtYGate);
-    DEF_ONE_QUBIT_GATE(SqrtYdagGate);
-    DEF_ONE_QUBIT_GATE(P0Gate);
-    DEF_ONE_QUBIT_GATE(P1Gate);
+#define DEF_ONE_QUBIT_GATE(GATE_TYPE, DESCRIPTION)                             \
+    DEF_GATE(GATE_TYPE, DESCRIPTION).def("target", [](const GATE_TYPE &gate) { \
+        return gate->target();                                                 \
+    })
 
-#define DEF_ONE_QUBIT_ROTATION_GATE(GATE_TYPE) \
-    DEF_ONE_QUBIT_GATE(GATE_TYPE).def("angle", [](const GATE_TYPE &gate) { return gate->angle(); })
+    DEF_ONE_QUBIT_GATE(XGate, "Specific class of Pauli-X gate.");
+    DEF_ONE_QUBIT_GATE(YGate, "Specific class of Pauli-Y gate.");
+    DEF_ONE_QUBIT_GATE(ZGate, "Specific class of Pauli-Z gate.");
+    DEF_ONE_QUBIT_GATE(HGate, "Specific class of Hadamard gate.");
+    DEF_ONE_QUBIT_GATE(SGate, "Specific class of S gate, represented as [[1, 0], [0, i]].");
+    DEF_ONE_QUBIT_GATE(SdagGate, "Specific class of inverse of S gate.");
+    DEF_ONE_QUBIT_GATE(TGate, "Specific class of T gate, represented as [[1, 0], [0, e^(iπ/4)]].");
+    DEF_ONE_QUBIT_GATE(TdagGate, "Specific class of inverse of T gate.");
+    DEF_ONE_QUBIT_GATE(SqrtXGate,
+                       "Specific class of sqrt(X) gate, represented as [[1+i, 1-i], [1-i, 1+i]].");
+    DEF_ONE_QUBIT_GATE(SqrtXdagGate, "Specific class of inverse of sqrt(X) gate.");
+    DEF_ONE_QUBIT_GATE(SqrtYGate,
+                       "Specific class of sqrt(Y) gate, represented as [[1+i, -1-i], [1+i, 1+i]].");
+    DEF_ONE_QUBIT_GATE(SqrtYdagGate, "Specific class of inverse of sqrt(Y) gate.");
+    DEF_ONE_QUBIT_GATE(
+        P0Gate, "Specific class of projection gate to |0>.\n[note] This gate is not unitary.");
+    DEF_ONE_QUBIT_GATE(
+        P1Gate, "Specific class of projection gate to |1>.\n[note] This gate is not unitary.");
 
-    DEF_ONE_QUBIT_ROTATION_GATE(RXGate);
-    DEF_ONE_QUBIT_ROTATION_GATE(RYGate);
-    DEF_ONE_QUBIT_ROTATION_GATE(RZGate);
+#define DEF_ONE_QUBIT_ROTATION_GATE(GATE_TYPE, DESCRIPTION) \
+    DEF_ONE_QUBIT_GATE(GATE_TYPE, DESCRIPTION)              \
+        .def(                                               \
+            "angle", [](const GATE_TYPE &gate) { return gate->angle(); }, "Get `angle` property.")
 
-    DEF_GATE(U1Gate).def("lambda_", [](const U1Gate &gate) { return gate->lambda(); });
-    DEF_GATE(U2Gate)
-        .def("phi", [](const U2Gate &gate) { return gate->phi(); })
-        .def("lambda_", [](const U2Gate &gate) { return gate->lambda(); });
-    DEF_GATE(U3Gate)
-        .def("theta", [](const U3Gate &gate) { return gate->theta(); })
-        .def("phi", [](const U3Gate &gate) { return gate->phi(); })
-        .def("lambda_", [](const U3Gate &gate) { return gate->lambda(); });
+    DEF_ONE_QUBIT_ROTATION_GATE(
+        RXGate, "Specific class of X rotation gate, represented as e^(-i(`angle`/2)X).");
+    DEF_ONE_QUBIT_ROTATION_GATE(
+        RYGate, "Specific class of Y rotation gate, represented as e^(-i(`angle`/2)Y).");
+    DEF_ONE_QUBIT_ROTATION_GATE(
+        RZGate, "Specific class of Z rotation gate, represented as e^(-i(`angle`/2)Z).");
 
-    DEF_GATE(OneQubitMatrixGate).def("matrix", [](const OneQubitMatrixGate &gate) {
-        return gate->matrix();
-    });
+    DEF_GATE(U1Gate,
+             "Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, represented as "
+             "[[1, 0], [0, e^(i`lambda`)]].")
+        .def(
+            "lambda_", [](const U1Gate &gate) { return gate->lambda(); }, "Get `lambda` property.");
+    DEF_GATE(U2Gate,
+             "Specific class of IBMQ's U2 Gate, which is a rotation about X+Z-axis, represented as "
+             "(1/sqrt(2)) [[1, -e^(-i`lambda`)], [e^(i`phi`), e^(i(`phi`+`lambda`))]].")
+        .def(
+            "phi", [](const U2Gate &gate) { return gate->phi(); }, "Get `phi` property.")
+        .def(
+            "lambda_", [](const U2Gate &gate) { return gate->lambda(); }, "Get `lambda` property.");
+    DEF_GATE(U3Gate,
+             "Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, represented as "
+             "[[cos(`theta`/2), -e^(i`lambda`)sin(`theta`/2)], [e^(i`phi`)sin(`theta`/2)], "
+             "e^(i(`phi`+`lambda`))cos(`theta`/2)].")
+        .def(
+            "theta", [](const U3Gate &gate) { return gate->theta(); }, "Get `theta` property.")
+        .def(
+            "phi", [](const U3Gate &gate) { return gate->phi(); }, "Get `phi` property.")
+        .def(
+            "lambda_", [](const U3Gate &gate) { return gate->lambda(); }, "Get `lambda` property.");
 
-#define DEF_ONE_CONTROL_ONE_TARGET_GATE(GATE_TYPE)                             \
-    DEF_GATE(GATE_TYPE)                                                        \
-        .def("control", [](const GATE_TYPE &gate) { return gate->control(); }) \
-        .def("target", [](const GATE_TYPE &gate) { return gate->target(); })
+    DEF_GATE(OneQubitMatrixGate, "Specific class of single-qubit dense matrix gate.")
+        .def("matrix", [](const OneQubitMatrixGate &gate) { return gate->matrix(); });
 
-    DEF_ONE_CONTROL_ONE_TARGET_GATE(CXGate);
-    DEF_ONE_CONTROL_ONE_TARGET_GATE(CZGate);
+#define DEF_ONE_CONTROL_ONE_TARGET_GATE(GATE_TYPE, DESCRIPTION)    \
+    DEF_GATE(GATE_TYPE, DESCRIPTION)                               \
+        .def(                                                      \
+            "control",                                             \
+            [](const GATE_TYPE &gate) { return gate->control(); }, \
+            "Get property `control`.")                             \
+        .def(                                                      \
+            "target",                                              \
+            [](const GATE_TYPE &gate) { return gate->target(); },  \
+            "Get property `target`.")
 
-#define DEF_TWO_QUBIT_GATE(GATE_TYPE)                                          \
-    DEF_GATE(GATE_TYPE)                                                        \
-        .def("target1", [](const GATE_TYPE &gate) { return gate->target1(); }) \
-        .def("target2", [](const GATE_TYPE &gate) { return gate->target2(); })
+    DEF_ONE_CONTROL_ONE_TARGET_GATE(CXGate,
+                                    "Specific class of single-qubit-controlled Pauli-X gate.");
+    DEF_ONE_CONTROL_ONE_TARGET_GATE(CZGate,
+                                    "Specific class of single-qubit-controlled Pauli-Z gate.");
 
-    DEF_TWO_QUBIT_GATE(SwapGate);
+#define DEF_TWO_QUBIT_GATE(GATE_TYPE, DESCRIPTION)                 \
+    DEF_GATE(GATE_TYPE, DESCRIPTION)                               \
+        .def(                                                      \
+            "target1",                                             \
+            [](const GATE_TYPE &gate) { return gate->target1(); }, \
+            "Get property `target1`.")                             \
+        .def(                                                      \
+            "target2",                                             \
+            [](const GATE_TYPE &gate) { return gate->target2(); }, \
+            "Get property `target2`.")
 
-    DEF_TWO_QUBIT_GATE(TwoQubitMatrixGate).def("matrix", [](const TwoQubitMatrixGate &gate) {
-        gate->matrix();
-    });
+    DEF_TWO_QUBIT_GATE(SwapGate, "Specific class of two-qubit swap gate.");
 
-    DEF_GATE(FusedSwapGate)
-        .def("qubit_index1", [](const FusedSwapGate &gate) { return gate->qubit_index1(); })
-        .def("qubit_index2", [](const FusedSwapGate &gate) { return gate->qubit_index2(); })
-        .def("block_size", [](const FusedSwapGate &gate) { return gate->block_size(); });
+    DEF_TWO_QUBIT_GATE(TwoQubitMatrixGate, "Specific class of double-qubit dense matrix gate.")
+        .def(
+            "matrix",
+            [](const TwoQubitMatrixGate &gate) { gate->matrix(); },
+            "Get property `matrix`.");
 
-    DEF_GATE(PauliGate);
-    DEF_GATE(PauliRotationGate);
+    DEF_GATE(FusedSwapGate,
+             "Specific class of fused swap gate, which swap qubits in "
+             "[`qubit_index1`..`qubit_index1+block_size`) and qubits in "
+             "[`qubit_index2`..`qubit_index2`+block_size`).")
+        .def(
+            "qubit_index1",
+            [](const FusedSwapGate &gate) { return gate->qubit_index1(); },
+            "Get property `qubit_index1`.")
+        .def(
+            "qubit_index2",
+            [](const FusedSwapGate &gate) { return gate->qubit_index2(); },
+            "Get property `qubit_index2`.")
+        .def(
+            "block_size",
+            [](const FusedSwapGate &gate) { return gate->block_size(); },
+            "Get property `block_size`.");
 
-#define DEF_GATE_FACTORY(GATE_NAME) m.def(#GATE_NAME, &GATE_NAME)
+    DEF_GATE(PauliGate,
+             "Specific class of multi-qubit pauli gate, which applies single-qubit Pauli gate to "
+             "each of qubit");
+    DEF_GATE(
+        PauliRotationGate,
+        "Specific class of multi-qubit pauli-rotation gate, represented as e^(-i(`angle`/2)P).");
+
+#define DEF_GATE_FACTORY(GATE_NAME) \
+    m.def(#GATE_NAME, &GATE_NAME, "Generate general Gate class instance of "s + #GATE_NAME)
 
     DEF_GATE_FACTORY(I);
     DEF_GATE_FACTORY(GlobalPhase);
@@ -356,7 +437,8 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(U2);
     DEF_GATE_FACTORY(U3);
     DEF_GATE_FACTORY(CX);
-    m.def("CNot", &CX);
+    m.def(
+        "CNot", &CX, "Generate general Gate class instance of CX.\n[note] CNot is an alias of CX.");
     DEF_GATE_FACTORY(CZ);
     DEF_GATE_FACTORY(Swap);
     DEF_GATE_FACTORY(FusedSwap);
