@@ -36,6 +36,12 @@ public:
                                                   Kokkos::conj(_matrix.val[0][1]),
                                                   Kokkos::conj(_matrix.val[1][1])});
     }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(2, 2);
+        mat << this->_matrix.val[0][0], this->_matrix.val[0][1], this->_matrix.val[1][0],
+            this->_matrix.val[1][1];
+        return mat;
+    }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -74,6 +80,16 @@ public:
             }
         }
         return std::make_shared<TwoQubitMatrixGateImpl>(_target1, _target2, matrix_dag);
+    }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(4, 4);
+        mat << this->_matrix.val[0][0], this->_matrix.val[0][1], this->_matrix.val[0][2],
+            this->_matrix.val[0][3], this->_matrix.val[1][0], this->_matrix.val[1][1],
+            this->_matrix.val[1][2], this->_matrix.val[1][3], this->_matrix.val[2][0],
+            this->_matrix.val[2][1], this->_matrix.val[2][2], this->_matrix.val[2][3],
+            this->_matrix.val[3][0], this->_matrix.val[3][1], this->_matrix.val[3][2],
+            this->_matrix.val[3][3];
+        return mat;
     }
 
     void update_quantum_state(StateVector& state_vector) const override;

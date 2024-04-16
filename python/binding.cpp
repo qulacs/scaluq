@@ -1,5 +1,7 @@
+#include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
+#include <nanobind/stl/complex.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
@@ -168,19 +170,21 @@ NB_MODULE(scaluq_core, m) {
         .value("Pauli", GateType::Pauli)
         .value("PauliRotation", GateType::PauliRotation);
 
-#define DEF_GATE(GATE_TYPE)                                                                 \
-    nb::class_<GATE_TYPE>(m, #GATE_TYPE)                                                    \
-        .def(nb::init<Gate>())                                                              \
-        .def("gate_type", &GATE_TYPE::gate_type)                                            \
-        .def("get_target_qubit_list",                                                       \
-             [](const GATE_TYPE &gate) { return gate->get_target_qubit_list(); })           \
-        .def("get_control_qubit_list",                                                      \
-             [](const GATE_TYPE &gate) { return gate->get_control_qubit_list(); })          \
-        .def("copy", [](const GATE_TYPE &gate) { return gate->copy(); })                    \
-        .def("get_inverse", [](const GATE_TYPE &gate) { return gate->get_inverse(); })      \
-        .def("update_quantum_state", [](const GATE_TYPE &gate, StateVector &state_vector) { \
-            gate->update_quantum_state(state_vector);                                       \
-        })
+#define DEF_GATE(GATE_TYPE)                                                            \
+    nb::class_<GATE_TYPE>(m, #GATE_TYPE)                                               \
+        .def(nb::init<Gate>())                                                         \
+        .def("gate_type", &GATE_TYPE::gate_type)                                       \
+        .def("get_target_qubit_list",                                                  \
+             [](const GATE_TYPE &gate) { return gate->get_target_qubit_list(); })      \
+        .def("get_control_qubit_list",                                                 \
+             [](const GATE_TYPE &gate) { return gate->get_control_qubit_list(); })     \
+        .def("copy", [](const GATE_TYPE &gate) { return gate->copy(); })               \
+        .def("get_inverse", [](const GATE_TYPE &gate) { return gate->get_inverse(); }) \
+        .def("update_quantum_state",                                                   \
+             [](const GATE_TYPE &gate, StateVector &state_vector) {                    \
+                 gate->update_quantum_state(state_vector);                             \
+             })                                                                        \
+        .def("get_matrix", [](const GATE_TYPE &gate) { return gate->get_matrix(); })
 
     DEF_GATE(Gate)
         .def(nb::init<IGate>())

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <Eigen/Sparse>
 #include <Kokkos_Core.hpp>
 #include <complex>
 #include <cstdint>
@@ -17,6 +19,10 @@ using UINT = std::uint64_t;
 
 using Complex = Kokkos::complex<double>;
 using namespace std::complex_literals;
+
+using StdComplex = std::complex<double>;
+using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex>;
 
 struct array_4 {
     Complex val[4];

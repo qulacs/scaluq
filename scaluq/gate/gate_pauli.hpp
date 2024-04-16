@@ -21,6 +21,7 @@ public:
 
     Gate copy() const override { return std::make_shared<PauliGateImpl>(_pauli); }
     Gate get_inverse() const override;
+    std::optional<ComplexMatrix> get_matrix() const override;
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
@@ -41,6 +42,7 @@ public:
 
     Gate copy() const override { return std::make_shared<PauliRotationGateImpl>(_pauli, _angle); }
     Gate get_inverse() const override;
+    std::optional<ComplexMatrix> get_matrix() const override;
 
     void update_quantum_state(StateVector& state_vector) const override;
 };

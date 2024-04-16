@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 
+#include "../operator/pauli_operator.hpp"
 #include "../types.hpp"
 
 namespace scaluq {
@@ -36,6 +37,36 @@ KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
     UINT umask = (1ULL << uidx) - 1;
     basis_index = ((basis_index >> lidx) << (lidx + 1)) | (basis_index & lmask);
     return ((basis_index >> uidx) << (uidx + 1)) | (basis_index & umask);
+}
+
+inline std::optional<ComplexMatrix> get_pauli_matrix(PauliOperator pauli) {
+    ComplexMatrix mat;
+    std::vector<UINT> pauli_id_list = pauli.get_pauli_id_list();
+    UINT flip_mask, phase_mask, rot90_count;
+    Kokkos::parallel_reduce(
+        pauli_id_list.size(),
+        KOKKOS_LAMBDA(const UINT& i, UINT& f_mask, UINT& p_mask, UINT& rot90_cnt) {
+            UINT pauli_id = pauli_id_list[i];
+            if (pauli_id == 1) {
+                f_mask ^= 1ULL << i;
+            } else if (pauli_id == 2) {
+                f_mask ^= 1ULL << i;
+                p_mask ^= 1ULL << i;
+                rot90_cnt++;
+            } else if (pauli_id == 3) {
+                p_mask ^= 1ULL << i;
+            }
+        },
+        flip_mask,
+        phase_mask,
+        rot90_count);
+    std::vector<StdComplex> rot = {1, -1.i, -1, 1.i};
+    UINT matrix_dim = 1ULL << pauli_id_list.size();
+    for (UINT index = 0; index < matrix_dim; index++) {
+        const StdComplex sign = 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
+        mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
+    }
+    return mat;
 }
 
 // Host std::vector を Device Kokkos::View に変換する関数

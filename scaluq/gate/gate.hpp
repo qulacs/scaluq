@@ -131,6 +131,7 @@ public:
 
     [[nodiscard]] virtual Gate copy() const = 0;
     [[nodiscard]] virtual Gate get_inverse() const = 0;
+    [[nodiscard]] virtual std::optional<ComplexMatrix> get_matrix() const = 0;
 
     virtual void update_quantum_state(StateVector& state_vector) const = 0;
 };
