@@ -1,8 +1,8 @@
 import subprocess
 
-subprocess.run("mkdir stub", shell = True, check = True)
-subprocess.run("cp ../../python/qulacs2023/qulacs_core.pyi ./stub/qulacs2023.py", shell = True, check = True)
-subprocess.run("sed -i 's/qulacs2023.qulacs_core/qulacs2023/g' ./stub/qulacs2023.py", shell = True, check=True)
+subprocess.run("mkdir -p stub", shell = True, check = True)
+subprocess.run("cp ../../python/scaluq/scaluq_core.pyi ./stub/scaluq.py", shell = True, check = True)
+subprocess.run("sed -i 's/scaluq.scaluq_core/scaluq/g' ./stub/scaluq.py", shell = True, check=True)
 
 project = 'scaluq'
 copyright = '2024, Fuji Lab.'
@@ -11,6 +11,8 @@ release = '0.0.1'
 
 extensions = [
     "sphinx.ext.napoleon",
+    'sphinx.ext.mathjax',
+    'sphinx_math_dollar',
     'autoapi.extension',
 ]
 

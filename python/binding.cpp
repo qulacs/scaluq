@@ -69,7 +69,7 @@ NB_MODULE(scaluq_core, m) {
     nb::class_<InitializationSettings>(
         m,
         "InitializationSettings",
-        "Wrapper class of Kokkos's InitializationSettings.\nSee details: "
+        "Wrapper class of Kokkos's InitializationSettings.\\nSee details: "
         "https://kokkos.org/kokkos-core-wiki/API/core/initialize_finalize/"
         "InitializationSettings.html")
         .def(nb::init<>())
@@ -106,19 +106,20 @@ NB_MODULE(scaluq_core, m) {
           "settings"_a = InitializationSettings(),
           "**You must call this before any scaluq function.** Initialize the Kokkos execution "
           "environment.");
-    m.def(
-        "finalize", &finalize, "Terminate the Kokkos execution environment. Release the resources");
-    m.def("is_initialized", &is_initialized, "Return true if initialize() is already called.");
-    m.def("is_finalized", &is_initialized, "Return true if finalize() is already called.");
+    m.def("finalize",
+          &finalize,
+          "Terminate the Kokkos execution environment. Release the resources.");
+    m.def("is_initialized", &is_initialized, "Return true if `initialize()` is already called.");
+    m.def("is_finalized", &is_initialized, "Return true if `finalize()` is already called.");
 
     nb::class_<StateVector>(m,
                             "StateVector",
-                            "Vector representation of quantum state.\n[note] Qubit index is "
-                            "start from 0. If the amplitudes of $\\ket{b_{n-1}\\dots b_0}$ is "
-                            "$b_i$, the state is $\\sum_i b_i 2^i$.")
+                            "Vector representation of quantum state.\\n.. note:: Qubit index is "
+                            "start from 0. If the amplitudes of $\\\\ket{b_{n-1}\\\\dots b_0}$ is "
+                            "$b_i$, the state is $\\\\sum_i b_i 2^i$.")
         .def(nb::init<UINT>(),
              "Construct state vector with specified qubits, initialized with computational "
-             "basis \\ket{0\\dots0}.")
+             "basis $\\ket{0\\dots0}$.")
         .def(nb::init<const StateVector &>(), "Constructing state vector by copying other state.")
         .def_static(
             "Haar_random_state",
@@ -133,31 +134,32 @@ NB_MODULE(scaluq_core, m) {
         .def("set_amplitude_at_index",
              &StateVector::set_amplitude_at_index,
              "Manually set amplitude at one index.")
-        .def("get_amplitude_at_index",
-             &StateVector::get_amplitude_at_index,
-             "Get amplitude at one index.\n[note] If you want to get all amplitudes, you should "
-             "use StateVector::amplitudes().")
+        .def(
+            "get_amplitude_at_index",
+            &StateVector::get_amplitude_at_index,
+            "Get amplitude at one index.\\n.. note:: If you want to get all amplitudes, you should "
+            "use `StateVector::amplitudes()`.")
         .def("set_zero_state",
              &StateVector::set_zero_state,
-             "Initialize with computational basis $\\ket{00\\dots0}$.")
+             "Initialize with computational basis $\\\\ket{00\\\\dots0}$.")
         .def("set_zero_norm_state",
              &StateVector::set_zero_norm_state,
              "Initialize with 0 (null vector).")
         .def("set_computational_basis",
              &StateVector::set_computational_basis,
-             "Initialize with computational basis \\ket{\\mathrm{basis}}.")
-        .def("amplitudes", &StateVector::amplitudes, "Get all amplitudes with as list[complex].")
+             "Initialize with computational basis \\\\ket{\\\\mathrm{basis}}.")
+        .def("amplitudes", &StateVector::amplitudes, "Get all amplitudes with as `list[complex]`.")
         .def("n_qubits", &StateVector::n_qubits, "Get num of qubits.")
-        .def("dim", &StateVector::dim, "Get dimension of the vector (=$2^\\mathrm{n_qubits}$).")
+        .def("dim", &StateVector::dim, "Get dimension of the vector ($=2^\\\\mathrm{n_qubits}$).")
         .def("get_squared_norm",
              &StateVector::get_squared_norm,
-             "Get squared norm of the state. $\\bra{\\psi}\\ket{\\psi}$.")
+             "Get squared norm of the state. $\\\\bra{\\\\psi}\\\\ket{\\p\\si}$.")
         .def("normalize",
              &StateVector::normalize,
-             "Normalize state (let $\\bra{\\psi}\\ket{\\psi}$ = 1 by multiplying coef).")
+             "Normalize state (let $\\\\bra{\\\\psi}\\ket{\\\\psi} = 1$ by multiplying coef).")
         .def("get_zero_probability",
              &StateVector::get_zero_probability,
-             "Get the probability to observe $\\ket{0}$ at specified index.")
+             "Get the probability to observe $\\\\ket{0}$ at specified index.")
         .def("get_marginal_probability",
              &StateVector::get_marginal_probability,
              "Get the marginal probability to observe as specified. Specify the result as n-length "
@@ -166,11 +168,13 @@ NB_MODULE(scaluq_core, m) {
         .def("get_entropy", &StateVector::get_entropy, "Get the entropy of the vector.")
         .def("add_state_vector",
              &StateVector::add_state_vector,
-             "Add other state vector and make superposition. $+=\\ket{\\mathrm{state}}$.")
+             "Add other state vector and make superposition. $\\\\mathrm{this} \\\\leftarrow "
+             "\\\\mathrm{rhis} + \\\\ket{\\\\mathrm{state}}$.")
         .def("add_state_vector_with_coef",
              &StateVector::add_state_vector_with_coef,
              "add other state vector with multiplying the coef and make superposition. "
-             "$+=\\mathrm{coef}\\ket{\\mathrm{state}}.")
+             "$\\\\mathrm{this}\\\\leftarrow\\\\mathrm{this}+\\\\mathrm{coef}\\\\ket{\\\\mathrm{"
+             "state}}.")
         .def("multiply_coef", &StateVector::multiply_coef, "Multiply coef.")
         .def(
             "sampling",
@@ -179,12 +183,12 @@ NB_MODULE(scaluq_core, m) {
             },
             "sampling_count"_a,
             "seed"_a = std::nullopt,
-            "Sampling specified times. Result is list[int] with the `sampling_count` length.")
-        .def("to_string", &StateVector::to_string, "Information as str.")
-        .def("load", &StateVector::load, "Load amplitudes of list[int] with `dim` length.")
-        .def("__str__", &StateVector::to_string, "Information as str.");
+            "Sampling specified times. Result is `list[int]` with the `sampling_count` length.")
+        .def("to_string", &StateVector::to_string, "Information as `str`.")
+        .def("load", &StateVector::load, "Load amplitudes of `list[int]` with `dim` length.")
+        .def("__str__", &StateVector::to_string, "Information as `str`.");
 
-    nb::enum_<GateType>(m, "GateType", "enum of Gate Type")
+    nb::enum_<GateType>(m, "GateType", "Enum of Gate Type.")
         .value("I", GateType::I)
         .value("GlobalPhase", GateType::GlobalPhase)
         .value("X", GateType::X)
@@ -216,75 +220,77 @@ NB_MODULE(scaluq_core, m) {
         .value("Pauli", GateType::Pauli)
         .value("PauliRotation", GateType::PauliRotation);
 
-#define DEF_GATE_BASE(GATE_TYPE, DESCRIPTION)                                                      \
-    nb::class_<GATE_TYPE>(m, #GATE_TYPE, DESCRIPTION)                                              \
-        .def("gate_type", &GATE_TYPE::gate_type, "Get gate_type as GateType enum.")                \
-        .def(                                                                                      \
-            "get_target_qubit_list",                                                               \
-            [](const GATE_TYPE &gate) { return gate->get_target_qubit_list(); },                   \
-            "Get target qubits as list[int] (control qubits is not included).")                    \
-        .def(                                                                                      \
-            "get_control_qubit_list",                                                              \
-            [](const GATE_TYPE &gate) { return gate->get_control_qubit_list(); },                  \
-            "Get control qubits as list[int].")                                                    \
-        .def(                                                                                      \
-            "copy", [](const GATE_TYPE &gate) { return gate->copy(); }, "Copy gate as Gate type.") \
-        .def(                                                                                      \
-            "get_inverse",                                                                         \
-            [](const GATE_TYPE &gate) { return gate->get_inverse(); },                             \
-            "Generate inverse gate as Gate type. If not exists, return None.")                     \
-        .def(                                                                                      \
-            "update_quantum_state",                                                                \
-            [](const GATE_TYPE &gate, StateVector &state_vector) {                                 \
-                gate->update_quantum_state(state_vector);                                          \
-            },                                                                                     \
-            "Apply gate to the StateVector. StateVector in args is directly updated.")
+#define DEF_GATE_BASE(GATE_TYPE, DESCRIPTION)                                         \
+    nb::class_<GATE_TYPE>(m, #GATE_TYPE, DESCRIPTION)                                 \
+        .def("gate_type", &GATE_TYPE::gate_type, "Get gate type as `GateType` enum.") \
+        .def(                                                                         \
+            "get_target_qubit_list",                                                  \
+            [](const GATE_TYPE &gate) { return gate->get_target_qubit_list(); },      \
+            "Get target qubits as `list[int]`. **Control qubits is not included.**")  \
+        .def(                                                                         \
+            "get_control_qubit_list",                                                 \
+            [](const GATE_TYPE &gate) { return gate->get_control_qubit_list(); },     \
+            "Get control qubits as `list[int]`.")                                     \
+        .def(                                                                         \
+            "copy",                                                                   \
+            [](const GATE_TYPE &gate) { return gate->copy(); },                       \
+            "Copy gate as `Gate` type.")                                              \
+        .def(                                                                         \
+            "get_inverse",                                                            \
+            [](const GATE_TYPE &gate) { return gate->get_inverse(); },                \
+            "Generate inverse gate as `Gate` type. If not exists, return None.")      \
+        .def(                                                                         \
+            "update_quantum_state",                                                   \
+            [](const GATE_TYPE &gate, StateVector &state_vector) {                    \
+                gate->update_quantum_state(state_vector);                             \
+            },                                                                        \
+            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")
 
-#define DEF_GATE(GATE_TYPE, DESCRIPTION)                                                   \
-    DEF_GATE_BASE(                                                                         \
-        GATE_TYPE,                                                                         \
-        DESCRIPTION                                                                        \
-        "\n[note] Upcast is required to use gate-general functions (ex: add to Circuit).") \
+#define DEF_GATE(GATE_TYPE, DESCRIPTION)                                                       \
+    DEF_GATE_BASE(                                                                             \
+        GATE_TYPE,                                                                             \
+        DESCRIPTION                                                                            \
+        "\\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
         .def(nb::init<Gate>())
 
-    DEF_GATE_BASE(
-        Gate,
-        "General class of QuantumGate.\n[note] Downcast to requred to use gate-specific functions.")
-        .def(nb::init<IGate>(), "Upcast from IGate.")
-        .def(nb::init<GlobalPhaseGate>(), "Upcast from GlobalPhaseGate.")
-        .def(nb::init<XGate>(), "Upcast from XGate.")
-        .def(nb::init<YGate>(), "Upcast from YGate.")
-        .def(nb::init<ZGate>(), "Upcast from ZGate.")
-        .def(nb::init<HGate>(), "Upcast from HGate.")
-        .def(nb::init<SGate>(), "Upcast from SGate.")
-        .def(nb::init<SdagGate>(), "Upcast from SdagGate.")
-        .def(nb::init<TGate>(), "Upcast from TGate.")
-        .def(nb::init<TdagGate>(), "Upcast from TdagGate.")
-        .def(nb::init<SqrtXGate>(), "Upcast from SqrtXGate.")
-        .def(nb::init<SqrtXdagGate>(), "Upcast from SqrtXdagGate.")
-        .def(nb::init<SqrtYGate>(), "Upcast from SqrtYGate.")
-        .def(nb::init<SqrtYdagGate>(), "Upcast from SqrtYdagGate.")
-        .def(nb::init<P0Gate>(), "Upcast from P0Gate.")
-        .def(nb::init<P1Gate>(), "Upcast from P1Gate.")
-        .def(nb::init<RXGate>(), "Upcast from RXGate.")
-        .def(nb::init<RYGate>(), "Upcast from RYGate.")
-        .def(nb::init<RZGate>(), "Upcast from RZGate.")
-        .def(nb::init<U1Gate>(), "Upcast from U1Gate.")
-        .def(nb::init<U2Gate>(), "Upcast from U2Gate.")
-        .def(nb::init<U3Gate>(), "Upcast from U3Gate.")
-        .def(nb::init<OneQubitMatrixGate>(), "Upcast from OneQubitMatrixGate.")
-        .def(nb::init<CXGate>(), "Upcast from CXGate.")
-        .def(nb::init<CZGate>(), "Upcast from CZGate.")
-        .def(nb::init<SwapGate>(), "Upcast from SwapGate.")
-        .def(nb::init<TwoQubitMatrixGate>(), "Upcast from TwoQubitMatrixGate.")
-        .def(nb::init<FusedSwapGate>(), "Upcast from FusedSwapGate.")
-        .def(nb::init<PauliGate>(), "Upcast from PauliGate.")
-        .def(nb::init<PauliRotationGate>(), "Upcast from PauliRotationGate.");
+    DEF_GATE_BASE(Gate,
+                  "General class of QuantumGate.\\n.. note:: Downcast to requred to use "
+                  "gate-specific functions.")
+        .def(nb::init<IGate>(), "Upcast from `IGate`.")
+        .def(nb::init<GlobalPhaseGate>(), "Upcast from `GlobalPhaseGate`.")
+        .def(nb::init<XGate>(), "Upcast from `XGate`.")
+        .def(nb::init<YGate>(), "Upcast from `YGate`.")
+        .def(nb::init<ZGate>(), "Upcast from `ZGate`.")
+        .def(nb::init<HGate>(), "Upcast from `HGate`.")
+        .def(nb::init<SGate>(), "Upcast from `SGate`.")
+        .def(nb::init<SdagGate>(), "Upcast from `SdagGate`.")
+        .def(nb::init<TGate>(), "Upcast from `TGate`.")
+        .def(nb::init<TdagGate>(), "Upcast from `TdagGate`.")
+        .def(nb::init<SqrtXGate>(), "Upcast from `SqrtXGate`.")
+        .def(nb::init<SqrtXdagGate>(), "Upcast from `SqrtXdagGate`.")
+        .def(nb::init<SqrtYGate>(), "Upcast from `SqrtYGate`.")
+        .def(nb::init<SqrtYdagGate>(), "Upcast from `SqrtYdagGate`.")
+        .def(nb::init<P0Gate>(), "Upcast from `P0Gate`.")
+        .def(nb::init<P1Gate>(), "Upcast from `P1Gate`.")
+        .def(nb::init<RXGate>(), "Upcast from `RXGate`.")
+        .def(nb::init<RYGate>(), "Upcast from `RYGate`.")
+        .def(nb::init<RZGate>(), "Upcast from `RZGate`.")
+        .def(nb::init<U1Gate>(), "Upcast from `U1Gate`.")
+        .def(nb::init<U2Gate>(), "Upcast from `U2Gate`.")
+        .def(nb::init<U3Gate>(), "Upcast from `U3Gate`.")
+        .def(nb::init<OneQubitMatrixGate>(), "Upcast from `OneQubitMatrixGate`.")
+        .def(nb::init<CXGate>(), "Upcast from `CXGate`.")
+        .def(nb::init<CZGate>(), "Upcast from `CZGate`.")
+        .def(nb::init<SwapGate>(), "Upcast from `SwapGate`.")
+        .def(nb::init<TwoQubitMatrixGate>(), "Upcast from `TwoQubitMatrixGate`.")
+        .def(nb::init<FusedSwapGate>(), "Upcast from `FusedSwapGate`.")
+        .def(nb::init<PauliGate>(), "Upcast from `PauliGate`.")
+        .def(nb::init<PauliRotationGate>(), "Upcast from `PauliRotationGate`.");
 
     DEF_GATE(IGate, "Specific class of Pauli-I gate.");
     DEF_GATE(GlobalPhaseGate,
              "Specific class of gate, which rotate global phase, represented as "
-             "$e^{i\\mathrm{phase}}I$.")
+             "$e^{i\\\\mathrm{phase}}I$.")
         .def(
             "phase",
             [](const GlobalPhaseGate &gate) { return gate->phase(); },
@@ -301,47 +307,53 @@ NB_MODULE(scaluq_core, m) {
     DEF_ONE_QUBIT_GATE(HGate, "Specific class of Hadamard gate.");
     DEF_ONE_QUBIT_GATE(SGate,
                        "Specific class of S gate, represented as "
-                       "$\\begin{bmatrix}1&0\\\\0&i\\end{bmatrix}$.");
+                       "$\\\\begin{bmatrix}\n1 & 0\\\\\\\\\n0 & i\n\\\\end{bmatrix}$.");
     DEF_ONE_QUBIT_GATE(SdagGate, "Specific class of inverse of S gate.");
     DEF_ONE_QUBIT_GATE(TGate,
                        "Specific class of T gate, represented as "
-                       "$\\begin{bmatrix}1&0\\\\0&e^{i\\pi/4}\\end{bmatrix}$.");
+                       "$\\\\begin{bmatrix}\n1 & 0\\\\\\\\\n0 & e^{i\\\\pi/4}\n\\\\end{bmatrix}$.");
     DEF_ONE_QUBIT_GATE(TdagGate, "Specific class of inverse of T gate.");
     DEF_ONE_QUBIT_GATE(SqrtXGate,
                        "Specific class of sqrt(X) gate, represented as "
-                       "$\\begin{bmatrix}1+i&1-i\\\\1-i&1+i\\end{bmatrix}$.");
+                       "$\\\\begin{bmatrix}\n1+i & 1-i\\\\\\\\\n1-i & 1+i\n\\\\end{bmatrix}$.");
     DEF_ONE_QUBIT_GATE(SqrtXdagGate, "Specific class of inverse of sqrt(X) gate.");
     DEF_ONE_QUBIT_GATE(SqrtYGate,
                        "Specific class of sqrt(Y) gate, represented as "
-                       "\\begin{bmatrix}1+i&-1-i\\\\1+i&1+i\\end{bmatrix}$.");
+                       "$\\\\begin{bmatrix}\n1+i & -1-i \\\\\\\\\n 1+i & 1+i\n\\\\end{bmatrix}$.");
     DEF_ONE_QUBIT_GATE(SqrtYdagGate, "Specific class of inverse of sqrt(Y) gate.");
     DEF_ONE_QUBIT_GATE(
-        P0Gate, "Specific class of projection gate to \\ket{0}.\n[note] This gate is not unitary.");
+        P0Gate,
+        "Specific class of projection gate to \\\\ket{0}.\\n.. note:: This gate is not unitary.");
     DEF_ONE_QUBIT_GATE(
-        P1Gate, "Specific class of projection gate to \\ket{1}.\n[note] This gate is not unitary.");
+        P1Gate,
+        "Specific class of projection gate to \\\\ket{1}.\\n.. note:: This gate is not unitary.");
 
 #define DEF_ONE_QUBIT_ROTATION_GATE(GATE_TYPE, DESCRIPTION) \
     DEF_ONE_QUBIT_GATE(GATE_TYPE, DESCRIPTION)              \
         .def(                                               \
             "angle", [](const GATE_TYPE &gate) { return gate->angle(); }, "Get `angle` property.")
 
-    DEF_ONE_QUBIT_ROTATION_GATE(
-        RXGate, "Specific class of X rotation gate, represented as e^(-i(`angle`/2)X).");
-    DEF_ONE_QUBIT_ROTATION_GATE(
-        RYGate, "Specific class of Y rotation gate, represented as e^(-i(`angle`/2)Y).");
-    DEF_ONE_QUBIT_ROTATION_GATE(
-        RZGate, "Specific class of Z rotation gate, represented as e^(-i(`angle`/2)Z).");
+    DEF_ONE_QUBIT_ROTATION_GATE(RXGate,
+                                "Specific class of X rotation gate, represented as "
+                                "$e^{-i\\\\frac{\\\\mathrm{angle}{2}X}$.");
+    DEF_ONE_QUBIT_ROTATION_GATE(RYGate,
+                                "Specific class of Y rotation gate, represented as "
+                                "$e^{-i\\\\frac{\\\\mathrm{angle}{2}Y}$.");
+    DEF_ONE_QUBIT_ROTATION_GATE(RZGate,
+                                "Specific class of Z rotation gate, represented as "
+                                "$e^{-i\\\\frac{\\\\mathrm{angle}{2}Z}$.");
 
     DEF_GATE(U1Gate,
              "Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, "
              "represented as "
-             "[[1, 0], [0, e^(i`lambda`)]].")
+             "\\\\begin{bmatrix}\n1 & 0\\\\\\\\\n 0 & e^{i\\\\lambda}\n\\\\end{bmatrix}.")
         .def(
             "lambda_", [](const U1Gate &gate) { return gate->lambda(); }, "Get `lambda` property.");
     DEF_GATE(U2Gate,
              "Specific class of IBMQ's U2 Gate, which is a rotation about X+Z-axis, "
              "represented as "
-             "(1/sqrt(2)) [[1, -e^(-i`lambda`)], [e^(i`phi`), e^(i(`phi`+`lambda`))]].")
+             "$\\\\frac{1}{\\\\sqrt{2}} \\\\begin{bmatrix}1 & -e^{-i\\\\lambda}\\\\\\\\\n "
+             "e^{i\\\\phi} & e^{i(\\\\phi+\\\\lambda)}\n\\\\end{bmatrix}$.")
         .def(
             "phi", [](const U2Gate &gate) { return gate->phi(); }, "Get `phi` property.")
         .def(
@@ -349,8 +361,10 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE(U3Gate,
              "Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, "
              "represented as "
-             "[[cos(`theta`/2), -e^(i`lambda`)sin(`theta`/2)], [e^(i`phi`)sin(`theta`/2)], "
-             "e^(i(`phi`+`lambda`))cos(`theta`/2)].")
+             "\\\\begin{bmatrix}\n\\\\cos \\\\frac{\\\\theta}{2} & "
+             "-e^{i\\\\lambda}\\\\sin\\\\frac{\\\\theta}{2}\\\\\\\\\n "
+             "e^{i\\\\phi}\\\\sin\\\\frac{\\\\theta}{2}\n\\\\end{bmatrix} & "
+             "e^{i(\\\\phi+\\\\lambda)}\\\\cos\\\\frac{\\\\theta}{2}\n\\\\end{bmatrix}$.")
         .def(
             "theta", [](const U3Gate &gate) { return gate->theta(); }, "Get `theta` property.")
         .def(
@@ -419,7 +433,7 @@ NB_MODULE(scaluq_core, m) {
              "each of qubit.");
     DEF_GATE(PauliRotationGate,
              "Specific class of multi-qubit pauli-rotation gate, represented as "
-             "e^(-i(`angle`/2)P).");
+             "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}P}$.");
 
 #define DEF_GATE_FACTORY(GATE_NAME) \
     m.def(#GATE_NAME, &GATE_NAME, "Generate general Gate class instance of " #GATE_NAME ".")

@@ -4,303 +4,519 @@ from typing import (Any, Callable, Iterable, Optional, Sequence, Typing, Union,
 
 import scaluq
 
-def CNot(arg0: int, arg1: int, /) -> scaluq.scaluq_core.Gate: ...
-def CX(arg0: int, arg1: int, /) -> scaluq.scaluq_core.Gate: ...
+def CNot(arg0: int, arg1: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of CX.
+    [note] CNot is an alias of CX.
+    """
+    ...
+
+def CX(arg0: int, arg1: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of CX.
+    """
+    ...
 
 class CXGate:
     """
-    None
+    Specific class of single-qubit-controlled Pauli-X gate.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def control(self) -> int: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def control(self) -> int:
+        """
+        Get property `control`.
+        """
+        ...
 
-def CZ(arg0: int, arg1: int, /) -> scaluq.scaluq_core.Gate: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
+
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target(self) -> int:
+        """
+        Get property `target`.
+        """
+        ...
+
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def CZ(arg0: int, arg1: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of CZ.
+    """
+    ...
 
 class CZGate:
     """
-    None
+    Specific class of single-qubit-controlled Pauli-Z gate.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def control(self) -> int: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def control(self) -> int:
+        """
+        Get property `control`.
+        """
+        ...
+
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
+
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target(self) -> int:
+        """
+        Get property `target`.
+        """
+        ...
+
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
 
 class Circuit:
     """
-    None
+    Quantum circuit represented as gate array
     """
 
-    def __init__(self, arg: int, /) -> None: ...
-    def add_circuit(self, arg: scaluq.scaluq_core.Circuit, /) -> None: ...
-    def add_gate(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def calculate_depth(self) -> int: ...
-    def copy(self) -> scaluq.scaluq_core.Circuit: ...
-    def gate_count(self) -> int: ...
-    def gate_list(self) -> list[scaluq.scaluq_core.Gate]: ...
-    def get(self, arg: int, /) -> scaluq.scaluq_core.Gate: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Circuit: ...
-    def n_qubits(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def __init__(self, arg: int, /) -> None:
+        """
+        Initialize empty circuit of specified qubits.
+        """
+        ...
 
-def FusedSwap(arg0: int, arg1: int, arg2: int, /) -> scaluq.scaluq_core.Gate: ...
+    def add_circuit(self, arg: scaluq.scaluq_core.Circuit, /) -> None:
+        """
+        Add all gates in specified circuit. Given gates are copied.
+        """
+        ...
+
+    def add_gate(self, arg: scaluq.scaluq_core.Gate, /) -> None:
+        """
+        Add gate. Given gate is copied.
+        """
+        ...
+
+    def calculate_depth(self) -> int:
+        """
+        Get depth of circuit.
+        """
+        ...
+
+    def copy(self) -> scaluq.scaluq_core.Circuit:
+        """
+        Copy circuit. All the gates inside is copied.
+        """
+        ...
+
+    def gate_count(self) -> int:
+        """
+        Get property of `gate_count`.
+        """
+        ...
+
+    def gate_list(self) -> list[scaluq.scaluq_core.Gate]:
+        """
+        Get property of `gate_list`.
+        """
+        ...
+
+    def get(self, arg: int, /) -> scaluq.scaluq_core.Gate:
+        """
+        Get reference of i-th gate.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Circuit:
+        """
+        Get inverse of circuit. ALl the gates are newly created.
+        """
+        ...
+
+    def n_qubits(self) -> int:
+        """
+        Get property of `n_qubits`.
+        """
+        ...
+
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to the StateVector. StateVector in args is directly updated.
+        """
+        ...
+
+def FusedSwap(arg0: int, arg1: int, arg2: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of FusedSwap.
+    """
+    ...
 
 class FusedSwapGate:
     """
-    None
+    Specific class of fused swap gate, which swap qubits in [`qubit_index1`..`qubit_index1+block_size`) and qubits in [`qubit_index2`..`qubit_index2`+block_size`).\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def block_size(self) -> int: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def qubit_index1(self) -> int: ...
-    def qubit_index2(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def block_size(self) -> int:
+        """
+        Get property `block_size`.
+        """
+        ...
+
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
+
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def qubit_index1(self) -> int:
+        """
+        Get property `qubit_index1`.
+        """
+        ...
+
+    def qubit_index2(self) -> int:
+        """
+        Get property `qubit_index2`.
+        """
+        ...
+
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
 
 class Gate:
     """
-    None
+    General class of QuantumGate.\n.. note:: Downcast to requred to use gate-specific functions.
     """
 
     def __init__(self, arg: scaluq.scaluq_core.PauliRotationGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.PauliRotationGate, /) -> None
-        """
-        ...
-
-    @overload
-    def __init__(self, arg: scaluq.scaluq_core.Gate) -> None:
-        """
-        __init__(self, arg: scaluq.scaluq_core.Gate) -> None
+        Upcast from `PauliRotationGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.IGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.IGate, /) -> None
+        Upcast from `IGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.GlobalPhaseGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.GlobalPhaseGate, /) -> None
+        Upcast from `GlobalPhaseGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.XGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.XGate, /) -> None
+        Upcast from `XGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.YGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.YGate, /) -> None
+        Upcast from `YGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.ZGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.ZGate, /) -> None
+        Upcast from `ZGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.HGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.HGate, /) -> None
+        Upcast from `HGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.SGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.SGate, /) -> None
+        Upcast from `SGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.SdagGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.SdagGate, /) -> None
+        Upcast from `SdagGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.TGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.TGate, /) -> None
+        Upcast from `TGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.TdagGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.TdagGate, /) -> None
+        Upcast from `TdagGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.SqrtXGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.SqrtXGate, /) -> None
+        Upcast from `SqrtXGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.SqrtXdagGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.SqrtXdagGate, /) -> None
+        Upcast from `SqrtXdagGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.SqrtYGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.SqrtYGate, /) -> None
+        Upcast from `SqrtYGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.SqrtYdagGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.SqrtYdagGate, /) -> None
+        Upcast from `SqrtYdagGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.P0Gate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.P0Gate, /) -> None
+        Upcast from `P0Gate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.P1Gate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.P1Gate, /) -> None
+        Upcast from `P1Gate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.RXGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.RXGate, /) -> None
+        Upcast from `RXGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.RYGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.RYGate, /) -> None
+        Upcast from `RYGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.RZGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.RZGate, /) -> None
+        Upcast from `RZGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.U1Gate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.U1Gate, /) -> None
+        Upcast from `U1Gate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.U2Gate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.U2Gate, /) -> None
+        Upcast from `U2Gate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.U3Gate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.U3Gate, /) -> None
+        Upcast from `U3Gate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.OneQubitMatrixGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.OneQubitMatrixGate, /) -> None
+        Upcast from `OneQubitMatrixGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.CXGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.CXGate, /) -> None
+        Upcast from `CXGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.CZGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.CZGate, /) -> None
+        Upcast from `CZGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.SwapGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.SwapGate, /) -> None
+        Upcast from `SwapGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.TwoQubitMatrixGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.TwoQubitMatrixGate, /) -> None
+        Upcast from `TwoQubitMatrixGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.FusedSwapGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.FusedSwapGate, /) -> None
+        Upcast from `FusedSwapGate`.
         """
         ...
 
     @overload
     def __init__(self, arg: scaluq.scaluq_core.PauliGate, /) -> None:
         """
-        __init__(self, arg: scaluq.scaluq_core.PauliGate, /) -> None
+        Upcast from `PauliGate`.
         """
         ...
 
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
+
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
 
 class GateType(Enum):
     """
@@ -367,57 +583,160 @@ class GateType(Enum):
 
     Z: Any
 
-def GlobalPhase(arg: float, /) -> scaluq.scaluq_core.Gate: ...
+def GlobalPhase(arg: float, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of GlobalPhase.
+    """
+    ...
 
 class GlobalPhaseGate:
     """
-    None
+    Specific class of gate, which rotate global phase, represented as $e^{i\\mathrm{phase}}I$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def phase(self) -> float: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def H(arg: int, /) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def phase(self) -> float:
+        """
+        Get `phase` property
+        """
+        ...
+
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def H(arg: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of H.
+    """
+    ...
 
 class HGate:
     """
-    None
+    Specific class of Hadamard gate.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def I() -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def I() -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of I.
+    """
+    ...
 
 class IGate:
     """
-    None
+    Specific class of Pauli-I gate.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
+
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
 
 class InitializationSettings:
     """
-    Wrapper class of Kokkos's InitializationSettings
-    See details: https://kokkos.org/kokkos-core-wiki/API/core/initialize_finalize/InitializationSettings.html
+    Wrapper class of Kokkos's InitializationSettings.\nSee details: https://kokkos.org/kokkos-core-wiki/API/core/initialize_finalize/InitializationSettings.html
     """
 
     def __init__(self) -> None: ...
@@ -469,17 +788,46 @@ class InitializationSettings:
 
 class OneQubitMatrixGate:
     """
-    None
+    Specific class of single-qubit dense matrix gate.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
+
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
     def matrix(self) -> list[list[complex]]: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
 
 class Operator:
     """
@@ -508,52 +856,151 @@ class Operator:
     def terms(self) -> list[scaluq.scaluq_core.PauliOperator]: ...
     def to_string(self) -> str: ...
 
-def P0(arg: int, /) -> scaluq.scaluq_core.Gate: ...
+def P0(arg: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of P0.
+    """
+    ...
 
 class P0Gate:
     """
-    None
+    Specific class of projection gate to \\ket{0}.\n.. note:: This gate is not unitary.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def P1(arg: int, /) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def P1(arg: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of P1.
+    """
+    ...
 
 class P1Gate:
     """
-    None
+    Specific class of projection gate to \\ket{1}.\n.. note:: This gate is not unitary.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def Pauli(arg: scaluq.scaluq_core.PauliOperator, /) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def Pauli(arg: scaluq.scaluq_core.PauliOperator, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of Pauli.
+    """
+    ...
 
 class PauliGate:
     """
-    None
+    Specific class of multi-qubit pauli gate, which applies single-qubit Pauli gate to each of qubit.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
+
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
 
 class PauliOperator:
     """
@@ -623,172 +1070,525 @@ class PauliOperator:
 
 def PauliRotation(
     arg0: scaluq.scaluq_core.PauliOperator, arg1: float, /
-) -> scaluq.scaluq_core.Gate: ...
+) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of PauliRotation.
+    """
+    ...
 
 class PauliRotationGate:
     """
-    None
+    Specific class of multi-qubit pauli-rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}P}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def RX(arg0: int, arg1: float, /) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def RX(arg0: int, arg1: float, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of RX.
+    """
+    ...
 
 class RXGate:
     """
-    None
+    Specific class of X rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}{2}X}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def angle(self) -> float: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def angle(self) -> float:
+        """
+        Get `angle` property.
+        """
+        ...
 
-def RY(arg0: int, arg1: float, /) -> scaluq.scaluq_core.Gate: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
+
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def RY(arg0: int, arg1: float, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of RY.
+    """
+    ...
 
 class RYGate:
     """
-    None
+    Specific class of Y rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}{2}Y}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def angle(self) -> float: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def angle(self) -> float:
+        """
+        Get `angle` property.
+        """
+        ...
 
-def RZ(arg0: int, arg1: float, /) -> scaluq.scaluq_core.Gate: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
+
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def RZ(arg0: int, arg1: float, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of RZ.
+    """
+    ...
 
 class RZGate:
     """
-    None
+    Specific class of Z rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}{2}Z}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def angle(self) -> float: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def angle(self) -> float:
+        """
+        Get `angle` property.
+        """
+        ...
 
-def S(arg: int, /) -> scaluq.scaluq_core.Gate: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
+
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def S(arg: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of S.
+    """
+    ...
 
 class SGate:
     """
-    None
+    Specific class of S gate, represented as $\\begin{bmatrix}
+    1 & 0\\\\
+    0 & i
+    \\end{bmatrix}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def Sdag(arg: int, /) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def Sdag(arg: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of Sdag.
+    """
+    ...
 
 class SdagGate:
     """
-    None
+    Specific class of inverse of S gate.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def SqrtX(arg: int, /) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def SqrtX(arg: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of SqrtX.
+    """
+    ...
 
 class SqrtXGate:
     """
-    None
+    Specific class of sqrt(X) gate, represented as $\\begin{bmatrix}
+    1+i & 1-i\\\\
+    1-i & 1+i
+    \\end{bmatrix}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def SqrtXdag(arg: int, /) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def SqrtXdag(arg: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of SqrtXdag.
+    """
+    ...
 
 class SqrtXdagGate:
     """
-    None
+    Specific class of inverse of sqrt(X) gate.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def SqrtY(arg: int, /) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def SqrtY(arg: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of SqrtY.
+    """
+    ...
 
 class SqrtYGate:
     """
-    None
+    Specific class of sqrt(Y) gate, represented as $\\begin{bmatrix}
+    1+i & -1-i \\\\
+    1+i & 1+i
+    \\end{bmatrix}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def SqrtYdag(arg: int, /) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def SqrtYdag(arg: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of SqrtYdag.
+    """
+    ...
 
 class SqrtYdagGate:
     """
-    None
+    Specific class of inverse of sqrt(Y) gate.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
+
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
     def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
 
 class StateVector:
     """
-    Vector representation of quantum state.
-    [note] Qubit index is start from 0. The amplitudes that ith qubit is b_i ∈ {0, 1} has an index of Σ(b_i 2^i).
+    Vector representation of quantum state.\n.. note:: Qubit index is start from 0. If the amplitudes of $\\ket{b_{n-1}\\dots b_0}$ is $b_i$, the state is $\\sum_i b_i 2^i$.
     """
 
     def Haar_random_state(
@@ -801,56 +1601,103 @@ class StateVector:
 
     def __init__(self, arg: scaluq.scaluq_core.StateVector) -> None:
         """
-        Constructing state vector by copying other state
+        Constructing state vector by copying other state.
         """
         ...
 
     @overload
     def __init__(self, arg: int, /) -> None:
         """
-        Construct state vector with specified qubits, initialized with computational basis |0...0>
+        Construct state vector with specified qubits, initialized with computational basis $\ket{0\dots0}$.
         """
         ...
 
-    def add_state_vector(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def add_state_vector(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Add other state vector and make superposition. $\\mathrm{this} \\leftarrow \\mathrm{rhis} + \\ket{\\mathrm{state}}$.
+        """
+        ...
+
     def add_state_vector_with_coef(
         self, arg0: complex, arg1: scaluq.scaluq_core.StateVector, /
-    ) -> None: ...
+    ) -> None:
+        """
+        add other state vector with multiplying the coef and make superposition. $\\mathrm{this}\\leftarrow\\mathrm{this}+\\mathrm{coef}\\ket{\\mathrm{state}}.
+        """
+        ...
+
     def amplitudes(self) -> list[complex]:
         """
-        Get all amplitudes with as List[complex]
+        Get all amplitudes with as `list[complex]`.
         """
         ...
 
     def dim(self) -> int:
         """
-        Get dimension of the vector (=2^(n_qubits))
+        Get dimension of the vector ($=2^\\mathrm{n_qubits}$).
         """
         ...
 
     def get_amplitude_at_index(self, arg: int, /) -> complex:
         """
-        Get amplitude at one index.
-        [note] If you want to get all amplitudes, you should use StateVector::amplitudes()
+        Get amplitude at one index.\n.. note:: If you want to get all amplitudes, you should use `StateVector::amplitudes()`.
         """
         ...
 
-    def get_entropy(self) -> float: ...
-    def get_marginal_probability(self, arg: list[int], /) -> float: ...
-    def get_squared_norm(self) -> float: ...
-    def get_zero_probability(self, arg: int, /) -> float: ...
-    def load(self, arg: list[complex], /) -> None: ...
-    def multiply_coef(self, arg: complex, /) -> None: ...
+    def get_entropy(self) -> float:
+        """
+        Get the entropy of the vector.
+        """
+        ...
+
+    def get_marginal_probability(self, arg: list[int], /) -> float:
+        """
+        Get the marginal probability to observe as specified. Specify the result as n-length list. `0` and `1` represent the qubit is observed and get the value. `2` represents the qubit is not observed.
+        """
+        ...
+
+    def get_squared_norm(self) -> float:
+        """
+        Get squared norm of the state. $\\bra{\\psi}\\ket{\p\si}$.
+        """
+        ...
+
+    def get_zero_probability(self, arg: int, /) -> float:
+        """
+        Get the probability to observe $\\ket{0}$ at specified index.
+        """
+        ...
+
+    def load(self, arg: list[complex], /) -> None:
+        """
+        Load amplitudes of `list[int]` with `dim` length.
+        """
+        ...
+
+    def multiply_coef(self, arg: complex, /) -> None:
+        """
+        Multiply coef.
+        """
+        ...
+
     def n_qubits(self) -> int:
         """
-        Get num of qubits
+        Get num of qubits.
         """
         ...
 
-    def normalize(self) -> None: ...
-    def sampling(
-        self, sampling_count: int, seed: Optional[int] = None
-    ) -> list[int]: ...
+    def normalize(self) -> None:
+        """
+        Normalize state (let $\\bra{\\psi}\ket{\\psi} = 1$ by multiplying coef).
+        """
+        ...
+
+    def sampling(self, sampling_count: int, seed: Optional[int] = None) -> list[int]:
+        """
+        Sampling specified times. Result is `list[int]` with the `sampling_count` length.
+        """
+        ...
+
     def set_amplitude_at_index(self, arg0: int, arg1: complex, /) -> None:
         """
         Manually set amplitude at one index.
@@ -859,193 +1706,588 @@ class StateVector:
 
     def set_computational_basis(self, arg: int, /) -> None:
         """
-        initialize with computational basis |basis>
+        Initialize with computational basis \\ket{\\mathrm{basis}}.
         """
         ...
 
     def set_zero_norm_state(self) -> None:
         """
-        initialize with 0(null vector)
+        Initialize with 0 (null vector).
         """
         ...
 
     def set_zero_state(self) -> None:
         """
-        initialize with computational basis |00...0>
+        Initialize with computational basis $\\ket{00\\dots0}$.
         """
         ...
 
-    def to_string(self) -> str: ...
+    def to_string(self) -> str:
+        """
+        Information as `str`.
+        """
+        ...
 
-def Swap(arg0: int, arg1: int, /) -> scaluq.scaluq_core.Gate: ...
+def Swap(arg0: int, arg1: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of Swap.
+    """
+    ...
 
 class SwapGate:
     """
-    None
+    Specific class of two-qubit swap gate.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target1(self) -> int: ...
-    def target2(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def T(arg: int, /) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target1(self) -> int:
+        """
+        Get property `target1`.
+        """
+        ...
+
+    def target2(self) -> int:
+        """
+        Get property `target2`.
+        """
+        ...
+
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def T(arg: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of T.
+    """
+    ...
 
 class TGate:
     """
-    None
+    Specific class of T gate, represented as $\\begin{bmatrix}
+    1 & 0\\\\
+    0 & e^{i\\pi/4}
+    \\end{bmatrix}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def Tdag(arg: int, /) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def Tdag(arg: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of Tdag.
+    """
+    ...
 
 class TdagGate:
     """
-    None
+    Specific class of inverse of T gate.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
+
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
     def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
 
 class TwoQubitMatrixGate:
     """
-    None
+    Specific class of double-qubit dense matrix gate.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def matrix(self) -> None: ...
-    def target1(self) -> int: ...
-    def target2(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def U1(arg0: int, arg1: float, /) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def matrix(self) -> None:
+        """
+        Get property `matrix`.
+        """
+        ...
+
+    def target1(self) -> int:
+        """
+        Get property `target1`.
+        """
+        ...
+
+    def target2(self) -> int:
+        """
+        Get property `target2`.
+        """
+        ...
+
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def U1(arg0: int, arg1: float, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of U1.
+    """
+    ...
 
 class U1Gate:
     """
-    None
+    Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, represented as \\begin{bmatrix}
+    1 & 0\\\\
+    0 & e^{i\\lambda}
+    \\end{bmatrix}.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def lambda_(self) -> float: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def U2(arg0: int, arg1: float, arg2: float, /) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def lambda_(self) -> float:
+        """
+        Get `lambda` property.
+        """
+        ...
+
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def U2(arg0: int, arg1: float, arg2: float, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of U2.
+    """
+    ...
 
 class U2Gate:
     """
-    None
+    Specific class of IBMQ's U2 Gate, which is a rotation about X+Z-axis, represented as $\\frac{1}{\\sqrt{2}} \\begin{bmatrix}1 & -e^{-i\\lambda}\\\\
+    e^{i\\phi} & e^{i(\\phi+\\lambda)}
+    \\end{bmatrix}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def lambda_(self) -> float: ...
-    def phi(self) -> float: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def U3(
-    arg0: int, arg1: float, arg2: float, arg3: float, /
-) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def lambda_(self) -> float:
+        """
+        Get `lambda` property.
+        """
+        ...
+
+    def phi(self) -> float:
+        """
+        Get `phi` property.
+        """
+        ...
+
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def U3(arg0: int, arg1: float, arg2: float, arg3: float, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of U3.
+    """
+    ...
 
 class U3Gate:
     """
-    None
+    Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, represented as \\begin{bmatrix}
+    \\cos \\frac{\\theta}{2} & -e^{i\\lambda}\\sin\\frac{\\theta}{2}\\\\
+    e^{i\\phi}\\sin\\frac{\\theta}{2}
+    \\end{bmatrix} & e^{i(\\phi+\\lambda)}\\cos\\frac{\\theta}{2}
+    \\end{bmatrix}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def lambda_(self) -> float: ...
-    def phi(self) -> float: ...
-    def theta(self) -> float: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def X(arg: int, /) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def lambda_(self) -> float:
+        """
+        Get `lambda` property.
+        """
+        ...
+
+    def phi(self) -> float:
+        """
+        Get `phi` property.
+        """
+        ...
+
+    def theta(self) -> float:
+        """
+        Get `theta` property.
+        """
+        ...
+
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def X(arg: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of X.
+    """
+    ...
 
 class XGate:
     """
-    None
+    Specific class of Pauli-X gate.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def Y(arg: int, /) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def Y(arg: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of Y.
+    """
+    ...
 
 class YGate:
     """
-    None
+    Specific class of Pauli-Y gate.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
-    def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
 
-def Z(arg: int, /) -> scaluq.scaluq_core.Gate: ...
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
+
+def Z(arg: int, /) -> scaluq.scaluq_core.Gate:
+    """
+    Generate general Gate class instance of Z.
+    """
+    ...
 
 class ZGate:
     """
-    None
+    Specific class of Pauli-Z gate.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
-    def copy(self) -> scaluq.scaluq_core.Gate: ...
-    def gate_type(self) -> scaluq.scaluq_core.GateType: ...
-    def get_control_qubit_list(self) -> list[int]: ...
-    def get_inverse(self) -> scaluq.scaluq_core.Gate: ...
-    def get_target_qubit_list(self) -> list[int]: ...
+    def copy(self) -> scaluq.scaluq_core.Gate:
+        """
+        Copy gate as `Gate` type.
+        """
+        ...
+
+    def gate_type(self) -> scaluq.scaluq_core.GateType:
+        """
+        Get gate type as `GateType` enum.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.Gate:
+        """
+        Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
     def target(self) -> int: ...
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None: ...
+    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Apply gate to `state_vector`. `state_vector` in args is directly updated.
+        """
+        ...
 
 def finalize() -> None:
     """
-    Terminate the Kokkos execution environment. Release the resources
+    Terminate the Kokkos execution environment. Release the resources.
     """
     ...
 
@@ -1057,12 +2299,12 @@ def initialize(settings: scaluq.scaluq_core.InitializationSettings = ...) -> Non
 
 def is_finalized() -> bool:
     """
-    Return true if finalize() is already called
+    Return true if `finalize()` is already called.
     """
     ...
 
 def is_initialized() -> bool:
     """
-    Return true if initialize() is already called
+    Return true if `initialize()` is already called.
     """
     ...
