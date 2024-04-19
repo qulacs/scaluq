@@ -15,4 +15,3 @@ for file in $files; do
 done
 
 files=$(git ls-files)
-

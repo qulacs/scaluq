@@ -43,7 +43,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const {
+    void update_quantum_state(StateVector& state_vector) const override {
         check_qubit_within_bounds(state_vector, this->_target);
         single_qubit_dense_matrix_gate(_target, _matrix, state_vector);
     }
