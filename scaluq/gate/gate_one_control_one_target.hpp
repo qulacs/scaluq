@@ -32,7 +32,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override;
+    void update_quantum_state(StateVector& state_vector) const override {
+        check_qubit_within_bounds(state_vector, this->_control);
+        check_qubit_within_bounds(state_vector, this->_target);
+        cx_gate(this->_control, this->_target, state_vector);
+    }
 };
 
 class CZGateImpl : public OneControlOneTargetGateBase {
@@ -47,7 +51,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override;
+    void update_quantum_state(StateVector& state_vector) const override {
+        check_qubit_within_bounds(state_vector, this->_control);
+        check_qubit_within_bounds(state_vector, this->_target);
+        cz_gate(this->_control, this->_target, state_vector);
+    }
 };
 }  // namespace internal
 

@@ -818,6 +818,9 @@ class StateVector:
     def Haar_random_state(
         n_qubits: int, seed: Optional[int] = None
     ) -> scaluq.scaluq_core.StateVector: ...
+
+    UNMEASURED: int
+
     def __init__(self, arg: scaluq.scaluq_core.StateVector) -> None:
         """
         __init__(self, arg: scaluq.scaluq_core.StateVector) -> None

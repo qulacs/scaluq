@@ -7,9 +7,9 @@ for file in $files; do
     if [ $file = $0 ]; then
         continue
     fi
-    sed -i -e 's/qulacs2023/scaluq/g' -e 's/qulacs/scaluq/g' -e 's/QULACS2023/SCALUQ/g' -e 's/QULACS/SCALUQ/g' -e 's/scaluq.osaka@gmail.com/qulacs.osaka@gmail.com/g' $file
-    if [ $file = *'qulacs'* ]; then
-        echo 'Warning: filename including qulacs: ' $file
+    sed -i -e 's/scaluq/scaluq/g' -e 's/scaluq/scaluq/g' -e 's/SCALUQ/SCALUQ/g' -e 's/SCALUQ/SCALUQ/g' -e 's/qulacs.osaka@gmail.com/qulacs.osaka@gmail.com/g' $file
+    if [ $file = *'scaluq'* ]; then
+        echo 'Warning: filename including scaluq: ' $file
     fi
 done
 

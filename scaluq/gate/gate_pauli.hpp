@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "../operator/pauli_operator.hpp"
+#include "../util/utility.hpp"
 #include "gate.hpp"
 
 namespace scaluq {
@@ -20,10 +21,14 @@ public:
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
     Gate copy() const override { return std::make_shared<PauliGateImpl>(_pauli); }
-    Gate get_inverse() const override;
-    std::optional<ComplexMatrix> get_matrix() const override;
+    Gate get_inverse() const override { return std::make_shared<PauliGateImpl>(this->_pauli); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        return get_pauli_matrix(this->_pauli);
+    }
 
-    void update_quantum_state(StateVector& state_vector) const override;
+    void update_quantum_state(StateVector& state_vector) const override {
+        pauli_gate(this->_pauli, state_vector);
+    }
 };
 
 class PauliRotationGateImpl : public GateBase {
@@ -41,10 +46,19 @@ public:
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
     Gate copy() const override { return std::make_shared<PauliRotationGateImpl>(_pauli, _angle); }
-    Gate get_inverse() const override;
-    std::optional<ComplexMatrix> get_matrix() const override;
-
-    void update_quantum_state(StateVector& state_vector) const override;
+    Gate get_inverse() const override {
+        return std::make_shared<PauliRotationGateImpl>(this->_pauli, -(this->_angle));
+    }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat = get_pauli_matrix(this->_pauli).value();
+        StdComplex imag_unit(0, 1);
+        mat = cos(-_angle / 2) * ComplexMatrix::Identity(mat.rows(), mat.cols()) +
+              imag_unit * sin(-_angle / 2) * mat;
+        return mat;
+    }
+    void update_quantum_state(StateVector& state_vector) const override {
+        pauli_rotation_gate(this->_pauli, this->_angle, state_vector);
+    }
 };
 }  // namespace internal
 
