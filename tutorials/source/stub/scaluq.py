@@ -1004,21 +1004,21 @@ class PauliGate:
 
 class PauliOperator:
     """
-    None
+    Pauli operator as coef and tensor product of single pauli for each qubit.
     """
 
     def __init__(
         self, bit_flip_mask: int, phase_flip_mask: int, coef: complex = 1.0
     ) -> None:
         """
-        __init__(self, bit_flip_mask: int, phase_flip_mask: int, coef: complex = 1.0) -> None
+        Initialize pauli operator. For each `i`, single pauli applied to `i`-th qubit is got from `i-th` bit of `bit_flip_mask` and `phase_flip_mask` as follows.\n|bit_flip|phase_flip|pauli|\n|--|--|--|\n|0|0|I|\n|0|1|Z|\n|1|0|X|\n|1|1|Y|
         """
         ...
 
     @overload
     def __init__(self, coef: complex = 1.0) -> None:
         """
-        __init__(self, coef: complex = 1.0) -> None
+        Initialize operator which just multiplying coef.
         """
         ...
 
@@ -1030,43 +1030,100 @@ class PauliOperator:
         coef: complex = 1.0,
     ) -> None:
         """
-        __init__(self, target_qubit_list: list[int], pauli_id_list: list[int], coef: complex = 1.0) -> None
+        Initialize pauli operator. For each `i`, single pauli correspond to `pauli_id_list[i]` is applied to `target_qubit_list`-th qubit.
         """
         ...
 
     @overload
     def __init__(self, pauli_string: str, coef: complex = 1.0) -> None:
         """
-        __init__(self, pauli_string: str, coef: complex = 1.0) -> None
+        Initialize pauli operator. If `pauli_string` is `"X0Y2"`, Pauli-X is applied to 0-th qubit and Pauli-Y is applied to 2-th qubit. In `pauli_string`, spaces are ignored.
         """
         ...
 
     @overload
     def __init__(self, pauli_id_par_qubit: list[int], coef: complex = 1.0) -> None:
         """
-        __init__(self, pauli_id_par_qubit: list[int], coef: complex = 1.0) -> None
+        Initialize pauli operator. For each `i`, single pauli correspond to `paul_id_per_qubit` is applied to `i`-th qubit.
         """
         ...
 
-    def add_single_pauli(self, arg0: int, arg1: int, /) -> None: ...
-    def apply_to_state(self, arg: scaluq.StateVector, /) -> None: ...
-    def change_coef(self, arg: complex, /) -> None: ...
-    def get_XZ_mask_representation(self) -> tuple[int, int]: ...
-    def get_coef(self) -> complex: ...
-    def get_dagger(self) -> scaluq.PauliOperator: ...
-    def get_expectation_value(
-        self, arg: scaluq.StateVector, /
-    ) -> complex: ...
-    def get_pauli_id_list(self) -> list[int]: ...
-    def get_pauli_string(self) -> str: ...
-    def get_qubit_count(self) -> int: ...
-    def get_target_qubit_list(self) -> list[int]: ...
+    def add_single_pauli(self, arg0: int, arg1: int, /) -> None:
+        """
+        Add (apply tensor product) another single pauli. You cannot specify qubit index that has always a single pauli.
+        """
+        ...
+
+    def apply_to_state(self, arg: scaluq.StateVector, /) -> None:
+        """
+        Apply pauli to state vector.
+        """
+        ...
+
+    def change_coef(self, arg: complex, /) -> None:
+        """
+        Set property `coef`.
+        """
+        ...
+
+    def get_XZ_mask_representation(self) -> tuple[int, int]:
+        """
+        Get single-pauli property as binary integer representation. See description of `__init__(bit_flip_mask_py: int, phase_flip_mask_py: int, coef: float=1.)` for details.
+        """
+        ...
+
+    def get_coef(self) -> complex:
+        """
+        Get property `coef`.
+        """
+        ...
+
+    def get_dagger(self) -> scaluq.PauliOperator:
+        """
+        Get adjoint operator.
+        """
+        ...
+
+    def get_expectation_value(self, arg: scaluq.StateVector, /) -> complex:
+        """
+        Get expectation value of measuring state vector. $\\bra{\\psi}P\\ket{\\psi}$.
+        """
+        ...
+
+    def get_pauli_id_list(self) -> list[int]:
+        """
+        Get pauli id to be applied. The order is correspond to the result of `get_target_qubit_list`
+        """
+        ...
+
+    def get_pauli_string(self) -> str:
+        """
+        Get single-pauli property as string representation. See description of `__init__(pauli_string: str, coef: float=1.)` for details.
+        """
+        ...
+
+    def get_qubit_count(self) -> int:
+        """
+        Get num of qubits to applied with, when count from 0-th qubit. Subset of $[0, \\mathrm{qubit_count})$ is the target.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get qubits to be applied pauli.
+        """
+        ...
+
     def get_transition_amplitude(
         self,
         arg0: scaluq.StateVector,
         arg1: scaluq.StateVector,
         /,
-    ) -> complex: ...
+    ) -> complex:
+        """
+        Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.
+        """
+        ...
 
 def PauliRotation(
     arg0: scaluq.PauliOperator, arg1: float, /

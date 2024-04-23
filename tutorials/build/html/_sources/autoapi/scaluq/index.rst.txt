@@ -961,42 +961,66 @@ Functions
 .. py:class:: PauliOperator(bit_flip_mask: int, phase_flip_mask: int, coef: complex = 1.0)
 
 
-   None
+   Pauli operator as coef and tensor product of single pauli for each qubit.
 
    .. py:method:: add_single_pauli(arg0: int, arg1: int, /) -> None
+
+      Add (apply tensor product) another single pauli. You cannot specify qubit index that has always a single pauli.
 
 
    .. py:method:: apply_to_state(arg: StateVector, /) -> None
 
+      Apply pauli to state vector.
+
 
    .. py:method:: change_coef(arg: complex, /) -> None
+
+      Set property `coef`.
 
 
    .. py:method:: get_XZ_mask_representation() -> tuple[int, int]
 
+      Get single-pauli property as binary integer representation. See description of `__init__(bit_flip_mask_py: int, phase_flip_mask_py: int, coef: float=1.)` for details.
+
 
    .. py:method:: get_coef() -> complex
+
+      Get property `coef`.
 
 
    .. py:method:: get_dagger() -> PauliOperator
 
+      Get adjoint operator.
+
 
    .. py:method:: get_expectation_value(arg: StateVector, /) -> complex
+
+      Get expectation value of measuring state vector. $\bra{\psi}P\ket{\psi}$.
 
 
    .. py:method:: get_pauli_id_list() -> list[int]
 
+      Get pauli id to be applied. The order is correspond to the result of `get_target_qubit_list`
+
 
    .. py:method:: get_pauli_string() -> str
+
+      Get single-pauli property as string representation. See description of `__init__(pauli_string: str, coef: float=1.)` for details.
 
 
    .. py:method:: get_qubit_count() -> int
 
+      Get num of qubits to applied with, when count from 0-th qubit. Subset of $[0, \mathrm{qubit_count})$ is the target.
+
 
    .. py:method:: get_target_qubit_list() -> list[int]
 
+      Get qubits to be applied pauli.
+
 
    .. py:method:: get_transition_amplitude(arg0: StateVector, arg1: StateVector, /) -> complex
+
+      Get transition amplitude of measuring state vector. $\bra{\chi}P\ket{\psi}$.
 
 
 

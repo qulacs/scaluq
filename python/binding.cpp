@@ -499,14 +499,30 @@ NB_MODULE(scaluq_core, m) {
              &Circuit::get_inverse,
              "Get inverse of circuit. ALl the gates are newly created.");
 
-    nb::class_<PauliOperator>(m, "PauliOperator")
-        .def(nb::init<Complex>(), "coef"_a = 1.)
+    nb::class_<PauliOperator>(
+        m,
+        "PauliOperator",
+        "Pauli operator as coef and tensor product of single pauli for each qubit.")
+        .def(nb::init<Complex>(), "coef"_a = 1., "Initialize operator which just multiplying coef.")
         .def(nb::init<const std::vector<UINT> &, const std::vector<UINT> &, Complex>(),
              "target_qubit_list"_a,
              "pauli_id_list"_a,
-             "coef"_a = 1.)
-        .def(nb::init<std::string_view, Complex>(), "pauli_string"_a, "coef"_a = 1.)
-        .def(nb::init<const std::vector<UINT> &, Complex>(), "pauli_id_par_qubit"_a, "coef"_a = 1.)
+             "coef"_a = 1.,
+             "Initialize pauli operator. For each `i`, single pauli correspond to "
+             "`pauli_id_list[i]` is "
+             "applied to `target_qubit_list`-th qubit.")
+        .def(nb::init<std::string_view, Complex>(),
+             "pauli_string"_a,
+             "coef"_a = 1.,
+             "Initialize pauli operator. If `pauli_string` is `\"X0Y2\"`, Pauli-X is applied to "
+             "0-th "
+             "qubit and Pauli-Y is applied to 2-th qubit. In `pauli_string`, spaces are ignored.")
+        .def(nb::init<const std::vector<UINT> &, Complex>(),
+             "pauli_id_par_qubit"_a,
+             "coef"_a = 1.,
+             "Initialize pauli operator. For each `i`, single pauli correspond to "
+             "`paul_id_per_qubit` is "
+             "applied to `i`-th qubit.")
         .def(
             "__init__",
             [](PauliOperator *t,
@@ -531,33 +547,64 @@ NB_MODULE(scaluq_core, m) {
             },
             "bit_flip_mask"_a,
             "phase_flip_mask"_a,
-            "coef"_a = 1.)
-        .def("get_coef", &PauliOperator::get_coef)
-        .def("get_target_qubit_list", &PauliOperator::get_target_qubit_list)
-        .def("get_pauli_id_list", &PauliOperator::get_pauli_id_list)
-        .def("get_XZ_mask_representation",
-             [](const PauliOperator &pauli) {
-                 const auto &[x_mask, z_mask] = pauli.get_XZ_mask_representation();
-                 const auto &x_raw = x_mask.data_raw();
-                 nb::int_ x_mask_py(0);
-                 for (UINT i = 0; i < x_raw.size(); ++i) {
-                     x_mask_py |= nb::int_(x_raw[i]) << nb::int_(64 * i);
-                 }
-                 const auto &z_raw = z_mask.data_raw();
-                 nb::int_ z_mask_py(0);
-                 for (UINT i = 0; i < z_raw.size(); ++i) {
-                     z_mask_py |= nb::int_(z_raw[i]) << nb::int_(64 * i);
-                 }
-                 return std::make_tuple(x_mask_py, z_mask_py);
-             })
-        .def("get_pauli_string", &PauliOperator::get_pauli_string)
-        .def("get_dagger", &PauliOperator::get_dagger)
-        .def("get_qubit_count", &PauliOperator::get_qubit_count)
-        .def("change_coef", &PauliOperator::change_coef)
-        .def("add_single_pauli", &PauliOperator::add_single_pauli)
-        .def("apply_to_state", &PauliOperator::apply_to_state)
-        .def("get_expectation_value", &PauliOperator::get_expectation_value)
-        .def("get_transition_amplitude", &PauliOperator::get_transition_amplitude)
+            "coef"_a = 1.,
+            "Initialize pauli operator. For each `i`, single pauli applied to `i`-th qubit is got "
+            "from `i-th` bit of `bit_flip_mask` and `phase_flip_mask` as "
+            "follows.\\n|bit_flip|phase_flip|pauli|\\n|--|--|--|\\n|0|0|I|\\n|0|1|Z|\\n|1|0|X|\\n|"
+            "1|1|Y|")
+        .def("get_coef", &PauliOperator::get_coef, "Get property `coef`.")
+        .def("get_target_qubit_list",
+             &PauliOperator::get_target_qubit_list,
+             "Get qubits to be applied pauli.")
+        .def("get_pauli_id_list",
+             &PauliOperator::get_pauli_id_list,
+             "Get pauli id to be applied. The order is correspond to the result of "
+             "`get_target_qubit_list`")
+        .def(
+            "get_XZ_mask_representation",
+            [](const PauliOperator &pauli) {
+                const auto &[x_mask, z_mask] = pauli.get_XZ_mask_representation();
+                const auto &x_raw = x_mask.data_raw();
+                nb::int_ x_mask_py(0);
+                for (UINT i = 0; i < x_raw.size(); ++i) {
+                    x_mask_py |= nb::int_(x_raw[i]) << nb::int_(64 * i);
+                }
+                const auto &z_raw = z_mask.data_raw();
+                nb::int_ z_mask_py(0);
+                for (UINT i = 0; i < z_raw.size(); ++i) {
+                    z_mask_py |= nb::int_(z_raw[i]) << nb::int_(64 * i);
+                }
+                return std::make_tuple(x_mask_py, z_mask_py);
+            },
+            "Get single-pauli property as binary integer representation. See description of "
+            "`__init__(bit_flip_mask_py: int, phase_flip_mask_py: int, coef: float=1.)` for "
+            "details.")
+        .def("get_pauli_string",
+             &PauliOperator::get_pauli_string,
+             "Get single-pauli property as string representation. See description of "
+             "`__init__(pauli_string: str, coef: float=1.)` for details.")
+        .def("get_dagger", &PauliOperator::get_dagger, "Get adjoint operator.")
+        .def("get_qubit_count",
+             &PauliOperator::get_qubit_count,
+             "Get num of qubits to applied with, when count from 0-th qubit. Subset of $[0, "
+             "\\\\mathrm{qubit_count})$ is the "
+             "target.")
+        .def("change_coef", &PauliOperator::change_coef, "Set property `coef`.")
+        .def("add_single_pauli",
+             &PauliOperator::add_single_pauli,
+             "Add (apply tensor product) another single pauli. You cannot specify qubit index that "
+             "has "
+             "always a single "
+             "pauli.")
+        .def("apply_to_state", &PauliOperator::apply_to_state, "Apply pauli to state vector.")
+        .def(
+            "get_expectation_value",
+            &PauliOperator::get_expectation_value,
+            "Get expectation value of measuring state vector. $\\\\bra{\\\\psi}P\\\\ket{\\\\psi}$.")
+        .def("get_transition_amplitude",
+             &PauliOperator::get_transition_amplitude,
+             "Get transition amplitude of measuring state vector. "
+             "$\\\\bra{\\\\chi}P\\\\ket{\\\\psi}$.")
         .def(nb::self * nb::self)
         .def(nb::self *= nb::self)
         .def(nb::self *= Complex())

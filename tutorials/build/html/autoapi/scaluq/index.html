@@ -139,7 +139,7 @@
 <td><p>Specific class of multi-qubit pauli gate, which applies single-qubit Pauli gate to each of qubit.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#scaluq.PauliOperator" title="scaluq.PauliOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PauliOperator</span></code></a></p></td>
-<td><p>None</p></td>
+<td><p>Pauli operator as coef and tensor product of single pauli for each qubit.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#scaluq.PauliRotationGate" title="scaluq.PauliRotationGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PauliRotationGate</span></code></a></p></td>
 <td><p>Specific class of multi-qubit pauli-rotation gate, represented as $e^{-ifrac{mathrm{angle}}{2}P}$.</p></td>
@@ -1411,66 +1411,78 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="scaluq.PauliOperator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scaluq.</span></span><span class="sig-name descname"><span class="pre">PauliOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bit_flip_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_flip_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coef</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">complex</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scaluq.PauliOperator" title="Link to this definition"></a></dt>
-<dd><p>None</p>
+<dd><p>Pauli operator as coef and tensor product of single pauli for each qubit.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.PauliOperator.add_single_pauli">
 <span class="sig-name descname"><span class="pre">add_single_pauli</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#scaluq.PauliOperator.add_single_pauli" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Add (apply tensor product) another single pauli. You cannot specify qubit index that has always a single pauli.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.PauliOperator.apply_to_state">
 <span class="sig-name descname"><span class="pre">apply_to_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scaluq.StateVector" title="scaluq.StateVector"><span class="pre">StateVector</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#scaluq.PauliOperator.apply_to_state" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Apply pauli to state vector.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.PauliOperator.change_coef">
 <span class="sig-name descname"><span class="pre">change_coef</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">complex</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#scaluq.PauliOperator.change_coef" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Set property <cite>coef</cite>.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.PauliOperator.get_XZ_mask_representation">
 <span class="sig-name descname"><span class="pre">get_XZ_mask_representation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#scaluq.PauliOperator.get_XZ_mask_representation" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Get single-pauli property as binary integer representation. See description of <cite>__init__(bit_flip_mask_py: int, phase_flip_mask_py: int, coef: float=1.)</cite> for details.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.PauliOperator.get_coef">
 <span class="sig-name descname"><span class="pre">get_coef</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">complex</span></span></span><a class="headerlink" href="#scaluq.PauliOperator.get_coef" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Get property <cite>coef</cite>.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.PauliOperator.get_dagger">
 <span class="sig-name descname"><span class="pre">get_dagger</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#scaluq.PauliOperator" title="scaluq.PauliOperator"><span class="pre">PauliOperator</span></a></span></span><a class="headerlink" href="#scaluq.PauliOperator.get_dagger" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Get adjoint operator.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.PauliOperator.get_expectation_value">
 <span class="sig-name descname"><span class="pre">get_expectation_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scaluq.StateVector" title="scaluq.StateVector"><span class="pre">StateVector</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">complex</span></span></span><a class="headerlink" href="#scaluq.PauliOperator.get_expectation_value" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Get expectation value of measuring state vector. <span class="math notranslate nohighlight">\(\bra{\psi}P\ket{\psi}\)</span>.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.PauliOperator.get_pauli_id_list">
 <span class="sig-name descname"><span class="pre">get_pauli_id_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#scaluq.PauliOperator.get_pauli_id_list" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Get pauli id to be applied. The order is correspond to the result of <cite>get_target_qubit_list</cite></p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.PauliOperator.get_pauli_string">
 <span class="sig-name descname"><span class="pre">get_pauli_string</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#scaluq.PauliOperator.get_pauli_string" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Get single-pauli property as string representation. See description of <cite>__init__(pauli_string: str, coef: float=1.)</cite> for details.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.PauliOperator.get_qubit_count">
 <span class="sig-name descname"><span class="pre">get_qubit_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#scaluq.PauliOperator.get_qubit_count" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Get num of qubits to applied with, when count from 0-th qubit. Subset of <span class="math notranslate nohighlight">\([0, \mathrm{qubit_count})\)</span> is the target.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.PauliOperator.get_target_qubit_list">
 <span class="sig-name descname"><span class="pre">get_target_qubit_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#scaluq.PauliOperator.get_target_qubit_list" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Get qubits to be applied pauli.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.PauliOperator.get_transition_amplitude">
 <span class="sig-name descname"><span class="pre">get_transition_amplitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scaluq.StateVector" title="scaluq.StateVector"><span class="pre">StateVector</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scaluq.StateVector" title="scaluq.StateVector"><span class="pre">StateVector</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">complex</span></span></span><a class="headerlink" href="#scaluq.PauliOperator.get_transition_amplitude" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Get transition amplitude of measuring state vector. <span class="math notranslate nohighlight">\(\bra{\chi}P\ket{\psi}\)</span>.</p>
+</dd></dl>
 
 </dd></dl>
 
