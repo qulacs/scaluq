@@ -269,7 +269,7 @@ Functions
 .. py:class:: FusedSwapGate(arg: Gate, /)
 
 
-       Specific class of fused swap gate, which swap qubits in [`qubit_index1`..`qubit_index1+block_size`) and qubits in [`qubit_index2`..`qubit_index2`+block_size`).
+       Specific class of fused swap gate, which swap qubits in $[\mathrm{qubit\_index1},\mathrm{qubit\_index1}+\mathrm{block\_size})$ and qubits in $[\mathrm{qubit\_index2},\mathrm{qubit\_index2}+\mathrm{block\_size})$.
    .. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
 
 
@@ -656,7 +656,7 @@ Functions
 
 
        Wrapper class of Kokkos's InitializationSettings.
-   See details: https://kokkos.org/kokkos-core-wiki/API/core/initialize_finalize/InitializationSettings.html
+   .. note:: See details: https://kokkos.org/kokkos-core-wiki/API/core/initialize_finalize/InitializationSettings.html
 
 
    .. py:method:: get_device_id() -> int
@@ -829,7 +829,7 @@ Functions
 .. py:class:: P0Gate(arg: Gate, /)
 
 
-       Specific class of projection gate to \ket{0}.
+       Specific class of projection gate to $\ket{0}$.
    .. note:: This gate is not unitary.
    .. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
 
@@ -876,7 +876,7 @@ Functions
 .. py:class:: P1Gate(arg: Gate, /)
 
 
-       Specific class of projection gate to \ket{1}.
+       Specific class of projection gate to $\ket{1}$.
    .. note:: This gate is not unitary.
    .. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
 
@@ -1051,7 +1051,7 @@ Functions
 .. py:class:: RXGate(arg: Gate, /)
 
 
-       Specific class of X rotation gate, represented as $e^{-i\frac{\mathrm{angle}{2}X}$.
+       Specific class of X rotation gate, represented as $e^{-i\frac{\mathrm{angle}}{2}X}$.
    .. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
 
 
@@ -1102,7 +1102,7 @@ Functions
 .. py:class:: RYGate(arg: Gate, /)
 
 
-       Specific class of Y rotation gate, represented as $e^{-i\frac{\mathrm{angle}{2}Y}$.
+       Specific class of Y rotation gate, represented as $e^{-i\frac{\mathrm{angle}}{2}Y}$.
    .. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
 
 
@@ -1153,7 +1153,7 @@ Functions
 .. py:class:: RZGate(arg: Gate, /)
 
 
-       Specific class of Z rotation gate, represented as $e^{-i\frac{\mathrm{angle}{2}Z}$.
+       Specific class of Z rotation gate, represented as $e^{-i\frac{\mathrm{angle}}{2}Z}$.
    .. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
 
 
@@ -1495,12 +1495,12 @@ Functions
 
    .. py:method:: add_state_vector(arg: StateVector, /) -> None
 
-      Add other state vector and make superposition. $\mathrm{this} \leftarrow \mathrm{rhis} + \ket{\mathrm{state}}$.
+      Add other state vector and make superposition. $\ket{\mathrm{this}} \leftarrow \ket{\mathrm{this}} + \ket{\mathrm{state}}$.
 
 
    .. py:method:: add_state_vector_with_coef(arg0: complex, arg1: StateVector, /) -> None
 
-      add other state vector with multiplying the coef and make superposition. $\mathrm{this}\leftarrow\mathrm{this}+\mathrm{coef}\ket{\mathrm{state}}.
+      add other state vector with multiplying the coef and make superposition. $\ket{\mathrm{this}}\leftarrow\ket{\mathrm{this}}+\mathrm{coef}\ket{\mathrm{state}}$.
 
 
    .. py:method:: amplitudes() -> list[complex]
@@ -1510,7 +1510,7 @@ Functions
 
    .. py:method:: dim() -> int
 
-      Get dimension of the vector ($=2^\mathrm{n_qubits}$).
+      Get dimension of the vector ($=2^\mathrm{n\_qubits}$).
 
 
    .. py:method:: get_amplitude_at_index(arg: int, /) -> complex
@@ -1532,7 +1532,7 @@ Functions
 
    .. py:method:: get_squared_norm() -> float
 
-      Get squared norm of the state. $\bra{\psi}\ket{\p\si}$.
+      Get squared norm of the state. $\braket{\psi|\psi}$.
 
 
    .. py:method:: get_zero_probability(arg: int, /) -> float
@@ -1547,7 +1547,7 @@ Functions
 
    .. py:method:: multiply_coef(arg: complex, /) -> None
 
-      Multiply coef.
+      Multiply coef. $\ket{\mathrm{this}}\leftarrow\mathrm{coef}\ket{\mathrm{this}}$.
 
 
    .. py:method:: n_qubits() -> int
@@ -1557,7 +1557,7 @@ Functions
 
    .. py:method:: normalize() -> None
 
-      Normalize state (let $\bra{\psi}\ket{\psi} = 1$ by multiplying coef).
+      Normalize state (let $\braket{\psi|\psi} = 1$ by multiplying coef).
 
 
    .. py:method:: sampling(sampling_count: int, seed: Optional[int] = None) -> list[int]
@@ -1800,10 +1800,10 @@ Functions
 .. py:class:: U1Gate(arg: Gate, /)
 
 
-       Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, represented as \begin{bmatrix}
+       Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, represented as $\begin{bmatrix}
        1 & 0\\
        0 & e^{i\lambda}
-       \end{bmatrix}.
+       \end{bmatrix}$.
    .. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
 
 
@@ -1906,10 +1906,9 @@ Functions
 .. py:class:: U3Gate(arg: Gate, /)
 
 
-       Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, represented as \begin{bmatrix}
+       Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, represented as $\begin{bmatrix}
        \cos \frac{\theta}{2} & -e^{i\lambda}\sin\frac{\theta}{2}\\
-       e^{i\phi}\sin\frac{\theta}{2}
-       \end{bmatrix} & e^{i(\phi+\lambda)}\cos\frac{\theta}{2}
+       e^{i\phi}\sin\frac{\theta}{2} & e^{i(\phi+\lambda)}\cos\frac{\theta}{2}
        \end{bmatrix}$.
    .. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
 

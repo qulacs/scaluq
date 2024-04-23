@@ -210,7 +210,7 @@ def FusedSwap(arg0: int, arg1: int, arg2: int, /) -> scaluq.scaluq_core.Gate:
 
 class FusedSwapGate:
     """
-    Specific class of fused swap gate, which swap qubits in [`qubit_index1`..`qubit_index1+block_size`) and qubits in [`qubit_index2`..`qubit_index2`+block_size`).\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
+    Specific class of fused swap gate, which swap qubits in $[\\mathrm{qubit\\_index1},\\mathrm{qubit\\_index1}+\\mathrm{block\\_size})$ and qubits in $[\\mathrm{qubit\\_index2},\\mathrm{qubit\\_index2}+\\mathrm{block\\_size})$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
@@ -736,7 +736,7 @@ class IGate:
 
 class InitializationSettings:
     """
-    Wrapper class of Kokkos's InitializationSettings.\nSee details: https://kokkos.org/kokkos-core-wiki/API/core/initialize_finalize/InitializationSettings.html
+    Wrapper class of Kokkos's InitializationSettings.\n.. note:: See details: https://kokkos.org/kokkos-core-wiki/API/core/initialize_finalize/InitializationSettings.html
     """
 
     def __init__(self) -> None: ...
@@ -864,7 +864,7 @@ def P0(arg: int, /) -> scaluq.scaluq_core.Gate:
 
 class P0Gate:
     """
-    Specific class of projection gate to \\ket{0}.\n.. note:: This gate is not unitary.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
+    Specific class of projection gate to $\\ket{0}$.\n.. note:: This gate is not unitary.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
@@ -913,7 +913,7 @@ def P1(arg: int, /) -> scaluq.scaluq_core.Gate:
 
 class P1Gate:
     """
-    Specific class of projection gate to \\ket{1}.\n.. note:: This gate is not unitary.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
+    Specific class of projection gate to $\\ket{1}$.\n.. note:: This gate is not unitary.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
@@ -1126,7 +1126,7 @@ def RX(arg0: int, arg1: float, /) -> scaluq.scaluq_core.Gate:
 
 class RXGate:
     """
-    Specific class of X rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}{2}X}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
+    Specific class of X rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}X}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
@@ -1181,7 +1181,7 @@ def RY(arg0: int, arg1: float, /) -> scaluq.scaluq_core.Gate:
 
 class RYGate:
     """
-    Specific class of Y rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}{2}Y}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
+    Specific class of Y rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Y}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
@@ -1236,7 +1236,7 @@ def RZ(arg0: int, arg1: float, /) -> scaluq.scaluq_core.Gate:
 
 class RZGate:
     """
-    Specific class of Z rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}{2}Z}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
+    Specific class of Z rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Z}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
@@ -1614,7 +1614,7 @@ class StateVector:
 
     def add_state_vector(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
         """
-        Add other state vector and make superposition. $\\mathrm{this} \\leftarrow \\mathrm{rhis} + \\ket{\\mathrm{state}}$.
+        Add other state vector and make superposition. $\\ket{\\mathrm{this}} \\leftarrow \\ket{\\mathrm{this}} + \\ket{\\mathrm{state}}$.
         """
         ...
 
@@ -1622,7 +1622,7 @@ class StateVector:
         self, arg0: complex, arg1: scaluq.scaluq_core.StateVector, /
     ) -> None:
         """
-        add other state vector with multiplying the coef and make superposition. $\\mathrm{this}\\leftarrow\\mathrm{this}+\\mathrm{coef}\\ket{\\mathrm{state}}.
+        add other state vector with multiplying the coef and make superposition. $\\ket{\\mathrm{this}}\\leftarrow\\ket{\\mathrm{this}}+\\mathrm{coef}\\ket{\\mathrm{state}}$.
         """
         ...
 
@@ -1634,7 +1634,7 @@ class StateVector:
 
     def dim(self) -> int:
         """
-        Get dimension of the vector ($=2^\\mathrm{n_qubits}$).
+        Get dimension of the vector ($=2^\\mathrm{n\\_qubits}$).
         """
         ...
 
@@ -1658,7 +1658,7 @@ class StateVector:
 
     def get_squared_norm(self) -> float:
         """
-        Get squared norm of the state. $\\bra{\\psi}\\ket{\p\si}$.
+        Get squared norm of the state. $\\braket{\\psi|\\psi}$.
         """
         ...
 
@@ -1676,7 +1676,7 @@ class StateVector:
 
     def multiply_coef(self, arg: complex, /) -> None:
         """
-        Multiply coef.
+        Multiply coef. $\\ket{\\mathrm{this}}\\leftarrow\\mathrm{coef}\\ket{\\mathrm{this}}$.
         """
         ...
 
@@ -1688,7 +1688,7 @@ class StateVector:
 
     def normalize(self) -> None:
         """
-        Normalize state (let $\\bra{\\psi}\ket{\\psi} = 1$ by multiplying coef).
+        Normalize state (let $\\braket{\\psi|\\psi} = 1$ by multiplying coef).
         """
         ...
 
@@ -1957,10 +1957,10 @@ def U1(arg0: int, arg1: float, /) -> scaluq.scaluq_core.Gate:
 
 class U1Gate:
     """
-    Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, represented as \\begin{bmatrix}
+    Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, represented as $\\begin{bmatrix}
     1 & 0\\\\
     0 & e^{i\\lambda}
-    \\end{bmatrix}.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
+    \\end{bmatrix}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 
     def __init__(self, arg: scaluq.scaluq_core.Gate, /) -> None: ...
@@ -2076,10 +2076,9 @@ def U3(arg0: int, arg1: float, arg2: float, arg3: float, /) -> scaluq.scaluq_cor
 
 class U3Gate:
     """
-    Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, represented as \\begin{bmatrix}
+    Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, represented as $\\begin{bmatrix}
     \\cos \\frac{\\theta}{2} & -e^{i\\lambda}\\sin\\frac{\\theta}{2}\\\\
-    e^{i\\phi}\\sin\\frac{\\theta}{2}
-    \\end{bmatrix} & e^{i(\\phi+\\lambda)}\\cos\\frac{\\theta}{2}
+    e^{i\\phi}\\sin\\frac{\\theta}{2} & e^{i(\\phi+\\lambda)}\\cos\\frac{\\theta}{2}
     \\end{bmatrix}$.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
     """
 

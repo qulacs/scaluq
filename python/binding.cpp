@@ -69,7 +69,7 @@ NB_MODULE(scaluq_core, m) {
     nb::class_<InitializationSettings>(
         m,
         "InitializationSettings",
-        "Wrapper class of Kokkos's InitializationSettings.\\nSee details: "
+        "Wrapper class of Kokkos's InitializationSettings.\\n.. note:: See details: "
         "https://kokkos.org/kokkos-core-wiki/API/core/initialize_finalize/"
         "InitializationSettings.html")
         .def(nb::init<>())
@@ -150,13 +150,15 @@ NB_MODULE(scaluq_core, m) {
              "Initialize with computational basis \\\\ket{\\\\mathrm{basis}}.")
         .def("amplitudes", &StateVector::amplitudes, "Get all amplitudes with as `list[complex]`.")
         .def("n_qubits", &StateVector::n_qubits, "Get num of qubits.")
-        .def("dim", &StateVector::dim, "Get dimension of the vector ($=2^\\\\mathrm{n_qubits}$).")
+        .def("dim",
+             &StateVector::dim,
+             "Get dimension of the vector ($=2^\\\\mathrm{n\\\\_qubits}$).")
         .def("get_squared_norm",
              &StateVector::get_squared_norm,
-             "Get squared norm of the state. $\\\\bra{\\\\psi}\\\\ket{\\p\\si}$.")
+             "Get squared norm of the state. $\\\\braket{\\\\psi|\\\\psi}$.")
         .def("normalize",
              &StateVector::normalize,
-             "Normalize state (let $\\\\bra{\\\\psi}\\ket{\\\\psi} = 1$ by multiplying coef).")
+             "Normalize state (let $\\\\braket{\\\\psi|\\\\psi} = 1$ by multiplying coef).")
         .def("get_zero_probability",
              &StateVector::get_zero_probability,
              "Get the probability to observe $\\\\ket{0}$ at specified index.")
@@ -168,14 +170,19 @@ NB_MODULE(scaluq_core, m) {
         .def("get_entropy", &StateVector::get_entropy, "Get the entropy of the vector.")
         .def("add_state_vector",
              &StateVector::add_state_vector,
-             "Add other state vector and make superposition. $\\\\mathrm{this} \\\\leftarrow "
-             "\\\\mathrm{rhis} + \\\\ket{\\\\mathrm{state}}$.")
+             "Add other state vector and make superposition. $\\\\ket{\\\\mathrm{this}} "
+             "\\\\leftarrow "
+             "\\\\ket{\\\\mathrm{this}} + \\\\ket{\\\\mathrm{state}}$.")
         .def("add_state_vector_with_coef",
              &StateVector::add_state_vector_with_coef,
              "add other state vector with multiplying the coef and make superposition. "
-             "$\\\\mathrm{this}\\\\leftarrow\\\\mathrm{this}+\\\\mathrm{coef}\\\\ket{\\\\mathrm{"
-             "state}}.")
-        .def("multiply_coef", &StateVector::multiply_coef, "Multiply coef.")
+             "$\\\\ket{\\\\mathrm{this}}\\\\leftarrow\\\\ket{\\\\mathrm{this}}+\\\\mathrm{coef}"
+             "\\\\ket{\\\\mathrm{"
+             "state}}$.")
+        .def("multiply_coef",
+             &StateVector::multiply_coef,
+             "Multiply coef. "
+             "$\\\\ket{\\\\mathrm{this}}\\\\leftarrow\\\\mathrm{coef}\\\\ket{\\\\mathrm{this}}$.")
         .def(
             "sampling",
             [](const StateVector &state, UINT sampling_count, std::optional<UINT> seed) {
@@ -323,10 +330,10 @@ NB_MODULE(scaluq_core, m) {
     DEF_ONE_QUBIT_GATE(SqrtYdagGate, "Specific class of inverse of sqrt(Y) gate.");
     DEF_ONE_QUBIT_GATE(
         P0Gate,
-        "Specific class of projection gate to \\\\ket{0}.\\n.. note:: This gate is not unitary.");
+        "Specific class of projection gate to $\\\\ket{0}$.\\n.. note:: This gate is not unitary.");
     DEF_ONE_QUBIT_GATE(
         P1Gate,
-        "Specific class of projection gate to \\\\ket{1}.\\n.. note:: This gate is not unitary.");
+        "Specific class of projection gate to $\\\\ket{1}$.\\n.. note:: This gate is not unitary.");
 
 #define DEF_ONE_QUBIT_ROTATION_GATE(GATE_TYPE, DESCRIPTION) \
     DEF_ONE_QUBIT_GATE(GATE_TYPE, DESCRIPTION)              \
@@ -335,18 +342,18 @@ NB_MODULE(scaluq_core, m) {
 
     DEF_ONE_QUBIT_ROTATION_GATE(RXGate,
                                 "Specific class of X rotation gate, represented as "
-                                "$e^{-i\\\\frac{\\\\mathrm{angle}{2}X}$.");
+                                "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}X}$.");
     DEF_ONE_QUBIT_ROTATION_GATE(RYGate,
                                 "Specific class of Y rotation gate, represented as "
-                                "$e^{-i\\\\frac{\\\\mathrm{angle}{2}Y}$.");
+                                "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}Y}$.");
     DEF_ONE_QUBIT_ROTATION_GATE(RZGate,
                                 "Specific class of Z rotation gate, represented as "
-                                "$e^{-i\\\\frac{\\\\mathrm{angle}{2}Z}$.");
+                                "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}Z}$.");
 
     DEF_GATE(U1Gate,
              "Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, "
              "represented as "
-             "\\\\begin{bmatrix}\n1 & 0\\\\\\\\\n 0 & e^{i\\\\lambda}\n\\\\end{bmatrix}.")
+             "$\\\\begin{bmatrix}\n1 & 0\\\\\\\\\n 0 & e^{i\\\\lambda}\n\\\\end{bmatrix}$.")
         .def(
             "lambda_", [](const U1Gate &gate) { return gate->lambda(); }, "Get `lambda` property.");
     DEF_GATE(U2Gate,
@@ -361,9 +368,9 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE(U3Gate,
              "Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, "
              "represented as "
-             "\\\\begin{bmatrix}\n\\\\cos \\\\frac{\\\\theta}{2} & "
+             "$\\\\begin{bmatrix}\n\\\\cos \\\\frac{\\\\theta}{2} & "
              "-e^{i\\\\lambda}\\\\sin\\\\frac{\\\\theta}{2}\\\\\\\\\n "
-             "e^{i\\\\phi}\\\\sin\\\\frac{\\\\theta}{2}\n\\\\end{bmatrix} & "
+             "e^{i\\\\phi}\\\\sin\\\\frac{\\\\theta}{2} & "
              "e^{i(\\\\phi+\\\\lambda)}\\\\cos\\\\frac{\\\\theta}{2}\n\\\\end{bmatrix}$.")
         .def(
             "theta", [](const U3Gate &gate) { return gate->theta(); }, "Get `theta` property.")
@@ -410,10 +417,12 @@ NB_MODULE(scaluq_core, m) {
             [](const TwoQubitMatrixGate &gate) { gate->matrix(); },
             "Get property `matrix`.");
 
-    DEF_GATE(FusedSwapGate,
-             "Specific class of fused swap gate, which swap qubits in "
-             "[`qubit_index1`..`qubit_index1+block_size`) and qubits in "
-             "[`qubit_index2`..`qubit_index2`+block_size`).")
+    DEF_GATE(
+        FusedSwapGate,
+        "Specific class of fused swap gate, which swap qubits in "
+        "$[\\\\mathrm{qubit\\\\_index1},\\\\mathrm{qubit\\\\_index1}+\\\\mathrm{block\\\\_size})$ "
+        "and qubits in "
+        "$[\\\\mathrm{qubit\\\\_index2},\\\\mathrm{qubit\\\\_index2}+\\\\mathrm{block\\\\_size})$.")
         .def(
             "qubit_index1",
             [](const FusedSwapGate &gate) { return gate->qubit_index1(); },

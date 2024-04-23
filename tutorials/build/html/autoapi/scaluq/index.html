@@ -103,7 +103,7 @@
 <td><p>Quantum circuit represented as gate array</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#scaluq.FusedSwapGate" title="scaluq.FusedSwapGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FusedSwapGate</span></code></a></p></td>
-<td><p>Specific class of fused swap gate, which swap qubits in [<cite>qubit_index1</cite>..`qubit_index1+block_size`) and qubits in [<cite>qubit_index2</cite>..`qubit_index2`+block_size`).</p></td>
+<td><p>Specific class of fused swap gate, which swap qubits in $[mathrm{qubit_index1},mathrm{qubit_index1}+mathrm{block_size})$ and qubits in $[mathrm{qubit_index2},mathrm{qubit_index2}+mathrm{block_size})$.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#scaluq.Gate" title="scaluq.Gate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Gate</span></code></a></p></td>
 <td><p>General class of QuantumGate.</p></td>
@@ -130,10 +130,10 @@
 <td><p>None</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#scaluq.P0Gate" title="scaluq.P0Gate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">P0Gate</span></code></a></p></td>
-<td><p>Specific class of projection gate to ket{0}.</p></td>
+<td><p>Specific class of projection gate to $ket{0}$.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#scaluq.P1Gate" title="scaluq.P1Gate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">P1Gate</span></code></a></p></td>
-<td><p>Specific class of projection gate to ket{1}.</p></td>
+<td><p>Specific class of projection gate to $ket{1}$.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#scaluq.PauliGate" title="scaluq.PauliGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PauliGate</span></code></a></p></td>
 <td><p>Specific class of multi-qubit pauli gate, which applies single-qubit Pauli gate to each of qubit.</p></td>
@@ -145,13 +145,13 @@
 <td><p>Specific class of multi-qubit pauli-rotation gate, represented as $e^{-ifrac{mathrm{angle}}{2}P}$.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#scaluq.RXGate" title="scaluq.RXGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RXGate</span></code></a></p></td>
-<td><p>Specific class of X rotation gate, represented as $e^{-ifrac{mathrm{angle}{2}X}$.</p></td>
+<td><p>Specific class of X rotation gate, represented as $e^{-ifrac{mathrm{angle}}{2}X}$.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#scaluq.RYGate" title="scaluq.RYGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RYGate</span></code></a></p></td>
-<td><p>Specific class of Y rotation gate, represented as $e^{-ifrac{mathrm{angle}{2}Y}$.</p></td>
+<td><p>Specific class of Y rotation gate, represented as $e^{-ifrac{mathrm{angle}}{2}Y}$.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#scaluq.RZGate" title="scaluq.RZGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RZGate</span></code></a></p></td>
-<td><p>Specific class of Z rotation gate, represented as $e^{-ifrac{mathrm{angle}{2}Z}$.</p></td>
+<td><p>Specific class of Z rotation gate, represented as $e^{-ifrac{mathrm{angle}}{2}Z}$.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#scaluq.SGate" title="scaluq.SGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SGate</span></code></a></p></td>
 <td><p>Specific class of S gate, represented as $begin{bmatrix}</p></td>
@@ -187,13 +187,13 @@
 <td><p>Specific class of double-qubit dense matrix gate.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#scaluq.U1Gate" title="scaluq.U1Gate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">U1Gate</span></code></a></p></td>
-<td><p>Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, represented as begin{bmatrix}</p></td>
+<td><p>Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, represented as $begin{bmatrix}</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#scaluq.U2Gate" title="scaluq.U2Gate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">U2Gate</span></code></a></p></td>
 <td><p>Specific class of IBMQ's U2 Gate, which is a rotation about X+Z-axis, represented as $frac{1}{sqrt{2}} begin{bmatrix}1 &amp; -e^{-ilambda}\</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#scaluq.U3Gate" title="scaluq.U3Gate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">U3Gate</span></code></a></p></td>
-<td><p>Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, represented as begin{bmatrix}</p></td>
+<td><p>Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, represented as $begin{bmatrix}</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#scaluq.XGate" title="scaluq.XGate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">XGate</span></code></a></p></td>
 <td><p>Specific class of Pauli-X gate.</p></td>
@@ -527,7 +527,7 @@
 <dt class="sig sig-object py" id="scaluq.FusedSwapGate">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scaluq.</span></span><span class="sig-name descname"><span class="pre">FusedSwapGate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scaluq.Gate" title="scaluq.Gate"><span class="pre">Gate</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scaluq.FusedSwapGate" title="Link to this definition"></a></dt>
 <dd><blockquote>
-<div><p>Specific class of fused swap gate, which swap qubits in [<cite>qubit_index1</cite>..`qubit_index1+block_size`) and qubits in [<cite>qubit_index2</cite>..`qubit_index2`+block_size`).</p>
+<div><p>Specific class of fused swap gate, which swap qubits in <span class="math notranslate nohighlight">\([\mathrm{qubit\_index1},\mathrm{qubit\_index1}+\mathrm{block\_size})\)</span> and qubits in <span class="math notranslate nohighlight">\([\mathrm{qubit\_index2},\mathrm{qubit\_index2}+\mathrm{block\_size})\)</span>.</p>
 </div></blockquote>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -973,7 +973,10 @@
 <dd><blockquote>
 <div><p>Wrapper class of Kokkos’s InitializationSettings.</p>
 </div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <p>See details: <a class="reference external" href="https://kokkos.org/kokkos-core-wiki/API/core/initialize_finalize/InitializationSettings.html">https://kokkos.org/kokkos-core-wiki/API/core/initialize_finalize/InitializationSettings.html</a></p>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.InitializationSettings.get_device_id">
 <span class="sig-name descname"><span class="pre">get_device_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#scaluq.InitializationSettings.get_device_id" title="Link to this definition"></a></dt>
@@ -1235,7 +1238,7 @@
 <dt class="sig sig-object py" id="scaluq.P0Gate">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scaluq.</span></span><span class="sig-name descname"><span class="pre">P0Gate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scaluq.Gate" title="scaluq.Gate"><span class="pre">Gate</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scaluq.P0Gate" title="Link to this definition"></a></dt>
 <dd><blockquote>
-<div><p>Specific class of projection gate to ket{0}.</p>
+<div><p>Specific class of projection gate to <span class="math notranslate nohighlight">\(\ket{0}\)</span>.</p>
 </div></blockquote>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1298,7 +1301,7 @@
 <dt class="sig sig-object py" id="scaluq.P1Gate">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scaluq.</span></span><span class="sig-name descname"><span class="pre">P1Gate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scaluq.Gate" title="scaluq.Gate"><span class="pre">Gate</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scaluq.P1Gate" title="Link to this definition"></a></dt>
 <dd><blockquote>
-<div><p>Specific class of projection gate to ket{1}.</p>
+<div><p>Specific class of projection gate to <span class="math notranslate nohighlight">\(\ket{1}\)</span>.</p>
 </div></blockquote>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1535,7 +1538,7 @@
 <dt class="sig sig-object py" id="scaluq.RXGate">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scaluq.</span></span><span class="sig-name descname"><span class="pre">RXGate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scaluq.Gate" title="scaluq.Gate"><span class="pre">Gate</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scaluq.RXGate" title="Link to this definition"></a></dt>
 <dd><blockquote>
-<div><p>Specific class of X rotation gate, represented as <span class="math notranslate nohighlight">\(e^{-i\frac{\mathrm{angle}{2}X}\)</span>.</p>
+<div><p>Specific class of X rotation gate, represented as <span class="math notranslate nohighlight">\(e^{-i\frac{\mathrm{angle}}{2}X}\)</span>.</p>
 </div></blockquote>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1600,7 +1603,7 @@
 <dt class="sig sig-object py" id="scaluq.RYGate">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scaluq.</span></span><span class="sig-name descname"><span class="pre">RYGate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scaluq.Gate" title="scaluq.Gate"><span class="pre">Gate</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scaluq.RYGate" title="Link to this definition"></a></dt>
 <dd><blockquote>
-<div><p>Specific class of Y rotation gate, represented as <span class="math notranslate nohighlight">\(e^{-i\frac{\mathrm{angle}{2}Y}\)</span>.</p>
+<div><p>Specific class of Y rotation gate, represented as <span class="math notranslate nohighlight">\(e^{-i\frac{\mathrm{angle}}{2}Y}\)</span>.</p>
 </div></blockquote>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1665,7 +1668,7 @@
 <dt class="sig sig-object py" id="scaluq.RZGate">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scaluq.</span></span><span class="sig-name descname"><span class="pre">RZGate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scaluq.Gate" title="scaluq.Gate"><span class="pre">Gate</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scaluq.RZGate" title="Link to this definition"></a></dt>
 <dd><blockquote>
-<div><p>Specific class of Z rotation gate, represented as <span class="math notranslate nohighlight">\(e^{-i\frac{\mathrm{angle}{2}Z}\)</span>.</p>
+<div><p>Specific class of Z rotation gate, represented as <span class="math notranslate nohighlight">\(e^{-i\frac{\mathrm{angle}}{2}Z}\)</span>.</p>
 </div></blockquote>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -2102,13 +2105,13 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.StateVector.add_state_vector">
 <span class="sig-name descname"><span class="pre">add_state_vector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scaluq.StateVector" title="scaluq.StateVector"><span class="pre">StateVector</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#scaluq.StateVector.add_state_vector" title="Link to this definition"></a></dt>
-<dd><p>Add other state vector and make superposition. <span class="math notranslate nohighlight">\(\mathrm{this} \leftarrow \mathrm{rhis} + \ket{\mathrm{state}}\)</span>.</p>
+<dd><p>Add other state vector and make superposition. <span class="math notranslate nohighlight">\(\ket{\mathrm{this}} \leftarrow \ket{\mathrm{this}} + \ket{\mathrm{state}}\)</span>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.StateVector.add_state_vector_with_coef">
 <span class="sig-name descname"><span class="pre">add_state_vector_with_coef</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">complex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scaluq.StateVector" title="scaluq.StateVector"><span class="pre">StateVector</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#scaluq.StateVector.add_state_vector_with_coef" title="Link to this definition"></a></dt>
-<dd><p>add other state vector with multiplying the coef and make superposition. $mathrm{this}leftarrowmathrm{this}+mathrm{coef}ket{mathrm{state}}.</p>
+<dd><p>add other state vector with multiplying the coef and make superposition. <span class="math notranslate nohighlight">\(\ket{\mathrm{this}}\leftarrow\ket{\mathrm{this}}+\mathrm{coef}\ket{\mathrm{state}}\)</span>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2120,7 +2123,7 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.StateVector.dim">
 <span class="sig-name descname"><span class="pre">dim</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#scaluq.StateVector.dim" title="Link to this definition"></a></dt>
-<dd><p>Get dimension of the vector (<span class="math notranslate nohighlight">\(=2^\mathrm{n_qubits}\)</span>).</p>
+<dd><p>Get dimension of the vector (<span class="math notranslate nohighlight">\(=2^\mathrm{n\_qubits}\)</span>).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2150,7 +2153,7 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.StateVector.get_squared_norm">
 <span class="sig-name descname"><span class="pre">get_squared_norm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#scaluq.StateVector.get_squared_norm" title="Link to this definition"></a></dt>
-<dd><p>Get squared norm of the state. <span class="math notranslate nohighlight">\(\bra{\psi}\ket{\p\si}\)</span>.</p>
+<dd><p>Get squared norm of the state. <span class="math notranslate nohighlight">\(\braket{\psi|\psi}\)</span>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2168,7 +2171,7 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.StateVector.multiply_coef">
 <span class="sig-name descname"><span class="pre">multiply_coef</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">complex</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#scaluq.StateVector.multiply_coef" title="Link to this definition"></a></dt>
-<dd><p>Multiply coef.</p>
+<dd><p>Multiply coef. <span class="math notranslate nohighlight">\(\ket{\mathrm{this}}\leftarrow\mathrm{coef}\ket{\mathrm{this}}\)</span>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2180,7 +2183,7 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="scaluq.StateVector.normalize">
 <span class="sig-name descname"><span class="pre">normalize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#scaluq.StateVector.normalize" title="Link to this definition"></a></dt>
-<dd><p>Normalize state (let <span class="math notranslate nohighlight">\(\bra{\psi}\ket{\psi} = 1\)</span> by multiplying coef).</p>
+<dd><p>Normalize state (let <span class="math notranslate nohighlight">\(\braket{\psi|\psi} = 1\)</span> by multiplying coef).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2484,10 +2487,10 @@
 <dt class="sig sig-object py" id="scaluq.U1Gate">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scaluq.</span></span><span class="sig-name descname"><span class="pre">U1Gate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scaluq.Gate" title="scaluq.Gate"><span class="pre">Gate</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scaluq.U1Gate" title="Link to this definition"></a></dt>
 <dd><blockquote>
-<div><p>Specific class of IBMQ’s U1 Gate, which is a rotation abount Z-axis, represented as begin{bmatrix}
-1 &amp; 0\
-0 &amp; e^{ilambda}
-end{bmatrix}.</p>
+<div><p>Specific class of IBMQ’s U1 Gate, which is a rotation abount Z-axis, represented as <span class="math notranslate nohighlight">\(\begin{bmatrix}
+1 &amp; 0\\
+0 &amp; e^{i\lambda}
+\end{bmatrix}\)</span>.</p>
 </div></blockquote>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -2615,11 +2618,10 @@ e^{i\phi} &amp; e^{i(\phi+\lambda)}
 <dt class="sig sig-object py" id="scaluq.U3Gate">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scaluq.</span></span><span class="sig-name descname"><span class="pre">U3Gate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scaluq.Gate" title="scaluq.Gate"><span class="pre">Gate</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scaluq.U3Gate" title="Link to this definition"></a></dt>
 <dd><blockquote>
-<div><p>Specific class of IBMQ’s U3 Gate, which is a rotation abount 3 axis, represented as begin{bmatrix}
-cos frac{theta}{2} &amp; -e^{ilambda}sinfrac{theta}{2}\
-e^{iphi}sinfrac{theta}{2}
-end{bmatrix} &amp; e^{i(phi+lambda)}cosfrac{theta}{2}
-end{bmatrix}$.</p>
+<div><p>Specific class of IBMQ’s U3 Gate, which is a rotation abount 3 axis, represented as <span class="math notranslate nohighlight">\(\begin{bmatrix}
+\cos \frac{\theta}{2} &amp; -e^{i\lambda}\sin\frac{\theta}{2}\\
+e^{i\phi}\sin\frac{\theta}{2} &amp; e^{i(\phi+\lambda)}\cos\frac{\theta}{2}
+\end{bmatrix}\)</span>.</p>
 </div></blockquote>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
