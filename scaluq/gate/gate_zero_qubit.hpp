@@ -22,7 +22,7 @@ public:
         return ComplexMatrix::Identity(1, 1);
     }
 
-    void update_quantum_state(StateVector& state_vector) const override;
+    void update_quantum_state(StateVector& state_vector) const override { i_gate(state_vector); }
 };
 
 class GlobalPhaseGateImpl : public ZeroQubitGateBase {
@@ -40,7 +40,9 @@ public:
         return ComplexMatrix::Identity(1, 1) * std::exp(std::complex<double>(0, _phase));
     }
 
-    void update_quantum_state(StateVector& state_vector) const override;
+    void update_quantum_state(StateVector& state_vector) const override {
+        global_phase_gate(_phase, state_vector);
+    }
 };
 }  // namespace internal
 

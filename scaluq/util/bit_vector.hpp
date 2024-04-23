@@ -8,6 +8,7 @@
 #include "../types.hpp"
 
 namespace scaluq {
+namespace internal {
 class BitVector {
 public:
     constexpr static UINT BIT_SIZE = sizeof(UINT) * 8;
@@ -159,4 +160,5 @@ public:
 private:
     std::vector<UINT> _data;
 };
+}  // namespace internal
 }  // namespace scaluq

@@ -136,7 +136,8 @@ NB_MODULE(scaluq_core, m) {
             "seed"_a = std::nullopt)
         .def("to_string", &StateVector::to_string)
         .def("load", &StateVector::load)
-        .def("__str__", &StateVector::to_string);
+        .def("__str__", &StateVector::to_string)
+        .def_ro_static("UNMEASURED", &StateVector::UNMEASURED);
 
     nb::enum_<GateType>(m, "GateType")
         .value("I", GateType::I)
@@ -347,7 +348,7 @@ NB_MODULE(scaluq_core, m) {
                nb::int_ bit_flip_mask_py,
                nb::int_ phase_flip_mask_py,
                Complex coef) {
-                BitVector bit_flip_mask(0), phase_flip_mask(0);
+                internal::BitVector bit_flip_mask(0), phase_flip_mask(0);
                 const nb::int_ mask(~0ULL);
                 auto &bit_flip_raw = bit_flip_mask.data_raw();
                 assert(bit_flip_raw.empty());

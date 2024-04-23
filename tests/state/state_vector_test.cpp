@@ -200,11 +200,17 @@ TEST(StateVectorTest, GetMarginalProbability) {
     ASSERT_NEAR(state.get_marginal_probability({1, 0}), probs[1], eps);
     ASSERT_NEAR(state.get_marginal_probability({0, 1}), probs[2], eps);
     ASSERT_NEAR(state.get_marginal_probability({1, 1}), probs[3], eps);
-    ASSERT_NEAR(state.get_marginal_probability({0, 2}), probs[0] + probs[2], eps);
-    ASSERT_NEAR(state.get_marginal_probability({1, 2}), probs[1] + probs[3], eps);
-    ASSERT_NEAR(state.get_marginal_probability({2, 0}), probs[0] + probs[1], eps);
-    ASSERT_NEAR(state.get_marginal_probability({2, 1}), probs[2] + probs[3], eps);
-    ASSERT_NEAR(state.get_marginal_probability({2, 2}), 1., eps);
+    ASSERT_NEAR(
+        state.get_marginal_probability({0, StateVector::UNMEASURED}), probs[0] + probs[2], eps);
+    ASSERT_NEAR(
+        state.get_marginal_probability({1, StateVector::UNMEASURED}), probs[1] + probs[3], eps);
+    ASSERT_NEAR(
+        state.get_marginal_probability({StateVector::UNMEASURED, 0}), probs[0] + probs[1], eps);
+    ASSERT_NEAR(
+        state.get_marginal_probability({StateVector::UNMEASURED, 1}), probs[2] + probs[3], eps);
+    ASSERT_NEAR(state.get_marginal_probability({StateVector::UNMEASURED, StateVector::UNMEASURED}),
+                1.,
+                eps);
 }
 
 TEST(StateVectorTest, SamplingSuperpositionState) {

@@ -50,7 +50,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override;
+    void update_quantum_state(StateVector& state_vector) const override {
+        check_qubit_within_bounds(state_vector, this->_qubit_index1 + this->_block_size - 1);
+        check_qubit_within_bounds(state_vector, this->_qubit_index2 + this->_block_size - 1);
+        fusedswap_gate(this->_qubit_index1, this->_qubit_index2, this->_block_size, state_vector);
+    }
 };
 }  // namespace internal
 
