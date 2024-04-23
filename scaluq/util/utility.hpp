@@ -8,6 +8,7 @@
 
 #include "../operator/pauli_operator.hpp"
 #include "../types.hpp"
+#include "KokkosSparse_spmv.hpp"
 
 namespace scaluq {
 
@@ -97,6 +98,12 @@ std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device
 
 KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
     return z.real() * z.real() + z.imag() * z.imag();
+}
+
+KOKKOS_INLINE_FUNCTION void spmv(const CrsMatrix& matrix,
+                                 const Kokkos::View<Complex*>& x,
+                                 Kokkos::View<Complex*>& y) {
+    KokkosSparse::spmv("N", 1.0, matrix, x, 0.0, y);
 }
 
 }  // namespace scaluq

@@ -68,6 +68,19 @@ if(NOT eigen_fetch_POPULATED)
     add_subdirectory(${eigen_fetch_SOURCE_DIR})
 endif(NOT eigen_fetch_POPULATED)
 
+# Kokkos-Kernels
+FetchContent_Declare(
+    kokkoskernels_fetch
+    GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels
+    GIT_TAG 4.2.00
+)
+FetchContent_GetProperties(kokkoskernels_fetch)
+if(NOT kokkoskernels_fetch_POPULATED)
+    message(STATUS "Fetch kokkos-kernels for matrix operation")
+    FetchContent_Populate(kokkoskernels_fetch)
+    add_subdirectory(${kokkoskernels_fetch_SOURCE_DIR})
+endif(NOT kokkoskernels_fetch_POPULATED)
+
 # nanobind
 if(SKBUILD)
     find_package(Python 3.8

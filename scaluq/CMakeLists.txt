@@ -24,6 +24,7 @@ target_sources(scaluq PRIVATE
 )
 target_link_libraries(scaluq PRIVATE 
     Kokkos::kokkos
+    Kokkos::kokkoskernels
     Eigen3::Eigen
 )
 target_include_directories(scaluq PRIVATE ${PROJECT_SOURCE_DIR}/scaluq)

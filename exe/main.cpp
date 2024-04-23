@@ -8,14 +8,14 @@
 
 #include "../scaluq/all.hpp"
 #include "../scaluq/util/utility.hpp"
+#include "KokkosKernels_default_types.hpp"
+#include "KokkosSparse_CrsMatrix.hpp"
+#include "KokkosSparse_spmv.hpp"
 
 using namespace scaluq;
 using namespace std;
 
-void run() {
-    UINT n_qubits = 5;
-    auto state = StateVector::Haar_random_state(n_qubits);
-}
+void run() { return; }
 
 int main() {
     Kokkos::initialize();

@@ -3,6 +3,7 @@
 #include <ranges>
 #include <vector>
 
+#include "KokkosSparse_CrsMatrix.hpp"
 #include "constant.hpp"
 #include "gate.hpp"
 #include "gate_one_qubit.hpp"
@@ -91,6 +92,23 @@ public:
             this->_matrix.val[3][3];
         return mat;
     }
+
+    void update_quantum_state(StateVector& state_vector) const override;
+};
+
+class CrsMatrixGateImpl : public GateBase {
+    CrsMatrix _matrix;
+    std::vector<UINT> target_qubit_index_list, control_qubit_index_list;
+
+public:
+    CrsMatrixGateImpl() : GateBase() {}
+
+    std::vector<UINT> get_target_qubit_list() const override { return target_qubit_index_list; }
+    std::vector<UINT> get_control_qubit_list() const override { return control_qubit_index_list; }
+
+    Gate copy() const override { return std::make_shared<CrsMatrixGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<CrsMatrixGateImpl>(*this); }
+    std::optional<ComplexMatrix> get_matrix() const override { return std::nullopt; }
 
     void update_quantum_state(StateVector& state_vector) const override;
 };
