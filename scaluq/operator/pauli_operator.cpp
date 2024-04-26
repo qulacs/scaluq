@@ -48,8 +48,8 @@ PauliOperator::PauliOperator(const std::vector<UINT>& target_qubit_list,
     }
 }
 
-PauliOperator::PauliOperator(const BitVector& bit_flip_mask,
-                             const BitVector& phase_flip_mask,
+PauliOperator::PauliOperator(const internal::BitVector& bit_flip_mask,
+                             const internal::BitVector& phase_flip_mask,
                              Complex coef)
     : _coef(coef) {
     UINT num_y = 0;

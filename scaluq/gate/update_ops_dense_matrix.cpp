@@ -2,7 +2,6 @@
 #include <Kokkos_StdAlgorithms.hpp>
 
 #include "../types.hpp"
-#include "update_ops.hpp"
 #include "util/utility.hpp"
 
 namespace scaluq {

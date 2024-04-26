@@ -2,6 +2,7 @@
 
 #include "../state/state_vector.hpp"
 #include "../types.hpp"
+#include "update_ops.hpp"
 
 namespace scaluq {
 namespace internal {
@@ -131,6 +132,7 @@ public:
 
     [[nodiscard]] virtual Gate copy() const = 0;
     [[nodiscard]] virtual Gate get_inverse() const = 0;
+    [[nodiscard]] virtual std::optional<ComplexMatrix> get_matrix() const = 0;
 
     virtual void update_quantum_state(StateVector& state_vector) const = 0;
 };
@@ -146,7 +148,7 @@ private:
     GateType _gate_type;
 
 public:
-    GatePtr() : _gate_type(get_gate_type<T>()), _gate_ptr(nullptr) {}
+    GatePtr() : _gate_ptr(nullptr), _gate_type(get_gate_type<T>()) {}
     GatePtr(const GatePtr& gate) = default;
     template <GateImpl U>
     GatePtr(const std::shared_ptr<U>& gate_ptr) {

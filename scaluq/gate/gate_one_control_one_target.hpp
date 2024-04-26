@@ -26,8 +26,17 @@ public:
 
     Gate copy() const override { return std::make_shared<CXGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<CXGateImpl>(*this); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(4, 4);
+        mat << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0;
+        return mat;
+    }
 
-    void update_quantum_state(StateVector& state_vector) const override;
+    void update_quantum_state(StateVector& state_vector) const override {
+        check_qubit_within_bounds(state_vector, this->_control);
+        check_qubit_within_bounds(state_vector, this->_target);
+        cx_gate(this->_control, this->_target, state_vector);
+    }
 };
 
 class CZGateImpl : public OneControlOneTargetGateBase {
@@ -36,8 +45,17 @@ public:
 
     Gate copy() const override { return std::make_shared<CZGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<CZGateImpl>(*this); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat(4, 4);
+        mat << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1;
+        return mat;
+    }
 
-    void update_quantum_state(StateVector& state_vector) const override;
+    void update_quantum_state(StateVector& state_vector) const override {
+        check_qubit_within_bounds(state_vector, this->_control);
+        check_qubit_within_bounds(state_vector, this->_target);
+        cz_gate(this->_control, this->_target, state_vector);
+    }
 };
 }  // namespace internal
 

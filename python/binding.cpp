@@ -1,6 +1,8 @@
+#include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
 #include <nanobind/stl/array.h>
+#include <nanobind/stl/complex.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
@@ -193,7 +195,11 @@ NB_MODULE(scaluq_core, m) {
             "Sampling specified times. Result is `list[int]` with the `sampling_count` length.")
         .def("to_string", &StateVector::to_string, "Information as `str`.")
         .def("load", &StateVector::load, "Load amplitudes of `list[int]` with `dim` length.")
-        .def("__str__", &StateVector::to_string, "Information as `str`.");
+        .def("__str__", &StateVector::to_string, "Information as `str`.")
+        .def_ro_static("UNMEASURED",
+                       &StateVector::UNMEASURED,
+                       "Constant used for `StateVector::get_marginal_probability` to express the "
+                       "the qubit is not measured.");
 
     nb::enum_<GateType>(m, "GateType", "Enum of Gate Type.")
         .value("I", GateType::I)
@@ -227,31 +233,35 @@ NB_MODULE(scaluq_core, m) {
         .value("Pauli", GateType::Pauli)
         .value("PauliRotation", GateType::PauliRotation);
 
-#define DEF_GATE_BASE(GATE_TYPE, DESCRIPTION)                                         \
-    nb::class_<GATE_TYPE>(m, #GATE_TYPE, DESCRIPTION)                                 \
-        .def("gate_type", &GATE_TYPE::gate_type, "Get gate type as `GateType` enum.") \
-        .def(                                                                         \
-            "get_target_qubit_list",                                                  \
-            [](const GATE_TYPE &gate) { return gate->get_target_qubit_list(); },      \
-            "Get target qubits as `list[int]`. **Control qubits is not included.**")  \
-        .def(                                                                         \
-            "get_control_qubit_list",                                                 \
-            [](const GATE_TYPE &gate) { return gate->get_control_qubit_list(); },     \
-            "Get control qubits as `list[int]`.")                                     \
-        .def(                                                                         \
-            "copy",                                                                   \
-            [](const GATE_TYPE &gate) { return gate->copy(); },                       \
-            "Copy gate as `Gate` type.")                                              \
-        .def(                                                                         \
-            "get_inverse",                                                            \
-            [](const GATE_TYPE &gate) { return gate->get_inverse(); },                \
-            "Generate inverse gate as `Gate` type. If not exists, return None.")      \
-        .def(                                                                         \
-            "update_quantum_state",                                                   \
-            [](const GATE_TYPE &gate, StateVector &state_vector) {                    \
-                gate->update_quantum_state(state_vector);                             \
-            },                                                                        \
-            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")
+#define DEF_GATE_BASE(GATE_TYPE, DESCRIPTION)                                            \
+    nb::class_<GATE_TYPE>(m, #GATE_TYPE, DESCRIPTION)                                    \
+        .def("gate_type", &GATE_TYPE::gate_type, "Get gate type as `GateType` enum.")    \
+        .def(                                                                            \
+            "get_target_qubit_list",                                                     \
+            [](const GATE_TYPE &gate) { return gate->get_target_qubit_list(); },         \
+            "Get target qubits as `list[int]`. **Control qubits is not included.**")     \
+        .def(                                                                            \
+            "get_control_qubit_list",                                                    \
+            [](const GATE_TYPE &gate) { return gate->get_control_qubit_list(); },        \
+            "Get control qubits as `list[int]`.")                                        \
+        .def(                                                                            \
+            "copy",                                                                      \
+            [](const GATE_TYPE &gate) { return gate->copy(); },                          \
+            "Copy gate as `Gate` type.")                                                 \
+        .def(                                                                            \
+            "get_inverse",                                                               \
+            [](const GATE_TYPE &gate) { return gate->get_inverse(); },                   \
+            "Generate inverse gate as `Gate` type. If not exists, return None.")         \
+        .def(                                                                            \
+            "update_quantum_state",                                                      \
+            [](const GATE_TYPE &gate, StateVector &state_vector) {                       \
+                gate->update_quantum_state(state_vector);                                \
+            },                                                                           \
+            "Apply gate to `state_vector`. `state_vector` in args is directly updated.") \
+        .def(                                                                            \
+            "get_matrix",                                                                \
+            [](const GATE_TYPE &gate) { return gate->get_matrix(); },                    \
+            "Get matrix representation of the gate. If cannot, None is returned.")
 
 #define DEF_GATE(GATE_TYPE, DESCRIPTION)                                                       \
     DEF_GATE_BASE(                                                                             \
@@ -529,7 +539,7 @@ NB_MODULE(scaluq_core, m) {
                nb::int_ bit_flip_mask_py,
                nb::int_ phase_flip_mask_py,
                Complex coef) {
-                BitVector bit_flip_mask(0), phase_flip_mask(0);
+                internal::BitVector bit_flip_mask(0), phase_flip_mask(0);
                 const nb::int_ mask(~0ULL);
                 auto &bit_flip_raw = bit_flip_mask.data_raw();
                 assert(bit_flip_raw.empty());

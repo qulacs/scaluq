@@ -37,8 +37,24 @@ public:
 
     Gate copy() const override { return std::make_shared<FusedSwapGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<FusedSwapGateImpl>(*this); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        const UINT pow2_nq = 1ULL << _block_size;
+        const UINT pow2_2nq = 1ULL << (_block_size * 2);
+        auto mat = SparseComplexMatrix(pow2_2nq, pow2_2nq);
+        mat.reserve(pow2_2nq);
+        for (UINT i = 0; i < pow2_nq; i++) {
+            for (UINT j = 0; j < pow2_nq; j++) {
+                mat.insert(i * pow2_nq + j, i + j * pow2_nq) = 1;
+            }
+        }
+        return mat;
+    }
 
-    void update_quantum_state(StateVector& state_vector) const override;
+    void update_quantum_state(StateVector& state_vector) const override {
+        check_qubit_within_bounds(state_vector, this->_qubit_index1 + this->_block_size - 1);
+        check_qubit_within_bounds(state_vector, this->_qubit_index2 + this->_block_size - 1);
+        fusedswap_gate(this->_qubit_index1, this->_qubit_index2, this->_block_size, state_vector);
+    }
 };
 }  // namespace internal
 

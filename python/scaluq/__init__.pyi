@@ -53,6 +53,12 @@ class CXGate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -110,6 +116,12 @@ class CZGate:
     def get_inverse(self) -> scaluq.scaluq_core.Gate:
         """
         Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
         """
         ...
 
@@ -241,6 +253,12 @@ class FusedSwapGate:
     def get_inverse(self) -> scaluq.scaluq_core.Gate:
         """
         Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
         """
         ...
 
@@ -506,6 +524,12 @@ class Gate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -619,6 +643,12 @@ class GlobalPhaseGate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -673,6 +703,12 @@ class HGate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -719,6 +755,12 @@ class IGate:
     def get_inverse(self) -> scaluq.scaluq_core.Gate:
         """
         Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
         """
         ...
 
@@ -816,6 +858,12 @@ class OneQubitMatrixGate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -892,6 +940,12 @@ class P0Gate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -941,6 +995,12 @@ class P1Gate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -987,6 +1047,12 @@ class PauliGate:
     def get_inverse(self) -> scaluq.scaluq_core.Gate:
         """
         Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
         """
         ...
 
@@ -1163,6 +1229,12 @@ class PauliRotationGate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -1214,6 +1286,12 @@ class RXGate:
     def get_inverse(self) -> scaluq.scaluq_core.Gate:
         """
         Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
         """
         ...
 
@@ -1272,6 +1350,12 @@ class RYGate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -1327,6 +1411,12 @@ class RZGate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -1379,6 +1469,12 @@ class SGate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -1425,6 +1521,12 @@ class SdagGate:
     def get_inverse(self) -> scaluq.scaluq_core.Gate:
         """
         Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
         """
         ...
 
@@ -1480,6 +1582,12 @@ class SqrtXGate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -1526,6 +1634,12 @@ class SqrtXdagGate:
     def get_inverse(self) -> scaluq.scaluq_core.Gate:
         """
         Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
         """
         ...
 
@@ -1581,6 +1695,12 @@ class SqrtYGate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -1630,6 +1750,12 @@ class SqrtYdagGate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -1655,6 +1781,7 @@ class StateVector:
         Constructing state vector with Haar random state. If seed is not specified, the value from random device is used.
         """
         ...
+    UNMEASURED: int
 
     def __init__(self, arg: scaluq.scaluq_core.StateVector) -> None:
         """
@@ -1821,6 +1948,12 @@ class SwapGate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -1884,6 +2017,12 @@ class TGate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -1933,6 +2072,12 @@ class TdagGate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -1973,6 +2118,12 @@ class TwoQubitMatrixGate:
     def get_inverse(self) -> scaluq.scaluq_core.Gate:
         """
         Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
         """
         ...
 
@@ -2045,6 +2196,12 @@ class U1Gate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -2098,6 +2255,12 @@ class U2Gate:
     def get_inverse(self) -> scaluq.scaluq_core.Gate:
         """
         Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
         """
         ...
 
@@ -2161,6 +2324,12 @@ class U3Gate:
     def get_inverse(self) -> scaluq.scaluq_core.Gate:
         """
         Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
         """
         ...
 
@@ -2230,6 +2399,12 @@ class XGate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -2279,6 +2454,12 @@ class YGate:
         """
         ...
 
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
+        """
+        ...
+
     def get_target_qubit_list(self) -> list[int]:
         """
         Get target qubits as `list[int]`. **Control qubits is not included.**
@@ -2325,6 +2506,12 @@ class ZGate:
     def get_inverse(self) -> scaluq.scaluq_core.Gate:
         """
         Generate inverse gate as `Gate` type. If not exists, return None.
+        """
+        ...
+
+    def get_matrix(self) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate. If cannot, None is returned.
         """
         ...
 

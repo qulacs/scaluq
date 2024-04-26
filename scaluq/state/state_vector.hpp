@@ -14,6 +14,7 @@ class StateVector {
     UINT _dim;
 
 public:
+    static constexpr UINT UNMEASURED = 2;
     Kokkos::View<Complex*> _raw;
     StateVector() = default;
     StateVector(UINT n_qubits);

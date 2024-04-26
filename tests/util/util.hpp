@@ -101,7 +101,7 @@ inline Eigen::MatrixXcd get_eigen_matrix_full_qubit_pauli(std::vector<UINT> inde
     }
     return get_eigen_matrix_full_qubit_pauli(whole_pauli_ids);
 }
-static Eigen::MatrixXcd get_eigen_matrix_full_qubit_CX(UINT control_qubit_index,
+inline Eigen::MatrixXcd get_eigen_matrix_full_qubit_CX(UINT control_qubit_index,
                                                        UINT target_qubit_index,
                                                        UINT qubit_count) {
     UINT dim = 1ULL << qubit_count;
@@ -130,7 +130,7 @@ inline Eigen::MatrixXcd get_eigen_matrix_full_qubit_CZ(UINT control_qubit_index,
     }
     return result;
 }
-static Eigen::MatrixXcd get_eigen_matrix_full_qubit_Swap(UINT target_qubit_index1,
+inline Eigen::MatrixXcd get_eigen_matrix_full_qubit_Swap(UINT target_qubit_index1,
                                                          UINT target_qubit_index2,
                                                          UINT qubit_count) {
     UINT dim = 1ULL << qubit_count;
@@ -168,14 +168,14 @@ inline Eigen::MatrixXcd make_Z() { return make_2x2_matrix(1, 0, 0, -1); }
 inline Eigen::MatrixXcd make_H() {
     return make_2x2_matrix(1 / sqrt(2.), 1 / sqrt(2.), 1 / sqrt(2.), -1 / sqrt(2.));
 }
-static Eigen::MatrixXcd make_S() { return make_2x2_matrix(1, 0, 0, 1.i); }
-static Eigen::MatrixXcd make_T() { return make_2x2_matrix(1, 0, 0, (1. + 1.i) / sqrt(2.)); }
+inline Eigen::MatrixXcd make_S() { return make_2x2_matrix(1, 0, 0, 1.i); }
+inline Eigen::MatrixXcd make_T() { return make_2x2_matrix(1, 0, 0, (1. + 1.i) / sqrt(2.)); }
 inline Eigen::MatrixXcd make_Sdag() { return make_2x2_matrix(1, 0, 0, -1.i); }
 inline Eigen::MatrixXcd make_Tdag() { return make_2x2_matrix(1, 0, 0, (1. - 1.i) / sqrt(2.)); }
-static Eigen::MatrixXcd make_SqrtX() {
+inline Eigen::MatrixXcd make_SqrtX() {
     return make_2x2_matrix(0.5 + 0.5i, 0.5 - 0.5i, 0.5 - 0.5i, 0.5 + 0.5i);
 }
-static Eigen::MatrixXcd make_SqrtY() {
+inline Eigen::MatrixXcd make_SqrtY() {
     return make_2x2_matrix(0.5 + 0.5i, -0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i);
 }
 

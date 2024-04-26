@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 
+#include "../operator/pauli_operator.hpp"
 #include "../types.hpp"
 
 namespace scaluq {
@@ -38,9 +39,39 @@ KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
     return ((basis_index >> uidx) << (uidx + 1)) | (basis_index & umask);
 }
 
+inline std::optional<ComplexMatrix> get_pauli_matrix(PauliOperator pauli) {
+    ComplexMatrix mat;
+    std::vector<UINT> pauli_id_list = pauli.get_pauli_id_list();
+    UINT flip_mask, phase_mask, rot90_count;
+    Kokkos::parallel_reduce(
+        pauli_id_list.size(),
+        KOKKOS_LAMBDA(const UINT& i, UINT& f_mask, UINT& p_mask, UINT& rot90_cnt) {
+            UINT pauli_id = pauli_id_list[i];
+            if (pauli_id == 1) {
+                f_mask ^= 1ULL << i;
+            } else if (pauli_id == 2) {
+                f_mask ^= 1ULL << i;
+                p_mask ^= 1ULL << i;
+                rot90_cnt++;
+            } else if (pauli_id == 3) {
+                p_mask ^= 1ULL << i;
+            }
+        },
+        flip_mask,
+        phase_mask,
+        rot90_count);
+    std::vector<StdComplex> rot = {1, -1.i, -1, 1.i};
+    UINT matrix_dim = 1ULL << pauli_id_list.size();
+    for (UINT index = 0; index < matrix_dim; index++) {
+        const StdComplex sign = 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
+        mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
+    }
+    return mat;
+}
+
 // Host std::vector を Device Kokkos::View に変換する関数
 template <typename T>
-Kokkos::View<T*, Kokkos::DefaultExecutionSpace> convert_host_vector_to_device_view(
+inline Kokkos::View<T*, Kokkos::DefaultExecutionSpace> convert_host_vector_to_device_view(
     const std::vector<T>& vec) {
     Kokkos::fence();
     Kokkos::View<T*, Kokkos::HostSpace> host_view("host_view", vec.size());
@@ -52,7 +83,7 @@ Kokkos::View<T*, Kokkos::DefaultExecutionSpace> convert_host_vector_to_device_vi
 
 // Device Kokkos::View を Host std::vector に変換する関数
 template <typename T>
-std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device_view) {
+inline std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device_view) {
     Kokkos::fence();
     std::vector<T> host_vector(device_view.extent(0));
     Kokkos::View<T*, Kokkos::HostSpace> host_view(
