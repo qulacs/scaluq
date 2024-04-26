@@ -3,6 +3,7 @@
 #include <ranges>
 #include <vector>
 
+#include "../util/utility.hpp"
 #include "KokkosSparse_CrsMatrix.hpp"
 #include "constant.hpp"
 #include "gate.hpp"
@@ -106,12 +107,79 @@ public:
     std::vector<UINT> get_target_qubit_list() const override { return target_qubit_index_list; }
     std::vector<UINT> get_control_qubit_list() const override { return control_qubit_index_list; }
 
+    void add_controle_qubit(UINT control_qubit_index) {
+        control_qubit_index_list.push_back(control_qubit_index);
+    }
+
     Gate copy() const override { return std::make_shared<CrsMatrixGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<CrsMatrixGateImpl>(*this); }
     std::optional<ComplexMatrix> get_matrix() const override { return std::nullopt; }
 
-    void update_quantum_state(StateVector& state_vector) const override;
+    void update_quantum_state(StateVector& state_vector) const override {}
+
+    // void update_quantum_state(StateVector& state_vector) const override {
+    //     Kokkos::View<scaluq::Complex*> state = state_vector._raw;
+    //     Kokkos::View<scaluq::Complex*> buffer1("buffer1", state_vector.dim());
+    //     Kokkos::View<scaluq::Complex*> buffer2("buffer2", state_vector.dim());
+
+    //     const UINT target_qubit_index_count = target_qubit_index_list.size();
+    //     const UINT matrix_dim = 1ULL << target_qubit_index_count;
+    //     const std::vector<UINT> matrix_mask_list =
+    //         create_matrix_mask_list(target_qubit_index_list, target_qubit_index_count);
+    //     const std::vector<UINT> sorted_insert_index_list =
+    //         create_sorted_ui_list(target_qubit_index_list, target_qubit_index_count);
+    //     const UINT loop_dim = state_vector.dim() >> target_qubit_index_count;
+
+    //     Kokkos::parallel_for(
+    //         loop_dim, KOKKOS_LAMBDA(const UINT& state_index) {
+    //             UINT basis_0 = state_index;
+    //             // create base index
+    //             Kokkos::parallel_for(
+    //                 target_qubit_index_count, KOKKOS_LAMBDA(const UINT& cursor) {
+    //                     UINT insert_index = sorted_insert_index_list[cursor];
+    //                     basis_0 =
+    //                         insert_zero_to_basis_index(basis_0, 1ULL << insert_index,
+    //                         insert_index);
+    //                 });
+
+    //             // fetch vector
+    //             Kokkos::parallel_for(
+    //                 matrix_dim, KOKKOS_LAMBDA(const UINT& y) {
+    //                     buffer1[y] = state[basis_0 ^ matrix_mask_list[y]];
+    //                 });
+
+    //             spmv(_matrix, buffer1, buffer2);
+    //             buffer1 = buffer2;
+
+    //             Kokkos::parallel_for(
+    //                 matrix_dim, KOKKOS_LAMBDA(const UINT& y) {
+    //                     state[basis_0 ^ matrix_mask_list[y]] = buffer1[y];
+    //                 });
+    //         });
+    // }
 };
+
+// class DenseMatrixGateImpl : public GateBase {
+//     DenseMatrix _matrix;
+//     std::vector<UINT> target_qubit_index_list, control_qubit_index_list;
+
+// public:
+//     DenseMatrixGateImpl() : GateBase() {}
+
+//     std::vector<UINT> get_target_qubit_list() const override { return target_qubit_index_list; }
+//     std::vector<UINT> get_control_qubit_list() const override { return control_qubit_index_list;
+//     }
+
+//     void add_controle_qubit(UINT control_qubit_index) {
+//         control_qubit_index_list.push_back(control_qubit_index);
+//     }
+
+//     Gate copy() const override { return std::make_shared<CrsMatrixGateImpl>(*this); }
+//     Gate get_inverse() const override { return std::make_shared<CrsMatrixGateImpl>(*this); }
+//     std::optional<ComplexMatrix> get_matrix() const override { return std::nullopt; }
+
+//     void update_quantum_state(StateVector& state_vector) const override {}
+// };
 }  // namespace internal
 
 using OneQubitMatrixGate = internal::GatePtr<internal::OneQubitMatrixGateImpl>;

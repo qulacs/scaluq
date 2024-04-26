@@ -29,8 +29,10 @@ using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex>;
 
 using device_type = typename Kokkos::Device<Kokkos::DefaultExecutionSpace,
                                             typename Kokkos::DefaultExecutionSpace::memory_space>;
-using CrsMatrix = typename KokkosSparse::
-    CrsMatrix<default_scalar, default_lno_t, device_type, void, default_size_type>;
+using CrsMatrix =
+    typename KokkosSparse::CrsMatrix<Complex, default_lno_t, device_type, void, default_size_type>;
+
+using DenseMatrix = Kokkos::View<Complex**, Kokkos::LayoutRight, device_type>;
 
 struct array_4 {
     Complex val[4];

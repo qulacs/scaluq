@@ -100,10 +100,46 @@ KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
     return z.real() * z.real() + z.imag() * z.imag();
 }
 
-KOKKOS_INLINE_FUNCTION void spmv(const CrsMatrix& matrix,
-                                 const Kokkos::View<Complex*>& x,
-                                 Kokkos::View<Complex*>& y) {
+inline std::vector<UINT> create_matrix_mask_list(const std::vector<UINT> qubit_index_list,
+                                                 const UINT qubit_index_count) {
+    const UINT matrix_dim = 1ULL << qubit_index_count;
+    std::vector<UINT> mask_list(matrix_dim, 0);
+
+    Kokkos::parallel_for(
+        matrix_dim, KOKKOS_LAMBDA(const UINT& i) {
+            for (UINT j = 0; j < qubit_index_count; j++) {
+                if ((i >> j) & 1) {
+                    mask_list[i] ^= 1ULL << qubit_index_list[j];
+                }
+            }
+        });
+    // for (int i = 0; i < matrix_dim; i++) {
+    //     for (int j = 0; j < qubit_index_count; j++) {
+    //         if ((i >> j) & 1) {
+    //             mask_list[i] ^= 1ULL << qubit_index_list[j];
+    //         }
+    //     }
+    // }
+    return mask_list;
+}
+
+inline std::vector<UINT> create_sorted_ui_list_value(const std::vector<UINT>& list) {
+    std::vector<UINT> sorted_list(list);
+    std::sort(sorted_list.begin(), sorted_list.end());
+    return sorted_list;
+}
+
+// x: state vector. output will be stored in y
+inline void spmv(const CrsMatrix& matrix,
+                 const Kokkos::View<Complex*>& x,
+                 Kokkos::View<Complex*>& y) {
     KokkosSparse::spmv("N", 1.0, matrix, x, 0.0, y);
 }
 
+// x: state vector, output will be stored in y
+inline void gemv(const DenseMatrix matrix,
+                 const Kokkos::View<Complex*>& x,
+                 Kokkos::View<Complex*>& y) {
+    KokkosBlas::gemv("N", 1.0, matrix, x, 0.0, y);
+}
 }  // namespace scaluq
