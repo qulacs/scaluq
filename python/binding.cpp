@@ -372,16 +372,14 @@ NB_MODULE(scaluq_core, m) {
         .def("get_pauli_id_list", &PauliOperator::get_pauli_id_list)
         .def("get_XZ_mask_representation",
              [](const PauliOperator &pauli) {
-                 const auto &[x_mask, z_mask] = pauli.get_XZ_mask_representation();
-                 const auto &x_raw = x_mask.data_raw();
+                 const auto [x_mask, z_mask] = pauli.get_XZ_mask_representation();
                  nb::int_ x_mask_py(0);
-                 for (UINT i = 0; i < x_raw.size(); ++i) {
-                     x_mask_py |= nb::int_(x_raw[i]) << nb::int_(64 * i);
+                 for (UINT i = 0; i < x_mask.size(); ++i) {
+                     x_mask_py |= nb::int_(x_mask[i]) << nb::int_(i);
                  }
-                 const auto &z_raw = z_mask.data_raw();
                  nb::int_ z_mask_py(0);
-                 for (UINT i = 0; i < z_raw.size(); ++i) {
-                     z_mask_py |= nb::int_(z_raw[i]) << nb::int_(64 * i);
+                 for (UINT i = 0; i < z_mask.size(); ++i) {
+                     z_mask_py |= nb::int_(z_mask[i]) << nb::int_(i);
                  }
                  return std::make_tuple(x_mask_py, z_mask_py);
              })
