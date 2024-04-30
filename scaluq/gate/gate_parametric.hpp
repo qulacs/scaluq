@@ -21,6 +21,7 @@ public:
 };
 
 class PRXGateImpl : public internal::ParametricOneQubitGateBase {
+public:
     PRXGateImpl(UINT target) : ParametricOneQubitGateBase(target) {}
 
     Gate copy() const override { return std::make_shared<PRXGateImpl>(*this); }
@@ -31,6 +32,7 @@ class PRXGateImpl : public internal::ParametricOneQubitGateBase {
 };
 
 class PRYGateImpl : public internal::ParametricOneQubitGateBase {
+public:
     PRYGateImpl(UINT target) : ParametricOneQubitGateBase(target) {}
 
     Gate copy() const override { return std::make_shared<PRYGateImpl>(*this); }
@@ -41,6 +43,7 @@ class PRYGateImpl : public internal::ParametricOneQubitGateBase {
 };
 
 class PRZGateImpl : public internal::ParametricOneQubitGateBase {
+public:
     PRZGateImpl(UINT target) : ParametricOneQubitGateBase(target) {}
 
     Gate copy() const override { return std::make_shared<PRZGateImpl>(*this); }
@@ -53,6 +56,7 @@ class PRZGateImpl : public internal::ParametricOneQubitGateBase {
 class PPauliRotationGateImpl : public ParametricGateBase {
     const PauliOperator _pauli;
 
+public:
 public:
     PPauliRotationGateImpl(const PauliOperator& pauli) : _pauli(pauli) {}
 

@@ -113,10 +113,7 @@ public:
             "update_quantum_state without parameters. Please cast to ParametricGate type or more "
             "specific class and run update_quantum_state(StateVector&, double).");
     }
-    [[nodiscard]] virtual Gate get_inverse() const {
-        throw std::runtime_error(
-            "ParametricGateBase::get_inverse(): ParametricGate does not support get_inverse().");
-    }
+    [[nodiscard]] virtual Gate get_inverse() const;
     [[nodiscard]] virtual std::optional<ComplexMatrix> get_matrix() const { return std::nullopt; }
     virtual void update_quantum_state(StateVector& state_vector, double parameter) const = 0;
 };
@@ -209,6 +206,11 @@ public:
         return _gate_ptr.get();
     }
 };
+
+Gate ParametricGateBase::get_inverse() const {
+    throw std::runtime_error(
+        "ParametricGateBase::get_inverse(): ParametricGate does not support get_inverse().");
+}
 }  // namespace internal
 
 using ParametricGate = internal::GatePtr<internal::ParametricGateBase>;
