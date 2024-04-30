@@ -396,7 +396,11 @@ NB_MODULE(scaluq_core, m) {
         .def(nb::self * nb::self)
         .def(nb::self *= nb::self)
         .def(nb::self *= Complex())
-        .def(nb::self * Complex());
+        .def(nb::self * Complex())
+        .def_ro_static("I", &PauliOperator::I)
+        .def_ro_static("X", &PauliOperator::X)
+        .def_ro_static("Y", &PauliOperator::Y)
+        .def_ro_static("Z", &PauliOperator::Z);
 
     nb::class_<Operator>(m, "Operator")
         .def(nb::init<UINT>())
