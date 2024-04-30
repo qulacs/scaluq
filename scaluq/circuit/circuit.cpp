@@ -31,38 +31,135 @@ UINT Circuit::calculate_depth() const {
 
 void Circuit::add_gate(const Gate& gate) {
     check_gate_is_valid(gate);
+    if (gate.is_parametric()) {
+        throw std::runtime_error(
+            "Circuit::add_gate(const Gate&): parametric gate cannot add without parameter_key.");
+    }
     _gate_list.push_back(gate->copy());
+    _parameter_key_list.push_back("");
 }
 void Circuit::add_gate(Gate&& gate) {
     check_gate_is_valid(gate);
+    if (gate.is_parametric()) {
+        throw std::runtime_error(
+            "Circuit::add_gate(const Gate&): parametric gate cannot add without parameter_key.");
+    }
     _gate_list.push_back(std::move(gate));
+    _parameter_key_list.push_back("");
+}
+void Circuit::add_gate(const Gate& gate, std::string_view parameter_key) {
+    if (parameter_key.empty()) {
+        throw std::runtime_error("parameter_key cannot be empty.");
+    }
+    check_gate_is_valid(gate);
+    if (!gate.is_parametric()) {
+        throw std::runtime_error(
+            "Circuit::add_gate(const Gate&, double): non-parametric gate cannot add with "
+            "parameter_key.");
+    }
+    _gate_list.push_back(gate->copy());
+    _parameter_key_list.push_back(parameter_key);
+}
+void Circuit::add_gate(Gate&& gate, std::string_view parameter_key) {
+    if (parameter_key.empty()) {
+        throw std::runtime_error("parameter_key cannot be empty.");
+    }
+    check_gate_is_valid(gate);
+    if (!gate.is_parametric()) {
+        throw std::runtime_error(
+            "Circuit::add_gate(Gate&&, double): non-parametric gate cannot add with "
+            "parameter_key.");
+    }
+    _gate_list.push_back(std::move(gate));
+    _parameter_key_list.push_back(parameter_key);
 }
 void Circuit::add_circuit(const Circuit& circuit) {
+    if (circuit._n_qubits != _n_qubits) {
+        throw std::runtime_error(
+            "Circuit::add_circuit(const Circuit&): circuit with different qubit count cannot be "
+            "merged.");
+    }
+    _gate_list.reserve(_gate_list.size() + circuit._gate_list.size());
+    _parameter_key_list.reserve(_parameter_key_list.size() + circuit._parameter_key_list.size());
     for (const auto& gate : circuit._gate_list) {
-        add_gate(gate);
+        _gate_list.push_back(gate);
+    }
+    for (std::string_view parameter_key : circuit._parameter_key_list) {
+        _parameter_key_list.push_back(parameter_key);
     }
 }
 void Circuit::add_circuit(Circuit&& circuit) {
     for (auto&& gate : circuit._gate_list) {
         add_gate(std::move(gate));
     }
+    if (circuit._n_qubits != _n_qubits) {
+        throw std::runtime_error(
+            "Circuit::add_circuit(Circuit&&): circuit with different qubit count cannot be "
+            "merged.");
+    }
+    _gate_list.reserve(_gate_list.size() + circuit._gate_list.size());
+    _parameter_key_list.reserve(_parameter_key_list.size() + circuit._parameter_key_list.size());
+    for (auto&& gate : circuit._gate_list) {
+        _gate_list.push_back(std::move(gate));
+    }
+    for (std::string_view parameter_key : circuit._parameter_key_list) {
+        _parameter_key_list.push_back(parameter_key);
+    }
 }
 
 void Circuit::update_quantum_state(StateVector& state) const {
+    for (std::string_view parameter_key : _parameter_key_list) {
+        if (parameter_key.empty()) continue;
+        using namespace std::string_literals;
+        throw std::runtime_error(
+            "Circuit::update_quantum_state(StateVector&) const: parameter named "s +
+            std::string(parameter_key) + "is not given.");
+    }
     for (const auto& gate : _gate_list) {
         gate->update_quantum_state(state);
     }
 }
 
+void Circuit::update_quantum_state(StateVector& state,
+                                   const std::map<std::string_view, double>& parameters) const {
+    for (std::string_view parameter_key : _parameter_key_list) {
+        if (parameter_key.empty()) continue;
+        if (!parameters.contains(parameter_key)) {
+            using namespace std::string_literals;
+            throw std::runtime_error(
+                "Circuit::update_quantum_state(StateVector&, const std::map<std::string_view, double>&) const: parameter named "s +
+                std::string(parameter_key) + "is not given.");
+        }
+    }
+    for (UINT gate_idx : std::views::iota(0, _gate_list.size())) {
+        Gate gate = _gate_list[gate_idx];
+        std::string_view parameter_key = _parameter_key_list[gate_idx];
+        if (parameter_key.empty()) {
+            gate->update_quantum_state(state);
+        } else {
+            gate.to_parametric_gate()->update_quantum_state(state, parameters.at(parameter_key));
+        }
+    }
+}
+
 Circuit Circuit::copy() const {
     Circuit ccircuit(_n_qubits);
-    for (const auto& gate : _gate_list) {
-        ccircuit.add_gate(gate->copy());
+    ccircuit._gate_list.reserve(_gate_list.size());
+    ccircuit._parameter_key_list.reserve(_parameter_key_list.size());
+    for (auto&& gate : _gate_list) {
+        ccircuit._gate_list.push_back(gate->copy());
+    }
+    for (std::string_view parameter_key : _parameter_key_list) {
+        ccircuit._parameter_key_list.push_back(parameter_key);
     }
     return ccircuit;
 }
 
 Circuit Circuit::get_inverse() const {
+    if (!_parameter_key_list.empty()) {
+        throw std::runtime_error(
+            "Circuit::get_inverse() const: Circuit with parameter is not supported");
+    }
     Circuit icircuit(_n_qubits);
     for (const auto& gate : _gate_list | std::views::reverse) {
         icircuit.add_gate(gate->get_inverse());
