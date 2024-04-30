@@ -41,7 +41,7 @@ public:
     }
     [[nodiscard]] UINT get_qubit_count() const {
         if (_target_qubit_list.empty()) return 0;
-        return std::ranges::max(_target_qubit_list);
+        return std::ranges::max(_target_qubit_list) + 1;
     }
 
     inline void change_coef(Complex new_coef) { _coef = new_coef; }
