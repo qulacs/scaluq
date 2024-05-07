@@ -190,18 +190,18 @@ class Circuit:
         """
         ...
 
-    def gate_list(*args, **kwargs):
+    def gate_list(
+        self,
+    ) -> list[Union[scaluq.scaluq_core.Gate, tuple[scaluq.scaluq_core.PGate, str]]]:
         """
-        gate_list(self) -> list[Union[scaluq.scaluq_core.Gate, std::pair<scaluq::internal::PGatePtr<scaluq::internal::PGateBase>, std::basic_string_view<char, std::char_traits<char> > >]]
-
         Get property of `gate_list`.
         """
         ...
 
-    def get(*args, **kwargs):
+    def get(
+        self, arg: int, /
+    ) -> Union[scaluq.scaluq_core.Gate, tuple[scaluq.scaluq_core.PGate, str]]:
         """
-        get(self, arg: int, /) -> Union[scaluq.scaluq_core.Gate, std::pair<scaluq::internal::PGatePtr<scaluq::internal::PGateBase>, std::basic_string_view<char, std::char_traits<char> > >]
-
         Get reference of i-th gate.
         """
         ...
