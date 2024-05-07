@@ -3,6 +3,7 @@
 #include <ranges>
 #include <vector>
 
+#include "../info/qubit_info.hpp"
 #include "../util/utility.hpp"
 #include "KokkosSparse_CrsMatrix.hpp"
 #include "constant.hpp"
@@ -99,89 +100,124 @@ public:
 
 class CrsMatrixGateImpl : public GateBase {
     CrsMatrix _matrix;
-    std::vector<UINT> target_qubit_index_list, control_qubit_index_list;
+    std::vector<TargetQubitInfo> target_qubit_index_list;
+    std::vector<ControlQubitInfo> control_qubit_index_list;
 
 public:
     CrsMatrixGateImpl() : GateBase() {}
 
-    std::vector<UINT> get_target_qubit_list() const override { return target_qubit_index_list; }
-    std::vector<UINT> get_control_qubit_list() const override { return control_qubit_index_list; }
+    std::vector<UINT> get_target_qubit_list() const override {
+        std::vector<UINT> target_qubit_list;
+        for (const auto& target : target_qubit_index_list) {
+            target_qubit_list.push_back(target.index());
+        }
+        return target_qubit_list;
+    }
+    std::vector<UINT> get_control_qubit_list() const override {
+        std::vector<UINT> control_qubit_list;
+        for (const auto& control : control_qubit_index_list) {
+            control_qubit_list.push_back(control.index());
+        }
+        return control_qubit_list;
+    }
 
-    void add_controle_qubit(UINT control_qubit_index) {
-        control_qubit_index_list.push_back(control_qubit_index);
+    void add_controle_qubit(UINT control_qubit_index, UINT value) {
+        control_qubit_index_list.push_back(ControlQubitInfo(control_qubit_index, value));
     }
 
     Gate copy() const override { return std::make_shared<CrsMatrixGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<CrsMatrixGateImpl>(*this); }
     std::optional<ComplexMatrix> get_matrix() const override { return std::nullopt; }
 
-    void update_quantum_state(StateVector& state_vector) const override {}
+    void update_quantum_state(StateVector& state_vector) const override {
+        Kokkos::View<scaluq::Complex*> state = state_vector._raw;
+        Kokkos::View<scaluq::Complex*> buffer1("buffer1", state_vector.dim());
+        Kokkos::View<scaluq::Complex*> buffer2("buffer2", state_vector.dim());
 
-    // void update_quantum_state(StateVector& state_vector) const override {
-    //     Kokkos::View<scaluq::Complex*> state = state_vector._raw;
-    //     Kokkos::View<scaluq::Complex*> buffer1("buffer1", state_vector.dim());
-    //     Kokkos::View<scaluq::Complex*> buffer2("buffer2", state_vector.dim());
+        const UINT target_qubit_index_count = target_qubit_index_list.size();
+        const UINT matrix_dim = 1ULL << target_qubit_index_count;
+        const std::vector<UINT> matrix_mask_list =
+            create_matrix_mask_list(this->get_control_qubit_list(), target_qubit_index_count);
+        const std::vector<UINT> sorted_insert_index_list =
+            create_sorted_ui_list(this->get_control_qubit_list());
+        const UINT loop_dim = state_vector.dim() >> target_qubit_index_count;
 
-    //     const UINT target_qubit_index_count = target_qubit_index_list.size();
-    //     const UINT matrix_dim = 1ULL << target_qubit_index_count;
-    //     const std::vector<UINT> matrix_mask_list =
-    //         create_matrix_mask_list(target_qubit_index_list, target_qubit_index_count);
-    //     const std::vector<UINT> sorted_insert_index_list =
-    //         create_sorted_ui_list(target_qubit_index_list, target_qubit_index_count);
-    //     const UINT loop_dim = state_vector.dim() >> target_qubit_index_count;
+        for (UINT state_index = 0; state_index < loop_dim; ++state_index) {
+            UINT basis_0 = state_index;
+            // create base index
+            for (UINT cursor = 0; cursor < target_qubit_index_count; ++cursor) {
+                UINT insert_index = sorted_insert_index_list[cursor];
+                basis_0 = insert_zero_to_basis_index(basis_0, 1ULL << insert_index, insert_index);
+            }
 
-    //     Kokkos::parallel_for(
-    //         loop_dim, KOKKOS_LAMBDA(const UINT& state_index) {
-    //             UINT basis_0 = state_index;
-    //             // create base index
-    //             Kokkos::parallel_for(
-    //                 target_qubit_index_count, KOKKOS_LAMBDA(const UINT& cursor) {
-    //                     UINT insert_index = sorted_insert_index_list[cursor];
-    //                     basis_0 =
-    //                         insert_zero_to_basis_index(basis_0, 1ULL << insert_index,
-    //                         insert_index);
-    //                 });
+            // fetch vector
+            for (UINT j = 0; j < matrix_dim; ++j) {
+                buffer1[j] = state[basis_0 ^ matrix_mask_list[j]];
+            }
 
-    //             // fetch vector
-    //             Kokkos::parallel_for(
-    //                 matrix_dim, KOKKOS_LAMBDA(const UINT& y) {
-    //                     buffer1[y] = state[basis_0 ^ matrix_mask_list[y]];
-    //                 });
+            spmv(_matrix, buffer1, buffer2);
 
-    //             spmv(_matrix, buffer1, buffer2);
-    //             buffer1 = buffer2;
-
-    //             Kokkos::parallel_for(
-    //                 matrix_dim, KOKKOS_LAMBDA(const UINT& y) {
-    //                     state[basis_0 ^ matrix_mask_list[y]] = buffer1[y];
-    //                 });
-    //         });
-    // }
+            for (UINT j = 0; j < matrix_dim; ++j) {
+                state[basis_0 ^ matrix_mask_list[j]] = buffer2[j];
+            }
+        }
+    }
 };
 
-// class DenseMatrixGateImpl : public GateBase {
-//     DenseMatrix _matrix;
-//     std::vector<UINT> target_qubit_index_list, control_qubit_index_list;
+class DenseMatrixGateImpl : public GateBase {
+    DenseMatrix _matrix;
+    std::vector<TargetQubitInfo> target_qubit_index_list;
+    std::vector<ControlQubitInfo> control_qubit_index_list;
 
-// public:
-//     DenseMatrixGateImpl() : GateBase() {}
+public:
+    DenseMatrixGateImpl() : GateBase() {}
 
-//     std::vector<UINT> get_target_qubit_list() const override { return target_qubit_index_list; }
-//     std::vector<UINT> get_control_qubit_list() const override { return control_qubit_index_list;
-//     }
+    std::vector<UINT> get_target_qubit_list() const override {
+        std::vector<UINT> target_qubit_list;
+        for (const auto& target : target_qubit_index_list) {
+            target_qubit_list.push_back(target.index());
+        }
+        return target_qubit_list;
+    }
+    std::vector<UINT> get_control_qubit_list() const override {
+        std::vector<UINT> control_qubit_list;
+        for (const auto& control : control_qubit_index_list) {
+            control_qubit_list.push_back(control.index());
+        }
+        return control_qubit_list;
+    }
 
-//     void add_controle_qubit(UINT control_qubit_index) {
-//         control_qubit_index_list.push_back(control_qubit_index);
-//     }
+    void add_controle_qubit(UINT control_qubit_index, UINT value) {
+        control_qubit_index_list.push_back(ControlQubitInfo(control_qubit_index, value));
+    }
 
-//     Gate copy() const override { return std::make_shared<CrsMatrixGateImpl>(*this); }
-//     Gate get_inverse() const override { return std::make_shared<CrsMatrixGateImpl>(*this); }
-//     std::optional<ComplexMatrix> get_matrix() const override { return std::nullopt; }
+    Gate copy() const override { return std::make_shared<DenseMatrixGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<DenseMatrixGateImpl>(*this); }
+    std::optional<ComplexMatrix> get_matrix() const override { return std::nullopt; }
 
-//     void update_quantum_state(StateVector& state_vector) const override {}
-// };
+    void update_quantum_state(StateVector& state_vector) const override {
+        // std::vector<UINT> target_index;
+        // for (const auto& target : target_qubit_index_list) {
+        //     target_index.push_back(target.index());
+        // }
+        // std::vector<UINT> control_index;
+        // std::vector<UINT> control_value;
+        // for (const auto& control : control_qubit_index_list) {
+        //     control_qubit_index_list.push_back(control.index());
+        // }
+
+        // if(this->target_qubit_index_list.size() == 1){
+        //     // no control qubit
+        //     if(this->control_qubit_index_list.size() == 0){
+        //         single_qubit_dense_matrix_gate(target_index[0], _matrix, state_vector);
+        //     }
+        // }
+    }
+};
 }  // namespace internal
 
 using OneQubitMatrixGate = internal::GatePtr<internal::OneQubitMatrixGateImpl>;
 using TwoQubitMatrixGate = internal::GatePtr<internal::TwoQubitMatrixGateImpl>;
+using CrsMatrixGate = internal::GatePtr<internal::CrsMatrixGateImpl>;
+using DenseMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl>;
 }  // namespace scaluq

@@ -105,25 +105,18 @@ inline std::vector<UINT> create_matrix_mask_list(const std::vector<UINT> qubit_i
     const UINT matrix_dim = 1ULL << qubit_index_count;
     std::vector<UINT> mask_list(matrix_dim, 0);
 
-    Kokkos::parallel_for(
-        matrix_dim, KOKKOS_LAMBDA(const UINT& i) {
-            for (UINT j = 0; j < qubit_index_count; j++) {
-                if ((i >> j) & 1) {
-                    mask_list[i] ^= 1ULL << qubit_index_list[j];
-                }
+    for (UINT cursor = 0; cursor < matrix_dim; cursor++) {
+        for (UINT bit_cursor = 0; bit_cursor < qubit_index_count; bit_cursor++) {
+            if ((cursor >> bit_cursor) % 2) {
+                UINT bit_index = qubit_index_list[bit_cursor];
+                mask_list[cursor] ^= (1ULL << bit_index);
             }
-        });
-    // for (int i = 0; i < matrix_dim; i++) {
-    //     for (int j = 0; j < qubit_index_count; j++) {
-    //         if ((i >> j) & 1) {
-    //             mask_list[i] ^= 1ULL << qubit_index_list[j];
-    //         }
-    //     }
-    // }
+        }
+    }
     return mask_list;
 }
 
-inline std::vector<UINT> create_sorted_ui_list_value(const std::vector<UINT>& list) {
+inline std::vector<UINT> create_sorted_ui_list(const std::vector<UINT>& list) {
     std::vector<UINT> sorted_list(list);
     std::sort(sorted_list.begin(), sorted_list.end());
     return sorted_list;
