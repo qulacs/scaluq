@@ -8,6 +8,7 @@ namespace scaluq {
 namespace internal {
 // forward declarations
 class GateBase;
+
 template <typename T>
 concept GateImpl = std::derived_from<T, GateBase>;
 
@@ -41,14 +42,11 @@ class TwoQubitMatrixGateImpl;
 class FusedSwapGateImpl;
 class PauliGateImpl;
 class PauliRotationGateImpl;
-class PRXGateImpl;
-class PRYGateImpl;
-class PRZGateImpl;
-class PPauliRotationGateImpl;
 
 template <GateImpl T>
 class GatePtr;
 }  // namespace internal
+using Gate = internal::GatePtr<internal::GateBase>;
 
 enum class GateType {
     Unknown,
@@ -81,14 +79,48 @@ enum class GateType {
     TwoQubitMatrix,
     FusedSwap,
     Pauli,
-    PauliRotation,
-    PRX,
-    PRY,
-    PRZ,
-    PPauliRotation
+    PauliRotation
 };
 
-using Gate = internal::GatePtr<internal::GateBase>;
+template <internal::GateImpl T>
+constexpr GateType get_gate_type() {
+    if constexpr (std::is_same_v<T, internal::GateBase>) return GateType::Unknown;
+    if constexpr (std::is_same_v<T, internal::IGateImpl>) return GateType::I;
+    if constexpr (std::is_same_v<T, internal::GlobalPhaseGateImpl>) return GateType::GlobalPhase;
+    if constexpr (std::is_same_v<T, internal::XGateImpl>) return GateType::X;
+    if constexpr (std::is_same_v<T, internal::YGateImpl>) return GateType::Y;
+    if constexpr (std::is_same_v<T, internal::ZGateImpl>) return GateType::Z;
+    if constexpr (std::is_same_v<T, internal::HGateImpl>) return GateType::H;
+    if constexpr (std::is_same_v<T, internal::SGateImpl>) return GateType::S;
+    if constexpr (std::is_same_v<T, internal::SdagGateImpl>) return GateType::Sdag;
+    if constexpr (std::is_same_v<T, internal::TGateImpl>) return GateType::T;
+    if constexpr (std::is_same_v<T, internal::TdagGateImpl>) return GateType::Tdag;
+    if constexpr (std::is_same_v<T, internal::SqrtXGateImpl>) return GateType::SqrtX;
+    if constexpr (std::is_same_v<T, internal::SqrtXdagGateImpl>) return GateType::SqrtXdag;
+    if constexpr (std::is_same_v<T, internal::SqrtYGateImpl>) return GateType::SqrtY;
+    if constexpr (std::is_same_v<T, internal::SqrtYdagGateImpl>) return GateType::SqrtYdag;
+    if constexpr (std::is_same_v<T, internal::P0GateImpl>) return GateType::P0;
+    if constexpr (std::is_same_v<T, internal::P1GateImpl>) return GateType::P1;
+    if constexpr (std::is_same_v<T, internal::RXGateImpl>) return GateType::RX;
+    if constexpr (std::is_same_v<T, internal::RYGateImpl>) return GateType::RY;
+    if constexpr (std::is_same_v<T, internal::RZGateImpl>) return GateType::RZ;
+    if constexpr (std::is_same_v<T, internal::U1GateImpl>) return GateType::U1;
+    if constexpr (std::is_same_v<T, internal::U2GateImpl>) return GateType::U2;
+    if constexpr (std::is_same_v<T, internal::U3GateImpl>) return GateType::U3;
+    if constexpr (std::is_same_v<T, internal::OneQubitMatrixGateImpl>)
+        return GateType::OneQubitMatrix;
+    if constexpr (std::is_same_v<T, internal::CXGateImpl>) return GateType::CX;
+    if constexpr (std::is_same_v<T, internal::CZGateImpl>) return GateType::CZ;
+    if constexpr (std::is_same_v<T, internal::SwapGateImpl>) return GateType::Swap;
+    if constexpr (std::is_same_v<T, internal::TwoQubitMatrixGateImpl>)
+        return GateType::TwoQubitMatrix;
+    if constexpr (std::is_same_v<T, internal::FusedSwapGateImpl>) return GateType::FusedSwap;
+    if constexpr (std::is_same_v<T, internal::PauliGateImpl>) return GateType::Pauli;
+    if constexpr (std::is_same_v<T, internal::PauliRotationGateImpl>)
+        return GateType::PauliRotation;
+    static_assert("unknown GateImpl");
+    return GateType::Unknown;
+}
 
 namespace internal {
 class GateBase {
@@ -105,61 +137,6 @@ public:
     virtual void update_quantum_state(StateVector& state_vector) const = 0;
 };
 
-class ParametricGateBase : public GateBase {
-public:
-    void update_quantum_state([[maybe_unused]] StateVector& state_vector) const override {
-        throw std::runtime_error(
-            "ParametricGateBase::update_quantum_state(): ParametricGate cannot run "
-            "update_quantum_state without parameters. Please cast to ParametricGate type or more "
-            "specific class and run update_quantum_state(StateVector&, double).");
-    }
-    [[nodiscard]] virtual Gate get_inverse() const;
-    [[nodiscard]] virtual std::optional<ComplexMatrix> get_matrix() const { return std::nullopt; }
-    virtual void update_quantum_state(StateVector& state_vector, double parameter) const = 0;
-};
-
-template <GateImpl T>
-constexpr GateType get_gate_type() {
-    if constexpr (std::is_same_v<T, GateBase>) return GateType::Unknown;
-    if constexpr (std::is_same_v<T, ParametricGateBase>) return GateType::Unknown;
-    if constexpr (std::is_same_v<T, IGateImpl>) return GateType::I;
-    if constexpr (std::is_same_v<T, GlobalPhaseGateImpl>) return GateType::GlobalPhase;
-    if constexpr (std::is_same_v<T, XGateImpl>) return GateType::X;
-    if constexpr (std::is_same_v<T, YGateImpl>) return GateType::Y;
-    if constexpr (std::is_same_v<T, ZGateImpl>) return GateType::Z;
-    if constexpr (std::is_same_v<T, HGateImpl>) return GateType::H;
-    if constexpr (std::is_same_v<T, SGateImpl>) return GateType::S;
-    if constexpr (std::is_same_v<T, SdagGateImpl>) return GateType::Sdag;
-    if constexpr (std::is_same_v<T, TGateImpl>) return GateType::T;
-    if constexpr (std::is_same_v<T, TdagGateImpl>) return GateType::Tdag;
-    if constexpr (std::is_same_v<T, SqrtXGateImpl>) return GateType::SqrtX;
-    if constexpr (std::is_same_v<T, SqrtXdagGateImpl>) return GateType::SqrtXdag;
-    if constexpr (std::is_same_v<T, SqrtYGateImpl>) return GateType::SqrtY;
-    if constexpr (std::is_same_v<T, SqrtYdagGateImpl>) return GateType::SqrtYdag;
-    if constexpr (std::is_same_v<T, P0GateImpl>) return GateType::P0;
-    if constexpr (std::is_same_v<T, P1GateImpl>) return GateType::P1;
-    if constexpr (std::is_same_v<T, RXGateImpl>) return GateType::RX;
-    if constexpr (std::is_same_v<T, RYGateImpl>) return GateType::RY;
-    if constexpr (std::is_same_v<T, RZGateImpl>) return GateType::RZ;
-    if constexpr (std::is_same_v<T, U1GateImpl>) return GateType::U1;
-    if constexpr (std::is_same_v<T, U2GateImpl>) return GateType::U2;
-    if constexpr (std::is_same_v<T, U3GateImpl>) return GateType::U3;
-    if constexpr (std::is_same_v<T, OneQubitMatrixGateImpl>) return GateType::OneQubitMatrix;
-    if constexpr (std::is_same_v<T, CXGateImpl>) return GateType::CX;
-    if constexpr (std::is_same_v<T, CZGateImpl>) return GateType::CZ;
-    if constexpr (std::is_same_v<T, SwapGateImpl>) return GateType::Swap;
-    if constexpr (std::is_same_v<T, TwoQubitMatrixGateImpl>) return GateType::TwoQubitMatrix;
-    if constexpr (std::is_same_v<T, FusedSwapGateImpl>) return GateType::FusedSwap;
-    if constexpr (std::is_same_v<T, PauliGateImpl>) return GateType::Pauli;
-    if constexpr (std::is_same_v<T, PauliRotationGateImpl>) return GateType::PauliRotation;
-    if constexpr (std::is_same_v<T, PRXGateImpl>) return GateType::PRX;
-    if constexpr (std::is_same_v<T, PRYGateImpl>) return GateType::PRY;
-    if constexpr (std::is_same_v<T, PRZGateImpl>) return GateType::PRZ;
-    if constexpr (std::is_same_v<T, PPauliRotationGateImpl>) return GateType::PPauliRotation;
-    static_assert("unknown GateImpl");
-    return GateType::Unknown;
-}
-
 template <GateImpl T>
 class GatePtr {
     friend class GateFactory;
@@ -175,29 +152,41 @@ public:
     GatePtr(const GatePtr& gate) = default;
     template <GateImpl U>
     GatePtr(const std::shared_ptr<U>& gate_ptr) {
-        _gate_type = std::max(get_gate_type<T>(), get_gate_type<U>());
-        if (!(_gate_ptr = std::dynamic_pointer_cast<T>(gate_ptr))) {
-            throw std::runtime_error("invalid gate cast");
+        if constexpr (std::is_same_v<T, U>) {
+            _gate_type = get_gate_type<T>();
+            _gate_ptr = gate_ptr;
+        } else if constexpr (std::is_same_v<T, internal::GateBase>) {
+            // upcast
+            _gate_type = get_gate_type<U>();
+            _gate_ptr = std::static_pointer_cast<T>(gate_ptr);
+        } else {
+            // downcast
+            _gate_type = get_gate_type<T>();
+            if (!(_gate_ptr = std::dynamic_pointer_cast<T>(gate_ptr))) {
+                throw std::runtime_error("invalid gate cast");
+            }
         }
     }
     template <GateImpl U>
     GatePtr(const GatePtr<U>& gate) {
-        _gate_type = gate._gate_type;
-        if (!(_gate_ptr = std::dynamic_pointer_cast<T>(gate._gate_ptr))) {
-            throw std::runtime_error("invalid gate cast");
+        if constexpr (std::is_same_v<T, U>) {
+            _gate_type = gate._gate_type;
+            _gate_ptr = gate._gate_ptr;
+        } else if constexpr (std::is_same_v<T, internal::GateBase>) {
+            // upcast
+            _gate_type = gate._gate_type;
+            _gate_ptr = std::static_pointer_cast<T>(gate._gate_ptr);
+        } else {
+            // downcast
+            if (gate._gate_type != get_gate_type<T>()) {
+                throw std::runtime_error("invalid gate cast");
+            }
+            _gate_type = gate._gate_type;
+            _gate_ptr = std::static_pointer_cast<T>(gate._gate_ptr);
         }
     }
 
     GateType gate_type() const { return _gate_type; }
-
-    bool is_parametric() const { return _gate_type >= GateType::PRX; }
-
-    GatePtr<ParametricGateBase> to_parametric_gate() const {
-        if (!is_parametric()) {
-            throw std::runtime_error("GatePtr::to_parametric_gate(): Gate is not parametric");
-        }
-        return GatePtr<ParametricGateBase>(*this);
-    }
 
     T* operator->() const {
         if (!_gate_ptr) {
@@ -206,13 +195,6 @@ public:
         return _gate_ptr.get();
     }
 };
-
-Gate ParametricGateBase::get_inverse() const {
-    throw std::runtime_error(
-        "ParametricGateBase::get_inverse(): ParametricGate does not support get_inverse().");
-}
 }  // namespace internal
-
-using ParametricGate = internal::GatePtr<internal::ParametricGateBase>;
 
 }  // namespace scaluq

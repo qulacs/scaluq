@@ -4,7 +4,6 @@
 #include "gate_npair_qubit.hpp"
 #include "gate_one_control_one_target.hpp"
 #include "gate_one_qubit.hpp"
-#include "gate_parametric.hpp"
 #include "gate_pauli.hpp"
 #include "gate_two_qubit.hpp"
 #include "gate_zero_qubit.hpp"
@@ -103,17 +102,5 @@ inline Gate Pauli(const PauliOperator& pauli) {
 }
 inline Gate PauliRotation(const PauliOperator& pauli, double angle) {
     return internal::GateFactory::create_gate<internal::PauliRotationGateImpl>(pauli, angle);
-}
-inline Gate PRX(UINT target) {
-    return internal::GateFactory::create_gate<internal::PRXGateImpl>(target);
-}
-inline Gate PRY(UINT target) {
-    return internal::GateFactory::create_gate<internal::PRXGateImpl>(target);
-}
-inline Gate PRZ(UINT target) {
-    return internal::GateFactory::create_gate<internal::PRXGateImpl>(target);
-}
-inline Gate PPauliRotation(const PauliOperator& pauli) {
-    return internal::GateFactory::create_gate<internal::PPauliRotationGateImpl>(pauli);
 }
 }  // namespace scaluq
