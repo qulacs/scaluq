@@ -14,16 +14,17 @@ class PauliOperator {
     internal::BitVector _bit_flip_mask, _phase_flip_mask;
 
 public:
+    static constexpr UINT I = 0, X = 1, Y = 2, Z = 3;
+
     explicit PauliOperator(Complex coef = 1.);
     PauliOperator(std::string_view pauli_string, Complex coef = 1.);
     PauliOperator(const std::vector<UINT>& target_qubit_list,
                   const std::vector<UINT>& pauli_id_list,
                   Complex coef = 1.);
     PauliOperator(const std::vector<UINT>& pauli_id_par_qubit, Complex coef = 1.);
-    PauliOperator(const internal::BitVector& bit_flip_mask,
-                  const internal::BitVector& phase_flip_mask,
-                  Complex coef = 1.);
-
+    PauliOperator(const std::vector<bool>& bit_flip_mask,
+                  const std::vector<bool>& phase_flip_mask,
+                  Complex coef);
     [[nodiscard]] inline Complex get_coef() const { return _coef; }
     [[nodiscard]] inline const std::vector<UINT>& get_target_qubit_list() const {
         return _target_qubit_list;
@@ -31,7 +32,7 @@ public:
     [[nodiscard]] inline const std::vector<UINT>& get_pauli_id_list() const {
         return _pauli_id_list;
     }
-    [[nodiscard]] inline std::tuple<const internal::BitVector&, const internal::BitVector&>
+    [[nodiscard]] inline std::tuple<std::vector<bool>, std::vector<bool>>
     get_XZ_mask_representation() const {
         return {_bit_flip_mask, _phase_flip_mask};
     }

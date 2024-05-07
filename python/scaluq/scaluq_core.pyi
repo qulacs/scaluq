@@ -1073,6 +1073,14 @@ class PauliOperator:
     Pauli operator as coef and tensor product of single pauli for each qubit.
     """
 
+    I: int
+
+    X: int
+
+    Y: int
+
+    Z: int
+
     def __init__(
         self, bit_flip_mask: int, phase_flip_mask: int, coef: complex = 1.0
     ) -> None:
