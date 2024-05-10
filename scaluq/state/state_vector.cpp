@@ -6,7 +6,9 @@
 namespace scaluq {
 
 StateVector::StateVector(UINT n_qubits)
-    : _n_qubits(n_qubits), _dim(1 << n_qubits), _raw(Kokkos::View<Complex*>("state", this->_dim)) {
+    : _n_qubits(n_qubits),
+      _dim(1 << n_qubits),
+      _raw(Kokkos::View<Complex*>(Kokkos::ViewAllocateWithoutInitializing("state"), this->_dim)) {
     set_zero_state();
 }
 
@@ -168,7 +170,7 @@ void StateVector::multiply_coef(const Complex& coef) {
 }
 
 std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
-    Kokkos::View<double*> stacked_prob("prob", _dim + 1);
+    Kokkos::View<double*> stacked_prob(Kokkos::ViewAllocateWithoutInitializing("prob"), _dim + 1);
     Kokkos::deep_copy(stacked_prob, 0);
     Kokkos::parallel_scan(
         "compute_stacked_prob",
@@ -181,7 +183,7 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
             update += prob;
         });
 
-    Kokkos::View<UINT*> result("result", sampling_count);
+    Kokkos::View<UINT*> result(Kokkos::ViewAllocateWithoutInitializing("result"), sampling_count);
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
     Kokkos::parallel_for(
         sampling_count, KOKKOS_LAMBDA(const UINT& i) {
