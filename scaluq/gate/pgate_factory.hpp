@@ -14,16 +14,16 @@ public:
 };
 }  // namespace internal
 
-inline PGate PRX(UINT target) {
-    return internal::PGateFactory::create_gate<internal::PRXGateImpl>(target);
+inline PGate PRX(UINT target, double pcoef = 1.) {
+    return internal::PGateFactory::create_gate<internal::PRXGateImpl>(target, pcoef);
 }
-inline PGate PRY(UINT target) {
-    return internal::PGateFactory::create_gate<internal::PRXGateImpl>(target);
+inline PGate PRY(UINT target, double pcoef = 1.) {
+    return internal::PGateFactory::create_gate<internal::PRXGateImpl>(target, pcoef);
 }
-inline PGate PRZ(UINT target) {
-    return internal::PGateFactory::create_gate<internal::PRXGateImpl>(target);
+inline PGate PRZ(UINT target, double pcoef = 1.) {
+    return internal::PGateFactory::create_gate<internal::PRXGateImpl>(target, pcoef);
 }
-inline PGate PPauliRotation(const PauliOperator& pauli) {
-    return internal::PGateFactory::create_gate<internal::PPauliRotationGateImpl>(pauli);
+inline PGate PPauliRotation(const PauliOperator& pauli, double pcoef = 1.) {
+    return internal::PGateFactory::create_gate<internal::PPauliRotationGateImpl>(pauli, pcoef);
 }
 }  // namespace scaluq
