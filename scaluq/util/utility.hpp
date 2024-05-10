@@ -122,6 +122,61 @@ inline std::vector<UINT> create_sorted_ui_list(const std::vector<UINT>& list) {
     return sorted_list;
 }
 
+inline std::vector<UINT> create_sorted_ui_list_value(const std::vector<UINT>& list, UINT value) {
+    std::vector<UINT> sorted_list(list);
+    sorted_list.emplace_back(value);
+    std::sort(sorted_list.begin(), sorted_list.end());
+    return sorted_list;
+}
+
+inline std::vector<UINT> create_sorted_ui_list_list(const std::vector<UINT>& list1,
+                                                    const UINT size1,
+                                                    const std::vector<UINT>& list2,
+                                                    const UINT size2) {
+    std::vector<UINT> new_array(size1 + size2);
+    std::copy(list1.begin(), list1.end(), new_array.begin());
+    std::copy(list2.begin(), list2.end(), new_array.begin() + size1);
+    std::sort(new_array.begin(), new_array.end());
+    return new_array;
+}
+
+inline void create_shift_mask_list_from_list_and_value_buf(const std::vector<UINT> array,
+                                                           UINT target,
+                                                           std::vector<UINT> dst_array,
+                                                           std::vector<UINT> dst_mask) {
+    UINT size = array.size() + 1;
+    dst_array.resize(size - 1);
+    dst_mask.resize(size);
+    std::copy(array.begin(), array.end(), dst_array.begin());
+    dst_array.emplace_back(target);
+    sort(dst_array.begin(), dst_array.end());
+    for (UINT i = 0; i < size; ++i) {
+        dst_mask[i] = (1ULL << dst_array[i]) - 1;
+    }
+}
+
+void create_shift_mask_list_from_list_buf(std::vector<UINT> array,
+                                          std::vector<UINT> dst_array,
+                                          std::vector<UINT> dst_mask) {
+    UINT size = array.size();
+    dst_array.resize(size);
+    dst_mask.resize(size);
+    std::copy(array.begin(), array.end(), dst_array.begin());
+    sort(dst_array.begin(), dst_array.end());
+    for (UINT i = 0; i < size; ++i) {
+        dst_mask[i] = (1ULL << dst_array[i]) - 1;
+    }
+}
+
+inline UINT create_control_mask(const std::vector<UINT> qubit_index_list,
+                                const std::vector<UINT> value_list) {
+    UINT mask = 0;
+    for (UINT i = 0; i < qubit_index_list.size(); ++i) {
+        mask ^= (1ULL << qubit_index_list[i]) * value_list[i];
+    }
+    return mask;
+}
+
 // x: state vector. output will be stored in y
 inline void spmv(const CrsMatrix& matrix,
                  const Kokkos::View<Complex*>& x,
