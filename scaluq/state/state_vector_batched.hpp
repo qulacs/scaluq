@@ -47,6 +47,7 @@ public:
     [[nodiscard]] Complex get_amplitude_at_index(const UINT batch_id, const UINT index) const;
 
     void set_zero_state();
+    void set_zero_state(UINT batch_id);
 
     [[nodiscard]] static StateVectorBatched Haar_random_state(UINT batch_size,
                                                               UINT n_qubits,

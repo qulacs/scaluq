@@ -8,39 +8,44 @@ StateVectorBatched::StateVectorBatched(UINT batch_size, UINT n_qubits)
       _n_qubits(n_qubits),
       _dim(1ULL << _n_qubits),
       _raw(Kokkos::View<Complex*>(Kokkos::ViewAllocateWithoutInitializing("state"),
-                                  _batch_size * _dim)) {
+                                  _batch_size << _n_qubits)) {
     set_zero_state();
 }
 
 void StateVectorBatched::set_amplitude_at_index(const UINT index, const Complex& c) {
     Kokkos::parallel_for(
-        _batch_size, KOKKOS_CLASS_LAMBDA(const UINT i) { _raw[i * _dim + index] = c; });
+        _batch_size, KOKKOS_CLASS_LAMBDA(const UINT i) { _raw[(i << _n_qubits) + index] = c; });
 }
-
 void StateVectorBatched::set_amplitude_at_index(const UINT batch_id,
                                                 const UINT index,
                                                 const Complex& c) {
     Kokkos::View<Complex, Kokkos::HostSpace> host_view("single_value");
     host_view() = c;
-    Kokkos::deep_copy(Kokkos::subview(_raw, batch_id * _dim + index), host_view());
+    Kokkos::deep_copy(Kokkos::subview(_raw, (batch_id << _n_qubits) + index), host_view());
 }
 
 std::vector<Complex> StateVectorBatched::get_amplitude_at_index(const UINT index) const {
     Kokkos::View<Complex*> res(Kokkos::ViewAllocateWithoutInitializing("res"), _batch_size);
     Kokkos::parallel_for(
-        _batch_size, KOKKOS_CLASS_LAMBDA(const UINT i) { res[i] = _raw[i * _dim + index]; });
+        _batch_size,
+        KOKKOS_CLASS_LAMBDA(const UINT i) { res[i] = _raw[(i << _n_qubits) + index]; });
     return internal::convert_device_view_to_host_vector(res);
 }
-
 Complex StateVectorBatched::get_amplitude_at_index(const UINT batch_id, const UINT index) const {
     Kokkos::View<Complex, Kokkos::HostSpace> host_view("single_value");
-    Kokkos::deep_copy(host_view, Kokkos::subview(_raw, batch_id * _dim + index));
+    Kokkos::deep_copy(host_view, Kokkos::subview(_raw, (batch_id << _n_qubits) + index));
     return host_view();
 }
 
 void StateVectorBatched::set_zero_state() {
     Kokkos::deep_copy(_raw, 0);
     set_amplitude_at_index(0, 1);
+}
+void StateVectorBatched::set_zero_state(UINT batch_id) {
+    Kokkos::View<Complex*> sv =
+        Kokkos::subview(_raw, std::make_pair(batch_id << _n_qubits, (batch_id + 1) << _n_qubits));
+    Kokkos::deep_copy(sv, 0);
+    set_amplitude_at_index(batch_id, 0, 1);
 }
 
 StateVectorBatched StateVectorBatched::Haar_random_state(UINT batch_size,
@@ -62,8 +67,8 @@ std::vector<std::vector<Complex>> StateVectorBatched::amplitudes() const {
     std::vector<std::vector<Complex>> result;
     result.reserve(_batch_size);
     for (UINT batch_id = 0; batch_id < _batch_size; ++batch_id) {
-        Kokkos::View<Complex*> sv =
-            Kokkos::subview(_raw, std::make_pair(batch_id * _dim, (batch_id + 1) * _dim));
+        Kokkos::View<Complex*> sv = Kokkos::subview(
+            _raw, std::make_pair(batch_id << _n_qubits, (batch_id + 1) << _n_qubits));
         result.push_back(internal::convert_device_view_to_host_vector(sv));
     }
     return result;
@@ -71,7 +76,7 @@ std::vector<std::vector<Complex>> StateVectorBatched::amplitudes() const {
 
 std::vector<Complex> StateVectorBatched::amplitudes(UINT batch_id) const {
     Kokkos::View<Complex*> sv =
-        Kokkos::subview(_raw, std::make_pair(batch_id * _dim, (batch_id + 1) * _dim));
+        Kokkos::subview(_raw, std::make_pair(batch_id << _n_qubits, (batch_id + 1) << _n_qubits));
     return internal::convert_device_view_to_host_vector(sv);
 }
 
@@ -87,7 +92,7 @@ std::vector<double> StateVectorBatched::get_squared_norm() const {
             Kokkos::parallel_reduce(
                 Kokkos::ThreadVectorRange(team, _dim),
                 [=, *this](const UINT& i, double& lcl) {
-                    UINT idx = batch_id * _dim + i;
+                    UINT idx = (batch_id << _n_qubits) + i;
                     lcl += squared_norm(_raw(idx));
                 },
                 nrm);
@@ -105,16 +110,14 @@ void StateVectorBatched::normalize() {
             double nrm = 0;
             UINT batch_id = team.league_rank();
             Kokkos::parallel_reduce(
-                Kokkos::ThreadVectorRange(team, _dim),
+                Kokkos::TeamThreadRange(team, _dim),
                 [=, *this](const UINT& i, double& lcl) {
-                    UINT idx = batch_id * _dim + i;
-                    lcl += squared_norm(_raw(idx));
+                    lcl += squared_norm(_raw((batch_id << _n_qubits) + i));
                 },
                 nrm);
             nrm = Kokkos::sqrt(nrm);
-            Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, _dim), [=, *this](const UINT& i) {
-                UINT idx = batch_id * _dim + i;
-                _raw(idx) /= nrm;
+            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, _dim), [=, *this](const UINT& i) {
+                _raw((batch_id << _n_qubits) + i) /= nrm;
             });
         });
 }
