@@ -45,7 +45,7 @@ inline std::optional<ComplexMatrix> get_pauli_matrix(PauliOperator pauli) {
     UINT flip_mask, phase_mask, rot90_count;
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, pauli_id_list.size()),
-        [&](const UINT& i, UINT& f_mask, UINT& p_mask, UINT& rot90_cnt) {
+        [&](UINT i, UINT& f_mask, UINT& p_mask, UINT& rot90_cnt) {
             UINT pauli_id = pauli_id_list[i];
             if (pauli_id == 1) {
                 f_mask ^= 1ULL << i;

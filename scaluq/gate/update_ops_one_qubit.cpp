@@ -10,7 +10,7 @@ namespace scaluq {
 namespace internal {
 void x_gate(UINT target_qubit_index, StateVector& state) {
     Kokkos::parallel_for(
-        state.dim() >> 1, KOKKOS_LAMBDA(const UINT& it) {
+        state.dim() >> 1, KOKKOS_LAMBDA(UINT it) {
             UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
             Kokkos::Experimental::swap(state._raw[i], state._raw[i | (1ULL << target_qubit_index)]);
         });
@@ -18,7 +18,7 @@ void x_gate(UINT target_qubit_index, StateVector& state) {
 
 void y_gate(UINT target_qubit_index, StateVector& state) {
     Kokkos::parallel_for(
-        state.dim() >> 1, KOKKOS_LAMBDA(const UINT& it) {
+        state.dim() >> 1, KOKKOS_LAMBDA(UINT it) {
             UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
             state._raw[i] *= Complex(0, 1);
             state._raw[i | (1ULL << target_qubit_index)] *= Complex(0, -1);
@@ -28,7 +28,7 @@ void y_gate(UINT target_qubit_index, StateVector& state) {
 
 void z_gate(UINT target_qubit_index, StateVector& state) {
     Kokkos::parallel_for(
-        state.dim() >> 1, KOKKOS_LAMBDA(const UINT& it) {
+        state.dim() >> 1, KOKKOS_LAMBDA(UINT it) {
             UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
             state._raw[i | (1ULL << target_qubit_index)] *= Complex(-1, 0);
         });
@@ -36,7 +36,7 @@ void z_gate(UINT target_qubit_index, StateVector& state) {
 
 void h_gate(UINT target_qubit_index, StateVector& state) {
     Kokkos::parallel_for(
-        state.dim() >> 1, KOKKOS_LAMBDA(const UINT& it) {
+        state.dim() >> 1, KOKKOS_LAMBDA(UINT it) {
             UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
             Complex a = state._raw[i];
             Complex b = state._raw[i | (1ULL << target_qubit_index)];
@@ -47,7 +47,7 @@ void h_gate(UINT target_qubit_index, StateVector& state) {
 
 void single_qubit_phase_gate(UINT target_qubit_index, Complex phase, StateVector& state) {
     Kokkos::parallel_for(
-        state.dim() >> 1, KOKKOS_LAMBDA(const UINT& it) {
+        state.dim() >> 1, KOKKOS_LAMBDA(UINT it) {
             UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
             state._raw[i | (1ULL << target_qubit_index)] *= phase;
         });
@@ -111,7 +111,7 @@ void single_qubit_diagonal_matrix_gate(UINT target_qubit_index,
                                        const diagonal_matrix_2_2 diag,
                                        StateVector& state) {
     Kokkos::parallel_for(
-        state.dim(), KOKKOS_LAMBDA(const UINT& it) {
+        state.dim(), KOKKOS_LAMBDA(UINT it) {
             state._raw[it] *= diag.val[(it >> target_qubit_index) & 1];
         });
 }
