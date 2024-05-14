@@ -10,13 +10,13 @@ StateVector::StateVector(UINT n_qubits)
     set_zero_state();
 }
 
-void StateVector::set_amplitude_at_index(const UINT& index, const Complex& c) {
+void StateVector::set_amplitude_at_index(UINT index, const Complex& c) {
     Kokkos::View<Complex, Kokkos::HostSpace> host_view("single_value");
     host_view() = c;
     Kokkos::deep_copy(Kokkos::subview(_raw, index), host_view());
 }
 
-Complex StateVector::get_amplitude_at_index(const UINT& index) const {
+Complex StateVector::get_amplitude_at_index(UINT index) const {
     Kokkos::View<Complex, Kokkos::HostSpace> host_view("single_value");
     Kokkos::deep_copy(host_view, Kokkos::subview(_raw, index));
     return host_view();
@@ -44,7 +44,7 @@ StateVector StateVector::Haar_random_state(UINT n_qubits, UINT seed) {
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
     StateVector state(n_qubits);
     Kokkos::parallel_for(
-        state._dim, KOKKOS_LAMBDA(const UINT& i) {
+        state._dim, KOKKOS_LAMBDA(UINT i) {
             auto rand_gen = rand_pool.get_state();
             state._raw[i] = Complex(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
             rand_pool.free_state(rand_gen);
@@ -65,7 +65,7 @@ double StateVector::get_squared_norm() const {
     double norm = 0.;
     Kokkos::parallel_reduce(
         this->_dim,
-        KOKKOS_CLASS_LAMBDA(const UINT& it, double& tmp) { tmp += squared_norm(this->_raw[it]); },
+        KOKKOS_CLASS_LAMBDA(UINT it, double& tmp) { tmp += squared_norm(this->_raw[it]); },
         norm);
     return norm;
 }
@@ -73,7 +73,7 @@ double StateVector::get_squared_norm() const {
 void StateVector::normalize() {
     const auto norm = std::sqrt(this->get_squared_norm());
     Kokkos::parallel_for(
-        this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& it) { this->_raw[it] /= norm; });
+        this->_dim, KOKKOS_CLASS_LAMBDA(UINT it) { this->_raw[it] /= norm; });
 }
 
 double StateVector::get_zero_probability(UINT target_qubit_index) const {
@@ -86,7 +86,7 @@ double StateVector::get_zero_probability(UINT target_qubit_index) const {
     Kokkos::parallel_reduce(
         "zero_prob",
         _dim >> 1,
-        KOKKOS_CLASS_LAMBDA(const UINT& i, double& lsum) {
+        KOKKOS_CLASS_LAMBDA(UINT i, double& lsum) {
             UINT basis_0 = internal::insert_zero_to_basis_index(i, target_qubit_index);
             lsum += squared_norm(this->_raw[basis_0]);
         },
@@ -123,7 +123,7 @@ double StateVector::get_marginal_probability(const std::vector<UINT>& measured_v
     Kokkos::parallel_reduce(
         "marginal_prob",
         _dim >> target_index.size(),
-        KOKKOS_CLASS_LAMBDA(const UINT& i, double& lsum) {
+        KOKKOS_CLASS_LAMBDA(UINT i, double& lsum) {
             UINT basis = i;
             for (UINT cursor = 0; cursor < d_target_index.size(); cursor++) {
                 UINT insert_index = d_target_index[cursor];
@@ -143,7 +143,7 @@ double StateVector::get_entropy() const {
     Kokkos::parallel_reduce(
         "get_entropy",
         _dim,
-        KOKKOS_CLASS_LAMBDA(const UINT& idx, double& lsum) {
+        KOKKOS_CLASS_LAMBDA(UINT idx, double& lsum) {
             double prob = squared_norm(_raw[idx]);
             prob = (prob > eps) ? prob : eps;
             lsum += -prob * Kokkos::log(prob);
@@ -154,17 +154,17 @@ double StateVector::get_entropy() const {
 
 void StateVector::add_state_vector(const StateVector& state) {
     Kokkos::parallel_for(
-        this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_raw[i] += state._raw[i]; });
+        this->_dim, KOKKOS_CLASS_LAMBDA(UINT i) { this->_raw[i] += state._raw[i]; });
 }
 
 void StateVector::add_state_vector_with_coef(const Complex& coef, const StateVector& state) {
     Kokkos::parallel_for(
-        this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_raw[i] += coef * state._raw[i]; });
+        this->_dim, KOKKOS_CLASS_LAMBDA(UINT i) { this->_raw[i] += coef * state._raw[i]; });
 }
 
 void StateVector::multiply_coef(const Complex& coef) {
     Kokkos::parallel_for(
-        this->_dim, KOKKOS_CLASS_LAMBDA(const UINT& i) { this->_raw[i] *= coef; });
+        this->_dim, KOKKOS_CLASS_LAMBDA(UINT i) { this->_raw[i] *= coef; });
 }
 
 std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
@@ -173,7 +173,7 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
     Kokkos::parallel_scan(
         "compute_stacked_prob",
         _dim,
-        KOKKOS_CLASS_LAMBDA(const UINT& i, double& update, const bool final) {
+        KOKKOS_CLASS_LAMBDA(UINT i, double& update, const bool final) {
             double prob = squared_norm(this->_raw[i]);
             if (final) {
                 stacked_prob[i + 1] = update + prob;
@@ -184,7 +184,7 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
     Kokkos::View<UINT*> result("result", sampling_count);
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
     Kokkos::parallel_for(
-        sampling_count, KOKKOS_LAMBDA(const UINT& i) {
+        sampling_count, KOKKOS_LAMBDA(UINT i) {
             auto rand_gen = rand_pool.get_state();
             double r = rand_gen.drand(0., 1.);
             UINT lo = 0, hi = stacked_prob.size();
