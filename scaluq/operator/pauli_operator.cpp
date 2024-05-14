@@ -199,7 +199,7 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
         Complex res;
         Kokkos::parallel_reduce(
             state_vector_bra.dim(),
-            KOKKOS_LAMBDA(UINT state_idx, Complex& sum) {
+            KOKKOS_LAMBDA(UINT state_idx, Complex & sum) {
                 Complex tmp = Kokkos::conj(state_vector_bra._raw[state_idx]) *
                               state_vector_ket._raw[state_idx];
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
@@ -214,7 +214,7 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
     Complex res;
     Kokkos::parallel_reduce(
         state_vector_bra.dim() >> 1,
-        KOKKOS_LAMBDA(UINT state_idx, Complex& sum) {
+        KOKKOS_LAMBDA(UINT state_idx, Complex & sum) {
             UINT basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             UINT basis_1 = basis_0 ^ bit_flip_mask;
             Complex tmp1 = Kokkos::conj(state_vector_bra._raw[basis_1]) *

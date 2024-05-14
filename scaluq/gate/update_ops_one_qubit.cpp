@@ -111,9 +111,8 @@ void single_qubit_diagonal_matrix_gate(UINT target_qubit_index,
                                        const diagonal_matrix_2_2 diag,
                                        StateVector& state) {
     Kokkos::parallel_for(
-        state.dim(), KOKKOS_LAMBDA(UINT it) {
-            state._raw[it] *= diag.val[(it >> target_qubit_index) & 1];
-        });
+        state.dim(),
+        KOKKOS_LAMBDA(UINT it) { state._raw[it] *= diag.val[(it >> target_qubit_index) & 1]; });
 }
 
 void rz_gate(UINT target_qubit_index, double angle, StateVector& state) {
