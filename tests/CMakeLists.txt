@@ -4,6 +4,7 @@ enable_testing()
 
 add_executable(scaluq_test EXCLUDE_FROM_ALL
     circuit/circuit_test.cpp
+    circuit/pcircuit_test.cpp
     gate/gate_test.cpp
     gate/pgate_test.cpp
     operator/test_pauli_operator.cpp
