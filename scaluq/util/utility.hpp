@@ -62,12 +62,12 @@ inline std::optional<ComplexMatrix> get_pauli_matrix(PauliOperator pauli) {
         rot90_count);
     std::vector<StdComplex> rot = {1, -1.i, -1, 1.i};
     UINT matrix_dim = 1ULL << pauli_id_list.size();
-    Kokkos::parallel_for(
-        Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, matrix_dim),
-        [&](const UINT index) { 
-            const StdComplex sign = 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
-            mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
-        });
+    Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, matrix_dim),
+                         [&](const UINT index) {
+                             const StdComplex sign =
+                                 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
+                             mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
+                         });
     return mat;
 }
 
