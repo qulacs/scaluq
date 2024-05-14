@@ -33,16 +33,9 @@ jobs:
       - name: Build sdist
         run: python -m build --sdist
           
-      # - name: Upload sdist data if the Git tag is set
-      #   run: python -m twine upload dist/*.tar.gz
-      #   if: ${{ contains(github.ref, 'tags/') }}
-      #   env:
-      #     TWINE_USERNAME: "__token__"
-      #     TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN_SCALUQ }}
-      
-      - name: Upload sdist data to testpypi if runs on workflow_dispatch
-        run: python -m twine upload --repository testpypi dist/*.tar.gz
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+      - name: Upload sdist data if the Git tag is set
+        run: python -m twine upload dist/*.tar.gz
+        if: ${{ contains(github.ref, 'tags/') }}
         env:
           TWINE_USERNAME: "__token__"
-          TWINE_PASSWORD: ${{ secrets.TESTPYPI_TOKEN_SCALUQ }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN_SCALUQ }}
