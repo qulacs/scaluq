@@ -13,8 +13,8 @@ void pauli_gate(const PauliOperator& pauli, StateVector& state) { pauli.apply_to
 
 void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& state) {
     auto [bit_flip_mask_vector, phase_flip_mask_vector] = pauli.get_XZ_mask_representation();
-    UINT bit_flip_mask = bit_flip_mask_vector.data_raw()[0];
-    UINT phase_flip_mask = phase_flip_mask_vector.data_raw()[0];
+    UINT bit_flip_mask = internal::BitVector(bit_flip_mask_vector).data_raw()[0];
+    UINT phase_flip_mask = internal::BitVector(phase_flip_mask_vector).data_raw()[0];
     UINT global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     const double cosval = cos(-angle / 2);
     const double sinval = sin(-angle / 2);
@@ -33,7 +33,7 @@ void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& 
             });
         return;
     } else {
-        const UINT insert_idx = bit_flip_mask_vector.msb();
+        const UINT insert_idx = internal::BitVector(bit_flip_mask_vector).msb();
         Kokkos::parallel_for(
             state.dim() >> 1, KOKKOS_LAMBDA(const UINT& state_idx) {
                 UINT basis_0 = internal::insert_zero_to_basis_index(state_idx, insert_idx);

@@ -18,10 +18,10 @@ PauliOperator::PauliOperator(std::string_view pauli_string, Complex coef) : _coe
             throw std::runtime_error("PauliOperator::PauliOperator: invalid pauli_string format");
         }
         UINT pauli_id = [&] {
-            if (pauli == 'I' || pauli == 'i') return 0;
-            if (pauli == 'X' || pauli == 'x') return 1;
-            if (pauli == 'Y' || pauli == 'y') return 2;
-            if (pauli == 'Z' || pauli == 'z') return 3;
+            if (pauli == 'I' || pauli == 'i') return PauliOperator::I;
+            if (pauli == 'X' || pauli == 'x') return PauliOperator::X;
+            if (pauli == 'Y' || pauli == 'y') return PauliOperator::Y;
+            if (pauli == 'Z' || pauli == 'z') return PauliOperator::Z;
             throw std::runtime_error("PauliOperator::PauliOperator: invalid pauli_string format");
         }();
         if (pauli_id != 0) add_single_pauli(target, pauli_id);
@@ -48,15 +48,16 @@ PauliOperator::PauliOperator(const std::vector<UINT>& target_qubit_list,
     }
 }
 
-PauliOperator::PauliOperator(const BitVector& bit_flip_mask,
-                             const BitVector& phase_flip_mask,
+PauliOperator::PauliOperator(const std::vector<bool>& bit_flip_mask,
+                             const std::vector<bool>& phase_flip_mask,
                              Complex coef)
     : _coef(coef) {
     UINT num_y = 0;
     UINT max_target = 0;
-    if (auto msb = bit_flip_mask.msb(); msb != std::numeric_limits<UINT>::max() && max_target < msb)
+    if (auto msb = internal::BitVector(bit_flip_mask).msb();
+        msb != std::numeric_limits<UINT>::max() && max_target < msb)
         max_target = msb;
-    if (auto msb = phase_flip_mask.msb();
+    if (auto msb = internal::BitVector(phase_flip_mask).msb();
         msb != std::numeric_limits<UINT>::max() && max_target < msb)
         max_target = msb;
     for (UINT target_idx = 0; target_idx <= max_target; target_idx++) {
@@ -98,10 +99,10 @@ void PauliOperator::add_single_pauli(UINT target_qubit, UINT pauli_id) {
         throw std::runtime_error(
             "PauliOperator::add_single_pauli: You cannot add single pauli twice for same qubit.");
     }
-    if (pauli_id == 1 || pauli_id == 2) {
+    if (pauli_id == PauliOperator::X || pauli_id == PauliOperator::Y) {
         _bit_flip_mask[target_qubit] = true;
     }
-    if (pauli_id == 2 || pauli_id == 3) {
+    if (pauli_id == PauliOperator::Y || pauli_id == PauliOperator::Z) {
         _phase_flip_mask[target_qubit] = true;
     }
 }

@@ -2,6 +2,7 @@
 
 #include "../state/state_vector.hpp"
 #include "../types.hpp"
+#include "update_ops.hpp"
 
 namespace scaluq {
 namespace internal {
@@ -147,7 +148,7 @@ private:
     GateType _gate_type;
 
 public:
-    GatePtr() : _gate_type(get_gate_type<T>()), _gate_ptr(nullptr) {}
+    GatePtr() : _gate_ptr(nullptr), _gate_type(get_gate_type<T>()) {}
     GatePtr(const GatePtr& gate) = default;
     template <GateImpl U>
     GatePtr(const std::shared_ptr<U>& gate_ptr) {

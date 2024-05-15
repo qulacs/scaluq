@@ -72,7 +72,7 @@ inline std::optional<ComplexMatrix> get_pauli_matrix(PauliOperator pauli) {
 
 // Host std::vector を Device Kokkos::View に変換する関数
 template <typename T>
-Kokkos::View<T*, Kokkos::DefaultExecutionSpace> convert_host_vector_to_device_view(
+inline Kokkos::View<T*, Kokkos::DefaultExecutionSpace> convert_host_vector_to_device_view(
     const std::vector<T>& vec) {
     Kokkos::fence();
     Kokkos::View<T*, Kokkos::HostSpace> host_view("host_view", vec.size());
@@ -84,7 +84,7 @@ Kokkos::View<T*, Kokkos::DefaultExecutionSpace> convert_host_vector_to_device_vi
 
 // Device Kokkos::View を Host std::vector に変換する関数
 template <typename T>
-std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device_view) {
+inline std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device_view) {
     Kokkos::fence();
     std::vector<T> host_vector(device_view.extent(0));
     Kokkos::View<T*, Kokkos::HostSpace> host_view(

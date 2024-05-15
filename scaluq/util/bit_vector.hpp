@@ -8,11 +8,17 @@
 #include "../types.hpp"
 
 namespace scaluq {
+namespace internal {
 class BitVector {
 public:
     constexpr static UINT BIT_SIZE = sizeof(UINT) * 8;
 
     BitVector(UINT sz = 1) : _data((sz + BIT_SIZE - 1) / BIT_SIZE) {}
+    BitVector(const std::vector<bool>& vec) : _data((vec.size() + BIT_SIZE - 1) / BIT_SIZE) {
+        for (UINT i = 0; i < vec.size(); ++i) {
+            set(i, vec[i]);
+        }
+    }
 
     [[nodiscard]] inline const std::vector<UINT>& data_raw() const { return _data; }
     [[nodiscard]] inline std::vector<UINT>& data_raw() { return _data; }
@@ -123,6 +129,14 @@ public:
         return true;
     }
 
+    operator std::vector<bool>() const {
+        std::vector<bool> vec(_data.size() * BIT_SIZE);
+        for (UINT i = 0; i < vec.size(); ++i) {
+            vec[i] = get(i);
+        }
+        return vec;
+    }
+
     inline bool empty() const {
         return std::ranges::all_of(_data, [](UINT x) { return x == 0; });
     }
@@ -159,4 +173,5 @@ public:
 private:
     std::vector<UINT> _data;
 };
+}  // namespace internal
 }  // namespace scaluq

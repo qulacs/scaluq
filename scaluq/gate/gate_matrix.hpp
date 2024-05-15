@@ -60,7 +60,7 @@ public:
         _matrix.val[1][1] = matrix[1][1];
     }
 
-    std::array<std::array<Complex, 2>, 2> matrix() {
+    std::array<std::array<Complex, 2>, 2> matrix() const {
         return {_matrix.val[0][0], _matrix.val[0][1], _matrix.val[1][0], _matrix.val[1][1]};
     }
 
@@ -80,7 +80,10 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override;
+    void update_quantum_state(StateVector& state_vector) const override {
+        check_qubit_within_bounds(state_vector, this->_target);
+        single_qubit_dense_matrix_gate(_target, _matrix, state_vector);
+    }
 };
 
 class TwoQubitMatrixGateImpl : public TwoQubitGateBase {
@@ -98,7 +101,7 @@ public:
         }
     }
 
-    std::array<std::array<Complex, 4>, 4> matrix() {
+    std::array<std::array<Complex, 4>, 4> matrix() const {
         std::array<std::array<Complex, 4>, 4> matrix;
         for (UINT i : std::views::iota(4)) {
             for (UINT j : std::views::iota(4)) {
@@ -129,7 +132,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override;
+    void update_quantum_state(StateVector& state_vector) const override {
+        check_qubit_within_bounds(state_vector, this->_target1);
+        check_qubit_within_bounds(state_vector, this->_target2);
+        double_qubit_dense_matrix_gate(_target1, _target2, _matrix, state_vector);
+    }
 };
 
 class CrsMatrixGateImpl : public GateBase {
