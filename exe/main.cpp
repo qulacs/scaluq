@@ -3,22 +3,16 @@
 #include <Eigen/Core>
 #include <functional>
 #include <iostream>
-#include <types.hpp>
-#include <util/random.hpp>
 
-#include "../scaluq/all.hpp"
-#include "../scaluq/util/utility.hpp"
-#include "KokkosKernels_default_types.hpp"
-#include "KokkosSparse_CrsMatrix.hpp"
-#include "KokkosSparse_spmv.hpp"
+// #include "../scaluq/all.hpp"
 
-using namespace scaluq;
+// using namespace scaluq;
 using namespace std;
 
 void run() { return; }
 
 int main() {
-    Kokkos::initialize();
+    // Kokkos::initialize();
     run();
-    Kokkos::finalize();
+    // Kokkos::finalize();
 }
