@@ -8,5 +8,4 @@
 #include "operator/operator.hpp"
 #include "operator/pauli_operator.hpp"
 #include "state/state_vector.hpp"
-#include "types.hpp"
 #include "util/random.hpp"

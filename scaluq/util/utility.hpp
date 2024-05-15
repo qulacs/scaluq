@@ -94,12 +94,6 @@ inline std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>&
     return host_vector;
 }
 
-}  // namespace internal
-
-KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
-    return z.real() * z.real() + z.imag() * z.imag();
-}
-
 inline std::vector<UINT> create_matrix_mask_list(const std::vector<UINT> qubit_index_list,
                                                  const UINT qubit_index_count) {
     const UINT matrix_dim = 1ULL << qubit_index_count;
@@ -155,9 +149,9 @@ inline void create_shift_mask_list_from_list_and_value_buf(const std::vector<UIN
     }
 }
 
-void create_shift_mask_list_from_list_buf(std::vector<UINT> array,
-                                          std::vector<UINT> dst_array,
-                                          std::vector<UINT> dst_mask) {
+inline void create_shift_mask_list_from_list_buf(std::vector<UINT> array,
+                                                 std::vector<UINT> dst_array,
+                                                 std::vector<UINT> dst_mask) {
     UINT size = array.size();
     dst_array.resize(size);
     dst_mask.resize(size);
@@ -189,5 +183,10 @@ inline void gemv(const DenseMatrix matrix,
                  const Kokkos::View<Complex*>& x,
                  Kokkos::View<Complex*>& y) {
     KokkosBlas::gemv("N", 1.0, matrix, x, 0.0, y);
+}
+}  // namespace internal
+
+KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
+    return z.real() * z.real() + z.imag() * z.imag();
 }
 }  // namespace scaluq

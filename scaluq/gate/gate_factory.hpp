@@ -103,4 +103,16 @@ inline Gate Pauli(const PauliOperator& pauli) {
 inline Gate PauliRotation(const PauliOperator& pauli, double angle) {
     return internal::GateFactory::create_gate<internal::PauliRotationGateImpl>(pauli, angle);
 }
+// inline Gate SparseMatrix(const Crsmatrix& matrix,
+//                          const std::vector<UINT>& target_qubit_list,
+//                          const std::vector<UINT>& control_qubit_list) {
+//     return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl>(
+//         matrix, target_qubit_list, control_qubit_list);
+// }
+// inline Gate DenseMatrix(const ComplexMatrix& matrix,
+//                         const std::vector<UINT>& target_qubit_list,
+//                         const std::vector<UINT>& control_qubit_list) {
+//     return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl>(
+//         matrix, target_qubit_list, control_qubit_list);
+// }
 }  // namespace scaluq

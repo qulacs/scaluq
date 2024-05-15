@@ -27,11 +27,12 @@ void single_qubit_control_single_qubit_dense_matrix_gate(UINT control_qubit_inde
                                                          UINT target_qubit_index,
                                                          const DenseMatrix& matrix,
                                                          StateVector& state_vector);
-void single_qubit_control_multi_qubit_dense_matrix_gate(UINT control_qubit_index,
-                                                        UINT control_value,
-                                                        std::vector<UINT> target_qubit_index_list,
-                                                        const DenseMatrix& matrix,
-                                                        StateVector& state);
+void single_qubit_control_multi_qubit_dense_matrix_gate(
+    UINT control_qubit_index,
+    UINT control_value,
+    const std::vector<UINT>& target_qubit_index_list,
+    const DenseMatrix& matrix,
+    StateVector& state);
 void multi_qubit_control_single_qubit_dense_matrix_gate(
     const std::vector<UINT>& control_qubit_index_list,
     const std::vector<UINT>& control_value_list,
@@ -145,7 +146,18 @@ class CrsMatrixGateImpl : public GateBase {
     std::vector<ControlQubitInfo> control_qubit_info_list;
 
 public:
-    CrsMatrixGateImpl() : GateBase() {}
+    CrsMatrixGateImpl(CrsMatrix matrix,
+                      const std::vector<UINT>& target_qubit_index_list,
+                      const std::vector<UINT>& control_qubit_index_list)
+        : GateBase() {
+        _matrix = matrix;
+        for (UINT i = 0; i < target_qubit_index_list.size(); i++) {
+            target_qubit_info_list.push_back(TargetQubitInfo(target_qubit_index_list[i]));
+        }
+        for (UINT i = 0; i < control_qubit_index_list.size(); i++) {
+            control_qubit_info_list.push_back(ControlQubitInfo(control_qubit_index_list[i], 1));
+        }
+    }
 
     std::vector<UINT> get_target_qubit_list() const override {
         std::vector<UINT> target_qubit_list;
@@ -218,13 +230,32 @@ class DenseMatrixGateImpl : public GateBase {
     std::vector<ControlQubitInfo> control_qubit_info_list;
 
 public:
-    DenseMatrixGateImpl(DenseMatrix matrix) : GateBase() {
+    DenseMatrixGateImpl(DenseMatrix matrix,
+                        const std::vector<UINT>& target_qubit_index_list,
+                        const std::vector<UINT>& control_qubit_index_list)
+        : GateBase() {
         _matrix = matrix;
         _adjoint_flag = false;
+        for (UINT i = 0; i < target_qubit_index_list.size(); i++) {
+            target_qubit_info_list.push_back(TargetQubitInfo(target_qubit_index_list[i]));
+        }
+        for (UINT i = 0; i < control_qubit_index_list.size(); i++) {
+            control_qubit_info_list.push_back(ControlQubitInfo(control_qubit_index_list[i], 1));
+        }
     }
-    DenseMatrixGateImpl(DenseMatrix matrix, bool flag) : GateBase() {
+    DenseMatrixGateImpl(DenseMatrix matrix,
+                        bool flag,
+                        const std::vector<UINT>& target_qubit_index_list,
+                        const std::vector<UINT>& control_qubit_index_list)
+        : GateBase() {
         _matrix = matrix;
         _adjoint_flag = flag;
+        for (UINT i = 0; i < target_qubit_index_list.size(); i++) {
+            target_qubit_info_list.push_back(TargetQubitInfo(target_qubit_index_list[i]));
+        }
+        for (UINT i = 0; i < control_qubit_index_list.size(); i++) {
+            control_qubit_info_list.push_back(ControlQubitInfo(control_qubit_index_list[i], 1));
+        }
     }
 
     std::vector<UINT> get_target_qubit_list() const override {
@@ -248,7 +279,8 @@ public:
 
     Gate copy() const override { return std::make_shared<DenseMatrixGateImpl>(*this); }
     Gate get_inverse() const override {
-        return std::make_shared<DenseMatrixGateImpl>(_matrix, !_adjoint_flag);
+        return std::make_shared<DenseMatrixGateImpl>(
+            _matrix, !_adjoint_flag, get_target_qubit_list(), get_control_qubit_list());
     }
     std::optional<DenseMatrix> get_matrix_internal() const { return _matrix; }
     std::optional<ComplexMatrix> get_matrix() const override {
@@ -306,7 +338,7 @@ public:
 };
 
 void single_qubit_dense_matrix_gate_view(UINT target_qubit_index,
-                                         DenseMatrix& matrix,
+                                         const DenseMatrix& matrix,
                                          StateVector& state_vector) {
     check_qubit_within_bounds(state_vector, target_qubit_index);
     const UINT loop_dim = state_vector.dim() >> 1;
@@ -328,7 +360,7 @@ void single_qubit_dense_matrix_gate_view(UINT target_qubit_index,
 
 void double_qubit_dense_matrix_gate(UINT target_qubit_index1,
                                     UINT target_qubit_index2,
-                                    DenseMatrix& matrix,
+                                    const DenseMatrix& matrix,
                                     StateVector& state_vector) {
     const auto [min_qubit_index, max_qubit_index] =
         std::minmax(target_qubit_index1, target_qubit_index2);
@@ -371,7 +403,7 @@ void double_qubit_dense_matrix_gate(UINT target_qubit_index1,
 void single_qubit_control_single_qubit_dense_matrix_gate(UINT control_qubit_index,
                                                          UINT control_value,
                                                          UINT target_qubit_index,
-                                                         DenseMatrix& matrix,
+                                                         const DenseMatrix& matrix,
                                                          StateVector& state_vector) {
     check_qubit_within_bounds(state_vector, control_qubit_index);
     const UINT loop_dim = state_vector.dim() >> 2;
@@ -435,11 +467,12 @@ void single_qubit_control_single_qubit_dense_matrix_gate(UINT control_qubit_inde
     }
 }
 
-void single_qubit_control_multi_qubit_dense_matrix_gate(UINT control_qubit_index,
-                                                        UINT control_value,
-                                                        std::vector<UINT> target_qubit_index_list,
-                                                        DenseMatrix& matrix,
-                                                        StateVector& state_vector) {
+void single_qubit_control_multi_qubit_dense_matrix_gate(
+    UINT control_qubit_index,
+    UINT control_value,
+    const std::vector<UINT>& target_qubit_index_list,
+    const DenseMatrix& matrix,
+    StateVector& state_vector) {
     const UINT target_qubit_index_count = target_qubit_index_list.size();
     const UINT matrix_dim = 1ULL << target_qubit_index_count;
     std::vector<UINT> matrix_mask_list =
@@ -480,7 +513,7 @@ void multi_qubit_control_single_qubit_dense_matrix_gate(
     const std::vector<UINT>& control_qubit_index_list,
     const std::vector<UINT>& control_value_list,
     UINT target_qubit_index,
-    DenseMatrix& matrix,
+    const DenseMatrix& matrix,
     StateVector& state_vector) {
     UINT control_qubit_index_count = control_qubit_index_list.size();
     if (control_qubit_index_count == 1) {
@@ -557,10 +590,10 @@ void multi_qubit_control_single_qubit_dense_matrix_gate(
 }
 
 void multi_qubit_control_multi_qubit_dense_matrix_gate(
-    const std::vector<UINT> control_qubit_index_list,
-    const std::vector<UINT> control_value_list,
-    const std::vector<UINT> target_qubit_index_list,
-    DenseMatrix& matrix,
+    const std::vector<UINT>& control_qubit_index_list,
+    const std::vector<UINT>& control_value_list,
+    const std::vector<UINT>& target_qubit_index_list,
+    const DenseMatrix& matrix,
     StateVector& state_vector) {
     const UINT control_qubit_index_count = control_qubit_index_list.size();
     const UINT target_qubit_index_count = target_qubit_index_list.size();
@@ -601,8 +634,8 @@ void multi_qubit_control_multi_qubit_dense_matrix_gate(
         });
 }
 
-void multi_qubit_dense_matrix_gate(const std::vector<UINT> target_qubit_index_list,
-                                   DenseMatrix& matrix,
+void multi_qubit_dense_matrix_gate(const std::vector<UINT>& target_qubit_index_list,
+                                   const DenseMatrix& matrix,
                                    StateVector& state_vector) {
     UINT target_qubit_index_count = target_qubit_index_list.size();
     if (target_qubit_index_count == 1) {
