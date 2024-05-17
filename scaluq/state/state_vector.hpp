@@ -63,6 +63,7 @@ public:
     [[nodiscard]] std::vector<UINT> sampling(UINT sampling_count,
                                              UINT seed = std::random_device()()) const;
 
+    template <bool display_indexes = true>
     [[nodiscard]] std::string to_string() const;
 
     void load(const std::vector<Complex>& other);

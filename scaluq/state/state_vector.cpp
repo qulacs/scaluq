@@ -169,7 +169,6 @@ void StateVector::multiply_coef(const Complex& coef) {
 
 std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
     Kokkos::View<double*> stacked_prob("prob", _dim + 1);
-    Kokkos::deep_copy(stacked_prob, 0);
     Kokkos::parallel_scan(
         "compute_stacked_prob",
         _dim,
@@ -181,7 +180,7 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
             update += prob;
         });
 
-    Kokkos::View<UINT*> result("result", sampling_count);
+    Kokkos::View<UINT*> result(Kokkos::ViewAllocateWithoutInitializing("result"), sampling_count);
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
     Kokkos::parallel_for(
         sampling_count, KOKKOS_LAMBDA(UINT i) {
@@ -202,6 +201,7 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
     return internal::convert_device_view_to_host_vector<UINT>(result);
 }
 
+template <bool display_indexes>
 std::string StateVector::to_string() const {
     std::stringstream os;
     auto amp = this->amplitudes();
@@ -210,6 +210,17 @@ std::string StateVector::to_string() const {
     os << " * Dimension   : " << _dim << '\n';
     os << " * State vector : \n";
     for (UINT i = 0; i < _dim; ++i) {
+        if constexpr (display_indexes) {
+            os <<
+                [](UINT n, UINT len) {
+                    std::string tmp;
+                    while (len--) {
+                        tmp += ((n >> len) & 1) + '0';
+                    }
+                    return tmp;
+                }(i, _n_qubits)
+               << ": ";
+        }
         os << amp[i] << std::endl;
     }
     return os.str();

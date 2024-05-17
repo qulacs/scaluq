@@ -75,8 +75,8 @@ inline std::optional<ComplexMatrix> get_pauli_matrix(PauliOperator pauli) {
 template <typename T>
 inline Kokkos::View<T*, Kokkos::DefaultExecutionSpace> convert_host_vector_to_device_view(
     const std::vector<T>& vec) {
-    Kokkos::View<T*, Kokkos::HostSpace> host_view("host_view", vec.size());
-    std::copy(vec.begin(), vec.end(), host_view.data());
+    Kokkos::View<const T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
+        vec.data(), vec.size());
     Kokkos::View<T*, Kokkos::DefaultExecutionSpace> device_view("device_view", vec.size());
     Kokkos::deep_copy(device_view, host_view);
     return device_view;
@@ -86,10 +86,9 @@ inline Kokkos::View<T*, Kokkos::DefaultExecutionSpace> convert_host_vector_to_de
 template <typename T>
 inline std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device_view) {
     std::vector<T> host_vector(device_view.extent(0));
-    Kokkos::View<T*, Kokkos::HostSpace> host_view(
-        Kokkos::ViewAllocateWithoutInitializing("host_view"), device_view.extent(0));
+    Kokkos::View<T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
+        host_vector.data(), host_vector.size());
     Kokkos::deep_copy(host_view, device_view);
-    std::copy(host_view.data(), host_view.data() + host_view.extent(0), host_vector.begin());
     return host_vector;
 }
 
