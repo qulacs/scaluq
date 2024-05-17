@@ -20,13 +20,13 @@ TEST(PCircuitTest, ApplyPCircuit) {
         Circuit circuit(n_qubits);
         Circuit pcircuit(n_qubits);
         constexpr UINT nparams = 5;
-        std::array<std::string_view, nparams> pkeys = {};
+        std::array<std::string, nparams> pkeys = {};
         for (UINT pidx : std::views::iota(UINT{0}, nparams))
             pkeys[pidx] = "p" + std::to_string(pidx);
         std::array<double, nparams> params = {};
         for (UINT pidx : std::views::iota(UINT{0}, nparams))
             params[pidx] = random.uniform() * M_PI * 2;
-        std::map<std::string_view, double> pmap;
+        std::map<std::string, double> pmap;
         for (UINT pidx : std::views::iota(UINT{0}, nparams)) pmap[pkeys[pidx]] = params[pidx];
         auto add_random_rotation_or_cnot = [&] {
             if (random.int32() & 1) {
@@ -87,4 +87,18 @@ TEST(PCircuitTest, ApplyPCircuit) {
             ASSERT_NEAR(Kokkos::abs(amplitudes_cp[idx] - amplitudes_base[idx]), 0, eps);
         }
     }
+}
+
+TEST(PCircuitTest, InsufficientParameterGiven) {
+    Circuit circuit(1);
+    circuit.add_pgate(PRX(0), "0");
+    circuit.add_pgate(PRX(0), "1");
+    circuit.add_pgate(PRX(0), "0");
+    StateVector state(1);
+    ASSERT_NO_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"1", 0}}));
+    ASSERT_NO_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"1", 0}, {"2", 0}}));
+    ASSERT_THROW(circuit.update_quantum_state(state), std::runtime_error);
+    ASSERT_THROW(circuit.update_quantum_state(state, {}), std::runtime_error);
+    ASSERT_THROW(circuit.update_quantum_state(state, {{"0", 0}}), std::runtime_error);
+    ASSERT_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"2", 0}}), std::runtime_error);
 }

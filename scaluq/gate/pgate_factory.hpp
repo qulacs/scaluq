@@ -18,10 +18,10 @@ inline PGate PRX(UINT target, double pcoef = 1.) {
     return internal::PGateFactory::create_gate<internal::PRXGateImpl>(target, pcoef);
 }
 inline PGate PRY(UINT target, double pcoef = 1.) {
-    return internal::PGateFactory::create_gate<internal::PRXGateImpl>(target, pcoef);
+    return internal::PGateFactory::create_gate<internal::PRYGateImpl>(target, pcoef);
 }
 inline PGate PRZ(UINT target, double pcoef = 1.) {
-    return internal::PGateFactory::create_gate<internal::PRXGateImpl>(target, pcoef);
+    return internal::PGateFactory::create_gate<internal::PRZGateImpl>(target, pcoef);
 }
 inline PGate PPauliRotation(const PauliOperator& pauli, double pcoef = 1.) {
     return internal::PGateFactory::create_gate<internal::PPauliRotationGateImpl>(pauli, pcoef);

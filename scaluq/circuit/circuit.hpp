@@ -10,14 +10,14 @@
 namespace scaluq {
 class Circuit {
 public:
-    using GateWithKey = std::variant<Gate, std::pair<PGate, std::string_view>>;
+    using GateWithKey = std::variant<Gate, std::pair<PGate, std::string>>;
     explicit Circuit(UINT n_qubits) : _n_qubits(n_qubits) {}
 
     [[nodiscard]] inline UINT n_qubits() const { return _n_qubits; }
     [[nodiscard]] inline const std::vector<GateWithKey>& gate_list() const { return _gate_list; }
     [[nodiscard]] inline UINT gate_count() { return _gate_list.size(); }
-    [[nodiscard]] inline const std::set<std::string_view> key_set() const {
-        std::set<std::string_view> key_set;
+    [[nodiscard]] inline const std::set<std::string> key_set() const {
+        std::set<std::string> key_set;
         for (auto&& gate : _gate_list) {
             if (gate.index() == 1) key_set.insert(std::get<1>(gate).second);
         }
@@ -29,7 +29,7 @@ public:
         }
         return _gate_list[idx];
     }
-    [[nodiscard]] inline std::optional<std::string_view> get_key(UINT idx) {
+    [[nodiscard]] inline std::optional<std::string> get_key(UINT idx) {
         if (idx >= _gate_list.size()) {
             throw std::runtime_error("Circuit::get_parameter_key(UINT): index out of bounds");
         }
@@ -48,7 +48,7 @@ public:
     void add_circuit(Circuit&& circuit);
 
     void update_quantum_state(StateVector& state,
-                              const std::map<std::string_view, double>& parameters = {}) const;
+                              const std::map<std::string, double>& parameters = {}) const;
 
     Circuit copy() const;
     Circuit get_inverse() const;

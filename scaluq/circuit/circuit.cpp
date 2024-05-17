@@ -43,11 +43,11 @@ void Circuit::add_gate(Gate&& gate) {
 }
 void Circuit::add_pgate(const PGate& pgate, std::string_view parameter_key) {
     check_gate_is_valid(pgate);
-    _gate_list.push_back(std::make_pair(pgate->copy(), parameter_key));
+    _gate_list.push_back(std::make_pair(pgate->copy(), std::string(parameter_key)));
 }
 void Circuit::add_pgate(PGate&& pgate, std::string_view parameter_key) {
     check_gate_is_valid(pgate);
-    _gate_list.push_back(std::make_pair(std::move(pgate), parameter_key));
+    _gate_list.push_back(std::make_pair(std::move(pgate), std::string(parameter_key)));
 }
 void Circuit::add_circuit(const Circuit& circuit) {
     if (circuit._n_qubits != _n_qubits) {
@@ -73,10 +73,10 @@ void Circuit::add_circuit(Circuit&& circuit) {
 }
 
 void Circuit::update_quantum_state(StateVector& state,
-                                   const std::map<std::string_view, double>& parameters) const {
+                                   const std::map<std::string, double>& parameters) const {
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0) continue;
-        std::string_view key = std::get<1>(gate).second;
+        const auto& key = std::get<1>(gate).second;
         if (!parameters.contains(key)) {
             using namespace std::string_literals;
             throw std::runtime_error(
