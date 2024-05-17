@@ -51,7 +51,7 @@ jobs:
         run: python -m cibuildwheel --output-dir wheels
           
       - name: Upload wheel to GitHub
-        uses: action/upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
           path: ./wheels/*.whl
       
