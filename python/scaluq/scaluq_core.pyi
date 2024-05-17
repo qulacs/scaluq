@@ -1137,7 +1137,7 @@ class PGateType(Enum):
     PRZ: Any
 
 def PPauliRotation(
-    arg0: scaluq.scaluq_core.PauliOperator, arg1: float, /
+    pauli: scaluq.scaluq_core.PauliOperator, coef: float = 1.0
 ) -> scaluq.scaluq_core.PGate:
     """
     Generate general PGate class instance of PPauliRotation.
@@ -1194,7 +1194,7 @@ class PPauliRotationGate:
         """
         ...
 
-def PRX(arg0: int, arg1: float, /) -> scaluq.scaluq_core.PGate:
+def PRX(target: int, coef: float = 1.0) -> scaluq.scaluq_core.PGate:
     """
     Generate general PGate class instance of PRX.
     """
@@ -1251,7 +1251,7 @@ class PRXGate:
         """
         ...
 
-def PRY(arg0: int, arg1: float, /) -> scaluq.scaluq_core.PGate:
+def PRY(target: int, coef: float = 1.0) -> scaluq.scaluq_core.PGate:
     """
     Generate general PGate class instance of PRY.
     """
@@ -1308,7 +1308,7 @@ class PRYGate:
         """
         ...
 
-def PRZ(arg0: int, arg1: float, /) -> scaluq.scaluq_core.PGate:
+def PRZ(target: int, coef: float = 1.0) -> scaluq.scaluq_core.PGate:
     """
     Generate general PGate class instance of PRZ.
     """
