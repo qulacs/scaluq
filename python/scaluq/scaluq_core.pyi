@@ -231,11 +231,18 @@ class Circuit:
         ...
 
     def update_quantum_state(
+        self, arg0: scaluq.scaluq_core.StateVector, /, **kwargs
+    ) -> None:
+        """
+        Apply gate to the StateVector. StateVector in args is directly updated. If the circuit contains parametric gate, you have to give real value of parameter as "name=value" format in kwargs.
+        """
+        ...
+
+    @overload
+    def update_quantum_state(
         self, arg0: scaluq.scaluq_core.StateVector, arg1: dict[str, float], /
     ) -> None:
         """
-        update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None
-
         Apply gate to the StateVector. StateVector in args is directly updated. If the circuit contains parametric gate, you have to give real value of parameter as dict[str, float] in 2nd arg.
         """
         ...
@@ -1130,7 +1137,7 @@ class PGateType(Enum):
     PRZ: Any
 
 def PPauliRotation(
-    arg: scaluq.scaluq_core.PauliOperator, /
+    arg0: scaluq.scaluq_core.PauliOperator, arg1: float, /
 ) -> scaluq.scaluq_core.PGate:
     """
     Generate general PGate class instance of PPauliRotation.
@@ -1187,7 +1194,7 @@ class PPauliRotationGate:
         """
         ...
 
-def PRX(arg: int, /) -> scaluq.scaluq_core.PGate:
+def PRX(arg0: int, arg1: float, /) -> scaluq.scaluq_core.PGate:
     """
     Generate general PGate class instance of PRX.
     """
@@ -1244,7 +1251,7 @@ class PRXGate:
         """
         ...
 
-def PRY(arg: int, /) -> scaluq.scaluq_core.PGate:
+def PRY(arg0: int, arg1: float, /) -> scaluq.scaluq_core.PGate:
     """
     Generate general PGate class instance of PRY.
     """
@@ -1301,7 +1308,7 @@ class PRYGate:
         """
         ...
 
-def PRZ(arg: int, /) -> scaluq.scaluq_core.PGate:
+def PRZ(arg0: int, arg1: float, /) -> scaluq.scaluq_core.PGate:
     """
     Generate general PGate class instance of PRZ.
     """

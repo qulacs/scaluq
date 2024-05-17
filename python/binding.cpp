@@ -56,7 +56,7 @@ struct type_caster<Kokkos::complex<T>> {
             return true;
         }
 
-        return true;
+        return false;
     }
 
     template <typename T2>
@@ -573,10 +573,14 @@ NB_MODULE(scaluq_core, m) {
 #define DEF_PGATE_FACTORY(PGATE_NAME) \
     m.def(#PGATE_NAME, &PGATE_NAME, "Generate general PGate class instance of " #PGATE_NAME ".")
 
-    DEF_PGATE_FACTORY(PRX);
-    DEF_PGATE_FACTORY(PRY);
-    DEF_PGATE_FACTORY(PRZ);
-    DEF_PGATE_FACTORY(PPauliRotation);
+    m.def("PRX", &PRX, "Generate general PGate class instance of PRX.", "target"_a, "coef"_a = 1.);
+    m.def("PRY", &PRY, "Generate general PGate class instance of PRY.", "target"_a, "coef"_a = 1.);
+    m.def("PRZ", &PRZ, "Generate general PGate class instance of PRZ.", "target"_a, "coef"_a = 1.);
+    m.def("PPauliRotation",
+          &PPauliRotation,
+          "Generate general PGate class instance of PPauliRotation.",
+          "pauli"_a,
+          "coef"_a = 1.);
 
     nb::class_<Circuit>(m, "Circuit", "Quantum circuit represented as gate array")
         .def(nb::init<UINT>(), "Initialize empty circuit of specified qubits.")
@@ -603,6 +607,18 @@ NB_MODULE(scaluq_core, m) {
              "Apply gate to the StateVector. StateVector in args is directly updated. If the "
              "circuit contains parametric gate, you have to give real value of parameter as "
              "dict[str, float] in 2nd arg.")
+        .def(
+            "update_quantum_state",
+            [&](const Circuit &circuit, StateVector &state, nb::kwargs kwargs) {
+                std::map<std::string, double> parameters;
+                for (auto &&[key, param] : kwargs) {
+                    parameters[nb::cast<std::string>(key)] = nb::cast<double>(param);
+                }
+                circuit.update_quantum_state(state, parameters);
+            },
+            "Apply gate to the StateVector. StateVector in args is directly updated. If the "
+            "circuit contains parametric gate, you have to give real value of parameter as "
+            "\"name=value\" format in kwargs.")
         .def(
             "update_quantum_state",
             [](const Circuit &circuit, StateVector &state) { circuit.update_quantum_state(state); })
