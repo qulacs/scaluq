@@ -48,13 +48,13 @@ inline std::optional<ComplexMatrix> get_pauli_matrix(PauliOperator pauli) {
         [&](UINT i, UINT& f_mask, UINT& p_mask, UINT& rot90_cnt) {
             UINT pauli_id = pauli_id_list[i];
             if (pauli_id == 1) {
-                f_mask ^= 1ULL << i;
+                f_mask += 1ULL << i;
             } else if (pauli_id == 2) {
-                f_mask ^= 1ULL << i;
-                p_mask ^= 1ULL << i;
+                f_mask += 1ULL << i;
+                p_mask += 1ULL << i;
                 rot90_cnt++;
             } else if (pauli_id == 3) {
-                p_mask ^= 1ULL << i;
+                p_mask += 1ULL << i;
             }
         },
         flip_mask,
@@ -62,12 +62,10 @@ inline std::optional<ComplexMatrix> get_pauli_matrix(PauliOperator pauli) {
         rot90_count);
     std::vector<StdComplex> rot = {1, -1.i, -1, 1.i};
     UINT matrix_dim = 1ULL << pauli_id_list.size();
-    Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, matrix_dim),
-                         [&](const UINT index) {
-                             const StdComplex sign =
-                                 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
-                             mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
-                         });
+    for (UINT index = 0; index < matrix_dim; index++) {
+        const StdComplex sign = 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
+        mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
+    }
     return mat;
 }
 
