@@ -1,5 +1,9 @@
 #include "./operator.hpp"
 
+#include <ranges>
+
+#include "../util/utility.hpp"
+
 namespace scaluq {
 Operator::Operator(UINT n_qubits) : _n_qubits(n_qubits) {}
 
@@ -62,9 +66,15 @@ Operator Operator::get_dagger() const {
 }
 
 void Operator::apply_to_state(StateVector& state_vector) const {
-    for (const auto& pauli : _terms) {
-        pauli.apply_to_state(state_vector);
+    UINT nterms = _terms.size();
+    StateVector res(state_vector.n_qubits());
+    res.set_zero_norm_state();
+    for (const auto& term : _terms) {
+        StateVector tmp = state_vector.copy();
+        term.apply_to_state(tmp);
+        res.add_state_vector(tmp);
     }
+    state_vector = res.copy();
 }
 
 Complex Operator::get_expectation_value(const StateVector& state_vector) const {
