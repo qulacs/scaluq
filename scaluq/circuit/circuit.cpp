@@ -41,13 +41,13 @@ void Circuit::add_gate(Gate&& gate) {
     check_gate_is_valid(gate);
     _gate_list.push_back(std::move(gate));
 }
-void Circuit::add_pgate(const PGate& pgate, std::string_view parameter_key) {
-    check_gate_is_valid(pgate);
-    _gate_list.push_back(std::make_pair(pgate->copy(), std::string(parameter_key)));
+void Circuit::add_param_gate(const ParamGate& param_gate, std::string_view parameter_key) {
+    check_gate_is_valid(param_gate);
+    _gate_list.push_back(std::make_pair(param_gate->copy(), std::string(parameter_key)));
 }
-void Circuit::add_pgate(PGate&& pgate, std::string_view parameter_key) {
-    check_gate_is_valid(pgate);
-    _gate_list.push_back(std::make_pair(std::move(pgate), std::string(parameter_key)));
+void Circuit::add_param_gate(ParamGate&& param_gate, std::string_view parameter_key) {
+    check_gate_is_valid(param_gate);
+    _gate_list.push_back(std::make_pair(std::move(param_gate), std::string(parameter_key)));
 }
 void Circuit::add_circuit(const Circuit& circuit) {
     if (circuit._n_qubits != _n_qubits) {
@@ -88,8 +88,8 @@ void Circuit::update_quantum_state(StateVector& state,
         if (gate.index() == 0) {
             std::get<0>(gate)->update_quantum_state(state);
         } else {
-            const auto& [pgate, key] = std::get<1>(gate);
-            pgate->update_quantum_state(state, parameters.at(key));
+            const auto& [param_gate, key] = std::get<1>(gate);
+            param_gate->update_quantum_state(state, parameters.at(key));
         }
     }
 }
@@ -101,8 +101,8 @@ Circuit Circuit::copy() const {
         if (gate.index() == 0)
             ccircuit._gate_list.push_back(std::get<0>(gate)->copy());
         else {
-            const auto& [pgate, key] = std::get<1>(gate);
-            ccircuit._gate_list.push_back(std::make_pair(pgate->copy(), key));
+            const auto& [param_gate, key] = std::get<1>(gate);
+            ccircuit._gate_list.push_back(std::make_pair(param_gate->copy(), key));
         }
     }
     return ccircuit;
@@ -115,8 +115,8 @@ Circuit Circuit::get_inverse() const {
         if (gate.index() == 0)
             icircuit._gate_list.push_back(std::get<0>(gate)->get_inverse());
         else {
-            const auto& [pgate, key] = std::get<1>(gate);
-            icircuit._gate_list.push_back(std::make_pair(pgate->get_inverse(), key));
+            const auto& [param_gate, key] = std::get<1>(gate);
+            icircuit._gate_list.push_back(std::make_pair(param_gate->get_inverse(), key));
         }
     }
     return icircuit;
@@ -133,9 +133,9 @@ void Circuit::check_gate_is_valid(const Gate& gate) const {
     }
 }
 
-void Circuit::check_gate_is_valid(const PGate& pgate) const {
-    auto targets = pgate->get_target_qubit_list();
-    auto controls = pgate->get_control_qubit_list();
+void Circuit::check_gate_is_valid(const ParamGate& param_gate) const {
+    auto targets = param_gate->get_target_qubit_list();
+    auto controls = param_gate->get_control_qubit_list();
     bool valid = true;
     if (!targets.empty()) valid &= *std::max_element(targets.begin(), targets.end()) < _n_qubits;
     if (!controls.empty()) valid &= *std::max_element(controls.begin(), controls.end()) < _n_qubits;

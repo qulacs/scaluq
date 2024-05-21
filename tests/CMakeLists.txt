@@ -4,9 +4,9 @@ enable_testing()
 
 add_executable(scaluq_test EXCLUDE_FROM_ALL
     circuit/circuit_test.cpp
-    circuit/pcircuit_test.cpp
+    circuit/param_circuit_test.cpp
     gate/gate_test.cpp
-    gate/pgate_test.cpp
+    gate/param_gate_test.cpp
     operator/test_pauli_operator.cpp
     operator/test_operator.cpp
     state/state_vector_test.cpp

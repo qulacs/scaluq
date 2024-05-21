@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <gate/gate_factory.hpp>
-#include <gate/pgate_factory.hpp>
+#include <gate/param_gate_factory.hpp>
 #include <state/state_vector.hpp>
 #include <types.hpp>
 #include <util/random.hpp>
@@ -28,7 +28,7 @@ void test_apply_parametric_single_pauli_rotation(UINT n_qubits,
         const double param = M_PI * random.uniform();
         const double pcoef = random.uniform() * 2 - 1;
         const Gate gate = factory_fixed(target, pcoef * param);
-        const PGate pgate = factory_parametric(target, pcoef);
+        const ParamGate pgate = factory_parametric(target, pcoef);
         gate->update_quantum_state(state);
         pgate->update_quantum_state(state_cp, param);
         auto state_amp = state.amplitudes();
@@ -38,7 +38,7 @@ void test_apply_parametric_single_pauli_rotation(UINT n_qubits,
             ASSERT_NEAR(Kokkos::abs(state_cp_amp[i] - state_amp[i]), 0, eps);
         }
 
-        PGate pgate_inv = pgate->get_inverse();
+        ParamGate pgate_inv = pgate->get_inverse();
         pgate_inv->update_quantum_state(state, param);
         state_amp = state.amplitudes();
         auto state_bef_amp = state_bef.amplitudes();
@@ -66,7 +66,7 @@ void test_apply_parametric_multi_pauli_rotation(UINT n_qubits) {
 
         PauliOperator pauli(target_vec, pauli_id_vec, 1.0);
         Gate gate = PauliRotation(pauli, pcoef * param);
-        PGate pgate = PPauliRotation(pauli, pcoef);
+        ParamGate pgate = PPauliRotation(pauli, pcoef);
         gate->update_quantum_state(state);
         pgate->update_quantum_state(state_cp, param);
         auto state_amp = state.amplitudes();
@@ -75,7 +75,7 @@ void test_apply_parametric_multi_pauli_rotation(UINT n_qubits) {
         for (UINT i = 0; i < dim; i++) {
             ASSERT_NEAR(Kokkos::abs(state_cp_amp[i] - state_amp[i]), 0, eps);
         }
-        PGate pgate_inv = pgate->get_inverse();
+        ParamGate pgate_inv = pgate->get_inverse();
         pgate_inv->update_quantum_state(state, param);
         state_amp = state.amplitudes();
         auto state_bef_amp = state_bef.amplitudes();
@@ -86,7 +86,7 @@ void test_apply_parametric_multi_pauli_rotation(UINT n_qubits) {
     }
 }
 
-TEST(PGateTest, ApplyPRXGate) { test_apply_parametric_single_pauli_rotation(5, &RX, &PRX); }
-TEST(PGateTest, ApplyPRYGate) { test_apply_parametric_single_pauli_rotation(5, &RX, &PRX); }
-TEST(PGateTest, ApplyPRZGate) { test_apply_parametric_single_pauli_rotation(5, &RX, &PRX); }
-TEST(PGateTest, ApplyPPauliRotationGate) { test_apply_parametric_multi_pauli_rotation(5); }
+TEST(ParamGateTest, ApplyPRXGate) { test_apply_parametric_single_pauli_rotation(5, &RX, &PRX); }
+TEST(ParamGateTest, ApplyPRYGate) { test_apply_parametric_single_pauli_rotation(5, &RX, &PRX); }
+TEST(ParamGateTest, ApplyPRZGate) { test_apply_parametric_single_pauli_rotation(5, &RX, &PRX); }
+TEST(ParamGateTest, ApplyPPauliRotationGate) { test_apply_parametric_multi_pauli_rotation(5); }

@@ -4,16 +4,16 @@
 
 #include "../operator/pauli_operator.hpp"
 #include "../util/utility.hpp"
-#include "pgate.hpp"
+#include "param_gate.hpp"
 
 namespace scaluq {
 namespace internal {
-class PPauliRotationGateImpl : public PGateBase {
+class PPauliRotationGateImpl : public ParamGateBase {
     const PauliOperator _pauli;
 
 public:
     PPauliRotationGateImpl(const PauliOperator& pauli, double pcoef = 1.)
-        : PGateBase(pcoef), _pauli(pauli) {}
+        : ParamGateBase(pcoef), _pauli(pauli) {}
 
     std::vector<UINT> get_target_qubit_list() const override {
         return _pauli.get_target_qubit_list();
@@ -21,8 +21,8 @@ public:
     std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
-    PGate copy() const override { return std::make_shared<PPauliRotationGateImpl>(*this); }
-    PGate get_inverse() const override {
+    ParamGate copy() const override { return std::make_shared<PPauliRotationGateImpl>(*this); }
+    ParamGate get_inverse() const override {
         return std::make_shared<PPauliRotationGateImpl>(_pauli, -_pcoef);
     }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
@@ -39,5 +39,5 @@ public:
 };
 }  // namespace internal
 
-using PPauliRotationGate = internal::PGatePtr<internal::PPauliRotationGateImpl>;
+using PPauliRotationGate = internal::ParamGatePtr<internal::PPauliRotationGateImpl>;
 }  // namespace scaluq

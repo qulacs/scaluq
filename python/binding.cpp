@@ -492,37 +492,37 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(Pauli);
     DEF_GATE_FACTORY(PauliRotation);
 
-    nb::enum_<PGateType>(m, "PGateType", "Enum of PGate Type.")
-        .value("PRX", PGateType::PRX)
-        .value("PRY", PGateType::PRY)
-        .value("PRZ", PGateType::PRZ)
-        .value("PPauliRotation", PGateType::PPauliRotation);
+    nb::enum_<ParamGateType>(m, "ParamGateType", "Enum of ParamGate Type.")
+        .value("PRX", ParamGateType::PRX)
+        .value("PRY", ParamGateType::PRY)
+        .value("PRZ", ParamGateType::PRZ)
+        .value("PPauliRotation", ParamGateType::PPauliRotation);
 
 #define DEF_PGATE_BASE(PGATE_TYPE, DESCRIPTION)                                                   \
     nb::class_<PGATE_TYPE>(m, #PGATE_TYPE, DESCRIPTION)                                           \
-        .def("pgate_type",                                                                        \
-             &PGATE_TYPE::pgate_type,                                                             \
-             "Get parametric gate type as `PGateType` enum.")                                     \
+        .def("param_gate_type",                                                                   \
+             &PGATE_TYPE::param_gate_type,                                                        \
+             "Get parametric gate type as `ParamGateType` enum.")                                 \
         .def(                                                                                     \
             "get_target_qubit_list",                                                              \
-            [](const PGATE_TYPE &pgate) { return pgate->get_target_qubit_list(); },               \
+            [](const PGATE_TYPE &param_gate) { return param_gate->get_target_qubit_list(); },     \
             "Get target qubits as `list[int]`. **Control qubits is not included.**")              \
         .def(                                                                                     \
             "get_control_qubit_list",                                                             \
-            [](const PGATE_TYPE &pgate) { return pgate->get_control_qubit_list(); },              \
+            [](const PGATE_TYPE &param_gate) { return param_gate->get_control_qubit_list(); },    \
             "Get control qubits as `list[int]`.")                                                 \
         .def(                                                                                     \
             "copy",                                                                               \
-            [](const PGATE_TYPE &pgate) { return pgate->copy(); },                                \
-            "Copy gate as `PGate` type.")                                                         \
+            [](const PGATE_TYPE &param_gate) { return param_gate->copy(); },                      \
+            "Copy gate as `ParamGate` type.")                                                     \
         .def(                                                                                     \
             "get_inverse",                                                                        \
-            [](const PGATE_TYPE &pgate) { return pgate->get_inverse(); },                         \
-            "Generate inverse parametric-gate as `PGate` type. If not exists, return None.")      \
+            [](const PGATE_TYPE &param_gate) { return param_gate->get_inverse(); },               \
+            "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.")  \
         .def(                                                                                     \
             "update_quantum_state",                                                               \
-            [](const PGATE_TYPE &pgate, StateVector &state_vector, double param) {                \
-                pgate->update_quantum_state(state_vector, param);                                 \
+            [](const PGATE_TYPE &param_gate, StateVector &state_vector, double param) {           \
+                param_gate->update_quantum_state(state_vector, param);                            \
             },                                                                                    \
             "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is " \
             "directly updated.")                                                                  \
@@ -537,10 +537,10 @@ NB_MODULE(scaluq_core, m) {
         PGATE_TYPE,                                                                            \
         DESCRIPTION                                                                            \
         "\\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
-        .def(nb::init<PGate>())
+        .def(nb::init<ParamGate>())
 
     DEF_PGATE_BASE(
-        PGate,
+        ParamGate,
         "General class of parametric quantum gate.\\n.. note:: Downcast to requred to use "
         "gate-specific functions.")
         .def(nb::init<PRXGate>(), "Upcast from `PRXGate`.")
@@ -548,9 +548,9 @@ NB_MODULE(scaluq_core, m) {
         .def(nb::init<PRZGate>(), "Upcast from `PRZGate`.")
         .def(nb::init<PPauliRotationGate>(), "Upcast from `PPauliRotationGate`.");
 
-#define DEF_ONE_QUBIT_PGATE(PGATE_TYPE, DESCRIPTION)                               \
-    DEF_PGATE(PGATE_TYPE, DESCRIPTION).def("target", [](const PGATE_TYPE &pgate) { \
-        return pgate->target();                                                    \
+#define DEF_ONE_QUBIT_PGATE(PGATE_TYPE, DESCRIPTION)                                    \
+    DEF_PGATE(PGATE_TYPE, DESCRIPTION).def("target", [](const PGATE_TYPE &param_gate) { \
+        return param_gate->target();                                                    \
     })
 
     DEF_ONE_QUBIT_PGATE(
@@ -571,14 +571,26 @@ NB_MODULE(scaluq_core, m) {
               "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}P}$. `angle` is given as `param * pcoef`.");
 
 #define DEF_PGATE_FACTORY(PGATE_NAME) \
-    m.def(#PGATE_NAME, &PGATE_NAME, "Generate general PGate class instance of " #PGATE_NAME ".")
+    m.def(#PGATE_NAME, &PGATE_NAME, "Generate general ParamGate class instance of " #PGATE_NAME ".")
 
-    m.def("PRX", &PRX, "Generate general PGate class instance of PRX.", "target"_a, "coef"_a = 1.);
-    m.def("PRY", &PRY, "Generate general PGate class instance of PRY.", "target"_a, "coef"_a = 1.);
-    m.def("PRZ", &PRZ, "Generate general PGate class instance of PRZ.", "target"_a, "coef"_a = 1.);
+    m.def("PRX",
+          &PRX,
+          "Generate general ParamGate class instance of PRX.",
+          "target"_a,
+          "coef"_a = 1.);
+    m.def("PRY",
+          &PRY,
+          "Generate general ParamGate class instance of PRY.",
+          "target"_a,
+          "coef"_a = 1.);
+    m.def("PRZ",
+          &PRZ,
+          "Generate general ParamGate class instance of PRZ.",
+          "target"_a,
+          "coef"_a = 1.);
     m.def("PPauliRotation",
           &PPauliRotation,
-          "Generate general PGate class instance of PPauliRotation.",
+          "Generate general ParamGate class instance of PPauliRotation.",
           "pauli"_a,
           "coef"_a = 1.);
 
@@ -596,9 +608,9 @@ NB_MODULE(scaluq_core, m) {
         .def("add_gate",
              nb::overload_cast<const Gate &>(&Circuit::add_gate),
              "Add gate. Given gate is copied.")
-        .def("add_pgate",
-             nb::overload_cast<const PGate &, std::string_view>(&Circuit::add_pgate),
-             "Add parametric gate with specifing key. Given pgate is copied.")
+        .def("add_param_gate",
+             nb::overload_cast<const ParamGate &, std::string_view>(&Circuit::add_param_gate),
+             "Add parametric gate with specifing key. Given param_gate is copied.")
         .def("add_circuit",
              nb::overload_cast<const Circuit &>(&Circuit::add_circuit),
              "Add all gates in specified circuit. Given gates are copied.")

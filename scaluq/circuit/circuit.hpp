@@ -4,13 +4,13 @@
 #include <variant>
 
 #include "../gate/gate.hpp"
-#include "../gate/pgate.hpp"
+#include "../gate/param_gate.hpp"
 #include "../types.hpp"
 
 namespace scaluq {
 class Circuit {
 public:
-    using GateWithKey = std::variant<Gate, std::pair<PGate, std::string>>;
+    using GateWithKey = std::variant<Gate, std::pair<ParamGate, std::string>>;
     explicit Circuit(UINT n_qubits) : _n_qubits(n_qubits) {}
 
     [[nodiscard]] inline UINT n_qubits() const { return _n_qubits; }
@@ -42,8 +42,8 @@ public:
 
     void add_gate(const Gate& gate);
     void add_gate(Gate&& gate);
-    void add_pgate(const PGate& pgate, std::string_view key);
-    void add_pgate(PGate&& pgate, std::string_view key);
+    void add_param_gate(const ParamGate& param_gate, std::string_view key);
+    void add_param_gate(ParamGate&& param_gate, std::string_view key);
     void add_circuit(const Circuit& circuit);
     void add_circuit(Circuit&& circuit);
 
@@ -59,6 +59,6 @@ private:
     std::vector<GateWithKey> _gate_list;
 
     void check_gate_is_valid(const Gate& gate) const;
-    void check_gate_is_valid(const PGate& gate) const;
+    void check_gate_is_valid(const ParamGate& gate) const;
 };
 }  // namespace scaluq

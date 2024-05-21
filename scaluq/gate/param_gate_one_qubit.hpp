@@ -1,18 +1,18 @@
 #pragma once
 
 #include "../operator/pauli_operator.hpp"
-#include "pgate.hpp"
+#include "param_gate.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq {
 
 namespace internal {
-class POneQubitGateBase : public PGateBase {
+class POneQubitGateBase : public ParamGateBase {
 protected:
     UINT _target;
 
 public:
-    POneQubitGateBase(UINT target, double pcoef = 1.) : PGateBase(pcoef), _target(target){};
+    POneQubitGateBase(UINT target, double pcoef = 1.) : ParamGateBase(pcoef), _target(target){};
 
     UINT target() const { return _target; }
 
@@ -24,8 +24,10 @@ class PRXGateImpl : public POneQubitGateBase {
 public:
     PRXGateImpl(UINT target, double pcoef = 1.) : POneQubitGateBase(target, pcoef){};
 
-    PGate copy() const override { return std::make_shared<PRXGateImpl>(*this); }
-    PGate get_inverse() const override { return std::make_shared<PRXGateImpl>(_target, -_pcoef); }
+    ParamGate copy() const override { return std::make_shared<PRXGateImpl>(*this); }
+    ParamGate get_inverse() const override {
+        return std::make_shared<PRXGateImpl>(_target, -_pcoef);
+    }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         double angle = _pcoef * param;
         ComplexMatrix mat(2, 2);
@@ -44,8 +46,10 @@ class PRYGateImpl : public POneQubitGateBase {
 public:
     PRYGateImpl(UINT target, double pcoef) : POneQubitGateBase(target, pcoef){};
 
-    PGate copy() const override { return std::make_shared<PRYGateImpl>(*this); }
-    PGate get_inverse() const override { return std::make_shared<PRYGateImpl>(_target, -_pcoef); }
+    ParamGate copy() const override { return std::make_shared<PRYGateImpl>(*this); }
+    ParamGate get_inverse() const override {
+        return std::make_shared<PRYGateImpl>(_target, -_pcoef);
+    }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         double angle = _pcoef * param;
         ComplexMatrix mat(2, 2);
@@ -63,8 +67,10 @@ class PRZGateImpl : public POneQubitGateBase {
 public:
     PRZGateImpl(UINT target, double pcoef) : POneQubitGateBase(target, pcoef){};
 
-    PGate copy() const override { return std::make_shared<PRZGateImpl>(*this); }
-    PGate get_inverse() const override { return std::make_shared<PRZGateImpl>(_target, -_pcoef); }
+    ParamGate copy() const override { return std::make_shared<PRZGateImpl>(*this); }
+    ParamGate get_inverse() const override {
+        return std::make_shared<PRZGateImpl>(_target, -_pcoef);
+    }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         double angle = param * _pcoef;
         ComplexMatrix mat(2, 2);
@@ -80,8 +86,8 @@ public:
 
 }  // namespace internal
 
-using PRXGate = internal::PGatePtr<internal::PRXGateImpl>;
-using PRYGate = internal::PGatePtr<internal::PRYGateImpl>;
-using PRZGate = internal::PGatePtr<internal::PRZGateImpl>;
+using PRXGate = internal::ParamGatePtr<internal::PRXGateImpl>;
+using PRYGate = internal::ParamGatePtr<internal::PRYGateImpl>;
+using PRZGate = internal::ParamGatePtr<internal::PRZGateImpl>;
 
 }  // namespace scaluq
