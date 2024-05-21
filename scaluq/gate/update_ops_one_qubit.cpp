@@ -94,15 +94,15 @@ void p1_gate(UINT target_qubit_index, StateVector& state) {
 }
 
 void rx_gate(UINT target_qubit_index, double angle, StateVector& state) {
-    const double cosval = cos(angle / 2.);
-    const double sinval = sin(angle / 2.);
+    const double cosval = std::cos(angle / 2.);
+    const double sinval = std::sin(angle / 2.);
     matrix_2_2 matrix = {cosval, Complex(0, -sinval), Complex(0, -sinval), cosval};
     single_qubit_dense_matrix_gate(target_qubit_index, matrix, state);
 }
 
 void ry_gate(UINT target_qubit_index, double angle, StateVector& state) {
-    const double cosval = cos(angle / 2.);
-    const double sinval = sin(angle / 2.);
+    const double cosval = std::cos(angle / 2.);
+    const double sinval = std::sin(angle / 2.);
     matrix_2_2 matrix = {cosval, -sinval, sinval, cosval};
     single_qubit_dense_matrix_gate(target_qubit_index, matrix, state);
 }
@@ -117,8 +117,8 @@ void single_qubit_diagonal_matrix_gate(UINT target_qubit_index,
 }
 
 void rz_gate(UINT target_qubit_index, double angle, StateVector& state) {
-    const double cosval = cos(angle / 2.);
-    const double sinval = sin(angle / 2.);
+    const double cosval = std::cos(angle / 2.);
+    const double sinval = std::sin(angle / 2.);
     diagonal_matrix_2_2 diag = {Complex(cosval, -sinval), Complex(cosval, sinval)};
     single_qubit_diagonal_matrix_gate(target_qubit_index, diag, state);
 }

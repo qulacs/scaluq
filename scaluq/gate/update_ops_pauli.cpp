@@ -16,8 +16,8 @@ void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& 
     UINT bit_flip_mask = bit_flip_mask_vector.data_raw()[0];
     UINT phase_flip_mask = phase_flip_mask_vector.data_raw()[0];
     UINT global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    const double cosval = cos(-angle / 2);
-    const double sinval = sin(-angle / 2);
+    const double cosval = std::cos(-angle / 2);
+    const double sinval = std::sin(-angle / 2);
     const Complex coef = pauli.get_coef();
     if (bit_flip_mask == 0) {
         const Complex cval_min = Complex(cosval, -sinval);
