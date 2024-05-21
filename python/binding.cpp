@@ -3,10 +3,14 @@
 #include <nanobind/operators.h>
 #include <nanobind/stl/array.h>
 #include <nanobind/stl/complex.h>
+#include <nanobind/stl/map.h>
 #include <nanobind/stl/optional.h>
+#include <nanobind/stl/pair.h>
+#include <nanobind/stl/set.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/tuple.h>
+#include <nanobind/stl/variant.h>
 #include <nanobind/stl/vector.h>
 
 #include <all.hpp>
@@ -52,7 +56,7 @@ struct type_caster<Kokkos::complex<T>> {
             return true;
         }
 
-        return true;
+        return false;
     }
 
     template <typename T2>
@@ -488,22 +492,148 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(Pauli);
     DEF_GATE_FACTORY(PauliRotation);
 
+    nb::enum_<ParamGateType>(m, "ParamGateType", "Enum of ParamGate Type.")
+        .value("PRX", ParamGateType::PRX)
+        .value("PRY", ParamGateType::PRY)
+        .value("PRZ", ParamGateType::PRZ)
+        .value("PPauliRotation", ParamGateType::PPauliRotation);
+
+#define DEF_PGATE_BASE(PGATE_TYPE, DESCRIPTION)                                                   \
+    nb::class_<PGATE_TYPE>(m, #PGATE_TYPE, DESCRIPTION)                                           \
+        .def("param_gate_type",                                                                   \
+             &PGATE_TYPE::param_gate_type,                                                        \
+             "Get parametric gate type as `ParamGateType` enum.")                                 \
+        .def(                                                                                     \
+            "get_target_qubit_list",                                                              \
+            [](const PGATE_TYPE &param_gate) { return param_gate->get_target_qubit_list(); },     \
+            "Get target qubits as `list[int]`. **Control qubits is not included.**")              \
+        .def(                                                                                     \
+            "get_control_qubit_list",                                                             \
+            [](const PGATE_TYPE &param_gate) { return param_gate->get_control_qubit_list(); },    \
+            "Get control qubits as `list[int]`.")                                                 \
+        .def(                                                                                     \
+            "copy",                                                                               \
+            [](const PGATE_TYPE &param_gate) { return param_gate->copy(); },                      \
+            "Copy gate as `ParamGate` type.")                                                     \
+        .def(                                                                                     \
+            "get_inverse",                                                                        \
+            [](const PGATE_TYPE &param_gate) { return param_gate->get_inverse(); },               \
+            "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.")  \
+        .def(                                                                                     \
+            "update_quantum_state",                                                               \
+            [](const PGATE_TYPE &param_gate, StateVector &state_vector, double param) {           \
+                param_gate->update_quantum_state(state_vector, param);                            \
+            },                                                                                    \
+            "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is " \
+            "directly updated.")                                                                  \
+        .def(                                                                                     \
+            "get_matrix",                                                                         \
+            [](const PGATE_TYPE &gate, double param) { return gate->get_matrix(param); },         \
+            "Get matrix representation of the gate with holding the parameter. If cannot, None "  \
+            "is returned.")
+
+#define DEF_PGATE(PGATE_TYPE, DESCRIPTION)                                                     \
+    DEF_PGATE_BASE(                                                                            \
+        PGATE_TYPE,                                                                            \
+        DESCRIPTION                                                                            \
+        "\\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
+        .def(nb::init<ParamGate>())
+
+    DEF_PGATE_BASE(
+        ParamGate,
+        "General class of parametric quantum gate.\\n.. note:: Downcast to requred to use "
+        "gate-specific functions.")
+        .def(nb::init<PRXGate>(), "Upcast from `PRXGate`.")
+        .def(nb::init<PRYGate>(), "Upcast from `PRYGate`.")
+        .def(nb::init<PRZGate>(), "Upcast from `PRZGate`.")
+        .def(nb::init<PPauliRotationGate>(), "Upcast from `PPauliRotationGate`.");
+
+#define DEF_ONE_QUBIT_PGATE(PGATE_TYPE, DESCRIPTION)                                    \
+    DEF_PGATE(PGATE_TYPE, DESCRIPTION).def("target", [](const PGATE_TYPE &param_gate) { \
+        return param_gate->target();                                                    \
+    })
+
+    DEF_ONE_QUBIT_PGATE(
+        PRXGate,
+        "Specific class of parametric X rotation gate, represented as "
+        "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}X}$. `angle` is given as `param * pcoef`.");
+    DEF_ONE_QUBIT_PGATE(
+        PRYGate,
+        "Specific class of parametric Y rotation gate, represented as "
+        "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}Y}$. `angle` is given as `param * pcoef`.");
+    DEF_ONE_QUBIT_PGATE(
+        PRZGate,
+        "Specific class of parametric Z rotation gate, represented as "
+        "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}Z}$. `angle` is given as `param * pcoef`.");
+
+    DEF_PGATE(PPauliRotationGate,
+              "Specific class of parametric multi-qubit pauli-rotation gate, represented as "
+              "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}P}$. `angle` is given as `param * pcoef`.");
+
+#define DEF_PGATE_FACTORY(PGATE_NAME) \
+    m.def(#PGATE_NAME, &PGATE_NAME, "Generate general ParamGate class instance of " #PGATE_NAME ".")
+
+    m.def("PRX",
+          &PRX,
+          "Generate general ParamGate class instance of PRX.",
+          "target"_a,
+          "coef"_a = 1.);
+    m.def("PRY",
+          &PRY,
+          "Generate general ParamGate class instance of PRY.",
+          "target"_a,
+          "coef"_a = 1.);
+    m.def("PRZ",
+          &PRZ,
+          "Generate general ParamGate class instance of PRZ.",
+          "target"_a,
+          "coef"_a = 1.);
+    m.def("PPauliRotation",
+          &PPauliRotation,
+          "Generate general ParamGate class instance of PPauliRotation.",
+          "pauli"_a,
+          "coef"_a = 1.);
+
     nb::class_<Circuit>(m, "Circuit", "Quantum circuit represented as gate array")
         .def(nb::init<UINT>(), "Initialize empty circuit of specified qubits.")
         .def("n_qubits", &Circuit::n_qubits, "Get property of `n_qubits`.")
         .def("gate_list", &Circuit::gate_list, "Get property of `gate_list`.")
         .def("gate_count", &Circuit::gate_count, "Get property of `gate_count`.")
-        .def("get", nb::overload_cast<UINT>(&Circuit::get), "Get reference of i-th gate.")
+        .def("key_set", &Circuit::key_set, "Get set of keys of parameters.")
+        .def("get", &Circuit::get, "Get reference of i-th gate.")
+        .def("get_key",
+             &Circuit::get_key,
+             "Get parameter key of i-th gate. If it is not parametric, return None.")
         .def("calculate_depth", &Circuit::calculate_depth, "Get depth of circuit.")
         .def("add_gate",
              nb::overload_cast<const Gate &>(&Circuit::add_gate),
              "Add gate. Given gate is copied.")
+        .def("add_param_gate",
+             nb::overload_cast<const ParamGate &, std::string_view>(&Circuit::add_param_gate),
+             "Add parametric gate with specifing key. Given param_gate is copied.")
         .def("add_circuit",
              nb::overload_cast<const Circuit &>(&Circuit::add_circuit),
              "Add all gates in specified circuit. Given gates are copied.")
         .def("update_quantum_state",
              &Circuit::update_quantum_state,
-             "Apply gate to the StateVector. StateVector in args is directly updated.")
+             "Apply gate to the StateVector. StateVector in args is directly updated. If the "
+             "circuit contains parametric gate, you have to give real value of parameter as "
+             "dict[str, float] in 2nd arg.")
+        .def(
+            "update_quantum_state",
+            [&](const Circuit &circuit, StateVector &state, nb::kwargs kwargs) {
+                std::map<std::string, double> parameters;
+                for (auto &&[key, param] : kwargs) {
+                    parameters[nb::cast<std::string>(key)] = nb::cast<double>(param);
+                }
+                circuit.update_quantum_state(state, parameters);
+            },
+            "Apply gate to the StateVector. StateVector in args is directly updated. If the "
+            "circuit contains parametric gate, you have to give real value of parameter as "
+            "\"name=value\" format in kwargs.")
+        .def(
+            "update_quantum_state",
+            [](const Circuit &circuit, StateVector &state) { circuit.update_quantum_state(state); })
         .def("copy", &Circuit::copy, "Copy circuit. All the gates inside is copied.")
         .def("get_inverse",
              &Circuit::get_inverse,

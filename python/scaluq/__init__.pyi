@@ -166,6 +166,12 @@ class Circuit:
         """
         ...
 
+    def add_param_gate(self, arg0: scaluq.scaluq_core.ParamGate, arg1: str, /) -> None:
+        """
+        Add parametric gate with specifing key. Given param_gate is copied.
+        """
+        ...
+
     def calculate_depth(self) -> int:
         """
         Get depth of circuit.
@@ -184,13 +190,17 @@ class Circuit:
         """
         ...
 
-    def gate_list(self) -> list[scaluq.scaluq_core.Gate]:
+    def gate_list(
+        self,
+    ) -> list[Union[scaluq.scaluq_core.Gate, tuple[scaluq.scaluq_core.ParamGate, str]]]:
         """
         Get property of `gate_list`.
         """
         ...
 
-    def get(self, arg: int, /) -> scaluq.scaluq_core.Gate:
+    def get(
+        self, arg: int, /
+    ) -> Union[scaluq.scaluq_core.Gate, tuple[scaluq.scaluq_core.ParamGate, str]]:
         """
         Get reference of i-th gate.
         """
@@ -202,15 +212,38 @@ class Circuit:
         """
         ...
 
+    def get_key(self, arg: int, /) -> Optional[str]:
+        """
+        Get parameter key of i-th gate. If it is not parametric, return None.
+        """
+        ...
+
+    def key_set(self) -> set[str]:
+        """
+        Get set of keys of parameters.
+        """
+        ...
+
     def n_qubits(self) -> int:
         """
         Get property of `n_qubits`.
         """
         ...
 
-    def update_quantum_state(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+    def update_quantum_state(
+        self, arg0: scaluq.scaluq_core.StateVector, /, **kwargs
+    ) -> None:
         """
-        Apply gate to the StateVector. StateVector in args is directly updated.
+        Apply gate to the StateVector. StateVector in args is directly updated. If the circuit contains parametric gate, you have to give real value of parameter as "name=value" format in kwargs.
+        """
+        ...
+
+    @overload
+    def update_quantum_state(
+        self, arg0: scaluq.scaluq_core.StateVector, arg1: dict[str, float], /
+    ) -> None:
+        """
+        Apply gate to the StateVector. StateVector in args is directly updated. If the circuit contains parametric gate, you have to give real value of parameter as dict[str, float] in 2nd arg.
         """
         ...
 
@@ -1013,6 +1046,324 @@ class P1Gate:
         Apply gate to `state_vector`. `state_vector` in args is directly updated.
         """
         ...
+
+def PPauliRotation(
+    pauli: scaluq.scaluq_core.PauliOperator, coef: float = 1.0
+) -> scaluq.scaluq_core.ParamGate:
+    """
+    Generate general ParamGate class instance of PPauliRotation.
+    """
+    ...
+
+class PPauliRotationGate:
+    """
+    Specific class of parametric multi-qubit pauli-rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}P}$. `angle` is given as `param * pcoef`.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
+    """
+
+    def __init__(self, arg: scaluq.scaluq_core.ParamGate, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.ParamGate:
+        """
+        Copy gate as `ParamGate` type.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.ParamGate:
+        """
+        Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.
+        """
+        ...
+
+    def get_matrix(self, arg: float, /) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate with holding the parameter. If cannot, None is returned.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def param_gate_type(self) -> scaluq.scaluq_core.ParamGateType:
+        """
+        Get parametric gate type as `ParamGateType` enum.
+        """
+        ...
+
+    def update_quantum_state(
+        self, arg0: scaluq.scaluq_core.StateVector, arg1: float, /
+    ) -> None:
+        """
+        Apply gate to `state_vector` with holding the parameter. `state_vector` in args is directly updated.
+        """
+        ...
+
+def PRX(target: int, coef: float = 1.0) -> scaluq.scaluq_core.ParamGate:
+    """
+    Generate general ParamGate class instance of PRX.
+    """
+    ...
+
+class PRXGate:
+    """
+    Specific class of parametric X rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}X}$. `angle` is given as `param * pcoef`.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
+    """
+
+    def __init__(self, arg: scaluq.scaluq_core.ParamGate, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.ParamGate:
+        """
+        Copy gate as `ParamGate` type.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.ParamGate:
+        """
+        Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.
+        """
+        ...
+
+    def get_matrix(self, arg: float, /) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate with holding the parameter. If cannot, None is returned.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def param_gate_type(self) -> scaluq.scaluq_core.ParamGateType:
+        """
+        Get parametric gate type as `ParamGateType` enum.
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(
+        self, arg0: scaluq.scaluq_core.StateVector, arg1: float, /
+    ) -> None:
+        """
+        Apply gate to `state_vector` with holding the parameter. `state_vector` in args is directly updated.
+        """
+        ...
+
+def PRY(target: int, coef: float = 1.0) -> scaluq.scaluq_core.ParamGate:
+    """
+    Generate general ParamGate class instance of PRY.
+    """
+    ...
+
+class PRYGate:
+    """
+    Specific class of parametric Y rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Y}$. `angle` is given as `param * pcoef`.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
+    """
+
+    def __init__(self, arg: scaluq.scaluq_core.ParamGate, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.ParamGate:
+        """
+        Copy gate as `ParamGate` type.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.ParamGate:
+        """
+        Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.
+        """
+        ...
+
+    def get_matrix(self, arg: float, /) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate with holding the parameter. If cannot, None is returned.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def param_gate_type(self) -> scaluq.scaluq_core.ParamGateType:
+        """
+        Get parametric gate type as `ParamGateType` enum.
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(
+        self, arg0: scaluq.scaluq_core.StateVector, arg1: float, /
+    ) -> None:
+        """
+        Apply gate to `state_vector` with holding the parameter. `state_vector` in args is directly updated.
+        """
+        ...
+
+def PRZ(target: int, coef: float = 1.0) -> scaluq.scaluq_core.ParamGate:
+    """
+    Generate general ParamGate class instance of PRZ.
+    """
+    ...
+
+class PRZGate:
+    """
+    Specific class of parametric Z rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Z}$. `angle` is given as `param * pcoef`.\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).
+    """
+
+    def __init__(self, arg: scaluq.scaluq_core.ParamGate, /) -> None: ...
+    def copy(self) -> scaluq.scaluq_core.ParamGate:
+        """
+        Copy gate as `ParamGate` type.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.ParamGate:
+        """
+        Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.
+        """
+        ...
+
+    def get_matrix(self, arg: float, /) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate with holding the parameter. If cannot, None is returned.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def param_gate_type(self) -> scaluq.scaluq_core.ParamGateType:
+        """
+        Get parametric gate type as `ParamGateType` enum.
+        """
+        ...
+
+    def target(self) -> int: ...
+    def update_quantum_state(
+        self, arg0: scaluq.scaluq_core.StateVector, arg1: float, /
+    ) -> None:
+        """
+        Apply gate to `state_vector` with holding the parameter. `state_vector` in args is directly updated.
+        """
+        ...
+
+class ParamGate:
+    """
+    General class of parametric quantum gate.\n.. note:: Downcast to requred to use gate-specific functions.
+    """
+
+    def __init__(self, arg: scaluq.scaluq_core.PPauliRotationGate, /) -> None:
+        """
+        Upcast from `PPauliRotationGate`.
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: scaluq.scaluq_core.PRXGate, /) -> None:
+        """
+        Upcast from `PRXGate`.
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: scaluq.scaluq_core.PRYGate, /) -> None:
+        """
+        Upcast from `PRYGate`.
+        """
+        ...
+
+    @overload
+    def __init__(self, arg: scaluq.scaluq_core.PRZGate, /) -> None:
+        """
+        Upcast from `PRZGate`.
+        """
+        ...
+
+    def copy(self) -> scaluq.scaluq_core.ParamGate:
+        """
+        Copy gate as `ParamGate` type.
+        """
+        ...
+
+    def get_control_qubit_list(self) -> list[int]:
+        """
+        Get control qubits as `list[int]`.
+        """
+        ...
+
+    def get_inverse(self) -> scaluq.scaluq_core.ParamGate:
+        """
+        Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.
+        """
+        ...
+
+    def get_matrix(self, arg: float, /) -> Optional[numpy.typing.NDArray]:
+        """
+        Get matrix representation of the gate with holding the parameter. If cannot, None is returned.
+        """
+        ...
+
+    def get_target_qubit_list(self) -> list[int]:
+        """
+        Get target qubits as `list[int]`. **Control qubits is not included.**
+        """
+        ...
+
+    def param_gate_type(self) -> scaluq.scaluq_core.ParamGateType:
+        """
+        Get parametric gate type as `ParamGateType` enum.
+        """
+        ...
+
+    def update_quantum_state(
+        self, arg0: scaluq.scaluq_core.StateVector, arg1: float, /
+    ) -> None:
+        """
+        Apply gate to `state_vector` with holding the parameter. `state_vector` in args is directly updated.
+        """
+        ...
+
+class ParamGateType(Enum):
+    """
+    <attribute '__doc__' of 'ParamGateType' objects>
+    """
+
+    PPauliRotation: Any
+
+    PRX: Any
+
+    PRY: Any
+
+    PRZ: Any
 
 def Pauli(arg: scaluq.scaluq_core.PauliOperator, /) -> scaluq.scaluq_core.Gate:
     """

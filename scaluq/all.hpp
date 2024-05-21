@@ -4,6 +4,8 @@
 #include "constant.hpp"
 #include "gate/gate.hpp"
 #include "gate/gate_factory.hpp"
+#include "gate/param_gate.hpp"
+#include "gate/param_gate_factory.hpp"
 #include "gate/update_ops.hpp"
 #include "operator/operator.hpp"
 #include "operator/pauli_operator.hpp"
