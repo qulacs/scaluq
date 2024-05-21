@@ -183,9 +183,33 @@ public:
         throw std::logic_error("Error: CrsMatrixGateImpl::get_inverse(): Not implemented.");
     }
 
+    std::optional<DenseMatrix> get_matrix_internal() const {
+        DenseMatrix mat("mat", _matrix.numRows(), _matrix.numCols());
+        Kokkos::parallel_for(
+            _matrix.numRows(), KOKKOS_LAMBDA(const default_lno_t i) {
+                for (default_size_type idx = _matrix.graph.row_map(i);
+                     idx < _matrix.graph.row_map(i + 1);
+                     ++idx) {
+                    auto j = _matrix.graph.entries(idx);
+                    mat(i, j) = _matrix.values(idx);
+                }
+            });
+        return mat;
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
-        // TODO: Implement
-        return std::nullopt;
+        // This function returns the eigen sparse matrix representation of the gate.
+        default_lno_t numRows = _matrix.numRows();
+        default_lno_t numCols = _matrix.numCols();
+        ComplexMatrix mat(numRows, numCols);
+        Kokkos::parallel_for(numRows, [&](const default_lno_t i) {
+            for (default_size_type idx = _matrix.graph.row_map(i);
+                 idx < _matrix.graph.row_map(i + 1);
+                 ++idx) {
+                auto j = _matrix.graph.entries(idx);
+                mat(i, j) = (StdComplex)_matrix.values(idx);
+            }
+        });
+        return mat;
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
@@ -282,10 +306,27 @@ public:
         return std::make_shared<DenseMatrixGateImpl>(
             _matrix, !_adjoint_flag, get_target_qubit_list(), get_control_qubit_list());
     }
-    std::optional<DenseMatrix> get_matrix_internal() const { return _matrix; }
+    std::optional<DenseMatrix> get_matrix_internal() const {
+        if (!_adjoint_flag) return _matrix;
+        DenseMatrix mat("matrix", _matrix.extent(0), _matrix.extent(1));
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>> md_range_policy(
+            {0, 0}, {static_cast<int>(mat.extent(0)), static_cast<int>(mat.extent(1))});
+        Kokkos::parallel_for(md_range_policy, [&](const int i, const int j) {
+            mat(i, j) = (StdComplex)Kokkos::conj(_matrix(j, i));
+        });
+        return mat;
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
-        // TODO: implement
-        return std::nullopt;
+        ComplexMatrix mat(_matrix.extent(0), _matrix.extent(1));
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>> md_range_policy(
+            {0, 0}, {static_cast<int>(_matrix.extent(0)), static_cast<int>(_matrix.extent(1))});
+        Kokkos::parallel_for(md_range_policy, [&](const int i, const int j) {
+            mat(i, j) = (StdComplex)_matrix(i, j);
+        });
+        if (_adjoint_flag) {
+            mat = mat.adjoint();
+        }
+        return mat;
     }
 
     void update_quantum_state(StateVector& state_vector) const override {

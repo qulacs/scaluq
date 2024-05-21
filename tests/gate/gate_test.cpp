@@ -374,6 +374,10 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
     }
 }
 
+void run_random_gate_sparse(UINT n_qubits) {
+    // a
+}
+
 TEST(GateTest, ApplyI) { run_random_gate_apply<I>(5); }
 TEST(GateTest, ApplyGlobalPhase) { run_random_gate_apply<GlobalPhase>(5); }
 TEST(GateTest, ApplyX) { run_random_gate_apply<X>(5, make_X); }
