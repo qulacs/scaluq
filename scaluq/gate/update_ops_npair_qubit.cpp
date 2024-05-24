@@ -23,7 +23,7 @@ void fusedswap_gate(UINT target_qubit_index_0,
     const UINT else_mask = (1 << n_qubits) - 1 - kblk_mask - jblk_mask;
 
     Kokkos::parallel_for(
-        state.dim(), KOKKOS_LAMBDA(const UINT& i) {
+        state.dim(), KOKKOS_LAMBDA(UINT i) {
             const UINT kblk = (i & kblk_mask) >> upper_index;
             const UINT jblk = (i & jblk_mask) >> lower_index;
             if (jblk > kblk) {
