@@ -1,12 +1,6 @@
 #pragma once
 
-#include <Kokkos_Core.hpp>
-#include <Kokkos_Random.hpp>
-#include <random>
-#include <stdexcept>
-#include <vector>
-
-#include "../types.hpp"
+#include "state_vector.hpp"
 
 namespace scaluq {
 class StateVectorBatched {
@@ -15,7 +9,7 @@ class StateVectorBatched {
     UINT _dim;
 
 public:
-    Kokkos::View<Complex*> _raw;
+    Kokkos::View<Complex**> _raw;
     StateVectorBatched() = default;
     StateVectorBatched(UINT batch_size, UINT n_qubits);
     StateVectorBatched(const StateVectorBatched& other) = default;
@@ -28,36 +22,42 @@ public:
 
     UINT batch_size() const { return this->_batch_size; }
 
+    void set_state_vector_at_batch_id(UINT batch_id, StateVector state);
+    [[nodiscard]] StateVector get_state_vector_at_batch_id(UINT batch_id) const;
+
     /**
      * @attention Very slow. You should use load() instead if you can.
      */
-    void set_amplitude_at_index(const UINT index, const Complex& c);
-    /**
-     * @attention Very slow. You should use load() instead if you can.
-     */
-    void set_amplitude_at_index(const UINT batch_id, const UINT index, const Complex& c);
+    void set_amplitude_at_index(UINT index, const Complex& c);
 
     /**
      * @attention Very slow. You should use amplitudes() instead if you can.
      */
-    [[nodiscard]] std::vector<Complex> get_amplitude_at_index(const UINT index) const;
-    /**
-     * @attention Very slow. You should use amplitudes() instead if you can.
-     */
-    [[nodiscard]] Complex get_amplitude_at_index(const UINT batch_id, const UINT index) const;
+    [[nodiscard]] std::vector<Complex> get_amplitude_at_index(UINT index) const;
 
     void set_zero_state();
-    void set_zero_state(UINT batch_id);
 
-    [[nodiscard]] static StateVectorBatched Haar_random_state(UINT batch_size,
-                                                              UINT n_qubits,
-                                                              UINT seed = std::random_device()());
+    [[nodiscard]] static StateVectorBatched Haar_random_states(UINT batch_size,
+                                                               UINT n_qubits,
+                                                               UINT seed = std::random_device()());
 
     [[nodiscard]] std::vector<std::vector<Complex>> amplitudes() const;
-    [[nodiscard]] std::vector<Complex> amplitudes(UINT batch_id) const;
 
     std::vector<double> get_squared_norm() const;
 
     void normalize();
+
+    [[nodiscard]] std::vector<double> get_zero_probability(UINT target_qubit_index) const;
+    [[nodiscard]] std::vector<double> get_marginal_probability(
+        const std::vector<UINT>& measured_values) const;
+    [[nodiscard]] std::vector<double> get_entropy() const;
+
+    void add_state_vector(const StateVectorBatched& states);
+    void add_state_vector_with_coef(const Complex& coef, const StateVectorBatched& states);
+    void multiply_coef(const Complex& coef);
+
+    std::string to_string() const;
+
+    void load(const std::vector<std::vector<Complex>>& other);
 };
 }  // namespace scaluq

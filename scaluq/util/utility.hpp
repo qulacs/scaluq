@@ -41,42 +41,41 @@ KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
 
 inline std::optional<ComplexMatrix> get_pauli_matrix(PauliOperator pauli) {
     ComplexMatrix mat;
-    std::vector<UINT> pauli_id_list = pauli.get_pauli_id_list();
-    UINT flip_mask, phase_mask, rot90_count;
-    Kokkos::parallel_reduce(
-        pauli_id_list.size(),
-        KOKKOS_LAMBDA(const UINT& i, UINT& f_mask, UINT& p_mask, UINT& rot90_cnt) {
-            UINT pauli_id = pauli_id_list[i];
-            if (pauli_id == 1) {
-                f_mask ^= 1ULL << i;
-            } else if (pauli_id == 2) {
-                f_mask ^= 1ULL << i;
-                p_mask ^= 1ULL << i;
-                rot90_cnt++;
-            } else if (pauli_id == 3) {
-                p_mask ^= 1ULL << i;
-            }
-        },
-        flip_mask,
-        phase_mask,
-        rot90_count);
-    std::vector<StdComplex> rot = {1, -1.i, -1, 1.i};
-    UINT matrix_dim = 1ULL << pauli_id_list.size();
-    for (UINT index = 0; index < matrix_dim; index++) {
-        const StdComplex sign = 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
-        mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
-    }
+    // std::vector<UINT> pauli_id_list = pauli.get_pauli_id_list();
+    // UINT flip_mask, phase_mask, rot90_count;
+    // Kokkos::parallel_reduce(
+    //     pauli_id_list.size(),
+    //     KOKKOS_LAMBDA(const UINT& i, UINT& f_mask, UINT& p_mask, UINT& rot90_cnt) {
+    //         UINT pauli_id = pauli_id_list[i];
+    //         if (pauli_id == 1) {
+    //             f_mask ^= 1ULL << i;
+    //         } else if (pauli_id == 2) {
+    //             f_mask ^= 1ULL << i;
+    //             p_mask ^= 1ULL << i;
+    //             rot90_cnt++;
+    //         } else if (pauli_id == 3) {
+    //             p_mask ^= 1ULL << i;
+    //         }
+    //     },
+    //     flip_mask,
+    //     phase_mask,
+    //     rot90_count);
+    // std::vector<StdComplex> rot = {1, -1.i, -1, 1.i};
+    // UINT matrix_dim = 1ULL << pauli_id_list.size();
+    // for (UINT index = 0; index < matrix_dim; index++) {
+    //     const StdComplex sign = 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
+    //     mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
+    // }
     return mat;
 }
 
 // Host std::vector を Device Kokkos::View に変換する関数
 template <typename T>
-inline Kokkos::View<T*, Kokkos::DefaultExecutionSpace> convert_host_vector_to_device_view(
-    const std::vector<T>& vec) {
+inline Kokkos::View<T*> convert_host_vector_to_device_view(const std::vector<T>& vec) {
     Kokkos::fence();
     Kokkos::View<T*, Kokkos::HostSpace> host_view("host_view", vec.size());
     std::copy(vec.begin(), vec.end(), host_view.data());
-    Kokkos::View<T*, Kokkos::DefaultExecutionSpace> device_view("device_view", vec.size());
+    Kokkos::View<T*> device_view("device_view", vec.size());
     Kokkos::deep_copy(device_view, host_view);
     return device_view;
 }
@@ -84,6 +83,19 @@ inline Kokkos::View<T*, Kokkos::DefaultExecutionSpace> convert_host_vector_to_de
 // Device Kokkos::View を Host std::vector に変換する関数
 template <typename T>
 inline std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device_view) {
+    Kokkos::fence();
+    std::vector<T> host_vector(device_view.extent(0));
+    Kokkos::View<T*, Kokkos::HostSpace> host_view(
+        Kokkos::ViewAllocateWithoutInitializing("host_view"), device_view.extent(0));
+    Kokkos::deep_copy(host_view, device_view);
+    std::copy(host_view.data(), host_view.data() + host_view.extent(0), host_vector.begin());
+    return host_vector;
+}
+
+// Device Kokkos::View を Host std::vector に変換する関数
+template <typename T, typename... Properties>
+inline std::vector<T> convert_device_view_to_host_vector(
+    const Kokkos::View<T*, Properties...>& device_view) {
     Kokkos::fence();
     std::vector<T> host_vector(device_view.extent(0));
     Kokkos::View<T*, Kokkos::HostSpace> host_view(

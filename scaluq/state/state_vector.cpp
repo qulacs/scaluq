@@ -1,5 +1,7 @@
 #include "state_vector.hpp"
 
+#include <bit>
+
 #include "../util/random.hpp"
 #include "../util/utility.hpp"
 
@@ -8,9 +10,11 @@ namespace scaluq {
 StateVector::StateVector(UINT n_qubits)
     : _n_qubits(n_qubits),
       _dim(1 << n_qubits),
-      _raw(Kokkos::View<Complex*>(Kokkos::ViewAllocateWithoutInitializing("state"), this->_dim)) {
+      _raw(StateVectorView(Kokkos::ViewAllocateWithoutInitializing("state"), this->_dim)) {
     set_zero_state();
 }
+
+StateVector::StateVector(StateVectorView raw) { load(raw); }
 
 void StateVector::set_amplitude_at_index(const UINT& index, const Complex& c) {
     Kokkos::View<Complex, Kokkos::HostSpace> host_view("single_value");
@@ -201,9 +205,10 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
             result[i] = lo;
             rand_pool.free_state(rand_gen);
         });
-    return internal::convert_device_view_to_host_vector<UINT>(result);
+    return internal::convert_device_view_to_host_vector(result);
 }
 
+template <bool display_indexes>
 std::string StateVector::to_string() const {
     std::stringstream os;
     auto amp = this->amplitudes();
@@ -212,6 +217,17 @@ std::string StateVector::to_string() const {
     os << " * Dimension   : " << _dim << '\n';
     os << " * State vector : \n";
     for (UINT i = 0; i < _dim; ++i) {
+        if constexpr (display_indexes) {
+            os <<
+                [](UINT n, UINT len) {
+                    std::string tmp;
+                    while (len--) {
+                        tmp += ((n >> len) & 1) + '0';
+                    }
+                    return tmp;
+                }(i, _n_qubits)
+               << ": ";
+        }
         os << amp[i] << std::endl;
     }
     return os.str();
@@ -224,6 +240,18 @@ void StateVector::load(const std::vector<Complex>& other) {
             "length of state");
     }
     _raw = internal::convert_host_vector_to_device_view(other);
+}
+
+void StateVector::load(StateVectorView raw) {
+    const UINT dm = raw.size();
+    if ((dm & (dm - 1)) > 0) {
+        throw std::runtime_error(
+            "Error: StateVector::StateVector(StateVectorView): the size of the view does "
+            "not match as statevector.");
+    }
+    _n_qubits = (dm >> std::countr_zero(dm));
+    _dim = dm;
+    _raw = raw;
 }
 
 StateVector StateVector::copy() const {

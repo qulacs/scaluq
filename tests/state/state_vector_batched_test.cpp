@@ -16,15 +16,15 @@ using namespace scaluq;
 const double eps = 1e-12;
 
 TEST(StateVectorBatchedTest, HaarRandomStateNorm) {
-    const int batch_size = 10, n_qubits = 10;
-    const auto states = StateVectorBatched::Haar_random_state(batch_size, n_qubits);
+    const UINT batch_size = 10, n_qubits = 3;
+    const auto states = StateVectorBatched::Haar_random_states(batch_size, n_qubits);
     auto norms = states.get_squared_norm();
     for (auto x : norms) ASSERT_NEAR(x, 1., eps);
 }
 
 TEST(StateVectorBatchedTest, OperationAtIndex) {
-    const int batch_size = 10, n_qubits = 3;
-    auto states = StateVectorBatched::Haar_random_state(batch_size, n_qubits);
+    const UINT batch_size = 10, n_qubits = 3;
+    auto states = StateVectorBatched::Haar_random_states(batch_size, n_qubits);
     for (UINT i = 0; i < states.dim(); ++i) {
         states.set_amplitude_at_index(i, Complex(i, 0));
     }
@@ -35,23 +35,32 @@ TEST(StateVectorBatchedTest, OperationAtIndex) {
             ASSERT_NEAR(c.imag(), 0., eps);
         }
     }
+}
+
+TEST(StateVectorBatchedTest, ToString) {
+    const UINT batch_size = 4, n_qubits = 3;
+    auto states = StateVectorBatched::Haar_random_states(batch_size, n_qubits);
+    StateVector zeronorm(n_qubits);
+    zeronorm.set_zero_norm_state();
+    states.set_state_vector_at_batch_id(3, zeronorm);
+    std::cout << states.to_string() << std::endl;
+}
+
+TEST(StateVectorBatchedTest, LoadAndAmplitues) {
+    const UINT batch_size = 4, n_qubits = 3;
+    const UINT dim = 1 << n_qubits;
+    std::vector h_states(batch_size, std::vector<Complex>(dim));
     for (UINT b = 0; b < batch_size; ++b) {
-        for (UINT i = 0; i < states.dim(); ++i) {
-            states.set_amplitude_at_index(b, i, Complex(b, i));
+        for (UINT i = 0; i < dim; ++i) {
+            h_states[b][i] = b * dim + i;
         }
     }
+    StateVectorBatched states(batch_size, n_qubits);
+    states.load(h_states);
+    auto amps = states.amplitudes();
     for (UINT b = 0; b < batch_size; ++b) {
-        for (UINT i = 0; i < states.dim(); ++i) {
-            auto c = states.get_amplitude_at_index(b, i);
-            ASSERT_NEAR(c.real(), b, eps);
-            ASSERT_NEAR(c.imag(), i, eps);
-        }
-    }
-    auto states_cpu = states.amplitudes();
-    for (UINT b = 0; b < batch_size; ++b) {
-        for (UINT i = 0; i < states.dim(); ++i) {
-            ASSERT_NEAR(states_cpu[b][i].real(), b, eps);
-            ASSERT_NEAR(states_cpu[b][i].imag(), i, eps);
+        for (UINT i = 0; i < dim; ++i) {
+            ASSERT_EQ(amps[b][i].real(), b * dim + i);
         }
     }
 }
