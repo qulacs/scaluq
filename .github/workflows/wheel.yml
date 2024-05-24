@@ -22,7 +22,7 @@ jobs:
         cibw-python: ["cp38", "cp39", "cp310", "cp311", "cp312"]
         include:
           - os-arch: "manylinux_x86_64"
-            os: "ubuntu22.04"
+            os: "ubuntu-22.04"
           - cibw-python: "cp38"
             python-version: "3.8"
           - cibw-python: "cp39"
@@ -51,8 +51,9 @@ jobs:
         run: python -m cibuildwheel --output-dir wheels
           
       - name: Upload wheel to GitHub
-        uses: action/upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
+          name: ${{ matrix.cibw-python }}-${{ matrix.os-arch }}
           path: ./wheels/*.whl
       
       - name: Upload wheel data if the Git tag is set

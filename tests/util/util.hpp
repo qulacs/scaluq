@@ -70,7 +70,7 @@ inline Eigen::VectorXcd get_eigen_diagonal_matrix_random_multi_qubit_unitary(UIN
     Random random;
     for (UINT i = 0; i < dim; ++i) {
         double angle = random.uniform() * 2 * 3.14159;
-        vec[i] = cos(angle) + 1.i * sin(angle);
+        vec[i] = std::cos(angle) + 1.i * std::sin(angle);
     }
     return vec;
 }

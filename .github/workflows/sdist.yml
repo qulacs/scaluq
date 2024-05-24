@@ -17,7 +17,7 @@ jobs:
     name: Source distribution
     strategy:
       matrix:
-        os: ["ubuntu22.04"]
+        os: ["ubuntu-22.04"]
         python-verson: ["3.12"]
     runs-on: ${{ matrix.os }}
     env:
