@@ -49,14 +49,15 @@ TEST(StateVectorBatchedTest, ToString) {
 TEST(StateVectorBatchedTest, LoadAndAmplitues) {
     const UINT batch_size = 4, n_qubits = 3;
     const UINT dim = 1 << n_qubits;
-    std::vector h_states(batch_size, std::vector<Complex>(dim));
+    std::vector states_h(batch_size, std::vector<Complex>(dim));
     for (UINT b = 0; b < batch_size; ++b) {
         for (UINT i = 0; i < dim; ++i) {
-            h_states[b][i] = b * dim + i;
+            states_h[b][i] = b * dim + i;
         }
     }
     StateVectorBatched states(batch_size, n_qubits);
-    states.load(h_states);
+
+    states.load(states_h);
     auto amps = states.amplitudes();
     for (UINT b = 0; b < batch_size; ++b) {
         for (UINT i = 0; i < dim; ++i) {

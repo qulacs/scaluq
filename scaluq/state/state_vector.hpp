@@ -19,7 +19,6 @@ public:
     StateVector() = default;
     StateVector(UINT n_qubits);
     StateVector(const StateVector& other) = default;
-    StateVector(StateVectorView raw);
 
     StateVector& operator=(const StateVector& other) = default;
 
