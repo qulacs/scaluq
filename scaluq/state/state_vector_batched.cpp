@@ -18,18 +18,21 @@ void StateVectorBatched::set_state_vector_at_batch_id(UINT batch_id, StateVector
     }
     Kokkos::parallel_for(
         _dim, KOKKOS_CLASS_LAMBDA(UINT i) { _raw(batch_id, i) = state._raw(i); });
+    Kokkos::fence();
 }
 
 StateVector StateVectorBatched::get_state_vector_at_batch_id(UINT batch_id) const {
     StateVector ret(_n_qubits);
     Kokkos::parallel_for(
         _dim, KOKKOS_CLASS_LAMBDA(UINT i) { ret._raw(i) = _raw(batch_id, i); });
+    Kokkos::fence();
     return ret;
 }
 
 void StateVectorBatched::set_amplitude_at_index(UINT index, const Complex& c) {
     Kokkos::parallel_for(
         _batch_size, KOKKOS_CLASS_LAMBDA(UINT b) { _raw(b, index) = c; });
+    Kokkos::fence();
 }
 
 std::vector<Complex> StateVectorBatched::get_amplitude_at_index(UINT index) const {
@@ -44,6 +47,7 @@ void StateVectorBatched::set_zero_state() {
     Kokkos::deep_copy(_raw, 0);
     Kokkos::parallel_for(
         _batch_size, KOKKOS_CLASS_LAMBDA(UINT i) { _raw(i, 0) = 1; });
+    Kokkos::fence();
 }
 
 StateVectorBatched StateVectorBatched::Haar_random_states(UINT batch_size,
@@ -58,6 +62,7 @@ StateVectorBatched StateVectorBatched::Haar_random_states(UINT batch_size,
             states._raw(b, i) = Complex(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
             rand_pool.free_state(rand_gen);
         });
+    Kokkos::fence();
     states.normalize();
     return states;
 }
@@ -86,6 +91,7 @@ std::vector<double> StateVectorBatched::get_squared_norm() const {
                 nrm);
             Kokkos::single(Kokkos::PerTeam(team), [&] { norms[batch_id] = nrm; });
         });
+    Kokkos::fence();
     return internal::convert_device_view_to_host_vector(norms);
 }
 
@@ -105,6 +111,7 @@ void StateVectorBatched::normalize() {
             Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, _dim),
                                  [=, *this](const UINT& i) { _raw(batch_id, i) /= nrm; });
         });
+    Kokkos::fence();
 }
 
 void StateVectorBatched::add_state_vector(const StateVectorBatched& states) {
@@ -113,6 +120,7 @@ void StateVectorBatched::add_state_vector(const StateVectorBatched& states) {
         KOKKOS_CLASS_LAMBDA(UINT batch_id, UINT i) {
             _raw(batch_id, i) += states._raw(batch_id, i);
         });
+    Kokkos::fence();
 }
 void StateVectorBatched::add_state_vector_with_coef(const Complex& coef,
                                                     const StateVectorBatched& states) {
@@ -121,11 +129,13 @@ void StateVectorBatched::add_state_vector_with_coef(const Complex& coef,
         KOKKOS_CLASS_LAMBDA(UINT batch_id, UINT i) {
             _raw(batch_id, i) += coef * states._raw(batch_id, i);
         });
+    Kokkos::fence();
 }
 void StateVectorBatched::multiply_coef(const Complex& coef) {
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, _dim}),
         KOKKOS_CLASS_LAMBDA(UINT batch_id, UINT i) { _raw(batch_id, i) *= coef; });
+    Kokkos::fence();
 }
 
 std::string StateVectorBatched::to_string() const {
@@ -133,6 +143,7 @@ std::string StateVectorBatched::to_string() const {
     Kokkos::View<Complex**, Kokkos::DefaultExecutionSpace::array_layout, Kokkos::HostSpace>
         states_h("host_copy", _batch_size, _dim);
     Kokkos::deep_copy(states_h, _raw);
+    Kokkos::fence();
 
     os << " *** Quantum States ***\n";
     os << " * Qubit Count : " << _n_qubits << '\n';
@@ -165,13 +176,18 @@ void StateVectorBatched::load(const std::vector<std::vector<Complex>>& other) {
 
     Kokkos::View<Complex**, Kokkos::DefaultExecutionSpace::array_layout, Kokkos::HostSpace> view_h(
         "host_view", _batch_size, _dim);
-
     for (UINT b = 0; b < other.size(); ++b) {
         for (UINT i = 0; i < other[0].size(); ++i) {
             view_h(b, i) = other[b][i];
         }
     }
     Kokkos::deep_copy(_raw, view_h);
+}
+
+StateVectorBatched StateVectorBatched::copy() const {
+    StateVectorBatched cp(_batch_size, _n_qubits);
+    Kokkos::deep_copy(cp._raw, _raw);
+    return cp;
 }
 
 }  // namespace scaluq

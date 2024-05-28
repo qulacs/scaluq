@@ -59,5 +59,7 @@ public:
     std::string to_string() const;
 
     void load(const std::vector<std::vector<Complex>>& other);
+    [[nodiscard]] StateVectorBatched copy() const;
+    
 };
 }  // namespace scaluq
