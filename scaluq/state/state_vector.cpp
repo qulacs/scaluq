@@ -205,6 +205,27 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
     return internal::convert_device_view_to_host_vector(result);
 }
 
+std::string StateVector::to_string() const {
+    std::stringstream os;
+    auto amp = this->amplitudes();
+    os << " *** Quantum State ***\n";
+    os << " * Qubit Count : " << _n_qubits << '\n';
+    os << " * Dimension   : " << _dim << '\n';
+    os << " * State vector : \n";
+    for (UINT i = 0; i < _dim; ++i) {
+        os <<
+            [](UINT n, UINT len) {
+                std::string tmp;
+                while (len--) {
+                    tmp += ((n >> len) & 1) + '0';
+                }
+                return tmp;
+            }(i, _n_qubits)
+           << ": " << amp[i] << std::endl;
+    }
+    return os.str();
+}
+
 void StateVector::load(const std::vector<Complex>& other) {
     if (other.size() != _dim) {
         throw std::runtime_error(
@@ -212,18 +233,6 @@ void StateVector::load(const std::vector<Complex>& other) {
             "length of state");
     }
     _raw = internal::convert_host_vector_to_device_view(other);
-}
-
-void StateVector::load(StateVectorView raw) {
-    const UINT dm = raw.size();
-    if ((dm & (dm - 1)) > 0) {
-        throw std::runtime_error(
-            "Error: StateVector::StateVector(StateVectorView): the size of the view does "
-            "not match as statevector.");
-    }
-    _n_qubits = (dm >> std::countr_zero(dm));
-    _dim = dm;
-    _raw = raw;
 }
 
 StateVector StateVector::copy() const {

@@ -2271,6 +2271,127 @@ class StateVector:
         """
         ...
 
+class StateVectorBatched:
+    """
+    Batched vector representation of quantum state.\n.. note:: Qubit index is start from 0. If the amplitudes of $\\ket{b_{n-1}\\dots b_0}$ is $b_i$, the state is $\\sum_i b_i 2^i$.
+    """
+
+    def Haar_random_states(
+        batch_size: int, n_qubits: int, seed: int = 2982637687
+    ) -> scaluq.scaluq_core.StateVectorBatched:
+        """
+        Construct batched state vectors with Haar random states. If seed is not specified, the value from random device is used.
+        """
+        ...
+
+    def __init__(self, arg: scaluq.scaluq_core.StateVectorBatched) -> None:
+        """
+        Constructing batched state vector by copying other batched state.
+        """
+        ...
+
+    @overload
+    def __init__(self, arg0: int, arg1: int, /) -> None:
+        """
+        Construct batched state vector with specified batch size and qubits.
+        """
+        ...
+
+    def add_state_vector(self, arg: scaluq.scaluq_core.StateVectorBatched, /) -> None:
+        """
+        Add other batched state vectors and make superposition. $\\ket{\\mathrm{this}} \\leftarrow \\ket{\\mathrm{this}} + \\ket{\\mathrm{states}}$.
+        """
+        ...
+
+    def add_state_vector_with_coef(
+        self, arg0: complex, arg1: scaluq.scaluq_core.StateVectorBatched, /
+    ) -> None:
+        """
+        Add other batched state vectors with multiplying the coef and make superposition. $\\ket{\\mathrm{this}}\\leftarrow\\ket{\\mathrm{this}}+\\mathrm{coef}\\ket{\\mathrm{states}}$.
+        """
+        ...
+
+    def amplitudes(self) -> list[list[complex]]:
+        """
+        Get all amplitudes with as `list[list[complex]]`.
+        """
+        ...
+
+    def batch_size(self) -> int:
+        """
+        Get batch size.
+        """
+        ...
+
+    def copy(self) -> scaluq.scaluq_core.StateVectorBatched:
+        """
+        Create a copy of the batched state vector.
+        """
+        ...
+
+    def dim(self) -> int:
+        """
+        Get dimension of the vector ($=2^\\mathrm{n\\_qubits}$).
+        """
+        ...
+
+    def get_squared_norm(self) -> list[float]:
+        """
+        Get squared norm of each state in the batch. $\\braket{\\psi|\\psi}$.
+        """
+        ...
+
+    def get_state_vector(self, arg: int, /) -> scaluq.scaluq_core.StateVector:
+        """
+        Get the state vector for a specific batch.
+        """
+        ...
+
+    def load(self, arg: list[list[complex]], /) -> None:
+        """
+        Load batched amplitudes from `list[list[complex]]`.
+        """
+        ...
+
+    def n_qubits(self) -> int:
+        """
+        Get num of qubits.
+        """
+        ...
+
+    def normalize(self) -> None:
+        """
+        Normalize each state in the batch (let $\\braket{\\psi|\\psi} = 1$ by multiplying coef).
+        """
+        ...
+
+    def set_state_vector(
+        self, arg0: int, arg1: scaluq.scaluq_core.StateVector, /
+    ) -> None:
+        """
+        Set the state vector for a specific batch.
+        """
+        ...
+
+    @overload
+    def set_state_vector(self, arg: scaluq.scaluq_core.StateVector, /) -> None:
+        """
+        Set the state vector for all batches.
+        """
+        ...
+
+    def set_zero_state(self) -> None:
+        """
+        Initialize all batches with computational basis $\\ket{00\\dots0}$.
+        """
+        ...
+
+    def to_string(self) -> str:
+        """
+        Information as `str`.
+        """
+        ...
+
 def Swap(arg0: int, arg1: int, /) -> scaluq.scaluq_core.Gate:
     """
     Generate general Gate class instance of Swap.

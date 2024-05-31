@@ -176,4 +176,32 @@ StateVectorBatched StateVectorBatched::copy() const {
     return cp;
 }
 
+std::string StateVectorBatched::to_string() const {
+    std::stringstream os;
+    auto states_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), _raw);
+    Kokkos::fence();
+
+    os << " *** Quantum States ***\n";
+    os << " * Qubit Count : " << _n_qubits << '\n';
+    os << " * Dimension   : " << _dim << '\n';
+    for (UINT b = 0; b < _batch_size; ++b) {
+        StateVector tmp(_n_qubits);
+        os << "--------------------\n";
+        os << " * Batch_id    : " << b << '\n';
+        os << " * State vector : \n";
+        for (UINT i = 0; i < _dim; ++i) {
+            os <<
+                [](UINT n, UINT len) {
+                    std::string tmp;
+                    while (len--) {
+                        tmp += ((n >> len) & 1) + '0';
+                    }
+                    return tmp;
+                }(i, _n_qubits)
+               << ": " << states_h(b, i) << std::endl;
+        }
+    }
+    return os.str();
+}
+
 }  // namespace scaluq

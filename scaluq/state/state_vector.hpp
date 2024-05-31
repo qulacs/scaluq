@@ -64,35 +64,11 @@ public:
                                              UINT seed = std::random_device()()) const;
 
     void load(const std::vector<Complex>& other);
-    void load(StateVectorView raw);
 
     [[nodiscard]] StateVector copy() const;
 
     friend std::ostream& operator<<(std::ostream& os, const StateVector& state);
 
-    template <bool display_indexes = true>
-    [[nodiscard]] std::string to_string() const {
-        std::stringstream os;
-        auto amp = this->amplitudes();
-        os << " *** Quantum State ***\n";
-        os << " * Qubit Count : " << _n_qubits << '\n';
-        os << " * Dimension   : " << _dim << '\n';
-        os << " * State vector : \n";
-        for (UINT i = 0; i < _dim; ++i) {
-            if constexpr (display_indexes) {
-                os <<
-                    [](UINT n, UINT len) {
-                        std::string tmp;
-                        while (len--) {
-                            tmp += ((n >> len) & 1) + '0';
-                        }
-                        return tmp;
-                    }(i, _n_qubits)
-                   << ": ";
-            }
-            os << amp[i] << std::endl;
-        }
-        return os.str();
-    }
+    [[nodiscard]] std::string to_string() const;
 };
 }  // namespace scaluq
