@@ -39,12 +39,9 @@ public:
 
     void normalize();
 
-    // not implemented yet
     [[nodiscard]] std::vector<double> get_zero_probability(UINT target_qubit_index) const;
-    // not implemented yet
     [[nodiscard]] std::vector<double> get_marginal_probability(
         const std::vector<UINT>& measured_values) const;
-    // not implemented yet
     [[nodiscard]] std::vector<double> get_entropy() const;
 
     void add_state_vector(const StateVectorBatched& states);

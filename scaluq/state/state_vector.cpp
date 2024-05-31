@@ -102,7 +102,7 @@ double StateVector::get_marginal_probability(const std::vector<UINT>& measured_v
     if (measured_values.size() != _n_qubits) {
         throw std::runtime_error(
             "Error: "
-            "StateVector::get_marginal_probability(vector<UINT>): "
+            "StateVector::get_marginal_probability(const vector<UINT>&): "
             "the length of measured_values must be equal to qubit_count");
     }
 
@@ -115,7 +115,9 @@ double StateVector::get_marginal_probability(const std::vector<UINT>& measured_v
             target_value.push_back(measured_value);
         } else if (measured_value != StateVector::UNMEASURED) {
             throw std::runtime_error(
-                "Error: Invalid qubit state specified. Each qubit state must be 0, 1, or "
+                "Error: "
+                "StateVector::get_marginal_probability(const vector<UINT>&): Invalid qubit state "
+                "specified. Each qubit state must be 0, 1, or "
                 "StateVector::UNMEASURED.");
         }
     }
@@ -229,7 +231,7 @@ std::string StateVector::to_string() const {
 void StateVector::load(const std::vector<Complex>& other) {
     if (other.size() != _dim) {
         throw std::runtime_error(
-            "Error: StateVector::load(vector<Complex>&): invalid "
+            "Error: StateVector::load(const vector<Complex>&): invalid "
             "length of state");
     }
     _raw = internal::convert_host_vector_to_device_view(other);

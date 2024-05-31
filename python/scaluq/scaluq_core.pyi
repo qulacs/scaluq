@@ -2277,7 +2277,7 @@ class StateVectorBatched:
     """
 
     def Haar_random_states(
-        batch_size: int, n_qubits: int, seed: int = 2982637687
+        batch_size: int, n_qubits: int, seed: int = 2897372235
     ) -> scaluq.scaluq_core.StateVectorBatched:
         """
         Construct batched state vectors with Haar random states. If seed is not specified, the value from random device is used.
@@ -2335,6 +2335,18 @@ class StateVectorBatched:
         """
         ...
 
+    def get_entropy(self) -> list[float]:
+        """
+        Get the entropy of each state in the batch.
+        """
+        ...
+
+    def get_marginal_probability(self, arg: list[int], /) -> list[float]:
+        """
+        Get the marginal probability to observe as specified for each state in the batch. Specify the result as n-length list. `0` and `1` represent the qubit is observed and get the value. `2` represents the qubit is not observed.
+        """
+        ...
+
     def get_squared_norm(self) -> list[float]:
         """
         Get squared norm of each state in the batch. $\\braket{\\psi|\\psi}$.
@@ -2344,6 +2356,12 @@ class StateVectorBatched:
     def get_state_vector(self, arg: int, /) -> scaluq.scaluq_core.StateVector:
         """
         Get the state vector for a specific batch.
+        """
+        ...
+
+    def get_zero_probability(self, arg: int, /) -> list[float]:
+        """
+        Get the probability to observe $\\ket{0}$ at specified index for each state in the batch.
         """
         ...
 

@@ -249,18 +249,18 @@ NB_MODULE(scaluq_core, m) {
              &StateVectorBatched::normalize,
              "Normalize each state in the batch (let $\\\\braket{\\\\psi|\\\\psi} = 1$ by "
              "multiplying coef).")
-        // .def("get_zero_probability",
-        //      &StateVectorBatched::get_zero_probability,
-        //      "Get the probability to observe $\\\\ket{0}$ at specified index for each state in
-        //      the " "batch.")
-        // .def("get_marginal_probability",
-        //      &StateVectorBatched::get_marginal_probability,
-        //      "Get the marginal probability to observe as specified for each state in the batch. "
-        //      "Specify the result as n-length list. `0` and `1` represent the qubit is observed
-        //      and " "get the value. `2` represents the qubit is not observed.")
-        // .def("get_entropy",
-        //      &StateVectorBatched::get_entropy,
-        //      "Get the entropy of each state in the batch.")
+        .def("get_zero_probability",
+             &StateVectorBatched::get_zero_probability,
+             "Get the probability to observe $\\\\ket{0}$ at specified index for each state in "
+             "the batch.")
+        .def("get_marginal_probability",
+             &StateVectorBatched::get_marginal_probability,
+             "Get the marginal probability to observe as specified for each state in the batch. "
+             "Specify the result as n-length list. `0` and `1` represent the qubit is observed "
+             "and get the value. `2` represents the qubit is not observed.")
+        .def("get_entropy",
+             &StateVectorBatched::get_entropy,
+             "Get the entropy of each state in the batch.")
         .def("add_state_vector",
              &StateVectorBatched::add_state_vector,
              "Add other batched state vectors and make superposition. $\\\\ket{\\\\mathrm{this}} "

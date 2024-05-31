@@ -75,3 +75,45 @@ TEST(StateVectorBatchedTest, OperateState) {
         ASSERT_TRUE(same_state(v, states.get_state_vector(b)));
     }
 }
+
+TEST(StateVectorBatchedTest, ZeroProbs) {
+    const UINT batch_size = 4, n_qubits = 3;
+    auto states = StateVectorBatched::Haar_random_states(batch_size, n_qubits, 0);
+
+    for (UINT i = 0; i < n_qubits; ++i) {
+        auto zero_probs = states.get_zero_probability(i);
+        for (UINT b = 0; b < batch_size; ++b) {
+            auto state = states.get_state_vector(b);
+            ASSERT_NEAR(zero_probs[b], state.get_zero_probability(i), eps);
+        }
+    }
+}
+
+TEST(StateVectorBatchedTest, MarginalProbs) {
+    const UINT batch_size = 4, n_qubits = 5;
+    auto states = StateVectorBatched::Haar_random_states(batch_size, n_qubits, 0);
+
+    Random rd(0);
+    for (UINT i = 0; i < 10; ++i) {
+        std::vector<UINT> targets;
+        for (UINT j = 0; j < n_qubits; ++j) {
+            targets.push_back(rd.int32() % 3);
+        }
+        auto mg_probs = states.get_marginal_probability(targets);
+        for (UINT b = 0; b < batch_size; ++b) {
+            auto state = states.get_state_vector(b);
+            ASSERT_NEAR(mg_probs[b], state.get_marginal_probability(targets), eps);
+        }
+    }
+}
+
+TEST(StateVectorBatchedTest, Entropy) {
+    const UINT batch_size = 4, n_qubits = 3;
+    auto states = StateVectorBatched::Haar_random_states(batch_size, n_qubits, 0);
+
+    auto entropies = states.get_entropy();
+    for (UINT b = 0; b < batch_size; ++b) {
+        auto state = states.get_state_vector(b);
+        ASSERT_NEAR(entropies[b], state.get_entropy(), eps);
+    }
+}
