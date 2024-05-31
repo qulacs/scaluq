@@ -146,7 +146,7 @@ Complex Operator::get_expectation_value(const StateVector& state_vector) const {
                 return coef * res;
             }();
             team.team_barrier();
-            if (team.team_rank() == 0) term_res += tmp;
+            Kokkos::single(Kokkos::PerTeam(team), [&] { term_res += tmp; });
         },
         res);
     return res;
@@ -229,7 +229,7 @@ Complex Operator::get_transition_amplitude(const StateVector& state_vector_bra,
                 return coef * res;
             }();
             team.team_barrier();
-            if (team.team_rank() == 0) term_res += tmp;
+            Kokkos::single(Kokkos::PerTeam(team), [&] { term_res += tmp; });
         },
         res);
     return res;
