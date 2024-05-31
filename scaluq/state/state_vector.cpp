@@ -205,31 +205,6 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
     return internal::convert_device_view_to_host_vector(result);
 }
 
-template <bool display_indexes>
-std::string StateVector::to_string() const {
-    std::stringstream os;
-    auto amp = this->amplitudes();
-    os << " *** Quantum State ***\n";
-    os << " * Qubit Count : " << _n_qubits << '\n';
-    os << " * Dimension   : " << _dim << '\n';
-    os << " * State vector : \n";
-    for (UINT i = 0; i < _dim; ++i) {
-        if constexpr (display_indexes) {
-            os <<
-                [](UINT n, UINT len) {
-                    std::string tmp;
-                    while (len--) {
-                        tmp += ((n >> len) & 1) + '0';
-                    }
-                    return tmp;
-                }(i, _n_qubits)
-               << ": ";
-        }
-        os << amp[i] << std::endl;
-    }
-    return os.str();
-}
-
 void StateVector::load(const std::vector<Complex>& other) {
     if (other.size() != _dim) {
         throw std::runtime_error(

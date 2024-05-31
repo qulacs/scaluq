@@ -89,19 +89,6 @@ inline std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>&
     return host_vector;
 }
 
-// Device Kokkos::View を Host std::vector に変換する関数
-template <typename T, typename... Properties>
-inline std::vector<T> convert_device_view_to_host_vector(
-    const Kokkos::View<T*, Properties...>& device_view) {
-    Kokkos::fence();
-    std::vector<T> host_vector(device_view.extent(0));
-    Kokkos::View<T*, Kokkos::HostSpace> host_view(
-        Kokkos::ViewAllocateWithoutInitializing("host_view"), device_view.extent(0));
-    Kokkos::deep_copy(host_view, device_view);
-    std::copy(host_view.data(), host_view.data() + host_view.extent(0), host_vector.begin());
-    return host_vector;
-}
-
 }  // namespace internal
 
 KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {

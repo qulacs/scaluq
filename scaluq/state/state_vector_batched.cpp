@@ -12,8 +12,18 @@ StateVectorBatched::StateVectorBatched(UINT batch_size, UINT n_qubits)
     set_zero_state();
 }
 
-void StateVectorBatched::set_state_vector_at_batch_id(UINT batch_id, StateVector state) {
-    if (_raw.extent(1) != state._raw.extent(0)) {
+void StateVectorBatched::set_state_vector(const StateVector& state) {
+    if (_raw.extent(1) != state._raw.extent(0)) [[unlikely]] {
+        throw std::runtime_error("Error: Dimensions of source and destination views do not match.");
+    }
+    Kokkos::parallel_for(
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, _dim}),
+        KOKKOS_CLASS_LAMBDA(UINT batch_id, UINT i) { _raw(batch_id, i) = state._raw(i); });
+    Kokkos::fence();
+}
+
+void StateVectorBatched::set_state_vector(UINT batch_id, const StateVector& state) {
+    if (_raw.extent(1) != state._raw.extent(0)) [[unlikely]] {
         throw std::runtime_error("Error: Dimensions of source and destination views do not match.");
     }
     Kokkos::parallel_for(
@@ -21,26 +31,12 @@ void StateVectorBatched::set_state_vector_at_batch_id(UINT batch_id, StateVector
     Kokkos::fence();
 }
 
-StateVector StateVectorBatched::get_state_vector_at_batch_id(UINT batch_id) const {
+StateVector StateVectorBatched::get_state_vector(UINT batch_id) const {
     StateVector ret(_n_qubits);
     Kokkos::parallel_for(
         _dim, KOKKOS_CLASS_LAMBDA(UINT i) { ret._raw(i) = _raw(batch_id, i); });
     Kokkos::fence();
     return ret;
-}
-
-void StateVectorBatched::set_amplitude_at_index(UINT index, const Complex& c) {
-    Kokkos::parallel_for(
-        _batch_size, KOKKOS_CLASS_LAMBDA(UINT b) { _raw(b, index) = c; });
-    Kokkos::fence();
-}
-
-std::vector<Complex> StateVectorBatched::get_amplitude_at_index(UINT index) const {
-    StateVectorView res(Kokkos::ViewAllocateWithoutInitializing("res"), _batch_size);
-
-    Kokkos::parallel_for(
-        _batch_size, KOKKOS_CLASS_LAMBDA(UINT b) { res[b] = _raw(b, index); });
-    return internal::convert_device_view_to_host_vector(res);
 }
 
 void StateVectorBatched::set_zero_state() {
@@ -71,7 +67,7 @@ std::vector<std::vector<Complex>> StateVectorBatched::amplitudes() const {
     std::vector<std::vector<Complex>> result;
     result.reserve(_batch_size);
     for (UINT batch_id = 0; batch_id < _batch_size; ++batch_id) {
-        result.push_back(get_state_vector_at_batch_id(batch_id).amplitudes());
+        result.push_back(get_state_vector(batch_id).amplitudes());
     }
     return result;
 }
@@ -115,6 +111,11 @@ void StateVectorBatched::normalize() {
 }
 
 void StateVectorBatched::add_state_vector(const StateVectorBatched& states) {
+    if (n_qubits() != states.n_qubits() || batch_size() != states.batch_size()) [[unlikely]] {
+        throw std::runtime_error(
+            "Error: StateVectorBatched::add_state_vector(const StateVectorBatched&): invalid "
+            "states");
+    }
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, _dim}),
         KOKKOS_CLASS_LAMBDA(UINT batch_id, UINT i) {
@@ -124,6 +125,11 @@ void StateVectorBatched::add_state_vector(const StateVectorBatched& states) {
 }
 void StateVectorBatched::add_state_vector_with_coef(const Complex& coef,
                                                     const StateVectorBatched& states) {
+    if (n_qubits() != states.n_qubits() || batch_size() != states.batch_size()) [[unlikely]] {
+        throw std::runtime_error(
+            "Error: StateVectorBatched::add_state_vector(const StateVectorBatched&): invalid "
+            "states");
+    }
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, _dim}),
         KOKKOS_CLASS_LAMBDA(UINT batch_id, UINT i) {
@@ -138,55 +144,35 @@ void StateVectorBatched::multiply_coef(const Complex& coef) {
     Kokkos::fence();
 }
 
-std::string StateVectorBatched::to_string() const {
-    std::stringstream os;
-    Kokkos::View<Complex**, Kokkos::DefaultExecutionSpace::array_layout, Kokkos::HostSpace>
-        states_h("host_copy", _batch_size, _dim);
-    Kokkos::deep_copy(states_h, _raw);
-    Kokkos::fence();
-
-    os << " *** Quantum States ***\n";
-    os << " * Qubit Count : " << _n_qubits << '\n';
-    os << " * Dimension   : " << _dim << '\n';
-    for (UINT b = 0; b < _batch_size; ++b) {
-        StateVector tmp(_n_qubits);
-        os << "--------------------\n";
-        os << " * Batch_id    : " << b << '\n';
-        os << " * State vector : \n";
-        for (UINT i = 0; i < _dim; ++i) {
-            os << states_h(b, i) << std::endl;
-        }
-    }
-    return os.str();
-}
-
-void StateVectorBatched::load(const std::vector<std::vector<Complex>>& other) {
-    if (other.size() != _batch_size) {
+void StateVectorBatched::load(const std::vector<std::vector<Complex>>& states) {
+    if (states.size() != _batch_size) {
         throw std::runtime_error(
             "Error: StateVectorBatched::load(std::vector<std::vector<Complex>>&): invalid "
             "batch_size");
     }
-    for (UINT b = 0; b < other.size(); ++b) {
-        if (other[b].size() != _dim) {
+    for (UINT b = 0; b < states.size(); ++b) {
+        if (states[b].size() != _dim) {
             throw std::runtime_error(
                 "Error: StateVectorBatched::load(std::vector<std::vector<Complex>>&): invalid "
                 "length of state");
         }
     }
 
-    Kokkos::View<Complex**, Kokkos::DefaultExecutionSpace::array_layout, Kokkos::HostSpace> view_h(
-        "host_view", _batch_size, _dim);
-    for (UINT b = 0; b < other.size(); ++b) {
-        for (UINT i = 0; i < other[0].size(); ++i) {
-            view_h(b, i) = other[b][i];
+    auto view_h = Kokkos::create_mirror_view(Kokkos::HostSpace(), _raw);
+    Kokkos::fence();
+    for (UINT b = 0; b < states.size(); ++b) {
+        for (UINT i = 0; i < states[0].size(); ++i) {
+            view_h(b, i) = states[b][i];
         }
     }
     Kokkos::deep_copy(_raw, view_h);
+    Kokkos::fence();
 }
 
 StateVectorBatched StateVectorBatched::copy() const {
     StateVectorBatched cp(_batch_size, _n_qubits);
     Kokkos::deep_copy(cp._raw, _raw);
+    Kokkos::fence();
     return cp;
 }
 
