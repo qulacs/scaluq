@@ -75,7 +75,7 @@ NB_MODULE(scaluq_core, m) {
     nb::class_<InitializationSettings>(
         m,
         "InitializationSettings",
-        "Wrapper class of Kokkos's InitializationSettings.\\n.. note:: See details: "
+        "Wrapper class of Kokkos's InitializationSettings.\n\n.. note:: See details: "
         "https://kokkos.org/kokkos-core-wiki/API/core/initialize_finalize/"
         "InitializationSettings.html")
         .def(nb::init<>())
@@ -107,11 +107,11 @@ NB_MODULE(scaluq_core, m) {
         .def("has_tools_args", &InitializationSettings::has_tools_args)
         .def("get_tools_args", &InitializationSettings::get_tools_args);
 
-    m.def("initialize",
-          &initialize,
-          "settings"_a = InitializationSettings(),
-          "**You must call this before any scaluq function.** Initialize the Kokkos execution "
-          "environment.");
+    m.def(
+        "initialize",
+        &initialize,
+        "settings"_a = InitializationSettings(),
+        R"(**You must call this before any scaluq function.** Initialize the Kokkos execution environment.)");
     m.def("finalize",
           &finalize,
           "Terminate the Kokkos execution environment. Release the resources.");
@@ -120,9 +120,9 @@ NB_MODULE(scaluq_core, m) {
 
     nb::class_<StateVector>(m,
                             "StateVector",
-                            "Vector representation of quantum state.\\n.. note:: Qubit index is "
-                            "start from 0. If the amplitudes of $\\\\ket{b_{n-1}\\\\dots b_0}$ is "
-                            "$b_i$, the state is $\\\\sum_i b_i 2^i$.")
+                            "Vector representation of quantum state.\n\n.. note:: Qubit index is "
+                            "start from 0. If the amplitudes of $\\ket{b_{n-1}\\dots b_0}$ is "
+                            "$b_i$, the state is $\\sum_i b_i 2^i$.")
         .def(nb::init<UINT>(),
              "Construct state vector with specified qubits, initialized with computational "
              "basis $\\ket{0\\dots0}$.")
@@ -140,34 +140,32 @@ NB_MODULE(scaluq_core, m) {
         .def("set_amplitude_at_index",
              &StateVector::set_amplitude_at_index,
              "Manually set amplitude at one index.")
-        .def(
-            "get_amplitude_at_index",
-            &StateVector::get_amplitude_at_index,
-            "Get amplitude at one index.\\n.. note:: If you want to get all amplitudes, you should "
-            "use `StateVector::amplitudes()`.")
+        .def("get_amplitude_at_index",
+             &StateVector::get_amplitude_at_index,
+             "Get amplitude at one index.\n\n.. note:: If you want to get all amplitudes, you "
+             "should "
+             "use `StateVector::amplitudes()`.")
         .def("set_zero_state",
              &StateVector::set_zero_state,
-             "Initialize with computational basis $\\\\ket{00\\\\dots0}$.")
+             "Initialize with computational basis $\\ket{00\\dots0}$.")
         .def("set_zero_norm_state",
              &StateVector::set_zero_norm_state,
              "Initialize with 0 (null vector).")
         .def("set_computational_basis",
              &StateVector::set_computational_basis,
-             "Initialize with computational basis \\\\ket{\\\\mathrm{basis}}.")
+             "Initialize with computational basis \\ket{\\mathrm{basis}}.")
         .def("amplitudes", &StateVector::amplitudes, "Get all amplitudes with as `list[complex]`.")
         .def("n_qubits", &StateVector::n_qubits, "Get num of qubits.")
-        .def("dim",
-             &StateVector::dim,
-             "Get dimension of the vector ($=2^\\\\mathrm{n\\\\_qubits}$).")
+        .def("dim", &StateVector::dim, "Get dimension of the vector ($=2^\\mathrm{n\\_qubits}$).")
         .def("get_squared_norm",
              &StateVector::get_squared_norm,
-             "Get squared norm of the state. $\\\\braket{\\\\psi|\\\\psi}$.")
+             "Get squared norm of the state. $\\braket{\\psi|\\psi}$.")
         .def("normalize",
              &StateVector::normalize,
-             "Normalize state (let $\\\\braket{\\\\psi|\\\\psi} = 1$ by multiplying coef).")
+             "Normalize state (let $\\braket{\\psi|\\psi} = 1$ by multiplying coef).")
         .def("get_zero_probability",
              &StateVector::get_zero_probability,
-             "Get the probability to observe $\\\\ket{0}$ at specified index.")
+             "Get the probability to observe $\\ket{0}$ at specified index.")
         .def("get_marginal_probability",
              &StateVector::get_marginal_probability,
              "Get the marginal probability to observe as specified. Specify the result as n-length "
@@ -176,19 +174,19 @@ NB_MODULE(scaluq_core, m) {
         .def("get_entropy", &StateVector::get_entropy, "Get the entropy of the vector.")
         .def("add_state_vector",
              &StateVector::add_state_vector,
-             "Add other state vector and make superposition. $\\\\ket{\\\\mathrm{this}} "
-             "\\\\leftarrow "
-             "\\\\ket{\\\\mathrm{this}} + \\\\ket{\\\\mathrm{state}}$.")
+             "Add other state vector and make superposition. $\\ket{\\mathrm{this}} "
+             "\\leftarrow "
+             "\\ket{\\mathrm{this}} + \\ket{\\mathrm{state}}$.")
         .def("add_state_vector_with_coef",
              &StateVector::add_state_vector_with_coef,
              "add other state vector with multiplying the coef and make superposition. "
-             "$\\\\ket{\\\\mathrm{this}}\\\\leftarrow\\\\ket{\\\\mathrm{this}}+\\\\mathrm{coef}"
-             "\\\\ket{\\\\mathrm{"
+             "$\\ket{\\mathrm{this}}\\leftarrow\\ket{\\mathrm{this}}+\\mathrm{coef}"
+             "\\ket{\\mathrm{"
              "state}}$.")
         .def("multiply_coef",
              &StateVector::multiply_coef,
              "Multiply coef. "
-             "$\\\\ket{\\\\mathrm{this}}\\\\leftarrow\\\\mathrm{coef}\\\\ket{\\\\mathrm{this}}$.")
+             "$\\ket{\\mathrm{this}}\\leftarrow\\mathrm{coef}\\ket{\\mathrm{this}}$.")
         .def(
             "sampling",
             [](const StateVector &state, UINT sampling_count, std::optional<UINT> seed) {
@@ -267,15 +265,15 @@ NB_MODULE(scaluq_core, m) {
             [](const GATE_TYPE &gate) { return gate->get_matrix(); },                    \
             "Get matrix representation of the gate. If cannot, None is returned.")
 
-#define DEF_GATE(GATE_TYPE, DESCRIPTION)                                                       \
-    DEF_GATE_BASE(                                                                             \
-        GATE_TYPE,                                                                             \
-        DESCRIPTION                                                                            \
-        "\\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
+#define DEF_GATE(GATE_TYPE, DESCRIPTION)                                                        \
+    DEF_GATE_BASE(                                                                              \
+        GATE_TYPE,                                                                              \
+        DESCRIPTION                                                                             \
+        "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
         .def(nb::init<Gate>())
 
     DEF_GATE_BASE(Gate,
-                  "General class of QuantumGate.\\n.. note:: Downcast to requred to use "
+                  "General class of QuantumGate.\n\n.. note:: Downcast to requred to use "
                   "gate-specific functions.")
         .def(nb::init<IGate>(), "Upcast from `IGate`.")
         .def(nb::init<GlobalPhaseGate>(), "Upcast from `GlobalPhaseGate`.")
@@ -311,7 +309,7 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE(IGate, "Specific class of Pauli-I gate.");
     DEF_GATE(GlobalPhaseGate,
              "Specific class of gate, which rotate global phase, represented as "
-             "$e^{i\\\\mathrm{phase}}I$.")
+             "$e^{i\\mathrm{phase}}I$.")
         .def(
             "phase",
             [](const GlobalPhaseGate &gate) { return gate->phase(); },
@@ -327,27 +325,27 @@ NB_MODULE(scaluq_core, m) {
     DEF_ONE_QUBIT_GATE(ZGate, "Specific class of Pauli-Z gate.");
     DEF_ONE_QUBIT_GATE(HGate, "Specific class of Hadamard gate.");
     DEF_ONE_QUBIT_GATE(SGate,
-                       "Specific class of S gate, represented as "
-                       "$\\\\begin{bmatrix}\n1 & 0\\\\\\\\\n0 & i\n\\\\end{bmatrix}$.");
+                       "Specific class of S gate, represented as $\\begin{bmatrix}\n1 & 0\\\\\n0 & "
+                       "i\n\\end{bmatrix}$.");
     DEF_ONE_QUBIT_GATE(SdagGate, "Specific class of inverse of S gate.");
     DEF_ONE_QUBIT_GATE(TGate,
                        "Specific class of T gate, represented as "
-                       "$\\\\begin{bmatrix}\n1 & 0\\\\\\\\\n0 & e^{i\\\\pi/4}\n\\\\end{bmatrix}$.");
+                       "$\\begin{bmatrix}\n1 & 0\\\\\n0 & e^{i\\pi/4}\n\\end{bmatrix}$.");
     DEF_ONE_QUBIT_GATE(TdagGate, "Specific class of inverse of T gate.");
     DEF_ONE_QUBIT_GATE(SqrtXGate,
                        "Specific class of sqrt(X) gate, represented as "
-                       "$\\\\begin{bmatrix}\n1+i & 1-i\\\\\\\\\n1-i & 1+i\n\\\\end{bmatrix}$.");
+                       "$\\begin{bmatrix}\n1+i & 1-i\\\\\n1-i & 1+i\n\\end{bmatrix}$.");
     DEF_ONE_QUBIT_GATE(SqrtXdagGate, "Specific class of inverse of sqrt(X) gate.");
     DEF_ONE_QUBIT_GATE(SqrtYGate,
                        "Specific class of sqrt(Y) gate, represented as "
-                       "$\\\\begin{bmatrix}\n1+i & -1-i \\\\\\\\\n 1+i & 1+i\n\\\\end{bmatrix}$.");
+                       "$\\begin{bmatrix}\n1+i & -1-i \\\\\n1+i & 1+i\n\\end{bmatrix}$.");
     DEF_ONE_QUBIT_GATE(SqrtYdagGate, "Specific class of inverse of sqrt(Y) gate.");
     DEF_ONE_QUBIT_GATE(
         P0Gate,
-        "Specific class of projection gate to $\\\\ket{0}$.\\n.. note:: This gate is not unitary.");
+        "Specific class of projection gate to $\\ket{0}$.\n\n.. note:: This gate is not unitary.");
     DEF_ONE_QUBIT_GATE(
         P1Gate,
-        "Specific class of projection gate to $\\\\ket{1}$.\\n.. note:: This gate is not unitary.");
+        "Specific class of projection gate to $\\ket{1}$.\n\n.. note:: This gate is not unitary.");
 
 #define DEF_ONE_QUBIT_ROTATION_GATE(GATE_TYPE, DESCRIPTION) \
     DEF_ONE_QUBIT_GATE(GATE_TYPE, DESCRIPTION)              \
@@ -356,25 +354,25 @@ NB_MODULE(scaluq_core, m) {
 
     DEF_ONE_QUBIT_ROTATION_GATE(RXGate,
                                 "Specific class of X rotation gate, represented as "
-                                "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}X}$.");
+                                "$e^{-i\\frac{\\mathrm{angle}}{2}X}$.");
     DEF_ONE_QUBIT_ROTATION_GATE(RYGate,
                                 "Specific class of Y rotation gate, represented as "
-                                "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}Y}$.");
+                                "$e^{-i\\frac{\\mathrm{angle}}{2}Y}$.");
     DEF_ONE_QUBIT_ROTATION_GATE(RZGate,
                                 "Specific class of Z rotation gate, represented as "
-                                "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}Z}$.");
+                                "$e^{-i\\frac{\\mathrm{angle}}{2}Z}$.");
 
     DEF_GATE(U1Gate,
              "Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, "
              "represented as "
-             "$\\\\begin{bmatrix}\n1 & 0\\\\\\\\\n 0 & e^{i\\\\lambda}\n\\\\end{bmatrix}$.")
+             "$\\begin{bmatrix}\n1 & 0\\\\\n0 & e^{i\\lambda}\n\\end{bmatrix}$.")
         .def(
             "lambda_", [](const U1Gate &gate) { return gate->lambda(); }, "Get `lambda` property.");
     DEF_GATE(U2Gate,
              "Specific class of IBMQ's U2 Gate, which is a rotation about X+Z-axis, "
              "represented as "
-             "$\\\\frac{1}{\\\\sqrt{2}} \\\\begin{bmatrix}1 & -e^{-i\\\\lambda}\\\\\\\\\n "
-             "e^{i\\\\phi} & e^{i(\\\\phi+\\\\lambda)}\n\\\\end{bmatrix}$.")
+             "$\\frac{1}{\\sqrt{2}} \\begin{bmatrix}1 & -e^{-i\\lambda}\\\\\n"
+             "e^{i\\phi} & e^{i(\\phi+\\lambda)}\n\\end{bmatrix}$.")
         .def(
             "phi", [](const U2Gate &gate) { return gate->phi(); }, "Get `phi` property.")
         .def(
@@ -382,10 +380,10 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE(U3Gate,
              "Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, "
              "represented as "
-             "$\\\\begin{bmatrix}\n\\\\cos \\\\frac{\\\\theta}{2} & "
-             "-e^{i\\\\lambda}\\\\sin\\\\frac{\\\\theta}{2}\\\\\\\\\n "
-             "e^{i\\\\phi}\\\\sin\\\\frac{\\\\theta}{2} & "
-             "e^{i(\\\\phi+\\\\lambda)}\\\\cos\\\\frac{\\\\theta}{2}\n\\\\end{bmatrix}$.")
+             "$\\begin{bmatrix}\n\\cos \\frac{\\theta}{2} & "
+             "-e^{i\\lambda}\\sin\\frac{\\theta}{2}\\\\\n"
+             "e^{i\\phi}\\sin\\frac{\\theta}{2} & "
+             "e^{i(\\phi+\\lambda)}\\cos\\frac{\\theta}{2}\n\\end{bmatrix}$.")
         .def(
             "theta", [](const U3Gate &gate) { return gate->theta(); }, "Get `theta` property.")
         .def(
@@ -431,12 +429,11 @@ NB_MODULE(scaluq_core, m) {
             [](const TwoQubitMatrixGate &gate) { gate->matrix(); },
             "Get property `matrix`.");
 
-    DEF_GATE(
-        FusedSwapGate,
-        "Specific class of fused swap gate, which swap qubits in "
-        "$[\\\\mathrm{qubit\\\\_index1},\\\\mathrm{qubit\\\\_index1}+\\\\mathrm{block\\\\_size})$ "
-        "and qubits in "
-        "$[\\\\mathrm{qubit\\\\_index2},\\\\mathrm{qubit\\\\_index2}+\\\\mathrm{block\\\\_size})$.")
+    DEF_GATE(FusedSwapGate,
+             "Specific class of fused swap gate, which swap qubits in "
+             "$[\\mathrm{qubit\\_index1},\\mathrm{qubit\\_index1}+\\mathrm{block\\_size})$ "
+             "and qubits in "
+             "$[\\mathrm{qubit\\_index2},\\mathrm{qubit\\_index2}+\\mathrm{block\\_size})$.")
         .def(
             "qubit_index1",
             [](const FusedSwapGate &gate) { return gate->qubit_index1(); },
@@ -456,7 +453,7 @@ NB_MODULE(scaluq_core, m) {
              "each of qubit.");
     DEF_GATE(PauliRotationGate,
              "Specific class of multi-qubit pauli-rotation gate, represented as "
-             "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}P}$.");
+             "$e^{-i\\frac{\\mathrm{angle}}{2}P}$.");
 
 #define DEF_GATE_FACTORY(GATE_NAME) \
     m.def(#GATE_NAME, &GATE_NAME, "Generate general Gate class instance of " #GATE_NAME ".")
@@ -484,8 +481,9 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(U2);
     DEF_GATE_FACTORY(U3);
     DEF_GATE_FACTORY(CX);
-    m.def(
-        "CNot", &CX, "Generate general Gate class instance of CX.\n[note] CNot is an alias of CX.");
+    m.def("CNot",
+          &CX,
+          "Generate general Gate class instance of CX.\n\n.. note:: CNot is an alias of CX.");
     DEF_GATE_FACTORY(CZ);
     DEF_GATE_FACTORY(Swap);
     DEF_GATE_FACTORY(FusedSwap);
@@ -532,16 +530,16 @@ NB_MODULE(scaluq_core, m) {
             "Get matrix representation of the gate with holding the parameter. If cannot, None "  \
             "is returned.")
 
-#define DEF_PGATE(PGATE_TYPE, DESCRIPTION)                                                     \
-    DEF_PGATE_BASE(                                                                            \
-        PGATE_TYPE,                                                                            \
-        DESCRIPTION                                                                            \
-        "\\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
+#define DEF_PGATE(PGATE_TYPE, DESCRIPTION)                                                      \
+    DEF_PGATE_BASE(                                                                             \
+        PGATE_TYPE,                                                                             \
+        DESCRIPTION                                                                             \
+        "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
         .def(nb::init<ParamGate>())
 
     DEF_PGATE_BASE(
         ParamGate,
-        "General class of parametric quantum gate.\\n.. note:: Downcast to requred to use "
+        "General class of parametric quantum gate.\n\n.. note:: Downcast to requred to use "
         "gate-specific functions.")
         .def(nb::init<PRXGate>(), "Upcast from `PRXGate`.")
         .def(nb::init<PRYGate>(), "Upcast from `PRYGate`.")
@@ -556,19 +554,19 @@ NB_MODULE(scaluq_core, m) {
     DEF_ONE_QUBIT_PGATE(
         PRXGate,
         "Specific class of parametric X rotation gate, represented as "
-        "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}X}$. `angle` is given as `param * pcoef`.");
+        "$e^{-i\\frac{\\mathrm{angle}}{2}X}$. `angle` is given as `param * pcoef`.");
     DEF_ONE_QUBIT_PGATE(
         PRYGate,
         "Specific class of parametric Y rotation gate, represented as "
-        "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}Y}$. `angle` is given as `param * pcoef`.");
+        "$e^{-i\\frac{\\mathrm{angle}}{2}Y}$. `angle` is given as `param * pcoef`.");
     DEF_ONE_QUBIT_PGATE(
         PRZGate,
         "Specific class of parametric Z rotation gate, represented as "
-        "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}Z}$. `angle` is given as `param * pcoef`.");
+        "$e^{-i\\frac{\\mathrm{angle}}{2}Z}$. `angle` is given as `param * pcoef`.");
 
     DEF_PGATE(PPauliRotationGate,
               "Specific class of parametric multi-qubit pauli-rotation gate, represented as "
-              "$e^{-i\\\\frac{\\\\mathrm{angle}}{2}P}$. `angle` is given as `param * pcoef`.");
+              "$e^{-i\\frac{\\mathrm{angle}}{2}P}$. `angle` is given as `param * pcoef`.");
 
 #define DEF_PGATE_FACTORY(PGATE_NAME) \
     m.def(#PGATE_NAME, &PGATE_NAME, "Generate general ParamGate class instance of " #PGATE_NAME ".")
@@ -689,9 +687,9 @@ NB_MODULE(scaluq_core, m) {
             "phase_flip_mask"_a,
             "coef"_a = 1.,
             "Initialize pauli operator. For each `i`, single pauli applied to `i`-th qubit is got "
-            "from `i-th` bit of `bit_flip_mask` and `phase_flip_mask` as "
-            "follows.\\n|bit_flip|phase_flip|pauli|\\n|--|--|--|\\n|0|0|I|\\n|0|1|Z|\\n|1|0|X|\\n|"
-            "1|1|Y|")
+            "from `i-th` bit of `bit_flip_mask` and `phase_flip_mask` as follows.\n\n.. "
+            "csv-table::\n\n    \"bit_flip\",\"phase_flip\",\"pauli\"\n    \"0\",\"0\",\"I\"\n    "
+            "\"0\",\"1\",\"Z\"\n    \"1\",\"0\",\"X\"\n    \"1\",\"1\",\"Y\"")
         .def("get_coef", &PauliOperator::get_coef, "Get property `coef`.")
         .def("get_target_qubit_list",
              &PauliOperator::get_target_qubit_list,
@@ -725,7 +723,7 @@ NB_MODULE(scaluq_core, m) {
         .def("get_qubit_count",
              &PauliOperator::get_qubit_count,
              "Get num of qubits to applied with, when count from 0-th qubit. Subset of $[0, "
-             "\\\\mathrm{qubit_count})$ is the "
+             "\\mathrm{qubit_count})$ is the "
              "target.")
         .def("change_coef", &PauliOperator::change_coef, "Set property `coef`.")
         .def("add_single_pauli",
@@ -735,14 +733,13 @@ NB_MODULE(scaluq_core, m) {
              "always a single "
              "pauli.")
         .def("apply_to_state", &PauliOperator::apply_to_state, "Apply pauli to state vector.")
-        .def(
-            "get_expectation_value",
-            &PauliOperator::get_expectation_value,
-            "Get expectation value of measuring state vector. $\\\\bra{\\\\psi}P\\\\ket{\\\\psi}$.")
+        .def("get_expectation_value",
+             &PauliOperator::get_expectation_value,
+             "Get expectation value of measuring state vector. $\\bra{\\psi}P\\ket{\\psi}$.")
         .def("get_transition_amplitude",
              &PauliOperator::get_transition_amplitude,
              "Get transition amplitude of measuring state vector. "
-             "$\\\\bra{\\\\chi}P\\\\ket{\\\\psi}$.")
+             "$\\bra{\\chi}P\\ket{\\psi}$.")
         .def(nb::self * nb::self)
         .def(nb::self *= nb::self)
         .def(nb::self *= Complex())
