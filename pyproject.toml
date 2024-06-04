@@ -61,3 +61,13 @@ ci = [
     "numpy == 1.26.0",
     "nanobind == 2.0.0"
 ]
+
+doc = [
+    "black == 24.4.2",
+    "isort == 5.13.2",
+    "sphinx == 7.3.7",
+    "sphinx-autoapi == 3.1.1",
+    "sphinxcontrib-napoleon == 0.7",
+    "sphinx_rtd_theme == 2.0.0",
+    "sphinx-math-dollar == 1.2.1"
+]

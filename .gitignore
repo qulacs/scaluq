@@ -38,5 +38,7 @@
 /build
 /typings
 /dist
-/tutorials/build/
+/doc/source/autoapi/
+/doc/source/stub/
+/doc/build/
 /python/scaluq/_version.py
