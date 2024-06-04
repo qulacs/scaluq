@@ -10,7 +10,7 @@ class StateVectorBatched {
     UINT _dim;
 
 public:
-    Kokkos::View<Complex**> _raw;
+    StateVectorBatchedView _raw;
     StateVectorBatched() = default;
     StateVectorBatched(UINT batch_size, UINT n_qubits);
     StateVectorBatched(const StateVectorBatched& other) = default;

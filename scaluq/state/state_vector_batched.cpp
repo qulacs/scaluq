@@ -7,7 +7,7 @@ StateVectorBatched::StateVectorBatched(UINT batch_size, UINT n_qubits)
     : _batch_size(batch_size),
       _n_qubits(n_qubits),
       _dim(1ULL << _n_qubits),
-      _raw(Kokkos::View<Complex**>(
+      _raw(StateVectorBatchedView(
           Kokkos::ViewAllocateWithoutInitializing("states"), _batch_size, _dim)) {
     set_zero_state();
 }
@@ -86,7 +86,7 @@ std::vector<double> StateVectorBatched::get_squared_norm() const {
             double nrm = 0;
             UINT batch_id = team.league_rank();
             Kokkos::parallel_reduce(
-                Kokkos::ThreadVectorRange(team, _dim),
+                Kokkos::TeamThreadRange(team, _dim),
                 [=, *this](const UINT& i, double& lcl) { lcl += squared_norm(_raw(batch_id, i)); },
                 nrm);
             team.team_barrier();
@@ -105,12 +105,12 @@ void StateVectorBatched::normalize() {
             double nrm = 0;
             UINT batch_id = team.league_rank();
             Kokkos::parallel_reduce(
-                Kokkos::ThreadVectorRange(team, _dim),
+                Kokkos::TeamThreadRange(team, _dim),
                 [=, *this](const UINT& i, double& lcl) { lcl += squared_norm(_raw(batch_id, i)); },
                 nrm);
             team.team_barrier();
             nrm = Kokkos::sqrt(nrm);
-            Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, _dim),
+            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, _dim),
                                  [=, *this](const UINT& i) { _raw(batch_id, i) /= nrm; });
         });
     Kokkos::fence();
@@ -131,7 +131,7 @@ std::vector<double> StateVectorBatched::get_zero_probability(UINT target_qubit_i
             double sum = 0;
             UINT batch_id = team.league_rank();
             Kokkos::parallel_reduce(
-                Kokkos::ThreadVectorRange(team, _dim >> 1),
+                Kokkos::TeamThreadRange(team, _dim >> 1),
                 [&](UINT i, double& lsum) {
                     UINT basis_0 = internal::insert_zero_to_basis_index(i, target_qubit_index);
                     lsum += squared_norm(_raw(batch_id, basis_0));
@@ -179,7 +179,7 @@ std::vector<double> StateVectorBatched::get_marginal_probability(
             double sum = 0;
             UINT batch_id = team.league_rank();
             Kokkos::parallel_reduce(
-                Kokkos::ThreadVectorRange(team, _dim >> target_index_d.size()),
+                Kokkos::TeamThreadRange(team, _dim >> target_index_d.size()),
                 [&](UINT i, double& lsum) {
                     UINT basis = i;
                     for (UINT cursor = 0; cursor < target_index_d.size(); cursor++) {
@@ -208,7 +208,7 @@ std::vector<double> StateVectorBatched::get_entropy() const {
             double sum = 0;
             UINT batch_id = team.league_rank();
             Kokkos::parallel_reduce(
-                Kokkos::ThreadVectorRange(team, _dim),
+                Kokkos::TeamThreadRange(team, _dim),
                 [&](UINT idx, double& lsum) {
                     double prob = squared_norm(_raw(batch_id, idx));
                     prob = Kokkos::max(prob, eps);
