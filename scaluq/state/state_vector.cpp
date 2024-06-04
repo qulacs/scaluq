@@ -1,7 +1,5 @@
 #include "state_vector.hpp"
 
-#include <bit>
-
 #include "../util/random.hpp"
 #include "../util/utility.hpp"
 
@@ -10,7 +8,7 @@ namespace scaluq {
 StateVector::StateVector(UINT n_qubits)
     : _n_qubits(n_qubits),
       _dim(1 << n_qubits),
-      _raw(StateVectorView(Kokkos::ViewAllocateWithoutInitializing("state"), this->_dim)) {
+      _raw(Kokkos::ViewAllocateWithoutInitializing("state"), this->_dim) {
     set_zero_state();
 }
 
