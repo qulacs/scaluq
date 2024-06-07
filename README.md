@@ -1,9 +1,3 @@
-
-
-
-
-
-
 # scaluq
 
 scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/qulacs) をもとに再開発された、新しい Python/C++ ライブラリです。
