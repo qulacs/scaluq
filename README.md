@@ -18,7 +18,7 @@ scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 - CMake 3.21 以上
 - CUDA 12.2 以上（GPU利用時のみ）
 
-## C++ ライブラリとしてのインストール
+## C++ ライブラリとしてインストール
 
 Qulacs2023 を静的ライブラリとしてインストールするには、以下の一連のコマンドを実行します。
 
@@ -40,7 +40,7 @@ SCALUQ_USE_CUDA=ON ./script/build_gcc.sh
 rm build/CMakeCache.txt
 ```
 
-## Python へのインストール
+## Python ライブラリとしてインストール
 Python のライブラリとしても使用することができます。
 ```txt
 pip install scaluq
