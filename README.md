@@ -107,7 +107,7 @@ def main():
     value = observable.get_expectation_value(state)
     print(value)
 
-initialize(InitializationSettings().set_num_threads(8))
+initialize()
 main()
 finalize()
 ```
