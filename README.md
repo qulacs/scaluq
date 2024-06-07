@@ -1,36 +1,113 @@
+
+
+
+
+
+
 # scaluq
 
+scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/qulacs) をもとに再開発された、新しい Python/C++ ライブラリです。
+大規模な量子回路、ノイズを伴う量子回路、パラメトリック量子回路の高速シミュレーションを実行することができます。
+本ライブラリは、MITライセンスの下で公開されています。
+
+[Qulacs](https://github.com/qulacs/qulacs) に比べ、以下の点が改善されています。
+
+- [Kokkos](https://github.com/kokkos/kokkos) をベースとした実装により、実行環境(CPU/GPU) の切り替えを容易に行うことができます。切り替えの際にコードを変更する必要はありません。
+- よりよい実行速度を実現します。
+- ポインタをユーザから隠蔽したことにより、より安全に、簡単に記述できます。
+- [nanobind](https://github.com/wjakob/nanobind) の導入により、よりコンパクトかつ高速な Python へのバインディングを実現します。
+- 複数の量子状態に対して同じ回路を適用させるようなケースに対して、より高速なインターフェースを提供します（未実装）。
+
 ## 依存ライブラリ
+
 - GCC 11 以上
 - CMake 3.21 以上
 - CUDA 12.2 以上（GPU利用時のみ）
 
-## ビルド・実行方法
+## C++ ライブラリとしてのインストール
 
-### ビルド (CPU)
-```
-script/build_gcc.sh
-```
+Qulacs2023 を静的ライブラリとしてインストールするには、以下の一連のコマンドを実行します。
 
-### ビルド（GPU）
-```
-SCALUQ_USE_CUDA script/build_gcc.sh
+```txt
+git clone https://github.com/qulacs/scaluq
+cd scaluq
+./script/build_gcc.sh
 ```
 
-※キャッシュ変数がセットされるため、ターゲットを変えてビルドする際は `build/CMakeCache.txt` を削除する
+NVIDIA GPU と CUDA が利用可能ならば、以下のコマンドで GPU バージョンをインストールできます。ビルドスクリプトの実行の際に `SCALUQ_USE_CUDA` オプションを付けます。
 
-### テスト
-```
-ninja -C build test
-```
-
-### scaluq を用いての C++ 単一ファイルの手元実行
-`exe` の中に cpp ファイルを作成し、`exe/CMakeLists.txt` に追記してビルド
-
-### フォーマット
-```
-ninja -C build format
+```txt
+SCALUQ_USE_CUDA=ON ./script/build_gcc.sh
 ```
 
-### Python へのインストール
-要確認
+ただし、オプションを変更して再ビルドする際には、CMake にセットされたキャッシュ変数をクリアするため、必ず以下のコマンドを実行してください。
+
+```txt
+rm build/CMakeCache.txt
+```
+
+## Python へのインストール
+Python のライブラリとしても使用することができます。
+```txt
+pip install scaluq
+```
+
+## サンプルコード(C++)
+
+```cpp
+#include <iostream>
+
+#include <circuit/circuit.hpp>
+#include <gate/gate_factory.hpp>
+#include <operator/operator.hpp>
+#include <state/state_vector.hpp>
+
+int main() {
+    scaluq::initialize();  // must be called before using any scaluq methods
+    {
+        const int n_qubits = 3;
+        scaluq::StateVector state = scaluq::StateVector::Haar_random_state(n_qubits, 0);
+        std::cout << state << std::endl;
+
+        scaluq::Circuit circuit(n_qubits);
+        circuit.add_gate(scaluq::X(0));
+        circuit.add_gate(scaluq::CNot(0, 1));
+        circuit.add_gate(scaluq::Y(1));
+        circuit.add_gate(scaluq::RX(1, M_PI / 2));
+        circuit.update_quantum_state(state);
+
+        scaluq::Operator observable(n_qubits);
+        observable.add_random_operator(1, 0);
+        auto value = observable.get_expectation_value(state);
+        std::cout << value << std::endl;
+    }
+    scaluq::finalize();  // must be called last
+}
+```
+
+## サンプルコード(Python)
+
+```Python
+from scaluq import *
+import math
+
+def main():
+    n_qubits = 3
+    state = StateVector.Haar_random_state(n_qubits, 0)
+
+    circuit = Circuit(n_qubits)
+    circuit.add_gate(X(0))
+    circuit.add_gate(CNot(0, 1))
+    circuit.add_gate(Y(1))
+    circuit.add_gate(RX(1, math.pi / 2))
+    circuit.update_quantum_state(state)
+
+    observable = Operator(n_qubits)
+    observable.add_random_operator(1, 0)
+    value = observable.get_expectation_value(state)
+    print(value)
+
+initialize(InitializationSettings().set_num_threads(8))
+main()
+finalize()
+```
