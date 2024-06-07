@@ -83,24 +83,31 @@ Complex Operator::get_expectation_value(const StateVector& state_vector) const {
             "Operator::get_expectation_value: n_qubits of state_vector is too small");
     }
     UINT nterms = _terms.size();
-    std::vector<UINT> bmasks_vector(nterms);
-    std::vector<UINT> pmasks_vector(nterms);
-    std::vector<Complex> coefs_vector(nterms);
-    std::transform(
-        _terms.begin(), _terms.end(), bmasks_vector.begin(), [](const PauliOperator& pauli) {
-            return pauli._bit_flip_mask.data_raw()[0];
-        });
-    std::transform(
-        _terms.begin(), _terms.end(), pmasks_vector.begin(), [](const PauliOperator& pauli) {
-            return pauli._phase_flip_mask.data_raw()[0];
-        });
-    std::transform(
-        _terms.begin(), _terms.end(), coefs_vector.begin(), [](const PauliOperator& pauli) {
-            return pauli._coef;
-        });
-    Kokkos::View<UINT*> bmasks = internal::convert_host_vector_to_device_view(bmasks_vector);
-    Kokkos::View<UINT*> pmasks = internal::convert_host_vector_to_device_view(pmasks_vector);
-    Kokkos::View<Complex*> coefs = internal::convert_host_vector_to_device_view(coefs_vector);
+    Kokkos::View<const PauliOperator*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        terms_view(_terms.data(), nterms);
+    Kokkos::View<UINT*, Kokkos::HostSpace> bmasks_host("bmasks_host", nterms);
+    Kokkos::View<UINT*, Kokkos::HostSpace> pmasks_host("pmasks_host", nterms);
+    Kokkos::View<Complex*, Kokkos::HostSpace> coefs_host("coefs_host", nterms);
+    Kokkos::Experimental::transform(
+        Kokkos::DefaultHostExecutionSpace(),
+        terms_view,
+        bmasks_host,
+        [](const PauliOperator& pauli) { return pauli._bit_flip_mask.data_raw()[0]; });
+    Kokkos::Experimental::transform(
+        Kokkos::DefaultHostExecutionSpace(),
+        terms_view,
+        pmasks_host,
+        [](const PauliOperator& pauli) { return pauli._phase_flip_mask.data_raw()[0]; });
+    Kokkos::Experimental::transform(Kokkos::DefaultHostExecutionSpace(),
+                                    terms_view,
+                                    coefs_host,
+                                    [](const PauliOperator& pauli) { return pauli._coef; });
+    Kokkos::View<UINT*> bmasks("bmasks", nterms);
+    Kokkos::View<UINT*> pmasks("pmasks", nterms);
+    Kokkos::View<Complex*> coefs("coefs", nterms);
+    Kokkos::deep_copy(bmasks, bmasks_host);
+    Kokkos::deep_copy(pmasks, pmasks_host);
+    Kokkos::deep_copy(coefs, coefs_host);
     UINT dim = state_vector.dim();
     Complex res;
     Kokkos::parallel_reduce(
