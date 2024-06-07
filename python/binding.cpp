@@ -208,8 +208,8 @@ NB_MODULE(scaluq_core, m) {
     nb::class_<StateVectorBatched>(
         m,
         "StateVectorBatched",
-        "Batched vector representation of quantum state.\\n.. note:: Qubit index is start from 0. "
-        "If the amplitudes of $\\\\ket{b_{n-1}\\\\dots b_0}$ is $b_i$, the state is $\\\\sum_i b_i "
+        "Batched vector representation of quantum state.\n\n.. note:: Qubit index is start from 0. "
+        "If the amplitudes of $\\ket{b_{n-1}\\dots b_0}$ is $b_i$, the state is $\\sum_i b_i "
         "2^i$.")
         .def(nb::init<UINT, UINT>(),
              "Construct batched state vector with specified batch size and qubits.")
@@ -218,7 +218,7 @@ NB_MODULE(scaluq_core, m) {
         .def("n_qubits", &StateVectorBatched::n_qubits, "Get num of qubits.")
         .def("dim",
              &StateVectorBatched::dim,
-             "Get dimension of the vector ($=2^\\\\mathrm{n\\\\_qubits}$).")
+             "Get dimension of the vector ($=2^\\mathrm{n\\_qubits}$).")
         .def("batch_size", &StateVectorBatched::batch_size, "Get batch size.")
         .def("set_state_vector",
              nb::overload_cast<const StateVector &>(&StateVectorBatched::set_state_vector),
@@ -231,7 +231,7 @@ NB_MODULE(scaluq_core, m) {
              "Get the state vector for a specific batch.")
         .def("set_zero_state",
              &StateVectorBatched::set_zero_state,
-             "Initialize all batches with computational basis $\\\\ket{00\\\\dots0}$.")
+             "Initialize all batches with computational basis $\\ket{00\\dots0}$.")
         .def_static("Haar_random_states",
                     &StateVectorBatched::Haar_random_states,
                     "batch_size"_a,
@@ -244,14 +244,14 @@ NB_MODULE(scaluq_core, m) {
              "Get all amplitudes with as `list[list[complex]]`.")
         .def("get_squared_norm",
              &StateVectorBatched::get_squared_norm,
-             "Get squared norm of each state in the batch. $\\\\braket{\\\\psi|\\\\psi}$.")
+             "Get squared norm of each state in the batch. $\\braket{\\psi|\\psi}$.")
         .def("normalize",
              &StateVectorBatched::normalize,
-             "Normalize each state in the batch (let $\\\\braket{\\\\psi|\\\\psi} = 1$ by "
+             "Normalize each state in the batch (let $\\braket{\\psi|\\psi} = 1$ by "
              "multiplying coef).")
         .def("get_zero_probability",
              &StateVectorBatched::get_zero_probability,
-             "Get the probability to observe $\\\\ket{0}$ at specified index for each state in "
+             "Get the probability to observe $\\ket{0}$ at specified index for each state in "
              "the batch.")
         .def("get_marginal_probability",
              &StateVectorBatched::get_marginal_probability,
@@ -263,13 +263,13 @@ NB_MODULE(scaluq_core, m) {
              "Get the entropy of each state in the batch.")
         .def("add_state_vector",
              &StateVectorBatched::add_state_vector,
-             "Add other batched state vectors and make superposition. $\\\\ket{\\\\mathrm{this}} "
-             "\\\\leftarrow \\\\ket{\\\\mathrm{this}} + \\\\ket{\\\\mathrm{states}}$.")
+             "Add other batched state vectors and make superposition. $\\ket{\\mathrm{this}} "
+             "\\leftarrow \\ket{\\mathrm{this}} + \\ket{\\mathrm{states}}$.")
         .def("add_state_vector_with_coef",
              &StateVectorBatched::add_state_vector_with_coef,
              "Add other batched state vectors with multiplying the coef and make superposition. "
-             "$\\\\ket{\\\\mathrm{this}}\\\\leftarrow\\\\ket{\\\\mathrm{this}}+\\\\mathrm{coef}"
-             "\\\\ket{\\\\mathrm{states}}$.")
+             "$\\ket{\\mathrm{this}}\\leftarrow\\ket{\\mathrm{this}}+\\mathrm{coef}"
+             "\\ket{\\mathrm{states}}$.")
         .def("load",
              &StateVectorBatched::load,
              "Load batched amplitudes from `list[list[complex]]`.")
