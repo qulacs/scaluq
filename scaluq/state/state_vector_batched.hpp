@@ -35,7 +35,7 @@ public:
 
     [[nodiscard]] std::vector<std::vector<Complex>> amplitudes() const;
 
-    std::vector<double> get_squared_norm() const;
+    [[nodiscard]] std::vector<double> get_squared_norm() const;
 
     void normalize();
 
