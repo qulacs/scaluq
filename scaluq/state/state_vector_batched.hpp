@@ -17,11 +17,11 @@ public:
 
     StateVectorBatched& operator=(const StateVectorBatched& other) = default;
 
-    UINT n_qubits() const { return this->_n_qubits; }
+    [[nodiscard]] UINT n_qubits() const { return this->_n_qubits; }
 
-    UINT dim() const { return this->_dim; }
+    [[nodiscard]] UINT dim() const { return this->_dim; }
 
-    UINT batch_size() const { return this->_batch_size; }
+    [[nodiscard]] UINT batch_size() const { return this->_batch_size; }
 
     void set_state_vector(const StateVector& state);
     void set_state_vector(UINT batch_id, const StateVector& state);
