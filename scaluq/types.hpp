@@ -27,7 +27,7 @@ using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, 
 using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex>;
 
 using StateVectorView = Kokkos::View<Complex*>;
-using StateVectorBatchedView = Kokkos::View<Complex**>;
+using StateVectorBatchedView = Kokkos::View<Complex**, Kokkos::LayoutRight>;
 
 struct array_4 {
     Complex val[4];

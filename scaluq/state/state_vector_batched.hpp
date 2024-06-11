@@ -28,9 +28,15 @@ public:
     [[nodiscard]] StateVector get_state_vector(UINT batch_id) const;
 
     void set_zero_state();
+    void set_computational_basis(UINT basis);
+    void set_zero_norm_state();
+
+    [[nodiscard]] std::vector<std::vector<UINT>> sampling(UINT sampling_count,
+                                                          UINT seed = std::random_device()()) const;
 
     [[nodiscard]] static StateVectorBatched Haar_random_states(UINT batch_size,
                                                                UINT n_qubits,
+                                                               bool does_set_same_state,
                                                                UINT seed = std::random_device()());
 
     [[nodiscard]] std::vector<std::vector<Complex>> amplitudes() const;

@@ -177,11 +177,10 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
         "compute_stacked_prob",
         _dim,
         KOKKOS_CLASS_LAMBDA(UINT i, double& update, const bool final) {
-            double prob = squared_norm(this->_raw[i]);
+            update += squared_norm(this->_raw[i]);
             if (final) {
-                stacked_prob[i + 1] = update + prob;
+                stacked_prob[i + 1] = update;
             }
-            update += prob;
         });
 
     Kokkos::View<UINT*> result(Kokkos::ViewAllocateWithoutInitializing("result"), sampling_count);
