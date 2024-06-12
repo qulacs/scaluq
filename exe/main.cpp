@@ -4,7 +4,6 @@
 #include <functional>
 #include <iostream>
 
-// #include "../scaluq/gate/gate_factory.hpp"
 #include "../scaluq/all.hpp"
 
 using namespace scaluq;

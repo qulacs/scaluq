@@ -150,8 +150,8 @@ inline void create_shift_mask_list_from_list_and_value_buf(const std::vector<UIN
 }
 
 inline void create_shift_mask_list_from_list_buf(std::vector<UINT> array,
-                                                 std::vector<UINT> dst_array,
-                                                 std::vector<UINT> dst_mask) {
+                                                 std::vector<UINT>& dst_array,
+                                                 std::vector<UINT>& dst_mask) {
     UINT size = array.size();
     dst_array.resize(size);
     dst_mask.resize(size);
@@ -179,7 +179,7 @@ inline void spmv(const CrsMatrix& matrix,
 }
 
 // x: state vector, output will be stored in y
-inline void gemv(const DenseMatrix matrix,
+inline void gemv(const DensityMatrix matrix,
                  const Kokkos::View<Complex*>& x,
                  Kokkos::View<Complex*>& y) {
     KokkosBlas::gemv("N", 1.0, matrix, x, 0.0, y);

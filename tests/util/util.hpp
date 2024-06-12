@@ -57,7 +57,7 @@ inline Eigen::MatrixXcd get_eigen_matrix_random_single_qubit_unitary() {
     xcoef = random.uniform();
     ycoef = random.uniform();
     zcoef = random.uniform();
-    norm = sqrt(icoef * icoef + xcoef + xcoef + ycoef * ycoef + zcoef * zcoef);
+    norm = sqrt(icoef * icoef + xcoef * xcoef + ycoef * ycoef + zcoef * zcoef);
     icoef /= norm;
     xcoef /= norm;
     ycoef /= norm;

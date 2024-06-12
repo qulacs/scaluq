@@ -13,6 +13,7 @@ add_executable(scaluq_test EXCLUDE_FROM_ALL
 target_link_libraries(scaluq_test PRIVATE
     scaluq
     Kokkos::kokkos
+    Kokkos::kokkoskernels
     GTest::gtest_main
     Eigen3::Eigen
 )

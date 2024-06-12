@@ -4,6 +4,7 @@
 #include <functional>
 #include <gate/gate.hpp>
 #include <gate/gate_factory.hpp>
+#include <info/qubit_info.hpp>
 #include <state/state_vector.hpp>
 #include <types.hpp>
 #include <util/random.hpp>
@@ -14,7 +15,7 @@
 using namespace scaluq;
 
 const auto eps = 1e-12;
-using CComplex = std::complex<double>;
+using StdComplex = StdComplex;
 
 template <Gate (*QuantumGateConstructor)()>
 void run_random_gate_apply(UINT n_qubits) {
@@ -35,7 +36,7 @@ void run_random_gate_apply(UINT n_qubits) {
         test_state = test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
         }
     }
 }
@@ -61,7 +62,7 @@ void run_random_gate_apply(UINT n_qubits) {
         test_state = std::polar(1., angle) * test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
         }
     }
 }
@@ -88,7 +89,7 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matr
         test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
         }
     }
 }
@@ -116,7 +117,7 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd(double)
         test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
         }
     }
 }
@@ -161,7 +162,7 @@ void run_random_gate_apply_IBMQ(
                 get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
 
             for (int i = 0; i < dim; i++) {
-                ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+                ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
             }
         }
     }
@@ -199,7 +200,7 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
             test_state = test_mat * test_state;
 
             for (int i = 0; i < dim; i++) {
-                ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+                ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
             }
         }
     }
@@ -223,7 +224,7 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
         test_state = test_mat * test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
         }
     }
 }
@@ -245,7 +246,7 @@ void run_random_gate_apply_fused(UINT n_qubits, UINT target0, UINT target1, UINT
     auto state_cp = state.amplitudes();
 
     for (UINT i = 0; i < dim; i++) {
-        ASSERT_NEAR(std::abs((CComplex)state_cp[i] - (CComplex)state_ref_cp[i]), 0, eps);
+        ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - (StdComplex)state_ref_cp[i]), 0, eps);
     }
 }
 
@@ -301,7 +302,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
 
         // check if the state is updated correctly
         for (UINT i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
         }
 
         auto state_bef_cp = state_bef.amplitudes();
@@ -311,7 +312,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
 
         // check if the state is restored correctly
         for (UINT i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)(state_cp[i] - state_bef_cp[i])), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)(state_cp[i] - state_bef_cp[i])), 0, eps);
         }
     }
 
@@ -361,7 +362,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         assert((int)state_cp.size() == test_state.size());
         // check if the state is updated correctly
         for (UINT i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
         }
         Gate pauli_gate_inv = pauli_gate->get_inverse();
         pauli_gate_inv->update_quantum_state(state);
@@ -369,13 +370,163 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         auto state_bef_cp = state_bef.amplitudes();
         // check if the state is restored correctly
         for (UINT i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)(state_cp[i] - state_bef_cp[i])), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)(state_cp[i] - state_bef_cp[i])), 0, eps);
         }
     }
 }
 
-void run_random_gate_sparse(UINT n_qubits) {
-    // a
+void run_random_gate_apply_single_dense(UINT n_qubits) {
+    const UINT dim = 1ULL << n_qubits;
+    const UINT max_repeat = 10;
+
+    Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> U;
+    UINT target;
+    Kokkos::View<Complex**> mat_view("mat_view", 2, 2);
+    Random random;
+    for (UINT rep = 0; rep < max_repeat; rep++) {
+        StateVector state = StateVector::Haar_random_state(n_qubits);
+        auto state_cp = state.amplitudes();
+        Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
+        for (UINT i = 0; i < dim; i++) {
+            test_state[i] = state_cp[i];
+        }
+        target = random.int64() % n_qubits;
+        std::vector<UINT> target_list = {target};
+        U = get_eigen_matrix_random_single_qubit_unitary();
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
+                mat_view(i, j) = U(i, j);
+            }
+        }
+        std::vector<UINT> control_list = {};
+        Gate dense_gate = DenseMatrix(mat_view, target_list, control_list);
+        dense_gate->update_quantum_state(state);
+        test_state = get_expanded_eigen_matrix_with_identity(target, U, n_qubits) * test_state;
+        state_cp = state.amplitudes();
+        for (UINT i = 0; i < dim; i++) {
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
+        }
+    }
+}
+
+void run_random_gate_apply_general_dense(UINT n_qubits) {
+    const UINT dim = 1ULL << n_qubits;
+    const UINT max_repeat = 10;
+
+    Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
+    Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> U1, U2, U3;
+    std::vector<UINT> targets(3);
+    std::vector<UINT> index_list;
+    std::random_device seed_gen;
+    std::mt19937 engine(seed_gen());
+    for (UINT i = 0; i < n_qubits; i++) {
+        index_list.push_back(i);
+    }
+    // general single
+    {
+        Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> Umerge;
+        for (UINT rep = 0; rep < max_repeat; rep++) {
+            StateVector state = StateVector::Haar_random_state(n_qubits);
+            auto state_cp = state.amplitudes();
+            Kokkos::View<Complex**> mat_view("mat_view", 2, 2);
+            for (UINT i = 0; i < dim; i++) {
+                test_state[i] = state_cp[i];
+            }
+            U1 = get_eigen_matrix_random_single_qubit_unitary();
+            std::shuffle(index_list.begin(), index_list.end(), engine);
+            targets[0] = index_list[0];
+            Umerge = U1;
+            test_state =
+                get_expanded_eigen_matrix_with_identity(targets[0], U1, n_qubits) * test_state;
+            for (int i = 0; i < 2; i++) {
+                for (int j = 0; j < 2; j++) {
+                    mat_view(i, j) = U1(i, j);
+                }
+            }
+            std::vector<UINT> target_list = {targets[0]};
+            std::vector<UINT> control_list = {};
+            Gate dense_gate = DenseMatrix(mat_view, target_list, control_list);
+            dense_gate->update_quantum_state(state);
+            state_cp = state.amplitudes();
+            for (UINT i = 0; i < dim; i++) {
+                ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
+            }
+        }
+    }
+    // general double
+    {
+        Eigen::Matrix<StdComplex, 4, 4, Eigen::RowMajor> Umerge;
+        for (UINT rep = 0; rep < max_repeat; rep++) {
+            StateVector state = StateVector::Haar_random_state(n_qubits);
+            auto state_cp = state.amplitudes();
+            Kokkos::View<Complex**> mat_view("mat_view", 4, 4);
+            for (UINT i = 0; i < dim; i++) {
+                test_state[i] = state_cp[i];
+            }
+            U1 = get_eigen_matrix_random_single_qubit_unitary();
+            U2 = get_eigen_matrix_random_single_qubit_unitary();
+
+            std::shuffle(index_list.begin(), index_list.end(), engine);
+            targets[0] = index_list[0];
+            targets[1] = index_list[1];
+            Umerge = kronecker_product(U2, U1);
+            test_state = get_expanded_eigen_matrix_with_identity(targets[1], U2, n_qubits) *
+                         get_expanded_eigen_matrix_with_identity(targets[0], U1, n_qubits) *
+                         test_state;
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 4; j++) {
+                    mat_view(i, j) = Umerge(i, j);
+                }
+            }
+            std::vector<UINT> target_list = {targets[0], targets[1]};
+            std::vector<UINT> control_list = {};
+            Gate dense_gate = DenseMatrix(mat_view, target_list, control_list);
+            dense_gate->update_quantum_state(state);
+            state_cp = state.amplitudes();
+            for (UINT i = 0; i < dim; i++) {
+                ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
+            }
+        }
+    }
+    // general triple
+    {
+        Eigen::Matrix<StdComplex, 8, 8, Eigen::RowMajor> Umerge;
+        for (UINT rep = 0; rep < max_repeat; rep++) {
+            StateVector state = StateVector::Haar_random_state(n_qubits);
+            auto state_cp = state.amplitudes();
+            Kokkos::View<Complex**> mat_view("mat_view", 8, 8);
+            for (UINT i = 0; i < dim; i++) {
+                test_state[i] = state_cp[i];
+            }
+            U1 = get_eigen_matrix_random_single_qubit_unitary();
+            U2 = get_eigen_matrix_random_single_qubit_unitary();
+            U3 = get_eigen_matrix_random_single_qubit_unitary();
+
+            std::shuffle(index_list.begin(), index_list.end(), engine);
+            targets[0] = index_list[0];
+            targets[1] = index_list[1];
+            targets[2] = index_list[2];
+            Umerge = kronecker_product(U3, kronecker_product(U2, U1));
+
+            test_state = get_expanded_eigen_matrix_with_identity(targets[2], U3, n_qubits) *
+                         get_expanded_eigen_matrix_with_identity(targets[1], U2, n_qubits) *
+                         get_expanded_eigen_matrix_with_identity(targets[0], U1, n_qubits) *
+                         test_state;
+            for (int i = 0; i < 8; i++) {
+                for (int j = 0; j < 8; j++) {
+                    mat_view(i, j) = Umerge(i, j);
+                }
+            }
+            std::vector<UINT> target_list = {targets[0], targets[1], targets[2]};
+            std::vector<UINT> control_list = {};
+            Gate dense_gate = DenseMatrix(mat_view, target_list, control_list);
+            dense_gate->update_quantum_state(state);
+            state_cp = state.amplitudes();
+            for (UINT i = 0; i < dim; i++) {
+                ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
+            }
+        }
+    }
 }
 
 TEST(GateTest, ApplyI) { run_random_gate_apply<I>(5); }
@@ -416,3 +567,7 @@ TEST(GateTest, ApplyFused) {
 }
 
 TEST(GateTest, ApplyPauliGate) { run_random_gate_apply_pauli(5); }
+TEST(GateTest, ApplyDensityMatrixGate) {
+    run_random_gate_apply_single_dense(6);
+    run_random_gate_apply_general_dense(6);
+}

@@ -32,26 +32,26 @@ private:
     UINT _commutation_property;
 
 public:
+    TargetQubitInfo(void) : QubitInfo(invalid_qubit), _commutation_property(0) {}
     TargetQubitInfo(UINT index) : QubitInfo(index), _commutation_property(0) {}
     TargetQubitInfo(UINT index, UINT commutation_property)
         : QubitInfo(index), _commutation_property(commutation_property) {}
+    ~TargetQubitInfo() {}
 
     bool is_commute_X() const { return (_commutation_property & FLAG_X_COMMUTE) != 0; }
     bool is_commute_Y() const { return (_commutation_property & FLAG_Y_COMMUTE) != 0; }
     bool is_commute_Z() const { return (_commutation_property & FLAG_Z_COMMUTE) != 0; }
 
-    virtual bool is_commute_with(const TargetQubitInfo& info) const;
-    virtual bool is_commute_with(const ControlQubitInfo& info) const;
+    bool is_commute_with(const TargetQubitInfo& info) const;
+    bool is_commute_with(const ControlQubitInfo& info) const;
 
-    virtual UINT get_merged_property(UINT property) const {
-        return _commutation_property & property;
-    }
+    UINT get_merged_property(UINT property) const { return _commutation_property & property; }
 
-    virtual UINT get_merged_property(const TargetQubitInfo& info) const {
+    UINT get_merged_property(const TargetQubitInfo& info) const {
         return _commutation_property & info._commutation_property;
     }
 
-    virtual UINT get_merged_property(const ControlQubitInfo& info) const {
+    UINT get_merged_property(const ControlQubitInfo& info) const {
         (void)info;
         return _commutation_property & FLAG_Z_COMMUTE;
     }
@@ -63,12 +63,14 @@ private:
 
 public:
     UINT control_value() const { return _control_value; }
+    ControlQubitInfo(void) : QubitInfo(invalid_qubit), _control_value(1) {}
     ControlQubitInfo(UINT index) : QubitInfo(index), _control_value(1) {}
     ControlQubitInfo(UINT index, UINT control_value)
         : QubitInfo(index), _control_value(control_value) {}
+    ~ControlQubitInfo() {}
 
-    virtual bool is_commute_with(const TargetQubitInfo& info) const;
-    virtual bool is_commute_with(const ControlQubitInfo& info) const;
+    bool is_commute_with(const TargetQubitInfo& info) const;
+    bool is_commute_with(const ControlQubitInfo& info) const;
 };
 }  // namespace internal
 }  // namespace scaluq

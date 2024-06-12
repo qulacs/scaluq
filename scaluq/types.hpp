@@ -34,7 +34,7 @@ using device_type = typename Kokkos::Device<Kokkos::DefaultExecutionSpace,
 using CrsMatrix =
     typename KokkosSparse::CrsMatrix<Complex, default_lno_t, device_type, void, default_size_type>;
 
-using DenseMatrix = Kokkos::View<Complex**, Kokkos::LayoutRight, device_type>;
+using DensityMatrix = Kokkos::View<Complex**, Kokkos::LayoutRight, device_type>;
 
 struct array_4 {
     Complex val[4];
