@@ -14,6 +14,7 @@ scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 
 ## 依存ライブラリ
 
+- Ninja 1.1
 - GCC 11 以上
 - CMake 3.21 以上
 - CUDA 12.2 以上（GPU利用時のみ）
@@ -44,6 +45,13 @@ rm build/CMakeCache.txt
 Python のライブラリとしても使用することができます。
 ```txt
 pip install scaluq
+```
+
+GPUを利用する場合は、リポジトリをクローンしたのちにインストールします。
+```txt
+git clone https://github.com/qulacs/scaluq
+cd ./scaluq
+SCALUQ_USE_CUDA=ON pip install . 
 ```
 
 ## サンプルコード(C++)
@@ -85,23 +93,19 @@ int main() {
 from scaluq import *
 import math
 
-def main():
-    n_qubits = 3
-    state = StateVector.Haar_random_state(n_qubits, 0)
+n_qubits = 3
+state = StateVector.Haar_random_state(n_qubits, 0)
 
-    circuit = Circuit(n_qubits)
-    circuit.add_gate(X(0))
-    circuit.add_gate(CNot(0, 1))
-    circuit.add_gate(Y(1))
-    circuit.add_gate(RX(1, math.pi / 2))
-    circuit.update_quantum_state(state)
+circuit = Circuit(n_qubits)
+circuit.add_gate(X(0))
+circuit.add_gate(CNot(0, 1))
+circuit.add_gate(Y(1))
+circuit.add_gate(RX(1, math.pi / 2))
+circuit.update_quantum_state(state)
 
-    observable = Operator(n_qubits)
-    observable.add_random_operator(1, 0)
-    value = observable.get_expectation_value(state)
-    print(value)
+observable = Operator(n_qubits)
+observable.add_random_operator(1, 0)
+value = observable.get_expectation_value(state)
+print(value)
 
-initialize()
-main()
-finalize()
 ```
