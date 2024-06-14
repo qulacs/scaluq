@@ -249,9 +249,9 @@ NB_MODULE(scaluq_core, m) {
             "length.")
         .def_static(
             "Haar_random_states",
-            [](UINT n_qubits, bool set_same_state, std::optional<UINT> seed) {
+            [](UINT batch_size, UINT n_qubits, bool set_same_state, std::optional<UINT> seed) {
                 return StateVectorBatched::Haar_random_states(
-                    n_qubits, set_same_state, seed.value_or(std::random_device{}()));
+                    batch_size, n_qubits, set_same_state, seed.value_or(std::random_device{}()));
             },
             "batch_size"_a,
             "n_qubits"_a,
