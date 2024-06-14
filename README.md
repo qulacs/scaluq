@@ -1,7 +1,7 @@
 # scaluq
 
 scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/qulacs) をもとに再開発された、新しい Python/C++ ライブラリです。
-大規模な量子回路、ノイズを伴う量子回路、パラメトリック量子回路の高速シミュレーションを実行することができます。
+大規模な量子回路、ノイズを伴う量子回路(未実装)、パラメトリック量子回路の高速シミュレーションを実行することができます。
 本ライブラリは、MITライセンスの下で公開されています。
 
 [Qulacs](https://github.com/qulacs/qulacs) に比べ、以下の点が改善されています。
@@ -14,7 +14,7 @@ scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 
 ## 依存ライブラリ
 
-- Ninja 1.1
+- Ninja 1.10 以上
 - GCC 11 以上
 - CMake 3.21 以上
 - CUDA 12.2 以上（GPU利用時のみ）
