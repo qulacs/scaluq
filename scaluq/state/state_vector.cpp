@@ -49,6 +49,7 @@ StateVector StateVector::Haar_random_state(UINT n_qubits, UINT seed) {
             state._raw[i] = Complex(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
             rand_pool.free_state(rand_gen);
         });
+    Kokkos::fence();
     state.normalize();
     return state;
 }
@@ -74,6 +75,7 @@ void StateVector::normalize() {
     const auto norm = std::sqrt(this->get_squared_norm());
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(UINT it) { this->_raw[it] /= norm; });
+    Kokkos::fence();
 }
 
 double StateVector::get_zero_probability(UINT target_qubit_index) const {
@@ -198,6 +200,7 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
             result[i] = lo;
             rand_pool.free_state(rand_gen);
         });
+    Kokkos::fence();
     return internal::convert_device_view_to_host_vector<UINT>(result);
 }
 

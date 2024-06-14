@@ -125,6 +125,7 @@ void PauliOperator::apply_to_state(StateVector& state_vector) const {
                     state_vector._raw[state_idx] *= coef;
                 }
             });
+        Kokkos::fence();
         return;
     }
     UINT pivot = sizeof(UINT) * 8 - std::countl_zero(bit_flip_mask) - 1;
@@ -141,6 +142,7 @@ void PauliOperator::apply_to_state(StateVector& state_vector) const {
             state_vector._raw[basis_0] = tmp2 * coef;
             state_vector._raw[basis_1] = tmp1 * coef;
         });
+    Kokkos::fence();
 }
 
 Complex PauliOperator::get_expectation_value(const StateVector& state_vector) const {

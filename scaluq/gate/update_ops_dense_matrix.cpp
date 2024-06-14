@@ -20,6 +20,7 @@ void single_qubit_dense_matrix_gate(UINT target_qubit_index,
             state._raw[basis_0] = res0;
             state._raw[basis_1] = res1;
         });
+    Kokkos::fence();
 }
 
 void double_qubit_dense_matrix_gate(UINT target0,
@@ -49,6 +50,7 @@ void double_qubit_dense_matrix_gate(UINT target0,
             state._raw[basis_2] = res2;
             state._raw[basis_3] = res3;
         });
+    Kokkos::fence();
 }
 }  // namespace internal
 }  // namespace scaluq
