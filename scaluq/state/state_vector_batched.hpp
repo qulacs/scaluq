@@ -36,7 +36,7 @@ public:
 
     [[nodiscard]] static StateVectorBatched Haar_random_states(UINT batch_size,
                                                                UINT n_qubits,
-                                                               bool does_set_same_state,
+                                                               bool set_same_state,
                                                                UINT seed = std::random_device()());
 
     [[nodiscard]] std::vector<std::vector<Complex>> amplitudes() const;

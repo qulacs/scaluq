@@ -62,11 +62,11 @@ void StateVectorBatched::set_zero_norm_state() { Kokkos::deep_copy(_raw, 0); }
 
 StateVectorBatched StateVectorBatched::Haar_random_states(UINT batch_size,
                                                           UINT n_qubits,
-                                                          bool does_set_same_state,
+                                                          bool set_same_state,
                                                           UINT seed) {
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
     StateVectorBatched states(batch_size, n_qubits);
-    if (does_set_same_state) {
+    if (set_same_state) {
         states.set_state_vector(StateVector::Haar_random_state(n_qubits, seed));
     } else {
         Kokkos::parallel_for(

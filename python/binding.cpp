@@ -232,10 +232,30 @@ NB_MODULE(scaluq_core, m) {
         .def("set_zero_state",
              &StateVectorBatched::set_zero_state,
              "Initialize all batches with computational basis $\\ket{00\\dots0}$.")
+        .def("set_zero_norm_state",
+             &StateVectorBatched::set_zero_norm_state,
+             "Initialize with 0 (null vector).")
+        .def("set_computational_basis",
+             &StateVectorBatched::set_computational_basis,
+             "Initialize with computational basis \\ket{\\mathrm{basis}}.")
+        .def(
+            "sampling",
+            [](const StateVectorBatched &states,
+               UINT sampling_count,
+               bool set_same_state,
+               std::optional<UINT> seed) {
+                return states.sampling(sampling_count, seed.value_or(std::random_device{}()));
+            },
+            "sampling_count"_a,
+            "set_same_state"_a,
+            "seed"_a = std::nullopt,
+            "Sampling specified times. Result is `list[list[int]]` with the `sampling_count` "
+            "length.")
         .def_static("Haar_random_states",
                     &StateVectorBatched::Haar_random_states,
                     "batch_size"_a,
                     "n_qubits"_a,
+                    ""
                     "seed"_a = std::random_device()(),
                     "Construct batched state vectors with Haar random states. If seed is not "
                     "specified, the value from random device is used.")
