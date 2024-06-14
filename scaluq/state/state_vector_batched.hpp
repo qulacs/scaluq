@@ -58,5 +58,6 @@ public:
     [[nodiscard]] StateVectorBatched copy() const;
 
     std::string to_string() const;
+    friend std::ostream& operator<<(std::ostream& os, const StateVectorBatched& states);
 };
 }  // namespace scaluq

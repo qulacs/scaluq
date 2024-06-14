@@ -372,4 +372,9 @@ std::string StateVectorBatched::to_string() const {
     return os.str();
 }
 
+std::ostream& operator<<(std::ostream& os, const StateVectorBatched& states) {
+    os << states.to_string();
+    return os;
+}
+
 }  // namespace scaluq
