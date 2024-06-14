@@ -93,7 +93,6 @@ inline std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>&
 template <typename T, typename Layout>
 inline std::vector<std::vector<T>> convert_2d_device_view_to_host_vector(
     const Kokkos::View<T**, Layout>& view_d) {
-    // デバイスからホストへのコピー
     auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), view_d);
     std::vector<std::vector<T>> result(view_d.extent(0), std::vector<T>(view_d.extent(1), 0));
     for (size_t i = 0; i < view_d.extent(0); ++i) {
