@@ -247,14 +247,18 @@ NB_MODULE(scaluq_core, m) {
             "seed"_a = std::nullopt,
             "Sampling specified times. Result is `list[list[int]]` with the `sampling_count` "
             "length.")
-        .def_static("Haar_random_states",
-                    &StateVectorBatched::Haar_random_states,
-                    "batch_size"_a,
-                    "n_qubits"_a,
-                    "set_same_state"_a,
-                    "seed"_a = std::random_device()(),
-                    "Construct batched state vectors with Haar random states. If seed is not "
-                    "specified, the value from random device is used.")
+        .def_static(
+            "Haar_random_states",
+            [](UINT n_qubits, bool set_same_state, std::optional<UINT> seed) {
+                return StateVectorBatched::Haar_random_states(
+                    n_qubits, set_same_state, seed.value_or(std::random_device{}()));
+            },
+            "batch_size"_a,
+            "n_qubits"_a,
+            "set_same_state"_a,
+            "seed"_a = std::nullopt,
+            "Construct batched state vectors with Haar random states. If seed is not "
+            "specified, the value from random device is used.")
         .def("amplitudes",
              &StateVectorBatched::amplitudes,
              "Get all amplitudes with as `list[list[complex]]`.")
