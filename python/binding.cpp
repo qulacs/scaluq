@@ -71,51 +71,19 @@ struct type_caster<Kokkos::complex<T>> {
 NAMESPACE_END(detail)
 NAMESPACE_END(NB_NAMESPACE)
 
-NB_MODULE(scaluq_core, m) {
-    nb::class_<InitializationSettings>(
-        m,
-        "InitializationSettings",
-        "Wrapper class of Kokkos's InitializationSettings.\n\n.. note:: See details: "
-        "https://kokkos.org/kokkos-core-wiki/API/core/initialize_finalize/"
-        "InitializationSettings.html")
-        .def(nb::init<>())
-        .def("set_num_threads", &InitializationSettings::set_num_threads)
-        .def("has_num_threads", &InitializationSettings::has_num_threads)
-        .def("get_num_threads", &InitializationSettings::get_num_threads)
-        .def("set_device_id", &InitializationSettings::set_device_id)
-        .def("has_device_id", &InitializationSettings::has_device_id)
-        .def("get_device_id", &InitializationSettings::get_device_id)
-        .def("set_map_device_id_by", &InitializationSettings::set_map_device_id_by)
-        .def("has_map_device_id_by", &InitializationSettings::has_map_device_id_by)
-        .def("get_map_device_id_by", &InitializationSettings::get_map_device_id_by)
-        .def("set_disable_warnings", &InitializationSettings::set_disable_warnings)
-        .def("has_disable_warnings", &InitializationSettings::has_disable_warnings)
-        .def("get_disable_warnings", &InitializationSettings::get_disable_warnings)
-        .def("set_print_configuration", &InitializationSettings::set_print_configuration)
-        .def("has_print_configuration", &InitializationSettings::has_print_configuration)
-        .def("get_print_configuration", &InitializationSettings::get_print_configuration)
-        .def("set_tune_internals", &InitializationSettings::set_tune_internals)
-        .def("has_tune_internals", &InitializationSettings::has_tune_internals)
-        .def("get_tune_internals", &InitializationSettings::get_tune_internals)
-        .def("set_tools_help", &InitializationSettings::set_tools_help)
-        .def("has_tools_help", &InitializationSettings::has_tools_help)
-        .def("get_tools_help", &InitializationSettings::get_tools_help)
-        .def("set_tools_libs", &InitializationSettings::set_tools_libs)
-        .def("has_tools_libs", &InitializationSettings::has_tools_libs)
-        .def("get_tools_libs", &InitializationSettings::get_tools_libs)
-        .def("set_tools_args", &InitializationSettings::set_tools_args)
-        .def("has_tools_args", &InitializationSettings::has_tools_args)
-        .def("get_tools_args", &InitializationSettings::get_tools_args);
+void cleanup() {
+    if (!is_finalized()) finalize();
+}
 
-    m.def(
-        "initialize",
-        &initialize,
-        "settings"_a = InitializationSettings(),
-        R"(**You must call this before any scaluq function.** Initialize the Kokkos execution environment.)");
+NB_MODULE(scaluq_core, m) {
     m.def("finalize",
           &finalize,
-          "Terminate the Kokkos execution environment. Release the resources.");
-    m.def("is_initialized", &is_initialized, "Return true if `initialize()` is already called.");
+          "Terminate the Kokkos execution environment. Release the resources.\n\n.. note:: "
+          "Finalization fails if there exists `StateVector` allocated. You must use "
+          "`StateVector` only inside inner scopes than the usage of `finalize` or delete all of "
+          "existing `StateVector`.\n\n.. note:: This is "
+          "automatically called when the program exits. If you call this manually, you cannot use "
+          "most of scaluq's functions until the program exits.");
     m.def("is_finalized", &is_initialized, "Return true if `finalize()` is already called.");
 
     nb::class_<StateVector>(m,
@@ -195,9 +163,9 @@ NB_MODULE(scaluq_core, m) {
             "sampling_count"_a,
             "seed"_a = std::nullopt,
             "Sampling specified times. Result is `list[int]` with the `sampling_count` length.")
-        .def("to_string", &StateVector::to_string, "Information as `str`.")
+        .def("to_string", &StateVector::to_string<true>, "Information as `str`.")
         .def("load", &StateVector::load, "Load amplitudes of `list[int]` with `dim` length.")
-        .def("__str__", &StateVector::to_string, "Information as `str`.")
+        .def("__str__", &StateVector::to_string<true>, "Information as `str`.")
         .def_ro_static("UNMEASURED",
                        &StateVector::UNMEASURED,
                        "Constant used for `StateVector::get_marginal_probability` to express the "
@@ -785,4 +753,6 @@ NB_MODULE(scaluq_core, m) {
         .def(nb::self - PauliOperator())
         .def(nb::self *= PauliOperator())
         .def(nb::self * PauliOperator());
+    initialize();
+    std::atexit(&cleanup);
 }
