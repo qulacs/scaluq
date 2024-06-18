@@ -45,17 +45,17 @@ inline std::optional<ComplexMatrix> get_pauli_matrix(PauliOperator pauli) {
     std::vector<UINT> pauli_id_list = pauli.get_pauli_id_list();
     UINT flip_mask, phase_mask, rot90_count;
     Kokkos::parallel_reduce(
-        pauli_id_list.size(),
-        KOKKOS_LAMBDA(const UINT& i, UINT& f_mask, UINT& p_mask, UINT& rot90_cnt) {
+        Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, pauli_id_list.size()),
+        [&](UINT i, UINT& f_mask, UINT& p_mask, UINT& rot90_cnt) {
             UINT pauli_id = pauli_id_list[i];
             if (pauli_id == 1) {
-                f_mask ^= 1ULL << i;
+                f_mask += 1ULL << i;
             } else if (pauli_id == 2) {
-                f_mask ^= 1ULL << i;
-                p_mask ^= 1ULL << i;
+                f_mask += 1ULL << i;
+                p_mask += 1ULL << i;
                 rot90_cnt++;
             } else if (pauli_id == 3) {
-                p_mask ^= 1ULL << i;
+                p_mask += 1ULL << i;
             }
         },
         flip_mask,
@@ -72,12 +72,10 @@ inline std::optional<ComplexMatrix> get_pauli_matrix(PauliOperator pauli) {
 
 // Host std::vector を Device Kokkos::View に変換する関数
 template <typename T>
-inline Kokkos::View<T*, Kokkos::DefaultExecutionSpace> convert_host_vector_to_device_view(
-    const std::vector<T>& vec) {
-    Kokkos::fence();
-    Kokkos::View<T*, Kokkos::HostSpace> host_view("host_view", vec.size());
-    std::copy(vec.begin(), vec.end(), host_view.data());
-    Kokkos::View<T*, Kokkos::DefaultExecutionSpace> device_view("device_view", vec.size());
+inline Kokkos::View<T*> convert_host_vector_to_device_view(const std::vector<T>& vec) {
+    Kokkos::View<const T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
+        vec.data(), vec.size());
+    Kokkos::View<T*> device_view("device_view", vec.size());
     Kokkos::deep_copy(device_view, host_view);
     return device_view;
 }
@@ -85,12 +83,10 @@ inline Kokkos::View<T*, Kokkos::DefaultExecutionSpace> convert_host_vector_to_de
 // Device Kokkos::View を Host std::vector に変換する関数
 template <typename T>
 inline std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device_view) {
-    Kokkos::fence();
     std::vector<T> host_vector(device_view.extent(0));
-    Kokkos::View<T*, Kokkos::HostSpace> host_view(
-        Kokkos::ViewAllocateWithoutInitializing("host_view"), device_view.extent(0));
+    Kokkos::View<T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
+        host_vector.data(), host_vector.size());
     Kokkos::deep_copy(host_view, device_view);
-    std::copy(host_view.data(), host_view.data() + host_view.extent(0), host_vector.begin());
     return host_vector;
 }
 

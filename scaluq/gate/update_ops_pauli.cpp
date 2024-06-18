@@ -16,14 +16,14 @@ void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& 
     UINT bit_flip_mask = internal::BitVector(bit_flip_mask_vector).data_raw()[0];
     UINT phase_flip_mask = internal::BitVector(phase_flip_mask_vector).data_raw()[0];
     UINT global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    const double cosval = cos(-angle / 2);
-    const double sinval = sin(-angle / 2);
+    const double cosval = std::cos(-angle / 2);
+    const double sinval = std::sin(-angle / 2);
     const Complex coef = pauli.get_coef();
     if (bit_flip_mask == 0) {
         const Complex cval_min = Complex(cosval, -sinval);
         const Complex cval_pls = Complex(cosval, sinval);
         Kokkos::parallel_for(
-            state.dim(), KOKKOS_LAMBDA(const UINT& state_idx) {
+            state.dim(), KOKKOS_LAMBDA(UINT state_idx) {
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
                     state._raw[state_idx] *= cval_min;
                 } else {
@@ -35,7 +35,7 @@ void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& 
     } else {
         const UINT insert_idx = internal::BitVector(bit_flip_mask_vector).msb();
         Kokkos::parallel_for(
-            state.dim() >> 1, KOKKOS_LAMBDA(const UINT& state_idx) {
+            state.dim() >> 1, KOKKOS_LAMBDA(UINT state_idx) {
                 UINT basis_0 = internal::insert_zero_to_basis_index(state_idx, insert_idx);
                 UINT basis_1 = basis_0 ^ bit_flip_mask;
 

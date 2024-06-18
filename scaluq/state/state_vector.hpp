@@ -15,7 +15,7 @@ class StateVector {
 
 public:
     static constexpr UINT UNMEASURED = 2;
-    Kokkos::View<Complex*> _raw;
+    StateVectorView _raw;
     StateVector() = default;
     StateVector(UINT n_qubits);
     StateVector(const StateVector& other) = default;
@@ -25,12 +25,12 @@ public:
     /**
      * @attention Very slow. You should use load() instead if you can.
      */
-    void set_amplitude_at_index(const UINT& index, const Complex& c);
+    void set_amplitude_at_index(UINT index, const Complex& c);
 
     /**
      * @attention Very slow. You should use amplitudes() instead if you can.
      */
-    [[nodiscard]] Complex get_amplitude_at_index(const UINT& index) const;
+    [[nodiscard]] Complex get_amplitude_at_index(UINT index) const;
 
     [[nodiscard]] static StateVector Haar_random_state(UINT n_qubits,
                                                        UINT seed = std::random_device()());
@@ -63,11 +63,12 @@ public:
     [[nodiscard]] std::vector<UINT> sampling(UINT sampling_count,
                                              UINT seed = std::random_device()()) const;
 
-    [[nodiscard]] std::string to_string() const;
-
     void load(const std::vector<Complex>& other);
+
     [[nodiscard]] StateVector copy() const;
 
     friend std::ostream& operator<<(std::ostream& os, const StateVector& state);
+
+    [[nodiscard]] std::string to_string() const;
 };
 }  // namespace scaluq

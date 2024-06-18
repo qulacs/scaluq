@@ -13,6 +13,7 @@ target_sources(scaluq PRIVATE
     operator/pauli_operator.cpp
     operator/operator.cpp
     state/state_vector.cpp
+    state/state_vector_batched.cpp
 )
 target_link_libraries(scaluq PRIVATE 
     Kokkos::kokkos

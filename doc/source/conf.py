@@ -1,8 +1,7 @@
+import sys
 import subprocess
 
-subprocess.run("mkdir -p stub", shell = True, check = True)
-subprocess.run("cp ../../python/scaluq/scaluq_core.pyi ./stub/scaluq.py", shell = True, check = True)
-subprocess.run("sed -i 's/scaluq.scaluq_core/scaluq/g' ./stub/scaluq.py", shell = True, check=True)
+subprocess.run([sys.executable, '-m', 'nanobind.stubgen', '-m', 'scaluq.scaluq_core', '-o', './stub/scaluq.py'])
 
 project = 'scaluq'
 copyright = '2024, Fuji Lab.'
@@ -23,7 +22,7 @@ autoapi_file_patterns = ["*.py"]
 autoapi_dirs = ["./stub"]
 autoapi_add_toctree_entry = True
 
-autoapi_template_dir = "_templates/autoapi"
+autoapi_python_class_content = 'both'
 autoapi_options = [
     "members",
     "undoc-members",
@@ -31,9 +30,6 @@ autoapi_options = [
     "show-module-summary",
     "imported-members",
 ]
-
-templates_path = ["_templates"]
-html_static_path = ["_static"]
 
 html_theme = "sphinx_rtd_theme"
 

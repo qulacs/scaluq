@@ -31,6 +31,7 @@ public:
     void apply_to_state(StateVector& state_vector) const;
 
     [[nodiscard]] Complex get_expectation_value(const StateVector& state_vector) const;
+    [[nodiscard]] Complex get_expectation_value_loop(const StateVector& state_vector) const;
     [[nodiscard]] Complex get_transition_amplitude(const StateVector& state_vector_bra,
                                                    const StateVector& state_vector_ket) const;
 

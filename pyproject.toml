@@ -1,10 +1,10 @@
 [build-system]
-requires = ["scikit-build-core >=0.4.3", "nanobind >=1.3.2"]
+requires = ["scikit-build-core >= 0.4.3", "nanobind >= 2.0.0", "typing_extensions >= 4.0.0", "setuptools >= 64", "setuptools_scm >= 8"]
 build-backend = "scikit_build_core.build"
 
 [project]
 name = "scaluq"
-version = "0.0.0"
+dynamic = ["version"]
 description = "Quantum circuit simulator for research"
 authors = [
     { name = "Qulacs-Osaka", email = "qulacs.osaka@gmail.com" }
@@ -13,8 +13,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = { file = "LICENSE" }
 dependencies = [
-    "scikit_build",
-    "nanobind"
+    "numpy >= 1.22.0"
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -34,35 +33,43 @@ minimum-version = "0.4"
 build-dir = "build/{wheel_tag}"
 # Build stable ABI wheels for CPython 3.12+
 wheel.py-api = "cp312"
+metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
+sdist.include = ["python/scaluq/_version.py"]
 
 [tool.scikit-build.cmake.define]
 SCALUQ_USE_OMP = {env="SCALUQ_USE_OMP", default="Yes"}
 SCALUQ_USE_CUDA = {env="SCALUQ_USE_CUDA", default="No"}
 SCALUQ_CUDA_ARCH = {env="SCALUQ_CUDA_ARCH"}
 
+[tool.setuptools_scm]
+write_to = "python/scaluq/_version.py"
+
 [project.urls]
 homepage = "http://www.scaluq.org"
 
 [project.optional-dependencies]
 dev = [
-    "black",
-    "flake8",
-    "isort",
-    "mypy",
-    "nanobind",
-    "nanobind-stubgen",
-    "openfermion"
-]
-
-test = [
-    "openfermion"
+    "scikit-build == 0.17.6",
+    "typing_extensions == 4.12.0",
+    "numpy == 1.26.0",
+    "nanobind == 2.0.0"
 ]
 
 ci = [
-    "black",
-    "flake8",
-    "isort",
-    "mypy",
-    "nanobind-stubgen",
-    "openfermion"
+    "scikit-build == 0.17.6",
+    "typing_extensions == 4.12.0",
+    "numpy == 1.26.0",
+    "nanobind == 2.0.0"
+]
+
+doc = [
+    "black == 24.4.2",
+    "isort == 5.13.2",
+    "nanobind == 2.0.0",
+    "sphinx == 7.3.7",
+    "sphinx-autoapi == 3.1.1",
+    "sphinxcontrib-napoleon == 0.7",
+    "sphinx_rtd_theme == 2.0.0",
+    "sphinx-math-dollar == 1.2.1",
+    "nanobind == 2.0.0"
 ]
