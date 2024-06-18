@@ -69,10 +69,12 @@ https://scaluq.readthedocs.io/en/latest/index.html
 #include <operator/operator.hpp>
 #include <state/state_vector.hpp>
 
+using scaluq::UINT;
+
 int main() {
     scaluq::initialize();  // must be called before using any scaluq methods
     {
-        const int n_qubits = 3;
+        const UINT n_qubits = 3;
         scaluq::StateVector state = scaluq::StateVector::Haar_random_state(n_qubits, 0);
         std::cout << state << std::endl;
 
