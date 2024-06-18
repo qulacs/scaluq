@@ -79,10 +79,10 @@ int main() {
         std::cout << state << std::endl;
 
         scaluq::Circuit circuit(n_qubits);
-        circuit.add_gate(scaluq::X(0));
-        circuit.add_gate(scaluq::CNot(0, 1));
-        circuit.add_gate(scaluq::Y(1));
-        circuit.add_gate(scaluq::RX(1, M_PI / 2));
+        circuit.add_gate(scaluq::gate::X(0));
+        circuit.add_gate(scaluq::gate::CNot(0, 1));
+        circuit.add_gate(scaluq::gate::Y(1));
+        circuit.add_gate(scaluq::gate::RX(1, M_PI / 2));
         circuit.update_quantum_state(state);
 
         scaluq::Operator observable(n_qubits);
@@ -104,10 +104,10 @@ n_qubits = 3
 state = StateVector.Haar_random_state(n_qubits, 0)
 
 circuit = Circuit(n_qubits)
-circuit.add_gate(X(0))
-circuit.add_gate(CNot(0, 1))
-circuit.add_gate(Y(1))
-circuit.add_gate(RX(1, math.pi / 2))
+circuit.add_gate(gate::X(0))
+circuit.add_gate(gate::CNot(0, 1))
+circuit.add_gate(gate::Y(1))
+circuit.add_gate(gate::RX(1, math.pi / 2))
 circuit.update_quantum_state(state)
 
 observable = Operator(n_qubits)
