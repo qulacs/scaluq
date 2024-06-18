@@ -54,6 +54,11 @@ cd ./scaluq
 SCALUQ_USE_CUDA=ON pip install . 
 ```
 
+## Python ドキュメント
+Python ライブラリとしてインストールした際の、関数の説明や型の情報がまとめられている、簡易的なドキュメントを用意しています。以下のリンクから確認できます。
+https://scaluq.readthedocs.io/en/latest/index.html
+
+
 ## サンプルコード(C++)
 
 ```cpp
