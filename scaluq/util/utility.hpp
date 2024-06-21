@@ -71,11 +71,10 @@ inline std::optional<ComplexMatrix> get_pauli_matrix(PauliOperator pauli) {
 
 // Host std::vector を Device Kokkos::View に変換する関数
 template <typename T>
-inline Kokkos::View<T*, Kokkos::DefaultExecutionSpace> convert_host_vector_to_device_view(
-    const std::vector<T>& vec) {
+inline Kokkos::View<T*> convert_host_vector_to_device_view(const std::vector<T>& vec) {
     Kokkos::View<const T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
         vec.data(), vec.size());
-    Kokkos::View<T*, Kokkos::DefaultExecutionSpace> device_view("device_view", vec.size());
+    Kokkos::View<T*> device_view("device_view", vec.size());
     Kokkos::deep_copy(device_view, host_view);
     return device_view;
 }
@@ -88,6 +87,20 @@ inline std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>&
         host_vector.data(), host_vector.size());
     Kokkos::deep_copy(host_view, device_view);
     return host_vector;
+}
+
+// Device Kokkos::View を Host std::vector に変換する関数
+template <typename T, typename Layout>
+inline std::vector<std::vector<T>> convert_2d_device_view_to_host_vector(
+    const Kokkos::View<T**, Layout>& view_d) {
+    auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), view_d);
+    std::vector<std::vector<T>> result(view_d.extent(0), std::vector<T>(view_d.extent(1), 0));
+    for (size_t i = 0; i < view_d.extent(0); ++i) {
+        for (size_t j = 0; j < view_d.extent(1); ++j) {
+            result[i][j] = view_h(i, j);
+        }
+    }
+    return result;
 }
 
 }  // namespace internal

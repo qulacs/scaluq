@@ -117,5 +117,8 @@ jobs:
 
       - name: Install scaluq for Ubuntu
         run: ./script/build_gcc.sh
-      
+
+      - name: Install scaluq Python module
+        run: SCALUQ_USE_CUDA=ON pip install .[ci]
+
       # GitHub Actions cannot run CUDA program
