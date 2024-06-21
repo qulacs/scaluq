@@ -161,16 +161,19 @@ double StateVector::get_entropy() const {
 void StateVector::add_state_vector(const StateVector& state) {
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(UINT i) { this->_raw[i] += state._raw[i]; });
+    Kokkos::fence();
 }
 
 void StateVector::add_state_vector_with_coef(const Complex& coef, const StateVector& state) {
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(UINT i) { this->_raw[i] += coef * state._raw[i]; });
+    Kokkos::fence();
 }
 
 void StateVector::multiply_coef(const Complex& coef) {
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(UINT i) { this->_raw[i] *= coef; });
+    Kokkos::fence();
 }
 
 std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
