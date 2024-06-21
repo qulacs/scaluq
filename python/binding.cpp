@@ -515,6 +515,18 @@ NB_MODULE(scaluq_core, m) {
              "Specific class of multi-qubit pauli-rotation gate, represented as "
              "$e^{-i\\frac{\\mathrm{angle}}{2}P}$.");
 
+    DEF_GATE(ProbablisticGate,
+             "Specific class of probablistic gate. The gate to apply is picked from a cirtain "
+             "distribution.")
+        .def(
+            "gate_list",
+            [](const ProbablisticGate &gate) { return gate->gate_list(); },
+            nb::rv_policy::reference)
+        .def(
+            "distribution",
+            [](const ProbablisticGate &gate) { return gate->distribution(); },
+            nb::rv_policy::reference);
+
     auto mgate = m.def_submodule("gate", "Define gates.");
 
 #define DEF_GATE_FACTORY(GATE_NAME) \
@@ -552,6 +564,19 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(FusedSwap);
     DEF_GATE_FACTORY(Pauli);
     DEF_GATE_FACTORY(PauliRotation);
+
+    mgate.def("Probablistic", [](nb::args args) {
+        std::vector<double> distribution;
+        std::vector<Gate> gate_list;
+        distribution.reserve(args.size());
+        gate_list.reserve(args.size());
+        for (auto &&elem : args) {
+            auto [prob, gate] = nb::cast<std::pair<double, Gate>>(elem);
+            distribution.push_back(prob);
+            gate_list.push_back(gate);
+        }
+        return gate::Probablistic(distribution, gate_list);
+    });
 
     nb::enum_<ParamGateType>(m, "ParamGateType", "Enum of ParamGate Type.")
         .value("PRX", ParamGateType::PRX)
@@ -655,7 +680,10 @@ NB_MODULE(scaluq_core, m) {
     nb::class_<Circuit>(m, "Circuit", "Quantum circuit represented as gate array")
         .def(nb::init<UINT>(), "Initialize empty circuit of specified qubits.")
         .def("n_qubits", &Circuit::n_qubits, "Get property of `n_qubits`.")
-        .def("gate_list", &Circuit::gate_list, "Get property of `gate_list`.")
+        .def("gate_list",
+             &Circuit::gate_list,
+             "Get property of `gate_list`.",
+             nb::rv_policy::reference)
         .def("gate_count", &Circuit::gate_count, "Get property of `gate_count`.")
         .def("key_set", &Circuit::key_set, "Get set of keys of parameters.")
         .def("get", &Circuit::get, "Get reference of i-th gate.")
@@ -813,7 +841,7 @@ NB_MODULE(scaluq_core, m) {
         .def(nb::init<UINT>())
         .def("is_hermitian", &Operator::is_hermitian)
         .def("n_qubits", &Operator::n_qubits)
-        .def("terms", &Operator::terms)
+        .def("terms", &Operator::terms, nb::rv_policy::reference)
         .def("to_string", &Operator::to_string)
         .def("add_operator", nb::overload_cast<const PauliOperator &>(&Operator::add_operator))
         .def(
