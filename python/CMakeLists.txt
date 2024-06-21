@@ -20,3 +20,11 @@ nanobind_add_stub(
     MARKER_FILE scaluq/py.typed
     VERBOSE
 )
+nanobind_add_stub(
+    scaluq_stub
+    INSTALL_TIME
+    MODULE scaluq.scaluq_core.gate
+    OUTPUT scaluq/gate.pyi
+    PYTHON_PATH $<TARGET_FILE_DIR:scaluq>
+    VERBOSE
+)

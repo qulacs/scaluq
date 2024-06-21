@@ -515,8 +515,11 @@ NB_MODULE(scaluq_core, m) {
              "Specific class of multi-qubit pauli-rotation gate, represented as "
              "$e^{-i\\frac{\\mathrm{angle}}{2}P}$.");
 
+    auto mgate = m.def_submodule("gate", "Define gates.");
+
 #define DEF_GATE_FACTORY(GATE_NAME) \
-    m.def(#GATE_NAME, &GATE_NAME, "Generate general Gate class instance of " #GATE_NAME ".")
+    mgate.def(                      \
+        #GATE_NAME, &gate::GATE_NAME, "Generate general Gate class instance of " #GATE_NAME ".")
 
     DEF_GATE_FACTORY(I);
     DEF_GATE_FACTORY(GlobalPhase);
@@ -541,9 +544,9 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(U2);
     DEF_GATE_FACTORY(U3);
     DEF_GATE_FACTORY(CX);
-    m.def("CNot",
-          &CX,
-          "Generate general Gate class instance of CX.\n\n.. note:: CNot is an alias of CX.");
+    mgate.def("CNot",
+              &gate::CX,
+              "Generate general Gate class instance of CX.\n\n.. note:: CNot is an alias of CX.");
     DEF_GATE_FACTORY(CZ);
     DEF_GATE_FACTORY(Swap);
     DEF_GATE_FACTORY(FusedSwap);
@@ -628,29 +631,26 @@ NB_MODULE(scaluq_core, m) {
               "Specific class of parametric multi-qubit pauli-rotation gate, represented as "
               "$e^{-i\\frac{\\mathrm{angle}}{2}P}$. `angle` is given as `param * pcoef`.");
 
-#define DEF_PGATE_FACTORY(PGATE_NAME) \
-    m.def(#PGATE_NAME, &PGATE_NAME, "Generate general ParamGate class instance of " #PGATE_NAME ".")
-
-    m.def("PRX",
-          &PRX,
-          "Generate general ParamGate class instance of PRX.",
-          "target"_a,
-          "coef"_a = 1.);
-    m.def("PRY",
-          &PRY,
-          "Generate general ParamGate class instance of PRY.",
-          "target"_a,
-          "coef"_a = 1.);
-    m.def("PRZ",
-          &PRZ,
-          "Generate general ParamGate class instance of PRZ.",
-          "target"_a,
-          "coef"_a = 1.);
-    m.def("PPauliRotation",
-          &PPauliRotation,
-          "Generate general ParamGate class instance of PPauliRotation.",
-          "pauli"_a,
-          "coef"_a = 1.);
+    mgate.def("PRX",
+              &gate::PRX,
+              "Generate general ParamGate class instance of PRX.",
+              "target"_a,
+              "coef"_a = 1.);
+    mgate.def("PRY",
+              &gate::PRY,
+              "Generate general ParamGate class instance of PRY.",
+              "target"_a,
+              "coef"_a = 1.);
+    mgate.def("PRZ",
+              &gate::PRZ,
+              "Generate general ParamGate class instance of PRZ.",
+              "target"_a,
+              "coef"_a = 1.);
+    mgate.def("PPauliRotation",
+              &gate::PPauliRotation,
+              "Generate general ParamGate class instance of PPauliRotation.",
+              "pauli"_a,
+              "coef"_a = 1.);
 
     nb::class_<Circuit>(m, "Circuit", "Quantum circuit represented as gate array")
         .def(nb::init<UINT>(), "Initialize empty circuit of specified qubits.")
