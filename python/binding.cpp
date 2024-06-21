@@ -163,9 +163,9 @@ NB_MODULE(scaluq_core, m) {
             "sampling_count"_a,
             "seed"_a = std::nullopt,
             "Sampling specified times. Result is `list[int]` with the `sampling_count` length.")
-        .def("to_string", &StateVector::to_string<true>, "Information as `str`.")
+        .def("to_string", &StateVector::to_string, "Information as `str`.")
         .def("load", &StateVector::load, "Load amplitudes of `list[int]` with `dim` length.")
-        .def("__str__", &StateVector::to_string<true>, "Information as `str`.")
+        .def("__str__", &StateVector::to_string, "Information as `str`.")
         .def_ro_static("UNMEASURED",
                        &StateVector::UNMEASURED,
                        "Constant used for `StateVector::get_marginal_probability` to express the "
