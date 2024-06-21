@@ -208,6 +208,7 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
                 sum += tmp;
             },
             res);
+        Kokkos::fence();
         return _coef * res;
     }
     UINT pivot = sizeof(UINT) * 8 - std::countl_zero(bit_flip_mask) - 1;
@@ -228,6 +229,7 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
             sum += tmp1 + tmp2;
         },
         res);
+    Kokkos::fence();
     return _coef * res;
 }
 

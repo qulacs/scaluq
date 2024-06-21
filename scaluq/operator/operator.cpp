@@ -152,10 +152,10 @@ Complex Operator::get_expectation_value(const StateVector& state_vector) const {
                     res);
                 return coef * res;
             }();
-            team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { term_res += tmp; });
         },
         res);
+    Kokkos::fence();
     return res;
 }
 
@@ -202,8 +202,8 @@ Complex Operator::get_transition_amplitude(const StateVector& state_vector_bra,
             UINT phase_flip_mask = pmasks[term_id];
             Complex coef = coefs[term_id];
             Complex tmp = [&] {
+                Complex res;
                 if (bit_flip_mask == 0) {
-                    Complex res;
                     Kokkos::parallel_reduce(
                         Kokkos::TeamThreadRange(team, dim),
                         [=](const UINT& state_idx, Complex& sum) {
@@ -213,32 +213,33 @@ Complex Operator::get_transition_amplitude(const StateVector& state_vector_bra,
                             sum += tmp;
                         },
                         res);
-                    return coef * res;
+                } else {
+                    UINT pivot = sizeof(UINT) * 8 - Kokkos::countl_zero(bit_flip_mask) - 1;
+                    UINT global_phase_90rot_count =
+                        Kokkos::popcount(bit_flip_mask & phase_flip_mask);
+                    Complex global_phase = PHASE_90ROT().val[global_phase_90rot_count % 4];
+                    Kokkos::parallel_reduce(
+                        Kokkos::TeamThreadRange(team, dim >> 1),
+                        [=](const UINT& state_idx, Complex& sum) {
+                            UINT basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
+                            UINT basis_1 = basis_0 ^ bit_flip_mask;
+                            Complex tmp1 = Kokkos::conj(state_vector_bra._raw[basis_1]) *
+                                           state_vector_ket._raw[basis_0] * global_phase;
+                            if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
+                            Complex tmp2 = Kokkos::conj(state_vector_bra._raw[basis_0]) *
+                                           state_vector_ket._raw[basis_1] * global_phase;
+                            if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
+                            sum += tmp1 + tmp2;
+                        },
+                        res);
                 }
-                UINT pivot = sizeof(UINT) * 8 - Kokkos::countl_zero(bit_flip_mask) - 1;
-                UINT global_phase_90rot_count = Kokkos::popcount(bit_flip_mask & phase_flip_mask);
-                Complex global_phase = PHASE_90ROT().val[global_phase_90rot_count % 4];
-                Complex res;
-                Kokkos::parallel_reduce(
-                    Kokkos::TeamThreadRange(team, dim >> 1),
-                    [=](const UINT& state_idx, Complex& sum) {
-                        UINT basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
-                        UINT basis_1 = basis_0 ^ bit_flip_mask;
-                        Complex tmp1 = Kokkos::conj(state_vector_bra._raw[basis_1]) *
-                                       state_vector_ket._raw[basis_0] * global_phase;
-                        if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
-                        Complex tmp2 = Kokkos::conj(state_vector_bra._raw[basis_0]) *
-                                       state_vector_ket._raw[basis_1] * global_phase;
-                        if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
-                        sum += tmp1 + tmp2;
-                    },
-                    res);
+                team.team_barrier();
                 return coef * res;
             }();
-            team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { term_res += tmp; });
         },
         res);
+    Kokkos::fence();
     return res;
 }
 
