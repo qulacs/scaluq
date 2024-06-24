@@ -6,7 +6,9 @@
 namespace scaluq {
 
 StateVector::StateVector(UINT n_qubits)
-    : _n_qubits(n_qubits), _dim(1 << n_qubits), _raw(Kokkos::View<Complex*>("state", this->_dim)) {
+    : _n_qubits(n_qubits),
+      _dim(1 << n_qubits),
+      _raw(Kokkos::ViewAllocateWithoutInitializing("state"), this->_dim) {
     set_zero_state();
 }
 
@@ -100,7 +102,7 @@ double StateVector::get_marginal_probability(const std::vector<UINT>& measured_v
     if (measured_values.size() != _n_qubits) {
         throw std::runtime_error(
             "Error: "
-            "StateVector::get_marginal_probability(vector<UINT>): "
+            "StateVector::get_marginal_probability(const vector<UINT>&): "
             "the length of measured_values must be equal to qubit_count");
     }
 
@@ -113,7 +115,9 @@ double StateVector::get_marginal_probability(const std::vector<UINT>& measured_v
             target_value.push_back(measured_value);
         } else if (measured_value != StateVector::UNMEASURED) {
             throw std::runtime_error(
-                "Error: Invalid qubit state specified. Each qubit state must be 0, 1, or "
+                "Error: "
+                "StateVector::get_marginal_probability(const vector<UINT>&): Invalid qubit state "
+                "specified. Each qubit state must be 0, 1, or "
                 "StateVector::UNMEASURED.");
         }
     }
@@ -157,16 +161,19 @@ double StateVector::get_entropy() const {
 void StateVector::add_state_vector(const StateVector& state) {
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(UINT i) { this->_raw[i] += state._raw[i]; });
+    Kokkos::fence();
 }
 
 void StateVector::add_state_vector_with_coef(const Complex& coef, const StateVector& state) {
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(UINT i) { this->_raw[i] += coef * state._raw[i]; });
+    Kokkos::fence();
 }
 
 void StateVector::multiply_coef(const Complex& coef) {
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(UINT i) { this->_raw[i] *= coef; });
+    Kokkos::fence();
 }
 
 std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
@@ -175,11 +182,10 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
         "compute_stacked_prob",
         _dim,
         KOKKOS_CLASS_LAMBDA(UINT i, double& update, const bool final) {
-            double prob = squared_norm(this->_raw[i]);
+            update += squared_norm(this->_raw[i]);
             if (final) {
-                stacked_prob[i + 1] = update + prob;
+                stacked_prob[i + 1] = update;
             }
-            update += prob;
         });
 
     Kokkos::View<UINT*> result(Kokkos::ViewAllocateWithoutInitializing("result"), sampling_count);
@@ -201,10 +207,9 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
             rand_pool.free_state(rand_gen);
         });
     Kokkos::fence();
-    return internal::convert_device_view_to_host_vector<UINT>(result);
+    return internal::convert_device_view_to_host_vector(result);
 }
 
-template <bool display_indexes>
 std::string StateVector::to_string() const {
     std::stringstream os;
     auto amp = this->amplitudes();
@@ -213,18 +218,15 @@ std::string StateVector::to_string() const {
     os << " * Dimension   : " << _dim << '\n';
     os << " * State vector : \n";
     for (UINT i = 0; i < _dim; ++i) {
-        if constexpr (display_indexes) {
-            os <<
-                [](UINT n, UINT len) {
-                    std::string tmp;
-                    while (len--) {
-                        tmp += ((n >> len) & 1) + '0';
-                    }
-                    return tmp;
-                }(i, _n_qubits)
-               << ": ";
-        }
-        os << amp[i] << std::endl;
+        os <<
+            [](UINT n, UINT len) {
+                std::string tmp;
+                while (len--) {
+                    tmp += ((n >> len) & 1) + '0';
+                }
+                return tmp;
+            }(i, _n_qubits)
+           << ": " << amp[i] << std::endl;
     }
     return os.str();
 }
@@ -232,7 +234,7 @@ std::string StateVector::to_string() const {
 void StateVector::load(const std::vector<Complex>& other) {
     if (other.size() != _dim) {
         throw std::runtime_error(
-            "Error: StateVector::load(vector<Complex>&): invalid "
+            "Error: StateVector::load(const vector<Complex>&): invalid "
             "length of state");
     }
     _raw = internal::convert_host_vector_to_device_view(other);

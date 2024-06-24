@@ -8,6 +8,16 @@ using namespace std::complex_literals;
 #include <util/random.hpp>
 using namespace scaluq;
 
+inline bool same_state(const StateVector& s1, const StateVector& s2, const double eps = 1e-12) {
+    auto s1_cp = s1.amplitudes();
+    auto s2_cp = s2.amplitudes();
+    assert(s1.n_qubits() == s2.n_qubits());
+    for (UINT i = 0; i < s1.dim(); ++i) {
+        if (std::abs((std::complex<double>)s1_cp[i] - (std::complex<double>)s2_cp[i]) > eps) return false;
+    }
+    return true;
+};
+
 #define _CHECK_GT(val1, val2) _check_gt(val1, val2, #val1, #val2, __FILE__, __LINE__)
 template <typename T>
 inline std::string _check_gt(
