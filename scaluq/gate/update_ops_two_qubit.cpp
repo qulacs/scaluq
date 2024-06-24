@@ -15,6 +15,7 @@ void swap_gate(UINT target0, UINT target1, StateVector& state) {
             Kokkos::Experimental::swap(state._raw[basis | (1ULL << target0)],
                                        state._raw[basis | (1ULL << target1)]);
         });
+    Kokkos::fence();
 }
 }  // namespace internal
 }  // namespace scaluq

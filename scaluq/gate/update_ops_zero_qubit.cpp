@@ -8,6 +8,7 @@ void global_phase_gate(double phase, StateVector& state) {
     Complex coef = Kokkos::polar(1., phase);
     Kokkos::parallel_for(
         state.dim(), KOKKOS_LAMBDA(UINT i) { state._raw[i] *= coef; });
+    Kokkos::fence();
 }
 }  // namespace internal
 }  // namespace scaluq

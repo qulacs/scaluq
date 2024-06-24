@@ -14,6 +14,7 @@ void x_gate(UINT target_qubit_index, StateVector& state) {
             UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
             Kokkos::Experimental::swap(state._raw[i], state._raw[i | (1ULL << target_qubit_index)]);
         });
+    Kokkos::fence();
 }
 
 void y_gate(UINT target_qubit_index, StateVector& state) {
@@ -24,6 +25,7 @@ void y_gate(UINT target_qubit_index, StateVector& state) {
             state._raw[i | (1ULL << target_qubit_index)] *= Complex(0, -1);
             Kokkos::Experimental::swap(state._raw[i], state._raw[i | (1ULL << target_qubit_index)]);
         });
+    Kokkos::fence();
 }
 
 void z_gate(UINT target_qubit_index, StateVector& state) {
@@ -32,6 +34,7 @@ void z_gate(UINT target_qubit_index, StateVector& state) {
             UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
             state._raw[i | (1ULL << target_qubit_index)] *= Complex(-1, 0);
         });
+    Kokkos::fence();
 }
 
 void h_gate(UINT target_qubit_index, StateVector& state) {
@@ -43,6 +46,7 @@ void h_gate(UINT target_qubit_index, StateVector& state) {
             state._raw[i] = (a + b) * INVERSE_SQRT2();
             state._raw[i | (1ULL << target_qubit_index)] = (a - b) * INVERSE_SQRT2();
         });
+    Kokkos::fence();
 }
 
 void single_qubit_phase_gate(UINT target_qubit_index, Complex phase, StateVector& state) {
@@ -51,6 +55,7 @@ void single_qubit_phase_gate(UINT target_qubit_index, Complex phase, StateVector
             UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
             state._raw[i | (1ULL << target_qubit_index)] *= phase;
         });
+    Kokkos::fence();
 }
 
 void s_gate(UINT target_qubit_index, StateVector& state) {
@@ -113,6 +118,7 @@ void single_qubit_diagonal_matrix_gate(UINT target_qubit_index,
     Kokkos::parallel_for(
         state.dim(),
         KOKKOS_LAMBDA(UINT it) { state._raw[it] *= diag.val[(it >> target_qubit_index) & 1]; });
+    Kokkos::fence();
 }
 
 void rz_gate(UINT target_qubit_index, double angle, StateVector& state) {
