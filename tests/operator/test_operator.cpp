@@ -140,7 +140,7 @@ TEST(OperatorTest, MultiCoefTest) {
     }
 }
 
-TEST(OperatorTest, AppluToStateTest) {
+TEST(OperatorTest, ApplyToStateTest) {
     const UINT n_qubits = 3;
     StateVector state_vector(n_qubits);
     state_vector.load([n_qubits] {
