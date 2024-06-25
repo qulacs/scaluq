@@ -55,6 +55,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_qubit_index2 + this->_block_size - 1);
         fusedswap_gate(this->_qubit_index1, this->_qubit_index2, this->_block_size, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 }  // namespace internal
 

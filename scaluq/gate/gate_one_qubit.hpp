@@ -44,6 +44,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         x_gate(this->_target, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class YGateImpl : public OneQubitGateBase {
@@ -62,6 +63,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         y_gate(this->_target, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class ZGateImpl : public OneQubitGateBase {
@@ -80,6 +82,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         z_gate(this->_target, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class HGateImpl : public OneQubitGateBase {
@@ -99,6 +102,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         h_gate(this->_target, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class SGateImpl;
@@ -126,6 +130,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         s_gate(this->_target, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class SdagGateImpl : public OneQubitGateBase {
@@ -144,6 +149,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         sdag_gate(this->_target, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 // for resolving dependency issues
 inline Gate SGateImpl::get_inverse() const { return std::make_shared<SdagGateImpl>(_target); }
@@ -164,6 +170,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         t_gate(this->_target, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class TdagGateImpl : public OneQubitGateBase {
@@ -182,6 +189,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         tdag_gate(this->_target, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 // for resolving dependency issues
 inline Gate TGateImpl::get_inverse() const { return std::make_shared<TdagGateImpl>(_target); }
@@ -202,6 +210,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         sqrtx_gate(this->_target, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class SqrtXdagGateImpl : public OneQubitGateBase {
@@ -220,6 +229,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         sqrtxdag_gate(this->_target, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 // for resolving dependency issues
 inline Gate SqrtXGateImpl::get_inverse() const {
@@ -242,6 +252,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         sqrty_gate(this->_target, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class SqrtYdagGateImpl : public OneQubitGateBase {
@@ -260,6 +271,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         sqrtydag_gate(this->_target, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 // for resolving dependency issues
 inline Gate SqrtYGateImpl::get_inverse() const {
@@ -284,6 +296,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         p0_gate(this->_target, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class P1GateImpl : public OneQubitGateBase {
@@ -304,6 +317,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         p1_gate(this->_target, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class RXGateImpl : public OneQubitRotationGateBase {
@@ -323,6 +337,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         rx_gate(this->_target, this->_angle, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class RYGateImpl : public OneQubitRotationGateBase {
@@ -342,6 +357,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         ry_gate(this->_target, this->_angle, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class RZGateImpl : public OneQubitRotationGateBase {
@@ -360,6 +376,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         rz_gate(this->_target, this->_angle, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class U1GateImpl : public OneQubitGateBase {
@@ -382,6 +399,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         u1_gate(this->_target, this->_lambda, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 class U2GateImpl : public OneQubitGateBase {
     double _phi, _lambda;
@@ -409,6 +427,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         u2_gate(this->_target, this->_phi, this->_lambda, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class U3GateImpl : public OneQubitGateBase {
@@ -438,6 +457,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         u3_gate(this->_target, this->_theta, this->_phi, this->_lambda, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 }  // namespace internal

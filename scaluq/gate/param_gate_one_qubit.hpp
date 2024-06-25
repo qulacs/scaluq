@@ -40,6 +40,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         rx_gate(_target, _pcoef * param, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states, double param) const override {}
 };
 
 class PRYGateImpl : public POneQubitGateBase {
@@ -61,6 +62,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         ry_gate(_target, _pcoef * param, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states, double param) const override {}
 };
 
 class PRZGateImpl : public POneQubitGateBase {
@@ -82,6 +84,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         rz_gate(this->_target, _pcoef * param, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states, double param) const override {}
 };
 
 }  // namespace internal

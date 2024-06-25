@@ -32,5 +32,9 @@ void fusedswap_gate(UINT target_qubit_index_0,
             }
         });
 }
+void fusedswap_gate(UINT target_qubit_index_0,
+                    UINT target_qubit_index_1,
+                    UINT block_size,
+                    StateVectorBatched& states) {}
 }  // namespace internal
 }  // namespace scaluq

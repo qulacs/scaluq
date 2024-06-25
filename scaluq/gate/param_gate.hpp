@@ -56,6 +56,7 @@ public:
     [[nodiscard]] virtual std::optional<ComplexMatrix> get_matrix(double param) const = 0;
 
     virtual void update_quantum_state(StateVector& state_vector, double param) const = 0;
+    virtual void update_quantum_state(StateVectorBatched& states, double param) const = 0;
 };
 
 template <ParamGateImpl T>

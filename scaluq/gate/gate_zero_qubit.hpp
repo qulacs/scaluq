@@ -23,6 +23,7 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override { i_gate(state_vector); }
+    void update_quantum_state(StateVectorBatched& states) const override { i_gate(states); };
 };
 
 class GlobalPhaseGateImpl : public ZeroQubitGateBase {
@@ -42,6 +43,9 @@ public:
 
     void update_quantum_state(StateVector& state_vector) const override {
         global_phase_gate(_phase, state_vector);
+    }
+    void update_quantum_state(StateVectorBatched& states) const override {
+        global_phase_gate(_phase, states);
     }
 };
 }  // namespace internal

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../state/state_vector.hpp"
+#include "../state/state_vector_batched.hpp"
 #include "../types.hpp"
 #include "update_ops.hpp"
 
@@ -139,6 +140,7 @@ public:
     [[nodiscard]] virtual std::optional<ComplexMatrix> get_matrix() const = 0;
 
     virtual void update_quantum_state(StateVector& state_vector) const = 0;
+    virtual void update_quantum_state(StateVectorBatched& states) const = 0;
 };
 
 template <GateImpl T>

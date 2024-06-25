@@ -85,6 +85,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         single_qubit_dense_matrix_gate(_target, _matrix, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class TwoQubitMatrixGateImpl : public TwoQubitGateBase {
@@ -138,6 +139,7 @@ public:
         check_qubit_within_bounds(state_vector, this->_target2);
         double_qubit_dense_matrix_gate(_target1, _target2, _matrix, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class CrsMatrixGateImpl : public GateBase {
@@ -245,6 +247,7 @@ public:
             }
         }
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class DensityMatrixGateImpl : public GateBase {
@@ -376,6 +379,7 @@ public:
             }
         }
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 inline void single_qubit_dense_matrix_gate_view(UINT target_qubit_index,

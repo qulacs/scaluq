@@ -29,6 +29,7 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         pauli_gate(this->_pauli, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 
 class PauliRotationGateImpl : public GateBase {
@@ -59,6 +60,7 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         pauli_rotation_gate(this->_pauli, this->_angle, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states) const override {}
 };
 }  // namespace internal
 

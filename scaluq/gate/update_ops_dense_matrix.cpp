@@ -1,6 +1,7 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
 
+#include "../state/state_vector_batched.hpp"
 #include "../types.hpp"
 #include "util/utility.hpp"
 
@@ -21,6 +22,9 @@ void single_qubit_dense_matrix_gate(UINT target_qubit_index,
             state._raw[basis_1] = res1;
         });
 }
+void single_qubit_dense_matrix_gate(UINT target_qubit_index,
+                                    const matrix_2_2& matrix,
+                                    StateVectorBatched& states) {}
 
 void double_qubit_dense_matrix_gate(UINT target0,
                                     UINT target1,
@@ -50,5 +54,9 @@ void double_qubit_dense_matrix_gate(UINT target0,
             state._raw[basis_3] = res3;
         });
 }
+void double_qubit_dense_matrix_gate(UINT target0,
+                                    UINT target1,
+                                    const matrix_4_4& matrix,
+                                    StateVectorBatched& states) {}
 }  // namespace internal
 }  // namespace scaluq

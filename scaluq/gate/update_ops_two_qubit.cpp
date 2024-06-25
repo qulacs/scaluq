@@ -16,5 +16,6 @@ void swap_gate(UINT target0, UINT target1, StateVector& state) {
                                        state._raw[basis | (1ULL << target1)]);
         });
 }
+void swap_gate(UINT target0, UINT target1, StateVectorBatched& states) {}
 }  // namespace internal
 }  // namespace scaluq

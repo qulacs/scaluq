@@ -10,6 +10,10 @@
 namespace scaluq {
 namespace internal {
 void pauli_gate(const PauliOperator& pauli, StateVector& state) { pauli.apply_to_state(state); }
+void pauli_gate(const PauliOperator& pauli, StateVectorBatched& states) {
+    // pauli operator need to be implemented for batched state
+    // pauli.apply_to_state(states);
+}
 
 void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& state) {
     auto [bit_flip_mask_vector, phase_flip_mask_vector] = pauli.get_XZ_mask_representation();
@@ -60,6 +64,7 @@ void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& 
             });
     }
 }
+void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVectorBatched& states) {}
 
 }  // namespace internal
 }  // namespace scaluq

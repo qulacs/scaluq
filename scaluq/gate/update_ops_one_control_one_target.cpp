@@ -17,6 +17,7 @@ void cx_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& sta
             Kokkos::Experimental::swap(state._raw[i], state._raw[i | (1ULL << target_qubit_index)]);
         });
 }
+void cx_gate(UINT control_qubit_index, UINT target_qubit_index, StateVectorBatched& states) {}
 
 void cz_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& state) {
     Kokkos::parallel_for(
@@ -28,5 +29,6 @@ void cz_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& sta
             state._raw[i] *= -1;
         });
 }
+void cz_gate(UINT control_qubit_index, UINT target_qubit_index, StateVectorBatched& states) {}
 }  // namespace internal
 }  // namespace scaluq

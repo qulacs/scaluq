@@ -18,14 +18,18 @@ matrix_2_2 get_IBMQ_matrix(double theta, double phi, double lambda) {
 void u1_gate(UINT target_qubit_index, double lambda, StateVector& state) {
     single_qubit_dense_matrix_gate(target_qubit_index, get_IBMQ_matrix(0., 0., lambda), state);
 }
+void u1_gate(UINT target_qubit_index, double lambda, StateVectorBatched& states) {}
 
 void u2_gate(UINT target_qubit_index, double phi, double lambda, StateVector& state) {
     single_qubit_dense_matrix_gate(
         target_qubit_index, get_IBMQ_matrix(PI() / 2., phi, lambda), state);
 }
+void u2_gate(UINT target_qubit_index, double phi, double lambda, StateVectorBatched& states) {}
 
 void u3_gate(UINT target_qubit_index, double theta, double phi, double lambda, StateVector& state) {
     single_qubit_dense_matrix_gate(target_qubit_index, get_IBMQ_matrix(theta, phi, lambda), state);
 }
+void u3_gate(
+    UINT target_qubit_index, double theta, double phi, double lambda, StateVectorBatched& states) {}
 }  // namespace internal
 }  // namespace scaluq

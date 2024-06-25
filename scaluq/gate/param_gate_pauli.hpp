@@ -36,6 +36,7 @@ public:
     void update_quantum_state(StateVector& state_vector, double param) const override {
         pauli_rotation_gate(_pauli, _pcoef * param, state_vector);
     }
+    void update_quantum_state(StateVectorBatched& states, double param) const override {}
 };
 }  // namespace internal
 
