@@ -31,6 +31,7 @@ void fusedswap_gate(UINT target_qubit_index_0,
                 Kokkos::Experimental::swap(state._raw[i], state._raw[j]);
             }
         });
+    Kokkos::fence();
 }
 }  // namespace internal
 }  // namespace scaluq

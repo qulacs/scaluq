@@ -18,7 +18,7 @@ public:
     }
 };
 }  // namespace internal
-
+namespace gate {
 inline Gate I() { return internal::GateFactory::create_gate<internal::IGateImpl>(); }
 inline Gate GlobalPhase(double phase) {
     return internal::GateFactory::create_gate<internal::GlobalPhaseGateImpl>(phase);

@@ -65,8 +65,8 @@ void test_apply_parametric_multi_pauli_rotation(UINT n_qubits) {
         }
 
         PauliOperator pauli(target_vec, pauli_id_vec, 1.0);
-        Gate gate = PauliRotation(pauli, pcoef * param);
-        ParamGate pgate = PPauliRotation(pauli, pcoef);
+        Gate gate = gate::PauliRotation(pauli, pcoef * param);
+        ParamGate pgate = gate::PPauliRotation(pauli, pcoef);
         gate->update_quantum_state(state);
         pgate->update_quantum_state(state_cp, param);
         auto state_amp = state.amplitudes();
@@ -86,7 +86,13 @@ void test_apply_parametric_multi_pauli_rotation(UINT n_qubits) {
     }
 }
 
-TEST(ParamGateTest, ApplyPRXGate) { test_apply_parametric_single_pauli_rotation(5, &RX, &PRX); }
-TEST(ParamGateTest, ApplyPRYGate) { test_apply_parametric_single_pauli_rotation(5, &RX, &PRX); }
-TEST(ParamGateTest, ApplyPRZGate) { test_apply_parametric_single_pauli_rotation(5, &RX, &PRX); }
+TEST(ParamGateTest, ApplyPRXGate) {
+    test_apply_parametric_single_pauli_rotation(5, &gate::RX, &gate::PRX);
+}
+TEST(ParamGateTest, ApplyPRYGate) {
+    test_apply_parametric_single_pauli_rotation(5, &gate::RX, &gate::PRX);
+}
+TEST(ParamGateTest, ApplyPRZGate) {
+    test_apply_parametric_single_pauli_rotation(5, &gate::RX, &gate::PRX);
+}
 TEST(ParamGateTest, ApplyPPauliRotationGate) { test_apply_parametric_multi_pauli_rotation(5); }

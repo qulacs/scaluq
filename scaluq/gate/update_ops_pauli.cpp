@@ -31,6 +31,7 @@ void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& 
                 }
                 state._raw[state_idx] *= coef;
             });
+        Kokkos::fence();
         return;
     } else {
         const UINT insert_idx = internal::BitVector(bit_flip_mask_vector).msb();
@@ -58,6 +59,7 @@ void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& 
                 state._raw[basis_0] *= coef;
                 state._raw[basis_1] *= coef;
             });
+        Kokkos::fence();
     }
 }
 
