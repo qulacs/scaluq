@@ -18,15 +18,6 @@ public:
         return {std::make_shared<T>(args...)};
     }
 };
-inline std::pair<std::vector<double>, std::vector<Gate>> decompose_dist_gate() { return {}; }
-template <typename... Tail>
-inline std::pair<std::vector<double>, std::vector<Gate>> decompose_dist_gate(
-    const std::pair<double, Gate> head, Tail&&... tail) {
-    auto ret = decompose_dist_gate(tail...);
-    ret.first.push_back(head.first);
-    ret.second.push_back(head.second);
-    return ret;
-}
 }  // namespace internal
 namespace gate {
 inline Gate I() { return internal::GateFactory::create_gate<internal::IGateImpl>(); }
@@ -115,18 +106,6 @@ inline Gate PauliRotation(const PauliOperator& pauli, double angle) {
 }
 inline Gate Probablistic(const std::vector<double>& distribution,
                          const std::vector<Gate>& gate_list) {
-    return internal::GateFactory::create_gate<internal::ProbablisticGateImpl>(distribution,
-                                                                              gate_list);
-}
-inline Gate Probablistic(const std::pair<double, Gate>& head) {
-    return internal::GateFactory::create_gate<internal::ProbablisticGateImpl>(
-        std::vector{head.first}, std::vector{head.second});
-}
-template <class... Args>
-inline Gate Probablistic(const std::pair<double, Gate>& head, Args&&... args) {
-    auto [distribution, gate_list] = internal::decompose_dist_gate(head, args...);
-    std::ranges::reverse(distribution);
-    std::ranges::reverse(gate_list);
     return internal::GateFactory::create_gate<internal::ProbablisticGateImpl>(distribution,
                                                                               gate_list);
 }

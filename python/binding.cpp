@@ -564,28 +564,7 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(FusedSwap);
     DEF_GATE_FACTORY(Pauli);
     DEF_GATE_FACTORY(PauliRotation);
-
-    mgate.def(
-        "Probablistic",
-        [](const std::vector<double> &distribution, const std::vector<Gate> &gate_list) {
-            return gate::Probablistic(distribution, gate_list);
-        },
-        "General general Gate class instance of Probablistic.");
-    mgate.def(
-        "Probablistic",
-        [](const std::vector<std::pair<double, Gate>> &prob_gate_list) {
-            std::vector<double> distribution;
-            std::vector<Gate> gate_list;
-            distribution.reserve(prob_gate_list.size());
-            gate_list.reserve(prob_gate_list.size());
-            for (const auto &[prob, gate] : prob_gate_list) {
-                distribution.push_back(prob);
-                gate_list.push_back(gate);
-            }
-            return gate::Probablistic(distribution, gate_list);
-        },
-        "Generate general Gate class instance of Probablistic by passing probablity and kind of "
-        "each gate with list[tuple[float, Gate]])].");
+    DEF_GATE_FACTORY(Probablistic);
 
     nb::enum_<ParamGateType>(m, "ParamGateType", "Enum of ParamGate Type.")
         .value("PRX", ParamGateType::PRX)
@@ -698,13 +677,9 @@ NB_MODULE(scaluq_core, m) {
               "Generate general ParamGate class instance of PPauliRotation.",
               "pauli"_a,
               "coef"_a = 1.);
-    mgate.def(
-        "PProbablistic",
-        [](const std::vector<double> &distribution,
-           const std::vector<std::variant<Gate, ParamGate>> &gate_list) {
-            return gate::PProbablistic(distribution, gate_list);
-        },
-        "Generate general ParamGate class instance of PProbablistic.");
+    mgate.def("PProbablistic",
+              &gate::PProbablistic,
+              "Generate general ParamGate class instance of PProbablistic.");
     mgate.def(
         "PProbablistic",
         [](const std::vector<std::pair<double, std::variant<Gate, ParamGate>>> &prob_gate_list) {
