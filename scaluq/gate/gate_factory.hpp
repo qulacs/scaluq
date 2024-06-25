@@ -18,7 +18,7 @@ public:
     }
 };
 }  // namespace internal
-
+namespace gate {
 inline Gate I() { return internal::GateFactory::create_gate<internal::IGateImpl>(); }
 inline Gate GlobalPhase(double phase) {
     return internal::GateFactory::create_gate<internal::GlobalPhaseGateImpl>(phase);
@@ -115,4 +115,5 @@ inline Gate DenseMatrix(const DensityMatrix& matrix,
     return internal::GateFactory::create_gate<internal::DensityMatrixGateImpl>(
         matrix, target_qubit_list, control_qubit_list);
 }
+}  // namespace gate
 }  // namespace scaluq

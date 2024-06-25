@@ -14,6 +14,7 @@ void x_gate(UINT target_qubit_index, StateVector& state) {
             UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
             Kokkos::Experimental::swap(state._raw[i], state._raw[i | (1ULL << target_qubit_index)]);
         });
+    Kokkos::fence();
 }
 void x_gate(UINT target_qubit_index, StateVectorBatched& states) {
     Kokkos::parallel_for(
@@ -33,6 +34,7 @@ void y_gate(UINT target_qubit_index, StateVector& state) {
             state._raw[i | (1ULL << target_qubit_index)] *= Complex(0, -1);
             Kokkos::Experimental::swap(state._raw[i], state._raw[i | (1ULL << target_qubit_index)]);
         });
+    Kokkos::fence();
 }
 void y_gate(UINT target_qubit_index, StateVectorBatched& states) {
     Kokkos::parallel_for(
@@ -52,6 +54,7 @@ void z_gate(UINT target_qubit_index, StateVector& state) {
             UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
             state._raw[i | (1ULL << target_qubit_index)] *= Complex(-1, 0);
         });
+    Kokkos::fence();
 }
 void z_gate(UINT target_qubit_index, StateVectorBatched& states) {
     Kokkos::parallel_for(
@@ -82,6 +85,7 @@ void h_gate(UINT target_qubit_index, StateVectorBatched& states) {
             states._raw(b, i) = (cval0 + cval1) * INVERSE_SQRT2();
             states._raw(b, i | (1ULL << target_qubit_index)) = (cval0 - cval1) * INVERSE_SQRT2();
         });
+    Kokkos::fence();
 }
 
 void single_qubit_phase_gate(UINT target_qubit_index, Complex phase, StateVector& state) {
@@ -90,6 +94,7 @@ void single_qubit_phase_gate(UINT target_qubit_index, Complex phase, StateVector
             UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
             state._raw[i | (1ULL << target_qubit_index)] *= phase;
         });
+    Kokkos::fence();
 }
 void single_qubit_phase_gate(UINT target_qubit_index, Complex phase, StateVectorBatched& states) {
     Kokkos::parallel_for(
@@ -202,6 +207,7 @@ void single_qubit_diagonal_matrix_gate(UINT target_qubit_index,
     Kokkos::parallel_for(
         state.dim(),
         KOKKOS_LAMBDA(UINT it) { state._raw[it] *= diag.val[(it >> target_qubit_index) & 1]; });
+    Kokkos::fence();
 }
 void single_qubit_diagonal_matrix_gate(UINT target_qubit_index,
                                        const diagonal_matrix_2_2 diag,

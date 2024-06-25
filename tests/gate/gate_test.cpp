@@ -149,11 +149,11 @@ void run_random_gate_apply_IBMQ(
             const UINT target = random.int64() % n_qubits;
             Gate gate;
             if (gate_type == 0) {
-                gate = U1(target, lambda);
+                gate = gate::U1(target, lambda);
             } else if (gate_type == 1) {
-                gate = U2(target, phi, lambda);
+                gate = gate::U2(target, phi, lambda);
             } else {
-                gate = U3(target, theta, phi, lambda);
+                gate = gate::U3(target, theta, phi, lambda);
             }
             gate->update_quantum_state(state);
             state_cp = state.amplitudes();
@@ -187,10 +187,10 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
             UINT control = random.int64() % n_qubits;
             if (target == control) target = (target + 1) % n_qubits;
             if (g == 0) {
-                gate = CX(control, target);
+                gate = gate::CX(control, target);
                 func_eig = get_eigen_matrix_full_qubit_CX;
             } else {
-                gate = CZ(control, target);
+                gate = gate::CZ(control, target);
                 func_eig = get_eigen_matrix_full_qubit_CZ;
             }
             gate->update_quantum_state(state);
@@ -216,7 +216,7 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
         UINT target = random.int64() % n_qubits;
         UINT control = random.int64() % n_qubits;
         if (target == control) target = (target + 1) % n_qubits;
-        auto gate = Swap(control, target);
+        auto gate = gate::Swap(control, target);
         gate->update_quantum_state(state);
         state_cp = state.amplitudes();
 
@@ -236,12 +236,12 @@ void run_random_gate_apply_fused(UINT n_qubits, UINT target0, UINT target1, UINT
 
     // update "state_ref" using Swap gate
     for (UINT i = 0; i < block_size; i++) {
-        auto swap_gate = Swap(target0 + i, target1 + i);
+        auto swap_gate = gate::Swap(target0 + i, target1 + i);
         swap_gate->update_quantum_state(state_ref);
     }
     auto state_ref_cp = state_ref.amplitudes();
 
-    auto fused_swap_gate = FusedSwap(target0, target1, block_size);
+    auto fused_swap_gate = gate::FusedSwap(target0, target1, block_size);
     fused_swap_gate->update_quantum_state(state);
     auto state_cp = state.amplitudes();
 
@@ -294,7 +294,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         }
 
         PauliOperator pauli(target_vec, pauli_id_vec, 1.0);
-        Gate pauli_gate = Pauli(pauli);
+        Gate pauli_gate = gate::Pauli(pauli);
         pauli_gate->update_quantum_state(state);
 
         state_cp = state.amplitudes();
@@ -355,7 +355,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         matrix = std::cos(angle / 2) * Eigen::MatrixXcd::Identity(dim, dim) -
                  Complex(0, 1) * std::sin(angle / 2) * matrix;
         PauliOperator pauli(target_vec, pauli_id_vec, 1.0);
-        Gate pauli_gate = PauliRotation(pauli, angle);
+        Gate pauli_gate = gate::PauliRotation(pauli, angle);
         pauli_gate->update_quantum_state(state);
         state_cp = state.amplitudes();
         test_state = matrix * test_state;
@@ -529,25 +529,25 @@ void run_random_gate_apply_general_dense(UINT n_qubits) {
     }
 }
 
-TEST(GateTest, ApplyI) { run_random_gate_apply<I>(5); }
-TEST(GateTest, ApplyGlobalPhase) { run_random_gate_apply<GlobalPhase>(5); }
-TEST(GateTest, ApplyX) { run_random_gate_apply<X>(5, make_X); }
-TEST(GateTest, ApplyY) { run_random_gate_apply<Y>(5, make_Y); }
-TEST(GateTest, ApplyZ) { run_random_gate_apply<Z>(5, make_Z); }
-TEST(GateTest, ApplyH) { run_random_gate_apply<H>(5, make_H); }
-TEST(GateTest, ApplyS) { run_random_gate_apply<S>(5, make_S); }
-TEST(GateTest, ApplySdag) { run_random_gate_apply<Sdag>(5, make_Sdag); }
-TEST(GateTest, ApplyT) { run_random_gate_apply<T>(5, make_T); }
-TEST(GateTest, ApplyTdag) { run_random_gate_apply<Tdag>(5, make_Tdag); }
-TEST(GateTest, ApplySqrtX) { run_random_gate_apply<SqrtX>(5, make_SqrtX); }
-TEST(GateTest, ApplySqrtY) { run_random_gate_apply<SqrtY>(5, make_SqrtY); }
-TEST(GateTest, ApplySqrtXdag) { run_random_gate_apply<SqrtXdag>(5, make_SqrtXdag); }
-TEST(GateTest, ApplySqrtYdag) { run_random_gate_apply<SqrtYdag>(5, make_SqrtYdag); }
-TEST(GateTest, ApplyP0) { run_random_gate_apply<P0>(5, make_P0); }
-TEST(GateTest, ApplyP1) { run_random_gate_apply<P1>(5, make_P1); }
-TEST(GateTest, ApplyRX) { run_random_gate_apply<RX>(5, make_RX); }
-TEST(GateTest, ApplyRY) { run_random_gate_apply<RY>(5, make_RY); }
-TEST(GateTest, ApplyRZ) { run_random_gate_apply<RZ>(5, make_RZ); }
+TEST(GateTest, ApplyI) { run_random_gate_apply<gate::I>(5); }
+TEST(GateTest, ApplyGlobalPhase) { run_random_gate_apply<gate::GlobalPhase>(5); }
+TEST(GateTest, ApplyX) { run_random_gate_apply<gate::X>(5, make_X); }
+TEST(GateTest, ApplyY) { run_random_gate_apply<gate::Y>(5, make_Y); }
+TEST(GateTest, ApplyZ) { run_random_gate_apply<gate::Z>(5, make_Z); }
+TEST(GateTest, ApplyH) { run_random_gate_apply<gate::H>(5, make_H); }
+TEST(GateTest, ApplyS) { run_random_gate_apply<gate::S>(5, make_S); }
+TEST(GateTest, ApplySdag) { run_random_gate_apply<gate::Sdag>(5, make_Sdag); }
+TEST(GateTest, ApplyT) { run_random_gate_apply<gate::T>(5, make_T); }
+TEST(GateTest, ApplyTdag) { run_random_gate_apply<gate::Tdag>(5, make_Tdag); }
+TEST(GateTest, ApplySqrtX) { run_random_gate_apply<gate::SqrtX>(5, make_SqrtX); }
+TEST(GateTest, ApplySqrtY) { run_random_gate_apply<gate::SqrtY>(5, make_SqrtY); }
+TEST(GateTest, ApplySqrtXdag) { run_random_gate_apply<gate::SqrtXdag>(5, make_SqrtXdag); }
+TEST(GateTest, ApplySqrtYdag) { run_random_gate_apply<gate::SqrtYdag>(5, make_SqrtYdag); }
+TEST(GateTest, ApplyP0) { run_random_gate_apply<gate::P0>(5, make_P0); }
+TEST(GateTest, ApplyP1) { run_random_gate_apply<gate::P1>(5, make_P1); }
+TEST(GateTest, ApplyRX) { run_random_gate_apply<gate::RX>(5, make_RX); }
+TEST(GateTest, ApplyRY) { run_random_gate_apply<gate::RY>(5, make_RY); }
+TEST(GateTest, ApplyRZ) { run_random_gate_apply<gate::RZ>(5, make_RZ); }
 
 TEST(GateTest, ApplyIBMQ) { run_random_gate_apply_IBMQ(5, make_U); }
 

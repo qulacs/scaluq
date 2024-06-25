@@ -1,7 +1,8 @@
 import sys
 import subprocess
 
-subprocess.run([sys.executable, '-m', 'nanobind.stubgen', '-m', 'scaluq.scaluq_core', '-o', './stub/scaluq.py'])
+subprocess.run([sys.executable, '-m', 'nanobind.stubgen', '-m', 'scaluq.scaluq_core', '-o', './stub/scaluq/__init__.py'])
+subprocess.run([sys.executable, '-m', 'nanobind.stubgen', '-m', 'scaluq.scaluq_core.gate', '-o', './stub/scaluq/gate.py'])
 
 project = 'scaluq'
 copyright = '2024, Fuji Lab.'
@@ -19,7 +20,7 @@ autoapi_type = "python"
 autoapi_keep_files = True
 
 autoapi_file_patterns = ["*.py"]
-autoapi_dirs = ["./stub"]
+autoapi_dirs = ["./stub/scaluq"]
 autoapi_add_toctree_entry = True
 
 autoapi_python_class_content = 'both'

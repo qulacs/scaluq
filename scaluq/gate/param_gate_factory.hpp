@@ -13,7 +13,7 @@ public:
     }
 };
 }  // namespace internal
-
+namespace gate {
 inline ParamGate PRX(UINT target, double pcoef = 1.) {
     return internal::ParamGateFactory::create_gate<internal::PRXGateImpl>(target, pcoef);
 }
@@ -26,4 +26,5 @@ inline ParamGate PRZ(UINT target, double pcoef = 1.) {
 inline ParamGate PPauliRotation(const PauliOperator& pauli, double pcoef = 1.) {
     return internal::ParamGateFactory::create_gate<internal::PPauliRotationGateImpl>(pauli, pcoef);
 }
+}  // namespace gate
 }  // namespace scaluq

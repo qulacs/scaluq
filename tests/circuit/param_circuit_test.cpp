@@ -35,16 +35,16 @@ TEST(ParamCircuitTest, ApplyParamCircuit) {
                 UINT pidx = random.int32() % nparams;
                 if (param_gate_kind == 0) {
                     UINT target = random.int32() % n_qubits;
-                    circuit.add_gate(RX(target, coef * params[pidx]));
-                    pcircuit.add_param_gate(PRX(target, coef), pkeys[pidx]);
+                    circuit.add_gate(gate::RX(target, coef * params[pidx]));
+                    pcircuit.add_param_gate(gate::PRX(target, coef), pkeys[pidx]);
                 } else if (param_gate_kind == 1) {
                     UINT target = random.int32() % n_qubits;
-                    circuit.add_gate(RY(target, coef * params[pidx]));
-                    pcircuit.add_param_gate(PRY(target, coef), pkeys[pidx]);
+                    circuit.add_gate(gate::RY(target, coef * params[pidx]));
+                    pcircuit.add_param_gate(gate::PRY(target, coef), pkeys[pidx]);
                 } else if (param_gate_kind == 2) {
                     UINT target = random.int32() % n_qubits;
-                    circuit.add_gate(RZ(target, coef * params[pidx]));
-                    pcircuit.add_param_gate(PRZ(target, coef), pkeys[pidx]);
+                    circuit.add_gate(gate::RZ(target, coef * params[pidx]));
+                    pcircuit.add_param_gate(gate::PRZ(target, coef), pkeys[pidx]);
                 } else {
                     std::vector<UINT> target_vec, pauli_id_vec;
                     for (UINT target = 0; target < n_qubits; target++) {
@@ -52,15 +52,15 @@ TEST(ParamCircuitTest, ApplyParamCircuit) {
                         pauli_id_vec.emplace_back(random.int64() % 4);
                     }
                     PauliOperator pauli(target_vec, pauli_id_vec, 1.0);
-                    circuit.add_gate(PauliRotation(pauli, coef * params[pidx]));
-                    pcircuit.add_param_gate(PPauliRotation(pauli, coef), pkeys[pidx]);
+                    circuit.add_gate(gate::PauliRotation(pauli, coef * params[pidx]));
+                    pcircuit.add_param_gate(gate::PPauliRotation(pauli, coef), pkeys[pidx]);
                 }
             } else {
                 UINT control = random.int32() % n_qubits;
                 UINT target = random.int32() % (n_qubits - 1);
                 if (target == control) target = n_qubits - 1;
-                circuit.add_gate(CX(control, target));
-                pcircuit.add_gate(CX(control, target));
+                circuit.add_gate(gate::CX(control, target));
+                pcircuit.add_gate(gate::CX(control, target));
             }
         };
         for ([[maybe_unused]] UINT _ : std::views::iota(0ULL, 20ULL)) {
@@ -91,9 +91,9 @@ TEST(ParamCircuitTest, ApplyParamCircuit) {
 
 TEST(ParamCircuitTest, InsufficientParameterGiven) {
     Circuit circuit(1);
-    circuit.add_param_gate(PRX(0), "0");
-    circuit.add_param_gate(PRX(0), "1");
-    circuit.add_param_gate(PRX(0), "0");
+    circuit.add_param_gate(gate::PRX(0), "0");
+    circuit.add_param_gate(gate::PRX(0), "1");
+    circuit.add_param_gate(gate::PRX(0), "0");
     StateVector state(1);
     ASSERT_NO_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"1", 0}}));
     ASSERT_NO_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"1", 0}, {"2", 0}}));
