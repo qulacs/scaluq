@@ -565,18 +565,27 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(Pauli);
     DEF_GATE_FACTORY(PauliRotation);
 
-    mgate.def("Probablistic", [](nb::args args) {
-        std::vector<double> distribution;
-        std::vector<Gate> gate_list;
-        distribution.reserve(args.size());
-        gate_list.reserve(args.size());
-        for (auto &&elem : args) {
-            auto [prob, gate] = nb::cast<std::pair<double, Gate>>(elem);
-            distribution.push_back(prob);
-            gate_list.push_back(gate);
-        }
-        return gate::Probablistic(distribution, gate_list);
-    });
+    mgate.def(
+        "Probablistic",
+        [](const std::vector<double> &distribution, const std::vector<Gate> &gate_list) {
+            return gate::Probablistic(distribution, gate_list);
+        },
+        "General general Gate class instance of Probablistic.");
+    mgate.def(
+        "Probablistic",
+        [](const std::vector<std::pair<double, Gate>> &prob_gate_list) {
+            std::vector<double> distribution;
+            std::vector<Gate> gate_list;
+            distribution.reserve(prob_gate_list.size());
+            gate_list.reserve(prob_gate_list.size());
+            for (const auto &[prob, gate] : prob_gate_list) {
+                distribution.push_back(prob);
+                gate_list.push_back(gate);
+            }
+            return gate::Probablistic(distribution, gate_list);
+        },
+        "Generate general Gate class instance of Probablistic by passing probablity and kind of "
+        "each gate with list[tuple[float, Gate]])].");
 
     nb::enum_<ParamGateType>(m, "ParamGateType", "Enum of ParamGate Type.")
         .value("PRX", ParamGateType::PRX)
@@ -656,6 +665,19 @@ NB_MODULE(scaluq_core, m) {
               "Specific class of parametric multi-qubit pauli-rotation gate, represented as "
               "$e^{-i\\frac{\\mathrm{angle}}{2}P}$. `angle` is given as `param * pcoef`.");
 
+    DEF_PGATE(PProbablisticGate,
+              "Specific class of parametric probablistic gate. The gate to apply is picked from a "
+              "cirtain "
+              "distribution.")
+        .def(
+            "gate_list",
+            [](const PProbablisticGate &gate) { return gate->gate_list(); },
+            nb::rv_policy::reference)
+        .def(
+            "distribution",
+            [](const PProbablisticGate &gate) { return gate->distribution(); },
+            nb::rv_policy::reference);
+
     mgate.def("PRX",
               &gate::PRX,
               "Generate general ParamGate class instance of PRX.",
@@ -676,6 +698,27 @@ NB_MODULE(scaluq_core, m) {
               "Generate general ParamGate class instance of PPauliRotation.",
               "pauli"_a,
               "coef"_a = 1.);
+    mgate.def(
+        "PProbablistic",
+        [](const std::vector<double> &distribution,
+           const std::vector<std::variant<Gate, ParamGate>> &gate_list) {
+            return gate::PProbablistic(distribution, gate_list);
+        },
+        "Generate general ParamGate class instance of PProbablistic.");
+    mgate.def(
+        "PProbablistic",
+        [](const std::vector<std::pair<double, std::variant<Gate, ParamGate>>> &prob_gate_list) {
+            std::vector<double> distribution;
+            std::vector<std::variant<Gate, ParamGate>> gate_list;
+            distribution.reserve(prob_gate_list.size());
+            gate_list.reserve(prob_gate_list.size());
+            for (const auto &[prob, gate] : prob_gate_list) {
+                distribution.push_back(prob);
+                gate_list.push_back(gate);
+            }
+            return gate::PProbablistic(distribution, gate_list);
+        },
+        "Generate general ParamGate class instance of PProbablistic.");
 
     nb::class_<Circuit>(m, "Circuit", "Quantum circuit represented as gate array")
         .def(nb::init<UINT>(), "Initialize empty circuit of specified qubits.")
