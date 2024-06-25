@@ -111,18 +111,24 @@ Complex Operator::get_expectation_value(const StateVector& state_vector) const {
     UINT dim = state_vector.dim();
     Complex res;
     Kokkos::parallel_reduce(
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {nterms, dim}),
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {nterms, dim >> 1}),
         KOKKOS_LAMBDA(UINT term_id, UINT state_idx, Complex & res_lcl) {
             UINT bit_flip_mask = bmasks[term_id];
             UINT phase_flip_mask = pmasks[term_id];
             Complex coef = coefs[term_id];
             if (bit_flip_mask == 0) {
-                double tmp =
-                    (Kokkos::conj(state_vector._raw[state_idx]) * state_vector._raw[state_idx])
+                UINT state_idx1 = state_idx << 1;
+                double tmp1 =
+                    (Kokkos::conj(state_vector._raw[state_idx1]) * state_vector._raw[state_idx1])
                         .real();
-                if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
-                res_lcl += coef * tmp;
-            } else if (state_idx < (dim >> 1)) {
+                if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
+                UINT state_idx2 = state_idx1 | 1;
+                double tmp2 =
+                    (Kokkos::conj(state_vector._raw[state_idx2]) * state_vector._raw[state_idx2])
+                        .real();
+                if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
+                res_lcl += coef * (tmp1 + tmp2);
+            } else {
                 UINT pivot = sizeof(UINT) * 8 - Kokkos::countl_zero(bit_flip_mask) - 1;
                 UINT global_phase_90rot_count = Kokkos::popcount(bit_flip_mask & phase_flip_mask);
                 Complex global_phase = PHASE_90ROT().val[global_phase_90rot_count % 4];
@@ -174,16 +180,21 @@ Complex Operator::get_transition_amplitude(const StateVector& state_vector_bra,
     UINT dim = state_vector_bra.dim();
     Complex res;
     Kokkos::parallel_reduce(
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {nterms, dim}),
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {nterms, dim >> 1}),
         KOKKOS_LAMBDA(UINT term_id, UINT state_idx, Complex & res_lcl) {
             UINT bit_flip_mask = bmasks[term_id];
             UINT phase_flip_mask = pmasks[term_id];
             Complex coef = coefs[term_id];
             if (bit_flip_mask == 0) {
-                Complex tmp = (Kokkos::conj(state_vector_bra._raw[state_idx]) *
-                               state_vector_ket._raw[state_idx]);
-                if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
-                res_lcl += coef * tmp;
+                UINT state_idx1 = state_idx << 1;
+                Complex tmp1 = (Kokkos::conj(state_vector_bra._raw[state_idx1]) *
+                                state_vector_ket._raw[state_idx1]);
+                if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
+                UINT state_idx2 = state_idx1 | 1;
+                Complex tmp2 = (Kokkos::conj(state_vector_bra._raw[state_idx2]) *
+                                state_vector_ket._raw[state_idx2]);
+                if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
+                res_lcl += coef * (tmp1 + tmp2);
             } else if (state_idx < (dim >> 1)) {
                 UINT pivot = sizeof(UINT) * 8 - Kokkos::countl_zero(bit_flip_mask) - 1;
                 UINT global_phase_90rot_count = Kokkos::popcount(bit_flip_mask & phase_flip_mask);
