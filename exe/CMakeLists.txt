@@ -7,7 +7,6 @@ function(exe name)
         Eigen3::Eigen
         Kokkos::kokkos
         Kokkos::kokkoskernels
-        GTest::gtest_main
     )
     target_include_directories(${name} PRIVATE ${PROJECT_SOURCE_DIR}/scaluq)
 endfunction()

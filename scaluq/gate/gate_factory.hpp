@@ -115,4 +115,5 @@ inline Gate DenseMatrix(const DensityMatrix& matrix,
     return internal::GateFactory::create_gate<internal::DensityMatrixGateImpl>(
         matrix, target_qubit_list, control_qubit_list);
 }
+}  // namespace gate
 }  // namespace scaluq
