@@ -85,7 +85,10 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         single_qubit_dense_matrix_gate(_target, _matrix, state_vector);
     }
-    void update_quantum_state(StateVectorBatched& states) const override {}
+    void update_quantum_state(StateVectorBatched& states) const override {
+        check_qubit_within_bounds(states, this->_target);
+        single_qubit_dense_matrix_gate(_target, _matrix, states);
+    }
 };
 
 class TwoQubitMatrixGateImpl : public TwoQubitGateBase {
@@ -139,7 +142,11 @@ public:
         check_qubit_within_bounds(state_vector, this->_target2);
         double_qubit_dense_matrix_gate(_target1, _target2, _matrix, state_vector);
     }
-    void update_quantum_state(StateVectorBatched& states) const override {}
+    void update_quantum_state(StateVectorBatched& states) const override {
+        check_qubit_within_bounds(states, this->_target1);
+        check_qubit_within_bounds(states, this->_target2);
+        double_qubit_dense_matrix_gate(_target1, _target2, _matrix, states);
+    }
 };
 
 class CrsMatrixGateImpl : public GateBase {
@@ -203,7 +210,7 @@ public:
         default_lno_t numRows = _matrix.numRows();
         default_lno_t numCols = _matrix.numCols();
         ComplexMatrix mat(numRows, numCols);
-        Kokkos::parallel_for(numRows, [&](const default_lno_t i) {
+        Kokkos::parallel_for(numRows, [&] __host__ __device__(const default_lno_t i) {
             for (default_size_type idx = _matrix.graph.row_map(i);
                  idx < _matrix.graph.row_map(i + 1);
                  ++idx) {
@@ -227,28 +234,64 @@ public:
             create_sorted_ui_list(this->get_control_qubit_list());
         const UINT loop_dim = state_vector.dim() >> target_qubit_index_count;
 
-        for (UINT state_index = 0; state_index < loop_dim; ++state_index) {
-            UINT basis_0 = state_index;
-            // create base index
-            for (UINT cursor = 0; cursor < target_qubit_index_count; ++cursor) {
-                UINT insert_index = sorted_insert_index_list[cursor];
-                basis_0 = insert_zero_to_basis_index(basis_0, 1ULL << insert_index, insert_index);
-            }
+        Kokkos::parallel_for(
+            Kokkos::TeamPolicy<>(loop_dim, Kokkos::AUTO()),
+            KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team) {
+                UINT basis_0 = team.league_rank();
+                for (UINT cursor = 0; cursor < target_qubit_index_count; ++cursor) {
+                    basis_0 = insert_zero_to_basis_index(basis_0,
+                                                         1ULL << sorted_insert_index_list[cursor],
+                                                         sorted_insert_index_list[cursor]);
+                }
 
-            // fetch vector
-            for (UINT j = 0; j < matrix_dim; ++j) {
-                buffer1[j] = state[basis_0 ^ matrix_mask_list[j]];
-            }
+                Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim),
+                                     [&] __host__ __device__(const UINT j) {
+                                         buffer1(j) = state(basis_0 ^ matrix_mask_list[j]);
+                                     });
 
-            spmv(_matrix, buffer1, buffer2);
+                spmv(_matrix, buffer1, buffer2);
 
-            for (UINT j = 0; j < matrix_dim; ++j) {
-                state[basis_0 ^ matrix_mask_list[j]] = buffer2[j];
-            }
-        }
+                Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim),
+                                     [&] __host__ __device__(const UINT j) {
+                                         state(basis_0 ^ matrix_mask_list[j]) = buffer2(j);
+                                     });
+            });
     }
-    void update_quantum_state(StateVectorBatched& states) const override {}
-};
+    void update_quantum_state(StateVectorBatched& states) const override {
+        const UINT target_qubit_index_count = target_qubit_info_list.size();
+        const UINT matrix_dim = 1ULL << target_qubit_index_count;
+        const std::vector<UINT> matrix_mask_list =
+            create_matrix_mask_list(this->get_control_qubit_list(), target_qubit_index_count);
+        const std::vector<UINT> sorted_insert_index_list =
+            create_sorted_ui_list(this->get_control_qubit_list());
+        const UINT loop_dim = state_vector.dim() >> target_qubit_index_count;
+
+        Kokkos::parallel_for(
+            Kokkos::TeamPolicy<>(loop_dim, Kokkos::AUTO()),
+            KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team) {
+                auto buffer1 = Kokkos::View<Complex*>("buffer1", matrix_dim);
+                auto buffer2 = Kokkos::View<Complex*>("buffer2", matrix_dim);
+                UINT basis_0 = team.league_rank();
+                for (UINT cursor = 0; cursor < target_qubit_index_count; ++cursor) {
+                    basis_0 = insert_zero_to_basis_index(basis_0,
+                                                         1ULL << sorted_insert_index_list[cursor],
+                                                         sorted_insert_index_list[cursor]);
+                }
+
+                Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim),
+                                     [&] __host__ __device__(const UINT j) {
+                                         buffer1[j] = states._raw[basis_0 ^ matrix_mask_list[j]];
+                                     });
+
+                spmv(_matrix, buffer1, buffer2);
+
+                Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim),
+                                     [&] __host__ __device__(const UINT j) {
+                                         states._raw[basis_0 ^ matrix_mask_list[j]] = buffer2[j];
+                                     });
+            });
+    }
+}
 
 class DensityMatrixGateImpl : public GateBase {
     DensityMatrix _matrix;
@@ -314,7 +357,7 @@ public:
         DensityMatrix mat("matrix", _matrix.extent(0), _matrix.extent(1));
         Kokkos::MDRangePolicy<Kokkos::Rank<2>> md_range_policy(
             {0, 0}, {static_cast<int>(mat.extent(0)), static_cast<int>(mat.extent(1))});
-        Kokkos::parallel_for(md_range_policy, [&](const int i, const int j) {
+        Kokkos::parallel_for(md_range_policy, [&] __host__ __device__(const int i, const int j) {
             mat(i, j) = (StdComplex)Kokkos::conj(_matrix(j, i));
         });
         return mat;
@@ -323,7 +366,7 @@ public:
         ComplexMatrix mat(_matrix.extent(0), _matrix.extent(1));
         Kokkos::MDRangePolicy<Kokkos::Rank<2>> md_range_policy(
             {0, 0}, {static_cast<int>(_matrix.extent(0)), static_cast<int>(_matrix.extent(1))});
-        Kokkos::parallel_for(md_range_policy, [&](const int i, const int j) {
+        Kokkos::parallel_for(md_range_policy, [&] __host__ __device__(const int i, const int j) {
             mat(i, j) = (StdComplex)_matrix(i, j);
         });
         if (_adjoint_flag) {
@@ -662,19 +705,20 @@ inline void multi_qubit_control_multi_qubit_dense_matrix_gate(
                 basis_0 = insert_zero_to_basis_index(basis_0, 1ULL << insert_index, insert_index);
             }
             basis_0 ^= control_mask;
-            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim), [&](const UINT y) {
-                buffer[y] = 0;
-                Complex sum = 0;
-                Kokkos::parallel_reduce(
-                    Kokkos::ThreadVectorRange(team, matrix_dim),
-                    [&](const UINT x, Complex& inner_sum) {
-                        inner_sum += matrix(y, x) * state._raw[basis_0 ^ matrix_mask_list[x]];
-                    },
-                    sum);
-                buffer[y] = sum;
-            });
+            Kokkos::parallel_for(
+                Kokkos::TeamThreadRange(team, matrix_dim), [&] __host__ __device__(const UINT y) {
+                    buffer[y] = 0;
+                    Complex sum = 0;
+                    Kokkos::parallel_reduce(
+                        Kokkos::ThreadVectorRange(team, matrix_dim),
+                        [&] __host__ __device__(const UINT x, Complex& inner_sum) {
+                            inner_sum += matrix(y, x) * state._raw[basis_0 ^ matrix_mask_list[x]];
+                        },
+                        sum);
+                    buffer[y] = sum;
+                });
 
-            Kokkos::parallel_for("update_state", matrix_dim, [&](const UINT y) {
+            Kokkos::parallel_for("update_state", matrix_dim, [&] __host__ __device__(const UINT y) {
                 state._raw[basis_0 ^ matrix_mask_list[y]] = buffer[y];
             });
         });
@@ -705,19 +749,20 @@ inline void multi_qubit_dense_matrix_gate_parallel(const std::vector<UINT>& targ
                           ((basis_0 & (~mask_array_view[cursor])) << 1);
             }
 
-            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim), [&](const UINT y) {
-                buffer[y] = 0;
-                Complex sum = 0;
-                Kokkos::parallel_reduce(
-                    Kokkos::ThreadVectorRange(team, matrix_dim),
-                    [&](const UINT x, Complex& inner_sum) {
-                        inner_sum += matrix(y, x) * state._raw[basis_0 ^ matrix_mask_list[x]];
-                    },
-                    sum);
-                buffer[y] = sum;
-            });
+            Kokkos::parallel_for(
+                Kokkos::TeamThreadRange(team, matrix_dim), [&] __host__ __device__(const UINT y) {
+                    buffer[y] = 0;
+                    Complex sum = 0;
+                    Kokkos::parallel_reduce(
+                        Kokkos::ThreadVectorRange(team, matrix_dim),
+                        [&](const UINT x, Complex& inner_sum) {
+                            inner_sum += matrix(y, x) * state._raw[basis_0 ^ matrix_mask_list[x]];
+                        },
+                        sum);
+                    buffer[y] = sum;
+                });
 
-            Kokkos::parallel_for("update_state", matrix_dim, [&](const UINT y) {
+            Kokkos::parallel_for("update_state", matrix_dim, [&] __host__ __device__(const UINT y) {
                 state._raw[basis_0 ^ matrix_mask_list[y]] = buffer[y];
             });
         });
