@@ -195,7 +195,7 @@ Complex Operator::get_transition_amplitude(const StateVector& state_vector_bra,
                                 state_vector_ket._raw[state_idx2]);
                 if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
                 res_lcl += coef * (tmp1 + tmp2);
-            } else if (state_idx < (dim >> 1)) {
+            } else {
                 UINT pivot = sizeof(UINT) * 8 - Kokkos::countl_zero(bit_flip_mask) - 1;
                 UINT global_phase_90rot_count = Kokkos::popcount(bit_flip_mask & phase_flip_mask);
                 Complex global_phase = PHASE_90ROT().val[global_phase_90rot_count % 4];
