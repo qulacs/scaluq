@@ -399,7 +399,7 @@ void run_random_gate_apply_single_dense(UINT n_qubits) {
             }
         }
         std::vector<UINT> control_list = {};
-        Gate dense_gate = DenseMatrix(mat_view, target_list, control_list);
+        Gate dense_gate = gate::DenseMatrix(mat_view, target_list, control_list);
         dense_gate->update_quantum_state(state);
         test_state = get_expanded_eigen_matrix_with_identity(target, U, n_qubits) * test_state;
         state_cp = state.amplitudes();
@@ -445,7 +445,7 @@ void run_random_gate_apply_general_dense(UINT n_qubits) {
             }
             std::vector<UINT> target_list = {targets[0]};
             std::vector<UINT> control_list = {};
-            Gate dense_gate = DenseMatrix(mat_view, target_list, control_list);
+            Gate dense_gate = gate::DenseMatrix(mat_view, target_list, control_list);
             dense_gate->update_quantum_state(state);
             state_cp = state.amplitudes();
             for (UINT i = 0; i < dim; i++) {
@@ -480,7 +480,7 @@ void run_random_gate_apply_general_dense(UINT n_qubits) {
             }
             std::vector<UINT> target_list = {targets[0], targets[1]};
             std::vector<UINT> control_list = {};
-            Gate dense_gate = DenseMatrix(mat_view, target_list, control_list);
+            Gate dense_gate = gate::DenseMatrix(mat_view, target_list, control_list);
             dense_gate->update_quantum_state(state);
             state_cp = state.amplitudes();
             for (UINT i = 0; i < dim; i++) {
@@ -519,7 +519,7 @@ void run_random_gate_apply_general_dense(UINT n_qubits) {
             }
             std::vector<UINT> target_list = {targets[0], targets[1], targets[2]};
             std::vector<UINT> control_list = {};
-            Gate dense_gate = DenseMatrix(mat_view, target_list, control_list);
+            Gate dense_gate = gate::DenseMatrix(mat_view, target_list, control_list);
             dense_gate->update_quantum_state(state);
             state_cp = state.amplitudes();
             for (UINT i = 0; i < dim; i++) {
