@@ -17,6 +17,15 @@ void swap_gate(UINT target0, UINT target1, StateVector& state) {
         });
     Kokkos::fence();
 }
-void swap_gate(UINT target0, UINT target1, StateVectorBatched& states) {}
+void swap_gate(UINT target0, UINT target1, StateVectorBatched& states) {
+    Kokkos::parallel_for(
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {states.batch_size(), states.dim() >> 2}),
+        KOKKOS_LAMBDA(UINT batch_id, UINT it) {
+            UINT basis = internal::insert_zero_to_basis_index(it, target0, target1);
+            Kokkos::Experimental::swap(states._raw(batch_id, basis | (1ULL << target0)),
+                                       states._raw(batch_id, basis | (1ULL << target1)));
+        });
+    Kokkos::fence();
+}
 }  // namespace internal
 }  // namespace scaluq

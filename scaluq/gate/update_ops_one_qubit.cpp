@@ -24,6 +24,7 @@ void x_gate(UINT target_qubit_index, StateVectorBatched& states) {
             Kokkos::Experimental::swap(states._raw(b, i),
                                        states._raw(b, i | (1ULL << target_qubit_index)));
         });
+    Kokkos::fence();
 }
 
 void y_gate(UINT target_qubit_index, StateVector& state) {
@@ -46,6 +47,7 @@ void y_gate(UINT target_qubit_index, StateVectorBatched& states) {
             Kokkos::Experimental::swap(states._raw(b, i),
                                        states._raw(b, i | (1ULL << target_qubit_index)));
         });
+    Kokkos::fence();
 }
 
 void z_gate(UINT target_qubit_index, StateVector& state) {
@@ -63,6 +65,7 @@ void z_gate(UINT target_qubit_index, StateVectorBatched& states) {
             UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
             states._raw(b, i | (1ULL << target_qubit_index)) *= Complex(-1, 0);
         });
+    Kokkos::fence();
 }
 
 void h_gate(UINT target_qubit_index, StateVector& state) {
@@ -74,6 +77,7 @@ void h_gate(UINT target_qubit_index, StateVector& state) {
             state._raw[i] = (cval0 + cval1) * INVERSE_SQRT2();
             state._raw[i | (1ULL << target_qubit_index)] = (cval0 - cval1) * INVERSE_SQRT2();
         });
+    Kokkos::fence();
 }
 void h_gate(UINT target_qubit_index, StateVectorBatched& states) {
     Kokkos::parallel_for(
@@ -103,6 +107,7 @@ void single_qubit_phase_gate(UINT target_qubit_index, Complex phase, StateVector
             UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
             states._raw(b, i | (1ULL << target_qubit_index)) *= phase;
         });
+    Kokkos::fence();
 }
 
 void s_gate(UINT target_qubit_index, StateVector& state) {
@@ -217,6 +222,7 @@ void single_qubit_diagonal_matrix_gate(UINT target_qubit_index,
         KOKKOS_LAMBDA(UINT b, UINT it) {
             states._raw(b, it) *= diag.val[(it >> target_qubit_index) & 1];
         });
+    Kokkos::fence();
 }
 
 void rz_gate(UINT target_qubit_index, double angle, StateVector& state) {

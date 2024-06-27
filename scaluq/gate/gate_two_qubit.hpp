@@ -37,7 +37,11 @@ public:
         check_qubit_within_bounds(state_vector, this->_target2);
         swap_gate(this->_target1, this->_target2, state_vector);
     }
-    void update_quantum_state(StateVectorBatched& states) const override {}
+    void update_quantum_state(StateVectorBatched& states) const override {
+        check_qubit_within_bounds(states, this->_target1);
+        check_qubit_within_bounds(states, this->_target2);
+        swap_gate(this->_target1, this->_target2, states);
+    }
 };
 }  // namespace internal
 
