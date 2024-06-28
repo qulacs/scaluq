@@ -39,6 +39,14 @@ KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
     return ((basis_index >> uidx) << (uidx + 1)) | (basis_index & umask);
 }
 
+KOKKOS_INLINE_FUNCTION matrix_2_2 matrix_multiply(const matrix_2_2& matrix1,
+                                                  const matrix_2_2& matrix2) {
+    return {matrix1.val[0][0] * matrix2.val[0][0] + matrix1.val[0][1] * matrix2.val[1][0],
+            matrix1.val[0][0] * matrix2.val[0][1] + matrix1.val[0][1] * matrix2.val[1][1],
+            matrix1.val[1][0] * matrix2.val[0][0] + matrix1.val[1][1] * matrix2.val[1][0],
+            matrix1.val[1][0] * matrix2.val[0][1] + matrix1.val[1][1] * matrix2.val[1][1]};
+}
+
 inline std::optional<ComplexMatrix> get_pauli_matrix(PauliOperator pauli) {
     ComplexMatrix mat;
     std::vector<UINT> pauli_id_list = pauli.get_pauli_id_list();
