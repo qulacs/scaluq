@@ -149,9 +149,21 @@ TEST(OperatorTest, ApplyToStateTest) {
         return tmp;
     }());
 
-    PauliOperator op(std::vector<bool>{1, 0, 0}, std::vector<bool>{0, 1, 0}, Complex(2));
+    Operator op(n_qubits);
+    op.add_operator({std::vector<bool>{1, 0, 0}, std::vector<bool>{0, 1, 0}, Complex(2)});
+    op.add_operator({"X 2 Y 1", 1});
     op.apply_to_state(state_vector);
-    std::vector<Complex> expected = {2, 0, -6, -4, 10, 8, -14, -12};
+
+    std::vector<Complex> expected = {
+        Complex(2, -6),
+        Complex(0, -7),
+        Complex(-6, 4),
+        Complex(-4, 5),
+        Complex(10, -2),
+        Complex(8, -3),
+        Complex(-14, 0),
+        Complex(-12, 1),
+    };
     ASSERT_EQ(state_vector.amplitudes(), expected);
 }
 

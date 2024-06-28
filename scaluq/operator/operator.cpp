@@ -74,7 +74,7 @@ void Operator::apply_to_state(StateVector& state_vector) const {
         term.apply_to_state(tmp);
         res.add_state_vector(tmp);
     }
-    state_vector = res.copy();
+    state_vector = res;
 }
 
 Complex Operator::get_expectation_value(const StateVector& state_vector) const {
