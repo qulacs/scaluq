@@ -5,6 +5,7 @@
 #include "gate_one_control_one_target.hpp"
 #include "gate_one_qubit.hpp"
 #include "gate_pauli.hpp"
+#include "gate_probablistic.hpp"
 #include "gate_two_qubit.hpp"
 #include "gate_zero_qubit.hpp"
 
@@ -102,6 +103,11 @@ inline Gate Pauli(const PauliOperator& pauli) {
 }
 inline Gate PauliRotation(const PauliOperator& pauli, double angle) {
     return internal::GateFactory::create_gate<internal::PauliRotationGateImpl>(pauli, angle);
+}
+inline Gate Probablistic(const std::vector<double>& distribution,
+                         const std::vector<Gate>& gate_list) {
+    return internal::GateFactory::create_gate<internal::ProbablisticGateImpl>(distribution,
+                                                                              gate_list);
 }
 }  // namespace gate
 }  // namespace scaluq
