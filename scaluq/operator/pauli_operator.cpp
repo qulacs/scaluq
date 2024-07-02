@@ -254,9 +254,4 @@ PauliOperator PauliOperator::operator*(const PauliOperator& target) const {
                          _coef * target._coef * PHASE_90ROT().val[extra_90rot_cnt]);
 }
 
-PauliOperator& PauliOperator::operator*=(const PauliOperator& target) {
-    *this = *this * target;
-    return *this;
-};
-
 }  // namespace scaluq

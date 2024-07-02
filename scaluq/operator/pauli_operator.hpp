@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string_view>
 #include <vector>
 
@@ -10,15 +11,14 @@
 namespace scaluq {
 class PauliOperator {
     friend class Operator;
+    friend class PauliOperatorFactory;
 
     std::vector<UINT> _target_qubit_list, _pauli_id_list;
     Complex _coef;
     internal::BitVector _bit_flip_mask, _phase_flip_mask;
 
-public:
-    static constexpr UINT I = 0, X = 1, Y = 2, Z = 3;
-
-    explicit PauliOperator(Complex coef = 1.);
+private:
+    explicit PauliOperator(Complex coef = 1.) : _coef(coef) {}
     PauliOperator(std::string_view pauli_string, Complex coef = 1.);
     PauliOperator(const std::vector<UINT>& target_qubit_list,
                   const std::vector<UINT>& pauli_id_list,
@@ -27,6 +27,11 @@ public:
     PauliOperator(const std::vector<bool>& bit_flip_mask,
                   const std::vector<bool>& phase_flip_mask,
                   Complex coef);
+    void add_single_pauli(UINT target_qubit, UINT pauli_id);
+
+public:
+    static constexpr UINT I = 0, X = 1, Y = 2, Z = 3;
+
     [[nodiscard]] inline Complex get_coef() const { return _coef; }
     [[nodiscard]] inline const std::vector<UINT>& get_target_qubit_list() const {
         return _target_qubit_list;
@@ -47,9 +52,6 @@ public:
         return std::ranges::max(_target_qubit_list) + 1;
     }
 
-    inline void change_coef(Complex new_coef) { _coef = new_coef; }
-    void add_single_pauli(UINT target_qubit, UINT pauli_id);
-
     void apply_to_state(StateVector& state_vector) const;
 
     [[nodiscard]] Complex get_expectation_value(const StateVector& state_vector) const;
@@ -57,14 +59,50 @@ public:
                                                    const StateVector& state_vector_ket) const;
 
     [[nodiscard]] PauliOperator operator*(const PauliOperator& target) const;
-    PauliOperator& operator*=(const PauliOperator& target);
-
-    inline PauliOperator& operator*=(Complex target) {
-        _coef *= target;
-        return *this;
-    };
     [[nodiscard]] inline PauliOperator operator*(Complex target) const {
         return PauliOperator(*this) * target;
+    }
+};
+
+class PauliOperatorFactory {
+public:
+    static std::shared_ptr<PauliOperator> create_pauli_operator(Complex coef = 1.) {
+        return std::make_shared<PauliOperator>(coef);
+    }
+
+    static std::shared_ptr<PauliOperator> create_pauli_operator(std::string_view pauli_string,
+                                                                Complex coef = 1.) {
+        return std::make_shared<PauliOperator>(pauli_string, coef);
+    }
+
+    static std::shared_ptr<PauliOperator> create_pauli_operator(
+        const std::vector<UINT>& target_qubit_list,
+        const std::vector<UINT>& pauli_id_list,
+        Complex coef = 1.) {
+        return std::make_shared<PauliOperator>(target_qubit_list, pauli_id_list, coef);
+    }
+
+    static std::shared_ptr<PauliOperator> create_pauli_operator(
+        const std::vector<UINT>& pauli_id_par_qubit, Complex coef = 1.) {
+        return std::make_shared<PauliOperator>(pauli_id_par_qubit, coef);
+    }
+
+    static std::shared_ptr<PauliOperator> create_pauli_operator(
+        const std::vector<bool>& bit_flip_mask,
+        const std::vector<bool>& phase_flip_mask,
+        Complex coef) {
+        return std::make_shared<PauliOperator>(bit_flip_mask, phase_flip_mask, coef);
+    }
+
+    static std::shared_ptr<PauliOperator> create_random_pauli_operator(UINT n_qubits, UINT seed) {
+        Random random(seed);
+        std::vector<UINT> target_qubit_list(n_qubits), pauli_id_list(n_qubits);
+        for (UINT qubit_idx = 0; qubit_idx < n_qubits; qubit_idx++) {
+            target_qubit_list[qubit_idx] = qubit_idx;
+            pauli_id_list[qubit_idx] = random.int32() & 0b11;
+        }
+        Complex coef = random.uniform() * 2. - 1.;
+        return std::make_shared<PauliOperator>(target_qubit_list, pauli_id_list, coef);
     }
 };
 
