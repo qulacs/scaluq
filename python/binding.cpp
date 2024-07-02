@@ -486,7 +486,7 @@ NB_MODULE(scaluq_core, m) {
     DEF_TWO_QUBIT_GATE(TwoQubitMatrixGate, "Specific class of double-qubit dense matrix gate.")
         .def(
             "matrix",
-            [](const TwoQubitMatrixGate &gate) { gate->matrix(); },
+            [](const TwoQubitMatrixGate &gate) { return gate->matrix(); },
             "Get property `matrix`.");
 
     DEF_GATE(FusedSwapGate,
@@ -543,6 +543,7 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(U1);
     DEF_GATE_FACTORY(U2);
     DEF_GATE_FACTORY(U3);
+    DEF_GATE_FACTORY(OneQubitMatrix);
     DEF_GATE_FACTORY(CX);
     mgate.def("CNot",
               &gate::CX,
@@ -550,8 +551,14 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(CZ);
     DEF_GATE_FACTORY(Swap);
     DEF_GATE_FACTORY(FusedSwap);
+    DEF_GATE_FACTORY(TwoQubitMatrix);
     DEF_GATE_FACTORY(Pauli);
     DEF_GATE_FACTORY(PauliRotation);
+    mgate.def("DenseMatrix",
+              &gate::DenseMatrix,
+              "Generate general Gate class instance of DenseMatrix. IGate, OneQubitMatrixGate or "
+              "TwoQubitMatrixGate correspond to len(target) is created. The case len(target) >= 3 "
+              "is currently not supported.");
 
     nb::enum_<ParamGateType>(m, "ParamGateType", "Enum of ParamGate Type.")
         .value("PRX", ParamGateType::PRX)
