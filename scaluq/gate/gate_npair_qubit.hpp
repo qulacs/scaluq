@@ -35,7 +35,6 @@ public:
     }
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
-    Gate copy() const override { return std::make_shared<FusedSwapGateImpl>(*this); }
     Gate get_inverse() const override { return std::make_shared<FusedSwapGateImpl>(*this); }
     std::optional<ComplexMatrix> get_matrix() const override {
         const UINT pow2_nq = 1ULL << _block_size;

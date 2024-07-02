@@ -21,7 +21,6 @@ public:
     std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
-    ParamGate copy() const override { return std::make_shared<PPauliRotationGateImpl>(*this); }
     ParamGate get_inverse() const override {
         return std::make_shared<PPauliRotationGateImpl>(_pauli, -_pcoef);
     }

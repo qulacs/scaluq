@@ -307,10 +307,6 @@ NB_MODULE(scaluq_core, m) {
             [](const GATE_TYPE &gate) { return gate->get_control_qubit_list(); },        \
             "Get control qubits as `list[int]`.")                                        \
         .def(                                                                            \
-            "copy",                                                                      \
-            [](const GATE_TYPE &gate) { return gate->copy(); },                          \
-            "Copy gate as `Gate` type.")                                                 \
-        .def(                                                                            \
             "get_inverse",                                                               \
             [](const GATE_TYPE &gate) { return gate->get_inverse(); },                   \
             "Generate inverse gate as `Gate` type. If not exists, return None.")         \
@@ -572,10 +568,6 @@ NB_MODULE(scaluq_core, m) {
             "get_control_qubit_list",                                                             \
             [](const PGATE_TYPE &param_gate) { return param_gate->get_control_qubit_list(); },    \
             "Get control qubits as `list[int]`.")                                                 \
-        .def(                                                                                     \
-            "copy",                                                                               \
-            [](const PGATE_TYPE &param_gate) { return param_gate->copy(); },                      \
-            "Copy gate as `ParamGate` type.")                                                     \
         .def(                                                                                     \
             "get_inverse",                                                                        \
             [](const PGATE_TYPE &param_gate) { return param_gate->get_inverse(); },               \

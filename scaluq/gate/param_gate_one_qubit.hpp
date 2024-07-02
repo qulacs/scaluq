@@ -24,7 +24,6 @@ class PRXGateImpl : public POneQubitGateBase {
 public:
     PRXGateImpl(UINT target, double pcoef = 1.) : POneQubitGateBase(target, pcoef){};
 
-    ParamGate copy() const override { return std::make_shared<PRXGateImpl>(*this); }
     ParamGate get_inverse() const override {
         return std::make_shared<PRXGateImpl>(_target, -_pcoef);
     }
@@ -46,7 +45,6 @@ class PRYGateImpl : public POneQubitGateBase {
 public:
     PRYGateImpl(UINT target, double pcoef) : POneQubitGateBase(target, pcoef){};
 
-    ParamGate copy() const override { return std::make_shared<PRYGateImpl>(*this); }
     ParamGate get_inverse() const override {
         return std::make_shared<PRYGateImpl>(_target, -_pcoef);
     }
@@ -67,7 +65,6 @@ class PRZGateImpl : public POneQubitGateBase {
 public:
     PRZGateImpl(UINT target, double pcoef) : POneQubitGateBase(target, pcoef){};
 
-    ParamGate copy() const override { return std::make_shared<PRZGateImpl>(*this); }
     ParamGate get_inverse() const override {
         return std::make_shared<PRZGateImpl>(_target, -_pcoef);
     }

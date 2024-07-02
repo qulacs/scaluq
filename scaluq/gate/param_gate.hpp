@@ -51,7 +51,6 @@ public:
     [[nodiscard]] virtual std::vector<UINT> get_target_qubit_list() const = 0;
     [[nodiscard]] virtual std::vector<UINT> get_control_qubit_list() const = 0;
 
-    [[nodiscard]] virtual ParamGate copy() const = 0;
     [[nodiscard]] virtual ParamGate get_inverse() const = 0;
     [[nodiscard]] virtual std::optional<ComplexMatrix> get_matrix(double param) const = 0;
 

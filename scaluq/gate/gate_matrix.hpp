@@ -27,7 +27,6 @@ public:
         return {_matrix.val[0][0], _matrix.val[0][1], _matrix.val[1][0], _matrix.val[1][1]};
     }
 
-    Gate copy() const override { return std::make_shared<OneQubitMatrixGateImpl>(*this); }
     Gate get_inverse() const override {
         return std::make_shared<OneQubitMatrixGateImpl>(
             _target,
@@ -74,7 +73,6 @@ public:
         return matrix;
     }
 
-    Gate copy() const override { return std::make_shared<TwoQubitMatrixGateImpl>(*this); }
     Gate get_inverse() const override {
         std::array<std::array<Complex, 4>, 4> matrix_dag;
         for (UINT i : std::views::iota(4)) {

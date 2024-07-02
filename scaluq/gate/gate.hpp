@@ -123,14 +123,13 @@ constexpr GateType get_gate_type() {
 }
 
 namespace internal {
-class GateBase {
+class GateBase : std::enable_shared_from_this<GateBase> {
 public:
     virtual ~GateBase() = default;
 
     [[nodiscard]] virtual std::vector<UINT> get_target_qubit_list() const = 0;
     [[nodiscard]] virtual std::vector<UINT> get_control_qubit_list() const = 0;
 
-    [[nodiscard]] virtual Gate copy() const = 0;
     [[nodiscard]] virtual Gate get_inverse() const = 0;
     [[nodiscard]] virtual std::optional<ComplexMatrix> get_matrix() const = 0;
 
