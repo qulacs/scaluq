@@ -547,10 +547,9 @@ inline void single_qubit_control_multi_qubit_dense_matrix_gate(
                 buffer[y] = sum;
             });
 
-            Kokkos::parallel_for(
-                "update_state", matrix_dim, KOKKOS_LAMBDA(const UINT y) {
-                    state._raw[basis_0 ^ matrix_mask_list[y]] = buffer[y];
-                });
+            Kokkos::parallel_for("update_state", matrix_dim, [=](const UINT y) {
+                state._raw[basis_0 ^ matrix_mask_list[y]] = buffer[y];
+            });
         });
     Kokkos::fence();
 }
@@ -678,10 +677,9 @@ inline void multi_qubit_control_multi_qubit_dense_matrix_gate(
             });
             team.team_barrier();
 
-            Kokkos::parallel_for(
-                "update_state", matrix_dim, KOKKOS_LAMBDA(UINT y) {
-                    state._raw[basis_0 ^ matrix_mask_list[y]] = buffer[y];
-                });
+            Kokkos::parallel_for("update_state", matrix_dim, [=](UINT y) {
+                state._raw[basis_0 ^ matrix_mask_list[y]] = buffer[y];
+            });
         });
 }
 
@@ -723,10 +721,9 @@ inline void multi_qubit_dense_matrix_gate_parallel(const std::vector<UINT>& targ
             });
             team.team_barrier();
 
-            Kokkos::parallel_for(
-                "update_state", matrix_dim, KOKKOS_LAMBDA(const UINT y) {
-                    state._raw[basis_0 ^ matrix_mask_list[y]] = buffer[y];
-                });
+            Kokkos::parallel_for("update_state", matrix_dim, [=](const UINT y) {
+                state._raw[basis_0 ^ matrix_mask_list[y]] = buffer[y];
+            });
         });
 }
 
