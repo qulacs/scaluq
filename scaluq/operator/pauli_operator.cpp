@@ -145,6 +145,10 @@ void PauliOperator::apply_to_state(StateVector& state_vector) const {
     Kokkos::fence();
 }
 
+void PauliOperator::apply_to_state(StateVectorBatched& states) const {
+    // TODO: implement
+}
+
 Complex PauliOperator::get_expectation_value(const StateVector& state_vector) const {
     if (state_vector.n_qubits() < get_qubit_count()) {
         throw std::runtime_error(
@@ -183,6 +187,9 @@ Complex PauliOperator::get_expectation_value(const StateVector& state_vector) co
         },
         res);
     return _coef * res;
+}
+Complex PauliOperator::get_expectation_value(const StateVectorBatched& states) const {
+    // TODO: implement
 }
 
 Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_bra,
@@ -231,6 +238,11 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
         res);
     Kokkos::fence();
     return _coef * res;
+}
+
+Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_bra,
+                                                const StateVectorBatched& states_ket) const {
+    // TODO: implement
 }
 
 PauliOperator PauliOperator::operator*(const PauliOperator& target) const {

@@ -51,10 +51,15 @@ public:
     void add_single_pauli(UINT target_qubit, UINT pauli_id);
 
     void apply_to_state(StateVector& state_vector) const;
+    void apply_to_state(StateVectorBatched& states) const;
 
     [[nodiscard]] Complex get_expectation_value(const StateVector& state_vector) const;
+    [[nodiscard]] Complex get_expectation_value(const StateVectorBatched& states) const;
+
     [[nodiscard]] Complex get_transition_amplitude(const StateVector& state_vector_bra,
                                                    const StateVector& state_vector_ket) const;
+    [[nodiscard]] Complex get_transition_amplitude(const StateVectorBatched& states_bra,
+                                                   const StateVectorBatched& states_ket) const;
 
     [[nodiscard]] PauliOperator operator*(const PauliOperator& target) const;
     PauliOperator& operator*=(const PauliOperator& target);

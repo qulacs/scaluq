@@ -37,7 +37,11 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         cx_gate(this->_control, this->_target, state_vector);
     }
-    void update_quantum_state(StateVectorBatched& states) const override {}
+    void update_quantum_state(StateVectorBatched& states) const override {
+        check_qubit_within_bounds(states, this->_control);
+        check_qubit_within_bounds(states, this->_target);
+        cx_gate(this->_control, this->_target, states);
+    }
 };
 
 class CZGateImpl : public OneControlOneTargetGateBase {
@@ -57,7 +61,11 @@ public:
         check_qubit_within_bounds(state_vector, this->_target);
         cz_gate(this->_control, this->_target, state_vector);
     }
-    void update_quantum_state(StateVectorBatched& states) const override {}
+    void update_quantum_state(StateVectorBatched& states) const override {
+        check_qubit_within_bounds(states, this->_control);
+        check_qubit_within_bounds(states, this->_target);
+        cz_gate(this->_control, this->_target, states);
+    }
 };
 }  // namespace internal
 
