@@ -571,3 +571,23 @@ TEST(GateTest, ApplyDensityMatrixGate) {
     run_random_gate_apply_single_dense(6);
     run_random_gate_apply_general_dense(6);
 }
+
+TEST(GateTest, ApplyProbablisticGate) {
+    auto probgate = gate::Probablistic({.1, .9}, {gate::X(0), gate::I()});
+    UINT x_cnt = 0, i_cnt = 0;
+    StateVector state(1);
+    for (auto _ : std::views::iota(0, 100)) {
+        UINT before = state.sampling(1)[0];
+        probgate->update_quantum_state(state);
+        UINT after = state.sampling(1)[0];
+        if (before != after) {
+            x_cnt++;
+        } else {
+            i_cnt++;
+        }
+    }
+    // These test is probablistic, but pass at least 99.99% cases.
+    ASSERT_GT(x_cnt, 0);
+    ASSERT_GT(i_cnt, 0);
+    ASSERT_LT(x_cnt, i_cnt);
+}
