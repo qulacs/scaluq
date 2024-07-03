@@ -201,15 +201,23 @@ public:
         default_lno_t numRows = _matrix.numRows();
         default_lno_t numCols = _matrix.numCols();
         ComplexMatrix mat(numRows, numCols);
-        Kokkos::parallel_for(numRows, [&](const default_lno_t i) {
-            for (default_size_type idx = _matrix.graph.row_map(i);
-                 idx < _matrix.graph.row_map(i + 1);
-                 ++idx) {
-                auto j = _matrix.graph.entries(idx);
-                auto val = _matrix.values(idx);
-                mat(i, j) = Kokkos::complex<double>(val.real(), val.imag());
-            }
-        });
+        Kokkos::View<Complex**,
+                     Kokkos::LayoutRight,
+                     Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+            mat_view(reinterpret_cast<Complex*>(mat.data()), numRows, numCols);
+        Kokkos::parallel_for(
+            "FillMatrix", numRows, KOKKOS_LAMBDA(const default_lno_t i) {
+                for (default_size_type idx = _matrix.graph.row_map(i);
+                     idx < _matrix.graph.row_map(i + 1);
+                     ++idx) {
+                    auto j = _matrix.graph.entries(idx);
+                    auto val = _matrix.values(idx);
+                    mat_view(i, j) = Kokkos::complex<double>(val.real(), val.imag());
+                }
+            });
+
+        Kokkos::fence();
         return mat;
     }
 
@@ -319,13 +327,23 @@ public:
         return mat;
     }
     std::optional<ComplexMatrix> get_matrix() const override {
-        ComplexMatrix mat(_matrix.extent(0), _matrix.extent(1));
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>> md_range_policy(
-            {0, 0}, {static_cast<int>(_matrix.extent(0)), static_cast<int>(_matrix.extent(1))});
-        Kokkos::parallel_for(md_range_policy, [&](const int i, const int j) {
-            auto val = _matrix(i, j);
-            mat(i, j) = Kokkos::complex<double>(val.real(), val.imag());
-        });
+        default_lno_t numRows = _matrix.extent(0);
+        default_lno_t numCols = _matrix.extent(1);
+        ComplexMatrix mat(numRows, numCols);
+        Kokkos::View<Complex**,
+                     Kokkos::LayoutRight,
+                     Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+            mat_view(reinterpret_cast<Complex*>(mat.data()), numRows, numCols);
+
+        Kokkos::parallel_for(
+            Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
+                {0, 0}, {static_cast<int>(numRows), static_cast<int>(numCols)}),
+            KOKKOS_LAMBDA(const int i, const int j) {
+                auto val = _matrix(i, j);
+                mat_view(i, j) = Kokkos::complex<double>(val.real(), val.imag());
+            });
+        Kokkos::fence();
         if (_adjoint_flag) {
             mat = mat.adjoint();
         }
@@ -547,9 +565,10 @@ inline void single_qubit_control_multi_qubit_dense_matrix_gate(
                 buffer[y] = sum;
             });
 
-            Kokkos::parallel_for("update_state", matrix_dim, [=](const UINT y) {
-                state._raw[basis_0 ^ matrix_mask_list[y]] = buffer[y];
-            });
+            Kokkos::parallel_for(
+                Kokkos::TeamThreadRange(team, matrix_dim), KOKKOS_LAMBDA(const UINT y) {
+                    state._raw[basis_0 ^ matrix_mask_list[y]] = buffer[y];
+                });
         });
     Kokkos::fence();
 }
@@ -677,9 +696,10 @@ inline void multi_qubit_control_multi_qubit_dense_matrix_gate(
             });
             team.team_barrier();
 
-            Kokkos::parallel_for("update_state", matrix_dim, [=](UINT y) {
-                state._raw[basis_0 ^ matrix_mask_list[y]] = buffer[y];
-            });
+            Kokkos::parallel_for(
+                Kokkos::TeamThreadRange(team, matrix_dim), KOKKOS_LAMBDA(const UINT y) {
+                    state._raw[basis_0 ^ matrix_mask_list[y]] = buffer[y];
+                });
         });
 }
 
@@ -721,9 +741,10 @@ inline void multi_qubit_dense_matrix_gate_parallel(const std::vector<UINT>& targ
             });
             team.team_barrier();
 
-            Kokkos::parallel_for("update_state", matrix_dim, [=](const UINT y) {
-                state._raw[basis_0 ^ matrix_mask_list[y]] = buffer[y];
-            });
+            Kokkos::parallel_for(
+                Kokkos::TeamThreadRange(team, matrix_dim), KOKKOS_LAMBDA(const UINT y) {
+                    state._raw[basis_0 ^ matrix_mask_list[y]] = buffer[y];
+                });
         });
 }
 
