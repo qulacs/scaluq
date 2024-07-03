@@ -207,16 +207,18 @@ public:
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>
             mat_view(reinterpret_cast<Complex*>(mat.data()), numRows, numCols);
         Kokkos::parallel_for(
-            "FillMatrix", numRows, KOKKOS_LAMBDA(const default_lno_t i) {
-                for (default_size_type idx = _matrix.graph.row_map(i);
-                     idx < _matrix.graph.row_map(i + 1);
-                     ++idx) {
-                    auto j = _matrix.graph.entries(idx);
-                    auto val = _matrix.values(idx);
-                    mat_view(i, j) = Kokkos::complex<double>(val.real(), val.imag());
-                }
+            Kokkos::TeamPolicy<>(numRows, Kokkos::AUTO()),
+            KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team) {
+                UINT i = team.league_rank();
+                UINT start_idx = _matrix.graph.row_map(i);
+                UINT end_idx = _matrix.graph.row_map(i + 1);
+                Kokkos::parallel_for(
+                    Kokkos::TeamThreadRange(team, start_idx, end_idx), [&](const UINT idx) {
+                        auto j = _matrix.graph.entries(idx);
+                        auto val = _matrix.values(idx);
+                        mat_view(i, j) = Kokkos::complex<double>(val.real(), val.imag());
+                    });
             });
-
         Kokkos::fence();
         return mat;
     }
@@ -249,6 +251,7 @@ public:
 
             spmv(_matrix, buffer1, buffer2);
 
+            // set result
             for (UINT j = 0; j < matrix_dim; ++j) {
                 state[basis_0 ^ matrix_mask_list[j]] = buffer2[j];
             }
