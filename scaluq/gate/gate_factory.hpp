@@ -109,7 +109,7 @@ inline Gate SparseMatrix(const CrsMatrix& matrix,
     return internal::GateFactory::create_gate<internal::CrsMatrixGateImpl>(
         matrix, target_qubit_list, control_qubit_list);
 }
-inline Gate DenseMatrix(const DensityMatrix& matrix,
+inline Gate DenseMatrix(const Matrix& matrix,
                         const std::vector<UINT>& target_qubit_list,
                         const std::vector<UINT>& control_qubit_list) {
     return internal::GateFactory::create_gate<internal::DensityMatrixGateImpl>(

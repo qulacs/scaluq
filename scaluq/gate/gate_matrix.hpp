@@ -16,37 +16,37 @@ namespace scaluq {
 namespace internal {
 
 void single_qubit_dense_matrix_gate_view(UINT target_qubit_index,
-                                         const DensityMatrix& matrix,
+                                         const Matrix& matrix,
                                          StateVector& state_vector);
 void double_qubit_dense_matrix_gate(UINT target_qubit_index1,
                                     UINT target_qubit_index2,
-                                    const DensityMatrix& matrix,
+                                    const Matrix& matrix,
                                     StateVector& state);
 void single_qubit_control_single_qubit_dense_matrix_gate(UINT control_qubit_index,
                                                          UINT control_value,
                                                          UINT target_qubit_index,
-                                                         const DensityMatrix& matrix,
+                                                         const Matrix& matrix,
                                                          StateVector& state_vector);
 void single_qubit_control_multi_qubit_dense_matrix_gate(
     UINT control_qubit_index,
     UINT control_value,
     const std::vector<UINT>& target_qubit_index_list,
-    const DensityMatrix& matrix,
+    const Matrix& matrix,
     StateVector& state);
 void multi_qubit_control_single_qubit_dense_matrix_gate(
     const std::vector<UINT>& control_qubit_index_list,
     const std::vector<UINT>& control_value_list,
     UINT target_qubit_index,
-    const DensityMatrix& matrix,
+    const Matrix& matrix,
     StateVector& state_vector);
 void multi_qubit_control_multi_qubit_dense_matrix_gate(
     const std::vector<UINT>& control_qubit_index_list,
     const std::vector<UINT>& control_value_list,
     const std::vector<UINT>& target_qubit_index_list,
-    const DensityMatrix& matrix,
+    const Matrix& matrix,
     StateVector& state_vector);
 void multi_qubit_dense_matrix_gate(const std::vector<UINT>& target_qubit_index_list,
-                                   const DensityMatrix& matrix,
+                                   const Matrix& matrix,
                                    StateVector& state_vector);
 
 class OneQubitMatrixGateImpl : public OneQubitGateBase {
@@ -183,8 +183,8 @@ public:
         throw std::logic_error("Error: CrsMatrixGateImpl::get_inverse(): Not implemented.");
     }
 
-    std::optional<DensityMatrix> get_matrix_internal() const {
-        DensityMatrix mat("mat", _matrix.numRows(), _matrix.numCols());
+    std::optional<Matrix> get_matrix_internal() const {
+        Matrix mat("mat", _matrix.numRows(), _matrix.numCols());
         Kokkos::parallel_for(
             _matrix.numRows(), KOKKOS_LAMBDA(const default_lno_t i) {
                 for (default_size_type idx = _matrix.graph.row_map(i);
@@ -257,13 +257,13 @@ public:
 };
 
 class DensityMatrixGateImpl : public GateBase {
-    DensityMatrix _matrix;
+    Matrix _matrix;
     bool _adjoint_flag;
     std::vector<TargetQubitInfo> target_qubit_info_list;
     std::vector<ControlQubitInfo> control_qubit_info_list;
 
 public:
-    DensityMatrixGateImpl(DensityMatrix matrix,
+    DensityMatrixGateImpl(Matrix matrix,
                           const std::vector<UINT>& target_qubit_index_list,
                           const std::vector<UINT>& control_qubit_index_list)
         : GateBase() {
@@ -276,7 +276,7 @@ public:
             control_qubit_info_list.push_back(ControlQubitInfo(control_qubit_index_list[i], 1));
         }
     }
-    DensityMatrixGateImpl(DensityMatrix matrix,
+    DensityMatrixGateImpl(Matrix matrix,
                           bool flag,
                           const std::vector<UINT>& target_qubit_index_list,
                           const std::vector<UINT>& control_qubit_index_list)
@@ -315,9 +315,9 @@ public:
         return std::make_shared<DensityMatrixGateImpl>(
             _matrix, !_adjoint_flag, get_target_qubit_list(), get_control_qubit_list());
     }
-    std::optional<DensityMatrix> get_matrix_internal() const {
+    std::optional<Matrix> get_matrix_internal() const {
         if (!_adjoint_flag) return _matrix;
-        DensityMatrix mat("matrix", _matrix.extent(0), _matrix.extent(1));
+        Matrix mat("matrix", _matrix.extent(0), _matrix.extent(1));
         Kokkos::MDRangePolicy<Kokkos::Rank<2>> md_range_policy(
             {0, 0}, {static_cast<int>(mat.extent(0)), static_cast<int>(mat.extent(1))});
         Kokkos::parallel_for(
@@ -400,7 +400,7 @@ public:
 };
 
 inline void single_qubit_dense_matrix_gate_view(UINT target_qubit_index,
-                                                const DensityMatrix& matrix,
+                                                const Matrix& matrix,
                                                 StateVector& state) {
     check_qubit_within_bounds(state, target_qubit_index);
     const UINT loop_dim = state.dim() >> 1;
@@ -421,7 +421,7 @@ inline void single_qubit_dense_matrix_gate_view(UINT target_qubit_index,
 
 inline void double_qubit_dense_matrix_gate(UINT target_qubit_index1,
                                            UINT target_qubit_index2,
-                                           const DensityMatrix& matrix,
+                                           const Matrix& matrix,
                                            StateVector& state) {
     const auto [min_qubit_index, max_qubit_index] =
         std::minmax(target_qubit_index1, target_qubit_index2);
@@ -463,7 +463,7 @@ inline void double_qubit_dense_matrix_gate(UINT target_qubit_index1,
 inline void single_qubit_control_single_qubit_dense_matrix_gate(UINT control_qubit_index,
                                                                 UINT control_value,
                                                                 UINT target_qubit_index,
-                                                                const DensityMatrix& matrix,
+                                                                const Matrix& matrix,
                                                                 StateVector& state) {
     check_qubit_within_bounds(state, control_qubit_index);
     const UINT loop_dim = state.dim() >> 2;
@@ -530,7 +530,7 @@ inline void single_qubit_control_multi_qubit_dense_matrix_gate(
     UINT control_qubit_index,
     UINT control_value,
     const std::vector<UINT>& target_qubit_index_list,
-    const DensityMatrix& matrix,
+    const Matrix& matrix,
     StateVector& state) {
     const UINT target_qubit_index_count = target_qubit_index_list.size();
     const UINT matrix_dim = 1ULL << target_qubit_index_count;
@@ -576,7 +576,7 @@ inline void multi_qubit_control_single_qubit_dense_matrix_gate(
     const std::vector<UINT>& control_qubit_index_list,
     const std::vector<UINT>& control_value_list,
     UINT target_qubit_index,
-    const DensityMatrix& matrix,
+    const Matrix& matrix,
     StateVector& state_vector) {
     UINT control_qubit_index_count = control_qubit_index_list.size();
     if (control_qubit_index_count == 1) {
@@ -656,7 +656,7 @@ inline void multi_qubit_control_multi_qubit_dense_matrix_gate(
     const std::vector<UINT>& control_qubit_index_list,
     const std::vector<UINT>& control_value_list,
     const std::vector<UINT>& target_qubit_index_list,
-    const DensityMatrix& matrix,
+    const Matrix& matrix,
     StateVector& state) {
     const UINT control_qubit_index_count = control_qubit_index_list.size();
     const UINT target_qubit_index_count = target_qubit_index_list.size();
@@ -702,7 +702,7 @@ inline void multi_qubit_control_multi_qubit_dense_matrix_gate(
 }
 
 inline void multi_qubit_dense_matrix_gate_parallel(const std::vector<UINT>& target_qubit_index_list,
-                                                   const DensityMatrix& matrix,
+                                                   const Matrix& matrix,
                                                    StateVector& state) {
     std::vector<UINT> sort_array, mask_array;
     create_shift_mask_list_from_list_buf(target_qubit_index_list, sort_array, mask_array);
@@ -746,7 +746,7 @@ inline void multi_qubit_dense_matrix_gate_parallel(const std::vector<UINT>& targ
 }
 
 inline void multi_qubit_dense_matrix_gate(const std::vector<UINT>& target_qubit_index_list,
-                                          const DensityMatrix& matrix,
+                                          const Matrix& matrix,
                                           StateVector& state_vector) {
     UINT target_qubit_index_count = target_qubit_index_list.size();
     if (target_qubit_index_count == 1) {

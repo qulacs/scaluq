@@ -175,9 +175,7 @@ inline void spmv(const CrsMatrix& matrix,
 }
 
 // x: state vector, output will be stored in y
-inline void gemv(const DensityMatrix matrix,
-                 const Kokkos::View<Complex*>& x,
-                 Kokkos::View<Complex*>& y) {
+inline void gemv(const Matrix matrix, const Kokkos::View<Complex*>& x, Kokkos::View<Complex*>& y) {
     KokkosBlas::gemv("N", 1.0, matrix, x, 0.0, y);
 }
 
