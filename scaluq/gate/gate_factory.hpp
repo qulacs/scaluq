@@ -132,13 +132,13 @@ inline Gate DenseMatrix(const std::vector<UINT>& targets, const ComplexMatrix& m
             targets[1],
             std::array{
                 std::array{
-                    Complex(matrix(0, 0)), Complex(matrix(0, 1)), Complex(0, 2), Complex(0, 3)},
+                    Complex(matrix(0, 0)), Complex(matrix(0, 1)), Complex(matrix(0, 2)), Complex(matrix(0, 3))},
                 std::array{
-                    Complex(matrix(1, 0)), Complex(matrix(1, 1)), Complex(1, 2), Complex(1, 3)},
+                    Complex(matrix(1, 0)), Complex(matrix(1, 1)), Complex(matrix(1, 2)), Complex(matrix(1, 3))},
                 std::array{
-                    Complex(matrix(2, 0)), Complex(matrix(2, 1)), Complex(2, 2), Complex(2, 3)},
+                    Complex(matrix(2, 0)), Complex(matrix(2, 1)), Complex(matrix(2, 2)), Complex(matrix(2, 3))},
                 std::array{
-                    Complex(matrix(3, 0)), Complex(matrix(3, 1)), Complex(3, 2), Complex(3, 3)},
+                    Complex(matrix(3, 0)), Complex(matrix(3, 1)), Complex(matrix(3, 2)), Complex(matrix(3, 3))},
             });
     }
     throw std::runtime_error(
