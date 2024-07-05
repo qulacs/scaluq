@@ -282,13 +282,13 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         }
         for (int i = 1; i < (int)n_qubits; i++) {
             if (pauli_id_vec[i] == 0) {
-                matrix = kronecker_product(make_I(), matrix);
+                matrix = internal::kronecker_product(make_I(), matrix);
             } else if (pauli_id_vec[i] == 1) {
-                matrix = kronecker_product(make_X(), matrix);
+                matrix = internal::kronecker_product(make_X(), matrix);
             } else if (pauli_id_vec[i] == 2) {
-                matrix = kronecker_product(make_Y(), matrix);
+                matrix = internal::kronecker_product(make_Y(), matrix);
             } else if (pauli_id_vec[i] == 3) {
-                matrix = kronecker_product(make_Z(), matrix);
+                matrix = internal::kronecker_product(make_Z(), matrix);
             }
         }
 
@@ -342,13 +342,13 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         }
         for (int i = 1; i < (int)n_qubits; i++) {
             if (pauli_id_vec[i] == 0) {
-                matrix = kronecker_product(make_I(), matrix);
+                matrix = internal::kronecker_product(make_I(), matrix);
             } else if (pauli_id_vec[i] == 1) {
-                matrix = kronecker_product(make_X(), matrix);
+                matrix = internal::kronecker_product(make_X(), matrix);
             } else if (pauli_id_vec[i] == 2) {
-                matrix = kronecker_product(make_Y(), matrix);
+                matrix = internal::kronecker_product(make_Y(), matrix);
             } else if (pauli_id_vec[i] == 3) {
-                matrix = kronecker_product(make_Z(), matrix);
+                matrix = internal::kronecker_product(make_Z(), matrix);
             }
         }
         matrix = std::cos(angle / 2) * Eigen::MatrixXcd::Identity(dim, dim) -
