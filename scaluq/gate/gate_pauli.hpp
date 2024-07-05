@@ -14,10 +14,12 @@ class PauliGateImpl : public GateBase {
 public:
     PauliGateImpl(const PauliOperator& pauli) : _pauli(pauli) {}
 
+    PauliOperator pauli() const { return _pauli; };
+    std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
+
     std::vector<UINT> get_target_qubit_list() const override {
         return _pauli.get_target_qubit_list();
     }
-    std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
     Gate copy() const override { return std::make_shared<PauliGateImpl>(_pauli); }
@@ -39,10 +41,13 @@ public:
     PauliRotationGateImpl(const PauliOperator& pauli, double angle)
         : _pauli(pauli), _angle(angle) {}
 
+    std::vector<UINT> pauli() const { return _pauli.get_pauli_id_list(); }
+    std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
+    double angle() const { return _angle; }
+
     std::vector<UINT> get_target_qubit_list() const override {
         return _pauli.get_target_qubit_list();
     }
-    std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
     Gate copy() const override { return std::make_shared<PauliRotationGateImpl>(_pauli, _angle); }

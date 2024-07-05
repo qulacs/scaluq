@@ -10,6 +10,7 @@ target_sources(scaluq PRIVATE
     gate/update_ops_quantum_matrix.cpp
     gate/update_ops_two_qubit.cpp
     gate/update_ops_zero_qubit.cpp
+    gate/utility.cpp
     operator/pauli_operator.cpp
     operator/operator.cpp
     state/state_vector.cpp

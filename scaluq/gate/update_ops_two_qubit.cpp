@@ -3,8 +3,8 @@
 
 #include "../constant.hpp"
 #include "../types.hpp"
+#include "../util/utility.hpp"
 #include "update_ops.hpp"
-#include "util/utility.hpp"
 
 namespace scaluq {
 namespace internal {
