@@ -9,19 +9,34 @@
 
 namespace scaluq {
 class Operator {
-public:
-    explicit Operator(UINT n_qubits);
+    struct OperatorData {
+        std::vector<PauliOperator> _terms;
+        UINT _n_qubits;
+        bool _is_hermitian = true;
+        explicit OperatorData(UINT n_qubits) : _n_qubits(n_qubits) {}
+        OperatorData(UINT n_qubits, const std::vector<PauliOperator>& terms);
+        void add_operator(const PauliOperator& mpt);
+        void add_operator(PauliOperator&& mpt);
+        void reserve(UINT size) { _terms.reserve(size); }
+    };
+    std::shared_ptr<const OperatorData> _ptr;
 
-    [[nodiscard]] inline bool is_hermitian() { return _is_hermitian; }
-    [[nodiscard]] inline UINT n_qubits() { return _n_qubits; }
-    [[nodiscard]] inline const std::vector<PauliOperator>& terms() const { return _terms; }
+public:
+    explicit Operator(UINT n_qubits) : _ptr(std::make_shared<OperatorData>(n_qubits)) {}
+    explicit Operator(const OperatorData& data) : _ptr(std::make_shared<OperatorData>(data)) {}
+    Operator(UINT n_qubits, const std::vector<PauliOperator>& terms)
+        : _ptr(std::make_shared<OperatorData>(n_qubits, terms)) {}
+
+    static Operator random_operator(UINT n_qubits,
+                                    UINT operator_count,
+                                    UINT seed = std::random_device()());
+
+    [[nodiscard]] inline bool is_hermitian() { return _ptr->_is_hermitian; }
+    [[nodiscard]] inline UINT n_qubits() { return _ptr->_n_qubits; }
+    [[nodiscard]] inline const std::vector<PauliOperator>& terms() const { return _ptr->_terms; }
     [[nodiscard]] std::string to_string() const;
 
-    void add_operator(const PauliOperator& mpt);
-    void add_operator(PauliOperator&& mpt);
-    void add_random_operator(const UINT operator_count = 1, UINT seed = std::random_device()());
-
-    void optimize();
+    Operator optimize() const;
 
     [[nodiscard]] Operator get_dagger() const;
 
@@ -44,26 +59,14 @@ public:
                                                                        UINT iter_count,
                                                                        Complex mu = 0.) const;
 
-    Operator& operator*=(Complex coef);
-    Operator operator*(Complex coef) const { return Operator(*this) *= coef; }
+    Operator operator*(Complex coef) const;
     inline Operator operator+() const { return *this; }
     Operator operator-() const { return *this * -1; }
-    Operator& operator+=(const Operator& target);
-    Operator operator+(const Operator& target) const { return Operator(*this) += target; }
-    Operator& operator-=(const Operator& target) { return *this += -target; }
-    Operator operator-(const Operator& target) const { return Operator(*this) -= target; }
+    Operator operator+(const Operator& target) const;
+    Operator operator-(const Operator& target) const { return *this + target * -1; }
     Operator operator*(const Operator& target) const;
-    Operator& operator*=(const Operator& target) { return *this = *this * target; }
-    Operator& operator+=(const PauliOperator& pauli);
-    Operator operator+(const PauliOperator& pauli) const { return Operator(*this) += pauli; }
-    Operator& operator-=(const PauliOperator& pauli) { return *this += pauli * -1; }
-    Operator operator-(const PauliOperator& pauli) const { return Operator(*this) -= pauli; }
-    Operator& operator*=(const PauliOperator& pauli);
-    Operator operator*(const PauliOperator& pauli) const { return Operator(*this) *= pauli; }
-
-private:
-    std::vector<PauliOperator> _terms;
-    UINT _n_qubits;
-    bool _is_hermitian;
+    Operator operator+(const PauliOperator& pauli) const;
+    Operator operator-(const PauliOperator& pauli) const { return *this + pauli * -1; }
+    Operator operator*(const PauliOperator& pauli) const;
 };
 }  // namespace scaluq

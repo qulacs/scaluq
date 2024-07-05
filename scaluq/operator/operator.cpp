@@ -6,21 +6,40 @@
 #include "../util/utility.hpp"
 
 namespace scaluq {
-Operator::Operator(UINT n_qubits) : _n_qubits(n_qubits) {}
 
 std::string Operator::to_string() const {
     std::stringstream ss;
-    for (auto itr = _terms.begin(); itr != _terms.end(); ++itr) {
+    for (auto itr = _ptr->_terms.begin(); itr != _ptr->_terms.end(); ++itr) {
         ss << itr->get_coef() << " " << itr->get_pauli_string();
-        if (itr != prev(_terms.end())) {
+        if (itr != std::prev(_ptr->_terms.end())) {
             ss << " + ";
         }
     }
     return ss.str();
 }
 
-void Operator::add_operator(const PauliOperator& mpt) { add_operator(PauliOperator{mpt}); }
-void Operator::add_operator(PauliOperator&& mpt) {
+Operator::OperatorData::OperatorData(UINT n_qubits, const std::vector<PauliOperator>& terms)
+    : _n_qubits(n_qubits) {
+    _terms.reserve(terms.size());
+    for (auto mpt : terms) {
+        _is_hermitian &= mpt.get_coef().imag() == 0.;
+        if (![&] {
+                const auto& target_list = mpt.get_target_qubit_list();
+                if (target_list.empty()) return true;
+                return *std::max_element(target_list.begin(), target_list.end()) < _n_qubits;
+            }()) [[unlikely]] {
+            throw std::runtime_error(
+                "Operator::add_operator: target index of pauli_operator is larger than "
+                "n_qubits");
+        }
+        _terms.emplace_back(std::move(mpt));
+    }
+}
+
+void Operator::OperatorData::add_operator(const PauliOperator& mpt) {
+    add_operator(PauliOperator{mpt});
+}
+void Operator::OperatorData::add_operator(PauliOperator&& mpt) {
     _is_hermitian &= mpt.get_coef().imag() == 0.;
     if (![&] {
             const auto& target_list = mpt.get_target_qubit_list();
@@ -33,43 +52,47 @@ void Operator::add_operator(PauliOperator&& mpt) {
     }
     this->_terms.emplace_back(std::move(mpt));
 }
-void Operator::add_random_operator(UINT operator_count, UINT seed) {
+
+Operator Operator::random_operator(UINT n_qubits, UINT operator_count, UINT seed) {
+    OperatorData op(n_qubits);
     Random random(seed);
     for (UINT operator_idx = 0; operator_idx < operator_count; operator_idx++) {
-        std::vector<UINT> target_qubit_list(_n_qubits), pauli_id_list(_n_qubits);
-        for (UINT qubit_idx = 0; qubit_idx < _n_qubits; qubit_idx++) {
+        std::vector<UINT> target_qubit_list(n_qubits), pauli_id_list(n_qubits);
+        for (UINT qubit_idx = 0; qubit_idx < n_qubits; qubit_idx++) {
             target_qubit_list[qubit_idx] = qubit_idx;
             pauli_id_list[qubit_idx] = random.int32() & 0b11;
         }
         Complex coef = random.uniform() * 2. - 1.;
-        this->add_operator(PauliOperator(target_qubit_list, pauli_id_list, coef));
+        op.add_operator(PauliOperator(target_qubit_list, pauli_id_list, coef));
     }
+    return Operator(op);
 }
 
-void Operator::optimize() {
+Operator Operator::optimize() const {
+    OperatorData op(_ptr->_n_qubits);
     std::map<std::tuple<internal::BitVector, internal::BitVector>, Complex> pauli_and_coef;
-    for (const auto& pauli : _terms) {
+    for (const auto& pauli : _ptr->_terms) {
         pauli_and_coef[pauli.get_XZ_mask_representation()] += pauli.get_coef();
     }
-    _terms.clear();
     for (const auto& [mask, coef] : pauli_and_coef) {
         const auto& [x_mask, z_mask] = mask;
-        _terms.emplace_back(x_mask, z_mask, coef);
+        op.add_operator(PauliOperator(x_mask, z_mask, coef));
     }
+    return Operator(op);
 }
 
 Operator Operator::get_dagger() const {
-    Operator quantum_operator(_n_qubits);
-    for (const auto& pauli : _terms) {
-        quantum_operator.add_operator(pauli.get_dagger());
+    OperatorData op(_ptr->_n_qubits);
+    for (const auto& pauli : _ptr->_terms) {
+        op.add_operator(pauli.get_dagger());
     }
-    return quantum_operator;
+    return Operator(op);
 }
 
 void Operator::apply_to_state(StateVector& state_vector) const {
     StateVector res(state_vector.n_qubits());
     res.set_zero_norm_state();
-    for (const auto& term : _terms) {
+    for (const auto& term : _ptr->_terms) {
         StateVector tmp = state_vector.copy();
         term.apply_to_state(tmp);
         res.add_state_vector(tmp);
@@ -78,13 +101,13 @@ void Operator::apply_to_state(StateVector& state_vector) const {
 }
 
 Complex Operator::get_expectation_value(const StateVector& state_vector) const {
-    if (_n_qubits > state_vector.n_qubits()) {
+    if (_ptr->_n_qubits > state_vector.n_qubits()) {
         throw std::runtime_error(
             "Operator::get_expectation_value: n_qubits of state_vector is too small");
     }
-    UINT nterms = _terms.size();
+    UINT nterms = _ptr->_terms.size();
     Kokkos::View<const PauliOperator*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-        terms_view(_terms.data(), nterms);
+        terms_view(_ptr->_terms.data(), nterms);
     Kokkos::View<UINT*, Kokkos::HostSpace> bmasks_host("bmasks_host", nterms);
     Kokkos::View<UINT*, Kokkos::HostSpace> pmasks_host("pmasks_host", nterms);
     Kokkos::View<Complex*, Kokkos::HostSpace> coefs_host("coefs_host", nterms);
@@ -92,16 +115,16 @@ Complex Operator::get_expectation_value(const StateVector& state_vector) const {
         Kokkos::DefaultHostExecutionSpace(),
         terms_view,
         bmasks_host,
-        [](const PauliOperator& pauli) { return pauli._bit_flip_mask.data_raw()[0]; });
+        [](const PauliOperator& pauli) { return pauli._ptr->_bit_flip_mask.data_raw()[0]; });
     Kokkos::Experimental::transform(
         Kokkos::DefaultHostExecutionSpace(),
         terms_view,
         pmasks_host,
-        [](const PauliOperator& pauli) { return pauli._phase_flip_mask.data_raw()[0]; });
+        [](const PauliOperator& pauli) { return pauli._ptr->_phase_flip_mask.data_raw()[0]; });
     Kokkos::Experimental::transform(Kokkos::DefaultHostExecutionSpace(),
                                     terms_view,
                                     coefs_host,
-                                    [](const PauliOperator& pauli) { return pauli._coef; });
+                                    [](const PauliOperator& pauli) { return pauli._ptr->_coef; });
     Kokkos::View<UINT*> bmasks("bmasks", nterms);
     Kokkos::View<UINT*> pmasks("pmasks", nterms);
     Kokkos::View<Complex*> coefs("coefs", nterms);
@@ -153,27 +176,29 @@ Complex Operator::get_transition_amplitude(const StateVector& state_vector_bra,
             "Operator::get_transition_amplitude: n_qubits of state_vector_bra and "
             "state_vector_ket must be same");
     }
-    if (_n_qubits > state_vector_bra.n_qubits()) {
+    if (_ptr->_n_qubits > state_vector_bra.n_qubits()) {
         throw std::runtime_error(
             "Operator::get_transition_amplitude: n_qubits of state_vector is too "
             "small");
     }
-    UINT nterms = _terms.size();
+    UINT nterms = _ptr->_terms.size();
     std::vector<UINT> bmasks_vector(nterms);
     std::vector<UINT> pmasks_vector(nterms);
     std::vector<Complex> coefs_vector(nterms);
     std::transform(
-        _terms.begin(), _terms.end(), bmasks_vector.begin(), [](const PauliOperator& pauli) {
-            return pauli._bit_flip_mask.data_raw()[0];
-        });
+        _ptr->_terms.begin(),
+        _ptr->_terms.end(),
+        bmasks_vector.begin(),
+        [](const PauliOperator& pauli) { return pauli._ptr->_bit_flip_mask.data_raw()[0]; });
     std::transform(
-        _terms.begin(), _terms.end(), pmasks_vector.begin(), [](const PauliOperator& pauli) {
-            return pauli._phase_flip_mask.data_raw()[0];
-        });
-    std::transform(
-        _terms.begin(), _terms.end(), coefs_vector.begin(), [](const PauliOperator& pauli) {
-            return pauli._coef;
-        });
+        _ptr->_terms.begin(),
+        _ptr->_terms.end(),
+        pmasks_vector.begin(),
+        [](const PauliOperator& pauli) { return pauli._ptr->_phase_flip_mask.data_raw()[0]; });
+    std::transform(_ptr->_terms.begin(),
+                   _ptr->_terms.end(),
+                   coefs_vector.begin(),
+                   [](const PauliOperator& pauli) { return pauli._ptr->_coef; });
     Kokkos::View<UINT*> bmasks = internal::convert_host_vector_to_device_view(bmasks_vector);
     Kokkos::View<UINT*> pmasks = internal::convert_host_vector_to_device_view(pmasks_vector);
     Kokkos::View<Complex*> coefs = internal::convert_host_vector_to_device_view(coefs_vector);
@@ -215,38 +240,50 @@ Complex Operator::get_transition_amplitude(const StateVector& state_vector_bra,
     return res;
 }
 
-Operator& Operator::operator*=(Complex coef) {
-    for (auto& pauli : _terms) pauli *= coef;
-    return *this;
+Operator Operator::operator*(Complex coef) const {
+    OperatorData cp(_ptr->_n_qubits);
+    cp.reserve(_ptr->_terms.size());
+    for (auto& mpt : _ptr->_terms) {
+        cp.add_operator(mpt * coef);
+    }
+    return Operator(cp);
 }
-Operator& Operator::operator+=(const Operator& target) {
-    if (_n_qubits != target._n_qubits) {
-        throw std::runtime_error("Operator::oeprator+=: n_qubits must be equal");
+Operator Operator::operator+(const Operator& target) const {
+    if (_ptr->_n_qubits != target._ptr->_n_qubits) {
+        throw std::runtime_error("Operator::oeprator+: n_qubits must be equal");
     }
-    for (const auto& pauli : target._terms) {
-        add_operator(pauli);
+    OperatorData cp(*_ptr);
+    cp.reserve(_ptr->_terms.size() + target._ptr->_terms.size());
+    for (const auto& pauli : target._ptr->_terms) {
+        cp.add_operator(pauli);
     }
-    return *this;
+    return Operator(cp);
 }
 Operator Operator::operator*(const Operator& target) const {
-    if (_n_qubits != target._n_qubits) {
-        throw std::runtime_error("Operator::oeprator+=: n_qubits must be equal");
+    if (_ptr->_n_qubits != target._ptr->_n_qubits) {
+        throw std::runtime_error("Operator::oeprator*: n_qubits must be equal");
     }
-    Operator ret(_n_qubits);
-    for (const auto& pauli1 : _terms) {
-        for (const auto& pauli2 : target._terms) {
-            ret.add_operator(pauli1 * pauli2);
+    OperatorData cp(_ptr->_n_qubits);
+    cp.reserve(_ptr->_terms.size() * target._ptr->_terms.size());
+    for (const auto& pauli1 : _ptr->_terms) {
+        for (const auto& pauli2 : target._ptr->_terms) {
+            cp.add_operator(pauli1 * pauli2);
         }
     }
-    return ret;
+    return Operator(cp);
 }
-Operator& Operator::operator+=(const PauliOperator& pauli) {
-    add_operator(pauli);
-    return *this;
+Operator Operator::operator+(const PauliOperator& pauli) const {
+    OperatorData cp(*_ptr);
+    cp.add_operator(pauli);
+    return Operator(cp);
 }
-Operator& Operator::operator*=(const PauliOperator& pauli) {
-    for (auto& pauli1 : _terms) pauli1 *= pauli;
-    return *this;
+Operator Operator::operator*(const PauliOperator& pauli) const {
+    OperatorData cp(_ptr->_n_qubits);
+    cp.reserve(_ptr->_terms.size());
+    for (const auto& mpt : _ptr->_terms) {
+        cp.add_operator(mpt * pauli);
+    }
+    return Operator(cp);
 }
 
 }  // namespace scaluq

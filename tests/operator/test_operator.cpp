@@ -12,7 +12,7 @@ const double eps = 1e-12;
 std::pair<Operator, Eigen::MatrixXcd> generate_random_observable_with_eigen(UINT n,
                                                                             Random& random) {
     UINT dim = 1ULL << n;
-    Operator rand_observable(n);
+    std::vector<PauliOperator> terms;
     Eigen::MatrixXcd test_rand_observable = Eigen::MatrixXcd::Zero(dim, dim);
 
     UINT term_count = random.int32() % 10 + 1;
@@ -41,9 +41,9 @@ std::pair<Operator, Eigen::MatrixXcd> generate_random_observable_with_eigen(UINT
                 str += " " + std::to_string(ind);
             }
         }
-        rand_observable.add_operator(PauliOperator(str.c_str(), coef));
+        terms.emplace_back(str.c_str(), coef);
     }
-    return {std::move(rand_observable), std::move(test_rand_observable)};
+    return {std::move(Operator(n, terms)), std::move(test_rand_observable)};
 }
 
 TEST(OperatorTest, CheckExpectationValue) {
@@ -141,14 +141,14 @@ TEST(OperatorTest, MultiCoefTest) {
 }
 
 TEST(OperatorTest, Optimize) {
-    Operator op(2);
-    op.add_operator(PauliOperator("X 0 Y 1", 1.));
-    op.add_operator(PauliOperator("Y 0 Z 1", 2.));
-    op.add_operator(PauliOperator("Z 1", 3.));
-    op.add_operator(PauliOperator("X 0 Y 1", 4.));
-    op.add_operator(PauliOperator("Z 1", 4.));
-    op.add_operator(PauliOperator("X 0 Y 1", 5.));
-    op.optimize();
+    std::vector<PauliOperator> terms;
+    terms.emplace_back("X 0 Y 1", 1.);
+    terms.emplace_back("Y 0 Z 1", 2.);
+    terms.emplace_back("Z 1", 3.);
+    terms.emplace_back("X 0 Y 1", 4.);
+    terms.emplace_back("Z 1", 4.);
+    terms.emplace_back("X 0 Y 1", 5.);
+    auto op = Operator(2, terms).optimize();
     std::vector<std::pair<std::string, Complex>> expected = {
         {"X 0 Y 1", 10.}, {"Y 0 Z 1", 2.}, {"Z 1", 7.}};
     std::vector<std::pair<std::string, Complex>> test;

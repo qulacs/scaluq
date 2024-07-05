@@ -101,7 +101,7 @@ TEST_P(PauliOperatorMultiplyTest, MultiplyTest) {
 TEST_P(PauliOperatorMultiplyTest, MultiplyAssignmentTest) {
     const auto p = GetParam();
     PauliOperator res = p.op1;
-    res *= p.op2;
+    res = res * p.op2;
     EXPECT_EQ(p.expected.get_pauli_string(), res.get_pauli_string());
     EXPECT_EQ(p.expected.get_coef(), res.get_coef());
 }

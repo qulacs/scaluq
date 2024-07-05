@@ -4,9 +4,12 @@
 #include "../util/utility.hpp"
 
 namespace scaluq {
-PauliOperator::PauliOperator(Complex coef) : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {}
 
-PauliOperator::PauliOperator(std::string_view pauli_string, Complex coef) : _coef(coef) {
+PauliOperator::PauliOperatorData::PauliOperatorData(Complex coef)
+    : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {}
+
+PauliOperator::PauliOperatorData::PauliOperatorData(std::string_view pauli_string, Complex coef)
+    : _coef(coef) {
     auto ss = std::stringstream(std::string(pauli_string));
     while (1) {
         char pauli;
@@ -28,29 +31,33 @@ PauliOperator::PauliOperator(std::string_view pauli_string, Complex coef) : _coe
     }
 }
 
-PauliOperator::PauliOperator(const std::vector<UINT>& pauli_id_par_qubit, Complex coef)
+PauliOperator::PauliOperatorData::PauliOperatorData(const std::vector<UINT>& pauli_id_par_qubit,
+                                                    Complex coef)
     : _coef(coef) {
+    reserve(pauli_id_par_qubit.size());
     for (UINT i = 0; i < pauli_id_par_qubit.size(); ++i) {
         add_single_pauli(i, pauli_id_par_qubit[i]);
     }
 }
 
-PauliOperator::PauliOperator(const std::vector<UINT>& target_qubit_list,
-                             const std::vector<UINT>& pauli_id_list,
-                             Complex coef)
+PauliOperator::PauliOperatorData::PauliOperatorData(const std::vector<UINT>& target_qubit_list,
+                                                    const std::vector<UINT>& pauli_id_list,
+                                                    Complex coef)
     : _coef(coef) {
     if (target_qubit_list.size() != pauli_id_list.size()) {
         throw std::runtime_error(
-            "PauliOperator::PauliOperator: target_qubit_list must have same size to pauli_id_list");
+            "PauliOperator::PauliOperator: target_qubit_list must have same size to "
+            "pauli_id_list");
     }
+    reserve(target_qubit_list.size());
     for (UINT term_index = 0; term_index < target_qubit_list.size(); ++term_index) {
         add_single_pauli(target_qubit_list[term_index], pauli_id_list[term_index]);
     }
 }
 
-PauliOperator::PauliOperator(const std::vector<bool>& bit_flip_mask,
-                             const std::vector<bool>& phase_flip_mask,
-                             Complex coef)
+PauliOperator::PauliOperatorData::PauliOperatorData(const std::vector<bool>& bit_flip_mask,
+                                                    const std::vector<bool>& phase_flip_mask,
+                                                    Complex coef)
     : _coef(coef) {
     UINT num_y = 0;
     UINT max_target = 0;
@@ -60,6 +67,7 @@ PauliOperator::PauliOperator(const std::vector<bool>& bit_flip_mask,
     if (auto msb = internal::BitVector(phase_flip_mask).msb();
         msb != std::numeric_limits<UINT>::max() && max_target < msb)
         max_target = msb;
+    reserve(max_target + 1);
     for (UINT target_idx = 0; target_idx <= max_target; target_idx++) {
         if (!bit_flip_mask[target_idx]) {
             if (!phase_flip_mask[target_idx])
@@ -79,12 +87,12 @@ PauliOperator::PauliOperator(const std::vector<bool>& bit_flip_mask,
 
 std::string PauliOperator::get_pauli_string() const {
     std::stringstream ss;
-    UINT size = _target_qubit_list.size();
+    UINT size = _ptr->_target_qubit_list.size();
     if (size == 0) return "";
     for (UINT term_index = 0; term_index < size; term_index++) {
-        if (_pauli_id_list[term_index] != 0) {
-            ss << "IXYZ"[_pauli_id_list[term_index]] << " " << _target_qubit_list[term_index]
-               << " ";
+        if (_ptr->_pauli_id_list[term_index] != 0) {
+            ss << "IXYZ"[_ptr->_pauli_id_list[term_index]] << " "
+               << _ptr->_target_qubit_list[term_index] << " ";
         }
     }
     std::string res = ss.str();
@@ -92,12 +100,13 @@ std::string PauliOperator::get_pauli_string() const {
     return res;
 }
 
-void PauliOperator::add_single_pauli(UINT target_qubit, UINT pauli_id) {
+void PauliOperator::PauliOperatorData::add_single_pauli(UINT target_qubit, UINT pauli_id) {
     _target_qubit_list.push_back(target_qubit);
     _pauli_id_list.push_back(pauli_id);
     if ((_bit_flip_mask | _phase_flip_mask)[target_qubit]) {
         throw std::runtime_error(
-            "PauliOperator::add_single_pauli: You cannot add single pauli twice for same qubit.");
+            "PauliOperator::add_single_pauli: You cannot add single pauli twice for same "
+            "qubit.");
     }
     if (pauli_id == PauliOperator::X || pauli_id == PauliOperator::Y) {
         _bit_flip_mask[target_qubit] = true;
@@ -113,8 +122,8 @@ void PauliOperator::apply_to_state(StateVector& state_vector) const {
             "PauliOperator::apply_to_state: n_qubits of state_vector is too small to apply the "
             "operator");
     }
-    UINT bit_flip_mask = _bit_flip_mask.data_raw()[0];
-    UINT phase_flip_mask = _phase_flip_mask.data_raw()[0];
+    UINT bit_flip_mask = _ptr->_bit_flip_mask.data_raw()[0];
+    UINT phase_flip_mask = _ptr->_phase_flip_mask.data_raw()[0];
     Complex coef = get_coef();
     if (bit_flip_mask == 0) {
         Kokkos::parallel_for(
@@ -148,11 +157,12 @@ void PauliOperator::apply_to_state(StateVector& state_vector) const {
 Complex PauliOperator::get_expectation_value(const StateVector& state_vector) const {
     if (state_vector.n_qubits() < get_qubit_count()) {
         throw std::runtime_error(
-            "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to apply "
+            "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to "
+            "apply "
             "the operator");
     }
-    UINT bit_flip_mask = _bit_flip_mask.data_raw()[0];
-    UINT phase_flip_mask = _phase_flip_mask.data_raw()[0];
+    UINT bit_flip_mask = _ptr->_bit_flip_mask.data_raw()[0];
+    UINT phase_flip_mask = _ptr->_phase_flip_mask.data_raw()[0];
     if (bit_flip_mask == 0) {
         double res;
         Kokkos::parallel_reduce(
@@ -165,7 +175,7 @@ Complex PauliOperator::get_expectation_value(const StateVector& state_vector) co
                 sum += tmp;
             },
             res);
-        return _coef * res;
+        return _ptr->_coef * res;
     }
     UINT pivot = sizeof(UINT) * 8 - std::countl_zero(bit_flip_mask) - 1;
     UINT global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
@@ -182,7 +192,7 @@ Complex PauliOperator::get_expectation_value(const StateVector& state_vector) co
             sum += tmp;
         },
         res);
-    return _coef * res;
+    return _ptr->_coef * res;
 }
 
 Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_bra,
@@ -192,11 +202,12 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
     }
     if (state_vector_bra.n_qubits() < get_qubit_count()) {
         throw std::runtime_error(
-            "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to apply "
+            "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to "
+            "apply "
             "the operator");
     }
-    UINT bit_flip_mask = _bit_flip_mask.data_raw()[0];
-    UINT phase_flip_mask = _phase_flip_mask.data_raw()[0];
+    UINT bit_flip_mask = _ptr->_bit_flip_mask.data_raw()[0];
+    UINT phase_flip_mask = _ptr->_phase_flip_mask.data_raw()[0];
     if (bit_flip_mask == 0) {
         Complex res;
         Kokkos::parallel_reduce(
@@ -209,7 +220,7 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
             },
             res);
         Kokkos::fence();
-        return _coef * res;
+        return _ptr->_coef * res;
     }
     UINT pivot = sizeof(UINT) * 8 - std::countl_zero(bit_flip_mask) - 1;
     UINT global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
@@ -230,17 +241,17 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
         },
         res);
     Kokkos::fence();
-    return _coef * res;
+    return _ptr->_coef * res;
 }
 
 PauliOperator PauliOperator::operator*(const PauliOperator& target) const {
     int extra_90rot_cnt = 0;
-    auto x_left = _bit_flip_mask - _phase_flip_mask;
-    auto y_left = _bit_flip_mask & _phase_flip_mask;
-    auto z_left = _phase_flip_mask - _bit_flip_mask;
-    auto x_right = target._bit_flip_mask - target._phase_flip_mask;
-    auto y_right = target._bit_flip_mask & target._phase_flip_mask;
-    auto z_right = target._phase_flip_mask - target._bit_flip_mask;
+    auto x_left = _ptr->_bit_flip_mask - _ptr->_phase_flip_mask;
+    auto y_left = _ptr->_bit_flip_mask & _ptr->_phase_flip_mask;
+    auto z_left = _ptr->_phase_flip_mask - _ptr->_bit_flip_mask;
+    auto x_right = target._ptr->_bit_flip_mask - target._ptr->_phase_flip_mask;
+    auto y_right = target._ptr->_bit_flip_mask & target._ptr->_phase_flip_mask;
+    auto z_right = target._ptr->_phase_flip_mask - target._ptr->_bit_flip_mask;
     extra_90rot_cnt += (x_left & y_right).popcount();  // XY = iZ
     extra_90rot_cnt += (y_left & z_right).popcount();  // YZ = iX
     extra_90rot_cnt += (z_left & x_right).popcount();  // ZX = iY
@@ -249,9 +260,9 @@ PauliOperator PauliOperator::operator*(const PauliOperator& target) const {
     extra_90rot_cnt -= (z_left & y_right).popcount();  // ZY = -iX
     extra_90rot_cnt %= 4;
     if (extra_90rot_cnt < 0) extra_90rot_cnt += 4;
-    return PauliOperator(_bit_flip_mask ^ target._bit_flip_mask,
-                         _phase_flip_mask ^ target._phase_flip_mask,
-                         _coef * target._coef * PHASE_90ROT().val[extra_90rot_cnt]);
+    return PauliOperator(_ptr->_bit_flip_mask ^ target._ptr->_bit_flip_mask,
+                         _ptr->_phase_flip_mask ^ target._ptr->_phase_flip_mask,
+                         _ptr->_coef * target._ptr->_coef * PHASE_90ROT().val[extra_90rot_cnt]);
 }
 
 }  // namespace scaluq
