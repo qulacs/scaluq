@@ -140,15 +140,15 @@ public:
     }
 };
 
-class CrsMatrixGateImpl : public GateBase {
+class SparseMatrixGateImpl : public GateBase {
     CrsMatrix _matrix;
     std::vector<TargetQubitInfo> target_qubit_info_list;
     std::vector<ControlQubitInfo> control_qubit_info_list;
 
 public:
-    CrsMatrixGateImpl(CrsMatrix matrix,
-                      const std::vector<UINT>& target_qubit_index_list,
-                      const std::vector<UINT>& control_qubit_index_list)
+    SparseMatrixGateImpl(CrsMatrix matrix,
+                         const std::vector<UINT>& target_qubit_index_list,
+                         const std::vector<UINT>& control_qubit_index_list)
         : GateBase() {
         _matrix = matrix;
         for (UINT i = 0; i < target_qubit_index_list.size(); i++) {
@@ -178,9 +178,9 @@ public:
         control_qubit_info_list.push_back(ControlQubitInfo(control_qubit_index, value));
     }
 
-    Gate copy() const override { return std::make_shared<CrsMatrixGateImpl>(*this); }
+    Gate copy() const override { return std::make_shared<SparseMatrixGateImpl>(*this); }
     Gate get_inverse() const override {
-        throw std::logic_error("Error: CrsMatrixGateImpl::get_inverse(): Not implemented.");
+        throw std::logic_error("Error: SparseMatrixGateImpl::get_inverse(): Not implemented.");
     }
 
     std::optional<Matrix> get_matrix_internal() const {
@@ -259,16 +259,16 @@ public:
     }
 };
 
-class DensityMatrixGateImpl : public GateBase {
+class DenseMatrixGateImpl : public GateBase {
     Matrix _matrix;
     bool _adjoint_flag;
     std::vector<TargetQubitInfo> target_qubit_info_list;
     std::vector<ControlQubitInfo> control_qubit_info_list;
 
 public:
-    DensityMatrixGateImpl(Matrix matrix,
-                          const std::vector<UINT>& target_qubit_index_list,
-                          const std::vector<UINT>& control_qubit_index_list)
+    DenseMatrixGateImpl(Matrix matrix,
+                        const std::vector<UINT>& target_qubit_index_list,
+                        const std::vector<UINT>& control_qubit_index_list)
         : GateBase() {
         _matrix = matrix;
         _adjoint_flag = false;
@@ -279,10 +279,10 @@ public:
             control_qubit_info_list.push_back(ControlQubitInfo(control_qubit_index_list[i], 1));
         }
     }
-    DensityMatrixGateImpl(Matrix matrix,
-                          bool flag,
-                          const std::vector<UINT>& target_qubit_index_list,
-                          const std::vector<UINT>& control_qubit_index_list)
+    DenseMatrixGateImpl(Matrix matrix,
+                        bool flag,
+                        const std::vector<UINT>& target_qubit_index_list,
+                        const std::vector<UINT>& control_qubit_index_list)
         : GateBase() {
         _matrix = matrix;
         _adjoint_flag = flag;
@@ -313,9 +313,9 @@ public:
         control_qubit_info_list.push_back(ControlQubitInfo(control_qubit_index, value));
     }
 
-    Gate copy() const override { return std::make_shared<DensityMatrixGateImpl>(*this); }
+    Gate copy() const override { return std::make_shared<DenseMatrixGateImpl>(*this); }
     Gate get_inverse() const override {
-        return std::make_shared<DensityMatrixGateImpl>(
+        return std::make_shared<DenseMatrixGateImpl>(
             _matrix, !_adjoint_flag, get_target_qubit_list(), get_control_qubit_list());
     }
     std::optional<Matrix> get_matrix_internal() const {
@@ -768,6 +768,6 @@ inline void multi_qubit_dense_matrix_gate(const std::vector<UINT>& target_qubit_
 
 using OneQubitMatrixGate = internal::GatePtr<internal::OneQubitMatrixGateImpl>;
 using TwoQubitMatrixGate = internal::GatePtr<internal::TwoQubitMatrixGateImpl>;
-using CrsMatrixGate = internal::GatePtr<internal::CrsMatrixGateImpl>;
-using DensityMatrixGate = internal::GatePtr<internal::DensityMatrixGateImpl>;
+using SparseMatrixGate = internal::GatePtr<internal::SparseMatrixGateImpl>;
+using DensityMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl>;
 }  // namespace scaluq

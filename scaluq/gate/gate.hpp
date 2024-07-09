@@ -42,7 +42,7 @@ class TwoQubitMatrixGateImpl;
 class FusedSwapGateImpl;
 class PauliGateImpl;
 class PauliRotationGateImpl;
-class CrsMatrixGateImpl;
+class SparseMatrixGateImpl;
 class DenseMatrixGateImpl;
 
 template <GateImpl T>
@@ -82,7 +82,7 @@ enum class GateType {
     FusedSwap,
     Pauli,
     PauliRotation,
-    CrsMatrixGate,
+    SparseMatrixGate,
     DenseMatrixGate
 };
 

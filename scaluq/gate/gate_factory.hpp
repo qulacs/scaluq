@@ -107,13 +107,13 @@ inline Gate PauliRotation(const PauliOperator& pauli, double angle) {
 inline Gate SparseMatrix(const CrsMatrix& matrix,
                          const std::vector<UINT>& target_qubit_list,
                          const std::vector<UINT>& control_qubit_list) {
-    return internal::GateFactory::create_gate<internal::CrsMatrixGateImpl>(
+    return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl>(
         matrix, target_qubit_list, control_qubit_list);
 }
 inline Gate DenseMatrix(const Matrix& matrix,
                         const std::vector<UINT>& target_qubit_list,
                         const std::vector<UINT>& control_qubit_list) {
-    return internal::GateFactory::create_gate<internal::DensityMatrixGateImpl>(
+    return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl>(
         matrix, target_qubit_list, control_qubit_list);
 }
 inline Gate Probablistic(const std::vector<double>& distribution,
