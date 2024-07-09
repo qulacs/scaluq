@@ -156,5 +156,6 @@ inline Gate DenseMatrix(const std::vector<UINT>& targets, const ComplexMatrix& m
                              const std::vector<Gate>& gate_list) {
     return internal::GateFactory::create_gate<internal::ProbablisticGateImpl>(distribution,
     }
+}
 }  // namespace gate
 }  // namespace scaluq
