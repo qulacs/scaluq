@@ -1,7 +1,5 @@
 #include "utility.hpp"
 
-#include <set>
-
 #include "../constant.hpp"
 #include "../util/utility.hpp"
 #include "gate/gate_factory.hpp"
