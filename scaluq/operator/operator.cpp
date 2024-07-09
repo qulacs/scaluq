@@ -7,7 +7,7 @@
 
 namespace scaluq {
 
-Operator::OperatorData::OperatorData(UINT n_qubits, const std::vector<PauliOperator>& terms)
+Operator::Data::Data(UINT n_qubits, const std::vector<PauliOperator>& terms)
     : _n_qubits(n_qubits) {
     _terms.reserve(terms.size());
     for (auto mpt : terms) {
@@ -25,10 +25,10 @@ Operator::OperatorData::OperatorData(UINT n_qubits, const std::vector<PauliOpera
     }
 }
 
-void Operator::OperatorData::add_operator(const PauliOperator& mpt) {
+void Operator::Data::add_operator(const PauliOperator& mpt) {
     add_operator(PauliOperator{mpt});
 }
-void Operator::OperatorData::add_operator(PauliOperator&& mpt) {
+void Operator::Data::add_operator(PauliOperator&& mpt) {
     _is_hermitian &= mpt.get_coef().imag() == 0.;
     if (![&] {
             const auto& target_list = mpt.get_target_qubit_list();
@@ -42,7 +42,7 @@ void Operator::OperatorData::add_operator(PauliOperator&& mpt) {
     this->_terms.emplace_back(std::move(mpt));
 }
 
-void Operator::OperatorData::add_random_operator(UINT operator_count, UINT seed) {
+void Operator::Data::add_random_operator(UINT operator_count, UINT seed) {
     Random random(seed);
     for (UINT operator_idx = 0; operator_idx < operator_count; operator_idx++) {
         std::vector<UINT> target_qubit_list(_n_qubits), pauli_id_list(_n_qubits);
@@ -67,7 +67,7 @@ std::string Operator::to_string() const {
 }
 
 Operator Operator::optimize() const {
-    OperatorData op(_ptr->_n_qubits);
+    Data op(_ptr->_n_qubits);
     std::map<std::tuple<internal::BitVector, internal::BitVector>, Complex> pauli_and_coef;
     for (const auto& pauli : _ptr->_terms) {
         pauli_and_coef[pauli.get_XZ_mask_representation()] += pauli.get_coef();
@@ -80,7 +80,7 @@ Operator Operator::optimize() const {
 }
 
 Operator Operator::get_dagger() const {
-    OperatorData op(_ptr->_n_qubits);
+    Data op(_ptr->_n_qubits);
     for (const auto& pauli : _ptr->_terms) {
         op.add_operator(pauli.get_dagger());
     }
@@ -239,7 +239,7 @@ Complex Operator::get_transition_amplitude(const StateVector& state_vector_bra,
 }
 
 Operator Operator::operator*(Complex coef) const {
-    OperatorData cp(_ptr->_n_qubits);
+    Data cp(_ptr->_n_qubits);
     cp.reserve(_ptr->_terms.size());
     for (auto& mpt : _ptr->_terms) {
         cp.add_operator(mpt * coef);
@@ -250,7 +250,7 @@ Operator Operator::operator+(const Operator& target) const {
     if (_ptr->_n_qubits != target._ptr->_n_qubits) {
         throw std::runtime_error("Operator::oeprator+: n_qubits must be equal");
     }
-    OperatorData cp(*_ptr);
+    Data cp(*_ptr);
     cp.reserve(_ptr->_terms.size() + target._ptr->_terms.size());
     for (const auto& pauli : target._ptr->_terms) {
         cp.add_operator(pauli);
@@ -261,7 +261,7 @@ Operator Operator::operator*(const Operator& target) const {
     if (_ptr->_n_qubits != target._ptr->_n_qubits) {
         throw std::runtime_error("Operator::oeprator*: n_qubits must be equal");
     }
-    OperatorData cp(_ptr->_n_qubits);
+    Data cp(_ptr->_n_qubits);
     cp.reserve(_ptr->_terms.size() * target._ptr->_terms.size());
     for (const auto& pauli1 : _ptr->_terms) {
         for (const auto& pauli2 : target._ptr->_terms) {
@@ -271,12 +271,12 @@ Operator Operator::operator*(const Operator& target) const {
     return Operator(cp);
 }
 Operator Operator::operator+(const PauliOperator& pauli) const {
-    OperatorData cp(*_ptr);
+    Data cp(*_ptr);
     cp.add_operator(pauli);
     return Operator(cp);
 }
 Operator Operator::operator*(const PauliOperator& pauli) const {
-    OperatorData cp(_ptr->_n_qubits);
+    Data cp(_ptr->_n_qubits);
     cp.reserve(_ptr->_terms.size());
     for (const auto& mpt : _ptr->_terms) {
         cp.add_operator(mpt * pauli);

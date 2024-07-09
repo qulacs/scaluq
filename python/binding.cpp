@@ -689,7 +689,7 @@ NB_MODULE(scaluq_core, m) {
              &Circuit::get_inverse,
              "Get inverse of circuit. ALl the gates are newly created.");
 
-    nb::class_<PauliOperator::PauliOperatorData>(m, "PauliOperatorData")
+    nb::class_<PauliOperator::Data>(m, "Data")
         .def(nb::init<Complex>(), "coef"_a = 1., "Initialize with coefficient.")
         .def(nb::init<std::string_view, Complex>(),
             "pauli_string"_a,
@@ -709,24 +709,24 @@ NB_MODULE(scaluq_core, m) {
             "phase_flip_mask"_a,
             "coef"_a,
             "Initialize with bit flip mask, phase flip mask, and coefficient.")
-        .def("add_single_pauli", &PauliOperator::PauliOperatorData::add_single_pauli,
+        .def("add_single_pauli", &PauliOperator::Data::add_single_pauli,
             "Add a single Pauli operator to the target qubit.")
-        .def("reserve", &PauliOperator::PauliOperatorData::reserve,
+        .def("reserve", &PauliOperator::Data::reserve,
             "Reserve space for the target qubit and Pauli ID lists.")
-        .def_ro("_target_qubit_list", &PauliOperator::PauliOperatorData::_target_qubit_list,
+        .def_ro("_target_qubit_list", &PauliOperator::Data::_target_qubit_list,
                     "List of target qubits.")
-        .def_ro("_pauli_id_list", &PauliOperator::PauliOperatorData::_pauli_id_list,
+        .def_ro("_pauli_id_list", &PauliOperator::Data::_pauli_id_list,
                     "List of Pauli IDs corresponding to the target qubits.")
-        .def_ro("_coef", &PauliOperator::PauliOperatorData::_coef,
+        .def_ro("_coef", &PauliOperator::Data::_coef,
                     "Coefficient of the Pauli operator.")
-        .def_ro("_bit_flip_mask", &PauliOperator::PauliOperatorData::_bit_flip_mask,
+        .def_ro("_bit_flip_mask", &PauliOperator::Data::_bit_flip_mask,
                     "Bit flip mask for the Pauli operator.")
-        .def_ro("_phase_flip_mask", &PauliOperator::PauliOperatorData::_phase_flip_mask,
+        .def_ro("_phase_flip_mask", &PauliOperator::Data::_phase_flip_mask,
                     "Phase flip mask for the Pauli operator.")
-        .def_ro_static("I", &PauliOperator::PauliOperatorData::I)
-        .def_ro_static("X", &PauliOperator::PauliOperatorData::X)
-        .def_ro_static("Y", &PauliOperator::PauliOperatorData::Y)
-        .def_ro_static("Z", &PauliOperator::PauliOperatorData::Z);
+        .def_ro_static("I", &PauliOperator::Data::I)
+        .def_ro_static("X", &PauliOperator::Data::X)
+        .def_ro_static("Y", &PauliOperator::Data::Y)
+        .def_ro_static("Z", &PauliOperator::Data::Z);
 
     nb::class_<PauliOperator>(
         m,
@@ -827,27 +827,27 @@ NB_MODULE(scaluq_core, m) {
         .def(nb::self * nb::self)
         .def(nb::self * Complex());
 
-    nb::class_<Operator::OperatorData>(m, "OperatorData")
+    nb::class_<Operator::Data>(m, "Data")
         .def(nb::init<UINT>(), "n_qubits"_a, "Initialize with number of qubits.")
         .def(nb::init<UINT, const std::vector<PauliOperator>&>(),
             "n_qubits"_a,
             "terms"_a,
             "Initialize with number of qubits and a list of Pauli operators.")
-        .def("add_operator", nb::overload_cast<const PauliOperator&>(&Operator::OperatorData::add_operator),
+        .def("add_operator", nb::overload_cast<const PauliOperator&>(&Operator::Data::add_operator),
             "Add a Pauli operator to the operator data.")
-        .def("add_operator", nb::overload_cast<PauliOperator&&>(&Operator::OperatorData::add_operator),
+        .def("add_operator", nb::overload_cast<PauliOperator&&>(&Operator::Data::add_operator),
             "Add a Pauli operator to the operator data using move semantics.")
         .def("add_random_operator", [](UINT operator_count, std::optional<UINT> seed) {
             return add_random_operator(operator_count, seed.value_or(std::random_device{}()));
         }, "operator_count"_a, "seed"_a = std::nullopt,
         "Add a specified number of random Pauli operators.")
-        .def("reserve", &Operator::OperatorData::reserve,
+        .def("reserve", &Operator::Data::reserve,
             "Reserve space for the terms vector.")
-        .def_ro("_terms", &Operator::OperatorData::_terms,
+        .def_ro("_terms", &Operator::Data::_terms,
                 "List of Pauli operators in the operator data.")
-        .def_ro("_n_qubits", &Operator::OperatorData::_n_qubits,
+        .def_ro("_n_qubits", &Operator::Data::_n_qubits,
                 "Number of qubits in the operator data.")
-        .def_ro("_is_hermitian", &Operator::OperatorData::_is_hermitian,
+        .def_ro("_is_hermitian", &Operator::Data::_is_hermitian,
                 "Boolean indicating if the operator is Hermitian.");
 
     nb::class_<Operator>(m, "Operator")

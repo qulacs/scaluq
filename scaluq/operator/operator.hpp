@@ -10,12 +10,12 @@
 namespace scaluq {
 class Operator {
 public:    
-    struct OperatorData {
+    struct Data {
         std::vector<PauliOperator> _terms;
         UINT _n_qubits;
         bool _is_hermitian = true;
-        explicit OperatorData(UINT n_qubits) : _n_qubits(n_qubits) {}
-        OperatorData(UINT n_qubits, const std::vector<PauliOperator>& terms);
+        explicit Data(UINT n_qubits) : _n_qubits(n_qubits) {}
+        Data(UINT n_qubits, const std::vector<PauliOperator>& terms);
         void add_operator(const PauliOperator& mpt);
         void add_operator(PauliOperator&& mpt);
         void add_random_operator(UINT operator_count,
@@ -24,13 +24,13 @@ public:
     };
 
 private:
-    std::shared_ptr<const OperatorData> _ptr;
+    std::shared_ptr<const Data> _ptr;
 
 public:
-    explicit Operator(UINT n_qubits) : _ptr(std::make_shared<OperatorData>(n_qubits)) {}
-    explicit Operator(const OperatorData& data) : _ptr(std::make_shared<OperatorData>(data)) {}
+    explicit Operator(UINT n_qubits) : _ptr(std::make_shared<Data>(n_qubits)) {}
+    explicit Operator(const Data& data) : _ptr(std::make_shared<Data>(data)) {}
     Operator(UINT n_qubits, const std::vector<PauliOperator>& terms)
-        : _ptr(std::make_shared<OperatorData>(n_qubits, terms)) {}
+        : _ptr(std::make_shared<Data>(n_qubits, terms)) {}
 
     [[nodiscard]] inline bool is_hermitian() { return _ptr->_is_hermitian; }
     [[nodiscard]] inline UINT n_qubits() { return _ptr->_n_qubits; }

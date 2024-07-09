@@ -5,10 +5,10 @@
 
 namespace scaluq {
 
-PauliOperator::PauliOperatorData::PauliOperatorData(Complex coef)
+PauliOperator::Data::Data(Complex coef)
     : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {}
 
-PauliOperator::PauliOperatorData::PauliOperatorData(std::string_view pauli_string, Complex coef)
+PauliOperator::Data::Data(std::string_view pauli_string, Complex coef)
     : _coef(coef) {
     auto ss = std::stringstream(std::string(pauli_string));
     while (1) {
@@ -21,17 +21,17 @@ PauliOperator::PauliOperatorData::PauliOperatorData(std::string_view pauli_strin
             throw std::runtime_error("PauliOperator::PauliOperator: invalid pauli_string format");
         }
         UINT pauli_id = [&] {
-            if (pauli == 'I' || pauli == 'i') return PauliOperatorData::I;
-            if (pauli == 'X' || pauli == 'x') return PauliOperatorData::X;
-            if (pauli == 'Y' || pauli == 'y') return PauliOperatorData::Y;
-            if (pauli == 'Z' || pauli == 'z') return PauliOperatorData::Z;
+            if (pauli == 'I' || pauli == 'i') return Data::I;
+            if (pauli == 'X' || pauli == 'x') return Data::X;
+            if (pauli == 'Y' || pauli == 'y') return Data::Y;
+            if (pauli == 'Z' || pauli == 'z') return Data::Z;
             throw std::runtime_error("PauliOperator::PauliOperator: invalid pauli_string format");
         }();
         if (pauli_id != 0) add_single_pauli(target, pauli_id);
     }
 }
 
-PauliOperator::PauliOperatorData::PauliOperatorData(const std::vector<UINT>& pauli_id_par_qubit,
+PauliOperator::Data::Data(const std::vector<UINT>& pauli_id_par_qubit,
                                                     Complex coef)
     : _coef(coef) {
     reserve(pauli_id_par_qubit.size());
@@ -40,7 +40,7 @@ PauliOperator::PauliOperatorData::PauliOperatorData(const std::vector<UINT>& pau
     }
 }
 
-PauliOperator::PauliOperatorData::PauliOperatorData(const std::vector<UINT>& target_qubit_list,
+PauliOperator::Data::Data(const std::vector<UINT>& target_qubit_list,
                                                     const std::vector<UINT>& pauli_id_list,
                                                     Complex coef)
     : _coef(coef) {
@@ -55,7 +55,7 @@ PauliOperator::PauliOperatorData::PauliOperatorData(const std::vector<UINT>& tar
     }
 }
 
-PauliOperator::PauliOperatorData::PauliOperatorData(const std::vector<bool>& bit_flip_mask,
+PauliOperator::Data::Data(const std::vector<bool>& bit_flip_mask,
                                                     const std::vector<bool>& phase_flip_mask,
                                                     Complex coef)
     : _coef(coef) {
@@ -100,7 +100,7 @@ std::string PauliOperator::get_pauli_string() const {
     return res;
 }
 
-void PauliOperator::PauliOperatorData::add_single_pauli(UINT target_qubit, UINT pauli_id) {
+void PauliOperator::Data::add_single_pauli(UINT target_qubit, UINT pauli_id) {
     _target_qubit_list.push_back(target_qubit);
     _pauli_id_list.push_back(pauli_id);
     if ((_bit_flip_mask | _phase_flip_mask)[target_qubit]) {
@@ -108,10 +108,10 @@ void PauliOperator::PauliOperatorData::add_single_pauli(UINT target_qubit, UINT 
             "PauliOperator::add_single_pauli: You cannot add single pauli twice for same "
             "qubit.");
     }
-    if (pauli_id == PauliOperatorData::X || pauli_id == PauliOperatorData::Y) {
+    if (pauli_id == Data::X || pauli_id == Data::Y) {
         _bit_flip_mask[target_qubit] = true;
     }
-    if (pauli_id == PauliOperatorData::Y || pauli_id == PauliOperatorData::Z) {
+    if (pauli_id == Data::Y || pauli_id == Data::Z) {
         _phase_flip_mask[target_qubit] = true;
     }
 }
