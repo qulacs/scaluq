@@ -5,6 +5,7 @@
 #include "gate_one_control_one_target.hpp"
 #include "gate_one_qubit.hpp"
 #include "gate_pauli.hpp"
+#include "gate_probablistic.hpp"
 #include "gate_two_qubit.hpp"
 #include "gate_zero_qubit.hpp"
 
@@ -127,23 +128,33 @@ inline Gate DenseMatrix(const std::vector<UINT>& targets, const ComplexMatrix& m
                                          std::array{Complex(matrix(1, 0)), Complex(matrix(1, 1))}});
     }
     if (targets.size() == 2) {
-        return TwoQubitMatrix(
-            targets[0],
-            targets[1],
-            std::array{
-                std::array{
-                    Complex(matrix(0, 0)), Complex(matrix(0, 1)), Complex(matrix(0, 2)), Complex(matrix(0, 3))},
-                std::array{
-                    Complex(matrix(1, 0)), Complex(matrix(1, 1)), Complex(matrix(1, 2)), Complex(matrix(1, 3))},
-                std::array{
-                    Complex(matrix(2, 0)), Complex(matrix(2, 1)), Complex(matrix(2, 2)), Complex(matrix(2, 3))},
-                std::array{
-                    Complex(matrix(3, 0)), Complex(matrix(3, 1)), Complex(matrix(3, 2)), Complex(matrix(3, 3))},
-            });
+        return TwoQubitMatrix(targets[0],
+                              targets[1],
+                              std::array{
+                                  std::array{Complex(matrix(0, 0)),
+                                             Complex(matrix(0, 1)),
+                                             Complex(matrix(0, 2)),
+                                             Complex(matrix(0, 3))},
+                                  std::array{Complex(matrix(1, 0)),
+                                             Complex(matrix(1, 1)),
+                                             Complex(matrix(1, 2)),
+                                             Complex(matrix(1, 3))},
+                                  std::array{Complex(matrix(2, 0)),
+                                             Complex(matrix(2, 1)),
+                                             Complex(matrix(2, 2)),
+                                             Complex(matrix(2, 3))},
+                                  std::array{Complex(matrix(3, 0)),
+                                             Complex(matrix(3, 1)),
+                                             Complex(matrix(3, 2)),
+                                             Complex(matrix(3, 3))},
+                              });
     }
     throw std::runtime_error(
         "gate::DenseMatrix(const std::vector<UINT>&, const ComplexMatrix&): DenseMatrix gate more "
         "than two qubits is not implemented yet.");
-}
+    inline Gate Probablistic(const std::vector<double>& distribution,
+                             const std::vector<Gate>& gate_list) {
+    return internal::GateFactory::create_gate<internal::ProbablisticGateImpl>(distribution,
+    }
 }  // namespace gate
 }  // namespace scaluq
