@@ -566,6 +566,9 @@ NB_MODULE(scaluq_core, m) {
         .value("PRZ", ParamGateType::PRZ)
         .value("PPauliRotation", ParamGateType::PPauliRotation);
 
+    m.def(
+        "merge_gate", &merge_gate, "Merge two gates. return value is (merged gate, global phase).");
+
 #define DEF_PGATE_BASE(PGATE_TYPE, DESCRIPTION)                                                   \
     nb::class_<PGATE_TYPE>(m, #PGATE_TYPE, DESCRIPTION)                                           \
         .def("param_gate_type",                                                                   \
