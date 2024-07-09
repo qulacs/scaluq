@@ -7,8 +7,7 @@
 
 namespace scaluq {
 
-Operator::Data::Data(UINT n_qubits, const std::vector<PauliOperator>& terms)
-    : _n_qubits(n_qubits) {
+Operator::Data::Data(UINT n_qubits, const std::vector<PauliOperator>& terms) : _n_qubits(n_qubits) {
     _terms.reserve(terms.size());
     for (auto mpt : terms) {
         _is_hermitian &= mpt.get_coef().imag() == 0.;
@@ -25,9 +24,7 @@ Operator::Data::Data(UINT n_qubits, const std::vector<PauliOperator>& terms)
     }
 }
 
-void Operator::Data::add_operator(const PauliOperator& mpt) {
-    add_operator(PauliOperator{mpt});
-}
+void Operator::Data::add_operator(const PauliOperator& mpt) { add_operator(PauliOperator{mpt}); }
 void Operator::Data::add_operator(PauliOperator&& mpt) {
     _is_hermitian &= mpt.get_coef().imag() == 0.;
     if (![&] {

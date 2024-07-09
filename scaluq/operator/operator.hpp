@@ -9,7 +9,7 @@
 
 namespace scaluq {
 class Operator {
-public:    
+public:
     struct Data {
         std::vector<PauliOperator> _terms;
         UINT _n_qubits;
@@ -18,8 +18,7 @@ public:
         Data(UINT n_qubits, const std::vector<PauliOperator>& terms);
         void add_operator(const PauliOperator& mpt);
         void add_operator(PauliOperator&& mpt);
-        void add_random_operator(UINT operator_count,
-                                    UINT seed = std::random_device()());
+        void add_random_operator(UINT operator_count, UINT seed = std::random_device()());
         void reserve(UINT size) { _terms.reserve(size); }
     };
 

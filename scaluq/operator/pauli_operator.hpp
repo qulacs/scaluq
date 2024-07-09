@@ -13,6 +13,7 @@ namespace scaluq {
 
 class PauliOperator {
     friend class Operator;
+
 public:
     struct Data {
         static constexpr UINT I = 0, X = 1, Y = 2, Z = 3;
@@ -22,12 +23,12 @@ public:
         explicit Data(Complex coef = 1.);
         Data(std::string_view pauli_string, Complex coef = 1.);
         Data(const std::vector<UINT>& target_qubit_list,
-                          const std::vector<UINT>& pauli_id_list,
-                          Complex coef = 1.);
+             const std::vector<UINT>& pauli_id_list,
+             Complex coef = 1.);
         Data(const std::vector<UINT>& pauli_id_par_qubit, Complex coef = 1.);
         Data(const std::vector<bool>& bit_flip_mask,
-                          const std::vector<bool>& phase_flip_mask,
-                          Complex coef);
+             const std::vector<bool>& phase_flip_mask,
+             Complex coef);
         void add_single_pauli(UINT target_qubit, UINT pauli_id);
         void reserve(UINT size) {
             _target_qubit_list.reserve(size);
@@ -40,8 +41,7 @@ private:
 
 public:
     explicit PauliOperator(Complex coef = 1.) : _ptr(std::make_shared<Data>(coef)) {}
-    explicit PauliOperator(const Data& data)
-        : _ptr(std::make_shared<Data>(data)) {}
+    explicit PauliOperator(const Data& data) : _ptr(std::make_shared<Data>(data)) {}
     PauliOperator(std::string_view pauli_string, Complex coef = 1.)
         : _ptr(std::make_shared<Data>(pauli_string, coef)) {}
     PauliOperator(const std::vector<UINT>& target_qubit_list,
