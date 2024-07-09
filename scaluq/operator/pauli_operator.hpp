@@ -13,8 +13,9 @@ namespace scaluq {
 
 class PauliOperator {
     friend class Operator;
-
+public:
     struct PauliOperatorData {
+        static constexpr UINT I = 0, X = 1, Y = 2, Z = 3;
         std::vector<UINT> _target_qubit_list, _pauli_id_list;
         Complex _coef;
         internal::BitVector _bit_flip_mask, _phase_flip_mask;
@@ -33,6 +34,8 @@ class PauliOperator {
             _pauli_id_list.reserve(size);
         }
     };
+    
+private:
     std::shared_ptr<const PauliOperatorData> _ptr;
 
 public:
@@ -51,8 +54,6 @@ public:
                   const std::vector<bool>& phase_flip_mask,
                   Complex coef)
         : _ptr(std::make_shared<PauliOperatorData>(bit_flip_mask, phase_flip_mask, coef)) {}
-
-    static constexpr UINT I = 0, X = 1, Y = 2, Z = 3;
 
     [[nodiscard]] inline Complex get_coef() const { return _ptr->_coef; }
     [[nodiscard]] inline const std::vector<UINT>& get_target_qubit_list() const {

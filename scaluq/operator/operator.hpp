@@ -9,6 +9,7 @@
 
 namespace scaluq {
 class Operator {
+public:    
     struct OperatorData {
         std::vector<PauliOperator> _terms;
         UINT _n_qubits;
@@ -17,8 +18,12 @@ class Operator {
         OperatorData(UINT n_qubits, const std::vector<PauliOperator>& terms);
         void add_operator(const PauliOperator& mpt);
         void add_operator(PauliOperator&& mpt);
+        void add_random_operator(UINT operator_count,
+                                    UINT seed = std::random_device()());
         void reserve(UINT size) { _terms.reserve(size); }
     };
+
+private:
     std::shared_ptr<const OperatorData> _ptr;
 
 public:
@@ -26,10 +31,6 @@ public:
     explicit Operator(const OperatorData& data) : _ptr(std::make_shared<OperatorData>(data)) {}
     Operator(UINT n_qubits, const std::vector<PauliOperator>& terms)
         : _ptr(std::make_shared<OperatorData>(n_qubits, terms)) {}
-
-    static Operator random_operator(UINT n_qubits,
-                                    UINT operator_count,
-                                    UINT seed = std::random_device()());
 
     [[nodiscard]] inline bool is_hermitian() { return _ptr->_is_hermitian; }
     [[nodiscard]] inline UINT n_qubits() { return _ptr->_n_qubits; }

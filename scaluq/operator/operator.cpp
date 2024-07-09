@@ -7,17 +7,6 @@
 
 namespace scaluq {
 
-std::string Operator::to_string() const {
-    std::stringstream ss;
-    for (auto itr = _ptr->_terms.begin(); itr != _ptr->_terms.end(); ++itr) {
-        ss << itr->get_coef() << " " << itr->get_pauli_string();
-        if (itr != std::prev(_ptr->_terms.end())) {
-            ss << " + ";
-        }
-    }
-    return ss.str();
-}
-
 Operator::OperatorData::OperatorData(UINT n_qubits, const std::vector<PauliOperator>& terms)
     : _n_qubits(n_qubits) {
     _terms.reserve(terms.size());
@@ -53,19 +42,28 @@ void Operator::OperatorData::add_operator(PauliOperator&& mpt) {
     this->_terms.emplace_back(std::move(mpt));
 }
 
-Operator Operator::random_operator(UINT n_qubits, UINT operator_count, UINT seed) {
-    OperatorData op(n_qubits);
+void Operator::OperatorData::add_random_operator(UINT operator_count, UINT seed) {
     Random random(seed);
     for (UINT operator_idx = 0; operator_idx < operator_count; operator_idx++) {
-        std::vector<UINT> target_qubit_list(n_qubits), pauli_id_list(n_qubits);
-        for (UINT qubit_idx = 0; qubit_idx < n_qubits; qubit_idx++) {
+        std::vector<UINT> target_qubit_list(_n_qubits), pauli_id_list(_n_qubits);
+        for (UINT qubit_idx = 0; qubit_idx < _n_qubits; qubit_idx++) {
             target_qubit_list[qubit_idx] = qubit_idx;
             pauli_id_list[qubit_idx] = random.int32() & 0b11;
         }
         Complex coef = random.uniform() * 2. - 1.;
-        op.add_operator(PauliOperator(target_qubit_list, pauli_id_list, coef));
+        add_operator(PauliOperator(target_qubit_list, pauli_id_list, coef));
     }
-    return Operator(op);
+}
+
+std::string Operator::to_string() const {
+    std::stringstream ss;
+    for (auto itr = _ptr->_terms.begin(); itr != _ptr->_terms.end(); ++itr) {
+        ss << itr->get_coef() << " " << itr->get_pauli_string();
+        if (itr != std::prev(_ptr->_terms.end())) {
+            ss << " + ";
+        }
+    }
+    return ss.str();
 }
 
 Operator Operator::optimize() const {
