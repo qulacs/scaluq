@@ -19,10 +19,10 @@ PauliOperator::Data::Data(std::string_view pauli_string, Complex coef) : _coef(c
             throw std::runtime_error("PauliOperator::PauliOperator: invalid pauli_string format");
         }
         UINT pauli_id = [&] {
-            if (pauli == 'I' || pauli == 'i') return Data::I;
-            if (pauli == 'X' || pauli == 'x') return Data::X;
-            if (pauli == 'Y' || pauli == 'y') return Data::Y;
-            if (pauli == 'Z' || pauli == 'z') return Data::Z;
+            if (pauli == 'I' || pauli == 'i') return PauliID::I;
+            if (pauli == 'X' || pauli == 'x') return PauliID::X;
+            if (pauli == 'Y' || pauli == 'y') return PauliID::Y;
+            if (pauli == 'Z' || pauli == 'z') return PauliID::Z;
             throw std::runtime_error("PauliOperator::PauliOperator: invalid pauli_string format");
         }();
         if (pauli_id != 0) add_single_pauli(target, pauli_id);
@@ -104,10 +104,10 @@ void PauliOperator::Data::add_single_pauli(UINT target_qubit, UINT pauli_id) {
             "PauliOperator::add_single_pauli: You cannot add single pauli twice for same "
             "qubit.");
     }
-    if (pauli_id == Data::X || pauli_id == Data::Y) {
+    if (pauli_id == PauliID::X || pauli_id == PauliID::Y) {
         _bit_flip_mask[target_qubit] = true;
     }
-    if (pauli_id == Data::Y || pauli_id == Data::Z) {
+    if (pauli_id == PauliID::Y || pauli_id == PauliID::Z) {
         _phase_flip_mask[target_qubit] = true;
     }
 }

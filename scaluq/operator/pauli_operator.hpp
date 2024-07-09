@@ -16,7 +16,6 @@ class PauliOperator {
 
 public:
     struct Data {
-        static constexpr UINT I = 0, X = 1, Y = 2, Z = 3;
         std::vector<UINT> _target_qubit_list, _pauli_id_list;
         Complex _coef;
         internal::BitVector _bit_flip_mask, _phase_flip_mask;
@@ -40,6 +39,7 @@ private:
     std::shared_ptr<const Data> _ptr;
 
 public:
+    enum PauliID : UINT { I, X, Y, Z };
     explicit PauliOperator(Complex coef = 1.) : _ptr(std::make_shared<Data>(coef)) {}
     explicit PauliOperator(const Data& data) : _ptr(std::make_shared<Data>(data)) {}
     PauliOperator(std::string_view pauli_string, Complex coef = 1.)

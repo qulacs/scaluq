@@ -689,6 +689,13 @@ NB_MODULE(scaluq_core, m) {
              &Circuit::get_inverse,
              "Get inverse of circuit. ALl the gates are newly created.");
 
+    nb::enum_<PauliOperator::PauliID>(m, "PauliID")
+        .value("I", PauliOperator::I)
+        .value("X", PauliOperator::X)
+        .value("Y", PauliOperator::Y)
+        .value("Z", PauliOperator::Z)
+        .export_values();
+
     nb::class_<PauliOperator::Data>(m, "Data")
         .def(nb::init<Complex>(), "coef"_a = 1., "Initialize with coefficient.")
         .def(nb::init<std::string_view, Complex>(),
@@ -727,11 +734,7 @@ NB_MODULE(scaluq_core, m) {
                 "Bit flip mask for the Pauli operator.")
         .def_ro("_phase_flip_mask",
                 &PauliOperator::Data::_phase_flip_mask,
-                "Phase flip mask for the Pauli operator.")
-        .def_ro_static("I", &PauliOperator::Data::I)
-        .def_ro_static("X", &PauliOperator::Data::X)
-        .def_ro_static("Y", &PauliOperator::Data::Y)
-        .def_ro_static("Z", &PauliOperator::Data::Z);
+                "Phase flip mask for the Pauli operator.");
 
     nb::class_<PauliOperator>(
         m,
@@ -846,7 +849,7 @@ NB_MODULE(scaluq_core, m) {
              "Add a Pauli operator to the operator data using move semantics.")
         .def(
             "add_random_operator",
-            [](const Operator::Data &op, UINT operator_count, std::optional<UINT> seed) {
+            [](Operator::Data &op, UINT operator_count, std::optional<UINT> seed) {
                 op.add_random_operator(operator_count, seed.value_or(std::random_device{}()));
             },
             "operator_count"_a,
