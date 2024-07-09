@@ -847,7 +847,7 @@ NB_MODULE(scaluq_core, m) {
         .def(
             "add_random_operator",
             [](UINT operator_count, std::optional<UINT> seed) {
-                return add_random_operator(operator_count, seed.value_or(std::random_device{}()));
+                add_random_operator(operator_count, seed.value_or(std::random_device{}()));
             },
             "operator_count"_a,
             "seed"_a = std::nullopt,
