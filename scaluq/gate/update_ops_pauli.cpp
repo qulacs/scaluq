@@ -16,12 +16,12 @@ void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& 
     UINT bit_flip_mask = internal::BitVector(bit_flip_mask_vector).data_raw()[0];
     UINT phase_flip_mask = internal::BitVector(phase_flip_mask_vector).data_raw()[0];
     UINT global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    const double cosval = std::cos(-angle / 2);
-    const double sinval = std::sin(-angle / 2);
-    const Complex coef = pauli.get_coef();
+    Complex true_angle = angle * pauli.get_coef();
+    const Complex cosval = Kokkos::cos(-true_angle / 2);
+    const Complex sinval = Kokkos::sin(-true_angle / 2);
     if (bit_flip_mask == 0) {
-        const Complex cval_min = Complex(cosval, -sinval);
-        const Complex cval_pls = Complex(cosval, sinval);
+        const Complex cval_min = cosval - Complex(0, 1) * sinval;
+        const Complex cval_pls = cosval + Complex(0, 1) * sinval;
         Kokkos::parallel_for(
             state.dim(), KOKKOS_LAMBDA(UINT state_idx) {
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
@@ -29,7 +29,6 @@ void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& 
                 } else {
                     state._raw[state_idx] *= cval_pls;
                 }
-                state._raw[state_idx] *= coef;
             });
         Kokkos::fence();
         return;
@@ -56,8 +55,6 @@ void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& 
                     cosval * cval_1 +
                     Complex(0, 1) * sinval * cval_0 *
                         PHASE_M90ROT().val[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
-                state._raw[basis_0] *= coef;
-                state._raw[basis_1] *= coef;
             });
         Kokkos::fence();
     }

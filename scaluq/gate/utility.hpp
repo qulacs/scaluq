@@ -3,5 +3,5 @@
 #include "gate.hpp"
 
 namespace scaluq {
-Gate merge_gate(const Gate& gate1, const Gate& gate2);
+std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2);
 }

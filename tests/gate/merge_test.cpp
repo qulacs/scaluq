@@ -81,18 +81,15 @@ TEST(GateTest, MergeGate) {
         gate::PauliRotation(PauliOperator("Z 1", random.uniform()), random.uniform() * PI() * 2));
     for (auto&& g1 : gates) {
         for (auto&& g2 : gates) {
-            std::cerr << (UINT)g1.gate_type() << ' ' << (UINT)g2.gate_type() << std::endl;
             UINT n = 2;
-            /* auto state1 = StateVector::Haar_random_state(n); */
-            auto state1 = StateVector(n);
+            auto state1 = StateVector::Haar_random_state(n);
             auto state2 = state1.copy();
-            auto mg = merge_gate(g1, g2);
+            auto [mg, phase] = merge_gate(g1, g2);
             g1->update_quantum_state(state1);
             g2->update_quantum_state(state1);
             mg->update_quantum_state(state2);
-            std::cerr << state1 << std::endl;
-            std::cerr << state2 << std::endl;
-            ASSERT_TRUE(same_state_except_global_phase(state1, state2));
+            state2.multiply_coef(Kokkos::polar(1., phase));
+            ASSERT_TRUE(same_state(state1, state2));
         }
     }
 }

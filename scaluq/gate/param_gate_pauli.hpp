@@ -27,10 +27,11 @@ public:
     }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         double angle = _pcoef * param;
-        ComplexMatrix mat = get_pauli_matrix(this->_pauli).value();
+        Complex true_angle = angle * this->_pauli.get_coef();
+        ComplexMatrix mat = this->_pauli.get_matrix_ignoring_coef();
         StdComplex imag_unit(0, 1);
-        mat = std::cos(-angle / 2) * ComplexMatrix::Identity(mat.rows(), mat.cols()) +
-              imag_unit * std::sin(-angle / 2) * mat;
+        mat = Kokkos::cos(-true_angle / 2) * ComplexMatrix::Identity(mat.rows(), mat.cols()) +
+              imag_unit * Kokkos::sin(-true_angle / 2) * mat;
         return mat;
     }
     void update_quantum_state(StateVector& state_vector, double param) const override {
