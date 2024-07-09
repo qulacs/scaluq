@@ -53,8 +53,6 @@ public:
     Circuit copy() const;
     Circuit get_inverse() const;
 
-    void optimize();
-
 private:
     UINT _n_qubits;
 

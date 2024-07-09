@@ -122,12 +122,6 @@ Circuit Circuit::get_inverse() const {
     return icircuit;
 }
 
-void Circuit::optimize() {
-    constexpr UINT no_gate = std::numeric_limits<UINT>::max();
-    std::vector<GateWithKey> new_gate_list;
-    std::vector<UINT> newest_gate_idx(_n_qubits, no_gate);
-}
-
 void Circuit::check_gate_is_valid(const Gate& gate) const {
     auto targets = gate->get_target_qubit_list();
     auto controls = gate->get_control_qubit_list();
