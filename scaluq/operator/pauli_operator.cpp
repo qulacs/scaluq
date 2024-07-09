@@ -16,14 +16,14 @@ PauliOperator::Data::Data(std::string_view pauli_string, Complex coef) : _coef(c
         if (ss.fail()) break;
         ss >> target;
         if (ss.fail()) {
-            throw std::runtime_error("PauliOperator::PauliOperator: invalid pauli_string format");
+            throw std::runtime_error("PauliOperator::Data::Data: invalid pauli_string format");
         }
         UINT pauli_id = [&] {
             if (pauli == 'I' || pauli == 'i') return PauliID::I;
             if (pauli == 'X' || pauli == 'x') return PauliID::X;
             if (pauli == 'Y' || pauli == 'y') return PauliID::Y;
             if (pauli == 'Z' || pauli == 'z') return PauliID::Z;
-            throw std::runtime_error("PauliOperator::PauliOperator: invalid pauli_string format");
+            throw std::runtime_error("PauliOperator::Data::Data: invalid pauli_string format");
         }();
         if (pauli_id != 0) add_single_pauli(target, pauli_id);
     }
@@ -42,7 +42,7 @@ PauliOperator::Data::Data(const std::vector<UINT>& target_qubit_list,
     : _coef(coef) {
     if (target_qubit_list.size() != pauli_id_list.size()) {
         throw std::runtime_error(
-            "PauliOperator::PauliOperator: target_qubit_list must have same size to "
+            "PauliOperator::::Data::Data: target_qubit_list must have same size to "
             "pauli_id_list");
     }
     reserve(target_qubit_list.size());
@@ -154,8 +154,7 @@ Complex PauliOperator::get_expectation_value(const StateVector& state_vector) co
     if (state_vector.n_qubits() < get_qubit_count()) {
         throw std::runtime_error(
             "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to "
-            "apply "
-            "the operator");
+            "apply the operator");
     }
     UINT bit_flip_mask = _ptr->_bit_flip_mask.data_raw()[0];
     UINT phase_flip_mask = _ptr->_phase_flip_mask.data_raw()[0];
@@ -199,8 +198,7 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
     if (state_vector_bra.n_qubits() < get_qubit_count()) {
         throw std::runtime_error(
             "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to "
-            "apply "
-            "the operator");
+            "apply the operator");
     }
     UINT bit_flip_mask = _ptr->_bit_flip_mask.data_raw()[0];
     UINT phase_flip_mask = _ptr->_phase_flip_mask.data_raw()[0];

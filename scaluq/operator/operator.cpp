@@ -10,17 +10,7 @@ namespace scaluq {
 Operator::Data::Data(UINT n_qubits, const std::vector<PauliOperator>& terms) : _n_qubits(n_qubits) {
     _terms.reserve(terms.size());
     for (auto mpt : terms) {
-        _is_hermitian &= mpt.get_coef().imag() == 0.;
-        if (![&] {
-                const auto& target_list = mpt.get_target_qubit_list();
-                if (target_list.empty()) return true;
-                return *std::max_element(target_list.begin(), target_list.end()) < _n_qubits;
-            }()) [[unlikely]] {
-            throw std::runtime_error(
-                "Operator::add_operator: target index of pauli_operator is larger than "
-                "n_qubits");
-        }
-        _terms.emplace_back(std::move(mpt));
+        add_operator(mpt);
     }
 }
 
@@ -33,7 +23,7 @@ void Operator::Data::add_operator(PauliOperator&& mpt) {
             return *std::max_element(target_list.begin(), target_list.end()) < _n_qubits;
         }()) {
         throw std::runtime_error(
-            "Operator::add_operator: target index of pauli_operator is larger than "
+            "Operator::Data::add_operator: target index of pauli_operator is larger than "
             "n_qubits");
     }
     this->_terms.emplace_back(std::move(mpt));
