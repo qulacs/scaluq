@@ -152,10 +152,11 @@ inline Gate DenseMatrix(const std::vector<UINT>& targets, const ComplexMatrix& m
     throw std::runtime_error(
         "gate::DenseMatrix(const std::vector<UINT>&, const ComplexMatrix&): DenseMatrix gate more "
         "than two qubits is not implemented yet.");
-    inline Gate Probablistic(const std::vector<double>& distribution,
-                             const std::vector<Gate>& gate_list) {
+}
+inline Gate Probablistic(const std::vector<double>& distribution,
+                         const std::vector<Gate>& gate_list) {
     return internal::GateFactory::create_gate<internal::ProbablisticGateImpl>(distribution,
-    }
+                                                                              gate_list);
 }
 }  // namespace gate
 }  // namespace scaluq
