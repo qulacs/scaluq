@@ -15,10 +15,12 @@ public:
     PPauliRotationGateImpl(const PauliOperator& pauli, double pcoef = 1.)
         : ParamGateBase(pcoef), _pauli(pauli) {}
 
+    PauliOperator pauli() const { return _pauli; }
+    std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
+
     std::vector<UINT> get_target_qubit_list() const override {
         return _pauli.get_target_qubit_list();
     }
-    std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
     ParamGate copy() const override { return std::make_shared<PPauliRotationGateImpl>(*this); }
