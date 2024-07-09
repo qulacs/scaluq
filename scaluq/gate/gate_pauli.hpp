@@ -39,7 +39,7 @@ public:
     PauliRotationGateImpl(const PauliOperator& pauli, double angle)
         : _pauli(pauli), _angle(angle) {}
 
-    std::vector<UINT> pauli() const { return _pauli.get_pauli_id_list(); }
+    PauliOperator pauli() const { return _pauli; }
     std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
     double angle() const { return _angle; }
 
