@@ -118,16 +118,15 @@ inline Gate DenseMatrix(const Matrix& matrix,
                         const std::vector<UINT>& controls) {
     UINT nqubits = targets.size();
     UINT dim = 1ULL << nqubits;
-    if (static_cast<UINT>(matrix.rows()) != dim || static_cast<UINT>(matrix.cols()) != dim) {
+    if (static_cast<UINT>(matrix.extent(0)) != dim || static_cast<UINT>(matrix.extent(1)) != dim) {
         throw std::runtime_error(
             "gate::DenseMatrix(const std::vector<UINT>&, const ComplexMatrix&): matrix size must "
             "be 2^{n_qubits} x 2^{n_qubits}.");
     }
     if (controls.size() > 0) {
-        throw std::runtime_error("gate::DenseMatrix(const Matrix& matrix,
-                                 const std::vector<UINT>& targets,
-                                 const std::vector<UINT>& controls)
-            : Control qubit is not implemented.");
+        throw std::runtime_error(
+            "gate::DenseMatrix(const Matrix& matrix, const std::vector<UINT>& targets, const "
+            "std::vector<UINT>& controls): Control qubit is not implemented.");
     }
     if (targets.size() == 0) return I();
     if (targets.size() == 1) {
@@ -158,7 +157,7 @@ inline Gate DenseMatrix(const Matrix& matrix,
                               });
     }
     return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl>(
-        matrix, target_qubit_list, control_qubit_list);
+        matrix, targets, controls);
 }
 inline Gate SparseMatrix(const CrsMatrix& matrix,
                          const std::vector<UINT>& target_qubit_list,
