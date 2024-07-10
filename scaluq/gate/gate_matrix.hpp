@@ -95,8 +95,8 @@ public:
                            UINT target2,
                            const std::array<std::array<Complex, 4>, 4>& matrix)
         : TwoQubitGateBase(target1, target2) {
-        for (UINT i : std::views::iota(4)) {
-            for (UINT j : std::views::iota(4)) {
+        for (UINT i : std::views::iota(0, 4)) {
+            for (UINT j : std::views::iota(0, 4)) {
                 _matrix.val[i][j] = matrix[i][j];
             }
         }
@@ -104,8 +104,8 @@ public:
 
     std::array<std::array<Complex, 4>, 4> matrix() const {
         std::array<std::array<Complex, 4>, 4> matrix;
-        for (UINT i : std::views::iota(4)) {
-            for (UINT j : std::views::iota(4)) {
+        for (UINT i : std::views::iota(0, 4)) {
+            for (UINT j : std::views::iota(0, 4)) {
                 matrix[i][j] = _matrix.val[i][j];
             }
         }
@@ -115,8 +115,8 @@ public:
     Gate copy() const override { return std::make_shared<TwoQubitMatrixGateImpl>(*this); }
     Gate get_inverse() const override {
         std::array<std::array<Complex, 4>, 4> matrix_dag;
-        for (UINT i : std::views::iota(4)) {
-            for (UINT j : std::views::iota(4)) {
+        for (UINT i : std::views::iota(0, 4)) {
+            for (UINT j : std::views::iota(0, 4)) {
                 matrix_dag[i][j] = Kokkos::conj(_matrix.val[j][i]);
             }
         }
