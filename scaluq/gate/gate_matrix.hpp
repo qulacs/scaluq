@@ -224,17 +224,23 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
+        if (control_qubit_info_list.size() > 0) {
+            throw std::logic_error(
+                "Error: SparseMatrixGateImpl::update_quantum_State(): Control qubit is not "
+                "supported.");
+        }
         Kokkos::View<scaluq::Complex*> state = state_vector._raw;
-        Kokkos::View<scaluq::Complex*> buffer1("buffer1", state_vector.dim());
-        Kokkos::View<scaluq::Complex*> buffer2("buffer2", state_vector.dim());
 
         const UINT target_qubit_index_count = target_qubit_info_list.size();
         const UINT matrix_dim = 1ULL << target_qubit_index_count;
         const std::vector<UINT> matrix_mask_list =
-            create_matrix_mask_list(this->get_control_qubit_list(), target_qubit_index_count);
+            create_matrix_mask_list(this->get_target_qubit_list(), target_qubit_index_count);
         const std::vector<UINT> sorted_insert_index_list =
-            create_sorted_ui_list(this->get_control_qubit_list());
+            create_sorted_ui_list(this->get_target_qubit_list());
         const UINT loop_dim = state_vector.dim() >> target_qubit_index_count;
+
+        Kokkos::View<scaluq::Complex*> buffer1("buffer1", matrix_dim);
+        Kokkos::View<scaluq::Complex*> buffer2("buffer2", matrix_dim);
 
         for (UINT state_index = 0; state_index < loop_dim; ++state_index) {
             UINT basis_0 = state_index;
@@ -245,16 +251,18 @@ public:
             }
 
             // fetch vector
-            for (UINT j = 0; j < matrix_dim; ++j) {
-                buffer1[j] = state[basis_0 ^ matrix_mask_list[j]];
-            }
+            Kokkos::parallel_for(
+                matrix_dim,
+                KOKKOS_LAMBDA(UINT j) { buffer1[j] = state[basis_0 ^ matrix_mask_list[j]]; });
+            Kokkos::fence();
 
             spmv(_matrix, buffer1, buffer2);
 
             // set result
-            for (UINT j = 0; j < matrix_dim; ++j) {
-                state[basis_0 ^ matrix_mask_list[j]] = buffer2[j];
-            }
+            Kokkos::parallel_for(
+                matrix_dim,
+                KOKKOS_LAMBDA(UINT j) { state[basis_0 ^ matrix_mask_list[j]] = buffer2[j]; });
+            Kokkos::fence();
         }
     }
 };

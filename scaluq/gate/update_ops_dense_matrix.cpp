@@ -29,7 +29,7 @@ void double_qubit_dense_matrix_gate(UINT target0,
                                     StateVector& state) {
     Kokkos::parallel_for(
         state.dim() >> 2, KOKKOS_LAMBDA(const UINT it) {
-            UINT basis_0 = internal::insert_zero_to_basis_index(it, target0, target1);
+            UINT basis_0 = internal::insert_two_zero_to_basis_index(it, target0, target1);
             UINT basis_1 = basis_0 | (1ULL << target0);
             UINT basis_2 = basis_0 | (1ULL << target1);
             UINT basis_3 = basis_1 | (1ULL << target1);

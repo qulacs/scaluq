@@ -25,14 +25,21 @@ KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index, UINT in
     return temp_basis | (basis_index & mask);
 }
 
+KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
+                                                       UINT basis_mask,
+                                                       UINT qubit_index) {
+    UINT tmp_basis = (basis_index >> qubit_index) << (qubit_index + 1);
+    return tmp_basis + basis_index % basis_mask;
+}
+
 /**
  * Inserts two 0 bits at specified indexes in basis_index.
- * Example: insert_zero_to_basis_index(0b11001, 1, 5) -> 0b1010001.
+ * Example: insert_two_zero_to_basis_index(0b11001, 1, 5) -> 0b1010001.
  *                                                          ^   ^
  */
-KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
-                                                       UINT insert_index1,
-                                                       UINT insert_index2) {
+KOKKOS_INLINE_FUNCTION UINT insert_two_zero_to_basis_index(UINT basis_index,
+                                                           UINT insert_index1,
+                                                           UINT insert_index2) {
     auto [lidx, uidx] = Kokkos::minmax(insert_index1, insert_index2);
     UINT lmask = (1ULL << lidx) - 1;
     UINT umask = (1ULL << uidx) - 1;
@@ -97,7 +104,7 @@ inline std::vector<UINT> create_matrix_mask_list(const std::vector<UINT> qubit_i
 
     for (UINT cursor = 0; cursor < matrix_dim; cursor++) {
         for (UINT bit_cursor = 0; bit_cursor < qubit_index_count; bit_cursor++) {
-            if ((cursor >> bit_cursor) % 2) {
+            if ((cursor >> bit_cursor) & 1) {
                 UINT bit_index = qubit_index_list[bit_cursor];
                 mask_list[cursor] ^= (1ULL << bit_index);
             }
