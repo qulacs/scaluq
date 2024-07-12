@@ -184,7 +184,7 @@ TEST(StateVectorTest, GetMarginalProbability) {
     auto state_cp = state.amplitudes();
     std::vector<double> probs;
     for (UINT i = 0; i < dim; ++i) {
-        probs.push_back(squared_norm(state_cp[i]));
+        probs.push_back(internal::squared_norm(state_cp[i]));
     }
     ASSERT_NEAR(state.get_marginal_probability({0, 0}), probs[0], eps);
     ASSERT_NEAR(state.get_marginal_probability({1, 0}), probs[1], eps);
