@@ -696,6 +696,36 @@ NB_MODULE(scaluq_core, m) {
         .value("Z", PauliOperator::Z)
         .export_values();
 
+    nb::class_<PauliOperator::Data>(
+        m, "PauliOperatorData", "Internal data structure for PauliOperator.")
+        .def(nb::init<Complex>(), "coef"_a = 1., "Initialize data with coefficient.")
+        .def(nb::init<std::string_view, Complex>(),
+             "pauli_string"_a,
+             "coef"_a = 1.,
+             "Initialize data with pauli string.")
+        .def(nb::init<const std::vector<UINT> &, const std::vector<UINT> &, Complex>(),
+             "target_qubit_list"_a,
+             "pauli_id_list"_a,
+             "coef"_a = 1.,
+             "Initialize data with target qubits and pauli ids.")
+        .def(nb::init<const std::vector<UINT> &, Complex>(),
+             "pauli_id_par_qubit"_a,
+             "coef"_a = 1.,
+             "Initialize data with pauli ids per qubit.")
+        .def(nb::init<const std::vector<bool> &, const std::vector<bool> &, Complex>(),
+             "bit_flip_mask"_a,
+             "phase_flip_mask"_a,
+             "coef"_a = 1.,
+             "Initialize data with bit flip and phase flip masks.")
+        .def(nb::init<const PauliOperator::Data &>(),
+             "data"_a,
+             "Initialize pauli operator from Data object.")
+        .def("add_single_pauli",
+             &PauliOperator::Data::add_single_pauli,
+             "target_qubit"_a,
+             "pauli_id"_a,
+             "Add a single pauli operation to the data.");
+
     nb::class_<PauliOperator>(
         m,
         "PauliOperator",
@@ -706,20 +736,18 @@ NB_MODULE(scaluq_core, m) {
              "pauli_id_list"_a,
              "coef"_a = 1.,
              "Initialize pauli operator. For each `i`, single pauli correspond to "
-             "`pauli_id_list[i]` is "
-             "applied to `target_qubit_list`-th qubit.")
+             "`pauli_id_list[i]` is applied to `target_qubit_list`-th qubit.")
         .def(nb::init<std::string_view, Complex>(),
              "pauli_string"_a,
              "coef"_a = 1.,
              "Initialize pauli operator. If `pauli_string` is `\"X0Y2\"`, Pauli-X is applied to "
-             "0-th "
-             "qubit and Pauli-Y is applied to 2-th qubit. In `pauli_string`, spaces are ignored.")
+             "0-th qubit and Pauli-Y is applied to 2-th qubit. In `pauli_string`, spaces are "
+             "ignored.")
         .def(nb::init<const std::vector<UINT> &, Complex>(),
              "pauli_id_par_qubit"_a,
              "coef"_a = 1.,
              "Initialize pauli operator. For each `i`, single pauli correspond to "
-             "`paul_id_per_qubit` is "
-             "applied to `i`-th qubit.")
+             "`paul_id_per_qubit` is applied to `i`-th qubit.")
         .def(
             "__init__",
             [](PauliOperator *t,
@@ -782,26 +810,15 @@ NB_MODULE(scaluq_core, m) {
         .def("get_qubit_count",
              &PauliOperator::get_qubit_count,
              "Get num of qubits to applied with, when count from 0-th qubit. Subset of $[0, "
-             "\\mathrm{qubit_count})$ is the "
-             "target.")
-        .def("change_coef", &PauliOperator::change_coef, "Set property `coef`.")
-        .def("add_single_pauli",
-             &PauliOperator::add_single_pauli,
-             "Add (apply tensor product) another single pauli. You cannot specify qubit index that "
-             "has "
-             "always a single "
-             "pauli.")
+             "\\mathrm{qubit_count})$ is the target.")
         .def("apply_to_state", &PauliOperator::apply_to_state, "Apply pauli to state vector.")
         .def("get_expectation_value",
              &PauliOperator::get_expectation_value,
              "Get expectation value of measuring state vector. $\\bra{\\psi}P\\ket{\\psi}$.")
         .def("get_transition_amplitude",
              &PauliOperator::get_transition_amplitude,
-             "Get transition amplitude of measuring state vector. "
-             "$\\bra{\\chi}P\\ket{\\psi}$.")
+             "Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.")
         .def(nb::self * nb::self)
-        .def(nb::self *= nb::self)
-        .def(nb::self *= Complex())
         .def(nb::self * Complex());
 
     nb::class_<Operator>(m, "Operator", "General quantum operator class.")

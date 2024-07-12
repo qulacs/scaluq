@@ -92,16 +92,16 @@ Complex Operator::get_expectation_value(const StateVector& state_vector) const {
         Kokkos::DefaultHostExecutionSpace(),
         terms_view,
         bmasks_host,
-        [](const PauliOperator& pauli) { return pauli._bit_flip_mask.data_raw()[0]; });
+        [](const PauliOperator& pauli) { return pauli._ptr->_bit_flip_mask.data_raw()[0]; });
     Kokkos::Experimental::transform(
         Kokkos::DefaultHostExecutionSpace(),
         terms_view,
         pmasks_host,
-        [](const PauliOperator& pauli) { return pauli._phase_flip_mask.data_raw()[0]; });
+        [](const PauliOperator& pauli) { return pauli._ptr->_phase_flip_mask.data_raw()[0]; });
     Kokkos::Experimental::transform(Kokkos::DefaultHostExecutionSpace(),
                                     terms_view,
                                     coefs_host,
-                                    [](const PauliOperator& pauli) { return pauli._coef; });
+                                    [](const PauliOperator& pauli) { return pauli._ptr->_coef; });
     Kokkos::View<UINT*> bmasks("bmasks", nterms);
     Kokkos::View<UINT*> pmasks("pmasks", nterms);
     Kokkos::View<Complex*> coefs("coefs", nterms);
@@ -164,15 +164,15 @@ Complex Operator::get_transition_amplitude(const StateVector& state_vector_bra,
     std::vector<Complex> coefs_vector(nterms);
     std::transform(
         _terms.begin(), _terms.end(), bmasks_vector.begin(), [](const PauliOperator& pauli) {
-            return pauli._bit_flip_mask.data_raw()[0];
+            return pauli._ptr->_bit_flip_mask.data_raw()[0];
         });
     std::transform(
         _terms.begin(), _terms.end(), pmasks_vector.begin(), [](const PauliOperator& pauli) {
-            return pauli._phase_flip_mask.data_raw()[0];
+            return pauli._ptr->_phase_flip_mask.data_raw()[0];
         });
     std::transform(
         _terms.begin(), _terms.end(), coefs_vector.begin(), [](const PauliOperator& pauli) {
-            return pauli._coef;
+            return pauli._ptr->_coef;
         });
     Kokkos::View<UINT*> bmasks = internal::convert_host_vector_to_device_view(bmasks_vector);
     Kokkos::View<UINT*> pmasks = internal::convert_host_vector_to_device_view(pmasks_vector);
@@ -216,7 +216,9 @@ Complex Operator::get_transition_amplitude(const StateVector& state_vector_bra,
 }
 
 Operator& Operator::operator*=(Complex coef) {
-    for (auto& pauli : _terms) pauli *= coef;
+    for (auto& pauli : _terms) {
+        pauli = pauli * coef;
+    }
     return *this;
 }
 Operator& Operator::operator+=(const Operator& target) {
@@ -245,7 +247,9 @@ Operator& Operator::operator+=(const PauliOperator& pauli) {
     return *this;
 }
 Operator& Operator::operator*=(const PauliOperator& pauli) {
-    for (auto& pauli1 : _terms) pauli1 *= pauli;
+    for (auto& pauli1 : _terms) {
+        pauli1 = pauli1 * pauli;
+    }
     return *this;
 }
 
