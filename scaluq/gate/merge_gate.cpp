@@ -1,4 +1,4 @@
-#include "utility.hpp"
+#include "merge_gate.hpp"
 
 #include "../constant.hpp"
 #include "../util/utility.hpp"

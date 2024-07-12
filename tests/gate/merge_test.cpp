@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <gate/gate_factory.hpp>
-#include <gate/utility.hpp>
+#include <gate/merge_gate.hpp>
 #include <state/state_vector.hpp>
 #include <types.hpp>
 #include <util/random.hpp>
