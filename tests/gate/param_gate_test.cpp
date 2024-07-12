@@ -96,3 +96,23 @@ TEST(ParamGateTest, ApplyPRZGate) {
     test_apply_parametric_single_pauli_rotation(5, &gate::RX, &gate::PRX);
 }
 TEST(ParamGateTest, ApplyPPauliRotationGate) { test_apply_parametric_multi_pauli_rotation(5); }
+
+TEST(ParamGateTest, ApplyPProbablisticGate) {
+    auto probgate = gate::PProbablistic({.1, .9}, {gate::PRX(0), gate::I()});
+    UINT x_cnt = 0, i_cnt = 0;
+    StateVector state(1);
+    for (auto _ : std::views::iota(0, 100)) {
+        UINT before = state.sampling(1)[0];
+        probgate->update_quantum_state(state, scaluq::PI());
+        UINT after = state.sampling(1)[0];
+        if (before != after) {
+            x_cnt++;
+        } else {
+            i_cnt++;
+        }
+    }
+    // These test is probablistic, but pass at least 99.99% cases.
+    ASSERT_GT(x_cnt, 0);
+    ASSERT_GT(i_cnt, 0);
+    ASSERT_LT(x_cnt, i_cnt);
+}

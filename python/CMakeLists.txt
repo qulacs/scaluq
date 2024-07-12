@@ -26,5 +26,6 @@ nanobind_add_stub(
     MODULE scaluq.scaluq_core.gate
     OUTPUT scaluq/gate.pyi
     PYTHON_PATH $<TARGET_FILE_DIR:scaluq>
+    MARKER_FILE scaluq/py.typed
     VERBOSE
 )
