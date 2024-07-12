@@ -56,7 +56,6 @@ public:
         return ret;
     }
 
-    Gate copy() const override { return std::make_shared<ProbablisticGateImpl>(*this); }
     Gate get_inverse() const override {
         std::vector<Gate> inv_gate_list;
         inv_gate_list.reserve(_gate_list.size());

@@ -62,7 +62,6 @@ public:
         return ret;
     }
 
-    ParamGate copy() const override { return std::make_shared<PProbablisticGateImpl>(*this); }
     ParamGate get_inverse() const override {
         std::vector<EitherGate> inv_gate_list;
         inv_gate_list.reserve(_gate_list.size());
