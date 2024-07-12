@@ -24,7 +24,9 @@ class SwapGateImpl : public TwoQubitGateBase {
 public:
     SwapGateImpl(UINT target1, UINT target2) : TwoQubitGateBase(target1, target2) {}
 
-    Gate get_inverse() const override { return std::make_shared<SwapGateImpl>(*this); }
+    Gate get_inverse() const override {
+        return std::const_pointer_cast<GateBase>(shared_from_this());
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat = ComplexMatrix::Identity(1 << 2, 1 << 2);
         mat << 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1;

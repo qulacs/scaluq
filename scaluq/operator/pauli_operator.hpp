@@ -16,7 +16,7 @@ class PauliOperator {
     internal::BitVector _bit_flip_mask, _phase_flip_mask;
 
 public:
-    static constexpr UINT I = 0, X = 1, Y = 2, Z = 3;
+    enum PauliID : UINT { I, X, Y, Z };
 
     explicit PauliOperator(Complex coef = 1.);
     PauliOperator(std::string_view pauli_string, Complex coef = 1.);

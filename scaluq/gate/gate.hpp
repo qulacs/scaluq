@@ -123,7 +123,7 @@ constexpr GateType get_gate_type() {
 }
 
 namespace internal {
-class GateBase : std::enable_shared_from_this<GateBase> {
+class GateBase : public std::enable_shared_from_this<GateBase> {
 public:
     virtual ~GateBase() = default;
 

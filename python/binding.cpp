@@ -689,6 +689,13 @@ NB_MODULE(scaluq_core, m) {
              &Circuit::get_inverse,
              "Get inverse of circuit. ALl the gates are newly created.");
 
+    nb::enum_<PauliOperator::PauliID>(m, "PauliID")
+        .value("I", PauliOperator::I)
+        .value("X", PauliOperator::X)
+        .value("Y", PauliOperator::Y)
+        .value("Z", PauliOperator::Z)
+        .export_values();
+
     nb::class_<PauliOperator>(
         m,
         "PauliOperator",

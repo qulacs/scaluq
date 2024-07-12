@@ -64,6 +64,6 @@ public:
 private:
     std::vector<PauliOperator> _terms;
     UINT _n_qubits;
-    bool _is_hermitian;
+    bool _is_hermitian = true;
 };
 }  // namespace scaluq

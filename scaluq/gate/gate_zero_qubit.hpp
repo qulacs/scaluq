@@ -16,7 +16,9 @@ class IGateImpl : public ZeroQubitGateBase {
 public:
     IGateImpl() : ZeroQubitGateBase(){};
 
-    Gate get_inverse() const override { return std::make_shared<IGateImpl>(*this); }
+    Gate get_inverse() const override {
+        return std::const_pointer_cast<GateBase>(shared_from_this());
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
         return ComplexMatrix::Identity(1, 1);
     }

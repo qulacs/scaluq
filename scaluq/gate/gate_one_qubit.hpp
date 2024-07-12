@@ -32,7 +32,9 @@ class XGateImpl : public OneQubitGateBase {
 public:
     XGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    Gate get_inverse() const override { return std::make_shared<XGateImpl>(*this); }
+    Gate get_inverse() const override {
+        return std::const_pointer_cast<GateBase>(shared_from_this());
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 0, 1, 1, 0;
@@ -49,7 +51,9 @@ class YGateImpl : public OneQubitGateBase {
 public:
     YGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    Gate get_inverse() const override { return std::make_shared<YGateImpl>(*this); }
+    Gate get_inverse() const override {
+        return std::const_pointer_cast<GateBase>(shared_from_this());
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 0, -1i, 1i, 0;
@@ -66,7 +70,9 @@ class ZGateImpl : public OneQubitGateBase {
 public:
     ZGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    Gate get_inverse() const override { return std::make_shared<ZGateImpl>(*this); }
+    Gate get_inverse() const override {
+        return std::const_pointer_cast<GateBase>(shared_from_this());
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, -1;
@@ -83,7 +89,9 @@ class HGateImpl : public OneQubitGateBase {
 public:
     HGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    Gate get_inverse() const override { return std::make_shared<HGateImpl>(*this); }
+    Gate get_inverse() const override {
+        return std::const_pointer_cast<GateBase>(shared_from_this());
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 1, 1, 1, -1;
