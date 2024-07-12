@@ -696,7 +696,7 @@ NB_MODULE(scaluq_core, m) {
         .value("Z", PauliOperator::Z)
         .export_values();
 
-    nb::class_<PauliOperator::Data>(m, "Data")
+    nb::class_<PauliOperator::Data>(m, "PauliOperatorData")
         .def(nb::init<Complex>(), "coef"_a = 1., "Initialize with coefficient.")
         .def(nb::init<std::string_view, Complex>(),
              "pauli_string"_a,
@@ -835,7 +835,7 @@ NB_MODULE(scaluq_core, m) {
         .def(nb::self * nb::self)
         .def(nb::self * Complex());
 
-    nb::class_<Operator::Data>(m, "Data")
+    nb::class_<Operator::Data>(m, "OperatorData")
         .def(nb::init<UINT>(), "n_qubits"_a, "Initialize with number of qubits.")
         .def(nb::init<UINT, const std::vector<PauliOperator> &>(),
              "n_qubits"_a,
