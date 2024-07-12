@@ -2,6 +2,7 @@
 
 #include "param_gate_one_qubit.hpp"
 #include "param_gate_pauli.hpp"
+#include "param_gate_probablistic.hpp"
 
 namespace scaluq {
 namespace internal {
@@ -25,6 +26,11 @@ inline ParamGate PRZ(UINT target, double pcoef = 1.) {
 }
 inline ParamGate PPauliRotation(const PauliOperator& pauli, double pcoef = 1.) {
     return internal::ParamGateFactory::create_gate<internal::PPauliRotationGateImpl>(pauli, pcoef);
+}
+inline ParamGate PProbablistic(const std::vector<double>& distribution,
+                               const std::vector<std::variant<Gate, ParamGate>>& gate_list) {
+    return internal::ParamGateFactory::create_gate<internal::PProbablisticGateImpl>(distribution,
+                                                                                    gate_list);
 }
 }  // namespace gate
 }  // namespace scaluq

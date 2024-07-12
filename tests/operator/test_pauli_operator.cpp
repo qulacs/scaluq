@@ -177,3 +177,18 @@ INSTANTIATE_TEST_CASE_P(
         return testing::Values(PauliTestParam("Z_Y", pauli_z, pauli_y, expected));
     }(),
     testing::PrintToStringParamName());
+
+TEST(PauliOperatorTest, ApplyToStateTest) {
+    const UINT n_qubits = 3;
+    StateVector state_vector(n_qubits);
+    state_vector.load([n_qubits] {
+        std::vector<Complex> tmp(1 << n_qubits);
+        for (UINT i = 0; i < tmp.size(); ++i) tmp[i] = Complex(i, 0);
+        return tmp;
+    }());
+
+    PauliOperator op(std::vector<bool>{1, 0, 0}, std::vector<bool>{0, 1, 0}, Complex(2));
+    op.apply_to_state(state_vector);
+    std::vector<Complex> expected = {2, 0, -6, -4, 10, 8, -14, -12};
+    ASSERT_EQ(state_vector.amplitudes(), expected);
+}
