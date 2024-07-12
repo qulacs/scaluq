@@ -802,19 +802,19 @@ NB_MODULE(scaluq_core, m) {
         .def(nb::self * nb::self)
         .def(nb::self *= nb::self)
         .def(nb::self *= Complex())
-        .def(nb::self * Complex())
-        .def_ro_static("I", &PauliOperator::I)
-        .def_ro_static("X", &PauliOperator::X)
-        .def_ro_static("Y", &PauliOperator::Y)
-        .def_ro_static("Z", &PauliOperator::Z);
+        .def(nb::self * Complex());
 
-    nb::class_<Operator>(m, "Operator")
-        .def(nb::init<UINT>())
-        .def("is_hermitian", &Operator::is_hermitian)
-        .def("n_qubits", &Operator::n_qubits)
-        .def("terms", &Operator::terms)
-        .def("to_string", &Operator::to_string)
-        .def("add_operator", nb::overload_cast<const PauliOperator &>(&Operator::add_operator))
+    nb::class_<Operator>(m, "Operator", "General quantum operator class.")
+        .def(nb::init<UINT>(),
+             "qubit_count"_a,
+             "Initialize operator with specified number of qubits.")
+        .def("is_hermitian", &Operator::is_hermitian, "Check if the operator is Hermitian.")
+        .def("n_qubits", &Operator::n_qubits, "Get the number of qubits the operator acts on.")
+        .def("terms", &Operator::terms, "Get the list of Pauli terms that make up the operator.")
+        .def("to_string", &Operator::to_string, "Get string representation of the operator.")
+        .def("add_operator",
+             nb::overload_cast<const PauliOperator &>(&Operator::add_operator),
+             "Add a Pauli operator to this operator.")
         .def(
             "add_random_operator",
             [](Operator &op, UINT operator_count, std::optional<UINT> seed) {
@@ -822,12 +822,20 @@ NB_MODULE(scaluq_core, m) {
                                               seed.value_or(std::random_device{}()));
             },
             "operator_count"_a,
-            "seed"_a = std::nullopt)
-        .def("optimize", &Operator::optimize)
-        .def("get_dagger", &Operator::get_dagger)
-        .def("apply_to_state", &Operator::apply_to_state)
-        .def("get_expectation_value", &Operator::get_expectation_value)
-        .def("get_transition_amplitude", &Operator::get_transition_amplitude)
+            "seed"_a = std::nullopt,
+            "Add a specified number of random Pauli operators to this operator. An optional seed "
+            "can be provided for reproducibility.")
+        .def("optimize", &Operator::optimize, "Optimize the operator by combining like terms.")
+        .def("get_dagger",
+             &Operator::get_dagger,
+             "Get the adjoint (Hermitian conjugate) of the operator.")
+        .def("apply_to_state", &Operator::apply_to_state, "Apply the operator to a state vector.")
+        .def("get_expectation_value",
+             &Operator::get_expectation_value,
+             "Get the expectation value of the operator with respect to a state vector.")
+        .def("get_transition_amplitude",
+             &Operator::get_transition_amplitude,
+             "Get the transition amplitude of the operator between two state vectors.")
         .def(nb::self *= Complex())
         .def(nb::self * Complex())
         .def(+nb::self)
