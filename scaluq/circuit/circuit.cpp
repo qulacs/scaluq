@@ -2,6 +2,8 @@
 
 #include <ranges>
 
+#include "../gate/merge_gate.hpp"
+
 namespace scaluq {
 UINT Circuit::calculate_depth() const {
     std::vector<UINT> filled_step(_n_qubits, 0ULL);
@@ -142,5 +144,88 @@ void Circuit::check_gate_is_valid(const ParamGate& param_gate) const {
     if (!valid) {
         throw std::runtime_error("Gate to be added to the circuit has invalid qubit range");
     }
+}
+
+void Circuit::optimize(UINT block_size) {
+    if (block_size >= 3) {
+        throw std::runtime_error(
+            "Currently block_size >= 3 is not supported because general matrix gate with qubits >= "
+            "3 is not implemented.");
+    }
+    std::vector<GateWithKey> new_gate_list;
+    double global_phase = 0.;
+    std::vector<std::pair<Gate, std::vector<UINT>>> gate_pool;
+    constexpr UINT NO_GATES = std::numeric_limits<UINT>::max();
+    std::vector<UINT> latest_gate_idx(n_qubits, NO_GATES);
+    for (const GateWithKey& gate_with_key) {
+        if (gate_with_key.index() == 1) {
+            const auto& pgate = std::get<1>(gate_with_key).first;
+            for (UINT target : pgate->get_target_qubit_list()) {
+                latest_gate_idx[target] = NO_GATES;
+            }
+            for (UINT control : pgate->get_control_qubit_list()) {
+                latest_gate_idx[control] = NO_GATES;
+            }
+            new_gate_list.emplace_back(std::move(gate_with_key));
+            continue;
+        }
+        const auto& gate = std::get<0>(gate_with_key);
+        auto target_list = gate->get_target_qubit_list();
+        auto control_list = gate->get_target_qubit_list();
+        std::vector<UINT> targets;
+        targets.reserve(target_list.size() + control_list.size());
+        std::ranges::copy(target_list, std::back_inserter(targets));
+        std::ranges::copy(control_list, std::back_inserter(targets));
+        std::vector<UINT> previous_gate_indices;
+        std::vector<UINT> newly_applied_qubits;
+        for (UINT target : targets) {
+            if (latest_gate_idx[target] == NO_GATES) {
+                newly_applied_qubits.push_back(target);
+            } else {
+                previous_gate_indices.push_back(latest_gate_idx[target]);
+            }
+        }
+        previous_gate_indices.erase(std::ranges::unique(previous_gate_indices).begin(),
+                                    previous_gate_indices.end());
+        UINT merged_gate_size =
+            std::accumulate(previous_gate_indices.begin(),
+                            previous_gate_indices.end(),
+                            newly_applied_qubits.size(),
+                            [&](UINT sz, UINT idx) { return sz + gate_pool[idx].second.size(); });
+        if (merged_gate_size > block_size) {
+            for (UINT idx : previous_gate_indices) {
+                for (UINT qubit : gate_pool[idx].second) {
+                    latest_gate_idx[qubit] = NO_GATES;
+                }
+                new_gate_list.emplace_back(std::move(gate_pool[idx]));
+            }
+            UINT new_idx = gate_pool.size();
+            for (UINT qubit : targets) {
+                latest_gate_idx[qubit] = new_idx;
+            }
+            gate_pool.emplace_back(std::move(gate), std::move(targets));
+            continue;
+        }
+        Gate merged_gate = gate::I();
+        UINT new_idx = gate_pool.size();
+        for (UINT idx : previous_gate_indices) {
+            double phase;
+            std::tie(merged_gate, phase) = merge_gate(merged_gate, gate_pool[idx].first);
+            global_phase += phase;
+            for (UINT qubit : targets) {
+                latest_gate_idx[qubit] = new_idx;
+            }
+        }
+        {
+            double phase;
+            std::tie(merged_gate, phase) = merge_gate(merged_gate, gate);
+            global_phase += phase;
+            for (UINT qubit : newly_applied_qubits) {
+                latest_gate_idx[qubit] = new_idx;
+            }
+        }
+        gate_pool.emplace_back(merge_gate);
+    }
+    // TODO push last gates
 }
 }  // namespace scaluq

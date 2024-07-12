@@ -48,6 +48,19 @@ KOKKOS_INLINE_FUNCTION matrix_2_2 matrix_multiply(const matrix_2_2& matrix1,
             matrix1.val[1][0] * matrix2.val[0][1] + matrix1.val[1][1] * matrix2.val[1][1]};
 }
 
+template <class T, class... Args>
+inline std::vector<T> concat_vector(Args... args) {
+    std::initializer_list<const std::vector<T>&> vecs = {args...};
+    std::vector<T> res;
+    res.reserve(std::accumulate(vecs.begin(), vecs.end(), 0ULL, [](UINT acc, const auto& vec) {
+        return acc + vec.size();
+    }));
+    for (const auto& vec : vecs) {
+        std::ranges::copy(vecs.begin(), vecs.end(), std::back_inserter(res));
+    }
+    return res;
+}
+
 inline ComplexMatrix kronecker_product(const ComplexMatrix& lhs, const ComplexMatrix& rhs) {
     ComplexMatrix result(lhs.rows() * rhs.rows(), lhs.cols() * rhs.cols());
     for (int i = 0; i < lhs.rows(); i++) {
