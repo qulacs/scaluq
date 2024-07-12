@@ -143,7 +143,7 @@ class GatePtr {
     friend class GatePtr;
 
 private:
-    std::shared_ptr<T> _gate_ptr;
+    std::shared_ptr<const T> _gate_ptr;
     GateType _gate_type;
 
 public:
@@ -157,11 +157,11 @@ public:
         } else if constexpr (std::is_same_v<T, internal::GateBase>) {
             // upcast
             _gate_type = get_gate_type<U>();
-            _gate_ptr = std::static_pointer_cast<T>(gate_ptr);
+            _gate_ptr = std::static_pointer_cast<const T>(gate_ptr);
         } else {
             // downcast
             _gate_type = get_gate_type<T>();
-            if (!(_gate_ptr = std::dynamic_pointer_cast<T>(gate_ptr))) {
+            if (!(_gate_ptr = std::dynamic_pointer_cast<const T>(gate_ptr))) {
                 throw std::runtime_error("invalid gate cast");
             }
         }
@@ -174,20 +174,20 @@ public:
         } else if constexpr (std::is_same_v<T, internal::GateBase>) {
             // upcast
             _gate_type = gate._gate_type;
-            _gate_ptr = std::static_pointer_cast<T>(gate._gate_ptr);
+            _gate_ptr = std::static_pointer_cast<const T>(gate._gate_ptr);
         } else {
             // downcast
             if (gate._gate_type != get_gate_type<T>()) {
                 throw std::runtime_error("invalid gate cast");
             }
             _gate_type = gate._gate_type;
-            _gate_ptr = std::static_pointer_cast<T>(gate._gate_ptr);
+            _gate_ptr = std::static_pointer_cast<const T>(gate._gate_ptr);
         }
     }
 
     GateType gate_type() const { return _gate_type; }
 
-    T* operator->() const {
+    const T* operator->() const {
         if (!_gate_ptr) {
             throw std::runtime_error("GatePtr::operator->(): Gate is Null");
         }

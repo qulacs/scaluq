@@ -20,9 +20,7 @@ public:
     std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
-    Gate get_inverse() const override {
-        return std::const_pointer_cast<GateBase>(shared_from_this());
-    }
+    Gate get_inverse() const override { return shared_from_this(); }
     std::optional<ComplexMatrix> get_matrix() const override {
         return get_pauli_matrix(this->_pauli);
     }

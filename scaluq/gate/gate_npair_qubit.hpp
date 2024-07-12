@@ -35,9 +35,7 @@ public:
     }
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
-    Gate get_inverse() const override {
-        return std::const_pointer_cast<GateBase>(shared_from_this());
-    }
+    Gate get_inverse() const override { return shared_from_this(); }
     std::optional<ComplexMatrix> get_matrix() const override {
         const UINT pow2_nq = 1ULL << _block_size;
         const UINT pow2_2nq = 1ULL << (_block_size * 2);

@@ -24,9 +24,7 @@ class CXGateImpl : public OneControlOneTargetGateBase {
 public:
     CXGateImpl(UINT control, UINT target) : OneControlOneTargetGateBase(control, target) {}
 
-    Gate get_inverse() const override {
-        return std::const_pointer_cast<GateBase>(shared_from_this());
-    }
+    Gate get_inverse() const override { return shared_from_this(); }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(4, 4);
         mat << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0;
@@ -44,9 +42,7 @@ class CZGateImpl : public OneControlOneTargetGateBase {
 public:
     CZGateImpl(UINT control, UINT target) : OneControlOneTargetGateBase(control, target) {}
 
-    Gate get_inverse() const override {
-        return std::const_pointer_cast<GateBase>(shared_from_this());
-    }
+    Gate get_inverse() const override { return shared_from_this(); }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(4, 4);
         mat << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1;
