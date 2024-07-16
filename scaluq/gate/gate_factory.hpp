@@ -152,11 +152,11 @@ inline Gate DenseMatrix(const ComplexMatrix& matrix,
                                                         Complex(matrix(3, 2)),
                                                         Complex(matrix(3, 3))}});
         }
-        Matrix mat = internal::convert_outer_matrix_to_internal_matrix(matrix);
+        Matrix mat = internal::convert_external_matrix_to_internal_matrix(matrix);
         return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl>(
             mat, targets, controls);
     }
-    Matrix mat = internal::convert_outer_matrix_to_internal_matrix(matrix);
+    Matrix mat = internal::convert_external_matrix_to_internal_matrix(matrix);
     return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl>(
         mat, targets, controls);
 }
