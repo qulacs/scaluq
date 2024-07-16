@@ -8,6 +8,7 @@
 #include "gate_probablistic.hpp"
 #include "gate_two_qubit.hpp"
 #include "gate_zero_qubit.hpp"
+#include "util/utility.hpp"
 
 namespace scaluq {
 namespace internal {
@@ -151,59 +152,13 @@ inline Gate DenseMatrix(const ComplexMatrix& matrix,
                                                         Complex(matrix(3, 2)),
                                                         Complex(matrix(3, 3))}});
         }
-        throw std::runtime_error(
-            "gate::DenseMatrix(const ComplexMatrix&, const std::vector<UINT>&): DenseMatrix gate "
-            "more "
-            "than two qubits is not implemented yet.");
-    }
-    throw std::runtime_error(
-        "gate::DenseMatrix(const ComplexMatrix&, const std::vector<UINT>&): This method does not "
-        "support control qubits. Use gate::DenseMatrix(const Matrix&, const std::vector<UINT>&, "
-        "const std::vector<UINT>&).");
-}
-inline Gate DenseMatrix(const Matrix& matrix,
-                        const std::vector<UINT>& targets,
-                        const std::vector<UINT>& controls = {}) {
-    UINT nqubits = targets.size();
-    UINT dim = 1ULL << nqubits;
-    if (static_cast<UINT>(matrix.extent(0)) != dim || static_cast<UINT>(matrix.extent(1)) != dim) {
-        throw std::runtime_error(
-            "gate::DenseMatrix(const std::vector<UINT>&, const ComplexMatrix&): matrix size must "
-            "be 2^{n_qubits} x 2^{n_qubits}.");
-    }
-    if (controls.size() == 0) {
-        if (targets.size() == 0) return I();
-        if (targets.size() == 1) {
-            return OneQubitMatrix(
-                targets[0],
-                std::array{std::array{Complex(matrix(0, 0)), Complex(matrix(0, 1))},
-                           std::array{Complex(matrix(1, 0)), Complex(matrix(1, 1))}});
-        }
-        if (targets.size() == 2) {
-            return TwoQubitMatrix(targets[0],
-                                  targets[1],
-                                  std::array{std::array{Complex(matrix(0, 0)),
-                                                        Complex(matrix(0, 1)),
-                                                        Complex(matrix(0, 2)),
-                                                        Complex(matrix(0, 3))},
-                                             std::array{Complex(matrix(1, 0)),
-                                                        Complex(matrix(1, 1)),
-                                                        Complex(matrix(1, 2)),
-                                                        Complex(matrix(1, 3))},
-                                             std::array{Complex(matrix(2, 0)),
-                                                        Complex(matrix(2, 1)),
-                                                        Complex(matrix(2, 2)),
-                                                        Complex(matrix(2, 3))},
-                                             std::array{Complex(matrix(3, 0)),
-                                                        Complex(matrix(3, 1)),
-                                                        Complex(matrix(3, 2)),
-                                                        Complex(matrix(3, 3))}});
-        }
+        Matrix mat = internal::convert_outer_matrix_to_internal_matrix(matrix);
         return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl>(
-            matrix, targets, controls);
+            mat, targets, controls);
     }
+    Matrix mat = internal::convert_outer_matrix_to_internal_matrix(matrix);
     return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl>(
-        matrix, targets, controls);
+        mat, targets, controls);
 }
 inline Gate SparseMatrix(const CrsMatrix& matrix,
                          const std::vector<UINT>& target_qubit_list,

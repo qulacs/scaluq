@@ -225,5 +225,17 @@ KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
     return z.real() * z.real() + z.imag() * z.imag();
 }
 
+inline Matrix convert_outer_matrix_to_internal_matrix(const ComplexMatrix& eigen_matrix) {
+    int rows = eigen_matrix.rows();
+    int cols = eigen_matrix.cols();
+    Matrix mat("internal_matrix", rows, cols);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            mat(i, j) = eigen_matrix(i, j);
+        }
+    }
+    return mat;
+}
+
 }  // namespace internal
 }  // namespace scaluq
