@@ -23,9 +23,7 @@ public:
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
     Gate get_inverse() const override { return shared_from_this(); }
-    std::optional<ComplexMatrix> get_matrix() const override {
-        return get_pauli_matrix(this->_pauli);
-    }
+    std::optional<ComplexMatrix> get_matrix() const override { return this->_pauli.get_matrix(); }
 
     void update_quantum_state(StateVector& state_vector) const override {
         pauli_gate(this->_pauli, state_vector);
