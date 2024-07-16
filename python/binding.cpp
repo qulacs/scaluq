@@ -482,7 +482,7 @@ NB_MODULE(scaluq_core, m) {
     DEF_TWO_QUBIT_GATE(TwoQubitMatrixGate, "Specific class of double-qubit dense matrix gate.")
         .def(
             "matrix",
-            [](const TwoQubitMatrixGate &gate) { gate->matrix(); },
+            [](const TwoQubitMatrixGate &gate) { return gate->matrix(); },
             "Get property `matrix`.");
 
     DEF_GATE(FusedSwapGate,
@@ -510,6 +510,18 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE(PauliRotationGate,
              "Specific class of multi-qubit pauli-rotation gate, represented as "
              "$e^{-i\\frac{\\mathrm{angle}}{2}P}$.");
+
+    DEF_GATE(ProbablisticGate,
+             "Specific class of probablistic gate. The gate to apply is picked from a cirtain "
+             "distribution.")
+        .def(
+            "gate_list",
+            [](const ProbablisticGate &gate) { return gate->gate_list(); },
+            nb::rv_policy::reference)
+        .def(
+            "distribution",
+            [](const ProbablisticGate &gate) { return gate->distribution(); },
+            nb::rv_policy::reference);
 
     auto mgate = m.def_submodule("gate", "Define gates.");
 
@@ -539,6 +551,7 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(U1);
     DEF_GATE_FACTORY(U2);
     DEF_GATE_FACTORY(U3);
+    DEF_GATE_FACTORY(OneQubitMatrix);
     DEF_GATE_FACTORY(CX);
     mgate.def("CNot",
               &gate::CX,
@@ -546,14 +559,24 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(CZ);
     DEF_GATE_FACTORY(Swap);
     DEF_GATE_FACTORY(FusedSwap);
+    DEF_GATE_FACTORY(TwoQubitMatrix);
     DEF_GATE_FACTORY(Pauli);
     DEF_GATE_FACTORY(PauliRotation);
+    mgate.def("DenseMatrix",
+              &gate::DenseMatrix,
+              "Generate general Gate class instance of DenseMatrix. IGate, OneQubitMatrixGate or "
+              "TwoQubitMatrixGate correspond to len(target) is created. The case len(target) >= 3 "
+              "is currently not supported.");
+    DEF_GATE_FACTORY(Probablistic);
 
     nb::enum_<ParamGateType>(m, "ParamGateType", "Enum of ParamGate Type.")
         .value("PRX", ParamGateType::PRX)
         .value("PRY", ParamGateType::PRY)
         .value("PRZ", ParamGateType::PRZ)
         .value("PPauliRotation", ParamGateType::PPauliRotation);
+
+    m.def(
+        "merge_gate", &merge_gate, "Merge two gates. return value is (merged gate, global phase).");
 
 #define DEF_PGATE_BASE(PGATE_TYPE, DESCRIPTION)                                                   \
     nb::class_<PGATE_TYPE>(m, #PGATE_TYPE, DESCRIPTION)                                           \
@@ -623,6 +646,19 @@ NB_MODULE(scaluq_core, m) {
               "Specific class of parametric multi-qubit pauli-rotation gate, represented as "
               "$e^{-i\\frac{\\mathrm{angle}}{2}P}$. `angle` is given as `param * pcoef`.");
 
+    DEF_PGATE(PProbablisticGate,
+              "Specific class of parametric probablistic gate. The gate to apply is picked from a "
+              "cirtain "
+              "distribution.")
+        .def(
+            "gate_list",
+            [](const PProbablisticGate &gate) { return gate->gate_list(); },
+            nb::rv_policy::reference)
+        .def(
+            "distribution",
+            [](const PProbablisticGate &gate) { return gate->distribution(); },
+            nb::rv_policy::reference);
+
     mgate.def("PRX",
               &gate::PRX,
               "Generate general ParamGate class instance of PRX.",
@@ -643,11 +679,31 @@ NB_MODULE(scaluq_core, m) {
               "Generate general ParamGate class instance of PPauliRotation.",
               "pauli"_a,
               "coef"_a = 1.);
+    mgate.def("PProbablistic",
+              &gate::PProbablistic,
+              "Generate general ParamGate class instance of PProbablistic.");
+    mgate.def(
+        "PProbablistic",
+        [](const std::vector<std::pair<double, std::variant<Gate, ParamGate>>> &prob_gate_list) {
+            std::vector<double> distribution;
+            std::vector<std::variant<Gate, ParamGate>> gate_list;
+            distribution.reserve(prob_gate_list.size());
+            gate_list.reserve(prob_gate_list.size());
+            for (const auto &[prob, gate] : prob_gate_list) {
+                distribution.push_back(prob);
+                gate_list.push_back(gate);
+            }
+            return gate::PProbablistic(distribution, gate_list);
+        },
+        "Generate general ParamGate class instance of PProbablistic.");
 
     nb::class_<Circuit>(m, "Circuit", "Quantum circuit represented as gate array")
         .def(nb::init<UINT>(), "Initialize empty circuit of specified qubits.")
         .def("n_qubits", &Circuit::n_qubits, "Get property of `n_qubits`.")
-        .def("gate_list", &Circuit::gate_list, "Get property of `gate_list`.")
+        .def("gate_list",
+             &Circuit::gate_list,
+             "Get property of `gate_list`.",
+             nb::rv_policy::reference)
         .def("gate_count", &Circuit::gate_count, "Get property of `gate_count`.")
         .def("key_set", &Circuit::key_set, "Get set of keys of parameters.")
         .def("get", &Circuit::get, "Get reference of i-th gate.")

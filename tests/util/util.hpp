@@ -6,6 +6,7 @@ using namespace std::complex_literals;
 
 #include <types.hpp>
 #include <util/random.hpp>
+#include <util/utility.hpp>
 using namespace scaluq;
 
 inline bool same_state(const StateVector& s1, const StateVector& s2, const double eps = 1e-12) {
@@ -13,7 +14,37 @@ inline bool same_state(const StateVector& s1, const StateVector& s2, const doubl
     auto s2_cp = s2.amplitudes();
     assert(s1.n_qubits() == s2.n_qubits());
     for (UINT i = 0; i < s1.dim(); ++i) {
-        if (std::abs((std::complex<double>)s1_cp[i] - (std::complex<double>)s2_cp[i]) > eps) return false;
+        if (std::abs((std::complex<double>)s1_cp[i] - (std::complex<double>)s2_cp[i]) > eps)
+            return false;
+    }
+    return true;
+};
+
+inline bool same_state_except_global_phase(const StateVector& s1,
+                                           const StateVector& s2,
+                                           const double eps = 1e-12) {
+    auto s1_cp = s1.amplitudes();
+    auto s2_cp = s2.amplitudes();
+    assert(s1.n_qubits() == s2.n_qubits());
+    UINT significant = 0;
+    for (UINT i = 0; i < s1.dim(); ++i) {
+        if (std::abs((std::complex<double>)s1_cp[i]) >
+            std::abs((std::complex<double>)s1_cp[significant])) {
+            significant = i;
+        }
+    }
+    if (std::abs((std::complex<double>)s1_cp[significant]) < eps) {
+        for (UINT i = 0; i < s2.dim(); ++i) {
+            if (std::abs((std::complex<double>)s2_cp[i]) > eps) return false;
+        }
+        return true;
+    }
+    double phase = std::arg(std::complex<double>(s2_cp[significant] / s1_cp[significant]));
+    std::complex<double> phase_coef = std::polar(1., phase);
+    for (UINT i = 0; i < s1.dim(); ++i) {
+        if (std::abs(phase_coef * (std::complex<double>)s1_cp[i] - (std::complex<double>)s2_cp[i]) >
+            eps)
+            return false;
     }
     return true;
 };
@@ -28,17 +59,6 @@ inline std::string _check_gt(
                          << "Expected: (" << val1_name << ") > (" << val2_name
                          << "), actual: " << val1 << " vs " << val2 << "\n";
     return error_message_stream.str();
-}
-
-inline Eigen::MatrixXcd kronecker_product(const Eigen::MatrixXcd& lhs,
-                                          const Eigen::MatrixXcd& rhs) {
-    Eigen::MatrixXcd result(lhs.rows() * rhs.rows(), lhs.cols() * rhs.cols());
-    for (int i = 0; i < lhs.rows(); i++) {
-        for (int j = 0; j < lhs.cols(); j++) {
-            result.block(i * rhs.rows(), j * rhs.cols(), rhs.rows(), rhs.cols()) = lhs(i, j) * rhs;
-        }
-    }
-    return result;
 }
 
 // obtain single dense matrix
@@ -91,14 +111,16 @@ inline Eigen::MatrixXcd get_expanded_eigen_matrix_with_identity(
     const UINT right_dim = 1ULL << (qubit_count - target_qubit_index - 1);
     auto left_identity = Eigen::MatrixXcd::Identity(left_dim, left_dim);
     auto right_identity = Eigen::MatrixXcd::Identity(right_dim, right_dim);
-    return kronecker_product(kronecker_product(right_identity, one_qubit_matrix), left_identity);
+    return internal::kronecker_product(
+        internal::kronecker_product(right_identity, one_qubit_matrix), left_identity);
 }
 
 // get expanded matrix
 inline Eigen::MatrixXcd get_eigen_matrix_full_qubit_pauli(std::vector<UINT> pauli_ids) {
     Eigen::MatrixXcd result = Eigen::MatrixXcd::Identity(1, 1);
     for (UINT i = 0; i < pauli_ids.size(); ++i) {
-        result = kronecker_product(get_eigen_matrix_single_Pauli(pauli_ids[i]), result).eval();
+        result =
+            internal::kronecker_product(get_eigen_matrix_single_Pauli(pauli_ids[i]), result).eval();
     }
     return result;
 }

@@ -282,13 +282,13 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         }
         for (int i = 1; i < (int)n_qubits; i++) {
             if (pauli_id_vec[i] == 0) {
-                matrix = kronecker_product(make_I(), matrix);
+                matrix = internal::kronecker_product(make_I(), matrix);
             } else if (pauli_id_vec[i] == 1) {
-                matrix = kronecker_product(make_X(), matrix);
+                matrix = internal::kronecker_product(make_X(), matrix);
             } else if (pauli_id_vec[i] == 2) {
-                matrix = kronecker_product(make_Y(), matrix);
+                matrix = internal::kronecker_product(make_Y(), matrix);
             } else if (pauli_id_vec[i] == 3) {
-                matrix = kronecker_product(make_Z(), matrix);
+                matrix = internal::kronecker_product(make_Z(), matrix);
             }
         }
 
@@ -342,13 +342,13 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         }
         for (int i = 1; i < (int)n_qubits; i++) {
             if (pauli_id_vec[i] == 0) {
-                matrix = kronecker_product(make_I(), matrix);
+                matrix = internal::kronecker_product(make_I(), matrix);
             } else if (pauli_id_vec[i] == 1) {
-                matrix = kronecker_product(make_X(), matrix);
+                matrix = internal::kronecker_product(make_X(), matrix);
             } else if (pauli_id_vec[i] == 2) {
-                matrix = kronecker_product(make_Y(), matrix);
+                matrix = internal::kronecker_product(make_Y(), matrix);
             } else if (pauli_id_vec[i] == 3) {
-                matrix = kronecker_product(make_Z(), matrix);
+                matrix = internal::kronecker_product(make_Z(), matrix);
             }
         }
         matrix = std::cos(angle / 2) * Eigen::MatrixXcd::Identity(dim, dim) -
@@ -412,3 +412,23 @@ TEST(GateTest, ApplyFused) {
 }
 
 TEST(GateTest, ApplyPauliGate) { run_random_gate_apply_pauli(5); }
+
+TEST(GateTest, ApplyProbablisticGate) {
+    auto probgate = gate::Probablistic({.1, .9}, {gate::X(0), gate::I()});
+    UINT x_cnt = 0, i_cnt = 0;
+    StateVector state(1);
+    for (auto _ : std::views::iota(0, 100)) {
+        UINT before = state.sampling(1)[0];
+        probgate->update_quantum_state(state);
+        UINT after = state.sampling(1)[0];
+        if (before != after) {
+            x_cnt++;
+        } else {
+            i_cnt++;
+        }
+    }
+    // These test is probablistic, but pass at least 99.99% cases.
+    ASSERT_GT(x_cnt, 0);
+    ASSERT_GT(i_cnt, 0);
+    ASSERT_LT(x_cnt, i_cnt);
+}

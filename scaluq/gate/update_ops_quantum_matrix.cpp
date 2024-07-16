@@ -2,6 +2,7 @@
 #include <Kokkos_StdAlgorithms.hpp>
 
 #include "../types.hpp"
+#include "../util/utility.hpp"
 #include "constant.hpp"
 #include "update_ops.hpp"
 
@@ -16,7 +17,13 @@ matrix_2_2 get_IBMQ_matrix(double theta, double phi, double lambda) {
 }
 
 void u1_gate(UINT target_qubit_index, double lambda, StateVector& state) {
-    single_qubit_dense_matrix_gate(target_qubit_index, get_IBMQ_matrix(0., 0., lambda), state);
+    Complex exp_val = Kokkos::exp(Complex(0, lambda));
+    Kokkos::parallel_for(
+        state.dim() >> 1, KOKKOS_LAMBDA(UINT it) {
+            UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
+            state._raw[i | (1ULL << target_qubit_index)] *= exp_val;
+        });
+    Kokkos::fence();
 }
 
 void u2_gate(UINT target_qubit_index, double phi, double lambda, StateVector& state) {
