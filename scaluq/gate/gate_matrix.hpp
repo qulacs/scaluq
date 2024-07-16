@@ -51,14 +51,18 @@ void multi_qubit_dense_matrix_gate(const std::vector<UINT>& target_qubit_index_l
 
 class OneQubitMatrixGateImpl : public OneQubitGateBase {
     matrix_2_2 _matrix;
+    bool _unitary_flag;
 
 public:
-    OneQubitMatrixGateImpl(UINT target, const std::array<std::array<Complex, 2>, 2>& matrix)
+    OneQubitMatrixGateImpl(UINT target,
+                           const std::array<std::array<Complex, 2>, 2>& matrix,
+                           bool unitary_flag = false)
         : OneQubitGateBase(target) {
         _matrix.val[0][0] = matrix[0][0];
         _matrix.val[0][1] = matrix[0][1];
         _matrix.val[1][0] = matrix[1][0];
         _matrix.val[1][1] = matrix[1][1];
+        _unitary_flag = unitary_flag;
     }
 
     std::array<std::array<Complex, 2>, 2> matrix() const {
@@ -67,12 +71,29 @@ public:
 
     Gate copy() const override { return std::make_shared<OneQubitMatrixGateImpl>(*this); }
     Gate get_inverse() const override {
-        return std::make_shared<OneQubitMatrixGateImpl>(
-            _target,
-            std::array<std::array<Complex, 2>, 2>{Kokkos::conj(_matrix.val[0][0]),
-                                                  Kokkos::conj(_matrix.val[1][0]),
-                                                  Kokkos::conj(_matrix.val[0][1]),
-                                                  Kokkos::conj(_matrix.val[1][1])});
+        if (_unitary_flag) {
+            return std::make_shared<OneQubitMatrixGateImpl>(
+                _target,
+                std::array<std::array<Complex, 2>, 2>{Kokkos::conj(_matrix.val[0][0]),
+                                                      Kokkos::conj(_matrix.val[1][0]),
+                                                      Kokkos::conj(_matrix.val[0][1]),
+                                                      Kokkos::conj(_matrix.val[1][1])},
+                _unitary_flag);
+        }
+        ComplexMatrix mat_eigen(2, 2);
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
+                mat_eigen(i, j) = _matrix.val[i][j];
+            }
+        }
+        ComplexMatrix inv_eigen = mat_eigen.inverse();
+        std::array<std::array<Complex, 2>, 2> mat;
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
+                mat[i][j] = inv_eigen(i, j);
+            }
+        }
+        return std::make_shared<OneQubitMatrixGateImpl>(_target, mat, _unitary_flag);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
@@ -89,17 +110,20 @@ public:
 
 class TwoQubitMatrixGateImpl : public TwoQubitGateBase {
     matrix_4_4 _matrix;
+    bool _unitary_flag;
 
 public:
     TwoQubitMatrixGateImpl(UINT target1,
                            UINT target2,
-                           const std::array<std::array<Complex, 4>, 4>& matrix)
+                           const std::array<std::array<Complex, 4>, 4>& matrix,
+                           bool unitary_flag = false)
         : TwoQubitGateBase(target1, target2) {
         for (UINT i : std::views::iota(0, 4)) {
             for (UINT j : std::views::iota(0, 4)) {
                 _matrix.val[i][j] = matrix[i][j];
             }
         }
+        _unitary_flag = unitary_flag;
     }
 
     std::array<std::array<Complex, 4>, 4> matrix() const {
@@ -114,13 +138,30 @@ public:
 
     Gate copy() const override { return std::make_shared<TwoQubitMatrixGateImpl>(*this); }
     Gate get_inverse() const override {
-        std::array<std::array<Complex, 4>, 4> matrix_dag;
-        for (UINT i : std::views::iota(0, 4)) {
-            for (UINT j : std::views::iota(0, 4)) {
-                matrix_dag[i][j] = Kokkos::conj(_matrix.val[j][i]);
+        if (_unitary_flag) {
+            std::array<std::array<Complex, 4>, 4> matrix_dag;
+            for (UINT i : std::views::iota(0, 4)) {
+                for (UINT j : std::views::iota(0, 4)) {
+                    matrix_dag[i][j] = Kokkos::conj(_matrix.val[j][i]);
+                }
+            }
+            return std::make_shared<TwoQubitMatrixGateImpl>(
+                _target1, _target2, matrix_dag, _unitary_flag);
+        }
+        ComplexMatrix mat_eigen(4, 4);
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                mat_eigen(i, j) = _matrix.val[i][j];
             }
         }
-        return std::make_shared<TwoQubitMatrixGateImpl>(_target1, _target2, matrix_dag);
+        ComplexMatrix inv_eigen = mat_eigen.inverse();
+        std::array<std::array<Complex, 4>, 4> mat;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                mat[i][j] = inv_eigen(i, j);
+            }
+        }
+        return std::make_shared<TwoQubitMatrixGateImpl>(_target1, _target2, mat, _unitary_flag);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(4, 4);
