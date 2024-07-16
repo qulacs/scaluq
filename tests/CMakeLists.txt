@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.21)
 enable_testing()
 
 add_executable(scaluq_test EXCLUDE_FROM_ALL
+    circuit/circuit_optimize_test.cpp
     circuit/circuit_test.cpp
     circuit/param_circuit_test.cpp
     gate/gate_test.cpp

@@ -2,6 +2,7 @@
 
 #include <ranges>
 
+#include "../gate/gate_factory.hpp"
 #include "../gate/merge_gate.hpp"
 
 namespace scaluq {
@@ -156,8 +157,8 @@ void Circuit::optimize(UINT block_size) {
     double global_phase = 0.;
     std::vector<std::pair<Gate, std::vector<UINT>>> gate_pool;
     constexpr UINT NO_GATES = std::numeric_limits<UINT>::max();
-    std::vector<UINT> latest_gate_idx(n_qubits, NO_GATES);
-    for (const GateWithKey& gate_with_key) {
+    std::vector<UINT> latest_gate_idx(_n_qubits, NO_GATES);
+    for (const GateWithKey& gate_with_key : _gate_list) {
         if (gate_with_key.index() == 1) {
             const auto& pgate = std::get<1>(gate_with_key).first;
             for (UINT target : pgate->get_target_qubit_list()) {
@@ -170,6 +171,13 @@ void Circuit::optimize(UINT block_size) {
             continue;
         }
         const auto& gate = std::get<0>(gate_with_key);
+        if (gate.gate_type() == GateType::I) {
+            continue;
+        }
+        if (gate.gate_type() == GateType::GlobalPhase) {
+            global_phase += GlobalPhaseGate(gate)->phase();
+            continue;
+        }
         auto target_list = gate->get_target_qubit_list();
         auto control_list = gate->get_target_qubit_list();
         std::vector<UINT> targets;
@@ -197,7 +205,7 @@ void Circuit::optimize(UINT block_size) {
                 for (UINT qubit : gate_pool[idx].second) {
                     latest_gate_idx[qubit] = NO_GATES;
                 }
-                new_gate_list.emplace_back(std::move(gate_pool[idx]));
+                new_gate_list.emplace_back(std::move(gate_pool[idx].first));
             }
             UINT new_idx = gate_pool.size();
             for (UINT qubit : targets) {
@@ -208,11 +216,13 @@ void Circuit::optimize(UINT block_size) {
         }
         Gate merged_gate = gate::I();
         UINT new_idx = gate_pool.size();
+        std::vector<UINT> new_targets;
         for (UINT idx : previous_gate_indices) {
             double phase;
             std::tie(merged_gate, phase) = merge_gate(merged_gate, gate_pool[idx].first);
             global_phase += phase;
             for (UINT qubit : targets) {
+                new_targets.push_back(qubit);
                 latest_gate_idx[qubit] = new_idx;
             }
         }
@@ -221,11 +231,16 @@ void Circuit::optimize(UINT block_size) {
             std::tie(merged_gate, phase) = merge_gate(merged_gate, gate);
             global_phase += phase;
             for (UINT qubit : newly_applied_qubits) {
+                new_targets.push_back(qubit);
                 latest_gate_idx[qubit] = new_idx;
             }
         }
-        gate_pool.emplace_back(merge_gate);
+        gate_pool.emplace_back(std::move(merged_gate), std::move(new_targets));
     }
-    // TODO push last gates
+    std::ranges::sort(latest_gate_idx);
+    latest_gate_idx.erase(std::ranges::unique(latest_gate_idx).begin(), latest_gate_idx.end());
+    for (UINT idx : latest_gate_idx) new_gate_list.emplace_back(std::move(gate_pool[idx].first));
+    if (std::abs(global_phase) < 1e-12) new_gate_list.push_back(gate::GlobalPhase(global_phase));
+    _gate_list.swap(new_gate_list);
 }
 }  // namespace scaluq
