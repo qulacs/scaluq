@@ -68,7 +68,9 @@ double StateVector::get_squared_norm() const {
     double norm = 0.;
     Kokkos::parallel_reduce(
         this->_dim,
-        KOKKOS_CLASS_LAMBDA(UINT it, double& tmp) { tmp += squared_norm(this->_raw[it]); },
+        KOKKOS_CLASS_LAMBDA(UINT it, double& tmp) {
+            tmp += internal::squared_norm(this->_raw[it]);
+        },
         norm);
     return norm;
 }
@@ -92,7 +94,7 @@ double StateVector::get_zero_probability(UINT target_qubit_index) const {
         _dim >> 1,
         KOKKOS_CLASS_LAMBDA(UINT i, double& lsum) {
             UINT basis_0 = internal::insert_zero_to_basis_index(i, target_qubit_index);
-            lsum += squared_norm(this->_raw[basis_0]);
+            lsum += internal::squared_norm(this->_raw[basis_0]);
         },
         sum);
     return sum;
@@ -136,7 +138,7 @@ double StateVector::get_marginal_probability(const std::vector<UINT>& measured_v
                 basis = internal::insert_zero_to_basis_index(basis, insert_index);
                 basis ^= d_target_value[cursor] << insert_index;
             }
-            lsum += squared_norm(this->_raw[basis]);
+            lsum += internal::squared_norm(this->_raw[basis]);
         },
         sum);
 
@@ -150,7 +152,7 @@ double StateVector::get_entropy() const {
         "get_entropy",
         _dim,
         KOKKOS_CLASS_LAMBDA(UINT idx, double& lsum) {
-            double prob = squared_norm(_raw[idx]);
+            double prob = internal::squared_norm(_raw[idx]);
             prob = (prob > eps) ? prob : eps;
             lsum += -prob * Kokkos::log(prob);
         },
@@ -182,7 +184,7 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
         "compute_stacked_prob",
         _dim,
         KOKKOS_CLASS_LAMBDA(UINT i, double& update, const bool final) {
-            update += squared_norm(this->_raw[i]);
+            update += internal::squared_norm(this->_raw[i]);
             if (final) {
                 stacked_prob[i + 1] = update;
             }
