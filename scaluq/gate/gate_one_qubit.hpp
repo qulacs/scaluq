@@ -127,7 +127,7 @@ class SdagGateImpl : public OneQubitGateBase {
 public:
     SdagGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    Gate get_inverse() const override { return std::make_shared<SGateImpl>(_target); }
+    Gate get_inverse() const override { return std::make_shared<const SGateImpl>(_target); }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, -1i;
@@ -140,7 +140,7 @@ public:
     }
 };
 // for resolving dependency issues
-inline Gate SGateImpl::get_inverse() const { return std::make_shared<SdagGateImpl>(_target); }
+inline Gate SGateImpl::get_inverse() const { return std::make_shared<const SdagGateImpl>(_target); }
 
 class TGateImpl : public OneQubitGateBase {
 public:
@@ -163,7 +163,7 @@ class TdagGateImpl : public OneQubitGateBase {
 public:
     TdagGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    Gate get_inverse() const override { return std::make_shared<TGateImpl>(_target); }
+    Gate get_inverse() const override { return std::make_shared<const TGateImpl>(_target); }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, (1. - 1.i) / std::sqrt(2);
@@ -176,7 +176,7 @@ public:
     }
 };
 // for resolving dependency issues
-inline Gate TGateImpl::get_inverse() const { return std::make_shared<TdagGateImpl>(_target); }
+inline Gate TGateImpl::get_inverse() const { return std::make_shared<const TdagGateImpl>(_target); }
 
 class SqrtXGateImpl : public OneQubitGateBase {
 public:
@@ -199,7 +199,7 @@ class SqrtXdagGateImpl : public OneQubitGateBase {
 public:
     SqrtXdagGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    Gate get_inverse() const override { return std::make_shared<SqrtXGateImpl>(_target); }
+    Gate get_inverse() const override { return std::make_shared<const SqrtXGateImpl>(_target); }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i, 0.5 - 0.5i;
@@ -213,7 +213,7 @@ public:
 };
 // for resolving dependency issues
 inline Gate SqrtXGateImpl::get_inverse() const {
-    return std::make_shared<SqrtXdagGateImpl>(_target);
+    return std::make_shared<const SqrtXdagGateImpl>(_target);
 }
 
 class SqrtYGateImpl : public OneQubitGateBase {
@@ -237,7 +237,7 @@ class SqrtYdagGateImpl : public OneQubitGateBase {
 public:
     SqrtYdagGateImpl(UINT target) : OneQubitGateBase(target){};
 
-    Gate get_inverse() const override { return std::make_shared<SqrtYGateImpl>(_target); }
+    Gate get_inverse() const override { return std::make_shared<const SqrtYGateImpl>(_target); }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 0.5 - 0.5i, 0.5 - 0.5i, -0.5 + 0.5i, 0.5 - 0.5i;
@@ -251,7 +251,7 @@ public:
 };
 // for resolving dependency issues
 inline Gate SqrtYGateImpl::get_inverse() const {
-    return std::make_shared<SqrtYdagGateImpl>(_target);
+    return std::make_shared<const SqrtYdagGateImpl>(_target);
 }
 
 class P0GateImpl : public OneQubitGateBase {
@@ -296,7 +296,9 @@ class RXGateImpl : public OneQubitRotationGateBase {
 public:
     RXGateImpl(UINT target, double angle) : OneQubitRotationGateBase(target, angle){};
 
-    Gate get_inverse() const override { return std::make_shared<RXGateImpl>(_target, -_angle); }
+    Gate get_inverse() const override {
+        return std::make_shared<const RXGateImpl>(_target, -_angle);
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << std::cos(_angle / 2), -1i * std::sin(_angle / 2), -1i * std::sin(_angle / 2),
@@ -314,7 +316,9 @@ class RYGateImpl : public OneQubitRotationGateBase {
 public:
     RYGateImpl(UINT target, double angle) : OneQubitRotationGateBase(target, angle){};
 
-    Gate get_inverse() const override { return std::make_shared<RYGateImpl>(_target, -_angle); }
+    Gate get_inverse() const override {
+        return std::make_shared<const RYGateImpl>(_target, -_angle);
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << std::cos(_angle / 2), -std::sin(_angle / 2), std::sin(_angle / 2),
@@ -332,7 +336,9 @@ class RZGateImpl : public OneQubitRotationGateBase {
 public:
     RZGateImpl(UINT target, double angle) : OneQubitRotationGateBase(target, angle){};
 
-    Gate get_inverse() const override { return std::make_shared<RZGateImpl>(_target, -_angle); }
+    Gate get_inverse() const override {
+        return std::make_shared<const RZGateImpl>(_target, -_angle);
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << std::exp(-0.5i * _angle), 0, 0, std::exp(0.5i * _angle);
@@ -353,7 +359,9 @@ public:
 
     double lambda() const { return _lambda; }
 
-    Gate get_inverse() const override { return std::make_shared<U1GateImpl>(_target, -_lambda); }
+    Gate get_inverse() const override {
+        return std::make_shared<const U1GateImpl>(_target, -_lambda);
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, std::exp(1i * _lambda);
@@ -376,7 +384,7 @@ public:
     double lambda() const { return _lambda; }
 
     Gate get_inverse() const override {
-        return std::make_shared<U2GateImpl>(_target, -_lambda - PI(), -_phi + PI());
+        return std::make_shared<const U2GateImpl>(_target, -_lambda - PI(), -_phi + PI());
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
@@ -404,7 +412,7 @@ public:
     double lambda() const { return _lambda; }
 
     Gate get_inverse() const override {
-        return std::make_shared<U3GateImpl>(_target, -_theta, -_lambda, -_phi);
+        return std::make_shared<const U3GateImpl>(_target, -_theta, -_lambda, -_phi);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);

@@ -33,7 +33,9 @@ public:
 
     [[nodiscard]] double phase() const { return _phase; }
 
-    Gate get_inverse() const override { return std::make_shared<GlobalPhaseGateImpl>(-_phase); }
+    Gate get_inverse() const override {
+        return std::make_shared<const GlobalPhaseGateImpl>(-_phase);
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
         return ComplexMatrix::Identity(1, 1) * std::exp(std::complex<double>(0, _phase));
     }

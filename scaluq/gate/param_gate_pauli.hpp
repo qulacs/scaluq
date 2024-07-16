@@ -24,7 +24,7 @@ public:
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
     ParamGate get_inverse() const override {
-        return std::make_shared<PPauliRotationGateImpl>(_pauli, -_pcoef);
+        return std::make_shared<const PPauliRotationGateImpl>(_pauli, -_pcoef);
     }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         double angle = _pcoef * param;

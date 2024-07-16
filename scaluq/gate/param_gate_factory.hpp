@@ -10,7 +10,7 @@ class ParamGateFactory {
 public:
     template <ParamGateImpl T, typename... Args>
     static ParamGate create_gate(Args... args) {
-        return {std::make_shared<T>(args...)};
+        return {std::make_shared<const T>(args...)};
     }
 };
 }  // namespace internal

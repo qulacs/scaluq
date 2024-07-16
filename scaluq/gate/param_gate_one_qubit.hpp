@@ -25,7 +25,7 @@ public:
     PRXGateImpl(UINT target, double pcoef = 1.) : POneQubitGateBase(target, pcoef){};
 
     ParamGate get_inverse() const override {
-        return std::make_shared<PRXGateImpl>(_target, -_pcoef);
+        return std::make_shared<const PRXGateImpl>(_target, -_pcoef);
     }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         double angle = _pcoef * param;
@@ -46,7 +46,7 @@ public:
     PRYGateImpl(UINT target, double pcoef) : POneQubitGateBase(target, pcoef){};
 
     ParamGate get_inverse() const override {
-        return std::make_shared<PRYGateImpl>(_target, -_pcoef);
+        return std::make_shared<const PRYGateImpl>(_target, -_pcoef);
     }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         double angle = _pcoef * param;
@@ -66,7 +66,7 @@ public:
     PRZGateImpl(UINT target, double pcoef) : POneQubitGateBase(target, pcoef){};
 
     ParamGate get_inverse() const override {
-        return std::make_shared<PRZGateImpl>(_target, -_pcoef);
+        return std::make_shared<const PRZGateImpl>(_target, -_pcoef);
     }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         double angle = param * _pcoef;
