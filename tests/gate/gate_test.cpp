@@ -417,7 +417,7 @@ TEST(GateTest, ApplyProbablisticGate) {
     auto probgate = gate::Probablistic({.1, .9}, {gate::X(0), gate::I()});
     UINT x_cnt = 0, i_cnt = 0;
     StateVector state(1);
-    for (auto _ : std::views::iota(0, 100)) {
+    for ([[maybe_unused]] auto _ : std::views::iota(0, 100)) {
         UINT before = state.sampling(1)[0];
         probgate->update_quantum_state(state);
         UINT after = state.sampling(1)[0];

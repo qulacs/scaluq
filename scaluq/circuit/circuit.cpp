@@ -35,7 +35,7 @@ UINT Circuit::calculate_depth() const {
 
 void Circuit::add_gate(const Gate& gate) {
     check_gate_is_valid(gate);
-    _gate_list.push_back(gate->copy());
+    _gate_list.push_back(gate);
 }
 void Circuit::add_gate(Gate&& gate) {
     check_gate_is_valid(gate);
@@ -43,7 +43,7 @@ void Circuit::add_gate(Gate&& gate) {
 }
 void Circuit::add_param_gate(const ParamGate& param_gate, std::string_view parameter_key) {
     check_gate_is_valid(param_gate);
-    _gate_list.push_back(std::make_pair(param_gate->copy(), std::string(parameter_key)));
+    _gate_list.push_back(std::make_pair(param_gate, std::string(parameter_key)));
 }
 void Circuit::add_param_gate(ParamGate&& param_gate, std::string_view parameter_key) {
     check_gate_is_valid(param_gate);
@@ -99,10 +99,10 @@ Circuit Circuit::copy() const {
     ccircuit._gate_list.reserve(_gate_list.size());
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0)
-            ccircuit._gate_list.push_back(std::get<0>(gate)->copy());
+            ccircuit._gate_list.push_back(std::get<0>(gate));
         else {
             const auto& [param_gate, key] = std::get<1>(gate);
-            ccircuit._gate_list.push_back(std::make_pair(param_gate->copy(), key));
+            ccircuit._gate_list.push_back(std::make_pair(param_gate, key));
         }
     }
     return ccircuit;

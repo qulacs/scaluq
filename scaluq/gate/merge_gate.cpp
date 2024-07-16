@@ -14,12 +14,10 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
     // TODO: Deal with ProbablisticGate
 
     // Special case: Zero qubit
-    if (gate_type1 == GateType::I) return {gate2->copy(), 0.};  // copy can be removed by #125
-    if (gate_type2 == GateType::I) return {gate1->copy(), 0.};
-    if (gate_type1 == GateType::GlobalPhase)
-        return {gate2->copy(), GlobalPhaseGate(gate1)->phase()};
-    if (gate_type2 == GateType::GlobalPhase)
-        return {gate1->copy(), GlobalPhaseGate(gate2)->phase()};
+    if (gate_type1 == GateType::I) return {gate2, 0.};  // copy can be removed by #125
+    if (gate_type2 == GateType::I) return {gate1, 0.};
+    if (gate_type1 == GateType::GlobalPhase) return {gate2, GlobalPhaseGate(gate1)->phase()};
+    if (gate_type2 == GateType::GlobalPhase) return {gate1, GlobalPhaseGate(gate2)->phase()};
 
     // Special case: Pauli
     auto get_pauli_id = [&](GateType gate_type) -> std::optional<UINT> {

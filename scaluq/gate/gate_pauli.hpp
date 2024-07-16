@@ -22,8 +22,7 @@ public:
     }
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
-    Gate copy() const override { return std::make_shared<PauliGateImpl>(_pauli); }
-    Gate get_inverse() const override { return std::make_shared<PauliGateImpl>(this->_pauli); }
+    Gate get_inverse() const override { return shared_from_this(); }
     std::optional<ComplexMatrix> get_matrix() const override { return this->_pauli.get_matrix(); }
 
     void update_quantum_state(StateVector& state_vector) const override {
@@ -48,9 +47,8 @@ public:
     }
     std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
-    Gate copy() const override { return std::make_shared<PauliRotationGateImpl>(_pauli, _angle); }
     Gate get_inverse() const override {
-        return std::make_shared<PauliRotationGateImpl>(this->_pauli, -(this->_angle));
+        return std::make_shared<const PauliRotationGateImpl>(this->_pauli, -(this->_angle));
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat = this->_pauli.get_matrix_ignoring_coef();

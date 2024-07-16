@@ -123,14 +123,13 @@ constexpr GateType get_gate_type() {
 }
 
 namespace internal {
-class GateBase {
+class GateBase : public std::enable_shared_from_this<GateBase> {
 public:
     virtual ~GateBase() = default;
 
     [[nodiscard]] virtual std::vector<UINT> get_target_qubit_list() const = 0;
     [[nodiscard]] virtual std::vector<UINT> get_control_qubit_list() const = 0;
 
-    [[nodiscard]] virtual Gate copy() const = 0;
     [[nodiscard]] virtual Gate get_inverse() const = 0;
     [[nodiscard]] virtual std::optional<ComplexMatrix> get_matrix() const = 0;
 
@@ -144,25 +143,25 @@ class GatePtr {
     friend class GatePtr;
 
 private:
-    std::shared_ptr<T> _gate_ptr;
+    std::shared_ptr<const T> _gate_ptr;
     GateType _gate_type;
 
 public:
     GatePtr() : _gate_ptr(nullptr), _gate_type(get_gate_type<T>()) {}
     GatePtr(const GatePtr& gate) = default;
     template <GateImpl U>
-    GatePtr(const std::shared_ptr<U>& gate_ptr) {
+    GatePtr(const std::shared_ptr<const U>& gate_ptr) {
         if constexpr (std::is_same_v<T, U>) {
             _gate_type = get_gate_type<T>();
             _gate_ptr = gate_ptr;
         } else if constexpr (std::is_same_v<T, internal::GateBase>) {
             // upcast
             _gate_type = get_gate_type<U>();
-            _gate_ptr = std::static_pointer_cast<T>(gate_ptr);
+            _gate_ptr = std::static_pointer_cast<const T>(gate_ptr);
         } else {
             // downcast
             _gate_type = get_gate_type<T>();
-            if (!(_gate_ptr = std::dynamic_pointer_cast<T>(gate_ptr))) {
+            if (!(_gate_ptr = std::dynamic_pointer_cast<const T>(gate_ptr))) {
                 throw std::runtime_error("invalid gate cast");
             }
         }
@@ -175,20 +174,20 @@ public:
         } else if constexpr (std::is_same_v<T, internal::GateBase>) {
             // upcast
             _gate_type = gate._gate_type;
-            _gate_ptr = std::static_pointer_cast<T>(gate._gate_ptr);
+            _gate_ptr = std::static_pointer_cast<const T>(gate._gate_ptr);
         } else {
             // downcast
             if (gate._gate_type != get_gate_type<T>()) {
                 throw std::runtime_error("invalid gate cast");
             }
             _gate_type = gate._gate_type;
-            _gate_ptr = std::static_pointer_cast<T>(gate._gate_ptr);
+            _gate_ptr = std::static_pointer_cast<const T>(gate._gate_ptr);
         }
     }
 
     GateType gate_type() const { return _gate_type; }
 
-    T* operator->() const {
+    const T* operator->() const {
         if (!_gate_ptr) {
             throw std::runtime_error("GatePtr::operator->(): Gate is Null");
         }

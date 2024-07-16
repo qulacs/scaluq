@@ -28,8 +28,8 @@ public:
             throw std::runtime_error("Sum of distribution must be equal to 1.");
         }
     }
-    const std::vector<Gate>& gate_list() { return _gate_list; }
-    const std::vector<double>& distribution() { return _distribution; }
+    const std::vector<Gate>& gate_list() const { return _gate_list; }
+    const std::vector<double>& distribution() const { return _distribution; }
 
     std::vector<UINT> get_target_qubit_list() const override {
         std::vector<UINT> ret;
@@ -56,14 +56,13 @@ public:
         return ret;
     }
 
-    Gate copy() const override { return std::make_shared<ProbablisticGateImpl>(*this); }
     Gate get_inverse() const override {
         std::vector<Gate> inv_gate_list;
         inv_gate_list.reserve(_gate_list.size());
         std::ranges::transform(_gate_list, std::back_inserter(inv_gate_list), [](const Gate& gate) {
             return gate->get_inverse();
         });
-        return std::make_shared<ProbablisticGateImpl>(_distribution, inv_gate_list);
+        return std::make_shared<const ProbablisticGateImpl>(_distribution, inv_gate_list);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         if (_gate_list.size() == 1) return _gate_list[0]->get_matrix();

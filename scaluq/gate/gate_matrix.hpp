@@ -27,9 +27,8 @@ public:
         return {_matrix.val[0][0], _matrix.val[0][1], _matrix.val[1][0], _matrix.val[1][1]};
     }
 
-    Gate copy() const override { return std::make_shared<OneQubitMatrixGateImpl>(*this); }
     Gate get_inverse() const override {
-        return std::make_shared<OneQubitMatrixGateImpl>(
+        return std::make_shared<const OneQubitMatrixGateImpl>(
             _target,
             std::array<std::array<Complex, 2>, 2>{Kokkos::conj(_matrix.val[0][0]),
                                                   Kokkos::conj(_matrix.val[1][0]),
@@ -74,7 +73,6 @@ public:
         return matrix;
     }
 
-    Gate copy() const override { return std::make_shared<TwoQubitMatrixGateImpl>(*this); }
     Gate get_inverse() const override {
         std::array<std::array<Complex, 4>, 4> matrix_dag;
         for (UINT i : std::views::iota(0, 4)) {
@@ -82,7 +80,7 @@ public:
                 matrix_dag[i][j] = Kokkos::conj(_matrix.val[j][i]);
             }
         }
-        return std::make_shared<TwoQubitMatrixGateImpl>(_target1, _target2, matrix_dag);
+        return std::make_shared<const TwoQubitMatrixGateImpl>(_target1, _target2, matrix_dag);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(4, 4);
