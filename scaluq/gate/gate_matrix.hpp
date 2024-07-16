@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Eigen/Dense>
 #include <ranges>
 #include <vector>
 
@@ -310,31 +311,18 @@ public:
 
 class DenseMatrixGateImpl : public GateBase {
     Matrix _matrix;
-    bool _adjoint_flag;
+    bool _unitary_flag;
     std::vector<TargetQubitInfo> target_qubit_info_list;
     std::vector<ControlQubitInfo> control_qubit_info_list;
 
 public:
     DenseMatrixGateImpl(Matrix matrix,
                         const std::vector<UINT>& target_qubit_index_list,
-                        const std::vector<UINT>& control_qubit_index_list)
+                        const std::vector<UINT>& control_qubit_index_list,
+                        bool unitary_flag = false)
         : GateBase() {
         _matrix = matrix;
-        _adjoint_flag = false;
-        for (UINT i = 0; i < target_qubit_index_list.size(); i++) {
-            target_qubit_info_list.push_back(TargetQubitInfo(target_qubit_index_list[i]));
-        }
-        for (UINT i = 0; i < control_qubit_index_list.size(); i++) {
-            control_qubit_info_list.push_back(ControlQubitInfo(control_qubit_index_list[i], 1));
-        }
-    }
-    DenseMatrixGateImpl(Matrix matrix,
-                        bool flag,
-                        const std::vector<UINT>& target_qubit_index_list,
-                        const std::vector<UINT>& control_qubit_index_list)
-        : GateBase() {
-        _matrix = matrix;
-        _adjoint_flag = flag;
+        _unitary_flag = unitary_flag;
         for (UINT i = 0; i < target_qubit_index_list.size(); i++) {
             target_qubit_info_list.push_back(TargetQubitInfo(target_qubit_index_list[i]));
         }
@@ -358,48 +346,32 @@ public:
         return control_qubit_list;
     }
 
-    void add_controle_qubit(UINT control_qubit_index, UINT value) {
+    void add_control_qubit(UINT control_qubit_index, UINT value) {
         control_qubit_info_list.push_back(ControlQubitInfo(control_qubit_index, value));
     }
 
     Gate copy() const override { return std::make_shared<DenseMatrixGateImpl>(*this); }
     Gate get_inverse() const override {
-        return std::make_shared<DenseMatrixGateImpl>(
-            _matrix, !_adjoint_flag, get_target_qubit_list(), get_control_qubit_list());
-    }
-    std::optional<Matrix> get_matrix_internal() const {
-        if (!_adjoint_flag) return _matrix;
-        Matrix mat("matrix", _matrix.extent(0), _matrix.extent(1));
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>> md_range_policy(
-            {0, 0}, {static_cast<int>(mat.extent(0)), static_cast<int>(mat.extent(1))});
-        Kokkos::parallel_for(
-            md_range_policy, KOKKOS_LAMBDA(const int i, const int j) {
-                mat(i, j) = (StdComplex)Kokkos::conj(_matrix(j, i));
-            });
-        return mat;
-    }
-    std::optional<ComplexMatrix> get_matrix() const override {
-        default_lno_t numRows = _matrix.extent(0);
-        default_lno_t numCols = _matrix.extent(1);
-        ComplexMatrix mat(numRows, numCols);
-        Kokkos::View<Complex**,
-                     Kokkos::LayoutRight,
-                     Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-            mat_view(reinterpret_cast<Complex*>(mat.data()), numRows, numCols);
-
-        Kokkos::parallel_for(
-            Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
-                {0, 0}, {static_cast<int>(numRows), static_cast<int>(numCols)}),
-            KOKKOS_LAMBDA(const int i, const int j) {
-                auto val = _matrix(i, j);
-                mat_view(i, j) = Kokkos::complex<double>(val.real(), val.imag());
-            });
-        Kokkos::fence();
-        if (_adjoint_flag) {
-            mat = mat.adjoint();
+        UINT rows = _matrix.extent(0);
+        UINT cols = _matrix.extent(1);
+        ComplexMatrix mat_eigen = convert_internal_matrix_to_external_matrix(_matrix);
+        ComplexMatrix inv_eigen;
+        if (_unitary_flag) {
+            inv_eigen = mat_eigen.adjoint();
+        } else {
+            inv_eigen = mat_eigen.lu().solve(ComplexMatrix::Identity(rows, cols));
         }
-        return mat;
+        Matrix mat("inverse", rows, cols);
+        Kokkos::parallel_for(
+            Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {rows, cols}),
+            KOKKOS_LAMBDA(UINT i, UINT j) { mat(i, j) = (Complex)inv_eigen(i, j); });
+        return std::make_shared<DenseMatrixGateImpl>(
+            mat, get_target_qubit_list(), get_control_qubit_list(), _unitary_flag);
+    }
+    std::optional<Matrix> get_matrix_internal() const { return _matrix; }
+
+    std::optional<ComplexMatrix> get_matrix() const override {
+        return convert_internal_matrix_to_external_matrix(_matrix);
     }
 
     void update_quantum_state(StateVector& state_vector) const override {

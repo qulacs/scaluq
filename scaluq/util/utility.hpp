@@ -240,12 +240,7 @@ inline Matrix convert_external_matrix_to_internal_matrix(const ComplexMatrix& ei
 inline ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix& matrix) {
     int rows = matrix.extent(0);
     int cols = matrix.extent(1);
-    ComplexMatrix mat(rows, cols);
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            mat(i, j) = matrix(i, j);
-        }
-    }
+    Eigen::Map<ComplexMatrix> mat(reinterpret_cast<StdComplex*>(matrix.data()), rows, cols);
     return mat;
 }
 
