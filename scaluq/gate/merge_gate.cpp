@@ -208,6 +208,6 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
     auto matrix2 =
         internal::get_expanded_matrix(gate2->get_matrix().value(), gate2_targets, merged_targets);
     auto matrix = matrix2 * matrix1;
-    return {gate::DenseMatrix(merged_targets, matrix), 0.};
+    return {gate::DenseMatrix(matrix, merged_targets), 0.};
 }
 }  // namespace scaluq
