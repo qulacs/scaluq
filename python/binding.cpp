@@ -780,7 +780,23 @@ NB_MODULE(scaluq_core, m) {
              &PauliOperator::Data::add_single_pauli,
              "target_qubit"_a,
              "pauli_id"_a,
-             "Add a single pauli operation to the data.");
+             "Add a single pauli operation to the data.")
+        .def("get_coef",
+             &PauliOperator::Data::get_coef,
+             "Get the coefficient of the Pauli operator.")
+        .def("set_coef",
+             &PauliOperator::Data::set_coef,
+             "c"_a,
+             "Set the coefficient of the Pauli operator.")
+        .def("get_target_qubit_list",
+             &PauliOperator::Data::get_target_qubit_list,
+             "Get the list of target qubits.")
+        .def("get_pauli_id_list",
+             &PauliOperator::Data::get_pauli_id_list,
+             "Get the list of Pauli IDs.")
+        .def("get_XZ_mask_representation",
+             &PauliOperator::Data::get_XZ_mask_representation,
+             "Get the X and Z mask representation as a tuple of vectors.");
 
     nb::class_<PauliOperator>(
         m,

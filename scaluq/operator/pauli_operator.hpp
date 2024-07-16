@@ -12,10 +12,12 @@ class PauliOperator {
     friend class Operator;
 
 public:
-    struct Data {
+    class Data {
         std::vector<UINT> _target_qubit_list, _pauli_id_list;
         Complex _coef;
         internal::BitVector _bit_flip_mask, _phase_flip_mask;
+
+    public:
         explicit Data(Complex coef = 1.);
         Data(std::string_view pauli_string, Complex coef = 1.);
         Data(const std::vector<UINT>& target_qubit_list,
@@ -26,6 +28,13 @@ public:
              const std::vector<bool>& phase_flip_mask,
              Complex coef);
         void add_single_pauli(UINT target_qubit, UINT pauli_id);
+        Complex get_coef() const { return _coef; }
+        void set_coef(Complex c) { _coef = c; }
+        const std::vector<UINT>& get_target_qubit_list() const { return _target_qubit_list; }
+        const std::vector<UINT>& get_pauli_id_list() const { return _pauli_id_list; }
+        std::tuple<std::vector<bool>, std::vector<bool>> get_XZ_mask_representation() const {
+            return {_bit_flip_mask, _phase_flip_mask};
+        }
     };
 
 private:
@@ -49,16 +58,16 @@ public:
                   Complex coef)
         : _ptr(std::make_shared<const Data>(bit_flip_mask, phase_flip_mask, coef)) {}
 
-    [[nodiscard]] inline Complex get_coef() const { return _ptr->_coef; }
+    [[nodiscard]] inline Complex get_coef() const { return _ptr->get_coef(); }
     [[nodiscard]] inline const std::vector<UINT>& get_target_qubit_list() const {
-        return _ptr->_target_qubit_list;
+        return _ptr->get_target_qubit_list();
     }
     [[nodiscard]] inline const std::vector<UINT>& get_pauli_id_list() const {
-        return _ptr->_pauli_id_list;
+        return _ptr->get_pauli_id_list();
     }
     [[nodiscard]] inline std::tuple<std::vector<bool>, std::vector<bool>>
     get_XZ_mask_representation() const {
-        return {_ptr->_bit_flip_mask, _ptr->_phase_flip_mask};
+        return _ptr->get_XZ_mask_representation();
     }
     [[nodiscard]] std::string get_pauli_string() const;
     [[nodiscard]] inline PauliOperator get_dagger() const {
