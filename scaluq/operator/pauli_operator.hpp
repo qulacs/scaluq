@@ -13,6 +13,7 @@ class PauliOperator {
 
 public:
     class Data {
+        friend class PauliOperator;
         std::vector<UINT> _target_qubit_list, _pauli_id_list;
         Complex _coef;
         internal::BitVector _bit_flip_mask, _phase_flip_mask;
