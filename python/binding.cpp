@@ -307,10 +307,6 @@ NB_MODULE(scaluq_core, m) {
             [](const GATE_TYPE &gate) { return gate->get_control_qubit_list(); },        \
             "Get control qubits as `list[int]`.")                                        \
         .def(                                                                            \
-            "copy",                                                                      \
-            [](const GATE_TYPE &gate) { return gate->copy(); },                          \
-            "Copy gate as `Gate` type.")                                                 \
-        .def(                                                                            \
             "get_inverse",                                                               \
             [](const GATE_TYPE &gate) { return gate->get_inverse(); },                   \
             "Generate inverse gate as `Gate` type. If not exists, return None.")         \
@@ -596,10 +592,6 @@ NB_MODULE(scaluq_core, m) {
             [](const PGATE_TYPE &param_gate) { return param_gate->get_control_qubit_list(); },    \
             "Get control qubits as `list[int]`.")                                                 \
         .def(                                                                                     \
-            "copy",                                                                               \
-            [](const PGATE_TYPE &param_gate) { return param_gate->copy(); },                      \
-            "Copy gate as `ParamGate` type.")                                                     \
-        .def(                                                                                     \
             "get_inverse",                                                                        \
             [](const PGATE_TYPE &param_gate) { return param_gate->get_inverse(); },               \
             "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.")  \
@@ -753,6 +745,59 @@ NB_MODULE(scaluq_core, m) {
              &Circuit::get_inverse,
              "Get inverse of circuit. ALl the gates are newly created.");
 
+    nb::enum_<PauliOperator::PauliID>(m, "PauliID")
+        .value("I", PauliOperator::I)
+        .value("X", PauliOperator::X)
+        .value("Y", PauliOperator::Y)
+        .value("Z", PauliOperator::Z)
+        .export_values();
+
+    nb::class_<PauliOperator::Data>(
+        m, "PauliOperatorData", "Internal data structure for PauliOperator.")
+        .def(nb::init<Complex>(), "coef"_a = 1., "Initialize data with coefficient.")
+        .def(nb::init<std::string_view, Complex>(),
+             "pauli_string"_a,
+             "coef"_a = 1.,
+             "Initialize data with pauli string.")
+        .def(nb::init<const std::vector<UINT> &, const std::vector<UINT> &, Complex>(),
+             "target_qubit_list"_a,
+             "pauli_id_list"_a,
+             "coef"_a = 1.,
+             "Initialize data with target qubits and pauli ids.")
+        .def(nb::init<const std::vector<UINT> &, Complex>(),
+             "pauli_id_par_qubit"_a,
+             "coef"_a = 1.,
+             "Initialize data with pauli ids per qubit.")
+        .def(nb::init<const std::vector<bool> &, const std::vector<bool> &, Complex>(),
+             "bit_flip_mask"_a,
+             "phase_flip_mask"_a,
+             "coef"_a = 1.,
+             "Initialize data with bit flip and phase flip masks.")
+        .def(nb::init<const PauliOperator::Data &>(),
+             "data"_a,
+             "Initialize pauli operator from Data object.")
+        .def("add_single_pauli",
+             &PauliOperator::Data::add_single_pauli,
+             "target_qubit"_a,
+             "pauli_id"_a,
+             "Add a single pauli operation to the data.")
+        .def("get_coef",
+             &PauliOperator::Data::get_coef,
+             "Get the coefficient of the Pauli operator.")
+        .def("set_coef",
+             &PauliOperator::Data::set_coef,
+             "c"_a,
+             "Set the coefficient of the Pauli operator.")
+        .def("get_target_qubit_list",
+             &PauliOperator::Data::get_target_qubit_list,
+             "Get the list of target qubits.")
+        .def("get_pauli_id_list",
+             &PauliOperator::Data::get_pauli_id_list,
+             "Get the list of Pauli IDs.")
+        .def("get_XZ_mask_representation",
+             &PauliOperator::Data::get_XZ_mask_representation,
+             "Get the X and Z mask representation as a tuple of vectors.");
+
     nb::class_<PauliOperator>(
         m,
         "PauliOperator",
@@ -763,20 +808,18 @@ NB_MODULE(scaluq_core, m) {
              "pauli_id_list"_a,
              "coef"_a = 1.,
              "Initialize pauli operator. For each `i`, single pauli correspond to "
-             "`pauli_id_list[i]` is "
-             "applied to `target_qubit_list`-th qubit.")
+             "`pauli_id_list[i]` is applied to `target_qubit_list`-th qubit.")
         .def(nb::init<std::string_view, Complex>(),
              "pauli_string"_a,
              "coef"_a = 1.,
              "Initialize pauli operator. If `pauli_string` is `\"X0Y2\"`, Pauli-X is applied to "
-             "0-th "
-             "qubit and Pauli-Y is applied to 2-th qubit. In `pauli_string`, spaces are ignored.")
+             "0-th qubit and Pauli-Y is applied to 2-th qubit. In `pauli_string`, spaces are "
+             "ignored.")
         .def(nb::init<const std::vector<UINT> &, Complex>(),
              "pauli_id_par_qubit"_a,
              "coef"_a = 1.,
              "Initialize pauli operator. For each `i`, single pauli correspond to "
-             "`paul_id_per_qubit` is "
-             "applied to `i`-th qubit.")
+             "`paul_id_per_qubit` is applied to `i`-th qubit.")
         .def(
             "__init__",
             [](PauliOperator *t,
@@ -839,39 +882,28 @@ NB_MODULE(scaluq_core, m) {
         .def("get_qubit_count",
              &PauliOperator::get_qubit_count,
              "Get num of qubits to applied with, when count from 0-th qubit. Subset of $[0, "
-             "\\mathrm{qubit_count})$ is the "
-             "target.")
-        .def("change_coef", &PauliOperator::change_coef, "Set property `coef`.")
-        .def("add_single_pauli",
-             &PauliOperator::add_single_pauli,
-             "Add (apply tensor product) another single pauli. You cannot specify qubit index that "
-             "has "
-             "always a single "
-             "pauli.")
+             "\\mathrm{qubit_count})$ is the target.")
         .def("apply_to_state", &PauliOperator::apply_to_state, "Apply pauli to state vector.")
         .def("get_expectation_value",
              &PauliOperator::get_expectation_value,
              "Get expectation value of measuring state vector. $\\bra{\\psi}P\\ket{\\psi}$.")
         .def("get_transition_amplitude",
              &PauliOperator::get_transition_amplitude,
-             "Get transition amplitude of measuring state vector. "
-             "$\\bra{\\chi}P\\ket{\\psi}$.")
+             "Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.")
         .def(nb::self * nb::self)
-        .def(nb::self *= nb::self)
-        .def(nb::self *= Complex())
-        .def(nb::self * Complex())
-        .def_ro_static("I", &PauliOperator::I)
-        .def_ro_static("X", &PauliOperator::X)
-        .def_ro_static("Y", &PauliOperator::Y)
-        .def_ro_static("Z", &PauliOperator::Z);
+        .def(nb::self * Complex());
 
-    nb::class_<Operator>(m, "Operator")
-        .def(nb::init<UINT>())
-        .def("is_hermitian", &Operator::is_hermitian)
-        .def("n_qubits", &Operator::n_qubits)
-        .def("terms", &Operator::terms, nb::rv_policy::reference)
-        .def("to_string", &Operator::to_string)
-        .def("add_operator", nb::overload_cast<const PauliOperator &>(&Operator::add_operator))
+    nb::class_<Operator>(m, "Operator", "General quantum operator class.")
+        .def(nb::init<UINT>(),
+             "qubit_count"_a,
+             "Initialize operator with specified number of qubits.")
+        .def("is_hermitian", &Operator::is_hermitian, "Check if the operator is Hermitian.")
+        .def("n_qubits", &Operator::n_qubits, "Get the number of qubits the operator acts on.")
+        .def("terms", &Operator::terms, "Get the list of Pauli terms that make up the operator.")
+        .def("to_string", &Operator::to_string, "Get string representation of the operator.")
+        .def("add_operator",
+             nb::overload_cast<const PauliOperator &>(&Operator::add_operator),
+             "Add a Pauli operator to this operator.")
         .def(
             "add_random_operator",
             [](Operator &op, UINT operator_count, std::optional<UINT> seed) {
@@ -879,12 +911,20 @@ NB_MODULE(scaluq_core, m) {
                                               seed.value_or(std::random_device{}()));
             },
             "operator_count"_a,
-            "seed"_a = std::nullopt)
-        .def("optimize", &Operator::optimize)
-        .def("get_dagger", &Operator::get_dagger)
-        .def("apply_to_state", &Operator::apply_to_state)
-        .def("get_expectation_value", &Operator::get_expectation_value)
-        .def("get_transition_amplitude", &Operator::get_transition_amplitude)
+            "seed"_a = std::nullopt,
+            "Add a specified number of random Pauli operators to this operator. An optional seed "
+            "can be provided for reproducibility.")
+        .def("optimize", &Operator::optimize, "Optimize the operator by combining like terms.")
+        .def("get_dagger",
+             &Operator::get_dagger,
+             "Get the adjoint (Hermitian conjugate) of the operator.")
+        .def("apply_to_state", &Operator::apply_to_state, "Apply the operator to a state vector.")
+        .def("get_expectation_value",
+             &Operator::get_expectation_value,
+             "Get the expectation value of the operator with respect to a state vector.")
+        .def("get_transition_amplitude",
+             &Operator::get_transition_amplitude,
+             "Get the transition amplitude of the operator between two state vectors.")
         .def(nb::self *= Complex())
         .def(nb::self * Complex())
         .def(+nb::self)
