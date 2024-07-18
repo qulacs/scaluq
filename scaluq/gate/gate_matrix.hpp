@@ -93,7 +93,7 @@ public:
                 mat[i][j] = inv_eigen(i, j);
             }
         }
-        return std::make_shared<OneQubitMatrixGateImpl>(_target, mat, _unitary_flag);
+        return std::make_shared<const OneQubitMatrixGateImpl>(_target, mat, _unitary_flag);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
@@ -160,7 +160,8 @@ public:
                 mat[i][j] = inv_eigen(i, j);
             }
         }
-        return std::make_shared<TwoQubitMatrixGateImpl>(_target1, _target2, mat, _unitary_flag);
+        return std::make_shared<const TwoQubitMatrixGateImpl>(
+            _target1, _target2, mat, _unitary_flag);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(4, 4);
@@ -218,7 +219,6 @@ public:
         control_qubit_info_list.push_back(ControlQubitInfo(control_qubit_index, value));
     }
 
-    Gate copy() const override { return std::make_shared<SparseMatrixGateImpl>(*this); }
     Gate get_inverse() const override {
         throw std::logic_error("Error: SparseMatrixGateImpl::get_inverse(): Not implemented.");
     }
@@ -348,7 +348,6 @@ public:
         control_qubit_info_list.push_back(ControlQubitInfo(control_qubit_index, value));
     }
 
-    Gate copy() const override { return std::make_shared<DenseMatrixGateImpl>(*this); }
     Gate get_inverse() const override {
         UINT rows = _matrix.extent(0);
         UINT cols = _matrix.extent(1);
@@ -363,7 +362,7 @@ public:
         Kokkos::parallel_for(
             Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {rows, cols}),
             KOKKOS_LAMBDA(UINT i, UINT j) { mat(i, j) = (Complex)inv_eigen(i, j); });
-        return std::make_shared<DenseMatrixGateImpl>(
+        return std::make_shared<const DenseMatrixGateImpl>(
             mat, get_target_qubit_list(), get_control_qubit_list(), _unitary_flag);
     }
     std::optional<Matrix> get_matrix_internal() const { return _matrix; }
