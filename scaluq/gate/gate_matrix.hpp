@@ -436,7 +436,7 @@ inline void single_qubit_dense_matrix_gate_view(UINT target_qubit_index,
             state._raw[basis_0] = matrix(0, 0) * v0 + matrix(0, 1) * v1;
             state._raw[basis_1] = matrix(1, 0) * v0 + matrix(1, 1) * v1;
         });
-    Kokos::fence();
+    Kokkos::fence();
 }
 
 inline void double_qubit_dense_matrix_gate(UINT target_qubit_index1,
