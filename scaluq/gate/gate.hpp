@@ -44,6 +44,7 @@ class PauliGateImpl;
 class PauliRotationGateImpl;
 class SparseMatrixGateImpl;
 class DenseMatrixGateImpl;
+class ProbablisticGateImpl;
 
 template <GateImpl T>
 class GatePtr;
@@ -82,8 +83,9 @@ enum class GateType {
     FusedSwap,
     Pauli,
     PauliRotation,
-    SparseMatrixGate,
-    DenseMatrixGate
+    SparseMatrix,
+    DenseMatrix,
+    Probablistic
 };
 
 template <internal::GateImpl T>
@@ -122,6 +124,9 @@ constexpr GateType get_gate_type() {
     if constexpr (std::is_same_v<T, internal::PauliGateImpl>) return GateType::Pauli;
     if constexpr (std::is_same_v<T, internal::PauliRotationGateImpl>)
         return GateType::PauliRotation;
+    if constexpr (std::is_same_v<T, internal::SparseMatrixGateImpl>) return GateType::SparseMatrix;
+    if constexpr (std::is_same_v<T, internal::DenseMatrixGateImpl>) return GateType::DenseMatrix;
+    if constexpr (std::is_same_v<T, internal::ProbablisticGateImpl>) return GateType::Probablistic;
     static_assert("unknown GateImpl");
     return GateType::Unknown;
 }
