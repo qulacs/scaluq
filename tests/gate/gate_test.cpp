@@ -569,7 +569,7 @@ TEST(GateTest, ApplyFused) {
 }
 
 TEST(GateTest, ApplyPauliGate) { run_random_gate_apply_pauli(5); }
-TEST(GateTest, ApplyDensityMatrixGate) {
+TEST(GateTest, ApplyDenseMatrixGate) {
     run_random_gate_apply_single_dense(6);
     run_random_gate_apply_general_dense(6);
 }
