@@ -79,7 +79,7 @@ class ParamGatePtr {
     friend class ParamGatePtr;
 
 private:
-    std::shared_ptr<const T> _param_gate_ptr;
+    std::shared_ptr<T> _param_gate_ptr;
     ParamGateType _param_gate_type;
 
 public:
@@ -93,11 +93,11 @@ public:
         } else if constexpr (std::is_same_v<T, internal::ParamGateBase>) {
             // upcast
             _param_gate_type = get_param_gate_type<U>();
-            _param_gate_ptr = std::static_pointer_cast<const T>(param_gate_ptr);
+            _param_gate_ptr = std::static_pointer_cast<T>(param_gate_ptr);
         } else {
             // downcast
             _param_gate_type = get_param_gate_type<T>();
-            if (!(_param_gate_ptr = std::dynamic_pointer_cast<const T>(param_gate_ptr))) {
+            if (!(_param_gate_ptr = std::dynamic_pointer_cast<T>(param_gate_ptr))) {
                 throw std::runtime_error("invalid gate cast");
             }
         }
@@ -110,20 +110,20 @@ public:
         } else if constexpr (std::is_same_v<T, internal::ParamGateBase>) {
             // upcast
             _param_gate_type = param_gate._param_gate_type;
-            _param_gate_ptr = std::static_pointer_cast<const T>(param_gate._param_gate_ptr);
+            _param_gate_ptr = std::static_pointer_cast<T>(param_gate._param_gate_ptr);
         } else {
             // downcast
             if (param_gate._param_gate_type != get_param_gate_type<T>()) {
                 throw std::runtime_error("invalid gate cast");
             }
             _param_gate_type = param_gate._param_gate_type;
-            _param_gate_ptr = std::static_pointer_cast<const T>(param_gate._param_gate_ptr);
+            _param_gate_ptr = std::static_pointer_cast<T>(param_gate._param_gate_ptr);
         }
     }
 
     ParamGateType param_gate_type() const { return _param_gate_type; }
 
-    const T* operator->() const {
+    T* operator->() const {
         if (!_param_gate_ptr) {
             throw std::runtime_error("ParamGatePtr::operator->(): ParamGate is Null");
         }

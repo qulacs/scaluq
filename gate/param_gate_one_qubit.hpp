@@ -13,7 +13,7 @@ public:
     using ParamGateBase::ParamGateBase;
 
     ParamGate get_inverse() const override {
-        return std::make_shared<const PRXGateImpl>(_target_mask, _control_mask, -_pcoef);
+        return std::make_shared<PRXGateImpl>(_target_mask, _control_mask, -_pcoef);
     }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         double angle = _pcoef * param;
@@ -34,7 +34,7 @@ public:
     using ParamGateBase::ParamGateBase;
 
     ParamGate get_inverse() const override {
-        return std::make_shared<const PRYGateImpl>(_target_mask, _control_mask, -_pcoef);
+        return std::make_shared<PRYGateImpl>(_target_mask, _control_mask, -_pcoef);
     }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         double angle = _pcoef * param;
@@ -54,7 +54,7 @@ public:
     using ParamGateBase::ParamGateBase;
 
     ParamGate get_inverse() const override {
-        return std::make_shared<const PRZGateImpl>(_target_mask, _control_mask, -_pcoef);
+        return std::make_shared<PRZGateImpl>(_target_mask, _control_mask, -_pcoef);
     }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         double angle = param * _pcoef;

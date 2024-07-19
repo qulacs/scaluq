@@ -18,7 +18,7 @@ public:
     std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
 
     Gate get_inverse() const override {
-        return std::make_shared<const PauliGateImpl>(_control_mask, _pauli);
+        return std::make_shared<PauliGateImpl>(_control_mask, _pauli);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         return get_pauli_matrix(this->_pauli);
@@ -40,7 +40,7 @@ public:
           _angle(angle) {}
 
     Gate get_inverse() const override {
-        return std::make_shared<const PauliRotationGateImpl>(_control_mask, _pauli, -_angle);
+        return std::make_shared<PauliRotationGateImpl>(_control_mask, _pauli, -_angle);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat = get_pauli_matrix(this->_pauli).value();

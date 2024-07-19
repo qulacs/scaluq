@@ -60,7 +60,7 @@ public:
             _gate_list, std::back_inserter(inv_gate_list), [](const EitherGate& gate) {
                 return std::visit([](const auto& g) { return EitherGate{g->get_inverse()}; }, gate);
             });
-        return std::make_shared<const PProbablisticGateImpl>(_distribution, inv_gate_list);
+        return std::make_shared<PProbablisticGateImpl>(_distribution, inv_gate_list);
     }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         if (_gate_list.size() == 1) {

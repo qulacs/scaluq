@@ -9,7 +9,7 @@ class IGateImpl : public GateBase {
 public:
     IGateImpl() : GateBase(0, 0) {}
 
-    Gate get_inverse() const override { return std::make_shared<const IGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<IGateImpl>(*this); }
     std::optional<ComplexMatrix> get_matrix() const override {
         return ComplexMatrix::Identity(1, 1);
     }
@@ -30,7 +30,7 @@ public:
     [[nodiscard]] double phase() const { return _phase; }
 
     Gate get_inverse() const override {
-        return std::make_shared<const GlobalPhaseGateImpl>(_control_mask, -_phase);
+        return std::make_shared<GlobalPhaseGateImpl>(_control_mask, -_phase);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         return ComplexMatrix::Identity(1, 1) * std::exp(std::complex<double>(0, _phase));

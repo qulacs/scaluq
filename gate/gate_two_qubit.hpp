@@ -11,7 +11,7 @@ class SwapGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
 
-    Gate get_inverse() const override { return std::make_shared<const SwapGateImpl>(*this); }
+    Gate get_inverse() const override { return std::make_shared<SwapGateImpl>(*this); }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat = ComplexMatrix::Identity(1 << 2, 1 << 2);
         mat << 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1;

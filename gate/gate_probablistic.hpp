@@ -49,7 +49,7 @@ public:
         std::ranges::transform(_gate_list, std::back_inserter(inv_gate_list), [](const Gate& gate) {
             return gate->get_inverse();
         });
-        return std::make_shared<const ProbablisticGateImpl>(_distribution, inv_gate_list);
+        return std::make_shared<ProbablisticGateImpl>(_distribution, inv_gate_list);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         if (_gate_list.size() == 1) return _gate_list[0]->get_matrix();

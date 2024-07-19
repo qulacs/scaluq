@@ -19,7 +19,7 @@ public:
     std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
 
     ParamGate get_inverse() const override {
-        return std::make_shared<const PPauliRotationGateImpl>(_control_mask, _pauli, -_pcoef);
+        return std::make_shared<PPauliRotationGateImpl>(_control_mask, _pauli, -_pcoef);
     }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         double angle = _pcoef * param;
