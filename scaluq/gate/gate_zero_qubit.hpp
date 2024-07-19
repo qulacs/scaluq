@@ -9,7 +9,7 @@ class IGateImpl : public GateBase {
 public:
     IGateImpl() : GateBase(0, 0) {}
 
-    Gate get_inverse() const override { return std::make_shared<const IGateImpl>(*this); }
+    Gate get_inverse() const override { return shared_from_this(); }
     std::optional<ComplexMatrix> get_matrix() const override {
         return ComplexMatrix::Identity(1, 1);
     }

@@ -21,7 +21,7 @@ class XGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
 
-    Gate get_inverse() const override { return std::make_shared<const XGateImpl>(*this); }
+    Gate get_inverse() const override { return shared_from_this(); }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 0, 1, 1, 0;
@@ -38,7 +38,7 @@ class YGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
 
-    Gate get_inverse() const override { return std::make_shared<const YGateImpl>(*this); }
+    Gate get_inverse() const override { return shared_from_this(); }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 0, -1i, 1i, 0;
@@ -55,7 +55,7 @@ class ZGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
 
-    Gate get_inverse() const override { return std::make_shared<const ZGateImpl>(*this); }
+    Gate get_inverse() const override { return shared_from_this(); }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, -1;
@@ -72,7 +72,7 @@ class HGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
 
-    Gate get_inverse() const override { return std::make_shared<const HGateImpl>(*this); }
+    Gate get_inverse() const override { return shared_from_this(); }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 1, 1, 1, -1;

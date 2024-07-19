@@ -1,5 +1,7 @@
 #pragma once
 
+#include <concepts>
+
 #include "../state/state_vector.hpp"
 #include "../types.hpp"
 #include "../util/utility.hpp"
@@ -124,7 +126,7 @@ constexpr GateType get_gate_type() {
 }
 
 namespace internal {
-class GateBase {
+class GateBase : public std::enable_shared_from_this<GateBase> {
 protected:
     UINT _target_mask, _control_mask;
     void check_qubit_mask_within_bounds(StateVector& state_vector) const {
