@@ -17,7 +17,25 @@ class PProbablisticGateImpl : public ParamGateBase {
 public:
     PProbablisticGateImpl(const std::vector<double>& distribution,
                           const std::vector<std::variant<Gate, ParamGate>>& gate_list)
-        : _distribution(distribution), _gate_list(gate_list) {
+        : ParamGateBase(  // make OR(target mask) and OR(control mask) at first
+              [this] {
+                  UINT mask_sum = 0;
+                  for (const auto& gate : _gate_list) {
+                      mask_sum |= std::visit(
+                          [](const auto& g) { return g->get_target_qubit_mask(); }, gate);
+                  }
+                  return mask_sum;
+              }(),
+              [this] {
+                  UINT mask_sum = 0;
+                  for (const auto& gate : _gate_list) {
+                      mask_sum |= std::visit(
+                          [](const auto& g) { return g->get_control_qubit_mask(); }, gate);
+                  }
+                  return mask_sum;
+              }()),
+          _distribution(distribution),
+          _gate_list(gate_list) {
         UINT n = distribution.size();
         if (n == 0) {
             throw std::runtime_error("At least one gate is required.");
@@ -32,35 +50,8 @@ public:
             throw std::runtime_error("Sum of distribution must be equal to 1.");
         }
     }
-    const std::vector<std::variant<Gate, ParamGate>>& gate_list() const { return _gate_list; }
-    const std::vector<double>& distribution() const { return _distribution; }
-
-    std::vector<UINT> get_target_qubit_list() const override {
-        std::vector<UINT> ret;
-        for (const auto& gate : _gate_list) {
-            std::vector<UINT> targets =
-                std::visit([](const auto& g) { return g->get_target_qubit_list(); }, gate);
-            ret.reserve(ret.size() + targets.size());
-            std::ranges::copy(targets, std::back_inserter(ret));
-        }
-        std::ranges::sort(ret);
-        auto result = std::ranges::unique(ret);
-        ret.erase(result.begin(), result.end());
-        return ret;
-    }
-    std::vector<UINT> get_control_qubit_list() const override {
-        std::vector<UINT> ret;
-        for (const auto& gate : _gate_list) {
-            std::vector<UINT> controls =
-                std::visit([](const auto& g) { return g->get_control_qubit_list(); }, gate);
-            ret.reserve(ret.size() + controls.size());
-            std::ranges::copy(controls, std::back_inserter(ret));
-        }
-        std::ranges::sort(ret);
-        auto result = std::ranges::unique(ret);
-        ret.erase(result.begin(), result.end());
-        return ret;
-    }
+    const std::vector<std::variant<Gate, ParamGate>>& gate_list() { return _gate_list; }
+    const std::vector<double>& distribution() { return _distribution; }
 
     ParamGate get_inverse() const override {
         std::vector<EitherGate> inv_gate_list;
@@ -69,7 +60,7 @@ public:
             _gate_list, std::back_inserter(inv_gate_list), [](const EitherGate& gate) {
                 return std::visit([](const auto& g) { return EitherGate{g->get_inverse()}; }, gate);
             });
-        return std::make_shared<const PProbablisticGateImpl>(_distribution, inv_gate_list);
+        return std::make_shared<PProbablisticGateImpl>(_distribution, inv_gate_list);
     }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         if (_gate_list.size() == 1) {

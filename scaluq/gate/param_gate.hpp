@@ -39,17 +39,32 @@ constexpr ParamGateType get_param_gate_type() {
 namespace internal {
 class ParamGateBase {
 protected:
+    UINT _target_mask, _control_mask;
     double _pcoef;
+    void check_qubit_mask_within_bounds(StateVector& state_vector) const {
+        UINT full_mask = (1ULL << state_vector.n_qubits()) - 1;
+        if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
+            throw std::runtime_error(
+                "Error: ParamGate::update_quantum_state(StateVector& state): "
+                "Target/Control qubit exceeds the number of qubits in the system.");
+        }
+    }
 
 public:
+    ParamGateBase(UINT target_mask, UINT control_mask, double pcoef = 1.)
+        : _target_mask(target_mask), _control_mask(control_mask), _pcoef(pcoef) {}
     virtual ~ParamGateBase() = default;
-
-    ParamGateBase(double pcoef = 1.) : _pcoef(pcoef) {}
 
     [[nodiscard]] double pcoef() { return _pcoef; }
 
-    [[nodiscard]] virtual std::vector<UINT> get_target_qubit_list() const = 0;
-    [[nodiscard]] virtual std::vector<UINT> get_control_qubit_list() const = 0;
+    [[nodiscard]] std::vector<UINT> get_target_qubit_list() const {
+        return mask_to_vector(_target_mask);
+    }
+    [[nodiscard]] std::vector<UINT> get_control_qubit_list() const {
+        return mask_to_vector(_control_mask);
+    }
+    [[nodiscard]] UINT get_target_qubit_mask() const { return _target_mask; }
+    [[nodiscard]] UINT get_control_qubit_mask() const { return _control_mask; }
 
     [[nodiscard]] virtual ParamGate get_inverse() const = 0;
     [[nodiscard]] virtual std::optional<ComplexMatrix> get_matrix(double param) const = 0;
@@ -64,7 +79,7 @@ class ParamGatePtr {
     friend class ParamGatePtr;
 
 private:
-    std::shared_ptr<const T> _param_gate_ptr;
+    std::shared_ptr<T> _param_gate_ptr;
     ParamGateType _param_gate_type;
 
 public:
@@ -78,11 +93,11 @@ public:
         } else if constexpr (std::is_same_v<T, internal::ParamGateBase>) {
             // upcast
             _param_gate_type = get_param_gate_type<U>();
-            _param_gate_ptr = std::static_pointer_cast<const T>(param_gate_ptr);
+            _param_gate_ptr = std::static_pointer_cast<T>(param_gate_ptr);
         } else {
             // downcast
             _param_gate_type = get_param_gate_type<T>();
-            if (!(_param_gate_ptr = std::dynamic_pointer_cast<const T>(param_gate_ptr))) {
+            if (!(_param_gate_ptr = std::dynamic_pointer_cast<T>(param_gate_ptr))) {
                 throw std::runtime_error("invalid gate cast");
             }
         }
@@ -95,20 +110,20 @@ public:
         } else if constexpr (std::is_same_v<T, internal::ParamGateBase>) {
             // upcast
             _param_gate_type = param_gate._param_gate_type;
-            _param_gate_ptr = std::static_pointer_cast<const T>(param_gate._param_gate_ptr);
+            _param_gate_ptr = std::static_pointer_cast<T>(param_gate._param_gate_ptr);
         } else {
             // downcast
             if (param_gate._param_gate_type != get_param_gate_type<T>()) {
                 throw std::runtime_error("invalid gate cast");
             }
             _param_gate_type = param_gate._param_gate_type;
-            _param_gate_ptr = std::static_pointer_cast<const T>(param_gate._param_gate_ptr);
+            _param_gate_ptr = std::static_pointer_cast<T>(param_gate._param_gate_ptr);
         }
     }
 
     ParamGateType param_gate_type() const { return _param_gate_type; }
 
-    const T* operator->() const {
+    T* operator->() const {
         if (!_param_gate_ptr) {
             throw std::runtime_error("ParamGatePtr::operator->(): ParamGate is Null");
         }

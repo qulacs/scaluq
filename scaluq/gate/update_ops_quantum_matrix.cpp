@@ -2,7 +2,6 @@
 #include <Kokkos_StdAlgorithms.hpp>
 
 #include "../types.hpp"
-#include "../util/utility.hpp"
 #include "constant.hpp"
 #include "update_ops.hpp"
 
@@ -16,23 +15,24 @@ matrix_2_2 get_IBMQ_matrix(double theta, double phi, double lambda) {
     return {cos_val, -exp_val2 * sin_val, exp_val1 * sin_val, exp_val1 * exp_val2 * cos_val};
 }
 
-void u1_gate(UINT target_qubit_index, double lambda, StateVector& state) {
-    Complex exp_val = Kokkos::exp(Complex(0, lambda));
-    Kokkos::parallel_for(
-        state.dim() >> 1, KOKKOS_LAMBDA(UINT it) {
-            UINT i = internal::insert_zero_to_basis_index(it, target_qubit_index);
-            state._raw[i | (1ULL << target_qubit_index)] *= exp_val;
-        });
-    Kokkos::fence();
-}
-
-void u2_gate(UINT target_qubit_index, double phi, double lambda, StateVector& state) {
+void u1_gate(UINT target_mask, UINT control_mask, double lambda, StateVector& state) {
     single_qubit_dense_matrix_gate(
-        target_qubit_index, get_IBMQ_matrix(PI() / 2., phi, lambda), state);
+        target_mask, control_mask, get_IBMQ_matrix(0., 0., lambda), state);
 }
 
-void u3_gate(UINT target_qubit_index, double theta, double phi, double lambda, StateVector& state) {
-    single_qubit_dense_matrix_gate(target_qubit_index, get_IBMQ_matrix(theta, phi, lambda), state);
+void u2_gate(UINT target_mask, UINT control_mask, double phi, double lambda, StateVector& state) {
+    single_qubit_dense_matrix_gate(
+        target_mask, control_mask, get_IBMQ_matrix(PI() / 2., phi, lambda), state);
+}
+
+void u3_gate(UINT target_mask,
+             UINT control_mask,
+             double theta,
+             double phi,
+             double lambda,
+             StateVector& state) {
+    single_qubit_dense_matrix_gate(
+        target_mask, control_mask, get_IBMQ_matrix(theta, phi, lambda), state);
 }
 }  // namespace internal
 }  // namespace scaluq
