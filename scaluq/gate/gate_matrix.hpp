@@ -11,12 +11,14 @@
 
 namespace scaluq {
 namespace internal {
-class OneQubitMatrixGateImpl : public OneQubitGateBase {
+class OneQubitMatrixGateImpl : public GateBase {
     matrix_2_2 _matrix;
 
 public:
-    OneQubitMatrixGateImpl(UINT target, const std::array<std::array<Complex, 2>, 2>& matrix)
-        : OneQubitGateBase(target) {
+    OneQubitMatrixGateImpl(UINT target_mask,
+                           UINT control_mask,
+                           const std::array<std::array<Complex, 2>, 2>& matrix)
+        : GateBase(target_mask, control_mask) {
         _matrix.val[0][0] = matrix[0][0];
         _matrix.val[0][1] = matrix[0][1];
         _matrix.val[1][0] = matrix[1][0];
@@ -29,7 +31,8 @@ public:
 
     Gate get_inverse() const override {
         return std::make_shared<const OneQubitMatrixGateImpl>(
-            _target,
+            _target_mask,
+            _control_mask,
             std::array<std::array<Complex, 2>, 2>{Kokkos::conj(_matrix.val[0][0]),
                                                   Kokkos::conj(_matrix.val[1][0]),
                                                   Kokkos::conj(_matrix.val[0][1]),
@@ -43,19 +46,19 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        single_qubit_dense_matrix_gate(_target, _matrix, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        single_qubit_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
     }
 };
 
-class TwoQubitMatrixGateImpl : public TwoQubitGateBase {
+class TwoQubitMatrixGateImpl : public GateBase {
     matrix_4_4 _matrix;
 
 public:
-    TwoQubitMatrixGateImpl(UINT target1,
-                           UINT target2,
+    TwoQubitMatrixGateImpl(UINT target_mask,
+                           UINT control_mask,
                            const std::array<std::array<Complex, 4>, 4>& matrix)
-        : TwoQubitGateBase(target1, target2) {
+        : GateBase(target_mask, control_mask) {
         for (UINT i : std::views::iota(0, 4)) {
             for (UINT j : std::views::iota(0, 4)) {
                 _matrix.val[i][j] = matrix[i][j];
@@ -80,7 +83,7 @@ public:
                 matrix_dag[i][j] = Kokkos::conj(_matrix.val[j][i]);
             }
         }
-        return std::make_shared<const TwoQubitMatrixGateImpl>(_target1, _target2, matrix_dag);
+        return std::make_shared<const TwoQubitMatrixGateImpl>(_target_mask, _control_mask, matrix_dag);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(4, 4);
@@ -94,9 +97,8 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target1);
-        check_qubit_within_bounds(state_vector, this->_target2);
-        double_qubit_dense_matrix_gate(_target1, _target2, _matrix, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        double_qubit_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
     }
 };
 }  // namespace internal

@@ -2,6 +2,7 @@
 
 #include "../state/state_vector.hpp"
 #include "../types.hpp"
+#include "../util/utility.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq {
@@ -123,12 +124,37 @@ constexpr GateType get_gate_type() {
 }
 
 namespace internal {
-class GateBase : public std::enable_shared_from_this<GateBase> {
+class GateBase: public std::enable_shared_from_this<GateBase> {
+protected:
+    UINT _target_mask, _control_mask;
+    void check_qubit_mask_within_bounds(StateVector& state_vector) const {
+        UINT full_mask = (1ULL << state_vector.n_qubits()) - 1;
+        if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
+            throw std::runtime_error(
+                "Error: Gate::update_quantum_state(StateVector& state): "
+                "Target/Control qubit exceeds the number of qubits in the system.");
+        }
+    }
+
 public:
+    GateBase(UINT target_mask, UINT control_mask)
+        : _target_mask(target_mask), _control_mask(control_mask) {
+        if (_target_mask & _control_mask) [[unlikely]] {
+            throw std::runtime_error(
+                "Error: Gate::Gate(UINT target_mask, UINT control_mask) : Target and "
+                "control qubits must not overlap.");
+        }
+    }
     virtual ~GateBase() = default;
 
-    [[nodiscard]] virtual std::vector<UINT> get_target_qubit_list() const = 0;
-    [[nodiscard]] virtual std::vector<UINT> get_control_qubit_list() const = 0;
+    [[nodiscard]] std::vector<UINT> get_target_qubit_list() const {
+        return mask_to_vector(_target_mask);
+    }
+    [[nodiscard]] std::vector<UINT> get_control_qubit_list() const {
+        return mask_to_vector(_control_mask);
+    }
+    [[nodiscard]] UINT get_target_qubit_mask() const { return _target_mask; }
+    [[nodiscard]] UINT get_control_qubit_mask() const { return _control_mask; }
 
     [[nodiscard]] virtual Gate get_inverse() const = 0;
     [[nodiscard]] virtual std::optional<ComplexMatrix> get_matrix() const = 0;

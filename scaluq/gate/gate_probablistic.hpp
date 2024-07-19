@@ -13,7 +13,19 @@ class ProbablisticGateImpl : public GateBase {
 public:
     ProbablisticGateImpl(const std::vector<double>& distribution,
                          const std::vector<Gate>& gate_list)
-        : _distribution(distribution), _gate_list(gate_list) {
+        : GateBase(  // make OR(target mask) and OR(control mask) at first
+              [this] {
+                  UINT mask_sum = 0;
+                  for (const auto& gate : _gate_list) mask_sum |= gate->get_target_qubit_mask();
+                  return mask_sum;
+              }(),
+              [this] {
+                  UINT mask_sum = 0;
+                  for (const auto& gate : _gate_list) mask_sum |= gate->get_control_qubit_mask();
+                  return mask_sum;
+              }()),
+          _distribution(distribution),
+          _gate_list(gate_list) {
         UINT n = distribution.size();
         if (n == 0) {
             throw std::runtime_error("At least one gate is required.");
@@ -30,31 +42,6 @@ public:
     }
     const std::vector<Gate>& gate_list() const { return _gate_list; }
     const std::vector<double>& distribution() const { return _distribution; }
-
-    std::vector<UINT> get_target_qubit_list() const override {
-        std::vector<UINT> ret;
-        for (const auto& gate : _gate_list) {
-            std::vector<UINT> targets = gate->get_target_qubit_list();
-            ret.reserve(ret.size() + targets.size());
-            std::ranges::copy(targets, std::back_inserter(ret));
-        }
-        std::ranges::sort(ret);
-        auto result = std::ranges::unique(ret);
-        ret.erase(result.begin(), result.end());
-        return ret;
-    }
-    std::vector<UINT> get_control_qubit_list() const override {
-        std::vector<UINT> ret;
-        for (const auto& gate : _gate_list) {
-            std::vector<UINT> controls = gate->get_control_qubit_list();
-            ret.reserve(ret.size() + controls.size());
-            std::ranges::copy(controls, std::back_inserter(ret));
-        }
-        std::ranges::sort(ret);
-        auto result = std::ranges::unique(ret);
-        ret.erase(result.begin(), result.end());
-        return ret;
-    }
 
     Gate get_inverse() const override {
         std::vector<Gate> inv_gate_list;

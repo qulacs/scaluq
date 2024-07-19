@@ -40,6 +40,35 @@ KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
     return ((basis_index >> uidx) << (uidx + 1)) | (basis_index & umask);
 }
 
+/**
+ * Inserts multiple 0 bits at specified positions in basis_index.
+ * Example: insert_zero_to_basis_index(0b11111, 0x100101) -> 0b11011010.
+ *                                                               ^  ^ ^
+ */
+KOKKOS_INLINE_FUNCTION UINT insert_zero_at_mask_positions(UINT basis_index, UINT insert_mask) {
+    for (UINT bit_mask = insert_mask; bit_mask;
+         bit_mask &= (bit_mask - 1)) {  // loop through set bits
+        UINT lower_mask = ~bit_mask & (bit_mask - 1);
+        UINT upper_mask = ~lower_mask;
+        basis_index = ((basis_index & upper_mask) << 1) | (basis_index & lower_mask);
+    }
+    return basis_index;
+}
+
+inline UINT vector_to_mask(const std::vector<UINT>& v) {
+    UINT mask = 0;
+    for (auto x : v) mask |= 1ULL << x;
+    return mask;
+}
+
+inline std::vector<UINT> mask_to_vector(UINT mask) {
+    std::vector<UINT> indices;
+    for (UINT sub_mask = mask; sub_mask; sub_mask &= (sub_mask - 1)) {
+        indices.push_back(std::countr_zero(sub_mask));
+    }
+    return indices;
+}
+
 KOKKOS_INLINE_FUNCTION matrix_2_2 matrix_multiply(const matrix_2_2& matrix1,
                                                   const matrix_2_2& matrix2) {
     return {matrix1.val[0][0] * matrix2.val[0][0] + matrix1.val[0][1] * matrix2.val[1][0],
@@ -53,8 +82,7 @@ inline ComplexMatrix kronecker_product(const ComplexMatrix& lhs, const ComplexMa
     for (int i = 0; i < lhs.rows(); i++) {
         for (int j = 0; j < lhs.cols(); j++) {
             result.block(i * rhs.rows(), j * rhs.cols(), rhs.rows(), rhs.cols()) = lhs(i, j) * rhs;
-        }
-    }
+        }    }
     return result;
 }
 

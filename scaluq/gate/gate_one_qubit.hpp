@@ -5,32 +5,21 @@
 
 namespace scaluq {
 namespace internal {
-class OneQubitGateBase : public GateBase {
-protected:
-    UINT _target;
 
-public:
-    OneQubitGateBase(UINT target) : _target(target){};
-
-    UINT target() const { return _target; }
-
-    std::vector<UINT> get_target_qubit_list() const override { return {_target}; }
-    std::vector<UINT> get_control_qubit_list() const override { return {}; };
-};
-
-class OneQubitRotationGateBase : public OneQubitGateBase {
+class RotationGateBase : public GateBase {
 protected:
     double _angle;
 
 public:
-    OneQubitRotationGateBase(UINT target, double angle) : OneQubitGateBase(target), _angle(angle){};
+    RotationGateBase(UINT target_mask, UINT control_mask, double angle)
+        : GateBase(target_mask, control_mask), _angle(angle) {}
 
     double angle() const { return _angle; }
 };
 
-class XGateImpl : public OneQubitGateBase {
+class XGateImpl : public GateBase {
 public:
-    XGateImpl(UINT target) : OneQubitGateBase(target){};
+    using GateBase::GateBase;
 
     Gate get_inverse() const override { return shared_from_this(); }
     std::optional<ComplexMatrix> get_matrix() const override {
@@ -40,14 +29,14 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        x_gate(this->_target, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        x_gate(_target_mask, _control_mask, state_vector);
     }
 };
 
-class YGateImpl : public OneQubitGateBase {
+class YGateImpl : public GateBase {
 public:
-    YGateImpl(UINT target) : OneQubitGateBase(target){};
+    using GateBase::GateBase;
 
     Gate get_inverse() const override { return shared_from_this(); }
     std::optional<ComplexMatrix> get_matrix() const override {
@@ -57,14 +46,14 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        y_gate(this->_target, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        y_gate(_target_mask, _control_mask, state_vector);
     }
 };
 
-class ZGateImpl : public OneQubitGateBase {
+class ZGateImpl : public GateBase {
 public:
-    ZGateImpl(UINT target) : OneQubitGateBase(target){};
+    using GateBase::GateBase;
 
     Gate get_inverse() const override { return shared_from_this(); }
     std::optional<ComplexMatrix> get_matrix() const override {
@@ -74,14 +63,14 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        z_gate(this->_target, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        z_gate(_target_mask, _control_mask, state_vector);
     }
 };
 
-class HGateImpl : public OneQubitGateBase {
+class HGateImpl : public GateBase {
 public:
-    HGateImpl(UINT target) : OneQubitGateBase(target){};
+    using GateBase::GateBase;
 
     Gate get_inverse() const override { return shared_from_this(); }
     std::optional<ComplexMatrix> get_matrix() const override {
@@ -92,8 +81,8 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        h_gate(this->_target, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        h_gate(_target_mask, _control_mask, state_vector);
     }
 };
 
@@ -106,9 +95,9 @@ class SqrtXdagGateImpl;
 class SqrtYGateImpl;
 class SqrtYdagGateImpl;
 
-class SGateImpl : public OneQubitGateBase {
+class SGateImpl : public GateBase {
 public:
-    SGateImpl(UINT target) : OneQubitGateBase(target){};
+    using GateBase::GateBase;
 
     Gate get_inverse() const override;
     std::optional<ComplexMatrix> get_matrix() const override {
@@ -118,16 +107,18 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        s_gate(this->_target, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        s_gate(_target_mask, _control_mask, state_vector);
     }
 };
 
-class SdagGateImpl : public OneQubitGateBase {
+class SdagGateImpl : public GateBase {
 public:
-    SdagGateImpl(UINT target) : OneQubitGateBase(target){};
+    using GateBase::GateBase;
 
-    Gate get_inverse() const override { return std::make_shared<const SGateImpl>(_target); }
+    Gate get_inverse() const override {
+        return std::make_shared<const SGateImpl>(_target_mask, _control_mask);
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, -1i;
@@ -135,16 +126,18 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        sdag_gate(this->_target, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        sdag_gate(_target_mask, _control_mask, state_vector);
     }
 };
 // for resolving dependency issues
-inline Gate SGateImpl::get_inverse() const { return std::make_shared<const SdagGateImpl>(_target); }
+inline Gate SGateImpl::get_inverse() const {
+    return std::make_shared<const SdagGateImpl>(_target_mask, _control_mask);
+}
 
-class TGateImpl : public OneQubitGateBase {
+class TGateImpl : public GateBase {
 public:
-    TGateImpl(UINT target) : OneQubitGateBase(target){};
+    using GateBase::GateBase;
 
     Gate get_inverse() const override;
     std::optional<ComplexMatrix> get_matrix() const override {
@@ -154,16 +147,18 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        t_gate(this->_target, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        t_gate(_target_mask, _control_mask, state_vector);
     }
 };
 
-class TdagGateImpl : public OneQubitGateBase {
+class TdagGateImpl : public GateBase {
 public:
-    TdagGateImpl(UINT target) : OneQubitGateBase(target){};
+    using GateBase::GateBase;
 
-    Gate get_inverse() const override { return std::make_shared<const TGateImpl>(_target); }
+    Gate get_inverse() const override {
+        return std::make_shared<const TGateImpl>(_target_mask, _control_mask);
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, (1. - 1.i) / std::sqrt(2);
@@ -171,16 +166,18 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        tdag_gate(this->_target, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        tdag_gate(_target_mask, _control_mask, state_vector);
     }
 };
 // for resolving dependency issues
-inline Gate TGateImpl::get_inverse() const { return std::make_shared<const TdagGateImpl>(_target); }
+inline Gate TGateImpl::get_inverse() const {
+    return std::make_shared<const TdagGateImpl>(_target_mask, _control_mask);
+}
 
-class SqrtXGateImpl : public OneQubitGateBase {
+class SqrtXGateImpl : public GateBase {
 public:
-    SqrtXGateImpl(UINT target) : OneQubitGateBase(target){};
+    using GateBase::GateBase;
 
     Gate get_inverse() const override;
     std::optional<ComplexMatrix> get_matrix() const override {
@@ -190,16 +187,18 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        sqrtx_gate(this->_target, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        sqrtx_gate(_target_mask, _control_mask, state_vector);
     }
 };
 
-class SqrtXdagGateImpl : public OneQubitGateBase {
+class SqrtXdagGateImpl : public GateBase {
 public:
-    SqrtXdagGateImpl(UINT target) : OneQubitGateBase(target){};
+    using GateBase::GateBase;
 
-    Gate get_inverse() const override { return std::make_shared<const SqrtXGateImpl>(_target); }
+    Gate get_inverse() const override {
+        return std::make_shared<const SqrtXGateImpl>(_target_mask, _control_mask);
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i, 0.5 - 0.5i;
@@ -207,18 +206,18 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        sqrtxdag_gate(this->_target, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        sqrtxdag_gate(_target_mask, _control_mask, state_vector);
     }
 };
 // for resolving dependency issues
 inline Gate SqrtXGateImpl::get_inverse() const {
-    return std::make_shared<const SqrtXdagGateImpl>(_target);
+    return std::make_shared<const SqrtXdagGateImpl>(_target_mask, _control_mask);
 }
 
-class SqrtYGateImpl : public OneQubitGateBase {
+class SqrtYGateImpl : public GateBase {
 public:
-    SqrtYGateImpl(UINT target) : OneQubitGateBase(target){};
+    using GateBase::GateBase;
 
     Gate get_inverse() const override;
     std::optional<ComplexMatrix> get_matrix() const override {
@@ -228,16 +227,18 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        sqrty_gate(this->_target, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        sqrty_gate(_target_mask, _control_mask, state_vector);
     }
 };
 
-class SqrtYdagGateImpl : public OneQubitGateBase {
+class SqrtYdagGateImpl : public GateBase {
 public:
-    SqrtYdagGateImpl(UINT target) : OneQubitGateBase(target){};
+    using GateBase::GateBase;
 
-    Gate get_inverse() const override { return std::make_shared<const SqrtYGateImpl>(_target); }
+    Gate get_inverse() const override {
+        return std::make_shared<const SqrtYGateImpl>(_target_mask, _control_mask);
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
         mat << 0.5 - 0.5i, 0.5 - 0.5i, -0.5 + 0.5i, 0.5 - 0.5i;
@@ -245,18 +246,18 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        sqrtydag_gate(this->_target, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        sqrtydag_gate(_target_mask, _control_mask, state_vector);
     }
 };
 // for resolving dependency issues
 inline Gate SqrtYGateImpl::get_inverse() const {
-    return std::make_shared<const SqrtYdagGateImpl>(_target);
+    return std::make_shared<const SqrtYdagGateImpl>(_target_mask, _control_mask);
 }
 
-class P0GateImpl : public OneQubitGateBase {
+class P0GateImpl : public GateBase {
 public:
-    P0GateImpl(UINT target) : OneQubitGateBase(target){};
+    using GateBase::GateBase;
 
     Gate get_inverse() const override {
         throw std::runtime_error("P0::get_inverse: Projection gate doesn't have inverse gate");
@@ -268,14 +269,14 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        p0_gate(this->_target, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        p0_gate(_target_mask, _control_mask, state_vector);
     }
 };
 
-class P1GateImpl : public OneQubitGateBase {
+class P1GateImpl : public GateBase {
 public:
-    P1GateImpl(UINT target) : OneQubitGateBase(target){};
+    using GateBase::GateBase;
 
     Gate get_inverse() const override {
         throw std::runtime_error("P1::get_inverse: Projection gate doesn't have inverse gate");
@@ -287,17 +288,17 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        p1_gate(this->_target, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        p1_gate(_target_mask, _control_mask, state_vector);
     }
 };
 
-class RXGateImpl : public OneQubitRotationGateBase {
+class RXGateImpl : public RotationGateBase {
 public:
-    RXGateImpl(UINT target, double angle) : OneQubitRotationGateBase(target, angle){};
+    using RotationGateBase::RotationGateBase;
 
     Gate get_inverse() const override {
-        return std::make_shared<const RXGateImpl>(_target, -_angle);
+        return std::make_shared<const RXGateImpl>(_target_mask, _control_mask, -_angle);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
@@ -307,17 +308,17 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        rx_gate(this->_target, this->_angle, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        rx_gate(_target_mask, _control_mask, _angle, state_vector);
     }
 };
 
-class RYGateImpl : public OneQubitRotationGateBase {
+class RYGateImpl : public RotationGateBase {
 public:
-    RYGateImpl(UINT target, double angle) : OneQubitRotationGateBase(target, angle){};
+    using RotationGateBase::RotationGateBase;
 
     Gate get_inverse() const override {
-        return std::make_shared<const RYGateImpl>(_target, -_angle);
+        return std::make_shared<const RYGateImpl>(_target_mask, _control_mask, -_angle);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
@@ -327,17 +328,17 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        ry_gate(this->_target, this->_angle, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        ry_gate(_target_mask, _control_mask, _angle, state_vector);
     }
 };
 
-class RZGateImpl : public OneQubitRotationGateBase {
+class RZGateImpl : public RotationGateBase {
 public:
-    RZGateImpl(UINT target, double angle) : OneQubitRotationGateBase(target, angle){};
+    using RotationGateBase::RotationGateBase;
 
     Gate get_inverse() const override {
-        return std::make_shared<const RZGateImpl>(_target, -_angle);
+        return std::make_shared<const RZGateImpl>(_target_mask, _control_mask, -_angle);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
@@ -346,21 +347,22 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        rz_gate(this->_target, this->_angle, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        rz_gate(_target_mask, _control_mask, _angle, state_vector);
     }
 };
 
-class U1GateImpl : public OneQubitGateBase {
+class U1GateImpl : public GateBase {
     double _lambda;
 
 public:
-    U1GateImpl(UINT target, double lambda) : OneQubitGateBase(target), _lambda(lambda) {}
+    U1GateImpl(UINT target_mask, UINT control_mask, double lambda)
+        : GateBase(target_mask, control_mask), _lambda(lambda) {}
 
     double lambda() const { return _lambda; }
 
     Gate get_inverse() const override {
-        return std::make_shared<const U1GateImpl>(_target, -_lambda);
+        return std::make_shared<const U1GateImpl>(_target_mask, _control_mask, -_lambda);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
@@ -369,22 +371,23 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        u1_gate(this->_target, this->_lambda, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        u1_gate(_target_mask, _control_mask, _lambda, state_vector);
     }
 };
-class U2GateImpl : public OneQubitGateBase {
+class U2GateImpl : public GateBase {
     double _phi, _lambda;
 
 public:
-    U2GateImpl(UINT target, double phi, double lambda)
-        : OneQubitGateBase(target), _phi(phi), _lambda(lambda) {}
+    U2GateImpl(UINT target_mask, UINT control_mask, double phi, double lambda)
+        : GateBase(target_mask, control_mask), _phi(phi), _lambda(lambda) {}
 
     double phi() const { return _phi; }
     double lambda() const { return _lambda; }
 
     Gate get_inverse() const override {
-        return std::make_shared<const U2GateImpl>(_target, -_lambda - PI(), -_phi + PI());
+        return std::make_shared<const U2GateImpl>(
+            _target_mask, _control_mask, -_lambda - PI(), -_phi + PI());
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
@@ -395,24 +398,24 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        u2_gate(this->_target, this->_phi, this->_lambda, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        u2_gate(_target_mask, _control_mask, _phi, _lambda, state_vector);
     }
 };
 
-class U3GateImpl : public OneQubitGateBase {
+class U3GateImpl : public GateBase {
     double _theta, _phi, _lambda;
 
 public:
-    U3GateImpl(UINT target, double theta, double phi, double lambda)
-        : OneQubitGateBase(target), _theta(theta), _phi(phi), _lambda(lambda) {}
+    U3GateImpl(UINT target_mask, UINT control_mask, double theta, double phi, double lambda)
+        : GateBase(target_mask, control_mask), _theta(theta), _phi(phi), _lambda(lambda) {}
 
     double theta() const { return _theta; }
     double phi() const { return _phi; }
     double lambda() const { return _lambda; }
 
     Gate get_inverse() const override {
-        return std::make_shared<const U3GateImpl>(_target, -_theta, -_lambda, -_phi);
+        return std::make_shared<const U3GateImpl>(_target_mask, _control_mask, -_theta, -_lambda, -_phi);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);
@@ -423,8 +426,8 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        u3_gate(this->_target, this->_theta, this->_phi, this->_lambda, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        u3_gate(_target_mask, _control_mask, _theta, _phi, _lambda, state_vector);
     }
 };
 

@@ -7,25 +7,13 @@
 namespace scaluq {
 
 namespace internal {
-class POneQubitGateBase : public ParamGateBase {
-protected:
-    UINT _target;
 
+class PRXGateImpl : public ParamGateBase {
 public:
-    POneQubitGateBase(UINT target, double pcoef = 1.) : ParamGateBase(pcoef), _target(target){};
-
-    UINT target() const { return _target; }
-
-    std::vector<UINT> get_target_qubit_list() const override { return {_target}; }
-    std::vector<UINT> get_control_qubit_list() const override { return {}; };
-};
-
-class PRXGateImpl : public POneQubitGateBase {
-public:
-    PRXGateImpl(UINT target, double pcoef = 1.) : POneQubitGateBase(target, pcoef){};
+    using ParamGateBase::ParamGateBase;
 
     ParamGate get_inverse() const override {
-        return std::make_shared<const PRXGateImpl>(_target, -_pcoef);
+        return std::make_shared<const PRXGateImpl>(_target_mask, _control_mask, -_pcoef);
     }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         double angle = _pcoef * param;
@@ -36,17 +24,17 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector, double param) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        rx_gate(_target, _pcoef * param, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        rx_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
     }
 };
 
-class PRYGateImpl : public POneQubitGateBase {
+class PRYGateImpl : public ParamGateBase {
 public:
-    PRYGateImpl(UINT target, double pcoef) : POneQubitGateBase(target, pcoef){};
+    using ParamGateBase::ParamGateBase;
 
     ParamGate get_inverse() const override {
-        return std::make_shared<const PRYGateImpl>(_target, -_pcoef);
+        return std::make_shared<const PRYGateImpl>(_target_mask, _control_mask, -_pcoef);
     }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         double angle = _pcoef * param;
@@ -56,17 +44,17 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector, double param) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        ry_gate(_target, _pcoef * param, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        ry_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
     }
 };
 
-class PRZGateImpl : public POneQubitGateBase {
+class PRZGateImpl : public ParamGateBase {
 public:
-    PRZGateImpl(UINT target, double pcoef) : POneQubitGateBase(target, pcoef){};
+    using ParamGateBase::ParamGateBase;
 
     ParamGate get_inverse() const override {
-        return std::make_shared<const PRZGateImpl>(_target, -_pcoef);
+        return std::make_shared<const PRZGateImpl>(_target_mask, _control_mask, -_pcoef);
     }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         double angle = param * _pcoef;
@@ -76,8 +64,8 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector, double param) const override {
-        check_qubit_within_bounds(state_vector, this->_target);
-        rz_gate(this->_target, _pcoef * param, state_vector);
+        check_qubit_mask_within_bounds(state_vector);
+        rz_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
     }
 };
 
