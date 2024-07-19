@@ -8,12 +8,15 @@
 
 namespace scaluq {
 namespace internal {
-void swap_gate(UINT target0, UINT target1, StateVector& state) {
+void swap_gate(UINT target_mask, UINT control_mask, StateVector& state) {
+    UINT lower_target_mask = -target_mask & target_mask;
+    UINT upper_target_mask = target_mask ^ lower_target_mask;
     Kokkos::parallel_for(
-        1ULL << (state.n_qubits() - 2), KOKKOS_LAMBDA(UINT it) {
-            UINT basis = internal::insert_zero_to_basis_index(it, target0, target1);
-            Kokkos::Experimental::swap(state._raw[basis | (1ULL << target0)],
-                                       state._raw[basis | (1ULL << target1)]);
+        state.n_qubits() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(UINT it) {
+            UINT basis =
+                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
+            Kokkos::Experimental::swap(state._raw[basis | lower_target_mask],
+                                       state._raw[basis | upper_target_mask]);
         });
     Kokkos::fence();
 }

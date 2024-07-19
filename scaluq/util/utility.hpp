@@ -39,6 +39,35 @@ KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
     return ((basis_index >> uidx) << (uidx + 1)) | (basis_index & umask);
 }
 
+/**
+ * Inserts multiple 0 bits at specified positions in basis_index.
+ * Example: insert_zero_to_basis_index(0b11111, 0x100101) -> 0b11011010.
+ *                                                               ^  ^ ^
+ */
+KOKKOS_INLINE_FUNCTION UINT insert_zero_at_mask_positions(UINT basis_index, UINT insert_mask) {
+    for (UINT bit_mask = insert_mask; bit_mask;
+         bit_mask &= (bit_mask - 1)) {  // loop through set bits
+        UINT lower_mask = ~bit_mask & (bit_mask - 1);
+        UINT upper_mask = ~lower_mask;
+        basis_index = ((basis_index & upper_mask) << 1) | (basis_index & lower_mask);
+    }
+    return basis_index;
+}
+
+inline UINT vector_to_mask(const std::vector<UINT>& v) {
+    UINT mask = 0;
+    for (auto x : v) mask |= 1ULL << x;
+    return mask;
+}
+
+inline std::vector<UINT> mask_to_vector(UINT mask) {
+    std::vector<UINT> indices;
+    for (UINT sub_mask = mask; sub_mask; sub_mask &= (sub_mask - 1)) {
+        indices.push_back(std::countr_zero(sub_mask));
+    }
+    return indices;
+}
+
 inline std::optional<ComplexMatrix> get_pauli_matrix(PauliOperator pauli) {
     ComplexMatrix mat;
     std::vector<UINT> pauli_id_list = pauli.get_pauli_id_list();

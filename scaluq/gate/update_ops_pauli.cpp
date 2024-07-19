@@ -9,9 +9,17 @@
 
 namespace scaluq {
 namespace internal {
-void pauli_gate(const PauliOperator& pauli, StateVector& state) { pauli.apply_to_state(state); }
 
-void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& state) {
+// まだ
+void pauli_gate(UINT control_mask, const PauliOperator& pauli, StateVector& state) {
+    pauli.apply_to_state(state);
+}
+
+// まだ
+void pauli_rotation_gate(UINT control_mask,
+                         const PauliOperator& pauli,
+                         double angle,
+                         StateVector& state) {
     auto [bit_flip_mask_vector, phase_flip_mask_vector] = pauli.get_XZ_mask_representation();
     UINT bit_flip_mask = internal::BitVector(bit_flip_mask_vector).data_raw()[0];
     UINT phase_flip_mask = internal::BitVector(phase_flip_mask_vector).data_raw()[0];

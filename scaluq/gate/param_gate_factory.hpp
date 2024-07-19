@@ -15,17 +15,24 @@ public:
 };
 }  // namespace internal
 namespace gate {
-inline ParamGate PRX(UINT target, double pcoef = 1.) {
-    return internal::ParamGateFactory::create_gate<internal::PRXGateImpl>(target, pcoef);
+inline ParamGate PRX(UINT target, const std::vector<UINT>& controls, double pcoef = 1.) {
+    return internal::ParamGateFactory::create_gate<internal::PRXGateImpl>(
+        internal::vector_to_mask({target}), internal::vector_to_mask(controls), pcoef);
 }
-inline ParamGate PRY(UINT target, double pcoef = 1.) {
-    return internal::ParamGateFactory::create_gate<internal::PRYGateImpl>(target, pcoef);
+inline ParamGate PRY(UINT target, const std::vector<UINT>& controls, double pcoef = 1.) {
+    return internal::ParamGateFactory::create_gate<internal::PRYGateImpl>(
+        internal::vector_to_mask({target}), internal::vector_to_mask(controls), pcoef);
 }
-inline ParamGate PRZ(UINT target, double pcoef = 1.) {
-    return internal::ParamGateFactory::create_gate<internal::PRZGateImpl>(target, pcoef);
+inline ParamGate PRZ(UINT target, const std::vector<UINT>& controls, double pcoef = 1.) {
+    return internal::ParamGateFactory::create_gate<internal::PRZGateImpl>(
+        internal::vector_to_mask({target}), internal::vector_to_mask(controls), pcoef);
 }
-inline ParamGate PPauliRotation(const PauliOperator& pauli, double pcoef = 1.) {
-    return internal::ParamGateFactory::create_gate<internal::PPauliRotationGateImpl>(pauli, pcoef);
+// まだ
+inline ParamGate PPauliRotation(const std::vector<UINT>& controls,
+                                const PauliOperator& pauli,
+                                double pcoef = 1.) {
+    return internal::ParamGateFactory::create_gate<internal::PPauliRotationGateImpl>(
+        internal::vector_to_mask(controls), pauli, pcoef);
 }
 inline ParamGate PProbablistic(const std::vector<double>& distribution,
                                const std::vector<std::variant<Gate, ParamGate>>& gate_list) {

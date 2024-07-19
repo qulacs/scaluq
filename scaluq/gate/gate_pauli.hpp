@@ -12,21 +12,20 @@ class PauliGateImpl : public GateBase {
     const PauliOperator _pauli;
 
 public:
-    PauliGateImpl(const PauliOperator& pauli) : _pauli(pauli) {}
+    PauliGateImpl(UINT control_mask, const PauliOperator& pauli)
+        : GateBase(vector_to_mask(_pauli.get_target_qubit_list()), control_mask), _pauli(pauli) {}
 
-    std::vector<UINT> get_target_qubit_list() const override {
-        return _pauli.get_target_qubit_list();
-    }
     std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
-    std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
-    Gate get_inverse() const override { return std::make_shared<PauliGateImpl>(this->_pauli); }
+    Gate get_inverse() const override {
+        return std::make_shared<PauliGateImpl>(_control_mask, _pauli);
+    }
     std::optional<ComplexMatrix> get_matrix() const override {
         return get_pauli_matrix(this->_pauli);
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        pauli_gate(this->_pauli, state_vector);
+        pauli_gate(_control_mask, _pauli, state_vector);
     }
 };
 
@@ -35,17 +34,13 @@ class PauliRotationGateImpl : public GateBase {
     const double _angle;
 
 public:
-    PauliRotationGateImpl(const PauliOperator& pauli, double angle)
-        : _pauli(pauli), _angle(angle) {}
-
-    std::vector<UINT> get_target_qubit_list() const override {
-        return _pauli.get_target_qubit_list();
-    }
-    std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
-    std::vector<UINT> get_control_qubit_list() const override { return {}; }
+    PauliRotationGateImpl(UINT control_mask, const PauliOperator& pauli, double angle)
+        : GateBase(vector_to_mask(_pauli.get_target_qubit_list()), control_mask),
+          _pauli(pauli),
+          _angle(angle) {}
 
     Gate get_inverse() const override {
-        return std::make_shared<PauliRotationGateImpl>(this->_pauli, -(this->_angle));
+        return std::make_shared<PauliRotationGateImpl>(_control_mask, _pauli, -_angle);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat = get_pauli_matrix(this->_pauli).value();
@@ -55,7 +50,7 @@ public:
         return mat;
     }
     void update_quantum_state(StateVector& state_vector) const override {
-        pauli_rotation_gate(this->_pauli, this->_angle, state_vector);
+        pauli_rotation_gate(_control_mask, _pauli, _angle, state_vector);
     }
 };
 }  // namespace internal

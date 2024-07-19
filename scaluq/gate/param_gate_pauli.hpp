@@ -12,17 +12,14 @@ class PPauliRotationGateImpl : public ParamGateBase {
     const PauliOperator _pauli;
 
 public:
-    PPauliRotationGateImpl(const PauliOperator& pauli, double pcoef = 1.)
-        : ParamGateBase(pcoef), _pauli(pauli) {}
+    PPauliRotationGateImpl(UINT control_mask, const PauliOperator& pauli, double pcoef = 1.)
+        : ParamGateBase(vector_to_mask(_pauli.get_target_qubit_list()), control_mask, pcoef),
+          _pauli(pauli) {}
 
-    std::vector<UINT> get_target_qubit_list() const override {
-        return _pauli.get_target_qubit_list();
-    }
     std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
-    std::vector<UINT> get_control_qubit_list() const override { return {}; }
 
     ParamGate get_inverse() const override {
-        return std::make_shared<PPauliRotationGateImpl>(_pauli, -_pcoef);
+        return std::make_shared<PPauliRotationGateImpl>(_control_mask, _pauli, -_pcoef);
     }
     std::optional<ComplexMatrix> get_matrix(double param) const override {
         double angle = _pcoef * param;
@@ -33,7 +30,7 @@ public:
         return mat;
     }
     void update_quantum_state(StateVector& state_vector, double param) const override {
-        pauli_rotation_gate(_pauli, _pcoef * param, state_vector);
+        pauli_rotation_gate(_control_mask, _pauli, _pcoef * param, state_vector);
     }
 };
 }  // namespace internal
