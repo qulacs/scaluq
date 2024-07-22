@@ -25,7 +25,7 @@ protected:
 
 public:
     GlobalPhaseGateImpl(UINT control_mask, double phase)
-        : GateBase(0, control_mask), _phase(phase){};
+        : GateBase(0, control_mask), _phase(phase) {}
 
     [[nodiscard]] double phase() const { return _phase; }
 

@@ -154,8 +154,7 @@ inline Gate DenseMatrix(const std::vector<UINT>& targets,
     if (static_cast<UINT>(matrix.rows()) != dim || static_cast<UINT>(matrix.cols()) != dim) {
         throw std::runtime_error(
             "gate::DenseMatrix(const std::vector<UINT>&, const ComplexMatrix&): matrix size "
-            "must "
-            "be 2^{n_qubits} x 2^{n_qubits}.");
+            "must be 2^{n_qubits} x 2^{n_qubits}.");
     }
     if (targets.size() == 0) return I();
     if (targets.size() == 1) {
@@ -189,8 +188,7 @@ inline Gate DenseMatrix(const std::vector<UINT>& targets,
     }
     throw std::runtime_error(
         "gate::DenseMatrix(const std::vector<UINT>&, const ComplexMatrix&): DenseMatrix gate "
-        "more "
-        "than two qubits is not implemented yet.");
+        "more than two qubits is not implemented yet.");
 }
 inline Gate Probablistic(const std::vector<double>& distribution,
                          const std::vector<Gate>& gate_list) {
