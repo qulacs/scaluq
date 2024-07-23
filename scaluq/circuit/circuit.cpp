@@ -200,7 +200,16 @@ void Circuit::optimize(UINT block_size) {
                             previous_gate_indices.end(),
                             newly_applied_qubits.size(),
                             [&](UINT sz, UINT idx) { return sz + gate_pool[idx].second.size(); });
-        if (merged_gate_size > block_size) {
+        auto is_pauli = [](const Gate& gate) {
+            GateType type = gate.gate_type();
+            return type == GateType::I || type == GateType::X || type == GateType::Y ||
+                   type == GateType::Z || type == GateType::Pauli;
+        };
+        bool all_pauli =
+            is_pauli(gate) && std::ranges::all_of(previous_gate_indices, [&](UINT idx) {
+                return is_pauli(gate_pool[idx].first);
+            });
+        if (!all_pauli && merged_gate_size > block_size) {
             for (UINT idx : previous_gate_indices) {
                 for (UINT qubit : gate_pool[idx].second) {
                     latest_gate_idx[qubit] = NO_GATES;
@@ -243,7 +252,6 @@ void Circuit::optimize(UINT block_size) {
         if (idx == NO_GATES) continue;
         new_gate_list.emplace_back(std::move(gate_pool[idx].first));
     }
-    std::cerr << global_phase << std::endl;
     if (std::abs(global_phase) < 1e-12) new_gate_list.push_back(gate::GlobalPhase(global_phase));
     _gate_list.swap(new_gate_list);
 }
