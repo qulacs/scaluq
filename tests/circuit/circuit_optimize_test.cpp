@@ -182,6 +182,6 @@ TEST(CircuitTest, Optimize1) {
         circuit.optimize();
         circuit.update_quantum_state(state1, params);
         ASSERT_LT(circuit.gate_count(), ngates);
-        ASSERT_TRUE(same_state(state0, state1));
+        ASSERT_TRUE(same_state(state0, state1, 1e-9));
     }
 }
