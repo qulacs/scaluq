@@ -31,23 +31,19 @@ class PauliRotationGateImpl : public GateBase {
     const double _angle;
 
 public:
-
-    PauliRotationGateImpl(const PauliOperator& pauli, double angle)
-        : _pauli(pauli), _angle(angle) {}
-
-    PauliOperator pauli() const { return _pauli; }
-    std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
-    double angle() const { return _angle; }
-    
     PauliRotationGateImpl(UINT control_mask, const PauliOperator& pauli, double angle)
         : GateBase(vector_to_mask(_pauli.get_target_qubit_list()), control_mask),
           _pauli(pauli),
           _angle(angle) {}
 
+    PauliOperator pauli() const { return _pauli; }
+    std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
+    double angle() const { return _angle; }
+
     Gate get_inverse() const override {
         return std::make_shared<const PauliRotationGateImpl>(_control_mask, _pauli, -_angle);
     }
-    
+
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat = this->_pauli.get_matrix_ignoring_coef();
         Complex true_angle = _angle * _pauli.get_coef();
