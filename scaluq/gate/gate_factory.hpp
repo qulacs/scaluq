@@ -184,7 +184,7 @@ inline Gate DenseMatrix(const std::vector<UINT>& targets,
                                   std::array{Complex(matrix(3, 0)),
                                              Complex(matrix(3, 1)),
                                              Complex(matrix(3, 2)),
-                                             Complex(matrix(3, 3))},
+                                             Complex(matrix(3, 3))}
                               });
     }
     throw std::runtime_error(
