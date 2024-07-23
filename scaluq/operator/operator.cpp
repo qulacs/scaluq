@@ -21,7 +21,7 @@ std::string Operator::to_string() const {
 
 void Operator::add_operator(const PauliOperator& mpt) { add_operator(PauliOperator{mpt}); }
 void Operator::add_operator(PauliOperator&& mpt) {
-    _is_hermitian &= mpt.get_coef().imag() == 0.;
+    _is_hermitian &= (mpt.get_coef().imag() == 0.);
     if (![&] {
             const auto& target_list = mpt.get_target_qubit_list();
             if (target_list.empty()) return true;

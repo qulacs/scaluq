@@ -179,7 +179,7 @@ void Circuit::optimize(UINT block_size) {
             continue;
         }
         auto target_list = gate->get_target_qubit_list();
-        auto control_list = gate->get_target_qubit_list();
+        auto control_list = gate->get_control_qubit_list();
         std::vector<UINT> targets;
         targets.reserve(target_list.size() + control_list.size());
         std::ranges::copy(target_list, std::back_inserter(targets));
@@ -221,7 +221,7 @@ void Circuit::optimize(UINT block_size) {
             double phase;
             std::tie(merged_gate, phase) = merge_gate(merged_gate, gate_pool[idx].first);
             global_phase += phase;
-            for (UINT qubit : targets) {
+            for (UINT qubit : gate_pool[idx].second) {
                 new_targets.push_back(qubit);
                 latest_gate_idx[qubit] = new_idx;
             }
@@ -239,7 +239,11 @@ void Circuit::optimize(UINT block_size) {
     }
     std::ranges::sort(latest_gate_idx);
     latest_gate_idx.erase(std::ranges::unique(latest_gate_idx).begin(), latest_gate_idx.end());
-    for (UINT idx : latest_gate_idx) new_gate_list.emplace_back(std::move(gate_pool[idx].first));
+    for (UINT idx : latest_gate_idx) {
+        if (idx == NO_GATES) continue;
+        new_gate_list.emplace_back(std::move(gate_pool[idx].first));
+    }
+    std::cerr << global_phase << std::endl;
     if (std::abs(global_phase) < 1e-12) new_gate_list.push_back(gate::GlobalPhase(global_phase));
     _gate_list.swap(new_gate_list);
 }
