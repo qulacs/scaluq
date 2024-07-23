@@ -19,7 +19,7 @@ TEST(CircuitTest, Optimize1) {
         UINT param_id = 0;
         Circuit circuit(n);
         for ([[maybe_unused]] UINT _ : std::views::iota(0, 1000)) {
-            UINT kind = random.int32() % 33;
+            UINT kind = random.int32() % 32;
             UINT q0 = random.int32() % n;
             UINT q1 = random.int32() % (n - 1);
             if (q1 == q0) q1 = n - 1;
