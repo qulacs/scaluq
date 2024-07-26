@@ -78,7 +78,6 @@ enum class GateType {
     CZ,
     Swap,
     TwoQubitMatrix,
-    FusedSwap,
     Pauli,
     PauliRotation
 };
@@ -115,7 +114,6 @@ constexpr GateType get_gate_type() {
     if constexpr (std::is_same_v<T, internal::SwapGateImpl>) return GateType::Swap;
     if constexpr (std::is_same_v<T, internal::TwoQubitMatrixGateImpl>)
         return GateType::TwoQubitMatrix;
-    if constexpr (std::is_same_v<T, internal::FusedSwapGateImpl>) return GateType::FusedSwap;
     if constexpr (std::is_same_v<T, internal::PauliGateImpl>) return GateType::Pauli;
     if constexpr (std::is_same_v<T, internal::PauliRotationGateImpl>)
         return GateType::PauliRotation;

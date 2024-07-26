@@ -52,7 +52,13 @@ protected:
 
 public:
     ParamGateBase(UINT target_mask, UINT control_mask, double pcoef = 1.)
-        : _target_mask(target_mask), _control_mask(control_mask), _pcoef(pcoef) {}
+        : _target_mask(target_mask), _control_mask(control_mask), _pcoef(pcoef) {
+        if (_target_mask & _control_mask) [[unlikely]] {
+            throw std::runtime_error(
+                "Error: ParamGate::ParamGate(UINT target_mask, UINT control_mask) : Target and "
+                "control qubits must not overlap.");
+        }
+    }
     virtual ~ParamGateBase() = default;
 
     [[nodiscard]] double pcoef() { return _pcoef; }

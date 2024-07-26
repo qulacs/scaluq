@@ -20,7 +20,8 @@ void u1_gate(UINT target_mask, UINT control_mask, double lambda, StateVector& st
     Complex exp_val = Kokkos::exp(Complex(0, lambda));
     Kokkos::parallel_for(
         state.dim() >> (std::popcount(target_mask | control_mask)), KOKKOS_LAMBDA(UINT it) {
-            UINT i = internal::insert_zero_to_basis_index(it, target_mask);
+            UINT i = internal::insert_zero_at_mask_positions(it, target_mask | control_mask) |
+                     control_mask;
             state._raw[i | target_mask] *= exp_val;
         });
     Kokkos::fence();

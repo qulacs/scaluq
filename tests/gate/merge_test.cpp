@@ -47,7 +47,6 @@ TEST(GateTest, MergeGate) {
         gates.push_back(gate::CX(target, target ^ 1));
         gates.push_back(gate::CZ(target, target ^ 1));
         gates.push_back(gate::Swap(target, target ^ 1));
-        gates.push_back(gate::FusedSwap(target, target ^ 1, 1));
     }
     gates.push_back(gate::I());
     gates.push_back(gate::GlobalPhase(random.uniform() * PI() * 2));
