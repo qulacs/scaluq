@@ -55,14 +55,17 @@ KOKKOS_INLINE_FUNCTION UINT insert_zero_at_mask_positions(UINT basis_index, UINT
     return basis_index;
 }
 
+template <bool enable_validate = true>
 inline UINT vector_to_mask(const std::vector<UINT>& v) {
     UINT mask = 0;
     for (auto x : v) {
-        if (x >= sizeof(UINT) * 8) [[unlikely]] {
-            throw std::runtime_error("The size of the qubit system must be less than 64.");
-        }
-        if ((mask >> x) & 1) [[unlikely]] {
-            throw std::runtime_error("The specified qubit is duplicated.");
+        if constexpr (enable_validate) {
+            if (x >= sizeof(UINT) * 8) [[unlikely]] {
+                throw std::runtime_error("The size of the qubit system must be less than 64.");
+            }
+            if ((mask >> x) & 1) [[unlikely]] {
+                throw std::runtime_error("The specified qubit is duplicated.");
+            }
         }
         mask |= 1ULL << x;
     }

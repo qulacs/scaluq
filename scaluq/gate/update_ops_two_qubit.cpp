@@ -9,6 +9,7 @@
 namespace scaluq {
 namespace internal {
 void swap_gate(UINT target_mask, UINT control_mask, StateVector& state) {
+    // '- target' is used for bit manipulation on unsigned type, not for its numerical meaning.
     UINT lower_target_mask = target_mask & -target_mask;
     UINT upper_target_mask = target_mask ^ lower_target_mask;
     Kokkos::parallel_for(

@@ -107,7 +107,7 @@ inline Gate U3(
 inline Gate OneQubitMatrix(UINT target,
                            const std::array<std::array<Complex, 2>, 2>& matrix,
                            const std::vector<UINT>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::OneQubitMatrixGateImpl>(
+    return internal::GateFactory::create_gate<internal::OneTargetMatrixGateImpl>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), matrix);
 }
 inline Gate CX(UINT target, UINT control) {
@@ -132,7 +132,7 @@ inline Gate TwoQubitMatrix(UINT target1,
                            UINT target2,
                            const std::array<std::array<Complex, 4>, 4>& matrix,
                            const std::vector<UINT>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::TwoQubitMatrixGateImpl>(
+    return internal::GateFactory::create_gate<internal::TwoTargetMatrixGateImpl>(
         internal::vector_to_mask({target1, target2}), internal::vector_to_mask(controls), matrix);
 }
 // まだ

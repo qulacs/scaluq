@@ -415,7 +415,8 @@ public:
     double lambda() const { return _lambda; }
 
     Gate get_inverse() const override {
-        return std::make_shared<const U3GateImpl>(_target_mask, _control_mask, -_theta, -_lambda, -_phi);
+        return std::make_shared<const U3GateImpl>(
+            _target_mask, _control_mask, -_theta, -_lambda, -_phi);
     }
     std::optional<ComplexMatrix> get_matrix() const override {
         ComplexMatrix mat(2, 2);

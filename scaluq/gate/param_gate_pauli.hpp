@@ -13,7 +13,7 @@ class PPauliRotationGateImpl : public ParamGateBase {
 
 public:
     PPauliRotationGateImpl(UINT control_mask, const PauliOperator& pauli, double pcoef = 1.)
-        : ParamGateBase(vector_to_mask(pauli.get_target_qubit_list()), control_mask, pcoef),
+        : ParamGateBase(vector_to_mask<false>(pauli.get_target_qubit_list()), control_mask, pcoef),
           _pauli(pauli) {}
 
     PauliOperator pauli() const { return _pauli; }
