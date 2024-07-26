@@ -104,6 +104,6 @@ public:
 };
 }  // namespace internal
 
-using OneQubitMatrixGate = internal::GatePtr<internal::OneTargetMatrixGateImpl>;
-using TwoQubitMatrixGate = internal::GatePtr<internal::TwoTargetMatrixGateImpl>;
+using OneTargetMatrixGate = internal::GatePtr<internal::OneTargetMatrixGateImpl>;
+using TwoTargetMatrixGate = internal::GatePtr<internal::TwoTargetMatrixGateImpl>;
 }  // namespace scaluq

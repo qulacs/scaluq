@@ -38,9 +38,9 @@ class U3GateImpl;
 class OneTargetMatrixGateImpl;
 class CXGateImpl;
 class CZGateImpl;
+class CCXGateImpl;
 class SwapGateImpl;
 class TwoTargetMatrixGateImpl;
-class FusedSwapGateImpl;
 class PauliGateImpl;
 class PauliRotationGateImpl;
 
@@ -73,9 +73,10 @@ enum class GateType {
     U1,
     U2,
     U3,
-    OneQubitMatrix,
+    OneTargetMatrix,
     CX,
     CZ,
+    CCX,
     Swap,
     TwoQubitMatrix,
     Pauli,
@@ -108,7 +109,7 @@ constexpr GateType get_gate_type() {
     if constexpr (std::is_same_v<T, internal::U2GateImpl>) return GateType::U2;
     if constexpr (std::is_same_v<T, internal::U3GateImpl>) return GateType::U3;
     if constexpr (std::is_same_v<T, internal::OneTargetMatrixGateImpl>)
-        return GateType::OneQubitMatrix;
+        return GateType::OneTargetMatrix;
     if constexpr (std::is_same_v<T, internal::CXGateImpl>) return GateType::CX;
     if constexpr (std::is_same_v<T, internal::CZGateImpl>) return GateType::CZ;
     if constexpr (std::is_same_v<T, internal::SwapGateImpl>) return GateType::Swap;
