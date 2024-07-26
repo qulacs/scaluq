@@ -49,6 +49,9 @@ void multi_qubit_control_multi_qubit_dense_matrix_gate(
 void multi_qubit_dense_matrix_gate(const std::vector<UINT>& target_qubit_index_list,
                                    const Matrix& matrix,
                                    StateVector& state_vector);
+void multi_qubit_dense_matrix_gate_gemm(const std::vector<UINT>& target_qubit_index_list,
+                                        const Matrix& matrix,
+                                        StateVector& state_vector);
 
 class OneQubitMatrixGateImpl : public OneQubitGateBase {
     matrix_2_2 _matrix;
@@ -226,7 +229,7 @@ public:
     std::optional<Matrix> get_matrix_internal() const {
         Matrix mat("mat", _matrix.numRows(), _matrix.numCols());
         Kokkos::parallel_for(
-            _matrix.numRows(), KOKKOS_LAMBDA(const default_lno_t i) {
+            _matrix.numRows(), KOKKOS_CLASS_LAMBDA(const default_lno_t i) {
                 for (default_size_type idx = _matrix.graph.row_map(i);
                      idx < _matrix.graph.row_map(i + 1);
                      ++idx) {
@@ -249,7 +252,7 @@ public:
             mat_view(reinterpret_cast<Complex*>(mat.data()), numRows, numCols);
         Kokkos::parallel_for(
             Kokkos::TeamPolicy<>(numRows, Kokkos::AUTO()),
-            KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team) {
+            KOKKOS_CLASS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team) {
                 UINT i = team.league_rank();
                 UINT start_idx = _matrix.graph.row_map(i);
                 UINT end_idx = _matrix.graph.row_map(i + 1);
@@ -400,6 +403,51 @@ public:
         } else {
             if (this->control_qubit_info_list.size() == 0) {
                 multi_qubit_dense_matrix_gate(target_index_list, _matrix, state_vector);
+            } else if (this->control_qubit_info_list.size() == 1) {
+                single_qubit_control_multi_qubit_dense_matrix_gate(control_index_list[0],
+                                                                   control_value_list[0],
+                                                                   target_index_list,
+                                                                   _matrix,
+                                                                   state_vector);
+            } else {
+                // multiple control qubit
+                multi_qubit_control_multi_qubit_dense_matrix_gate(control_index_list,
+                                                                  control_value_list,
+                                                                  target_index_list,
+                                                                  _matrix,
+                                                                  state_vector);
+            }
+        }
+    }
+
+    void update_quantum_state_gemm(StateVector& state_vector) const {
+        std::vector<UINT> target_index_list = get_target_qubit_list();
+        std::vector<UINT> control_index_list;
+        std::vector<UINT> control_value_list;
+        for (const auto& control : control_qubit_info_list) {
+            control_index_list.push_back(control.index());
+            control_value_list.push_back(control.control_value());
+        }
+
+        if (this->target_qubit_info_list.size() == 1) {
+            if (this->control_qubit_info_list.size() == 0) {
+                single_qubit_dense_matrix_gate_view(target_index_list[0], _matrix, state_vector);
+            } else if (this->control_qubit_info_list.size() == 1) {
+                single_qubit_control_single_qubit_dense_matrix_gate(control_index_list[0],
+                                                                    control_value_list[0],
+                                                                    target_index_list[0],
+                                                                    _matrix,
+                                                                    state_vector);
+            } else {
+                multi_qubit_control_single_qubit_dense_matrix_gate(control_index_list,
+                                                                   control_value_list,
+                                                                   target_index_list[0],
+                                                                   _matrix,
+                                                                   state_vector);
+            }
+        } else {
+            if (this->control_qubit_info_list.size() == 0) {
+                multi_qubit_dense_matrix_gate_gemm(target_index_list, _matrix, state_vector);
             } else if (this->control_qubit_info_list.size() == 1) {
                 single_qubit_control_multi_qubit_dense_matrix_gate(control_index_list[0],
                                                                    control_value_list[0],
@@ -789,10 +837,100 @@ inline void multi_qubit_dense_matrix_gate(const std::vector<UINT>& target_qubit_
         return;
     }
 }
+
+inline void multi_qubit_dense_matrix_gate_gemm(const std::vector<UINT>& target_qubit_index_list,
+                                               const Matrix& matrix,
+                                               StateVector& state) {
+    UINT target_qubit_index_count = target_qubit_index_list.size();
+    UINT n_qubits = state.n_qubits();
+    if (target_qubit_index_count == n_qubits) {
+        Kokkos::View<Complex*> buffer("buffer", 1ULL << n_qubits);
+        if (std::ranges::is_sorted(target_qubit_index_list)) {
+            gemv(matrix, state._raw, buffer);
+            state._raw = buffer;
+            return;
+        }
+        std::vector<UINT> sort_array, mask_array;
+        create_shift_mask_list_from_list_buf(target_qubit_index_list, sort_array, mask_array);
+
+        const UINT target_qubit_index_count = target_qubit_index_list.size();
+        const UINT matrix_dim = 1ULL << target_qubit_index_count;
+        const std::vector<UINT> matrix_mask_list =
+            create_matrix_mask_list(target_qubit_index_list, target_qubit_index_count);
+
+        const UINT loop_dim = state.dim() >> target_qubit_index_count;
+        auto mask_array_view = convert_host_vector_to_device_view(mask_array);
+        auto matrix_mask_list_view = convert_host_vector_to_device_view(matrix_mask_list);
+
+        Kokkos::View<Complex*> arranged_state("arranged_state", 1ULL << n_qubits);
+
+        Kokkos::parallel_for(
+            matrix_dim,
+            KOKKOS_LAMBDA(UINT x) { arranged_state[x] = state._raw[matrix_mask_list_view[x]]; });
+        Kokkos::fence();
+
+        gemv(matrix, arranged_state, buffer);
+
+        Kokkos::parallel_for(
+            matrix_dim,
+            KOKKOS_LAMBDA(UINT x) { state._raw[matrix_mask_list_view[x]] = buffer[x]; });
+        Kokkos::fence();
+
+        return;
+    }
+    std::vector<UINT> sort_array, mask_array;
+    create_shift_mask_list_from_list_buf(target_qubit_index_list, sort_array, mask_array);
+
+    const UINT matrix_dim = 1ULL << target_qubit_index_count;
+    const std::vector<UINT> matrix_mask_list =
+        create_matrix_mask_list(target_qubit_index_list, target_qubit_index_count);
+
+    const UINT loop_dim = state.dim() >> target_qubit_index_count;
+    auto mask_array_view = convert_host_vector_to_device_view(mask_array);
+    auto matrix_mask_list_view = convert_host_vector_to_device_view(matrix_mask_list);
+
+    Kokkos::View<UINT*> basis_view("basis_view", loop_dim);
+    Kokkos::parallel_for(
+        loop_dim, KOKKOS_LAMBDA(UINT i) {
+            UINT basis_0 = i;
+            for (UINT cursor = 0; cursor < target_qubit_index_count; ++cursor) {
+                basis_0 = (basis_0 & mask_array_view[cursor]) +
+                          ((basis_0 & (~mask_array_view[cursor])) << 1);
+            }
+            basis_view[i] = basis_0;
+        });
+    Kokkos::fence();
+
+    Matrix arranged_state("arranged_state", loop_dim, 1ULL << target_qubit_index_count);
+
+    Kokkos::parallel_for(
+        Kokkos::TeamPolicy<>(loop_dim, Kokkos::AUTO()),
+        KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team) {
+            UINT rank = team.league_rank();
+            Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, matrix_dim), [&](UINT x) {
+                arranged_state(rank, x) = state._raw[basis_view[rank] ^ matrix_mask_list[x]];
+            });
+        });
+    Kokkos::fence();
+
+    Matrix buffer("buffer", matrix_dim, loop_dim);
+    gemm_trans(matrix, arranged_state, buffer);
+
+    Kokkos::parallel_for(
+        Kokkos::TeamPolicy<>(matrix_dim, Kokkos::AUTO()),
+        KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team) {
+            UINT rank = team.league_rank();
+
+            Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, loop_dim), [&](UINT x) {
+                state._raw[basis_view[x] ^ matrix_mask_list[rank]] = buffer(rank, x);
+            });
+        });
+    Kokkos::fence();
+}
 }  // namespace internal
 
 using OneQubitMatrixGate = internal::GatePtr<internal::OneQubitMatrixGateImpl>;
 using TwoQubitMatrixGate = internal::GatePtr<internal::TwoQubitMatrixGateImpl>;
 using SparseMatrixGate = internal::GatePtr<internal::SparseMatrixGateImpl>;
-using DensityMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl>;
+using DenseMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl>;
 }  // namespace scaluq

@@ -207,6 +207,11 @@ inline void gemv(const Matrix matrix, const Kokkos::View<Complex*>& x, Kokkos::V
     KokkosBlas::gemv("N", 1.0, matrix, x, 0.0, y);
 }
 
+// x: rearranged state vector, output will be stored in y
+inline void gemm_trans(const Matrix matrix, const Matrix& x, Matrix& y) {
+    KokkosBlas::gemm("N", "T", 1.0, matrix, x, 0.0, y);
+}
+
 // Device Kokkos::View を Host std::vector に変換する関数
 template <typename T, typename Layout>
 inline std::vector<std::vector<T>> convert_2d_device_view_to_host_vector(
