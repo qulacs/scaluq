@@ -18,17 +18,17 @@ public:
     PProbablisticGateImpl(const std::vector<double>& distribution,
                           const std::vector<std::variant<Gate, ParamGate>>& gate_list)
         : ParamGateBase(  // make OR(target mask) and OR(control mask) at first
-              [this] {
+              [&gate_list] {
                   UINT mask_sum = 0;
-                  for (const auto& gate : _gate_list) {
+                  for (const auto& gate : gate_list) {
                       mask_sum |= std::visit(
                           [](const auto& g) { return g->get_target_qubit_mask(); }, gate);
                   }
                   return mask_sum;
               }(),
-              [this] {
+              [&gate_list] {
                   UINT mask_sum = 0;
-                  for (const auto& gate : _gate_list) {
+                  for (const auto& gate : gate_list) {
                       mask_sum |= std::visit(
                           [](const auto& g) { return g->get_control_qubit_mask(); }, gate);
                   }

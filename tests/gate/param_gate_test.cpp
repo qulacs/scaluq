@@ -27,8 +27,8 @@ void test_apply_parametric_single_pauli_rotation(UINT n_qubits,
         const UINT target = random.int32() % n_qubits;
         const double param = M_PI * random.uniform();
         const double pcoef = random.uniform() * 2 - 1;
-        const Gate gate = factory_fixed(target, pcoef * param);
-        const ParamGate pgate = factory_parametric(target, pcoef);
+        const Gate gate = factory_fixed(target, pcoef * param, {});
+        const ParamGate pgate = factory_parametric(target, pcoef, {});
         gate->update_quantum_state(state);
         pgate->update_quantum_state(state_cp, param);
         auto state_amp = state.amplitudes();
