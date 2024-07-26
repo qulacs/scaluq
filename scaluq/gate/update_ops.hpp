@@ -45,10 +45,6 @@ void ry_gate(UINT target_mask, UINT control_mask, double angle, StateVector& sta
 
 void rz_gate(UINT target_mask, UINT control_mask, double angle, StateVector& state);
 
-void cx_gate(UINT target_mask, UINT control_mask, StateVector& state);
-
-void cz_gate(UINT target_mask, UINT control_mask, StateVector& state);
-
 matrix_2_2 get_IBMQ_matrix(double _theta, double _phi, double _lambda);
 
 void single_qubit_dense_matrix_gate(UINT target_mask,

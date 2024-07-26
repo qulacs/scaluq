@@ -57,7 +57,15 @@ KOKKOS_INLINE_FUNCTION UINT insert_zero_at_mask_positions(UINT basis_index, UINT
 
 inline UINT vector_to_mask(const std::vector<UINT>& v) {
     UINT mask = 0;
-    for (auto x : v) mask |= 1ULL << x;
+    for (auto x : v) {
+        if (x >= sizeof(UINT) * 8) [[unlikely]] {
+            throw std::runtime_error("The size of the qubit system must be less than 64.");
+        }
+        if ((mask >> x) & 1) [[unlikely]] {
+            throw std::runtime_error("The specified qubit is duplicated.");
+        }
+        mask |= 1ULL << x;
+    }
     return mask;
 }
 
@@ -82,7 +90,8 @@ inline ComplexMatrix kronecker_product(const ComplexMatrix& lhs, const ComplexMa
     for (int i = 0; i < lhs.rows(); i++) {
         for (int j = 0; j < lhs.cols(); j++) {
             result.block(i * rhs.rows(), j * rhs.cols(), rhs.rows(), rhs.cols()) = lhs(i, j) * rhs;
-        }    }
+        }
+    }
     return result;
 }
 

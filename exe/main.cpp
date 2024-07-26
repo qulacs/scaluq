@@ -6,9 +6,6 @@
 #include <types.hpp>
 #include <util/random.hpp>
 
-#include "../scaluq/all.hpp"
-#include "../scaluq/util/utility.hpp"
-
 using namespace scaluq;
 using namespace std;
 
