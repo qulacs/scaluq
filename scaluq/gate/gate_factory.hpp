@@ -137,6 +137,7 @@ inline Gate TwoQubitMatrix(UINT target1,
 }
 // まだ
 inline Gate Pauli(const PauliOperator& pauli, const std::vector<UINT>& controls = {}) {
+    auto tar = pauli.get_target_qubit_list();
     return internal::GateFactory::create_gate<internal::PauliGateImpl>(
         internal::vector_to_mask(controls), pauli);
 }

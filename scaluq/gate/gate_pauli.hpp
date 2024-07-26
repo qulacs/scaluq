@@ -13,7 +13,7 @@ class PauliGateImpl : public GateBase {
 
 public:
     PauliGateImpl(UINT control_mask, const PauliOperator& pauli)
-        : GateBase(vector_to_mask(_pauli.get_target_qubit_list()), control_mask), _pauli(pauli) {}
+        : GateBase(vector_to_mask(pauli.get_target_qubit_list()), control_mask), _pauli(pauli) {}
 
     PauliOperator pauli() const { return _pauli; };
     std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
@@ -32,7 +32,7 @@ class PauliRotationGateImpl : public GateBase {
 
 public:
     PauliRotationGateImpl(UINT control_mask, const PauliOperator& pauli, double angle)
-        : GateBase(vector_to_mask(_pauli.get_target_qubit_list()), control_mask),
+        : GateBase(vector_to_mask(pauli.get_target_qubit_list()), control_mask),
           _pauli(pauli),
           _angle(angle) {}
 

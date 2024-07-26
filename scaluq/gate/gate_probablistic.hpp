@@ -14,14 +14,14 @@ public:
     ProbablisticGateImpl(const std::vector<double>& distribution,
                          const std::vector<Gate>& gate_list)
         : GateBase(  // make OR(target mask) and OR(control mask) at first
-              [this] {
+              [&gate_list] {
                   UINT mask_sum = 0;
-                  for (const auto& gate : _gate_list) mask_sum |= gate->get_target_qubit_mask();
+                  for (const auto& gate : gate_list) mask_sum |= gate->get_target_qubit_mask();
                   return mask_sum;
               }(),
-              [this] {
+              [&gate_list] {
                   UINT mask_sum = 0;
-                  for (const auto& gate : _gate_list) mask_sum |= gate->get_control_qubit_mask();
+                  for (const auto& gate : gate_list) mask_sum |= gate->get_control_qubit_mask();
                   return mask_sum;
               }()),
           _distribution(distribution),
