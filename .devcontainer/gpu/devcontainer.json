@@ -33,6 +33,7 @@
 				"C_Cpp.default.includePath": [
 					"scaluq",
 					"/usr/local/include/kokkos",
+					"/usr/local/include/kokkos-kernels",
 					"build/_deps/eigen_fetch-src",
 					"build/_deps/googletest_fetch-src/googletest/include",
 					"~/.local/lib/python3.10/site-packages/nanobind/include",

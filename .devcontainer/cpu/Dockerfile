@@ -38,13 +38,19 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.28.0/cmake-3.28.0
     rm /tmp/cmake-install.sh && \
     ln -s /opt/cmake-3.28.0/bin/* /usr/local/bin
 
-RUN git clone --recursive https://github.com/kokkos/kokkos.git /tmp/kokkos --depth 1 && \
+    RUN git clone --recursive https://github.com/kokkos/kokkos.git /tmp/kokkos --depth 1 && \
     mkdir /tmp/kokkos/build && \
     cd /tmp/kokkos/build && \
     cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/kokkos-build && \
     make install && \
+    git clone --recursive https://github.com/kokkos/kokkos-kernels.git /tmp/kokkos-kernels --depth 1 && \
+    mkdir /tmp/kokkos-kernels/build && \
+    cd /tmp/kokkos-kernels/build && \
+    cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/kokkos-kernels-build -DCMAKE_PREFIX_PATH=/tmp/kokkos-build/lib/cmake/Kokkos && \
+    make install && \
     cp -r /tmp/kokkos-build/include /usr/local/include/kokkos && \
-    rm -rf /tmp/kokkos /tmp/kokkos-build
+    cp -r /tmp/kokkos-kernels-build/include /usr/local/include/kokkos-kernels && \
+    rm -rf /tmp/kokkos /tmp/kokkos-build /tmp/kokkos-kernels /tmp/kokkos-kernels/build
 
 ARG USERNAME=vscode
 ARG GROUPNAME=vscode

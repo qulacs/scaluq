@@ -116,7 +116,6 @@ void double_qubit_dense_matrix_gate(UINT target_qubit_index1,
 }
 
 void single_qubit_control_single_qubit_dense_matrix_gate(UINT control_qubit_index,
-                                                         UINT control_value,
                                                          UINT target_qubit_index,
                                                          const Matrix& matrix,
                                                          StateVector& state) {
@@ -136,7 +135,7 @@ void single_qubit_control_single_qubit_dense_matrix_gate(UINT control_qubit_inde
         Kokkos::parallel_for(
             loop_dim, KOKKOS_LAMBDA(const UINT state_index) {
                 UINT basis_index = (state_index & low_mask) + ((state_index & mid_mask) << 1) +
-                                   ((state_index & high_mask) << 2) + control_mask * control_value;
+                                   ((state_index & high_mask) << 2) + control_mask;
 
                 Complex cval0 = state._raw[basis_index];
                 Complex cval1 = state._raw[basis_index + 1];
@@ -149,8 +148,7 @@ void single_qubit_control_single_qubit_dense_matrix_gate(UINT control_qubit_inde
         Kokkos::parallel_for(
             loop_dim, KOKKOS_LAMBDA(const UINT state_index) {
                 UINT basis_index_0 = (state_index & low_mask) + ((state_index & mid_mask) << 1) +
-                                     ((state_index & high_mask) << 2) +
-                                     control_mask * control_value;
+                                     ((state_index & high_mask) << 2) + control_mask;
                 UINT basis_index_1 = basis_index_0 + target_mask;
 
                 Complex cval0 = state._raw[basis_index_0];
@@ -165,8 +163,7 @@ void single_qubit_control_single_qubit_dense_matrix_gate(UINT control_qubit_inde
             loop_dim << 1, KOKKOS_LAMBDA(UINT state_index) {
                 state_index *= 2;
                 UINT basis_index_0 = (state_index & low_mask) + ((state_index & mid_mask) << 1) +
-                                     ((state_index & high_mask) << 2) +
-                                     control_mask * control_value;
+                                     ((state_index & high_mask) << 2) + control_mask;
                 UINT basis_index_1 = basis_index_0 + target_mask;
 
                 Complex cval0 = state._raw[basis_index_0];
@@ -185,14 +182,13 @@ void single_qubit_control_single_qubit_dense_matrix_gate(UINT control_qubit_inde
 
 void single_qubit_control_multi_qubit_dense_matrix_gate(
     UINT control_qubit_index,
-    UINT control_value,
     const std::vector<UINT>& target_qubit_index_list,
     const Matrix& matrix,
     StateVector& state) {
     const UINT target_qubit_index_count = target_qubit_index_list.size();
     const UINT matrix_dim = 1ULL << target_qubit_index_count;
     const UINT insert_index_count = target_qubit_index_count + 1;
-    const UINT control_mask = (1ULL << control_qubit_index) * control_value;
+    const UINT control_mask = (1ULL << control_qubit_index);
     const UINT loop_dim = state.dim() >> insert_index_count;
 
     std::vector<UINT> matrix_mask_list = create_matrix_mask_list(target_qubit_index_list);
@@ -213,7 +209,6 @@ void single_qubit_control_multi_qubit_dense_matrix_gate(
             }
             basis_0 ^= control_mask;
             Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim), [&](const UINT y) {
-                buffer[y] = 0;
                 Complex sum = 0;
                 Kokkos::parallel_reduce(
                     Kokkos::ThreadVectorRange(team, matrix_dim),
@@ -234,17 +229,13 @@ void single_qubit_control_multi_qubit_dense_matrix_gate(
 
 void multi_qubit_control_single_qubit_dense_matrix_gate(
     const std::vector<UINT>& control_qubit_index_list,
-    const std::vector<UINT>& control_value_list,
     UINT target_qubit_index,
     const Matrix& matrix,
     StateVector& state_vector) {
     UINT control_qubit_index_count = control_qubit_index_list.size();
     if (control_qubit_index_count == 1) {
-        single_qubit_control_single_qubit_dense_matrix_gate(control_qubit_index_list[0],
-                                                            control_value_list[0],
-                                                            target_qubit_index,
-                                                            matrix,
-                                                            state_vector);
+        single_qubit_control_single_qubit_dense_matrix_gate(
+            control_qubit_index_list[0], target_qubit_index, matrix, state_vector);
         return;
     }
 
@@ -252,7 +243,7 @@ void multi_qubit_control_single_qubit_dense_matrix_gate(
     create_shift_mask_list_from_list_and_value_buf(
         control_qubit_index_list, target_qubit_index, sort_array, mask_array);
     const UINT target_mask = 1ULL << target_qubit_index;
-    const UINT control_mask = create_control_mask(control_qubit_index_list, control_value_list);
+    const UINT control_mask = create_control_mask(control_qubit_index_list);
 
     const UINT insert_index_list_count = control_qubit_index_list.size() + 1;
     const UINT loop_dim = state_vector.dim() >> insert_index_list_count;
@@ -315,7 +306,6 @@ void multi_qubit_control_single_qubit_dense_matrix_gate(
 
 void multi_qubit_control_multi_qubit_dense_matrix_gate(
     const std::vector<UINT>& control_qubit_index_list,
-    const std::vector<UINT>& control_value_list,
     const std::vector<UINT>& target_qubit_index_list,
     const Matrix& matrix,
     StateVector& state) {
@@ -323,7 +313,7 @@ void multi_qubit_control_multi_qubit_dense_matrix_gate(
     const UINT target_qubit_index_count = target_qubit_index_list.size();
     const UINT matrix_dim = 1ULL << target_qubit_index_count;
     const UINT insert_index_count = target_qubit_index_count + control_qubit_index_count;
-    UINT control_mask = create_control_mask(control_qubit_index_list, control_value_list);
+    UINT control_mask = create_control_mask(control_qubit_index_list);
     const UINT loop_dim = state.dim() >> insert_index_count;
     std::vector<UINT> matrix_mask_list = create_matrix_mask_list(target_qubit_index_list);
     std::vector<UINT> sorted_insert_index_list =
@@ -346,7 +336,6 @@ void multi_qubit_control_multi_qubit_dense_matrix_gate(
             }
             basis_0 ^= control_mask;
             Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim), [&](UINT y) {
-                buffer[y] = 0;
                 Complex sum = 0;
                 Kokkos::parallel_reduce(
                     Kokkos::ThreadVectorRange(team, matrix_dim),
@@ -389,7 +378,6 @@ void multi_qubit_dense_matrix_gate_parallel(const std::vector<UINT>& target_qubi
             }
 
             Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim), [&](UINT y) {
-                buffer[y] = 0;
                 Complex sum = 0;
                 Kokkos::parallel_reduce(
                     Kokkos::ThreadVectorRange(team, matrix_dim),
@@ -435,21 +423,21 @@ void dense_matrix_gate(std::vector<UINT> target_index_list,
             single_qubit_dense_matrix_gate_view(target_index_list[0], matrix, state);
         } else if (control_index_list.size() == 1) {
             single_qubit_control_single_qubit_dense_matrix_gate(
-                control_index_list[0], control_value_list[0], target_index_list[0], matrix, state);
+                control_index_list[0], target_index_list[0], matrix, state);
         } else {
             multi_qubit_control_single_qubit_dense_matrix_gate(
-                control_index_list, control_value_list, target_index_list[0], matrix, state);
+                control_index_list, target_index_list[0], matrix, state);
         }
     } else {
         if (control_index_list.size() == 0) {
             multi_qubit_dense_matrix_gate(target_index_list, matrix, state);
         } else if (control_index_list.size() == 1) {
             single_qubit_control_multi_qubit_dense_matrix_gate(
-                control_index_list[0], control_value_list[0], target_index_list, matrix, state);
+                control_index_list[0], target_index_list, matrix, state);
         } else {
             // multiple control qubit
             multi_qubit_control_multi_qubit_dense_matrix_gate(
-                control_index_list, control_value_list, target_index_list, matrix, state);
+                control_index_list, target_index_list, matrix, state);
         }
     }
 }

@@ -87,13 +87,11 @@ void pauli_rotation_gate(const PauliOperator& pauli, double angle, StateVector& 
 
 void sparse_matrix_gate(std::vector<UINT> target_index_list,
                         std::vector<UINT> control_index_list,
-                        std::vector<UINT> control_value_list,
                         const CrsMatrix& matrix,
                         StateVector& state);
 
 void dense_matrix_gate(std::vector<UINT> target_index_list,
                        std::vector<UINT> control_index_list,
-                       std::vector<UINT> control_value_list,
                        const Matrix& matrix,
                        StateVector& state);
 }  // namespace internal

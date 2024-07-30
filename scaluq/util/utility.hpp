@@ -179,11 +179,10 @@ inline void create_shift_mask_list_from_list_buf(std::vector<UINT> array,
     }
 }
 
-inline UINT create_control_mask(const std::vector<UINT> qubit_index_list,
-                                const std::vector<UINT> value_list) {
+inline UINT create_control_mask(const std::vector<UINT> qubit_index_list) {
     UINT mask = 0;
     for (UINT i = 0; i < qubit_index_list.size(); ++i) {
-        mask ^= (1ULL << qubit_index_list[i]) * value_list[i];
+        mask ^= 1ULL << qubit_index_list[i];
     }
     return mask;
 }
@@ -219,14 +218,12 @@ KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
 }
 
 inline Matrix convert_external_matrix_to_internal_matrix(const ComplexMatrix& eigen_matrix) {
-    int rows = eigen_matrix.rows();
-    int cols = eigen_matrix.cols();
+    UINT rows = eigen_matrix.rows();
+    UINT cols = eigen_matrix.cols();
+    Kokkos::View<const Complex**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        host_view(reinterpret_cast<const Complex*>(eigen_matrix.data()), rows, cols);
     Matrix mat("internal_matrix", rows, cols);
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            mat(i, j) = eigen_matrix(i, j);
-        }
-    }
+    Kokkos::deep_copy(mat, host_view);
     return mat;
 }
 

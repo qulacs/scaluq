@@ -4,7 +4,6 @@
 #include <functional>
 #include <gate/gate.hpp>
 #include <gate/gate_factory.hpp>
-#include <info/qubit_info.hpp>
 #include <state/state_vector.hpp>
 #include <types.hpp>
 #include <util/random.hpp>

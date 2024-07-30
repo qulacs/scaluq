@@ -4,7 +4,6 @@
 #include <ranges>
 #include <vector>
 
-#include "../info/qubit_info.hpp"
 #include "../util/utility.hpp"
 #include "KokkosSparse_CrsMatrix.hpp"
 #include "constant.hpp"
@@ -144,37 +143,21 @@ public:
 
 class SparseMatrixGateImpl : public GateBase {
     CrsMatrix _matrix;
-    std::vector<TargetQubitInfo> target_qubit_info_list;
-    std::vector<ControlQubitInfo> control_qubit_info_list;
+    std::vector<UINT> _target_list;
+    std::vector<UINT> _control_list;
 
 public:
     SparseMatrixGateImpl(SparseComplexMatrix matrix,
                          const std::vector<UINT>& target_qubit_index_list,
                          const std::vector<UINT>& control_qubit_index_list)
-        : GateBase() {
+        : GateBase(),
+          _target_list(target_qubit_index_list),
+          _control_list(control_qubit_index_list) {
         _matrix = std::move(convert_external_sparse_to_internal_sparse(matrix));
-        for (UINT i = 0; i < target_qubit_index_list.size(); i++) {
-            target_qubit_info_list.push_back(TargetQubitInfo(target_qubit_index_list[i]));
-        }
-        for (UINT i = 0; i < control_qubit_index_list.size(); i++) {
-            control_qubit_info_list.push_back(ControlQubitInfo(control_qubit_index_list[i], 1));
-        }
     }
 
-    std::vector<UINT> get_target_qubit_list() const override {
-        std::vector<UINT> target_qubit_list;
-        for (const auto& target : target_qubit_info_list) {
-            target_qubit_list.push_back(target.index());
-        }
-        return target_qubit_list;
-    }
-    std::vector<UINT> get_control_qubit_list() const override {
-        std::vector<UINT> control_qubit_list;
-        for (const auto& control : control_qubit_info_list) {
-            control_qubit_list.push_back(control.index());
-        }
-        return control_qubit_list;
-    }
+    std::vector<UINT> get_target_qubit_list() const override { return _target_list; }
+    std::vector<UINT> get_control_qubit_list() const override { return _control_list; }
 
     Gate get_inverse() const override {
         throw std::logic_error("Error: SparseMatrixGateImpl::get_inverse(): Not implemented.");
@@ -183,7 +166,7 @@ public:
     std::optional<Matrix> get_matrix_internal() const {
         Matrix mat("mat", _matrix.numRows(), _matrix.numCols());
         Kokkos::parallel_for(
-            _matrix.numRows(), KOKKOS_LAMBDA(const auto i) {
+            _matrix.numRows(), KOKKOS_CLASS_LAMBDA(const auto i) {
                 for (auto idx = _matrix.graph.row_map(i); idx < _matrix.graph.row_map(i + 1);
                      ++idx) {
                     auto j = _matrix.graph.entries(idx);
@@ -205,7 +188,7 @@ public:
             mat_view(reinterpret_cast<Complex*>(mat.data()), numRows, numCols);
         Kokkos::parallel_for(
             Kokkos::TeamPolicy<>(numRows, Kokkos::AUTO()),
-            KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team) {
+            KOKKOS_CLASS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team) {
                 UINT i = team.league_rank();
                 UINT start_idx = _matrix.graph.row_map(i);
                 UINT end_idx = _matrix.graph.row_map(i + 1);
@@ -221,56 +204,28 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        std::vector<UINT> target_index_list = this->get_target_qubit_list();
-        std::vector<UINT> control_index_list, control_value_list;
-        for (auto info : control_qubit_info_list) {
-            control_index_list.push_back(info.index());
-            control_value_list.push_back(info.control_value());
-        }
-        sparse_matrix_gate(
-            target_index_list, control_index_list, control_value_list, _matrix, state_vector);
+        sparse_matrix_gate(_target_list, _control_list, _matrix, state_vector);
     }
 };
 
 class DenseMatrixGateImpl : public GateBase {
     Matrix _matrix;
     bool _is_unitary;
-    std::vector<TargetQubitInfo> target_qubit_info_list;
-    std::vector<ControlQubitInfo> control_qubit_info_list;
+    std::vector<UINT> _target_list;
+    std::vector<UINT> _control_list;
 
 public:
     DenseMatrixGateImpl(ComplexMatrix matrix,
                         const std::vector<UINT>& target_qubit_index_list,
                         const std::vector<UINT>& control_qubit_index_list,
                         bool is_unitary = false)
-        : GateBase(), _is_unitary(is_unitary) {
-        _matrix = std::move(convert_external_matrix_to_internal_matrix(matrix));
-        for (UINT i = 0; i < target_qubit_index_list.size(); i++) {
-            target_qubit_info_list.push_back(TargetQubitInfo(target_qubit_index_list[i]));
-        }
-        for (UINT i = 0; i < control_qubit_index_list.size(); i++) {
-            control_qubit_info_list.push_back(ControlQubitInfo(control_qubit_index_list[i], 1));
-        }
-    }
+        : GateBase(),
+          _is_unitary(is_unitary),
+          _target_list(target_qubit_index_list),
+          _control_list(control_qubit_index_list) {}
 
-    std::vector<UINT> get_target_qubit_list() const override {
-        std::vector<UINT> target_qubit_list;
-        for (const auto& target : target_qubit_info_list) {
-            target_qubit_list.push_back(target.index());
-        }
-        return target_qubit_list;
-    }
-    std::vector<UINT> get_control_qubit_list() const override {
-        std::vector<UINT> control_qubit_list;
-        for (const auto& control : control_qubit_info_list) {
-            control_qubit_list.push_back(control.index());
-        }
-        return control_qubit_list;
-    }
-
-    void add_control_qubit(UINT control_qubit_index, UINT value) {
-        control_qubit_info_list.push_back(ControlQubitInfo(control_qubit_index, value));
-    }
+    std::vector<UINT> get_target_qubit_list() const override { return _target_list; }
+    std::vector<UINT> get_control_qubit_list() const override { return _control_list; }
 
     Gate get_inverse() const override {
         UINT rows = _matrix.extent(0);
@@ -283,7 +238,7 @@ public:
             inv_eigen = mat_eigen.lu().solve(ComplexMatrix::Identity(rows, cols));
         }
         return std::make_shared<const DenseMatrixGateImpl>(
-            inv_eigen, get_target_qubit_list(), get_control_qubit_list(), _is_unitary);
+            inv_eigen, _target_list, _control_list, _is_unitary);
     }
     std::optional<Matrix> get_matrix_internal() const { return _matrix; }
 
@@ -292,18 +247,9 @@ public:
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        std::vector<UINT> target_index_list = get_target_qubit_list();
-        std::vector<UINT> control_index_list;
-        std::vector<UINT> control_value_list;
-        for (const auto& control : control_qubit_info_list) {
-            control_index_list.push_back(control.index());
-            control_value_list.push_back(control.control_value());
-        }
-
-        for (auto i : target_index_list) check_qubit_within_bounds(state_vector, i);
-        for (auto i : control_index_list) check_qubit_within_bounds(state_vector, i);
-        dense_matrix_gate(
-            target_index_list, control_index_list, control_value_list, _matrix, state_vector);
+        for (auto i : _target_list) check_qubit_within_bounds(state_vector, i);
+        for (auto i : _control_list) check_qubit_within_bounds(state_vector, i);
+        dense_matrix_gate(_target_list, _control_list, _matrix, state_vector);
     }
 };
 }  // namespace internal
@@ -311,5 +257,5 @@ public:
 using OneQubitMatrixGate = internal::GatePtr<internal::OneQubitMatrixGateImpl>;
 using TwoQubitMatrixGate = internal::GatePtr<internal::TwoQubitMatrixGateImpl>;
 using SparseMatrixGate = internal::GatePtr<internal::SparseMatrixGateImpl>;
-using DensityMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl>;
+using DenseMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl>;
 }  // namespace scaluq
