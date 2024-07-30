@@ -858,7 +858,6 @@ inline void multi_qubit_dense_matrix_gate_gemm(const std::vector<UINT>& target_q
         const std::vector<UINT> matrix_mask_list =
             create_matrix_mask_list(target_qubit_index_list, target_qubit_index_count);
 
-        const UINT loop_dim = state.dim() >> target_qubit_index_count;
         auto mask_array_view = convert_host_vector_to_device_view(mask_array);
         auto matrix_mask_list_view = convert_host_vector_to_device_view(matrix_mask_list);
 
