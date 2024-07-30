@@ -7,6 +7,7 @@ using namespace std::complex_literals;
 #include <types.hpp>
 #include <util/random.hpp>
 #include <util/utility.hpp>
+
 using namespace scaluq;
 
 inline bool same_state(const StateVector& s1, const StateVector& s2, const double eps = 1e-12) {
@@ -246,16 +247,6 @@ inline Eigen::MatrixXcd make_U(double theta, double phi, double lambda) {
                            std::exp(1i * phi) * std::exp(1i * lambda) * std::cos(theta / 2.));
 }
 
-// Host std::vector を Device Kokkos::View に変換する関数
-template <typename T>
-inline Kokkos::View<T*> convert_host_vector_to_device_view(const std::vector<T>& vec) {
-    Kokkos::View<const T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
-        vec.data(), vec.size());
-    Kokkos::View<T*> device_view("device_view", vec.size());
-    Kokkos::deep_copy(device_view, host_view);
-    return device_view;
-}
-
 inline CrsMatrix make_crs_matrix(UINT n_qubits, double sparsity = 0.1) {
     using matrix_type = typename KokkosSparse::
         CrsMatrix<Complex, default_lno_t, device_type, void, default_size_type>;
@@ -278,7 +269,7 @@ inline CrsMatrix make_crs_matrix(UINT n_qubits, double sparsity = 0.1) {
 
     for (UINT i = 0; i < numNNZ; i++) {
         UINT row = row_dist(gen);
-        UINT col = col_dist(gen);
+        default_lno_t col = col_dist(gen);
         Complex val(val_dist(gen), val_dist(gen));
 
         row_map_h[row + 1]++;
@@ -290,9 +281,9 @@ inline CrsMatrix make_crs_matrix(UINT n_qubits, double sparsity = 0.1) {
         row_map_h[i] += row_map_h[i - 1];
     }
 
-    row_map_type row_map_d = convert_host_vector_to_device_view(row_map_h);
-    entries_type col_ind_d = convert_host_vector_to_device_view(col_ind_h);
-    values_type values_d = convert_host_vector_to_device_view(values_h);
+    row_map_type row_map_d = scaluq::internal::convert_host_vector_to_device_view(row_map_h);
+    entries_type col_ind_d = scaluq::internal::convert_host_vector_to_device_view(col_ind_h);
+    values_type values_d = scaluq::internal::convert_host_vector_to_device_view(values_h);
 
     return matrix_type("random_sparse_matrix", dim, dim, numNNZ, values_d, row_map_d, col_ind_d);
 }

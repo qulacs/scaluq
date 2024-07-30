@@ -26,17 +26,10 @@ KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index, UINT in
     return temp_basis | (basis_index & mask);
 }
 
-KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
-                                                       UINT basis_mask,
-                                                       UINT qubit_index) {
-    UINT tmp_basis = (basis_index >> qubit_index) << (qubit_index + 1);
-    return tmp_basis + basis_index % basis_mask;
-}
-
 /**
  * Inserts two 0 bits at specified indexes in basis_index.
  * Example: insert_two_zero_to_basis_index(0b11001, 1, 5) -> 0b1010001.
- *                                                          ^   ^
+ *                                                              ^   ^
  */
 KOKKOS_INLINE_FUNCTION UINT insert_two_zero_to_basis_index(UINT basis_index,
                                                            UINT insert_index1,
@@ -118,8 +111,8 @@ inline std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>&
     return host_vector;
 }
 
-inline std::vector<UINT> create_matrix_mask_list(const std::vector<UINT> qubit_index_list,
-                                                 const UINT qubit_index_count) {
+inline std::vector<UINT> create_matrix_mask_list(const std::vector<UINT>& qubit_index_list) {
+    const UINT qubit_index_count = qubit_index_list.size();
     const UINT matrix_dim = 1ULL << qubit_index_count;
     std::vector<UINT> mask_list(matrix_dim, 0);
 
@@ -242,6 +235,56 @@ inline ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix& ma
     int cols = matrix.extent(1);
     Eigen::Map<ComplexMatrix> mat(reinterpret_cast<StdComplex*>(matrix.data()), rows, cols);
     return mat;
+}
+
+inline CrsMatrix convert_external_sparse_to_internal_sparse(const SparseComplexMatrix& eigenMat) {
+    int numRows = eigenMat.rows();
+    int numCols = eigenMat.cols();
+    int nnz = eigenMat.nonZeros();
+
+    Kokkos::View<default_size_type*, Kokkos::HostSpace> h_rowmap("h_rowmap", numRows + 1);
+    Kokkos::View<default_lno_t*, Kokkos::HostSpace> h_colidx("h_colidx", nnz);
+    Kokkos::View<Complex*, Kokkos::HostSpace> h_values("h_values", nnz);
+
+    Kokkos::parallel_for(
+        "compute_rowmap",
+        Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, numRows),
+        KOKKOS_LAMBDA(const int i) {
+            h_rowmap(i + 1) = eigenMat.outerIndexPtr()[i + 1] - eigenMat.outerIndexPtr()[i];
+        });
+
+    Kokkos::parallel_scan(
+        "prefix_sum_rowmap",
+        Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, numRows + 1),
+        KOKKOS_LAMBDA(const int i, default_size_type& update, const bool final) {
+            const default_size_type val = h_rowmap(i);
+            if (final) {
+                h_rowmap(i) = update;
+            }
+            update += val;
+        });
+
+    Kokkos::parallel_for(
+        "fill_col_idx_and_values",
+        Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, numRows),
+        KOKKOS_LAMBDA(const int i) {
+            auto row_start = h_rowmap(i);
+            for (SparseComplexMatrix::InnerIterator it(eigenMat, i); it; ++it) {
+                h_colidx(row_start) = it.col();
+                h_values(row_start) = Complex(it.value().real(), it.value().imag());
+                ++row_start;
+            }
+        });
+
+    Kokkos::View<default_size_type*> d_rowmap("d_rowmap", numRows + 1);
+    Kokkos::View<default_lno_t*> d_colidx("d_colidx", nnz);
+    Kokkos::View<Complex*> d_values("d_values", nnz);
+
+    Kokkos::deep_copy(d_rowmap, h_rowmap);
+    Kokkos::deep_copy(d_colidx, h_colidx);
+    Kokkos::deep_copy(d_values, h_values);
+
+    return CrsMatrix("SparseMatrix", numRows, numCols, nnz, d_values, d_rowmap, d_colidx);
 }
 
 }  // namespace internal

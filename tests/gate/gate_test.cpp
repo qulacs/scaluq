@@ -15,7 +15,6 @@
 using namespace scaluq;
 
 const auto eps = 1e-12;
-using StdComplex = StdComplex;
 
 template <Gate (*QuantumGateConstructor)()>
 void run_random_gate_apply(UINT n_qubits) {
@@ -495,7 +494,6 @@ void run_random_gate_apply_general_dense(UINT n_qubits) {
         for (UINT rep = 0; rep < max_repeat; rep++) {
             StateVector state = StateVector::Haar_random_state(n_qubits);
             auto state_cp = state.amplitudes();
-            Kokkos::View<Complex**> mat_view("mat_view", 8, 8);
             for (UINT i = 0; i < dim; i++) {
                 test_state[i] = state_cp[i];
             }

@@ -152,15 +152,13 @@ inline Gate DenseMatrix(const ComplexMatrix& matrix,
                                                         Complex(matrix(3, 2)),
                                                         Complex(matrix(3, 3))}});
         }
-        Matrix mat = internal::convert_external_matrix_to_internal_matrix(matrix);
         return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl>(
-            mat, targets, controls);
+            matrix, targets, controls);
     }
-    Matrix mat = internal::convert_external_matrix_to_internal_matrix(matrix);
     return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl>(
-        mat, targets, controls);
+        matrix, targets, controls);
 }
-inline Gate SparseMatrix(const CrsMatrix& matrix,
+inline Gate SparseMatrix(const SparseComplexMatrix& matrix,
                          const std::vector<UINT>& target_qubit_list,
                          const std::vector<UINT>& control_qubit_list) {
     return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl>(
