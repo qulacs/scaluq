@@ -287,9 +287,6 @@ NB_MODULE(scaluq_core, m) {
         .value("U2", GateType::U2)
         .value("U3", GateType::U3)
         .value("OneTargetMatrix", GateType::OneTargetMatrix)
-        .value("CX", GateType::CX)
-        .value("CZ", GateType::CZ)
-        .value("CCX", GateType::CCX)
         .value("Swap", GateType::Swap)
         .value("TwoTargetMatrix", GateType::TwoTargetMatrix)
         .value("Pauli", GateType::Pauli)
@@ -297,7 +294,6 @@ NB_MODULE(scaluq_core, m) {
 
 #define DEF_GATE_BASE(GATE_TYPE, DESCRIPTION)                                            \
     nb::class_<GATE_TYPE>(m, #GATE_TYPE, DESCRIPTION)                                    \
-        .def(nb::init<UINT, UINT>(), "Constructor with target and control masks")        \
         .def("gate_type", &GATE_TYPE::gate_type, "Get gate type as `GateType` enum.")    \
         .def(                                                                            \
             "get_target_qubit_list",                                                     \
@@ -335,7 +331,7 @@ NB_MODULE(scaluq_core, m) {
         GATE_TYPE,                                                                              \
         DESCRIPTION                                                                             \
         "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
-        .def(nb::init<Gate>())
+        .def(nb::init<const Gate &>())
 
     DEF_GATE_BASE(Gate,
                   "General class of QuantumGate.\n\n.. note:: Downcast to requred to use "
@@ -363,9 +359,6 @@ NB_MODULE(scaluq_core, m) {
         .def(nb::init<U2Gate>(), "Upcast from `U2Gate`.")
         .def(nb::init<U3Gate>(), "Upcast from `U3Gate`.")
         .def(nb::init<OneTargetMatrixGate>(), "Upcast from `OneTargetMatrixGate`.")
-        .def(nb::init<CXGate>(), "Upcast from `CXGate`.")
-        .def(nb::init<CZGate>(), "Upcast from `CZGate`.")
-        .def(nb::init<CCXGate>(), "Upcast from `CCXGate`.")
         .def(nb::init<SwapGate>(), "Upcast from `SwapGate`.")
         .def(nb::init<TwoTargetMatrixGate>(), "Upcast from `TwoTargetMatrixGate`.")
         .def(nb::init<PauliGate>(), "Upcast from `PauliGate`.")
@@ -502,20 +495,29 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(U2);
     DEF_GATE_FACTORY(U3);
     DEF_GATE_FACTORY(OneTargetMatrix);
-    DEF_GATE_FACTORY(CX);
+    mgate.def(
+        "CX",
+        &gate::CX,
+        "Generate general Gate class instance of CX.\n\n.. note:: CX is a specialization of X.");
     mgate.def("CNot",
               &gate::CX,
-              "Generate general Gate class instance of CX.\n\n.. note:: CNot is an alias of CX.");
-    DEF_GATE_FACTORY(CZ);
-    DEF_GATE_FACTORY(CCX);
+              "Generate general Gate class instance of CNot.\n\n.. note:: CNot is an alias of CX.");
+    mgate.def(
+        "CZ",
+        &gate::CZ,
+        "Generate general Gate class instance of CZ.\n\n.. note:: CZ is a specialization of Z.");
+    mgate.def(
+        "CCX",
+        &gate::CCX,
+        "Generate general Gate class instance of CXX.\n\n.. note:: CX is a specialization of X.");
     mgate.def(
         "CCNot",
         &gate::CCX,
-        "Generate general Gate class instance of CCX.\n\n.. note:: CCNot is an alias of CCX.");
-    mgate.def(
-        "Toffoli",
-        &gate::CCX,
-        "Generate general Gate class instance of CCX.\n\n.. note:: Toffoli is an alias of CCX.");
+        "Generate general Gate class instance of CCNot.\n\n.. note:: CCNot is an alias of CCX.");
+    mgate.def("Toffoli",
+              &gate::CCX,
+              "Generate general Gate class instance of Toffoli.\n\n.. note:: Toffoli is an alias "
+              "of CCX.");
     DEF_GATE_FACTORY(Swap);
     DEF_GATE_FACTORY(TwoTargetMatrix);
     DEF_GATE_FACTORY(Pauli);
@@ -538,8 +540,6 @@ NB_MODULE(scaluq_core, m) {
 
 #define DEF_PGATE_BASE(PGATE_TYPE, DESCRIPTION)                                                   \
     nb::class_<PGATE_TYPE>(m, #PGATE_TYPE, DESCRIPTION)                                           \
-        .def(nb::init<UINT, UINT, double>(),                                                      \
-             "Constructor with target and control masks and angle")                               \
         .def("param_gate_type",                                                                   \
              &PGATE_TYPE::param_gate_type,                                                        \
              "Get parametric gate type as `ParamGateType` enum.")                                 \
@@ -581,7 +581,7 @@ NB_MODULE(scaluq_core, m) {
         PGATE_TYPE,                                                                             \
         DESCRIPTION                                                                             \
         "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
-        .def(nb::init<ParamGate>())
+        .def(nb::init<const ParamGate &>())
 
     DEF_PGATE_BASE(
         ParamGate,
@@ -623,22 +623,26 @@ NB_MODULE(scaluq_core, m) {
               &gate::PRX,
               "Generate general ParamGate class instance of PRX.",
               "target"_a,
-              "coef"_a = 1.);
+              "coef"_a = 1.,
+              "controls"_a = std::vector<UINT>{});
     mgate.def("PRY",
               &gate::PRY,
               "Generate general ParamGate class instance of PRY.",
               "target"_a,
-              "coef"_a = 1.);
+              "coef"_a = 1.,
+              "controls"_a = std::vector<UINT>{});
     mgate.def("PRZ",
               &gate::PRZ,
               "Generate general ParamGate class instance of PRZ.",
               "target"_a,
-              "coef"_a = 1.);
+              "coef"_a = 1.,
+              "controls"_a = std::vector<UINT>{});
     mgate.def("PPauliRotation",
               &gate::PPauliRotation,
               "Generate general ParamGate class instance of PPauliRotation.",
               "pauli"_a,
-              "coef"_a = 1.);
+              "coef"_a = 1.,
+              "controls"_a = std::vector<UINT>{});
     mgate.def("PProbablistic",
               &gate::PProbablistic,
               "Generate general ParamGate class instance of PProbablistic.");

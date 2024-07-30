@@ -78,7 +78,7 @@ enum class GateType {
     CZ,
     CCX,
     Swap,
-    TwoQubitMatrix,
+    TwoTargetMatrix,
     Pauli,
     PauliRotation
 };
@@ -112,9 +112,10 @@ constexpr GateType get_gate_type() {
         return GateType::OneTargetMatrix;
     if constexpr (std::is_same_v<T, internal::CXGateImpl>) return GateType::CX;
     if constexpr (std::is_same_v<T, internal::CZGateImpl>) return GateType::CZ;
+    if constexpr (std::is_same_v<T, internal::CZGateImpl>) return GateType::CCX;
     if constexpr (std::is_same_v<T, internal::SwapGateImpl>) return GateType::Swap;
     if constexpr (std::is_same_v<T, internal::TwoTargetMatrixGateImpl>)
-        return GateType::TwoQubitMatrix;
+        return GateType::TwoTargetMatrix;
     if constexpr (std::is_same_v<T, internal::PauliGateImpl>) return GateType::Pauli;
     if constexpr (std::is_same_v<T, internal::PauliRotationGateImpl>)
         return GateType::PauliRotation;
