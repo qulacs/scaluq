@@ -331,7 +331,7 @@ NB_MODULE(scaluq_core, m) {
         GATE_TYPE,                                                                              \
         DESCRIPTION                                                                             \
         "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
-        .def(nb::init<const Gate &>())
+        .def(nb::init<Gate>())
 
     DEF_GATE_BASE(Gate,
                   "General class of QuantumGate.\n\n.. note:: Downcast to requred to use "
@@ -581,7 +581,7 @@ NB_MODULE(scaluq_core, m) {
         PGATE_TYPE,                                                                             \
         DESCRIPTION                                                                             \
         "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
-        .def(nb::init<const ParamGate &>())
+        .def(nb::init<ParamGate>())
 
     DEF_PGATE_BASE(
         ParamGate,
