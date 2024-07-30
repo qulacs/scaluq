@@ -43,8 +43,14 @@ RUN git clone --recursive https://github.com/kokkos/kokkos.git /tmp/kokkos --dep
     cd /tmp/kokkos/build && \
     cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/kokkos-build && \
     make install && \
+    git clone --recursive https://github.com/kokkos/kokkos-kernels.git /tmp/kokkos-kernels --depth 1 && \
+    mkdir /tmp/kokkos-kernels/build && \
+    cd /tmp/kokkos-kernels/build && \
+    cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/kokkos-kernels-build -DCMAKE_PREFIX_PATH=/tmp/kokkos-build/lib/cmake/Kokkos && \
+    make install && \
     cp -r /tmp/kokkos-build/include /usr/local/include/kokkos && \
-    rm -rf /tmp/kokkos /tmp/kokkos-build
+    cp -r /tmp/kokkos-kernels-build/include /usr/local/include/kokkos-kernels && \
+    rm -rf /tmp/kokkos /tmp/kokkos-build /tmp/kokkos-kernels /tmp/kokkos-kernels/build
 
 ARG USERNAME=vscode
 ARG GROUPNAME=vscode

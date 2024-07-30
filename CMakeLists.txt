@@ -72,7 +72,7 @@ endif(NOT eigen_fetch_POPULATED)
 FetchContent_Declare(
     kokkoskernels_fetch
     GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels
-    GIT_TAG 4.2.00
+    GIT_TAG 4.3.01
 )
 FetchContent_GetProperties(kokkoskernels_fetch)
 if(NOT kokkoskernels_fetch_POPULATED)
