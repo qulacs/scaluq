@@ -47,7 +47,7 @@ int main() {
         std::int64_t sum_time_false = 0, sum_time_true = 0;
         for (auto _ : std::views::iota(0ULL, count)) {
             sum_time_false += run(n, t, false);
-            sum_time_false += run(n, t, true);
+            sum_time_true += run(n, t, true);
         }
         std::cout << n << " " << sum_time_false / count << " " << sum_time_true / count
                   << std::endl;
