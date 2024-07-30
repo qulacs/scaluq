@@ -38,8 +38,11 @@ std::int64_t run(UINT n, UINT t, bool gemm) {
 
 int main() {
     Kokkos::initialize();
-    UINT t = 3;
-    for (UINT n : std::views::iota(t, 26ULL)) {
+    UINT t;
+    cin >> t;
+    UINT max_n;
+    cin >> max_n;
+    for (UINT n : std::views::iota(t, max_n + 1)) {
         UINT count = 10;
         std::int64_t sum_time_false = 0, sum_time_true = 0;
         for (auto _ : std::views::iota(0ULL, count)) {
