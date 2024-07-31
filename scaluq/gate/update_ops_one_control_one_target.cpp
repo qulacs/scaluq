@@ -11,8 +11,8 @@ namespace internal {
 void cx_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& state) {
     Kokkos::parallel_for(
         state.dim() >> 2, KOKKOS_LAMBDA(UINT it) {
-            UINT i =
-                internal::insert_zero_to_basis_index(it, target_qubit_index, control_qubit_index);
+            UINT i = internal::insert_two_zero_to_basis_index(
+                it, target_qubit_index, control_qubit_index);
             i |= 1ULL << control_qubit_index;
             Kokkos::Experimental::swap(state._raw[i], state._raw[i | (1ULL << target_qubit_index)]);
         });
@@ -22,8 +22,8 @@ void cx_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& sta
 void cz_gate(UINT control_qubit_index, UINT target_qubit_index, StateVector& state) {
     Kokkos::parallel_for(
         state.dim() >> 2, KOKKOS_LAMBDA(UINT it) {
-            UINT i =
-                internal::insert_zero_to_basis_index(it, target_qubit_index, control_qubit_index);
+            UINT i = internal::insert_two_zero_to_basis_index(
+                it, target_qubit_index, control_qubit_index);
             i |= 1ULL << control_qubit_index;
             i |= 1ULL << target_qubit_index;
             state._raw[i] *= -1;

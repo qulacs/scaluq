@@ -9,6 +9,7 @@
 
 #include "../operator/pauli_operator.hpp"
 #include "../types.hpp"
+#include "KokkosSparse_spmv.hpp"
 
 namespace scaluq {
 
@@ -27,12 +28,12 @@ KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index, UINT in
 
 /**
  * Inserts two 0 bits at specified indexes in basis_index.
- * Example: insert_zero_to_basis_index(0b11001, 1, 5) -> 0b1010001.
- *                                                          ^   ^
+ * Example: insert_two_zero_to_basis_index(0b11001, 1, 5) -> 0b1010001.
+ *                                                              ^   ^
  */
-KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
-                                                       UINT insert_index1,
-                                                       UINT insert_index2) {
+KOKKOS_INLINE_FUNCTION UINT insert_two_zero_to_basis_index(UINT basis_index,
+                                                           UINT insert_index1,
+                                                           UINT insert_index2) {
     auto [lidx, uidx] = Kokkos::minmax(insert_index1, insert_index2);
     UINT lmask = (1ULL << lidx) - 1;
     UINT umask = (1ULL << uidx) - 1;
@@ -110,6 +111,94 @@ inline std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>&
     return host_vector;
 }
 
+inline std::vector<UINT> create_matrix_mask_list(const std::vector<UINT>& qubit_index_list) {
+    const UINT qubit_index_count = qubit_index_list.size();
+    const UINT matrix_dim = 1ULL << qubit_index_count;
+    std::vector<UINT> mask_list(matrix_dim, 0);
+
+    for (UINT cursor = 0; cursor < matrix_dim; cursor++) {
+        for (UINT bit_cursor = 0; bit_cursor < qubit_index_count; bit_cursor++) {
+            if ((cursor >> bit_cursor) & 1) {
+                UINT bit_index = qubit_index_list[bit_cursor];
+                mask_list[cursor] ^= (1ULL << bit_index);
+            }
+        }
+    }
+    return mask_list;
+}
+
+inline std::vector<UINT> create_sorted_ui_list(const std::vector<UINT>& list) {
+    std::vector<UINT> sorted_list(list);
+    std::sort(sorted_list.begin(), sorted_list.end());
+    return sorted_list;
+}
+
+inline std::vector<UINT> create_sorted_ui_list_value(const std::vector<UINT>& list, UINT value) {
+    std::vector<UINT> sorted_list(list);
+    sorted_list.emplace_back(value);
+    std::sort(sorted_list.begin(), sorted_list.end());
+    return sorted_list;
+}
+
+inline std::vector<UINT> create_sorted_ui_list_list(const std::vector<UINT>& list1,
+                                                    const UINT size1,
+                                                    const std::vector<UINT>& list2,
+                                                    const UINT size2) {
+    std::vector<UINT> new_array(size1 + size2);
+    std::copy(list1.begin(), list1.end(), new_array.begin());
+    std::copy(list2.begin(), list2.end(), new_array.begin() + size1);
+    std::sort(new_array.begin(), new_array.end());
+    return new_array;
+}
+
+inline void create_shift_mask_list_from_list_and_value_buf(const std::vector<UINT> array,
+                                                           UINT target,
+                                                           std::vector<UINT> dst_array,
+                                                           std::vector<UINT> dst_mask) {
+    UINT size = array.size() + 1;
+    dst_array.resize(size - 1);
+    dst_mask.resize(size);
+    std::copy(array.begin(), array.end(), dst_array.begin());
+    dst_array.emplace_back(target);
+    sort(dst_array.begin(), dst_array.end());
+    for (UINT i = 0; i < size; ++i) {
+        dst_mask[i] = (1ULL << dst_array[i]) - 1;
+    }
+}
+
+inline void create_shift_mask_list_from_list_buf(std::vector<UINT> array,
+                                                 std::vector<UINT>& dst_array,
+                                                 std::vector<UINT>& dst_mask) {
+    UINT size = array.size();
+    dst_array.resize(size);
+    dst_mask.resize(size);
+    std::copy(array.begin(), array.end(), dst_array.begin());
+    sort(dst_array.begin(), dst_array.end());
+    for (UINT i = 0; i < size; ++i) {
+        dst_mask[i] = (1ULL << dst_array[i]) - 1;
+    }
+}
+
+inline UINT create_control_mask(const std::vector<UINT> qubit_index_list) {
+    UINT mask = 0;
+    for (UINT i = 0; i < qubit_index_list.size(); ++i) {
+        mask ^= 1ULL << qubit_index_list[i];
+    }
+    return mask;
+}
+
+// x: state vector. output will be stored in y
+inline void spmv(const CrsMatrix& matrix,
+                 const Kokkos::View<Complex*>& x,
+                 Kokkos::View<Complex*>& y) {
+    KokkosSparse::spmv("N", 1.0, matrix, x, 0.0, y);
+}
+
+// x: state vector, output will be stored in y
+inline void gemv(const Matrix matrix, const Kokkos::View<Complex*>& x, Kokkos::View<Complex*>& y) {
+    KokkosBlas::gemv("N", 1.0, matrix, x, 0.0, y);
+}
+
 // Device Kokkos::View を Host std::vector に変換する関数
 template <typename T, typename Layout>
 inline std::vector<std::vector<T>> convert_2d_device_view_to_host_vector(
@@ -128,6 +217,72 @@ KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
     return z.real() * z.real() + z.imag() * z.imag();
 }
 
-}  // namespace internal
+inline Matrix convert_external_matrix_to_internal_matrix(const ComplexMatrix& eigen_matrix) {
+    UINT rows = eigen_matrix.rows();
+    UINT cols = eigen_matrix.cols();
+    Kokkos::View<const Complex**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        host_view(reinterpret_cast<const Complex*>(eigen_matrix.data()), rows, cols);
+    Matrix mat("internal_matrix", rows, cols);
+    Kokkos::deep_copy(mat, host_view);
+    return mat;
+}
 
+inline ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix& matrix) {
+    int rows = matrix.extent(0);
+    int cols = matrix.extent(1);
+    Eigen::Map<ComplexMatrix> mat(reinterpret_cast<StdComplex*>(matrix.data()), rows, cols);
+    return mat;
+}
+
+inline CrsMatrix convert_external_sparse_to_internal_sparse(const SparseComplexMatrix& eigenMat) {
+    int numRows = eigenMat.rows();
+    int numCols = eigenMat.cols();
+    int nnz = eigenMat.nonZeros();
+
+    Kokkos::View<default_size_type*, Kokkos::HostSpace> h_rowmap("h_rowmap", numRows + 1);
+    Kokkos::View<default_lno_t*, Kokkos::HostSpace> h_colidx("h_colidx", nnz);
+    Kokkos::View<Complex*, Kokkos::HostSpace> h_values("h_values", nnz);
+
+    Kokkos::parallel_for(
+        "compute_rowmap",
+        Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, numRows),
+        KOKKOS_LAMBDA(const int i) {
+            h_rowmap(i + 1) = eigenMat.outerIndexPtr()[i + 1] - eigenMat.outerIndexPtr()[i];
+        });
+
+    Kokkos::parallel_scan(
+        "prefix_sum_rowmap",
+        Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, numRows + 1),
+        KOKKOS_LAMBDA(const int i, default_size_type& update, const bool final) {
+            const default_size_type val = h_rowmap(i);
+            if (final) {
+                h_rowmap(i) = update;
+            }
+            update += val;
+        });
+
+    Kokkos::parallel_for(
+        "fill_col_idx_and_values",
+        Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, numRows),
+        KOKKOS_LAMBDA(const int i) {
+            auto row_start = h_rowmap(i);
+            for (SparseComplexMatrix::InnerIterator it(eigenMat, i); it; ++it) {
+                h_colidx(row_start) = it.col();
+                h_values(row_start) = Complex(it.value().real(), it.value().imag());
+                ++row_start;
+            }
+        });
+
+    Kokkos::View<default_size_type*> d_rowmap("d_rowmap", numRows + 1);
+    Kokkos::View<default_lno_t*> d_colidx("d_colidx", nnz);
+    Kokkos::View<Complex*> d_values("d_values", nnz);
+
+    Kokkos::deep_copy(d_rowmap, h_rowmap);
+    Kokkos::deep_copy(d_colidx, h_colidx);
+    Kokkos::deep_copy(d_values, h_values);
+
+    return CrsMatrix("SparseMatrix", numRows, numCols, nnz, d_values, d_rowmap, d_colidx);
+}
+
+}  // namespace internal
 }  // namespace scaluq

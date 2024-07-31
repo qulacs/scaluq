@@ -7,6 +7,7 @@ using namespace std::complex_literals;
 #include <types.hpp>
 #include <util/random.hpp>
 #include <util/utility.hpp>
+
 using namespace scaluq;
 
 inline bool same_state(const StateVector& s1, const StateVector& s2, const double eps = 1e-12) {
@@ -87,7 +88,7 @@ inline Eigen::MatrixXcd get_eigen_matrix_random_single_qubit_unitary() {
     xcoef = random.uniform();
     ycoef = random.uniform();
     zcoef = random.uniform();
-    norm = sqrt(icoef * icoef + xcoef + xcoef + ycoef * ycoef + zcoef * zcoef);
+    norm = sqrt(icoef * icoef + xcoef * xcoef + ycoef * ycoef + zcoef * zcoef);
     icoef /= norm;
     xcoef /= norm;
     ycoef /= norm;
@@ -244,4 +245,70 @@ inline Eigen::MatrixXcd make_U(double theta, double phi, double lambda) {
                            -std::exp(1i * lambda) * std::sin(theta / 2.),
                            std::exp(1i * phi) * std::sin(theta / 2.),
                            std::exp(1i * phi) * std::exp(1i * lambda) * std::cos(theta / 2.));
+}
+
+inline CrsMatrix make_crs_matrix(UINT n_qubits, double sparsity = 0.1) {
+    using matrix_type = typename KokkosSparse::
+        CrsMatrix<Complex, default_lno_t, device_type, void, default_size_type>;
+    using graph_type = typename matrix_type::staticcrsgraph_type;
+    using row_map_type = typename graph_type::row_map_type;
+    using entries_type = typename graph_type::entries_type;
+    using values_type = typename matrix_type::values_type;
+    UINT dim = 1 << n_qubits;
+    UINT numNNZ = dim * dim * sparsity;
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> row_dist(0, dim - 1);
+    std::uniform_int_distribution<> col_dist(0, dim - 1);
+    std::uniform_real_distribution<> val_dist(0.0, 1.0);
+
+    std::vector<UINT> row_map_h(dim + 1, 0);
+    std::vector<default_lno_t> col_ind_h;
+    std::vector<Complex> values_h;
+
+    for (UINT i = 0; i < numNNZ; i++) {
+        UINT row = row_dist(gen);
+        default_lno_t col = col_dist(gen);
+        Complex val(val_dist(gen), val_dist(gen));
+
+        row_map_h[row + 1]++;
+        col_ind_h.push_back(col);
+        values_h.push_back(val);
+    }
+
+    for (UINT i = 1; i <= dim; i++) {
+        row_map_h[i] += row_map_h[i - 1];
+    }
+
+    row_map_type row_map_d = scaluq::internal::convert_host_vector_to_device_view(row_map_h);
+    entries_type col_ind_d = scaluq::internal::convert_host_vector_to_device_view(col_ind_h);
+    values_type values_d = scaluq::internal::convert_host_vector_to_device_view(values_h);
+
+    return matrix_type("random_sparse_matrix", dim, dim, numNNZ, values_d, row_map_d, col_ind_d);
+}
+
+inline SparseComplexMatrix make_sparse_complex_matrix(const UINT n_qubit, double sparsity = 0.1) {
+    const UINT dim = 1ULL << n_qubit;
+    typedef Eigen::Triplet<StdComplex> T;
+    std::vector<T> tripletList;
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0.0, 1.0);
+
+    for (UINT i = 0; i < dim; ++i) {
+        for (UINT j = 0; j < dim; ++j) {
+            if (dis(gen) > sparsity) {
+                double real = dis(gen);
+                double imag = dis(gen);
+                tripletList.push_back(T(i, j, StdComplex(real, imag)));
+            }
+        }
+    }
+
+    SparseComplexMatrix mat(dim, dim);
+    mat.setFromTriplets(tripletList.begin(), tripletList.end());
+
+    return mat;
 }

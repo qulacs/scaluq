@@ -6,6 +6,9 @@
 #include <complex>
 #include <cstdint>
 
+#include "KokkosKernels_default_types.hpp"
+#include "KokkosSparse_CrsMatrix.hpp"
+
 namespace scaluq {
 
 using InitializationSettings = Kokkos::InitializationSettings;
@@ -25,6 +28,13 @@ using namespace std::complex_literals;
 using StdComplex = std::complex<double>;
 using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex>;
+
+using device_type = typename Kokkos::Device<Kokkos::DefaultExecutionSpace,
+                                            typename Kokkos::DefaultExecutionSpace::memory_space>;
+using CrsMatrix =
+    typename KokkosSparse::CrsMatrix<Complex, default_lno_t, device_type, void, default_size_type>;
+
+using Matrix = Kokkos::View<Complex**, Kokkos::LayoutRight, device_type>;
 
 using StateVectorView = Kokkos::View<Complex*>;
 using StateVectorBatchedView = Kokkos::View<Complex**, Kokkos::LayoutRight>;
