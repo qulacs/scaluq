@@ -415,7 +415,6 @@ void multi_qubit_dense_matrix_gate(const std::vector<UINT>& target_qubit_index_l
 
 void dense_matrix_gate(std::vector<UINT> target_index_list,
                        std::vector<UINT> control_index_list,
-                       std::vector<UINT> control_value_list,
                        const Matrix& matrix,
                        StateVector& state) {
     if (target_index_list.size() == 1) {

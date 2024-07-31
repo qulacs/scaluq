@@ -117,8 +117,8 @@ inline Gate PauliRotation(const PauliOperator& pauli, double angle) {
 inline Gate DenseMatrix(const ComplexMatrix& matrix,
                         const std::vector<UINT>& targets,
                         const std::vector<UINT>& controls = {}) {
-    UINT nqubits = targets.size();
-    UINT dim = 1ULL << nqubits;
+    UINT n_qubits = targets.size();
+    UINT dim = 1ULL << n_qubits;
     if (static_cast<UINT>(matrix.rows()) != dim || static_cast<UINT>(matrix.cols()) != dim) {
         throw std::runtime_error(
             "gate::DenseMatrix(const std::vector<UINT>&, const ComplexMatrix&): matrix size must "

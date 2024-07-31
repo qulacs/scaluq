@@ -287,3 +287,28 @@ inline CrsMatrix make_crs_matrix(UINT n_qubits, double sparsity = 0.1) {
 
     return matrix_type("random_sparse_matrix", dim, dim, numNNZ, values_d, row_map_d, col_ind_d);
 }
+
+inline SparseComplexMatrix make_sparse_complex_matrix(const UINT n_qubit, double sparsity = 0.1) {
+    const UINT dim = 1ULL << n_qubit;
+    typedef Eigen::Triplet<StdComplex> T;
+    std::vector<T> tripletList;
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0.0, 1.0);
+
+    for (UINT i = 0; i < dim; ++i) {
+        for (UINT j = 0; j < dim; ++j) {
+            if (dis(gen) > sparsity) {
+                double real = dis(gen);
+                double imag = dis(gen);
+                tripletList.push_back(T(i, j, StdComplex(real, imag)));
+            }
+        }
+    }
+
+    SparseComplexMatrix mat(dim, dim);
+    mat.setFromTriplets(tripletList.begin(), tripletList.end());
+
+    return mat;
+}

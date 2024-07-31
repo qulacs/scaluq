@@ -153,7 +153,7 @@ public:
         : GateBase(),
           _target_list(target_qubit_index_list),
           _control_list(control_qubit_index_list) {
-        _matrix = std::move(convert_external_sparse_to_internal_sparse(matrix));
+        _matrix = convert_external_sparse_to_internal_sparse(matrix);
     }
 
     std::vector<UINT> get_target_qubit_list() const override { return _target_list; }
@@ -222,7 +222,9 @@ public:
         : GateBase(),
           _is_unitary(is_unitary),
           _target_list(target_qubit_index_list),
-          _control_list(control_qubit_index_list) {}
+          _control_list(control_qubit_index_list) {
+        _matrix = convert_external_matrix_to_internal_matrix(matrix);
+    }
 
     std::vector<UINT> get_target_qubit_list() const override { return _target_list; }
     std::vector<UINT> get_control_qubit_list() const override { return _control_list; }

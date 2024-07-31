@@ -8,7 +8,6 @@ namespace scaluq {
 namespace internal {
 void sparse_matrix_gate(std::vector<UINT> target_index_list,
                         std::vector<UINT> control_index_list,
-                        std::vector<UINT> control_value_list,
                         const CrsMatrix& matrix,
                         StateVector& state_vector) {
     if (control_index_list.size() > 0) {
