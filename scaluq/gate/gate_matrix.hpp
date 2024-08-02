@@ -791,11 +791,12 @@ inline void multi_qubit_dense_matrix_gate_parallel(const std::vector<UINT>& targ
     auto mask_array_view = convert_host_vector_to_device_view(mask_array);
     auto matrix_mask_list_view = convert_host_vector_to_device_view(matrix_mask_list);
 
+    Kokkos::View<Complex**> buffer_all("buffer", loop_dim, matrix_dim);
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<>(loop_dim, Kokkos::AUTO()),
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team) {
-            auto buffer = Kokkos::View<Complex*>("buffer", matrix_dim);
             UINT basis_0 = team.league_rank();
+            auto buffer = Kokkos::subview(buffer_all, basis_0, Kokkos::ALL);
             for (UINT cursor = 0; cursor < target_qubit_index_count; ++cursor) {
                 basis_0 = (basis_0 & mask_array_view[cursor]) +
                           ((basis_0 & (~mask_array_view[cursor])) << 1);

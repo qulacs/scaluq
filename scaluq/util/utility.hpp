@@ -243,8 +243,11 @@ inline Matrix convert_external_matrix_to_internal_matrix(const ComplexMatrix& ei
 inline ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix& matrix) {
     int rows = matrix.extent(0);
     int cols = matrix.extent(1);
-    Eigen::Map<ComplexMatrix> mat(reinterpret_cast<StdComplex*>(matrix.data()), rows, cols);
-    return mat;
+    ComplexMatrix eigen_matrix(rows, cols);
+    Kokkos::View<Complex**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
+        reinterpret_cast<Complex*>(eigen_matrix.data()), rows, cols);
+    Kokkos::deep_copy(host_view, matrix);
+    return eigen_matrix;
 }
 
 }  // namespace internal
