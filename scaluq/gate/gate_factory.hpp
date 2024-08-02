@@ -1,11 +1,9 @@
 #pragma once
 
 #include "gate_matrix.hpp"
-#include "gate_one_qubit.hpp"
 #include "gate_pauli.hpp"
 #include "gate_probablistic.hpp"
-#include "gate_two_qubit.hpp"
-#include "gate_zero_qubit.hpp"
+#include "gate_standard.hpp"
 
 namespace scaluq {
 namespace internal {
@@ -104,10 +102,10 @@ inline Gate U3(
     return internal::GateFactory::create_gate<internal::U3GateImpl>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), theta, phi, lambda);
 }
-inline Gate OneTargetMatrix(UINT target,
-                            const std::array<std::array<Complex, 2>, 2>& matrix,
-                            const std::vector<UINT>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::OneTargetMatrixGateImpl>(
+inline Gate OneQubitMatrix(UINT target,
+                           const std::array<std::array<Complex, 2>, 2>& matrix,
+                           const std::vector<UINT>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::OneQubitMatrixGateImpl>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), matrix);
 }
 inline Gate CX(UINT target, UINT control) {
@@ -129,11 +127,11 @@ inline Gate Swap(UINT target1, UINT target2, const std::vector<UINT>& controls =
     return internal::GateFactory::create_gate<internal::SwapGateImpl>(
         internal::vector_to_mask({target1, target2}), internal::vector_to_mask(controls));
 }
-inline Gate TwoTargetMatrix(UINT target1,
-                            UINT target2,
-                            const std::array<std::array<Complex, 4>, 4>& matrix,
-                            const std::vector<UINT>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::TwoTargetMatrixGateImpl>(
+inline Gate TwoQubitMatrix(UINT target1,
+                           UINT target2,
+                           const std::array<std::array<Complex, 4>, 4>& matrix,
+                           const std::vector<UINT>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::TwoQubitMatrixGateImpl>(
         internal::vector_to_mask({target1, target2}), internal::vector_to_mask(controls), matrix);
 }
 // まだ
@@ -161,31 +159,31 @@ inline Gate DenseMatrix(const std::vector<UINT>& targets,
     }
     if (targets.size() == 0) return I();
     if (targets.size() == 1) {
-        return OneTargetMatrix(targets[0],
-                               std::array{std::array{Complex(matrix(0, 0)), Complex(matrix(0, 1))},
-                                          std::array{Complex(matrix(1, 0)), Complex(matrix(1, 1))}},
-                               controls);
+        return OneQubitMatrix(targets[0],
+                              std::array{std::array{Complex(matrix(0, 0)), Complex(matrix(0, 1))},
+                                         std::array{Complex(matrix(1, 0)), Complex(matrix(1, 1))}},
+                              controls);
     }
     if (targets.size() == 2) {
-        return TwoTargetMatrix(targets[0],
-                               targets[1],
-                               std::array{std::array{Complex(matrix(0, 0)),
-                                                     Complex(matrix(0, 1)),
-                                                     Complex(matrix(0, 2)),
-                                                     Complex(matrix(0, 3))},
-                                          std::array{Complex(matrix(1, 0)),
-                                                     Complex(matrix(1, 1)),
-                                                     Complex(matrix(1, 2)),
-                                                     Complex(matrix(1, 3))},
-                                          std::array{Complex(matrix(2, 0)),
-                                                     Complex(matrix(2, 1)),
-                                                     Complex(matrix(2, 2)),
-                                                     Complex(matrix(2, 3))},
-                                          std::array{Complex(matrix(3, 0)),
-                                                     Complex(matrix(3, 1)),
-                                                     Complex(matrix(3, 2)),
-                                                     Complex(matrix(3, 3))}},
-                               controls);
+        return TwoQubitMatrix(targets[0],
+                              targets[1],
+                              std::array{std::array{Complex(matrix(0, 0)),
+                                                    Complex(matrix(0, 1)),
+                                                    Complex(matrix(0, 2)),
+                                                    Complex(matrix(0, 3))},
+                                         std::array{Complex(matrix(1, 0)),
+                                                    Complex(matrix(1, 1)),
+                                                    Complex(matrix(1, 2)),
+                                                    Complex(matrix(1, 3))},
+                                         std::array{Complex(matrix(2, 0)),
+                                                    Complex(matrix(2, 1)),
+                                                    Complex(matrix(2, 2)),
+                                                    Complex(matrix(2, 3))},
+                                         std::array{Complex(matrix(3, 0)),
+                                                    Complex(matrix(3, 1)),
+                                                    Complex(matrix(3, 2)),
+                                                    Complex(matrix(3, 3))}},
+                              controls);
     }
     throw std::runtime_error(
         "gate::DenseMatrix(const std::vector<UINT>&, const ComplexMatrix&): DenseMatrix gate "

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "param_gate_one_qubit.hpp"
 #include "param_gate_pauli.hpp"
 #include "param_gate_probablistic.hpp"
+#include "param_gate_standard.hpp"
 
 namespace scaluq {
 namespace internal {

@@ -6,6 +6,43 @@
 namespace scaluq {
 namespace internal {
 
+class IGateImpl : public GateBase {
+public:
+    IGateImpl() : GateBase(0, 0) {}
+
+    Gate get_inverse() const override { return shared_from_this(); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        return ComplexMatrix::Identity(1, 1);
+    }
+
+    void update_quantum_state(StateVector& state_vector) const override {
+        i_gate(_target_mask, _control_mask, state_vector);
+    }
+};
+
+class GlobalPhaseGateImpl : public GateBase {
+protected:
+    double _phase;
+
+public:
+    GlobalPhaseGateImpl(UINT control_mask, double phase)
+        : GateBase(0, control_mask), _phase(phase){};
+
+    [[nodiscard]] double phase() const { return _phase; }
+
+    Gate get_inverse() const override {
+        return std::make_shared<const GlobalPhaseGateImpl>(_control_mask, -_phase);
+    }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        return ComplexMatrix::Identity(1, 1) * std::exp(std::complex<double>(0, _phase));
+    }
+
+    void update_quantum_state(StateVector& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        global_phase_gate(_target_mask, _control_mask, _phase, state_vector);
+    }
+};
+
 class RotationGateBase : public GateBase {
 protected:
     double _angle;
@@ -432,7 +469,27 @@ public:
     }
 };
 
+class SwapGateImpl : public GateBase {
+public:
+    using GateBase::GateBase;
+
+    Gate get_inverse() const override { return shared_from_this(); }
+    std::optional<ComplexMatrix> get_matrix() const override {
+        ComplexMatrix mat = ComplexMatrix::Identity(1 << 2, 1 << 2);
+        mat << 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1;
+        return mat;
+    }
+
+    void update_quantum_state(StateVector& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        swap_gate(_target_mask, _control_mask, state_vector);
+    }
+};
+
 }  // namespace internal
+
+using IGate = internal::GatePtr<internal::IGateImpl>;
+using GlobalPhaseGate = internal::GatePtr<internal::GlobalPhaseGateImpl>;
 
 using XGate = internal::GatePtr<internal::XGateImpl>;
 using YGate = internal::GatePtr<internal::YGateImpl>;
@@ -454,4 +511,6 @@ using RZGate = internal::GatePtr<internal::RZGateImpl>;
 using U1Gate = internal::GatePtr<internal::U1GateImpl>;
 using U2Gate = internal::GatePtr<internal::U2GateImpl>;
 using U3Gate = internal::GatePtr<internal::U3GateImpl>;
+
+using SwapGate = internal::GatePtr<internal::SwapGateImpl>;
 }  // namespace scaluq

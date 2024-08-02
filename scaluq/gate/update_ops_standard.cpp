@@ -8,6 +8,17 @@
 
 namespace scaluq {
 namespace internal {
+void i_gate(UINT, UINT, StateVector&) {}
+
+void global_phase_gate(UINT, UINT control_mask, double phase, StateVector& state) {
+    Complex coef = Kokkos::polar(1., phase);
+    Kokkos::parallel_for(
+        state.dim() >> std::popcount(control_mask), KOKKOS_LAMBDA(UINT i) {
+            state._raw[insert_zero_at_mask_positions(i, control_mask) | control_mask] *= coef;
+        });
+    Kokkos::fence();
+}
+
 void x_gate(UINT target_mask, UINT control_mask, StateVector& state) {
     Kokkos::parallel_for(
         state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(UINT it) {
@@ -132,5 +143,20 @@ void rz_gate(UINT target_mask, UINT control_mask, double angle, StateVector& sta
     diagonal_matrix_2_2 diag = {Complex(cosval, -sinval), Complex(cosval, sinval)};
     single_qubit_diagonal_matrix_gate(target_mask, control_mask, diag, state);
 }
+
+void swap_gate(UINT target_mask, UINT control_mask, StateVector& state) {
+    // '- target' is used for bit manipulation on unsigned type, not for its numerical meaning.
+    UINT lower_target_mask = target_mask & -target_mask;
+    UINT upper_target_mask = target_mask ^ lower_target_mask;
+    Kokkos::parallel_for(
+        state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(UINT it) {
+            UINT basis =
+                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
+            Kokkos::Experimental::swap(state._raw[basis | lower_target_mask],
+                                       state._raw[basis | upper_target_mask]);
+        });
+    Kokkos::fence();
+}
+
 }  // namespace internal
 }  // namespace scaluq
