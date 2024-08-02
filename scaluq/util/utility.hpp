@@ -208,7 +208,9 @@ inline void gemv(const Matrix matrix, const Kokkos::View<Complex*>& x, Kokkos::V
 }
 
 // x: rearranged state vector, output will be stored in y
-inline void gemm_trans(const Matrix matrix, const Kokkos::View<Complex**>& x, Matrix& y) {
+inline void gemm_trans(const Matrix matrix,
+                       const Kokkos::View<Complex**>& x,
+                       Kokkos::View<Complex**>& y) {
     KokkosBlas::gemm("N", "T", 1.0, matrix, x, 0.0, y);
 }
 

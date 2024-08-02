@@ -914,7 +914,7 @@ inline void multi_qubit_dense_matrix_gate_gemm(const std::vector<UINT>& target_q
         });
     Kokkos::fence();
 
-    Matrix buffer("buffer", matrix_dim, loop_dim);
+    Kokkos::View<Complex**> buffer("buffer", matrix_dim, loop_dim);
     gemm_trans(matrix, arranged_state, buffer);
 
     Kokkos::parallel_for(
