@@ -901,7 +901,8 @@ inline void multi_qubit_dense_matrix_gate_gemm(const std::vector<UINT>& target_q
         });
     Kokkos::fence();
 
-    Matrix arranged_state("arranged_state", loop_dim, 1ULL << target_qubit_index_count);
+    Kokkos::View<Complex**> arranged_state(
+        "arranged_state", loop_dim, 1ULL << target_qubit_index_count);
 
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<>(loop_dim, Kokkos::AUTO()),
