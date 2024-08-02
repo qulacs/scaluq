@@ -908,8 +908,9 @@ inline void multi_qubit_dense_matrix_gate_gemm(const std::vector<UINT>& target_q
         Kokkos::TeamPolicy<>(loop_dim, Kokkos::AUTO()),
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team) {
             UINT rank = team.league_rank();
+            UINT basis_mask = basis_view[rank];
             Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, matrix_dim), [&](UINT x) {
-                arranged_state(rank, x) = state._raw[basis_view[rank] ^ matrix_mask_list[x]];
+                arranged_state(rank, x) = state._raw[basis_mask ^ matrix_mask_list_view[x]];
             });
         });
     Kokkos::fence();
@@ -921,9 +922,9 @@ inline void multi_qubit_dense_matrix_gate_gemm(const std::vector<UINT>& target_q
         Kokkos::TeamPolicy<>(matrix_dim, Kokkos::AUTO()),
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team) {
             UINT rank = team.league_rank();
-
+            UINT basis_mask = matrix_mask_list_view[rank];
             Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, loop_dim), [&](UINT x) {
-                state._raw[basis_view[x] ^ matrix_mask_list[rank]] = buffer(rank, x);
+                state._raw[basis_view[x] ^ basis_mask] = buffer(rank, x);
             });
         });
     Kokkos::fence();
