@@ -304,7 +304,7 @@ NB_MODULE(scaluq_core, m) {
             [](const GATE_TYPE &gate) { return gate->get_control_qubit_list(); },        \
             "Get control qubits as `list[int]`.")                                        \
         .def(                                                                            \
-            "getoperand_qubit_list",                                                     \
+            "get_operand_qubit_list",                                                    \
             [](const GATE_TYPE &gate) { return gate->get_operand_qubit_list(); },        \
             "Get target and control qubits as `list[int]`.")                             \
         .def(                                                                            \
@@ -560,7 +560,7 @@ NB_MODULE(scaluq_core, m) {
             [](const PGATE_TYPE &gate) { return gate->get_control_qubit_list(); },                \
             "Get control qubits as `list[int]`.")                                                 \
         .def(                                                                                     \
-            "getoperand_qubit_list",                                                              \
+            "get_operand_qubit_list",                                                             \
             [](const PGATE_TYPE &gate) { return gate->get_operand_qubit_list(); },                \
             "Get target and control qubits as `list[int]`.")                                      \
         .def(                                                                                     \
