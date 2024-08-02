@@ -286,9 +286,9 @@ NB_MODULE(scaluq_core, m) {
         .value("U1", GateType::U1)
         .value("U2", GateType::U2)
         .value("U3", GateType::U3)
-        .value("OneQubitMatrix", GateType::OneQubitMatrix)
+        .value("OneTargetMatrix", GateType::OneTargetMatrix)
         .value("Swap", GateType::Swap)
-        .value("TwoQubitMatrix", GateType::TwoQubitMatrix)
+        .value("TwoTargetMatrix", GateType::TwoTargetMatrix)
         .value("Pauli", GateType::Pauli)
         .value("PauliRotation", GateType::PauliRotation);
 
@@ -358,9 +358,9 @@ NB_MODULE(scaluq_core, m) {
         .def(nb::init<U1Gate>(), "Upcast from `U1Gate`.")
         .def(nb::init<U2Gate>(), "Upcast from `U2Gate`.")
         .def(nb::init<U3Gate>(), "Upcast from `U3Gate`.")
-        .def(nb::init<OneQubitMatrixGate>(), "Upcast from `OneQubitMatrixGate`.")
+        .def(nb::init<OneTargetMatrixGate>(), "Upcast from `OneTargetMatrixGate`.")
         .def(nb::init<SwapGate>(), "Upcast from `SwapGate`.")
-        .def(nb::init<TwoQubitMatrixGate>(), "Upcast from `TwoQubitMatrixGate`.")
+        .def(nb::init<TwoTargetMatrixGate>(), "Upcast from `TwoTargetMatrixGate`.")
         .def(nb::init<PauliGate>(), "Upcast from `PauliGate`.")
         .def(nb::init<PauliRotationGate>(), "Upcast from `PauliRotationGate`.");
 
@@ -443,8 +443,8 @@ NB_MODULE(scaluq_core, m) {
         .def(
             "lambda_", [](const U3Gate &gate) { return gate->lambda(); }, "Get `lambda` property.");
 
-    DEF_GATE(OneQubitMatrixGate, "Specific class of single-qubit dense matrix gate.")
-        .def("matrix", [](const OneQubitMatrixGate &gate) { return gate->matrix(); });
+    DEF_GATE(OneTargetMatrixGate, "Specific class of single-qubit dense matrix gate.")
+        .def("matrix", [](const OneTargetMatrixGate &gate) { return gate->matrix(); });
 
     DEF_GATE(PauliGate,
              "Specific class of multi-qubit pauli gate, which applies single-qubit Pauli "
@@ -494,7 +494,7 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(U1);
     DEF_GATE_FACTORY(U2);
     DEF_GATE_FACTORY(U3);
-    DEF_GATE_FACTORY(OneQubitMatrix);
+    DEF_GATE_FACTORY(OneTargetMatrix);
     mgate.def(
         "CX",
         &gate::CX,
@@ -519,13 +519,13 @@ NB_MODULE(scaluq_core, m) {
               "Generate general Gate class instance of Toffoli.\n\n.. note:: Toffoli is an alias "
               "of CCX.");
     DEF_GATE_FACTORY(Swap);
-    DEF_GATE_FACTORY(TwoQubitMatrix);
+    DEF_GATE_FACTORY(TwoTargetMatrix);
     DEF_GATE_FACTORY(Pauli);
     DEF_GATE_FACTORY(PauliRotation);
     mgate.def("DenseMatrix",
               &gate::DenseMatrix,
-              "Generate general Gate class instance of DenseMatrix. IGate, OneQubitMatrixGate or "
-              "TwoQubitMatrixGate correspond to len(target) is created. The case len(target) >= 3 "
+              "Generate general Gate class instance of DenseMatrix. IGate, OneTargetMatrixGate or "
+              "TwoTargetMatrixGate correspond to len(target) is created. The case len(target) >= 3 "
               "is currently not supported.");
     DEF_GATE_FACTORY(Probablistic);
 

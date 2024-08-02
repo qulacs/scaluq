@@ -167,7 +167,7 @@ void run_random_gate_apply_IBMQ(
     }
 }
 
-void run_random_gate_apply_two_qubit(UINT n_qubits) {
+void run_random_gate_apply_two_target(UINT n_qubits) {
     const int dim = 1ULL << n_qubits;
     Random random;
 
@@ -374,7 +374,7 @@ TEST(GateTest, ApplyRZ) { run_random_gate_apply<gate::RZ>(5, make_RZ); }
 
 TEST(GateTest, ApplyIBMQ) { run_random_gate_apply_IBMQ(5, make_U); }
 
-TEST(GateTest, ApplyTwoQubit) { run_random_gate_apply_two_qubit(5); }
+TEST(GateTest, ApplyTwoTarget) { run_random_gate_apply_two_target(5); }
 
 TEST(GateTest, ApplyPauliGate) { run_random_gate_apply_pauli(5); }
 

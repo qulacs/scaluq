@@ -6,10 +6,10 @@
 
 namespace scaluq {
 namespace internal {
-void single_qubit_dense_matrix_gate(UINT target_mask,
-                                    UINT control_mask,
-                                    const matrix_2_2& matrix,
-                                    StateVector& state) {
+void one_target_dense_matrix_gate(UINT target_mask,
+                                  UINT control_mask,
+                                  const matrix_2_2& matrix,
+                                  StateVector& state) {
     Kokkos::parallel_for(
         state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(UINT it) {
             UINT basis_0 =
@@ -25,10 +25,10 @@ void single_qubit_dense_matrix_gate(UINT target_mask,
     Kokkos::fence();
 }
 
-void double_qubit_dense_matrix_gate(UINT target_mask,
-                                    UINT control_mask,
-                                    const matrix_4_4& matrix,
-                                    StateVector& state) {
+void two_target_dense_matrix_gate(UINT target_mask,
+                                  UINT control_mask,
+                                  const matrix_4_4& matrix,
+                                  StateVector& state) {
     UINT lower_target_mask = -target_mask & target_mask;
     UINT upper_target_mask = target_mask ^ lower_target_mask;
     Kokkos::parallel_for(

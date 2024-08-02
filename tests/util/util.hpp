@@ -74,7 +74,7 @@ inline Eigen::MatrixXcd get_eigen_matrix_single_Pauli(UINT pauli_id) {
         mat << 1, 0, 0, -1;
     return mat;
 }
-inline Eigen::MatrixXcd get_eigen_matrix_random_single_qubit_unitary() {
+inline Eigen::MatrixXcd get_eigen_matrix_random_one_target_unitary() {
     Eigen::MatrixXcd Identity, X, Y, Z;
     Identity = get_eigen_matrix_single_Pauli(0);
     X = get_eigen_matrix_single_Pauli(1);
@@ -106,13 +106,13 @@ inline Eigen::VectorXcd get_eigen_diagonal_matrix_random_multi_qubit_unitary(UIN
 }
 
 inline Eigen::MatrixXcd get_expanded_eigen_matrix_with_identity(
-    UINT target_qubit_index, const Eigen::MatrixXcd& one_qubit_matrix, UINT qubit_count) {
+    UINT target_qubit_index, const Eigen::MatrixXcd& one_target_matrix, UINT qubit_count) {
     const UINT left_dim = 1ULL << target_qubit_index;
     const UINT right_dim = 1ULL << (qubit_count - target_qubit_index - 1);
     auto left_identity = Eigen::MatrixXcd::Identity(left_dim, left_dim);
     auto right_identity = Eigen::MatrixXcd::Identity(right_dim, right_dim);
     return internal::kronecker_product(
-        internal::kronecker_product(right_identity, one_qubit_matrix), left_identity);
+        internal::kronecker_product(right_identity, one_target_matrix), left_identity);
 }
 
 // get expanded matrix

@@ -28,7 +28,7 @@ void u1_gate(UINT target_mask, UINT control_mask, double lambda, StateVector& st
 }
 
 void u2_gate(UINT target_mask, UINT control_mask, double phi, double lambda, StateVector& state) {
-    single_qubit_dense_matrix_gate(
+    one_target_dense_matrix_gate(
         target_mask, control_mask, get_IBMQ_matrix(PI() / 2., phi, lambda), state);
 }
 
@@ -38,7 +38,7 @@ void u3_gate(UINT target_mask,
              double phi,
              double lambda,
              StateVector& state) {
-    single_qubit_dense_matrix_gate(
+    one_target_dense_matrix_gate(
         target_mask, control_mask, get_IBMQ_matrix(theta, phi, lambda), state);
 }
 }  // namespace internal

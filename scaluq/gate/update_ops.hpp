@@ -47,15 +47,15 @@ void rz_gate(UINT target_mask, UINT control_mask, double angle, StateVector& sta
 
 matrix_2_2 get_IBMQ_matrix(double _theta, double _phi, double _lambda);
 
-void single_qubit_dense_matrix_gate(UINT target_mask,
-                                    UINT control_mask,
-                                    const matrix_2_2& matrix,
-                                    StateVector& state);
+void one_target_dense_matrix_gate(UINT target_mask,
+                                  UINT control_mask,
+                                  const matrix_2_2& matrix,
+                                  StateVector& state);
 
-void double_qubit_dense_matrix_gate(UINT target_mask,
-                                    UINT control_mask,
-                                    const matrix_4_4& matrix,
-                                    StateVector& state);
+void two_target_dense_matrix_gate(UINT target_mask,
+                                  UINT control_mask,
+                                  const matrix_4_4& matrix,
+                                  StateVector& state);
 
 void u1_gate(UINT target_mask, UINT control_mask, double lambda, StateVector& state);
 
