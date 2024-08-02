@@ -304,13 +304,21 @@ NB_MODULE(scaluq_core, m) {
             [](const GATE_TYPE &gate) { return gate->get_control_qubit_list(); },        \
             "Get control qubits as `list[int]`.")                                        \
         .def(                                                                            \
+            "getoperand_qubit_list",                                                     \
+            [](const GATE_TYPE &gate) { return gate->get_operand_qubit_list(); },        \
+            "Get target and control qubits as `list[int]`.")                             \
+        .def(                                                                            \
             "get_target_qubit_mask",                                                     \
             [](const GATE_TYPE &gate) { return gate->get_target_qubit_mask(); },         \
             "Get target qubits as mask. **Control qubits is not included.**")            \
         .def(                                                                            \
             "get_control_qubit_mask",                                                    \
             [](const GATE_TYPE &gate) { return gate->get_control_qubit_mask(); },        \
-            "Get control qubits as `mask`.")                                             \
+            "Get control qubits as mask.")                                               \
+        .def(                                                                            \
+            "get_operand_qubit_mask",                                                    \
+            [](const GATE_TYPE &gate) { return gate->get_operand_qubit_mask(); },        \
+            "Get target and control qubits as mask.")                                    \
         .def(                                                                            \
             "get_inverse",                                                               \
             [](const GATE_TYPE &gate) { return gate->get_inverse(); },                   \
@@ -545,20 +553,28 @@ NB_MODULE(scaluq_core, m) {
              "Get parametric gate type as `ParamGateType` enum.")                                 \
         .def(                                                                                     \
             "get_target_qubit_list",                                                              \
-            [](const PGATE_TYPE &param_gate) { return param_gate->get_target_qubit_list(); },     \
+            [](const PGATE_TYPE &gate) { return gate->get_target_qubit_list(); },                 \
             "Get target qubits as `list[int]`. **Control qubits is not included.**")              \
         .def(                                                                                     \
             "get_control_qubit_list",                                                             \
-            [](const PGATE_TYPE &param_gate) { return param_gate->get_control_qubit_list(); },    \
+            [](const PGATE_TYPE &gate) { return gate->get_control_qubit_list(); },                \
             "Get control qubits as `list[int]`.")                                                 \
         .def(                                                                                     \
+            "getoperand_qubit_list",                                                              \
+            [](const PGATE_TYPE &gate) { return gate->get_operand_qubit_list(); },                \
+            "Get target and control qubits as `list[int]`.")                                      \
+        .def(                                                                                     \
             "get_target_qubit_mask",                                                              \
-            [](const PGATE_TYPE &param_gate) { return param_gate->get_target_qubit_mask(); },     \
+            [](const PGATE_TYPE &gate) { return gate->get_target_qubit_mask(); },                 \
             "Get target qubits as mask. **Control qubits is not included.**")                     \
         .def(                                                                                     \
             "get_control_qubit_mask",                                                             \
-            [](const PGATE_TYPE &param_gate) { return param_gate->get_control_qubit_mask(); },    \
+            [](const PGATE_TYPE &gate) { return gate->get_control_qubit_mask(); },                \
             "Get control qubits as mask.")                                                        \
+        .def(                                                                                     \
+            "get_operand_qubit_mask",                                                             \
+            [](const PGATE_TYPE &gate) { return gate->get_operand_qubit_mask(); },                \
+            "Get target and control qubits as mask.")                                             \
         .def(                                                                                     \
             "get_inverse",                                                                        \
             [](const PGATE_TYPE &param_gate) { return param_gate->get_inverse(); },               \

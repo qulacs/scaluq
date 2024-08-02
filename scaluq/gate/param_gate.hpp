@@ -69,8 +69,12 @@ public:
     [[nodiscard]] std::vector<UINT> get_control_qubit_list() const {
         return mask_to_vector(_control_mask);
     }
+    [[nodiscard]] std::vector<UINT> get_operand_qubit_list() const {
+        return mask_to_vector(_target_mask | _control_mask);
+    }
     [[nodiscard]] UINT get_target_qubit_mask() const { return _target_mask; }
     [[nodiscard]] UINT get_control_qubit_mask() const { return _control_mask; }
+    [[nodiscard]] UINT get_operand_qubit_mask() const { return _target_mask | _control_mask; }
 
     [[nodiscard]] virtual ParamGate get_inverse() const = 0;
     [[nodiscard]] virtual std::optional<ComplexMatrix> get_matrix(double param) const = 0;
