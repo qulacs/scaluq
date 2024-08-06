@@ -127,7 +127,7 @@ namespace internal {
 class GateBase : public std::enable_shared_from_this<GateBase> {
 protected:
     UINT _target_mask, _control_mask;
-    void check_qubit_mask_within_bounds(StateVector& state_vector) const {
+    void check_qubit_mask_within_bounds(const StateVector& state_vector) const {
         UINT full_mask = (1ULL << state_vector.n_qubits()) - 1;
         if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
             throw std::runtime_error(
