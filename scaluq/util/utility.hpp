@@ -7,7 +7,6 @@
 #include <ranges>
 #include <vector>
 
-#include "../operator/pauli_operator.hpp"
 #include "../types.hpp"
 
 namespace scaluq {
@@ -101,8 +100,17 @@ inline Kokkos::View<T*> convert_host_vector_to_device_view(const std::vector<T>&
 }
 
 // Device Kokkos::View を Host std::vector に変換する関数
-template <typename T>
+template <typename T, typename Space = Kokkos::DefaultExecutionSpace::memory_space>
 inline std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device_view) {
+    std::vector<T> host_vector(device_view.extent(0));
+    Kokkos::View<T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
+        host_vector.data(), host_vector.size());
+    Kokkos::deep_copy(host_view, device_view);
+    return host_vector;
+}
+template <typename T, typename Space>
+inline std::vector<T> convert_device_view_to_host_vector(
+    const Kokkos::View<T*, Space>& device_view) {
     std::vector<T> host_vector(device_view.extent(0));
     Kokkos::View<T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
         host_vector.data(), host_vector.size());
@@ -124,7 +132,8 @@ inline std::vector<std::vector<T>> convert_2d_device_view_to_host_vector(
     return result;
 }
 
-KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
+template <std::floating_point FloatType>
+KOKKOS_INLINE_FUNCTION FloatType squared_norm(const Complex<FloatType>& z) {
     return z.real() * z.real() + z.imag() * z.imag();
 }
 

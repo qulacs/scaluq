@@ -19,30 +19,31 @@ inline bool is_finalized() { return Kokkos::is_finalized(); }
 
 using UINT = std::uint64_t;
 
-using Complex = Kokkos::complex<double>;
+template <std::floating_point FloatType>
+using Complex = Kokkos::complex<FloatType>;
 using namespace std::complex_literals;
 
 using StdComplex = std::complex<double>;
 using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex>;
 
-using StateVectorView = Kokkos::View<Complex*>;
-using StateVectorBatchedView = Kokkos::View<Complex**, Kokkos::LayoutRight>;
+using StateVectorView = Kokkos::View<Complex<double>*>;
+using StateVectorBatchedView = Kokkos::View<Complex<double>**, Kokkos::LayoutRight>;
 
 struct array_4 {
-    Complex val[4];
+    Complex<double> val[4];
 };
 
 struct matrix_2_2 {
-    Complex val[2][2];
+    Complex<double> val[2][2];
 };
 
 struct matrix_4_4 {
-    Complex val[4][4];
+    Complex<double> val[4][4];
 };
 
 struct diagonal_matrix_2_2 {
-    Complex val[2];
+    Complex<double> val[2];
 };
 
 }  // namespace scaluq
