@@ -186,10 +186,10 @@ void run_random_gate_apply_two_target(UINT n_qubits) {
             UINT control = random.int64() % n_qubits;
             if (target == control) target = (target + 1) % n_qubits;
             if (g == 0) {
-                gate = gate::CX(target, control);
+                gate = gate::CX(control, target);
                 func_eig = get_eigen_matrix_full_qubit_CX;
             } else {
-                gate = gate::CZ(target, control);
+                gate = gate::CZ(control, target);
                 func_eig = get_eigen_matrix_full_qubit_CZ;
             }
             gate->update_quantum_state(state);

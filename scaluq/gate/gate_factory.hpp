@@ -108,16 +108,16 @@ inline Gate OneTargetMatrix(UINT target,
     return internal::GateFactory::create_gate<internal::OneTargetMatrixGateImpl>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), matrix);
 }
-inline Gate CX(UINT target, UINT control) {
+inline Gate CX(UINT control, UINT target) {
     return internal::GateFactory::create_gate<internal::XGateImpl>(
         internal::vector_to_mask({target}), internal::vector_to_mask({control}));
 }
 inline auto& CNot = CX;
-inline Gate CZ(UINT target, UINT control) {
+inline Gate CZ(UINT control, UINT target) {
     return internal::GateFactory::create_gate<internal::ZGateImpl>(
         internal::vector_to_mask({target}), internal::vector_to_mask({control}));
 }
-inline Gate CCX(UINT target, UINT control1, UINT control2) {
+inline Gate CCX(UINT control1, UINT control2, UINT target) {
     return internal::GateFactory::create_gate<internal::XGateImpl>(
         internal::vector_to_mask({target}), internal::vector_to_mask({control1, control2}));
 }
