@@ -13,19 +13,7 @@ class ProbablisticGateImpl : public GateBase {
 public:
     ProbablisticGateImpl(const std::vector<double>& distribution,
                          const std::vector<Gate>& gate_list)
-        : GateBase(  // make OR(target mask) and OR(control mask) at first
-              [&gate_list] {
-                  UINT mask_sum = 0;
-                  for (const auto& gate : gate_list) mask_sum |= gate->get_target_qubit_mask();
-                  return mask_sum;
-              }(),
-              [&gate_list] {
-                  UINT mask_sum = 0;
-                  for (const auto& gate : gate_list) mask_sum |= gate->get_control_qubit_mask();
-                  return mask_sum;
-              }()),
-          _distribution(distribution),
-          _gate_list(gate_list) {
+        : GateBase(0, 0), _distribution(distribution), _gate_list(gate_list) {
         UINT n = distribution.size();
         if (n == 0) {
             throw std::runtime_error("At least one gate is required.");
@@ -42,6 +30,37 @@ public:
     }
     const std::vector<Gate>& gate_list() const { return _gate_list; }
     const std::vector<double>& distribution() const { return _distribution; }
+
+    std::vector<UINT> get_target_qubit_list() const override {
+        throw std::runtime_error(
+            "ProbablisticGateImpl::get_target_qubit_list(): This function must not be used in "
+            "ProbablisticGateImpl.");
+    }
+    std::vector<UINT> get_control_qubit_list() const override {
+        throw std::runtime_error(
+            "ProbablisticGateImpl::get_control_qubit_list(): This function must not be used in "
+            "ProbablisticGateImpl.");
+    }
+    std::vector<UINT> get_operand_qubit_list() const override {
+        throw std::runtime_error(
+            "ProbablisticGateImpl::get_operand_qubit_list(): This function must not be used in "
+            "ProbablisticGateImpl.");
+    }
+    UINT get_target_qubit_mask() const override {
+        throw std::runtime_error(
+            "ProbablisticGateImpl::get_target_qubit_mask(): This function must not be used in "
+            "ProbablisticGateImpl.");
+    }
+    UINT get_control_qubit_mask() const override {
+        throw std::runtime_error(
+            "ProbablisticGateImpl::get_control_qubit_mask(): This function must not be used in "
+            "ProbablisticGateImpl.");
+    }
+    UINT get_operand_qubit_mask() const override {
+        throw std::runtime_error(
+            "ProbablisticGateImpl::get_operand_qubit_mask(): This function must not be used in "
+            "ProbablisticGateImpl.");
+    }
 
     Gate get_inverse() const override {
         std::vector<Gate> inv_gate_list;
