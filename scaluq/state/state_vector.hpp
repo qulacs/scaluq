@@ -105,7 +105,7 @@ public:
     [[nodiscard]] UINT dim() const { return this->_dim; }
 
     [[nodiscard]] std::vector<ComplexType> amplitudes() const {
-        return internal::convert_device_view_to_host_vector(_raw);
+        return internal::convert_device_view_to_host_vector<ComplexType>(_raw);
     }
 
     [[nodiscard]] FloatType get_squared_norm() const {

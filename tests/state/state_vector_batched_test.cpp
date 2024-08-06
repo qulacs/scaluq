@@ -8,7 +8,7 @@
 #include "../test_environment.hpp"
 #include "../util/util.hpp"
 
-using CComplex = std::complex<double>;
+using StdComplex = std::complex<double>;
 
 using namespace scaluq;
 
@@ -16,7 +16,7 @@ const double eps = 1e-12;
 
 TEST(StateVectorBatchedTest, HaarRandomStateNorm) {
     const UINT batch_size = 10, n_qubits = 3;
-    const auto states = StateVectorBatched::Haar_random_states(batch_size, n_qubits, false);
+    const auto states = StateVectorBatched<>::Haar_random_states(batch_size, n_qubits, false);
     auto norms = states.get_squared_norm();
     for (auto x : norms) ASSERT_NEAR(x, 1., eps);
 }
@@ -24,7 +24,7 @@ TEST(StateVectorBatchedTest, HaarRandomStateNorm) {
 TEST(StateVectorBatchedTest, LoadAndAmplitues) {
     const UINT batch_size = 4, n_qubits = 3;
     const UINT dim = 1 << n_qubits;
-    std::vector states_h(batch_size, std::vector<Complex>(dim));
+    std::vector states_h(batch_size, std::vector<Complex<double>>(dim));
     for (UINT b = 0; b < batch_size; ++b) {
         for (UINT i = 0; i < dim; ++i) {
             states_h[b][i] = b * dim + i;
@@ -43,9 +43,9 @@ TEST(StateVectorBatchedTest, LoadAndAmplitues) {
 
 TEST(StateVectorBatchedTest, OperateState) {
     const UINT batch_size = 4, n_qubits = 3;
-    auto states = StateVectorBatched::Haar_random_states(batch_size, n_qubits, 0);
-    auto states_add = StateVectorBatched::Haar_random_states(batch_size, n_qubits, false);
-    const Complex coef(2.1, 3.5);
+    auto states = StateVectorBatched<>::Haar_random_states(batch_size, n_qubits, 0);
+    auto states_add = StateVectorBatched<>::Haar_random_states(batch_size, n_qubits, false);
+    const Complex<double> coef(2.1, 3.5);
 
     auto states_cp = states.copy();
     for (UINT b = 0; b < batch_size; ++b) {
@@ -78,7 +78,7 @@ TEST(StateVectorBatchedTest, OperateState) {
 
 TEST(StateVectorBatchedTest, ZeroProbs) {
     const UINT batch_size = 4, n_qubits = 3;
-    auto states = StateVectorBatched::Haar_random_states(batch_size, n_qubits, false);
+    auto states = StateVectorBatched<>::Haar_random_states(batch_size, n_qubits, false);
 
     for (UINT i = 0; i < n_qubits; ++i) {
         auto zero_probs = states.get_zero_probability(i);
@@ -91,7 +91,7 @@ TEST(StateVectorBatchedTest, ZeroProbs) {
 
 TEST(StateVectorBatchedTest, MarginalProbs) {
     const UINT batch_size = 4, n_qubits = 5;
-    auto states = StateVectorBatched::Haar_random_states(batch_size, n_qubits, false);
+    auto states = StateVectorBatched<>::Haar_random_states(batch_size, n_qubits, false);
 
     Random rd(0);
     for (UINT i = 0; i < 10; ++i) {
@@ -109,7 +109,7 @@ TEST(StateVectorBatchedTest, MarginalProbs) {
 
 TEST(StateVectorBatchedTest, Entropy) {
     const UINT batch_size = 4, n_qubits = 3;
-    auto states = StateVectorBatched::Haar_random_states(batch_size, n_qubits, false);
+    auto states = StateVectorBatched<>::Haar_random_states(batch_size, n_qubits, false);
 
     auto entropies = states.get_entropy();
     for (UINT b = 0; b < batch_size; ++b) {
@@ -121,8 +121,8 @@ TEST(StateVectorBatchedTest, Entropy) {
 TEST(StateVectorBatchedTest, Sampling) {
     const UINT batch_size = 2, n_qubits = 3;
     StateVectorBatched states(batch_size, n_qubits);
-    states.load(
-        std::vector<std::vector<Complex>>{{1, 4, 5, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 6, 4, 1}});
+    states.load(std::vector<std::vector<Complex<double>>>{{1, 4, 5, 0, 0, 0, 0, 0},
+                                                          {0, 0, 0, 0, 0, 6, 4, 1}});
     states.normalize();
     auto result = states.sampling(4096);
     std::vector cnt(2, std::vector<UINT>(states.dim(), 0));
