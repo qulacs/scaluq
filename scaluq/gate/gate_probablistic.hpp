@@ -70,9 +70,10 @@ public:
         });
         return std::make_shared<const ProbablisticGateImpl>(_distribution, inv_gate_list);
     }
-    std::optional<ComplexMatrix> get_matrix() const override {
-        if (_gate_list.size() == 1) return _gate_list[0]->get_matrix();
-        return std::nullopt;
+    ComplexMatrix get_matrix() const override {
+        throw std::runtime_error(
+            "ProbablisticGateImpl::get_matrix(): This function must not be used in "
+            "ProbablisticGateImpl.");
     }
 
     void update_quantum_state(StateVector& state_vector) const override {

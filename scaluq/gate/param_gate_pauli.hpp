@@ -22,7 +22,7 @@ public:
     ParamGate get_inverse() const override {
         return std::make_shared<const PPauliRotationGateImpl>(_control_mask, _pauli, -_pcoef);
     }
-    std::optional<ComplexMatrix> get_matrix(double param) const override {
+    ComplexMatrix get_matrix(double param) const override {
         double angle = _pcoef * param;
         Complex true_angle = angle * this->_pauli.get_coef();
         ComplexMatrix mat = this->_pauli.get_matrix_ignoring_coef();

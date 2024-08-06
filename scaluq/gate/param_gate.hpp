@@ -79,7 +79,7 @@ public:
     }
 
     [[nodiscard]] virtual ParamGate get_inverse() const = 0;
-    [[nodiscard]] virtual std::optional<ComplexMatrix> get_matrix(double param) const = 0;
+    [[nodiscard]] virtual ComplexMatrix get_matrix(double param) const = 0;
 
     virtual void update_quantum_state(StateVector& state_vector, double param) const = 0;
 };

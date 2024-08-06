@@ -332,7 +332,7 @@ NB_MODULE(scaluq_core, m) {
         .def(                                                                            \
             "get_matrix",                                                                \
             [](const GATE_TYPE &gate) { return gate->get_matrix(); },                    \
-            "Get matrix representation of the gate. If cannot, None is returned.")
+            "Get matrix representation of the gate.")
 
 #define DEF_GATE(GATE_TYPE, DESCRIPTION)                                                        \
     DEF_GATE_BASE(                                                                              \
@@ -589,8 +589,7 @@ NB_MODULE(scaluq_core, m) {
         .def(                                                                                     \
             "get_matrix",                                                                         \
             [](const PGATE_TYPE &gate, double param) { return gate->get_matrix(param); },         \
-            "Get matrix representation of the gate with holding the parameter. If cannot, None "  \
-            "is returned.")
+            "Get matrix representation of the gate with holding the parameter.")
 
 #define DEF_PGATE(PGATE_TYPE, DESCRIPTION)                                                      \
     DEF_PGATE_BASE(                                                                             \
