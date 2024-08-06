@@ -9,41 +9,45 @@ using namespace std::complex_literals;
 #include <util/utility.hpp>
 using namespace scaluq;
 
-inline bool same_state(const StateVector& s1, const StateVector& s2, const double eps = 1e-12) {
+template <typename FloatType, typename Space>
+inline bool same_state(const StateVector<FloatType, Space>& s1,
+                       const StateVector<FloatType, Space>& s2,
+                       const double eps = 1e-12) {
     auto s1_cp = s1.amplitudes();
     auto s2_cp = s2.amplitudes();
     assert(s1.n_qubits() == s2.n_qubits());
     for (UINT i = 0; i < s1.dim(); ++i) {
-        if (std::abs((std::complex<double>)s1_cp[i] - (std::complex<double>)s2_cp[i]) > eps)
+        if (std::abs((std::complex<FloatType>)s1_cp[i] - (std::complex<FloatType>)s2_cp[i]) > eps)
             return false;
     }
     return true;
 };
 
-inline bool same_state_except_global_phase(const StateVector& s1,
-                                           const StateVector& s2,
+template <typename FloatType, typename Space>
+inline bool same_state_except_global_phase(const StateVector<FloatType, Space>& s1,
+                                           const StateVector<FloatType, Space>& s2,
                                            const double eps = 1e-12) {
     auto s1_cp = s1.amplitudes();
     auto s2_cp = s2.amplitudes();
     assert(s1.n_qubits() == s2.n_qubits());
     UINT significant = 0;
     for (UINT i = 0; i < s1.dim(); ++i) {
-        if (std::abs((std::complex<double>)s1_cp[i]) >
-            std::abs((std::complex<double>)s1_cp[significant])) {
+        if (std::abs((std::complex<FloatType>)s1_cp[i]) >
+            std::abs((std::complex<FloatType>)s1_cp[significant])) {
             significant = i;
         }
     }
-    if (std::abs((std::complex<double>)s1_cp[significant]) < eps) {
+    if (std::abs((std::complex<FloatType>)s1_cp[significant]) < eps) {
         for (UINT i = 0; i < s2.dim(); ++i) {
-            if (std::abs((std::complex<double>)s2_cp[i]) > eps) return false;
+            if (std::abs((std::complex<FloatType>)s2_cp[i]) > eps) return false;
         }
         return true;
     }
-    double phase = std::arg(std::complex<double>(s2_cp[significant] / s1_cp[significant]));
-    std::complex<double> phase_coef = std::polar(1., phase);
+    double phase = std::arg(std::complex<FloatType>(s2_cp[significant] / s1_cp[significant]));
+    std::complex<FloatType> phase_coef = std::polar(1., phase);
     for (UINT i = 0; i < s1.dim(); ++i) {
-        if (std::abs(phase_coef * (std::complex<double>)s1_cp[i] - (std::complex<double>)s2_cp[i]) >
-            eps)
+        if (std::abs(phase_coef * (std::complex<FloatType>)s1_cp[i] -
+                     (std::complex<FloatType>)s2_cp[i]) > eps)
             return false;
     }
     return true;
