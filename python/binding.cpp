@@ -286,12 +286,9 @@ NB_MODULE(scaluq_core, m) {
         .value("U1", GateType::U1)
         .value("U2", GateType::U2)
         .value("U3", GateType::U3)
-        .value("OneQubitMatrix", GateType::OneQubitMatrix)
-        .value("CX", GateType::CX)
-        .value("CZ", GateType::CZ)
+        .value("OneTargetMatrix", GateType::OneTargetMatrix)
         .value("Swap", GateType::Swap)
-        .value("TwoQubitMatrix", GateType::TwoQubitMatrix)
-        .value("FusedSwap", GateType::FusedSwap)
+        .value("TwoTargetMatrix", GateType::TwoTargetMatrix)
         .value("Pauli", GateType::Pauli)
         .value("PauliRotation", GateType::PauliRotation);
 
@@ -307,6 +304,22 @@ NB_MODULE(scaluq_core, m) {
             [](const GATE_TYPE &gate) { return gate->get_control_qubit_list(); },        \
             "Get control qubits as `list[int]`.")                                        \
         .def(                                                                            \
+            "get_operand_qubit_list",                                                    \
+            [](const GATE_TYPE &gate) { return gate->get_operand_qubit_list(); },        \
+            "Get target and control qubits as `list[int]`.")                             \
+        .def(                                                                            \
+            "get_target_qubit_mask",                                                     \
+            [](const GATE_TYPE &gate) { return gate->get_target_qubit_mask(); },         \
+            "Get target qubits as mask. **Control qubits is not included.**")            \
+        .def(                                                                            \
+            "get_control_qubit_mask",                                                    \
+            [](const GATE_TYPE &gate) { return gate->get_control_qubit_mask(); },        \
+            "Get control qubits as mask.")                                               \
+        .def(                                                                            \
+            "get_operand_qubit_mask",                                                    \
+            [](const GATE_TYPE &gate) { return gate->get_operand_qubit_mask(); },        \
+            "Get target and control qubits as mask.")                                    \
+        .def(                                                                            \
             "get_inverse",                                                               \
             [](const GATE_TYPE &gate) { return gate->get_inverse(); },                   \
             "Generate inverse gate as `Gate` type. If not exists, return None.")         \
@@ -319,7 +332,7 @@ NB_MODULE(scaluq_core, m) {
         .def(                                                                            \
             "get_matrix",                                                                \
             [](const GATE_TYPE &gate) { return gate->get_matrix(); },                    \
-            "Get matrix representation of the gate. If cannot, None is returned.")
+            "Get matrix representation of the gate.")
 
 #define DEF_GATE(GATE_TYPE, DESCRIPTION)                                                        \
     DEF_GATE_BASE(                                                                              \
@@ -353,12 +366,9 @@ NB_MODULE(scaluq_core, m) {
         .def(nb::init<U1Gate>(), "Upcast from `U1Gate`.")
         .def(nb::init<U2Gate>(), "Upcast from `U2Gate`.")
         .def(nb::init<U3Gate>(), "Upcast from `U3Gate`.")
-        .def(nb::init<OneQubitMatrixGate>(), "Upcast from `OneQubitMatrixGate`.")
-        .def(nb::init<CXGate>(), "Upcast from `CXGate`.")
-        .def(nb::init<CZGate>(), "Upcast from `CZGate`.")
+        .def(nb::init<OneTargetMatrixGate>(), "Upcast from `OneTargetMatrixGate`.")
         .def(nb::init<SwapGate>(), "Upcast from `SwapGate`.")
-        .def(nb::init<TwoQubitMatrixGate>(), "Upcast from `TwoQubitMatrixGate`.")
-        .def(nb::init<FusedSwapGate>(), "Upcast from `FusedSwapGate`.")
+        .def(nb::init<TwoTargetMatrixGate>(), "Upcast from `TwoTargetMatrixGate`.")
         .def(nb::init<PauliGate>(), "Upcast from `PauliGate`.")
         .def(nb::init<PauliRotationGate>(), "Upcast from `PauliRotationGate`.");
 
@@ -370,53 +380,47 @@ NB_MODULE(scaluq_core, m) {
             "phase",
             [](const GlobalPhaseGate &gate) { return gate->phase(); },
             "Get `phase` property");
-
-#define DEF_ONE_QUBIT_GATE(GATE_TYPE, DESCRIPTION)                             \
-    DEF_GATE(GATE_TYPE, DESCRIPTION).def("target", [](const GATE_TYPE &gate) { \
-        return gate->target();                                                 \
-    })
-
-    DEF_ONE_QUBIT_GATE(XGate, "Specific class of Pauli-X gate.");
-    DEF_ONE_QUBIT_GATE(YGate, "Specific class of Pauli-Y gate.");
-    DEF_ONE_QUBIT_GATE(ZGate, "Specific class of Pauli-Z gate.");
-    DEF_ONE_QUBIT_GATE(HGate, "Specific class of Hadamard gate.");
-    DEF_ONE_QUBIT_GATE(SGate,
-                       "Specific class of S gate, represented as $\\begin{bmatrix}\n1 & 0\\\\\n0 & "
-                       "i\n\\end{bmatrix}$.");
-    DEF_ONE_QUBIT_GATE(SdagGate, "Specific class of inverse of S gate.");
-    DEF_ONE_QUBIT_GATE(TGate,
-                       "Specific class of T gate, represented as "
-                       "$\\begin{bmatrix}\n1 & 0\\\\\n0 & e^{i\\pi/4}\n\\end{bmatrix}$.");
-    DEF_ONE_QUBIT_GATE(TdagGate, "Specific class of inverse of T gate.");
-    DEF_ONE_QUBIT_GATE(SqrtXGate,
-                       "Specific class of sqrt(X) gate, represented as "
-                       "$\\begin{bmatrix}\n1+i & 1-i\\\\\n1-i & 1+i\n\\end{bmatrix}$.");
-    DEF_ONE_QUBIT_GATE(SqrtXdagGate, "Specific class of inverse of sqrt(X) gate.");
-    DEF_ONE_QUBIT_GATE(SqrtYGate,
-                       "Specific class of sqrt(Y) gate, represented as "
-                       "$\\begin{bmatrix}\n1+i & -1-i \\\\\n1+i & 1+i\n\\end{bmatrix}$.");
-    DEF_ONE_QUBIT_GATE(SqrtYdagGate, "Specific class of inverse of sqrt(Y) gate.");
-    DEF_ONE_QUBIT_GATE(
+    DEF_GATE(XGate, "Specific class of Pauli-X gate.");
+    DEF_GATE(YGate, "Specific class of Pauli-Y gate.");
+    DEF_GATE(ZGate, "Specific class of Pauli-Z gate.");
+    DEF_GATE(HGate, "Specific class of Hadamard gate.");
+    DEF_GATE(SGate,
+             "Specific class of S gate, represented as $\\begin{bmatrix}\n1 & 0\\\\\n0 & "
+             "i\n\\end{bmatrix}$.");
+    DEF_GATE(SdagGate, "Specific class of inverse of S gate.");
+    DEF_GATE(TGate,
+             "Specific class of T gate, represented as $\\begin{bmatrix}\n1 & 0\\\\\n0 & "
+             "e^{i\\pi/4}\n\\end{bmatrix}$.");
+    DEF_GATE(TdagGate, "Specific class of inverse of T gate.");
+    DEF_GATE(SqrtXGate,
+             "Specific class of sqrt(X) gate, represented as $\\begin{bmatrix}\n1+i & 1-i\\\\\n1-i "
+             "& 1+i\n\\end{bmatrix}$.");
+    DEF_GATE(SqrtXdagGate, "Specific class of inverse of sqrt(X) gate.");
+    DEF_GATE(SqrtYGate,
+             "Specific class of sqrt(Y) gate, represented as $\\begin{bmatrix}\n1+i & -1-i "
+             "\\\\\n1+i & 1+i\n\\end{bmatrix}$.");
+    DEF_GATE(SqrtYdagGate, "Specific class of inverse of sqrt(Y) gate.");
+    DEF_GATE(
         P0Gate,
         "Specific class of projection gate to $\\ket{0}$.\n\n.. note:: This gate is not unitary.");
-    DEF_ONE_QUBIT_GATE(
+    DEF_GATE(
         P1Gate,
         "Specific class of projection gate to $\\ket{1}$.\n\n.. note:: This gate is not unitary.");
 
-#define DEF_ONE_QUBIT_ROTATION_GATE(GATE_TYPE, DESCRIPTION) \
-    DEF_ONE_QUBIT_GATE(GATE_TYPE, DESCRIPTION)              \
-        .def(                                               \
+#define DEF_ROTATION_GATE(GATE_TYPE, DESCRIPTION) \
+    DEF_GATE(GATE_TYPE, DESCRIPTION)              \
+        .def(                                     \
             "angle", [](const GATE_TYPE &gate) { return gate->angle(); }, "Get `angle` property.")
 
-    DEF_ONE_QUBIT_ROTATION_GATE(RXGate,
-                                "Specific class of X rotation gate, represented as "
-                                "$e^{-i\\frac{\\mathrm{angle}}{2}X}$.");
-    DEF_ONE_QUBIT_ROTATION_GATE(RYGate,
-                                "Specific class of Y rotation gate, represented as "
-                                "$e^{-i\\frac{\\mathrm{angle}}{2}Y}$.");
-    DEF_ONE_QUBIT_ROTATION_GATE(RZGate,
-                                "Specific class of Z rotation gate, represented as "
-                                "$e^{-i\\frac{\\mathrm{angle}}{2}Z}$.");
+    DEF_ROTATION_GATE(
+        RXGate,
+        "Specific class of X rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}X}$.");
+    DEF_ROTATION_GATE(
+        RYGate,
+        "Specific class of Y rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Y}$.");
+    DEF_ROTATION_GATE(
+        RZGate,
+        "Specific class of Z rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Z}$.");
 
     DEF_GATE(U1Gate,
              "Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, "
@@ -447,61 +451,8 @@ NB_MODULE(scaluq_core, m) {
         .def(
             "lambda_", [](const U3Gate &gate) { return gate->lambda(); }, "Get `lambda` property.");
 
-    DEF_GATE(OneQubitMatrixGate, "Specific class of single-qubit dense matrix gate.")
-        .def("matrix", [](const OneQubitMatrixGate &gate) { return gate->matrix(); });
-
-#define DEF_ONE_CONTROL_ONE_TARGET_GATE(GATE_TYPE, DESCRIPTION)    \
-    DEF_GATE(GATE_TYPE, DESCRIPTION)                               \
-        .def(                                                      \
-            "control",                                             \
-            [](const GATE_TYPE &gate) { return gate->control(); }, \
-            "Get property `control`.")                             \
-        .def(                                                      \
-            "target",                                              \
-            [](const GATE_TYPE &gate) { return gate->target(); },  \
-            "Get property `target`.")
-
-    DEF_ONE_CONTROL_ONE_TARGET_GATE(CXGate,
-                                    "Specific class of single-qubit-controlled Pauli-X gate.");
-    DEF_ONE_CONTROL_ONE_TARGET_GATE(CZGate,
-                                    "Specific class of single-qubit-controlled Pauli-Z gate.");
-
-#define DEF_TWO_QUBIT_GATE(GATE_TYPE, DESCRIPTION)                 \
-    DEF_GATE(GATE_TYPE, DESCRIPTION)                               \
-        .def(                                                      \
-            "target1",                                             \
-            [](const GATE_TYPE &gate) { return gate->target1(); }, \
-            "Get property `target1`.")                             \
-        .def(                                                      \
-            "target2",                                             \
-            [](const GATE_TYPE &gate) { return gate->target2(); }, \
-            "Get property `target2`.")
-
-    DEF_TWO_QUBIT_GATE(SwapGate, "Specific class of two-qubit swap gate.");
-
-    DEF_TWO_QUBIT_GATE(TwoQubitMatrixGate, "Specific class of double-qubit dense matrix gate.")
-        .def(
-            "matrix",
-            [](const TwoQubitMatrixGate &gate) { return gate->matrix(); },
-            "Get property `matrix`.");
-
-    DEF_GATE(FusedSwapGate,
-             "Specific class of fused swap gate, which swap qubits in "
-             "$[\\mathrm{qubit\\_index1},\\mathrm{qubit\\_index1}+\\mathrm{block\\_size})$ "
-             "and qubits in "
-             "$[\\mathrm{qubit\\_index2},\\mathrm{qubit\\_index2}+\\mathrm{block\\_size})$.")
-        .def(
-            "qubit_index1",
-            [](const FusedSwapGate &gate) { return gate->qubit_index1(); },
-            "Get property `qubit_index1`.")
-        .def(
-            "qubit_index2",
-            [](const FusedSwapGate &gate) { return gate->qubit_index2(); },
-            "Get property `qubit_index2`.")
-        .def(
-            "block_size",
-            [](const FusedSwapGate &gate) { return gate->block_size(); },
-            "Get property `block_size`.");
+    DEF_GATE(OneTargetMatrixGate, "Specific class of single-qubit dense matrix gate.")
+        .def("matrix", [](const OneTargetMatrixGate &gate) { return gate->matrix(); });
 
     DEF_GATE(PauliGate,
              "Specific class of multi-qubit pauli gate, which applies single-qubit Pauli "
@@ -551,21 +502,38 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(U1);
     DEF_GATE_FACTORY(U2);
     DEF_GATE_FACTORY(U3);
-    DEF_GATE_FACTORY(OneQubitMatrix);
-    DEF_GATE_FACTORY(CX);
+    DEF_GATE_FACTORY(OneTargetMatrix);
+    mgate.def(
+        "CX",
+        &gate::CX,
+        "Generate general Gate class instance of CX.\n\n.. note:: CX is a specialization of X.");
     mgate.def("CNot",
               &gate::CX,
-              "Generate general Gate class instance of CX.\n\n.. note:: CNot is an alias of CX.");
-    DEF_GATE_FACTORY(CZ);
+              "Generate general Gate class instance of CNot.\n\n.. note:: CNot is an alias of CX.");
+    mgate.def(
+        "CZ",
+        &gate::CZ,
+        "Generate general Gate class instance of CZ.\n\n.. note:: CZ is a specialization of Z.");
+    mgate.def(
+        "CCX",
+        &gate::CCX,
+        "Generate general Gate class instance of CXX.\n\n.. note:: CX is a specialization of X.");
+    mgate.def(
+        "CCNot",
+        &gate::CCX,
+        "Generate general Gate class instance of CCNot.\n\n.. note:: CCNot is an alias of CCX.");
+    mgate.def("Toffoli",
+              &gate::CCX,
+              "Generate general Gate class instance of Toffoli.\n\n.. note:: Toffoli is an alias "
+              "of CCX.");
     DEF_GATE_FACTORY(Swap);
-    DEF_GATE_FACTORY(FusedSwap);
-    DEF_GATE_FACTORY(TwoQubitMatrix);
+    DEF_GATE_FACTORY(TwoTargetMatrix);
     DEF_GATE_FACTORY(Pauli);
     DEF_GATE_FACTORY(PauliRotation);
     mgate.def("DenseMatrix",
               &gate::DenseMatrix,
-              "Generate general Gate class instance of DenseMatrix. IGate, OneQubitMatrixGate or "
-              "TwoQubitMatrixGate correspond to len(target) is created. The case len(target) >= 3 "
+              "Generate general Gate class instance of DenseMatrix. IGate, OneTargetMatrixGate or "
+              "TwoTargetMatrixGate correspond to len(target) is created. The case len(target) >= 3 "
               "is currently not supported.");
     DEF_GATE_FACTORY(Probablistic);
 
@@ -585,12 +553,28 @@ NB_MODULE(scaluq_core, m) {
              "Get parametric gate type as `ParamGateType` enum.")                                 \
         .def(                                                                                     \
             "get_target_qubit_list",                                                              \
-            [](const PGATE_TYPE &param_gate) { return param_gate->get_target_qubit_list(); },     \
+            [](const PGATE_TYPE &gate) { return gate->get_target_qubit_list(); },                 \
             "Get target qubits as `list[int]`. **Control qubits is not included.**")              \
         .def(                                                                                     \
             "get_control_qubit_list",                                                             \
-            [](const PGATE_TYPE &param_gate) { return param_gate->get_control_qubit_list(); },    \
+            [](const PGATE_TYPE &gate) { return gate->get_control_qubit_list(); },                \
             "Get control qubits as `list[int]`.")                                                 \
+        .def(                                                                                     \
+            "get_operand_qubit_list",                                                             \
+            [](const PGATE_TYPE &gate) { return gate->get_operand_qubit_list(); },                \
+            "Get target and control qubits as `list[int]`.")                                      \
+        .def(                                                                                     \
+            "get_target_qubit_mask",                                                              \
+            [](const PGATE_TYPE &gate) { return gate->get_target_qubit_mask(); },                 \
+            "Get target qubits as mask. **Control qubits is not included.**")                     \
+        .def(                                                                                     \
+            "get_control_qubit_mask",                                                             \
+            [](const PGATE_TYPE &gate) { return gate->get_control_qubit_mask(); },                \
+            "Get control qubits as mask.")                                                        \
+        .def(                                                                                     \
+            "get_operand_qubit_mask",                                                             \
+            [](const PGATE_TYPE &gate) { return gate->get_operand_qubit_mask(); },                \
+            "Get target and control qubits as mask.")                                             \
         .def(                                                                                     \
             "get_inverse",                                                                        \
             [](const PGATE_TYPE &param_gate) { return param_gate->get_inverse(); },               \
@@ -605,8 +589,7 @@ NB_MODULE(scaluq_core, m) {
         .def(                                                                                     \
             "get_matrix",                                                                         \
             [](const PGATE_TYPE &gate, double param) { return gate->get_matrix(param); },         \
-            "Get matrix representation of the gate with holding the parameter. If cannot, None "  \
-            "is returned.")
+            "Get matrix representation of the gate with holding the parameter.")
 
 #define DEF_PGATE(PGATE_TYPE, DESCRIPTION)                                                      \
     DEF_PGATE_BASE(                                                                             \
@@ -624,23 +607,15 @@ NB_MODULE(scaluq_core, m) {
         .def(nb::init<PRZGate>(), "Upcast from `PRZGate`.")
         .def(nb::init<PPauliRotationGate>(), "Upcast from `PPauliRotationGate`.");
 
-#define DEF_ONE_QUBIT_PGATE(PGATE_TYPE, DESCRIPTION)                                    \
-    DEF_PGATE(PGATE_TYPE, DESCRIPTION).def("target", [](const PGATE_TYPE &param_gate) { \
-        return param_gate->target();                                                    \
-    })
-
-    DEF_ONE_QUBIT_PGATE(
-        PRXGate,
-        "Specific class of parametric X rotation gate, represented as "
-        "$e^{-i\\frac{\\mathrm{angle}}{2}X}$. `angle` is given as `param * pcoef`.");
-    DEF_ONE_QUBIT_PGATE(
-        PRYGate,
-        "Specific class of parametric Y rotation gate, represented as "
-        "$e^{-i\\frac{\\mathrm{angle}}{2}Y}$. `angle` is given as `param * pcoef`.");
-    DEF_ONE_QUBIT_PGATE(
-        PRZGate,
-        "Specific class of parametric Z rotation gate, represented as "
-        "$e^{-i\\frac{\\mathrm{angle}}{2}Z}$. `angle` is given as `param * pcoef`.");
+    DEF_PGATE(PRXGate,
+              "Specific class of parametric X rotation gate, represented as "
+              "$e^{-i\\frac{\\mathrm{angle}}{2}X}$. `angle` is given as `param * pcoef`.");
+    DEF_PGATE(PRYGate,
+              "Specific class of parametric Y rotation gate, represented as "
+              "$e^{-i\\frac{\\mathrm{angle}}{2}Y}$. `angle` is given as `param * pcoef`.");
+    DEF_PGATE(PRZGate,
+              "Specific class of parametric Z rotation gate, represented as "
+              "$e^{-i\\frac{\\mathrm{angle}}{2}Z}$. `angle` is given as `param * pcoef`.");
 
     DEF_PGATE(PPauliRotationGate,
               "Specific class of parametric multi-qubit pauli-rotation gate, represented as "
@@ -663,22 +638,26 @@ NB_MODULE(scaluq_core, m) {
               &gate::PRX,
               "Generate general ParamGate class instance of PRX.",
               "target"_a,
-              "coef"_a = 1.);
+              "coef"_a = 1.,
+              "controls"_a = std::vector<UINT>{});
     mgate.def("PRY",
               &gate::PRY,
               "Generate general ParamGate class instance of PRY.",
               "target"_a,
-              "coef"_a = 1.);
+              "coef"_a = 1.,
+              "controls"_a = std::vector<UINT>{});
     mgate.def("PRZ",
               &gate::PRZ,
               "Generate general ParamGate class instance of PRZ.",
               "target"_a,
-              "coef"_a = 1.);
+              "coef"_a = 1.,
+              "controls"_a = std::vector<UINT>{});
     mgate.def("PPauliRotation",
               &gate::PPauliRotation,
               "Generate general ParamGate class instance of PPauliRotation.",
               "pauli"_a,
-              "coef"_a = 1.);
+              "coef"_a = 1.,
+              "controls"_a = std::vector<UINT>{});
     mgate.def("PProbablistic",
               &gate::PProbablistic,
               "Generate general ParamGate class instance of PProbablistic.");

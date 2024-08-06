@@ -39,37 +39,36 @@ TEST(GateTest, MergeGate) {
                                  random.uniform() * PI() * 2,
                                  random.uniform() * PI() * 2));
         gates.push_back(
-            gate::OneQubitMatrix(target,
-                                 {std::array{Complex(random.uniform(), random.uniform()),
-                                             Complex(random.uniform(), random.uniform())},
-                                  std::array{Complex(random.uniform(), random.uniform()),
-                                             Complex(random.uniform(), random.uniform())}}));
+            gate::OneTargetMatrix(target,
+                                  {std::array{Complex(random.uniform(), random.uniform()),
+                                              Complex(random.uniform(), random.uniform())},
+                                   std::array{Complex(random.uniform(), random.uniform()),
+                                              Complex(random.uniform(), random.uniform())}}));
         gates.push_back(gate::CX(target, target ^ 1));
         gates.push_back(gate::CZ(target, target ^ 1));
         gates.push_back(gate::Swap(target, target ^ 1));
-        gates.push_back(gate::FusedSwap(target, target ^ 1, 1));
     }
     gates.push_back(gate::I());
     gates.push_back(gate::GlobalPhase(random.uniform() * PI() * 2));
     gates.push_back(
-        gate::TwoQubitMatrix(0,
-                             1,
-                             {std::array{Complex(random.uniform(), random.uniform()),
-                                         Complex(random.uniform(), random.uniform()),
-                                         Complex(random.uniform(), random.uniform()),
-                                         Complex(random.uniform(), random.uniform())},
-                              std::array{Complex(random.uniform(), random.uniform()),
-                                         Complex(random.uniform(), random.uniform()),
-                                         Complex(random.uniform(), random.uniform()),
-                                         Complex(random.uniform(), random.uniform())},
-                              std::array{Complex(random.uniform(), random.uniform()),
-                                         Complex(random.uniform(), random.uniform()),
-                                         Complex(random.uniform(), random.uniform()),
-                                         Complex(random.uniform(), random.uniform())},
-                              std::array{Complex(random.uniform(), random.uniform()),
-                                         Complex(random.uniform(), random.uniform()),
-                                         Complex(random.uniform(), random.uniform()),
-                                         Complex(random.uniform(), random.uniform())}}));
+        gate::TwoTargetMatrix(0,
+                              1,
+                              {std::array{Complex(random.uniform(), random.uniform()),
+                                          Complex(random.uniform(), random.uniform()),
+                                          Complex(random.uniform(), random.uniform()),
+                                          Complex(random.uniform(), random.uniform())},
+                               std::array{Complex(random.uniform(), random.uniform()),
+                                          Complex(random.uniform(), random.uniform()),
+                                          Complex(random.uniform(), random.uniform()),
+                                          Complex(random.uniform(), random.uniform())},
+                               std::array{Complex(random.uniform(), random.uniform()),
+                                          Complex(random.uniform(), random.uniform()),
+                                          Complex(random.uniform(), random.uniform()),
+                                          Complex(random.uniform(), random.uniform())},
+                               std::array{Complex(random.uniform(), random.uniform()),
+                                          Complex(random.uniform(), random.uniform()),
+                                          Complex(random.uniform(), random.uniform()),
+                                          Complex(random.uniform(), random.uniform())}}));
     gates.push_back(gate::Pauli(PauliOperator("X 0 Y 1", random.uniform())));
     gates.push_back(gate::Pauli(PauliOperator("Z 0", random.uniform())));
     gates.push_back(gate::Pauli(PauliOperator("Z 1", random.uniform())));

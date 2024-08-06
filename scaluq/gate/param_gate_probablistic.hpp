@@ -17,7 +17,7 @@ class PProbablisticGateImpl : public ParamGateBase {
 public:
     PProbablisticGateImpl(const std::vector<double>& distribution,
                           const std::vector<std::variant<Gate, ParamGate>>& gate_list)
-        : _distribution(distribution), _gate_list(gate_list) {
+        : ParamGateBase(0, 0), _distribution(distribution), _gate_list(gate_list) {
         UINT n = distribution.size();
         if (n == 0) {
             throw std::runtime_error("At least one gate is required.");
@@ -36,30 +36,34 @@ public:
     const std::vector<double>& distribution() const { return _distribution; }
 
     std::vector<UINT> get_target_qubit_list() const override {
-        std::vector<UINT> ret;
-        for (const auto& gate : _gate_list) {
-            std::vector<UINT> targets =
-                std::visit([](const auto& g) { return g->get_target_qubit_list(); }, gate);
-            ret.reserve(ret.size() + targets.size());
-            std::ranges::copy(targets, std::back_inserter(ret));
-        }
-        std::ranges::sort(ret);
-        auto result = std::ranges::unique(ret);
-        ret.erase(result.begin(), result.end());
-        return ret;
+        throw std::runtime_error(
+            "PProbablisticGateImpl::get_target_qubit_list(): This function must not be used in "
+            "PProbablisticGateImpl.");
     }
     std::vector<UINT> get_control_qubit_list() const override {
-        std::vector<UINT> ret;
-        for (const auto& gate : _gate_list) {
-            std::vector<UINT> controls =
-                std::visit([](const auto& g) { return g->get_control_qubit_list(); }, gate);
-            ret.reserve(ret.size() + controls.size());
-            std::ranges::copy(controls, std::back_inserter(ret));
-        }
-        std::ranges::sort(ret);
-        auto result = std::ranges::unique(ret);
-        ret.erase(result.begin(), result.end());
-        return ret;
+        throw std::runtime_error(
+            "PProbablisticGateImpl::get_control_qubit_list(): This function must not be used in "
+            "PProbablisticGateImpl.");
+    }
+    std::vector<UINT> get_operand_qubit_list() const override {
+        throw std::runtime_error(
+            "PProbablisticGateImpl::get_operand_qubit_list(): This function must not be used in "
+            "PProbablisticGateImpl.");
+    }
+    UINT get_target_qubit_mask() const override {
+        throw std::runtime_error(
+            "PProbablisticGateImpl::get_target_qubit_mask(): This function must not be used in "
+            "PProbablisticGateImpl.");
+    }
+    UINT get_control_qubit_mask() const override {
+        throw std::runtime_error(
+            "PProbablisticGateImpl::get_control_qubit_mask(): This function must not be used in "
+            "PProbablisticGateImpl.");
+    }
+    UINT get_operand_qubit_mask() const override {
+        throw std::runtime_error(
+            "PProbablisticGateImpl::get_operand_qubit_mask(): This function must not be used in "
+            "PProbablisticGateImpl.");
     }
 
     ParamGate get_inverse() const override {
@@ -71,16 +75,10 @@ public:
             });
         return std::make_shared<const PProbablisticGateImpl>(_distribution, inv_gate_list);
     }
-    std::optional<ComplexMatrix> get_matrix(double param) const override {
-        if (_gate_list.size() == 1) {
-            const auto& gate = _gate_list[0];
-            if (gate.index() == 0) {
-                return std::get<0>(gate)->get_matrix();
-            } else {
-                return std::get<1>(gate)->get_matrix(param);
-            }
-        }
-        return std::nullopt;
+    ComplexMatrix get_matrix(double) const override {
+        throw std::runtime_error(
+            "PProbablisticGateImpl::get_matrix(): This function must not be used in "
+            "PProbablisticGateImpl.");
     }
 
     void update_quantum_state(StateVector& state_vector, double param) const override {

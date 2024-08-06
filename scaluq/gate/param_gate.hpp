@@ -39,20 +39,47 @@ constexpr ParamGateType get_param_gate_type() {
 namespace internal {
 class ParamGateBase {
 protected:
+    UINT _target_mask, _control_mask;
     double _pcoef;
+    void check_qubit_mask_within_bounds(const StateVector& state_vector) const {
+        UINT full_mask = (1ULL << state_vector.n_qubits()) - 1;
+        if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
+            throw std::runtime_error(
+                "Error: ParamGate::update_quantum_state(StateVector& state): "
+                "Target/Control qubit exceeds the number of qubits in the system.");
+        }
+    }
 
 public:
+    ParamGateBase(UINT target_mask, UINT control_mask, double pcoef = 1.)
+        : _target_mask(target_mask), _control_mask(control_mask), _pcoef(pcoef) {
+        if (_target_mask & _control_mask) [[unlikely]] {
+            throw std::runtime_error(
+                "Error: ParamGate::ParamGate(UINT target_mask, UINT control_mask) : Target and "
+                "control qubits must not overlap.");
+        }
+    }
     virtual ~ParamGateBase() = default;
-
-    ParamGateBase(double pcoef = 1.) : _pcoef(pcoef) {}
 
     [[nodiscard]] double pcoef() { return _pcoef; }
 
-    [[nodiscard]] virtual std::vector<UINT> get_target_qubit_list() const = 0;
-    [[nodiscard]] virtual std::vector<UINT> get_control_qubit_list() const = 0;
+    [[nodiscard]] virtual std::vector<UINT> get_target_qubit_list() const {
+        return mask_to_vector(_target_mask);
+    }
+    [[nodiscard]] virtual std::vector<UINT> get_control_qubit_list() const {
+        return mask_to_vector(_control_mask);
+    }
+    [[nodiscard]] virtual std::vector<UINT> get_operand_qubit_list() const {
+        return mask_to_vector(_target_mask | _control_mask);
+    }
+    [[nodiscard]] virtual UINT get_target_qubit_mask() const { return _target_mask; }
+    [[nodiscard]] virtual UINT get_control_qubit_mask() const { return _control_mask; }
+    [[nodiscard]] virtual UINT get_operand_qubit_mask() const {
+        return _target_mask | _control_mask;
+    }
 
     [[nodiscard]] virtual ParamGate get_inverse() const = 0;
-    [[nodiscard]] virtual std::optional<ComplexMatrix> get_matrix(double param) const = 0;
+    [[nodiscard]] virtual ComplexMatrix get_matrix(double param) const = 0;
 
     virtual void update_quantum_state(StateVector& state_vector, double param) const = 0;
 };

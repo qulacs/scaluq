@@ -40,7 +40,7 @@ void run_random_gate_apply(UINT n_qubits) {
     }
 }
 
-template <Gate (*QuantumGateConstructor)(double)>
+template <Gate (*QuantumGateConstructor)(double, const std::vector<UINT>&)>
 void run_random_gate_apply(UINT n_qubits) {
     const int dim = 1ULL << n_qubits;
     Random random;
@@ -54,7 +54,7 @@ void run_random_gate_apply(UINT n_qubits) {
         }
 
         const double angle = M_PI * random.uniform();
-        const Gate gate = QuantumGateConstructor(angle);
+        const Gate gate = QuantumGateConstructor(angle, {});
         gate->update_quantum_state(state);
         state_cp = state.amplitudes();
 
@@ -66,7 +66,7 @@ void run_random_gate_apply(UINT n_qubits) {
     }
 }
 
-template <Gate (*QuantumGateConstructor)(UINT)>
+template <Gate (*QuantumGateConstructor)(UINT, const std::vector<UINT>&)>
 void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matrix_factory) {
     const auto matrix = matrix_factory();
     const int dim = 1ULL << n_qubits;
@@ -81,7 +81,7 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matr
         }
 
         const UINT target = random.int64() % n_qubits;
-        const Gate gate = QuantumGateConstructor(target);
+        const Gate gate = QuantumGateConstructor(target, {});
         gate->update_quantum_state(state);
         state_cp = state.amplitudes();
 
@@ -93,7 +93,7 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matr
     }
 }
 
-template <Gate (*QuantumGateConstructor)(UINT, double)>
+template <Gate (*QuantumGateConstructor)(UINT, double, const std::vector<UINT>&)>
 void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd(double)> matrix_factory) {
     const int dim = 1ULL << n_qubits;
     Random random;
@@ -109,7 +109,7 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd(double)
         const double angle = M_PI * random.uniform();
         const auto matrix = matrix_factory(angle);
         const UINT target = random.int64() % n_qubits;
-        const Gate gate = QuantumGateConstructor(target, angle);
+        const Gate gate = QuantumGateConstructor(target, angle, {});
         gate->update_quantum_state(state);
         state_cp = state.amplitudes();
 
@@ -148,11 +148,11 @@ void run_random_gate_apply_IBMQ(
             const UINT target = random.int64() % n_qubits;
             Gate gate;
             if (gate_type == 0) {
-                gate = gate::U1(target, lambda);
+                gate = gate::U1(target, lambda, {});
             } else if (gate_type == 1) {
-                gate = gate::U2(target, phi, lambda);
+                gate = gate::U2(target, phi, lambda, {});
             } else {
-                gate = gate::U3(target, theta, phi, lambda);
+                gate = gate::U3(target, theta, phi, lambda, {});
             }
             gate->update_quantum_state(state);
             state_cp = state.amplitudes();
@@ -167,7 +167,7 @@ void run_random_gate_apply_IBMQ(
     }
 }
 
-void run_random_gate_apply_two_qubit(UINT n_qubits) {
+void run_random_gate_apply_two_target(UINT n_qubits) {
     const int dim = 1ULL << n_qubits;
     Random random;
 
@@ -204,7 +204,6 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
         }
     }
 
-    func_eig = get_eigen_matrix_full_qubit_Swap;
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
         auto state_cp = state.amplitudes();
@@ -212,40 +211,19 @@ void run_random_gate_apply_two_qubit(UINT n_qubits) {
             test_state[i] = state_cp[i];
         }
 
-        UINT target = random.int64() % n_qubits;
-        UINT control = random.int64() % n_qubits;
-        if (target == control) target = (target + 1) % n_qubits;
-        auto gate = gate::Swap(control, target);
+        UINT target1 = random.int64() % n_qubits;
+        UINT target2 = random.int64() % n_qubits;
+        if (target1 == target2) target1 = (target1 + 1) % n_qubits;
+        auto gate = gate::Swap(target1, target2);
         gate->update_quantum_state(state);
         state_cp = state.amplitudes();
 
-        Eigen::MatrixXcd test_mat = func_eig(control, target, n_qubits);
+        Eigen::MatrixXcd test_mat = get_eigen_matrix_full_qubit_Swap(target1, target2, n_qubits);
         test_state = test_mat * test_state;
 
         for (int i = 0; i < dim; i++) {
             ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
         }
-    }
-}
-
-void run_random_gate_apply_fused(UINT n_qubits, UINT target0, UINT target1, UINT block_size) {
-    const UINT dim = 1ULL << n_qubits;
-    StateVector state_ref = StateVector::Haar_random_state(n_qubits);
-    StateVector state = state_ref.copy();
-
-    // update "state_ref" using Swap gate
-    for (UINT i = 0; i < block_size; i++) {
-        auto swap_gate = gate::Swap(target0 + i, target1 + i);
-        swap_gate->update_quantum_state(state_ref);
-    }
-    auto state_ref_cp = state_ref.amplitudes();
-
-    auto fused_swap_gate = gate::FusedSwap(target0, target1, block_size);
-    fused_swap_gate->update_quantum_state(state);
-    auto state_cp = state.amplitudes();
-
-    for (UINT i = 0; i < dim; i++) {
-        ASSERT_NEAR(std::abs((CComplex)state_cp[i] - (CComplex)state_ref_cp[i]), 0, eps);
     }
 }
 
@@ -396,20 +374,7 @@ TEST(GateTest, ApplyRZ) { run_random_gate_apply<gate::RZ>(5, make_RZ); }
 
 TEST(GateTest, ApplyIBMQ) { run_random_gate_apply_IBMQ(5, make_U); }
 
-TEST(GateTest, ApplyTwoQubit) { run_random_gate_apply_two_qubit(5); }
-TEST(GateTest, ApplyFused) {
-    UINT n_qubits = 10;
-    for (UINT t0 = 0; t0 < n_qubits; t0++) {
-        for (UINT t1 = 0; t1 < n_qubits; t1++) {
-            if (t0 == t1) continue;
-            UINT max_bs =
-                std::min((t0 < t1) ? (t1 - t0) : (t0 - t1), std::min(n_qubits - t0, n_qubits - t1));
-            for (UINT bs = 1; bs <= max_bs; bs++) {
-                run_random_gate_apply_fused(n_qubits, t0, t1, bs);
-            }
-        }
-    }
-}
+TEST(GateTest, ApplyTwoTarget) { run_random_gate_apply_two_target(5); }
 
 TEST(GateTest, ApplyPauliGate) { run_random_gate_apply_pauli(5); }
 
