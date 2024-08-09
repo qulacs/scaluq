@@ -6,7 +6,8 @@
 namespace scaluq {
 PauliOperator::Data::Data(Complex coef) : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {}
 
-PauliOperator::Data::Data(std::string_view pauli_string, Complex coef) : _coef(coef) {
+PauliOperator::Data::Data(std::string_view pauli_string, Complex coef)
+    : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
     auto ss = std::stringstream(std::string(pauli_string));
     while (1) {
         char pauli;
@@ -28,7 +29,8 @@ PauliOperator::Data::Data(std::string_view pauli_string, Complex coef) : _coef(c
     }
 }
 
-PauliOperator::Data::Data(const std::vector<UINT>& pauli_id_par_qubit, Complex coef) : _coef(coef) {
+PauliOperator::Data::Data(const std::vector<UINT>& pauli_id_par_qubit, Complex coef)
+    : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
     for (UINT i = 0; i < pauli_id_par_qubit.size(); ++i) {
         add_single_pauli(i, pauli_id_par_qubit[i]);
     }
@@ -37,7 +39,7 @@ PauliOperator::Data::Data(const std::vector<UINT>& pauli_id_par_qubit, Complex c
 PauliOperator::Data::Data(const std::vector<UINT>& target_qubit_list,
                           const std::vector<UINT>& pauli_id_list,
                           Complex coef)
-    : _coef(coef) {
+    : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
     if (target_qubit_list.size() != pauli_id_list.size()) {
         throw std::runtime_error(
             "PauliOperator::PauliOperator: target_qubit_list must have same size to pauli_id_list");
@@ -47,7 +49,8 @@ PauliOperator::Data::Data(const std::vector<UINT>& target_qubit_list,
     }
 }
 
-PauliOperator::Data::Data(UINT bit_flip_mask, UINT phase_flip_mask, Complex coef) : _coef(coef) {
+PauliOperator::Data::Data(UINT bit_flip_mask, UINT phase_flip_mask, Complex coef)
+    : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
     for (UINT target_idx = 0; target_idx < sizeof(UINT) * 8; target_idx++) {
         bool bit_flip = bit_flip_mask >> target_idx & 1;
         bool phase_flip = phase_flip_mask >> target_idx & 1;
