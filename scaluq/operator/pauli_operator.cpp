@@ -229,12 +229,12 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
 
 PauliOperator PauliOperator::operator*(const PauliOperator& target) const {
     int extra_90rot_cnt = 0;
-    auto x_left = _ptr->_bit_flip_mask - _ptr->_phase_flip_mask;
+    auto x_left = _ptr->_bit_flip_mask & ~_ptr->_phase_flip_mask;
     auto y_left = _ptr->_bit_flip_mask & _ptr->_phase_flip_mask;
-    auto z_left = _ptr->_phase_flip_mask - _ptr->_bit_flip_mask;
-    auto x_right = target._ptr->_bit_flip_mask - target._ptr->_phase_flip_mask;
+    auto z_left = _ptr->_phase_flip_mask & ~_ptr->_bit_flip_mask;
+    auto x_right = target._ptr->_bit_flip_mask & ~target._ptr->_phase_flip_mask;
     auto y_right = target._ptr->_bit_flip_mask & target._ptr->_phase_flip_mask;
-    auto z_right = target._ptr->_phase_flip_mask - target._ptr->_bit_flip_mask;
+    auto z_right = target._ptr->_phase_flip_mask & ~target._ptr->_bit_flip_mask;
     extra_90rot_cnt += std::popcount(x_left & y_right);  // XY = iZ
     extra_90rot_cnt += std::popcount(y_left & z_right);  // YZ = iX
     extra_90rot_cnt += std::popcount(z_left & x_right);  // ZX = iY
