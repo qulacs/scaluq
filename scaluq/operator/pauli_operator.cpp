@@ -70,6 +70,12 @@ PauliOperator::Data::Data(UINT bit_flip_mask, UINT phase_flip_mask, Complex coef
 }
 
 void PauliOperator::Data::add_single_pauli(UINT target_qubit, UINT pauli_id) {
+    if(target_qubit >= sizeof(UINT) * 8) {
+        throw std::runtime_error("PauliOperator::Data::add_single_pauli: target_qubit is too large");
+    }
+    if(pauli_id >= 4) {
+        throw std::runtime_error("PauliOperator::Data::add_single_pauli: pauli_id is invalid");
+    }
     _target_qubit_list.push_back(target_qubit);
     _pauli_id_list.push_back(pauli_id);
     if ((_bit_flip_mask | _phase_flip_mask) >> target_qubit & 1) {

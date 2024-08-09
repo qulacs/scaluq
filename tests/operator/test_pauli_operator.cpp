@@ -154,7 +154,7 @@ INSTANTIATE_TEST_CASE_P(
     PauliOperatorMultiplyTest,
     []() {
         double coef = 2.0;
-        UINT MAX_TERM = 100;
+        UINT MAX_TERM = 64;
         std::string pauli_string_x = "";
         std::string pauli_string_y = "";
         std::string pauli_string_z = "";
