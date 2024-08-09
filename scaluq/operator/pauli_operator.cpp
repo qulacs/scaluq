@@ -50,7 +50,7 @@ PauliOperator::Data::Data(const std::vector<UINT>& target_qubit_list,
 PauliOperator::Data::Data(UINT bit_flip_mask, UINT phase_flip_mask, Complex coef) : _coef(coef) {
     for (UINT target_idx = 0; target_idx < sizeof(UINT) * 8; target_idx++) {
         bool bit_flip = bit_flip_mask >> target_idx & 1;
-        bool phase_flip = bit_flip_mask >> target_idx & 1;
+        bool phase_flip = phase_flip_mask >> target_idx & 1;
         if (!bit_flip) {
             if (!phase_flip)
                 continue;

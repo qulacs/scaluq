@@ -34,8 +34,12 @@ public:
     }
     void update_quantum_state(StateVector& state_vector, double param) const override {
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
-        apply_pauli_rotation(
-            _control_mask, bit_flip_mask, phase_flip_mask, _pcoef * param, state_vector);
+        apply_pauli_rotation(_control_mask,
+                             bit_flip_mask,
+                             phase_flip_mask,
+                             _pauli.get_coef(),
+                             _pcoef * param,
+                             state_vector);
     }
 };
 }  // namespace internal
