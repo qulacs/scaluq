@@ -448,44 +448,48 @@ void test_standard_gates(auto factory, UINT n) {
     for (double& angle : angles) angle = random.uniform() * PI() * 2;
     if constexpr (num_target == 0 && num_rotation == 1) {
         Gate g1 = factory(angles[0], controls);
-        Gate g2 = factory(angles[0]);
+        Gate g2 = factory(angles[0], {});
         test_gate(g1, g2, n, control_mask);
     } else if constexpr (num_target == 1 && num_rotation == 0) {
         Gate g1 = factory(targets[0], controls);
-        Gate g2 = factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)));
+        Gate g2 =
+            factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)), {});
         test_gate(g1, g2, n, control_mask);
     } else if constexpr (num_target == 1 && num_rotation == 1) {
         Gate g1 = factory(targets[0], angles[0], controls);
-        Gate g2 = factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
-                          angles[0]);
+        Gate g2 = factory(
+            targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)), angles[0], {});
         test_gate(g1, g2, n, control_mask);
     } else if constexpr (num_target == 1 && num_rotation == 2) {
         Gate g1 = factory(targets[0], angles[0], angles[1], controls);
         Gate g2 = factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
                           angles[0],
-                          angles[1]);
+                          angles[1],
+                          {});
         test_gate(g1, g2, n, control_mask);
     } else if constexpr (num_target == 1 && num_rotation == 3) {
         Gate g1 = factory(targets[0], angles[0], angles[1], angles[2], controls);
         Gate g2 = factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
                           angles[0],
                           angles[1],
-                          angles[2]);
+                          angles[2],
+                          {});
         test_gate(g1, g2, n, control_mask);
     } else if constexpr (num_target == 2 && num_rotation == 0) {
         Gate g1 = factory(targets[0], targets[1], controls);
         Gate g2 = factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
                           targets[1] - std::popcount(control_mask & ((1ULL << targets[1]) - 1)),
-                          control_mask);
+                          {});
         test_gate(g1, g2, n, control_mask);
     } else {
-        static_assert(false);
+        FAIL();
     }
 }
 
 template <bool rotation>
 void test_pauli_control(UINT n) {
     PauliOperator::Data data1, data2;
+    std::vector<UINT> controls;
     UINT control_mask = 0;
     UINT num_control = 0;
     Random random;
@@ -495,25 +499,26 @@ void test_pauli_control(UINT n) {
             data1.add_single_pauli(i, dat);
             data2.add_single_pauli(i - num_control, dat);
         } else if (dat < 8) {
+            controls.push_back(i);
             control_mask |= 1ULL << i;
             num_control++;
         }
     }
     if constexpr (!rotation) {
         Gate g1 = gate::Pauli(PauliOperator(data1), controls);
-        Gate g2 = gate::Pauli(PauliOperator(data2));
+        Gate g2 = gate::Pauli(PauliOperator(data2), {});
         test_gate(g1, g2, n, control_mask);
     } else {
         double angle = random.uniform() * PI() * 2;
         Gate g1 = gate::PauliRotation(PauliOperator(data1), angle, controls);
-        Gate g2 = gate::PauliRotation(PauliOperator(data2), angle);
+        Gate g2 = gate::PauliRotation(PauliOperator(data2), angle, {});
         test_gate(g1, g2, n, control_mask);
     }
 }
 
 TEST(GateTest, Control) {
     UINT n = 10;
-    for (UINT _ : std::views::iota(0, 10)) {
+    for ([[maybe_unused]] UINT _ : std::views::iota(0, 10)) {
         test_standard_gates<0, 1>(gate::GlobalPhase, n);
         test_standard_gates<1, 0>(gate::X, n);
         test_standard_gates<1, 0>(gate::Y, n);
