@@ -97,44 +97,6 @@ std::string PauliOperator::get_pauli_string() const {
     return res;
 }
 
-void PauliOperator::apply_to_state(StateVector& state_vector) const {
-    if (state_vector.n_qubits() < get_qubit_count()) {
-        throw std::runtime_error(
-            "PauliOperator::apply_to_state: n_qubits of state_vector is too small to apply the "
-            "operator");
-    }
-    UINT bit_flip_mask = _ptr->_bit_flip_mask;
-    UINT phase_flip_mask = _ptr->_phase_flip_mask;
-    Complex coef = get_coef();
-    if (bit_flip_mask == 0) {
-        Kokkos::parallel_for(
-            state_vector.dim(), KOKKOS_LAMBDA(UINT state_idx) {
-                if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
-                    state_vector._raw[state_idx] *= -coef;
-                } else {
-                    state_vector._raw[state_idx] *= coef;
-                }
-            });
-        Kokkos::fence();
-        return;
-    }
-    UINT pivot = sizeof(UINT) * 8 - std::countl_zero(bit_flip_mask) - 1;
-    UINT global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex global_phase = PHASE_M90ROT().val[global_phase_90rot_count % 4];
-    Kokkos::parallel_for(
-        state_vector.dim() >> 1, KOKKOS_LAMBDA(UINT state_idx) {
-            UINT basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
-            UINT basis_1 = basis_0 ^ bit_flip_mask;
-            Complex tmp1 = state_vector._raw[basis_0] * global_phase;
-            Complex tmp2 = state_vector._raw[basis_1] * global_phase;
-            if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp2 = -tmp2;
-            if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp1 = -tmp1;
-            state_vector._raw[basis_0] = tmp2 * coef;
-            state_vector._raw[basis_1] = tmp1 * coef;
-        });
-    Kokkos::fence();
-}
-
 Complex PauliOperator::get_expectation_value(const StateVector& state_vector) const {
     if (state_vector.n_qubits() < get_qubit_count()) {
         throw std::runtime_error(

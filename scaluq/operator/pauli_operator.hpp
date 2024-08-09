@@ -5,6 +5,7 @@
 
 #include "../state/state_vector.hpp"
 #include "../types.hpp"
+#include "apply_pauli.hpp"
 
 namespace scaluq {
 class PauliOperator {
@@ -75,7 +76,14 @@ public:
         return std::ranges::max(_ptr->_target_qubit_list) + 1;
     }
 
-    void apply_to_state(StateVector& state_vector) const;
+    void apply_to_state(StateVector& state_vector) const {
+        if (state_vector.n_qubits() < get_qubit_count()) {
+            throw std::runtime_error(
+                "PauliOperator::apply_to_state: n_qubits of state_vector is too small to apply the "
+                "operator");
+        }
+        internal::apply_pauli(0ULL, _ptr->_bit_flip_mask, _ptr->_phase_flip_mask, state_vector);
+    }
 
     [[nodiscard]] Complex get_expectation_value(const StateVector& state_vector) const;
     [[nodiscard]] Complex get_transition_amplitude(const StateVector& state_vector_bra,
