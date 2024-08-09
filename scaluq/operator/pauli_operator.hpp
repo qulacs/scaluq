@@ -82,7 +82,8 @@ public:
                 "PauliOperator::apply_to_state: n_qubits of state_vector is too small to apply the "
                 "operator");
         }
-        internal::apply_pauli(0ULL, _ptr->_bit_flip_mask, _ptr->_phase_flip_mask, state_vector);
+        internal::apply_pauli(
+            0ULL, _ptr->_bit_flip_mask, _ptr->_phase_flip_mask, _ptr->_coef, state_vector);
     }
 
     [[nodiscard]] Complex get_expectation_value(const StateVector& state_vector) const;

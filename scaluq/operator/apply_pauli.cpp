@@ -56,20 +56,20 @@ void apply_pauli_rotation(UINT control_mask,
         const Complex cval_min = cosval - Complex(0, 1) * sinval;
         const Complex cval_pls = cosval + Complex(0, 1) * sinval;
         Kokkos::parallel_for(
-            state.dim() >> std::popcount(control_mask), KOKKOS_LAMBDA(UINT i) {
+            state_vector.dim() >> std::popcount(control_mask), KOKKOS_LAMBDA(UINT i) {
                 UINT state_idx = insert_zero_at_mask_positions(i, control_mask) | control_mask;
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
-                    state._raw[state_idx] *= cval_min;
+                    state_vector._raw[state_idx] *= cval_min;
                 } else {
-                    state._raw[state_idx] *= cval_pls;
+                    state_vector._raw[state_idx] *= cval_pls;
                 }
             });
         Kokkos::fence();
         return;
     } else {
-        const UINT insert_idx = internal::BitVector(bit_flip_mask_vector).msb();
+        UINT pivot = sizeof(UINT) * 8 - std::countl_zero(bit_flip_mask) - 1;
         Kokkos::parallel_for(
-            state.dim() >> (std::popcount(control_mask) + 1), KOKKOS_LAMBDA(UINT state_idx) {
+            state_vector.dim() >> (std::popcount(control_mask) + 1), KOKKOS_LAMBDA(UINT state_idx) {
                 UINT basis_0 =
                     internal::insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
                     control_mask;
@@ -79,15 +79,15 @@ void apply_pauli_rotation(UINT control_mask,
                 int bit_parity_1 = Kokkos::popcount(basis_1 & phase_flip_mask) & 1;
 
                 // fetch values
-                Complex cval_0 = state._raw[basis_0];
-                Complex cval_1 = state._raw[basis_1];
+                Complex cval_0 = state_vector._raw[basis_0];
+                Complex cval_1 = state_vector._raw[basis_1];
 
                 // set values
-                state._raw[basis_0] =
+                state_vector._raw[basis_0] =
                     cosval * cval_0 +
                     Complex(0, 1) * sinval * cval_1 *
                         PHASE_M90ROT().val[(global_phase_90_rot_count + bit_parity_0 * 2) % 4];
-                state._raw[basis_1] =
+                state_vector._raw[basis_1] =
                     cosval * cval_1 +
                     Complex(0, 1) * sinval * cval_0 *
                         PHASE_M90ROT().val[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
