@@ -815,23 +815,11 @@ NB_MODULE(scaluq_core, m) {
              &PauliOperator::get_pauli_id_list,
              "Get pauli id to be applied. The order is correspond to the result of "
              "`get_target_qubit_list`")
-        .def(
-            "get_XZ_mask_representation",
-            [](const PauliOperator &pauli) {
-                const auto [x_mask, z_mask] = pauli.get_XZ_mask_representation();
-                nb::int_ x_mask_py(0);
-                for (UINT i = 0; i < x_mask.size(); ++i) {
-                    x_mask_py |= nb::int_(x_mask[i]) << nb::int_(i);
-                }
-                nb::int_ z_mask_py(0);
-                for (UINT i = 0; i < z_mask.size(); ++i) {
-                    z_mask_py |= nb::int_(z_mask[i]) << nb::int_(i);
-                }
-                return std::make_tuple(x_mask_py, z_mask_py);
-            },
-            "Get single-pauli property as binary integer representation. See description of "
-            "`__init__(bit_flip_mask_py: int, phase_flip_mask_py: int, coef: float=1.)` for "
-            "details.")
+        .def("get_XZ_mask_representation",
+             &PauliOperator::get_XZ_mask_representation(),
+             "Get single-pauli property as binary integer representation. See description of "
+             "`__init__(bit_flip_mask_py: int, phase_flip_mask_py: int, coef: float=1.)` for "
+             "details.")
         .def("get_pauli_string",
              &PauliOperator::get_pauli_string,
              "Get single-pauli property as string representation. See description of "
