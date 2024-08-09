@@ -69,7 +69,7 @@ void apply_pauli_rotation(UINT control_mask,
     } else {
         UINT pivot = sizeof(UINT) * 8 - std::countl_zero(bit_flip_mask) - 1;
         Kokkos::parallel_for(
-            state_vector.dim() >> (std::popcount(control_mask) + 1), KOKKOS_LAMBDA(UINT state_idx) {
+            state_vector.dim() >> (std::popcount(control_mask) + 1), KOKKOS_LAMBDA(UINT i) {
                 UINT basis_0 =
                     internal::insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
                     control_mask;
