@@ -421,8 +421,8 @@ void test_gate(Gate gate_control, Gate gate_simple, UINT n_qubits, UINT control_
     }
 }
 
-template <UINT num_target, UINT num_rotation>
-void test_standard_gates(auto factory, UINT n) {
+template <UINT num_target, UINT num_rotation, typename Factory>
+void test_standard_gates(Factory factory, UINT n) {
     Random random;
     std::vector<UINT> targets(num_target);
     for (UINT i : std::views::iota(0ULL, num_target)) {
