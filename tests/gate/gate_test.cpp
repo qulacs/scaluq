@@ -439,7 +439,7 @@ void test_standard_gates(Factory factory, UINT n) {
     for (UINT i : std::views::iota(0ULL, num_control)) {
         std::cerr << "control: " << i << std::endl;
         controls[i] = random.int32() % (n - num_target - i);
-        for (UINT j : std::views::iota(num_target)) {
+        for (UINT j : std::views::iota(0ULL, num_target)) {
             if (controls[i] == targets[j]) controls[i] = n - 1 - j;
         }
         for (UINT j : std::views::iota(0ULL, i)) {
