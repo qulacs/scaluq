@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../state/state_vector.hpp"
+
 namespace scaluq::internal {
 void apply_pauli(UINT control_mask, UINT bit_flip_mask, UINT phase_flip_mask, StateVector& state);
 void apply_pauli_rotation(
