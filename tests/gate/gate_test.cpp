@@ -397,3 +397,145 @@ TEST(GateTest, ApplyProbablisticGate) {
     ASSERT_GT(i_cnt, 0);
     ASSERT_LT(x_cnt, i_cnt);
 }
+
+void test_gate(Gate gate_control, Gate gate_simple, UINT n_qubits, UINT control_mask) {
+    StateVector state = StateVector::Haar_random_state(n_qubits);
+    auto amplitudes = state.amplitudes();
+    StateVector state_controlled(n_qubits - std::popcount(control_mask));
+    std::vector<Complex> amplitudes_controlled(state_controlled.dim());
+    for (UINT i : std::views::iota(0ULL, state_controlled.dim())) {
+        amplitudes_controlled[i] =
+            amplitudes[internal::insert_zero_at_mask_positions(i, control_mask)];
+    }
+    state_controlled.load(amplitudes_controlled);
+    gate_control->update_quantum_state(state);
+    gate_simple->update_quantum_state(state_controlled);
+    amplitudes = state.amplitudes();
+    amplitudes_controlled = state_controlled.amplitudes();
+    for (UINT i : std::views::iota(0ULL, state_controlled.dim())) {
+        ASSERT_NEAR(
+            Kokkos::abs(amplitudes_controlled[i] -
+                        amplitudes[internal::insert_zero_at_mask_positions(i, control_mask)]),
+            0.,
+            eps);
+    }
+}
+
+template <UINT num_target, UINT num_rotation>
+void test_standard_gates(auto factory, UINT n) {
+    Random random;
+    UINT targets = std::vector<UINT>(num_target);
+    for (UINT i : std::views::iota(0ULL, num_target)) {
+        targets[i] = random.int32() % (n - i);
+        for (UINT j : std::views::iota(0ULL, i)) {
+            if (targets[i] == targets[j]) targets[i] = n - 1 - j;
+        }
+    }
+    UINT num_control = random.int32() % (n - num_target + 1);
+    std::vector<UINT> controls(num_control);
+    for (UINT i : std::views::iota(0ULL, num_control)) {
+        controls[i] = random.int32() % (n - num_target - i);
+        for (UINT j : std::views::iota(num_target)) {
+            if (controls[i] == targets[j]) controls[i] = n - 1 - j;
+        }
+        for (UINT j : std::views::iota(0ULL, i)) {
+            if (controls[i] == controls[j]) controls[i] = n - num_target - 1 - j;
+        }
+    }
+    UINT control_mask = 0ULL;
+    for (UINT c : controls) control_mask |= 1ULL << c;
+    std::vector<double> angles(num_rotation);
+    for (double& angle : angles) angle = random.uniform() * PI() * 2;
+    if constexpr (num_target == 0 && num_rotation == 1) {
+        Gate g1 = factory(angles[0], control_mask);
+        Gate g2 = factory(angles[0]);
+        test_gate(g1, g2, n, control_mask);
+    } else if constexpr (num_target == 1 && num_rotation == 0) {
+        Gate g1 = factory(targets[0], control_mask);
+        Gate g2 = factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)));
+        test_gate(g1, g2, n, control_mask);
+    } else if constexpr (num_target == 1 && num_rotation == 1) {
+        Gate g1 = factory(targets[0], angles[0], control_mask);
+        Gate g2 = factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
+                          angles[0]);
+        test_gate(g1, g2, n, control_mask);
+    } else if constexpr (num_target == 1 && num_rotation == 2) {
+        Gate g1 = factory(targets[0], angles[0], angles[1], control_mask);
+        Gate g2 = factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
+                          angles[0],
+                          angles[1]);
+        test_gate(g1, g2, n, control_mask);
+    } else if constexpr (num_target == 1 && num_rotation == 3) {
+        Gate g1 = factory(targets[0], angles[0], angles[1], angles[2] control_mask);
+        Gate g2 = factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
+                          angles[0],
+                          angles[1],
+                          angles[2]);
+        test_gate(g1, g2, n, control_mask);
+    } else if constexpr (num_target == 2 && num_rotation == 0) {
+        Gate g1 = factory(targets[0], targets[1], control_mask);
+        Gate g2 = factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
+                          targets[1] - std::popcount(control_mask & ((1ULL << targets[1]) - 1)),
+                          control_mask);
+        test_gate(g1, g2, n, control_mask);
+    } else {
+        static_assert(false);
+    }
+}
+
+template <bool rotation>
+void test_pauli_control(UINT n) {
+    PauliOperator::Data data1, data2;
+    UINT control_mask = 0;
+    UINT num_control = 0;
+    Random random;
+    for (UINT i : std::views::iota(0ULL, n)) {
+        UINT dat = random.int32() % 12;
+        if (dat < 4) {
+            data1.add_single_pauli(i, dat);
+            data2.add_single_pauli(i - num_control, dat);
+        } else if (dat < 8) {
+            control_mask |= 1ULL << i;
+            num_control++;
+        }
+    }
+    if constexpr (!rotation) {
+        Gate g1 = gate::Pauli(PauliOperator(data1), control_mask);
+        Gate g2 = gate::Pauli(PauliOperator(data2));
+        test_gate(g1, g2, n, control_mask);
+    } else {
+        double angle = random.uniform() * PI() * 2;
+        Gate g1 = gate::PauliRotation(PauliOperator(data1), angle, control_mask);
+        Gate g2 = gate::PauliRotation(PauliOperator(data2), angle);
+        test_gate(g1, g2, n, control_mask);
+    }
+}
+
+TEST(GateTest, Control) {
+    UINT n = 10;
+    for (UINT _ : std::views::iota(0, 10)) {
+        test_standard_gates<0, 1>(gate::GlobalPhase, n);
+        test_standard_gates<1, 0>(gate::X, n);
+        test_standard_gates<1, 0>(gate::Y, n);
+        test_standard_gates<1, 0>(gate::Z, n);
+        test_standard_gates<1, 0>(gate::S, n);
+        test_standard_gates<1, 0>(gate::Sdag, n);
+        test_standard_gates<1, 0>(gate::T, n);
+        test_standard_gates<1, 0>(gate::Tdag, n);
+        test_standard_gates<1, 0>(gate::SqrtX, n);
+        test_standard_gates<1, 0>(gate::SqrtXdag, n);
+        test_standard_gates<1, 0>(gate::SqrtY, n);
+        test_standard_gates<1, 0>(gate::SqrtYdag, n);
+        test_standard_gates<1, 0>(gate::P0, n);
+        test_standard_gates<1, 0>(gate::P1, n);
+        test_standard_gates<1, 1>(gate::RX, n);
+        test_standard_gates<1, 1>(gate::RY, n);
+        test_standard_gates<1, 1>(gate::RZ, n);
+        test_standard_gates<1, 1>(gate::U1, n);
+        test_standard_gates<1, 2>(gate::U2, n);
+        test_standard_gates<1, 3>(gate::U3, n);
+        test_standard_gates<2, 0>(gate::Swap, n);
+        test_pauli_control<false>(n);
+        test_pauli_control<true>(n);
+    }
+}
