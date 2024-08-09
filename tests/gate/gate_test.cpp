@@ -399,14 +399,13 @@ TEST(GateTest, ApplyProbablisticGate) {
 }
 
 void test_gate(Gate gate_control, Gate gate_simple, UINT n_qubits, UINT control_mask) {
-    std::cerr << "test_gate" << std::endl;
     StateVector state = StateVector::Haar_random_state(n_qubits);
     auto amplitudes = state.amplitudes();
     StateVector state_controlled(n_qubits - std::popcount(control_mask));
     std::vector<Complex> amplitudes_controlled(state_controlled.dim());
     for (UINT i : std::views::iota(0ULL, state_controlled.dim())) {
         amplitudes_controlled[i] =
-            amplitudes[internal::insert_zero_at_mask_positions(i, control_mask)];
+            amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) | control_mask];
     }
     state_controlled.load(amplitudes_controlled);
     gate_control->update_quantum_state(state);
@@ -416,7 +415,8 @@ void test_gate(Gate gate_control, Gate gate_simple, UINT n_qubits, UINT control_
     for (UINT i : std::views::iota(0ULL, state_controlled.dim())) {
         ASSERT_NEAR(
             Kokkos::abs(amplitudes_controlled[i] -
-                        amplitudes[internal::insert_zero_at_mask_positions(i, control_mask)]),
+                        amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) |
+                                   control_mask]),
             0.,
             eps);
     }
@@ -424,11 +424,9 @@ void test_gate(Gate gate_control, Gate gate_simple, UINT n_qubits, UINT control_
 
 template <UINT num_target, UINT num_rotation, typename Factory>
 void test_standard_gates(Factory factory, UINT n) {
-    std::cerr << "test_standard_gates" << std::endl;
     Random random;
     std::vector<UINT> targets(num_target);
     for (UINT i : std::views::iota(0ULL, num_target)) {
-        std::cerr << "target: " << i << std::endl;
         targets[i] = random.int32() % (n - i);
         for (UINT j : std::views::iota(0ULL, i)) {
             if (targets[i] == targets[j]) targets[i] = n - 1 - j;
@@ -437,7 +435,6 @@ void test_standard_gates(Factory factory, UINT n) {
     UINT num_control = random.int32() % (n - num_target + 1);
     std::vector<UINT> controls(num_control);
     for (UINT i : std::views::iota(0ULL, num_control)) {
-        std::cerr << "control: " << i << std::endl;
         controls[i] = random.int32() % (n - num_target - i);
         for (UINT j : std::views::iota(0ULL, num_target)) {
             if (controls[i] == targets[j]) controls[i] = n - 1 - j;
@@ -448,16 +445,11 @@ void test_standard_gates(Factory factory, UINT n) {
     }
     UINT control_mask = 0ULL;
     for (UINT c : controls) control_mask |= 1ULL << c;
-    std::cerr << "preparing angles" << std::endl;
     std::vector<double> angles(num_rotation);
     for (double& angle : angles) angle = random.uniform() * PI() * 2;
-    std::cerr << "prepared angles" << std::endl;
     if constexpr (num_target == 0 && num_rotation == 1) {
-        std::cerr << "gate 0" << std::endl;
         Gate g1 = factory(angles[0], controls);
-        std::cerr << "gate 1" << std::endl;
         Gate g2 = factory(angles[0], {});
-        std::cerr << "gate 2" << std::endl;
         test_gate(g1, g2, n, control_mask);
     } else if constexpr (num_target == 1 && num_rotation == 0) {
         Gate g1 = factory(targets[0], controls);
