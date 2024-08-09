@@ -816,7 +816,7 @@ NB_MODULE(scaluq_core, m) {
              "Get pauli id to be applied. The order is correspond to the result of "
              "`get_target_qubit_list`")
         .def("get_XZ_mask_representation",
-             &PauliOperator::get_XZ_mask_representation(),
+             &PauliOperator::get_XZ_mask_representation,
              "Get single-pauli property as binary integer representation. See description of "
              "`__init__(bit_flip_mask_py: int, phase_flip_mask_py: int, coef: float=1.)` for "
              "details.")
