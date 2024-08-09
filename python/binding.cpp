@@ -747,7 +747,7 @@ NB_MODULE(scaluq_core, m) {
              "pauli_id_par_qubit"_a,
              "coef"_a = 1.,
              "Initialize data with pauli ids per qubit.")
-        .def(nb::init<const std::vector<bool> &, const std::vector<bool> &, Complex>(),
+        .def(nb::init<UINT, UINT, Complex>(),
              "bit_flip_mask"_a,
              "phase_flip_mask"_a,
              "coef"_a = 1.,
