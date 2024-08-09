@@ -5,7 +5,6 @@ target_sources(scaluq PRIVATE
     gate/update_ops_dense_matrix.cpp
     gate/update_ops_standard.cpp
     gate/update_ops_pauli.cpp
-    gate/update_ops_quantum_matrix.cpp
     # gate/merge_gate.cpp
     operator/pauli_operator.cpp
     operator/operator.cpp
