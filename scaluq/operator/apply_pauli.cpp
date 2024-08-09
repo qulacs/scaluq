@@ -2,12 +2,16 @@
 
 #include <Kokkos_Core.hpp>
 
+#include "../constant.hpp"
 #include "../types.hpp"
 #include "../util/utility.hpp"
 
 namespace scaluq::internal {
-void apply_pauli(UINT control_mask, UINT bit_flip_mask, UINT phase_flip_mask, StateVector& state) {
-    Complex coef = get_coef();
+void apply_pauli(UINT control_mask,
+                 UINT bit_flip_mask,
+                 UINT phase_flip_mask,
+                 Complex coef,
+                 StateVector& state_vector) {
     if (bit_flip_mask == 0) {
         Kokkos::parallel_for(
             state_vector.dim() >> std::popcount(control_mask), KOKKOS_LAMBDA(UINT i) {
@@ -38,11 +42,14 @@ void apply_pauli(UINT control_mask, UINT bit_flip_mask, UINT phase_flip_mask, St
         });
     Kokkos::fence();
 }
-void apply_pauli_rotation(
-    UINT control_mask, UINT bit_flip_mask, UINT phase_flip_mask, double angle, StateVector& state) {
-    auto [bit_flip_mask, phase_flip_mask] = pauli.get_XZ_mask_representation();
+void apply_pauli_rotation(UINT control_mask,
+                          UINT bit_flip_mask,
+                          UINT phase_flip_mask,
+                          Complex coef,
+                          double angle,
+                          StateVector& state_vector) {
     UINT global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex true_angle = angle * pauli.get_coef();
+    Complex true_angle = angle * coef;
     const Complex cosval = Kokkos::cos(-true_angle / 2);
     const Complex sinval = Kokkos::sin(-true_angle / 2);
     if (bit_flip_mask == 0) {

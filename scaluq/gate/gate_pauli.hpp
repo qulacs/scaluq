@@ -25,7 +25,7 @@ public:
 
     void update_quantum_state(StateVector& state_vector) const override {
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
-        apply_pauli(_control_mask, bit_flip_mask, phase_flip_mask, state_vector);
+        apply_pauli(_control_mask, bit_flip_mask, phase_flip_mask, _pauli.get_coef(), state_vector);
     }
 };
 
@@ -57,7 +57,8 @@ public:
     }
     void update_quantum_state(StateVector& state_vector) const override {
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
-        apply_pauli_rotation(_control_mask, bit_flip_mask, phase_flip_mask, _angle, state_vector);
+        apply_pauli_rotation(
+            _control_mask, bit_flip_mask, phase_flip_mask, _pauli.get_coef(), _angle, state_vector);
     }
 };
 }  // namespace internal
