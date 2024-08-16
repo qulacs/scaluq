@@ -48,15 +48,7 @@ void z_gate(UINT target_mask, UINT control_mask, StateVector& state) {
 }
 
 void h_gate(UINT target_mask, UINT control_mask, StateVector& state) {
-    Kokkos::parallel_for(
-        state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(UINT it) {
-            UINT i = insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
-            Complex a = state._raw[i];
-            Complex b = state._raw[i | target_mask];
-            state._raw[i] = (a + b) * INVERSE_SQRT2();
-            state._raw[i | target_mask] = (a - b) * INVERSE_SQRT2();
-        });
-    Kokkos::fence();
+    one_target_dense_matrix_gate(target_mask, control_mask, HADAMARD_MATRIX(), state);
 }
 
 void one_target_phase_gate(UINT target_mask, UINT control_mask, Complex phase, StateVector& state) {
