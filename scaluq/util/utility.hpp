@@ -187,7 +187,7 @@ inline UINT create_control_mask(const std::vector<UINT> qubit_index_list) {
     return mask;
 }
 
-// x: state vector. output will be stored in y
+// x: state vector, output will be stored in y
 inline void spmv(const CrsMatrix& matrix,
                  const Kokkos::View<Complex*>& x,
                  Kokkos::View<Complex*>& y) {

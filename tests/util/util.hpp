@@ -247,7 +247,7 @@ inline Eigen::MatrixXcd make_U(double theta, double phi, double lambda) {
                            std::exp(1i * phi) * std::exp(1i * lambda) * std::cos(theta / 2.));
 }
 
-inline CrsMatrix make_crs_matrix(UINT n_qubits, double sparsity = 0.1) {
+inline CrsMatrix make_crs_matrix(UINT n_qubits, double density = 0.1) {
     using matrix_type = typename KokkosSparse::
         CrsMatrix<Complex, default_lno_t, device_type, void, default_size_type>;
     using graph_type = typename matrix_type::staticcrsgraph_type;
@@ -255,7 +255,7 @@ inline CrsMatrix make_crs_matrix(UINT n_qubits, double sparsity = 0.1) {
     using entries_type = typename graph_type::entries_type;
     using values_type = typename matrix_type::values_type;
     UINT dim = 1 << n_qubits;
-    UINT numNNZ = dim * dim * sparsity;
+    UINT numNNZ = dim * dim * density;
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -288,7 +288,7 @@ inline CrsMatrix make_crs_matrix(UINT n_qubits, double sparsity = 0.1) {
     return matrix_type("random_sparse_matrix", dim, dim, numNNZ, values_d, row_map_d, col_ind_d);
 }
 
-inline SparseComplexMatrix make_sparse_complex_matrix(const UINT n_qubit, double sparsity = 0.1) {
+inline SparseComplexMatrix make_sparse_complex_matrix(const UINT n_qubit, double border = 0.9) {
     const UINT dim = 1ULL << n_qubit;
     typedef Eigen::Triplet<StdComplex> T;
     std::vector<T> tripletList;
@@ -299,7 +299,7 @@ inline SparseComplexMatrix make_sparse_complex_matrix(const UINT n_qubit, double
 
     for (UINT i = 0; i < dim; ++i) {
         for (UINT j = 0; j < dim; ++j) {
-            if (dis(gen) > sparsity) {
+            if (dis(gen) > border) {
                 double real = dis(gen);
                 double imag = dis(gen);
                 tripletList.push_back(T(i, j, StdComplex(real, imag)));

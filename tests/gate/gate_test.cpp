@@ -409,35 +409,57 @@ void run_random_gate_apply_single_dense(UINT n_qubits) {
 }
 
 void run_random_gate_apply_sparse(UINT n_qubits) {
-    // const UINT dim = 1ULL << n_qubits;
-    // const UINT max_repeat = 10;
+    const UINT dim = 1ULL << n_qubits;
+    const UINT max_repeat = 10;
 
-    // Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
-    // Eigen::MatrixXcd mat;
-    // std::vector<UINT> targets(3);
-    // std::vector<UINT> index_list;
-    // std::random_device seed_gen;
-    // std::mt19937 engine(seed_gen());
-    // for (UINT i = 0; i < n_qubits; i++) {
-    //     index_list.push_back(i);
-    // }
-    // for (UINT rep = 0; rep < max_repeat; rep++) {
-    //     StateVector state = StateVector::Haar_random_state(n_qubits);
-    //     auto state_cp = state.amplitudes();
-    //     for (UINT i = 0; i < dim; i++) {
-    //         test_state[i] = state_cp[i];
-    //     }
-    //     std::shuffle(index_list.begin(), index_list.end(), engine);
-    //     targets[0] = index_list[0];
-    //     targets[1] = index_list[1];
-    //     targets[2] = index_list[2];
-    //     sort(targets.begin(), targets.end());
-    //     SparseComplexMatrix u1 = make_sparse_complex_matrix(1);
-    //     SparseComplexMatrix u2 = make_sparse_complex_matrix(1);
-    //     SparseComplexMatrix u3 = make_sparse_complex_matrix(1);
-    //     auto i_eigen = make_I();
+    Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
+    SparseComplexMatrix mat;
+    std::vector<UINT> targets(3);
+    std::vector<UINT> index_list;
+    std::random_device seed_gen;
+    std::mt19937 engine(seed_gen());
+    Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> u1, u2, u3;
+    Eigen::Matrix<StdComplex, 8, 8, Eigen::RowMajor> Umerge;
+    for (UINT i = 0; i < n_qubits; i++) {
+        index_list.push_back(i);
+    }
+    for (UINT rep = 0; rep < max_repeat; rep++) {
+        StateVector state = StateVector::Haar_random_state(n_qubits);
+        auto state_cp = state.amplitudes();
+        for (UINT i = 0; i < dim; i++) {
+            test_state[i] = state_cp[i];
+        }
+        std::shuffle(index_list.begin(), index_list.end(), engine);
+        targets[0] = index_list[0];
+        targets[1] = index_list[1];
+        targets[2] = index_list[2];
+        u1 = make_sparse_complex_matrix(1, 0.2);
+        u2 = make_sparse_complex_matrix(1, 0.2);
+        u3 = make_sparse_complex_matrix(1, 0.2);
+        Umerge = internal::kronecker_product(u3, internal::kronecker_product(u2, u1));
+        test_state = get_expanded_eigen_matrix_with_identity(targets[2], u3, n_qubits) *
+                     get_expanded_eigen_matrix_with_identity(targets[1], u2, n_qubits) *
+                     get_expanded_eigen_matrix_with_identity(targets[0], u1, n_qubits) * test_state;
 
-    // }
+        std::vector<UINT> target_list = {targets[0], targets[1], targets[2]};
+        std::vector<UINT> control_list = {};
+        // ComplexMatrix mat(8, 8);
+        // for (int i = 0; i < 8; i++) {
+        //     for (int j = 0; j < 8; j++) {
+        //         mat(i, j) = Umerge(i, j);
+        //     }
+        // }
+        // Gate dense_gate = gate::DenseMatrix(mat, target_list, control_list);
+        // dense_gate->update_quantum_state(state);
+
+        mat = Umerge.sparseView();
+        Gate sparse_gate = gate::SparseMatrix(mat, target_list, control_list);
+        sparse_gate->update_quantum_state(state);
+        state_cp = state.amplitudes();
+        for (UINT i = 0; i < dim; i++) {
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
+        }
+    }
 }
 
 void run_random_gate_apply_general_dense(UINT n_qubits) {
@@ -598,6 +620,7 @@ TEST(GateTest, ApplyFused) {
 }
 
 TEST(GateTest, ApplyPauliGate) { run_random_gate_apply_pauli(5); }
+TEST(GateTest, ApplySparseMatrixGate) { run_random_gate_apply_sparse(6); }
 TEST(GateTest, ApplyDenseMatrixGate) {
     run_random_gate_apply_single_dense(6);
     run_random_gate_apply_general_dense(6);
