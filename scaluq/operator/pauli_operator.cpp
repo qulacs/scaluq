@@ -262,7 +262,7 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
     return mat;
 }
 [[nodiscard]] ComplexMatrix PauliOperator::get_matrix() const {
-    return get_matrix_ignoring_coef() * _ptr->_coef;
+    return get_matrix_ignoring_coef() * StdComplex(_ptr->_coef);
 }
 
 PauliOperator PauliOperator::operator*(const PauliOperator& target) const {
