@@ -58,5 +58,12 @@ void two_target_dense_matrix_gate(UINT target_mask,
         });
     Kokkos::fence();
 }
+
+void dense_matrix_gate(UINT target_mask,
+                       UINT control_mask,
+                       const Matrix& matrix,
+                       StateVector& state) {
+    // todo: implement
+}
 }  // namespace internal
 }  // namespace scaluq

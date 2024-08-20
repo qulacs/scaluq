@@ -82,5 +82,14 @@ void pauli_rotation_gate(UINT control_mask,
                          double angle,
                          StateVector& state);
 
+void sparse_matrix_gate(UINT target_mask,
+                        UINT control_mask,
+                        const SparseMatrix& matrix,
+                        StateVector& state);
+
+void dense_matrix_gate(UINT target_mask,
+                       UINT control_mask,
+                       const Matrix& matrix,
+                       StateVector& state);
 }  // namespace internal
 }  // namespace scaluq

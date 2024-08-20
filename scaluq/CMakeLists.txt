@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.21)
 target_sources(scaluq PRIVATE
     circuit/circuit.cpp
     gate/update_ops_dense_matrix.cpp
+    gate/update_ops_sparse_matrix.cpp
     gate/update_ops_standard.cpp
     gate/update_ops_pauli.cpp
     # gate/merge_gate.cpp

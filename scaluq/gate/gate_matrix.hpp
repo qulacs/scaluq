@@ -101,6 +101,72 @@ public:
         two_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
     }
 };
+
+class SparseMatrixGateImpl : public GateBase {
+    SparseMatrix _matrix;
+    SparseMatrixGateImpl(UINT target_mask, UINT control_mask, const SparseComplexMatrix& mat)
+        : GateBase(target_mask, control_mask) {
+        _matrix = std::move(SparseMatrix(mat));
+    }
+
+    Gate get_inverse() const override {
+        throw std::logic_error("Error: SparseMatrixGateImpl::get_inverse(): Not implemented.");
+    }
+
+    std::optional<Matrix> get_matrix_internal() const {
+        // TODO: implementation
+        return std::nullopt;
+    }
+
+    std::optional<ComplexMatrix> get_matrix() const override {
+        // TODO: implementation
+        return std::nullopt;
+    }
+
+    void update_quantum_state(StateVector& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        sparse_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
+    }
+};
+
+class DenseMatrixGateImpl : public GateBase {
+    Matrix _matrix;
+    bool _is_unitary;
+
+    DenseMatrixGateImpl(UINT target_mask,
+                        UINT control_mask,
+                        const ComplexMatrix& mat,
+                        bool is_unitary = false)
+        : GateBase(target_mask, control_mask), _is_unitary(is_unitary) {
+        _matrix = convert_external_matrix_to_internal_matrix(mat);
+    }
+
+    Gate get_inverse() const override {
+        UINT rows = _matrix.extent(0);
+        UINT cols = _matrix.extent(1);
+        ComplexMatrix mat_eigen = convert_internal_matrix_to_external_matrix(_matrix);
+        ComplexMatrix inv_eigen;
+        if (_is_unitary) {
+            inv_eigen = mat_eigen.adjoint();
+        } else {
+            inv_eigen = mat_eigen.lu().solve(ComplexMatrix::Identity(rows, cols));
+        }
+        return std::make_shared<const DenseMatrixGateImpl>(
+            _target_mask, _control_mask, inv_eigen, _is_unitary);
+    }
+
+    std::optional<Matrix> get_matrix_internal() const { return _matrix; }
+
+    std::optional<ComplexMatrix> get_matrix() const override {
+        return convert_internal_matrix_to_external_matrix(_matrix);
+    }
+
+    void update_quantum_state(StateVector& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
+    }
+};
+
 }  // namespace internal
 
 using OneTargetMatrixGate = internal::GatePtr<internal::OneTargetMatrixGateImpl>;

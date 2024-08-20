@@ -153,6 +153,23 @@ KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
     return z.real() * z.real() + z.imag() * z.imag();
 }
 
+inline Matrix convert_external_matrix_to_internal_matrix(const ComplexMatrix& eigen_matrix) {
+    UINT rows = eigen_matrix.rows();
+    UINT cols = eigen_matrix.cols();
+    Kokkos::View<const Complex**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        host_view(reinterpret_cast<const Complex*>(eigen_matrix.data()), rows, cols);
+    Matrix mat("internal_matrix", rows, cols);
+    Kokkos::deep_copy(mat, host_view);
+    return mat;
+}
+
+inline ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix& matrix) {
+    int rows = matrix.extent(0);
+    int cols = matrix.extent(1);
+    Eigen::Map<ComplexMatrix> mat(reinterpret_cast<StdComplex*>(matrix.data()), rows, cols);
+    return mat;
+}
+
 }  // namespace internal
 
 }  // namespace scaluq
