@@ -48,15 +48,7 @@ void z_gate(UINT target_mask, UINT control_mask, StateVector& state) {
 }
 
 void h_gate(UINT target_mask, UINT control_mask, StateVector& state) {
-    Kokkos::parallel_for(
-        state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(UINT it) {
-            UINT i = insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
-            Complex a = state._raw[i];
-            Complex b = state._raw[i | target_mask];
-            state._raw[i] = (a + b) * INVERSE_SQRT2();
-            state._raw[i | target_mask] = (a - b) * INVERSE_SQRT2();
-        });
-    Kokkos::fence();
+    one_target_dense_matrix_gate(target_mask, control_mask, HADAMARD_MATRIX(), state);
 }
 
 void one_target_phase_gate(UINT target_mask, UINT control_mask, Complex phase, StateVector& state) {
@@ -126,11 +118,15 @@ void ry_gate(UINT target_mask, UINT control_mask, double angle, StateVector& sta
 
 void one_target_diagonal_matrix_gate(UINT target_mask,
                                      UINT control_mask,
-                                     const diagonal_matrix_2_2 diag,
+                                     const diagonal_matrix_2_2& diag,
                                      StateVector& state) {
     Kokkos::parallel_for(
-        state.dim(),
-        KOKKOS_LAMBDA(UINT it) { state._raw[it] *= diag.val[bool(it & target_mask)]; });
+        state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(UINT it) {
+            UINT basis =
+                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
+            state._raw[basis] *= diag.val[0];
+            state._raw[basis | target_mask] *= diag.val[1];
+        });
     Kokkos::fence();
 }
 
@@ -139,6 +135,40 @@ void rz_gate(UINT target_mask, UINT control_mask, double angle, StateVector& sta
     const double sinval = std::sin(angle / 2.);
     diagonal_matrix_2_2 diag = {Complex(cosval, -sinval), Complex(cosval, sinval)};
     one_target_diagonal_matrix_gate(target_mask, control_mask, diag, state);
+}
+
+matrix_2_2 get_IBMQ_matrix(double theta, double phi, double lambda) {
+    Complex exp_val1 = Kokkos::exp(Complex(0, phi));
+    Complex exp_val2 = Kokkos::exp(Complex(0, lambda));
+    Complex cos_val = Kokkos::cos(theta / 2.);
+    Complex sin_val = Kokkos::sin(theta / 2.);
+    return {cos_val, -exp_val2 * sin_val, exp_val1 * sin_val, exp_val1 * exp_val2 * cos_val};
+}
+
+void u1_gate(UINT target_mask, UINT control_mask, double lambda, StateVector& state) {
+    Complex exp_val = Kokkos::exp(Complex(0, lambda));
+    Kokkos::parallel_for(
+        state.dim() >> (std::popcount(target_mask | control_mask)), KOKKOS_LAMBDA(UINT it) {
+            UINT i = internal::insert_zero_at_mask_positions(it, target_mask | control_mask) |
+                     control_mask;
+            state._raw[i | target_mask] *= exp_val;
+        });
+    Kokkos::fence();
+}
+
+void u2_gate(UINT target_mask, UINT control_mask, double phi, double lambda, StateVector& state) {
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, get_IBMQ_matrix(PI() / 2., phi, lambda), state);
+}
+
+void u3_gate(UINT target_mask,
+             UINT control_mask,
+             double theta,
+             double phi,
+             double lambda,
+             StateVector& state) {
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, get_IBMQ_matrix(theta, phi, lambda), state);
 }
 
 void swap_gate(UINT target_mask, UINT control_mask, StateVector& state) {

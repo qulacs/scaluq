@@ -26,21 +26,6 @@ KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index, UINT in
 }
 
 /**
- * Inserts two 0 bits at specified indexes in basis_index.
- * Example: insert_zero_to_basis_index(0b11001, 1, 5) -> 0b1010001.
- *                                                          ^   ^
- */
-KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index,
-                                                       UINT insert_index1,
-                                                       UINT insert_index2) {
-    auto [lidx, uidx] = Kokkos::minmax(insert_index1, insert_index2);
-    UINT lmask = (1ULL << lidx) - 1;
-    UINT umask = (1ULL << uidx) - 1;
-    basis_index = ((basis_index >> lidx) << (lidx + 1)) | (basis_index & lmask);
-    return ((basis_index >> uidx) << (uidx + 1)) | (basis_index & umask);
-}
-
-/**
  * Inserts multiple 0 bits at specified positions in basis_index.
  * Example: insert_zero_to_basis_index(0b11111, 0x100101) -> 0b11011010.
  *                                                               ^  ^ ^
