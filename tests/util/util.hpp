@@ -115,6 +115,30 @@ inline Eigen::MatrixXcd get_expanded_eigen_matrix_with_identity(
         internal::kronecker_product(right_identity, one_target_matrix), left_identity);
 }
 
+inline Eigen::MatrixXcd get_expanded_eigen_matrix(uint64_t control_mask,
+                                                  uint64_t target_mask,
+                                                  const Eigen::MatrixXcd& matrix,
+                                                  StateVector state) {
+    uint64_t matrix_size = matrix.rows();
+    uint64_t dim = state.dim();
+    UINT outer_mask = ~target_mask & ((1ULL << state.n_qubits()) - 1);  // target qubit 以外の mask
+
+    Eigen::MatrixXcd expanded = Eigen::MatrixXcd::Identity(dim, dim);
+    for (uint64_t outer = 0; outer < dim >> std::popcount(target_mask | control_mask); ++outer) {
+        uint64_t basis =
+            internal::insert_zero_at_mask_positions(outer, control_mask | target_mask) |
+            control_mask;
+        for (uint64_t r = 0; r < matrix_size; ++r) {
+            for (uint64_t c = 0; c < matrix_size; ++c) {
+                uint64_t exr = internal::insert_zero_at_mask_positions(r, outer_mask) | basis;
+                uint64_t exc = internal::insert_zero_at_mask_positions(c, outer_mask) | basis;
+                expanded.coeffRef(exr, exc) = matrix.coeff(r, c);
+            }
+        }
+    }
+    return expanded;
+}
+
 // get expanded matrix
 inline Eigen::MatrixXcd get_eigen_matrix_full_qubit_pauli(std::vector<UINT> pauli_ids) {
     Eigen::MatrixXcd result = Eigen::MatrixXcd::Identity(1, 1);
@@ -133,52 +157,6 @@ inline Eigen::MatrixXcd get_eigen_matrix_full_qubit_pauli(std::vector<UINT> inde
     }
     return get_eigen_matrix_full_qubit_pauli(whole_pauli_ids);
 }
-inline Eigen::MatrixXcd get_eigen_matrix_full_qubit_CX(UINT control_qubit_index,
-                                                       UINT target_qubit_index,
-                                                       UINT qubit_count) {
-    UINT dim = 1ULL << qubit_count;
-    Eigen::MatrixXcd result = Eigen::MatrixXcd::Zero(dim, dim);
-    for (UINT ind = 0; ind < dim; ++ind) {
-        if (ind & (1ULL << control_qubit_index)) {
-            result(ind, ind ^ (1ULL << target_qubit_index)) = 1;
-        } else {
-            result(ind, ind) = 1;
-        }
-    }
-    return result;
-}
-inline Eigen::MatrixXcd get_eigen_matrix_full_qubit_CZ(UINT control_qubit_index,
-                                                       UINT target_qubit_index,
-                                                       UINT qubit_count) {
-    UINT dim = 1ULL << qubit_count;
-    Eigen::MatrixXcd result = Eigen::MatrixXcd::Zero(dim, dim);
-    for (UINT ind = 0; ind < dim; ++ind) {
-        if ((ind & (1ULL << control_qubit_index)) != 0 &&
-            (ind & (1ULL << target_qubit_index)) != 0) {
-            result(ind, ind) = -1;
-        } else {
-            result(ind, ind) = 1;
-        }
-    }
-    return result;
-}
-inline Eigen::MatrixXcd get_eigen_matrix_full_qubit_Swap(UINT target_qubit_index1,
-                                                         UINT target_qubit_index2,
-                                                         UINT qubit_count) {
-    UINT dim = 1ULL << qubit_count;
-    Eigen::MatrixXcd result = Eigen::MatrixXcd::Zero(dim, dim);
-    for (UINT ind = 0; ind < dim; ++ind) {
-        bool flag1, flag2;
-        flag1 = (ind & (1ULL << target_qubit_index1)) != 0;
-        flag2 = (ind & (1ULL << target_qubit_index2)) != 0;
-        if (flag1 ^ flag2) {
-            result(ind, ind ^ (1ULL << target_qubit_index1) ^ (1ULL << target_qubit_index2)) = 1;
-        } else {
-            result(ind, ind) = 1;
-        }
-    }
-    return result;
-}
 
 inline Eigen::MatrixXcd make_2x2_matrix(const Eigen::dcomplex a00,
                                         const Eigen::dcomplex a01,
@@ -186,6 +164,33 @@ inline Eigen::MatrixXcd make_2x2_matrix(const Eigen::dcomplex a00,
                                         const Eigen::dcomplex a11) {
     Eigen::MatrixXcd m(2, 2);
     m << a00, a01, a10, a11;
+    return m;
+}
+
+inline Eigen::MatrixXcd make_4x4_matrix(const Eigen::dcomplex a00,
+                                        const Eigen::dcomplex a01,
+                                        const Eigen::dcomplex a02,
+                                        const Eigen::dcomplex a03,
+                                        const Eigen::dcomplex a10,
+                                        const Eigen::dcomplex a11,
+                                        const Eigen::dcomplex a12,
+                                        const Eigen::dcomplex a13,
+                                        const Eigen::dcomplex a20,
+                                        const Eigen::dcomplex a21,
+                                        const Eigen::dcomplex a22,
+                                        const Eigen::dcomplex a23,
+                                        const Eigen::dcomplex a30,
+                                        const Eigen::dcomplex a31,
+                                        const Eigen::dcomplex a32,
+                                        const Eigen::dcomplex a33) {
+    Eigen::MatrixXcd m(4, 4);
+    m << a00, a01, a02, a03, a10, a11, a12, a13, a20, a21, a22, a23, a30, a31, a32, a33;
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            std::cout << m.coeff(i, j) << " ";
+        }
+        std::cout << std::endl;
+    }
     return m;
 }
 
@@ -244,4 +249,7 @@ inline Eigen::MatrixXcd make_U(double theta, double phi, double lambda) {
                            -std::exp(1i * lambda) * std::sin(theta / 2.),
                            std::exp(1i * phi) * std::sin(theta / 2.),
                            std::exp(1i * phi) * std::exp(1i * lambda) * std::cos(theta / 2.));
+}
+inline Eigen::MatrixXcd make_swap() {
+    return make_4x4_matrix(1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
 }
