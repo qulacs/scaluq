@@ -33,7 +33,7 @@ TEST(StateVectorBatchedTest, LoadAndAmplitues) {
     StateVectorBatched states(batch_size, n_qubits);
 
     states.load(states_h);
-    auto amps = states.amplitudes();
+    auto amps = states.get_amplitudes();
     for (UINT b = 0; b < batch_size; ++b) {
         for (UINT i = 0; i < dim; ++i) {
             ASSERT_EQ(amps[b][i].real(), b * dim + i);

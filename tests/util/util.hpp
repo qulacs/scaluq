@@ -10,8 +10,8 @@ using namespace std::complex_literals;
 using namespace scaluq;
 
 inline bool same_state(const StateVector& s1, const StateVector& s2, const double eps = 1e-12) {
-    auto s1_cp = s1.amplitudes();
-    auto s2_cp = s2.amplitudes();
+    auto s1_cp = s1.get_amplitudes();
+    auto s2_cp = s2.get_amplitudes();
     assert(s1.n_qubits() == s2.n_qubits());
     for (UINT i = 0; i < s1.dim(); ++i) {
         if (std::abs((std::complex<double>)s1_cp[i] - (std::complex<double>)s2_cp[i]) > eps)
@@ -23,8 +23,8 @@ inline bool same_state(const StateVector& s1, const StateVector& s2, const doubl
 inline bool same_state_except_global_phase(const StateVector& s1,
                                            const StateVector& s2,
                                            const double eps = 1e-12) {
-    auto s1_cp = s1.amplitudes();
-    auto s2_cp = s2.amplitudes();
+    auto s1_cp = s1.get_amplitudes();
+    auto s2_cp = s2.get_amplitudes();
     assert(s1.n_qubits() == s2.n_qubits());
     UINT significant = 0;
     for (UINT i = 0; i < s1.dim(); ++i) {

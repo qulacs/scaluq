@@ -39,7 +39,7 @@ public:
                                                                bool set_same_state,
                                                                UINT seed = std::random_device()());
 
-    [[nodiscard]] std::vector<std::vector<Complex>> amplitudes() const;
+    [[nodiscard]] std::vector<std::vector<Complex>> get_amplitudes() const;
 
     [[nodiscard]] std::vector<double> get_squared_norm() const;
 

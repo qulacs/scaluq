@@ -11,7 +11,7 @@ Operator::Operator(UINT n_qubits) : _n_qubits(n_qubits) {}
 std::string Operator::to_string() const {
     std::stringstream ss;
     for (auto itr = _terms.begin(); itr != _terms.end(); ++itr) {
-        ss << itr->get_coef() << " " << itr->get_pauli_string();
+        ss << itr->coef() << " " << itr->get_pauli_string();
         if (itr != prev(_terms.end())) {
             ss << " + ";
         }
@@ -21,9 +21,9 @@ std::string Operator::to_string() const {
 
 void Operator::add_operator(const PauliOperator& mpt) { add_operator(PauliOperator{mpt}); }
 void Operator::add_operator(PauliOperator&& mpt) {
-    _is_hermitian &= mpt.get_coef().imag() == 0.;
+    _is_hermitian &= mpt.coef().imag() == 0.;
     if (![&] {
-            const auto& target_list = mpt.get_target_qubit_list();
+            const auto& target_list = mpt.target_qubit_list();
             if (target_list.empty()) return true;
             return *std::max_element(target_list.begin(), target_list.end()) < _n_qubits;
         }()) {
@@ -49,7 +49,7 @@ void Operator::add_random_operator(UINT operator_count, UINT seed) {
 void Operator::optimize() {
     std::map<std::tuple<internal::BitVector, internal::BitVector>, Complex> pauli_and_coef;
     for (const auto& pauli : _terms) {
-        pauli_and_coef[pauli.get_XZ_mask_representation()] += pauli.get_coef();
+        pauli_and_coef[pauli.get_XZ_mask_representation()] += pauli.coef();
     }
     _terms.clear();
     for (const auto& [mask, coef] : pauli_and_coef) {

@@ -13,11 +13,10 @@ class PauliGateImpl : public GateBase {
 
 public:
     PauliGateImpl(UINT control_mask, const PauliOperator& pauli)
-        : GateBase(vector_to_mask<false>(pauli.get_target_qubit_list()), control_mask),
-          _pauli(pauli) {}
+        : GateBase(vector_to_mask<false>(pauli.target_qubit_list()), control_mask), _pauli(pauli) {}
 
     PauliOperator pauli() const { return _pauli; };
-    std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
+    std::vector<UINT> pauli_id_list() const { return _pauli.pauli_id_list(); }
 
     Gate get_inverse() const override { return shared_from_this(); }
     ComplexMatrix get_matrix() const override { return this->_pauli.get_matrix(); }
@@ -33,12 +32,12 @@ class PauliRotationGateImpl : public GateBase {
 
 public:
     PauliRotationGateImpl(UINT control_mask, const PauliOperator& pauli, double angle)
-        : GateBase(vector_to_mask<false>(pauli.get_target_qubit_list()), control_mask),
+        : GateBase(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
           _pauli(pauli),
           _angle(angle) {}
 
     PauliOperator pauli() const { return _pauli; }
-    std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
+    std::vector<UINT> pauli_id_list() const { return _pauli.pauli_id_list(); }
     double angle() const { return _angle; }
 
     Gate get_inverse() const override {
@@ -47,7 +46,7 @@ public:
 
     ComplexMatrix get_matrix() const override {
         ComplexMatrix mat = this->_pauli.get_matrix_ignoring_coef();
-        Complex true_angle = _angle * _pauli.get_coef();
+        Complex true_angle = _angle * _pauli.coef();
         StdComplex imag_unit(0, 1);
         mat = (StdComplex)Kokkos::cos(-true_angle / 2) *
                   ComplexMatrix::Identity(mat.rows(), mat.cols()) +

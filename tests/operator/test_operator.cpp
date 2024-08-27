@@ -56,7 +56,7 @@ TEST(OperatorTest, CheckExpectationValue) {
             generate_random_observable_with_eigen(n, random);
 
         auto state = StateVector::Haar_random_state(n);
-        auto state_cp = state.amplitudes();
+        auto state_cp = state.get_amplitudes();
         Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
         for (UINT i = 0; i < dim; ++i) test_state[i] = state_cp[i];
 
@@ -78,11 +78,11 @@ TEST(OperatorTest, CheckTransitionAmplitude) {
             generate_random_observable_with_eigen(n, random);
 
         auto state_bra = StateVector::Haar_random_state(n);
-        auto state_bra_cp = state_bra.amplitudes();
+        auto state_bra_cp = state_bra.get_amplitudes();
         Eigen::VectorXcd test_state_bra = Eigen::VectorXcd::Zero(dim);
         for (UINT i = 0; i < dim; ++i) test_state_bra[i] = state_bra_cp[i];
         auto state_ket = StateVector::Haar_random_state(n);
-        auto state_ket_cp = state_ket.amplitudes();
+        auto state_ket_cp = state_ket.get_amplitudes();
         Eigen::VectorXcd test_state_ket = Eigen::VectorXcd::Zero(dim);
         for (UINT i = 0; i < dim; ++i) test_state_ket[i] = state_ket_cp[i];
 
@@ -164,7 +164,7 @@ TEST(OperatorTest, ApplyToStateTest) {
         Complex(-14, 0),
         Complex(-12, 1),
     };
-    ASSERT_EQ(state_vector.amplitudes(), expected);
+    ASSERT_EQ(state_vector.get_amplitudes(), expected);
 }
 
 TEST(OperatorTest, Optimize) {
@@ -180,7 +180,7 @@ TEST(OperatorTest, Optimize) {
         {"X 0 Y 1", 10.}, {"Y 0 Z 1", 2.}, {"Z 1", 7.}};
     std::vector<std::pair<std::string, Complex>> test;
     for (const auto& pauli : op.terms()) {
-        test.emplace_back(pauli.get_pauli_string(), pauli.get_coef());
+        test.emplace_back(pauli.get_pauli_string(), pauli.coef());
     }
     std::ranges::sort(expected, [](const auto& l, const auto& r) { return l.first < r.first; });
     std::ranges::sort(test, [](const auto& l, const auto& r) { return l.first < r.first; });

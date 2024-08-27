@@ -28,7 +28,7 @@ public:
     void set_amplitude_at_index(UINT index, const Complex& c);
 
     /**
-     * @attention Very slow. You should use amplitudes() instead if you can.
+     * @attention Very slow. You should use get_amplitudes() instead if you can.
      */
     [[nodiscard]] Complex get_amplitude_at_index(UINT index) const;
 
@@ -46,7 +46,7 @@ public:
 
     [[nodiscard]] UINT dim() const;
 
-    [[nodiscard]] std::vector<Complex> amplitudes() const;
+    [[nodiscard]] std::vector<Complex> get_amplitudes() const;
 
     [[nodiscard]] double get_squared_norm() const;
 

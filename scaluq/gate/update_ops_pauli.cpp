@@ -24,7 +24,7 @@ void pauli_rotation_gate(UINT control_mask,
     UINT bit_flip_mask = internal::BitVector(bit_flip_mask_vector).data_raw()[0];
     UINT phase_flip_mask = internal::BitVector(phase_flip_mask_vector).data_raw()[0];
     UINT global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex true_angle = angle * pauli.get_coef();
+    Complex true_angle = angle * pauli.coef();
     const Complex cosval = Kokkos::cos(-true_angle / 2);
     const Complex sinval = Kokkos::sin(-true_angle / 2);
     if (bit_flip_mask == 0) {

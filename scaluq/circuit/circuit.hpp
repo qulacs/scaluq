@@ -15,7 +15,7 @@ public:
 
     [[nodiscard]] inline UINT n_qubits() const { return _n_qubits; }
     [[nodiscard]] inline const std::vector<GateWithKey>& gate_list() const { return _gate_list; }
-    [[nodiscard]] inline UINT gate_count() { return _gate_list.size(); }
+    [[nodiscard]] inline UINT n_gates() { return _gate_list.size(); }
     [[nodiscard]] inline const std::set<std::string> key_set() const {
         std::set<std::string> key_set;
         for (auto&& gate : _gate_list) {

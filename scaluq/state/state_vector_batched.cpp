@@ -129,7 +129,7 @@ std::vector<std::vector<UINT>> StateVectorBatched::sampling(UINT sampling_count,
             result);
 }
 
-std::vector<std::vector<Complex>> StateVectorBatched::amplitudes() const {
+std::vector<std::vector<Complex>> StateVectorBatched::get_amplitudes() const {
     return internal::convert_2d_device_view_to_host_vector<Complex>(_raw);
 }
 

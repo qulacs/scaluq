@@ -7,11 +7,11 @@ UINT Circuit::calculate_depth() const {
     std::vector<UINT> filled_step(_n_qubits, 0ULL);
     for (const auto& gate : _gate_list) {
         std::vector<UINT> control_qubits = gate.index() == 0
-                                               ? std::get<0>(gate)->get_control_qubit_list()
-                                               : std::get<1>(gate).first->get_control_qubit_list();
+                                               ? std::get<0>(gate)->control_qubit_list()
+                                               : std::get<1>(gate).first->control_qubit_list();
         std::vector<UINT> target_qubits = gate.index() == 0
-                                              ? std::get<0>(gate)->get_target_qubit_list()
-                                              : std::get<1>(gate).first->get_target_qubit_list();
+                                              ? std::get<0>(gate)->target_qubit_list()
+                                              : std::get<1>(gate).first->target_qubit_list();
         UINT max_step_amount_target_qubits = 0;
         for (UINT control : control_qubits) {
             if (max_step_amount_target_qubits < filled_step[control]) {
@@ -123,8 +123,8 @@ Circuit Circuit::get_inverse() const {
 }
 
 void Circuit::check_gate_is_valid(const Gate& gate) const {
-    auto targets = gate->get_target_qubit_list();
-    auto controls = gate->get_control_qubit_list();
+    auto targets = gate->target_qubit_list();
+    auto controls = gate->control_qubit_list();
     bool valid = true;
     if (!targets.empty()) valid &= *std::max_element(targets.begin(), targets.end()) < _n_qubits;
     if (!controls.empty()) valid &= *std::max_element(controls.begin(), controls.end()) < _n_qubits;
@@ -134,8 +134,8 @@ void Circuit::check_gate_is_valid(const Gate& gate) const {
 }
 
 void Circuit::check_gate_is_valid(const ParamGate& param_gate) const {
-    auto targets = param_gate->get_target_qubit_list();
-    auto controls = param_gate->get_control_qubit_list();
+    auto targets = param_gate->target_qubit_list();
+    auto controls = param_gate->control_qubit_list();
     bool valid = true;
     if (!targets.empty()) valid &= *std::max_element(targets.begin(), targets.end()) < _n_qubits;
     if (!controls.empty()) valid &= *std::max_element(controls.begin(), controls.end()) < _n_qubits;

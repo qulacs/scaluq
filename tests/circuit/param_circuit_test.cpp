@@ -68,11 +68,11 @@ TEST(ParamCircuitTest, ApplyParamCircuit) {
         }
         StateVector state = StateVector::Haar_random_state(n_qubits);
         StateVector state_cp = state.copy();
-        auto amplitudes_base = state.amplitudes();
+        auto amplitudes_base = state.get_amplitudes();
         circuit.update_quantum_state(state);
         pcircuit.update_quantum_state(state_cp, pmap);
-        auto amplitudes = state.amplitudes();
-        auto amplitudes_cp = state_cp.amplitudes();
+        auto amplitudes = state.get_amplitudes();
+        auto amplitudes_cp = state_cp.get_amplitudes();
         for (UINT idx : std::views::iota(UINT{0}, 1ULL << n_qubits)) {
             ASSERT_NEAR(Kokkos::abs(amplitudes[idx] - amplitudes_cp[idx]), 0, eps);
         }
@@ -80,8 +80,8 @@ TEST(ParamCircuitTest, ApplyParamCircuit) {
         auto ipcircuit = pcircuit.get_inverse();
         icircuit.update_quantum_state(state);
         ipcircuit.update_quantum_state(state_cp, pmap);
-        amplitudes = state.amplitudes();
-        amplitudes_cp = state_cp.amplitudes();
+        amplitudes = state.get_amplitudes();
+        amplitudes_cp = state_cp.get_amplitudes();
         for (UINT idx : std::views::iota(UINT{0}, 1ULL << n_qubits)) {
             ASSERT_NEAR(Kokkos::abs(amplitudes[idx] - amplitudes_base[idx]), 0, eps);
             ASSERT_NEAR(Kokkos::abs(amplitudes_cp[idx] - amplitudes_base[idx]), 0, eps);

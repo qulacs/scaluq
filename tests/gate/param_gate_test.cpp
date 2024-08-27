@@ -31,8 +31,8 @@ void test_apply_parametric_single_pauli_rotation(UINT n_qubits,
         const ParamGate pgate = factory_parametric(target, pcoef, {});
         gate->update_quantum_state(state);
         pgate->update_quantum_state(state_cp, param);
-        auto state_amp = state.amplitudes();
-        auto state_cp_amp = state_cp.amplitudes();
+        auto state_amp = state.get_amplitudes();
+        auto state_cp_amp = state_cp.get_amplitudes();
 
         for (UINT i = 0; i < dim; i++) {
             ASSERT_NEAR(Kokkos::abs(state_cp_amp[i] - state_amp[i]), 0, eps);
@@ -40,8 +40,8 @@ void test_apply_parametric_single_pauli_rotation(UINT n_qubits,
 
         ParamGate pgate_inv = pgate->get_inverse();
         pgate_inv->update_quantum_state(state, param);
-        state_amp = state.amplitudes();
-        auto state_bef_amp = state_bef.amplitudes();
+        state_amp = state.get_amplitudes();
+        auto state_bef_amp = state_bef.get_amplitudes();
         for (UINT i = 0; i < dim; i++) {
             ASSERT_NEAR(Kokkos::abs(state_bef_amp[i] - state_amp[i]), 0, eps);
         }
@@ -69,16 +69,16 @@ void test_apply_parametric_multi_pauli_rotation(UINT n_qubits) {
         ParamGate pgate = gate::PPauliRotation(pauli, pcoef);
         gate->update_quantum_state(state);
         pgate->update_quantum_state(state_cp, param);
-        auto state_amp = state.amplitudes();
-        auto state_cp_amp = state_cp.amplitudes();
+        auto state_amp = state.get_amplitudes();
+        auto state_cp_amp = state_cp.get_amplitudes();
         // check if the state is updated correctly
         for (UINT i = 0; i < dim; i++) {
             ASSERT_NEAR(Kokkos::abs(state_cp_amp[i] - state_amp[i]), 0, eps);
         }
         ParamGate pgate_inv = pgate->get_inverse();
         pgate_inv->update_quantum_state(state, param);
-        state_amp = state.amplitudes();
-        auto state_bef_amp = state_bef.amplitudes();
+        state_amp = state.get_amplitudes();
+        auto state_bef_amp = state_bef.get_amplitudes();
         // check if the state is restored correctly
         for (UINT i = 0; i < dim; i++) {
             ASSERT_NEAR(Kokkos::abs((state_bef_amp[i] - state_amp[i])), 0, eps);

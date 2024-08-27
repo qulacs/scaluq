@@ -60,7 +60,7 @@ UINT StateVector::n_qubits() const { return this->_n_qubits; }
 
 UINT StateVector::dim() const { return this->_dim; }
 
-std::vector<Complex> StateVector::amplitudes() const {
+std::vector<Complex> StateVector::get_amplitudes() const {
     return internal::convert_device_view_to_host_vector(_raw);
 }
 
@@ -214,7 +214,7 @@ std::vector<UINT> StateVector::sampling(UINT sampling_count, UINT seed) const {
 
 std::string StateVector::to_string() const {
     std::stringstream os;
-    auto amp = this->amplitudes();
+    auto amp = this->get_amplitudes();
     os << " *** Quantum State ***\n";
     os << " * Qubit Count : " << _n_qubits << '\n';
     os << " * Dimension   : " << _dim << '\n';
