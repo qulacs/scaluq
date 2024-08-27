@@ -122,7 +122,9 @@ NB_MODULE(scaluq_core, m) {
         .def("set_computational_basis",
              &StateVector::set_computational_basis,
              "Initialize with computational basis \\ket{\\mathrm{basis}}.")
-        .def("amplitudes", &StateVector::amplitudes, "Get all amplitudes with as `list[complex]`.")
+        .def("amplitudes",
+             &StateVector::get_amplitudes,
+             "Get all amplitudes with as `list[complex]`.")
         .def("n_qubits", &StateVector::n_qubits, "Get num of qubits.")
         .def("dim", &StateVector::dim, "Get dimension of the vector ($=2^\\mathrm{n\\_qubits}$).")
         .def("get_squared_norm",
@@ -226,7 +228,7 @@ NB_MODULE(scaluq_core, m) {
             "Construct batched state vectors with Haar random states. If seed is not "
             "specified, the value from random device is used.")
         .def("amplitudes",
-             &StateVectorBatched::amplitudes,
+             &StateVectorBatched::get_amplitudes,
              "Get all amplitudes with as `list[list[complex]]`.")
         .def("get_squared_norm",
              &StateVectorBatched::get_squared_norm,
