@@ -166,9 +166,43 @@ inline Matrix convert_external_matrix_to_internal_matrix(const ComplexMatrix& ei
 inline ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix& matrix) {
     int rows = matrix.extent(0);
     int cols = matrix.extent(1);
-    Eigen::Map<ComplexMatrix> mat(reinterpret_cast<StdComplex*>(matrix.data()), rows, cols);
-    return mat;
+    ComplexMatrix eigen_matrix(rows, cols);
+    Kokkos::View<Complex**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
+        reinterpret_cast<Complex*>(eigen_matrix.data()), rows, cols);
+    Kokkos::deep_copy(host_view, matrix);
+    return eigen_matrix;
 }
+
+inline std::vector<UINT> create_matrix_mask_list(UINT target_mask) {
+    std::vector<UINT> bit_mask_list;
+    UINT x = 1;
+    for (UINT bit = 0; bit < 64; bit++) {
+        if (target_mask & x) bit_mask_list.emplace_back(x);
+        x <<= 1;
+    }
+    const UINT qubit_index_count = std::popcount(target_mask);
+    const UINT matrix_dim = 1ULL << qubit_index_count;
+    std::vector<UINT> mask_list(matrix_dim, 0);
+
+    for (UINT cursor = 0; cursor < matrix_dim; cursor++) {
+        for (UINT idx = 0; idx < bit_mask_list.size(); idx++) {
+            UINT bit_mask = bit_mask_list[idx];
+            if (cursor & bit_mask) mask_list[cursor] ^= bit_mask;
+        }
+    }
+    return mask_list;
+}
+
+// いらなさそう
+// inline std::vector<UINT> create_sorted_ui_list_value(UINT target_mask, UINT control_mask) {
+//     std::vector<UINT> sorted_list;
+//     UINT qubit_count = std::bit_width(target_mask);
+//     for (UINT bit_cursor = 1; bit_cursor < std::bit_width(target_mask); bit_cursor++) {
+//         if (target_mask & (1 << bit_cursor)) sorted_list.emplace_back(bit_cursor);
+//         if (control_mask & (1 << bit_cursor)) sorted_list.emplace_back(bit_cursor);
+//     }
+//     return sorted_list;
+// }
 
 }  // namespace internal
 

@@ -57,21 +57,20 @@ public:
     Kokkos::View<SparseValue*> _values;
 
     SparseMatrix(const SparseComplexMatrix& sp) {
-        SparseComplexMatrix& mat = const_cast<SparseComplexMatrix&>(sp);
+        SparseComplexMatrix mat = sp;
         mat.makeCompressed();
 
         Kokkos::View<SparseValue*, Kokkos::HostSpace> values_h("values_h", mat.nonZeros());
         int idx = 0;
         for (int k = 0; k < mat.outerSize(); ++k) {
-            for (Eigen::SparseMatrix<StdComplex>::InnerIterator it(sp, k); it; ++it) {
+            for (SparseComplexMatrix::InnerIterator it(mat, k); it; ++it) {
                 uint32_t row = it.row();
                 uint32_t col = it.col();
                 Complex value = it.value();
                 values_h(idx++) = {value, row, col};
             }
         }
-        auto _values =
-            Kokkos::create_mirror_view_and_copy(Kokkos::DefaultExecutionSpace(), values_h);
+        Kokkos::deep_copy(_values, values_h);
     }
 };
 

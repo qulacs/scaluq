@@ -105,9 +105,7 @@ public:
 class SparseMatrixGateImpl : public GateBase {
     SparseMatrix _matrix;
     SparseMatrixGateImpl(UINT target_mask, UINT control_mask, const SparseComplexMatrix& mat)
-        : GateBase(target_mask, control_mask) {
-        _matrix = std::move(SparseMatrix(mat));
-    }
+        : GateBase(target_mask, control_mask), _matrix(SparseMatrix(mat)) {}
 
     Gate get_inverse() const override {
         throw std::logic_error("Error: SparseMatrixGateImpl::get_inverse(): Not implemented.");
