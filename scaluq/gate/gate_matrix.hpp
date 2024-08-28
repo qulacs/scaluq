@@ -111,14 +111,22 @@ class SparseMatrixGateImpl : public GateBase {
         throw std::logic_error("Error: SparseMatrixGateImpl::get_inverse(): Not implemented.");
     }
 
-    std::optional<Matrix> get_matrix_internal() const {
-        // TODO: implementation
-        return std::nullopt;
+    Matrix get_matrix_internal() const {
+        Matrix ret("return matrix", _matrix._row, _matrix._col);
+        auto vec = _matrix._values;
+        for (int i = 0; i < vec.size(); i++) {
+            ret(vec[i].r, vec[i].c) = vec[i].val;
+        }
+        return ret;
     }
 
-    std::optional<ComplexMatrix> get_matrix() const override {
-        // TODO: implementation
-        return std::nullopt;
+    ComplexMatrix get_matrix() const override {
+        ComplexMatrix ret(_matrix._row, _matrix._col);
+        auto vec = _matrix._values;
+        for (int i = 0; i < vec.size(); i++) {
+            ret(vec[i].r, vec[i].c) = vec[i].val;
+        }
+        return ret;
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
@@ -135,27 +143,25 @@ class DenseMatrixGateImpl : public GateBase {
                         UINT control_mask,
                         const ComplexMatrix& mat,
                         bool is_unitary = false)
-        : GateBase(target_mask, control_mask), _is_unitary(is_unitary) {
-        _matrix = convert_external_matrix_to_internal_matrix(mat);
-    }
+        : GateBase(target_mask, control_mask),
+          _is_unitary(is_unitary),
+          _matrix(convert_external_matrix_to_internal_matrix(mat)) {}
 
     Gate get_inverse() const override {
-        UINT rows = _matrix.extent(0);
-        UINT cols = _matrix.extent(1);
         ComplexMatrix mat_eigen = convert_internal_matrix_to_external_matrix(_matrix);
         ComplexMatrix inv_eigen;
         if (_is_unitary) {
             inv_eigen = mat_eigen.adjoint();
         } else {
-            inv_eigen = mat_eigen.lu().solve(ComplexMatrix::Identity(rows, cols));
+            inv_eigen = mat_eigen.inverse();
         }
         return std::make_shared<const DenseMatrixGateImpl>(
             _target_mask, _control_mask, inv_eigen, _is_unitary);
     }
 
-    std::optional<Matrix> get_matrix_internal() const { return _matrix; }
+    Matrix get_matrix_internal() const { return _matrix; }
 
-    std::optional<ComplexMatrix> get_matrix() const override {
+    ComplexMatrix get_matrix() const override {
         return convert_internal_matrix_to_external_matrix(_matrix);
     }
 
@@ -169,4 +175,6 @@ class DenseMatrixGateImpl : public GateBase {
 
 using OneTargetMatrixGate = internal::GatePtr<internal::OneTargetMatrixGateImpl>;
 using TwoTargetMatrixGate = internal::GatePtr<internal::TwoTargetMatrixGateImpl>;
+using SparseMatrixGate = internal::GatePtr<internal::SparseMatrixGateImpl>;
+using DenseMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl>;
 }  // namespace scaluq

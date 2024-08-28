@@ -55,8 +55,11 @@ struct SparseValue {
 class SparseMatrix {
 public:
     Kokkos::View<SparseValue*> _values;
+    UINT _row, _col;
 
     SparseMatrix(const SparseComplexMatrix& sp) {
+        _row = sp.rows();
+        _col = sp.cols();
         SparseComplexMatrix mat = sp;
         mat.makeCompressed();
 

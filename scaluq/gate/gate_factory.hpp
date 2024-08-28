@@ -148,7 +148,8 @@ inline Gate PauliRotation(const PauliOperator& pauli,
 }
 inline Gate DenseMatrix(const std::vector<UINT>& targets,
                         const ComplexMatrix& matrix,
-                        const std::vector<UINT>& controls = {}) {
+                        const std::vector<UINT>& controls = {},
+                        bool is_unitary = false) {
     UINT nqubits = targets.size();
     UINT dim = 1ULL << nqubits;
     if (static_cast<UINT>(matrix.rows()) != dim || static_cast<UINT>(matrix.cols()) != dim) {
@@ -185,10 +186,19 @@ inline Gate DenseMatrix(const std::vector<UINT>& targets,
                                                      Complex(matrix(3, 3))}},
                                controls);
     }
-    throw std::runtime_error(
-        "gate::DenseMatrix(const std::vector<UINT>&, const ComplexMatrix&): DenseMatrix gate "
-        "more "
-        "than two qubits is not implemented yet.");
+    if (targets.size() >= 3) {
+        return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl>(
+            internal::vector_to_mask(targets),
+            internal::vector_to_mask(controls),
+            matrix,
+            is_unitary);
+    }
+}
+inline Gate SparseMatrix(const std::vector<UINT>& targets,
+                         const SparseComplexMatrix& matrix,
+                         const std::vector<UINT>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl>(
+        internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix);
 }
 inline Gate Probablistic(const std::vector<double>& distribution,
                          const std::vector<Gate>& gate_list) {
