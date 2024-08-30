@@ -10,16 +10,17 @@
 namespace scaluq {
 class Operator {
 public:
-    explicit Operator(UINT n_qubits);
+    explicit Operator(std::uint64_t n_qubits);
 
     [[nodiscard]] inline bool is_hermitian() { return _is_hermitian; }
-    [[nodiscard]] inline UINT n_qubits() { return _n_qubits; }
+    [[nodiscard]] inline std::uint64_t n_qubits() { return _n_qubits; }
     [[nodiscard]] inline const std::vector<PauliOperator>& terms() const { return _terms; }
     [[nodiscard]] std::string to_string() const;
 
     void add_operator(const PauliOperator& mpt);
     void add_operator(PauliOperator&& mpt);
-    void add_random_operator(const UINT operator_count = 1, UINT seed = std::random_device()());
+    void add_random_operator(const std::uint64_t operator_count = 1,
+                             std::uint64_t seed = std::random_device()());
 
     void optimize();
 
@@ -37,11 +38,11 @@ public:
 
     // not implemented yet
     [[nodiscard]] Complex solve_gound_state_eigenvalue_by_arnoldi_method(const StateVector& state,
-                                                                         UINT iter_count,
+                                                                         std::uint64_t iter_count,
                                                                          Complex mu = 0.) const;
     // not implemented yet
     [[nodiscard]] Complex solve_gound_state_eigenvalue_by_power_method(const StateVector& state,
-                                                                       UINT iter_count,
+                                                                       std::uint64_t iter_count,
                                                                        Complex mu = 0.) const;
 
     Operator& operator*=(Complex coef);
@@ -63,7 +64,7 @@ public:
 
 private:
     std::vector<PauliOperator> _terms;
-    UINT _n_qubits;
+    std::uint64_t _n_qubits;
     bool _is_hermitian = true;
 };
 }  // namespace scaluq
