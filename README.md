@@ -63,13 +63,12 @@ https://scaluq.readthedocs.io/en/latest/index.html
 
 ```cpp
 #include <iostream>
+#include <cstdint>
 
 #include <circuit/circuit.hpp>
 #include <gate/gate_factory.hpp>
 #include <operator/operator.hpp>
 #include <state/state_vector.hpp>
-
-using scaluq::std::uint64_t;
 
 int main() {
     scaluq::initialize();  // must be called before using any scaluq methods
