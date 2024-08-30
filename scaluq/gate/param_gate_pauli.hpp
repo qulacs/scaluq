@@ -24,13 +24,13 @@ public:
     ParamGate get_inverse() const override {
         return std::make_shared<const PPauliRotationGateImpl>(_control_mask, _pauli, -_pcoef);
     }
-    ComplexMatrix get_matrix(double param) const override {
+    internal::ComplexMatrix get_matrix(double param) const override {
         double angle = _pcoef * param;
         Complex true_angle = angle * this->_pauli.get_coef();
-        ComplexMatrix mat = this->_pauli.get_matrix_ignoring_coef();
+        internal::ComplexMatrix mat = this->_pauli.get_matrix_ignoring_coef();
         StdComplex imag_unit(0, 1);
         mat = (StdComplex)Kokkos::cos(-true_angle / 2) *
-                  ComplexMatrix::Identity(mat.rows(), mat.cols()) +
+                  internal::ComplexMatrix::Identity(mat.rows(), mat.cols()) +
               imag_unit * (StdComplex)Kokkos::sin(-true_angle / 2) * mat;
         return mat;
     }

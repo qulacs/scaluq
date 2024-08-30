@@ -234,7 +234,7 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
     return _ptr->_coef * res;
 }
 
-[[nodiscard]] ComplexMatrix PauliOperator::get_matrix_ignoring_coef() const {
+[[nodiscard]] internal::ComplexMatrix PauliOperator::get_matrix_ignoring_coef() const {
     std::uint64_t flip_mask, phase_mask, rot90_count;
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, _ptr->_pauli_id_list.size()),
@@ -258,14 +258,14 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
         rot90_count);
     std::vector<StdComplex> rot = {1, -1.i, -1, 1.i};
     std::uint64_t matrix_dim = 1ULL << _ptr->_pauli_id_list.size();
-    ComplexMatrix mat = ComplexMatrix::Zero(matrix_dim, matrix_dim);
+    internal::ComplexMatrix mat = internal::ComplexMatrix::Zero(matrix_dim, matrix_dim);
     for (std::uint64_t index = 0; index < matrix_dim; index++) {
         const StdComplex sign = 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
         mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
     }
     return mat;
 }
-[[nodiscard]] ComplexMatrix PauliOperator::get_matrix() const {
+[[nodiscard]] internal::ComplexMatrix PauliOperator::get_matrix() const {
     return get_matrix_ignoring_coef() * StdComplex(_ptr->_coef);
 }
 

@@ -88,8 +88,8 @@ public:
     [[nodiscard]] Complex get_expectation_value(const StateVector& state_vector) const;
     [[nodiscard]] Complex get_transition_amplitude(const StateVector& state_vector_bra,
                                                    const StateVector& state_vector_ket) const;
-    [[nodiscard]] ComplexMatrix get_matrix() const;
-    [[nodiscard]] ComplexMatrix get_matrix_ignoring_coef() const;
+    [[nodiscard]] internal::ComplexMatrix get_matrix() const;
+    [[nodiscard]] internal::ComplexMatrix get_matrix_ignoring_coef() const;
 
     [[nodiscard]] PauliOperator operator*(const PauliOperator& target) const;
     [[nodiscard]] inline PauliOperator operator*(Complex target) const {

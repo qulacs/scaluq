@@ -75,8 +75,9 @@ KOKKOS_INLINE_FUNCTION Matrix2x2 matrix_multiply(const Matrix2x2& matrix1,
             matrix1[1][0] * matrix2[0][1] + matrix1[1][1] * matrix2[1][1]};
 }
 
-inline ComplexMatrix kronecker_product(const ComplexMatrix& lhs, const ComplexMatrix& rhs) {
-    ComplexMatrix result(lhs.rows() * rhs.rows(), lhs.cols() * rhs.cols());
+inline internal::ComplexMatrix kronecker_product(const internal::ComplexMatrix& lhs,
+                                                 const internal::ComplexMatrix& rhs) {
+    internal::ComplexMatrix result(lhs.rows() * rhs.rows(), lhs.cols() * rhs.cols());
     for (int i = 0; i < lhs.rows(); i++) {
         for (int j = 0; j < lhs.cols(); j++) {
             result.block(i * rhs.rows(), j * rhs.cols(), rhs.rows(), rhs.cols()) = lhs(i, j) * rhs;
@@ -85,9 +86,9 @@ inline ComplexMatrix kronecker_product(const ComplexMatrix& lhs, const ComplexMa
     return result;
 }
 
-inline ComplexMatrix get_expanded_matrix(const ComplexMatrix& from_matrix,
-                                         const std::vector<std::uint64_t>& from_targets,
-                                         std::vector<std::uint64_t>& to_targets) {
+inline internal::ComplexMatrix get_expanded_matrix(const internal::ComplexMatrix& from_matrix,
+                                                   const std::vector<std::uint64_t>& from_targets,
+                                                   std::vector<std::uint64_t>& to_targets) {
     std::vector<std::uint64_t> targets_map(from_targets.size());
     std::ranges::transform(from_targets, targets_map.begin(), [&](std::uint64_t x) {
         return std::ranges::lower_bound(to_targets, x) - to_targets.begin();
@@ -105,8 +106,8 @@ inline ComplexMatrix get_expanded_matrix(const ComplexMatrix& from_matrix,
     for (std::uint64_t i : std::views::iota(0ULL, 1ULL << to_targets.size())) {
         if ((i & targets_idx_mask) == 0) outer_indices.push_back(i);
     }
-    ComplexMatrix to_matrix =
-        ComplexMatrix::Zero(1ULL << to_targets.size(), 1ULL << to_targets.size());
+    internal::ComplexMatrix to_matrix =
+        internal::ComplexMatrix::Zero(1ULL << to_targets.size(), 1ULL << to_targets.size());
     for (std::uint64_t i : std::views::iota(0ULL, 1ULL << from_targets.size())) {
         for (std::uint64_t j : std::views::iota(0ULL, 1ULL << from_targets.size())) {
             for (std::uint64_t o : outer_indices) {

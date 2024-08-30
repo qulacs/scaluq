@@ -146,7 +146,7 @@ TEST(CircuitTest, CircuitBasic) {
     PauliOperator pauli = PauliOperator("I 0 X 1 Y 2 Z 3");
     circuit.add_gate(multi_Pauli(pauli));
 
-    ComplexMatrix mat_x(2, 2);
+    internal::ComplexMatrix mat_x(2, 2);
     target = random.int32() % n;
     mat_x << 0, 1, 1, 0;
     circuit.add_gate(dense_matrix(target, mat_x));

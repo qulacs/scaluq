@@ -37,8 +37,8 @@ public:
                                                   Kokkos::conj(_matrix[0][1]),
                                                   Kokkos::conj(_matrix[1][1])});
     }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << this->_matrix[0][0], this->_matrix[0][1], this->_matrix[1][0], this->_matrix[1][1];
         return mat;
     }
@@ -84,8 +84,8 @@ public:
         return std::make_shared<const TwoTargetMatrixGateImpl>(
             _target_mask, _control_mask, matrix_dag);
     }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(4, 4);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(4, 4);
         mat << this->_matrix[0][0], this->_matrix[0][1], this->_matrix[0][2], this->_matrix[0][3],
             this->_matrix[1][0], this->_matrix[1][1], this->_matrix[1][2], this->_matrix[1][3],
             this->_matrix[2][0], this->_matrix[2][1], this->_matrix[2][2], this->_matrix[2][3],
