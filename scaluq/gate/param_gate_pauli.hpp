@@ -13,12 +13,14 @@ class PPauliRotationGateImpl : public ParamGateBase {
     const PauliOperator _pauli;
 
 public:
-    PPauliRotationGateImpl(UINT control_mask, const PauliOperator& pauli, double pcoef = 1.)
+    PPauliRotationGateImpl(std::uint64_t control_mask,
+                           const PauliOperator& pauli,
+                           double pcoef = 1.)
         : ParamGateBase(vector_to_mask<false>(pauli.get_target_qubit_list()), control_mask, pcoef),
           _pauli(pauli) {}
 
     PauliOperator pauli() const { return _pauli; }
-    std::vector<UINT> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
+    std::vector<std::uint64_t> get_pauli_id_list() const { return _pauli.get_pauli_id_list(); }
 
     ParamGate get_inverse() const override {
         return std::make_shared<const PPauliRotationGateImpl>(_control_mask, _pauli, -_pcoef);

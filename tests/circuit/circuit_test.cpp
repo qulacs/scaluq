@@ -14,8 +14,8 @@ const auto eps = 1e-12;
 using CComplex = std::complex<double>;
 
 TEST(CircuitTest, CircuitBasic) {
-    const UINT n = 4;
-    const UINT dim = 1ULL << n;
+    const std::uint64_t n = 4;
+    const std::uint64_t dim = 1ULL << n;
 
     Random random;
 
@@ -23,10 +23,10 @@ TEST(CircuitTest, CircuitBasic) {
     Eigen::VectorXcd state_eigen(dim);
 
     auto state_cp = state.amplitudes();
-    for (UINT i = 0; i < dim; ++i) state_eigen[i] = state_cp[i];
+    for (std::uint64_t i = 0; i < dim; ++i) state_eigen[i] = state_cp[i];
 
     Circuit circuit(n);
-    UINT target, target_sub;
+    std::uint64_t target, target_sub;
     double angle;
     std::complex<double> imag_unit(0, 1);
 
@@ -138,8 +138,8 @@ TEST(CircuitTest, CircuitBasic) {
         get_expanded_eigen_matrix_with_identity(target, make_U(-angle, 0, 0), n) * state_eigen;
 
     /*
-    std::vector<UINT> target_index_list{0, 1, 2, 3};
-    std::vector<UINT> pauli_id_list{0, 1, 2, 3};
+    std::vector<std::uint64_t> target_index_list{0, 1, 2, 3};
+    std::vector<std::uint64_t> pauli_id_list{0, 1, 2, 3};
     circuit.add_gate(multi_Pauli(target_index_list, pauli_id_list));
 
     // add same gate == cancel above pauli gate
@@ -159,23 +159,23 @@ TEST(CircuitTest, CircuitBasic) {
     circuit.update_quantum_state(state);
 
     state_cp = state.amplitudes();
-    for (UINT i = 0; i < dim; ++i)
+    for (std::uint64_t i = 0; i < dim; ++i)
         ASSERT_NEAR(std::abs(state_eigen[i] - (CComplex)state_cp[i]), 0, eps);
 }
 
 TEST(CircuitTest, CircuitRev) {
-    const UINT n = 4;
-    const UINT dim = 1ULL << n;
+    const std::uint64_t n = 4;
+    const std::uint64_t dim = 1ULL << n;
 
     Random random;
 
     StateVector state = StateVector::Haar_random_state(n);
     auto state_cp = state.amplitudes();
     Eigen::VectorXcd state_eigen(dim);
-    for (UINT i = 0; i < dim; ++i) state_eigen[i] = state_cp[i];
+    for (std::uint64_t i = 0; i < dim; ++i) state_eigen[i] = state_cp[i];
 
     Circuit circuit(n);
-    UINT target, target_sub;
+    std::uint64_t target, target_sub;
     double angle;
 
     target = random.int32() % n;
@@ -257,5 +257,6 @@ TEST(CircuitTest, CircuitRev) {
 
     revcircuit.update_quantum_state(state);
     state_cp = state.amplitudes();
-    for (UINT i = 0; i < dim; ++i) ASSERT_NEAR(abs(state_eigen[i] - (CComplex)state_cp[i]), 0, eps);
+    for (std::uint64_t i = 0; i < dim; ++i)
+        ASSERT_NEAR(abs(state_eigen[i] - (CComplex)state_cp[i]), 0, eps);
 }

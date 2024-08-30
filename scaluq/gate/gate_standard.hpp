@@ -23,7 +23,7 @@ protected:
     double _phase;
 
 public:
-    GlobalPhaseGateImpl(UINT control_mask, double phase)
+    GlobalPhaseGateImpl(std::uint64_t control_mask, double phase)
         : GateBase(0, control_mask), _phase(phase){};
 
     [[nodiscard]] double phase() const { return _phase; }
@@ -46,7 +46,7 @@ protected:
     double _angle;
 
 public:
-    RotationGateBase(UINT target_mask, UINT control_mask, double angle)
+    RotationGateBase(std::uint64_t target_mask, std::uint64_t control_mask, double angle)
         : GateBase(target_mask, control_mask), _angle(angle) {}
 
     double angle() const { return _angle; }
@@ -391,7 +391,7 @@ class U1GateImpl : public GateBase {
     double _lambda;
 
 public:
-    U1GateImpl(UINT target_mask, UINT control_mask, double lambda)
+    U1GateImpl(std::uint64_t target_mask, std::uint64_t control_mask, double lambda)
         : GateBase(target_mask, control_mask), _lambda(lambda) {}
 
     double lambda() const { return _lambda; }
@@ -414,7 +414,7 @@ class U2GateImpl : public GateBase {
     double _phi, _lambda;
 
 public:
-    U2GateImpl(UINT target_mask, UINT control_mask, double phi, double lambda)
+    U2GateImpl(std::uint64_t target_mask, std::uint64_t control_mask, double phi, double lambda)
         : GateBase(target_mask, control_mask), _phi(phi), _lambda(lambda) {}
 
     double phi() const { return _phi; }
@@ -442,7 +442,11 @@ class U3GateImpl : public GateBase {
     double _theta, _phi, _lambda;
 
 public:
-    U3GateImpl(UINT target_mask, UINT control_mask, double theta, double phi, double lambda)
+    U3GateImpl(std::uint64_t target_mask,
+               std::uint64_t control_mask,
+               double theta,
+               double phi,
+               double lambda)
         : GateBase(target_mask, control_mask), _theta(theta), _phi(phi), _lambda(lambda) {}
 
     double theta() const { return _theta; }

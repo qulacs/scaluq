@@ -11,11 +11,11 @@ namespace scaluq {
 class Circuit {
 public:
     using GateWithKey = std::variant<Gate, std::pair<ParamGate, std::string>>;
-    explicit Circuit(UINT n_qubits) : _n_qubits(n_qubits) {}
+    explicit Circuit(std::uint64_t n_qubits) : _n_qubits(n_qubits) {}
 
-    [[nodiscard]] inline UINT n_qubits() const { return _n_qubits; }
+    [[nodiscard]] inline std::uint64_t n_qubits() const { return _n_qubits; }
     [[nodiscard]] inline const std::vector<GateWithKey>& gate_list() const { return _gate_list; }
-    [[nodiscard]] inline UINT gate_count() { return _gate_list.size(); }
+    [[nodiscard]] inline std::uint64_t gate_count() { return _gate_list.size(); }
     [[nodiscard]] inline const std::set<std::string> key_set() const {
         std::set<std::string> key_set;
         for (auto&& gate : _gate_list) {
@@ -23,22 +23,23 @@ public:
         }
         return key_set;
     }
-    [[nodiscard]] inline const GateWithKey& get(UINT idx) const {
+    [[nodiscard]] inline const GateWithKey& get(std::uint64_t idx) const {
         if (idx >= _gate_list.size()) {
-            throw std::runtime_error("Circuit::get(UINT): index out of bounds");
+            throw std::runtime_error("Circuit::get(std::uint64_t): index out of bounds");
         }
         return _gate_list[idx];
     }
-    [[nodiscard]] inline std::optional<std::string> get_key(UINT idx) {
+    [[nodiscard]] inline std::optional<std::string> get_key(std::uint64_t idx) {
         if (idx >= _gate_list.size()) {
-            throw std::runtime_error("Circuit::get_parameter_key(UINT): index out of bounds");
+            throw std::runtime_error(
+                "Circuit::get_parameter_key(std::uint64_t): index out of bounds");
         }
         const auto& gate = _gate_list[idx];
         if (gate.index() == 0) return std::nullopt;
         return std::get<1>(gate).second;
     }
 
-    [[nodiscard]] UINT calculate_depth() const;
+    [[nodiscard]] std::uint64_t calculate_depth() const;
 
     void add_gate(const Gate& gate);
     void add_gate(Gate&& gate);
@@ -54,7 +55,7 @@ public:
     Circuit get_inverse() const;
 
 private:
-    UINT _n_qubits;
+    std::uint64_t _n_qubits;
 
     std::vector<GateWithKey> _gate_list;
 
