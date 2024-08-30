@@ -79,13 +79,11 @@ void sdag_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVecto
 }
 
 void t_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector& state) {
-    one_target_phase_gate(
-        target_mask, control_mask, Complex(INVERSE_SQRT2(), INVERSE_SQRT2()), state);
+    one_target_phase_gate(target_mask, control_mask, Complex(INVERSE_SQRT2, INVERSE_SQRT2), state);
 }
 
 void tdag_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector& state) {
-    one_target_phase_gate(
-        target_mask, control_mask, Complex(INVERSE_SQRT2(), -INVERSE_SQRT2()), state);
+    one_target_phase_gate(target_mask, control_mask, Complex(INVERSE_SQRT2, -INVERSE_SQRT2), state);
 }
 
 void sqrtx_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector& state) {
@@ -186,7 +184,7 @@ void u2_gate(std::uint64_t target_mask,
              double lambda,
              StateVector& state) {
     one_target_dense_matrix_gate(
-        target_mask, control_mask, get_IBMQ_matrix(PI() / 2., phi, lambda), state);
+        target_mask, control_mask, get_IBMQ_matrix(PI / 2., phi, lambda), state);
 }
 
 void u3_gate(std::uint64_t target_mask,

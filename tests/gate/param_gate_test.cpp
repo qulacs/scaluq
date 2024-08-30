@@ -103,7 +103,7 @@ TEST(ParamGateTest, ApplyPProbablisticGate) {
     StateVector state(1);
     for ([[maybe_unused]] auto _ : std::views::iota(0, 100)) {
         std::uint64_t before = state.sampling(1)[0];
-        probgate->update_quantum_state(state, scaluq::PI());
+        probgate->update_quantum_state(state, scaluq::PI);
         std::uint64_t after = state.sampling(1)[0];
         if (before != after) {
             x_cnt++;

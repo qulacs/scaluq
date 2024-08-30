@@ -422,13 +422,13 @@ public:
 
     Gate get_inverse() const override {
         return std::make_shared<const U2GateImpl>(
-            _target_mask, _control_mask, -_lambda - PI(), -_phi + PI());
+            _target_mask, _control_mask, -_lambda - PI, -_phi + PI);
     }
     ComplexMatrix get_matrix() const override {
         ComplexMatrix mat(2, 2);
-        mat << std::cos(PI() / 4.), -std::exp(1i * _lambda) * std::sin(PI() / 4.),
-            std::exp(1i * _phi) * std::sin(PI() / 4.),
-            std::exp(1i * _phi) * std::exp(1i * _lambda) * std::cos(PI() / 4.);
+        mat << std::cos(PI / 4.), -std::exp(1i * _lambda) * std::sin(PI / 4.),
+            std::exp(1i * _phi) * std::sin(PI / 4.),
+            std::exp(1i * _phi) * std::exp(1i * _lambda) * std::cos(PI / 4.);
         return mat;
     }
 
