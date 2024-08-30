@@ -3,7 +3,7 @@
 #include "../util/utility.hpp"
 
 namespace scaluq {
-StateVectorBatched::StateVectorBatched(UINT batch_size, UINT n_qubits)
+StateVectorBatched::StateVectorBatched(std::uint64_t batch_size, std::uint64_t n_qubits)
     : _batch_size(batch_size),
       _n_qubits(n_qubits),
       _dim(1ULL << _n_qubits),
@@ -20,50 +20,53 @@ void StateVectorBatched::set_state_vector(const StateVector& state) {
     }
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, _dim}),
-        KOKKOS_CLASS_LAMBDA(UINT batch_id, UINT i) { _raw(batch_id, i) = state._raw(i); });
+        KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
+            _raw(batch_id, i) = state._raw(i);
+        });
     Kokkos::fence();
 }
 
-void StateVectorBatched::set_state_vector(UINT batch_id, const StateVector& state) {
+void StateVectorBatched::set_state_vector(std::uint64_t batch_id, const StateVector& state) {
     if (_raw.extent(1) != state._raw.extent(0)) [[unlikely]] {
         throw std::runtime_error(
-            "Error: StateVectorBatched::set_state_vector(UINT, const StateVector&): Dimensions of "
+            "Error: StateVectorBatched::set_state_vector(std::uint64_t, const StateVector&): "
+            "Dimensions of "
             "source and destination views do not match.");
     }
     Kokkos::parallel_for(
-        _dim, KOKKOS_CLASS_LAMBDA(UINT i) { _raw(batch_id, i) = state._raw(i); });
+        _dim, KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw(batch_id, i) = state._raw(i); });
     Kokkos::fence();
 }
 
-StateVector StateVectorBatched::get_state_vector(UINT batch_id) const {
+StateVector StateVectorBatched::get_state_vector(std::uint64_t batch_id) const {
     StateVector ret(_n_qubits);
     Kokkos::parallel_for(
-        _dim, KOKKOS_CLASS_LAMBDA(UINT i) { ret._raw(i) = _raw(batch_id, i); });
+        _dim, KOKKOS_CLASS_LAMBDA(std::uint64_t i) { ret._raw(i) = _raw(batch_id, i); });
     Kokkos::fence();
     return ret;
 }
 
 void StateVectorBatched::set_zero_state() { set_computational_basis(0); }
 
-void StateVectorBatched::set_computational_basis(UINT basis) {
+void StateVectorBatched::set_computational_basis(std::uint64_t basis) {
     if (basis >= _dim) [[unlikely]] {
         throw std::runtime_error(
-            "Error: StateVectorBatched::set_computational_basis(UINT): "
+            "Error: StateVectorBatched::set_computational_basis(std::uint64_t): "
             "index of "
             "computational basis must be smaller than 2^qubit_count");
     }
     Kokkos::deep_copy(_raw, 0);
     Kokkos::parallel_for(
-        _batch_size, KOKKOS_CLASS_LAMBDA(UINT i) { _raw(i, basis) = 1; });
+        _batch_size, KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw(i, basis) = 1; });
     Kokkos::fence();
 }
 
 void StateVectorBatched::set_zero_norm_state() { Kokkos::deep_copy(_raw, 0); }
 
-StateVectorBatched StateVectorBatched::Haar_random_states(UINT batch_size,
-                                                          UINT n_qubits,
+StateVectorBatched StateVectorBatched::Haar_random_states(std::uint64_t batch_size,
+                                                          std::uint64_t n_qubits,
                                                           bool set_same_state,
-                                                          UINT seed) {
+                                                          std::uint64_t seed) {
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
     StateVectorBatched states(batch_size, n_qubits);
     if (set_same_state) {
@@ -71,7 +74,7 @@ StateVectorBatched StateVectorBatched::Haar_random_states(UINT batch_size,
     } else {
         Kokkos::parallel_for(
             Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {states.batch_size(), states.dim()}),
-            KOKKOS_LAMBDA(UINT b, UINT i) {
+            KOKKOS_LAMBDA(std::uint64_t b, std::uint64_t i) {
                 auto rand_gen = rand_pool.get_state();
                 states._raw(b, i) = Complex(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
                 rand_pool.free_state(rand_gen);
@@ -83,7 +86,8 @@ StateVectorBatched StateVectorBatched::Haar_random_states(UINT batch_size,
     return states;
 }
 
-std::vector<std::vector<UINT>> StateVectorBatched::sampling(UINT sampling_count, UINT seed) const {
+std::vector<std::vector<std::uint64_t>> StateVectorBatched::sampling(std::uint64_t sampling_count,
+                                                                     std::uint64_t seed) const {
     Kokkos::View<double**> stacked_prob("prob", _batch_size, _dim + 1);
 
     Kokkos::parallel_for(
@@ -91,9 +95,9 @@ std::vector<std::vector<UINT>> StateVectorBatched::sampling(UINT sampling_count,
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                 team) {
-            UINT batch_id = team.league_rank();
+            std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_scan(Kokkos::TeamThreadRange(team, _dim),
-                                  [&](UINT i, double& update, const bool final) {
+                                  [&](std::uint64_t i, double& update, const bool final) {
                                       update += internal::squared_norm(this->_raw(batch_id, i));
                                       if (final) {
                                           stacked_prob(batch_id, i + 1) = update;
@@ -102,18 +106,18 @@ std::vector<std::vector<UINT>> StateVectorBatched::sampling(UINT sampling_count,
         });
     Kokkos::fence();
 
-    Kokkos::View<UINT**> result(
+    Kokkos::View<std::uint64_t**> result(
         Kokkos::ViewAllocateWithoutInitializing("result"), _batch_size, sampling_count);
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
 
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, sampling_count}),
-        KOKKOS_CLASS_LAMBDA(UINT batch_id, UINT i) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
             auto rand_gen = rand_pool.get_state();
             double r = rand_gen.drand(0., 1.);
-            UINT lo = 0, hi = stacked_prob.extent(1);
+            std::uint64_t lo = 0, hi = stacked_prob.extent(1);
             while (hi - lo > 1) {
-                UINT mid = (lo + hi) / 2;
+                std::uint64_t mid = (lo + hi) / 2;
                 if (stacked_prob(batch_id, mid) > r) {
                     hi = mid;
                 } else {
@@ -124,9 +128,9 @@ std::vector<std::vector<UINT>> StateVectorBatched::sampling(UINT sampling_count,
             rand_pool.free_state(rand_gen);
         });
     Kokkos::fence();
-    return internal::
-        convert_2d_device_view_to_host_vector<UINT, Kokkos::DefaultExecutionSpace::array_layout>(
-            result);
+    return internal::convert_2d_device_view_to_host_vector<
+        std::uint64_t,
+        Kokkos::DefaultExecutionSpace::array_layout>(result);
 }
 
 std::vector<std::vector<Complex>> StateVectorBatched::get_amplitudes() const {
@@ -141,10 +145,10 @@ std::vector<double> StateVectorBatched::get_squared_norm() const {
             const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                 team) {
             double nrm = 0;
-            UINT batch_id = team.league_rank();
+            std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim),
-                [=, *this](const UINT& i, double& lcl) {
+                [=, *this](const std::uint64_t& i, double& lcl) {
                     lcl += internal::squared_norm(_raw(batch_id, i));
                 },
                 nrm);
@@ -162,25 +166,26 @@ void StateVectorBatched::normalize() {
             const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                 team) {
             double nrm = 0;
-            UINT batch_id = team.league_rank();
+            std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim),
-                [=, *this](const UINT& i, double& lcl) {
+                [=, *this](const std::uint64_t& i, double& lcl) {
                     lcl += internal::squared_norm(_raw(batch_id, i));
                 },
                 nrm);
             team.team_barrier();
             nrm = Kokkos::sqrt(nrm);
             Kokkos::parallel_for(Kokkos::TeamThreadRange(team, _dim),
-                                 [=, *this](const UINT& i) { _raw(batch_id, i) /= nrm; });
+                                 [=, *this](const std::uint64_t& i) { _raw(batch_id, i) /= nrm; });
         });
     Kokkos::fence();
 }
 
-std::vector<double> StateVectorBatched::get_zero_probability(UINT target_qubit_index) const {
+std::vector<double> StateVectorBatched::get_zero_probability(
+    std::uint64_t target_qubit_index) const {
     if (target_qubit_index >= _n_qubits) {
         throw std::runtime_error(
-            "Error: StateVectorBatched::get_zero_probability(UINT): index "
+            "Error: StateVectorBatched::get_zero_probability(std::uint64_t): index "
             "of target qubit must be smaller than qubit_count");
     }
     Kokkos::View<double*> probs("probs", _batch_size);
@@ -190,11 +195,12 @@ std::vector<double> StateVectorBatched::get_zero_probability(UINT target_qubit_i
             const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                 team) {
             double sum = 0;
-            UINT batch_id = team.league_rank();
+            std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim >> 1),
-                [&](UINT i, double& lsum) {
-                    UINT basis_0 = internal::insert_zero_to_basis_index(i, target_qubit_index);
+                [&](std::uint64_t i, double& lsum) {
+                    std::uint64_t basis_0 =
+                        internal::insert_zero_to_basis_index(i, target_qubit_index);
                     lsum += internal::squared_norm(_raw(batch_id, basis_0));
                 },
                 sum);
@@ -206,24 +212,24 @@ std::vector<double> StateVectorBatched::get_zero_probability(UINT target_qubit_i
 }
 
 std::vector<double> StateVectorBatched::get_marginal_probability(
-    const std::vector<UINT>& measured_values) const {
+    const std::vector<std::uint64_t>& measured_values) const {
     if (measured_values.size() != _n_qubits) {
         throw std::runtime_error(
             "Error: "
-            "StateVectorBatched::get_marginal_probability(const vector<UINT>&): "
+            "StateVectorBatched::get_marginal_probability(const vector<std::uint64_t>&): "
             "the length of measured_values must be equal to qubit_count");
     }
 
-    std::vector<UINT> target_index;
-    std::vector<UINT> target_value;
-    for (UINT i = 0; i < measured_values.size(); ++i) {
-        UINT measured_value = measured_values[i];
+    std::vector<std::uint64_t> target_index;
+    std::vector<std::uint64_t> target_value;
+    for (std::uint64_t i = 0; i < measured_values.size(); ++i) {
+        std::uint64_t measured_value = measured_values[i];
         if (measured_value == 0 || measured_value == 1) {
             target_index.push_back(i);
             target_value.push_back(measured_value);
         } else if (measured_value != StateVector::UNMEASURED) {
             throw std::runtime_error(
-                "Error:StateVectorBatched::get_marginal_probability(const vector<UINT>&): "
+                "Error:StateVectorBatched::get_marginal_probability(const vector<std::uint64_t>&): "
                 "Invalid "
                 "qubit state specified. Each qubit state must be 0, 1, or "
                 "StateVector::UNMEASURED.");
@@ -239,13 +245,13 @@ std::vector<double> StateVectorBatched::get_marginal_probability(
             const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                 team) {
             double sum = 0;
-            UINT batch_id = team.league_rank();
+            std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim >> target_index_d.size()),
-                [&](UINT i, double& lsum) {
-                    UINT basis = i;
-                    for (UINT cursor = 0; cursor < target_index_d.size(); cursor++) {
-                        UINT insert_index = target_index_d[cursor];
+                [&](std::uint64_t i, double& lsum) {
+                    std::uint64_t basis = i;
+                    for (std::uint64_t cursor = 0; cursor < target_index_d.size(); cursor++) {
+                        std::uint64_t insert_index = target_index_d[cursor];
                         basis = internal::insert_zero_to_basis_index(basis, insert_index);
                         basis ^= target_value_d[cursor] << insert_index;
                     }
@@ -268,10 +274,10 @@ std::vector<double> StateVectorBatched::get_entropy() const {
             const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                 team) {
             double sum = 0;
-            UINT batch_id = team.league_rank();
+            std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim),
-                [&](UINT idx, double& lsum) {
+                [&](std::uint64_t idx, double& lsum) {
                     double prob = internal::squared_norm(_raw(batch_id, idx));
                     prob = Kokkos::max(prob, eps);
                     lsum += -prob * Kokkos::log(prob);
@@ -292,7 +298,7 @@ void StateVectorBatched::add_state_vector(const StateVectorBatched& states) {
     }
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, _dim}),
-        KOKKOS_CLASS_LAMBDA(UINT batch_id, UINT i) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
             _raw(batch_id, i) += states._raw(batch_id, i);
         });
     Kokkos::fence();
@@ -306,7 +312,7 @@ void StateVectorBatched::add_state_vector_with_coef(const Complex& coef,
     }
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, _dim}),
-        KOKKOS_CLASS_LAMBDA(UINT batch_id, UINT i) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
             _raw(batch_id, i) += coef * states._raw(batch_id, i);
         });
     Kokkos::fence();
@@ -314,7 +320,9 @@ void StateVectorBatched::add_state_vector_with_coef(const Complex& coef,
 void StateVectorBatched::multiply_coef(const Complex& coef) {
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, _dim}),
-        KOKKOS_CLASS_LAMBDA(UINT batch_id, UINT i) { _raw(batch_id, i) *= coef; });
+        KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
+            _raw(batch_id, i) *= coef;
+        });
     Kokkos::fence();
 }
 
@@ -324,7 +332,7 @@ void StateVectorBatched::load(const std::vector<std::vector<Complex>>& states) {
             "Error: StateVectorBatched::load(std::vector<std::vector<Complex>>&): invalid "
             "batch_size");
     }
-    for (UINT b = 0; b < states.size(); ++b) {
+    for (std::uint64_t b = 0; b < states.size(); ++b) {
         if (states[b].size() != _dim) {
             throw std::runtime_error(
                 "Error: StateVectorBatched::load(std::vector<std::vector<Complex>>&): invalid "
@@ -334,8 +342,8 @@ void StateVectorBatched::load(const std::vector<std::vector<Complex>>& states) {
 
     auto view_h = Kokkos::create_mirror_view(Kokkos::HostSpace(), _raw);
     Kokkos::fence();
-    for (UINT b = 0; b < states.size(); ++b) {
-        for (UINT i = 0; i < states[0].size(); ++i) {
+    for (std::uint64_t b = 0; b < states.size(); ++b) {
+        for (std::uint64_t i = 0; i < states[0].size(); ++i) {
             view_h(b, i) = states[b][i];
         }
     }
@@ -356,14 +364,14 @@ std::string StateVectorBatched::to_string() const {
     os << " *** Quantum States ***\n";
     os << " * Qubit Count : " << _n_qubits << '\n';
     os << " * Dimension   : " << _dim << '\n';
-    for (UINT b = 0; b < _batch_size; ++b) {
+    for (std::uint64_t b = 0; b < _batch_size; ++b) {
         StateVector tmp(_n_qubits);
         os << "--------------------\n";
         os << " * Batch_id    : " << b << '\n';
         os << " * State vector : \n";
-        for (UINT i = 0; i < _dim; ++i) {
+        for (std::uint64_t i = 0; i < _dim; ++i) {
             os <<
-                [](UINT n, UINT len) {
+                [](std::uint64_t n, std::uint64_t len) {
                     std::string tmp;
                     while (len--) {
                         tmp += ((n >> len) & 1) + '0';

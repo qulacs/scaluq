@@ -14,7 +14,7 @@ using namespace scaluq;
 TEST(GateTest, MergeGate) {
     std::vector<Gate> gates;
     Random random;
-    for (UINT target = 0; target < 2; target++) {
+    for (std::uint64_t target = 0; target < 2; target++) {
         gates.push_back(gate::X(target));
         gates.push_back(gate::Y(target));
         gates.push_back(gate::Z(target));
@@ -80,7 +80,7 @@ TEST(GateTest, MergeGate) {
         gate::PauliRotation(PauliOperator("Z 1", random.uniform()), random.uniform() * PI() * 2));
     for (auto&& g1 : gates) {
         for (auto&& g2 : gates) {
-            UINT n = 2;
+            std::uint64_t n = 2;
             auto state1 = StateVector::Haar_random_state(n);
             auto state2 = state1.copy();
             auto [mg, phase] = merge_gate(g1, g2);

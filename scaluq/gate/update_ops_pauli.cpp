@@ -11,19 +11,19 @@ namespace scaluq {
 namespace internal {
 
 // まだ
-void pauli_gate(UINT control_mask, const PauliOperator& pauli, StateVector& state) {
+void pauli_gate(std::uint64_t control_mask, const PauliOperator& pauli, StateVector& state) {
     pauli.apply_to_state(state);
 }
 
 // まだ
-void pauli_rotation_gate(UINT control_mask,
+void pauli_rotation_gate(std::uint64_t control_mask,
                          const PauliOperator& pauli,
                          double angle,
                          StateVector& state) {
     auto [bit_flip_mask_vector, phase_flip_mask_vector] = pauli.get_XZ_mask_representation();
-    UINT bit_flip_mask = internal::BitVector(bit_flip_mask_vector).data_raw()[0];
-    UINT phase_flip_mask = internal::BitVector(phase_flip_mask_vector).data_raw()[0];
-    UINT global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
+    std::uint64_t bit_flip_mask = internal::BitVector(bit_flip_mask_vector).data_raw()[0];
+    std::uint64_t phase_flip_mask = internal::BitVector(phase_flip_mask_vector).data_raw()[0];
+    std::uint64_t global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     Complex true_angle = angle * pauli.coef();
     const Complex cosval = Kokkos::cos(-true_angle / 2);
     const Complex sinval = Kokkos::sin(-true_angle / 2);
@@ -31,7 +31,7 @@ void pauli_rotation_gate(UINT control_mask,
         const Complex cval_min = cosval - Complex(0, 1) * sinval;
         const Complex cval_pls = cosval + Complex(0, 1) * sinval;
         Kokkos::parallel_for(
-            state.dim(), KOKKOS_LAMBDA(UINT state_idx) {
+            state.dim(), KOKKOS_LAMBDA(std::uint64_t state_idx) {
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
                     state._raw[state_idx] *= cval_min;
                 } else {
@@ -41,11 +41,11 @@ void pauli_rotation_gate(UINT control_mask,
         Kokkos::fence();
         return;
     } else {
-        const UINT insert_idx = internal::BitVector(bit_flip_mask_vector).msb();
+        const std::uint64_t insert_idx = internal::BitVector(bit_flip_mask_vector).msb();
         Kokkos::parallel_for(
-            state.dim() >> 1, KOKKOS_LAMBDA(UINT state_idx) {
-                UINT basis_0 = internal::insert_zero_to_basis_index(state_idx, insert_idx);
-                UINT basis_1 = basis_0 ^ bit_flip_mask;
+            state.dim() >> 1, KOKKOS_LAMBDA(std::uint64_t state_idx) {
+                std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, insert_idx);
+                std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
 
                 int bit_parity_0 = Kokkos::popcount(basis_0 & phase_flip_mask) & 1;
                 int bit_parity_1 = Kokkos::popcount(basis_1 & phase_flip_mask) & 1;

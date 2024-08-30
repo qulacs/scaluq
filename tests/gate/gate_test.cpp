@@ -17,7 +17,7 @@ const auto eps = 1e-12;
 using CComplex = std::complex<double>;
 
 template <Gate (*QuantumGateConstructor)()>
-void run_random_gate_apply(UINT n_qubits) {
+void run_random_gate_apply(std::uint64_t n_qubits) {
     const int dim = 1ULL << n_qubits;
 
     Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
@@ -40,8 +40,8 @@ void run_random_gate_apply(UINT n_qubits) {
     }
 }
 
-template <Gate (*QuantumGateConstructor)(double, const std::vector<UINT>&)>
-void run_random_gate_apply(UINT n_qubits) {
+template <Gate (*QuantumGateConstructor)(double, const std::vector<std::uint64_t>&)>
+void run_random_gate_apply(std::uint64_t n_qubits) {
     const int dim = 1ULL << n_qubits;
     Random random;
 
@@ -66,8 +66,9 @@ void run_random_gate_apply(UINT n_qubits) {
     }
 }
 
-template <Gate (*QuantumGateConstructor)(UINT, const std::vector<UINT>&)>
-void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matrix_factory) {
+template <Gate (*QuantumGateConstructor)(std::uint64_t, const std::vector<std::uint64_t>&)>
+void run_random_gate_apply(std::uint64_t n_qubits,
+                           std::function<Eigen::MatrixXcd()> matrix_factory) {
     const auto matrix = matrix_factory();
     const int dim = 1ULL << n_qubits;
     Random random;
@@ -80,7 +81,7 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matr
             test_state[i] = state_cp[i];
         }
 
-        const UINT target = random.int64() % n_qubits;
+        const std::uint64_t target = random.int64() % n_qubits;
         const Gate gate = QuantumGateConstructor(target, {});
         gate->update_quantum_state(state);
         state_cp = state.get_amplitudes();
@@ -93,8 +94,9 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd()> matr
     }
 }
 
-template <Gate (*QuantumGateConstructor)(UINT, double, const std::vector<UINT>&)>
-void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd(double)> matrix_factory) {
+template <Gate (*QuantumGateConstructor)(std::uint64_t, double, const std::vector<std::uint64_t>&)>
+void run_random_gate_apply(std::uint64_t n_qubits,
+                           std::function<Eigen::MatrixXcd(double)> matrix_factory) {
     const int dim = 1ULL << n_qubits;
     Random random;
 
@@ -108,7 +110,7 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd(double)
 
         const double angle = M_PI * random.uniform();
         const auto matrix = matrix_factory(angle);
-        const UINT target = random.int64() % n_qubits;
+        const std::uint64_t target = random.int64() % n_qubits;
         const Gate gate = QuantumGateConstructor(target, angle, {});
         gate->update_quantum_state(state);
         state_cp = state.get_amplitudes();
@@ -122,7 +124,8 @@ void run_random_gate_apply(UINT n_qubits, std::function<Eigen::MatrixXcd(double)
 }
 
 void run_random_gate_apply_IBMQ(
-    UINT n_qubits, std::function<Eigen::MatrixXcd(double, double, double)> matrix_factory) {
+    std::uint64_t n_qubits,
+    std::function<Eigen::MatrixXcd(double, double, double)> matrix_factory) {
     const int dim = 1ULL << n_qubits;
     Random random;
 
@@ -145,7 +148,7 @@ void run_random_gate_apply_IBMQ(
                 theta = M_PI / 2;
             }
             const auto matrix = matrix_factory(theta, phi, lambda);
-            const UINT target = random.int64() % n_qubits;
+            const std::uint64_t target = random.int64() % n_qubits;
             Gate gate;
             if (gate_type == 0) {
                 gate = gate::U1(target, lambda, {});
@@ -167,12 +170,12 @@ void run_random_gate_apply_IBMQ(
     }
 }
 
-void run_random_gate_apply_two_target(UINT n_qubits) {
+void run_random_gate_apply_two_target(std::uint64_t n_qubits) {
     const int dim = 1ULL << n_qubits;
     Random random;
 
     Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
-    std::function<Eigen::MatrixXcd(UINT, UINT, UINT)> func_eig;
+    std::function<Eigen::MatrixXcd(std::uint64_t, std::uint64_t, std::uint64_t)> func_eig;
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
         for (int g = 0; g < 2; g++) {
@@ -182,8 +185,8 @@ void run_random_gate_apply_two_target(UINT n_qubits) {
                 test_state[i] = state_cp[i];
             }
 
-            UINT target = random.int64() % n_qubits;
-            UINT control = random.int64() % n_qubits;
+            std::uint64_t target = random.int64() % n_qubits;
+            std::uint64_t control = random.int64() % n_qubits;
             if (target == control) target = (target + 1) % n_qubits;
             if (g == 0) {
                 gate = gate::CX(control, target);
@@ -211,8 +214,8 @@ void run_random_gate_apply_two_target(UINT n_qubits) {
             test_state[i] = state_cp[i];
         }
 
-        UINT target1 = random.int64() % n_qubits;
-        UINT target2 = random.int64() % n_qubits;
+        std::uint64_t target1 = random.int64() % n_qubits;
+        std::uint64_t target2 = random.int64() % n_qubits;
         if (target1 == target2) target1 = (target1 + 1) % n_qubits;
         auto gate = gate::Swap(target1, target2);
         gate->update_quantum_state(state);
@@ -227,8 +230,8 @@ void run_random_gate_apply_two_target(UINT n_qubits) {
     }
 }
 
-void run_random_gate_apply_pauli(UINT n_qubits) {
-    const UINT dim = 1ULL << n_qubits;
+void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
+    const std::uint64_t dim = 1ULL << n_qubits;
     Random random;
     Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
     Eigen::MatrixXcd matrix;
@@ -239,12 +242,12 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         auto state_cp = state.get_amplitudes();
         auto state_bef = state.copy();
 
-        for (UINT i = 0; i < dim; i++) {
+        for (std::uint64_t i = 0; i < dim; i++) {
             test_state[i] = state_cp[i];
         }
 
-        std::vector<UINT> target_vec, pauli_id_vec;
-        for (UINT target = 0; target < n_qubits; target++) {
+        std::vector<std::uint64_t> target_vec, pauli_id_vec;
+        for (std::uint64_t target = 0; target < n_qubits; target++) {
             target_vec.emplace_back(target);
             pauli_id_vec.emplace_back(random.int64() % 4);
         }
@@ -278,7 +281,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         test_state = matrix * test_state;
 
         // check if the state is updated correctly
-        for (UINT i = 0; i < dim; i++) {
+        for (std::uint64_t i = 0; i < dim; i++) {
             ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
         }
 
@@ -288,7 +291,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         state_cp = state.get_amplitudes();
 
         // check if the state is restored correctly
-        for (UINT i = 0; i < dim; i++) {
+        for (std::uint64_t i = 0; i < dim; i++) {
             ASSERT_NEAR(std::abs((CComplex)(state_cp[i] - state_bef_cp[i])), 0, eps);
         }
     }
@@ -299,12 +302,12 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         auto state_cp = state.get_amplitudes();
         auto state_bef = state.copy();
         assert(test_state.size() == (int)state_cp.size());
-        for (UINT i = 0; i < dim; i++) {
+        for (std::uint64_t i = 0; i < dim; i++) {
             test_state[i] = state_cp[i];
         }
         const double angle = M_PI * random.uniform();
-        std::vector<UINT> target_vec, pauli_id_vec;
-        for (UINT target = 0; target < n_qubits; target++) {
+        std::vector<std::uint64_t> target_vec, pauli_id_vec;
+        for (std::uint64_t target = 0; target < n_qubits; target++) {
             target_vec.emplace_back(target);
             pauli_id_vec.emplace_back(random.int64() % 4);
         }
@@ -338,7 +341,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         test_state = matrix * test_state;
         assert((int)state_cp.size() == test_state.size());
         // check if the state is updated correctly
-        for (UINT i = 0; i < dim; i++) {
+        for (std::uint64_t i = 0; i < dim; i++) {
             ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
         }
         Gate pauli_gate_inv = pauli_gate->get_inverse();
@@ -346,7 +349,7 @@ void run_random_gate_apply_pauli(UINT n_qubits) {
         state_cp = state.get_amplitudes();
         auto state_bef_cp = state_bef.get_amplitudes();
         // check if the state is restored correctly
-        for (UINT i = 0; i < dim; i++) {
+        for (std::uint64_t i = 0; i < dim; i++) {
             ASSERT_NEAR(std::abs((CComplex)(state_cp[i] - state_bef_cp[i])), 0, eps);
         }
     }
@@ -380,12 +383,12 @@ TEST(GateTest, ApplyPauliGate) { run_random_gate_apply_pauli(5); }
 
 TEST(GateTest, ApplyProbablisticGate) {
     auto probgate = gate::Probablistic({.1, .9}, {gate::X(0), gate::I()});
-    UINT x_cnt = 0, i_cnt = 0;
+    std::uint64_t x_cnt = 0, i_cnt = 0;
     StateVector state(1);
     for ([[maybe_unused]] auto _ : std::views::iota(0, 100)) {
-        UINT before = state.sampling(1)[0];
+        std::uint64_t before = state.sampling(1)[0];
         probgate->update_quantum_state(state);
-        UINT after = state.sampling(1)[0];
+        std::uint64_t after = state.sampling(1)[0];
         if (before != after) {
             x_cnt++;
         } else {

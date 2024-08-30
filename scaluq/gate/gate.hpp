@@ -126,9 +126,9 @@ constexpr GateType get_gate_type() {
 namespace internal {
 class GateBase : public std::enable_shared_from_this<GateBase> {
 protected:
-    UINT _target_mask, _control_mask;
+    std::uint64_t _target_mask, _control_mask;
     void check_qubit_mask_within_bounds(const StateVector& state_vector) const {
-        UINT full_mask = (1ULL << state_vector.n_qubits()) - 1;
+        std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
         if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
             throw std::runtime_error(
                 "Error: Gate::update_quantum_state(StateVector& state): "
@@ -137,28 +137,31 @@ protected:
     }
 
 public:
-    GateBase(UINT target_mask, UINT control_mask)
+    GateBase(std::uint64_t target_mask, std::uint64_t control_mask)
         : _target_mask(target_mask), _control_mask(control_mask) {
         if (_target_mask & _control_mask) [[unlikely]] {
             throw std::runtime_error(
-                "Error: Gate::Gate(UINT target_mask, UINT control_mask) : Target and "
+                "Error: Gate::Gate(std::uint64_t target_mask, std::uint64_t control_mask) : Target "
+                "and "
                 "control qubits must not overlap.");
         }
     }
     virtual ~GateBase() = default;
 
-    [[nodiscard]] virtual std::vector<UINT> target_qubit_list() const {
+    [[nodiscard]] virtual std::vector<std::uint64_t> target_qubit_list() const {
         return mask_to_vector(_target_mask);
     }
-    [[nodiscard]] virtual std::vector<UINT> control_qubit_list() const {
+    [[nodiscard]] virtual std::vector<std::uint64_t> control_qubit_list() const {
         return mask_to_vector(_control_mask);
     }
-    [[nodiscard]] virtual std::vector<UINT> operand_qubit_list() const {
+    [[nodiscard]] virtual std::vector<std::uint64_t> operand_qubit_list() const {
         return mask_to_vector(_target_mask | _control_mask);
     }
-    [[nodiscard]] virtual UINT target_qubit_mask() const { return _target_mask; }
-    [[nodiscard]] virtual UINT control_qubit_mask() const { return _control_mask; }
-    [[nodiscard]] virtual UINT operand_qubit_mask() const { return _target_mask | _control_mask; }
+    [[nodiscard]] virtual std::uint64_t target_qubit_mask() const { return _target_mask; }
+    [[nodiscard]] virtual std::uint64_t control_qubit_mask() const { return _control_mask; }
+    [[nodiscard]] virtual std::uint64_t operand_qubit_mask() const {
+        return _target_mask | _control_mask;
+    }
 
     [[nodiscard]] virtual Gate get_inverse() const = 0;
     [[nodiscard]] virtual ComplexMatrix get_matrix() const = 0;

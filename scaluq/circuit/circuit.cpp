@@ -3,30 +3,30 @@
 #include <ranges>
 
 namespace scaluq {
-UINT Circuit::calculate_depth() const {
-    std::vector<UINT> filled_step(_n_qubits, 0ULL);
+std::uint64_t Circuit::calculate_depth() const {
+    std::vector<std::uint64_t> filled_step(_n_qubits, 0ULL);
     for (const auto& gate : _gate_list) {
-        std::vector<UINT> control_qubits = gate.index() == 0
-                                               ? std::get<0>(gate)->control_qubit_list()
-                                               : std::get<1>(gate).first->control_qubit_list();
-        std::vector<UINT> target_qubits = gate.index() == 0
-                                              ? std::get<0>(gate)->target_qubit_list()
-                                              : std::get<1>(gate).first->target_qubit_list();
-        UINT max_step_amount_target_qubits = 0;
-        for (UINT control : control_qubits) {
+        std::vector<std::uint64_t> control_qubits =
+            gate.index() == 0 ? std::get<0>(gate)->control_qubit_list()
+                              : std::get<1>(gate).first->control_qubit_list();
+        std::vector<std::uint64_t> target_qubits =
+            gate.index() == 0 ? std::get<0>(gate)->target_qubit_list()
+                              : std::get<1>(gate).first->target_qubit_list();
+        std::uint64_t max_step_amount_target_qubits = 0;
+        for (std::uint64_t control : control_qubits) {
             if (max_step_amount_target_qubits < filled_step[control]) {
                 max_step_amount_target_qubits = filled_step[control];
             }
         }
-        for (UINT target : control_qubits) {
+        for (std::uint64_t target : control_qubits) {
             if (max_step_amount_target_qubits < filled_step[target]) {
                 max_step_amount_target_qubits = filled_step[target];
             }
         }
-        for (UINT control : control_qubits) {
+        for (std::uint64_t control : control_qubits) {
             filled_step[control] = max_step_amount_target_qubits + 1;
         }
-        for (UINT target : target_qubits) {
+        for (std::uint64_t target : target_qubits) {
             filled_step[target] = max_step_amount_target_qubits + 1;
         }
     }

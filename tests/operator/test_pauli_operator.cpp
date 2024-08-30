@@ -154,12 +154,12 @@ INSTANTIATE_TEST_CASE_P(
     PauliOperatorMultiplyTest,
     []() {
         double coef = 2.0;
-        UINT MAX_TERM = 100;
+        std::uint64_t MAX_TERM = 100;
         std::string pauli_string_x = "";
         std::string pauli_string_y = "";
         std::string pauli_string_z = "";
 
-        for (UINT i = 0; i < MAX_TERM; i++) {
+        for (std::uint64_t i = 0; i < MAX_TERM; i++) {
             pauli_string_x += "X " + std::to_string(i);
             pauli_string_y += "Y " + std::to_string(i);
             pauli_string_z += "Z " + std::to_string(i);
@@ -179,11 +179,11 @@ INSTANTIATE_TEST_CASE_P(
     testing::PrintToStringParamName());
 
 TEST(PauliOperatorTest, ApplyToStateTest) {
-    const UINT n_qubits = 3;
+    const std::uint64_t n_qubits = 3;
     StateVector state_vector(n_qubits);
     state_vector.load([n_qubits] {
         std::vector<Complex> tmp(1 << n_qubits);
-        for (UINT i = 0; i < tmp.size(); ++i) tmp[i] = Complex(i, 0);
+        for (std::uint64_t i = 0; i < tmp.size(); ++i) tmp[i] = Complex(i, 0);
         return tmp;
     }());
 
