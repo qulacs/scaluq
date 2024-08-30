@@ -243,7 +243,7 @@ TEST(CircuitTest, CircuitRev) {
 
     /*
     Observable observable(n);
-    angle = 2 * PI * random.uniform();
+    angle = 2 * Kokkos::numbers::pi * random.uniform();
 
     observable.add_operator(1.0, "Z 0");
     observable.add_operator(2.0, "Z 0 Z 1");

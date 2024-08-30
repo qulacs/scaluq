@@ -9,7 +9,7 @@ namespace scaluq {
 namespace internal {
 void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
-                                  const Kokkos::Array<Kokkos::Array<Complex, 2>, 2>& matrix,
+                                  const Matrix2x2& matrix,
                                   StateVector& state) {
     Kokkos::parallel_for(
         state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(std::uint64_t it) {
@@ -28,7 +28,7 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
 
 void two_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
-                                  const Kokkos::Array<Kokkos::Array<Complex, 4>, 4>& matrix,
+                                  const Matrix4x4& matrix,
                                   StateVector& state) {
     std::uint64_t lower_target_mask = -target_mask & target_mask;
     std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;

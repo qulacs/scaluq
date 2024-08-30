@@ -131,7 +131,7 @@ void PauliOperator::apply_to_state(StateVector& state_vector) const {
     }
     std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex global_phase = PHASE_M90ROT()[global_phase_90rot_count % 4];
+    Complex global_phase = internal::PHASE_M90ROT()[global_phase_90rot_count % 4];
     Kokkos::parallel_for(
         state_vector.dim() >> 1, KOKKOS_LAMBDA(std::uint64_t state_idx) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
@@ -170,7 +170,7 @@ Complex PauliOperator::get_expectation_value(const StateVector& state_vector) co
     }
     std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex global_phase = PHASE_90ROT()[global_phase_90rot_count % 4];
+    Complex global_phase = internal::PHASE_90ROT()[global_phase_90rot_count % 4];
     double res;
     Kokkos::parallel_reduce(
         state_vector.dim() >> 1,
@@ -214,7 +214,7 @@ Complex PauliOperator::get_transition_amplitude(const StateVector& state_vector_
     }
     std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex global_phase = PHASE_90ROT()[global_phase_90rot_count % 4];
+    Complex global_phase = internal::PHASE_90ROT()[global_phase_90rot_count % 4];
     Complex res;
     Kokkos::parallel_reduce(
         state_vector_bra.dim() >> 1,
@@ -285,9 +285,10 @@ PauliOperator PauliOperator::operator*(const PauliOperator& target) const {
     extra_90rot_cnt -= (z_left & y_right).popcount();  // ZY = -iX
     extra_90rot_cnt %= 4;
     if (extra_90rot_cnt < 0) extra_90rot_cnt += 4;
-    return PauliOperator(_ptr->_bit_flip_mask ^ target._ptr->_bit_flip_mask,
-                         _ptr->_phase_flip_mask ^ target._ptr->_phase_flip_mask,
-                         _ptr->_coef * target._ptr->_coef * PHASE_90ROT()[extra_90rot_cnt]);
+    return PauliOperator(
+        _ptr->_bit_flip_mask ^ target._ptr->_bit_flip_mask,
+        _ptr->_phase_flip_mask ^ target._ptr->_phase_flip_mask,
+        _ptr->_coef * target._ptr->_coef * internal::PHASE_90ROT()[extra_90rot_cnt]);
 }
 
 }  // namespace scaluq

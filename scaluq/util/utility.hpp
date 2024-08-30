@@ -67,9 +67,8 @@ inline std::vector<std::uint64_t> mask_to_vector(std::uint64_t mask) {
     return indices;
 }
 
-KOKKOS_INLINE_FUNCTION Kokkos::Array<Kokkos::Array<Complex, 2>, 2> matrix_multiply(
-    const Kokkos::Array<Kokkos::Array<Complex, 2>, 2>& matrix1,
-    const Kokkos::Array<Kokkos::Array<Complex, 2>, 2>& matrix2) {
+KOKKOS_INLINE_FUNCTION Matrix2x2 matrix_multiply(const Matrix2x2& matrix1,
+                                                 const Matrix2x2& matrix2) {
     return {matrix1[0][0] * matrix2[0][0] + matrix1[0][1] * matrix2[1][0],
             matrix1[0][0] * matrix2[0][1] + matrix1[0][1] * matrix2[1][1],
             matrix1[1][0] * matrix2[0][0] + matrix1[1][1] * matrix2[1][0],

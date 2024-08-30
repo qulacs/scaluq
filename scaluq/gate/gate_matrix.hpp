@@ -11,7 +11,7 @@
 namespace scaluq {
 namespace internal {
 class OneTargetMatrixGateImpl : public GateBase {
-    Kokkos::Array<Kokkos::Array<Complex, 2>, 2> _matrix;
+    Matrix2x2 _matrix;
 
 public:
     OneTargetMatrixGateImpl(std::uint64_t target_mask,
@@ -50,7 +50,7 @@ public:
 };
 
 class TwoTargetMatrixGateImpl : public GateBase {
-    Kokkos::Array<Kokkos::Array<Complex, 4>, 4> _matrix;
+    Matrix4x4 _matrix;
 
 public:
     TwoTargetMatrixGateImpl(std::uint64_t target_mask,
