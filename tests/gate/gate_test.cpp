@@ -423,7 +423,7 @@ void test_gate(Gate gate_control, Gate gate_simple, UINT n_qubits, UINT control_
 }
 
 template <UINT num_target, UINT num_rotation, typename Factory>
-void test_standard_gates(Factory factory, UINT n) {
+void test_standard_gate_control(Factory factory, UINT n) {
     Random random;
     std::vector<UINT> shuffled(n);
     std::iota(shuffled.begin(), shuffled.end(), 0ULL);
@@ -517,27 +517,27 @@ void test_pauli_control(UINT n) {
 TEST(GateTest, Control) {
     UINT n = 10;
     for ([[maybe_unused]] UINT _ : std::views::iota(0, 10)) {
-        test_standard_gates<0, 1>(gate::GlobalPhase, n);
-        test_standard_gates<1, 0>(gate::X, n);
-        test_standard_gates<1, 0>(gate::Y, n);
-        test_standard_gates<1, 0>(gate::Z, n);
-        test_standard_gates<1, 0>(gate::S, n);
-        test_standard_gates<1, 0>(gate::Sdag, n);
-        test_standard_gates<1, 0>(gate::T, n);
-        test_standard_gates<1, 0>(gate::Tdag, n);
-        test_standard_gates<1, 0>(gate::SqrtX, n);
-        test_standard_gates<1, 0>(gate::SqrtXdag, n);
-        test_standard_gates<1, 0>(gate::SqrtY, n);
-        test_standard_gates<1, 0>(gate::SqrtYdag, n);
-        test_standard_gates<1, 0>(gate::P0, n);
-        test_standard_gates<1, 0>(gate::P1, n);
-        test_standard_gates<1, 1>(gate::RX, n);
-        test_standard_gates<1, 1>(gate::RY, n);
-        test_standard_gates<1, 1>(gate::RZ, n);
-        test_standard_gates<1, 1>(gate::U1, n);
-        test_standard_gates<1, 2>(gate::U2, n);
-        test_standard_gates<1, 3>(gate::U3, n);
-        test_standard_gates<2, 0>(gate::Swap, n);
+        test_standard_gate_control<0, 1>(gate::GlobalPhase, n);
+        test_standard_gate_control<1, 0>(gate::X, n);
+        test_standard_gate_control<1, 0>(gate::Y, n);
+        test_standard_gate_control<1, 0>(gate::Z, n);
+        test_standard_gate_control<1, 0>(gate::S, n);
+        test_standard_gate_control<1, 0>(gate::Sdag, n);
+        test_standard_gate_control<1, 0>(gate::T, n);
+        test_standard_gate_control<1, 0>(gate::Tdag, n);
+        test_standard_gate_control<1, 0>(gate::SqrtX, n);
+        test_standard_gate_control<1, 0>(gate::SqrtXdag, n);
+        test_standard_gate_control<1, 0>(gate::SqrtY, n);
+        test_standard_gate_control<1, 0>(gate::SqrtYdag, n);
+        test_standard_gate_control<1, 0>(gate::P0, n);
+        test_standard_gate_control<1, 0>(gate::P1, n);
+        test_standard_gate_control<1, 1>(gate::RX, n);
+        test_standard_gate_control<1, 1>(gate::RY, n);
+        test_standard_gate_control<1, 1>(gate::RZ, n);
+        test_standard_gate_control<1, 1>(gate::U1, n);
+        test_standard_gate_control<1, 2>(gate::U2, n);
+        test_standard_gate_control<1, 3>(gate::U3, n);
+        test_standard_gate_control<2, 0>(gate::Swap, n);
         test_pauli_control<false>(n);
         test_pauli_control<true>(n);
     }

@@ -116,3 +116,86 @@ TEST(ParamGateTest, ApplyPProbablisticGate) {
     ASSERT_GT(i_cnt, 0);
     ASSERT_LT(x_cnt, i_cnt);
 }
+
+void test_gate(
+    ParamGate gate_control, ParamGate gate_simple, UINT n_qubits, UINT control_mask, double param) {
+    StateVector state = StateVector::Haar_random_state(n_qubits);
+    auto amplitudes = state.amplitudes();
+    StateVector state_controlled(n_qubits - std::popcount(control_mask));
+    std::vector<Complex> amplitudes_controlled(state_controlled.dim());
+    for (UINT i : std::views::iota(0ULL, state_controlled.dim())) {
+        amplitudes_controlled[i] =
+            amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) | control_mask];
+    }
+    state_controlled.load(amplitudes_controlled);
+    gate_control->update_quantum_state(state, param);
+    gate_simple->update_quantum_state(state_controlled, param);
+    amplitudes = state.amplitudes();
+    amplitudes_controlled = state_controlled.amplitudes();
+    for (UINT i : std::views::iota(0ULL, state_controlled.dim())) {
+        ASSERT_NEAR(
+            Kokkos::abs(amplitudes_controlled[i] -
+                        amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) |
+                                   control_mask]),
+            0.,
+            eps);
+    }
+}
+
+template <typename Factory>
+void test_param_rotation_control(Factory factory, UINT n) {
+    std::cerr << "prx" << std::endl;
+    Random random;
+    std::vector<UINT> shuffled(n);
+    std::iota(shuffled.begin(), shuffled.end(), 0ULL);
+    for (UINT i : std::views::iota(0ULL, n) | std::views::reverse) {
+        UINT j = random.int32() % (i + 1);
+        if (i != j) std::swap(shuffled[i], shuffled[j]);
+    }
+    UINT target = shuffled[0];
+    UINT num_control = random.int32() % n;
+    std::vector<UINT> controls(num_control);
+    for (UINT i : std::views::iota(0ULL, num_control)) {
+        controls[i] = shuffled[1 + i];
+    }
+    UINT control_mask = 0ULL;
+    for (UINT c : controls) control_mask |= 1ULL << c;
+    double param = random.uniform() * PI() * 2;
+    ParamGate g1 = factory(target, 1., controls);
+    ParamGate g2 = factory(target - std::popcount(control_mask & ((1ULL << target) - 1)), 1., {});
+    test_gate(g1, g2, n, control_mask, param);
+}
+
+void test_ppauli_control(UINT n) {
+    std::cerr << "ppauli" << std::endl;
+    PauliOperator::Data data1, data2;
+    std::vector<UINT> controls;
+    UINT control_mask = 0;
+    UINT num_control = 0;
+    Random random;
+    for (UINT i : std::views::iota(0ULL, n)) {
+        UINT dat = random.int32() % 12;
+        if (dat < 4) {
+            data1.add_single_pauli(i, dat);
+            data2.add_single_pauli(i - num_control, dat);
+        } else if (dat < 8) {
+            controls.push_back(i);
+            control_mask |= 1ULL << i;
+            num_control++;
+        }
+    }
+    double param = random.uniform() * PI() * 2;
+    ParamGate g1 = gate::PPauliRotation(PauliOperator(data1), 1., controls);
+    ParamGate g2 = gate::PPauliRotation(PauliOperator(data2), 1., {});
+    test_gate(g1, g2, n, control_mask, param);
+}
+
+TEST(ParamGateTest, Control) {
+    UINT n = 10;
+    for ([[maybe_unused]] UINT _ : std::views::iota(0, 10)) {
+        test_param_rotation_control(gate::PRX, n);
+        test_param_rotation_control(gate::PRY, n);
+        test_param_rotation_control(gate::PRZ, n);
+        test_ppauli_control(n);
+    }
+}
