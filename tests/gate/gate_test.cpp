@@ -425,23 +425,20 @@ void test_gate(Gate gate_control, Gate gate_simple, UINT n_qubits, UINT control_
 template <UINT num_target, UINT num_rotation, typename Factory>
 void test_standard_gates(Factory factory, UINT n) {
     Random random;
+    std::vector<UINT> shuffled(n);
+    std::iota(shuffled.begin(), shuffled.end(), 0ULL);
+    for (UINT i : std::views::iota(0ULL, n) | std::views::reverse) {
+        UINT j = random.int32() % (i + 1);
+        if (i != j) std::swap(shuffled[i], shuffled[j]);
+    }
     std::vector<UINT> targets(num_target);
     for (UINT i : std::views::iota(0ULL, num_target)) {
-        targets[i] = random.int32() % (n - i);
-        for (UINT j : std::views::iota(0ULL, i)) {
-            if (targets[i] == targets[j]) targets[i] = n - 1 - j;
-        }
+        targets[i] = shuffled[i];
     }
     UINT num_control = random.int32() % (n - num_target + 1);
     std::vector<UINT> controls(num_control);
     for (UINT i : std::views::iota(0ULL, num_control)) {
-        controls[i] = random.int32() % (n - num_target - i);
-        for (UINT j : std::views::iota(0ULL, num_target)) {
-            if (controls[i] == targets[j]) controls[i] = n - 1 - j;
-        }
-        for (UINT j : std::views::iota(0ULL, i)) {
-            if (controls[i] == controls[j]) controls[i] = n - num_target - 1 - j;
-        }
+        controls[i] = shuffled[num_target + i];
     }
     UINT control_mask = 0ULL;
     for (UINT c : controls) control_mask |= 1ULL << c;
