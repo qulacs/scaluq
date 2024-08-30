@@ -57,6 +57,11 @@ void two_target_dense_matrix_gate(UINT target_mask,
                                   const matrix_4_4& matrix,
                                   StateVector& state);
 
+void one_target_diagonal_matrix_gate(UINT target_mask,
+                                     UINT control_mask,
+                                     const diagonal_matrix_2_2& diag,
+                                     StateVector& state);
+
 void u1_gate(UINT target_mask, UINT control_mask, double lambda, StateVector& state);
 
 void u2_gate(UINT target_mask, UINT control_mask, double phi, double lambda, StateVector& state);
