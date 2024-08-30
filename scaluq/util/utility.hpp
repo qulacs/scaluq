@@ -67,12 +67,13 @@ inline std::vector<std::uint64_t> mask_to_vector(std::uint64_t mask) {
     return indices;
 }
 
-KOKKOS_INLINE_FUNCTION matrix_2_2 matrix_multiply(const matrix_2_2& matrix1,
-                                                  const matrix_2_2& matrix2) {
-    return {matrix1.val[0][0] * matrix2.val[0][0] + matrix1.val[0][1] * matrix2.val[1][0],
-            matrix1.val[0][0] * matrix2.val[0][1] + matrix1.val[0][1] * matrix2.val[1][1],
-            matrix1.val[1][0] * matrix2.val[0][0] + matrix1.val[1][1] * matrix2.val[1][0],
-            matrix1.val[1][0] * matrix2.val[0][1] + matrix1.val[1][1] * matrix2.val[1][1]};
+KOKKOS_INLINE_FUNCTION Kokkos::Array<Kokkos::Array<Complex, 2>, 2> matrix_multiply(
+    const Kokkos::Array<Kokkos::Array<Complex, 2>, 2>& matrix1,
+    const Kokkos::Array<Kokkos::Array<Complex, 2>, 2>& matrix2) {
+    return {matrix1[0][0] * matrix2[0][0] + matrix1[0][1] * matrix2[1][0],
+            matrix1[0][0] * matrix2[0][1] + matrix1[0][1] * matrix2[1][1],
+            matrix1[1][0] * matrix2[0][0] + matrix1[1][1] * matrix2[1][0],
+            matrix1[1][0] * matrix2[0][1] + matrix1[1][1] * matrix2[1][1]};
 }
 
 inline ComplexMatrix kronecker_product(const ComplexMatrix& lhs, const ComplexMatrix& rhs) {

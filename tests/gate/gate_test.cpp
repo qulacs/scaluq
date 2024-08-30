@@ -333,7 +333,7 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
             }
         }
         matrix = std::cos(angle / 2) * Eigen::MatrixXcd::Identity(dim, dim) -
-                 Complex(0, 1) * std::sin(angle / 2) * matrix;
+                 StdComplex(0, 1) * std::sin(angle / 2) * matrix;
         PauliOperator pauli(target_vec, pauli_id_vec, 1.0);
         Gate pauli_gate = gate::PauliRotation(pauli, angle);
         pauli_gate->update_quantum_state(state);

@@ -57,21 +57,23 @@ void rz_gate(std::uint64_t target_mask,
              double angle,
              StateVector& state);
 
-matrix_2_2 get_IBMQ_matrix(double _theta, double _phi, double _lambda);
+Kokkos::Array<Kokkos::Array<Complex, 2>, 2> get_IBMQ_matrix(double _theta,
+                                                            double _phi,
+                                                            double _lambda);
 
 void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
-                                  const matrix_2_2& matrix,
+                                  const Kokkos::Array<Kokkos::Array<Complex, 2>, 2>& matrix,
                                   StateVector& state);
 
 void two_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
-                                  const matrix_4_4& matrix,
+                                  const Kokkos::Array<Kokkos::Array<Complex, 4>, 4>& matrix,
                                   StateVector& state);
 
 void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
-                                     const diagonal_matrix_2_2& diag,
+                                     const Kokkos::Array<Complex, 2>& diag,
                                      StateVector& state);
 
 void u1_gate(std::uint64_t target_mask,

@@ -27,20 +27,4 @@ using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex>;
 using StateVectorView = Kokkos::View<Complex*>;
 using StateVectorBatchedView = Kokkos::View<Complex**, Kokkos::LayoutRight>;
 
-struct array_4 {
-    Complex val[4];
-};
-
-struct matrix_2_2 {
-    Complex val[2][2];
-};
-
-struct matrix_4_4 {
-    Complex val[4][4];
-};
-
-struct diagonal_matrix_2_2 {
-    Complex val[2];
-};
-
 }  // namespace scaluq

@@ -116,7 +116,8 @@ void rx_gate(std::uint64_t target_mask,
              StateVector& state) {
     const double cosval = std::cos(angle / 2.);
     const double sinval = std::sin(angle / 2.);
-    matrix_2_2 matrix = {cosval, Complex(0, -sinval), Complex(0, -sinval), cosval};
+    Kokkos::Array<Kokkos::Array<Complex, 2>, 2> matrix = {
+        cosval, Complex(0, -sinval), Complex(0, -sinval), cosval};
     one_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
 }
 
@@ -126,20 +127,20 @@ void ry_gate(std::uint64_t target_mask,
              StateVector& state) {
     const double cosval = std::cos(angle / 2.);
     const double sinval = std::sin(angle / 2.);
-    matrix_2_2 matrix = {cosval, -sinval, sinval, cosval};
+    Kokkos::Array<Kokkos::Array<Complex, 2>, 2> matrix = {cosval, -sinval, sinval, cosval};
     one_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
 }
 
 void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
-                                     const diagonal_matrix_2_2& diag,
+                                     const Kokkos::Array<Complex, 2>& diag,
                                      StateVector& state) {
     Kokkos::parallel_for(
         state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis =
                 insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
-            state._raw[basis] *= diag.val[0];
-            state._raw[basis | target_mask] *= diag.val[1];
+            state._raw[basis] *= diag[0];
+            state._raw[basis | target_mask] *= diag[1];
         });
     Kokkos::fence();
 }
@@ -150,11 +151,13 @@ void rz_gate(std::uint64_t target_mask,
              StateVector& state) {
     const double cosval = std::cos(angle / 2.);
     const double sinval = std::sin(angle / 2.);
-    diagonal_matrix_2_2 diag = {Complex(cosval, -sinval), Complex(cosval, sinval)};
+    Kokkos::Array<Complex, 2> diag = {Complex(cosval, -sinval), Complex(cosval, sinval)};
     one_target_diagonal_matrix_gate(target_mask, control_mask, diag, state);
 }
 
-matrix_2_2 get_IBMQ_matrix(double theta, double phi, double lambda) {
+Kokkos::Array<Kokkos::Array<Complex, 2>, 2> get_IBMQ_matrix(double theta,
+                                                            double phi,
+                                                            double lambda) {
     Complex exp_val1 = Kokkos::exp(Complex(0, phi));
     Complex exp_val2 = Kokkos::exp(Complex(0, lambda));
     Complex cos_val = Kokkos::cos(theta / 2.);
