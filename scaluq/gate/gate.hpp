@@ -148,18 +148,18 @@ public:
     }
     virtual ~GateBase() = default;
 
-    [[nodiscard]] virtual std::vector<std::uint64_t> get_target_qubit_list() const {
+    [[nodiscard]] virtual std::vector<std::uint64_t> target_qubit_list() const {
         return mask_to_vector(_target_mask);
     }
-    [[nodiscard]] virtual std::vector<std::uint64_t> get_control_qubit_list() const {
+    [[nodiscard]] virtual std::vector<std::uint64_t> control_qubit_list() const {
         return mask_to_vector(_control_mask);
     }
-    [[nodiscard]] virtual std::vector<std::uint64_t> get_operand_qubit_list() const {
+    [[nodiscard]] virtual std::vector<std::uint64_t> operand_qubit_list() const {
         return mask_to_vector(_target_mask | _control_mask);
     }
-    [[nodiscard]] virtual std::uint64_t get_target_qubit_mask() const { return _target_mask; }
-    [[nodiscard]] virtual std::uint64_t get_control_qubit_mask() const { return _control_mask; }
-    [[nodiscard]] virtual std::uint64_t get_operand_qubit_mask() const {
+    [[nodiscard]] virtual std::uint64_t target_qubit_mask() const { return _target_mask; }
+    [[nodiscard]] virtual std::uint64_t control_qubit_mask() const { return _control_mask; }
+    [[nodiscard]] virtual std::uint64_t operand_qubit_mask() const {
         return _target_mask | _control_mask;
     }
 

@@ -12,26 +12,26 @@ class ParamGateBase;
 template <typename T>
 concept ParamGateImpl = std::derived_from<T, ParamGateBase>;
 
-class PRXGateImpl;
-class PRYGateImpl;
-class PRZGateImpl;
-class PPauliRotationGateImpl;
+class ParamRXGateImpl;
+class ParamRYGateImpl;
+class ParamRZGateImpl;
+class ParamPauliRotationGateImpl;
 
 template <ParamGateImpl T>
 class ParamGatePtr;
 }  // namespace internal
 using ParamGate = internal::ParamGatePtr<internal::ParamGateBase>;
 
-enum class ParamGateType { Unknown, PRX, PRY, PRZ, PPauliRotation };
+enum class ParamGateType { Unknown, ParamRX, ParamRY, ParamRZ, ParamPauliRotation };
 
 template <internal::ParamGateImpl T>
 constexpr ParamGateType get_param_gate_type() {
     if constexpr (std::is_same_v<T, internal::ParamGateBase>) return ParamGateType::Unknown;
-    if constexpr (std::is_same_v<T, internal::PRXGateImpl>) return ParamGateType::PRX;
-    if constexpr (std::is_same_v<T, internal::PRYGateImpl>) return ParamGateType::PRY;
-    if constexpr (std::is_same_v<T, internal::PRZGateImpl>) return ParamGateType::PRZ;
-    if constexpr (std::is_same_v<T, internal::PPauliRotationGateImpl>)
-        return ParamGateType::PPauliRotation;
+    if constexpr (std::is_same_v<T, internal::ParamRXGateImpl>) return ParamGateType::ParamRX;
+    if constexpr (std::is_same_v<T, internal::ParamRYGateImpl>) return ParamGateType::ParamRY;
+    if constexpr (std::is_same_v<T, internal::ParamRZGateImpl>) return ParamGateType::ParamRZ;
+    if constexpr (std::is_same_v<T, internal::ParamPauliRotationGateImpl>)
+        return ParamGateType::ParamPauliRotation;
     static_assert("unknown ParamGateImpl");
     return ParamGateType::Unknown;
 }
@@ -51,8 +51,8 @@ protected:
     }
 
 public:
-    ParamGateBase(std::uint64_t target_mask, std::uint64_t control_mask, double pcoef = 1.)
-        : _target_mask(target_mask), _control_mask(control_mask), _pcoef(pcoef) {
+    ParamGateBase(std::uint64_t target_mask, std::uint64_t control_mask, double param_coef = 1.)
+        : _target_mask(target_mask), _control_mask(control_mask), _pcoef(param_coef) {
         if (_target_mask & _control_mask) [[unlikely]] {
             throw std::runtime_error(
                 "Error: ParamGate::ParamGate(std::uint64_t target_mask, std::uint64_t "
@@ -62,20 +62,20 @@ public:
     }
     virtual ~ParamGateBase() = default;
 
-    [[nodiscard]] double pcoef() { return _pcoef; }
+    [[nodiscard]] double param_coef() { return _pcoef; }
 
-    [[nodiscard]] virtual std::vector<std::uint64_t> get_target_qubit_list() const {
+    [[nodiscard]] virtual std::vector<std::uint64_t> target_qubit_list() const {
         return mask_to_vector(_target_mask);
     }
-    [[nodiscard]] virtual std::vector<std::uint64_t> get_control_qubit_list() const {
+    [[nodiscard]] virtual std::vector<std::uint64_t> control_qubit_list() const {
         return mask_to_vector(_control_mask);
     }
-    [[nodiscard]] virtual std::vector<std::uint64_t> get_operand_qubit_list() const {
+    [[nodiscard]] virtual std::vector<std::uint64_t> operand_qubit_list() const {
         return mask_to_vector(_target_mask | _control_mask);
     }
-    [[nodiscard]] virtual std::uint64_t get_target_qubit_mask() const { return _target_mask; }
-    [[nodiscard]] virtual std::uint64_t get_control_qubit_mask() const { return _control_mask; }
-    [[nodiscard]] virtual std::uint64_t get_operand_qubit_mask() const {
+    [[nodiscard]] virtual std::uint64_t target_qubit_mask() const { return _target_mask; }
+    [[nodiscard]] virtual std::uint64_t control_qubit_mask() const { return _control_mask; }
+    [[nodiscard]] virtual std::uint64_t operand_qubit_mask() const {
         return _target_mask | _control_mask;
     }
 

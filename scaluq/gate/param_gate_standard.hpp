@@ -8,12 +8,12 @@ namespace scaluq {
 
 namespace internal {
 
-class PRXGateImpl : public ParamGateBase {
+class ParamRXGateImpl : public ParamGateBase {
 public:
     using ParamGateBase::ParamGateBase;
 
     ParamGate get_inverse() const override {
-        return std::make_shared<const PRXGateImpl>(_target_mask, _control_mask, -_pcoef);
+        return std::make_shared<const ParamRXGateImpl>(_target_mask, _control_mask, -_pcoef);
     }
     internal::ComplexMatrix get_matrix(double param) const override {
         double angle = _pcoef * param;
@@ -29,12 +29,12 @@ public:
     }
 };
 
-class PRYGateImpl : public ParamGateBase {
+class ParamRYGateImpl : public ParamGateBase {
 public:
     using ParamGateBase::ParamGateBase;
 
     ParamGate get_inverse() const override {
-        return std::make_shared<const PRYGateImpl>(_target_mask, _control_mask, -_pcoef);
+        return std::make_shared<const ParamRYGateImpl>(_target_mask, _control_mask, -_pcoef);
     }
     internal::ComplexMatrix get_matrix(double param) const override {
         double angle = _pcoef * param;
@@ -49,12 +49,12 @@ public:
     }
 };
 
-class PRZGateImpl : public ParamGateBase {
+class ParamRZGateImpl : public ParamGateBase {
 public:
     using ParamGateBase::ParamGateBase;
 
     ParamGate get_inverse() const override {
-        return std::make_shared<const PRZGateImpl>(_target_mask, _control_mask, -_pcoef);
+        return std::make_shared<const ParamRZGateImpl>(_target_mask, _control_mask, -_pcoef);
     }
     internal::ComplexMatrix get_matrix(double param) const override {
         double angle = param * _pcoef;
@@ -71,8 +71,8 @@ public:
 
 }  // namespace internal
 
-using PRXGate = internal::ParamGatePtr<internal::PRXGateImpl>;
-using PRYGate = internal::ParamGatePtr<internal::PRYGateImpl>;
-using PRZGate = internal::ParamGatePtr<internal::PRZGateImpl>;
+using ParamRXGate = internal::ParamGatePtr<internal::ParamRXGateImpl>;
+using ParamRYGate = internal::ParamGatePtr<internal::ParamRYGateImpl>;
+using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl>;
 
 }  // namespace scaluq

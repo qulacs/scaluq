@@ -24,14 +24,14 @@ void run_random_gate_apply(std::uint64_t n_qubits) {
     Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
-        auto state_cp = state.amplitudes();
+        auto state_cp = state.get_amplitudes();
         for (int i = 0; i < dim; i++) {
             test_state[i] = state_cp[i];
         }
 
         const Gate gate = QuantumGateConstructor();
         gate->update_quantum_state(state);
-        state_cp = state.amplitudes();
+        state_cp = state.get_amplitudes();
 
         test_state = test_state;
 
@@ -49,7 +49,7 @@ void run_random_gate_apply(std::uint64_t n_qubits) {
     Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
-        auto state_cp = state.amplitudes();
+        auto state_cp = state.get_amplitudes();
         for (int i = 0; i < dim; i++) {
             test_state[i] = state_cp[i];
         }
@@ -57,7 +57,7 @@ void run_random_gate_apply(std::uint64_t n_qubits) {
         const double angle = std::numbers::pi * random.uniform();
         const Gate gate = QuantumGateConstructor(angle, {});
         gate->update_quantum_state(state);
-        state_cp = state.amplitudes();
+        state_cp = state.get_amplitudes();
 
         test_state = std::polar(1., angle) * test_state;
 
@@ -77,7 +77,7 @@ void run_random_gate_apply(std::uint64_t n_qubits,
     Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
-        auto state_cp = state.amplitudes();
+        auto state_cp = state.get_amplitudes();
         for (int i = 0; i < dim; i++) {
             test_state[i] = state_cp[i];
         }
@@ -85,7 +85,7 @@ void run_random_gate_apply(std::uint64_t n_qubits,
         const std::uint64_t target = random.int64() % n_qubits;
         const Gate gate = QuantumGateConstructor(target, {});
         gate->update_quantum_state(state);
-        state_cp = state.amplitudes();
+        state_cp = state.get_amplitudes();
 
         test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
 
@@ -104,7 +104,7 @@ void run_random_gate_apply(std::uint64_t n_qubits,
     Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
-        auto state_cp = state.amplitudes();
+        auto state_cp = state.get_amplitudes();
         for (int i = 0; i < dim; i++) {
             test_state[i] = state_cp[i];
         }
@@ -114,7 +114,7 @@ void run_random_gate_apply(std::uint64_t n_qubits,
         const std::uint64_t target = random.int64() % n_qubits;
         const Gate gate = QuantumGateConstructor(target, angle, {});
         gate->update_quantum_state(state);
-        state_cp = state.amplitudes();
+        state_cp = state.get_amplitudes();
 
         test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
 
@@ -133,7 +133,7 @@ void run_random_gate_apply_IBMQ(
     Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
-        auto state_cp = state.amplitudes();
+        auto state_cp = state.get_amplitudes();
         for (int gate_type = 0; gate_type < 3; gate_type++) {
             for (int i = 0; i < dim; i++) {
                 test_state[i] = state_cp[i];
@@ -159,7 +159,7 @@ void run_random_gate_apply_IBMQ(
                 gate = gate::U3(target, theta, phi, lambda, {});
             }
             gate->update_quantum_state(state);
-            state_cp = state.amplitudes();
+            state_cp = state.get_amplitudes();
 
             test_state =
                 get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
@@ -181,7 +181,7 @@ void run_random_gate_apply_two_target(std::uint64_t n_qubits) {
         auto state = StateVector::Haar_random_state(n_qubits);
         for (int g = 0; g < 2; g++) {
             Gate gate;
-            auto state_cp = state.amplitudes();
+            auto state_cp = state.get_amplitudes();
             for (int i = 0; i < dim; i++) {
                 test_state[i] = state_cp[i];
             }
@@ -197,7 +197,7 @@ void run_random_gate_apply_two_target(std::uint64_t n_qubits) {
                 func_eig = get_eigen_matrix_full_qubit_CZ;
             }
             gate->update_quantum_state(state);
-            state_cp = state.amplitudes();
+            state_cp = state.get_amplitudes();
 
             Eigen::MatrixXcd test_mat = func_eig(control, target, n_qubits);
             test_state = test_mat * test_state;
@@ -210,7 +210,7 @@ void run_random_gate_apply_two_target(std::uint64_t n_qubits) {
 
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector::Haar_random_state(n_qubits);
-        auto state_cp = state.amplitudes();
+        auto state_cp = state.get_amplitudes();
         for (int i = 0; i < dim; i++) {
             test_state[i] = state_cp[i];
         }
@@ -220,7 +220,7 @@ void run_random_gate_apply_two_target(std::uint64_t n_qubits) {
         if (target1 == target2) target1 = (target1 + 1) % n_qubits;
         auto gate = gate::Swap(target1, target2);
         gate->update_quantum_state(state);
-        state_cp = state.amplitudes();
+        state_cp = state.get_amplitudes();
 
         Eigen::MatrixXcd test_mat = get_eigen_matrix_full_qubit_Swap(target1, target2, n_qubits);
         test_state = test_mat * test_state;
@@ -240,7 +240,7 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
     // Test for PauliGate
     for (int repeat = 0; repeat < 10; repeat++) {
         StateVector state = StateVector::Haar_random_state(n_qubits);
-        auto state_cp = state.amplitudes();
+        auto state_cp = state.get_amplitudes();
         auto state_bef = state.copy();
 
         for (std::uint64_t i = 0; i < dim; i++) {
@@ -278,7 +278,7 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
         Gate pauli_gate = gate::Pauli(pauli);
         pauli_gate->update_quantum_state(state);
 
-        state_cp = state.amplitudes();
+        state_cp = state.get_amplitudes();
         test_state = matrix * test_state;
 
         // check if the state is updated correctly
@@ -286,10 +286,10 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
             ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
         }
 
-        auto state_bef_cp = state_bef.amplitudes();
+        auto state_bef_cp = state_bef.get_amplitudes();
         Gate pauli_gate_inv = pauli_gate->get_inverse();
         pauli_gate_inv->update_quantum_state(state);
-        state_cp = state.amplitudes();
+        state_cp = state.get_amplitudes();
 
         // check if the state is restored correctly
         for (std::uint64_t i = 0; i < dim; i++) {
@@ -300,7 +300,7 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
     // Test for PauliRotationGate
     for (int repeat = 0; repeat < 10; repeat++) {
         StateVector state = StateVector::Haar_random_state(n_qubits);
-        auto state_cp = state.amplitudes();
+        auto state_cp = state.get_amplitudes();
         auto state_bef = state.copy();
         assert(test_state.size() == (int)state_cp.size());
         for (std::uint64_t i = 0; i < dim; i++) {
@@ -338,7 +338,7 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
         PauliOperator pauli(target_vec, pauli_id_vec, 1.0);
         Gate pauli_gate = gate::PauliRotation(pauli, angle);
         pauli_gate->update_quantum_state(state);
-        state_cp = state.amplitudes();
+        state_cp = state.get_amplitudes();
         test_state = matrix * test_state;
         assert((int)state_cp.size() == test_state.size());
         // check if the state is updated correctly
@@ -347,8 +347,8 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
         }
         Gate pauli_gate_inv = pauli_gate->get_inverse();
         pauli_gate_inv->update_quantum_state(state);
-        state_cp = state.amplitudes();
-        auto state_bef_cp = state_bef.amplitudes();
+        state_cp = state.get_amplitudes();
+        auto state_bef_cp = state_bef.get_amplitudes();
         // check if the state is restored correctly
         for (std::uint64_t i = 0; i < dim; i++) {
             ASSERT_NEAR(std::abs((CComplex)(state_cp[i] - state_bef_cp[i])), 0, eps);

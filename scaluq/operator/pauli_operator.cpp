@@ -116,7 +116,7 @@ void PauliOperator::apply_to_state(StateVector& state_vector) const {
     }
     std::uint64_t bit_flip_mask = _ptr->_bit_flip_mask.data_raw()[0];
     std::uint64_t phase_flip_mask = _ptr->_phase_flip_mask.data_raw()[0];
-    Complex coef = get_coef();
+    Complex coef = this->coef();
     if (bit_flip_mask == 0) {
         Kokkos::parallel_for(
             state_vector.dim(), KOKKOS_LAMBDA(std::uint64_t state_idx) {
