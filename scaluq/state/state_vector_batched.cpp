@@ -38,7 +38,7 @@ void StateVectorBatched::set_state_vector(std::uint64_t batch_id, const StateVec
     Kokkos::fence();
 }
 
-StateVector StateVectorBatched::get_state_vector(std::uint64_t batch_id) const {
+StateVector StateVectorBatched::get_state_vector_at(std::uint64_t batch_id) const {
     StateVector ret(_n_qubits);
     Kokkos::parallel_for(
         _dim, KOKKOS_CLASS_LAMBDA(std::uint64_t i) { ret._raw(i) = _raw(batch_id, i); });
@@ -133,7 +133,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched::sampling(std::uint64
         Kokkos::DefaultExecutionSpace::array_layout>(result);
 }
 
-std::vector<std::vector<Complex>> StateVectorBatched::amplitudes() const {
+std::vector<std::vector<Complex>> StateVectorBatched::get_amplitudes() const {
     return internal::convert_2d_device_view_to_host_vector<Complex>(_raw);
 }
 

@@ -31,34 +31,34 @@ public:
     const std::vector<Gate>& gate_list() const { return _gate_list; }
     const std::vector<double>& distribution() const { return _distribution; }
 
-    std::vector<std::uint64_t> get_target_qubit_list() const override {
+    std::vector<std::uint64_t> target_qubit_list() const override {
         throw std::runtime_error(
-            "ProbablisticGateImpl::get_target_qubit_list(): This function must not be used in "
+            "ProbablisticGateImpl::target_qubit_list(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
-    std::vector<std::uint64_t> get_control_qubit_list() const override {
+    std::vector<std::uint64_t> control_qubit_list() const override {
         throw std::runtime_error(
-            "ProbablisticGateImpl::get_control_qubit_list(): This function must not be used in "
+            "ProbablisticGateImpl::control_qubit_list(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
-    std::vector<std::uint64_t> get_operand_qubit_list() const override {
+    std::vector<std::uint64_t> operand_qubit_list() const override {
         throw std::runtime_error(
-            "ProbablisticGateImpl::get_operand_qubit_list(): This function must not be used in "
+            "ProbablisticGateImpl::operand_qubit_list(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
-    std::uint64_t get_target_qubit_mask() const override {
+    std::uint64_t target_qubit_mask() const override {
         throw std::runtime_error(
-            "ProbablisticGateImpl::get_target_qubit_mask(): This function must not be used in "
+            "ProbablisticGateImpl::target_qubit_mask(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
-    std::uint64_t get_control_qubit_mask() const override {
+    std::uint64_t control_qubit_mask() const override {
         throw std::runtime_error(
-            "ProbablisticGateImpl::get_control_qubit_mask(): This function must not be used in "
+            "ProbablisticGateImpl::control_qubit_mask(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
-    std::uint64_t get_operand_qubit_mask() const override {
+    std::uint64_t operand_qubit_mask() const override {
         throw std::runtime_error(
-            "ProbablisticGateImpl::get_operand_qubit_mask(): This function must not be used in "
+            "ProbablisticGateImpl::operand_qubit_mask(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
 

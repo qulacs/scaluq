@@ -15,35 +15,35 @@ public:
 };
 }  // namespace internal
 namespace gate {
-inline ParamGate PRX(std::uint64_t target,
-                     double pcoef = 1.,
-                     const std::vector<std::uint64_t>& controls = {}) {
-    return internal::ParamGateFactory::create_gate<internal::PRXGateImpl>(
-        internal::vector_to_mask({target}), internal::vector_to_mask(controls), pcoef);
+inline ParamGate ParamRX(std::uint64_t target,
+                         double param_coef = 1.,
+                         const std::vector<std::uint64_t>& controls = {}) {
+    return internal::ParamGateFactory::create_gate<internal::ParamRXGateImpl>(
+        internal::vector_to_mask({target}), internal::vector_to_mask(controls), param_coef);
 }
-inline ParamGate PRY(std::uint64_t target,
-                     double pcoef = 1.,
-                     const std::vector<std::uint64_t>& controls = {}) {
-    return internal::ParamGateFactory::create_gate<internal::PRYGateImpl>(
-        internal::vector_to_mask({target}), internal::vector_to_mask(controls), pcoef);
+inline ParamGate ParamRY(std::uint64_t target,
+                         double param_coef = 1.,
+                         const std::vector<std::uint64_t>& controls = {}) {
+    return internal::ParamGateFactory::create_gate<internal::ParamRYGateImpl>(
+        internal::vector_to_mask({target}), internal::vector_to_mask(controls), param_coef);
 }
-inline ParamGate PRZ(std::uint64_t target,
-                     double pcoef = 1.,
-                     const std::vector<std::uint64_t>& controls = {}) {
-    return internal::ParamGateFactory::create_gate<internal::PRZGateImpl>(
-        internal::vector_to_mask({target}), internal::vector_to_mask(controls), pcoef);
+inline ParamGate ParamRZ(std::uint64_t target,
+                         double param_coef = 1.,
+                         const std::vector<std::uint64_t>& controls = {}) {
+    return internal::ParamGateFactory::create_gate<internal::ParamRZGateImpl>(
+        internal::vector_to_mask({target}), internal::vector_to_mask(controls), param_coef);
 }
 // まだ
-inline ParamGate PPauliRotation(const PauliOperator& pauli,
-                                double pcoef = 1.,
-                                const std::vector<std::uint64_t>& controls = {}) {
-    return internal::ParamGateFactory::create_gate<internal::PPauliRotationGateImpl>(
-        internal::vector_to_mask(controls), pauli, pcoef);
+inline ParamGate ParamPauliRotation(const PauliOperator& pauli,
+                                    double param_coef = 1.,
+                                    const std::vector<std::uint64_t>& controls = {}) {
+    return internal::ParamGateFactory::create_gate<internal::ParamPauliRotationGateImpl>(
+        internal::vector_to_mask(controls), pauli, param_coef);
 }
-inline ParamGate PProbablistic(const std::vector<double>& distribution,
-                               const std::vector<std::variant<Gate, ParamGate>>& gate_list) {
-    return internal::ParamGateFactory::create_gate<internal::PProbablisticGateImpl>(distribution,
-                                                                                    gate_list);
+inline ParamGate ParamProbablistic(const std::vector<double>& distribution,
+                                   const std::vector<std::variant<Gate, ParamGate>>& gate_list) {
+    return internal::ParamGateFactory::create_gate<internal::ParamProbablisticGateImpl>(
+        distribution, gate_list);
 }
 }  // namespace gate
 }  // namespace scaluq

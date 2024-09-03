@@ -25,9 +25,9 @@ TEST(StateVectorTest, HaarRandomStateNorm) {
 TEST(StateVectorTest, OperationAtIndex) {
     auto state = StateVector::Haar_random_state(10);
     for (std::uint64_t i = 0; i < state.dim(); ++i) {
-        state.set_amplitude_at_index(i, 1);
-        ASSERT_NEAR(state.get_amplitude_at_index(i).real(), 1, eps);
-        ASSERT_NEAR(state.get_amplitude_at_index(i).imag(), 0., eps);
+        state.set_amplitude_at(i, 1);
+        ASSERT_NEAR(state.get_amplitude_at(i).real(), 1, eps);
+        ASSERT_NEAR(state.get_amplitude_at(i).imag(), 0., eps);
     }
 }
 
@@ -35,8 +35,8 @@ TEST(StateVectorTest, CopyState) {
     const int n = 5;
     const auto state = StateVector::Haar_random_state(n);
     StateVector state_cp = state.copy();
-    auto vec1 = state.amplitudes();
-    auto vec2 = state_cp.amplitudes();
+    auto vec1 = state.get_amplitudes();
+    auto vec2 = state_cp.get_amplitudes();
     ASSERT_EQ(vec1, vec2);
 }
 
@@ -45,7 +45,7 @@ TEST(StateVectorTest, ZeroNormState) {
 
     StateVector state(StateVector::Haar_random_state(n));
     state.set_zero_norm_state();
-    auto state_cp = state.amplitudes();
+    auto state_cp = state.get_amplitudes();
 
     for (std::uint64_t i = 0; i < state.dim(); ++i) {
         ASSERT_EQ((CComplex)state_cp[i], CComplex(0, 0));
@@ -57,7 +57,7 @@ TEST(StateVectorTest, ComputationalBasisState) {
 
     StateVector state(StateVector::Haar_random_state(n));
     state.set_computational_basis(31);
-    auto state_cp = state.amplitudes();
+    auto state_cp = state.get_amplitudes();
 
     for (std::uint64_t i = 0; i < state.dim(); ++i) {
         if (i == 31) {
@@ -90,10 +90,10 @@ TEST(StateVectorTest, AddState) {
     const std::uint64_t n = 10;
     StateVector state1(StateVector::Haar_random_state(n));
     StateVector state2(StateVector::Haar_random_state(n));
-    auto vec1 = state1.amplitudes();
-    auto vec2 = state2.amplitudes();
+    auto vec1 = state1.get_amplitudes();
+    auto vec2 = state2.get_amplitudes();
     state1.add_state_vector(state2);
-    auto new_vec = state1.amplitudes();
+    auto new_vec = state1.get_amplitudes();
 
     for (std::uint64_t i = 0; i < state1.dim(); ++i) {
         CComplex res = new_vec[i], val = (CComplex)vec1[i] + (CComplex)vec2[i];
@@ -107,11 +107,11 @@ TEST(StateVectorTest, AddStateWithCoef) {
     const std::uint64_t n = 10;
     StateVector state1(StateVector::Haar_random_state(n));
     StateVector state2(StateVector::Haar_random_state(n));
-    auto vec1 = state1.amplitudes();
-    auto vec2 = state2.amplitudes();
+    auto vec1 = state1.get_amplitudes();
+    auto vec2 = state2.get_amplitudes();
 
     state1.add_state_vector_with_coef(coef, state2);
-    auto new_vec = state1.amplitudes();
+    auto new_vec = state1.get_amplitudes();
 
     for (std::uint64_t i = 0; i < state1.dim(); ++i) {
         CComplex res = new_vec[i], val = (CComplex)vec1[i] + coef * (CComplex)vec2[i];
@@ -125,9 +125,9 @@ TEST(StateVectorTest, MultiplyCoef) {
     const CComplex coef(0.5, 0.2);
 
     StateVector state(StateVector::Haar_random_state(n));
-    auto vec = state.amplitudes();
+    auto vec = state.get_amplitudes();
     state.multiply_coef(coef);
-    auto new_vec = state.amplitudes();
+    auto new_vec = state.get_amplitudes();
 
     for (std::uint64_t i = 0; i < state.dim(); ++i) {
         CComplex res = new_vec[i], val = coef * (CComplex)vec[i];
@@ -160,7 +160,7 @@ TEST(StateVectorTest, EntropyCalculation) {
     StateVector state(n);
     for (std::uint64_t rep = 0; rep < max_repeat; ++rep) {
         state = StateVector::Haar_random_state(n);
-        auto state_cp = state.amplitudes();
+        auto state_cp = state.get_amplitudes();
         ASSERT_NEAR(state.get_squared_norm(), 1, eps);
         Eigen::VectorXcd test_state(dim);
         for (std::uint64_t i = 0; i < dim; ++i) test_state[i] = (CComplex)state_cp[i];
@@ -181,7 +181,7 @@ TEST(StateVectorTest, GetMarginalProbability) {
     const std::uint64_t n = 2;
     const std::uint64_t dim = 1 << n;
     StateVector state(StateVector::Haar_random_state(n));
-    auto state_cp = state.amplitudes();
+    auto state_cp = state.get_amplitudes();
     std::vector<double> probs;
     for (std::uint64_t i = 0; i < dim; ++i) {
         probs.push_back(internal::squared_norm(state_cp[i]));

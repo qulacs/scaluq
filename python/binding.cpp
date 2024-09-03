@@ -105,14 +105,14 @@ NB_MODULE(scaluq_core, m) {
             "seed"_a = std::nullopt,
             "Constructing state vector with Haar random state. If seed is not specified, the value "
             "from random device is used.")
-        .def("set_amplitude_at_index",
-             &StateVector::set_amplitude_at_index,
+        .def("set_amplitude_at",
+             &StateVector::set_amplitude_at,
              "Manually set amplitude at one index.")
-        .def("get_amplitude_at_index",
-             &StateVector::get_amplitude_at_index,
+        .def("get_amplitude_at",
+             &StateVector::get_amplitude_at,
              "Get amplitude at one index.\n\n.. note:: If you want to get all amplitudes, you "
              "should "
-             "use `StateVector::amplitudes()`.")
+             "use `StateVector::get_amplitudes()`.")
         .def("set_zero_state",
              &StateVector::set_zero_state,
              "Initialize with computational basis $\\ket{00\\dots0}$.")
@@ -122,7 +122,9 @@ NB_MODULE(scaluq_core, m) {
         .def("set_computational_basis",
              &StateVector::set_computational_basis,
              "Initialize with computational basis \\ket{\\mathrm{basis}}.")
-        .def("amplitudes", &StateVector::amplitudes, "Get all amplitudes with as `list[complex]`.")
+        .def("amplitudes",
+             &StateVector::get_amplitudes,
+             "Get all amplitudes with as `list[complex]`.")
         .def("n_qubits", &StateVector::n_qubits, "Get num of qubits.")
         .def("dim", &StateVector::dim, "Get dimension of the vector ($=2^\\mathrm{n\\_qubits}$).")
         .def("get_squared_norm",
@@ -195,8 +197,8 @@ NB_MODULE(scaluq_core, m) {
              nb::overload_cast<std::uint64_t, const StateVector &>(
                  &StateVectorBatched::set_state_vector),
              "Set the state vector for a specific batch.")
-        .def("get_state_vector",
-             &StateVectorBatched::get_state_vector,
+        .def("get_state_vector_at",
+             &StateVectorBatched::get_state_vector_at,
              "Get the state vector for a specific batch.")
         .def("set_zero_state",
              &StateVectorBatched::set_zero_state,
@@ -234,7 +236,7 @@ NB_MODULE(scaluq_core, m) {
             "Construct batched state vectors with Haar random states. If seed is not "
             "specified, the value from random device is used.")
         .def("amplitudes",
-             &StateVectorBatched::amplitudes,
+             &StateVectorBatched::get_amplitudes,
              "Get all amplitudes with as `list[list[complex]]`.")
         .def("get_squared_norm",
              &StateVectorBatched::get_squared_norm,
@@ -304,28 +306,28 @@ NB_MODULE(scaluq_core, m) {
     nb::class_<GATE_TYPE>(m, #GATE_TYPE, DESCRIPTION)                                    \
         .def("gate_type", &GATE_TYPE::gate_type, "Get gate type as `GateType` enum.")    \
         .def(                                                                            \
-            "get_target_qubit_list",                                                     \
-            [](const GATE_TYPE &gate) { return gate->get_target_qubit_list(); },         \
+            "target_qubit_list",                                                         \
+            [](const GATE_TYPE &gate) { return gate->target_qubit_list(); },             \
             "Get target qubits as `list[int]`. **Control qubits is not included.**")     \
         .def(                                                                            \
-            "get_control_qubit_list",                                                    \
-            [](const GATE_TYPE &gate) { return gate->get_control_qubit_list(); },        \
+            "control_qubit_list",                                                        \
+            [](const GATE_TYPE &gate) { return gate->control_qubit_list(); },            \
             "Get control qubits as `list[int]`.")                                        \
         .def(                                                                            \
-            "get_operand_qubit_list",                                                    \
-            [](const GATE_TYPE &gate) { return gate->get_operand_qubit_list(); },        \
+            "operand_qubit_list",                                                        \
+            [](const GATE_TYPE &gate) { return gate->operand_qubit_list(); },            \
             "Get target and control qubits as `list[int]`.")                             \
         .def(                                                                            \
-            "get_target_qubit_mask",                                                     \
-            [](const GATE_TYPE &gate) { return gate->get_target_qubit_mask(); },         \
+            "target_qubit_mask",                                                         \
+            [](const GATE_TYPE &gate) { return gate->target_qubit_mask(); },             \
             "Get target qubits as mask. **Control qubits is not included.**")            \
         .def(                                                                            \
-            "get_control_qubit_mask",                                                    \
-            [](const GATE_TYPE &gate) { return gate->get_control_qubit_mask(); },        \
+            "control_qubit_mask",                                                        \
+            [](const GATE_TYPE &gate) { return gate->control_qubit_mask(); },            \
             "Get control qubits as mask.")                                               \
         .def(                                                                            \
-            "get_operand_qubit_mask",                                                    \
-            [](const GATE_TYPE &gate) { return gate->get_operand_qubit_mask(); },        \
+            "operand_qubit_mask",                                                        \
+            [](const GATE_TYPE &gate) { return gate->operand_qubit_mask(); },            \
             "Get target and control qubits as mask.")                                    \
         .def(                                                                            \
             "get_inverse",                                                               \
@@ -546,10 +548,10 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(Probablistic);
 
     nb::enum_<ParamGateType>(m, "ParamGateType", "Enum of ParamGate Type.")
-        .value("PRX", ParamGateType::PRX)
-        .value("PRY", ParamGateType::PRY)
-        .value("PRZ", ParamGateType::PRZ)
-        .value("PPauliRotation", ParamGateType::PPauliRotation);
+        .value("ParamRX", ParamGateType::ParamRX)
+        .value("ParamRY", ParamGateType::ParamRY)
+        .value("ParamRZ", ParamGateType::ParamRZ)
+        .value("ParamPauliRotation", ParamGateType::ParamPauliRotation);
 
     m.def(
         "merge_gate", &merge_gate, "Merge two gates. return value is (merged gate, global phase).");
@@ -560,28 +562,28 @@ NB_MODULE(scaluq_core, m) {
              &PGATE_TYPE::param_gate_type,                                                        \
              "Get parametric gate type as `ParamGateType` enum.")                                 \
         .def(                                                                                     \
-            "get_target_qubit_list",                                                              \
-            [](const PGATE_TYPE &gate) { return gate->get_target_qubit_list(); },                 \
+            "target_qubit_list",                                                                  \
+            [](const PGATE_TYPE &gate) { return gate->target_qubit_list(); },                     \
             "Get target qubits as `list[int]`. **Control qubits is not included.**")              \
         .def(                                                                                     \
-            "get_control_qubit_list",                                                             \
-            [](const PGATE_TYPE &gate) { return gate->get_control_qubit_list(); },                \
+            "control_qubit_list",                                                                 \
+            [](const PGATE_TYPE &gate) { return gate->control_qubit_list(); },                    \
             "Get control qubits as `list[int]`.")                                                 \
         .def(                                                                                     \
-            "get_operand_qubit_list",                                                             \
-            [](const PGATE_TYPE &gate) { return gate->get_operand_qubit_list(); },                \
+            "operand_qubit_list",                                                                 \
+            [](const PGATE_TYPE &gate) { return gate->operand_qubit_list(); },                    \
             "Get target and control qubits as `list[int]`.")                                      \
         .def(                                                                                     \
-            "get_target_qubit_mask",                                                              \
-            [](const PGATE_TYPE &gate) { return gate->get_target_qubit_mask(); },                 \
+            "target_qubit_mask",                                                                  \
+            [](const PGATE_TYPE &gate) { return gate->target_qubit_mask(); },                     \
             "Get target qubits as mask. **Control qubits is not included.**")                     \
         .def(                                                                                     \
-            "get_control_qubit_mask",                                                             \
-            [](const PGATE_TYPE &gate) { return gate->get_control_qubit_mask(); },                \
+            "control_qubit_mask",                                                                 \
+            [](const PGATE_TYPE &gate) { return gate->control_qubit_mask(); },                    \
             "Get control qubits as mask.")                                                        \
         .def(                                                                                     \
-            "get_operand_qubit_mask",                                                             \
-            [](const PGATE_TYPE &gate) { return gate->get_operand_qubit_mask(); },                \
+            "operand_qubit_mask",                                                                 \
+            [](const PGATE_TYPE &gate) { return gate->operand_qubit_mask(); },                    \
             "Get target and control qubits as mask.")                                             \
         .def(                                                                                     \
             "get_inverse",                                                                        \
@@ -610,67 +612,67 @@ NB_MODULE(scaluq_core, m) {
         ParamGate,
         "General class of parametric quantum gate.\n\n.. note:: Downcast to requred to use "
         "gate-specific functions.")
-        .def(nb::init<PRXGate>(), "Upcast from `PRXGate`.")
-        .def(nb::init<PRYGate>(), "Upcast from `PRYGate`.")
-        .def(nb::init<PRZGate>(), "Upcast from `PRZGate`.")
-        .def(nb::init<PPauliRotationGate>(), "Upcast from `PPauliRotationGate`.");
+        .def(nb::init<ParamRXGate>(), "Upcast from `ParamRXGate`.")
+        .def(nb::init<ParamRYGate>(), "Upcast from `ParamRYGate`.")
+        .def(nb::init<ParamRZGate>(), "Upcast from `ParamRZGate`.")
+        .def(nb::init<ParamPauliRotationGate>(), "Upcast from `ParamPauliRotationGate`.");
 
-    DEF_PGATE(PRXGate,
+    DEF_PGATE(ParamRXGate,
               "Specific class of parametric X rotation gate, represented as "
-              "$e^{-i\\frac{\\mathrm{angle}}{2}X}$. `angle` is given as `param * pcoef`.");
-    DEF_PGATE(PRYGate,
+              "$e^{-i\\frac{\\mathrm{angle}}{2}X}$. `angle` is given as `param * param_coef`.");
+    DEF_PGATE(ParamRYGate,
               "Specific class of parametric Y rotation gate, represented as "
-              "$e^{-i\\frac{\\mathrm{angle}}{2}Y}$. `angle` is given as `param * pcoef`.");
-    DEF_PGATE(PRZGate,
+              "$e^{-i\\frac{\\mathrm{angle}}{2}Y}$. `angle` is given as `param * param_coef`.");
+    DEF_PGATE(ParamRZGate,
               "Specific class of parametric Z rotation gate, represented as "
-              "$e^{-i\\frac{\\mathrm{angle}}{2}Z}$. `angle` is given as `param * pcoef`.");
+              "$e^{-i\\frac{\\mathrm{angle}}{2}Z}$. `angle` is given as `param * param_coef`.");
 
-    DEF_PGATE(PPauliRotationGate,
+    DEF_PGATE(ParamPauliRotationGate,
               "Specific class of parametric multi-qubit pauli-rotation gate, represented as "
-              "$e^{-i\\frac{\\mathrm{angle}}{2}P}$. `angle` is given as `param * pcoef`.");
+              "$e^{-i\\frac{\\mathrm{angle}}{2}P}$. `angle` is given as `param * param_coef`.");
 
-    DEF_PGATE(PProbablisticGate,
+    DEF_PGATE(ParamProbablisticGate,
               "Specific class of parametric probablistic gate. The gate to apply is picked from a "
               "cirtain "
               "distribution.")
         .def(
             "gate_list",
-            [](const PProbablisticGate &gate) { return gate->gate_list(); },
+            [](const ParamProbablisticGate &gate) { return gate->gate_list(); },
             nb::rv_policy::reference)
         .def(
             "distribution",
-            [](const PProbablisticGate &gate) { return gate->distribution(); },
+            [](const ParamProbablisticGate &gate) { return gate->distribution(); },
             nb::rv_policy::reference);
 
-    mgate.def("PRX",
-              &gate::PRX,
-              "Generate general ParamGate class instance of PRX.",
+    mgate.def("ParamRX",
+              &gate::ParamRX,
+              "Generate general ParamGate class instance of ParamRX.",
               "target"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("PRY",
-              &gate::PRY,
-              "Generate general ParamGate class instance of PRY.",
+    mgate.def("ParamRY",
+              &gate::ParamRY,
+              "Generate general ParamGate class instance of ParamRY.",
               "target"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("PRZ",
-              &gate::PRZ,
-              "Generate general ParamGate class instance of PRZ.",
+    mgate.def("ParamRZ",
+              &gate::ParamRZ,
+              "Generate general ParamGate class instance of ParamRZ.",
               "target"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("PPauliRotation",
-              &gate::PPauliRotation,
-              "Generate general ParamGate class instance of PPauliRotation.",
+    mgate.def("ParamPauliRotation",
+              &gate::ParamPauliRotation,
+              "Generate general ParamGate class instance of ParamPauliRotation.",
               "pauli"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("PProbablistic",
-              &gate::PProbablistic,
-              "Generate general ParamGate class instance of PProbablistic.");
+    mgate.def("ParamProbablistic",
+              &gate::ParamProbablistic,
+              "Generate general ParamGate class instance of ParamProbablistic.");
     mgate.def(
-        "PProbablistic",
+        "ParamProbablistic",
         [](const std::vector<std::pair<double, std::variant<Gate, ParamGate>>> &prob_gate_list) {
             std::vector<double> distribution;
             std::vector<std::variant<Gate, ParamGate>> gate_list;
@@ -680,9 +682,9 @@ NB_MODULE(scaluq_core, m) {
                 distribution.push_back(prob);
                 gate_list.push_back(gate);
             }
-            return gate::PProbablistic(distribution, gate_list);
+            return gate::ParamProbablistic(distribution, gate_list);
         },
-        "Generate general ParamGate class instance of PProbablistic.");
+        "Generate general ParamGate class instance of ParamProbablistic.");
 
     nb::class_<Circuit>(m, "Circuit", "Quantum circuit represented as gate array")
         .def(nb::init<std::uint64_t>(), "Initialize empty circuit of specified qubits.")
@@ -691,11 +693,11 @@ NB_MODULE(scaluq_core, m) {
              &Circuit::gate_list,
              "Get property of `gate_list`.",
              nb::rv_policy::reference)
-        .def("gate_count", &Circuit::gate_count, "Get property of `gate_count`.")
+        .def("n_gates", &Circuit::n_gates, "Get property of `n_gates`.")
         .def("key_set", &Circuit::key_set, "Get set of keys of parameters.")
-        .def("get", &Circuit::get, "Get reference of i-th gate.")
-        .def("get_key",
-             &Circuit::get_key,
+        .def("get_gate_at", &Circuit::get_gate_at, "Get reference of i-th gate.")
+        .def("get_param_key_at",
+             &Circuit::get_param_key_at,
              "Get parameter key of i-th gate. If it is not parametric, return None.")
         .def("calculate_depth", &Circuit::calculate_depth, "Get depth of circuit.")
         .def("add_gate",
@@ -770,19 +772,15 @@ NB_MODULE(scaluq_core, m) {
              "target_qubit"_a,
              "pauli_id"_a,
              "Add a single pauli operation to the data.")
-        .def("get_coef",
-             &PauliOperator::Data::get_coef,
-             "Get the coefficient of the Pauli operator.")
+        .def("coef", &PauliOperator::Data::coef, "Get the coefficient of the Pauli operator.")
         .def("set_coef",
              &PauliOperator::Data::set_coef,
              "c"_a,
              "Set the coefficient of the Pauli operator.")
-        .def("get_target_qubit_list",
-             &PauliOperator::Data::get_target_qubit_list,
+        .def("target_qubit_list",
+             &PauliOperator::Data::target_qubit_list,
              "Get the list of target qubits.")
-        .def("get_pauli_id_list",
-             &PauliOperator::Data::get_pauli_id_list,
-             "Get the list of Pauli IDs.")
+        .def("pauli_id_list", &PauliOperator::Data::pauli_id_list, "Get the list of Pauli IDs.")
         .def("get_XZ_mask_representation",
              &PauliOperator::Data::get_XZ_mask_representation,
              "Get the X and Z mask representation as a tuple of vectors.");
@@ -819,14 +817,14 @@ NB_MODULE(scaluq_core, m) {
              "from `i-th` bit of `bit_flip_mask` and `phase_flip_mask` as follows.\n\n.. "
              "csv-table::\n\n    \"bit_flip\",\"phase_flip\",\"pauli\"\n    \"0\",\"0\",\"I\"\n    "
              "\"0\",\"1\",\"Z\"\n    \"1\",\"0\",\"X\"\n    \"1\",\"1\",\"Y\"")
-        .def("get_coef", &PauliOperator::get_coef, "Get property `coef`.")
-        .def("get_target_qubit_list",
-             &PauliOperator::get_target_qubit_list,
+        .def("coef", &PauliOperator::coef, "Get property `coef`.")
+        .def("target_qubit_list",
+             &PauliOperator::target_qubit_list,
              "Get qubits to be applied pauli.")
-        .def("get_pauli_id_list",
-             &PauliOperator::get_pauli_id_list,
+        .def("pauli_id_list",
+             &PauliOperator::pauli_id_list,
              "Get pauli id to be applied. The order is correspond to the result of "
-             "`get_target_qubit_list`")
+             "`target_qubit_list`")
         .def("get_XZ_mask_representation",
              &PauliOperator::get_XZ_mask_representation,
              "Get single-pauli property as binary integer representation. See description of "
