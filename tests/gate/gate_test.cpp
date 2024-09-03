@@ -401,9 +401,12 @@ TEST(GateTest, ApplyProbablisticGate) {
     ASSERT_LT(x_cnt, i_cnt);
 }
 
-void test_gate(Gate gate_control, Gate gate_simple, std::uint64_t n_qubits, std::uint64_t control_mask) {
+void test_gate(Gate gate_control,
+               Gate gate_simple,
+               std::uint64_t n_qubits,
+               std::uint64_t control_mask) {
     StateVector state = StateVector::Haar_random_state(n_qubits);
-    auto amplitudes = state.amplitudes();
+    auto amplitudes = state.get_amplitudes();
     StateVector state_controlled(n_qubits - std::popcount(control_mask));
     std::vector<Complex> amplitudes_controlled(state_controlled.dim());
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
@@ -413,8 +416,8 @@ void test_gate(Gate gate_control, Gate gate_simple, std::uint64_t n_qubits, std:
     state_controlled.load(amplitudes_controlled);
     gate_control->update_quantum_state(state);
     gate_simple->update_quantum_state(state_controlled);
-    amplitudes = state.amplitudes();
-    amplitudes_controlled = state_controlled.amplitudes();
+    amplitudes = state.get_amplitudes();
+    amplitudes_controlled = state_controlled.get_amplitudes();
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
         ASSERT_NEAR(
             Kokkos::abs(amplitudes_controlled[i] -

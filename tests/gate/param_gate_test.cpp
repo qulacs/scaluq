@@ -117,10 +117,13 @@ TEST(ParamGateTest, ApplyParamProbablisticGate) {
     ASSERT_LT(x_cnt, i_cnt);
 }
 
-void test_gate(
-    ParamGate gate_control, ParamGate gate_simple, std::uint64_t n_qubits, std::uint64_t control_mask, double param) {
+void test_gate(ParamGate gate_control,
+               ParamGate gate_simple,
+               std::uint64_t n_qubits,
+               std::uint64_t control_mask,
+               double param) {
     StateVector state = StateVector::Haar_random_state(n_qubits);
-    auto amplitudes = state.amplitudes();
+    auto amplitudes = state.get_amplitudes();
     StateVector state_controlled(n_qubits - std::popcount(control_mask));
     std::vector<Complex> amplitudes_controlled(state_controlled.dim());
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
@@ -130,8 +133,8 @@ void test_gate(
     state_controlled.load(amplitudes_controlled);
     gate_control->update_quantum_state(state, param);
     gate_simple->update_quantum_state(state_controlled, param);
-    amplitudes = state.amplitudes();
-    amplitudes_controlled = state_controlled.amplitudes();
+    amplitudes = state.get_amplitudes();
+    amplitudes_controlled = state_controlled.get_amplitudes();
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
         ASSERT_NEAR(
             Kokkos::abs(amplitudes_controlled[i] -
@@ -185,17 +188,17 @@ void test_ppauli_control(std::uint64_t n) {
         }
     }
     double param = random.uniform() * PI() * 2;
-    ParamGate g1 = gate::PPauliRotation(PauliOperator(data1), 1., controls);
-    ParamGate g2 = gate::PPauliRotation(PauliOperator(data2), 1., {});
+    ParamGate g1 = gate::ParamPauliRotation(PauliOperator(data1), 1., controls);
+    ParamGate g2 = gate::ParamPauliRotation(PauliOperator(data2), 1., {});
     test_gate(g1, g2, n, control_mask, param);
 }
 
 TEST(ParamGateTest, Control) {
     std::uint64_t n = 10;
     for ([[maybe_unused]] std::uint64_t _ : std::views::iota(0, 10)) {
-        test_param_rotation_control(gate::PRX, n);
-        test_param_rotation_control(gate::PRY, n);
-        test_param_rotation_control(gate::PRZ, n);
+        test_param_rotation_control(gate::ParamRX, n);
+        test_param_rotation_control(gate::ParamRY, n);
+        test_param_rotation_control(gate::ParamRZ, n);
         test_ppauli_control(n);
     }
 }
