@@ -2,6 +2,7 @@
 
 #include <gate/gate_factory.hpp>
 #include <gate/merge_gate.hpp>
+#include <numbers>
 #include <state/state_vector.hpp>
 #include <types.hpp>
 #include <util/random.hpp>
@@ -29,15 +30,17 @@ TEST(GateTest, MergeGate) {
         gates.push_back(gate::SqrtYdag(target));
         gates.push_back(gate::P0(target));
         gates.push_back(gate::P1(target));
-        gates.push_back(gate::RX(target, random.uniform() * M_PI * 2));
-        gates.push_back(gate::RY(target, random.uniform() * M_PI * 2));
-        gates.push_back(gate::RZ(target, random.uniform() * M_PI * 2));
-        gates.push_back(gate::U1(target, random.uniform() * M_PI * 2));
-        gates.push_back(gate::U2(target, random.uniform() * M_PI * 2, random.uniform() * M_PI * 2));
+        gates.push_back(gate::RX(target, random.uniform() * std::numbers::pi * 2));
+        gates.push_back(gate::RY(target, random.uniform() * std::numbers::pi * 2));
+        gates.push_back(gate::RZ(target, random.uniform() * std::numbers::pi * 2));
+        gates.push_back(gate::U1(target, random.uniform() * std::numbers::pi * 2));
+        gates.push_back(gate::U2(target,
+                                 random.uniform() * std::numbers::pi * 2,
+                                 random.uniform() * std::numbers::pi * 2));
         gates.push_back(gate::U3(target,
-                                 random.uniform() * M_PI * 2,
-                                 random.uniform() * M_PI * 2,
-                                 random.uniform() * M_PI * 2));
+                                 random.uniform() * std::numbers::pi * 2,
+                                 random.uniform() * std::numbers::pi * 2,
+                                 random.uniform() * std::numbers::pi * 2));
         gates.push_back(
             gate::OneTargetMatrix(target,
                                   {std::array{Complex(random.uniform(), random.uniform()),
@@ -49,7 +52,7 @@ TEST(GateTest, MergeGate) {
         gates.push_back(gate::Swap(target, target ^ 1));
     }
     gates.push_back(gate::I());
-    gates.push_back(gate::GlobalPhase(random.uniform() * M_PI * 2));
+    gates.push_back(gate::GlobalPhase(random.uniform() * std::numbers::pi * 2));
     gates.push_back(
         gate::TwoTargetMatrix(0,
                               1,
@@ -73,11 +76,11 @@ TEST(GateTest, MergeGate) {
     gates.push_back(gate::Pauli(PauliOperator("Z 0", random.uniform())));
     gates.push_back(gate::Pauli(PauliOperator("Z 1", random.uniform())));
     gates.push_back(gate::PauliRotation(PauliOperator("X 0 Y 1", random.uniform()),
-                                        random.uniform() * M_PI * 2));
-    gates.push_back(
-        gate::PauliRotation(PauliOperator("Z 0", random.uniform()), random.uniform() * M_PI * 2));
-    gates.push_back(
-        gate::PauliRotation(PauliOperator("Z 1", random.uniform()), random.uniform() * M_PI * 2));
+                                        random.uniform() * std::numbers::pi * 2));
+    gates.push_back(gate::PauliRotation(PauliOperator("Z 0", random.uniform()),
+                                        random.uniform() * std::numbers::pi * 2));
+    gates.push_back(gate::PauliRotation(PauliOperator("Z 1", random.uniform()),
+                                        random.uniform() * std::numbers::pi * 2));
     for (auto&& g1 : gates) {
         for (auto&& g2 : gates) {
             std::uint64_t n = 2;

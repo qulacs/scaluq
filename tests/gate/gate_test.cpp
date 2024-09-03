@@ -4,6 +4,7 @@
 #include <functional>
 #include <gate/gate.hpp>
 #include <gate/gate_factory.hpp>
+#include <numbers>
 #include <state/state_vector.hpp>
 #include <types.hpp>
 #include <util/random.hpp>
@@ -53,7 +54,7 @@ void run_random_gate_apply(std::uint64_t n_qubits) {
             test_state[i] = state_cp[i];
         }
 
-        const double angle = M_PI * random.uniform();
+        const double angle = std::numbers::pi * random.uniform();
         const Gate gate = QuantumGateConstructor(angle, {});
         gate->update_quantum_state(state);
         state_cp = state.amplitudes();
@@ -108,7 +109,7 @@ void run_random_gate_apply(std::uint64_t n_qubits,
             test_state[i] = state_cp[i];
         }
 
-        const double angle = M_PI * random.uniform();
+        const double angle = std::numbers::pi * random.uniform();
         const auto matrix = matrix_factory(angle);
         const std::uint64_t target = random.int64() % n_qubits;
         const Gate gate = QuantumGateConstructor(target, angle, {});
@@ -138,14 +139,14 @@ void run_random_gate_apply_IBMQ(
                 test_state[i] = state_cp[i];
             }
 
-            double theta = M_PI * random.uniform();
-            double phi = M_PI * random.uniform();
-            double lambda = M_PI * random.uniform();
+            double theta = std::numbers::pi * random.uniform();
+            double phi = std::numbers::pi * random.uniform();
+            double lambda = std::numbers::pi * random.uniform();
             if (gate_type == 0) {
                 theta = 0;
                 phi = 0;
             } else if (gate_type == 1) {
-                theta = M_PI / 2;
+                theta = std::numbers::pi / 2;
             }
             const auto matrix = matrix_factory(theta, phi, lambda);
             const std::uint64_t target = random.int64() % n_qubits;
@@ -305,7 +306,7 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
         for (std::uint64_t i = 0; i < dim; i++) {
             test_state[i] = state_cp[i];
         }
-        const double angle = M_PI * random.uniform();
+        const double angle = std::numbers::pi * random.uniform();
         std::vector<std::uint64_t> target_vec, pauli_id_vec;
         for (std::uint64_t target = 0; target < n_qubits; target++) {
             target_vec.emplace_back(target);

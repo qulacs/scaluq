@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <Eigen/Core>
+#include <numbers>
 
 #include "../util/util.hpp"
 #include "gate/gate_factory.hpp"
@@ -124,11 +125,11 @@ TEST(CircuitTest, CircuitBasic) {
     state_eigen = get_eigen_matrix_full_qubit_Swap(target, target_sub, n) * state_eigen;
 
     target = random.int32() % n;
-    circuit.add_gate(gate::U1(target, M_PI));
+    circuit.add_gate(gate::U1(target, std::numbers::pi));
     state_eigen = get_expanded_eigen_matrix_with_identity(target, make_Z(), n) * state_eigen;
 
     target = random.int32() % n;
-    circuit.add_gate(gate::U2(target, 0, M_PI));
+    circuit.add_gate(gate::U2(target, 0, std::numbers::pi));
     state_eigen = get_expanded_eigen_matrix_with_identity(target, make_H(), n) * state_eigen;
 
     target = random.int32() % n;
@@ -243,7 +244,7 @@ TEST(CircuitTest, CircuitRev) {
 
     /*
     Observable observable(n);
-    angle = 2 * M_PI * random.uniform();
+    angle = 2 * std::numbers::pi * random.uniform();
 
     observable.add_operator(1.0, "Z 0");
     observable.add_operator(2.0, "Z 0 Z 1");
