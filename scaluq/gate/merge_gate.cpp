@@ -32,8 +32,8 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
     assert(!pauli_id1 || pauli_id1 != 0);
     assert(!pauli_id2 || pauli_id2 != 0);
     if (pauli_id1 && pauli_id2) {
-        std::uint64_t target1 = gate1->get_target_qubit_list()[0];
-        std::uint64_t target2 = gate2->get_target_qubit_list()[0];
+        std::uint64_t target1 = gate1->target_qubit_list()[0];
+        std::uint64_t target2 = gate2->target_qubit_list()[0];
         if (target1 == target2) {
             if (pauli_id1 == pauli_id2) return {gate::I(), 0.};
             if (pauli_id1 == 1) {
@@ -54,11 +54,11 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
         (pauli_id2 || gate2.gate_type() == GateType::Pauli)) {
         auto pauli1 = gate_type1 == GateType::Pauli
                           ? PauliGate(gate1)->pauli()
-                          : PauliOperator(std::vector{gate1->get_target_qubit_list()[0]},
+                          : PauliOperator(std::vector{gate1->target_qubit_list()[0]},
                                           std::vector{pauli_id1.value()});
         auto pauli2 = gate_type2 == GateType::Pauli
                           ? PauliGate(gate2)->pauli()
-                          : PauliOperator(std::vector{gate2->get_target_qubit_list()[0]},
+                          : PauliOperator(std::vector{gate2->target_qubit_list()[0]},
                                           std::vector{pauli_id2.value()});
         return {gate::Pauli(pauli2 * pauli1), 0.};
     }
@@ -87,8 +87,8 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
     auto oct_phase1 = get_oct_phase(gate_type1);
     auto oct_phase2 = get_oct_phase(gate_type2);
     if (oct_phase1 && oct_phase2) {
-        std::uint64_t target1 = gate1->get_target_qubit_list()[0];
-        std::uint64_t target2 = gate2->get_target_qubit_list()[0];
+        std::uint64_t target1 = gate1->target_qubit_list()[0];
+        std::uint64_t target2 = gate2->target_qubit_list()[0];
         if (target1 == target2) {
             auto g = oct_phase_gate(oct_phase1.value() + oct_phase2.value(), target1);
             if (g) return {g.value(), 0.};
@@ -96,8 +96,8 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
     }
     if ((oct_phase1 || gate_type1 == GateType::RZ || gate_type1 == GateType::U1) &&
         (oct_phase2 || gate_type2 == GateType::RZ || gate_type2 == GateType::U1)) {
-        std::uint64_t target1 = gate1->get_target_qubit_list()[0];
-        std::uint64_t target2 = gate2->get_target_qubit_list()[0];
+        std::uint64_t target1 = gate1->target_qubit_list()[0];
+        std::uint64_t target2 = gate2->target_qubit_list()[0];
         if (target1 == target2) {
             double phase1 = oct_phase1                   ? oct_phase1.value() * PI() / 4
                             : gate_type1 == GateType::RZ ? RZGate(gate1)->angle()
@@ -123,8 +123,8 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
     auto rx_param1 = get_rx_angle(gate1, gate_type1);
     auto rx_param2 = get_rx_angle(gate2, gate_type2);
     if (rx_param1 && rx_param2) {
-        std::uint64_t target1 = gate1->get_target_qubit_list()[0];
-        std::uint64_t target2 = gate2->get_target_qubit_list()[0];
+        std::uint64_t target1 = gate1->target_qubit_list()[0];
+        std::uint64_t target2 = gate2->target_qubit_list()[0];
         double global_phase1 = gate_type1 == GateType::RX ? 0. : rx_param1.value() / 2;
         double global_phase2 = gate_type2 == GateType::RX ? 0. : rx_param2.value() / 2;
         if (target1 == target2) {
@@ -145,8 +145,8 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
     auto ry_param1 = get_ry_angle(gate1, gate_type1);
     auto ry_param2 = get_ry_angle(gate2, gate_type2);
     if (ry_param1 && ry_param2) {
-        std::uint64_t target1 = gate1->get_target_qubit_list()[0];
-        std::uint64_t target2 = gate2->get_target_qubit_list()[0];
+        std::uint64_t target1 = gate1->target_qubit_list()[0];
+        std::uint64_t target2 = gate2->target_qubit_list()[0];
         double global_phase1 = gate_type1 == GateType::RY ? 0. : ry_param1.value() / 2;
         double global_phase2 = gate_type2 == GateType::RY ? 0. : ry_param2.value() / 2;
         if (target1 == target2) {
@@ -188,10 +188,10 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
     }
 
     // General case
-    auto gate1_targets = gate1->get_target_qubit_list();
-    std::ranges::copy(gate1->get_control_qubit_list(), std::back_inserter(gate1_targets));
-    auto gate2_targets = gate2->get_target_qubit_list();
-    std::ranges::copy(gate2->get_control_qubit_list(), std::back_inserter(gate2_targets));
+    auto gate1_targets = gate1->target_qubit_list();
+    std::ranges::copy(gate1->control_qubit_list(), std::back_inserter(gate1_targets));
+    auto gate2_targets = gate2->target_qubit_list();
+    std::ranges::copy(gate2->control_qubit_list(), std::back_inserter(gate2_targets));
     std::vector<std::uint64_t> merged_targets(gate1_targets.size() + gate2_targets.size());
     std::ranges::copy(gate1_targets, merged_targets.begin());
     std::ranges::copy(gate2_targets, merged_targets.begin() + gate1_targets.size());
