@@ -105,11 +105,11 @@ NB_MODULE(scaluq_core, m) {
             "seed"_a = std::nullopt,
             "Constructing state vector with Haar random state. If seed is not specified, the value "
             "from random device is used.")
-        .def("set_amplitude_at_index",
-             &StateVector::set_amplitude_at_index,
+        .def("set_amplitude_at",
+             &StateVector::set_amplitude_at,
              "Manually set amplitude at one index.")
-        .def("get_amplitude_at_index",
-             &StateVector::get_amplitude_at_index,
+        .def("get_amplitude_at",
+             &StateVector::get_amplitude_at,
              "Get amplitude at one index.\n\n.. note:: If you want to get all amplitudes, you "
              "should "
              "use `StateVector::get_amplitudes()`.")
@@ -197,8 +197,8 @@ NB_MODULE(scaluq_core, m) {
              nb::overload_cast<std::uint64_t, const StateVector &>(
                  &StateVectorBatched::set_state_vector),
              "Set the state vector for a specific batch.")
-        .def("get_state_vector",
-             &StateVectorBatched::get_state_vector,
+        .def("get_state_vector_at",
+             &StateVectorBatched::get_state_vector_at,
              "Get the state vector for a specific batch.")
         .def("set_zero_state",
              &StateVectorBatched::set_zero_state,
@@ -695,9 +695,9 @@ NB_MODULE(scaluq_core, m) {
              nb::rv_policy::reference)
         .def("n_gates", &Circuit::n_gates, "Get property of `n_gates`.")
         .def("key_set", &Circuit::key_set, "Get set of keys of parameters.")
-        .def("get", &Circuit::get, "Get reference of i-th gate.")
-        .def("get_key",
-             &Circuit::get_key,
+        .def("get_gate_at", &Circuit::get_gate_at, "Get reference of i-th gate.")
+        .def("get_param_key_at",
+             &Circuit::get_param_key_at,
              "Get parameter key of i-th gate. If it is not parametric, return None.")
         .def("calculate_depth", &Circuit::calculate_depth, "Get depth of circuit.")
         .def("add_gate",

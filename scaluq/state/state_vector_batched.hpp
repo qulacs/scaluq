@@ -25,7 +25,7 @@ public:
 
     void set_state_vector(const StateVector& state);
     void set_state_vector(std::uint64_t batch_id, const StateVector& state);
-    [[nodiscard]] StateVector get_state_vector(std::uint64_t batch_id) const;
+    [[nodiscard]] StateVector get_state_vector_at(std::uint64_t batch_id) const;
 
     void set_zero_state();
     void set_computational_basis(std::uint64_t basis);

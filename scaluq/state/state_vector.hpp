@@ -25,12 +25,12 @@ public:
     /**
      * @attention Very slow. You should use load() instead if you can.
      */
-    void set_amplitude_at_index(std::uint64_t index, const Complex& c);
+    void set_amplitude_at(std::uint64_t index, const Complex& c);
 
     /**
      * @attention Very slow. You should use get_amplitudes() instead if you can.
      */
-    [[nodiscard]] Complex get_amplitude_at_index(std::uint64_t index) const;
+    [[nodiscard]] Complex get_amplitude_at(std::uint64_t index) const;
 
     [[nodiscard]] static StateVector Haar_random_state(std::uint64_t n_qubits,
                                                        std::uint64_t seed = std::random_device()());

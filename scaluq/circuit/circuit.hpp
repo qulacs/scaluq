@@ -23,13 +23,13 @@ public:
         }
         return key_set;
     }
-    [[nodiscard]] inline const GateWithKey& get(std::uint64_t idx) const {
+    [[nodiscard]] inline const GateWithKey& get_gate_at(std::uint64_t idx) const {
         if (idx >= _gate_list.size()) {
-            throw std::runtime_error("Circuit::get(std::uint64_t): index out of bounds");
+            throw std::runtime_error("Circuit::get_gate_at(std::uint64_t): index out of bounds");
         }
         return _gate_list[idx];
     }
-    [[nodiscard]] inline std::optional<std::string> get_key(std::uint64_t idx) {
+    [[nodiscard]] inline std::optional<std::string> get_param_key_at(std::uint64_t idx) {
         if (idx >= _gate_list.size()) {
             throw std::runtime_error(
                 "Circuit::get_parameter_key(std::uint64_t): index out of bounds");

@@ -25,9 +25,9 @@ TEST(StateVectorTest, HaarRandomStateNorm) {
 TEST(StateVectorTest, OperationAtIndex) {
     auto state = StateVector::Haar_random_state(10);
     for (std::uint64_t i = 0; i < state.dim(); ++i) {
-        state.set_amplitude_at_index(i, 1);
-        ASSERT_NEAR(state.get_amplitude_at_index(i).real(), 1, eps);
-        ASSERT_NEAR(state.get_amplitude_at_index(i).imag(), 0., eps);
+        state.set_amplitude_at(i, 1);
+        ASSERT_NEAR(state.get_amplitude_at(i).real(), 1, eps);
+        ASSERT_NEAR(state.get_amplitude_at(i).imag(), 0., eps);
     }
 }
 

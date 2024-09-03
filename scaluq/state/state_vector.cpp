@@ -12,13 +12,13 @@ StateVector::StateVector(std::uint64_t n_qubits)
     set_zero_state();
 }
 
-void StateVector::set_amplitude_at_index(std::uint64_t index, const Complex& c) {
+void StateVector::set_amplitude_at(std::uint64_t index, const Complex& c) {
     Kokkos::View<Complex, Kokkos::HostSpace> host_view("single_value");
     host_view() = c;
     Kokkos::deep_copy(Kokkos::subview(_raw, index), host_view());
 }
 
-Complex StateVector::get_amplitude_at_index(std::uint64_t index) const {
+Complex StateVector::get_amplitude_at(std::uint64_t index) const {
     Kokkos::View<Complex, Kokkos::HostSpace> host_view("single_value");
     Kokkos::deep_copy(host_view, Kokkos::subview(_raw, index));
     return host_view();
@@ -26,7 +26,7 @@ Complex StateVector::get_amplitude_at_index(std::uint64_t index) const {
 
 void StateVector::set_zero_state() {
     Kokkos::deep_copy(_raw, 0);
-    set_amplitude_at_index(0, 1);
+    set_amplitude_at(0, 1);
 }
 
 void StateVector::set_zero_norm_state() { Kokkos::deep_copy(_raw, 0); }
@@ -39,7 +39,7 @@ void StateVector::set_computational_basis(std::uint64_t basis) {
             "computational basis must be smaller than 2^qubit_count");
     }
     Kokkos::deep_copy(_raw, 0);
-    set_amplitude_at_index(basis, 1);
+    set_amplitude_at(basis, 1);
 }
 
 StateVector StateVector::Haar_random_state(std::uint64_t n_qubits, std::uint64_t seed) {

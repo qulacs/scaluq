@@ -49,30 +49,30 @@ TEST(StateVectorBatchedTest, OperateState) {
 
     auto states_cp = states.copy();
     for (std::uint64_t b = 0; b < batch_size; ++b) {
-        ASSERT_TRUE(same_state(states.get_state_vector(b), states_cp.get_state_vector(b)));
+        ASSERT_TRUE(same_state(states.get_state_vector_at(b), states_cp.get_state_vector_at(b)));
     }
 
     states.add_state_vector(states_add);
     for (std::uint64_t b = 0; b < batch_size; ++b) {
-        auto v = states_cp.get_state_vector(b);
-        v.add_state_vector(states_add.get_state_vector(b));
-        ASSERT_TRUE(same_state(v, states.get_state_vector(b)));
+        auto v = states_cp.get_state_vector_at(b);
+        v.add_state_vector(states_add.get_state_vector_at(b));
+        ASSERT_TRUE(same_state(v, states.get_state_vector_at(b)));
     }
 
     states_cp = states.copy();
     states.add_state_vector_with_coef(coef, states_add);
     for (std::uint64_t b = 0; b < batch_size; ++b) {
-        auto v = states_cp.get_state_vector(b);
-        v.add_state_vector_with_coef(coef, states_add.get_state_vector(b));
-        ASSERT_TRUE(same_state(v, states.get_state_vector(b)));
+        auto v = states_cp.get_state_vector_at(b);
+        v.add_state_vector_with_coef(coef, states_add.get_state_vector_at(b));
+        ASSERT_TRUE(same_state(v, states.get_state_vector_at(b)));
     }
 
     states_cp = states.copy();
     states.multiply_coef(coef);
     for (std::uint64_t b = 0; b < batch_size; ++b) {
-        auto v = states_cp.get_state_vector(b);
+        auto v = states_cp.get_state_vector_at(b);
         v.multiply_coef(coef);
-        ASSERT_TRUE(same_state(v, states.get_state_vector(b)));
+        ASSERT_TRUE(same_state(v, states.get_state_vector_at(b)));
     }
 }
 
@@ -83,7 +83,7 @@ TEST(StateVectorBatchedTest, ZeroProbs) {
     for (std::uint64_t i = 0; i < n_qubits; ++i) {
         auto zero_probs = states.get_zero_probability(i);
         for (std::uint64_t b = 0; b < batch_size; ++b) {
-            auto state = states.get_state_vector(b);
+            auto state = states.get_state_vector_at(b);
             ASSERT_NEAR(zero_probs[b], state.get_zero_probability(i), eps);
         }
     }
@@ -101,7 +101,7 @@ TEST(StateVectorBatchedTest, MarginalProbs) {
         }
         auto mg_probs = states.get_marginal_probability(targets);
         for (std::uint64_t b = 0; b < batch_size; ++b) {
-            auto state = states.get_state_vector(b);
+            auto state = states.get_state_vector_at(b);
             ASSERT_NEAR(mg_probs[b], state.get_marginal_probability(targets), eps);
         }
     }
@@ -113,7 +113,7 @@ TEST(StateVectorBatchedTest, Entropy) {
 
     auto entropies = states.get_entropy();
     for (std::uint64_t b = 0; b < batch_size; ++b) {
-        auto state = states.get_state_vector(b);
+        auto state = states.get_state_vector_at(b);
         ASSERT_NEAR(entropies[b], state.get_entropy(), eps);
     }
 }

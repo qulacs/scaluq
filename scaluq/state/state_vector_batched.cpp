@@ -38,7 +38,7 @@ void StateVectorBatched::set_state_vector(std::uint64_t batch_id, const StateVec
     Kokkos::fence();
 }
 
-StateVector StateVectorBatched::get_state_vector(std::uint64_t batch_id) const {
+StateVector StateVectorBatched::get_state_vector_at(std::uint64_t batch_id) const {
     StateVector ret(_n_qubits);
     Kokkos::parallel_for(
         _dim, KOKKOS_CLASS_LAMBDA(std::uint64_t i) { ret._raw(i) = _raw(batch_id, i); });
