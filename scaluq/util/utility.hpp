@@ -156,8 +156,8 @@ KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
 }
 
 inline Matrix convert_external_matrix_to_internal_matrix(const ComplexMatrix& eigen_matrix) {
-    UINT rows = eigen_matrix.rows();
-    UINT cols = eigen_matrix.cols();
+    std::uint64_t rows = eigen_matrix.rows();
+    std::uint64_t cols = eigen_matrix.cols();
     Kokkos::View<const Complex**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
         host_view(reinterpret_cast<const Complex*>(eigen_matrix.data()), rows, cols);
     Matrix mat("internal_matrix", rows, cols);
@@ -175,20 +175,20 @@ inline ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix& ma
     return eigen_matrix;
 }
 
-inline std::vector<UINT> create_matrix_mask_list(UINT target_mask) {
-    std::vector<UINT> bit_mask_list;
-    UINT x = 1;
-    for (UINT bit = 0; bit < 64; bit++) {
+inline std::vector<std::uint64_t> create_matrix_mask_list(std::uint64_t target_mask) {
+    std::vector<std::uint64_t> bit_mask_list;
+    std::uint64_t x = 1;
+    for (std::uint64_t bit = 0; bit < 64; bit++) {
         if (target_mask & x) bit_mask_list.emplace_back(x);
         x <<= 1;
     }
-    const UINT qubit_index_count = std::popcount(target_mask);
-    const UINT matrix_dim = 1ULL << qubit_index_count;
-    std::vector<UINT> mask_list(matrix_dim, 0);
+    const std::uint64_t qubit_index_count = std::popcount(target_mask);
+    const std::uint64_t matrix_dim = 1ULL << qubit_index_count;
+    std::vector<std::uint64_t> mask_list(matrix_dim, 0);
 
-    for (UINT cursor = 0; cursor < matrix_dim; cursor++) {
-        for (UINT idx = 0; idx < bit_mask_list.size(); idx++) {
-            UINT bit_mask = bit_mask_list[idx];
+    for (std::uint64_t cursor = 0; cursor < matrix_dim; cursor++) {
+        for (std::uint64_t idx = 0; idx < bit_mask_list.size(); idx++) {
+            std::uint64_t bit_mask = bit_mask_list[idx];
             if (cursor & bit_mask) mask_list[cursor] ^= bit_mask;
         }
     }
@@ -196,10 +196,11 @@ inline std::vector<UINT> create_matrix_mask_list(UINT target_mask) {
 }
 
 // いらなさそう
-// inline std::vector<UINT> create_sorted_ui_list_value(UINT target_mask, UINT control_mask) {
-//     std::vector<UINT> sorted_list;
-//     UINT qubit_count = std::bit_width(target_mask);
-//     for (UINT bit_cursor = 1; bit_cursor < std::bit_width(target_mask); bit_cursor++) {
+// inline std::vector<std::uint64_t> create_sorted_ui_list_value(std::uint64_t target_mask,
+// std::uint64_t control_mask) {
+//     std::vector<std::uint64_t> sorted_list;
+//     std::uint64_t qubit_count = std::bit_width(target_mask);
+//     for (std::uint64_t bit_cursor = 1; bit_cursor < std::bit_width(target_mask); bit_cursor++) {
 //         if (target_mask & (1 << bit_cursor)) sorted_list.emplace_back(bit_cursor);
 //         if (control_mask & (1 << bit_cursor)) sorted_list.emplace_back(bit_cursor);
 //     }

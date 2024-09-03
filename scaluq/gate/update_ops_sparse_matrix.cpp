@@ -8,17 +8,17 @@
 
 namespace scaluq {
 namespace internal {
-void sparse_matrix_gate(UINT target_mask,
-                        UINT control_mask,
+void sparse_matrix_gate(std::uint64_t target_mask,
+                        std::uint64_t control_mask,
                         const SparseMatrix& mat,
                         StateVector& state) {
     using Value = Kokkos::pair<Complex, uint32_t>;
-    UINT full_mask = (1ULL << state.n_qubits()) - 1;
-    UINT inner_mask = ~(target_mask | control_mask) & full_mask;
+    std::uint64_t full_mask = (1ULL << state.n_qubits()) - 1;
+    std::uint64_t inner_mask = ~(target_mask | control_mask) & full_mask;
     auto values = mat._values;
     Kokkos::View<Complex*> update(Kokkos::ViewAllocateWithoutInitializing("update"), state.dim());
     Kokkos::parallel_for(
-        state.dim(), KOKKOS_LAMBDA(UINT i) {
+        state.dim(), KOKKOS_LAMBDA(std::uint64_t i) {
             if ((i | control_mask) == i) {
                 update(i) = 0;
             } else {
@@ -31,9 +31,10 @@ void sparse_matrix_gate(UINT target_mask,
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
             {0, 0}, {state.dim() >> std::popcount(target_mask | control_mask), values.size()}),
-        KOKKOS_LAMBDA(UINT it, UINT i) {
-            UINT basis = internal::insert_zero_at_mask_positions(it, control_mask | target_mask) |
-                         control_mask;
+        KOKKOS_LAMBDA(std::uint64_t it, std::uint64_t i) {
+            std::uint64_t basis =
+                internal::insert_zero_at_mask_positions(it, control_mask | target_mask) |
+                control_mask;
             auto access = scatter.access();
             auto [v, r, c] = values(i);
             uint32_t src_index = internal::insert_zero_at_mask_positions(r, inner_mask) | basis;

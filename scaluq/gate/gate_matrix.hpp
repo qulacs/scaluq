@@ -106,7 +106,9 @@ class SparseMatrixGateImpl : public GateBase {
     SparseMatrix _matrix;
 
 public:
-    SparseMatrixGateImpl(UINT target_mask, UINT control_mask, const SparseComplexMatrix& mat)
+    SparseMatrixGateImpl(std::uint64_t target_mask,
+                         std::uint64_t control_mask,
+                         const SparseComplexMatrix& mat)
         : GateBase(target_mask, control_mask), _matrix(SparseMatrix(mat)) {}
 
     Gate get_inverse() const override {
@@ -142,8 +144,8 @@ class DenseMatrixGateImpl : public GateBase {
     bool _is_unitary;
 
 public:
-    DenseMatrixGateImpl(UINT target_mask,
-                        UINT control_mask,
+    DenseMatrixGateImpl(std::uint64_t target_mask,
+                        std::uint64_t control_mask,
                         const ComplexMatrix& mat,
                         bool is_unitary = false)
         : GateBase(target_mask, control_mask),

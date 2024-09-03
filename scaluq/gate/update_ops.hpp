@@ -101,13 +101,13 @@ void pauli_rotation_gate(std::uint64_t control_mask,
                          double angle,
                          StateVector& state);
 
-void sparse_matrix_gate(UINT target_mask,
-                        UINT control_mask,
+void sparse_matrix_gate(std::uint64_t target_mask,
+                        std::uint64_t control_mask,
                         const SparseMatrix& matrix,
                         StateVector& state);
 
-void dense_matrix_gate(UINT target_mask,
-                       UINT control_mask,
+void dense_matrix_gate(std::uint64_t target_mask,
+                       std::uint64_t control_mask,
                        const Matrix& matrix,
                        StateVector& state);
 }  // namespace internal
