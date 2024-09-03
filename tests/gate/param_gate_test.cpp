@@ -2,6 +2,7 @@
 
 #include <gate/gate_factory.hpp>
 #include <gate/param_gate_factory.hpp>
+#include <numbers>
 #include <state/state_vector.hpp>
 #include <types.hpp>
 #include <util/random.hpp>
@@ -25,7 +26,7 @@ void test_apply_parametric_single_pauli_rotation(std::uint64_t n_qubits,
         auto state_bef = state.copy();
 
         const std::uint64_t target = random.int32() % n_qubits;
-        const double param = M_PI * random.uniform();
+        const double param = std::numbers::pi * random.uniform();
         const double param_coef = random.uniform() * 2 - 1;
         const Gate gate = factory_fixed(target, param_coef * param, {});
         const ParamGate pgate = factory_parametric(target, param_coef, {});
@@ -56,7 +57,7 @@ void test_apply_parametric_multi_pauli_rotation(std::uint64_t n_qubits) {
         StateVector state = StateVector::Haar_random_state(n_qubits);
         auto state_cp = state.copy();
         auto state_bef = state.copy();
-        const double param = M_PI * random.uniform();
+        const double param = std::numbers::pi * random.uniform();
         const double param_coef = random.uniform() * 2 - 1;
         std::vector<std::uint64_t> target_vec, pauli_id_vec;
         for (std::uint64_t target = 0; target < n_qubits; target++) {
@@ -103,7 +104,7 @@ TEST(ParamGateTest, ApplyParamProbablisticGate) {
     StateVector state(1);
     for ([[maybe_unused]] auto _ : std::views::iota(0, 100)) {
         std::uint64_t before = state.sampling(1)[0];
-        probgate->update_quantum_state(state, scaluq::PI());
+        probgate->update_quantum_state(state, std::numbers::pi);
         std::uint64_t after = state.sampling(1)[0];
         if (before != after) {
             x_cnt++;

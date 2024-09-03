@@ -7,7 +7,7 @@ StateVectorBatched::StateVectorBatched(std::uint64_t batch_size, std::uint64_t n
     : _batch_size(batch_size),
       _n_qubits(n_qubits),
       _dim(1ULL << _n_qubits),
-      _raw(StateVectorBatchedView(
+      _raw(Kokkos::View<Complex**, Kokkos::LayoutRight>(
           Kokkos::ViewAllocateWithoutInitializing("states"), _batch_size, _dim)) {
     set_zero_state();
 }
