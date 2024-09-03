@@ -15,7 +15,8 @@ void apply_pauli(std::uint64_t control_mask,
     if (bit_flip_mask == 0) {
         Kokkos::parallel_for(
             state_vector.dim() >> std::popcount(control_mask), KOKKOS_LAMBDA(std::uint64_t i) {
-                std::uint64_t state_idx = insert_zero_at_mask_positions(i, control_mask) | control_mask;
+                std::uint64_t state_idx =
+                    insert_zero_at_mask_positions(i, control_mask) | control_mask;
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
                     state_vector._raw[state_idx] *= -coef;
                 } else {
@@ -57,7 +58,8 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         const Complex cval_pls = cosval + Complex(0, 1) * sinval;
         Kokkos::parallel_for(
             state_vector.dim() >> std::popcount(control_mask), KOKKOS_LAMBDA(std::uint64_t i) {
-                std::uint64_t state_idx = insert_zero_at_mask_positions(i, control_mask) | control_mask;
+                std::uint64_t state_idx =
+                    insert_zero_at_mask_positions(i, control_mask) | control_mask;
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
                     state_vector._raw[state_idx] *= cval_min;
                 } else {
@@ -69,7 +71,8 @@ void apply_pauli_rotation(std::uint64_t control_mask,
     } else {
         std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
         Kokkos::parallel_for(
-            state_vector.dim() >> (std::popcount(control_mask) + 1), KOKKOS_LAMBDA(std::uint64_t i) {
+            state_vector.dim() >> (std::popcount(control_mask) + 1),
+            KOKKOS_LAMBDA(std::uint64_t i) {
                 std::uint64_t basis_0 =
                     internal::insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
                     control_mask;
