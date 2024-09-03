@@ -28,7 +28,7 @@ void apply_pauli(std::uint64_t control_mask,
     }
     std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex global_phase = PHASE_M90ROT().val[global_phase_90rot_count % 4];
+    Complex global_phase = PHASE_M90ROT()[global_phase_90rot_count % 4];
     Kokkos::parallel_for(
         state_vector.dim() >> (std::popcount(control_mask) + 1), KOKKOS_LAMBDA(std::uint64_t i) {
             std::uint64_t basis_0 =
@@ -89,11 +89,11 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                 state_vector._raw[basis_0] =
                     cosval * cval_0 +
                     Complex(0, 1) * sinval * cval_1 *
-                        PHASE_M90ROT().val[(global_phase_90_rot_count + bit_parity_0 * 2) % 4];
+                        PHASE_M90ROT()[(global_phase_90_rot_count + bit_parity_0 * 2) % 4];
                 state_vector._raw[basis_1] =
                     cosval * cval_1 +
                     Complex(0, 1) * sinval * cval_0 *
-                        PHASE_M90ROT().val[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
+                        PHASE_M90ROT()[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
             });
         Kokkos::fence();
     }

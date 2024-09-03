@@ -164,7 +164,7 @@ void test_param_rotation_control(Factory factory, std::uint64_t n) {
     }
     std::uint64_t control_mask = 0ULL;
     for (std::uint64_t c : controls) control_mask |= 1ULL << c;
-    double param = random.uniform() * PI() * 2;
+    double param = random.uniform() * std::numbers::pi * 2;
     ParamGate g1 = factory(target, 1., controls);
     ParamGate g2 = factory(target - std::popcount(control_mask & ((1ULL << target) - 1)), 1., {});
     test_gate(g1, g2, n, control_mask, param);
@@ -188,7 +188,7 @@ void test_ppauli_control(std::uint64_t n) {
             num_control++;
         }
     }
-    double param = random.uniform() * PI() * 2;
+    double param = random.uniform() * std::numbers::pi * 2;
     ParamGate g1 = gate::ParamPauliRotation(PauliOperator(data1), 1., controls);
     ParamGate g2 = gate::ParamPauliRotation(PauliOperator(data2), 1., {});
     test_gate(g1, g2, n, control_mask, param);

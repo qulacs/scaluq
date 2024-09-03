@@ -450,7 +450,7 @@ void test_standard_gate_control(Factory factory, std::uint64_t n) {
     std::uint64_t control_mask = 0ULL;
     for (std::uint64_t c : controls) control_mask |= 1ULL << c;
     std::vector<double> angles(num_rotation);
-    for (double& angle : angles) angle = random.uniform() * PI() * 2;
+    for (double& angle : angles) angle = random.uniform() * std::numbers::pi * 2;
     if constexpr (num_target == 0 && num_rotation == 1) {
         Gate g1 = factory(angles[0], controls);
         Gate g2 = factory(angles[0], {});
@@ -514,7 +514,7 @@ void test_pauli_control(std::uint64_t n) {
         Gate g2 = gate::Pauli(PauliOperator(data2), {});
         test_gate(g1, g2, n, control_mask);
     } else {
-        double angle = random.uniform() * PI() * 2;
+        double angle = random.uniform() * std::numbers::pi * 2;
         Gate g1 = gate::PauliRotation(PauliOperator(data1), angle, controls);
         Gate g2 = gate::PauliRotation(PauliOperator(data2), angle, {});
         test_gate(g1, g2, n, control_mask);
