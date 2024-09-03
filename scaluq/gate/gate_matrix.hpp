@@ -104,6 +104,8 @@ public:
 
 class SparseMatrixGateImpl : public GateBase {
     SparseMatrix _matrix;
+
+public:
     SparseMatrixGateImpl(UINT target_mask, UINT control_mask, const SparseComplexMatrix& mat)
         : GateBase(target_mask, control_mask), _matrix(SparseMatrix(mat)) {}
 
@@ -139,6 +141,7 @@ class DenseMatrixGateImpl : public GateBase {
     Matrix _matrix;
     bool _is_unitary;
 
+public:
     DenseMatrixGateImpl(UINT target_mask,
                         UINT control_mask,
                         const ComplexMatrix& mat,
