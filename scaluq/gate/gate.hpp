@@ -43,6 +43,7 @@ class SwapGateImpl;
 class TwoTargetMatrixGateImpl;
 class PauliGateImpl;
 class PauliRotationGateImpl;
+class ProbablisticGateImpl;
 
 template <GateImpl T>
 class GatePtr;
@@ -80,7 +81,8 @@ enum class GateType {
     Swap,
     TwoTargetMatrix,
     Pauli,
-    PauliRotation
+    PauliRotation,
+    Probablistic
 };
 
 template <internal::GateImpl T>
@@ -119,6 +121,7 @@ constexpr GateType get_gate_type() {
     if constexpr (std::is_same_v<T, internal::PauliGateImpl>) return GateType::Pauli;
     if constexpr (std::is_same_v<T, internal::PauliRotationGateImpl>)
         return GateType::PauliRotation;
+    if constexpr (std::is_same_v<T, internal::ProbablisticGateImpl>) return GateType::Probablistic;
     static_assert("unknown GateImpl");
     return GateType::Unknown;
 }
@@ -226,6 +229,8 @@ public:
         }
         return _gate_ptr.get();
     }
+
+    // 依存関係により、operator<< の定義は gate_factory.hpp に定義
 };
 }  // namespace internal
 

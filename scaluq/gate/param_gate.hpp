@@ -142,6 +142,43 @@ public:
         }
         return _param_gate_ptr.get();
     }
+
+    friend std::ostream& operator<<(std::ostream& os, const ParamGatePtr& obj) {
+        if (!obj._param_gate_ptr) {
+            os << "Gate Type: Null";
+            return os;
+        }
+        auto targets = internal::mask_to_vector(obj->target_qubit_mask());
+        auto controls = internal::mask_to_vector(obj->control_qubit_mask());
+        os << "Gate Type: ";
+        switch (obj.param_gate_type()) {
+            case ParamGateType::ParamRX:
+                os << "ParamRX";
+                break;
+            case ParamGateType::ParamRY:
+                os << "ParamRY";
+                break;
+            case ParamGateType::ParamRZ:
+                os << "ParamRZ";
+                break;
+            case ParamGateType::ParamPauliRotation:
+                os << "ParamPauliRotation";
+                break;
+            default:
+                os << "Undefined";
+                break;
+        }
+        os << "\n"
+              "Target Qubits: {";
+        for (std::uint32_t i = 0; i < targets.size(); ++i)
+            os << targets[i] << (i == targets.size() - 1 ? "" : ", ");
+        os << "}\n"
+              "Control Qubits: {";
+        for (std::uint32_t i = 0; i < controls.size(); ++i)
+            os << controls[i] << (i == controls.size() - 1 ? "" : ", ");
+        os << "}";
+        return os;
+    }
 };
 }  // namespace internal
 

@@ -215,4 +215,135 @@ inline Gate Probablistic(const std::vector<double>& distribution,
                                                                               gate_list);
 }
 }  // namespace gate
+
+template <internal::GateImpl T>
+std::ostream& operator<<(std::ostream& os, const internal::GatePtr<T>& obj) {
+    std::string indent = "  ";
+    if (obj.gate_type() == GateType::Probablistic) {
+        const auto prob_gate = ProbablisticGate(obj);
+        const auto distribution = prob_gate->distribution();
+        const auto gates = prob_gate->gate_list();
+        os << "Gate Type: Probablistic\n";
+        for (std::size_t i = 0; i < distribution.size(); ++i) {
+            std::ostringstream gate_ss;
+            gate_ss << gates[i];
+            std::istringstream gate_is(gate_ss.str());
+            std::string line;
+            // os << indent << "--------------------\n";
+            os << indent << "Probability: " << distribution[i] << "\n";
+            while (std::getline(gate_is, line)) {
+                os << indent << line << (gate_is.peek() == EOF ? "" : "\n");
+            }
+        }
+        return os;
+    }
+    auto targets = internal::mask_to_vector(obj->target_qubit_mask());
+    auto controls = internal::mask_to_vector(obj->control_qubit_mask());
+    os << "Gate Type: ";
+    switch (obj.gate_type()) {
+        case GateType::I:
+            os << "I";
+            break;
+        case GateType::GlobalPhase:
+            os << "GlobalPhase";
+            break;
+        case GateType::X:
+            os << "X";
+            break;
+        case GateType::Y:
+            os << "Y";
+            break;
+        case GateType::Z:
+            os << "Z";
+            break;
+        case GateType::H:
+            os << "H";
+            break;
+        case GateType::S:
+            os << "S";
+            break;
+        case GateType::Sdag:
+            os << "Sdag";
+            break;
+        case GateType::T:
+            os << "T";
+            break;
+        case GateType::Tdag:
+            os << "Tdag";
+            break;
+        case GateType::SqrtX:
+            os << "SqrtX";
+            break;
+        case GateType::SqrtXdag:
+            os << "SqrtXdag";
+            break;
+        case GateType::SqrtY:
+            os << "SqrtY";
+            break;
+        case GateType::SqrtYdag:
+            os << "SqrtYdag";
+            break;
+        case GateType::P0:
+            os << "P0";
+            break;
+        case GateType::P1:
+            os << "P1";
+            break;
+        case GateType::RX:
+            os << "RX";
+            break;
+        case GateType::RY:
+            os << "RY";
+            break;
+        case GateType::RZ:
+            os << "RZ";
+            break;
+        case GateType::U1:
+            os << "U1";
+            break;
+        case GateType::U2:
+            os << "U2";
+            break;
+        case GateType::U3:
+            os << "U3";
+            break;
+        case GateType::OneTargetMatrix:
+            os << "OneTargetMatrix";
+            break;
+        case GateType::CX:
+            os << "CX";
+            break;
+        case GateType::CZ:
+            os << "CZ";
+            break;
+        case GateType::CCX:
+            os << "CCX";
+            break;
+        case GateType::Swap:
+            os << "Swap";
+            break;
+        case GateType::TwoTargetMatrix:
+            os << "TwoTargetMatrix";
+            break;
+        case GateType::Pauli:
+            os << "Pauli";
+            break;
+        case GateType::PauliRotation:
+            os << "PauliRotation";
+            break;
+        case GateType::Unknown:
+        default:
+            os << "Unknown";
+            break;
+    }
+    os << "\n" << indent << "Target Qubits: {";
+    for (std::uint32_t i = 0; i < targets.size(); ++i)
+        os << targets[i] << (i == targets.size() - 1 ? "" : ", ");
+    os << "}\n" << indent << "Control Qubits: {";
+    for (std::uint32_t i = 0; i < controls.size(); ++i)
+        os << controls[i] << (i == controls.size() - 1 ? "" : ", ");
+    os << "}";
+    return os;
+}
+
 }  // namespace scaluq
