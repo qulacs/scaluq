@@ -40,7 +40,7 @@ public:
         apply_pauli_rotation(_control_mask,
                              bit_flip_mask,
                              phase_flip_mask,
-                             _pauli.get_coef(),
+                             _pauli.coef(),
                              _pcoef * param,
                              state_vector);
     }
