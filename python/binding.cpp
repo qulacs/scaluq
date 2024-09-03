@@ -548,10 +548,10 @@ NB_MODULE(scaluq_core, m) {
     DEF_GATE_FACTORY(Probablistic);
 
     nb::enum_<ParamGateType>(m, "ParamGateType", "Enum of ParamGate Type.")
-        .value("PRX", ParamGateType::PRX)
-        .value("PRY", ParamGateType::PRY)
-        .value("PRZ", ParamGateType::PRZ)
-        .value("PPauliRotation", ParamGateType::PPauliRotation);
+        .value("ParamRX", ParamGateType::ParamRX)
+        .value("ParamRY", ParamGateType::ParamRY)
+        .value("ParamRZ", ParamGateType::ParamRZ)
+        .value("ParamPauliRotation", ParamGateType::ParamPauliRotation);
 
     m.def(
         "merge_gate", &merge_gate, "Merge two gates. return value is (merged gate, global phase).");
@@ -612,67 +612,67 @@ NB_MODULE(scaluq_core, m) {
         ParamGate,
         "General class of parametric quantum gate.\n\n.. note:: Downcast to requred to use "
         "gate-specific functions.")
-        .def(nb::init<PRXGate>(), "Upcast from `PRXGate`.")
-        .def(nb::init<PRYGate>(), "Upcast from `PRYGate`.")
-        .def(nb::init<PRZGate>(), "Upcast from `PRZGate`.")
-        .def(nb::init<PPauliRotationGate>(), "Upcast from `PPauliRotationGate`.");
+        .def(nb::init<ParamRXGate>(), "Upcast from `ParamRXGate`.")
+        .def(nb::init<ParamRYGate>(), "Upcast from `ParamRYGate`.")
+        .def(nb::init<ParamRZGate>(), "Upcast from `ParamRZGate`.")
+        .def(nb::init<ParamPauliRotationGate>(), "Upcast from `ParamPauliRotationGate`.");
 
-    DEF_PGATE(PRXGate,
+    DEF_PGATE(ParamRXGate,
               "Specific class of parametric X rotation gate, represented as "
-              "$e^{-i\\frac{\\mathrm{angle}}{2}X}$. `angle` is given as `param * pcoef`.");
-    DEF_PGATE(PRYGate,
+              "$e^{-i\\frac{\\mathrm{angle}}{2}X}$. `angle` is given as `param * param_coef`.");
+    DEF_PGATE(ParamRYGate,
               "Specific class of parametric Y rotation gate, represented as "
-              "$e^{-i\\frac{\\mathrm{angle}}{2}Y}$. `angle` is given as `param * pcoef`.");
-    DEF_PGATE(PRZGate,
+              "$e^{-i\\frac{\\mathrm{angle}}{2}Y}$. `angle` is given as `param * param_coef`.");
+    DEF_PGATE(ParamRZGate,
               "Specific class of parametric Z rotation gate, represented as "
-              "$e^{-i\\frac{\\mathrm{angle}}{2}Z}$. `angle` is given as `param * pcoef`.");
+              "$e^{-i\\frac{\\mathrm{angle}}{2}Z}$. `angle` is given as `param * param_coef`.");
 
-    DEF_PGATE(PPauliRotationGate,
+    DEF_PGATE(ParamPauliRotationGate,
               "Specific class of parametric multi-qubit pauli-rotation gate, represented as "
-              "$e^{-i\\frac{\\mathrm{angle}}{2}P}$. `angle` is given as `param * pcoef`.");
+              "$e^{-i\\frac{\\mathrm{angle}}{2}P}$. `angle` is given as `param * param_coef`.");
 
-    DEF_PGATE(PProbablisticGate,
+    DEF_PGATE(ParamProbablisticGate,
               "Specific class of parametric probablistic gate. The gate to apply is picked from a "
               "cirtain "
               "distribution.")
         .def(
             "gate_list",
-            [](const PProbablisticGate &gate) { return gate->gate_list(); },
+            [](const ParamProbablisticGate &gate) { return gate->gate_list(); },
             nb::rv_policy::reference)
         .def(
             "distribution",
-            [](const PProbablisticGate &gate) { return gate->distribution(); },
+            [](const ParamProbablisticGate &gate) { return gate->distribution(); },
             nb::rv_policy::reference);
 
-    mgate.def("PRX",
-              &gate::PRX,
-              "Generate general ParamGate class instance of PRX.",
+    mgate.def("ParamRX",
+              &gate::ParamRX,
+              "Generate general ParamGate class instance of ParamRX.",
               "target"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("PRY",
-              &gate::PRY,
-              "Generate general ParamGate class instance of PRY.",
+    mgate.def("ParamRY",
+              &gate::ParamRY,
+              "Generate general ParamGate class instance of ParamRY.",
               "target"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("PRZ",
-              &gate::PRZ,
-              "Generate general ParamGate class instance of PRZ.",
+    mgate.def("ParamRZ",
+              &gate::ParamRZ,
+              "Generate general ParamGate class instance of ParamRZ.",
               "target"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("PPauliRotation",
-              &gate::PPauliRotation,
-              "Generate general ParamGate class instance of PPauliRotation.",
+    mgate.def("ParamPauliRotation",
+              &gate::ParamPauliRotation,
+              "Generate general ParamGate class instance of ParamPauliRotation.",
               "pauli"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("PProbablistic",
-              &gate::PProbablistic,
-              "Generate general ParamGate class instance of PProbablistic.");
+    mgate.def("ParamProbablistic",
+              &gate::ParamProbablistic,
+              "Generate general ParamGate class instance of ParamProbablistic.");
     mgate.def(
-        "PProbablistic",
+        "ParamProbablistic",
         [](const std::vector<std::pair<double, std::variant<Gate, ParamGate>>> &prob_gate_list) {
             std::vector<double> distribution;
             std::vector<std::variant<Gate, ParamGate>> gate_list;
@@ -682,9 +682,9 @@ NB_MODULE(scaluq_core, m) {
                 distribution.push_back(prob);
                 gate_list.push_back(gate);
             }
-            return gate::PProbablistic(distribution, gate_list);
+            return gate::ParamProbablistic(distribution, gate_list);
         },
-        "Generate general ParamGate class instance of PProbablistic.");
+        "Generate general ParamGate class instance of ParamProbablistic.");
 
     nb::class_<Circuit>(m, "Circuit", "Quantum circuit represented as gate array")
         .def(nb::init<std::uint64_t>(), "Initialize empty circuit of specified qubits.")

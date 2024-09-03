@@ -26,9 +26,9 @@ void test_apply_parametric_single_pauli_rotation(std::uint64_t n_qubits,
 
         const std::uint64_t target = random.int32() % n_qubits;
         const double param = M_PI * random.uniform();
-        const double pcoef = random.uniform() * 2 - 1;
-        const Gate gate = factory_fixed(target, pcoef * param, {});
-        const ParamGate pgate = factory_parametric(target, pcoef, {});
+        const double param_coef = random.uniform() * 2 - 1;
+        const Gate gate = factory_fixed(target, param_coef * param, {});
+        const ParamGate pgate = factory_parametric(target, param_coef, {});
         gate->update_quantum_state(state);
         pgate->update_quantum_state(state_cp, param);
         auto state_amp = state.get_amplitudes();
@@ -57,7 +57,7 @@ void test_apply_parametric_multi_pauli_rotation(std::uint64_t n_qubits) {
         auto state_cp = state.copy();
         auto state_bef = state.copy();
         const double param = M_PI * random.uniform();
-        const double pcoef = random.uniform() * 2 - 1;
+        const double param_coef = random.uniform() * 2 - 1;
         std::vector<std::uint64_t> target_vec, pauli_id_vec;
         for (std::uint64_t target = 0; target < n_qubits; target++) {
             target_vec.emplace_back(target);
@@ -65,8 +65,8 @@ void test_apply_parametric_multi_pauli_rotation(std::uint64_t n_qubits) {
         }
 
         PauliOperator pauli(target_vec, pauli_id_vec, 1.0);
-        Gate gate = gate::PauliRotation(pauli, pcoef * param);
-        ParamGate pgate = gate::PPauliRotation(pauli, pcoef);
+        Gate gate = gate::PauliRotation(pauli, param_coef * param);
+        ParamGate pgate = gate::ParamPauliRotation(pauli, param_coef);
         gate->update_quantum_state(state);
         pgate->update_quantum_state(state_cp, param);
         auto state_amp = state.get_amplitudes();
@@ -86,19 +86,19 @@ void test_apply_parametric_multi_pauli_rotation(std::uint64_t n_qubits) {
     }
 }
 
-TEST(ParamGateTest, ApplyPRXGate) {
-    test_apply_parametric_single_pauli_rotation(5, &gate::RX, &gate::PRX);
+TEST(ParamGateTest, ApplyParamRXGate) {
+    test_apply_parametric_single_pauli_rotation(5, &gate::RX, &gate::ParamRX);
 }
-TEST(ParamGateTest, ApplyPRYGate) {
-    test_apply_parametric_single_pauli_rotation(5, &gate::RX, &gate::PRX);
+TEST(ParamGateTest, ApplyParamRYGate) {
+    test_apply_parametric_single_pauli_rotation(5, &gate::RX, &gate::ParamRX);
 }
-TEST(ParamGateTest, ApplyPRZGate) {
-    test_apply_parametric_single_pauli_rotation(5, &gate::RX, &gate::PRX);
+TEST(ParamGateTest, ApplyParamRZGate) {
+    test_apply_parametric_single_pauli_rotation(5, &gate::RX, &gate::ParamRX);
 }
-TEST(ParamGateTest, ApplyPPauliRotationGate) { test_apply_parametric_multi_pauli_rotation(5); }
+TEST(ParamGateTest, ApplyParamPauliRotationGate) { test_apply_parametric_multi_pauli_rotation(5); }
 
-TEST(ParamGateTest, ApplyPProbablisticGate) {
-    auto probgate = gate::PProbablistic({.1, .9}, {gate::PRX(0), gate::I()});
+TEST(ParamGateTest, ApplyParamProbablisticGate) {
+    auto probgate = gate::ParamProbablistic({.1, .9}, {gate::ParamRX(0), gate::I()});
     std::uint64_t x_cnt = 0, i_cnt = 0;
     StateVector state(1);
     for ([[maybe_unused]] auto _ : std::views::iota(0, 100)) {

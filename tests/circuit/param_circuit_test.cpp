@@ -37,15 +37,15 @@ TEST(ParamCircuitTest, ApplyParamCircuit) {
                 if (param_gate_kind == 0) {
                     std::uint64_t target = random.int32() % n_qubits;
                     circuit.add_gate(gate::RX(target, coef * params[pidx]));
-                    pcircuit.add_param_gate(gate::PRX(target, coef), pkeys[pidx]);
+                    pcircuit.add_param_gate(gate::ParamRX(target, coef), pkeys[pidx]);
                 } else if (param_gate_kind == 1) {
                     std::uint64_t target = random.int32() % n_qubits;
                     circuit.add_gate(gate::RY(target, coef * params[pidx]));
-                    pcircuit.add_param_gate(gate::PRY(target, coef), pkeys[pidx]);
+                    pcircuit.add_param_gate(gate::ParamRY(target, coef), pkeys[pidx]);
                 } else if (param_gate_kind == 2) {
                     std::uint64_t target = random.int32() % n_qubits;
                     circuit.add_gate(gate::RZ(target, coef * params[pidx]));
-                    pcircuit.add_param_gate(gate::PRZ(target, coef), pkeys[pidx]);
+                    pcircuit.add_param_gate(gate::ParamRZ(target, coef), pkeys[pidx]);
                 } else {
                     std::vector<std::uint64_t> target_vec, pauli_id_vec;
                     for (std::uint64_t target = 0; target < n_qubits; target++) {
@@ -54,7 +54,7 @@ TEST(ParamCircuitTest, ApplyParamCircuit) {
                     }
                     PauliOperator pauli(target_vec, pauli_id_vec, 1.0);
                     circuit.add_gate(gate::PauliRotation(pauli, coef * params[pidx]));
-                    pcircuit.add_param_gate(gate::PPauliRotation(pauli, coef), pkeys[pidx]);
+                    pcircuit.add_param_gate(gate::ParamPauliRotation(pauli, coef), pkeys[pidx]);
                 }
             } else {
                 std::uint64_t control = random.int32() % n_qubits;
@@ -92,9 +92,9 @@ TEST(ParamCircuitTest, ApplyParamCircuit) {
 
 TEST(ParamCircuitTest, InsufficientParameterGiven) {
     Circuit circuit(1);
-    circuit.add_param_gate(gate::PRX(0), "0");
-    circuit.add_param_gate(gate::PRX(0), "1");
-    circuit.add_param_gate(gate::PRX(0), "0");
+    circuit.add_param_gate(gate::ParamRX(0), "0");
+    circuit.add_param_gate(gate::ParamRX(0), "1");
+    circuit.add_param_gate(gate::ParamRX(0), "0");
     StateVector state(1);
     ASSERT_NO_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"1", 0}}));
     ASSERT_NO_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"1", 0}, {"2", 0}}));
