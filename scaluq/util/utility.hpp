@@ -19,9 +19,10 @@ namespace internal {
  * Example: insert_zero_to_basis_index(0b1001, 1) -> 0b10001.
  *                                                        ^
  */
-KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index, UINT insert_index) {
-    UINT mask = (1ULL << insert_index) - 1;
-    UINT temp_basis = (basis_index >> insert_index) << (insert_index + 1);
+KOKKOS_INLINE_FUNCTION std::uint64_t insert_zero_to_basis_index(std::uint64_t basis_index,
+                                                                std::uint64_t insert_index) {
+    std::uint64_t mask = (1ULL << insert_index) - 1;
+    std::uint64_t temp_basis = (basis_index >> insert_index) << (insert_index + 1);
     return temp_basis | (basis_index & mask);
 }
 
@@ -30,22 +31,23 @@ KOKKOS_INLINE_FUNCTION UINT insert_zero_to_basis_index(UINT basis_index, UINT in
  * Example: insert_zero_to_basis_index(0b11111, 0x100101) -> 0b11011010.
  *                                                               ^  ^ ^
  */
-KOKKOS_INLINE_FUNCTION UINT insert_zero_at_mask_positions(UINT basis_index, UINT insert_mask) {
-    for (UINT bit_mask = insert_mask; bit_mask;
+KOKKOS_INLINE_FUNCTION std::uint64_t insert_zero_at_mask_positions(std::uint64_t basis_index,
+                                                                   std::uint64_t insert_mask) {
+    for (std::uint64_t bit_mask = insert_mask; bit_mask;
          bit_mask &= (bit_mask - 1)) {  // loop through set bits
-        UINT lower_mask = ~bit_mask & (bit_mask - 1);
-        UINT upper_mask = ~lower_mask;
+        std::uint64_t lower_mask = ~bit_mask & (bit_mask - 1);
+        std::uint64_t upper_mask = ~lower_mask;
         basis_index = ((basis_index & upper_mask) << 1) | (basis_index & lower_mask);
     }
     return basis_index;
 }
 
 template <bool enable_validate = true>
-inline UINT vector_to_mask(const std::vector<UINT>& v) {
-    UINT mask = 0;
+inline std::uint64_t vector_to_mask(const std::vector<std::uint64_t>& v) {
+    std::uint64_t mask = 0;
     for (auto x : v) {
         if constexpr (enable_validate) {
-            if (x >= sizeof(UINT) * 8) [[unlikely]] {
+            if (x >= sizeof(std::uint64_t) * 8) [[unlikely]] {
                 throw std::runtime_error("The size of the qubit system must be less than 64.");
             }
             if ((mask >> x) & 1) [[unlikely]] {
@@ -57,9 +59,9 @@ inline UINT vector_to_mask(const std::vector<UINT>& v) {
     return mask;
 }
 
-inline std::vector<UINT> mask_to_vector(UINT mask) {
-    std::vector<UINT> indices;
-    for (UINT sub_mask = mask; sub_mask; sub_mask &= (sub_mask - 1)) {
+inline std::vector<std::uint64_t> mask_to_vector(std::uint64_t mask) {
+    std::vector<std::uint64_t> indices;
+    for (std::uint64_t sub_mask = mask; sub_mask; sub_mask &= (sub_mask - 1)) {
         indices.push_back(std::countr_zero(sub_mask));
     }
     return indices;
@@ -84,30 +86,30 @@ inline ComplexMatrix kronecker_product(const ComplexMatrix& lhs, const ComplexMa
 }
 
 inline ComplexMatrix get_expanded_matrix(const ComplexMatrix& from_matrix,
-                                         const std::vector<UINT>& from_targets,
-                                         std::vector<UINT>& to_targets) {
-    std::vector<UINT> targets_map(from_targets.size());
-    std::ranges::transform(from_targets, targets_map.begin(), [&](UINT x) {
+                                         const std::vector<std::uint64_t>& from_targets,
+                                         std::vector<std::uint64_t>& to_targets) {
+    std::vector<std::uint64_t> targets_map(from_targets.size());
+    std::ranges::transform(from_targets, targets_map.begin(), [&](std::uint64_t x) {
         return std::ranges::lower_bound(to_targets, x) - to_targets.begin();
     });
-    std::vector<UINT> idx_map(1ULL << from_targets.size());
-    for (UINT i : std::views::iota(0ULL, 1ULL << from_targets.size())) {
-        for (UINT j : std::views::iota(0ULL, from_targets.size())) {
+    std::vector<std::uint64_t> idx_map(1ULL << from_targets.size());
+    for (std::uint64_t i : std::views::iota(0ULL, 1ULL << from_targets.size())) {
+        for (std::uint64_t j : std::views::iota(0ULL, from_targets.size())) {
             idx_map[i] |= (i >> j & 1) << targets_map[j];
         }
     }
 
-    UINT targets_idx_mask = idx_map.back();
-    std::vector<UINT> outer_indices;
+    std::uint64_t targets_idx_mask = idx_map.back();
+    std::vector<std::uint64_t> outer_indices;
     outer_indices.reserve(1ULL << (to_targets.size() - from_targets.size()));
-    for (UINT i : std::views::iota(0ULL, 1ULL << to_targets.size())) {
+    for (std::uint64_t i : std::views::iota(0ULL, 1ULL << to_targets.size())) {
         if ((i & targets_idx_mask) == 0) outer_indices.push_back(i);
     }
     ComplexMatrix to_matrix =
         ComplexMatrix::Zero(1ULL << to_targets.size(), 1ULL << to_targets.size());
-    for (UINT i : std::views::iota(0ULL, 1ULL << from_targets.size())) {
-        for (UINT j : std::views::iota(0ULL, 1ULL << from_targets.size())) {
-            for (UINT o : outer_indices) {
+    for (std::uint64_t i : std::views::iota(0ULL, 1ULL << from_targets.size())) {
+        for (std::uint64_t j : std::views::iota(0ULL, 1ULL << from_targets.size())) {
+            for (std::uint64_t o : outer_indices) {
                 to_matrix(idx_map[i] | o, idx_map[j] | o) = from_matrix(i, j);
             }
         }

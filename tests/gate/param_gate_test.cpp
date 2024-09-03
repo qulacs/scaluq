@@ -13,10 +13,10 @@ using namespace scaluq;
 const auto eps = 1e-12;
 
 template <typename FactoryFixed, typename FactoryParametric>
-void test_apply_parametric_single_pauli_rotation(UINT n_qubits,
+void test_apply_parametric_single_pauli_rotation(std::uint64_t n_qubits,
                                                  FactoryFixed factory_fixed,
                                                  FactoryParametric factory_parametric) {
-    const UINT dim = 1ULL << n_qubits;
+    const std::uint64_t dim = 1ULL << n_qubits;
     Random random;
 
     for (int repeat = 0; repeat < 10; repeat++) {
@@ -24,7 +24,7 @@ void test_apply_parametric_single_pauli_rotation(UINT n_qubits,
         auto state_cp = state.copy();
         auto state_bef = state.copy();
 
-        const UINT target = random.int32() % n_qubits;
+        const std::uint64_t target = random.int32() % n_qubits;
         const double param = M_PI * random.uniform();
         const double pcoef = random.uniform() * 2 - 1;
         const Gate gate = factory_fixed(target, pcoef * param, {});
@@ -34,7 +34,7 @@ void test_apply_parametric_single_pauli_rotation(UINT n_qubits,
         auto state_amp = state.amplitudes();
         auto state_cp_amp = state_cp.amplitudes();
 
-        for (UINT i = 0; i < dim; i++) {
+        for (std::uint64_t i = 0; i < dim; i++) {
             ASSERT_NEAR(Kokkos::abs(state_cp_amp[i] - state_amp[i]), 0, eps);
         }
 
@@ -42,14 +42,14 @@ void test_apply_parametric_single_pauli_rotation(UINT n_qubits,
         pgate_inv->update_quantum_state(state, param);
         state_amp = state.amplitudes();
         auto state_bef_amp = state_bef.amplitudes();
-        for (UINT i = 0; i < dim; i++) {
+        for (std::uint64_t i = 0; i < dim; i++) {
             ASSERT_NEAR(Kokkos::abs(state_bef_amp[i] - state_amp[i]), 0, eps);
         }
     }
 }
 
-void test_apply_parametric_multi_pauli_rotation(UINT n_qubits) {
-    const UINT dim = 1ULL << n_qubits;
+void test_apply_parametric_multi_pauli_rotation(std::uint64_t n_qubits) {
+    const std::uint64_t dim = 1ULL << n_qubits;
     Random random;
 
     for (int repeat = 0; repeat < 10; repeat++) {
@@ -58,8 +58,8 @@ void test_apply_parametric_multi_pauli_rotation(UINT n_qubits) {
         auto state_bef = state.copy();
         const double param = M_PI * random.uniform();
         const double pcoef = random.uniform() * 2 - 1;
-        std::vector<UINT> target_vec, pauli_id_vec;
-        for (UINT target = 0; target < n_qubits; target++) {
+        std::vector<std::uint64_t> target_vec, pauli_id_vec;
+        for (std::uint64_t target = 0; target < n_qubits; target++) {
             target_vec.emplace_back(target);
             pauli_id_vec.emplace_back(random.int64() % 4);
         }
@@ -72,7 +72,7 @@ void test_apply_parametric_multi_pauli_rotation(UINT n_qubits) {
         auto state_amp = state.amplitudes();
         auto state_cp_amp = state_cp.amplitudes();
         // check if the state is updated correctly
-        for (UINT i = 0; i < dim; i++) {
+        for (std::uint64_t i = 0; i < dim; i++) {
             ASSERT_NEAR(Kokkos::abs(state_cp_amp[i] - state_amp[i]), 0, eps);
         }
         ParamGate pgate_inv = pgate->get_inverse();
@@ -80,7 +80,7 @@ void test_apply_parametric_multi_pauli_rotation(UINT n_qubits) {
         state_amp = state.amplitudes();
         auto state_bef_amp = state_bef.amplitudes();
         // check if the state is restored correctly
-        for (UINT i = 0; i < dim; i++) {
+        for (std::uint64_t i = 0; i < dim; i++) {
             ASSERT_NEAR(Kokkos::abs((state_bef_amp[i] - state_amp[i])), 0, eps);
         }
     }
@@ -99,12 +99,12 @@ TEST(ParamGateTest, ApplyPPauliRotationGate) { test_apply_parametric_multi_pauli
 
 TEST(ParamGateTest, ApplyPProbablisticGate) {
     auto probgate = gate::PProbablistic({.1, .9}, {gate::PRX(0), gate::I()});
-    UINT x_cnt = 0, i_cnt = 0;
+    std::uint64_t x_cnt = 0, i_cnt = 0;
     StateVector state(1);
     for ([[maybe_unused]] auto _ : std::views::iota(0, 100)) {
-        UINT before = state.sampling(1)[0];
+        std::uint64_t before = state.sampling(1)[0];
         probgate->update_quantum_state(state, scaluq::PI());
-        UINT after = state.sampling(1)[0];
+        std::uint64_t after = state.sampling(1)[0];
         if (before != after) {
             x_cnt++;
         } else {

@@ -91,13 +91,13 @@ NB_MODULE(scaluq_core, m) {
                             "Vector representation of quantum state.\n\n.. note:: Qubit index is "
                             "start from 0. If the amplitudes of $\\ket{b_{n-1}\\dots b_0}$ is "
                             "$b_i$, the state is $\\sum_i b_i 2^i$.")
-        .def(nb::init<UINT>(),
+        .def(nb::init<std::uint64_t>(),
              "Construct state vector with specified qubits, initialized with computational "
              "basis $\\ket{0\\dots0}$.")
         .def(nb::init<const StateVector &>(), "Constructing state vector by copying other state.")
         .def_static(
             "Haar_random_state",
-            [](UINT n_qubits, std::optional<UINT> seed) {
+            [](std::uint64_t n_qubits, std::optional<std::uint64_t> seed) {
                 return StateVector::Haar_random_state(n_qubits,
                                                       seed.value_or(std::random_device{}()));
             },
@@ -157,7 +157,9 @@ NB_MODULE(scaluq_core, m) {
              "$\\ket{\\mathrm{this}}\\leftarrow\\mathrm{coef}\\ket{\\mathrm{this}}$.")
         .def(
             "sampling",
-            [](const StateVector &state, UINT sampling_count, std::optional<UINT> seed) {
+            [](const StateVector &state,
+               std::uint64_t sampling_count,
+               std::optional<std::uint64_t> seed) {
                 return state.sampling(sampling_count, seed.value_or(std::random_device{}()));
             },
             "sampling_count"_a,
@@ -177,7 +179,7 @@ NB_MODULE(scaluq_core, m) {
         "Batched vector representation of quantum state.\n\n.. note:: Qubit index is start from 0. "
         "If the amplitudes of $\\ket{b_{n-1}\\dots b_0}$ is $b_i$, the state is $\\sum_i b_i "
         "2^i$.")
-        .def(nb::init<UINT, UINT>(),
+        .def(nb::init<std::uint64_t, std::uint64_t>(),
              "Construct batched state vector with specified batch size and qubits.")
         .def(nb::init<const StateVectorBatched &>(),
              "Constructing batched state vector by copying other batched state.")
@@ -190,7 +192,8 @@ NB_MODULE(scaluq_core, m) {
              nb::overload_cast<const StateVector &>(&StateVectorBatched::set_state_vector),
              "Set the state vector for all batches.")
         .def("set_state_vector",
-             nb::overload_cast<UINT, const StateVector &>(&StateVectorBatched::set_state_vector),
+             nb::overload_cast<std::uint64_t, const StateVector &>(
+                 &StateVectorBatched::set_state_vector),
              "Set the state vector for a specific batch.")
         .def("get_state_vector",
              &StateVectorBatched::get_state_vector,
@@ -206,7 +209,9 @@ NB_MODULE(scaluq_core, m) {
              "Initialize with computational basis \\ket{\\mathrm{basis}}.")
         .def(
             "sampling",
-            [](const StateVectorBatched &states, UINT sampling_count, std::optional<UINT> seed) {
+            [](const StateVectorBatched &states,
+               std::uint64_t sampling_count,
+               std::optional<std::uint64_t> seed) {
                 return states.sampling(sampling_count, seed.value_or(std::random_device{}()));
             },
             "sampling_count"_a,
@@ -215,7 +220,10 @@ NB_MODULE(scaluq_core, m) {
             "length.")
         .def_static(
             "Haar_random_states",
-            [](UINT batch_size, UINT n_qubits, bool set_same_state, std::optional<UINT> seed) {
+            [](std::uint64_t batch_size,
+               std::uint64_t n_qubits,
+               bool set_same_state,
+               std::optional<std::uint64_t> seed) {
                 return StateVectorBatched::Haar_random_states(
                     batch_size, n_qubits, set_same_state, seed.value_or(std::random_device{}()));
             },
@@ -639,25 +647,25 @@ NB_MODULE(scaluq_core, m) {
               "Generate general ParamGate class instance of PRX.",
               "target"_a,
               "coef"_a = 1.,
-              "controls"_a = std::vector<UINT>{});
+              "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("PRY",
               &gate::PRY,
               "Generate general ParamGate class instance of PRY.",
               "target"_a,
               "coef"_a = 1.,
-              "controls"_a = std::vector<UINT>{});
+              "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("PRZ",
               &gate::PRZ,
               "Generate general ParamGate class instance of PRZ.",
               "target"_a,
               "coef"_a = 1.,
-              "controls"_a = std::vector<UINT>{});
+              "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("PPauliRotation",
               &gate::PPauliRotation,
               "Generate general ParamGate class instance of PPauliRotation.",
               "pauli"_a,
               "coef"_a = 1.,
-              "controls"_a = std::vector<UINT>{});
+              "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("PProbablistic",
               &gate::PProbablistic,
               "Generate general ParamGate class instance of PProbablistic.");
@@ -677,7 +685,7 @@ NB_MODULE(scaluq_core, m) {
         "Generate general ParamGate class instance of PProbablistic.");
 
     nb::class_<Circuit>(m, "Circuit", "Quantum circuit represented as gate array")
-        .def(nb::init<UINT>(), "Initialize empty circuit of specified qubits.")
+        .def(nb::init<std::uint64_t>(), "Initialize empty circuit of specified qubits.")
         .def("n_qubits", &Circuit::n_qubits, "Get property of `n_qubits`.")
         .def("gate_list",
              &Circuit::gate_list,
@@ -738,12 +746,14 @@ NB_MODULE(scaluq_core, m) {
              "pauli_string"_a,
              "coef"_a = 1.,
              "Initialize data with pauli string.")
-        .def(nb::init<const std::vector<UINT> &, const std::vector<UINT> &, Complex>(),
+        .def(nb::init<const std::vector<std::uint64_t> &,
+                      const std::vector<std::uint64_t> &,
+                      Complex>(),
              "target_qubit_list"_a,
              "pauli_id_list"_a,
              "coef"_a = 1.,
              "Initialize data with target qubits and pauli ids.")
-        .def(nb::init<const std::vector<UINT> &, Complex>(),
+        .def(nb::init<const std::vector<std::uint64_t> &, Complex>(),
              "pauli_id_par_qubit"_a,
              "coef"_a = 1.,
              "Initialize data with pauli ids per qubit.")
@@ -782,7 +792,9 @@ NB_MODULE(scaluq_core, m) {
         "PauliOperator",
         "Pauli operator as coef and tensor product of single pauli for each qubit.")
         .def(nb::init<Complex>(), "coef"_a = 1., "Initialize operator which just multiplying coef.")
-        .def(nb::init<const std::vector<UINT> &, const std::vector<UINT> &, Complex>(),
+        .def(nb::init<const std::vector<std::uint64_t> &,
+                      const std::vector<std::uint64_t> &,
+                      Complex>(),
              "target_qubit_list"_a,
              "pauli_id_list"_a,
              "coef"_a = 1.,
@@ -794,7 +806,7 @@ NB_MODULE(scaluq_core, m) {
              "Initialize pauli operator. If `pauli_string` is `\"X0Y2\"`, Pauli-X is applied to "
              "0-th qubit and Pauli-Y is applied to 2-th qubit. In `pauli_string`, spaces are "
              "ignored.")
-        .def(nb::init<const std::vector<UINT> &, Complex>(),
+        .def(nb::init<const std::vector<std::uint64_t> &, Complex>(),
              "pauli_id_par_qubit"_a,
              "coef"_a = 1.,
              "Initialize pauli operator. For each `i`, single pauli correspond to "
@@ -810,13 +822,13 @@ NB_MODULE(scaluq_core, m) {
                 auto &bit_flip_raw = bit_flip_mask.data_raw();
                 assert(bit_flip_raw.empty());
                 while (bit_flip_mask_py > nb::int_(0)) {
-                    bit_flip_raw.push_back((UINT)nb::int_(bit_flip_mask_py & mask));
+                    bit_flip_raw.push_back((std::uint64_t)nb::int_(bit_flip_mask_py & mask));
                     bit_flip_mask_py >>= nb::int_(64);
                 }
                 auto &phase_flip_raw = phase_flip_mask.data_raw();
                 assert(phase_flip_raw.empty());
                 while (phase_flip_mask_py > nb::int_(0)) {
-                    phase_flip_raw.push_back((UINT)nb::int_(phase_flip_mask_py & mask));
+                    phase_flip_raw.push_back((std::uint64_t)nb::int_(phase_flip_mask_py & mask));
                     phase_flip_mask_py >>= nb::int_(64);
                 }
                 new (t) PauliOperator(bit_flip_mask, phase_flip_mask, coef);
@@ -841,11 +853,11 @@ NB_MODULE(scaluq_core, m) {
             [](const PauliOperator &pauli) {
                 const auto [x_mask, z_mask] = pauli.get_XZ_mask_representation();
                 nb::int_ x_mask_py(0);
-                for (UINT i = 0; i < x_mask.size(); ++i) {
+                for (std::uint64_t i = 0; i < x_mask.size(); ++i) {
                     x_mask_py |= nb::int_(x_mask[i]) << nb::int_(i);
                 }
                 nb::int_ z_mask_py(0);
-                for (UINT i = 0; i < z_mask.size(); ++i) {
+                for (std::uint64_t i = 0; i < z_mask.size(); ++i) {
                     z_mask_py |= nb::int_(z_mask[i]) << nb::int_(i);
                 }
                 return std::make_tuple(x_mask_py, z_mask_py);
@@ -873,7 +885,7 @@ NB_MODULE(scaluq_core, m) {
         .def(nb::self * Complex());
 
     nb::class_<Operator>(m, "Operator", "General quantum operator class.")
-        .def(nb::init<UINT>(),
+        .def(nb::init<std::uint64_t>(),
              "qubit_count"_a,
              "Initialize operator with specified number of qubits.")
         .def("is_hermitian", &Operator::is_hermitian, "Check if the operator is Hermitian.")
@@ -885,7 +897,7 @@ NB_MODULE(scaluq_core, m) {
              "Add a Pauli operator to this operator.")
         .def(
             "add_random_operator",
-            [](Operator &op, UINT operator_count, std::optional<UINT> seed) {
+            [](Operator &op, std::uint64_t operator_count, std::optional<std::uint64_t> seed) {
                 return op.add_random_operator(operator_count,
                                               seed.value_or(std::random_device{}()));
             },

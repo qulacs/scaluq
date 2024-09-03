@@ -14,8 +14,8 @@ class OneTargetMatrixGateImpl : public GateBase {
     matrix_2_2 _matrix;
 
 public:
-    OneTargetMatrixGateImpl(UINT target_mask,
-                            UINT control_mask,
+    OneTargetMatrixGateImpl(std::uint64_t target_mask,
+                            std::uint64_t control_mask,
                             const std::array<std::array<Complex, 2>, 2>& matrix)
         : GateBase(target_mask, control_mask) {
         _matrix.val[0][0] = matrix[0][0];
@@ -54,12 +54,12 @@ class TwoTargetMatrixGateImpl : public GateBase {
     matrix_4_4 _matrix;
 
 public:
-    TwoTargetMatrixGateImpl(UINT target_mask,
-                            UINT control_mask,
+    TwoTargetMatrixGateImpl(std::uint64_t target_mask,
+                            std::uint64_t control_mask,
                             const std::array<std::array<Complex, 4>, 4>& matrix)
         : GateBase(target_mask, control_mask) {
-        for (UINT i : std::views::iota(0, 4)) {
-            for (UINT j : std::views::iota(0, 4)) {
+        for (std::uint64_t i : std::views::iota(0, 4)) {
+            for (std::uint64_t j : std::views::iota(0, 4)) {
                 _matrix.val[i][j] = matrix[i][j];
             }
         }
@@ -67,8 +67,8 @@ public:
 
     std::array<std::array<Complex, 4>, 4> matrix() const {
         std::array<std::array<Complex, 4>, 4> matrix;
-        for (UINT i : std::views::iota(0, 4)) {
-            for (UINT j : std::views::iota(0, 4)) {
+        for (std::uint64_t i : std::views::iota(0, 4)) {
+            for (std::uint64_t j : std::views::iota(0, 4)) {
                 matrix[i][j] = _matrix.val[i][j];
             }
         }
@@ -77,8 +77,8 @@ public:
 
     Gate get_inverse() const override {
         std::array<std::array<Complex, 4>, 4> matrix_dag;
-        for (UINT i : std::views::iota(0, 4)) {
-            for (UINT j : std::views::iota(0, 4)) {
+        for (std::uint64_t i : std::views::iota(0, 4)) {
+            for (std::uint64_t j : std::views::iota(0, 4)) {
                 matrix_dag[i][j] = Kokkos::conj(_matrix.val[j][i]);
             }
         }

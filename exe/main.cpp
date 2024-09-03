@@ -13,7 +13,7 @@ using namespace scaluq;
 using namespace std;
 
 void run() {
-    UINT n_qubits = 5;
+    std::uint64_t n_qubits = 5;
     auto state = StateVector::Haar_random_state(n_qubits);
 }
 

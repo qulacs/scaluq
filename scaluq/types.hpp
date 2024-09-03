@@ -17,8 +17,6 @@ inline void finalize() { Kokkos::finalize(); }
 inline bool is_initialized() { return Kokkos::is_initialized(); }
 inline bool is_finalized() { return Kokkos::is_finalized(); }
 
-using UINT = std::uint64_t;
-
 using Complex = Kokkos::complex<double>;
 using namespace std::complex_literals;
 

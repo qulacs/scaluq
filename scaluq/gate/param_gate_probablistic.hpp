@@ -18,7 +18,7 @@ public:
     PProbablisticGateImpl(const std::vector<double>& distribution,
                           const std::vector<std::variant<Gate, ParamGate>>& gate_list)
         : ParamGateBase(0, 0), _distribution(distribution), _gate_list(gate_list) {
-        UINT n = distribution.size();
+        std::uint64_t n = distribution.size();
         if (n == 0) {
             throw std::runtime_error("At least one gate is required.");
         }
@@ -35,32 +35,32 @@ public:
     const std::vector<std::variant<Gate, ParamGate>>& gate_list() const { return _gate_list; }
     const std::vector<double>& distribution() const { return _distribution; }
 
-    std::vector<UINT> get_target_qubit_list() const override {
+    std::vector<std::uint64_t> get_target_qubit_list() const override {
         throw std::runtime_error(
             "PProbablisticGateImpl::get_target_qubit_list(): This function must not be used in "
             "PProbablisticGateImpl.");
     }
-    std::vector<UINT> get_control_qubit_list() const override {
+    std::vector<std::uint64_t> get_control_qubit_list() const override {
         throw std::runtime_error(
             "PProbablisticGateImpl::get_control_qubit_list(): This function must not be used in "
             "PProbablisticGateImpl.");
     }
-    std::vector<UINT> get_operand_qubit_list() const override {
+    std::vector<std::uint64_t> get_operand_qubit_list() const override {
         throw std::runtime_error(
             "PProbablisticGateImpl::get_operand_qubit_list(): This function must not be used in "
             "PProbablisticGateImpl.");
     }
-    UINT get_target_qubit_mask() const override {
+    std::uint64_t get_target_qubit_mask() const override {
         throw std::runtime_error(
             "PProbablisticGateImpl::get_target_qubit_mask(): This function must not be used in "
             "PProbablisticGateImpl.");
     }
-    UINT get_control_qubit_mask() const override {
+    std::uint64_t get_control_qubit_mask() const override {
         throw std::runtime_error(
             "PProbablisticGateImpl::get_control_qubit_mask(): This function must not be used in "
             "PProbablisticGateImpl.");
     }
-    UINT get_operand_qubit_mask() const override {
+    std::uint64_t get_operand_qubit_mask() const override {
         throw std::runtime_error(
             "PProbablisticGateImpl::get_operand_qubit_mask(): This function must not be used in "
             "PProbablisticGateImpl.");
@@ -84,9 +84,9 @@ public:
     void update_quantum_state(StateVector& state_vector, double param) const override {
         Random random;
         double r = random.uniform();
-        UINT i = std::distance(_cumlative_distribution.begin(),
-                               std::ranges::upper_bound(_cumlative_distribution, r)) -
-                 1;
+        std::uint64_t i = std::distance(_cumlative_distribution.begin(),
+                                        std::ranges::upper_bound(_cumlative_distribution, r)) -
+                          1;
         if (i >= _gate_list.size()) i = _gate_list.size() - 1;
         const auto& gate = _gate_list[i];
         if (gate.index() == 0) {
