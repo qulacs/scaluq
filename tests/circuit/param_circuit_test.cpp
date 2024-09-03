@@ -3,6 +3,7 @@
 #include <circuit/circuit.hpp>
 #include <gate/gate_factory.hpp>
 #include <gate/param_gate_factory.hpp>
+#include <numbers>
 #include <state/state_vector.hpp>
 #include <types.hpp>
 #include <util/random.hpp>
@@ -25,7 +26,7 @@ TEST(ParamCircuitTest, ApplyParamCircuit) {
             pkeys[pidx] = "p" + std::to_string(pidx);
         std::array<double, nparams> params = {};
         for (std::uint64_t pidx : std::views::iota(std::uint64_t{0}, nparams))
-            params[pidx] = random.uniform() * M_PI * 2;
+            params[pidx] = random.uniform() * std::numbers::pi * 2;
         std::map<std::string, double> pmap;
         for (std::uint64_t pidx : std::views::iota(std::uint64_t{0}, nparams))
             pmap[pkeys[pidx]] = params[pidx];
