@@ -418,12 +418,14 @@ void run_random_gate_apply_sparse(std::uint64_t n_qubits) {
         u1 = make_sparse_complex_matrix(1, 0.2);
         u2 = make_sparse_complex_matrix(1, 0.2);
         u3 = make_sparse_complex_matrix(1, 0.2);
-        test_state = get_expanded_eigen_matrix_with_identity(targets[2], u3, n_qubits) *
-                     get_expanded_eigen_matrix_with_identity(targets[1], u2, n_qubits) *
-                     get_expanded_eigen_matrix_with_identity(targets[0], u1, n_qubits) * test_state;
-
         std::vector<std::uint64_t> target_list = {targets[0], targets[1], targets[2]};
         std::vector<std::uint64_t> control_list = {};
+        std::sort(target_list.begin(), target_list.end());
+
+        test_state = get_expanded_eigen_matrix_with_identity(target_list[2], u3, n_qubits) *
+                     get_expanded_eigen_matrix_with_identity(target_list[1], u2, n_qubits) *
+                     get_expanded_eigen_matrix_with_identity(target_list[0], u1, n_qubits) *
+                     test_state;
 
         Umerge = internal::kronecker_product(u3, internal::kronecker_product(u2, u1));
         mat = Umerge.sparseView();

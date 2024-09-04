@@ -67,10 +67,10 @@ inline SparseComplexMatrix make_sparse_complex_matrix(const std::uint64_t n_qubi
     return mat;
 }
 
-void update_by_sparse(std::uint64_t target_mask,
-                      std::uint64_t control_mask,
-                      const SparseComplexMatrix& matrix,
-                      StateVector& state) {
+void update_by_coo(std::uint64_t target_mask,
+                   std::uint64_t control_mask,
+                   const SparseComplexMatrix& matrix,
+                   StateVector& state) {
     SparseMatrix mat = SparseMatrix(matrix);
     auto values = mat._values;
 
@@ -138,20 +138,20 @@ void test_sparse(std::uint64_t n_qubits) {
         u1 = make_sparse_complex_matrix(1, 0.2);
         u2 = make_sparse_complex_matrix(1, 0.2);
         u3 = make_sparse_complex_matrix(1, 0.2);
-        test_state = get_expanded_eigen_matrix_with_identity(targets[2], u3, n_qubits) *
-                     get_expanded_eigen_matrix_with_identity(targets[1], u2, n_qubits) *
-                     get_expanded_eigen_matrix_with_identity(targets[0], u1, n_qubits) * test_state;
-
         std::vector<std::uint64_t> target_list = {targets[0], targets[1], targets[2]};
         std::vector<std::uint64_t> control_list = {};
+        std::sort(target_list.begin(), target_list.end());
+
+        test_state = get_expanded_eigen_matrix_with_identity(target_list[2], u3, n_qubits) *
+                     get_expanded_eigen_matrix_with_identity(target_list[1], u2, n_qubits) *
+                     get_expanded_eigen_matrix_with_identity(target_list[0], u1, n_qubits) *
+                     test_state;
 
         Umerge = internal::kronecker_product(u3, internal::kronecker_product(u2, u1));
         mat = Umerge.sparseView();
-        // Gate sparse_gate = gate::SparseMatrix(target_list, mat, control_list);
-        // sparse_gate->update_quantum_state(state);
         std::uint64_t target_mask = vector_to_mask(target_list);
         std::uint64_t control_mask = vector_to_mask(control_list);
-        update_by_sparse(target_mask, control_mask, mat, state);
+        update_by_coo(target_mask, control_mask, mat, state);
         state_cp = state.amplitudes();
         for (std::uint64_t i = 0; i < dim; i++) {
             std::cout << "diff: " << std::abs((StdComplex)state_cp[i] - test_state[i])
@@ -159,26 +159,15 @@ void test_sparse(std::uint64_t n_qubits) {
                       << "]: " << test_state[i] << ", bef[" << i << "]: " << state_before[i]
                       << std::endl;
         }
+        for (int i = 0; i < 3; i++) {
+            std::cout << "target_list[" << i << "]: " << target_list[i] << std::endl;
+        }
     }
 }
 
 void run() {
-    std::uint64_t n_qubits = 6;
-    // test_sparse(n_qubits);
-    using UINT = std::uint64_t;
-    UINT outer_mask = 0b1000;
-    UINT c = 0b011;
-    UINT src = internal::insert_zero_at_mask_positions(c, outer_mask);
-    auto to_binary = [](UINT x, UINT n_qubits) {
-        std::string s;
-        for (UINT i = 0; i < n_qubits; i++) {
-            s += (x & 1) ? "1" : "0";
-            x >>= 1;
-        }
-        std::reverse(s.begin(), s.end());
-        return s;
-    };
-    cout << "binary representation of src: " << to_binary(src, n_qubits) << endl;
+    std::uint64_t n_qubits = 4;
+    test_sparse(n_qubits);
 }
 
 int main() {
