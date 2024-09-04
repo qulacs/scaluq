@@ -61,6 +61,7 @@ public:
         SparseComplexMatrix mat = sp;
         mat.makeCompressed();
 
+        _values = Kokkos::View<SparseValue*>("_values", mat.nonZeros());
         Kokkos::View<SparseValue*, Kokkos::HostSpace> values_h("values_h", mat.nonZeros());
         int idx = 0;
         for (int k = 0; k < mat.outerSize(); ++k) {

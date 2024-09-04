@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <Eigen/LU>
 #include <ranges>
 #include <vector>
 
@@ -118,9 +120,8 @@ public:
     Matrix get_matrix_internal() const {
         Matrix ret("return matrix", _matrix._row, _matrix._col);
         auto vec = _matrix._values;
-        for (int i = 0; i < vec.size(); i++) {
-            ret(vec[i].r, vec[i].c) = vec[i].val;
-        }
+        Kokkos::parallel_for(
+            vec.size(), KOKKOS_LAMBDA(int i) { ret(vec[i].r, vec[i].c) = vec[i].val; });
         return ret;
     }
 

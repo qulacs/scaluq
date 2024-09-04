@@ -252,3 +252,29 @@ inline Eigen::MatrixXcd make_U(double theta, double phi, double lambda) {
                            std::exp(1i * phi) * std::sin(theta / 2.),
                            std::exp(1i * phi) * std::exp(1i * lambda) * std::cos(theta / 2.));
 }
+
+inline SparseComplexMatrix make_sparse_complex_matrix(const std::uint64_t n_qubit,
+                                                      double border = 0.9) {
+    const std::uint64_t dim = 1ULL << n_qubit;
+    typedef Eigen::Triplet<StdComplex> T;
+    std::vector<T> tripletList;
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0.0, 1.0);
+
+    for (std::uint64_t i = 0; i < dim; ++i) {
+        for (std::uint64_t j = 0; j < dim; ++j) {
+            if (dis(gen) > border) {
+                double real = dis(gen);
+                double imag = dis(gen);
+                tripletList.push_back(T(i, j, StdComplex(real, imag)));
+            }
+        }
+    }
+
+    SparseComplexMatrix mat(dim, dim);
+    mat.setFromTriplets(tripletList.begin(), tripletList.end());
+
+    return mat;
+}
