@@ -133,7 +133,7 @@ Complex Operator::get_expectation_value(const StateVector& state_vector) const {
                     sizeof(std::uint64_t) * 8 - Kokkos::countl_zero(bit_flip_mask) - 1;
                 std::uint64_t global_phase_90rot_count =
                     Kokkos::popcount(bit_flip_mask & phase_flip_mask);
-                Complex global_phase = PHASE_90ROT().val[global_phase_90rot_count % 4];
+                Complex global_phase = internal::PHASE_90ROT()[global_phase_90rot_count % 4];
                 std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
                 std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
                 double tmp =
@@ -204,7 +204,7 @@ Complex Operator::get_transition_amplitude(const StateVector& state_vector_bra,
                     sizeof(std::uint64_t) * 8 - Kokkos::countl_zero(bit_flip_mask) - 1;
                 std::uint64_t global_phase_90rot_count =
                     Kokkos::popcount(bit_flip_mask & phase_flip_mask);
-                Complex global_phase = PHASE_90ROT().val[global_phase_90rot_count % 4];
+                Complex global_phase = internal::PHASE_90ROT()[global_phase_90rot_count % 4];
                 std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
                 std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
                 Complex tmp1 = Kokkos::conj(state_vector_bra._raw[basis_1]) *

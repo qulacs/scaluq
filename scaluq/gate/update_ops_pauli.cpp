@@ -58,11 +58,11 @@ void pauli_rotation_gate(std::uint64_t control_mask,
                 state._raw[basis_0] =
                     cosval * cval_0 +
                     Complex(0, 1) * sinval * cval_1 *
-                        PHASE_M90ROT().val[(global_phase_90_rot_count + bit_parity_0 * 2) % 4];
+                        PHASE_M90ROT()[(global_phase_90_rot_count + bit_parity_0 * 2) % 4];
                 state._raw[basis_1] =
                     cosval * cval_1 +
                     Complex(0, 1) * sinval * cval_0 *
-                        PHASE_M90ROT().val[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
+                        PHASE_M90ROT()[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
             });
         Kokkos::fence();
     }

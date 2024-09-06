@@ -162,17 +162,15 @@ inline Gate PauliRotation(const PauliOperator& pauli,
         internal::vector_to_mask(controls), pauli, angle);
 }
 inline Gate DenseMatrix(const std::vector<std::uint64_t>& targets,
-                        const ComplexMatrix& matrix,
+                        const internal::ComplexMatrix& matrix,
                         const std::vector<std::uint64_t>& controls = {}) {
     std::uint64_t nqubits = targets.size();
     std::uint64_t dim = 1ULL << nqubits;
     if (static_cast<std::uint64_t>(matrix.rows()) != dim ||
         static_cast<std::uint64_t>(matrix.cols()) != dim) {
         throw std::runtime_error(
-            "gate::DenseMatrix(const std::vector<std::uint64_t>&, const ComplexMatrix&): matrix "
-            "size "
-            "must "
-            "be 2^{n_qubits} x 2^{n_qubits}.");
+            "gate::DenseMatrix(const std::vector<std::uint64_t>&, const internal::ComplexMatrix&): "
+            "matrix size must be 2^{n_qubits} x 2^{n_qubits}.");
     }
     if (targets.size() == 0) return I();
     if (targets.size() == 1) {
@@ -203,7 +201,8 @@ inline Gate DenseMatrix(const std::vector<std::uint64_t>& targets,
                                controls);
     }
     throw std::runtime_error(
-        "gate::DenseMatrix(const std::vector<std::uint64_t>&, const ComplexMatrix&): DenseMatrix "
+        "gate::DenseMatrix(const std::vector<std::uint64_t>&, const internal::ComplexMatrix&): "
+        "DenseMatrix "
         "gate "
         "more "
         "than two qubits is not implemented yet.");

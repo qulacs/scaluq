@@ -15,7 +15,7 @@ class StateVector {
 
 public:
     static constexpr std::uint64_t UNMEASURED = 2;
-    StateVectorView _raw;
+    Kokkos::View<Complex*> _raw;
     StateVector() = default;
     StateVector(std::uint64_t n_qubits);
     StateVector(const StateVector& other) = default;

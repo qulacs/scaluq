@@ -15,9 +15,9 @@ public:
     ParamGate get_inverse() const override {
         return std::make_shared<const ParamRXGateImpl>(_target_mask, _control_mask, -_pcoef);
     }
-    ComplexMatrix get_matrix(double param) const override {
+    internal::ComplexMatrix get_matrix(double param) const override {
         double angle = _pcoef * param;
-        ComplexMatrix mat(2, 2);
+        internal::ComplexMatrix mat(2, 2);
         mat << std::cos(angle / 2), -1i * std::sin(angle / 2), -1i * std::sin(angle / 2),
             std::cos(angle / 2);
         return mat;
@@ -36,9 +36,9 @@ public:
     ParamGate get_inverse() const override {
         return std::make_shared<const ParamRYGateImpl>(_target_mask, _control_mask, -_pcoef);
     }
-    ComplexMatrix get_matrix(double param) const override {
+    internal::ComplexMatrix get_matrix(double param) const override {
         double angle = _pcoef * param;
-        ComplexMatrix mat(2, 2);
+        internal::ComplexMatrix mat(2, 2);
         mat << std::cos(angle / 2), -std::sin(angle / 2), std::sin(angle / 2), std::cos(angle / 2);
         return mat;
     }
@@ -56,9 +56,9 @@ public:
     ParamGate get_inverse() const override {
         return std::make_shared<const ParamRZGateImpl>(_target_mask, _control_mask, -_pcoef);
     }
-    ComplexMatrix get_matrix(double param) const override {
+    internal::ComplexMatrix get_matrix(double param) const override {
         double angle = param * _pcoef;
-        ComplexMatrix mat(2, 2);
+        internal::ComplexMatrix mat(2, 2);
         mat << std::exp(-0.5i * angle), 0, 0, std::exp(0.5i * angle);
         return mat;
     }
