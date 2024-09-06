@@ -515,4 +515,90 @@ using U2Gate = internal::GatePtr<internal::U2GateImpl>;
 using U3Gate = internal::GatePtr<internal::U3GateImpl>;
 
 using SwapGate = internal::GatePtr<internal::SwapGateImpl>;
+
+#ifdef SCALUQ_USE_NANOBIND
+namespace internal {
+void bind_gate_gate_standard_hpp(nb::module_& m) {
+    DEF_GATE(IGate, "Specific class of Pauli-I gate.");
+    DEF_GATE(GlobalPhaseGate,
+             "Specific class of gate, which rotate global phase, represented as "
+             "$e^{i\\mathrm{phase}}I$.")
+        .def(
+            "phase",
+            [](const GlobalPhaseGate& gate) { return gate->phase(); },
+            "Get `phase` property");
+    DEF_GATE(XGate, "Specific class of Pauli-X gate.");
+    DEF_GATE(YGate, "Specific class of Pauli-Y gate.");
+    DEF_GATE(ZGate, "Specific class of Pauli-Z gate.");
+    DEF_GATE(HGate, "Specific class of Hadamard gate.");
+    DEF_GATE(SGate,
+             "Specific class of S gate, represented as $\\begin{bmatrix}\n1 & 0\\\\\n0 & "
+             "i\n\\end{bmatrix}$.");
+    DEF_GATE(SdagGate, "Specific class of inverse of S gate.");
+    DEF_GATE(TGate,
+             "Specific class of T gate, represented as $\\begin{bmatrix}\n1 & 0\\\\\n0 & "
+             "e^{i\\pi/4}\n\\end{bmatrix}$.");
+    DEF_GATE(TdagGate, "Specific class of inverse of T gate.");
+    DEF_GATE(SqrtXGate,
+             "Specific class of sqrt(X) gate, represented as $\\begin{bmatrix}\n1+i & 1-i\\\\\n1-i "
+             "& 1+i\n\\end{bmatrix}$.");
+    DEF_GATE(SqrtXdagGate, "Specific class of inverse of sqrt(X) gate.");
+    DEF_GATE(SqrtYGate,
+             "Specific class of sqrt(Y) gate, represented as $\\begin{bmatrix}\n1+i & -1-i "
+             "\\\\\n1+i & 1+i\n\\end{bmatrix}$.");
+    DEF_GATE(SqrtYdagGate, "Specific class of inverse of sqrt(Y) gate.");
+    DEF_GATE(
+        P0Gate,
+        "Specific class of projection gate to $\\ket{0}$.\n\n.. note:: This gate is not unitary.");
+    DEF_GATE(
+        P1Gate,
+        "Specific class of projection gate to $\\ket{1}$.\n\n.. note:: This gate is not unitary.");
+
+#define DEF_ROTATION_GATE(GATE_TYPE, DESCRIPTION) \
+    DEF_GATE(GATE_TYPE, DESCRIPTION)              \
+        .def(                                     \
+            "angle", [](const GATE_TYPE& gate) { return gate->angle(); }, "Get `angle` property.")
+
+    DEF_ROTATION_GATE(
+        RXGate,
+        "Specific class of X rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}X}$.");
+    DEF_ROTATION_GATE(
+        RYGate,
+        "Specific class of Y rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Y}$.");
+    DEF_ROTATION_GATE(
+        RZGate,
+        "Specific class of Z rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Z}$.");
+
+    DEF_GATE(U1Gate,
+             "Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, "
+             "represented as "
+             "$\\begin{bmatrix}\n1 & 0\\\\\n0 & e^{i\\lambda}\n\\end{bmatrix}$.")
+        .def(
+            "lambda_", [](const U1Gate& gate) { return gate->lambda(); }, "Get `lambda` property.");
+    DEF_GATE(U2Gate,
+             "Specific class of IBMQ's U2 Gate, which is a rotation about X+Z-axis, "
+             "represented as "
+             "$\\frac{1}{\\sqrt{2}} \\begin{bmatrix}1 & -e^{-i\\lambda}\\\\\n"
+             "e^{i\\phi} & e^{i(\\phi+\\lambda)}\n\\end{bmatrix}$.")
+        .def(
+            "phi", [](const U2Gate& gate) { return gate->phi(); }, "Get `phi` property.")
+        .def(
+            "lambda_", [](const U2Gate& gate) { return gate->lambda(); }, "Get `lambda` property.");
+    DEF_GATE(U3Gate,
+             "Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, "
+             "represented as "
+             "$\\begin{bmatrix}\n\\cos \\frac{\\theta}{2} & "
+             "-e^{i\\lambda}\\sin\\frac{\\theta}{2}\\\\\n"
+             "e^{i\\phi}\\sin\\frac{\\theta}{2} & "
+             "e^{i(\\phi+\\lambda)}\\cos\\frac{\\theta}{2}\n\\end{bmatrix}$.")
+        .def(
+            "theta", [](const U3Gate& gate) { return gate->theta(); }, "Get `theta` property.")
+        .def(
+            "phi", [](const U3Gate& gate) { return gate->phi(); }, "Get `phi` property.")
+        .def(
+            "lambda_", [](const U3Gate& gate) { return gate->lambda(); }, "Get `lambda` property.");
+    DEF_GATE(SwapGate, "Specific class of two-qubit swap gate.");
+}
+}  // namespace internal
+#endif
 }  // namespace scaluq
