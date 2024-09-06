@@ -150,7 +150,7 @@ TEST(OperatorTest, ApplyToStateTest) {
     }());
 
     Operator op(n_qubits);
-    op.add_operator({std::vector<bool>{1, 0, 0}, std::vector<bool>{0, 1, 0}, Complex(2)});
+    op.add_operator({0b001, 0b010, Complex(2)});
     op.add_operator({"X 2 Y 1", 1});
     op.apply_to_state(state_vector);
 

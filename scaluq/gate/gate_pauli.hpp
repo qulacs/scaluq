@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "../operator/apply_pauli.hpp"
 #include "../operator/pauli_operator.hpp"
 #include "../util/utility.hpp"
 #include "gate.hpp"
@@ -22,7 +23,8 @@ public:
     internal::ComplexMatrix get_matrix() const override { return this->_pauli.get_matrix(); }
 
     void update_quantum_state(StateVector& state_vector) const override {
-        pauli_gate(_control_mask, _pauli, state_vector);
+        auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
+        apply_pauli(_control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), state_vector);
     }
 };
 
@@ -54,7 +56,9 @@ public:
         return mat;
     }
     void update_quantum_state(StateVector& state_vector) const override {
-        pauli_rotation_gate(_control_mask, _pauli, _angle, state_vector);
+        auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
+        apply_pauli_rotation(
+            _control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), _angle, state_vector);
     }
 };
 }  // namespace internal

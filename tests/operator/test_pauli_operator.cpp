@@ -154,7 +154,7 @@ INSTANTIATE_TEST_CASE_P(
     PauliOperatorMultiplyTest,
     []() {
         double coef = 2.0;
-        std::uint64_t MAX_TERM = 100;
+        std::uint64_t MAX_TERM = 64;
         std::string pauli_string_x = "";
         std::string pauli_string_y = "";
         std::string pauli_string_z = "";
@@ -187,7 +187,7 @@ TEST(PauliOperatorTest, ApplyToStateTest) {
         return tmp;
     }());
 
-    PauliOperator op(std::vector<bool>{1, 0, 0}, std::vector<bool>{0, 1, 0}, Complex(2));
+    PauliOperator op(0b001, 0b010, Complex(2));
     op.apply_to_state(state_vector);
     std::vector<Complex> expected = {2, 0, -6, -4, 10, 8, -14, -12};
     ASSERT_EQ(state_vector.get_amplitudes(), expected);
