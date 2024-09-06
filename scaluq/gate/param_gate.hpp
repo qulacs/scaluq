@@ -163,7 +163,7 @@ public:
         return _param_gate_ptr.get();
     }
 
-    // 依存関係の都合上、operator<< の定義は gate_factory.hpp に定義
+    // Due to dependency reasons, the definition of operator<< is in param_gate_factory.hpp
 };
 }  // namespace internal
 

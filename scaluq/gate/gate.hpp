@@ -36,9 +36,6 @@ class U1GateImpl;
 class U2GateImpl;
 class U3GateImpl;
 class OneTargetMatrixGateImpl;
-class CXGateImpl;
-class CZGateImpl;
-class CCXGateImpl;
 class SwapGateImpl;
 class TwoTargetMatrixGateImpl;
 class PauliGateImpl;
@@ -75,9 +72,6 @@ enum class GateType {
     U2,
     U3,
     OneTargetMatrix,
-    CX,
-    CZ,
-    CCX,
     Swap,
     TwoTargetMatrix,
     Pauli,
@@ -117,9 +111,6 @@ constexpr GateType get_gate_type() {
     if constexpr (std::is_same_v<TWithoutConst, internal::U3GateImpl>) return GateType::U3;
     if constexpr (std::is_same_v<TWithoutConst, internal::OneTargetMatrixGateImpl>)
         return GateType::OneTargetMatrix;
-    if constexpr (std::is_same_v<TWithoutConst, internal::CXGateImpl>) return GateType::CX;
-    if constexpr (std::is_same_v<TWithoutConst, internal::CZGateImpl>) return GateType::CZ;
-    if constexpr (std::is_same_v<TWithoutConst, internal::CZGateImpl>) return GateType::CCX;
     if constexpr (std::is_same_v<TWithoutConst, internal::SwapGateImpl>) return GateType::Swap;
     if constexpr (std::is_same_v<TWithoutConst, internal::TwoTargetMatrixGateImpl>)
         return GateType::TwoTargetMatrix;
@@ -240,7 +231,7 @@ public:
         return _gate_ptr.get();
     }
 
-    // 依存関係の都合上、operator<< の定義は gate_factory.hpp に定義
+    // Due to dependency reasons, the definition of operator<< is in gate_factory.hpp
 };
 }  // namespace internal
 

@@ -47,10 +47,8 @@ inline ParamGate ParamProbablistic(const std::vector<double>& distribution,
 }
 }  // namespace gate
 
-namespace internal {
-
-template <ParamGateImpl T>
-std::string gate_to_string(const ParamGatePtr<T>& obj, std::uint32_t depth = 0) {
+template <internal::ParamGateImpl T>
+std::string gate_to_string(const internal::ParamGatePtr<T>& obj, std::uint32_t depth = 0) {
     std::ostringstream ss;
     std::string indent(depth * 2, ' ');
 
@@ -108,11 +106,10 @@ std::string gate_to_string(const ParamGatePtr<T>& obj, std::uint32_t depth = 0) 
     ss << "}";
     return ss.str();
 }
-}  // namespace internal
 
 template <internal::ParamGateImpl T>
 std::ostream& operator<<(std::ostream& os, const internal::ParamGatePtr<T>& obj) {
-    os << internal::gate_to_string(obj);
+    os << gate_to_string(obj);
     return os;
 }
 
