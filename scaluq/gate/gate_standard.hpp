@@ -16,6 +16,13 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         i_gate(_target_mask, _control_mask, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: I\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 class GlobalPhaseGateImpl : public GateBase {
@@ -38,6 +45,14 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         global_phase_gate(_target_mask, _control_mask, _phase, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: GlobalPhase\n";
+        ss << indent << "  Phase: " << _phase << "\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
     }
 };
 
@@ -67,6 +82,13 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         x_gate(_target_mask, _control_mask, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: X\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 class YGateImpl : public GateBase {
@@ -83,6 +105,13 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         y_gate(_target_mask, _control_mask, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: Y\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
     }
 };
 
@@ -101,6 +130,13 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         z_gate(_target_mask, _control_mask, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: Z\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 class HGateImpl : public GateBase {
@@ -118,6 +154,13 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         h_gate(_target_mask, _control_mask, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: H\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
     }
 };
 
@@ -145,6 +188,13 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         s_gate(_target_mask, _control_mask, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: S\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 class SdagGateImpl : public GateBase {
@@ -163,6 +213,13 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         sdag_gate(_target_mask, _control_mask, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: Sdag\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
     }
 };
 // for resolving dependency issues
@@ -185,6 +242,13 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         t_gate(_target_mask, _control_mask, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: T\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 class TdagGateImpl : public GateBase {
@@ -203,6 +267,13 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         tdag_gate(_target_mask, _control_mask, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: Tdag\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
     }
 };
 // for resolving dependency issues
@@ -225,6 +296,13 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         sqrtx_gate(_target_mask, _control_mask, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: SqrtX\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 class SqrtXdagGateImpl : public GateBase {
@@ -243,6 +321,13 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         sqrtxdag_gate(_target_mask, _control_mask, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: SqrtXdag\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
     }
 };
 // for resolving dependency issues
@@ -265,6 +350,13 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         sqrty_gate(_target_mask, _control_mask, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: SqrtY\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 class SqrtYdagGateImpl : public GateBase {
@@ -283,6 +375,13 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         sqrtydag_gate(_target_mask, _control_mask, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: SqrtYdag\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
     }
 };
 // for resolving dependency issues
@@ -307,6 +406,13 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         p0_gate(_target_mask, _control_mask, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: P0\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 class P1GateImpl : public GateBase {
@@ -325,6 +431,13 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         p1_gate(_target_mask, _control_mask, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: P1\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
     }
 };
 
@@ -346,6 +459,14 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         rx_gate(_target_mask, _control_mask, _angle, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: RX\n";
+        ss << indent << "  Angle: " << this->_angle << "\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 class RYGateImpl : public RotationGateBase {
@@ -366,6 +487,14 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         ry_gate(_target_mask, _control_mask, _angle, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: RY\n";
+        ss << indent << "  Angle: " << this->_angle << "\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 class RZGateImpl : public RotationGateBase {
@@ -384,6 +513,14 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         rz_gate(_target_mask, _control_mask, _angle, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: RZ\n";
+        ss << indent << "  Angle: " << this->_angle << "\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
     }
 };
 
@@ -408,6 +545,13 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         u1_gate(_target_mask, _control_mask, _lambda, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: U1\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
     }
 };
 class U2GateImpl : public GateBase {
@@ -435,6 +579,13 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         u2_gate(_target_mask, _control_mask, _phi, _lambda, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: U2\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
     }
 };
 
@@ -469,6 +620,13 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         u3_gate(_target_mask, _control_mask, _theta, _phi, _lambda, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: U3\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 class SwapGateImpl : public GateBase {
@@ -485,6 +643,13 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         swap_gate(_target_mask, _control_mask, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: Swap\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
     }
 };
 

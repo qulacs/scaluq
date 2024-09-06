@@ -65,6 +65,22 @@ protected:
         }
     }
 
+    std::string get_qubit_info_as_string(const std::string& indent) const {
+        std::ostringstream ss;
+        auto targets = target_qubit_list();
+        auto controls = control_qubit_list();
+        ss << indent << "  Parameter Coefficient: " << _pcoef << "\n";
+        ss << indent << "  Target Qubits: {";
+        for (std::uint32_t i = 0; i < targets.size(); ++i)
+            ss << targets[i] << (i == targets.size() - 1 ? "" : ", ");
+        ss << "}\n";
+        ss << indent << "  Control Qubits: {";
+        for (std::uint32_t i = 0; i < controls.size(); ++i)
+            ss << controls[i] << (i == controls.size() - 1 ? "" : ", ");
+        ss << "}";
+        return ss.str();
+    }
+
 public:
     ParamGateBase(std::uint64_t target_mask, std::uint64_t control_mask, double param_coef = 1.)
         : _target_mask(target_mask), _control_mask(control_mask), _pcoef(param_coef) {
@@ -97,6 +113,8 @@ public:
     [[nodiscard]] virtual ComplexMatrix get_matrix(double param) const = 0;
 
     virtual void update_quantum_state(StateVector& state_vector, double param) const = 0;
+
+    [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 };
 
 template <ParamGateImpl T>
@@ -163,7 +181,11 @@ public:
         return _param_gate_ptr.get();
     }
 
-    // Due to dependency reasons, the definition of operator<< is in param_gate_factory.hpp
+    template <ParamGateImpl U>
+    friend std::ostream& operator<<(std::ostream& os, ParamGatePtr<U> gate) {
+        os << gate->to_string();
+        return os;
+    }
 };
 }  // namespace internal
 

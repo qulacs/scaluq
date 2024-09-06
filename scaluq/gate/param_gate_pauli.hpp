@@ -37,6 +37,13 @@ public:
     void update_quantum_state(StateVector& state_vector, double param) const override {
         pauli_rotation_gate(_control_mask, _pauli, _pcoef * param, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: ParamPauliRotation\n";
+        ss << _pauli.get_pauli_string();
+        return ss.str();
+    }
 };
 }  // namespace internal
 

@@ -48,6 +48,13 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         one_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: OneTargetMatrix\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 class TwoTargetMatrixGateImpl : public GateBase {
@@ -99,6 +106,13 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         two_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: TwoTargetMatrix\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
     }
 };
 }  // namespace internal

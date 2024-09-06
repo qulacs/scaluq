@@ -24,6 +24,13 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         pauli_gate(_control_mask, _pauli, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: Pauli\n";
+        ss << _pauli.get_pauli_string();
+        return ss.str();
+    }
 };
 
 class PauliRotationGateImpl : public GateBase {
@@ -55,6 +62,14 @@ public:
     }
     void update_quantum_state(StateVector& state_vector) const override {
         pauli_rotation_gate(_control_mask, _pauli, _angle, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: PauliRotation\n";
+        ss << indent << "  Angle: " << _angle << "\n";
+        ss << _pauli.get_pauli_string();
+        return ss.str();
     }
 };
 }  // namespace internal

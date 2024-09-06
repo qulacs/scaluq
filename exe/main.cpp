@@ -10,13 +10,16 @@ using namespace std;
 
 void run() {
     auto y_gate = gate::Y(2);
-    std::cout << y_gate << std::endl;
+    std::cout << y_gate->to_string() << "\n\n";
 
     auto cx_gate = gate::CX(0, 2);
-    std::cout << cx_gate << std::endl;
+    std::cout << cx_gate << "\n\n";
 
     auto swap_gate = gate::Swap(2, 3, {4, 6});
     std::cout << swap_gate << "\n\n";
+
+    auto rx_gate = gate::RX(2, 0.5);
+    std::cout << rx_gate << "\n\n";
 
     auto prob_gate = gate::Probablistic({0.1, 0.1, 0.8}, {cx_gate, y_gate, swap_gate});
     std::cout << prob_gate << "\n\n";

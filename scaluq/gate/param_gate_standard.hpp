@@ -27,6 +27,13 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         rx_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: ParamRX\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 class ParamRYGateImpl : public ParamGateBase {
@@ -47,6 +54,13 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         ry_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: ParamRY\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 class ParamRZGateImpl : public ParamGateBase {
@@ -66,6 +80,13 @@ public:
     void update_quantum_state(StateVector& state_vector, double param) const override {
         check_qubit_mask_within_bounds(state_vector);
         rz_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: ParamRZ\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
     }
 };
 
