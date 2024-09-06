@@ -8,6 +8,7 @@
 #include "gate/param_gate.hpp"
 #include "gate/param_gate_factory.hpp"
 #include "gate/update_ops.hpp"
+#include "operator/apply_pauli.hpp"
 #include "operator/operator.hpp"
 #include "operator/pauli_operator.hpp"
 #include "state/state_vector.hpp"

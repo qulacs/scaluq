@@ -79,9 +79,17 @@ using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl>;
 namespace internal {
 void bind_gate_param_gate_standard_hpp(nb::module_& m) {
     DEF_PARAM_GATE(
-        ParamPauliRotationGate,
-        "Specific class of parametric multi-qubit pauli-rotation gate, represented as "
-        "$e^{-i\\frac{\\mathrm{angle}}{2}P}$. `angle` is given as `param * param_coef`.");
+        ParamRXGate,
+        "Specific class of parametric X rotation gate, represented as "
+        "$e^{-i\\frac{\\mathrm{angle}}{2}X}$. `angle` is given as `param * param_coef`.");
+    DEF_PARAM_GATE(
+        ParamRYGate,
+        "Specific class of parametric Y rotation gate, represented as "
+        "$e^{-i\\frac{\\mathrm{angle}}{2}Y}$. `angle` is given as `param * param_coef`.");
+    DEF_PARAM_GATE(
+        ParamRZGate,
+        "Specific class of parametric Z rotation gate, represented as "
+        "$e^{-i\\frac{\\mathrm{angle}}{2}Z}$. `angle` is given as `param * param_coef`.");
 }
 }  // namespace internal
 #endif

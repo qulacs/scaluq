@@ -5,7 +5,7 @@
 
 #include "../state/state_vector.hpp"
 #include "../types.hpp"
-#include "../util/bit_vector.hpp"
+#include "apply_pauli.hpp"
 
 namespace scaluq {
 class PauliOperator {
@@ -17,7 +17,7 @@ public:
         friend class Operator;
         std::vector<std::uint64_t> _target_qubit_list, _pauli_id_list;
         Complex _coef;
-        internal::BitVector _bit_flip_mask, _phase_flip_mask;
+        std::uint64_t _bit_flip_mask, _phase_flip_mask;
 
     public:
         explicit Data(Complex coef = 1.);
@@ -26,15 +26,13 @@ public:
              const std::vector<std::uint64_t>& pauli_id_list,
              Complex coef = 1.);
         Data(const std::vector<std::uint64_t>& pauli_id_par_qubit, Complex coef = 1.);
-        Data(const std::vector<bool>& bit_flip_mask,
-             const std::vector<bool>& phase_flip_mask,
-             Complex coef);
+        Data(std::uint64_t bit_flip_mask, std::uint64_t phase_flip_mask, Complex coef);
         void add_single_pauli(std::uint64_t target_qubit, std::uint64_t pauli_id);
         Complex coef() const { return _coef; }
         void set_coef(Complex c) { _coef = c; }
         const std::vector<std::uint64_t>& target_qubit_list() const { return _target_qubit_list; }
         const std::vector<std::uint64_t>& pauli_id_list() const { return _pauli_id_list; }
-        std::tuple<std::vector<bool>, std::vector<bool>> get_XZ_mask_representation() const {
+        std::tuple<std::uint64_t, std::uint64_t> get_XZ_mask_representation() const {
             return {_bit_flip_mask, _phase_flip_mask};
         }
     };
@@ -55,9 +53,7 @@ public:
         : _ptr(std::make_shared<const Data>(target_qubit_list, pauli_id_list, coef)) {}
     PauliOperator(const std::vector<std::uint64_t>& pauli_id_par_qubit, Complex coef = 1.)
         : _ptr(std::make_shared<const Data>(pauli_id_par_qubit, coef)) {}
-    PauliOperator(const std::vector<bool>& bit_flip_mask,
-                  const std::vector<bool>& phase_flip_mask,
-                  Complex coef)
+    PauliOperator(std::uint64_t bit_flip_mask, std::uint64_t phase_flip_mask, Complex coef = 1.)
         : _ptr(std::make_shared<const Data>(bit_flip_mask, phase_flip_mask, coef)) {}
 
     [[nodiscard]] inline Complex coef() const { return _ptr->coef(); }
@@ -67,8 +63,8 @@ public:
     [[nodiscard]] inline const std::vector<std::uint64_t>& pauli_id_list() const {
         return _ptr->pauli_id_list();
     }
-    [[nodiscard]] inline std::tuple<std::vector<bool>, std::vector<bool>>
-    get_XZ_mask_representation() const {
+    [[nodiscard]] inline std::tuple<std::uint64_t, std::uint64_t> get_XZ_mask_representation()
+        const {
         return _ptr->get_XZ_mask_representation();
     }
     [[nodiscard]] std::string get_pauli_string() const;
@@ -81,7 +77,15 @@ public:
         return std::ranges::max(_ptr->_target_qubit_list) + 1;
     }
 
-    void apply_to_state(StateVector& state_vector) const;
+    void apply_to_state(StateVector& state_vector) const {
+        if (state_vector.n_qubits() < get_qubit_count()) {
+            throw std::runtime_error(
+                "PauliOperator::apply_to_state: n_qubits of state_vector is too small to apply the "
+                "operator");
+        }
+        internal::apply_pauli(
+            0ULL, _ptr->_bit_flip_mask, _ptr->_phase_flip_mask, _ptr->_coef, state_vector);
+    }
 
     [[nodiscard]] Complex get_expectation_value(const StateVector& state_vector) const;
     [[nodiscard]] Complex get_transition_amplitude(const StateVector& state_vector_bra,
@@ -123,7 +127,7 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "pauli_id_par_qubit"_a,
              "coef"_a = 1.,
              "Initialize data with pauli ids per qubit.")
-        .def(nb::init<const std::vector<bool>&, const std::vector<bool>&, Complex>(),
+        .def(nb::init<std::uint64_t, std::uint64_t, Complex>(),
              "bit_flip_mask"_a,
              "phase_flip_mask"_a,
              "coef"_a = 1.,
@@ -173,35 +177,14 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "coef"_a = 1.,
              "Initialize pauli operator. For each `i`, single pauli correspond to "
              "`paul_id_per_qubit` is applied to `i`-th qubit.")
-        .def(
-            "__init__",
-            [](PauliOperator* t,
-               nb::int_ bit_flip_mask_py,
-               nb::int_ phase_flip_mask_py,
-               Complex coef) {
-                internal::BitVector bit_flip_mask(0), phase_flip_mask(0);
-                const nb::int_ mask(~0ULL);
-                auto& bit_flip_raw = bit_flip_mask.data_raw();
-                assert(bit_flip_raw.empty());
-                while (bit_flip_mask_py > nb::int_(0)) {
-                    bit_flip_raw.push_back((std::uint64_t)nb::int_(bit_flip_mask_py & mask));
-                    bit_flip_mask_py >>= nb::int_(64);
-                }
-                auto& phase_flip_raw = phase_flip_mask.data_raw();
-                assert(phase_flip_raw.empty());
-                while (phase_flip_mask_py > nb::int_(0)) {
-                    phase_flip_raw.push_back((std::uint64_t)nb::int_(phase_flip_mask_py & mask));
-                    phase_flip_mask_py >>= nb::int_(64);
-                }
-                new (t) PauliOperator(bit_flip_mask, phase_flip_mask, coef);
-            },
-            "bit_flip_mask"_a,
-            "phase_flip_mask"_a,
-            "coef"_a = 1.,
-            "Initialize pauli operator. For each `i`, single pauli applied to `i`-th qubit is got "
-            "from `i-th` bit of `bit_flip_mask` and `phase_flip_mask` as follows.\n\n.. "
-            "csv-table::\n\n    \"bit_flip\",\"phase_flip\",\"pauli\"\n    \"0\",\"0\",\"I\"\n    "
-            "\"0\",\"1\",\"Z\"\n    \"1\",\"0\",\"X\"\n    \"1\",\"1\",\"Y\"")
+        .def(nb::init<std::uint64_t, std::uint64_t, Complex>(),
+             "bit_flip_mask"_a,
+             "phase_flip_mask"_a,
+             "coef"_a = 1.,
+             "Initialize pauli operator. For each `i`, single pauli applied to `i`-th qubit is got "
+             "from `i-th` bit of `bit_flip_mask` and `phase_flip_mask` as follows.\n\n.. "
+             "csv-table::\n\n    \"bit_flip\",\"phase_flip\",\"pauli\"\n    \"0\",\"0\",\"I\"\n    "
+             "\"0\",\"1\",\"Z\"\n    \"1\",\"0\",\"X\"\n    \"1\",\"1\",\"Y\"")
         .def("coef", &PauliOperator::coef, "Get property `coef`.")
         .def("target_qubit_list",
              &PauliOperator::target_qubit_list,
@@ -210,23 +193,11 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              &PauliOperator::pauli_id_list,
              "Get pauli id to be applied. The order is correspond to the result of "
              "`target_qubit_list`")
-        .def(
-            "get_XZ_mask_representation",
-            [](const PauliOperator& pauli) {
-                const auto [x_mask, z_mask] = pauli.get_XZ_mask_representation();
-                nb::int_ x_mask_py(0);
-                for (std::uint64_t i = 0; i < x_mask.size(); ++i) {
-                    x_mask_py |= nb::int_(x_mask[i]) << nb::int_(i);
-                }
-                nb::int_ z_mask_py(0);
-                for (std::uint64_t i = 0; i < z_mask.size(); ++i) {
-                    z_mask_py |= nb::int_(z_mask[i]) << nb::int_(i);
-                }
-                return std::make_tuple(x_mask_py, z_mask_py);
-            },
-            "Get single-pauli property as binary integer representation. See description of "
-            "`__init__(bit_flip_mask_py: int, phase_flip_mask_py: int, coef: float=1.)` for "
-            "details.")
+        .def("get_XZ_mask_representation",
+             &PauliOperator::get_XZ_mask_representation,
+             "Get single-pauli property as binary integer representation. See description of "
+             "`__init__(bit_flip_mask_py: int, phase_flip_mask_py: int, coef: float=1.)` for "
+             "details.")
         .def("get_pauli_string",
              &PauliOperator::get_pauli_string,
              "Get single-pauli property as string representation. See description of "

@@ -93,13 +93,5 @@ void u3_gate(std::uint64_t target_mask,
              StateVector& state);
 
 void swap_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector& state);
-
-void pauli_gate(std::uint64_t control_mask, const PauliOperator& pauli, StateVector& state);
-
-void pauli_rotation_gate(std::uint64_t control_mask,
-                         const PauliOperator& pauli,
-                         double angle,
-                         StateVector& state);
-
 }  // namespace internal
 }  // namespace scaluq

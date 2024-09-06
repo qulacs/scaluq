@@ -93,6 +93,7 @@ NB_MODULE(scaluq_core, m) {
     internal::bind_gate_gate_factory_hpp(mgate);
     internal::bind_gate_param_gate_hpp(m);
     internal::bind_gate_param_gate_standard_hpp(m);
+    internal::bind_gate_param_gate_pauli_hpp(m);
     internal::bind_gate_param_gate_probablistic_hpp(m);
     internal::bind_gate_param_gate_factory(mgate);
     // internal::bind_gate_merge_gate_hpp(m);
