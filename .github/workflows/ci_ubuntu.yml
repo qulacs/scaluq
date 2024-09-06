@@ -68,7 +68,7 @@ jobs:
       
       - name: Test if stub exists
         run: |
-          echo -e "from scaluq import StateVector\nfrom.scaluq.gate import I" > /tmp/stub_sample.py
+          echo -e "from scaluq import StateVector\nfrom scaluq.gate import I" > /tmp/stub_sample.py
           mypy /tmp/stub_sample.py
 
   nvcc-build:
