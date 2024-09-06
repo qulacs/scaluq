@@ -16,24 +16,39 @@ class ParamRXGateImpl;
 class ParamRYGateImpl;
 class ParamRZGateImpl;
 class ParamPauliRotationGateImpl;
+class ParamProbablisticGateImpl;
 
 template <ParamGateImpl T>
 class ParamGatePtr;
 }  // namespace internal
 using ParamGate = internal::ParamGatePtr<internal::ParamGateBase>;
 
-enum class ParamGateType { Unknown, ParamRX, ParamRY, ParamRZ, ParamPauliRotation };
+enum class ParamGateType {
+    Unknown,
+    ParamRX,
+    ParamRY,
+    ParamRZ,
+    ParamPauliRotation,
+    ParamProbablistic,
+    Error
+};
 
 template <internal::ParamGateImpl T>
 constexpr ParamGateType get_param_gate_type() {
-    if constexpr (std::is_same_v<T, internal::ParamGateBase>) return ParamGateType::Unknown;
-    if constexpr (std::is_same_v<T, internal::ParamRXGateImpl>) return ParamGateType::ParamRX;
-    if constexpr (std::is_same_v<T, internal::ParamRYGateImpl>) return ParamGateType::ParamRY;
-    if constexpr (std::is_same_v<T, internal::ParamRZGateImpl>) return ParamGateType::ParamRZ;
-    if constexpr (std::is_same_v<T, internal::ParamPauliRotationGateImpl>)
+    using TWithoutConst = std::remove_cv_t<T>;
+    if constexpr (std::is_same_v<TWithoutConst, internal::ParamGateBase>)
+        return ParamGateType::Unknown;
+    if constexpr (std::is_same_v<TWithoutConst, internal::ParamRXGateImpl>)
+        return ParamGateType::ParamRX;
+    if constexpr (std::is_same_v<TWithoutConst, internal::ParamRYGateImpl>)
+        return ParamGateType::ParamRY;
+    if constexpr (std::is_same_v<TWithoutConst, internal::ParamRZGateImpl>)
+        return ParamGateType::ParamRZ;
+    if constexpr (std::is_same_v<TWithoutConst, internal::ParamPauliRotationGateImpl>)
         return ParamGateType::ParamPauliRotation;
-    static_assert("unknown ParamGateImpl");
-    return ParamGateType::Unknown;
+    if constexpr (std::is_same_v<TWithoutConst, internal::ParamProbablisticGateImpl>)
+        return ParamGateType::ParamProbablistic;
+    return ParamGateType::Error;
 }
 
 namespace internal {
@@ -56,13 +71,12 @@ public:
         if (_target_mask & _control_mask) [[unlikely]] {
             throw std::runtime_error(
                 "Error: ParamGate::ParamGate(std::uint64_t target_mask, std::uint64_t "
-                "control_mask) : Target and "
-                "control qubits must not overlap.");
+                "control_mask) : Target and control qubits must not overlap.");
         }
     }
     virtual ~ParamGateBase() = default;
 
-    [[nodiscard]] double param_coef() { return _pcoef; }
+    [[nodiscard]] double param_coef() const { return _pcoef; }
 
     [[nodiscard]] virtual std::vector<std::uint64_t> target_qubit_list() const {
         return mask_to_vector(_target_mask);
@@ -99,17 +113,23 @@ public:
     ParamGatePtr() : _param_gate_ptr(nullptr), _param_gate_type(get_param_gate_type<T>()) {}
     ParamGatePtr(const ParamGatePtr& param_gate) = default;
     template <ParamGateImpl U>
-    ParamGatePtr(const std::shared_ptr<U>& param_gate_ptr) {
+    ParamGatePtr(const std::shared_ptr<const U>& param_gate_ptr) {
         if constexpr (std::is_same_v<T, U>) {
-            _param_gate_type = get_param_gate_type<T>();
+            if ((_param_gate_type = get_param_gate_type<T>()) == ParamGateType::Error) {
+                throw std::runtime_error("Unknown GateType");
+            }
             _param_gate_ptr = param_gate_ptr;
         } else if constexpr (std::is_same_v<T, internal::ParamGateBase>) {
             // upcast
-            _param_gate_type = get_param_gate_type<U>();
+            if ((_param_gate_type = get_param_gate_type<U>()) == ParamGateType::Error) {
+                throw std::runtime_error("Unknown GateType");
+            }
             _param_gate_ptr = std::static_pointer_cast<const T>(param_gate_ptr);
         } else {
             // downcast
-            _param_gate_type = get_param_gate_type<T>();
+            if ((_param_gate_type = get_param_gate_type<T>()) == ParamGateType::Error) {
+                throw std::runtime_error("Unknown GateType");
+            }
             if (!(_param_gate_ptr = std::dynamic_pointer_cast<const T>(param_gate_ptr))) {
                 throw std::runtime_error("invalid gate cast");
             }
@@ -143,42 +163,7 @@ public:
         return _param_gate_ptr.get();
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const ParamGatePtr& obj) {
-        if (!obj._param_gate_ptr) {
-            os << "Gate Type: Null";
-            return os;
-        }
-        auto targets = internal::mask_to_vector(obj->target_qubit_mask());
-        auto controls = internal::mask_to_vector(obj->control_qubit_mask());
-        os << "Gate Type: ";
-        switch (obj.param_gate_type()) {
-            case ParamGateType::ParamRX:
-                os << "ParamRX";
-                break;
-            case ParamGateType::ParamRY:
-                os << "ParamRY";
-                break;
-            case ParamGateType::ParamRZ:
-                os << "ParamRZ";
-                break;
-            case ParamGateType::ParamPauliRotation:
-                os << "ParamPauliRotation";
-                break;
-            default:
-                os << "Undefined";
-                break;
-        }
-        os << "\n"
-              "Target Qubits: {";
-        for (std::uint32_t i = 0; i < targets.size(); ++i)
-            os << targets[i] << (i == targets.size() - 1 ? "" : ", ");
-        os << "}\n"
-              "Control Qubits: {";
-        for (std::uint32_t i = 0; i < controls.size(); ++i)
-            os << controls[i] << (i == controls.size() - 1 ? "" : ", ");
-        os << "}";
-        return os;
-    }
+    // 依存関係の都合上、operator<< の定義は gate_factory.hpp に定義
 };
 }  // namespace internal
 

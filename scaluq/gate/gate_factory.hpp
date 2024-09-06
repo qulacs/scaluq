@@ -216,133 +216,145 @@ inline Gate Probablistic(const std::vector<double>& distribution,
 }
 }  // namespace gate
 
-template <internal::GateImpl T>
-std::ostream& operator<<(std::ostream& os, const internal::GatePtr<T>& obj) {
-    std::string indent = "  ";
+namespace internal {
+
+template <GateImpl T>
+std::string gate_to_string(const GatePtr<T>& obj, std::uint32_t depth = 0) {
+    std::ostringstream ss;
+    std::string indent(depth * 2, ' ');
+
     if (obj.gate_type() == GateType::Probablistic) {
         const auto prob_gate = ProbablisticGate(obj);
         const auto distribution = prob_gate->distribution();
         const auto gates = prob_gate->gate_list();
-        os << "Gate Type: Probablistic\n";
+        ss << indent << "Gate Type: Probablistic\n";
         for (std::size_t i = 0; i < distribution.size(); ++i) {
-            std::ostringstream gate_ss;
-            gate_ss << gates[i];
-            std::istringstream gate_is(gate_ss.str());
-            std::string line;
-            // os << indent << "--------------------\n";
-            os << indent << "Probability: " << distribution[i] << "\n";
-            while (std::getline(gate_is, line)) {
-                os << indent << line << (gate_is.peek() == EOF ? "" : "\n");
-            }
+            ss << indent << "  --------------------\n";
+            ss << indent << "  Probability: " << distribution[i] << "\n";
+            ss << gate_to_string(gates[i], depth + 1) << (i == distribution.size() - 1 ? "" : "\n");
         }
-        return os;
+        return ss.str();
     }
+
     auto targets = internal::mask_to_vector(obj->target_qubit_mask());
     auto controls = internal::mask_to_vector(obj->control_qubit_mask());
-    os << "Gate Type: ";
+
+    ss << indent << "Gate Type: ";
     switch (obj.gate_type()) {
         case GateType::I:
-            os << "I";
+            ss << "I";
             break;
         case GateType::GlobalPhase:
-            os << "GlobalPhase";
+            ss << "GlobalPhase";
             break;
         case GateType::X:
-            os << "X";
+            ss << "X";
             break;
         case GateType::Y:
-            os << "Y";
+            ss << "Y";
             break;
         case GateType::Z:
-            os << "Z";
+            ss << "Z";
             break;
         case GateType::H:
-            os << "H";
+            ss << "H";
             break;
         case GateType::S:
-            os << "S";
+            ss << "S";
             break;
         case GateType::Sdag:
-            os << "Sdag";
+            ss << "Sdag";
             break;
         case GateType::T:
-            os << "T";
+            ss << "T";
             break;
         case GateType::Tdag:
-            os << "Tdag";
+            ss << "Tdag";
             break;
         case GateType::SqrtX:
-            os << "SqrtX";
+            ss << "SqrtX";
             break;
         case GateType::SqrtXdag:
-            os << "SqrtXdag";
+            ss << "SqrtXdag";
             break;
         case GateType::SqrtY:
-            os << "SqrtY";
+            ss << "SqrtY";
             break;
         case GateType::SqrtYdag:
-            os << "SqrtYdag";
+            ss << "SqrtYdag";
             break;
         case GateType::P0:
-            os << "P0";
+            ss << "P0";
             break;
         case GateType::P1:
-            os << "P1";
+            ss << "P1";
             break;
         case GateType::RX:
-            os << "RX";
+            ss << "RX";
             break;
         case GateType::RY:
-            os << "RY";
+            ss << "RY";
             break;
         case GateType::RZ:
-            os << "RZ";
+            ss << "RZ";
             break;
         case GateType::U1:
-            os << "U1";
+            ss << "U1";
             break;
         case GateType::U2:
-            os << "U2";
+            ss << "U2";
             break;
         case GateType::U3:
-            os << "U3";
+            ss << "U3";
             break;
         case GateType::OneTargetMatrix:
-            os << "OneTargetMatrix";
+            ss << "OneTargetMatrix";
             break;
         case GateType::CX:
-            os << "CX";
+            ss << "CX";
             break;
         case GateType::CZ:
-            os << "CZ";
+            ss << "CZ";
             break;
         case GateType::CCX:
-            os << "CCX";
+            ss << "CCX";
             break;
         case GateType::Swap:
-            os << "Swap";
+            ss << "Swap";
             break;
         case GateType::TwoTargetMatrix:
-            os << "TwoTargetMatrix";
+            ss << "TwoTargetMatrix";
             break;
         case GateType::Pauli:
-            os << "Pauli";
+            ss << "Pauli";
             break;
         case GateType::PauliRotation:
-            os << "PauliRotation";
+            ss << "PauliRotation";
             break;
         case GateType::Unknown:
         default:
-            os << "Unknown";
+            ss << "Unknown";
             break;
     }
-    os << "\n" << indent << "Target Qubits: {";
+
+    ss << "\n";
+    ss << indent << "  Target Qubits: {";
     for (std::uint32_t i = 0; i < targets.size(); ++i)
-        os << targets[i] << (i == targets.size() - 1 ? "" : ", ");
-    os << "}\n" << indent << "Control Qubits: {";
+        ss << targets[i] << (i == targets.size() - 1 ? "" : ", ");
+    ss << "}\n";
+    ss << indent << "  Control Qubits: {";
     for (std::uint32_t i = 0; i < controls.size(); ++i)
-        os << controls[i] << (i == controls.size() - 1 ? "" : ", ");
-    os << "}";
+        ss << controls[i] << (i == controls.size() - 1 ? "" : ", ");
+    ss << "}";
+
+    return ss.str();
+}
+
+}  // namespace internal
+
+template <internal::GateImpl T>
+std::ostream& operator<<(std::ostream& os, const internal::GatePtr<T>& obj) {
+    os << internal::gate_to_string(obj);
     return os;
 }
 
