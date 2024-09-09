@@ -47,8 +47,13 @@ public:
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
+        auto controls = control_qubit_list();
         ss << indent << "Gate Type: ParamPauliRotation\n";
-        ss << _pauli.get_pauli_string();
+        ss << indent << "  Control Qubits: {";
+        for (std::uint32_t i = 0; i < controls.size(); ++i)
+            ss << controls[i] << (i == controls.size() - 1 ? "" : ", ");
+        ss << "}\n";
+        ss << indent << "  Pauli Operator: \"" << _pauli.get_pauli_string() << "\"";
         return ss.str();
     }
 };
