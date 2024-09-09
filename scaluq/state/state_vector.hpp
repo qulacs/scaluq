@@ -78,12 +78,20 @@ namespace internal {
 void bind_state_state_vector_hpp(nb::module_& m) {
     nb::class_<StateVector>(m,
                             "StateVector",
-                            "Vector representation of quantum state.\n\n.. note:: Qubit index is "
-                            "start from 0. If the amplitudes of $\\ket{b_{n-1}\\dots b_0}$ is "
-                            "$b_i$, the state is $\\sum_i b_i 2^i$.")
+                            DocString()
+                                .desc("Vector representation of quantum state.")
+                                .desc("Qubit index is "
+                                      "start from 0. If the i-th value of the vector is "
+                                      "$a_i$, the state is $\\sum_i a_i \\ket{i}$.")
+                                .build_as_google_style()
+                                .c_str())
         .def(nb::init<std::uint64_t>(),
-             "Construct state vector with specified qubits, initialized with computational "
-             "basis $\\ket{0\\dots0}$.")
+             DocString()
+                 .desc(
+                     "Construct state vector with specified qubits, initialized with computational "
+                     "basis $\\ket{0\\dots0}$.")
+                 .build_as_google_style()
+                 .c_str())
         .def(nb::init<const StateVector&>(), "Constructing state vector by copying other state.")
         .def_static(
             "Haar_random_state",
@@ -100,9 +108,29 @@ void bind_state_state_vector_hpp(nb::module_& m) {
              "Manually set amplitude at one index.")
         .def("get_amplitude_at",
              &StateVector::get_amplitude_at,
-             "Get amplitude at one index.\n\n.. note:: If you want to get all amplitudes, you "
-             "should "
-             "use `StateVector::get_amplitudes()`.")
+             "index"_a,
+             DocString()
+                 .desc("Get amplitude at one index.")
+                 .arg({"index",
+                       "int",
+                       false,
+                       {"Index of state vector.",
+                        "This is read as binary. k-th bit of index represents k-th qubit."}})
+                 .ret({"complex", {"Amplitude at specified index"}})
+                 .ex(DocString::Code{">>> state = StateVector(2)",
+                                     ">>> state.load([1+2j, 3+4j, 5+6j, 7+8j])",
+                                     ">>> state.get_amplitude_at(0)",
+                                     "(1+2j)",
+                                     ">>> state.get_amplitude_at(1)",
+                                     "(3+4j)",
+                                     ">>> state.get_amplitude_at(2)",
+                                     "(5+6j)",
+                                     ">>> state.get_amplitude_at(3)",
+                                     "(7+8j)"})
+                 .note("If you want to get amplitudes at all indices, you should use "
+                       ":meth:`.get_amplitudes`.")
+                 .build_as_google_style()
+                 .c_str())
         .def("set_zero_state",
              &StateVector::set_zero_state,
              "Initialize with computational basis $\\ket{00\\dots0}$.")
@@ -112,7 +140,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
         .def("set_computational_basis",
              &StateVector::set_computational_basis,
              "Initialize with computational basis \\ket{\\mathrm{basis}}.")
-        .def("amplitudes",
+        .def("get_amplitudes",
              &StateVector::get_amplitudes,
              "Get all amplitudes with as `list[complex]`.")
         .def("n_qubits", &StateVector::n_qubits, "Get num of qubits.")
