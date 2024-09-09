@@ -127,7 +127,7 @@ namespace internal {
 class GateBase : public std::enable_shared_from_this<GateBase> {
 protected:
     std::uint64_t _target_mask, _control_mask;
-    void check_qubit_mask_within_bounds(const StateVector &state_vector) const {
+    void check_qubit_mask_within_bounds(const StateVector& state_vector) const {
         std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
         if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
             throw std::runtime_error(
@@ -166,7 +166,7 @@ public:
     [[nodiscard]] virtual Gate get_inverse() const = 0;
     [[nodiscard]] virtual internal::ComplexMatrix get_matrix() const = 0;
 
-    virtual void update_quantum_state(StateVector &state_vector) const = 0;
+    virtual void update_quantum_state(StateVector& state_vector) const = 0;
 };
 
 template <GateImpl T>
@@ -181,9 +181,9 @@ private:
 
 public:
     GatePtr() : _gate_ptr(nullptr), _gate_type(get_gate_type<T>()) {}
-    GatePtr(const GatePtr &gate) = default;
+    GatePtr(const GatePtr& gate) = default;
     template <GateImpl U>
-    GatePtr(const std::shared_ptr<const U> &gate_ptr) {
+    GatePtr(const std::shared_ptr<const U>& gate_ptr) {
         if constexpr (std::is_same_v<T, U>) {
             _gate_type = get_gate_type<T>();
             _gate_ptr = gate_ptr;
@@ -200,7 +200,7 @@ public:
         }
     }
     template <GateImpl U>
-    GatePtr(const GatePtr<U> &gate) {
+    GatePtr(const GatePtr<U>& gate) {
         if constexpr (std::is_same_v<T, U>) {
             _gate_type = gate._gate_type;
             _gate_ptr = gate._gate_ptr;
@@ -220,7 +220,7 @@ public:
 
     GateType gate_type() const { return _gate_type; }
 
-    const T *operator->() const {
+    const T* operator->() const {
         if (!_gate_ptr) {
             throw std::runtime_error("GatePtr::operator->(): Gate is Null");
         }
@@ -236,41 +236,41 @@ namespace internal {
         .def("gate_type", &GATE_TYPE::gate_type, "Get gate type as `GateType` enum.")    \
         .def(                                                                            \
             "target_qubit_list",                                                         \
-            [](const GATE_TYPE &gate) { return gate->target_qubit_list(); },             \
+            [](const GATE_TYPE& gate) { return gate->target_qubit_list(); },             \
             "Get target qubits as `list[int]`. **Control qubits is not included.**")     \
         .def(                                                                            \
             "control_qubit_list",                                                        \
-            [](const GATE_TYPE &gate) { return gate->control_qubit_list(); },            \
+            [](const GATE_TYPE& gate) { return gate->control_qubit_list(); },            \
             "Get control qubits as `list[int]`.")                                        \
         .def(                                                                            \
             "operand_qubit_list",                                                        \
-            [](const GATE_TYPE &gate) { return gate->operand_qubit_list(); },            \
+            [](const GATE_TYPE& gate) { return gate->operand_qubit_list(); },            \
             "Get target and control qubits as `list[int]`.")                             \
         .def(                                                                            \
             "target_qubit_mask",                                                         \
-            [](const GATE_TYPE &gate) { return gate->target_qubit_mask(); },             \
+            [](const GATE_TYPE& gate) { return gate->target_qubit_mask(); },             \
             "Get target qubits as mask. **Control qubits is not included.**")            \
         .def(                                                                            \
             "control_qubit_mask",                                                        \
-            [](const GATE_TYPE &gate) { return gate->control_qubit_mask(); },            \
+            [](const GATE_TYPE& gate) { return gate->control_qubit_mask(); },            \
             "Get control qubits as mask.")                                               \
         .def(                                                                            \
             "operand_qubit_mask",                                                        \
-            [](const GATE_TYPE &gate) { return gate->operand_qubit_mask(); },            \
+            [](const GATE_TYPE& gate) { return gate->operand_qubit_mask(); },            \
             "Get target and control qubits as mask.")                                    \
         .def(                                                                            \
             "get_inverse",                                                               \
-            [](const GATE_TYPE &gate) { return gate->get_inverse(); },                   \
+            [](const GATE_TYPE& gate) { return gate->get_inverse(); },                   \
             "Generate inverse gate as `Gate` type. If not exists, return None.")         \
         .def(                                                                            \
             "update_quantum_state",                                                      \
-            [](const GATE_TYPE &gate, StateVector &state_vector) {                       \
+            [](const GATE_TYPE& gate, StateVector& state_vector) {                       \
                 gate->update_quantum_state(state_vector);                                \
             },                                                                           \
             "Apply gate to `state_vector`. `state_vector` in args is directly updated.") \
         .def(                                                                            \
             "get_matrix",                                                                \
-            [](const GATE_TYPE &gate) { return gate->get_matrix(); },                    \
+            [](const GATE_TYPE& gate) { return gate->get_matrix(); },                    \
             "Get matrix representation of the gate.")
 
 nb::class_<Gate> gate_base_def;
@@ -283,7 +283,7 @@ nb::class_<Gate> gate_base_def;
         "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).")    \
         .def(nb::init<Gate>())
 
-void bind_gate_gate_hpp(nb::module_ &m) {
+void bind_gate_gate_hpp(nb::module_& m) {
     nb::enum_<GateType>(m, "GateType", "Enum of Gate Type.")
         .value("I", GateType::I)
         .value("GlobalPhase", GateType::GlobalPhase)

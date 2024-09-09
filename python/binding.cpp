@@ -31,7 +31,7 @@ struct type_caster<Kokkos::complex<T>> {
     NB_TYPE_CASTER(Kokkos::complex<T>, const_name("complex"))
 
     template <bool Recursive = true>
-    bool from_python(handle src, uint8_t flags, cleanup_list *cleanup) noexcept {
+    bool from_python(handle src, uint8_t flags, cleanup_list* cleanup) noexcept {
         (void)flags;
         (void)cleanup;
 
@@ -63,7 +63,7 @@ struct type_caster<Kokkos::complex<T>> {
     }
 
     template <typename T2>
-    static handle from_cpp(T2 &&value, rv_policy policy, cleanup_list *cleanup) noexcept {
+    static handle from_cpp(T2&& value, rv_policy policy, cleanup_list* cleanup) noexcept {
         (void)policy;
         (void)cleanup;
 
