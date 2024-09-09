@@ -181,8 +181,7 @@ public:
         return _param_gate_ptr.get();
     }
 
-    template <ParamGateImpl U>
-    friend std::ostream& operator<<(std::ostream& os, ParamGatePtr<U> gate) {
+    friend std::ostream& operator<<(std::ostream& os, ParamGatePtr gate) {
         os << gate->to_string();
         return os;
     }

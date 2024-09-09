@@ -248,8 +248,7 @@ public:
         return _gate_ptr.get();
     }
 
-    template <GateImpl U>
-    friend std::ostream& operator<<(std::ostream& os, GatePtr<U> gate) {
+    friend std::ostream& operator<<(std::ostream& os, GatePtr gate) {
         os << gate->to_string();
         return os;
     }
