@@ -112,7 +112,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def("copy", &Circuit::copy, "Copy circuit. All the gates inside is copied.")
         .def("get_inverse",
              &Circuit::get_inverse,
-             "Get inverse of circuit. ALl the gates are newly created.");
+             "Get inverse of circuit. All the gates are newly created.");
 }
 }  // namespace internal
 #endif
