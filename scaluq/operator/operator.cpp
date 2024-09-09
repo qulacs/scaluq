@@ -47,7 +47,7 @@ void Operator::add_random_operator(std::uint64_t operator_count, std::uint64_t s
 }
 
 void Operator::optimize() {
-    std::map<std::tuple<internal::BitVector, internal::BitVector>, Complex> pauli_and_coef;
+    std::map<std::tuple<std::uint64_t, std::uint64_t>, Complex> pauli_and_coef;
     for (const auto& pauli : _terms) {
         pauli_and_coef[pauli.get_XZ_mask_representation()] += pauli.coef();
     }
@@ -92,12 +92,12 @@ Complex Operator::get_expectation_value(const StateVector& state_vector) const {
         Kokkos::DefaultHostExecutionSpace(),
         terms_view,
         bmasks_host,
-        [](const PauliOperator& pauli) { return pauli._ptr->_bit_flip_mask.data_raw()[0]; });
+        [](const PauliOperator& pauli) { return pauli._ptr->_bit_flip_mask; });
     Kokkos::Experimental::transform(
         Kokkos::DefaultHostExecutionSpace(),
         terms_view,
         pmasks_host,
-        [](const PauliOperator& pauli) { return pauli._ptr->_phase_flip_mask.data_raw()[0]; });
+        [](const PauliOperator& pauli) { return pauli._ptr->_phase_flip_mask; });
     Kokkos::Experimental::transform(Kokkos::DefaultHostExecutionSpace(),
                                     terms_view,
                                     coefs_host,
@@ -133,7 +133,7 @@ Complex Operator::get_expectation_value(const StateVector& state_vector) const {
                     sizeof(std::uint64_t) * 8 - Kokkos::countl_zero(bit_flip_mask) - 1;
                 std::uint64_t global_phase_90rot_count =
                     Kokkos::popcount(bit_flip_mask & phase_flip_mask);
-                Complex global_phase = PHASE_90ROT().val[global_phase_90rot_count % 4];
+                Complex global_phase = internal::PHASE_90ROT()[global_phase_90rot_count % 4];
                 std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
                 std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
                 double tmp =
@@ -166,11 +166,11 @@ Complex Operator::get_transition_amplitude(const StateVector& state_vector_bra,
     std::vector<Complex> coefs_vector(nterms);
     std::transform(
         _terms.begin(), _terms.end(), bmasks_vector.begin(), [](const PauliOperator& pauli) {
-            return pauli._ptr->_bit_flip_mask.data_raw()[0];
+            return pauli._ptr->_bit_flip_mask;
         });
     std::transform(
         _terms.begin(), _terms.end(), pmasks_vector.begin(), [](const PauliOperator& pauli) {
-            return pauli._ptr->_phase_flip_mask.data_raw()[0];
+            return pauli._ptr->_phase_flip_mask;
         });
     std::transform(
         _terms.begin(), _terms.end(), coefs_vector.begin(), [](const PauliOperator& pauli) {
@@ -204,7 +204,7 @@ Complex Operator::get_transition_amplitude(const StateVector& state_vector_bra,
                     sizeof(std::uint64_t) * 8 - Kokkos::countl_zero(bit_flip_mask) - 1;
                 std::uint64_t global_phase_90rot_count =
                     Kokkos::popcount(bit_flip_mask & phase_flip_mask);
-                Complex global_phase = PHASE_90ROT().val[global_phase_90rot_count % 4];
+                Complex global_phase = internal::PHASE_90ROT()[global_phase_90rot_count % 4];
                 std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
                 std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
                 Complex tmp1 = Kokkos::conj(state_vector_bra._raw[basis_1]) *

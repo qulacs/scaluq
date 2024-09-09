@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "../operator/apply_pauli.hpp"
 #include "../operator/pauli_operator.hpp"
 #include "../util/utility.hpp"
 #include "param_gate.hpp"
@@ -24,18 +25,24 @@ public:
     ParamGate get_inverse() const override {
         return std::make_shared<const ParamPauliRotationGateImpl>(_control_mask, _pauli, -_pcoef);
     }
-    ComplexMatrix get_matrix(double param) const override {
+    internal::ComplexMatrix get_matrix(double param) const override {
         double angle = _pcoef * param;
         Complex true_angle = angle * this->_pauli.coef();
-        ComplexMatrix mat = this->_pauli.get_matrix_ignoring_coef();
+        internal::ComplexMatrix mat = this->_pauli.get_matrix_ignoring_coef();
         StdComplex imag_unit(0, 1);
         mat = (StdComplex)Kokkos::cos(-true_angle / 2) *
-                  ComplexMatrix::Identity(mat.rows(), mat.cols()) +
+                  internal::ComplexMatrix::Identity(mat.rows(), mat.cols()) +
               imag_unit * (StdComplex)Kokkos::sin(-true_angle / 2) * mat;
         return mat;
     }
     void update_quantum_state(StateVector& state_vector, double param) const override {
-        pauli_rotation_gate(_control_mask, _pauli, _pcoef * param, state_vector);
+        auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
+        apply_pauli_rotation(_control_mask,
+                             bit_flip_mask,
+                             phase_flip_mask,
+                             _pauli.coef(),
+                             _pcoef * param,
+                             state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {

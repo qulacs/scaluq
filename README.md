@@ -81,7 +81,7 @@ int main() {
         circuit.add_gate(scaluq::gate::X(0));
         circuit.add_gate(scaluq::gate::CNot(0, 1));
         circuit.add_gate(scaluq::gate::Y(1));
-        circuit.add_gate(scaluq::gate::RX(1, M_PI / 2));
+        circuit.add_gate(scaluq::gate::RX(1, std::numbers::pi / 2));
         circuit.update_quantum_state(state);
 
         scaluq::Operator observable(n_qubits);

@@ -11,7 +11,9 @@ public:
     IGateImpl() : GateBase(0, 0) {}
 
     Gate get_inverse() const override { return shared_from_this(); }
-    ComplexMatrix get_matrix() const override { return ComplexMatrix::Identity(1, 1); }
+    internal::ComplexMatrix get_matrix() const override {
+        return internal::ComplexMatrix::Identity(1, 1);
+    }
 
     void update_quantum_state(StateVector& state_vector) const override {
         i_gate(_target_mask, _control_mask, state_vector);
@@ -38,8 +40,8 @@ public:
     Gate get_inverse() const override {
         return std::make_shared<const GlobalPhaseGateImpl>(_control_mask, -_phase);
     }
-    ComplexMatrix get_matrix() const override {
-        return ComplexMatrix::Identity(1, 1) * std::exp(std::complex<double>(0, _phase));
+    internal::ComplexMatrix get_matrix() const override {
+        return internal::ComplexMatrix::Identity(1, 1) * std::exp(std::complex<double>(0, _phase));
     }
 
     void update_quantum_state(StateVector& state_vector) const override {
@@ -72,8 +74,8 @@ public:
     using GateBase::GateBase;
 
     Gate get_inverse() const override { return shared_from_this(); }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << 0, 1, 1, 0;
         return mat;
     }
@@ -96,8 +98,8 @@ public:
     using GateBase::GateBase;
 
     Gate get_inverse() const override { return shared_from_this(); }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << 0, -1i, 1i, 0;
         return mat;
     }
@@ -120,8 +122,8 @@ public:
     using GateBase::GateBase;
 
     Gate get_inverse() const override { return shared_from_this(); }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, -1;
         return mat;
     }
@@ -144,8 +146,8 @@ public:
     using GateBase::GateBase;
 
     Gate get_inverse() const override { return shared_from_this(); }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << 1, 1, 1, -1;
         mat /= std::sqrt(2);
         return mat;
@@ -178,8 +180,8 @@ public:
     using GateBase::GateBase;
 
     Gate get_inverse() const override;
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, 1i;
         return mat;
     }
@@ -204,8 +206,8 @@ public:
     Gate get_inverse() const override {
         return std::make_shared<const SGateImpl>(_target_mask, _control_mask);
     }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, -1i;
         return mat;
     }
@@ -232,8 +234,8 @@ public:
     using GateBase::GateBase;
 
     Gate get_inverse() const override;
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, (1. + 1i) / std::sqrt(2);
         return mat;
     }
@@ -258,8 +260,8 @@ public:
     Gate get_inverse() const override {
         return std::make_shared<const TGateImpl>(_target_mask, _control_mask);
     }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, (1. - 1.i) / std::sqrt(2);
         return mat;
     }
@@ -286,8 +288,8 @@ public:
     using GateBase::GateBase;
 
     Gate get_inverse() const override;
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << 0.5 + 0.5i, 0.5 - 0.5i, 0.5 - 0.5i, 0.5 + 0.5i;
         return mat;
     }
@@ -312,8 +314,8 @@ public:
     Gate get_inverse() const override {
         return std::make_shared<const SqrtXGateImpl>(_target_mask, _control_mask);
     }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << 0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i, 0.5 - 0.5i;
         return mat;
     }
@@ -340,8 +342,8 @@ public:
     using GateBase::GateBase;
 
     Gate get_inverse() const override;
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << 0.5 + 0.5i, -0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i;
         return mat;
     }
@@ -366,8 +368,8 @@ public:
     Gate get_inverse() const override {
         return std::make_shared<const SqrtYGateImpl>(_target_mask, _control_mask);
     }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << 0.5 - 0.5i, 0.5 - 0.5i, -0.5 + 0.5i, 0.5 - 0.5i;
         return mat;
     }
@@ -396,8 +398,8 @@ public:
     Gate get_inverse() const override {
         throw std::runtime_error("P0::get_inverse: Projection gate doesn't have inverse gate");
     }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, 0;
         return mat;
     }
@@ -422,8 +424,8 @@ public:
     Gate get_inverse() const override {
         throw std::runtime_error("P1::get_inverse: Projection gate doesn't have inverse gate");
     }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << 0, 0, 0, 1;
         return mat;
     }
@@ -448,8 +450,8 @@ public:
     Gate get_inverse() const override {
         return std::make_shared<const RXGateImpl>(_target_mask, _control_mask, -_angle);
     }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << std::cos(_angle / 2), -1i * std::sin(_angle / 2), -1i * std::sin(_angle / 2),
             std::cos(_angle / 2);
         return mat;
@@ -476,8 +478,8 @@ public:
     Gate get_inverse() const override {
         return std::make_shared<const RYGateImpl>(_target_mask, _control_mask, -_angle);
     }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << std::cos(_angle / 2), -std::sin(_angle / 2), std::sin(_angle / 2),
             std::cos(_angle / 2);
         return mat;
@@ -504,8 +506,8 @@ public:
     Gate get_inverse() const override {
         return std::make_shared<const RZGateImpl>(_target_mask, _control_mask, -_angle);
     }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << std::exp(-0.5i * _angle), 0, 0, std::exp(0.5i * _angle);
         return mat;
     }
@@ -536,8 +538,8 @@ public:
     Gate get_inverse() const override {
         return std::make_shared<const U1GateImpl>(_target_mask, _control_mask, -_lambda);
     }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, std::exp(1i * _lambda);
         return mat;
     }
@@ -565,14 +567,17 @@ public:
     double lambda() const { return _lambda; }
 
     Gate get_inverse() const override {
-        return std::make_shared<const U2GateImpl>(
-            _target_mask, _control_mask, -_lambda - PI(), -_phi + PI());
+        return std::make_shared<const U2GateImpl>(_target_mask,
+                                                  _control_mask,
+                                                  -_lambda - Kokkos::numbers::pi,
+                                                  -_phi + Kokkos::numbers::pi);
     }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
-        mat << std::cos(PI() / 4.), -std::exp(1i * _lambda) * std::sin(PI() / 4.),
-            std::exp(1i * _phi) * std::sin(PI() / 4.),
-            std::exp(1i * _phi) * std::exp(1i * _lambda) * std::cos(PI() / 4.);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
+        mat << std::cos(Kokkos::numbers::pi / 4.),
+            -std::exp(1i * _lambda) * std::sin(Kokkos::numbers::pi / 4.),
+            std::exp(1i * _phi) * std::sin(Kokkos::numbers::pi / 4.),
+            std::exp(1i * _phi) * std::exp(1i * _lambda) * std::cos(Kokkos::numbers::pi / 4.);
         return mat;
     }
 
@@ -608,8 +613,8 @@ public:
         return std::make_shared<const U3GateImpl>(
             _target_mask, _control_mask, -_theta, -_lambda, -_phi);
     }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat(2, 2);
         mat << std::cos(_theta / 2.), -std::exp(1i * _lambda) * std::sin(_theta / 2.),
             std::exp(1i * _phi) * std::sin(_theta / 2.),
             std::exp(1i * _phi) * std::exp(1i * _lambda) * std::cos(_theta / 2.);
@@ -634,8 +639,8 @@ public:
     using GateBase::GateBase;
 
     Gate get_inverse() const override { return shared_from_this(); }
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix mat = ComplexMatrix::Identity(1 << 2, 1 << 2);
+    internal::ComplexMatrix get_matrix() const override {
+        internal::ComplexMatrix mat = internal::ComplexMatrix::Identity(1 << 2, 1 << 2);
         mat << 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1;
         return mat;
     }
