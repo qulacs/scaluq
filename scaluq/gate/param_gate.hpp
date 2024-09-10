@@ -62,7 +62,7 @@ public:
     }
     virtual ~ParamGateBase() = default;
 
-    [[nodiscard]] double param_coef() { return _pcoef; }
+    [[nodiscard]] double param_coef() const { return _pcoef; }
 
     [[nodiscard]] virtual std::vector<std::uint64_t> target_qubit_list() const {
         return mask_to_vector(_target_mask);
@@ -145,4 +145,81 @@ public:
 };
 }  // namespace internal
 
+#ifdef SCALUQ_USE_NANOBIND
+namespace internal {
+#define DEF_PARAM_GATE_BASE(PARAM_GATE_TYPE, DESCRIPTION)                                         \
+    nb::class_<PARAM_GATE_TYPE>(m, #PARAM_GATE_TYPE, DESCRIPTION)                                 \
+        .def("param_gate_type",                                                                   \
+             &PARAM_GATE_TYPE::param_gate_type,                                                   \
+             "Get parametric gate type as `ParamGateType` enum.")                                 \
+        .def(                                                                                     \
+            "param_coef",                                                                         \
+            [](const PARAM_GATE_TYPE& gate) { return gate->param_coef(); },                       \
+            "Get coefficient of parameter.")                                                      \
+        .def(                                                                                     \
+            "target_qubit_list",                                                                  \
+            [](const PARAM_GATE_TYPE& gate) { return gate->target_qubit_list(); },                \
+            "Get target qubits as `list[int]`. **Control qubits is not included.**")              \
+        .def(                                                                                     \
+            "control_qubit_list",                                                                 \
+            [](const PARAM_GATE_TYPE& gate) { return gate->control_qubit_list(); },               \
+            "Get control qubits as `list[int]`.")                                                 \
+        .def(                                                                                     \
+            "operand_qubit_list",                                                                 \
+            [](const PARAM_GATE_TYPE& gate) { return gate->operand_qubit_list(); },               \
+            "Get target and control qubits as `list[int]`.")                                      \
+        .def(                                                                                     \
+            "target_qubit_mask",                                                                  \
+            [](const PARAM_GATE_TYPE& gate) { return gate->target_qubit_mask(); },                \
+            "Get target qubits as mask. **Control qubits is not included.**")                     \
+        .def(                                                                                     \
+            "control_qubit_mask",                                                                 \
+            [](const PARAM_GATE_TYPE& gate) { return gate->control_qubit_mask(); },               \
+            "Get control qubits as mask.")                                                        \
+        .def(                                                                                     \
+            "operand_qubit_mask",                                                                 \
+            [](const PARAM_GATE_TYPE& gate) { return gate->operand_qubit_mask(); },               \
+            "Get target and control qubits as mask.")                                             \
+        .def(                                                                                     \
+            "get_inverse",                                                                        \
+            [](const PARAM_GATE_TYPE& param_gate) { return param_gate->get_inverse(); },          \
+            "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.")  \
+        .def(                                                                                     \
+            "update_quantum_state",                                                               \
+            [](const PARAM_GATE_TYPE& param_gate, StateVector& state_vector, double param) {      \
+                param_gate->update_quantum_state(state_vector, param);                            \
+            },                                                                                    \
+            "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is " \
+            "directly updated.")                                                                  \
+        .def(                                                                                     \
+            "get_matrix",                                                                         \
+            [](const PARAM_GATE_TYPE& gate, double param) { return gate->get_matrix(param); },    \
+            "Get matrix representation of the gate with holding the parameter.")
+
+nb::class_<ParamGate> param_gate_base_def;
+
+#define DEF_PARAM_GATE(PARAM_GATE_TYPE, DESCRIPTION)                                            \
+    ::scaluq::internal::param_gate_base_def.def(nb::init<PARAM_GATE_TYPE>(),                    \
+                                                "Upcast from `" #PARAM_GATE_TYPE "`.");         \
+    DEF_PARAM_GATE_BASE(                                                                        \
+        PARAM_GATE_TYPE,                                                                        \
+        DESCRIPTION                                                                             \
+        "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
+        .def(nb::init<ParamGate>())
+
+void bind_gate_param_gate_hpp(nb::module_& m) {
+    nb::enum_<ParamGateType>(m, "ParamGateType", "Enum of ParamGate Type.")
+        .value("ParamRX", ParamGateType::ParamRX)
+        .value("ParamRY", ParamGateType::ParamRY)
+        .value("ParamRZ", ParamGateType::ParamRZ)
+        .value("ParamPauliRotation", ParamGateType::ParamPauliRotation);
+
+    param_gate_base_def = DEF_PARAM_GATE_BASE(
+        ParamGate,
+        "General class of parametric quantum gate.\n\n.. note:: Downcast to requred to use "
+        "gate-specific functions.");
+}
+
+}  // namespace internal
+#endif
 }  // namespace scaluq

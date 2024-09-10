@@ -75,4 +75,22 @@ using ParamRXGate = internal::ParamGatePtr<internal::ParamRXGateImpl>;
 using ParamRYGate = internal::ParamGatePtr<internal::ParamRYGateImpl>;
 using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl>;
 
+#ifdef SCALUQ_USE_NANOBIND
+namespace internal {
+void bind_gate_param_gate_standard_hpp(nb::module_& m) {
+    DEF_PARAM_GATE(
+        ParamRXGate,
+        "Specific class of parametric X rotation gate, represented as "
+        "$e^{-i\\frac{\\mathrm{angle}}{2}X}$. `angle` is given as `param * param_coef`.");
+    DEF_PARAM_GATE(
+        ParamRYGate,
+        "Specific class of parametric Y rotation gate, represented as "
+        "$e^{-i\\frac{\\mathrm{angle}}{2}Y}$. `angle` is given as `param * param_coef`.");
+    DEF_PARAM_GATE(
+        ParamRZGate,
+        "Specific class of parametric Z rotation gate, represented as "
+        "$e^{-i\\frac{\\mathrm{angle}}{2}Z}$. `angle` is given as `param * param_coef`.");
+}
+}  // namespace internal
+#endif
 }  // namespace scaluq
