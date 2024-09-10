@@ -497,6 +497,9 @@ void run_random_gate_apply_general_dense(std::uint64_t n_qubits) {
             std::shuffle(index_list.begin(), index_list.end(), engine);
             targets[0] = index_list[0];
             targets[1] = index_list[1];
+            if (targets[0] > targets[1]) {
+                std::swap(targets[0], targets[1]);
+            }
             Umerge = internal::kronecker_product(U2, U1);
             ComplexMatrix mat(Umerge.rows(), Umerge.cols());
             test_state = get_expanded_eigen_matrix_with_identity(targets[1], U2, n_qubits) *
@@ -534,6 +537,7 @@ void run_random_gate_apply_general_dense(std::uint64_t n_qubits) {
             targets[0] = index_list[0];
             targets[1] = index_list[1];
             targets[2] = index_list[2];
+            std::sort(targets.begin(), targets.end());
             Umerge = internal::kronecker_product(U3, internal::kronecker_product(U2, U1));
             ComplexMatrix mat(Umerge.rows(), Umerge.cols());
 
