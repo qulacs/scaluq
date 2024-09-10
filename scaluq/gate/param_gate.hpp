@@ -16,24 +16,40 @@ class ParamRXGateImpl;
 class ParamRYGateImpl;
 class ParamRZGateImpl;
 class ParamPauliRotationGateImpl;
+class ParamProbablisticGateImpl;
 
 template <ParamGateImpl T>
 class ParamGatePtr;
 }  // namespace internal
 using ParamGate = internal::ParamGatePtr<internal::ParamGateBase>;
 
-enum class ParamGateType { Unknown, ParamRX, ParamRY, ParamRZ, ParamPauliRotation };
+enum class ParamGateType {
+    Unknown,
+    ParamRX,
+    ParamRY,
+    ParamRZ,
+    ParamPauliRotation,
+    ParamProbablistic,
+    Error
+};
 
 template <internal::ParamGateImpl T>
 constexpr ParamGateType get_param_gate_type() {
-    if constexpr (std::is_same_v<T, internal::ParamGateBase>) return ParamGateType::Unknown;
-    if constexpr (std::is_same_v<T, internal::ParamRXGateImpl>) return ParamGateType::ParamRX;
-    if constexpr (std::is_same_v<T, internal::ParamRYGateImpl>) return ParamGateType::ParamRY;
-    if constexpr (std::is_same_v<T, internal::ParamRZGateImpl>) return ParamGateType::ParamRZ;
-    if constexpr (std::is_same_v<T, internal::ParamPauliRotationGateImpl>)
+    using TWithoutConst = std::remove_cv_t<T>;
+    if constexpr (std::is_same_v<TWithoutConst, internal::ParamGateBase>)
+        return ParamGateType::Unknown;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRXGateImpl>)
+        return ParamGateType::ParamRX;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRYGateImpl>)
+        return ParamGateType::ParamRY;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRZGateImpl>)
+        return ParamGateType::ParamRZ;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamPauliRotationGateImpl>)
         return ParamGateType::ParamPauliRotation;
-    static_assert("unknown ParamGateImpl");
-    return ParamGateType::Unknown;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamProbablisticGateImpl>)
+        return ParamGateType::ParamProbablistic;
+    else
+        static_assert(internal::lazy_false_v<T>, "unknown GateImpl");
 }
 
 namespace internal {
@@ -50,14 +66,29 @@ protected:
         }
     }
 
+    std::string get_qubit_info_as_string(const std::string& indent) const {
+        std::ostringstream ss;
+        auto targets = target_qubit_list();
+        auto controls = control_qubit_list();
+        ss << indent << "  Parameter Coefficient: " << _pcoef << "\n";
+        ss << indent << "  Target Qubits: {";
+        for (std::uint32_t i = 0; i < targets.size(); ++i)
+            ss << targets[i] << (i == targets.size() - 1 ? "" : ", ");
+        ss << "}\n";
+        ss << indent << "  Control Qubits: {";
+        for (std::uint32_t i = 0; i < controls.size(); ++i)
+            ss << controls[i] << (i == controls.size() - 1 ? "" : ", ");
+        ss << "}";
+        return ss.str();
+    }
+
 public:
     ParamGateBase(std::uint64_t target_mask, std::uint64_t control_mask, double param_coef = 1.)
         : _target_mask(target_mask), _control_mask(control_mask), _pcoef(param_coef) {
         if (_target_mask & _control_mask) [[unlikely]] {
             throw std::runtime_error(
                 "Error: ParamGate::ParamGate(std::uint64_t target_mask, std::uint64_t "
-                "control_mask) : Target and "
-                "control qubits must not overlap.");
+                "control_mask) : Target and control qubits must not overlap.");
         }
     }
     virtual ~ParamGateBase() = default;
@@ -83,6 +114,8 @@ public:
     [[nodiscard]] virtual internal::ComplexMatrix get_matrix(double param) const = 0;
 
     virtual void update_quantum_state(StateVector& state_vector, double param) const = 0;
+
+    [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 };
 
 template <ParamGateImpl T>
@@ -99,7 +132,7 @@ public:
     ParamGatePtr() : _param_gate_ptr(nullptr), _param_gate_type(get_param_gate_type<T>()) {}
     ParamGatePtr(const ParamGatePtr& param_gate) = default;
     template <ParamGateImpl U>
-    ParamGatePtr(const std::shared_ptr<U>& param_gate_ptr) {
+    ParamGatePtr(const std::shared_ptr<const U>& param_gate_ptr) {
         if constexpr (std::is_same_v<T, U>) {
             _param_gate_type = get_param_gate_type<T>();
             _param_gate_ptr = param_gate_ptr;
@@ -141,6 +174,11 @@ public:
             throw std::runtime_error("ParamGatePtr::operator->(): ParamGate is Null");
         }
         return _param_gate_ptr.get();
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, ParamGatePtr gate) {
+        os << gate->to_string();
+        return os;
     }
 };
 }  // namespace internal

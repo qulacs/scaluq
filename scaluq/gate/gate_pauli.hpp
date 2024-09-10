@@ -26,6 +26,18 @@ public:
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
         apply_pauli(_control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        auto controls = control_qubit_list();
+        ss << indent << "Gate Type: Pauli\n";
+        ss << indent << "  Control Qubits: {";
+        for (std::uint32_t i = 0; i < controls.size(); ++i)
+            ss << controls[i] << (i == controls.size() - 1 ? "" : ", ");
+        ss << "}\n";
+        ss << indent << "  Pauli Operator: \"" << _pauli.get_pauli_string() << "\"";
+        return ss.str();
+    }
 };
 
 class PauliRotationGateImpl : public GateBase {
@@ -59,6 +71,19 @@ public:
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
         apply_pauli_rotation(
             _control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), _angle, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        auto controls = control_qubit_list();
+        ss << indent << "Gate Type: PauliRotation\n";
+        ss << indent << "  Angle: " << _angle << "\n";
+        ss << indent << "  Control Qubits: {";
+        for (std::uint32_t i = 0; i < controls.size(); ++i)
+            ss << controls[i] << (i == controls.size() - 1 ? "" : ", ");
+        ss << "}\n";
+        ss << indent << "  Pauli Operator: \"" << _pauli.get_pauli_string() << "\"";
+        return ss.str();
     }
 };
 }  // namespace internal

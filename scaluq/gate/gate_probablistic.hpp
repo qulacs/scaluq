@@ -85,6 +85,18 @@ public:
         if (i >= _gate_list.size()) i = _gate_list.size() - 1;
         _gate_list[i]->update_quantum_state(state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        const auto dist = distribution();
+        ss << indent << "Gate Type: Probablistic\n";
+        for (std::size_t i = 0; i < dist.size(); ++i) {
+            ss << indent << "  --------------------\n";
+            ss << indent << "  Probability: " << dist[i] << "\n";
+            ss << gate_list()[i]->to_string(indent + "  ") << (i == dist.size() - 1 ? "" : "\n");
+        }
+        return ss.str();
+    }
 };
 }  // namespace internal
 

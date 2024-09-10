@@ -367,7 +367,7 @@ std::string StateVectorBatched::to_string() const {
     for (std::uint64_t b = 0; b < _batch_size; ++b) {
         StateVector tmp(_n_qubits);
         os << "--------------------\n";
-        os << " * Batch_id    : " << b << '\n';
+        os << " * Batch id     : " << b << '\n';
         os << " * State vector : \n";
         for (std::uint64_t i = 0; i < _dim; ++i) {
             os <<
@@ -378,7 +378,7 @@ std::string StateVectorBatched::to_string() const {
                     }
                     return tmp;
                 }(i, _n_qubits)
-               << ": " << states_h(b, i) << std::endl;
+               << ": " << states_h(b, i) << (b < _batch_size - 1 || i < _dim - 1 ? "\n" : "");
         }
     }
     return os.str();

@@ -233,7 +233,7 @@ std::string StateVector::to_string() const {
                 }
                 return tmp;
             }(i, _n_qubits)
-           << ": " << amp[i] << std::endl;
+           << ": " << amp[i] << (i < _dim - 1 ? "\n" : "");
     }
     return os.str();
 }
