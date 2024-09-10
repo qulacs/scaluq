@@ -12,9 +12,9 @@ StateVector::StateVector(std::uint64_t n_qubits)
     set_zero_state();
 }
 
-void StateVector::set_amplitude_at(std::uint64_t index, const Complex& c) {
+void StateVector::set_amplitude_at(std::uint64_t index, const Complex& value) {
     Kokkos::View<Complex, Kokkos::HostSpace> host_view("single_value");
-    host_view() = c;
+    host_view() = value;
     Kokkos::deep_copy(Kokkos::subview(_raw, index), host_view());
 }
 
@@ -156,7 +156,7 @@ double StateVector::get_entropy() const {
         KOKKOS_CLASS_LAMBDA(std::uint64_t idx, double& lsum) {
             double prob = internal::squared_norm(_raw[idx]);
             prob = (prob > eps) ? prob : eps;
-            lsum += -prob * Kokkos::log(prob);
+            lsum += -prob * Kokkos::log2(prob);
         },
         ent);
     return ent;
