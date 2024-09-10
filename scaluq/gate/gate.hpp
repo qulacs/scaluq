@@ -255,4 +255,97 @@ public:
 };
 }  // namespace internal
 
+#ifdef SCALUQ_USE_NANOBIND
+namespace internal {
+#define DEF_GATE_BASE(GATE_TYPE, DESCRIPTION)                                            \
+    nb::class_<GATE_TYPE>(m, #GATE_TYPE, DESCRIPTION)                                    \
+        .def("gate_type", &GATE_TYPE::gate_type, "Get gate type as `GateType` enum.")    \
+        .def(                                                                            \
+            "target_qubit_list",                                                         \
+            [](const GATE_TYPE& gate) { return gate->target_qubit_list(); },             \
+            "Get target qubits as `list[int]`. **Control qubits is not included.**")     \
+        .def(                                                                            \
+            "control_qubit_list",                                                        \
+            [](const GATE_TYPE& gate) { return gate->control_qubit_list(); },            \
+            "Get control qubits as `list[int]`.")                                        \
+        .def(                                                                            \
+            "operand_qubit_list",                                                        \
+            [](const GATE_TYPE& gate) { return gate->operand_qubit_list(); },            \
+            "Get target and control qubits as `list[int]`.")                             \
+        .def(                                                                            \
+            "target_qubit_mask",                                                         \
+            [](const GATE_TYPE& gate) { return gate->target_qubit_mask(); },             \
+            "Get target qubits as mask. **Control qubits is not included.**")            \
+        .def(                                                                            \
+            "control_qubit_mask",                                                        \
+            [](const GATE_TYPE& gate) { return gate->control_qubit_mask(); },            \
+            "Get control qubits as mask.")                                               \
+        .def(                                                                            \
+            "operand_qubit_mask",                                                        \
+            [](const GATE_TYPE& gate) { return gate->operand_qubit_mask(); },            \
+            "Get target and control qubits as mask.")                                    \
+        .def(                                                                            \
+            "get_inverse",                                                               \
+            [](const GATE_TYPE& gate) { return gate->get_inverse(); },                   \
+            "Generate inverse gate as `Gate` type. If not exists, return None.")         \
+        .def(                                                                            \
+            "update_quantum_state",                                                      \
+            [](const GATE_TYPE& gate, StateVector& state_vector) {                       \
+                gate->update_quantum_state(state_vector);                                \
+            },                                                                           \
+            "Apply gate to `state_vector`. `state_vector` in args is directly updated.") \
+        .def(                                                                            \
+            "get_matrix",                                                                \
+            [](const GATE_TYPE& gate) { return gate->get_matrix(); },                    \
+            "Get matrix representation of the gate.")
+
+nb::class_<Gate> gate_base_def;
+
+#define DEF_GATE(GATE_TYPE, DESCRIPTION)                                                           \
+    ::scaluq::internal::gate_base_def.def(nb::init<GATE_TYPE>(), "Upcast from `" #GATE_TYPE "`."); \
+    DEF_GATE_BASE(                                                                                 \
+        GATE_TYPE,                                                                                 \
+        DESCRIPTION                                                                                \
+        "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).")    \
+        .def(nb::init<Gate>())
+
+void bind_gate_gate_hpp(nb::module_& m) {
+    nb::enum_<GateType>(m, "GateType", "Enum of Gate Type.")
+        .value("I", GateType::I)
+        .value("GlobalPhase", GateType::GlobalPhase)
+        .value("X", GateType::X)
+        .value("Y", GateType::Y)
+        .value("Z", GateType::Z)
+        .value("H", GateType::H)
+        .value("S", GateType::S)
+        .value("Sdag", GateType::Sdag)
+        .value("T", GateType::T)
+        .value("Tdag", GateType::Tdag)
+        .value("SqrtX", GateType::SqrtX)
+        .value("SqrtXdag", GateType::SqrtXdag)
+        .value("SqrtY", GateType::SqrtY)
+        .value("SqrtYdag", GateType::SqrtYdag)
+        .value("P0", GateType::P0)
+        .value("P1", GateType::P1)
+        .value("RX", GateType::RX)
+        .value("RY", GateType::RY)
+        .value("RZ", GateType::RZ)
+        .value("U1", GateType::U1)
+        .value("U2", GateType::U2)
+        .value("U3", GateType::U3)
+        .value("OneTargetMatrix", GateType::OneTargetMatrix)
+        .value("Swap", GateType::Swap)
+        .value("TwoTargetMatrix", GateType::TwoTargetMatrix)
+        .value("Pauli", GateType::Pauli)
+        .value("PauliRotation", GateType::PauliRotation);
+
+    gate_base_def =
+        DEF_GATE_BASE(Gate,
+                      "General class of QuantumGate.\n\n.. note:: Downcast to requred to use "
+                      "gate-specific functions.")
+            .def(nb::init<Gate>(), "Just copy shallowly.");
+}
+}  // namespace internal
+#endif
+
 }  // namespace scaluq

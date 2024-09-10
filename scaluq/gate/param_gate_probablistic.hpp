@@ -115,4 +115,24 @@ public:
 }  // namespace internal
 
 using ParamProbablisticGate = internal::ParamGatePtr<internal::ParamProbablisticGateImpl>;
+
+#ifdef SCALUQ_USE_NANOBIND
+namespace internal {
+void bind_gate_param_gate_probablistic_hpp(nb::module_& m) {
+    DEF_PARAM_GATE(
+        ParamProbablisticGate,
+        "Specific class of parametric probablistic gate. The gate to apply is picked from a "
+        "cirtain "
+        "distribution.")
+        .def(
+            "gate_list",
+            [](const ParamProbablisticGate& gate) { return gate->gate_list(); },
+            nb::rv_policy::reference)
+        .def(
+            "distribution",
+            [](const ParamProbablisticGate& gate) { return gate->distribution(); },
+            nb::rv_policy::reference);
+}
+}  // namespace internal
+#endif
 }  // namespace scaluq

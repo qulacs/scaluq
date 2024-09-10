@@ -101,4 +101,22 @@ public:
 }  // namespace internal
 
 using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl>;
+
+#ifdef SCALUQ_USE_NANOBIND
+namespace internal {
+void bind_gate_gate_probablistic(nb::module_& m) {
+    DEF_GATE(ProbablisticGate,
+             "Specific class of probablistic gate. The gate to apply is picked from a cirtain "
+             "distribution.")
+        .def(
+            "gate_list",
+            [](const ProbablisticGate& gate) { return gate->gate_list(); },
+            nb::rv_policy::reference)
+        .def(
+            "distribution",
+            [](const ProbablisticGate& gate) { return gate->distribution(); },
+            nb::rv_policy::reference);
+}
+}  // namespace internal
+#endif
 }  // namespace scaluq
