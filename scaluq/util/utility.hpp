@@ -7,7 +7,7 @@
 #include <ranges>
 #include <vector>
 
-#include "../operator/pauli_operator.hpp"
+// #include "../operator/pauli_operator.hpp"
 #include "../types.hpp"
 
 namespace scaluq {
@@ -138,21 +138,8 @@ inline std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>&
     return host_vector;
 }
 
-// Device Kokkos::View を Host std::vector に変換する関数
-template <typename T, typename Layout>
-inline std::vector<std::vector<T>> convert_2d_device_view_to_host_vector(
-    const Kokkos::View<T**, Layout>& view_d) {
-    auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), view_d);
-    std::vector<std::vector<T>> result(view_d.extent(0), std::vector<T>(view_d.extent(1), 0));
-    for (size_t i = 0; i < view_d.extent(0); ++i) {
-        for (size_t j = 0; j < view_d.extent(1); ++j) {
-            result[i][j] = view_h(i, j);
-        }
-    }
-    return result;
-}
-
-KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
+template <std::floating_point S>
+KOKKOS_INLINE_FUNCTION double squared_norm(const Kokkos::complex<S>& z) {
     return z.real() * z.real() + z.imag() * z.imag();
 }
 
