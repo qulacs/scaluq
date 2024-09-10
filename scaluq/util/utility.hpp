@@ -175,38 +175,6 @@ inline ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix& ma
     return eigen_matrix;
 }
 
-inline std::vector<std::uint64_t> create_matrix_mask_list(std::uint64_t target_mask) {
-    std::vector<std::uint64_t> bit_mask_list;
-    std::uint64_t x = 1;
-    for (std::uint64_t bit = 0; bit < 64; bit++) {
-        if (target_mask & x) bit_mask_list.emplace_back(x);
-        x <<= 1;
-    }
-    const std::uint64_t qubit_index_count = std::popcount(target_mask);
-    const std::uint64_t matrix_dim = 1ULL << qubit_index_count;
-    std::vector<std::uint64_t> mask_list(matrix_dim, 0);
-
-    for (std::uint64_t cursor = 0; cursor < matrix_dim; cursor++) {
-        for (std::uint64_t idx = 0; idx < bit_mask_list.size(); idx++) {
-            std::uint64_t bit_mask = bit_mask_list[idx];
-            if (cursor & bit_mask) mask_list[cursor] ^= bit_mask;
-        }
-    }
-    return mask_list;
-}
-
-// いらなさそう
-// inline std::vector<std::uint64_t> create_sorted_ui_list_value(std::uint64_t target_mask,
-// std::uint64_t control_mask) {
-//     std::vector<std::uint64_t> sorted_list;
-//     std::uint64_t qubit_count = std::bit_width(target_mask);
-//     for (std::uint64_t bit_cursor = 1; bit_cursor < std::bit_width(target_mask); bit_cursor++) {
-//         if (target_mask & (1 << bit_cursor)) sorted_list.emplace_back(bit_cursor);
-//         if (control_mask & (1 << bit_cursor)) sorted_list.emplace_back(bit_cursor);
-//     }
-//     return sorted_list;
-// }
-
 }  // namespace internal
 
 }  // namespace scaluq

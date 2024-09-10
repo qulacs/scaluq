@@ -60,39 +60,45 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
-void single_target_dense_matrix_gate_view(std::uint64_t target_mask,
-                                          const Matrix& matrix,
-                                          StateVector& state) {
-    const std::uint64_t loop_dim = state.dim() >> 1;
-    const std::uint64_t mask_low = target_mask - 1;
-    const std::uint64_t mask_high = ~mask_low;
-
+void multi_control_single_target_dense_matrix_gate(std::uint64_t target_mask,
+                                                   std::uint64_t control_mask,
+                                                   const Matrix& matrix,
+                                                   StateVector& state) {
+    std::uint64_t control_qubit_index_count = std::popcount(control_mask);
+    const std::uint64_t loop_dim = state.dim() >> (control_qubit_index_count + 1);
     Kokkos::parallel_for(
-        loop_dim, KOKKOS_LAMBDA(const std::uint64_t state_index) {
-            std::uint64_t basis_0 = (state_index & mask_low) + ((state_index & mask_high) << 1);
-            std::uint64_t basis_1 = basis_0 + target_mask;
-            Complex v0 = state._raw[basis_0];
-            Complex v1 = state._raw[basis_1];
-            state._raw[basis_0] = matrix(0, 0) * v0 + matrix(0, 1) * v1;
-            state._raw[basis_1] = matrix(1, 0) * v0 + matrix(1, 1) * v1;
+        loop_dim, KOKKOS_LAMBDA(std::uint64_t it) {
+            std::uint64_t basis_0 =
+                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
+            std::uint64_t basis_1 = basis_0 | target_mask;
+            Complex val0 = state._raw[basis_0];
+            Complex val1 = state._raw[basis_1];
+            Complex res0 = matrix(0, 0) * val0 + matrix(0, 1) * val1;
+            Complex res1 = matrix(1, 0) * val0 + matrix(1, 1) * val1;
+            state._raw[basis_0] = res0;
+            state._raw[basis_1] = res1;
         });
     Kokkos::fence();
 }
 
-void double_target_dense_matrix_gate(std::uint64_t target_mask,
-                                     const Matrix& matrix,
-                                     StateVector& state) {
-    std::uint64_t lower_target_mask = -target_mask & target_mask;
-    std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;
-
-    const std::uint64_t loop_dim = state.dim() >> 2;
+void multi_control_double_target_dense_matrix_gate(std::uint64_t target_mask,
+                                                   std::uint64_t control_mask,
+                                                   const Matrix& matrix,
+                                                   StateVector& state) {
+    const std::uint64_t insert_index_count = 2 + std::popcount(control_mask);
+    const std::uint64_t loop_dim = state.dim() >> insert_index_count;
+    const std::uint64_t target_bit_index_right = std::countr_zero(target_mask);
+    const std::uint64_t target_bit_index_left = 64 - std::countl_zero(target_mask | 1 << 63) - 1;
+    const std::uint64_t target_bit_right = 1ULL << target_bit_index_right;
+    const std::uint64_t target_bit_left = 1ULL << target_bit_index_left;
 
     Kokkos::parallel_for(
         loop_dim, KOKKOS_LAMBDA(const std::uint64_t it) {
-            std::uint64_t basis_0 = insert_zero_at_mask_positions(it, target_mask);
-            std::uint64_t basis_1 = basis_0 | lower_target_mask;
-            std::uint64_t basis_2 = basis_0 | upper_target_mask;
-            std::uint64_t basis_3 = basis_1 | target_mask;
+            std::uint64_t basis_0 =
+                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
+            std::uint64_t basis_1 = basis_0 | target_bit_right;
+            std::uint64_t basis_2 = basis_0 | target_bit_left;
+            std::uint64_t basis_3 = basis_0 | target_mask;
             Complex val0 = state._raw[basis_0];
             Complex val1 = state._raw[basis_1];
             Complex val2 = state._raw[basis_2];
@@ -113,203 +119,63 @@ void double_target_dense_matrix_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
-void single_control_single_target_dense_matrix_gate(std::uint64_t target_mask,
-                                                    std::uint64_t control_mask,
-                                                    const Matrix& matrix,
-                                                    StateVector& state) {
-    Kokkos::parallel_for(
-        state.dim() >> 2, KOKKOS_LAMBDA(std::uint64_t it) {
-            std::uint64_t basis_0 =
-                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
-            std::uint64_t basis_1 = basis_0 | target_mask;
-            Complex val0 = state._raw[basis_0];
-            Complex val1 = state._raw[basis_1];
-            Complex res0 = matrix(0, 0) * val0 + matrix(0, 1) * val1;
-            Complex res1 = matrix(1, 0) * val0 + matrix(1, 1) * val1;
-            state._raw[basis_0] = res0;
-            state._raw[basis_1] = res1;
-        });
-    Kokkos::fence();
-}
-
-void single_control_multi_target_dense_matrix_gate(std::uint64_t target_mask,
-                                                   std::uint64_t control_mask,
-                                                   const Matrix& matrix,
-                                                   StateVector& state) {
-    const std::uint64_t target_qubit_index_count = std::popcount(target_mask);
-    const std::uint64_t matrix_dim = 1ULL << target_qubit_index_count;
-    const std::uint64_t insert_index_count = target_qubit_index_count + 1;
-    const std::uint64_t loop_dim = state.dim() >> insert_index_count;
-
-    std::vector<std::uint64_t> matrix_mask_list = create_matrix_mask_list(target_mask);
-    Kokkos::View<std::uint64_t*> matrix_mask_view =
-        convert_host_vector_to_device_view(matrix_mask_list);
-
-    Kokkos::parallel_for(
-        Kokkos::TeamPolicy<>(loop_dim, Kokkos::AUTO()),
-        KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team) {
-            Kokkos::View<Complex*> buffer = Kokkos::View<Complex*>("buffer", matrix_dim);
-            std::uint64_t basis_0 = team.league_rank();
-            basis_0 =
-                insert_zero_at_mask_positions(basis_0, control_mask | target_mask) | control_mask;
-            Kokkos::parallel_for(
-                Kokkos::TeamThreadRange(team, matrix_dim), [&](const std::uint64_t y) {
-                    Complex sum = 0;
-                    Kokkos::parallel_reduce(
-                        Kokkos::ThreadVectorRange(team, matrix_dim),
-                        [&](const std::uint64_t x, Complex& inner_sum) {
-                            inner_sum += matrix(y, x) * state._raw[basis_0 ^ matrix_mask_view(x)];
-                        },
-                        sum);
-                    buffer[y] = sum;
-                });
-            team.team_barrier();
-
-            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim),
-                                 [=](const std::uint64_t y) {
-                                     state._raw[basis_0 ^ matrix_mask_view(y)] = buffer[y];
-                                 });
-        });
-    Kokkos::fence();
-}
-
-void multi_control_single_target_dense_matrix_gate(std::uint64_t target_mask,
-                                                   std::uint64_t control_mask,
-                                                   const Matrix& matrix,
-                                                   StateVector& state) {
-    std::uint64_t control_qubit_index_count = std::popcount(control_mask);
-    if (control_qubit_index_count == 1) {
-        single_control_single_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
-        return;
-    }
-
-    const std::uint64_t loop_dim = state.dim() >> (control_qubit_index_count + 1);
-    Kokkos::parallel_for(
-        loop_dim, KOKKOS_LAMBDA(std::uint64_t it) {
-            std::uint64_t basis_0 =
-                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
-            std::uint64_t basis_1 = basis_0 | target_mask;
-            Complex val0 = state._raw[basis_0];
-            Complex val1 = state._raw[basis_1];
-            Complex res0 = matrix(0, 0) * val0 + matrix(0, 1) * val1;
-            Complex res1 = matrix(1, 0) * val0 + matrix(1, 1) * val1;
-            state._raw[basis_0] = res0;
-            state._raw[basis_1] = res1;
-        });
-    Kokkos::fence();
-}
-
 void multi_control_multi_target_dense_matrix_gate(std::uint64_t target_mask,
                                                   std::uint64_t control_mask,
                                                   const Matrix& matrix,
                                                   StateVector& state) {
-    const std::uint64_t control_qubit_index_count = std::popcount(control_mask);
     const std::uint64_t target_qubit_index_count = std::popcount(target_mask);
     const std::uint64_t matrix_dim = 1ULL << target_qubit_index_count;
-    const std::uint64_t insert_index_count = target_qubit_index_count + control_qubit_index_count;
-    const std::uint64_t loop_dim = state.dim() >> insert_index_count;
-    std::vector<std::uint64_t> matrix_mask_list = create_matrix_mask_list(target_mask);
-    Kokkos::View<std::uint64_t*> matrix_mask_view =
-        convert_host_vector_to_device_view(matrix_mask_list);
 
+    Kokkos::View<Complex*> update(Kokkos::ViewAllocateWithoutInitializing("update"), state.dim());
     Kokkos::parallel_for(
-        Kokkos::TeamPolicy<>(loop_dim, Kokkos::AUTO()),
+        state.dim(), KOKKOS_LAMBDA(std::uint64_t i) {
+            if ((i | control_mask) == i) {
+                update(i) = 0;
+            } else {
+                update(i) = state._raw(i);
+            }
+        });
+    Kokkos::fence();
+
+    std::uint64_t outer_mask =
+        ~target_mask & ((1ULL << state.n_qubits()) - 1);  // target qubit 以外の mask
+    Kokkos::parallel_for(
+        Kokkos::TeamPolicy<>(state.dim() >> std::popcount(target_mask | control_mask),
+                             Kokkos::AUTO()),
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team) {
-            Kokkos::View<Complex*> buffer = Kokkos::View<Complex*>("buffer", matrix_dim);
-            std::uint64_t basis_0 = team.league_rank();
-            basis_0 =
-                insert_zero_at_mask_positions(basis_0, target_mask | control_mask) | control_mask;
-            basis_0 ^= control_mask;
-            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim), [&](std::uint64_t y) {
+            std::uint64_t basis = team.league_rank();
+            basis = insert_zero_at_mask_positions(basis, target_mask | control_mask) | control_mask;
+            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim), [&](std::uint64_t r) {
+                uint32_t dst_index = internal::insert_zero_at_mask_positions(r, outer_mask) | basis;
                 Complex sum = 0;
                 Kokkos::parallel_reduce(
                     Kokkos::ThreadVectorRange(team, matrix_dim),
-                    [&](std::uint64_t x, Complex& inner_sum) {
-                        inner_sum += matrix(y, x) * state._raw[basis_0 ^ matrix_mask_view(x)];
+                    [&](std::uint64_t c, Complex& inner_sum) {
+                        uint32_t src_index =
+                            internal::insert_zero_at_mask_positions(c, outer_mask) | basis;
+                        inner_sum += matrix(r, c) * state._raw(src_index);
                     },
                     sum);
-                buffer[y] = sum;
+                update(dst_index) = sum;
             });
             team.team_barrier();
-
-            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim),
-                                 [=](const std::uint64_t y) {
-                                     state._raw[basis_0 ^ matrix_mask_view(y)] = buffer[y];
-                                 });
         });
     Kokkos::fence();
-}
 
-void multi_target_dense_matrix_gate_parallel(std::uint64_t target_mask,
-                                             const Matrix& matrix,
-                                             StateVector& state) {
-    const std::uint64_t target_qubit_index_count = std::popcount(target_mask);
-    const std::uint64_t matrix_dim = 1ULL << target_qubit_index_count;
-    const std::uint64_t loop_dim = state.dim() >> target_qubit_index_count;
-    std::vector<std::uint64_t> matrix_mask_list = create_matrix_mask_list(target_mask);
-    Kokkos::View<std::uint64_t*> matrix_mask_view =
-        convert_host_vector_to_device_view(matrix_mask_list);
-
-    Kokkos::parallel_for(
-        Kokkos::TeamPolicy<>(loop_dim, Kokkos::AUTO()),
-        KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team) {
-            Kokkos::View<Complex*> buffer = Kokkos::View<Complex*>("buffer", matrix_dim);
-            std::uint64_t basis_0 = team.league_rank();
-            basis_0 = insert_zero_at_mask_positions(basis_0, target_mask);
-            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim), [&](std::uint64_t y) {
-                Complex sum = 0;
-                Kokkos::parallel_reduce(
-                    Kokkos::ThreadVectorRange(team, matrix_dim),
-                    [&](std::uint64_t x, Complex& inner_sum) {
-                        inner_sum += matrix(y, x) * state._raw[basis_0 ^ matrix_mask_view(x)];
-                    },
-                    sum);
-                buffer[y] = sum;
-            });
-            team.team_barrier();
-
-            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim),
-                                 [=](const std::uint64_t y) {
-                                     state._raw[basis_0 ^ matrix_mask_view(y)] = buffer[y];
-                                 });
-        });
-    Kokkos::fence();
-}
-
-void multi_target_dense_matrix_gate(std::uint64_t target_mask,
-                                    const Matrix& matrix,
-                                    StateVector& state) {
-    const std::uint64_t target_qubit_index_count = std::popcount(target_mask);
-    if (target_qubit_index_count == 1) {
-        single_target_dense_matrix_gate_view(target_mask, matrix, state);
-    } else if (target_qubit_index_count == 2) {
-        double_target_dense_matrix_gate(target_mask, matrix, state);
-    } else {
-        multi_target_dense_matrix_gate_parallel(target_mask, matrix, state);
-    }
+    state._raw = update;
 }
 
 void dense_matrix_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
                        const Matrix& matrix,
                        StateVector& state) {
-    if (std::popcount(target_mask) == 1) {
-        if (std::popcount(control_mask) == 0) {
-            single_target_dense_matrix_gate_view(target_mask, matrix, state);
-        } else if (std::popcount(control_mask) == 1) {
-            single_control_single_target_dense_matrix_gate(
-                target_mask, control_mask, matrix, state);
-        } else {
-            multi_control_single_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
-        }
+    const std::uint64_t target_qubit_index_count = std::popcount(target_mask);
+    if (target_qubit_index_count == 1) {
+        multi_control_single_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
+    } else if (target_qubit_index_count == 2) {
+        multi_control_double_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
     } else {
-        if (std::popcount(control_mask) == 0) {
-            multi_target_dense_matrix_gate(target_mask, matrix, state);
-        } else if (std::popcount(control_mask) == 1) {
-            single_control_multi_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
-        } else {
-            multi_control_multi_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
-        }
+        multi_control_multi_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
     }
 }
 }  // namespace internal
