@@ -297,7 +297,15 @@ namespace internal {
         .def(                                                                            \
             "get_matrix",                                                                \
             [](const GATE_TYPE& gate) { return gate->get_matrix(); },                    \
-            "Get matrix representation of the gate.")
+            "Get matrix representation of the gate.")                                    \
+        .def(                                                                            \
+            "to_string",                                                                 \
+            [](const GATE_TYPE& gate) { return gate->to_string(""); },                   \
+            "Get string representation of the gate.")                                    \
+        .def(                                                                            \
+            "__str__",                                                                   \
+            [](const GATE_TYPE& gate) { return gate->to_string(""); },                   \
+            "Get string representation of the gate.")
 
 nb::class_<Gate> gate_base_def;
 
