@@ -76,50 +76,72 @@ enum class GateType {
     TwoTargetMatrix,
     Pauli,
     PauliRotation,
-    Probablistic,
-    Error
+    Probablistic
 };
 
 template <internal::GateImpl T>
 constexpr GateType get_gate_type() {
     using TWithoutConst = std::remove_cv_t<T>;
-    if constexpr (std::is_same_v<TWithoutConst, internal::GateBase>) return GateType::Unknown;
-    if constexpr (std::is_same_v<TWithoutConst, internal::IGateImpl>) return GateType::I;
-    if constexpr (std::is_same_v<TWithoutConst, internal::GlobalPhaseGateImpl>)
+    if constexpr (std::is_same_v<TWithoutConst, internal::GateBase>)
+        return GateType::Unknown;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::IGateImpl>)
+        return GateType::I;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::GlobalPhaseGateImpl>)
         return GateType::GlobalPhase;
-    if constexpr (std::is_same_v<TWithoutConst, internal::XGateImpl>) return GateType::X;
-    if constexpr (std::is_same_v<TWithoutConst, internal::YGateImpl>) return GateType::Y;
-    if constexpr (std::is_same_v<TWithoutConst, internal::ZGateImpl>) return GateType::Z;
-    if constexpr (std::is_same_v<TWithoutConst, internal::HGateImpl>) return GateType::H;
-    if constexpr (std::is_same_v<TWithoutConst, internal::SGateImpl>) return GateType::S;
-    if constexpr (std::is_same_v<TWithoutConst, internal::SdagGateImpl>) return GateType::Sdag;
-    if constexpr (std::is_same_v<TWithoutConst, internal::TGateImpl>) return GateType::T;
-    if constexpr (std::is_same_v<TWithoutConst, internal::TdagGateImpl>) return GateType::Tdag;
-    if constexpr (std::is_same_v<TWithoutConst, internal::SqrtXGateImpl>) return GateType::SqrtX;
-    if constexpr (std::is_same_v<TWithoutConst, internal::SqrtXdagGateImpl>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::XGateImpl>)
+        return GateType::X;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::YGateImpl>)
+        return GateType::Y;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ZGateImpl>)
+        return GateType::Z;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::HGateImpl>)
+        return GateType::H;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SGateImpl>)
+        return GateType::S;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SdagGateImpl>)
+        return GateType::Sdag;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::TGateImpl>)
+        return GateType::T;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::TdagGateImpl>)
+        return GateType::Tdag;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SqrtXGateImpl>)
+        return GateType::SqrtX;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SqrtXdagGateImpl>)
         return GateType::SqrtXdag;
-    if constexpr (std::is_same_v<TWithoutConst, internal::SqrtYGateImpl>) return GateType::SqrtY;
-    if constexpr (std::is_same_v<TWithoutConst, internal::SqrtYdagGateImpl>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SqrtYGateImpl>)
+        return GateType::SqrtY;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SqrtYdagGateImpl>)
         return GateType::SqrtYdag;
-    if constexpr (std::is_same_v<TWithoutConst, internal::P0GateImpl>) return GateType::P0;
-    if constexpr (std::is_same_v<TWithoutConst, internal::P1GateImpl>) return GateType::P1;
-    if constexpr (std::is_same_v<TWithoutConst, internal::RXGateImpl>) return GateType::RX;
-    if constexpr (std::is_same_v<TWithoutConst, internal::RYGateImpl>) return GateType::RY;
-    if constexpr (std::is_same_v<TWithoutConst, internal::RZGateImpl>) return GateType::RZ;
-    if constexpr (std::is_same_v<TWithoutConst, internal::U1GateImpl>) return GateType::U1;
-    if constexpr (std::is_same_v<TWithoutConst, internal::U2GateImpl>) return GateType::U2;
-    if constexpr (std::is_same_v<TWithoutConst, internal::U3GateImpl>) return GateType::U3;
-    if constexpr (std::is_same_v<TWithoutConst, internal::OneTargetMatrixGateImpl>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::P0GateImpl>)
+        return GateType::P0;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::P1GateImpl>)
+        return GateType::P1;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::RXGateImpl>)
+        return GateType::RX;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::RYGateImpl>)
+        return GateType::RY;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::RZGateImpl>)
+        return GateType::RZ;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::U1GateImpl>)
+        return GateType::U1;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::U2GateImpl>)
+        return GateType::U2;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::U3GateImpl>)
+        return GateType::U3;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::OneTargetMatrixGateImpl>)
         return GateType::OneTargetMatrix;
-    if constexpr (std::is_same_v<TWithoutConst, internal::SwapGateImpl>) return GateType::Swap;
-    if constexpr (std::is_same_v<TWithoutConst, internal::TwoTargetMatrixGateImpl>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SwapGateImpl>)
+        return GateType::Swap;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::TwoTargetMatrixGateImpl>)
         return GateType::TwoTargetMatrix;
-    if constexpr (std::is_same_v<TWithoutConst, internal::PauliGateImpl>) return GateType::Pauli;
-    if constexpr (std::is_same_v<TWithoutConst, internal::PauliRotationGateImpl>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::PauliGateImpl>)
+        return GateType::Pauli;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::PauliRotationGateImpl>)
         return GateType::PauliRotation;
-    if constexpr (std::is_same_v<TWithoutConst, internal::ProbablisticGateImpl>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ProbablisticGateImpl>)
         return GateType::Probablistic;
-    return GateType::Error;
+    else
+        static_assert(internal::lazy_false_v<T>, "unknown GateImpl");
 }
 
 namespace internal {
@@ -200,21 +222,15 @@ public:
     template <GateImpl U>
     GatePtr(const std::shared_ptr<const U>& gate_ptr) {
         if constexpr (std::is_same_v<T, U>) {
-            if ((_gate_type = get_gate_type<T>()) == GateType::Error) {
-                throw std::runtime_error("Unknown GateType");
-            }
+            _gate_type = get_gate_type<T>();
             _gate_ptr = gate_ptr;
         } else if constexpr (std::is_same_v<T, internal::GateBase>) {
             // upcast
-            if ((_gate_type = get_gate_type<U>()) == GateType::Error) {
-                throw std::runtime_error("Unknown GateType");
-            }
+            _gate_type = get_gate_type<U>();
             _gate_ptr = std::static_pointer_cast<const T>(gate_ptr);
         } else {
             // downcast
-            if ((_gate_type = get_gate_type<T>()) == GateType::Error) {
-                throw std::runtime_error("Unknown GateType");
-            }
+            _gate_type = get_gate_type<T>();
             if (!(_gate_ptr = std::dynamic_pointer_cast<const T>(gate_ptr))) {
                 throw std::runtime_error("invalid gate cast");
             }

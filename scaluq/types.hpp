@@ -22,7 +22,8 @@ using Complex = Kokkos::complex<double>;
 using namespace std::complex_literals;
 
 namespace internal {
-
+template <typename DummyType>
+constexpr bool lazy_false_v = false;  // Used for lazy evaluation in static_assert.
 using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex>;
 

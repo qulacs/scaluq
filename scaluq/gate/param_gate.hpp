@@ -38,17 +38,18 @@ constexpr ParamGateType get_param_gate_type() {
     using TWithoutConst = std::remove_cv_t<T>;
     if constexpr (std::is_same_v<TWithoutConst, internal::ParamGateBase>)
         return ParamGateType::Unknown;
-    if constexpr (std::is_same_v<TWithoutConst, internal::ParamRXGateImpl>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRXGateImpl>)
         return ParamGateType::ParamRX;
-    if constexpr (std::is_same_v<TWithoutConst, internal::ParamRYGateImpl>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRYGateImpl>)
         return ParamGateType::ParamRY;
-    if constexpr (std::is_same_v<TWithoutConst, internal::ParamRZGateImpl>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRZGateImpl>)
         return ParamGateType::ParamRZ;
-    if constexpr (std::is_same_v<TWithoutConst, internal::ParamPauliRotationGateImpl>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamPauliRotationGateImpl>)
         return ParamGateType::ParamPauliRotation;
-    if constexpr (std::is_same_v<TWithoutConst, internal::ParamProbablisticGateImpl>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamProbablisticGateImpl>)
         return ParamGateType::ParamProbablistic;
-    return ParamGateType::Error;
+    else
+        static_assert(internal::lazy_false_v<T>, "unknown GateImpl");
 }
 
 namespace internal {
@@ -133,21 +134,15 @@ public:
     template <ParamGateImpl U>
     ParamGatePtr(const std::shared_ptr<const U>& param_gate_ptr) {
         if constexpr (std::is_same_v<T, U>) {
-            if ((_param_gate_type = get_param_gate_type<T>()) == ParamGateType::Error) {
-                throw std::runtime_error("Unknown GateType");
-            }
+            _param_gate_type = get_param_gate_type<T>();
             _param_gate_ptr = param_gate_ptr;
         } else if constexpr (std::is_same_v<T, internal::ParamGateBase>) {
             // upcast
-            if ((_param_gate_type = get_param_gate_type<U>()) == ParamGateType::Error) {
-                throw std::runtime_error("Unknown GateType");
-            }
+            _param_gate_type = get_param_gate_type<U>();
             _param_gate_ptr = std::static_pointer_cast<const T>(param_gate_ptr);
         } else {
             // downcast
-            if ((_param_gate_type = get_param_gate_type<T>()) == ParamGateType::Error) {
-                throw std::runtime_error("Unknown GateType");
-            }
+            _param_gate_type = get_param_gate_type<T>();
             if (!(_param_gate_ptr = std::dynamic_pointer_cast<const T>(param_gate_ptr))) {
                 throw std::runtime_error("invalid gate cast");
             }
