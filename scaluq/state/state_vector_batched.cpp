@@ -7,7 +7,7 @@ StateVectorBatched::StateVectorBatched(std::uint64_t batch_size, std::uint64_t n
     : _batch_size(batch_size),
       _n_qubits(n_qubits),
       _dim(1ULL << _n_qubits),
-      _raw(StateVectorBatchedView(
+      _raw(Kokkos::View<Complex**, Kokkos::LayoutRight>(
           Kokkos::ViewAllocateWithoutInitializing("states"), _batch_size, _dim)) {
     set_zero_state();
 }
@@ -38,7 +38,7 @@ void StateVectorBatched::set_state_vector(std::uint64_t batch_id, const StateVec
     Kokkos::fence();
 }
 
-StateVector StateVectorBatched::get_state_vector(std::uint64_t batch_id) const {
+StateVector StateVectorBatched::get_state_vector_at(std::uint64_t batch_id) const {
     StateVector ret(_n_qubits);
     Kokkos::parallel_for(
         _dim, KOKKOS_CLASS_LAMBDA(std::uint64_t i) { ret._raw(i) = _raw(batch_id, i); });
@@ -133,7 +133,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched::sampling(std::uint64
         Kokkos::DefaultExecutionSpace::array_layout>(result);
 }
 
-std::vector<std::vector<Complex>> StateVectorBatched::amplitudes() const {
+std::vector<std::vector<Complex>> StateVectorBatched::get_amplitudes() const {
     return internal::convert_2d_device_view_to_host_vector<Complex>(_raw);
 }
 
@@ -367,7 +367,7 @@ std::string StateVectorBatched::to_string() const {
     for (std::uint64_t b = 0; b < _batch_size; ++b) {
         StateVector tmp(_n_qubits);
         os << "--------------------\n";
-        os << " * Batch_id    : " << b << '\n';
+        os << " * Batch id     : " << b << '\n';
         os << " * State vector : \n";
         for (std::uint64_t i = 0; i < _dim; ++i) {
             os <<
@@ -378,7 +378,7 @@ std::string StateVectorBatched::to_string() const {
                     }
                     return tmp;
                 }(i, _n_qubits)
-               << ": " << states_h(b, i) << std::endl;
+               << ": " << states_h(b, i) << (b < _batch_size - 1 || i < _dim - 1 ? "\n" : "");
         }
     }
     return os.str();

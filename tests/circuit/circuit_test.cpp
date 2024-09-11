@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <Eigen/Core>
+#include <numbers>
 
 #include "../util/util.hpp"
 #include "gate/gate_factory.hpp"
@@ -22,7 +23,7 @@ TEST(CircuitTest, CircuitBasic) {
     StateVector state = StateVector::Haar_random_state(n);
     Eigen::VectorXcd state_eigen(dim);
 
-    auto state_cp = state.amplitudes();
+    auto state_cp = state.get_amplitudes();
     for (std::uint64_t i = 0; i < dim; ++i) state_eigen[i] = state_cp[i];
 
     Circuit circuit(n);
@@ -124,11 +125,11 @@ TEST(CircuitTest, CircuitBasic) {
     state_eigen = get_eigen_matrix_full_qubit_Swap(target, target_sub, n) * state_eigen;
 
     target = random.int32() % n;
-    circuit.add_gate(gate::U1(target, M_PI));
+    circuit.add_gate(gate::U1(target, std::numbers::pi));
     state_eigen = get_expanded_eigen_matrix_with_identity(target, make_Z(), n) * state_eigen;
 
     target = random.int32() % n;
-    circuit.add_gate(gate::U2(target, 0, M_PI));
+    circuit.add_gate(gate::U2(target, 0, std::numbers::pi));
     state_eigen = get_expanded_eigen_matrix_with_identity(target, make_H(), n) * state_eigen;
 
     target = random.int32() % n;
@@ -146,7 +147,7 @@ TEST(CircuitTest, CircuitBasic) {
     PauliOperator pauli = PauliOperator("I 0 X 1 Y 2 Z 3");
     circuit.add_gate(multi_Pauli(pauli));
 
-    ComplexMatrix mat_x(2, 2);
+    internal::ComplexMatrix mat_x(2, 2);
     target = random.int32() % n;
     mat_x << 0, 1, 1, 0;
     circuit.add_gate(dense_matrix(target, mat_x));
@@ -158,7 +159,7 @@ TEST(CircuitTest, CircuitBasic) {
 
     circuit.update_quantum_state(state);
 
-    state_cp = state.amplitudes();
+    state_cp = state.get_amplitudes();
     for (std::uint64_t i = 0; i < dim; ++i)
         ASSERT_NEAR(std::abs(state_eigen[i] - (CComplex)state_cp[i]), 0, eps);
 }
@@ -170,7 +171,7 @@ TEST(CircuitTest, CircuitRev) {
     Random random;
 
     StateVector state = StateVector::Haar_random_state(n);
-    auto state_cp = state.amplitudes();
+    auto state_cp = state.get_amplitudes();
     Eigen::VectorXcd state_eigen(dim);
     for (std::uint64_t i = 0; i < dim; ++i) state_eigen[i] = state_cp[i];
 
@@ -243,7 +244,7 @@ TEST(CircuitTest, CircuitRev) {
 
     /*
     Observable observable(n);
-    angle = 2 * PI * random.uniform();
+    angle = 2 * std::numbers::pi * random.uniform();
 
     observable.add_operator(1.0, "Z 0");
     observable.add_operator(2.0, "Z 0 Z 1");
@@ -256,7 +257,7 @@ TEST(CircuitTest, CircuitRev) {
     auto revcircuit = circuit.get_inverse();
 
     revcircuit.update_quantum_state(state);
-    state_cp = state.amplitudes();
+    state_cp = state.get_amplitudes();
     for (std::uint64_t i = 0; i < dim; ++i)
         ASSERT_NEAR(abs(state_eigen[i] - (CComplex)state_cp[i]), 0, eps);
 }

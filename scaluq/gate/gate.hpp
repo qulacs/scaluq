@@ -36,13 +36,11 @@ class U1GateImpl;
 class U2GateImpl;
 class U3GateImpl;
 class OneTargetMatrixGateImpl;
-class CXGateImpl;
-class CZGateImpl;
-class CCXGateImpl;
 class SwapGateImpl;
 class TwoTargetMatrixGateImpl;
 class PauliGateImpl;
 class PauliRotationGateImpl;
+class ProbablisticGateImpl;
 class SparseMatrixGateImpl;
 class DenseMatrixGateImpl;
 
@@ -76,57 +74,81 @@ enum class GateType {
     U2,
     U3,
     OneTargetMatrix,
-    CX,
-    CZ,
-    CCX,
     Swap,
     TwoTargetMatrix,
     Pauli,
     PauliRotation,
     SparseMatrix,
-    DenseMatrix
+    DenseMatrix,
+    Probablistic
 };
 
 template <internal::GateImpl T>
 constexpr GateType get_gate_type() {
-    if constexpr (std::is_same_v<T, internal::GateBase>) return GateType::Unknown;
-    if constexpr (std::is_same_v<T, internal::IGateImpl>) return GateType::I;
-    if constexpr (std::is_same_v<T, internal::GlobalPhaseGateImpl>) return GateType::GlobalPhase;
-    if constexpr (std::is_same_v<T, internal::XGateImpl>) return GateType::X;
-    if constexpr (std::is_same_v<T, internal::YGateImpl>) return GateType::Y;
-    if constexpr (std::is_same_v<T, internal::ZGateImpl>) return GateType::Z;
-    if constexpr (std::is_same_v<T, internal::HGateImpl>) return GateType::H;
-    if constexpr (std::is_same_v<T, internal::SGateImpl>) return GateType::S;
-    if constexpr (std::is_same_v<T, internal::SdagGateImpl>) return GateType::Sdag;
-    if constexpr (std::is_same_v<T, internal::TGateImpl>) return GateType::T;
-    if constexpr (std::is_same_v<T, internal::TdagGateImpl>) return GateType::Tdag;
-    if constexpr (std::is_same_v<T, internal::SqrtXGateImpl>) return GateType::SqrtX;
-    if constexpr (std::is_same_v<T, internal::SqrtXdagGateImpl>) return GateType::SqrtXdag;
-    if constexpr (std::is_same_v<T, internal::SqrtYGateImpl>) return GateType::SqrtY;
-    if constexpr (std::is_same_v<T, internal::SqrtYdagGateImpl>) return GateType::SqrtYdag;
-    if constexpr (std::is_same_v<T, internal::P0GateImpl>) return GateType::P0;
-    if constexpr (std::is_same_v<T, internal::P1GateImpl>) return GateType::P1;
-    if constexpr (std::is_same_v<T, internal::RXGateImpl>) return GateType::RX;
-    if constexpr (std::is_same_v<T, internal::RYGateImpl>) return GateType::RY;
-    if constexpr (std::is_same_v<T, internal::RZGateImpl>) return GateType::RZ;
-    if constexpr (std::is_same_v<T, internal::U1GateImpl>) return GateType::U1;
-    if constexpr (std::is_same_v<T, internal::U2GateImpl>) return GateType::U2;
-    if constexpr (std::is_same_v<T, internal::U3GateImpl>) return GateType::U3;
-    if constexpr (std::is_same_v<T, internal::OneTargetMatrixGateImpl>)
+    using TWithoutConst = std::remove_cv_t<T>;
+    if constexpr (std::is_same_v<TWithoutConst, internal::GateBase>)
+        return GateType::Unknown;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::IGateImpl>)
+        return GateType::I;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::GlobalPhaseGateImpl>)
+        return GateType::GlobalPhase;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::XGateImpl>)
+        return GateType::X;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::YGateImpl>)
+        return GateType::Y;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ZGateImpl>)
+        return GateType::Z;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::HGateImpl>)
+        return GateType::H;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SGateImpl>)
+        return GateType::S;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SdagGateImpl>)
+        return GateType::Sdag;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::TGateImpl>)
+        return GateType::T;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::TdagGateImpl>)
+        return GateType::Tdag;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SqrtXGateImpl>)
+        return GateType::SqrtX;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SqrtXdagGateImpl>)
+        return GateType::SqrtXdag;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SqrtYGateImpl>)
+        return GateType::SqrtY;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SqrtYdagGateImpl>)
+        return GateType::SqrtYdag;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::P0GateImpl>)
+        return GateType::P0;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::P1GateImpl>)
+        return GateType::P1;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::RXGateImpl>)
+        return GateType::RX;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::RYGateImpl>)
+        return GateType::RY;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::RZGateImpl>)
+        return GateType::RZ;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::U1GateImpl>)
+        return GateType::U1;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::U2GateImpl>)
+        return GateType::U2;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::U3GateImpl>)
+        return GateType::U3;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::OneTargetMatrixGateImpl>)
         return GateType::OneTargetMatrix;
-    if constexpr (std::is_same_v<T, internal::CXGateImpl>) return GateType::CX;
-    if constexpr (std::is_same_v<T, internal::CZGateImpl>) return GateType::CZ;
-    if constexpr (std::is_same_v<T, internal::CZGateImpl>) return GateType::CCX;
-    if constexpr (std::is_same_v<T, internal::SwapGateImpl>) return GateType::Swap;
-    if constexpr (std::is_same_v<T, internal::TwoTargetMatrixGateImpl>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SwapGateImpl>)
+        return GateType::Swap;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::TwoTargetMatrixGateImpl>)
         return GateType::TwoTargetMatrix;
-    if constexpr (std::is_same_v<T, internal::PauliGateImpl>) return GateType::Pauli;
-    if constexpr (std::is_same_v<T, internal::PauliRotationGateImpl>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::PauliGateImpl>)
+        return GateType::Pauli;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::PauliRotationGateImpl>)
         return GateType::PauliRotation;
-    if constexpr (std::is_same_v<T, internal::SparseMatrixGateImpl>) return GateType::SparseMatrix;
-    if constexpr (std::is_same_v<T, internal::DenseMatrixGateImpl>) return GateType::DenseMatrix;
-    static_assert("unknown GateImpl");
-    return GateType::Unknown;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ProbablisticGateImpl>)
+        return GateType::Probablistic;
+    else if constexpr (std::is_same_v<T, internal::SparseMatrixGateImpl>)
+        return GateType::SparseMatrix;
+    else if constexpr (std::is_same_v<T, internal::DenseMatrixGateImpl>)
+        return GateType::DenseMatrix;
+    static_assert(internal::lazy_false_v<T>, "unknown GateImpl");
 }
 
 namespace internal {
@@ -142,37 +164,53 @@ protected:
         }
     }
 
+    std::string get_qubit_info_as_string(const std::string& indent) const {
+        std::ostringstream ss;
+        auto targets = target_qubit_list();
+        auto controls = control_qubit_list();
+        ss << indent << "  Target Qubits: {";
+        for (std::uint32_t i = 0; i < targets.size(); ++i)
+            ss << targets[i] << (i == targets.size() - 1 ? "" : ", ");
+        ss << "}\n";
+        ss << indent << "  Control Qubits: {";
+        for (std::uint32_t i = 0; i < controls.size(); ++i)
+            ss << controls[i] << (i == controls.size() - 1 ? "" : ", ");
+        ss << "}";
+        return ss.str();
+    }
+
 public:
     GateBase(std::uint64_t target_mask, std::uint64_t control_mask)
         : _target_mask(target_mask), _control_mask(control_mask) {
         if (_target_mask & _control_mask) [[unlikely]] {
             throw std::runtime_error(
                 "Error: Gate::Gate(std::uint64_t target_mask, std::uint64_t control_mask) : Target "
-                "and "
-                "control qubits must not overlap.");
+                "and control qubits must not overlap.");
         }
     }
     virtual ~GateBase() = default;
 
-    [[nodiscard]] virtual std::vector<std::uint64_t> get_target_qubit_list() const {
+    [[nodiscard]] virtual std::vector<std::uint64_t> target_qubit_list() const {
         return mask_to_vector(_target_mask);
     }
-    [[nodiscard]] virtual std::vector<std::uint64_t> get_control_qubit_list() const {
+    [[nodiscard]] virtual std::vector<std::uint64_t> control_qubit_list() const {
         return mask_to_vector(_control_mask);
     }
-    [[nodiscard]] virtual std::vector<std::uint64_t> get_operand_qubit_list() const {
+    [[nodiscard]] virtual std::vector<std::uint64_t> operand_qubit_list() const {
         return mask_to_vector(_target_mask | _control_mask);
     }
-    [[nodiscard]] virtual std::uint64_t get_target_qubit_mask() const { return _target_mask; }
-    [[nodiscard]] virtual std::uint64_t get_control_qubit_mask() const { return _control_mask; }
-    [[nodiscard]] virtual std::uint64_t get_operand_qubit_mask() const {
+    [[nodiscard]] virtual std::uint64_t target_qubit_mask() const { return _target_mask; }
+    [[nodiscard]] virtual std::uint64_t control_qubit_mask() const { return _control_mask; }
+    [[nodiscard]] virtual std::uint64_t operand_qubit_mask() const {
         return _target_mask | _control_mask;
     }
 
     [[nodiscard]] virtual Gate get_inverse() const = 0;
-    [[nodiscard]] virtual ComplexMatrix get_matrix() const = 0;
+    [[nodiscard]] virtual internal::ComplexMatrix get_matrix() const = 0;
 
     virtual void update_quantum_state(StateVector& state_vector) const = 0;
+
+    [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 };
 
 template <GateImpl T>
@@ -232,7 +270,113 @@ public:
         }
         return _gate_ptr.get();
     }
+
+    friend std::ostream& operator<<(std::ostream& os, GatePtr gate) {
+        os << gate->to_string();
+        return os;
+    }
 };
 }  // namespace internal
+
+#ifdef SCALUQ_USE_NANOBIND
+namespace internal {
+#define DEF_GATE_BASE(GATE_TYPE, DESCRIPTION)                                            \
+    nb::class_<GATE_TYPE>(m, #GATE_TYPE, DESCRIPTION)                                    \
+        .def("gate_type", &GATE_TYPE::gate_type, "Get gate type as `GateType` enum.")    \
+        .def(                                                                            \
+            "target_qubit_list",                                                         \
+            [](const GATE_TYPE& gate) { return gate->target_qubit_list(); },             \
+            "Get target qubits as `list[int]`. **Control qubits is not included.**")     \
+        .def(                                                                            \
+            "control_qubit_list",                                                        \
+            [](const GATE_TYPE& gate) { return gate->control_qubit_list(); },            \
+            "Get control qubits as `list[int]`.")                                        \
+        .def(                                                                            \
+            "operand_qubit_list",                                                        \
+            [](const GATE_TYPE& gate) { return gate->operand_qubit_list(); },            \
+            "Get target and control qubits as `list[int]`.")                             \
+        .def(                                                                            \
+            "target_qubit_mask",                                                         \
+            [](const GATE_TYPE& gate) { return gate->target_qubit_mask(); },             \
+            "Get target qubits as mask. **Control qubits is not included.**")            \
+        .def(                                                                            \
+            "control_qubit_mask",                                                        \
+            [](const GATE_TYPE& gate) { return gate->control_qubit_mask(); },            \
+            "Get control qubits as mask.")                                               \
+        .def(                                                                            \
+            "operand_qubit_mask",                                                        \
+            [](const GATE_TYPE& gate) { return gate->operand_qubit_mask(); },            \
+            "Get target and control qubits as mask.")                                    \
+        .def(                                                                            \
+            "get_inverse",                                                               \
+            [](const GATE_TYPE& gate) { return gate->get_inverse(); },                   \
+            "Generate inverse gate as `Gate` type. If not exists, return None.")         \
+        .def(                                                                            \
+            "update_quantum_state",                                                      \
+            [](const GATE_TYPE& gate, StateVector& state_vector) {                       \
+                gate->update_quantum_state(state_vector);                                \
+            },                                                                           \
+            "Apply gate to `state_vector`. `state_vector` in args is directly updated.") \
+        .def(                                                                            \
+            "get_matrix",                                                                \
+            [](const GATE_TYPE& gate) { return gate->get_matrix(); },                    \
+            "Get matrix representation of the gate.")                                    \
+        .def(                                                                            \
+            "to_string",                                                                 \
+            [](const GATE_TYPE& gate) { return gate->to_string(""); },                   \
+            "Get string representation of the gate.")                                    \
+        .def(                                                                            \
+            "__str__",                                                                   \
+            [](const GATE_TYPE& gate) { return gate->to_string(""); },                   \
+            "Get string representation of the gate.")
+
+nb::class_<Gate> gate_base_def;
+
+#define DEF_GATE(GATE_TYPE, DESCRIPTION)                                                           \
+    ::scaluq::internal::gate_base_def.def(nb::init<GATE_TYPE>(), "Upcast from `" #GATE_TYPE "`."); \
+    DEF_GATE_BASE(                                                                                 \
+        GATE_TYPE,                                                                                 \
+        DESCRIPTION                                                                                \
+        "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).")    \
+        .def(nb::init<Gate>())
+
+void bind_gate_gate_hpp(nb::module_& m) {
+    nb::enum_<GateType>(m, "GateType", "Enum of Gate Type.")
+        .value("I", GateType::I)
+        .value("GlobalPhase", GateType::GlobalPhase)
+        .value("X", GateType::X)
+        .value("Y", GateType::Y)
+        .value("Z", GateType::Z)
+        .value("H", GateType::H)
+        .value("S", GateType::S)
+        .value("Sdag", GateType::Sdag)
+        .value("T", GateType::T)
+        .value("Tdag", GateType::Tdag)
+        .value("SqrtX", GateType::SqrtX)
+        .value("SqrtXdag", GateType::SqrtXdag)
+        .value("SqrtY", GateType::SqrtY)
+        .value("SqrtYdag", GateType::SqrtYdag)
+        .value("P0", GateType::P0)
+        .value("P1", GateType::P1)
+        .value("RX", GateType::RX)
+        .value("RY", GateType::RY)
+        .value("RZ", GateType::RZ)
+        .value("U1", GateType::U1)
+        .value("U2", GateType::U2)
+        .value("U3", GateType::U3)
+        .value("OneTargetMatrix", GateType::OneTargetMatrix)
+        .value("Swap", GateType::Swap)
+        .value("TwoTargetMatrix", GateType::TwoTargetMatrix)
+        .value("Pauli", GateType::Pauli)
+        .value("PauliRotation", GateType::PauliRotation);
+
+    gate_base_def =
+        DEF_GATE_BASE(Gate,
+                      "General class of QuantumGate.\n\n.. note:: Downcast to requred to use "
+                      "gate-specific functions.")
+            .def(nb::init<Gate>(), "Just copy shallowly.");
+}
+}  // namespace internal
+#endif
 
 }  // namespace scaluq

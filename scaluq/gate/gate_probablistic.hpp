@@ -31,34 +31,34 @@ public:
     const std::vector<Gate>& gate_list() const { return _gate_list; }
     const std::vector<double>& distribution() const { return _distribution; }
 
-    std::vector<std::uint64_t> get_target_qubit_list() const override {
+    std::vector<std::uint64_t> target_qubit_list() const override {
         throw std::runtime_error(
-            "ProbablisticGateImpl::get_target_qubit_list(): This function must not be used in "
+            "ProbablisticGateImpl::target_qubit_list(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
-    std::vector<std::uint64_t> get_control_qubit_list() const override {
+    std::vector<std::uint64_t> control_qubit_list() const override {
         throw std::runtime_error(
-            "ProbablisticGateImpl::get_control_qubit_list(): This function must not be used in "
+            "ProbablisticGateImpl::control_qubit_list(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
-    std::vector<std::uint64_t> get_operand_qubit_list() const override {
+    std::vector<std::uint64_t> operand_qubit_list() const override {
         throw std::runtime_error(
-            "ProbablisticGateImpl::get_operand_qubit_list(): This function must not be used in "
+            "ProbablisticGateImpl::operand_qubit_list(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
-    std::uint64_t get_target_qubit_mask() const override {
+    std::uint64_t target_qubit_mask() const override {
         throw std::runtime_error(
-            "ProbablisticGateImpl::get_target_qubit_mask(): This function must not be used in "
+            "ProbablisticGateImpl::target_qubit_mask(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
-    std::uint64_t get_control_qubit_mask() const override {
+    std::uint64_t control_qubit_mask() const override {
         throw std::runtime_error(
-            "ProbablisticGateImpl::get_control_qubit_mask(): This function must not be used in "
+            "ProbablisticGateImpl::control_qubit_mask(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
-    std::uint64_t get_operand_qubit_mask() const override {
+    std::uint64_t operand_qubit_mask() const override {
         throw std::runtime_error(
-            "ProbablisticGateImpl::get_operand_qubit_mask(): This function must not be used in "
+            "ProbablisticGateImpl::operand_qubit_mask(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
 
@@ -70,7 +70,7 @@ public:
         });
         return std::make_shared<const ProbablisticGateImpl>(_distribution, inv_gate_list);
     }
-    ComplexMatrix get_matrix() const override {
+    internal::ComplexMatrix get_matrix() const override {
         throw std::runtime_error(
             "ProbablisticGateImpl::get_matrix(): This function must not be used in "
             "ProbablisticGateImpl.");
@@ -85,8 +85,38 @@ public:
         if (i >= _gate_list.size()) i = _gate_list.size() - 1;
         _gate_list[i]->update_quantum_state(state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        const auto dist = distribution();
+        ss << indent << "Gate Type: Probablistic\n";
+        for (std::size_t i = 0; i < dist.size(); ++i) {
+            ss << indent << "  --------------------\n";
+            ss << indent << "  Probability: " << dist[i] << "\n";
+            ss << gate_list()[i]->to_string(indent + "  ") << (i == dist.size() - 1 ? "" : "\n");
+        }
+        return ss.str();
+    }
 };
 }  // namespace internal
 
 using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl>;
+
+#ifdef SCALUQ_USE_NANOBIND
+namespace internal {
+void bind_gate_gate_probablistic(nb::module_& m) {
+    DEF_GATE(ProbablisticGate,
+             "Specific class of probablistic gate. The gate to apply is picked from a cirtain "
+             "distribution.")
+        .def(
+            "gate_list",
+            [](const ProbablisticGate& gate) { return gate->gate_list(); },
+            nb::rv_policy::reference)
+        .def(
+            "distribution",
+            [](const ProbablisticGate& gate) { return gate->distribution(); },
+            nb::rv_policy::reference);
+}
+}  // namespace internal
+#endif
 }  // namespace scaluq

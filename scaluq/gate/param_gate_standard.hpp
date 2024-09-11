@@ -8,16 +8,16 @@ namespace scaluq {
 
 namespace internal {
 
-class PRXGateImpl : public ParamGateBase {
+class ParamRXGateImpl : public ParamGateBase {
 public:
     using ParamGateBase::ParamGateBase;
 
     ParamGate get_inverse() const override {
-        return std::make_shared<const PRXGateImpl>(_target_mask, _control_mask, -_pcoef);
+        return std::make_shared<const ParamRXGateImpl>(_target_mask, _control_mask, -_pcoef);
     }
-    ComplexMatrix get_matrix(double param) const override {
+    internal::ComplexMatrix get_matrix(double param) const override {
         double angle = _pcoef * param;
-        ComplexMatrix mat(2, 2);
+        internal::ComplexMatrix mat(2, 2);
         mat << std::cos(angle / 2), -1i * std::sin(angle / 2), -1i * std::sin(angle / 2),
             std::cos(angle / 2);
         return mat;
@@ -27,18 +27,25 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         rx_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: ParamRX\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
-class PRYGateImpl : public ParamGateBase {
+class ParamRYGateImpl : public ParamGateBase {
 public:
     using ParamGateBase::ParamGateBase;
 
     ParamGate get_inverse() const override {
-        return std::make_shared<const PRYGateImpl>(_target_mask, _control_mask, -_pcoef);
+        return std::make_shared<const ParamRYGateImpl>(_target_mask, _control_mask, -_pcoef);
     }
-    ComplexMatrix get_matrix(double param) const override {
+    internal::ComplexMatrix get_matrix(double param) const override {
         double angle = _pcoef * param;
-        ComplexMatrix mat(2, 2);
+        internal::ComplexMatrix mat(2, 2);
         mat << std::cos(angle / 2), -std::sin(angle / 2), std::sin(angle / 2), std::cos(angle / 2);
         return mat;
     }
@@ -47,18 +54,25 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         ry_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: ParamRY\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
-class PRZGateImpl : public ParamGateBase {
+class ParamRZGateImpl : public ParamGateBase {
 public:
     using ParamGateBase::ParamGateBase;
 
     ParamGate get_inverse() const override {
-        return std::make_shared<const PRZGateImpl>(_target_mask, _control_mask, -_pcoef);
+        return std::make_shared<const ParamRZGateImpl>(_target_mask, _control_mask, -_pcoef);
     }
-    ComplexMatrix get_matrix(double param) const override {
+    internal::ComplexMatrix get_matrix(double param) const override {
         double angle = param * _pcoef;
-        ComplexMatrix mat(2, 2);
+        internal::ComplexMatrix mat(2, 2);
         mat << std::exp(-0.5i * angle), 0, 0, std::exp(0.5i * angle);
         return mat;
     }
@@ -67,12 +81,37 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         rz_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: ParamRZ\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 }  // namespace internal
 
-using PRXGate = internal::ParamGatePtr<internal::PRXGateImpl>;
-using PRYGate = internal::ParamGatePtr<internal::PRYGateImpl>;
-using PRZGate = internal::ParamGatePtr<internal::PRZGateImpl>;
+using ParamRXGate = internal::ParamGatePtr<internal::ParamRXGateImpl>;
+using ParamRYGate = internal::ParamGatePtr<internal::ParamRYGateImpl>;
+using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl>;
 
+#ifdef SCALUQ_USE_NANOBIND
+namespace internal {
+void bind_gate_param_gate_standard_hpp(nb::module_& m) {
+    DEF_PARAM_GATE(
+        ParamRXGate,
+        "Specific class of parametric X rotation gate, represented as "
+        "$e^{-i\\frac{\\mathrm{angle}}{2}X}$. `angle` is given as `param * param_coef`.");
+    DEF_PARAM_GATE(
+        ParamRYGate,
+        "Specific class of parametric Y rotation gate, represented as "
+        "$e^{-i\\frac{\\mathrm{angle}}{2}Y}$. `angle` is given as `param * param_coef`.");
+    DEF_PARAM_GATE(
+        ParamRZGate,
+        "Specific class of parametric Z rotation gate, represented as "
+        "$e^{-i\\frac{\\mathrm{angle}}{2}Z}$. `angle` is given as `param * param_coef`.");
+}
+}  // namespace internal
+#endif
 }  // namespace scaluq

@@ -65,6 +65,11 @@ jobs:
       - name: Test in Ubuntu
         run: |
           OMP_PROC_BIND=false ninja test -C build -j $(nproc)
+      
+      - name: Test if stub exists
+        run: |
+          echo -e "from scaluq import StateVector\nfrom scaluq.gate import I" > /tmp/stub_sample.py
+          mypy /tmp/stub_sample.py
 
   nvcc-build:
     name: NVCC build
