@@ -142,13 +142,14 @@ constexpr GateType get_gate_type() {
         return GateType::Pauli;
     else if constexpr (std::is_same_v<TWithoutConst, internal::PauliRotationGateImpl>)
         return GateType::PauliRotation;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::ProbablisticGateImpl>)
-        return GateType::Probablistic;
     else if constexpr (std::is_same_v<T, internal::SparseMatrixGateImpl>)
         return GateType::SparseMatrix;
     else if constexpr (std::is_same_v<T, internal::DenseMatrixGateImpl>)
         return GateType::DenseMatrix;
-    static_assert(internal::lazy_false_v<T>, "unknown GateImpl");
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ProbablisticGateImpl>)
+        return GateType::Probablistic;
+    else
+        static_assert(internal::lazy_false_v<T>, "unknown GateImpl");
 }
 
 namespace internal {

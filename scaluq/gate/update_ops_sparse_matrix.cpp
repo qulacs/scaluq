@@ -25,8 +25,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 
-    std::uint64_t outer_mask =
-        ~target_mask & ((1ULL << state.n_qubits()) - 1);  // target qubit 以外の mask
+    std::uint64_t outer_mask = ~target_mask & ((1ULL << state.n_qubits()) - 1);
     Kokkos::View<Complex*, Kokkos::MemoryTraits<Kokkos::Atomic>> update_atomic(update);
     Kokkos::parallel_for(
         "COO_Update",
@@ -39,8 +38,6 @@ void sparse_matrix_gate(std::uint64_t target_mask,
             auto [v, r, c] = values(inner);
             uint32_t src_index = internal::insert_zero_at_mask_positions(c, outer_mask) | basis;
             uint32_t dst_index = internal::insert_zero_at_mask_positions(r, outer_mask) | basis;
-            // vec = matrix * vec' という式は各 r, c に対して、 vec[r] += vec'[c] * matrix[r][c]
-            // の寄与を与えることに等しい。これを各 basis と合わせて更新する
             update_atomic(dst_index) += v * state._raw(src_index);
         });
     Kokkos::fence();

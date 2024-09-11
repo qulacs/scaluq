@@ -137,8 +137,7 @@ void multi_control_multi_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 
-    std::uint64_t outer_mask =
-        ~target_mask & ((1ULL << state.n_qubits()) - 1);  // target qubit 以外の mask
+    std::uint64_t outer_mask = ~target_mask & ((1ULL << state.n_qubits()) - 1);
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<>(state.dim() >> std::popcount(target_mask | control_mask),
                              Kokkos::AUTO()),

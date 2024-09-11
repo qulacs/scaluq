@@ -162,7 +162,7 @@ inline Gate PauliRotation(const PauliOperator& pauli,
         internal::vector_to_mask(controls), pauli, angle);
 }
 inline Gate DenseMatrix(const std::vector<std::uint64_t>& targets,
-                        const ComplexMatrix& matrix,
+                        const internal::ComplexMatrix& matrix,
                         const std::vector<std::uint64_t>& controls = {},
                         bool is_unitary = false) {
     std::uint64_t nqubits = targets.size();
@@ -178,7 +178,7 @@ inline Gate DenseMatrix(const std::vector<std::uint64_t>& targets,
         internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix, is_unitary);
 }
 inline Gate SparseMatrix(const std::vector<std::uint64_t>& targets,
-                         const SparseComplexMatrix& matrix,
+                         const internal::SparseComplexMatrix& matrix,
                          const std::vector<std::uint64_t>& controls = {}) {
     return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl>(
         internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix);
