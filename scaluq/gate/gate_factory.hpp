@@ -357,7 +357,8 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "is currently not supported.",
               "targets"_a,
               "matrix"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
+              "controls"_a = std::vector<std::uint64_t>{},
+              "is_unitary"_a = false);
     mgate.def("Pauli",
               &gate::Pauli,
               "Generate general Gate class instance of Pauli.",
