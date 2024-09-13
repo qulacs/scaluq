@@ -27,6 +27,13 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         rx_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: ParamRX\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 class ParamRYGateImpl : public ParamGateBase {
@@ -46,6 +53,13 @@ public:
     void update_quantum_state(StateVector& state_vector, double param) const override {
         check_qubit_mask_within_bounds(state_vector);
         ry_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: ParamRY\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
     }
 };
 
@@ -67,6 +81,13 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         rz_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: ParamRZ\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 }  // namespace internal
@@ -75,4 +96,22 @@ using ParamRXGate = internal::ParamGatePtr<internal::ParamRXGateImpl>;
 using ParamRYGate = internal::ParamGatePtr<internal::ParamRYGateImpl>;
 using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl>;
 
+#ifdef SCALUQ_USE_NANOBIND
+namespace internal {
+void bind_gate_param_gate_standard_hpp(nb::module_& m) {
+    DEF_PARAM_GATE(
+        ParamRXGate,
+        "Specific class of parametric X rotation gate, represented as "
+        "$e^{-i\\frac{\\mathrm{angle}}{2}X}$. `angle` is given as `param * param_coef`.");
+    DEF_PARAM_GATE(
+        ParamRYGate,
+        "Specific class of parametric Y rotation gate, represented as "
+        "$e^{-i\\frac{\\mathrm{angle}}{2}Y}$. `angle` is given as `param * param_coef`.");
+    DEF_PARAM_GATE(
+        ParamRZGate,
+        "Specific class of parametric Z rotation gate, represented as "
+        "$e^{-i\\frac{\\mathrm{angle}}{2}Z}$. `angle` is given as `param * param_coef`.");
+}
+}  // namespace internal
+#endif
 }  // namespace scaluq

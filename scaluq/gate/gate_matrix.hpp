@@ -47,6 +47,13 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         one_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: OneTargetMatrix\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 
 class TwoTargetMatrixGateImpl : public GateBase {
@@ -97,9 +104,27 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         two_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: TwoTargetMatrix\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
 };
 }  // namespace internal
 
 using OneTargetMatrixGate = internal::GatePtr<internal::OneTargetMatrixGateImpl>;
 using TwoTargetMatrixGate = internal::GatePtr<internal::TwoTargetMatrixGateImpl>;
+
+#ifdef SCALUQ_USE_NANOBIND
+namespace internal {
+void bind_gate_gate_matrix_hpp(nb::module_& m) {
+    DEF_GATE(OneTargetMatrixGate, "Specific class of one-qubit dense matrix gate.")
+        .def("matrix", [](const OneTargetMatrixGate& gate) { return gate->matrix(); });
+    DEF_GATE(TwoTargetMatrixGate, "Specific class of two-qubit dense matrix gate.")
+        .def("matrix", [](const TwoTargetMatrixGate& gate) { return gate->matrix(); });
+}
+}  // namespace internal
+#endif
 }  // namespace scaluq

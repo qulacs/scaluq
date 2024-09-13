@@ -95,8 +95,44 @@ public:
             std::get<1>(gate)->update_quantum_state(state_vector, param);
         }
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        const auto dist = distribution();
+        ss << indent << "Gate Type: Probablistic\n";
+        for (std::size_t i = 0; i < dist.size(); ++i) {
+            ss << indent << "  --------------------\n";
+            ss << indent << "  Probability: " << dist[i] << "\n";
+            std::visit(
+                [&](auto&& arg) {
+                    ss << arg->to_string(indent + "  ") << (i == dist.size() - 1 ? "" : "\n");
+                },
+                gate_list()[i]);
+        }
+        return ss.str();
+    }
 };
 }  // namespace internal
 
 using ParamProbablisticGate = internal::ParamGatePtr<internal::ParamProbablisticGateImpl>;
+
+#ifdef SCALUQ_USE_NANOBIND
+namespace internal {
+void bind_gate_param_gate_probablistic_hpp(nb::module_& m) {
+    DEF_PARAM_GATE(
+        ParamProbablisticGate,
+        "Specific class of parametric probablistic gate. The gate to apply is picked from a "
+        "cirtain "
+        "distribution.")
+        .def(
+            "gate_list",
+            [](const ParamProbablisticGate& gate) { return gate->gate_list(); },
+            nb::rv_policy::reference)
+        .def(
+            "distribution",
+            [](const ParamProbablisticGate& gate) { return gate->distribution(); },
+            nb::rv_policy::reference);
+}
+}  // namespace internal
+#endif
 }  // namespace scaluq

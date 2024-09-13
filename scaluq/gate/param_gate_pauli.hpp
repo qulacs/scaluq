@@ -44,8 +44,31 @@ public:
                              _pcoef * param,
                              state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        auto controls = control_qubit_list();
+        ss << indent << "Gate Type: ParamPauliRotation\n";
+        ss << indent << "  Control Qubits: {";
+        for (std::uint32_t i = 0; i < controls.size(); ++i)
+            ss << controls[i] << (i == controls.size() - 1 ? "" : ", ");
+        ss << "}\n";
+        ss << indent << "  Pauli Operator: \"" << _pauli.get_pauli_string() << "\"";
+        return ss.str();
+    }
 };
 }  // namespace internal
 
 using ParamPauliRotationGate = internal::ParamGatePtr<internal::ParamPauliRotationGateImpl>;
+
+#ifdef SCALUQ_USE_NANOBIND
+namespace internal {
+void bind_gate_param_gate_pauli_hpp(nb::module_& m) {
+    DEF_PARAM_GATE(
+        ParamPauliRotationGate,
+        "Specific class of parametric multi-qubit pauli-rotation gate, represented as "
+        "$e^{-i\\frac{\\mathrm{angle}}{2}P}$. `angle` is given as `param * param_coef`.");
+}
+}  // namespace internal
+#endif
 }  // namespace scaluq

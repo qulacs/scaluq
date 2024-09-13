@@ -26,6 +26,18 @@ public:
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
         apply_pauli(_control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        auto controls = control_qubit_list();
+        ss << indent << "Gate Type: Pauli\n";
+        ss << indent << "  Control Qubits: {";
+        for (std::uint32_t i = 0; i < controls.size(); ++i)
+            ss << controls[i] << (i == controls.size() - 1 ? "" : ", ");
+        ss << "}\n";
+        ss << indent << "  Pauli Operator: \"" << _pauli.get_pauli_string() << "\"";
+        return ss.str();
+    }
 };
 
 class PauliRotationGateImpl : public GateBase {
@@ -60,9 +72,36 @@ public:
         apply_pauli_rotation(
             _control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), _angle, state_vector);
     }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        auto controls = control_qubit_list();
+        ss << indent << "Gate Type: PauliRotation\n";
+        ss << indent << "  Angle: " << _angle << "\n";
+        ss << indent << "  Control Qubits: {";
+        for (std::uint32_t i = 0; i < controls.size(); ++i)
+            ss << controls[i] << (i == controls.size() - 1 ? "" : ", ");
+        ss << "}\n";
+        ss << indent << "  Pauli Operator: \"" << _pauli.get_pauli_string() << "\"";
+        return ss.str();
+    }
 };
 }  // namespace internal
 
 using PauliGate = internal::GatePtr<internal::PauliGateImpl>;
 using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl>;
+
+#ifdef SCALUQ_USE_NANOBIND
+namespace internal {
+void bind_gate_gate_pauli_hpp(nb::module_& m) {
+    DEF_GATE(PauliGate,
+             "Specific class of multi-qubit pauli gate, which applies single-qubit Pauli "
+             "gate to "
+             "each of qubit.");
+    DEF_GATE(PauliRotationGate,
+             "Specific class of multi-qubit pauli-rotation gate, represented as "
+             "$e^{-i\\frac{\\mathrm{angle}}{2}P}$.");
+}
+}  // namespace internal
+#endif
 }  // namespace scaluq
