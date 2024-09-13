@@ -15,7 +15,10 @@ namespace scaluq {
 using HostSpace = Kokkos::HostSpace;
 using DefaultSpace = Kokkos::DefaultExecutionSpace;
 
-template <std::floating_point FloatType = double, typename Space = DefaultSpace>
+#define STATE_VECTOR_TEMPLATE(FloatType, Space) \
+    template <std::floating_point FloatType = double, typename Space = DefaultSpace>
+
+STATE_VECTOR_TEMPLATE(FloatType, Space)
 class StateVector {
     std::uint64_t _n_qubits;
     std::uint64_t _dim;
