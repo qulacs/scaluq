@@ -85,6 +85,13 @@ public:
 
     void set_zero_norm_state() { Kokkos::deep_copy(_raw, 0); }
 
+    void set_Haar_random_state(std::uint64_t batch_size,
+                               std::uint64_t n_qubits,
+                               bool set_same_state,
+                               std::uint64_t seed = std::random_device()()) {
+        *this = Haar_random_state(batch_size, n_qubits, set_same_state, seed);
+    }
+
     [[nodiscard]] std::vector<std::vector<std::uint64_t>> sampling(
         std::uint64_t sampling_count, std::uint64_t seed = std::random_device()()) const {
         Kokkos::View<FloatType**> stacked_prob("prob", _batch_size, _dim + 1);
@@ -139,7 +146,7 @@ public:
         return vv;
     }
 
-    [[nodiscard]] static StateVectorBatched Haar_random_states(
+    [[nodiscard]] static StateVectorBatched Haar_random_state(
         std::uint64_t batch_size,
         std::uint64_t n_qubits,
         bool set_same_state,
@@ -318,7 +325,7 @@ public:
                     [&](std::uint64_t idx, FloatType& lsum) {
                         FloatType prob = internal::squared_norm(_raw(batch_id, idx));
                         prob = Kokkos::max(prob, eps);
-                        lsum += -prob * Kokkos::log(prob);
+                        lsum += -prob * Kokkos::log2(prob);
                     },
                     sum);
                 team.team_barrier();

@@ -189,7 +189,7 @@ public:
             KOKKOS_CLASS_LAMBDA(std::uint64_t idx, FloatType & lsum) {
                 FloatType prob = internal::squared_norm(_raw[idx]);
                 prob = (prob > eps) ? prob : eps;
-                lsum += -prob * Kokkos::log(prob);
+                lsum += -prob * Kokkos::log2(prob);
             },
             ent);
         return ent;
