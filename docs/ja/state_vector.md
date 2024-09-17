@@ -30,6 +30,7 @@ scaluq::finalize();
 
 以下のコードで $n$ qubitの量子状態を生成します。
 生成した量子状態ははじめ、 $|0\rangle^{\otimes n}$ に初期化されています。
+生成した量子状態は`cout`によってダンプできます。
 メモリが不足している場合はプログラムが終了します。
 
 ```cpp
@@ -43,6 +44,8 @@ scaluq::initialize();
     // |00000>に初期化されている
     const unsigned int n = 5;
     scaluq::StateVector state(n);
+
+    std::cout << state << std::endl;
 
 }
 scaluq::finalize();
@@ -66,8 +69,8 @@ scaluq::initialize();
     const unsigned int n = 5;
     scaluq::StateVector state(n);
 
-    // 配列を取得
-    auto data = state.amplitudes();
+    // 確率振幅のvectorを取得
+    auto data = state.get_amplitudes();
 
 }
 scaluq::finalize();
