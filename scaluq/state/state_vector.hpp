@@ -240,8 +240,8 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .arg({"basis",
                        "int",
                        false,
-                       {"basis as integer format ($0 \\leq \\mathrm{basis} \\lea "
-                        "2^{\\mathrm{n_qubits}}-1$)"}})
+                       {"basis as integer format ($0 \\leq \\mathrm{basis} \\leq "
+                        "2^{\\mathrm{n\\_qubits}}-1$)"}})
                  .ex(DocString::Code{">>> state = StateVector(2)",
                                      ">>> state.set_computational_basis(0) # |00>",
                                      ">>> state.get_amplitudes()",
@@ -261,7 +261,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
              &StateVector::get_amplitudes,
              DocString()
                  .desc("Get all amplitudes as `list[complex]`.")
-                 .ret({"list[complex]", {"amplitudes of list with len $2^{\\mathrm{n_qubits}}$"}})
+                 .ret({"list[complex]", {"amplitudes of list with len $2^{\\mathrm{n\\_qubits}}$"}})
                  .ex(DocString::Code{">>> state = StateVector(2)",
                                      ">>> state.get_amplitudes()",
                                      "[(1+0j), 0j, 0j, 0j]"})
@@ -392,7 +392,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .desc("Add other state vector and make superposition.")
                  .desc("$\\ket{\\mathrm{this}} \\leftarrow \\ket{\\mathrm{this}} + "
                        "\\ket{\\mathrm{state}}$.")
-                 .arg({"state", ":class:`StateVector`", "state to be added"})
+                 .arg({"state", ":class:`StateVector`", false, {"state to be added"}})
                  .ex(DocString::Code{">>> state1 = StateVector(1)",
                                      ">>> state1.load([1, 2])",
                                      ">>> state2 = StateVector(1)",
@@ -410,8 +410,8 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .desc("Add other state vector with multiplying the coef and make superposition.")
                  .desc("$\\ket{\\mathrm{this}}\\leftarrow\\ket{\\mathrm{this}}+\\mathrm{coef} "
                        "\\ket{\\mathrm{state}}$.")
-                 .arg({"coef", "complex", "coefficient to multiply to `state`"})
-                 .arg({"state", ":class:`StateVector`", "state to be added"})
+                 .arg({"coef", "complex", false, {"coefficient to multiply to `state`"}})
+                 .arg({"state", ":class:`StateVector`", false, {"state to be added"}})
                  .ex(DocString::Code{">>> state1 = StateVector(1)",
                                      ">>> state1.load([1, 2])",
                                      ">>> state2 = StateVector(1)",
@@ -423,8 +423,18 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .c_str())
         .def("multiply_coef",
              &StateVector::multiply_coef,
-             "Multiply coef. "
-             "$\\ket{\\mathrm{this}}\\leftarrow\\mathrm{coef}\\ket{\\mathrm{this}}$.")
+             "coef"_a,
+             DocString()
+                 .desc("Multiply coef.")
+                 .desc("$\\ket{\\mathrm{this}}\\leftarrow\\mathrm{coef}\\ket{\\mathrm{this}}$.")
+                 .arg({"coef", "complex", false, {"coefficient to multiply"}})
+                 .ex(DocString::Code{">>> state = StateVector(1)",
+                                     ">>> state.load([1, 2])",
+                                     ">>> state.multiply_coef(2j)",
+                                     ">>> state.get_amplitudes()",
+                                     "[2j, 4j]"})
+                 .build_as_google_style()
+                 .c_str())
         .def(
             "sampling",
             [](const StateVector& state,
@@ -434,14 +444,61 @@ void bind_state_state_vector_hpp(nb::module_& m) {
             },
             "sampling_count"_a,
             "seed"_a = std::nullopt,
-            "Sampling specified times. Result is `list[int]` with the `sampling_count` length.")
-        .def("to_string", &StateVector::to_string, "Information as `str`.")
-        .def("load", &StateVector::load, "Load amplitudes of `list[int]` with `dim` length.")
-        .def("__str__", &StateVector::to_string, "Information as `str`.")
-        .def_ro_static("UNMEASURED",
-                       &StateVector::UNMEASURED,
-                       "Constant used for `StateVector::get_marginal_probability` to express the "
-                       "the qubit is not measured.");
+            DocString()
+                .desc("Sampling state vector independently and get list of computational basis")
+                .arg({"sampling_count", "int", false, {"how many times to apply sampling"}})
+                .arg({"seed",
+                      "int | None",
+                      true,
+                      {"random seed", "If not specified, the value from random device is used."}})
+                .ret({"list[int]",
+                      {"result of sampling",
+                       "list of `sampling_count` length. Each element is in "
+                       "$[0,2^{\\mathrm{n\\_qubits}})$"}})
+                .ex(DocString::Code{" >>> state = StateVector(2)",
+                                    ">>> state.load([1/2, 0, -3**.5/2, 0])",
+                                    " >>> state.sampling(8) ",
+                                    "[0, 2, 2, 2, 2, 0, 0, 2]"})
+                .build_as_google_style()
+                .c_str())
+        .def(
+            "to_string",
+            &StateVector::to_string,
+            DocString()
+                .desc("Information as `str`.")
+                .ret({"str", {"information as str"}})
+                .ex(DocString::Code{
+                    ">>> state = StateVector(1)",
+                    ">>> state.to_string()",
+                    R"(' *** Quantum State ***\n * Qubit Count : 1\n * Dimension   : 2\n * State vector : \n0: (1,0)\n1: (0,0)\n')"})
+                .build_as_google_style()
+                .c_str())
+        .def("load",
+             &StateVector::load,
+             "other"_a,
+             DocString()
+                 .desc("Load amplitudes of `Sequence`")
+                 .arg({"other",
+                       "collections.abc.Sequence[complex]",
+                       false,
+                       {"list of complex amplitudes with len $2^{\\mathrm{n_qubits}}$"}})
+                 .build_as_google_style()
+                 .c_str())
+        .def("__str__",
+             &StateVector::to_string,
+             DocString()
+                 .desc("Information as `str`.")
+                 .desc("Same as :meth:`.to_string()`")
+                 .build_as_google_style()
+                 .c_str())
+        .def_ro_static(
+            "UNMEASURED",
+            &StateVector::UNMEASURED,
+            DocString()
+                .desc("Constant used for `StateVector::get_marginal_probability` to express the "
+                      "the qubit is not measured.")
+                .build_as_google_style()
+                .c_str());
 }
 }  // namespace internal
 #endif
