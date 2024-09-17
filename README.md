@@ -6,11 +6,13 @@ scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 
 [Qulacs](https://github.com/qulacs/qulacs) に比べ、以下の点が改善されています。
 
-- [Kokkos](https://github.com/kokkos/kokkos) をベースとした実装により、実行環境(CPU/GPU) の切り替えを容易に行うことができます。切り替えの際にコードを変更する必要はありません。
-- よりよい実行速度を実現します。
+- [Kokkos](https://github.com/kokkos/kokkos) をベースとした実装により、実行環境 (CPU/GPU) の切り替えを容易に行うことができます。切り替えの際にコードを変更する必要はありません。
+- よりよいアルゴリズムを採用し，高い実行速度と簡潔な実装を実現します。
+- 量子ゲートの作成時、コントロールキュービットを任意の数だけ設定できます。
 - ポインタをユーザから隠蔽したことにより、より安全に、簡単に記述できます。
 - [nanobind](https://github.com/wjakob/nanobind) の導入により、よりコンパクトかつ高速な Python へのバインディングを実現します。
 - 複数の量子状態に対して同じ回路を適用させるようなケースに対して、より高速なインターフェースを提供します（未実装）。
+- 状態ベクトルのデータを保持する浮動小数点数の精度を、自由に設定できるようにします（未実装）。
 
 ## 依存ライブラリ
 
@@ -21,7 +23,7 @@ scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 
 ## C++ ライブラリとしてインストール
 
-Qulacs2023 を静的ライブラリとしてインストールするには、以下の一連のコマンドを実行します。
+scaluq を静的ライブラリとしてインストールするには、以下の一連のコマンドを実行します。
 
 ```txt
 git clone https://github.com/qulacs/scaluq
@@ -42,12 +44,15 @@ rm build/CMakeCache.txt
 ```
 
 ## Python ライブラリとしてインストール
+
 Python のライブラリとしても使用することができます。
+
 ```txt
 pip install scaluq
 ```
 
 GPUを利用する場合は、リポジトリをクローンしたのちにインストールします。
+
 ```txt
 git clone https://github.com/qulacs/scaluq
 cd ./scaluq
@@ -55,9 +60,9 @@ SCALUQ_USE_CUDA=ON pip install .
 ```
 
 ## Python ドキュメント
+
 Python ライブラリとしてインストールした際の、関数の説明や型の情報がまとめられている、簡易的なドキュメントを用意しています。以下のリンクから確認できます。
 https://scaluq.readthedocs.io/en/latest/index.html
-
 
 ## サンプルコード(C++)
 
@@ -71,8 +76,8 @@ https://scaluq.readthedocs.io/en/latest/index.html
 #include <state/state_vector.hpp>
 
 int main() {
-    scaluq::initialize();  // must be called before using any scaluq methods
-    {
+scaluq::initialize();  // must be called before using any scaluq methods
+{
         const std::uint64_t n_qubits = 3;
         scaluq::StateVector state = scaluq::StateVector::Haar_random_state(n_qubits, 0);
         std::cout << state << std::endl;
@@ -88,8 +93,8 @@ int main() {
         observable.add_random_operator(1, 0);
         auto value = observable.get_expectation_value(state);
         std::cout << value << std::endl;
-    }
-    scaluq::finalize();  // must be called last
+}
+scaluq::finalize();  // must be called last
 }
 ```
 
