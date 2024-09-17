@@ -42,7 +42,7 @@ scaluq::initialize();
 
     // 5-qubitの状態を生成
     // |00000>に初期化されている
-    const unsigned int n = 5;
+    const std::uint32_t n = 5;
     scaluq::StateVector state(n);
 
     std::cout << state << std::endl;
@@ -66,7 +66,7 @@ int main(){
 scaluq::initialize();
 {
 
-    const unsigned int n = 5;
+    const std::uint32_t n = 5;
     scaluq::StateVector state(n);
 
     // 確率振幅のvectorを取得
@@ -89,7 +89,7 @@ int main(){
 scaluq::initialize();
 {
 
-    const unsigned int n = 5;
+    const std::uint32_t n = 5;
     scaluq::StateVector state(n);
 
     // |00000>に初期化
@@ -117,8 +117,8 @@ int main(){
 scaluq::initialize();
 {
 
-    const unsigned int n = 5;
-    const unsigned int dim = 1 << 5; // (=2^5=32)
+    const std::uint32_t n = 5;
+    const std::uint32_t dim = 1 << 5; // (=2^5=32)
     scaluq::StateVector state(n);
 
     // 量子状態のデータを配列から初期化
@@ -149,7 +149,7 @@ int main(){
 scaluq::initialize();
 {
 
-    const unsigned int n = 5;
+    const std::uint32_t n = 5;
     scaluq::StateVector state(n);
 
     // コピーして新たな量子状態を作成
@@ -197,7 +197,7 @@ int main() {
 scaluq::initialize();
 {
 
-    const unsigned int n = 5;
+    const std::uint32_t n = 5;
     scaluq::StateVector state(n);
     
     // 2乗ノルムの計算
@@ -206,12 +206,12 @@ scaluq::initialize();
     double entropy = state.get_entropy();
 
     // k-th qubitをZ基底で測定して0を得る確率の計算
-    unsigned int k = 3;
+    std::uint32_t k = 3;
     double zero_prob = state.get_zero_probability(k);
 
     // 周辺確率を計算する
     // 以下は0,4-th qubitが0、1,2-th qubitが1と測定される確率の例
-    std::vector<unsigned int> expected_values{ 0,1,1,StateVector::UNMEASURED,0 };
+    std::vector<std::uint32_t> expected_values{ 0,1,1,StateVector::UNMEASURED,0 };
     double marginal_prob = state.get_marginal_probability(expected_values);
 
 }
