@@ -1,4 +1,4 @@
-name: Build check
+name: Build and Test
 
 on:
   push:
@@ -15,8 +15,8 @@ on:
       - "*.md"
 
 jobs:
-  build:
-    name: GCC11 build
+  test:
+    name: Build and Test
     strategy:
       matrix:
         os: ["linux", "macos"]
@@ -27,21 +27,21 @@ jobs:
             device: "cuda"
     runs-on: |
       ${{
-        matrix.os == "linux" && "ubuntu-22.04" ||
-        matrix.os == "macos" && "macos-13" ||
+        matrix.os == 'linux' && 'ubuntu-22.04' ||
+        matrix.os == 'macos' && 'macos-13' ||
         "error"
       }}
     env:
       CXX_COMPILER: "/usr/lib/ccache/g++"
       C_COMPILER: "/usr/lib/ccache/gcc"
       SCALUQ_USE_TEST: "Yes"
-      SCALUQ_USE_CUDA: ${{ matrix.device == "cuda" && "Yes" || "No" }}
+      SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'Yes' || 'No' }}
       SCALUQ_CUDA_ARCH: "PASCAL61"
     steps:
       - uses: actions/checkout@v4
 
       - name: Install gcc-11/g++-11
-        if: ${{ matrix.os == "linux" }}
+        if: ${{ matrix.os == 'linux' }}
         run: |
           sudo apt update && \
           sudo apt install -y software-properties-common && \
