@@ -6,8 +6,8 @@ scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 
 [Qulacs](https://github.com/qulacs/qulacs) に比べ、以下の点が改善されています。
 
-- [Kokkos](https://github.com/kokkos/kokkos) をベースとした実装により、実行環境(CPU/GPU) の切り替えを容易に行うことができます。切り替えの際にコードを変更する必要はありません。
-- よりよい実行速度を実現します。
+- [Kokkos](https://github.com/kokkos/kokkos) をベースとした実装により、実行環境 (CPU/GPU) の切り替えを容易に行うことができます。切り替えの際にコードを変更する必要はありません。
+- よりよいアルゴリズムを採用し，高い実行速度を実現します。
 - ポインタをユーザから隠蔽したことにより、より安全に、簡単に記述できます。
 - [nanobind](https://github.com/wjakob/nanobind) の導入により、よりコンパクトかつ高速な Python へのバインディングを実現します。
 - 複数の量子状態に対して同じ回路を適用させるようなケースに対して、より高速なインターフェースを提供します（未実装）。
@@ -42,12 +42,15 @@ rm build/CMakeCache.txt
 ```
 
 ## Python ライブラリとしてインストール
+
 Python のライブラリとしても使用することができます。
+
 ```txt
 pip install scaluq
 ```
 
 GPUを利用する場合は、リポジトリをクローンしたのちにインストールします。
+
 ```txt
 git clone https://github.com/qulacs/scaluq
 cd ./scaluq
@@ -55,9 +58,9 @@ SCALUQ_USE_CUDA=ON pip install .
 ```
 
 ## Python ドキュメント
+
 Python ライブラリとしてインストールした際の、関数の説明や型の情報がまとめられている、簡易的なドキュメントを用意しています。以下のリンクから確認できます。
 https://scaluq.readthedocs.io/en/latest/index.html
-
 
 ## サンプルコード(C++)
 
