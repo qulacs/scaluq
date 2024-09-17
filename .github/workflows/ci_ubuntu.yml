@@ -1,4 +1,4 @@
-name: Ubuntu CI
+name: Build check
 
 on:
   push:
@@ -15,20 +15,33 @@ on:
       - "*.md"
 
 jobs:
-  gcc11-build:
+  build:
     name: GCC11 build
     strategy:
       matrix:
+        os: ["linux", "macos"]
+        device: ["cpu", "cuda"]
         python-version: ["3.10"]
-    runs-on: "ubuntu-22.04"
+        exclude:
+          - os: "macos"
+            device: "cuda"
+    runs-on: |
+      ${{
+        matrix.os == "linux" && "ubuntu-22.04" ||
+        matrix.os == "macos" && "macos-13" ||
+        "error"
+      }}
     env:
       CXX_COMPILER: "/usr/lib/ccache/g++"
       C_COMPILER: "/usr/lib/ccache/gcc"
       SCALUQ_USE_TEST: "Yes"
+      SCALUQ_USE_CUDA: ${{ matrix.device == "cuda" && "Yes" || "No" }}
+      SCALUQ_CUDA_ARCH: "PASCAL61"
     steps:
       - uses: actions/checkout@v4
 
       - name: Install gcc-11/g++-11
+        if: ${{ matrix.os == "linux" }}
         run: |
           sudo apt update && \
           sudo apt install -y software-properties-common && \
@@ -46,8 +59,22 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: "${{ github.job }}-ubuntu-22.04"
+          key: "${{ github.job }}-${{ matrix.device }}"
           verbose: 2
+
+      - name: Install CUDA toolkit
+        if: ${{ matrix.device == "cuda" }}
+        uses: Jimver/cuda-toolkit@v0.2.11
+        with:
+          cuda: "12.2.0"
+          method: "network"
+      
+      - name: Show installed Compiler version
+        run: |
+          nvcc --version
+          gcc --version
+          g++ --version
+          cmake --version
 
       - name: Install scaluq for Ubuntu
         run: CMAKE_BUILD_TYPE=Debug ./script/build_gcc.sh
@@ -63,6 +90,7 @@ jobs:
         run: pip install .[ci]
 
       - name: Test in Ubuntu
+        if: ${{ matrix.device == "cpu" }} # currently GPU runner is not supported
         run: |
           OMP_PROC_BIND=false ninja test -C build -j $(nproc)
       
@@ -70,60 +98,3 @@ jobs:
         run: |
           echo -e "from scaluq import StateVector\nfrom scaluq.gate import I" > /tmp/stub_sample.py
           mypy /tmp/stub_sample.py
-
-  nvcc-build:
-    name: NVCC build
-    strategy:
-      matrix:
-        python-version: ["3.10"]
-    runs-on: "ubuntu-22.04"
-    env:
-      CXX_COMPILER: "/usr/lib/ccache/g++"
-      C_COMPILER: "/usr/lib/ccache/gcc"
-      SCALUQ_USE_TEST: "Yes"
-      SCALUQ_USE_CUDA: "Yes"
-      SCALUQ_CUDA_ARCH: "PASCAL61"
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install gcc-11/g++-11
-        run: |
-          sudo apt update && \
-          sudo apt install -y software-properties-common && \
-          sudo apt update && \
-          sudo apt install -y gcc-11 g++-11 && \
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 && \
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
-
-      - name: Setup cmake
-        uses: lukka/get-cmake@latest
-
-      - name: Install Ninja
-        run: sudo apt install ninja-build
-
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: "${{ github.job }}-ubuntu-22.04"
-          verbose: 2
-      
-      - name: Install CUDA toolkit
-        uses: Jimver/cuda-toolkit@v0.2.11
-        with:
-          cuda: "12.2.0"
-          method: "network"
-      
-      - name: Show installed Compiler version
-        run: |
-          nvcc --version
-          gcc --version
-          g++ --version
-          cmake --version
-
-      - name: Install scaluq for Ubuntu
-        run: ./script/build_gcc.sh
-
-      - name: Install scaluq Python module
-        run: SCALUQ_USE_CUDA=ON pip install .[ci]
-
-      # GitHub Actions cannot run CUDA program

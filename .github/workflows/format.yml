@@ -1,0 +1,40 @@
+name: Ubuntu CI
+
+on:
+  push:
+    paths-ignore:
+      - ".devcontainer/**"
+      - ".vscode/**"
+      - "doc/**"
+      - "*.md"
+  pull_request:
+    paths-ignore:
+      - ".devcontainer/**"
+      - ".vscode/**"
+      - "doc/**"
+      - "*.md"
+
+jobs:
+  check-format:
+    name: Check Format
+    runs-on: "ubuntu-22.04"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup cmake
+        uses: lukka/get-cmake@latest
+          
+      - name: Install Ninja
+        run: sudo apt install ninja-build
+
+      - name: Configure
+        run: |
+          mkdir -p ./build
+          cmake -B build -G Ninja
+
+      - name: Check format
+        run: |
+          ninja -C build format
+          diff=$(git diff)
+          echo -n "$diff"
+          test $(echo -n "$diff" | wc -l) -eq 0
