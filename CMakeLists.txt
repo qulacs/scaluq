@@ -122,6 +122,14 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
         -Wuninitialized
     )
 
+    if(SCALUQ_USE_CUDA)
+        # to remove tremendous warnings of Eigen
+        target_compile_options(scaluq PUBLIC
+            -Wno-unknown-pragmas
+            --expt-relaxed-constexpr
+        ) 
+    endif()
+
     # Enable pthread
     target_compile_options(scaluq PUBLIC -pthread)
 

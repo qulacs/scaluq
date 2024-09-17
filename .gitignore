@@ -38,3 +38,8 @@
 /build
 /typings
 /dist
+/doc/source/autoapi/
+/doc/source/stub/
+/doc/build/
+/python/scaluq/_version.py
+/kokkos-tools

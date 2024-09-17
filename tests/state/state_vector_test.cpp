@@ -14,16 +14,6 @@ using namespace scaluq;
 
 const double eps = 1e-12;
 
-bool same_state(const StateVector& s1, const StateVector& s2) {
-    auto s1_cp = s1.amplitudes();
-    auto s2_cp = s2.amplitudes();
-    assert(s1.n_qubits() == s2.n_qubits());
-    for (UINT i = 0; i < s1.dim(); ++i) {
-        if (std::abs((CComplex)s1_cp[i] - (CComplex)s2_cp[i]) > eps) return false;
-    }
-    return true;
-};
-
 TEST(StateVectorTest, HaarRandomStateNorm) {
     const int n_tries = 20;
     for (int n = 1; n <= n_tries; n++) {
@@ -34,10 +24,10 @@ TEST(StateVectorTest, HaarRandomStateNorm) {
 
 TEST(StateVectorTest, OperationAtIndex) {
     auto state = StateVector::Haar_random_state(10);
-    for (UINT i = 0; i < state.dim(); ++i) {
-        state.set_amplitude_at_index(i, 1);
-        ASSERT_NEAR(state.get_amplitude_at_index(i).real(), 1, eps);
-        ASSERT_NEAR(state.get_amplitude_at_index(i).imag(), 0., eps);
+    for (std::uint64_t i = 0; i < state.dim(); ++i) {
+        state.set_amplitude_at(i, 1);
+        ASSERT_NEAR(state.get_amplitude_at(i).real(), 1, eps);
+        ASSERT_NEAR(state.get_amplitude_at(i).imag(), 0., eps);
     }
 }
 
@@ -45,31 +35,31 @@ TEST(StateVectorTest, CopyState) {
     const int n = 5;
     const auto state = StateVector::Haar_random_state(n);
     StateVector state_cp = state.copy();
-    auto vec1 = state.amplitudes();
-    auto vec2 = state_cp.amplitudes();
+    auto vec1 = state.get_amplitudes();
+    auto vec2 = state_cp.get_amplitudes();
     ASSERT_EQ(vec1, vec2);
 }
 
 TEST(StateVectorTest, ZeroNormState) {
-    const UINT n = 5;
+    const std::uint64_t n = 5;
 
     StateVector state(StateVector::Haar_random_state(n));
     state.set_zero_norm_state();
-    auto state_cp = state.amplitudes();
+    auto state_cp = state.get_amplitudes();
 
-    for (UINT i = 0; i < state.dim(); ++i) {
+    for (std::uint64_t i = 0; i < state.dim(); ++i) {
         ASSERT_EQ((CComplex)state_cp[i], CComplex(0, 0));
     }
 }
 
 TEST(StateVectorTest, ComputationalBasisState) {
-    const UINT n = 5;
+    const std::uint64_t n = 5;
 
     StateVector state(StateVector::Haar_random_state(n));
     state.set_computational_basis(31);
-    auto state_cp = state.amplitudes();
+    auto state_cp = state.get_amplitudes();
 
-    for (UINT i = 0; i < state.dim(); ++i) {
+    for (std::uint64_t i = 0; i < state.dim(); ++i) {
         if (i == 31) {
             ASSERT_EQ((CComplex)state_cp[i], CComplex(1, 0));
         } else {
@@ -79,8 +69,8 @@ TEST(StateVectorTest, ComputationalBasisState) {
 }
 
 TEST(StateVectorTest, HaarRandomStateSameSeed) {
-    const UINT n = 10, m = 5;
-    for (UINT i = 0; i < m; ++i) {
+    const std::uint64_t n = 10, m = 5;
+    for (std::uint64_t i = 0; i < m; ++i) {
         StateVector state1(StateVector::Haar_random_state(n, i)),
             state2(StateVector::Haar_random_state(n, i));
         ASSERT_TRUE(same_state(state1, state2));
@@ -88,8 +78,8 @@ TEST(StateVectorTest, HaarRandomStateSameSeed) {
 }
 
 TEST(StateVectorTest, HaarRandomStateWithoutSeed) {
-    const UINT n = 10, m = 5;
-    for (UINT i = 0; i < m; ++i) {
+    const std::uint64_t n = 10, m = 5;
+    for (std::uint64_t i = 0; i < m; ++i) {
         StateVector state1(StateVector::Haar_random_state(n)),
             state2(StateVector::Haar_random_state(n));
         ASSERT_FALSE(same_state(state1, state2));
@@ -97,15 +87,15 @@ TEST(StateVectorTest, HaarRandomStateWithoutSeed) {
 }
 
 TEST(StateVectorTest, AddState) {
-    const UINT n = 10;
+    const std::uint64_t n = 10;
     StateVector state1(StateVector::Haar_random_state(n));
     StateVector state2(StateVector::Haar_random_state(n));
-    auto vec1 = state1.amplitudes();
-    auto vec2 = state2.amplitudes();
+    auto vec1 = state1.get_amplitudes();
+    auto vec2 = state2.get_amplitudes();
     state1.add_state_vector(state2);
-    auto new_vec = state1.amplitudes();
+    auto new_vec = state1.get_amplitudes();
 
-    for (UINT i = 0; i < state1.dim(); ++i) {
+    for (std::uint64_t i = 0; i < state1.dim(); ++i) {
         CComplex res = new_vec[i], val = (CComplex)vec1[i] + (CComplex)vec2[i];
         ASSERT_NEAR(res.real(), val.real(), eps);
         ASSERT_NEAR(res.imag(), val.imag(), eps);
@@ -114,16 +104,16 @@ TEST(StateVectorTest, AddState) {
 
 TEST(StateVectorTest, AddStateWithCoef) {
     const CComplex coef(2.5, 1.3);
-    const UINT n = 10;
+    const std::uint64_t n = 10;
     StateVector state1(StateVector::Haar_random_state(n));
     StateVector state2(StateVector::Haar_random_state(n));
-    auto vec1 = state1.amplitudes();
-    auto vec2 = state2.amplitudes();
+    auto vec1 = state1.get_amplitudes();
+    auto vec2 = state2.get_amplitudes();
 
     state1.add_state_vector_with_coef(coef, state2);
-    auto new_vec = state1.amplitudes();
+    auto new_vec = state1.get_amplitudes();
 
-    for (UINT i = 0; i < state1.dim(); ++i) {
+    for (std::uint64_t i = 0; i < state1.dim(); ++i) {
         CComplex res = new_vec[i], val = (CComplex)vec1[i] + coef * (CComplex)vec2[i];
         ASSERT_NEAR(res.real(), val.real(), eps);
         ASSERT_NEAR(res.imag(), val.imag(), eps);
@@ -131,15 +121,15 @@ TEST(StateVectorTest, AddStateWithCoef) {
 }
 
 TEST(StateVectorTest, MultiplyCoef) {
-    const UINT n = 10;
+    const std::uint64_t n = 10;
     const CComplex coef(0.5, 0.2);
 
     StateVector state(StateVector::Haar_random_state(n));
-    auto vec = state.amplitudes();
+    auto vec = state.get_amplitudes();
     state.multiply_coef(coef);
-    auto new_vec = state.amplitudes();
+    auto new_vec = state.get_amplitudes();
 
-    for (UINT i = 0; i < state.dim(); ++i) {
+    for (std::uint64_t i = 0; i < state.dim(); ++i) {
         CComplex res = new_vec[i], val = coef * (CComplex)vec[i];
         ASSERT_NEAR(res.real(), val.real(), eps);
         ASSERT_NEAR(res.imag(), val.imag(), eps);
@@ -147,10 +137,10 @@ TEST(StateVectorTest, MultiplyCoef) {
 }
 
 TEST(StateVectorTest, GetZeroProbability) {
-    const UINT n = 10;
+    const std::uint64_t n = 10;
     StateVector state(n);
     state.set_computational_basis(1);
-    for (UINT i = 2; i <= 10; ++i) {
+    for (std::uint64_t i = 2; i <= 10; ++i) {
         StateVector tmp_state(n);
         tmp_state.set_computational_basis(i);
         state.add_state_vector_with_coef(std::sqrt(i), tmp_state);
@@ -163,21 +153,21 @@ TEST(StateVectorTest, GetZeroProbability) {
 }
 
 TEST(StateVectorTest, EntropyCalculation) {
-    const UINT n = 6;
-    const UINT dim = 1ULL << n;
-    const UINT max_repeat = 10;
+    const std::uint64_t n = 6;
+    const std::uint64_t dim = 1ULL << n;
+    const std::uint64_t max_repeat = 10;
 
     StateVector state(n);
-    for (UINT rep = 0; rep < max_repeat; ++rep) {
+    for (std::uint64_t rep = 0; rep < max_repeat; ++rep) {
         state = StateVector::Haar_random_state(n);
-        auto state_cp = state.amplitudes();
+        auto state_cp = state.get_amplitudes();
         ASSERT_NEAR(state.get_squared_norm(), 1, eps);
         Eigen::VectorXcd test_state(dim);
-        for (UINT i = 0; i < dim; ++i) test_state[i] = (CComplex)state_cp[i];
+        for (std::uint64_t i = 0; i < dim; ++i) test_state[i] = (CComplex)state_cp[i];
 
-        for (UINT target = 0; target < n; ++target) {
+        for (std::uint64_t target = 0; target < n; ++target) {
             double ent = 0;
-            for (UINT ind = 0; ind < dim; ++ind) {
+            for (std::uint64_t ind = 0; ind < dim; ++ind) {
                 CComplex z = test_state[ind];
                 double prob = z.real() * z.real() + z.imag() * z.imag();
                 if (prob > eps) ent += -prob * log(prob);
@@ -188,34 +178,40 @@ TEST(StateVectorTest, EntropyCalculation) {
 }
 
 TEST(StateVectorTest, GetMarginalProbability) {
-    const UINT n = 2;
-    const UINT dim = 1 << n;
+    const std::uint64_t n = 2;
+    const std::uint64_t dim = 1 << n;
     StateVector state(StateVector::Haar_random_state(n));
-    auto state_cp = state.amplitudes();
+    auto state_cp = state.get_amplitudes();
     std::vector<double> probs;
-    for (UINT i = 0; i < dim; ++i) {
-        probs.push_back(squared_norm(state_cp[i]));
+    for (std::uint64_t i = 0; i < dim; ++i) {
+        probs.push_back(internal::squared_norm(state_cp[i]));
     }
     ASSERT_NEAR(state.get_marginal_probability({0, 0}), probs[0], eps);
     ASSERT_NEAR(state.get_marginal_probability({1, 0}), probs[1], eps);
     ASSERT_NEAR(state.get_marginal_probability({0, 1}), probs[2], eps);
     ASSERT_NEAR(state.get_marginal_probability({1, 1}), probs[3], eps);
-    ASSERT_NEAR(state.get_marginal_probability({0, 2}), probs[0] + probs[2], eps);
-    ASSERT_NEAR(state.get_marginal_probability({1, 2}), probs[1] + probs[3], eps);
-    ASSERT_NEAR(state.get_marginal_probability({2, 0}), probs[0] + probs[1], eps);
-    ASSERT_NEAR(state.get_marginal_probability({2, 1}), probs[2] + probs[3], eps);
-    ASSERT_NEAR(state.get_marginal_probability({2, 2}), 1., eps);
+    ASSERT_NEAR(
+        state.get_marginal_probability({0, StateVector::UNMEASURED}), probs[0] + probs[2], eps);
+    ASSERT_NEAR(
+        state.get_marginal_probability({1, StateVector::UNMEASURED}), probs[1] + probs[3], eps);
+    ASSERT_NEAR(
+        state.get_marginal_probability({StateVector::UNMEASURED, 0}), probs[0] + probs[1], eps);
+    ASSERT_NEAR(
+        state.get_marginal_probability({StateVector::UNMEASURED, 1}), probs[2] + probs[3], eps);
+    ASSERT_NEAR(state.get_marginal_probability({StateVector::UNMEASURED, StateVector::UNMEASURED}),
+                1.,
+                eps);
 }
 
 TEST(StateVectorTest, SamplingSuperpositionState) {
-    const UINT n = 10;
-    const UINT nshot = 65536;
-    const UINT test_count = 10;
-    UINT pass_count = 0;
-    for (UINT test_i = 0; test_i < test_count; test_i++) {
+    const std::uint64_t n = 10;
+    const std::uint64_t nshot = 65536;
+    const std::uint64_t test_count = 10;
+    std::uint64_t pass_count = 0;
+    for (std::uint64_t test_i = 0; test_i < test_count; test_i++) {
         StateVector state(n);
         state.set_computational_basis(0);
-        for (UINT i = 1; i <= 4; ++i) {
+        for (std::uint64_t i = 1; i <= 4; ++i) {
             StateVector tmp_state(n);
             tmp_state.set_computational_basis(i);
             state.add_state_vector_with_coef(1 << i, tmp_state);
@@ -223,14 +219,14 @@ TEST(StateVectorTest, SamplingSuperpositionState) {
         state.normalize();
         std::vector<size_t> res = state.sampling(nshot);
 
-        std::array<UINT, 5> cnt = {};
-        for (UINT i = 0; i < nshot; ++i) {
+        std::array<std::uint64_t, 5> cnt = {};
+        for (std::uint64_t i = 0; i < nshot; ++i) {
             ASSERT_GE(res[i], 0);
             ASSERT_LE(res[i], 4);
             cnt[res[i]] += 1;
         }
         bool pass = true;
-        for (UINT i = 0; i < 4; i++) {
+        for (std::uint64_t i = 0; i < 4; i++) {
             std::string err_message = _CHECK_GT(cnt[i + 1], cnt[i]);
             if (err_message != "") {
                 pass = false;
@@ -243,12 +239,12 @@ TEST(StateVectorTest, SamplingSuperpositionState) {
 }
 
 TEST(StateVectorTest, SamplingComputationalBasis) {
-    const UINT n = 10;
-    const UINT nshot = 1024;
+    const std::uint64_t n = 10;
+    const std::uint64_t nshot = 1024;
     StateVector state(n);
     state.set_computational_basis(100);
     auto res = state.sampling(nshot);
-    for (UINT i = 0; i < nshot; ++i) {
+    for (std::uint64_t i = 0; i < nshot; ++i) {
         ASSERT_TRUE(res[i] == 100);
     }
 }

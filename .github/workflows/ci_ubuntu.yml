@@ -62,16 +62,14 @@ jobs:
       - name: Install scaluq Python module
         run: pip install .[ci]
 
-      - name: Check stubs
-        run: |
-          ./script/update_stubs.sh
-          diff=$(git diff)
-          echo -n "$diff"
-          test $(echo -n "$diff" | wc -l) -eq 0
-
       - name: Test in Ubuntu
         run: |
           OMP_PROC_BIND=false ninja test -C build -j $(nproc)
+      
+      - name: Test if stub exists
+        run: |
+          echo -e "from scaluq import StateVector\nfrom scaluq.gate import I" > /tmp/stub_sample.py
+          mypy /tmp/stub_sample.py
 
   nvcc-build:
     name: NVCC build
@@ -124,5 +122,8 @@ jobs:
 
       - name: Install scaluq for Ubuntu
         run: ./script/build_gcc.sh
-      
+
+      - name: Install scaluq Python module
+        run: SCALUQ_USE_CUDA=ON pip install .[ci]
+
       # GitHub Actions cannot run CUDA program

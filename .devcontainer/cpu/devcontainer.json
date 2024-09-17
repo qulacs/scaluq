@@ -20,20 +20,20 @@
 				},
 				"editor.defaultFormatter": "xaver.clang-format",
 				"files.insertFinalNewline": true,
+				"python.analysis.exclude": ["."],
 				"python.linting.enabled": true,
 				"python.linting.pylintEnabled": false,
 				"python.linting.flake8Enabled": true,
-				"python.formatting.provider": "black",
 				"python.linting.mypyEnabled": true,
+				"python.formatting.provider": "black",
 				"python.terminal.activateEnvironment": false,
 				// CAVEAT: you need to restart after building scaluq to take effect.
 				"C_Cpp.default.includePath": [
 					"scaluq",
 					"/usr/local/include/kokkos",
-					"/usr/local/include/python3.9",
 					"build/_deps/eigen_fetch-src",
 					"build/_deps/googletest_fetch-src/googletest/include",
-					"/usr/local/lib/python3.10/dist-packages/nanobind/include",
+					"~/.local/lib/python3.10/site-packages/nanobind/include",
 					"/usr/include/python3.10"
 				],
 				"C_Cpp.default.cppStandard": "c++20"

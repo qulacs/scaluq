@@ -13,15 +13,15 @@ TEST(PauliOperatorTest, ContainsExtraWhitespace) {
     PauliOperator expected = PauliOperator("X 0", 1.0);
     PauliOperator pauli_whitespace = PauliOperator("X 0 ", 1.0);
 
-    EXPECT_EQ(1, pauli_whitespace.get_target_qubit_list().size());
-    EXPECT_EQ(1, pauli_whitespace.get_pauli_id_list().size());
+    EXPECT_EQ(1, pauli_whitespace.target_qubit_list().size());
+    EXPECT_EQ(1, pauli_whitespace.pauli_id_list().size());
     EXPECT_EQ(expected.get_pauli_string(), pauli_whitespace.get_pauli_string());
 }
 
 TEST(PauliOperatorTest, EmptyStringConstructsIdentity) {
     const auto identity = PauliOperator("", 1.0);
-    ASSERT_EQ(0, identity.get_target_qubit_list().size());
-    ASSERT_EQ(0, identity.get_pauli_id_list().size());
+    ASSERT_EQ(0, identity.target_qubit_list().size());
+    ASSERT_EQ(0, identity.pauli_id_list().size());
     ASSERT_EQ("", identity.get_pauli_string());
 }
 
@@ -62,7 +62,7 @@ TEST(PauliOperatorTest, SpacedPauliString) {
     double coef = 2.0;
     std::string Pauli_string = "X 0 Y 1 ";
     PauliOperator pauli = PauliOperator(Pauli_string, coef);
-    size_t PauliSize = pauli.get_target_qubit_list().size();
+    size_t PauliSize = pauli.target_qubit_list().size();
     ASSERT_EQ(PauliSize, 2);
 }
 
@@ -95,15 +95,15 @@ TEST_P(PauliOperatorMultiplyTest, MultiplyTest) {
     const auto p = GetParam();
     PauliOperator res = p.op1 * p.op2;
     EXPECT_EQ(p.expected.get_pauli_string(), res.get_pauli_string());
-    EXPECT_EQ(p.expected.get_coef(), res.get_coef());
+    EXPECT_EQ(p.expected.coef(), res.coef());
 }
 
 TEST_P(PauliOperatorMultiplyTest, MultiplyAssignmentTest) {
     const auto p = GetParam();
     PauliOperator res = p.op1;
-    res *= p.op2;
+    res = res * p.op2;
     EXPECT_EQ(p.expected.get_pauli_string(), res.get_pauli_string());
-    EXPECT_EQ(p.expected.get_coef(), res.get_coef());
+    EXPECT_EQ(p.expected.coef(), res.coef());
 }
 
 INSTANTIATE_TEST_CASE_P(
@@ -154,12 +154,12 @@ INSTANTIATE_TEST_CASE_P(
     PauliOperatorMultiplyTest,
     []() {
         double coef = 2.0;
-        UINT MAX_TERM = 100;
+        std::uint64_t MAX_TERM = 64;
         std::string pauli_string_x = "";
         std::string pauli_string_y = "";
         std::string pauli_string_z = "";
 
-        for (UINT i = 0; i < MAX_TERM; i++) {
+        for (std::uint64_t i = 0; i < MAX_TERM; i++) {
             pauli_string_x += "X " + std::to_string(i);
             pauli_string_y += "Y " + std::to_string(i);
             pauli_string_z += "Z " + std::to_string(i);
@@ -177,3 +177,18 @@ INSTANTIATE_TEST_CASE_P(
         return testing::Values(PauliTestParam("Z_Y", pauli_z, pauli_y, expected));
     }(),
     testing::PrintToStringParamName());
+
+TEST(PauliOperatorTest, ApplyToStateTest) {
+    const std::uint64_t n_qubits = 3;
+    StateVector state_vector(n_qubits);
+    state_vector.load([n_qubits] {
+        std::vector<Complex> tmp(1 << n_qubits);
+        for (std::uint64_t i = 0; i < tmp.size(); ++i) tmp[i] = Complex(i, 0);
+        return tmp;
+    }());
+
+    PauliOperator op(0b001, 0b010, Complex(2));
+    op.apply_to_state(state_vector);
+    std::vector<Complex> expected = {2, 0, -6, -4, 10, 8, -14, -12};
+    ASSERT_EQ(state_vector.get_amplitudes(), expected);
+}
