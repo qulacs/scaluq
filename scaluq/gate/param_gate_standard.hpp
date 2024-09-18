@@ -28,6 +28,8 @@ public:
         rx_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
     }
 
+    void update_quantum_state(StateVectorBatched& states, double param) const override {}
+
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: ParamRX\n";
@@ -55,6 +57,8 @@ public:
         ry_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
     }
 
+    void update_quantum_state(StateVectorBatched& states, double param) const override {}
+
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: ParamRY\n";
@@ -81,6 +85,8 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         rz_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
     }
+
+    void update_quantum_state(StateVectorBatched& states, double param) const override {}
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;

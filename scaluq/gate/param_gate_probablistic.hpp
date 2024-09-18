@@ -96,6 +96,8 @@ public:
         }
     }
 
+    void update_quantum_state(StateVectorBatched& states, double param) const override {}
+
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         const auto dist = distribution();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../state/state_vector.hpp"
+#include "../state/state_vector_batched.hpp"
 #include "../types.hpp"
 #include "update_ops.hpp"
 
@@ -114,6 +115,7 @@ public:
     [[nodiscard]] virtual internal::ComplexMatrix get_matrix(double param) const = 0;
 
     virtual void update_quantum_state(StateVector& state_vector, double param) const = 0;
+    virtual void update_quantum_state(StateVectorBatched& states, double param) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 };
@@ -229,6 +231,13 @@ namespace internal {
             },                                                                                    \
             "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is " \
             "directly updated.")                                                                  \
+        .def(                                                                                     \
+            "update_quantum_state",                                                               \
+            [](const PARAM_GATE_TYPE& param_gate, StateVectorBatched& states, double param) {     \
+                param_gate->update_quantum_state(states, param);                                  \
+            },                                                                                    \
+            "Apply gate to `states` with holding the parameter. `states` in args is directly "    \
+            "updated.")                                                                           \
         .def(                                                                                     \
             "get_matrix",                                                                         \
             [](const PARAM_GATE_TYPE& gate, double param) { return gate->get_matrix(param); },    \

@@ -27,6 +27,8 @@ public:
         apply_pauli(_control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), state_vector);
     }
 
+    void update_quantum_state(StateVectorBatched& states) const override {}
+
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         auto controls = control_qubit_list();
@@ -72,6 +74,8 @@ public:
         apply_pauli_rotation(
             _control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), _angle, state_vector);
     }
+
+    void update_quantum_state(StateVectorBatched& states) const override {}
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;

@@ -86,6 +86,8 @@ public:
         _gate_list[i]->update_quantum_state(state_vector);
     }
 
+    void update_quantum_state(StateVectorBatched& states) const override {}
+
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         const auto dist = distribution();

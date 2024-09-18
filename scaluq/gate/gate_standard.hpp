@@ -19,6 +19,8 @@ public:
         i_gate(_target_mask, _control_mask, state_vector);
     }
 
+    void update_quantum_state(StateVectorBatched& states) const override {}
+
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: I\n";
@@ -48,6 +50,8 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         global_phase_gate(_target_mask, _control_mask, _phase, state_vector);
     }
+
+    void update_quantum_state(StateVectorBatched& states) const override {}
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
@@ -85,6 +89,8 @@ public:
         x_gate(_target_mask, _control_mask, state_vector);
     }
 
+    void update_quantum_state(StateVectorBatched& states) const override {}
+
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: X\n";
@@ -108,6 +114,8 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         y_gate(_target_mask, _control_mask, state_vector);
     }
+
+    void update_quantum_state(StateVectorBatched& states) const override {}
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
@@ -133,6 +141,8 @@ public:
         z_gate(_target_mask, _control_mask, state_vector);
     }
 
+    void update_quantum_state(StateVectorBatched& states) const override {}
+
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: Z\n";
@@ -157,6 +167,8 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         h_gate(_target_mask, _control_mask, state_vector);
     }
+
+    void update_quantum_state(StateVectorBatched& states) const override {}
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
@@ -191,6 +203,8 @@ public:
         s_gate(_target_mask, _control_mask, state_vector);
     }
 
+    void update_quantum_state(StateVectorBatched& states) const override {}
+
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: S\n";
@@ -216,6 +230,8 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         sdag_gate(_target_mask, _control_mask, state_vector);
     }
+
+    void update_quantum_state(StateVectorBatched& states) const override {}
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
@@ -245,6 +261,8 @@ public:
         t_gate(_target_mask, _control_mask, state_vector);
     }
 
+    void update_quantum_state(StateVectorBatched& states) const override {}
+
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: T\n";
@@ -270,6 +288,8 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         tdag_gate(_target_mask, _control_mask, state_vector);
     }
+
+    void update_quantum_state(StateVectorBatched& states) const override {}
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
@@ -299,6 +319,8 @@ public:
         sqrtx_gate(_target_mask, _control_mask, state_vector);
     }
 
+    void update_quantum_state(StateVectorBatched& states) const override {}
+
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: SqrtX\n";
@@ -324,6 +346,8 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         sqrtxdag_gate(_target_mask, _control_mask, state_vector);
     }
+
+    void update_quantum_state(StateVectorBatched& states) const override {}
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
@@ -353,6 +377,8 @@ public:
         sqrty_gate(_target_mask, _control_mask, state_vector);
     }
 
+    void update_quantum_state(StateVectorBatched& states) const override {}
+
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: SqrtY\n";
@@ -378,6 +404,8 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         sqrtydag_gate(_target_mask, _control_mask, state_vector);
     }
+
+    void update_quantum_state(StateVectorBatched& states) const override {}
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
@@ -409,6 +437,8 @@ public:
         p0_gate(_target_mask, _control_mask, state_vector);
     }
 
+    void update_quantum_state(StateVectorBatched& states) const override {}
+
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: P0\n";
@@ -434,6 +464,8 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         p1_gate(_target_mask, _control_mask, state_vector);
     }
+
+    void update_quantum_state(StateVectorBatched& states) const override {}
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
@@ -461,6 +493,8 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         rx_gate(_target_mask, _control_mask, _angle, state_vector);
     }
+
+    void update_quantum_state(StateVectorBatched& states) const override {}
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
@@ -490,6 +524,8 @@ public:
         ry_gate(_target_mask, _control_mask, _angle, state_vector);
     }
 
+    void update_quantum_state(StateVectorBatched& states) const override {}
+
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: RY\n";
@@ -516,6 +552,8 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         rz_gate(_target_mask, _control_mask, _angle, state_vector);
     }
+
+    void update_quantum_state(StateVectorBatched& states) const override {}
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
@@ -548,6 +586,8 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         u1_gate(_target_mask, _control_mask, _lambda, state_vector);
     }
+
+    void update_quantum_state(StateVectorBatched& states) const override {}
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
@@ -585,6 +625,8 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         u2_gate(_target_mask, _control_mask, _phi, _lambda, state_vector);
     }
+
+    void update_quantum_state(StateVectorBatched& states) const override {}
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
@@ -626,6 +668,8 @@ public:
         u3_gate(_target_mask, _control_mask, _theta, _phi, _lambda, state_vector);
     }
 
+    void update_quantum_state(StateVectorBatched& states) const override {}
+
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: U3\n";
@@ -649,6 +693,8 @@ public:
         check_qubit_mask_within_bounds(state_vector);
         swap_gate(_target_mask, _control_mask, state_vector);
     }
+
+    void update_quantum_state(StateVectorBatched& states) const override {}
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;

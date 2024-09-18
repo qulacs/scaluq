@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../state/state_vector.hpp"
+#include "../state/state_vector_batched.hpp"
 #include "../types.hpp"
 #include "../util/utility.hpp"
 #include "update_ops.hpp"
@@ -202,6 +203,7 @@ public:
     [[nodiscard]] virtual internal::ComplexMatrix get_matrix() const = 0;
 
     virtual void update_quantum_state(StateVector& state_vector) const = 0;
+    virtual void update_quantum_state(StateVectorBatched& states) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 };
@@ -273,7 +275,7 @@ public:
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-#define DEF_GATE_BASE(GATE_TYPE, DESCRIPTION)                                            \
+#define DEF_GATE_BASE(GATE_TYPE, DESCRIPTION)                                              \
     nb::class_<GATE_TYPE>(m, #GATE_TYPE, DESCRIPTION)                                    \
         .def("gate_type", &GATE_TYPE::gate_type, "Get gate type as `GateType` enum.")    \
         .def(                                                                            \
@@ -311,16 +313,28 @@ namespace internal {
             },                                                                           \
             "Apply gate to `state_vector`. `state_vector` in args is directly updated.") \
         .def(                                                                            \
+            "update_quantum_state",                                                      \
+            [](const GATE_TYPE& gate, StateVectorBatched& states) {                      \
+                gate->update_quantum_state(states);                                      \
+            },                                                                           \
+            "Apply gate to `state_vector_batched`. `states` in args is directly updated."\
+        )                                                                                \
+        .def(                                                                            \
             "get_matrix",                                                                \
-            [](const GATE_TYPE& gate) { return gate->get_matrix(); },                    \
+            [](const GATE_TYPE& gate) {
+return gate->get_matrix();
+}  // namespace internal
+,                    \
             "Get matrix representation of the gate.")                                    \
         .def(                                                                            \
             "to_string",                                                                 \
-            [](const GATE_TYPE& gate) { return gate->to_string(""); },                   \
+            [](const GATE_TYPE& gate) {
+    return gate->to_string(""); },                   \
             "Get string representation of the gate.")                                    \
         .def(                                                                            \
             "__str__",                                                                   \
-            [](const GATE_TYPE& gate) { return gate->to_string(""); },                   \
+            [](const GATE_TYPE& gate) {
+    return gate->to_string(""); },                   \
             "Get string representation of the gate.")
 
 nb::class_<Gate> gate_base_def;
