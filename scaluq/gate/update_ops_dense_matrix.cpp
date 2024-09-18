@@ -26,6 +26,28 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
+void one_target_dense_matrix_gate(std::uint64_t target_mask,
+                                  std::uint64_t control_mask,
+                                  const Matrix2x2& matrix,
+                                  StateVectorBatched& states) {
+    Kokkos::parallel_for(
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
+            {0, 0},
+            {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
+        KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
+            std::uint64_t basis_0 =
+                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
+            std::uint64_t basis_1 = basis_0 | target_mask;
+            Complex val0 = states._raw(batch_id, basis_0);
+            Complex val1 = states._raw(batch_id, basis_1);
+            Complex res0 = matrix[0][0] * val0 + matrix[0][1] * val1;
+            Complex res1 = matrix[1][0] * val0 + matrix[1][1] * val1;
+            states._raw(batch_id, basis_0) = res0;
+            states._raw(batch_id, basis_1) = res1;
+        });
+    Kokkos::fence();
+}
+
 void two_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   const Matrix4x4& matrix,

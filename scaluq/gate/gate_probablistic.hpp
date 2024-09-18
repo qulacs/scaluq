@@ -7,7 +7,7 @@ namespace scaluq {
 namespace internal {
 class ProbablisticGateImpl : public GateBase {
     std::vector<double> _distribution;
-    std::vector<double> _cumlative_distribution;
+    std::vector<double> _cumulative_distribution;
     std::vector<Gate> _gate_list;
 
 public:
@@ -21,10 +21,10 @@ public:
         if (n != gate_list.size()) {
             throw std::runtime_error("distribution and gate_list have different size.");
         }
-        _cumlative_distribution.resize(n + 1);
+        _cumulative_distribution.resize(n + 1);
         std::partial_sum(
-            distribution.begin(), distribution.end(), _cumlative_distribution.begin() + 1);
-        if (std::abs(_cumlative_distribution.back() - 1.) > 1e-6) {
+            distribution.begin(), distribution.end(), _cumulative_distribution.begin() + 1);
+        if (std::abs(_cumulative_distribution.back() - 1.) > 1e-6) {
             throw std::runtime_error("Sum of distribution must be equal to 1.");
         }
     }
@@ -79,14 +79,33 @@ public:
     void update_quantum_state(StateVector& state_vector) const override {
         Random random;
         double r = random.uniform();
-        std::uint64_t i = std::distance(_cumlative_distribution.begin(),
-                                        std::ranges::upper_bound(_cumlative_distribution, r)) -
+        std::uint64_t i = std::distance(_cumulative_distribution.begin(),
+                                        std::ranges::upper_bound(_cumulative_distribution, r)) -
                           1;
         if (i >= _gate_list.size()) i = _gate_list.size() - 1;
         _gate_list[i]->update_quantum_state(state_vector);
     }
 
-    void update_quantum_state(StateVectorBatched& states) const override {}
+    // これでいいのか？わからない...
+    void update_quantum_state(StateVectorBatched& states) const override {
+        Random random;
+        std::vector<double> r(states.batch_size());
+        std::ranges::generate(r, [&random]() { return random.uniform(); });
+        std::vector<std::uint64_t> indicies(states.batch_size());
+        std::ranges::transform(r, indicies.begin(), [this](double r) {
+            return std::distance(_cumulative_distribution.begin(),
+                                 std::ranges::upper_bound(_cumulative_distribution, r)) -
+                   1;
+        });
+        std::ranges::transform(indicies, indicies.begin(), [this](std::uint64_t i) {
+            if (i >= _gate_list.size()) i = _gate_list.size() - 1;
+            return i;
+        });
+        for (std::size_t i = 0; i < states.batch_size(); ++i) {
+            auto state_vector = states.get_state_vector_at(i);
+            _gate_list[indicies[i]]->update_quantum_state(state_vector);
+        }
+    }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;

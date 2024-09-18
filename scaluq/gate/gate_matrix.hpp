@@ -48,7 +48,10 @@ public:
         one_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
     }
 
-    void update_quantum_state(StateVectorBatched& states) const override {}
+    void update_quantum_state(StateVectorBatched& states) const override {
+        check_qubit_mask_within_bounds(states.get_state_vector_at(0));
+        one_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, states);
+    }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
@@ -107,7 +110,10 @@ public:
         two_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
     }
 
-    void update_quantum_state(StateVectorBatched& states) const override {}
+    void update_quantum_state(StateVectorBatched& states) const override {
+        check_qubit_mask_within_bounds(states.get_state_vector_at(0));
+        two_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, states);
+    }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;

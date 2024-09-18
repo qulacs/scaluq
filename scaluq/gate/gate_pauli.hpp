@@ -27,7 +27,10 @@ public:
         apply_pauli(_control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), state_vector);
     }
 
-    void update_quantum_state(StateVectorBatched& states) const override {}
+    void update_quantum_state(StateVectorBatched& states) const override {
+        auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
+        apply_pauli(_control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), states);
+    }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
@@ -75,7 +78,11 @@ public:
             _control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), _angle, state_vector);
     }
 
-    void update_quantum_state(StateVectorBatched& states) const override {}
+    void update_quantum_state(StateVectorBatched& states) const override {
+        auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
+        apply_pauli_rotation(
+            _control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), _angle, states);
+    }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;

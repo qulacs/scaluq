@@ -158,7 +158,18 @@ protected:
         }
     }
 
-    std::string get_qubit_info_as_string(const std::string& indent) const {
+    [[nodiscard]] std::vector<std::uint64_t> mask_to_vector(std::uint64_t mask) const {
+        std::vector<std::uint64_t> qubits;
+        for (std::uint64_t i = 0; i < 64; ++i) {
+            if ((mask >> i) & 1) qubits.push_back(i);
+        }
+        return qubits;
+    }
+
+    [[nodiscard]]
+
+    std::string
+    get_qubit_info_as_string(const std::string& indent) const {
         std::ostringstream ss;
         auto targets = target_qubit_list();
         auto controls = control_qubit_list();
