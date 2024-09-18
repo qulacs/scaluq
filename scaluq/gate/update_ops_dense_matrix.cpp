@@ -81,5 +81,40 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
+void two_target_dense_matrix_gate(std::uint64_t target_mask,
+                                  std::uint64_t control_mask,
+                                  const Matrix4x4& matrix,
+                                  StateVectorBatched& states) {
+    std::uint64_t lower_target_mask = -target_mask & target_mask;
+    std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;
+    Kokkos::parallel_for(
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
+            {0, 0},
+            {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
+        KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
+            std::uint64_t basis_0 =
+                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
+            std::uint64_t basis_1 = basis_0 | lower_target_mask;
+            std::uint64_t basis_2 = basis_0 | upper_target_mask;
+            std::uint64_t basis_3 = basis_1 | target_mask;
+            Complex val0 = states._raw(batch_id, basis_0);
+            Complex val1 = states._raw(batch_id, basis_1);
+            Complex val2 = states._raw(batch_id, basis_2);
+            Complex val3 = states._raw(batch_id, basis_3);
+            Complex res0 = matrix[0][0] * val0 + matrix[0][1] * val1 + matrix[0][2] * val2 +
+                           matrix[0][3] * val3;
+            Complex res1 = matrix[1][0] * val0 + matrix[1][1] * val1 + matrix[1][2] * val2 +
+                           matrix[1][3] * val3;
+            Complex res2 = matrix[2][0] * val0 + matrix[2][1] * val1 + matrix[2][2] * val2 +
+                           matrix[2][3] * val3;
+            Complex res3 = matrix[3][0] * val0 + matrix[3][1] * val1 + matrix[3][2] * val2 +
+                           matrix[3][3] * val3;
+            states._raw(batch_id, basis_0) = res0;
+            states._raw(batch_id, basis_1) = res1;
+            states._raw(batch_id, basis_2) = res2;
+            states._raw(batch_id, basis_3) = res3;
+        });
+    Kokkos::fence();
+}
 }  // namespace internal
 }  // namespace scaluq
