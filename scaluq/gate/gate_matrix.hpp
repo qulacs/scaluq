@@ -139,7 +139,7 @@ public:
     ComplexMatrix get_matrix() const override {
         ComplexMatrix ret(_matrix._row, _matrix._col);
         auto vec = _matrix._values;
-        for (int i = 0; i < vec.size(); i++) {
+        for (std::size_t i = 0; i < vec.size(); i++) {
             ret(vec[i].r, vec[i].c) = vec[i].val;
         }
         return ret;
@@ -168,8 +168,8 @@ public:
                         const ComplexMatrix& mat,
                         bool is_unitary = false)
         : GateBase(target_mask, control_mask),
-          _is_unitary(is_unitary),
-          _matrix(convert_external_matrix_to_internal_matrix(mat)) {}
+          _matrix(convert_external_matrix_to_internal_matrix(mat)),
+          _is_unitary(is_unitary) {}
 
     Gate get_inverse() const override {
         ComplexMatrix mat_eigen = convert_internal_matrix_to_external_matrix(_matrix);

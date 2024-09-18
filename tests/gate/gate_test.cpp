@@ -734,6 +734,90 @@ void test_pauli_control(std::uint64_t n) {
     }
 }
 
+template <std::uint64_t num_target>
+void test_matrix_control(std::uint64_t n_qubits) {
+    Random random;
+    std::vector<std::uint64_t> shuffled(n_qubits);
+    std::iota(shuffled.begin(), shuffled.end(), 0ULL);
+    for (std::uint64_t i : std::views::iota(0ULL, n_qubits) | std::views::reverse) {
+        std::uint64_t j = random.int32() % (i + 1);
+        if (i != j) std::swap(shuffled[i], shuffled[j]);
+    }
+    std::vector<std::uint64_t> targets(num_target);
+    for (std::uint64_t i : std::views::iota(0ULL, num_target)) {
+        targets[i] = shuffled[i];
+    }
+    std::uint64_t num_control = random.int32() % (n_qubits - num_target + 1);
+    std::vector<std::uint64_t> controls(num_control);
+    for (std::uint64_t i : std::views::iota(0ULL, num_control)) {
+        controls[i] = shuffled[num_target + i];
+    }
+    std::uint64_t control_mask = 0ULL;
+    for (std::uint64_t c : controls) control_mask |= 1ULL << c;
+    auto adjust = [](std::vector<std::uint64_t> targets, std::uint64_t control_mask) {
+        std::vector<std::uint64_t> new_targets;
+        for (auto i : targets) {
+            new_targets.push_back(i - std::popcount(control_mask & ((1ULL << i) - 1)));
+        }
+        return new_targets;
+    };
+    auto new_targets = adjust(targets, control_mask);
+    if constexpr (num_target == 1) {
+        Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> U =
+            get_eigen_matrix_random_one_target_unitary();
+        internal::ComplexMatrix mat(U.rows(), U.cols());
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
+                mat(i, j) = U(i, j);
+            }
+        }
+        Gate d1 = gate::DenseMatrix(targets, mat, controls);
+        Gate d2 = gate::DenseMatrix(new_targets, mat, {});
+        Gate s1 = gate::SparseMatrix(targets, mat.sparseView(), controls);
+        Gate s2 = gate::SparseMatrix(new_targets, mat.sparseView(), {});
+        test_gate(d1, d2, n_qubits, control_mask);
+        test_gate(s1, s2, n_qubits, control_mask);
+    } else if constexpr (num_target == 2) {
+        Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> U1 =
+            get_eigen_matrix_random_one_target_unitary();
+        Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> U2 =
+            get_eigen_matrix_random_one_target_unitary();
+        auto U = internal::kronecker_product(U2, U1);
+        internal::ComplexMatrix mat(U.rows(), U.cols());
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                mat(i, j) = U(i, j);
+            }
+        }
+        Gate d1 = gate::DenseMatrix(targets, mat, controls);
+        Gate d2 = gate::DenseMatrix(new_targets, mat, {});
+        Gate s1 = gate::SparseMatrix(targets, mat.sparseView(), controls);
+        Gate s2 = gate::SparseMatrix(new_targets, mat.sparseView(), {});
+        test_gate(d1, d2, n_qubits, control_mask);
+        test_gate(s1, s2, n_qubits, control_mask);
+    } else {
+        Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> U1 =
+            get_eigen_matrix_random_one_target_unitary();
+        Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> U2 =
+            get_eigen_matrix_random_one_target_unitary();
+        Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> U3 =
+            get_eigen_matrix_random_one_target_unitary();
+        auto U = internal::kronecker_product(U3, internal::kronecker_product(U2, U1));
+        internal::ComplexMatrix mat(U.rows(), U.cols());
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                mat(i, j) = U(i, j);
+            }
+        }
+        Gate d1 = gate::DenseMatrix(targets, mat, controls);
+        Gate d2 = gate::DenseMatrix(new_targets, mat, {});
+        Gate s1 = gate::SparseMatrix(targets, mat.sparseView(), controls);
+        Gate s2 = gate::SparseMatrix(new_targets, mat.sparseView(), {});
+        test_gate(d1, d2, n_qubits, control_mask);
+        test_gate(s1, s2, n_qubits, control_mask);
+    }
+}
+
 TEST(GateTest, Control) {
     std::uint64_t n = 10;
     for ([[maybe_unused]] std::uint64_t _ : std::views::iota(0, 10)) {
@@ -760,5 +844,8 @@ TEST(GateTest, Control) {
         test_standard_gate_control<2, 0>(gate::Swap, n);
         test_pauli_control<false>(n);
         test_pauli_control<true>(n);
+        test_matrix_control<1>(n);
+        test_matrix_control<2>(n);
+        test_matrix_control<3>(n);
     }
 }
