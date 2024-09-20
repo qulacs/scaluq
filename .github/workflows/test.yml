@@ -20,17 +20,20 @@ jobs:
     strategy:
       matrix:
         os: ["linux", "macos"]
+        architecture: ["x86_64"]
         device: ["cpu", "cuda"]
         python-version: ["3.10"]
         exclude:
           - os: "macos"
             device: "cuda"
-    runs-on: |
-      ${{
-        matrix.os == 'linux' && 'ubuntu-22.04' ||
-        matrix.os == 'macos' && 'macos-13' ||
-        'error'
-      }}
+        include:
+          - os: "linux"
+            architecture: "x86_64"
+            runs-on: "ubuntu-22.04"
+          - os: "macos"
+            architecture: "x86_64"
+            runs-on: "macos-13"
+    runs-on: ${{ matrix.runs-on }}
     env:
       CXX_COMPILER: "/usr/lib/ccache/g++"
       C_COMPILER: "/usr/lib/ccache/gcc"
