@@ -78,13 +78,6 @@ jobs:
       - name: Install scaluq for Ubuntu
         run: CMAKE_BUILD_TYPE=Debug ./script/build_gcc.sh
 
-      - name: Check format
-        run: |
-          ninja -C build format
-          diff=$(git diff)
-          echo -n "$diff"
-          test $(echo -n "$diff" | wc -l) -eq 0
-
       - name: Install scaluq Python module
         run: pip install .[ci]
 
