@@ -84,7 +84,12 @@ jobs:
       - name: Test in Ubuntu
         if: ${{ matrix.device == 'cpu' }} # currently GPU runner is not supported
         run: |
-          OMP_PROC_BIND=false ninja test -C build -j $(nproc)
+          if [ "$(uname)" == 'Darwin' ]; then
+            NPROC=$(sysctl -n hw.logicalcpu)
+          else
+            NPROC=$(nproc)
+          fi
+          OMP_PROC_BIND=false ninja test -C build -j ${NPROC}
       
       - name: Test if stub exists
         run: |
