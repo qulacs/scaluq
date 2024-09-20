@@ -36,9 +36,9 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     env:
       CMAKE_C_COMPILER_LAUNCHER: "ccache"
-      CMAKE_C_COMPILER: ${{ matrix.os == 'macos' && 'gcc-14' || 'gcc' }}
+      CMAKE_C_COMPILER: ${{ matrix.os == 'macos' && 'gcc-14' || matrix.device == 'cuda' && 'nvcc' || 'gcc' }}
       CMAKE_CXX_COMPILER_LAUNCHER: "ccache"
-      CMAKE_CXX_COMPILER: ${{ matrix.os == 'macos' && 'g++-14' || 'g++' }}
+      CMAKE_CXX_COMPILER: ${{ matrix.os == 'macos' && 'g++-14' || matrix.device == 'cuda' && 'nvcc' || 'g++' }}
       SCALUQ_USE_TEST: "Yes"
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'Yes' || 'No' }}
       SCALUQ_CUDA_ARCH: "PASCAL61"
