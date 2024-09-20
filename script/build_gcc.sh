@@ -28,11 +28,11 @@ if [ -n "${SCALUQ_CUDA_ARCH:-""}" ]; then
 fi
 
 if [ "$(uname)" == 'Darwin' ]; then
-  NPROCS=$(sysctl -n hw.logicalcpu)
+  NPROC=$(sysctl -n hw.logicalcpu)
 else
-  NPROCS=$(nprocs)
+  NPROC=$(nproc)
 fi
 
 mkdir -p ./build
 cmake -B build -G Ninja ${CMAKE_OPS}
-ninja -C build -j ${NPROCS}
+ninja -C build -j ${NPROC}
