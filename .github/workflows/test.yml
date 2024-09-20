@@ -35,6 +35,8 @@ jobs:
             runs-on: "macos-13"
     runs-on: ${{ matrix.runs-on }}
     env:
+      CMAKE_C_COMPILER_LAUNCHER: "ccache"
+      CMAKE_C_COMPILER: ${{ matrix.os == 'macos' && 'gcc-14' || 'gcc' }}
       CMAKE_CXX_COMPILER_LAUNCHER: "ccache"
       CMAKE_CXX_COMPILER: ${{ matrix.os == 'macos' && 'g++-14' || 'g++' }}
       SCALUQ_USE_TEST: "Yes"
@@ -67,8 +69,9 @@ jobs:
       - name: Show installed Compiler version
         run: |
           [ SCALUQ_USE_CUDA = 'Yes' ] && nvcc --version
-          gcc --version
-          g++ --version
+          ccache --version
+          $CMAKE_C_COMPILER --version
+          $CMAKE_CXX_COMPILER --version
           cmake --version
           ninja --version
 
