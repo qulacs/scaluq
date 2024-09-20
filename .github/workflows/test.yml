@@ -43,21 +43,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install gcc-11/g++-11
+      - name: Install Ninja
         if: ${{ matrix.os == 'linux' }}
-        run: |
-          sudo apt update && \
-          sudo apt install -y software-properties-common && \
-          sudo apt update && \
-          sudo apt install -y gcc-11 g++-11 && \
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 && \
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
-
-      - name: Setup cmake
-        uses: lukka/get-cmake@latest
+        run: sudo apt update && sudo apt install ninja-build
 
       - name: Install Ninja
-        run: sudo apt install ninja-build
+        if: ${{ matrix.os == 'macos' }}
+        run: brew install ninja
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -74,10 +66,11 @@ jobs:
       
       - name: Show installed Compiler version
         run: |
-          nvcc --version
+          [ SCALUQ_USE_CUDA = 'Yes' ] && nvcc --version
           gcc --version
           g++ --version
           cmake --version
+          ninja --version
 
       - name: Install scaluq for Ubuntu
         run: CMAKE_BUILD_TYPE=Debug ./script/build_gcc.sh
