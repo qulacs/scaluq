@@ -6,17 +6,17 @@
 
 class DocString {
 public:
-    using Code = std::vector<std::string_view>;
-    using Block = std::variant<std::string_view, Code>;
+    using Code = std::vector<std::string>;
+    using Block = std::variant<std::string, Code>;
     using Blocks = std::vector<Block>;
     struct Arg {
-        std::string_view name;
-        std::string_view type;
+        std::string name;
+        std::string type;
         bool is_optional;
         Blocks description;
     };
     struct Ret {
-        std::string_view type;
+        std::string type;
         Blocks description;
     };
 
@@ -29,8 +29,27 @@ public:
         args.push_back(arg);
         return *this;
     }
+    template <class... Args>
+    DocString& arg(std::string_view name, std::string_view type, const Args&... desc) {
+        args.push_back(Arg(std::string(name), std::string(type), false, construct_blocks(desc...)));
+        return *this;
+    }
+    template <class... Args>
+    DocString& arg(std::string_view name,
+                   std::string_view type,
+                   bool is_optional,
+                   const Args&... desc) {
+        args.push_back(
+            Arg(std::string(name), std::string(type), is_optional, construct_blocks(desc...)));
+        return *this;
+    }
     DocString& ret(const Ret& ret) {
         returns = ret;
+        return *this;
+    }
+    template <class... Args>
+    DocString& ret(std::string_view type, const Args&... desc) {
+        returns = Ret(std::string(type), construct_blocks(desc...));
         return *this;
     }
     DocString& ex(const Block& ex) {
@@ -97,4 +116,18 @@ private:
     std::optional<Ret> returns;
     Blocks examples;
     Blocks notes;
+
+    Blocks construct_blocks_reverse() { return Blocks(); }
+    template <class... Tail>
+    Blocks construct_blocks_reverse(const Block& block, const Tail&... tail) {
+        Blocks blocks = construct_blocks_reverse(tail...);
+        blocks.push_back(block);
+        return blocks;
+    }
+    template <class... Args>
+    Blocks construct_blocks(const Args&... args) {
+        Blocks blocks = construct_blocks_reverse(args...);
+        std::ranges::reverse(blocks);
+        return blocks;
+    }
 };
