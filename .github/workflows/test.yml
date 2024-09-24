@@ -54,7 +54,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: "${{ github.job }}-${{ matrix.device }}"
+          key: "${{ github.job }}-${{ matrix.os }}-${{ matrix.device }}"
           verbose: 2
 
       - name: Install CUDA toolkit
