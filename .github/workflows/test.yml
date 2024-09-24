@@ -35,10 +35,8 @@ jobs:
             runs-on: "macos-13"
     runs-on: ${{ matrix.runs-on }}
     env:
-      CMAKE_C_COMPILER_LAUNCUER: ${{ matrix.device == 'cpu' && 'ccache' }}
-      CMAKE_C_COMPILER: ${{ matrix.os == 'macos' && 'gcc-14' || 'gcc' }}
-      CMAKE_CXX_COMPILER_LAUNCUER: ${{ matrix.device == 'cpu' && 'ccache' }}
-      CMAKE_CXX_COMPILER: ${{ matrix.os == 'macos' && 'g++-14' || 'g++' }}
+      CMAKE_C_COMPILER: ${{ matrix.os == 'macos' && '/usr/local/opt/ccache/libexec/gcc-14' || '/usr/lib/ccache/gcc' }}
+      CMAKE_CXX_COMPILER: ${{ matrix.os == 'macos' && '/usr/local/opt/ccache/libexec/g++-14' || '/usr/lib/ccache/g++' }}
       SCALUQ_USE_TEST: "Yes"
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'Yes' || 'No' }}
       SCALUQ_CUDA_ARCH: "PASCAL61"
