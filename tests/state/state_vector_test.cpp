@@ -170,7 +170,7 @@ TEST(StateVectorTest, EntropyCalculation) {
             for (std::uint64_t ind = 0; ind < dim; ++ind) {
                 CComplex z = test_state[ind];
                 double prob = z.real() * z.real() + z.imag() * z.imag();
-                if (prob > eps) ent += -prob * log(prob);
+                if (prob > eps) ent += -prob * std::log2(prob);
             }
             ASSERT_NEAR(ent, state.get_entropy(), eps);
         }
