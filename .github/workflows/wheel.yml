@@ -37,6 +37,8 @@ jobs:
             python-version: "3.12"
     runs-on: ${{ matrix.os }}
     env:
+      CMAKE_C_COMPILER: ${{ matrix.os == 'macos' && 'gcc-14' || 'gcc' }}
+      CMAKE_CXX_COMPILER: ${{ matrix.os == 'macos' && 'g++-14' || 'g++' }}
       CIBW_BUILD: ${{ matrix.cibw-python }}-${{ matrix.os-arch }}
       PYTHON: ${{ matrix.python-version }}
     steps:
