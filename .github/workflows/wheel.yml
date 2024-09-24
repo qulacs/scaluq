@@ -18,13 +18,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os-arch: ["manylinux_x86_64", "macosx_x86_64"]
+        os: ["linux", "macos"]
+        arch: ["x86_64"]
         cibw-python: ["cp38", "cp39", "cp310", "cp311", "cp312"]
         include:
-          - os-arch: "manylinux_x86_64"
-            os: "ubuntu-22.04"
-          - os-arch: "macosx_x86_64"
-            os: "macos-13"
+          - os: "linux"
+            arch: "x86_64"
+            runs-on: "ubuntu-22.04"
+            cibw-os-arch: "manylinux_x86_64"
+          - os: "macos"
+            arch: "x86_64"
+            runs-on: "macos-13"
+            cibw-os-arch: "macosx_x86_64"
           - cibw-python: "cp38"
             python-version: "3.8"
           - cibw-python: "cp39"
@@ -35,11 +40,11 @@ jobs:
             python-version: "3.11"
           - cibw-python: "cp312"
             python-version: "3.12"
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runs-on }}
     env:
       CMAKE_C_COMPILER: ${{ matrix.os == 'macos' && 'gcc-14' || 'gcc' }}
       CMAKE_CXX_COMPILER: ${{ matrix.os == 'macos' && 'g++-14' || 'g++' }}
-      CIBW_BUILD: ${{ matrix.cibw-python }}-${{ matrix.os-arch }}
+      CIBW_BUILD: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}
       PYTHON: ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v4
@@ -57,7 +62,7 @@ jobs:
       - name: Upload wheel to GitHub
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.cibw-python }}-${{ matrix.os-arch }}
+          name: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}
           path: ./wheels/*.whl
       
       - name: Upload wheel data if the Git tag is set
