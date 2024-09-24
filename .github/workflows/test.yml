@@ -37,6 +37,7 @@ jobs:
     env:
       CMAKE_C_COMPILER: ${{ matrix.os == 'macos' && '/usr/local/opt/ccache/libexec/gcc-14' || '/usr/lib/ccache/gcc' }}
       CMAKE_CXX_COMPILER: ${{ matrix.os == 'macos' && '/usr/local/opt/ccache/libexec/g++-14' || '/usr/lib/ccache/g++' }}
+      CMAKE_BUILD_TYPE: ${{ matrix.device == 'cuda' && 'Release' || 'Debug' }}
       SCALUQ_USE_TEST: "ON"
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
       SCALUQ_CUDA_ARCH: "PASCAL61"
@@ -74,7 +75,7 @@ jobs:
           ninja --version
 
       - name: Install scaluq for Ubuntu
-        run: CMAKE_BUILD_TYPE=Debug ./script/build_gcc.sh
+        run: ./script/build_gcc.sh
 
       - name: Install scaluq Python module
         run: pip install .[ci]
