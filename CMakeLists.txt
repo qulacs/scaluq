@@ -68,6 +68,11 @@ if(NOT eigen_fetch_POPULATED)
     add_subdirectory(${eigen_fetch_SOURCE_DIR})
 endif(NOT eigen_fetch_POPULATED)
 
+if(SCALUQ_USE_CUDA)
+    set(EIGEN_USE_GPU ON CACHE BOOL "Enable Eigen GPU support" FORCE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEIGEN_USE_GPU")
+endif()
+
 # nanobind
 if(SKBUILD)
     find_package(Python 3.8
