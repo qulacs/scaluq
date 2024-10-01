@@ -115,49 +115,6 @@ public:
     }
 };
 
-class SparseMatrixGateImpl : public GateBase {
-    SparseMatrix _matrix;
-
-public:
-    SparseMatrixGateImpl(std::uint64_t target_mask,
-                         std::uint64_t control_mask,
-                         const SparseComplexMatrix& mat)
-        : GateBase(target_mask, control_mask), _matrix(SparseMatrix(mat)) {}
-
-    Gate get_inverse() const override {
-        throw std::logic_error("Error: SparseMatrixGateImpl::get_inverse(): Not implemented.");
-    }
-
-    Matrix get_matrix_internal() const {
-        Matrix ret("return matrix", _matrix._row, _matrix._col);
-        auto vec = _matrix._values;
-        Kokkos::parallel_for(
-            vec.size(), KOKKOS_LAMBDA(int i) { ret(vec[i].r, vec[i].c) = vec[i].val; });
-        return ret;
-    }
-
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix ret(_matrix._row, _matrix._col);
-        auto vec = _matrix._values;
-        for (std::size_t i = 0; i < vec.size(); i++) {
-            ret(vec[i].r, vec[i].c) = vec[i].val;
-        }
-        return ret;
-    }
-
-    void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_mask_within_bounds(state_vector);
-        sparse_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
-    }
-
-    std::string to_string(const std::string& indent) const override {
-        std::ostringstream ss;
-        ss << indent << "Gate Type: SparseMatrix\n";
-        ss << get_qubit_info_as_string(indent);
-        return ss.str();
-    }
-};
-
 class DenseMatrixGateImpl : public GateBase {
     Matrix _matrix;
     bool _is_unitary;
@@ -202,6 +159,51 @@ public:
     }
 };
 
+class SparseMatrixGateImpl : public GateBase {
+    SparseMatrix _matrix;
+
+public:
+    SparseMatrixGateImpl(std::uint64_t target_mask,
+                         std::uint64_t control_mask,
+                         const SparseComplexMatrix& mat)
+        : GateBase(target_mask, control_mask), _matrix(SparseMatrix(mat)) {}
+
+    Gate get_inverse() const override {
+        ComplexMatrix mat_eigen = convert_coo_to_external_matrix(_matrix);
+        ComplexMatrix inv_eigen = mat_eigen.inverse();
+        return std::make_shared<const DenseMatrixGateImpl>(_target_mask, _control_mask, inv_eigen);
+    }
+
+    Matrix get_matrix_internal() const {
+        Matrix ret("return matrix", _matrix._row, _matrix._col);
+        auto vec = _matrix._values;
+        Kokkos::parallel_for(
+            vec.size(), KOKKOS_LAMBDA(int i) { ret(vec[i].r, vec[i].c) = vec[i].val; });
+        return ret;
+    }
+
+    ComplexMatrix get_matrix() const override {
+        ComplexMatrix ret(_matrix._row, _matrix._col);
+        auto vec = _matrix._values;
+        for (std::size_t i = 0; i < vec.size(); i++) {
+            ret(vec[i].r, vec[i].c) = vec[i].val;
+        }
+        return ret;
+    }
+
+    void update_quantum_state(StateVector& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        sparse_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
+    }
+
+    std::string to_string(const std::string& indent) const override {
+        std::ostringstream ss;
+        ss << indent << "Gate Type: SparseMatrix\n";
+        ss << get_qubit_info_as_string(indent);
+        return ss.str();
+    }
+};
+
 }  // namespace internal
 
 using OneTargetMatrixGate = internal::GatePtr<internal::OneTargetMatrixGateImpl>;
@@ -216,6 +218,10 @@ void bind_gate_gate_matrix_hpp(nb::module_& m) {
         .def("matrix", [](const OneTargetMatrixGate& gate) { return gate->matrix(); });
     DEF_GATE(TwoTargetMatrixGate, "Specific class of two-qubit dense matrix gate.")
         .def("matrix", [](const TwoTargetMatrixGate& gate) { return gate->matrix(); });
+    DEF_GATE(SparseMatrixGate, "Specific class of sparse matrix gate.")
+        .def("matrix", [](const SparseMatrixGate& gate) { return gate->get_matrix(); });
+    DEF_GATE(DenseMatrixGate, "Specific class of dense matrix gate.")
+        .def("matrix", [](const DenseMatrixGate& gate) { return gate->get_matrix(); });
 }
 }  // namespace internal
 #endif

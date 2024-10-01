@@ -173,7 +173,6 @@ inline Gate DenseMatrix(const std::vector<std::uint64_t>& targets,
             "gate::DenseMatrix(const std::vector<std::uint64_t>&, const internal::ComplexMatrix&): "
             "matrix size must be 2^{n_qubits} x 2^{n_qubits}.");
     }
-    if (targets.size() == 0) return I();
     return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl>(
         internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix, is_unitary);
 }
@@ -352,13 +351,17 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("DenseMatrix",
               &gate::DenseMatrix,
-              "Generate general Gate class instance of DenseMatrix. IGate, OneTargetMatrixGate or "
-              "TwoTargetMatrixGate correspond to len(target) is created. The case len(target) >= 3 "
-              "is currently not supported.",
+              "Generate general Gate class instance of DenseMatrix.",
               "targets"_a,
               "matrix"_a,
               "controls"_a = std::vector<std::uint64_t>{},
               "is_unitary"_a = false);
+    mgate.def("SparseMatrix",
+              &gate::SparseMatrix,
+              "Generate general Gate class instance of SparseMatrix.",
+              "targets"_a,
+              "matrix"_a,
+              "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("Pauli",
               &gate::Pauli,
               "Generate general Gate class instance of Pauli.",

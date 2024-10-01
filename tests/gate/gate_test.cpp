@@ -416,9 +416,9 @@ void run_random_gate_apply_sparse(std::uint64_t n_qubits) {
         targets[0] = index_list[0];
         targets[1] = index_list[1];
         targets[2] = index_list[2];
-        u1 = make_sparse_complex_matrix(1, 0.2);
-        u2 = make_sparse_complex_matrix(1, 0.2);
-        u3 = make_sparse_complex_matrix(1, 0.2);
+        u1 = get_eigen_matrix_random_one_target_unitary();
+        u2 = get_eigen_matrix_random_one_target_unitary();
+        u3 = get_eigen_matrix_random_one_target_unitary();
         std::vector<std::uint64_t> target_list = {targets[0], targets[1], targets[2]};
         std::vector<std::uint64_t> control_list = {};
         std::sort(target_list.begin(), target_list.end());
@@ -587,11 +587,11 @@ TEST(GateTest, ApplyIBMQ) { run_random_gate_apply_IBMQ(5, make_U); }
 
 TEST(GateTest, ApplyTwoTarget) { run_random_gate_apply_two_target(5); }
 
-// TEST(GateTest, ApplySparseMatrixGate) { run_random_gate_apply_sparse(6); }
-// TEST(GateTest, ApplyDenseMatrixGate) {
-//     run_random_gate_apply_single_dense(6);
-//     run_random_gate_apply_general_dense(6);
-// }
+TEST(GateTest, ApplySparseMatrixGate) { run_random_gate_apply_sparse(6); }
+TEST(GateTest, ApplyDenseMatrixGate) {
+    run_random_gate_apply_single_dense(6);
+    run_random_gate_apply_general_dense(6);
+}
 
 TEST(GateTest, ApplyPauliGate) { run_random_gate_apply_pauli(5); }
 

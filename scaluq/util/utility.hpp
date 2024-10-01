@@ -176,6 +176,14 @@ inline ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix& ma
     return eigen_matrix;
 }
 
+inline ComplexMatrix convert_coo_to_external_matrix(SparseMatrix mat) {
+    ComplexMatrix eigen_matrix(mat._row, mat._col);
+    for (std::size_t i = 0; i < mat._values.extent(0); i++) {
+        eigen_matrix(mat._values(i).r, mat._values(i).c) = mat._values(i).val;
+    }
+    return eigen_matrix;
+}
+
 }  // namespace internal
 
 }  // namespace scaluq

@@ -60,14 +60,12 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
-void multi_control_single_target_dense_matrix_gate(std::uint64_t target_mask,
-                                                   std::uint64_t control_mask,
-                                                   const Matrix& matrix,
-                                                   StateVector& state) {
-    std::uint64_t control_qubit_index_count = std::popcount(control_mask);
-    const std::uint64_t loop_dim = state.dim() >> (control_qubit_index_count + 1);
+void single_target_dense_matrix_gate(std::uint64_t target_mask,
+                                     std::uint64_t control_mask,
+                                     const Matrix& matrix,
+                                     StateVector& state) {
     Kokkos::parallel_for(
-        loop_dim, KOKKOS_LAMBDA(std::uint64_t it) {
+        state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis_0 =
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
             std::uint64_t basis_1 = basis_0 | target_mask;
@@ -81,19 +79,16 @@ void multi_control_single_target_dense_matrix_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
-void multi_control_double_target_dense_matrix_gate(std::uint64_t target_mask,
-                                                   std::uint64_t control_mask,
-                                                   const Matrix& matrix,
-                                                   StateVector& state) {
-    const std::uint64_t insert_index_count = 2 + std::popcount(control_mask);
-    const std::uint64_t loop_dim = state.dim() >> insert_index_count;
-    const std::uint64_t target_bit_index_right = std::countr_zero(target_mask);
-    const std::uint64_t target_bit_index_left = 64 - std::countl_zero(target_mask | 1 << 63) - 1;
-    const std::uint64_t target_bit_right = 1ULL << target_bit_index_right;
-    const std::uint64_t target_bit_left = 1ULL << target_bit_index_left;
+void double_target_dense_matrix_gate(std::uint64_t target_mask,
+                                     std::uint64_t control_mask,
+                                     const Matrix& matrix,
+                                     StateVector& state) {
+    std::uint64_t target_bit_right = -target_mask & target_mask;
+    std::uint64_t target_bit_left = target_mask ^ target_bit_right;
 
     Kokkos::parallel_for(
-        loop_dim, KOKKOS_LAMBDA(const std::uint64_t it) {
+        state.dim() >> std::popcount(target_mask | control_mask),
+        KOKKOS_LAMBDA(const std::uint64_t it) {
             std::uint64_t basis_0 =
                 insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
             std::uint64_t basis_1 = basis_0 | target_bit_right;
@@ -119,12 +114,11 @@ void multi_control_double_target_dense_matrix_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
-void multi_control_multi_target_dense_matrix_gate(std::uint64_t target_mask,
-                                                  std::uint64_t control_mask,
-                                                  const Matrix& matrix,
-                                                  StateVector& state) {
-    const std::uint64_t target_qubit_index_count = std::popcount(target_mask);
-    const std::uint64_t matrix_dim = 1ULL << target_qubit_index_count;
+void multi_target_dense_matrix_gate(std::uint64_t target_mask,
+                                    std::uint64_t control_mask,
+                                    const Matrix& matrix,
+                                    StateVector& state) {
+    const std::uint64_t matrix_dim = 1ULL << std::popcount(target_mask);
 
     Kokkos::View<Complex*> update(Kokkos::ViewAllocateWithoutInitializing("update"), state.dim());
     Kokkos::parallel_for(
@@ -170,11 +164,11 @@ void dense_matrix_gate(std::uint64_t target_mask,
                        StateVector& state) {
     const std::uint64_t target_qubit_index_count = std::popcount(target_mask);
     if (target_qubit_index_count == 1) {
-        multi_control_single_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
+        single_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
     } else if (target_qubit_index_count == 2) {
-        multi_control_double_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
+        double_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
     } else {
-        multi_control_multi_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
+        multi_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
     }
 }
 }  // namespace internal

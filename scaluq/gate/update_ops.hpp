@@ -94,13 +94,6 @@ void u3_gate(std::uint64_t target_mask,
 
 void swap_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector& state);
 
-void pauli_gate(std::uint64_t control_mask, const PauliOperator& pauli, StateVector& state);
-
-void pauli_rotation_gate(std::uint64_t control_mask,
-                         const PauliOperator& pauli,
-                         double angle,
-                         StateVector& state);
-
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
                         const SparseMatrix& matrix,
