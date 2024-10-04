@@ -76,7 +76,16 @@ public:
             "ProbablisticGateImpl.");
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        Random random;
+        double r = random.uniform();
+        std::uint64_t i = std::distance(_cumlative_distribution.begin(),
+                                        std::ranges::upper_bound(_cumlative_distribution, r)) -
+                          1;
+        if (i >= _gate_list.size()) i = _gate_list.size() - 1;
+        _gate_list[i]->update_quantum_state(state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         Random random;
         double r = random.uniform();
         std::uint64_t i = std::distance(_cumlative_distribution.begin(),

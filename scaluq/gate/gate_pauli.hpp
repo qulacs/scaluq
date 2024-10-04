@@ -22,7 +22,11 @@ public:
     Gate get_inverse() const override { return shared_from_this(); }
     internal::ComplexMatrix get_matrix() const override { return this->_pauli.get_matrix(); }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
+        apply_pauli(_control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
         apply_pauli(_control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), state_vector);
     }
@@ -67,7 +71,13 @@ public:
               imag_unit * (StdComplex)Kokkos::sin(-true_angle / 2) * mat;
         return mat;
     }
-    void update_quantum_state(StateVector& state_vector) const override {
+
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
+        apply_pauli_rotation(
+            _control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), _angle, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
         apply_pauli_rotation(
             _control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), _angle, state_vector);

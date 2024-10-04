@@ -148,7 +148,9 @@ namespace internal {
 class GateBase : public std::enable_shared_from_this<GateBase> {
 protected:
     std::uint64_t _target_mask, _control_mask;
-    void check_qubit_mask_within_bounds(const StateVector& state_vector) const {
+
+    template <std::floating_point FloatType>
+    void check_qubit_mask_within_bounds(const StateVector<FloatType>& state_vector) const {
         std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
         if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
             throw std::runtime_error(
@@ -201,7 +203,8 @@ public:
     [[nodiscard]] virtual Gate get_inverse() const = 0;
     [[nodiscard]] virtual internal::ComplexMatrix get_matrix() const = 0;
 
-    virtual void update_quantum_state(StateVector& state_vector) const = 0;
+    virtual void update_quantum_state(StateVector<float>& state_vector) const = 0;
+    virtual void update_quantum_state(StateVector<double>& state_vector) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 };

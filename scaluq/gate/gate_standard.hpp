@@ -15,7 +15,10 @@ public:
         return internal::ComplexMatrix::Identity(1, 1);
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        i_gate(_target_mask, _control_mask, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         i_gate(_target_mask, _control_mask, state_vector);
     }
 
@@ -44,7 +47,11 @@ public:
         return internal::ComplexMatrix::Identity(1, 1) * std::exp(std::complex<double>(0, _phase));
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        global_phase_gate(_target_mask, _control_mask, _phase, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         global_phase_gate(_target_mask, _control_mask, _phase, state_vector);
     }
@@ -80,7 +87,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        x_gate(_target_mask, _control_mask, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         x_gate(_target_mask, _control_mask, state_vector);
     }
@@ -104,7 +115,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        y_gate(_target_mask, _control_mask, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         y_gate(_target_mask, _control_mask, state_vector);
     }
@@ -128,7 +143,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        z_gate(_target_mask, _control_mask, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         z_gate(_target_mask, _control_mask, state_vector);
     }
@@ -153,7 +172,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        h_gate(_target_mask, _control_mask, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         h_gate(_target_mask, _control_mask, state_vector);
     }
@@ -186,7 +209,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        s_gate(_target_mask, _control_mask, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         s_gate(_target_mask, _control_mask, state_vector);
     }
@@ -212,7 +239,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        sdag_gate(_target_mask, _control_mask, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         sdag_gate(_target_mask, _control_mask, state_vector);
     }
@@ -240,7 +271,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        t_gate(_target_mask, _control_mask, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         t_gate(_target_mask, _control_mask, state_vector);
     }
@@ -266,7 +301,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        tdag_gate(_target_mask, _control_mask, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         tdag_gate(_target_mask, _control_mask, state_vector);
     }
@@ -294,7 +333,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        sqrtx_gate(_target_mask, _control_mask, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         sqrtx_gate(_target_mask, _control_mask, state_vector);
     }
@@ -320,7 +363,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        sqrtxdag_gate(_target_mask, _control_mask, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         sqrtxdag_gate(_target_mask, _control_mask, state_vector);
     }
@@ -348,7 +395,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        sqrty_gate(_target_mask, _control_mask, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         sqrty_gate(_target_mask, _control_mask, state_vector);
     }
@@ -374,7 +425,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        sqrtydag_gate(_target_mask, _control_mask, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         sqrtydag_gate(_target_mask, _control_mask, state_vector);
     }
@@ -404,7 +459,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        p0_gate(_target_mask, _control_mask, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         p0_gate(_target_mask, _control_mask, state_vector);
     }
@@ -430,7 +489,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        p1_gate(_target_mask, _control_mask, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         p1_gate(_target_mask, _control_mask, state_vector);
     }
@@ -457,7 +520,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        rx_gate(_target_mask, _control_mask, _angle, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         rx_gate(_target_mask, _control_mask, _angle, state_vector);
     }
@@ -485,7 +552,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        ry_gate(_target_mask, _control_mask, _angle, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         ry_gate(_target_mask, _control_mask, _angle, state_vector);
     }
@@ -512,7 +583,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        rz_gate(_target_mask, _control_mask, _angle, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         rz_gate(_target_mask, _control_mask, _angle, state_vector);
     }
@@ -544,7 +619,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        u1_gate(_target_mask, _control_mask, _lambda, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         u1_gate(_target_mask, _control_mask, _lambda, state_vector);
     }
@@ -581,7 +660,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        u2_gate(_target_mask, _control_mask, _phi, _lambda, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         u2_gate(_target_mask, _control_mask, _phi, _lambda, state_vector);
     }
@@ -621,7 +704,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        u3_gate(_target_mask, _control_mask, _theta, _phi, _lambda, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         u3_gate(_target_mask, _control_mask, _theta, _phi, _lambda, state_vector);
     }
@@ -645,7 +732,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        swap_gate(_target_mask, _control_mask, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         swap_gate(_target_mask, _control_mask, state_vector);
     }

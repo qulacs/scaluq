@@ -43,7 +43,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        one_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         one_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
     }
@@ -100,7 +104,11 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<float>& state_vector) const override {
+        check_qubit_mask_within_bounds(state_vector);
+        two_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
+    }
+    void update_quantum_state(StateVector<double>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         two_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
     }
