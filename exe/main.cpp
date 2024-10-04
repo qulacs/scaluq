@@ -14,35 +14,23 @@ namespace internal {
 
 enum class GateType { Unknown, X };
 
-template <std::floating_point FloatType, typename Space>
 class XGateImpl;
 
 template <typename T>
-inline constexpr bool lazy_false_v = false;
-
-template <typename T>
 constexpr GateType get_gate_type() {
-    if constexpr (std::is_same_v<T, XGateImpl<float, DefaultSpace>> ||
-                  std::is_same_v<T, XGateImpl<double, DefaultSpace>> ||
-                  std::is_same_v<T, XGateImpl<float, HostSpace>> ||
-                  std::is_same_v<T, XGateImpl<double, HostSpace>>) {
+    if constexpr (std::is_same_v<T, XGateImpl>) {
         return GateType::X;
     } else {
         static_assert(lazy_false_v<T>, "unknown GateImpl");
     }
 }
 
-// GateBase テンプレートクラス
-template <std::floating_point _FloatType, typename _Space>
-class GateBase : public std::enable_shared_from_this<GateBase<_FloatType, _Space>> {
-public:
-    using FloatType = _FloatType;
-    using Space = _Space;
-
+class GateBase : public std::enable_shared_from_this<GateBase> {
 protected:
     std::uint64_t _target_mask, _control_mask;
 
-    void check_qubit_mask_within_bounds(const StateVector<FloatType, Space>& state_vector) const {
+    template <std::floating_point FloatType>
+    void check_qubit_mask_within_bounds(const StateVector<FloatType>& state_vector) const {
         std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
         if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
             throw std::runtime_error(
@@ -92,22 +80,17 @@ public:
         return _target_mask | _control_mask;
     }
 
-    virtual void update_quantum_state(StateVector<FloatType, Space>& state_vector) const = 0;
+    virtual void update_quantum_state(StateVector<double>& state_vector) const = 0;
+    virtual void update_quantum_state(StateVector<float>& state_vector) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 };
 
 template <typename T>
-concept GateImpl = std::derived_from<T, GateBase<typename T::FloatType, typename T::Space>>;
+concept GateImpl = std::derived_from<T, GateBase>;
 
 template <GateImpl T>
 class GatePtr {
-    using FloatType = T::FloatType;
-    using Space = T::Space;
-
-    static_assert(std::derived_from<T, GateBase<FloatType, Space>>,
-                  "T must derive from GateBase<FloatType, Space>");
-
 private:
     std::shared_ptr<const T> _gate_ptr;
     GateType _gate_type;
@@ -166,13 +149,10 @@ public:
     }
 };
 
-template <std::floating_point FloatType, typename Space>
-using Gate = GatePtr<GateBase<FloatType, Space>>;
+using Gate = GatePtr<GateBase>;
 
-template <std::floating_point FloatType, typename Space>
-void x_gate(std::uint64_t target_mask,
-            std::uint64_t control_mask,
-            StateVector<FloatType, Space>& state) {
+template <std::floating_point FloatType>
+void x_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<FloatType>& state) {
     Kokkos::parallel_for(
         state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t i =
@@ -182,12 +162,16 @@ void x_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
-template <std::floating_point FloatType, typename Space>
-class XGateImpl : public GateBase<FloatType, Space> {
+class XGateImpl : public GateBase {
 public:
-    using GateBase<FloatType, Space>::GateBase;
+    using GateBase::GateBase;
 
-    void update_quantum_state(StateVector<FloatType, Space>& state_vector) const override {
+    void update_quantum_state(StateVector<double>& state_vector) const override {
+        this->check_qubit_mask_within_bounds(state_vector);
+        x_gate(this->_target_mask, this->_control_mask, state_vector);
+    }
+
+    void update_quantum_state(StateVector<float>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         x_gate(this->_target_mask, this->_control_mask, state_vector);
     }
@@ -202,7 +186,7 @@ public:
 class GateFactory {
 public:
     template <GateImpl T, typename... Args>
-    static internal::Gate<typename T::FloatType, typename T::Space> create_gate(Args... args) {
+    static internal::Gate create_gate(Args... args) {
         return {std::make_shared<const T>(args...)};
     }
 };
@@ -211,10 +195,9 @@ public:
 
 namespace gate {
 
-template <std::floating_point FloatType, typename Space>
-inline internal::Gate<FloatType, Space> X(std::uint64_t target,
-                                          const std::vector<std::uint64_t>& control_qubits = {}) {
-    return internal::GateFactory::create_gate<internal::XGateImpl<FloatType, Space>>(
+inline internal::Gate X(std::uint64_t target,
+                        const std::vector<std::uint64_t>& control_qubits = {}) {
+    return internal::GateFactory::create_gate<internal::XGateImpl>(
         internal::vector_to_mask({target}), internal::vector_to_mask(control_qubits));
 }
 
@@ -226,9 +209,9 @@ int main() {
     Kokkos::initialize();
     {
         std::uint64_t n_qubits = 3;
-        scaluq::StateVector<double, scaluq::HostSpace> state(n_qubits);
+        scaluq::StateVector<double> state(n_qubits);
         state.load({0, 1, 2, 3, 4, 5, 6, 7});
-        auto x_gate = scaluq::gate::X<double, scaluq::HostSpace>(1, {0, 2});
+        auto x_gate = scaluq::gate::X(1, {0, 2});
         x_gate->update_quantum_state(state);
 
         std::cout << state << std::endl;

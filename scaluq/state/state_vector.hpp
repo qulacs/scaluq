@@ -15,21 +15,23 @@ namespace scaluq {
 using HostSpace = Kokkos::HostSpace;
 using DefaultSpace = Kokkos::DefaultExecutionSpace;
 
-#define STATE_VECTOR_TEMPLATE(FloatType, Space) \
-    template <std::floating_point FloatType = double, typename Space = DefaultSpace>
+// #define STATE_VECTOR_TEMPLATE(FloatType, Space) \
+//     template <std::floating_point FloatType = double, typename Space = DefaultSpace>
 
-STATE_VECTOR_TEMPLATE(FloatType, Space)
+#define STATE_VECTOR_TEMPLATE(FloatType) template <std::floating_point FloatType = double>
+
+template <std::floating_point FloatType = double>
 class StateVector {
     std::uint64_t _n_qubits;
     std::uint64_t _dim;
     using ComplexType = Kokkos::complex<FloatType>;
 
-    static_assert(std::is_same_v<Space, HostSpace> || std::is_same_v<Space, DefaultSpace>,
-                  "Unsupported execution space tag");
+    // static_assert(std::is_same_v<Space, HostSpace> || std::is_same_v<Space, DefaultSpace>,
+    //               "Unsupported execution space tag");
 
 public:
     static constexpr std::uint64_t UNMEASURED = 2;
-    Kokkos::View<ComplexType*, Space> _raw;
+    Kokkos::View<ComplexType*> _raw;
     StateVector() = default;
     StateVector(std::uint64_t n_qubits)
         : _n_qubits(n_qubits),
@@ -62,7 +64,7 @@ public:
     [[nodiscard]] static StateVector Haar_random_state(
         std::uint64_t n_qubits, std::uint64_t seed = std::random_device()()) {
         Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
-        StateVector<FloatType, Space> state(n_qubits);
+        StateVector<FloatType> state(n_qubits);
         Kokkos::parallel_for(
             state._dim, KOKKOS_LAMBDA(std::uint64_t i) {
                 auto rand_gen = rand_pool.get_state();

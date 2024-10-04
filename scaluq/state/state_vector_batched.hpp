@@ -5,15 +5,15 @@
 
 namespace scaluq {
 
-STATE_VECTOR_TEMPLATE(FloatType, Space)
+STATE_VECTOR_TEMPLATE(FloatType)
 class StateVectorBatched {
     std::uint64_t _batch_size;
     std::uint64_t _n_qubits;
     std::uint64_t _dim;
     using ComplexType = Kokkos::complex<FloatType>;
 
-    static_assert(std::is_same_v<Space, HostSpace> || std::is_same_v<Space, DefaultSpace>,
-                  "Unsupported execution space tag");
+    // static_assert(std::is_same_v<Space, HostSpace> || std::is_same_v<Space, DefaultSpace>,
+    //               "Unsupported execution space tag");
 
 public:
     Kokkos::View<ComplexType**, Kokkos::LayoutRight> _raw;
@@ -36,7 +36,7 @@ public:
 
     [[nodiscard]] std::uint64_t batch_size() const { return this->_batch_size; }
 
-    void set_state_vector(const StateVector<FloatType, Space>& state) {
+    void set_state_vector(const StateVector<FloatType>& state) {
         if (_raw.extent(1) != state._raw.extent(0)) [[unlikely]] {
             throw std::runtime_error(
                 "Error: StateVectorBatched::set_state_vector(const StateVector&): Dimensions of "
@@ -50,7 +50,7 @@ public:
         Kokkos::fence();
     }
 
-    void set_state_vector_at(std::uint64_t batch_id, const StateVector<FloatType, Space>& state) {
+    void set_state_vector_at(std::uint64_t batch_id, const StateVector<FloatType>& state) {
         if (_raw.extent(1) != state._raw.extent(0)) [[unlikely]] {
             throw std::runtime_error(
                 "Error: StateVectorBatched::set_state_vector(std::uint64_t, const StateVector&): "
@@ -61,8 +61,8 @@ public:
         Kokkos::fence();
     }
 
-    [[nodiscard]] StateVector<FloatType, Space> get_state_vector_at(std::uint64_t batch_id) const {
-        StateVector<FloatType, Space> ret(_n_qubits);
+    [[nodiscard]] StateVector<FloatType> get_state_vector_at(std::uint64_t batch_id) const {
+        StateVector<FloatType> ret(_n_qubits);
         Kokkos::parallel_for(
             _dim, KOKKOS_CLASS_LAMBDA(std::uint64_t i) { ret._raw(i) = _raw(batch_id, i); });
         Kokkos::fence();
@@ -154,8 +154,7 @@ public:
         Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
         StateVectorBatched states(batch_size, n_qubits);
         if (set_same_state) {
-            states.set_state_vector(
-                StateVector<FloatType, Space>::Haar_random_state(n_qubits, seed));
+            states.set_state_vector(StateVector<FloatType>::Haar_random_state(n_qubits, seed));
         } else {
             Kokkos::parallel_for(
                 Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {states.batch_size(), states.dim()}),
@@ -273,7 +272,7 @@ public:
             if (measured_value == 0 || measured_value == 1) {
                 target_index.push_back(i);
                 target_value.push_back(measured_value);
-            } else if (measured_value != StateVector<FloatType, Space>::UNMEASURED) {
+            } else if (measured_value != StateVector<FloatType>::UNMEASURED) {
                 throw std::runtime_error(
                     "Error:StateVectorBatched::get_marginal_probability(const "
                     "vector<std::uint64_t>&): Invalid qubit state specified. Each qubit state must "
