@@ -8,44 +8,73 @@
 namespace scaluq {
 namespace internal {
 // forward declarations
+
+template <std::floating_point FloatType>
 class GateBase;
 
 template <typename T>
-concept GateImpl = std::derived_from<T, GateBase>;
+concept GateImpl = std::derived_from<T, GateBase<typename T::FloatType>>;
 
-class IGateImpl;
+template <std::floating_point FloatType>
 class GlobalPhaseGateImpl;
+template <std::floating_point FloatType>
 class XGateImpl;
+template <std::floating_point FloatType>
 class YGateImpl;
+template <std::floating_point FloatType>
 class ZGateImpl;
+template <std::floating_point FloatType>
 class HGateImpl;
+template <std::floating_point FloatType>
 class SGateImpl;
+template <std::floating_point FloatType>
 class SdagGateImpl;
+template <std::floating_point FloatType>
 class TGateImpl;
+template <std::floating_point FloatType>
 class TdagGateImpl;
+template <std::floating_point FloatType>
 class SqrtXGateImpl;
+template <std::floating_point FloatType>
 class SqrtXdagGateImpl;
+template <std::floating_point FloatType>
 class SqrtYGateImpl;
+template <std::floating_point FloatType>
 class SqrtYdagGateImpl;
+template <std::floating_point FloatType>
 class P0GateImpl;
+template <std::floating_point FloatType>
 class P1GateImpl;
+template <std::floating_point FloatType>
 class RXGateImpl;
+template <std::floating_point FloatType>
 class RYGateImpl;
+template <std::floating_point FloatType>
 class RZGateImpl;
+template <std::floating_point FloatType>
 class U1GateImpl;
+template <std::floating_point FloatType>
 class U2GateImpl;
+template <std::floating_point FloatType>
 class U3GateImpl;
+template <std::floating_point FloatType>
 class OneTargetMatrixGateImpl;
+template <std::floating_point FloatType>
 class SwapGateImpl;
+template <std::floating_point FloatType>
 class TwoTargetMatrixGateImpl;
+template <std::floating_point FloatType>
 class PauliGateImpl;
+template <std::floating_point FloatType>
 class PauliRotationGateImpl;
+template <std::floating_point FloatType>
 class ProbablisticGateImpl;
 
 template <GateImpl T>
 class GatePtr;
 }  // namespace internal
-using Gate = internal::GatePtr<internal::GateBase>;
+template <std::floating_point FloatType>
+using Gate = GatePtr<GateBase<FloatType>>;
 
 enum class GateType {
     Unknown,
@@ -145,10 +174,16 @@ constexpr GateType get_gate_type() {
 }
 
 namespace internal {
-class GateBase : public std::enable_shared_from_this<GateBase> {
+// GateBase テンプレートクラス
+template <std::floating_point _FloatType>
+class GateBase : public std::enable_shared_from_this<GateBase<_FloatType>> {
+public:
+    using FloatType = _FloatType;
+
 protected:
     std::uint64_t _target_mask, _control_mask;
-    void check_qubit_mask_within_bounds(const StateVector& state_vector) const {
+
+    void check_qubit_mask_within_bounds(const StateVector<FloatType>& state_vector) const {
         std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
         if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
             throw std::runtime_error(
@@ -198,10 +233,7 @@ public:
         return _target_mask | _control_mask;
     }
 
-    [[nodiscard]] virtual Gate get_inverse() const = 0;
-    [[nodiscard]] virtual internal::ComplexMatrix get_matrix() const = 0;
-
-    virtual void update_quantum_state(StateVector& state_vector) const = 0;
+    virtual void update_quantum_state(StateVector<FloatType>& state_vector) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 };

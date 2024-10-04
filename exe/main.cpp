@@ -14,22 +14,27 @@ namespace internal {
 
 enum class GateType { Unknown, X };
 
+template <std::floating_point FloatType>
 class XGateImpl;
 
 template <typename T>
 constexpr GateType get_gate_type() {
-    if constexpr (std::is_same_v<T, XGateImpl>) {
+    if constexpr (std::is_same_v<T, XGateImpl<float>> || std::is_same_v<T, XGateImpl<double>>) {
         return GateType::X;
     } else {
         static_assert(lazy_false_v<T>, "unknown GateImpl");
     }
 }
 
-class GateBase : public std::enable_shared_from_this<GateBase> {
+// GateBase テンプレートクラス
+template <std::floating_point _FloatType>
+class GateBase : public std::enable_shared_from_this<GateBase<_FloatType>> {
+public:
+    using FloatType = _FloatType;
+
 protected:
     std::uint64_t _target_mask, _control_mask;
 
-    template <std::floating_point FloatType>
     void check_qubit_mask_within_bounds(const StateVector<FloatType>& state_vector) const {
         std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
         if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
@@ -80,17 +85,18 @@ public:
         return _target_mask | _control_mask;
     }
 
-    virtual void update_quantum_state(StateVector<double>& state_vector) const = 0;
-    virtual void update_quantum_state(StateVector<float>& state_vector) const = 0;
+    virtual void update_quantum_state(StateVector<FloatType>& state_vector) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 };
 
 template <typename T>
-concept GateImpl = std::derived_from<T, GateBase>;
+concept GateImpl = std::derived_from<T, GateBase<typename T::FloatType>>;
 
 template <GateImpl T>
 class GatePtr {
+    using FloatType = T::FloatType;
+
 private:
     std::shared_ptr<const T> _gate_ptr;
     GateType _gate_type;
@@ -149,7 +155,8 @@ public:
     }
 };
 
-using Gate = GatePtr<GateBase>;
+template <std::floating_point FloatType>
+using Gate = GatePtr<GateBase<FloatType>>;
 
 template <std::floating_point FloatType>
 void x_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<FloatType>& state) {
@@ -162,23 +169,18 @@ void x_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<F
     Kokkos::fence();
 }
 
-class XGateImpl : public GateBase {
+template <std::floating_point FloatType>
+class XGateImpl : public GateBase<FloatType> {
 public:
-    using GateBase::GateBase;
+    using GateBase<FloatType>::GateBase;
 
-    void update_quantum_state(StateVector<double>& state_vector) const override {
-        this->check_qubit_mask_within_bounds(state_vector);
-        x_gate(this->_target_mask, this->_control_mask, state_vector);
-    }
-
-    void update_quantum_state(StateVector<float>& state_vector) const override {
+    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         x_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent = "") const override {
         std::ostringstream ss;
-        ss << indent << "XGate";
         return ss.str();
     }
 };
@@ -186,7 +188,7 @@ public:
 class GateFactory {
 public:
     template <GateImpl T, typename... Args>
-    static internal::Gate create_gate(Args... args) {
+    static internal::Gate<typename T::FloatType> create_gate(Args... args) {
         return {std::make_shared<const T>(args...)};
     }
 };
@@ -195,9 +197,10 @@ public:
 
 namespace gate {
 
-inline internal::Gate X(std::uint64_t target,
-                        const std::vector<std::uint64_t>& control_qubits = {}) {
-    return internal::GateFactory::create_gate<internal::XGateImpl>(
+template <std::floating_point FloatType>
+inline internal::Gate<FloatType> X(std::uint64_t target,
+                                   const std::vector<std::uint64_t>& control_qubits = {}) {
+    return internal::GateFactory::create_gate<internal::XGateImpl<FloatType>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(control_qubits));
 }
 
@@ -211,7 +214,7 @@ int main() {
         std::uint64_t n_qubits = 3;
         scaluq::StateVector<double> state(n_qubits);
         state.load({0, 1, 2, 3, 4, 5, 6, 7});
-        auto x_gate = scaluq::gate::X(1, {0, 2});
+        auto x_gate = scaluq::gate::X<double>(1, {0, 2});
         x_gate->update_quantum_state(state);
 
         std::cout << state << std::endl;

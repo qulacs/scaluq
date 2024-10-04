@@ -6,6 +6,7 @@
 namespace scaluq {
 namespace internal {
 
+template <std::floating_point FloatType>
 class IGateImpl : public GateBase {
 public:
     IGateImpl() : GateBase(0, 0) {}
@@ -27,6 +28,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class GlobalPhaseGateImpl : public GateBase {
 protected:
     double _phase;
@@ -58,6 +60,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class RotationGateBase : public GateBase {
 protected:
     double _angle;
@@ -69,6 +72,7 @@ public:
     double angle() const { return _angle; }
 };
 
+template <std::floating_point FloatType>
 class XGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
@@ -93,6 +97,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class YGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
@@ -117,6 +122,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class ZGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
@@ -141,6 +147,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class HGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
@@ -166,20 +173,31 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class SGateImpl;
+template <std::floating_point FloatType>
 class SdagGateImpl;
+template <std::floating_point FloatType>
 class TGateImpl;
+template <std::floating_point FloatType>
 class TdagGateImpl;
+template <std::floating_point FloatType>
 class SqrtXGateImpl;
+template <std::floating_point FloatType>
 class SqrtXdagGateImpl;
+template <std::floating_point FloatType>
 class SqrtYGateImpl;
+template <std::floating_point FloatType>
 class SqrtYdagGateImpl;
 
+template <std::floating_point FloatType>
 class SGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
 
-    Gate get_inverse() const override;
+    Gate get_inverse() const override {
+        return std::make_shared<const SdagGateImpl<FloatType>>(_target_mask, _control_mask);
+    }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, 1i;
@@ -199,6 +217,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class SdagGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
@@ -224,16 +243,15 @@ public:
         return ss.str();
     }
 };
-// for resolving dependency issues
-inline Gate SGateImpl::get_inverse() const {
-    return std::make_shared<const SdagGateImpl>(_target_mask, _control_mask);
-}
 
+template <std::floating_point FloatType>
 class TGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
 
-    Gate get_inverse() const override;
+    Gate get_inverse() const override {
+        return std::make_shared<const TdagGateImpl>(_target_mask, _control_mask);
+    }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, (1. + 1i) / std::sqrt(2);
@@ -253,6 +271,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class TdagGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
@@ -278,16 +297,16 @@ public:
         return ss.str();
     }
 };
-// for resolving dependency issues
-inline Gate TGateImpl::get_inverse() const {
-    return std::make_shared<const TdagGateImpl>(_target_mask, _control_mask);
-}
 
+template <std::floating_point FloatType>
 class SqrtXGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
 
-    Gate get_inverse() const override;
+    Gate get_inverse() const override {
+        return std::make_shared<const SqrtXdagGateImpl>(_target_mask, _control_mask);
+    }
+
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
         mat << 0.5 + 0.5i, 0.5 - 0.5i, 0.5 - 0.5i, 0.5 + 0.5i;
@@ -307,6 +326,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class SqrtXdagGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
@@ -332,16 +352,16 @@ public:
         return ss.str();
     }
 };
-// for resolving dependency issues
-inline Gate SqrtXGateImpl::get_inverse() const {
-    return std::make_shared<const SqrtXdagGateImpl>(_target_mask, _control_mask);
-}
 
+template <std::floating_point FloatType>
 class SqrtYGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
 
-    Gate get_inverse() const override;
+    Gate get_inverse() const override {
+        return std::make_shared<const SqrtYdagGateImpl>(_target_mask, _control_mask);
+    }
+
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
         mat << 0.5 + 0.5i, -0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i;
@@ -361,6 +381,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class SqrtYdagGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
@@ -386,11 +407,8 @@ public:
         return ss.str();
     }
 };
-// for resolving dependency issues
-inline Gate SqrtYGateImpl::get_inverse() const {
-    return std::make_shared<const SqrtYdagGateImpl>(_target_mask, _control_mask);
-}
 
+template <std::floating_point FloatType>
 class P0GateImpl : public GateBase {
 public:
     using GateBase::GateBase;
@@ -417,6 +435,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class P1GateImpl : public GateBase {
 public:
     using GateBase::GateBase;
@@ -443,6 +462,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class RXGateImpl : public RotationGateBase {
 public:
     using RotationGateBase::RotationGateBase;
@@ -471,6 +491,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class RYGateImpl : public RotationGateBase {
 public:
     using RotationGateBase::RotationGateBase;
@@ -499,6 +520,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class RZGateImpl : public RotationGateBase {
 public:
     using RotationGateBase::RotationGateBase;
@@ -526,6 +548,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class U1GateImpl : public GateBase {
     double _lambda;
 
@@ -556,6 +579,7 @@ public:
         return ss.str();
     }
 };
+template <std::floating_point FloatType>
 class U2GateImpl : public GateBase {
     double _phi, _lambda;
 
@@ -594,6 +618,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class U3GateImpl : public GateBase {
     double _theta, _phi, _lambda;
 
@@ -634,6 +659,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class SwapGateImpl : public GateBase {
 public:
     using GateBase::GateBase;
@@ -660,69 +686,112 @@ public:
 
 }  // namespace internal
 
-using IGate = internal::GatePtr<internal::IGateImpl>;
-using GlobalPhaseGate = internal::GatePtr<internal::GlobalPhaseGateImpl>;
+template <std::floating_point FloatType>
+using IGate = internal::GatePtr<internal::IGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using GlobalPhaseGate = internal::GatePtr<internal::GlobalPhaseGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using XGate = internal::GatePtr<internal::XGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using YGate = internal::GatePtr<internal::YGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using ZGate = internal::GatePtr<internal::ZGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using HGate = internal::GatePtr<internal::HGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using SGate = internal::GatePtr<internal::SGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using SdagGate = internal::GatePtr<internal::SdagGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using TGate = internal::GatePtr<internal::TGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using TdagGate = internal::GatePtr<internal::TdagGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using SqrtXGate = internal::GatePtr<internal::SqrtXGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using SqrtXdagGate = internal::GatePtr<internal::SqrtXdagGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using SqrtYGate = internal::GatePtr<internal::SqrtYGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using SqrtYdagGate = internal::GatePtr<internal::SqrtYdagGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using P0Gate = internal::GatePtr<internal::P0GateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using P1Gate = internal::GatePtr<internal::P1GateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using RXGate = internal::GatePtr<internal::RXGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using RYGate = internal::GatePtr<internal::RYGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using RZGate = internal::GatePtr<internal::RZGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using U1Gate = internal::GatePtr<internal::U1GateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using U2Gate = internal::GatePtr<internal::U2GateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using U3Gate = internal::GatePtr<internal::U3GateImpl<FloatType>>;
+template <std::floating_point FloatType>
 
-using XGate = internal::GatePtr<internal::XGateImpl>;
-using YGate = internal::GatePtr<internal::YGateImpl>;
-using ZGate = internal::GatePtr<internal::ZGateImpl>;
-using HGate = internal::GatePtr<internal::HGateImpl>;
-using SGate = internal::GatePtr<internal::SGateImpl>;
-using SdagGate = internal::GatePtr<internal::SdagGateImpl>;
-using TGate = internal::GatePtr<internal::TGateImpl>;
-using TdagGate = internal::GatePtr<internal::TdagGateImpl>;
-using SqrtXGate = internal::GatePtr<internal::SqrtXGateImpl>;
-using SqrtXdagGate = internal::GatePtr<internal::SqrtXdagGateImpl>;
-using SqrtYGate = internal::GatePtr<internal::SqrtYGateImpl>;
-using SqrtYdagGate = internal::GatePtr<internal::SqrtYdagGateImpl>;
-using P0Gate = internal::GatePtr<internal::P0GateImpl>;
-using P1Gate = internal::GatePtr<internal::P1GateImpl>;
-using RXGate = internal::GatePtr<internal::RXGateImpl>;
-using RYGate = internal::GatePtr<internal::RYGateImpl>;
-using RZGate = internal::GatePtr<internal::RZGateImpl>;
-using U1Gate = internal::GatePtr<internal::U1GateImpl>;
-using U2Gate = internal::GatePtr<internal::U2GateImpl>;
-using U3Gate = internal::GatePtr<internal::U3GateImpl>;
-
-using SwapGate = internal::GatePtr<internal::SwapGateImpl>;
-
+using SwapGate = internal::GatePtr<internal::SwapGateImpl<FloatType>>;
+template <std::floating_point FloatType>
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-void bind_gate_gate_standard_hpp(nb::module_& m) {
-    DEF_GATE(IGate, "Specific class of Pauli-I gate.");
+    void bind_gate_gate_standard_hpp(nb::module_ & m) {
+    DEF_GATE(IGate, "Specific template <std::floating_point FloatType>
+class of Pauli-I gate.");
     DEF_GATE(GlobalPhaseGate,
-             "Specific class of gate, which rotate global phase, represented as "
+             "Specific template <std::floating_point FloatType>
+class of gate, which rotate global phase, represented as "
              "$e^{i\\mathrm{phase}}I$.")
         .def(
             "phase",
-            [](const GlobalPhaseGate& gate) { return gate->phase(); },
+            [](const GlobalPhaseGate& gate) {
+            return gate->phase(); },
             "Get `phase` property");
-    DEF_GATE(XGate, "Specific class of Pauli-X gate.");
-    DEF_GATE(YGate, "Specific class of Pauli-Y gate.");
-    DEF_GATE(ZGate, "Specific class of Pauli-Z gate.");
-    DEF_GATE(HGate, "Specific class of Hadamard gate.");
+    DEF_GATE(XGate, "Specific template <std::floating_point FloatType>
+class of Pauli-X gate.");
+    DEF_GATE(YGate, "Specific template <std::floating_point FloatType>
+class of Pauli-Y gate.");
+    DEF_GATE(ZGate, "Specific template <std::floating_point FloatType>
+class of Pauli-Z gate.");
+    DEF_GATE(HGate, "Specific template <std::floating_point FloatType>
+class of Hadamard gate.");
     DEF_GATE(SGate,
-             "Specific class of S gate, represented as $\\begin{bmatrix}\n1 & 0\\\\\n0 & "
+             "Specific template <std::floating_point FloatType>
+class of S gate, represented as $\\begin{
+            bmatrix}\n1 & 0\\\\\n0 & "
              "i\n\\end{bmatrix}$.");
-    DEF_GATE(SdagGate, "Specific class of inverse of S gate.");
+    DEF_GATE(SdagGate, "Specific template <std::floating_point FloatType>
+class of inverse of S gate.");
     DEF_GATE(TGate,
-             "Specific class of T gate, represented as $\\begin{bmatrix}\n1 & 0\\\\\n0 & "
+             "Specific template <std::floating_point FloatType>
+class of T gate, represented as $\\begin{
+            bmatrix}\n1 & 0\\\\\n0 & "
              "e^{i\\pi/4}\n\\end{bmatrix}$.");
-    DEF_GATE(TdagGate, "Specific class of inverse of T gate.");
+    DEF_GATE(TdagGate, "Specific template <std::floating_point FloatType>
+class of inverse of T gate.");
     DEF_GATE(SqrtXGate,
-             "Specific class of sqrt(X) gate, represented as $\\begin{bmatrix}\n1+i & 1-i\\\\\n1-i "
+             "Specific template <std::floating_point FloatType>
+class of sqrt(X) gate, represented as $\\begin{
+            bmatrix}\n1+i & 1-i\\\\\n1-i "
              "& 1+i\n\\end{bmatrix}$.");
-    DEF_GATE(SqrtXdagGate, "Specific class of inverse of sqrt(X) gate.");
+    DEF_GATE(SqrtXdagGate, "Specific template <std::floating_point FloatType>
+class of inverse of sqrt(X) gate.");
     DEF_GATE(SqrtYGate,
-             "Specific class of sqrt(Y) gate, represented as $\\begin{bmatrix}\n1+i & -1-i "
+             "Specific template <std::floating_point FloatType>
+class of sqrt(Y) gate, represented as $\\begin{
+            bmatrix}\n1+i & -1-i "
              "\\\\\n1+i & 1+i\n\\end{bmatrix}$.");
-    DEF_GATE(SqrtYdagGate, "Specific class of inverse of sqrt(Y) gate.");
+    DEF_GATE(SqrtYdagGate, "Specific template <std::floating_point FloatType>
+class of inverse of sqrt(Y) gate.");
     DEF_GATE(
         P0Gate,
-        "Specific class of projection gate to $\\ket{0}$.\n\n.. note:: This gate is not unitary.");
+        "Specific template <std::floating_point FloatType>
+class of projection gate to $\\ket{0}$.\n\n.. note:: This gate is not unitary.");
     DEF_GATE(
         P1Gate,
-        "Specific class of projection gate to $\\ket{1}$.\n\n.. note:: This gate is not unitary.");
+        "Specific template <std::floating_point FloatType>
+class of projection gate to $\\ket{1}$.\n\n.. note:: This gate is not unitary.");
 
 #define DEF_ROTATION_GATE(GATE_TYPE, DESCRIPTION) \
     DEF_GATE(GATE_TYPE, DESCRIPTION)              \
@@ -731,44 +800,57 @@ void bind_gate_gate_standard_hpp(nb::module_& m) {
 
     DEF_ROTATION_GATE(
         RXGate,
-        "Specific class of X rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}X}$.");
+        "Specific template <std::floating_point FloatType>
+class of X rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}X}$.");
     DEF_ROTATION_GATE(
         RYGate,
-        "Specific class of Y rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Y}$.");
+        "Specific template <std::floating_point FloatType>
+class of Y rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Y}$.");
     DEF_ROTATION_GATE(
         RZGate,
-        "Specific class of Z rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Z}$.");
+        "Specific template <std::floating_point FloatType>
+class of Z rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Z}$.");
 
     DEF_GATE(U1Gate,
-             "Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, "
+             "Specific template <std::floating_point FloatType>
+class of IBMQ's U1 Gate, which is a rotation abount Z-axis, "
              "represented as "
              "$\\begin{bmatrix}\n1 & 0\\\\\n0 & e^{i\\lambda}\n\\end{bmatrix}$.")
         .def(
-            "lambda_", [](const U1Gate& gate) { return gate->lambda(); }, "Get `lambda` property.");
+            "lambda_", [](const U1Gate& gate) {
+            return gate->lambda(); }, "Get `lambda` property.");
     DEF_GATE(U2Gate,
-             "Specific class of IBMQ's U2 Gate, which is a rotation about X+Z-axis, "
+             "Specific template <std::floating_point FloatType>
+class of IBMQ's U2 Gate, which is a rotation about X+Z-axis, "
              "represented as "
              "$\\frac{1}{\\sqrt{2}} \\begin{bmatrix}1 & -e^{-i\\lambda}\\\\\n"
              "e^{i\\phi} & e^{i(\\phi+\\lambda)}\n\\end{bmatrix}$.")
         .def(
-            "phi", [](const U2Gate& gate) { return gate->phi(); }, "Get `phi` property.")
+            "phi", [](const U2Gate& gate) {
+            return gate->phi(); }, "Get `phi` property.")
         .def(
-            "lambda_", [](const U2Gate& gate) { return gate->lambda(); }, "Get `lambda` property.");
+            "lambda_", [](const U2Gate& gate) {
+            return gate->lambda(); }, "Get `lambda` property.");
     DEF_GATE(U3Gate,
-             "Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, "
+             "Specific template <std::floating_point FloatType>
+class of IBMQ's U3 Gate, which is a rotation abount 3 axis, "
              "represented as "
              "$\\begin{bmatrix}\n\\cos \\frac{\\theta}{2} & "
              "-e^{i\\lambda}\\sin\\frac{\\theta}{2}\\\\\n"
              "e^{i\\phi}\\sin\\frac{\\theta}{2} & "
              "e^{i(\\phi+\\lambda)}\\cos\\frac{\\theta}{2}\n\\end{bmatrix}$.")
         .def(
-            "theta", [](const U3Gate& gate) { return gate->theta(); }, "Get `theta` property.")
+            "theta", [](const U3Gate& gate) {
+            return gate->theta(); }, "Get `theta` property.")
         .def(
-            "phi", [](const U3Gate& gate) { return gate->phi(); }, "Get `phi` property.")
+            "phi", [](const U3Gate& gate) {
+            return gate->phi(); }, "Get `phi` property.")
         .def(
-            "lambda_", [](const U3Gate& gate) { return gate->lambda(); }, "Get `lambda` property.");
-    DEF_GATE(SwapGate, "Specific class of two-qubit swap gate.");
-}
+            "lambda_", [](const U3Gate& gate) {
+            return gate->lambda(); }, "Get `lambda` property.");
+    DEF_GATE(SwapGate, "Specific template <std::floating_point FloatType>
+class of two-qubit swap gate.");
+    }
 }  // namespace internal
 #endif
 }  // namespace scaluq
