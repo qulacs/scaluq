@@ -140,7 +140,11 @@ public:
             _target_mask, _control_mask, inv_eigen, _is_unitary);
     }
 
-    Matrix get_matrix_internal() const { return _matrix; }
+    Matrix get_matrix_internal() const {
+        Matrix ret("return matrix", _matrix.extent(0), _matrix.extent(1));
+        Kokkos::deep_copy(ret, _matrix);
+        return ret;
+    }
 
     ComplexMatrix get_matrix() const override {
         return convert_internal_matrix_to_external_matrix(_matrix);
@@ -184,12 +188,15 @@ public:
 
     ComplexMatrix get_matrix() const override {
         ComplexMatrix ret(_matrix._row, _matrix._col);
-        auto vec = _matrix._values;
-        for (std::size_t i = 0; i < vec.size(); i++) {
-            ret(vec[i].r, vec[i].c) = vec[i].val;
+        auto vec_d = _matrix._values;
+        auto vec_h = Kokkos::create_mirror_view(vec_d);
+        for (std::size_t i = 0; i < vec_h.size(); i++) {
+            ret(vec_h(i).r, vec_h(i).c) = vec_h(i).val;
         }
         return ret;
     }
+
+    SparseComplexMatrix get_sparse_matrix() const { return get_matrix().sparseView(); }
 
     void update_quantum_state(StateVector& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
@@ -219,7 +226,9 @@ void bind_gate_gate_matrix_hpp(nb::module_& m) {
     DEF_GATE(TwoTargetMatrixGate, "Specific class of two-qubit dense matrix gate.")
         .def("matrix", [](const TwoTargetMatrixGate& gate) { return gate->matrix(); });
     DEF_GATE(SparseMatrixGate, "Specific class of sparse matrix gate.")
-        .def("matrix", [](const SparseMatrixGate& gate) { return gate->get_matrix(); });
+        .def("matrix", [](const SparseMatrixGate& gate) { return gate->get_matrix(); })
+        .def("sparse_matrix",
+             [](const SparseMatrixGate& gate) { return gate->get_sparse_matrix(); });
     DEF_GATE(DenseMatrixGate, "Specific class of dense matrix gate.")
         .def("matrix", [](const DenseMatrixGate& gate) { return gate->get_matrix(); });
 }

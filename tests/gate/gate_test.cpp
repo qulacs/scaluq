@@ -15,7 +15,7 @@
 using namespace scaluq;
 
 const auto eps = 1e-12;
-using CComplex = std::complex<double>;
+using StdComplex = std::complex<double>;
 
 template <Gate (*QuantumGateConstructor)()>
 void run_random_gate_apply(std::uint64_t n_qubits) {
@@ -36,7 +36,7 @@ void run_random_gate_apply(std::uint64_t n_qubits) {
         test_state = test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
         }
     }
 }
@@ -62,7 +62,7 @@ void run_random_gate_apply(std::uint64_t n_qubits) {
         test_state = std::polar(1., angle) * test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
         }
     }
 }
@@ -90,7 +90,7 @@ void run_random_gate_apply(std::uint64_t n_qubits,
         test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
         }
     }
 }
@@ -119,7 +119,7 @@ void run_random_gate_apply(std::uint64_t n_qubits,
         test_state = get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
         }
     }
 }
@@ -165,7 +165,7 @@ void run_random_gate_apply_IBMQ(
                 get_expanded_eigen_matrix_with_identity(target, matrix, n_qubits) * test_state;
 
             for (int i = 0; i < dim; i++) {
-                ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+                ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
             }
         }
     }
@@ -203,7 +203,7 @@ void run_random_gate_apply_two_target(std::uint64_t n_qubits) {
             test_state = test_mat * test_state;
 
             for (int i = 0; i < dim; i++) {
-                ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+                ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
             }
         }
     }
@@ -226,7 +226,7 @@ void run_random_gate_apply_two_target(std::uint64_t n_qubits) {
         test_state = test_mat * test_state;
 
         for (int i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
         }
     }
 }
@@ -283,7 +283,7 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
 
         // check if the state is updated correctly
         for (std::uint64_t i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
         }
 
         auto state_bef_cp = state_bef.get_amplitudes();
@@ -293,7 +293,7 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
 
         // check if the state is restored correctly
         for (std::uint64_t i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)(state_cp[i] - state_bef_cp[i])), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)(state_cp[i] - state_bef_cp[i])), 0, eps);
         }
     }
 
@@ -343,7 +343,7 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
         assert((int)state_cp.size() == test_state.size());
         // check if the state is updated correctly
         for (std::uint64_t i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)state_cp[i] - test_state[i]), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
         }
         Gate pauli_gate_inv = pauli_gate->get_inverse();
         pauli_gate_inv->update_quantum_state(state);
@@ -351,7 +351,7 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
         auto state_bef_cp = state_bef.get_amplitudes();
         // check if the state is restored correctly
         for (std::uint64_t i = 0; i < dim; i++) {
-            ASSERT_NEAR(std::abs((CComplex)(state_cp[i] - state_bef_cp[i])), 0, eps);
+            ASSERT_NEAR(std::abs((StdComplex)(state_cp[i] - state_bef_cp[i])), 0, eps);
         }
     }
 }

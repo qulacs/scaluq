@@ -139,12 +139,13 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
             std::uint64_t basis = team.league_rank();
             basis = insert_zero_at_mask_positions(basis, target_mask | control_mask) | control_mask;
             Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim), [&](std::uint64_t r) {
-                uint32_t dst_index = internal::insert_zero_at_mask_positions(r, outer_mask) | basis;
+                std::uint64_t dst_index =
+                    internal::insert_zero_at_mask_positions(r, outer_mask) | basis;
                 Complex sum = 0;
                 Kokkos::parallel_reduce(
                     Kokkos::ThreadVectorRange(team, matrix_dim),
                     [&](std::uint64_t c, Complex& inner_sum) {
-                        uint32_t src_index =
+                        std::uint64_t src_index =
                             internal::insert_zero_at_mask_positions(c, outer_mask) | basis;
                         inner_sum += matrix(r, c) * state._raw(src_index);
                     },
