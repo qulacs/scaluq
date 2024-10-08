@@ -174,8 +174,7 @@ public:
 
     Gate get_inverse() const override {
         ComplexMatrix mat_eigen = convert_coo_to_external_matrix(_matrix);
-        ComplexMatrix inv_eigen;
-        inv_eigen = mat_eigen.inverse();
+        ComplexMatrix inv_eigen = mat_eigen.inverse().eval();
         return std::make_shared<const DenseMatrixGateImpl>(_target_mask, _control_mask, inv_eigen);
     }
 
