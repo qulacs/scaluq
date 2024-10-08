@@ -156,6 +156,67 @@ KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
     return z.real() * z.real() + z.imag() * z.imag();
 }
 
+inline Matrix convert_external_matrix_to_internal_matrix(const ComplexMatrix& eigen_matrix) {
+    std::uint64_t rows = eigen_matrix.rows();
+    std::uint64_t cols = eigen_matrix.cols();
+    Kokkos::View<const Complex**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        host_view(reinterpret_cast<const Complex*>(eigen_matrix.data()), rows, cols);
+    Matrix mat("internal_matrix", rows, cols);
+    Kokkos::deep_copy(mat, host_view);
+    return mat;
+}
+
+inline ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix& matrix) {
+    int rows = matrix.extent(0);
+    int cols = matrix.extent(1);
+    ComplexMatrix eigen_matrix(rows, cols);
+    Kokkos::View<Complex**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
+        reinterpret_cast<Complex*>(eigen_matrix.data()), rows, cols);
+    Kokkos::deep_copy(host_view, matrix);
+    return eigen_matrix;
+}
+
+inline ComplexMatrix convert_coo_to_external_matrix(SparseMatrix mat) {
+    ComplexMatrix eigen_matrix(mat._row, mat._col);
+    for (std::size_t i = 0; i < mat._values.extent(0); i++) {
+        eigen_matrix(mat._values(i).r, mat._values(i).c) = mat._values(i).val;
+    }
+    return eigen_matrix;
+}
+
+inline ComplexMatrix transform_dense_matrix_by_order(const ComplexMatrix& mat,
+                                                     const std::vector<std::uint64_t>& targets) {
+    std::vector<std::uint64_t> sorted(targets);
+    std::sort(sorted.begin(), sorted.end());
+
+    const std::size_t matrix_size = mat.rows();
+
+    std::vector<std::uint64_t> targets_order(targets.size());
+    for (std::size_t i = 0; i < targets.size(); i++) {
+        targets_order[i] =
+            std::lower_bound(sorted.begin(), sorted.end(), targets[i]) - sorted.begin();
+    }
+
+    auto transform_index = [&targets_order](std::size_t index) {
+        std::size_t transformed = 0;
+        for (std::size_t j = 0; j < targets_order.size(); j++) {
+            transformed |= ((index & (1ULL << targets_order[j])) >> targets_order[j]) << j;
+        }
+        return transformed;
+    };
+
+    ComplexMatrix ret(matrix_size, matrix_size);
+
+    for (std::size_t i = 0; i < matrix_size; i++) {
+        std::size_t row_dst = transform_index(i);
+        for (std::size_t j = 0; j < matrix_size; j++) {
+            std::size_t col_dst = transform_index(j);
+            ret(row_dst, col_dst) = mat(i, j);
+        }
+    }
+    return ret;
+}
+
 }  // namespace internal
 
 }  // namespace scaluq
