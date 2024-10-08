@@ -1,0 +1,1251 @@
+-- SKBUILD = 
+-- SCALUQ_USE_TEST = ON
+-- Fetch Kokkos for parallel execution
+-- Setting default Kokkos CXX standard to 17
+-- Kokkos version: 4.2.0
+-- The project name is: Kokkos
+-- Using internal gtest for testing
+-- Using -std=gnu++17 for C++17 extensions as feature
+-- Built-in Execution Spaces:
+--     Device Parallel: NoTypeDefined
+--     Host Parallel: Kokkos::OpenMP
+--       Host Serial: SERIAL
+-- 
+-- Architectures:
+-- Using internal desul_atomics copy
+-- Kokkos Devices: OPENMP;SERIAL, Kokkos Backends: OPENMP;SERIAL
+-- Fetch Eigen for matrix operation
+-- Performing Test COMPILER_SUPPORT_std=cpp03
+-- Performing Test COMPILER_SUPPORT_std=cpp03 - Success
+-- Standard libraries to link to explicitly: none
+-- Found unsuitable Qt version "" from NOTFOUND
+-- Could NOT find CHOLMOD (missing: CHOLMOD_INCLUDES CHOLMOD_LIBRARIES) 
+-- Could NOT find UMFPACK (missing: UMFPACK_INCLUDES UMFPACK_LIBRARIES) 
+-- Could NOT find KLU (missing: KLU_INCLUDES KLU_LIBRARIES) 
+-- Could NOT find SuperLU (missing: SUPERLU_INCLUDES SUPERLU_LIBRARIES SUPERLU_VERSION_OK) (Required is at least version "4.0")
+-- A version of Pastix has been found but pastix_nompi.h does not exist in the include directory. Because Eigen tests require a version without MPI, we disable the Pastix backend.
+-- Could NOT find SPQR (missing: SPQR_INCLUDES SPQR_LIBRARIES) 
+-- Found unsuitable Qt version "" from NOTFOUND
+-- Could NOT find GoogleHash (missing: GOOGLEHASH_INCLUDES GOOGLEHASH_COMPILE) 
+-- Could NOT find Adolc (missing: ADOLC_INCLUDES ADOLC_LIBRARIES) 
+-- Could NOT find MPFR (missing: MPFR_INCLUDES MPFR_LIBRARIES MPFR_VERSION_OK) (Required is at least version "1.0.0")
+-- Could NOT find PkgConfig (missing: PKG_CONFIG_EXECUTABLE) 
+-- Found unsuitable Qt version "" from NOTFOUND
+-- Qt4 not found, so disabling the mandelbrot and opengl demos
+-- Could NOT find CHOLMOD (missing: CHOLMOD_INCLUDES CHOLMOD_LIBRARIES) 
+-- Could NOT find UMFPACK (missing: UMFPACK_INCLUDES UMFPACK_LIBRARIES) 
+-- Could NOT find KLU (missing: KLU_INCLUDES KLU_LIBRARIES) 
+-- Could NOT find SuperLU (missing: SUPERLU_INCLUDES SUPERLU_LIBRARIES SUPERLU_VERSION_OK) (Required is at least version "4.0")
+-- A version of Pastix has been found but pastix_nompi.h does not exist in the include directory. Because Eigen tests require a version without MPI, we disable the Pastix backend.
+-- ************************************************************
+-- ***    Eigen's unit tests configuration summary          ***
+-- ************************************************************
+-- 
+-- Build type:        Release
+-- Build site:        e4425d27c128
+-- Build string:      linux-5.15.153.1-microsoft-standard-wsl2-g++-11.4.0-sse2-64bit
+-- Enabled backends:  Boost.Multiprecision, 
+-- Disabled backends: CHOLMOD,  UMFPACK,  KLU,  SuperLU,  PaStiX,  METIS,  SPQR,  Qt4 support,  GoogleHash,  Adolc,  MPFR C++,  fftw,  OpenGL, 
+-- Default order:     Column-major
+-- Maximal matrix/vector size: 320
+-- SSE2:              Using architecture defaults
+-- SSE3:              Using architecture defaults
+-- SSSE3:             Using architecture defaults
+-- SSE4.1:            Using architecture defaults
+-- SSE4.2:            Using architecture defaults
+-- AVX:               Using architecture defaults
+-- AVX2:              Using architecture defaults
+-- FMA:               Using architecture defaults
+-- AVX512:            Using architecture defaults
+-- AVX512DQ:          Using architecture defaults
+-- Altivec:           Using architecture defaults
+-- VSX:               Using architecture defaults
+-- MIPS MSA:          Using architecture defaults
+-- ARM NEON:          Using architecture defaults
+-- ARMv8 NEON:        Using architecture defaults
+-- S390X ZVECTOR:     Using architecture defaults
+-- C++11:             OFF
+-- SYCL:              OFF
+-- CUDA:              OFF
+-- HIP:               OFF
+-- 
+CXX:               /usr/bin/g++
+ CXX_VERSION:       g++ (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
+ CXX_FLAGS:          -std=c++03 -pedantic -Wall -Wextra -Wundef -Wcast-align -Wchar-subscripts -Wnon-virtual-dtor -Wunused-local-typedefs -Wpointer-arith -Wwrite-strings -Wformat-security -Wlogical-op -Wenum-conversion -Wdouble-promotion -Wshadow -Wno-psabi -Wno-variadic-macros -Wno-long-long -fno-check-new -fno-common -fstrict-aliasing -ansi
+ Sparse lib flags:   
+
+-- ************************************************************
+-- 
+-- Configured Eigen 3.4.0
+-- 
+-- Available targets (use: cmake --build . --target TARGET):
+-- ---------+--------------------------------------------------------------
+-- Target   |   Description
+-- ---------+--------------------------------------------------------------
+-- install  | Install Eigen. Headers will be installed to:
+--          |     <CMAKE_INSTALL_PREFIX>/<INCLUDE_INSTALL_DIR>
+--          |   Using the following values:
+--          |     CMAKE_INSTALL_PREFIX: /usr/local
+--          |     INCLUDE_INSTALL_DIR:  include/eigen3
+--          |   Change the install location of Eigen headers using:
+--          |     cmake . -DCMAKE_INSTALL_PREFIX=yourprefix
+--          |   Or:
+--          |     cmake . -DINCLUDE_INSTALL_DIR=yourdir
+-- doc      | Generate the API documentation, requires Doxygen & LaTeX
+-- check    | Build and run the unit-tests. Read this page:
+--          |   http://eigen.tuxfamily.org/index.php?title=Tests
+-- blas     | Build BLAS library (not the same thing as Eigen)
+-- uninstall| Remove files installed by the install target
+-- ---------+--------------------------------------------------------------
+-- 
+-- Fetch googletest for C++ testing
+-- Configuring done (1.0s)
+-- Generating done (0.7s)
+-- Build files have been written to: /workspaces/scaluq/build
+ninja: Entering directory `build'
+[1/5] cd /workspaces/scaluq/build/build/_deps/kokkos_fetch-src && /opt/cmake-3.28.0/bin/cmake -DRUN_CHECK_GIT_VERSION=1 -DKOKKOS_SOURCE_DIR=/workspaces/scaluq/build/_deps/kokkos_fetch-src -P /workspaces/scaluq/build/_deps/kokkos_fetch-src/cmake/build_env_info.cmake
+[2/3] Building CXX object exe/CMakeFiles/main.dir/main.cpp.o
+FAILED: exe/CMakeFiles/main.dir/main.cpp.o 
+/usr/bin/g++ -DKOKKOS_DEPENDENCE -DOPENMP -I/workspaces/scaluq/scaluq -I/workspaces/scaluq/build/_deps/eigen_fetch-src -I/workspaces/scaluq/build/build/_deps/kokkos_fetch-src -I/workspaces/scaluq/build/build/_deps/kokkos_fetch-src/core/src -I/workspaces/scaluq/build/_deps/kokkos_fetch-src/core/src -I/workspaces/scaluq/build/_deps/kokkos_fetch-src/core/src/../../tpls/desul/include -I/workspaces/scaluq/build/build/_deps/kokkos_fetch-src/containers/src -I/workspaces/scaluq/build/_deps/kokkos_fetch-src/containers/src -I/workspaces/scaluq/build/build/_deps/kokkos_fetch-src/algorithms/src -I/workspaces/scaluq/build/_deps/kokkos_fetch-src/algorithms/src -I/workspaces/scaluq/build/build/_deps/kokkos_fetch-src/simd/src -I/workspaces/scaluq/build/_deps/kokkos_fetch-src/simd/src -isystem /workspaces/scaluq/build/_deps/googletest_fetch-src/googletest/include -isystem /workspaces/scaluq/build/_deps/googletest_fetch-src/googletest -O3 -DNDEBUG -std=gnu++20 -Wall -Wextra -Wunused-parameter -Wsign-compare -Wtype-limits -Wuninitialized -pthread -fopenmp -O3 -fopenmp -MD -MT exe/CMakeFiles/main.dir/main.cpp.o -MF exe/CMakeFiles/main.dir/main.cpp.o.d -o exe/CMakeFiles/main.dir/main.cpp.o -c /workspaces/scaluq/exe/main.cpp
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp: In function ‘constexpr scaluq::GateType scaluq::get_gate_type()’:
+/workspaces/scaluq/scaluq/gate/gate.hpp:118:74: error: ‘FloatType’ was not declared in this scope
+  118 |     else if constexpr (std::is_same_v<TWithoutConst, internal::IGateImpl<FloatType>>)
+      |                                                                          ^~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate.hpp:118:74: error: template argument 1 is invalid
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:10:35: error: expected class-name before ‘{’ token
+   10 | class IGateImpl : public GateBase {
+      |                                   ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:14:10: error: deduced class type ‘Gate’ in function return type
+   14 |     Gate get_inverse() const override { return shared_from_this(); }
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In constructor ‘scaluq::internal::IGateImpl<FloatType>::IGateImpl()’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:12:19: error: class ‘scaluq::internal::IGateImpl<FloatType>’ does not have any field named ‘GateBase’
+   12 |     IGateImpl() : GateBase(0, 0) {}
+      |                   ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::IGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:20:16: error: ‘_target_mask’ was not declared in this scope
+   20 |         i_gate(_target_mask, _control_mask, state_vector);
+      |                ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:20:30: error: ‘_control_mask’ was not declared in this scope
+   20 |         i_gate(_target_mask, _control_mask, state_vector);
+      |                              ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::IGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:26:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+   26 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:26:15: note: (if you use ‘-fpermissive’, G++ will accept your code, but allowing the use of an undeclared name is deprecated)
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:32:45: error: expected class-name before ‘{’ token
+   32 | class GlobalPhaseGateImpl : public GateBase {
+      |                                             ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:42:10: error: deduced class type ‘Gate’ in function return type
+   42 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In constructor ‘scaluq::internal::GlobalPhaseGateImpl<FloatType>::GlobalPhaseGateImpl(uint64_t, double)’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:38:11: error: class ‘scaluq::internal::GlobalPhaseGateImpl<FloatType>’ does not have any field named ‘GateBase’
+   38 |         : GateBase(0, control_mask), _phase(phase){};
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::GlobalPhaseGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:51:27: error: ‘_target_mask’ was not declared in this scope
+   51 |         global_phase_gate(_target_mask, _control_mask, _phase, state_vector);
+      |                           ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:51:41: error: ‘_control_mask’ was not declared in this scope
+   51 |         global_phase_gate(_target_mask, _control_mask, _phase, state_vector);
+      |                                         ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::GlobalPhaseGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:58:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+   58 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:64:42: error: expected class-name before ‘{’ token
+   64 | class RotationGateBase : public GateBase {
+      |                                          ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In constructor ‘scaluq::internal::RotationGateBase<FloatType>::RotationGateBase(uint64_t, uint64_t, double)’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:70:11: error: class ‘scaluq::internal::RotationGateBase<FloatType>’ does not have any field named ‘GateBase’
+   70 |         : GateBase(target_mask, control_mask), _angle(angle) {}
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:76:35: error: expected class-name before ‘{’ token
+   76 | class XGateImpl : public GateBase {
+      |                                   ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:78:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::GateBase’ used without template arguments
+   78 |     using GateBase::GateBase;
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:80:10: error: deduced class type ‘Gate’ in function return type
+   80 |     Gate get_inverse() const override { return shared_from_this(); }
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::XGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:89:16: error: ‘_target_mask’ was not declared in this scope
+   89 |         x_gate(_target_mask, _control_mask, state_vector);
+      |                ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:89:30: error: ‘_control_mask’ was not declared in this scope
+   89 |         x_gate(_target_mask, _control_mask, state_vector);
+      |                              ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::XGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:95:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+   95 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:101:35: error: expected class-name before ‘{’ token
+  101 | class YGateImpl : public GateBase {
+      |                                   ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:103:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::GateBase’ used without template arguments
+  103 |     using GateBase::GateBase;
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:105:10: error: deduced class type ‘Gate’ in function return type
+  105 |     Gate get_inverse() const override { return shared_from_this(); }
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::YGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:114:16: error: ‘_target_mask’ was not declared in this scope
+  114 |         y_gate(_target_mask, _control_mask, state_vector);
+      |                ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:114:30: error: ‘_control_mask’ was not declared in this scope
+  114 |         y_gate(_target_mask, _control_mask, state_vector);
+      |                              ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::YGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:120:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  120 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:126:35: error: expected class-name before ‘{’ token
+  126 | class ZGateImpl : public GateBase {
+      |                                   ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:128:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::GateBase’ used without template arguments
+  128 |     using GateBase::GateBase;
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:130:10: error: deduced class type ‘Gate’ in function return type
+  130 |     Gate get_inverse() const override { return shared_from_this(); }
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::ZGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:139:16: error: ‘_target_mask’ was not declared in this scope
+  139 |         z_gate(_target_mask, _control_mask, state_vector);
+      |                ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:139:30: error: ‘_control_mask’ was not declared in this scope
+  139 |         z_gate(_target_mask, _control_mask, state_vector);
+      |                              ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::ZGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:145:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  145 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:151:35: error: expected class-name before ‘{’ token
+  151 | class HGateImpl : public GateBase {
+      |                                   ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:153:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::GateBase’ used without template arguments
+  153 |     using GateBase::GateBase;
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:155:10: error: deduced class type ‘Gate’ in function return type
+  155 |     Gate get_inverse() const override { return shared_from_this(); }
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::HGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:165:16: error: ‘_target_mask’ was not declared in this scope
+  165 |         h_gate(_target_mask, _control_mask, state_vector);
+      |                ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:165:30: error: ‘_control_mask’ was not declared in this scope
+  165 |         h_gate(_target_mask, _control_mask, state_vector);
+      |                              ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::HGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:171:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  171 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:194:35: error: expected class-name before ‘{’ token
+  194 | class SGateImpl : public GateBase {
+      |                                   ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:196:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::GateBase’ used without template arguments
+  196 |     using GateBase::GateBase;
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:198:10: error: deduced class type ‘Gate’ in function return type
+  198 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::SGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:209:16: error: ‘_target_mask’ was not declared in this scope
+  209 |         s_gate(_target_mask, _control_mask, state_vector);
+      |                ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:209:30: error: ‘_control_mask’ was not declared in this scope
+  209 |         s_gate(_target_mask, _control_mask, state_vector);
+      |                              ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::SGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:215:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  215 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:221:38: error: expected class-name before ‘{’ token
+  221 | class SdagGateImpl : public GateBase {
+      |                                      ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:223:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::GateBase’ used without template arguments
+  223 |     using GateBase::GateBase;
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:225:10: error: deduced class type ‘Gate’ in function return type
+  225 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::SdagGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:236:19: error: ‘_target_mask’ was not declared in this scope
+  236 |         sdag_gate(_target_mask, _control_mask, state_vector);
+      |                   ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:236:33: error: ‘_control_mask’ was not declared in this scope
+  236 |         sdag_gate(_target_mask, _control_mask, state_vector);
+      |                                 ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::SdagGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:242:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  242 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:248:35: error: expected class-name before ‘{’ token
+  248 | class TGateImpl : public GateBase {
+      |                                   ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:250:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::GateBase’ used without template arguments
+  250 |     using GateBase::GateBase;
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:252:10: error: deduced class type ‘Gate’ in function return type
+  252 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::TGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:263:16: error: ‘_target_mask’ was not declared in this scope
+  263 |         t_gate(_target_mask, _control_mask, state_vector);
+      |                ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:263:30: error: ‘_control_mask’ was not declared in this scope
+  263 |         t_gate(_target_mask, _control_mask, state_vector);
+      |                              ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::TGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:269:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  269 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:275:38: error: expected class-name before ‘{’ token
+  275 | class TdagGateImpl : public GateBase {
+      |                                      ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:277:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::GateBase’ used without template arguments
+  277 |     using GateBase::GateBase;
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:279:10: error: deduced class type ‘Gate’ in function return type
+  279 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::TdagGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:290:19: error: ‘_target_mask’ was not declared in this scope
+  290 |         tdag_gate(_target_mask, _control_mask, state_vector);
+      |                   ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:290:33: error: ‘_control_mask’ was not declared in this scope
+  290 |         tdag_gate(_target_mask, _control_mask, state_vector);
+      |                                 ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::TdagGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:296:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  296 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:302:39: error: expected class-name before ‘{’ token
+  302 | class SqrtXGateImpl : public GateBase {
+      |                                       ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:304:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::GateBase’ used without template arguments
+  304 |     using GateBase::GateBase;
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:306:10: error: deduced class type ‘Gate’ in function return type
+  306 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::SqrtXGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:318:20: error: ‘_target_mask’ was not declared in this scope
+  318 |         sqrtx_gate(_target_mask, _control_mask, state_vector);
+      |                    ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:318:34: error: ‘_control_mask’ was not declared in this scope
+  318 |         sqrtx_gate(_target_mask, _control_mask, state_vector);
+      |                                  ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::SqrtXGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:324:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  324 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:330:42: error: expected class-name before ‘{’ token
+  330 | class SqrtXdagGateImpl : public GateBase {
+      |                                          ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:332:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::GateBase’ used without template arguments
+  332 |     using GateBase::GateBase;
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:334:10: error: deduced class type ‘Gate’ in function return type
+  334 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::SqrtXdagGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:345:23: error: ‘_target_mask’ was not declared in this scope
+  345 |         sqrtxdag_gate(_target_mask, _control_mask, state_vector);
+      |                       ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:345:37: error: ‘_control_mask’ was not declared in this scope
+  345 |         sqrtxdag_gate(_target_mask, _control_mask, state_vector);
+      |                                     ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::SqrtXdagGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:351:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  351 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:357:39: error: expected class-name before ‘{’ token
+  357 | class SqrtYGateImpl : public GateBase {
+      |                                       ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:359:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::GateBase’ used without template arguments
+  359 |     using GateBase::GateBase;
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:361:10: error: deduced class type ‘Gate’ in function return type
+  361 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::SqrtYGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:373:20: error: ‘_target_mask’ was not declared in this scope
+  373 |         sqrty_gate(_target_mask, _control_mask, state_vector);
+      |                    ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:373:34: error: ‘_control_mask’ was not declared in this scope
+  373 |         sqrty_gate(_target_mask, _control_mask, state_vector);
+      |                                  ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::SqrtYGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:379:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  379 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:385:42: error: expected class-name before ‘{’ token
+  385 | class SqrtYdagGateImpl : public GateBase {
+      |                                          ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:387:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::GateBase’ used without template arguments
+  387 |     using GateBase::GateBase;
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:389:10: error: deduced class type ‘Gate’ in function return type
+  389 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::SqrtYdagGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:400:23: error: ‘_target_mask’ was not declared in this scope
+  400 |         sqrtydag_gate(_target_mask, _control_mask, state_vector);
+      |                       ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:400:37: error: ‘_control_mask’ was not declared in this scope
+  400 |         sqrtydag_gate(_target_mask, _control_mask, state_vector);
+      |                                     ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::SqrtYdagGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:406:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  406 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:412:36: error: expected class-name before ‘{’ token
+  412 | class P0GateImpl : public GateBase {
+      |                                    ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:414:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::GateBase’ used without template arguments
+  414 |     using GateBase::GateBase;
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:416:10: error: deduced class type ‘Gate’ in function return type
+  416 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::P0GateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:427:17: error: ‘_target_mask’ was not declared in this scope
+  427 |         p0_gate(_target_mask, _control_mask, state_vector);
+      |                 ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:427:31: error: ‘_control_mask’ was not declared in this scope
+  427 |         p0_gate(_target_mask, _control_mask, state_vector);
+      |                               ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::P0GateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:433:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  433 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:439:36: error: expected class-name before ‘{’ token
+  439 | class P1GateImpl : public GateBase {
+      |                                    ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:441:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::GateBase’ used without template arguments
+  441 |     using GateBase::GateBase;
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:443:10: error: deduced class type ‘Gate’ in function return type
+  443 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::P1GateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:454:17: error: ‘_target_mask’ was not declared in this scope
+  454 |         p1_gate(_target_mask, _control_mask, state_vector);
+      |                 ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:454:31: error: ‘_control_mask’ was not declared in this scope
+  454 |         p1_gate(_target_mask, _control_mask, state_vector);
+      |                               ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::P1GateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:460:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  460 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:466:44: error: expected class-name before ‘{’ token
+  466 | class RXGateImpl : public RotationGateBase {
+      |                                            ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:468:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::RotationGateBase’ used without template arguments
+  468 |     using RotationGateBase::RotationGateBase;
+      |           ^~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:470:10: error: deduced class type ‘Gate’ in function return type
+  470 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘scaluq::internal::ComplexMatrix scaluq::internal::RXGateImpl<FloatType>::get_matrix() const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:475:25: error: ‘_angle’ was not declared in this scope
+  475 |         mat << std::cos(_angle / 2), -1i * std::sin(_angle / 2), -1i * std::sin(_angle / 2),
+      |                         ^~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::RXGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:482:17: error: ‘_target_mask’ was not declared in this scope
+  482 |         rx_gate(_target_mask, _control_mask, _angle, state_vector);
+      |                 ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:482:31: error: ‘_control_mask’ was not declared in this scope
+  482 |         rx_gate(_target_mask, _control_mask, _angle, state_vector);
+      |                               ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:482:46: error: ‘_angle’ was not declared in this scope
+  482 |         rx_gate(_target_mask, _control_mask, _angle, state_vector);
+      |                                              ^~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::RXGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:489:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  489 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:495:44: error: expected class-name before ‘{’ token
+  495 | class RYGateImpl : public RotationGateBase {
+      |                                            ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:497:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::RotationGateBase’ used without template arguments
+  497 |     using RotationGateBase::RotationGateBase;
+      |           ^~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:499:10: error: deduced class type ‘Gate’ in function return type
+  499 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘scaluq::internal::ComplexMatrix scaluq::internal::RYGateImpl<FloatType>::get_matrix() const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:504:25: error: ‘_angle’ was not declared in this scope
+  504 |         mat << std::cos(_angle / 2), -std::sin(_angle / 2), std::sin(_angle / 2),
+      |                         ^~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::RYGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:511:17: error: ‘_target_mask’ was not declared in this scope
+  511 |         ry_gate(_target_mask, _control_mask, _angle, state_vector);
+      |                 ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:511:31: error: ‘_control_mask’ was not declared in this scope
+  511 |         ry_gate(_target_mask, _control_mask, _angle, state_vector);
+      |                               ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:511:46: error: ‘_angle’ was not declared in this scope
+  511 |         ry_gate(_target_mask, _control_mask, _angle, state_vector);
+      |                                              ^~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::RYGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:518:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  518 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:524:44: error: expected class-name before ‘{’ token
+  524 | class RZGateImpl : public RotationGateBase {
+      |                                            ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:526:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::RotationGateBase’ used without template arguments
+  526 |     using RotationGateBase::RotationGateBase;
+      |           ^~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:528:10: error: deduced class type ‘Gate’ in function return type
+  528 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘scaluq::internal::ComplexMatrix scaluq::internal::RZGateImpl<FloatType>::get_matrix() const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:533:33: error: ‘_angle’ was not declared in this scope
+  533 |         mat << std::exp(-0.5i * _angle), 0, 0, std::exp(0.5i * _angle);
+      |                                 ^~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::RZGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:539:17: error: ‘_target_mask’ was not declared in this scope
+  539 |         rz_gate(_target_mask, _control_mask, _angle, state_vector);
+      |                 ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:539:31: error: ‘_control_mask’ was not declared in this scope
+  539 |         rz_gate(_target_mask, _control_mask, _angle, state_vector);
+      |                               ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:539:46: error: ‘_angle’ was not declared in this scope
+  539 |         rz_gate(_target_mask, _control_mask, _angle, state_vector);
+      |                                              ^~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::RZGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:546:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  546 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:552:36: error: expected class-name before ‘{’ token
+  552 | class U1GateImpl : public GateBase {
+      |                                    ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:561:10: error: deduced class type ‘Gate’ in function return type
+  561 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In constructor ‘scaluq::internal::U1GateImpl<FloatType>::U1GateImpl(uint64_t, uint64_t, double)’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:557:11: error: class ‘scaluq::internal::U1GateImpl<FloatType>’ does not have any field named ‘GateBase’
+  557 |         : GateBase(target_mask, control_mask), _lambda(lambda) {}
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::U1GateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:572:17: error: ‘_target_mask’ was not declared in this scope
+  572 |         u1_gate(_target_mask, _control_mask, _lambda, state_vector);
+      |                 ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:572:31: error: ‘_control_mask’ was not declared in this scope
+  572 |         u1_gate(_target_mask, _control_mask, _lambda, state_vector);
+      |                               ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::U1GateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:578:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  578 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:583:36: error: expected class-name before ‘{’ token
+  583 | class U2GateImpl : public GateBase {
+      |                                    ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:593:10: error: deduced class type ‘Gate’ in function return type
+  593 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In constructor ‘scaluq::internal::U2GateImpl<FloatType>::U2GateImpl(uint64_t, uint64_t, double, double)’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:588:11: error: class ‘scaluq::internal::U2GateImpl<FloatType>’ does not have any field named ‘GateBase’
+  588 |         : GateBase(target_mask, control_mask), _phi(phi), _lambda(lambda) {}
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::U2GateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:610:17: error: ‘_target_mask’ was not declared in this scope
+  610 |         u2_gate(_target_mask, _control_mask, _phi, _lambda, state_vector);
+      |                 ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:610:31: error: ‘_control_mask’ was not declared in this scope
+  610 |         u2_gate(_target_mask, _control_mask, _phi, _lambda, state_vector);
+      |                               ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::U2GateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:616:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  616 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:622:36: error: expected class-name before ‘{’ token
+  622 | class U3GateImpl : public GateBase {
+      |                                    ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:637:10: error: deduced class type ‘Gate’ in function return type
+  637 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In constructor ‘scaluq::internal::U3GateImpl<FloatType>::U3GateImpl(uint64_t, uint64_t, double, double, double)’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:631:11: error: class ‘scaluq::internal::U3GateImpl<FloatType>’ does not have any field named ‘GateBase’
+  631 |         : GateBase(target_mask, control_mask), _theta(theta), _phi(phi), _lambda(lambda) {}
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::U3GateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:651:17: error: ‘_target_mask’ was not declared in this scope
+  651 |         u3_gate(_target_mask, _control_mask, _theta, _phi, _lambda, state_vector);
+      |                 ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:651:31: error: ‘_control_mask’ was not declared in this scope
+  651 |         u3_gate(_target_mask, _control_mask, _theta, _phi, _lambda, state_vector);
+      |                               ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::U3GateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:657:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  657 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:663:38: error: expected class-name before ‘{’ token
+  663 | class SwapGateImpl : public GateBase {
+      |                                      ^
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:665:11: error: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::internal::GateBase’ used without template arguments
+  665 |     using GateBase::GateBase;
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:667:10: error: deduced class type ‘Gate’ in function return type
+  667 |     Gate get_inverse() const override { return shared_from_this(); }
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘void scaluq::internal::SwapGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:676:19: error: ‘_target_mask’ was not declared in this scope
+  676 |         swap_gate(_target_mask, _control_mask, state_vector);
+      |                   ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:676:33: error: ‘_control_mask’ was not declared in this scope
+  676 |         swap_gate(_target_mask, _control_mask, state_vector);
+      |                                 ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In member function ‘std::string scaluq::internal::SwapGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:682:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  682 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp:15:49: error: expected class-name before ‘{’ token
+   15 | class OneTargetMatrixGateImpl : public GateBase {
+      |                                                 ^
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp:33:10: error: deduced class type ‘Gate’ in function return type
+   33 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp: In constructor ‘scaluq::internal::OneTargetMatrixGateImpl<FloatType>::OneTargetMatrixGateImpl(uint64_t, uint64_t, const std::array<std::array<Kokkos::complex<double>, 2>, 2>&)’:
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp:22:11: error: class ‘scaluq::internal::OneTargetMatrixGateImpl<FloatType>’ does not have any field named ‘GateBase’
+   22 |         : GateBase(target_mask, control_mask) {
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp: In member function ‘void scaluq::internal::OneTargetMatrixGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp:50:38: error: ‘_target_mask’ was not declared in this scope
+   50 |         one_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
+      |                                      ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp:50:52: error: ‘_control_mask’ was not declared in this scope
+   50 |         one_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
+      |                                                    ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp: In member function ‘std::string scaluq::internal::OneTargetMatrixGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp:56:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+   56 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp:62:49: error: expected class-name before ‘{’ token
+   62 | class TwoTargetMatrixGateImpl : public GateBase {
+      |                                                 ^
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp:87:10: error: deduced class type ‘Gate’ in function return type
+   87 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp: In constructor ‘scaluq::internal::TwoTargetMatrixGateImpl<FloatType>::TwoTargetMatrixGateImpl(uint64_t, uint64_t, const std::array<std::array<Kokkos::complex<double>, 4>, 4>&)’:
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp:69:11: error: class ‘scaluq::internal::TwoTargetMatrixGateImpl<FloatType>’ does not have any field named ‘GateBase’
+   69 |         : GateBase(target_mask, control_mask) {
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp: In member function ‘void scaluq::internal::TwoTargetMatrixGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp:108:38: error: ‘_target_mask’ was not declared in this scope
+  108 |         two_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
+      |                                      ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp:108:52: error: ‘_control_mask’ was not declared in this scope
+  108 |         two_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
+      |                                                    ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp: In member function ‘std::string scaluq::internal::TwoTargetMatrixGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_matrix.hpp:114:15: error: there are no arguments to ‘get_qubit_info_as_string’ that depend on a template parameter, so a declaration of ‘get_qubit_info_as_string’ must be available [-fpermissive]
+  114 |         ss << get_qubit_info_as_string(indent);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:4,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:14:39: error: expected class-name before ‘{’ token
+   14 | class PauliGateImpl : public GateBase {
+      |                                       ^
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:15:11: error: invalid use of template-name ‘scaluq::PauliOperator’ without an argument list
+   15 |     const PauliOperator _pauli;
+      |           ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:18:47: error: template placeholder type ‘const PauliOperator<...auto...>’ must be followed by a simple declarator-id
+   18 |     PauliGateImpl(std::uint64_t control_mask, const PauliOperator& pauli)
+      |                                               ^~~~~
+In file included from /workspaces/scaluq/scaluq/gate/update_ops.hpp:4,
+                 from /workspaces/scaluq/scaluq/gate/gate.hpp:6,
+                 from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/../operator/pauli_operator.hpp:17:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::PauliOperator’ declared here
+   17 | class PauliOperator {
+      |       ^~~~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:4,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:21:19: error: deduced class type ‘PauliOperator’ in function return type
+   21 |     PauliOperator pauli() const { return _pauli; };
+      |                   ^~~~~
+In file included from /workspaces/scaluq/scaluq/gate/update_ops.hpp:4,
+                 from /workspaces/scaluq/scaluq/gate/gate.hpp:6,
+                 from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/../operator/pauli_operator.hpp:17:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::PauliOperator’ declared here
+   17 | class PauliOperator {
+      |       ^~~~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:4,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:24:10: error: deduced class type ‘Gate’ in function return type
+   24 |     Gate get_inverse() const override { return shared_from_this(); }
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:4,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp: In constructor ‘scaluq::internal::PauliGateImpl<FloatType>::PauliGateImpl(...)’:
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:19:11: error: class ‘scaluq::internal::PauliGateImpl<FloatType>’ does not have any field named ‘GateBase’
+   19 |         : GateBase(vector_to_mask<false>(pauli.target_qubit_list()), control_mask), _pauli(pauli) {}
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:19:42: error: ‘pauli’ was not declared in this scope; did you mean ‘_pauli’?
+   19 |         : GateBase(vector_to_mask<false>(pauli.target_qubit_list()), control_mask), _pauli(pauli) {}
+      |                                          ^~~~~
+      |                                          _pauli
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:19:70: error: ‘control_mask’ was not declared in this scope
+   19 |         : GateBase(vector_to_mask<false>(pauli.target_qubit_list()), control_mask), _pauli(pauli) {}
+      |                                                                      ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp: In member function ‘void scaluq::internal::PauliGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:29:21: error: ‘_control_mask’ was not declared in this scope
+   29 |         apply_pauli(_control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), state_vector);
+      |                     ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp: In member function ‘std::string scaluq::internal::PauliGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:34:25: error: there are no arguments to ‘control_qubit_list’ that depend on a template parameter, so a declaration of ‘control_qubit_list’ must be available [-fpermissive]
+   34 |         auto controls = control_qubit_list();
+      |                         ^~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:46:47: error: expected class-name before ‘{’ token
+   46 | class PauliRotationGateImpl : public GateBase {
+      |                                               ^
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:47:11: error: invalid use of template-name ‘scaluq::PauliOperator’ without an argument list
+   47 |     const PauliOperator _pauli;
+      |           ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:51:55: error: template placeholder type ‘const PauliOperator<...auto...>’ must be followed by a simple declarator-id
+   51 |     PauliRotationGateImpl(std::uint64_t control_mask, const PauliOperator& pauli, FloatType angle)
+      |                                                       ^~~~~
+In file included from /workspaces/scaluq/scaluq/gate/update_ops.hpp:4,
+                 from /workspaces/scaluq/scaluq/gate/gate.hpp:6,
+                 from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/../operator/pauli_operator.hpp:17:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::PauliOperator’ declared here
+   17 | class PauliOperator {
+      |       ^~~~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:4,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:51:81: error: expected ‘)’ before ‘,’ token
+   51 |     PauliRotationGateImpl(std::uint64_t control_mask, const PauliOperator& pauli, FloatType angle)
+      |                          ~                                                      ^
+      |                                                                                 )
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:51:83: error: ISO C++ forbids declaration of ‘FloatType’ with no type [-fpermissive]
+   51 |     PauliRotationGateImpl(std::uint64_t control_mask, const PauliOperator& pauli, FloatType angle)
+      |                                                                                   ^~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:51:83: error: expected ‘;’ at end of member declaration
+   51 |     PauliRotationGateImpl(std::uint64_t control_mask, const PauliOperator& pauli, FloatType angle)
+      |                                                                                   ^~~~~~~~~
+      |                                                                                            ;
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:51:83: error: declaration of ‘int scaluq::internal::PauliRotationGateImpl<FloatType>::FloatType’ shadows template parameter
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:45:11: note: template parameter ‘FloatType’ declared here
+   45 | template <std::floating_point FloatType>
+      |           ^~~
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:51:93: error: ‘angle’ does not name a type
+   51 |     PauliRotationGateImpl(std::uint64_t control_mask, const PauliOperator& pauli, FloatType angle)
+      |                                                                                             ^~~~~
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:56:19: error: deduced class type ‘PauliOperator’ in function return type
+   56 |     PauliOperator pauli() const { return _pauli; }
+      |                   ^~~~~
+In file included from /workspaces/scaluq/scaluq/gate/update_ops.hpp:4,
+                 from /workspaces/scaluq/scaluq/gate/gate.hpp:6,
+                 from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/../operator/pauli_operator.hpp:17:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> class scaluq::PauliOperator’ declared here
+   17 | class PauliOperator {
+      |       ^~~~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:4,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:60:10: error: deduced class type ‘Gate’ in function return type
+   60 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:4,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp: In member function ‘void scaluq::internal::PauliRotationGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:76:13: error: ‘_control_mask’ was not declared in this scope
+   76 |             _control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), _angle, state_vector);
+      |             ^~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp: In member function ‘std::string scaluq::internal::PauliRotationGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_pauli.hpp:81:25: error: there are no arguments to ‘control_qubit_list’ that depend on a template parameter, so a declaration of ‘control_qubit_list’ must be available [-fpermissive]
+   81 |         auto controls = control_qubit_list();
+      |                         ^~~~~~~~~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:5,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp: At global scope:
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:10:46: error: expected class-name before ‘{’ token
+   10 | class ProbablisticGateImpl : public GateBase {
+      |                                              ^
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:13:21: error: type/value mismatch at argument 1 in template parameter list for ‘template<class _Tp, class _Alloc> class std::vector’
+   13 |     std::vector<Gate> _gate_list;
+      |                     ^
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:13:21: note:   expected a type, got ‘Gate’
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:13:21: error: template argument 2 is invalid
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:13:10: error: ‘<expression error>’ in namespace ‘std’ does not name a type
+   13 |     std::vector<Gate> _gate_list;
+      |          ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:17:48: error: type/value mismatch at argument 1 in template parameter list for ‘template<class _Tp, class _Alloc> class std::vector’
+   17 |                          const std::vector<Gate>& gate_list)
+      |                                                ^
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:17:48: note:   expected a type, got ‘Gate’
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:17:48: error: template argument 2 is invalid
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:17:37: error: ‘<expression error>’ in namespace ‘std’ does not name a type
+   17 |                          const std::vector<Gate>& gate_list)
+      |                                     ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:33:27: error: type/value mismatch at argument 1 in template parameter list for ‘template<class _Tp, class _Alloc> class std::vector’
+   33 |     const std::vector<Gate>& gate_list() const { return _gate_list; }
+      |                           ^
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:33:27: note:   expected a type, got ‘Gate’
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:33:27: error: template argument 2 is invalid
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:33:16: error: ‘<expression error>’ in namespace ‘std’ does not name a type
+   33 |     const std::vector<Gate>& gate_list() const { return _gate_list; }
+      |                ^~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:67:10: error: deduced class type ‘Gate’ in function return type
+   67 |     Gate get_inverse() const override {
+      |          ^~~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:7,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate.hpp:79:7: note: ‘template<class FloatType>  requires  floating_point<FloatType> using Gate = scaluq::internal::GatePtr<scaluq::internal::GateBase<FloatType> >’ declared here
+   79 | using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+      |       ^~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:5,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp: In constructor ‘scaluq::internal::ProbablisticGateImpl<FloatType>::ProbablisticGateImpl(const std::vector<ValueType>&, const int&)’:
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:18:11: error: class ‘scaluq::internal::ProbablisticGateImpl<FloatType>’ does not have any field named ‘GateBase’
+   18 |         : GateBase(0, 0), _distribution(distribution), _gate_list(gate_list) {
+      |           ^~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:18:56: error: class ‘scaluq::internal::ProbablisticGateImpl<FloatType>’ does not have any field named ‘_gate_list’
+   18 |         : GateBase(0, 0), _distribution(distribution), _gate_list(gate_list) {
+      |                                                        ^~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:23:28: error: request for member ‘size’ in ‘gate_list’, which is of non-class type ‘const int’
+   23 |         if (n != gate_list.size()) {
+      |                            ^~~~
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp: In member function ‘void scaluq::internal::ProbablisticGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const’:
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:87:18: error: ‘_gate_list’ was not declared in this scope; did you mean ‘va_list’?
+   87 |         if (i >= _gate_list.size()) i = _gate_list.size() - 1;
+      |                  ^~~~~~~~~~
+      |                  va_list
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:88:9: error: ‘_gate_list’ was not declared in this scope; did you mean ‘va_list’?
+   88 |         _gate_list[i]->update_quantum_state(state_vector);
+      |         ^~~~~~~~~~
+      |         va_list
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp: In member function ‘std::string scaluq::internal::ProbablisticGateImpl<FloatType>::to_string(const string&) const’:
+/workspaces/scaluq/scaluq/gate/gate_probablistic.hpp:98:19: error: there are no arguments to ‘gate_list’ that depend on a template parameter, so a declaration of ‘gate_list’ must be available [-fpermissive]
+   98 |             ss << gate_list()[i]->to_string(indent + "  ") << (i == dist.size() - 1 ? "" : "\n");
+      |                   ^~~~~~~~~
+In file included from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp: In function ‘scaluq::Gate<FloatType> scaluq::gate::DenseMatrix(const std::vector<long unsigned int>&, const ComplexMatrix&, const std::vector<long unsigned int>&)’:
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:221:38: error: no matching function for call to ‘I()’
+  221 |     if (targets.size() == 0) return I();
+      |                                     ~^~
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:21:24: note: candidate: ‘template<class FloatType>  requires  floating_point<FloatType> scaluq::Gate<FloatType> scaluq::gate::I()’
+   21 | inline Gate<FloatType> I() {
+      |                        ^
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:21:24: note:   template argument deduction/substitution failed:
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:221:38: note:   couldn’t deduce template parameter ‘FloatType’
+  221 |     if (targets.size() == 0) return I();
+      |                                     ~^~
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:223:31: error: no matching function for call to ‘OneTargetMatrix(const value_type&, std::array<std::array<Kokkos::complex<double>, 2>, 2>, const std::vector<long unsigned int>&)’
+  223 |         return OneTargetMatrix(targets[0],
+      |                ~~~~~~~~~~~~~~~^~~~~~~~~~~~
+  224 |                                std::array{std::array{Complex(matrix(0, 0)), Complex(matrix(0, 1))},
+      |                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  225 |                                           std::array{Complex(matrix(1, 0)), Complex(matrix(1, 1))}},
+      |                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  226 |                                controls);
+      |                                ~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:150:24: note: candidate: ‘template<class FloatType>  requires  floating_point<FloatType> scaluq::Gate<FloatType> scaluq::gate::OneTargetMatrix(uint64_t, const std::array<std::array<Kokkos::complex<double>, 2>, 2>&, const std::vector<long unsigned int>&)’
+  150 | inline Gate<FloatType> OneTargetMatrix(std::uint64_t target,
+      |                        ^~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:150:24: note:   template argument deduction/substitution failed:
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:223:31: note:   couldn’t deduce template parameter ‘FloatType’
+  223 |         return OneTargetMatrix(targets[0],
+      |                ~~~~~~~~~~~~~~~^~~~~~~~~~~~
+  224 |                                std::array{std::array{Complex(matrix(0, 0)), Complex(matrix(0, 1))},
+      |                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  225 |                                           std::array{Complex(matrix(1, 0)), Complex(matrix(1, 1))}},
+      |                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  226 |                                controls);
+      |                                ~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:229:31: error: no matching function for call to ‘TwoTargetMatrix(const value_type&, const value_type&, std::array<std::array<Kokkos::complex<double>, 4>, 4>, const std::vector<long unsigned int>&)’
+  229 |         return TwoTargetMatrix(targets[0],
+      |                ~~~~~~~~~~~~~~~^~~~~~~~~~~~
+  230 |                                targets[1],
+      |                                ~~~~~~~~~~~
+  231 |                                std::array{std::array{Complex(matrix(0, 0)),
+      |                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  232 |                                                      Complex(matrix(0, 1)),
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~
+  233 |                                                      Complex(matrix(0, 2)),
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~
+  234 |                                                      Complex(matrix(0, 3))},
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~~
+  235 |                                           std::array{Complex(matrix(1, 0)),
+      |                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  236 |                                                      Complex(matrix(1, 1)),
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~
+  237 |                                                      Complex(matrix(1, 2)),
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~
+  238 |                                                      Complex(matrix(1, 3))},
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~~
+  239 |                                           std::array{Complex(matrix(2, 0)),
+      |                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  240 |                                                      Complex(matrix(2, 1)),
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~
+  241 |                                                      Complex(matrix(2, 2)),
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~
+  242 |                                                      Complex(matrix(2, 3))},
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~~
+  243 |                                           std::array{Complex(matrix(3, 0)),
+      |                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  244 |                                                      Complex(matrix(3, 1)),
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~
+  245 |                                                      Complex(matrix(3, 2)),
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~
+  246 |                                                      Complex(matrix(3, 3))}},
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~~~
+  247 |                                controls);
+      |                                ~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:186:24: note: candidate: ‘template<class FloatType>  requires  floating_point<FloatType> scaluq::Gate<FloatType> scaluq::gate::TwoTargetMatrix(uint64_t, uint64_t, const std::array<std::array<Kokkos::complex<double>, 4>, 4>&, const std::vector<long unsigned int>&)’
+  186 | inline Gate<FloatType> TwoTargetMatrix(std::uint64_t target1,
+      |                        ^~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:186:24: note:   template argument deduction/substitution failed:
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:229:31: note:   couldn’t deduce template parameter ‘FloatType’
+  229 |         return TwoTargetMatrix(targets[0],
+      |                ~~~~~~~~~~~~~~~^~~~~~~~~~~~
+  230 |                                targets[1],
+      |                                ~~~~~~~~~~~
+  231 |                                std::array{std::array{Complex(matrix(0, 0)),
+      |                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  232 |                                                      Complex(matrix(0, 1)),
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~
+  233 |                                                      Complex(matrix(0, 2)),
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~
+  234 |                                                      Complex(matrix(0, 3))},
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~~
+  235 |                                           std::array{Complex(matrix(1, 0)),
+      |                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  236 |                                                      Complex(matrix(1, 1)),
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~
+  237 |                                                      Complex(matrix(1, 2)),
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~
+  238 |                                                      Complex(matrix(1, 3))},
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~~
+  239 |                                           std::array{Complex(matrix(2, 0)),
+      |                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  240 |                                                      Complex(matrix(2, 1)),
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~
+  241 |                                                      Complex(matrix(2, 2)),
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~
+  242 |                                                      Complex(matrix(2, 3))},
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~~
+  243 |                                           std::array{Complex(matrix(3, 0)),
+      |                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  244 |                                                      Complex(matrix(3, 1)),
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~
+  245 |                                                      Complex(matrix(3, 2)),
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~
+  246 |                                                      Complex(matrix(3, 3))}},
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~~~
+  247 |                                controls);
+      |                                ~~~~~~~~~
+In file included from /workspaces/scaluq/scaluq/gate/gate_matrix.hpp:8,
+                 from /workspaces/scaluq/scaluq/gate/gate_factory.hpp:3,
+                 from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp: In instantiation of ‘class scaluq::internal::XGateImpl<double>’:
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:32:89:   recursively required by substitution of ‘template<class FloatType, class T, class ... Args>  requires (floating_point<FloatType>) && (GateImpl<T>) static scaluq::Gate<FloatType> scaluq::internal::GateFactory::create_gate(Args ...) [with FloatType = double; T = scaluq::internal::XGateImpl<double>; Args = {long unsigned int, long unsigned int}]’
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:32:89:   required from ‘scaluq::Gate<FloatType> scaluq::gate::X(uint64_t, const std::vector<long unsigned int>&) [with FloatType = double; scaluq::Gate<FloatType> = scaluq::internal::GatePtr<scaluq::internal::GateBase<double> >; uint64_t = long unsigned int]’
+/workspaces/scaluq/exe/main.cpp:19:46:   required from here
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:81:29: error: ‘scaluq::internal::ComplexMatrix scaluq::internal::XGateImpl<FloatType>::get_matrix() const [with FloatType = double; scaluq::internal::ComplexMatrix = Eigen::Matrix<std::complex<double>, -1, -1, 1>]’ marked ‘override’, but does not override
+   81 |     internal::ComplexMatrix get_matrix() const override {
+      |                             ^~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:87:10: error: ‘void scaluq::internal::XGateImpl<FloatType>::update_quantum_state(scaluq::StateVector<FloatType>&) const [with FloatType = double]’ marked ‘override’, but does not override
+   87 |     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+      |          ^~~~~~~~~~~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_standard.hpp:92:17: error: ‘std::string scaluq::internal::XGateImpl<FloatType>::to_string(const string&) const [with FloatType = double; std::string = std::__cxx11::basic_string<char>]’ marked ‘override’, but does not override
+   92 |     std::string to_string(const std::string& indent) const override {
+      |                 ^~~~~~~~~
+In file included from /workspaces/scaluq/exe/main.cpp:10:
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp: In instantiation of ‘scaluq::Gate<FloatType> scaluq::gate::X(uint64_t, const std::vector<long unsigned int>&) [with FloatType = double; scaluq::Gate<FloatType> = scaluq::internal::GatePtr<scaluq::internal::GateBase<double> >; uint64_t = long unsigned int]’:
+/workspaces/scaluq/exe/main.cpp:19:46:   required from here
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:32:89: error: no matching function for call to ‘scaluq::internal::GateFactory::create_gate<double, scaluq::internal::XGateImpl<double> >(uint64_t, uint64_t)’
+   32 |     return internal::GateFactory::create_gate<FloatType, internal::XGateImpl<FloatType>>(
+      |            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+   33 |         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~          
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:13:28: note: candidate: ‘template<class FloatType, class T, class ... Args>  requires (floating_point<FloatType>) && (GateImpl<T>) static scaluq::Gate<FloatType> scaluq::internal::GateFactory::create_gate(Args ...)’
+   13 |     static Gate<FloatType> create_gate(Args... args) {
+      |                            ^~~~~~~~~~~
+/workspaces/scaluq/scaluq/gate/gate_factory.hpp:13:28: note:   substitution of deduced template arguments resulted in errors seen above
+ninja: build stopped: subcommand failed.

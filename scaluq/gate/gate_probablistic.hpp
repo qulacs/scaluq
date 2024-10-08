@@ -5,13 +5,15 @@
 
 namespace scaluq {
 namespace internal {
+
+template <std::floating_point FloatType>
 class ProbablisticGateImpl : public GateBase {
-    std::vector<double> _distribution;
-    std::vector<double> _cumlative_distribution;
+    std::vector<FloatType> _distribution;
+    std::vector<FloatType> _cumlative_distribution;
     std::vector<Gate> _gate_list;
 
 public:
-    ProbablisticGateImpl(const std::vector<double>& distribution,
+    ProbablisticGateImpl(const std::vector<FloatType>& distribution,
                          const std::vector<Gate>& gate_list)
         : GateBase(0, 0), _distribution(distribution), _gate_list(gate_list) {
         std::uint64_t n = distribution.size();
@@ -29,7 +31,7 @@ public:
         }
     }
     const std::vector<Gate>& gate_list() const { return _gate_list; }
-    const std::vector<double>& distribution() const { return _distribution; }
+    const std::vector<FloatType>& distribution() const { return _distribution; }
 
     std::vector<std::uint64_t> target_qubit_list() const override {
         throw std::runtime_error(
@@ -76,9 +78,9 @@ public:
             "ProbablisticGateImpl.");
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         Random random;
-        double r = random.uniform();
+        FloatType r = random.uniform();
         std::uint64_t i = std::distance(_cumlative_distribution.begin(),
                                         std::ranges::upper_bound(_cumlative_distribution, r)) -
                           1;
@@ -100,7 +102,8 @@ public:
 };
 }  // namespace internal
 
-using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl>;
+template <std::floating_point FloatType>
+using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl<FloatType>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {

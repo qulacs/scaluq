@@ -9,6 +9,8 @@
 
 namespace scaluq {
 namespace internal {
+
+template <std::floating_point FloatType>
 class PauliGateImpl : public GateBase {
     const PauliOperator _pauli;
 
@@ -22,7 +24,7 @@ public:
     Gate get_inverse() const override { return shared_from_this(); }
     internal::ComplexMatrix get_matrix() const override { return this->_pauli.get_matrix(); }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
         apply_pauli(_control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), state_vector);
     }
@@ -40,19 +42,20 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class PauliRotationGateImpl : public GateBase {
     const PauliOperator _pauli;
-    const double _angle;
+    const FloatType _angle;
 
 public:
-    PauliRotationGateImpl(std::uint64_t control_mask, const PauliOperator& pauli, double angle)
+    PauliRotationGateImpl(std::uint64_t control_mask, const PauliOperator& pauli, FloatType angle)
         : GateBase(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
           _pauli(pauli),
           _angle(angle) {}
 
     PauliOperator pauli() const { return _pauli; }
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
-    double angle() const { return _angle; }
+    FloatType angle() const { return _angle; }
 
     Gate get_inverse() const override {
         return std::make_shared<const PauliRotationGateImpl>(_control_mask, _pauli, -_angle);
@@ -67,7 +70,7 @@ public:
               imag_unit * (StdComplex)Kokkos::sin(-true_angle / 2) * mat;
         return mat;
     }
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
         apply_pauli_rotation(
             _control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), _angle, state_vector);
@@ -88,8 +91,10 @@ public:
 };
 }  // namespace internal
 
-using PauliGate = internal::GatePtr<internal::PauliGateImpl>;
-using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl>;
+template <std::floating_point FloatType>
+using PauliGate = internal::GatePtr<internal::PauliGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl<FloatType>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {

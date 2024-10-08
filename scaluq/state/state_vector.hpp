@@ -15,9 +15,6 @@ namespace scaluq {
 using HostSpace = Kokkos::HostSpace;
 using DefaultSpace = Kokkos::DefaultExecutionSpace;
 
-// #define STATE_VECTOR_TEMPLATE(FloatType, Space) \
-//     template <std::floating_point FloatType = double, typename Space = DefaultSpace>
-
 #define STATE_VECTOR_TEMPLATE(FloatType) template <std::floating_point FloatType = double>
 
 template <std::floating_point FloatType = double>

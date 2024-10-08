@@ -10,6 +10,8 @@
 
 namespace scaluq {
 namespace internal {
+
+template <std::floating_point FloatType>
 class OneTargetMatrixGateImpl : public GateBase {
     Matrix2x2 _matrix;
 
@@ -43,7 +45,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         one_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
     }
@@ -56,6 +58,7 @@ public:
     }
 };
 
+template <std::floating_point FloatType>
 class TwoTargetMatrixGateImpl : public GateBase {
     Matrix4x4 _matrix;
 
@@ -100,7 +103,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
+    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
         two_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
     }
@@ -114,8 +117,10 @@ public:
 };
 }  // namespace internal
 
-using OneTargetMatrixGate = internal::GatePtr<internal::OneTargetMatrixGateImpl>;
-using TwoTargetMatrixGate = internal::GatePtr<internal::TwoTargetMatrixGateImpl>;
+template <std::floating_point FloatType>
+using OneTargetMatrixGate = internal::GatePtr<internal::OneTargetMatrixGateImpl<FloatType>>;
+template <std::floating_point FloatType>
+using TwoTargetMatrixGate = internal::GatePtr<internal::TwoTargetMatrixGateImpl<FloatType>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
