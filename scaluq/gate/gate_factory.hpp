@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../util/utility.hpp"
 #include "gate_matrix.hpp"
 #include "gate_pauli.hpp"
 #include "gate_probablistic.hpp"

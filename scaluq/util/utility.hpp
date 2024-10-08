@@ -184,6 +184,26 @@ inline ComplexMatrix convert_coo_to_external_matrix(SparseMatrix mat) {
     return eigen_matrix;
 }
 
+void std::vector<std::uint64_t> compute_mapping(std::vector<std::uint64_t> targets) {
+    std::vector<std::uint64_t> ret;
+    for (std::size_t i = 0; i < targets.size(); i++) {
+        ret.emplace_back(targets[i]);
+    }
+    return ret;
+}
+
+void transform_dense_matrix_by_order(ComplexMatrix& mat, std::vector<std::uint64_t> targets) {
+    std::vector<std::uint64_t> mapping = compute_mapping(targets);
+    std::vector<std::uint64_t> prev_position = std::iota(0, targets.size());
+    for (std::size_t src = 0; src < targets.size(); src++) {
+        std::size_t dst = mapping[src];
+        if (src != dst) {
+            mat.row(src).swap(mat.row(dst));
+            std::swap(prev_position[src], prev_position[dst]);
+        }
+    }
+}
+
 }  // namespace internal
 
 }  // namespace scaluq
