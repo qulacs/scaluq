@@ -20,12 +20,16 @@ jobs:
     strategy:
       matrix:
         os: ["linux", "macos"]
-        architecture: ["x86_64"]
+        architecture: ["x86_64", "arm64"]
         device: ["cpu", "cuda"]
         python-version: ["3.10"]
         exclude:
           - os: "macos"
             device: "cuda"
+        exclude:
+          # currently ARM runner is not supported
+          - os: "linux"
+            architecture: "arm64"
         include:
           - os: "linux"
             architecture: "x86_64"
@@ -33,6 +37,9 @@ jobs:
           - os: "macos"
             architecture: "x86_64"
             runs-on: "macos-13"
+          - os: "macos"
+            architecture: "arm64"
+            runs-on: "macos-14"
     runs-on: ${{ matrix.runs-on }}
     env:
       CMAKE_C_COMPILER: ${{ matrix.os == 'macos' && '/usr/local/opt/ccache/libexec/gcc-14' || '/usr/lib/ccache/gcc' }}
