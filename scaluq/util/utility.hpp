@@ -223,9 +223,7 @@ inline SparseComplexMatrix transform_sparse_matrix_by_order(
     // hence this function will be refactored.
     const SparseComplexMatrix& mat,
     const std::vector<std::uint64_t>& targets) {
-    ComplexMatrix dense_mat = mat;
-    ComplexMatrix transformed = transform_dense_matrix_by_order(dense_mat, targets);
-    return transformed.sparseView();
+    return transform_dense_matrix_by_order(mat, targets).sparseView();
 }
 
 }  // namespace internal
