@@ -5,7 +5,7 @@
 
 namespace scaluq {
 
-STATE_VECTOR_TEMPLATE(FloatType)
+template <std::floating_point FloatType>
 class StateVectorBatched {
     std::uint64_t _batch_size;
     std::uint64_t _n_qubits;

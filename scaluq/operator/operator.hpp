@@ -88,9 +88,9 @@ public:
         StateVector<FloatType> res(state_vector.n_qubits());
         res.set_zero_norm_state();
         for (const auto& term : _terms) {
-            StateVector tmp = state_vector.copy();
+            StateVector<double> tmp = state_vector.copy();
             term.apply_to_state(tmp);
-            res.add_state_vector(tmp);
+            res.add_state_vector_with_coef(1, tmp);
         }
         state_vector = res;
     }

@@ -23,8 +23,8 @@ inline bool same_state(const StateVector<FloatType>& s1,
     return true;
 };
 
-inline bool same_state_except_global_phase(const StateVector<>& s1,
-                                           const StateVector<>& s2,
+inline bool same_state_except_global_phase(const StateVector<double>& s1,
+                                           const StateVector<double>& s2,
                                            const double eps = 1e-12) {
     auto s1_cp = s1.get_amplitudes();
     auto s2_cp = s2.get_amplitudes();

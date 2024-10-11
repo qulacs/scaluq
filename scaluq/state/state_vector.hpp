@@ -3,6 +3,7 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
 #include <random>
+#include <ranges>
 #include <stdexcept>
 #include <vector>
 
@@ -15,9 +16,7 @@ namespace scaluq {
 using HostSpace = Kokkos::HostSpace;
 using DefaultSpace = Kokkos::DefaultExecutionSpace;
 
-#define STATE_VECTOR_TEMPLATE(FloatType) template <std::floating_point FloatType = double>
-
-template <std::floating_point FloatType = double>
+template <std::floating_point FloatType>
 class StateVector {
     std::uint64_t _n_qubits;
     std::uint64_t _dim;

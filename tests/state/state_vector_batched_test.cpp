@@ -30,7 +30,7 @@ TEST(StateVectorBatchedTest, LoadAndAmplitues) {
             states_h[b][i] = b * dim + i;
         }
     }
-    StateVectorBatched states(batch_size, n_qubits);
+    StateVectorBatched<double> states(batch_size, n_qubits);
 
     states.load(states_h);
     auto amps = states.get_amplitudes();
@@ -120,7 +120,7 @@ TEST(StateVectorBatchedTest, Entropy) {
 
 TEST(StateVectorBatchedTest, Sampling) {
     const std::uint64_t batch_size = 2, n_qubits = 3;
-    StateVectorBatched states(batch_size, n_qubits);
+    StateVectorBatched<double> states(batch_size, n_qubits);
     states.load(
         std::vector<std::vector<Complex>>{{1, 4, 5, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 6, 4, 1}});
     states.normalize();
