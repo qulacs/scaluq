@@ -237,17 +237,7 @@ public:
 };
 
 template <typename T>
-concept GateImpl = std::derived_from<T, internal::GateBase<typename T::FloatType>>;
-
-template <GateImpl T>
-class GatePtr;
-
-}  // namespace internal
-
-template <std::floating_point FloatType>
-using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
-
-namespace internal {
+concept GateImpl = std::derived_from<T, GateBase<typename T::FloatType>>;
 
 template <GateImpl T>
 class GatePtr {
@@ -315,6 +305,9 @@ public:
 };
 
 }  // namespace internal
+
+template <std::floating_point FloatType>
+using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {

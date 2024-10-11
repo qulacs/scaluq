@@ -10,11 +10,11 @@ template <std::floating_point FloatType>
 class ProbablisticGateImpl : public GateBase<FloatType> {
     std::vector<FloatType> _distribution;
     std::vector<FloatType> _cumlative_distribution;
-    std::vector<Gate<FloatType>> _gate_list;
+    std::vector<std::shared_ptr<const GateBase<FloatType>>> _gate_list;
 
 public:
     ProbablisticGateImpl(const std::vector<FloatType>& distribution,
-                         const std::vector<Gate<FloatType>>& gate_list)
+                         const std::vector<std::shared_ptr<const GateBase<FloatType>>>& gate_list)
         : GateBase<FloatType>(0, 0), _distribution(distribution), _gate_list(gate_list) {
         std::uint64_t n = distribution.size();
         if (n == 0) {
@@ -30,7 +30,9 @@ public:
             throw std::runtime_error("Sum of distribution must be equal to 1.");
         }
     }
-    const std::vector<Gate<FloatType>>& gate_list() const { return _gate_list; }
+    const std::vector<std::shared_ptr<const GateBase<FloatType>>>& gate_list() const {
+        return _gate_list;
+    }
     const std::vector<FloatType>& distribution() const { return _distribution; }
 
     std::vector<std::uint64_t> target_qubit_list() const override {
@@ -64,12 +66,14 @@ public:
             "ProbablisticGateImpl.");
     }
 
-    Gate<FloatType> get_inverse() const override {
-        std::vector<Gate<FloatType>> inv_gate_list;
+    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
+        std::vector<std::shared_ptr<const GateBase<FloatType>>> inv_gate_list;
         inv_gate_list.reserve(_gate_list.size());
         std::ranges::transform(_gate_list,
                                std::back_inserter(inv_gate_list),
-                               [](const Gate<FloatType>& gate) { return gate->get_inverse(); });
+                               [](const std::shared_ptr<const GateBase<FloatType>>& gate) {
+                                   return gate->get_inverse();
+                               });
         return std::make_shared<const ProbablisticGateImpl>(_distribution, inv_gate_list);
     }
     internal::ComplexMatrix get_matrix() const override {

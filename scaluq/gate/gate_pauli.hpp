@@ -22,7 +22,9 @@ public:
     PauliOperator<FloatType> pauli() const { return _pauli; };
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
 
-    Gate<FloatType> get_inverse() const override { return this->shared_from_this(); }
+    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
+        return this->shared_from_this();
+    }
     internal::ComplexMatrix get_matrix() const override { return this->_pauli.get_matrix(); }
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
@@ -61,7 +63,7 @@ public:
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
     FloatType angle() const { return _angle; }
 
-    Gate<FloatType> get_inverse() const override {
+    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
         return std::make_shared<const PauliRotationGateImpl<FloatType>>(
             this->_control_mask, _pauli, -_angle);
     }

@@ -30,7 +30,7 @@ public:
         return {_matrix[0][0], _matrix[0][1], _matrix[1][0], _matrix[1][1]};
     }
 
-    Gate<FloatType> get_inverse() const override {
+    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
         return std::make_shared<const OneTargetMatrixGateImpl>(
             this->_target_mask,
             this->_control_mask,
@@ -46,14 +46,14 @@ public:
     }
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
-        check_qubit_mask_within_bounds(state_vector);
+        this->check_qubit_mask_within_bounds(state_vector);
         one_target_dense_matrix_gate(
             this->_target_mask, this->_control_mask, _matrix, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
-        ss << indent << "Gate<FloatType> Type: OneTargetMatrix\n";
+        ss << indent << "std::shared_ptr<const GateBase<FloatType>> Type: OneTargetMatrix\n";
         ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
@@ -85,7 +85,7 @@ public:
         return matrix;
     }
 
-    Gate<FloatType> get_inverse() const override {
+    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
         std::array<std::array<Complex, 4>, 4> matrix_dag;
         for (std::uint64_t i : std::views::iota(0, 4)) {
             for (std::uint64_t j : std::views::iota(0, 4)) {
@@ -105,14 +105,14 @@ public:
     }
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
-        check_qubit_mask_within_bounds(state_vector);
+        this->check_qubit_mask_within_bounds(state_vector);
         two_target_dense_matrix_gate(
             this->_target_mask, this->_control_mask, _matrix, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
-        ss << indent << "Gate<FloatType> Type: TwoTargetMatrix\n";
+        ss << indent << "std::shared_ptr<const GateBase<FloatType>> Type: TwoTargetMatrix\n";
         ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }

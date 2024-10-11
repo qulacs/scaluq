@@ -18,7 +18,10 @@ int main() {
         state.load({0, 1, 2, 3, 4, 5, 6, 7});
         auto x_gate = scaluq::gate::X<double>(1, {0, 2});
         x_gate->update_quantum_state(state);
-        //  auto sqrtx = scaluq::gate::SqrtX<double>(1, {0, 3});
+        auto sqrtx_gate = scaluq::gate::SqrtX<double>(1, {0});
+        sqrtx_gate->update_quantum_state(state);
+        auto sqrtxdag_gate = scaluq::gate::SqrtXdag<double>(0);
+        sqrtxdag_gate->update_quantum_state(state);
 
         std::cout << state << std::endl;
     }

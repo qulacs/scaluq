@@ -9,9 +9,9 @@ using namespace std::complex_literals;
 #include <util/utility.hpp>
 using namespace scaluq;
 
-template <std::floating_point FloatType = double, typename Space = DefaultSpace>
-inline bool same_state(const StateVector<FloatType, Space>& s1,
-                       const StateVector<FloatType, Space>& s2,
+template <std::floating_point FloatType>
+inline bool same_state(const StateVector<FloatType>& s1,
+                       const StateVector<FloatType>& s2,
                        const double eps = 1e-12) {
     auto s1_cp = s1.get_amplitudes();
     auto s2_cp = s2.get_amplitudes();

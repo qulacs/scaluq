@@ -16,7 +16,7 @@ const double eps = 1e-12;
 
 TEST(StateVectorBatchedTest, HaarRandomStateNorm) {
     const std::uint64_t batch_size = 10, n_qubits = 3;
-    const auto states = StateVectorBatched<>::Haar_random_state(batch_size, n_qubits, false);
+    const auto states = StateVectorBatched<double>::Haar_random_state(batch_size, n_qubits, false);
     auto norms = states.get_squared_norm();
     for (auto x : norms) ASSERT_NEAR(x, 1., eps);
 }
@@ -43,8 +43,8 @@ TEST(StateVectorBatchedTest, LoadAndAmplitues) {
 
 TEST(StateVectorBatchedTest, OperateState) {
     const std::uint64_t batch_size = 4, n_qubits = 3;
-    auto states = StateVectorBatched<>::Haar_random_state(batch_size, n_qubits, false);
-    auto states_add = StateVectorBatched<>::Haar_random_state(batch_size, n_qubits, false);
+    auto states = StateVectorBatched<double>::Haar_random_state(batch_size, n_qubits, false);
+    auto states_add = StateVectorBatched<double>::Haar_random_state(batch_size, n_qubits, false);
     const Complex coef(2.1, 3.5);
 
     auto states_cp = states.copy();
@@ -78,7 +78,7 @@ TEST(StateVectorBatchedTest, OperateState) {
 
 TEST(StateVectorBatchedTest, ZeroProbs) {
     const std::uint64_t batch_size = 4, n_qubits = 3;
-    auto states = StateVectorBatched<>::Haar_random_state(batch_size, n_qubits, false);
+    auto states = StateVectorBatched<double>::Haar_random_state(batch_size, n_qubits, false);
 
     for (std::uint64_t i = 0; i < n_qubits; ++i) {
         auto zero_probs = states.get_zero_probability(i);
@@ -91,7 +91,7 @@ TEST(StateVectorBatchedTest, ZeroProbs) {
 
 TEST(StateVectorBatchedTest, MarginalProbs) {
     const std::uint64_t batch_size = 4, n_qubits = 5;
-    auto states = StateVectorBatched<>::Haar_random_state(batch_size, n_qubits, false);
+    auto states = StateVectorBatched<double>::Haar_random_state(batch_size, n_qubits, false);
 
     Random rd(0);
     for (std::uint64_t i = 0; i < 10; ++i) {
@@ -109,7 +109,7 @@ TEST(StateVectorBatchedTest, MarginalProbs) {
 
 TEST(StateVectorBatchedTest, Entropy) {
     const std::uint64_t batch_size = 4, n_qubits = 3;
-    auto states = StateVectorBatched<>::Haar_random_state(batch_size, n_qubits, false);
+    auto states = StateVectorBatched<double>::Haar_random_state(batch_size, n_qubits, false);
 
     auto entropies = states.get_entropy();
     for (std::uint64_t b = 0; b < batch_size; ++b) {
