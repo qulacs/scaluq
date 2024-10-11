@@ -454,7 +454,6 @@ void run_random_gate_apply_general_dense(std::uint64_t n_qubits) {
     }
     // general single
     {
-        Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> Umerge;
         for (std::uint64_t rep = 0; rep < max_repeat; rep++) {
             StateVector state = StateVector::Haar_random_state(n_qubits);
             auto state_cp = state.get_amplitudes();
@@ -462,20 +461,13 @@ void run_random_gate_apply_general_dense(std::uint64_t n_qubits) {
                 test_state[i] = state_cp[i];
             }
             U1 = get_eigen_matrix_random_one_target_unitary();
-            internal::ComplexMatrix mat(U1.rows(), U1.cols());
             std::shuffle(index_list.begin(), index_list.end(), engine);
             targets[0] = index_list[0];
-            Umerge = U1;
             test_state =
                 get_expanded_eigen_matrix_with_identity(targets[0], U1, n_qubits) * test_state;
-            for (int i = 0; i < 2; i++) {
-                for (int j = 0; j < 2; j++) {
-                    mat(i, j) = U1(i, j);
-                }
-            }
             std::vector<std::uint64_t> target_list = {targets[0]};
             std::vector<std::uint64_t> control_list = {};
-            Gate dense_gate = gate::DenseMatrix(target_list, mat, control_list);
+            Gate dense_gate = gate::DenseMatrix(target_list, U1, control_list);
             dense_gate->update_quantum_state(state);
             state_cp = state.get_amplitudes();
             for (std::uint64_t i = 0; i < dim; i++) {
@@ -498,22 +490,20 @@ void run_random_gate_apply_general_dense(std::uint64_t n_qubits) {
             std::shuffle(index_list.begin(), index_list.end(), engine);
             targets[0] = index_list[0];
             targets[1] = index_list[1];
-            if (targets[0] > targets[1]) {
+            // if (targets[0] > targets[1]) {
+            //     std::swap(targets[0], targets[1]);
+            // }
+            // check when the order is not ascending
+            if (targets[0] < targets[1]) {
                 std::swap(targets[0], targets[1]);
             }
             Umerge = internal::kronecker_product(U2, U1);
-            internal::ComplexMatrix mat(Umerge.rows(), Umerge.cols());
             test_state = get_expanded_eigen_matrix_with_identity(targets[1], U2, n_qubits) *
                          get_expanded_eigen_matrix_with_identity(targets[0], U1, n_qubits) *
                          test_state;
-            for (int i = 0; i < 4; i++) {
-                for (int j = 0; j < 4; j++) {
-                    mat(i, j) = Umerge(i, j);
-                }
-            }
             std::vector<std::uint64_t> target_list = {targets[0], targets[1]};
             std::vector<std::uint64_t> control_list = {};
-            Gate dense_gate = gate::DenseMatrix(target_list, mat, control_list);
+            Gate dense_gate = gate::DenseMatrix(target_list, Umerge, control_list);
             dense_gate->update_quantum_state(state);
             state_cp = state.get_amplitudes();
             for (std::uint64_t i = 0; i < dim; i++) {
@@ -540,20 +530,14 @@ void run_random_gate_apply_general_dense(std::uint64_t n_qubits) {
             targets[2] = index_list[2];
             std::sort(targets.begin(), targets.end());
             Umerge = internal::kronecker_product(U3, internal::kronecker_product(U2, U1));
-            internal::ComplexMatrix mat(Umerge.rows(), Umerge.cols());
 
             test_state = get_expanded_eigen_matrix_with_identity(targets[2], U3, n_qubits) *
                          get_expanded_eigen_matrix_with_identity(targets[1], U2, n_qubits) *
                          get_expanded_eigen_matrix_with_identity(targets[0], U1, n_qubits) *
                          test_state;
-            for (int i = 0; i < 8; i++) {
-                for (int j = 0; j < 8; j++) {
-                    mat(i, j) = Umerge(i, j);
-                }
-            }
             std::vector<std::uint64_t> target_list = {targets[0], targets[1], targets[2]};
             std::vector<std::uint64_t> control_list = {};
-            Gate dense_gate = gate::DenseMatrix(target_list, mat, control_list);
+            Gate dense_gate = gate::DenseMatrix(target_list, Umerge, control_list);
             dense_gate->update_quantum_state(state);
             state_cp = state.get_amplitudes();
             for (std::uint64_t i = 0; i < dim; i++) {
