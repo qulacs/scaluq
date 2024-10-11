@@ -190,18 +190,19 @@ inline ComplexMatrix transform_dense_matrix_by_order(const ComplexMatrix& mat,
     std::sort(sorted.begin(), sorted.end());
 
     const std::size_t matrix_size = mat.rows();
+    const std::uint64_t n_targets = targets.size();
 
-    std::vector<std::uint64_t> targets_order(targets.size());
-    for (std::size_t i = 0; i < targets.size(); i++) {
+    std::vector<std::uint64_t> targets_order(n_targets);
+    for (std::size_t i = 0; i < n_targets; i++) {
         targets_order[i] =
             std::lower_bound(sorted.begin(), sorted.end(), targets[i]) - sorted.begin();
     }
 
     // transform_indices
-    std::vector<std::uint64_t> transformed(targets_order.size());
-    for (std::size_t index = 0; index < targets_order.size(); index++) {
+    std::vector<std::uint64_t> transformed(matrix_size);
+    for (std::size_t index = 0; index < matrix_size; index++) {
         for (std::size_t j = 0; j < targets_order.size(); j++) {
-            transformed[j] |= ((index & (1ULL << targets_order[j])) >> targets_order[j]) << j;
+            transformed[index] |= ((index & (1ULL << targets_order[j])) >> targets_order[j]) << j;
         }
     }
 
@@ -223,7 +224,8 @@ inline SparseComplexMatrix transform_sparse_matrix_by_order(
     // hence this function will be refactored.
     const SparseComplexMatrix& mat,
     const std::vector<std::uint64_t>& targets) {
-    return transform_dense_matrix_by_order(mat, targets).sparseView();
+    ComplexMatrix dense_mat = mat.toDense();
+    return transform_dense_matrix_by_order(dense_mat, targets).sparseView();
 }
 
 }  // namespace internal
