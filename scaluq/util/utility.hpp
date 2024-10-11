@@ -197,24 +197,35 @@ inline ComplexMatrix transform_dense_matrix_by_order(const ComplexMatrix& mat,
             std::lower_bound(sorted.begin(), sorted.end(), targets[i]) - sorted.begin();
     }
 
-    auto transform_index = [&targets_order](std::size_t index) {
-        std::size_t transformed = 0;
+    // transform_indices
+    std::vector<std::uint64_t> transformed(targets_order.size());
+    for (std::size_t index = 0; index < targets_order.size(); index++) {
         for (std::size_t j = 0; j < targets_order.size(); j++) {
-            transformed |= ((index & (1ULL << targets_order[j])) >> targets_order[j]) << j;
+            transformed[j] |= ((index & (1ULL << targets_order[j])) >> targets_order[j]) << j;
         }
-        return transformed;
-    };
+    }
 
     ComplexMatrix ret(matrix_size, matrix_size);
 
     for (std::size_t i = 0; i < matrix_size; i++) {
-        std::size_t row_dst = transform_index(i);
+        std::size_t row_dst = transformed[i];
         for (std::size_t j = 0; j < matrix_size; j++) {
-            std::size_t col_dst = transform_index(j);
+            std::size_t col_dst = transformed[j];
             ret(row_dst, col_dst) = mat(i, j);
         }
     }
     return ret;
+}
+
+inline SparseComplexMatrix transform_sparse_matrix_by_order(
+    // This is temporary implementation.
+    // SparseComplexMatrix will be replaced with std::vector<std::vector<std::Complex<double>>>
+    // hence this function will be refactored.
+    const SparseComplexMatrix& mat,
+    const std::vector<std::uint64_t>& targets) {
+    ComplexMatrix dense_mat = mat;
+    ComplexMatrix transformed = transform_dense_matrix_by_order(dense_mat, targets);
+    return transformed.sparseView();
 }
 
 }  // namespace internal

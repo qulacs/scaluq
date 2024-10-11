@@ -134,7 +134,7 @@ public:
         if (_is_unitary) {
             inv_eigen = mat_eigen.adjoint();
         } else {
-            inv_eigen = mat_eigen.inverse();
+            inv_eigen = mat_eigen.inverse().eval();
         }
         return std::make_shared<const DenseMatrixGateImpl>(
             _target_mask, _control_mask, inv_eigen, _is_unitary);
@@ -165,17 +165,27 @@ public:
 
 class SparseMatrixGateImpl : public GateBase {
     SparseMatrix _matrix;
+    std::uint64_t num_nnz;
 
 public:
     SparseMatrixGateImpl(std::uint64_t target_mask,
                          std::uint64_t control_mask,
                          const SparseComplexMatrix& mat)
-        : GateBase(target_mask, control_mask), _matrix(SparseMatrix(mat)) {}
+        : GateBase(target_mask, control_mask),
+          _matrix(SparseMatrix(mat)),
+          num_nnz(mat.nonZeros()) {}
 
     Gate get_inverse() const override {
-        ComplexMatrix mat_eigen = convert_coo_to_external_matrix(_matrix);
-        ComplexMatrix inv_eigen = mat_eigen.inverse().eval();
-        return std::make_shared<const DenseMatrixGateImpl>(_target_mask, _control_mask, inv_eigen);
+        Kokkos::View<SparseValue*, Kokkos::HostSpace> vec_h("h_view", num_nnz);
+        Kokkos::deep_copy(vec_h, _matrix._values);
+        // conversion to Eigen matrix (COO format)
+        ComplexMatrix eigen_matrix(_matrix._row, _matrix._col);
+        for (std::size_t i = 0; i < vec_h.extent(0); i++) {
+            eigen_matrix(vec_h(i).r, vec_h(i).c) = vec_h(i).val;
+        }
+
+        return std::make_shared<const DenseMatrixGateImpl>(
+            _target_mask, _control_mask, eigen_matrix.inverse().eval());
     }
 
     Matrix get_matrix_internal() const {

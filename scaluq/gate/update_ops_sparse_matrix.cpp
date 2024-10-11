@@ -30,7 +30,9 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     Kokkos::parallel_for(
         "COO_Update",
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
-            {0, 0}, {state.dim() >> std::popcount(target_mask | control_mask), values.size()}),
+            {0, 0},
+            {static_cast<std::int64_t>(state.dim() >> std::popcount(target_mask | control_mask)),
+             static_cast<std::int64_t>(values.size())}),
         KOKKOS_LAMBDA(std::uint64_t outer, std::uint64_t inner) {
             std::uint64_t basis =
                 internal::insert_zero_at_mask_positions(outer, target_mask | control_mask) |
