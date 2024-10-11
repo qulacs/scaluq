@@ -46,9 +46,9 @@ StateVector StateVectorBatched::get_state_vector_at(std::uint64_t batch_id) cons
     return ret;
 }
 
-void StateVectorBatched::set_zero_state() { set_computational_basis(0); }
+void StateVectorBatched::set_zero_state() const { set_computational_basis(0); }
 
-void StateVectorBatched::set_computational_basis(std::uint64_t basis) {
+void StateVectorBatched::set_computational_basis(std::uint64_t basis) const {
     if (basis >= _dim) [[unlikely]] {
         throw std::runtime_error(
             "Error: StateVectorBatched::set_computational_basis(std::uint64_t): "
@@ -61,7 +61,7 @@ void StateVectorBatched::set_computational_basis(std::uint64_t basis) {
     Kokkos::fence();
 }
 
-void StateVectorBatched::set_zero_norm_state() { Kokkos::deep_copy(_raw, 0); }
+void StateVectorBatched::set_zero_norm_state() const { Kokkos::deep_copy(_raw, 0); }
 
 StateVectorBatched StateVectorBatched::Haar_random_states(std::uint64_t batch_size,
                                                           std::uint64_t n_qubits,
@@ -91,7 +91,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched::sampling(std::uint64
     Kokkos::View<double**> stacked_prob("prob", _batch_size, _dim + 1);
 
     Kokkos::parallel_for(
-        Kokkos::TeamPolicy<>(_batch_size, Kokkos::AUTO()),
+        Kokkos::TeamPolicy<>(static_cast<int>(_batch_size), Kokkos::AUTO()),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                 team) {
@@ -115,7 +115,8 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched::sampling(std::uint64
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
             auto rand_gen = rand_pool.get_state();
             double r = rand_gen.drand(0., 1.);
-            std::uint64_t lo = 0, hi = stacked_prob.extent(1);
+            std::uint64_t lo = 0;
+            std::uint64_t hi = stacked_prob.extent(1);
             while (hi - lo > 1) {
                 std::uint64_t mid = (lo + hi) / 2;
                 if (stacked_prob(batch_id, mid) > r) {
@@ -140,7 +141,7 @@ std::vector<std::vector<Complex>> StateVectorBatched::get_amplitudes() const {
 std::vector<double> StateVectorBatched::get_squared_norm() const {
     Kokkos::View<double*> norms(Kokkos::ViewAllocateWithoutInitializing("norms"), _batch_size);
     Kokkos::parallel_for(
-        Kokkos::TeamPolicy<>(_batch_size, Kokkos::AUTO()),
+        Kokkos::TeamPolicy<>(static_cast<int>(_batch_size), Kokkos::AUTO()),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                 team) {
@@ -161,7 +162,7 @@ std::vector<double> StateVectorBatched::get_squared_norm() const {
 
 void StateVectorBatched::normalize() {
     Kokkos::parallel_for(
-        Kokkos::TeamPolicy<>(_batch_size, Kokkos::AUTO()),
+        Kokkos::TeamPolicy<>(static_cast<int>(_batch_size), Kokkos::AUTO()),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                 team) {
@@ -190,14 +191,14 @@ std::vector<double> StateVectorBatched::get_zero_probability(
     }
     Kokkos::View<double*> probs("probs", _batch_size);
     Kokkos::parallel_for(
-        Kokkos::TeamPolicy<>(_batch_size, Kokkos::AUTO()),
+        Kokkos::TeamPolicy<>(static_cast<int>(_batch_size), Kokkos::AUTO()),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                 team) {
             double sum = 0;
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
-                Kokkos::TeamThreadRange(team, _dim >> 1),
+                Kokkos::TeamThreadRange(team, _dim >> 1ULL),
                 [&](std::uint64_t i, double& lsum) {
                     std::uint64_t basis_0 =
                         internal::insert_zero_to_basis_index(i, target_qubit_index);
@@ -240,7 +241,7 @@ std::vector<double> StateVectorBatched::get_marginal_probability(
     auto target_value_d = internal::convert_host_vector_to_device_view(target_value);
     Kokkos::View<double*> probs("probs", _batch_size);
     Kokkos::parallel_for(
-        Kokkos::TeamPolicy<>(_batch_size, Kokkos::AUTO()),
+        Kokkos::TeamPolicy<>(static_cast<int>(_batch_size), Kokkos::AUTO()),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                 team) {
@@ -269,7 +270,7 @@ std::vector<double> StateVectorBatched::get_entropy() const {
     Kokkos::View<double*> ents("ents", _batch_size);
     const double eps = 1e-15;
     Kokkos::parallel_for(
-        Kokkos::TeamPolicy<>(_batch_size, Kokkos::AUTO()),
+        Kokkos::TeamPolicy<>(static_cast<int>(_batch_size), Kokkos::AUTO()),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                 team) {
@@ -326,7 +327,7 @@ void StateVectorBatched::multiply_coef(const Complex& coef) {
     Kokkos::fence();
 }
 
-void StateVectorBatched::load(const std::vector<std::vector<Complex>>& states) {
+void StateVectorBatched::load(const std::vector<std::vector<Complex>>& states) const {
     if (states.size() != _batch_size) {
         throw std::runtime_error(
             "Error: StateVectorBatched::load(std::vector<std::vector<Complex>>&): invalid "
@@ -373,8 +374,8 @@ std::string StateVectorBatched::to_string() const {
             os <<
                 [](std::uint64_t n, std::uint64_t len) {
                     std::string tmp;
-                    while (len--) {
-                        tmp += ((n >> len) & 1) + '0';
+                    while (len-- > 0) {
+                        tmp += static_cast<char>(((n >> len) & 1ULL) + '0');
                     }
                     return tmp;
                 }(i, _n_qubits)

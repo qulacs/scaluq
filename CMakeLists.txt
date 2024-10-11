@@ -130,6 +130,8 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
     else()
         target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
         target_link_options(scaluq PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
+        set_property(TARGET scaluq PROPERTY CXX_STANDARD 20)
+        set_target_properties(scaluq PROPERTIES CXX_CLANG_TIDY "clang-tidy;-extra-arg=-std=gnu++20")
     endif()
 endif()
 

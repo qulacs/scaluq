@@ -27,9 +27,9 @@ public:
     void set_state_vector(std::uint64_t batch_id, const StateVector& state);
     [[nodiscard]] StateVector get_state_vector_at(std::uint64_t batch_id) const;
 
-    void set_zero_state();
-    void set_computational_basis(std::uint64_t basis);
-    void set_zero_norm_state();
+    void set_zero_state() const;
+    void set_computational_basis(std::uint64_t basis) const;
+    void set_zero_norm_state() const;
 
     [[nodiscard]] std::vector<std::vector<std::uint64_t>> sampling(
         std::uint64_t sampling_count, std::uint64_t seed = std::random_device()()) const;
@@ -55,7 +55,7 @@ public:
     void add_state_vector_with_coef(const Complex& coef, const StateVectorBatched& states);
     void multiply_coef(const Complex& coef);
 
-    void load(const std::vector<std::vector<Complex>>& states);
+    void load(const std::vector<std::vector<Complex>>& states) const;
     [[nodiscard]] StateVectorBatched copy() const;
 
     std::string to_string() const;

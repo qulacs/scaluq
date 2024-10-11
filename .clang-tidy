@@ -1,0 +1,3 @@
+---
+Checks: -*,bugprone-*,cert-*,clang-analyzer-*,cppcoreguidelines-*,google-*,hicpp-*,llvm-*,openmp-*,performance-*,readability-*,-bugprone-easily-swappable-parameters,-readability-identifier-length
+---
