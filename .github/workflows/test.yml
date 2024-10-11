@@ -26,7 +26,6 @@ jobs:
         exclude:
           - os: "macos"
             device: "cuda"
-        exclude:
           # currently ARM runner is not supported
           - os: "linux"
             architecture: "arm64"
