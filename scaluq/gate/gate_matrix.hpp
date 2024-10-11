@@ -12,14 +12,14 @@ namespace scaluq {
 namespace internal {
 
 template <std::floating_point FloatType>
-class OneTargetMatrixGateImpl : public GateBase {
+class OneTargetMatrixGateImpl : public GateBase<FloatType> {
     Matrix2x2 _matrix;
 
 public:
     OneTargetMatrixGateImpl(std::uint64_t target_mask,
                             std::uint64_t control_mask,
                             const std::array<std::array<Complex, 2>, 2>& matrix)
-        : GateBase(target_mask, control_mask) {
+        : GateBase<FloatType>(target_mask, control_mask) {
         _matrix[0][0] = matrix[0][0];
         _matrix[0][1] = matrix[0][1];
         _matrix[1][0] = matrix[1][0];
@@ -30,10 +30,10 @@ public:
         return {_matrix[0][0], _matrix[0][1], _matrix[1][0], _matrix[1][1]};
     }
 
-    Gate get_inverse() const override {
+    Gate<FloatType> get_inverse() const override {
         return std::make_shared<const OneTargetMatrixGateImpl>(
-            _target_mask,
-            _control_mask,
+            this->_target_mask,
+            this->_control_mask,
             std::array<std::array<Complex, 2>, 2>{Kokkos::conj(_matrix[0][0]),
                                                   Kokkos::conj(_matrix[1][0]),
                                                   Kokkos::conj(_matrix[0][1]),
@@ -47,26 +47,27 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        one_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
+        one_target_dense_matrix_gate(
+            this->_target_mask, this->_control_mask, _matrix, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
-        ss << indent << "Gate Type: OneTargetMatrix\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << indent << "Gate<FloatType> Type: OneTargetMatrix\n";
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class TwoTargetMatrixGateImpl : public GateBase {
+class TwoTargetMatrixGateImpl : public GateBase<FloatType> {
     Matrix4x4 _matrix;
 
 public:
     TwoTargetMatrixGateImpl(std::uint64_t target_mask,
                             std::uint64_t control_mask,
                             const std::array<std::array<Complex, 4>, 4>& matrix)
-        : GateBase(target_mask, control_mask) {
+        : GateBase<FloatType>(target_mask, control_mask) {
         for (std::uint64_t i : std::views::iota(0, 4)) {
             for (std::uint64_t j : std::views::iota(0, 4)) {
                 _matrix[i][j] = matrix[i][j];
@@ -84,7 +85,7 @@ public:
         return matrix;
     }
 
-    Gate get_inverse() const override {
+    Gate<FloatType> get_inverse() const override {
         std::array<std::array<Complex, 4>, 4> matrix_dag;
         for (std::uint64_t i : std::views::iota(0, 4)) {
             for (std::uint64_t j : std::views::iota(0, 4)) {
@@ -92,7 +93,7 @@ public:
             }
         }
         return std::make_shared<const TwoTargetMatrixGateImpl>(
-            _target_mask, _control_mask, matrix_dag);
+            this->_target_mask, this->_control_mask, matrix_dag);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(4, 4);
@@ -105,13 +106,14 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        two_target_dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
+        two_target_dense_matrix_gate(
+            this->_target_mask, this->_control_mask, _matrix, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
-        ss << indent << "Gate Type: TwoTargetMatrix\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << indent << "Gate<FloatType> Type: TwoTargetMatrix\n";
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };

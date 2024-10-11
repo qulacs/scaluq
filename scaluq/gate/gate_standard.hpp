@@ -7,40 +7,40 @@ namespace scaluq {
 namespace internal {
 
 template <std::floating_point FloatType>
-class IGateImpl : public GateBase {
+class IGateImpl : public GateBase<FloatType> {
 public:
-    IGateImpl() : GateBase(0, 0) {}
+    IGateImpl() : GateBase<FloatType>(0, 0) {}
 
-    Gate get_inverse() const override { return shared_from_this(); }
+    Gate<FloatType> get_inverse() const override { return this->shared_from_this(); }
     internal::ComplexMatrix get_matrix() const override {
         return internal::ComplexMatrix::Identity(1, 1);
     }
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
-        i_gate(_target_mask, _control_mask, state_vector);
+        i_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: I\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class GlobalPhaseGateImpl : public GateBase {
+class GlobalPhaseGateImpl : public GateBase<FloatType> {
 protected:
     double _phase;
 
 public:
     GlobalPhaseGateImpl(std::uint64_t control_mask, double phase)
-        : GateBase(0, control_mask), _phase(phase){};
+        : GateBase<FloatType>(0, control_mask), _phase(phase){};
 
     [[nodiscard]] double phase() const { return _phase; }
 
-    Gate get_inverse() const override {
-        return std::make_shared<const GlobalPhaseGateImpl<FloatType>>(_control_mask, -_phase);
+    Gate<FloatType> get_inverse() const override {
+        return std::make_shared<const GlobalPhaseGateImpl<FloatType>>(this->_control_mask, -_phase);
     }
     internal::ComplexMatrix get_matrix() const override {
         return internal::ComplexMatrix::Identity(1, 1) * std::exp(std::complex<double>(0, _phase));
@@ -48,36 +48,38 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        global_phase_gate(_target_mask, _control_mask, _phase, state_vector);
+        global_phase_gate(this->_target_mask, this->_control_mask, _phase, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: GlobalPhase\n";
         ss << indent << "  Phase: " << _phase << "\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class RotationGateBase : public GateBase {
+class RotationGateBase : public GateBase<FloatType> {
 protected:
     double _angle;
 
 public:
     RotationGateBase(std::uint64_t target_mask, std::uint64_t control_mask, double angle)
-        : GateBase(target_mask, control_mask), _angle(angle) {}
+        : GateBase<FloatType>(target_mask, control_mask), _angle(angle) {}
 
     double angle() const { return _angle; }
 };
 
 template <std::floating_point FloatType>
-class XGateImpl : public GateBase {
+class XGateImpl : public GateBase<FloatType> {
 public:
-    using GateBase::GateBase;
+    using GateBase<FloatType>::GateBase;
 
-    Gate get_inverse() const override { return shared_from_this(); }
+    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
+        return this->shared_from_this();
+    }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
         mat << 0, 1, 1, 0;
@@ -85,24 +87,24 @@ public:
     }
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
-        check_qubit_mask_within_bounds(state_vector);
-        x_gate(_target_mask, _control_mask, state_vector);
+        this->check_qubit_mask_within_bounds(state_vector);
+        x_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: X\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class YGateImpl : public GateBase {
+class YGateImpl : public GateBase<FloatType> {
 public:
-    using GateBase::GateBase;
+    using GateBase<FloatType>::GateBase;
 
-    Gate get_inverse() const override { return shared_from_this(); }
+    Gate<FloatType> get_inverse() const override { return this->shared_from_this(); }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
         mat << 0, -1i, 1i, 0;
@@ -111,23 +113,23 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        y_gate(_target_mask, _control_mask, state_vector);
+        y_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: Y\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class ZGateImpl : public GateBase {
+class ZGateImpl : public GateBase<FloatType> {
 public:
-    using GateBase::GateBase;
+    using GateBase<FloatType>::GateBase;
 
-    Gate get_inverse() const override { return shared_from_this(); }
+    Gate<FloatType> get_inverse() const override { return this->shared_from_this(); }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
         mat << 1, 0, 0, -1;
@@ -136,23 +138,23 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        z_gate(_target_mask, _control_mask, state_vector);
+        z_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: Z\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class HGateImpl : public GateBase {
+class HGateImpl : public GateBase<FloatType> {
 public:
-    using GateBase::GateBase;
+    using GateBase<FloatType>::GateBase;
 
-    Gate get_inverse() const override { return shared_from_this(); }
+    Gate<FloatType> get_inverse() const override { return this->shared_from_this(); }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
         mat << 1, 1, 1, -1;
@@ -162,13 +164,13 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        h_gate(_target_mask, _control_mask, state_vector);
+        h_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: H\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
@@ -191,12 +193,13 @@ template <std::floating_point FloatType>
 class SqrtYdagGateImpl;
 
 template <std::floating_point FloatType>
-class SGateImpl : public GateBase {
+class SGateImpl : public GateBase<FloatType> {
 public:
-    using GateBase::GateBase;
+    using GateBase<FloatType>::GateBase;
 
-    Gate get_inverse() const override {
-        return std::make_shared<const SdagGateImpl<FloatType>>(_target_mask, _control_mask);
+    Gate<FloatType> get_inverse() const override {
+        return std::make_shared<const SdagGateImpl<FloatType>>(this->_target_mask,
+                                                               this->_control_mask);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
@@ -206,24 +209,25 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        s_gate(_target_mask, _control_mask, state_vector);
+        s_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: S\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class SdagGateImpl : public GateBase {
+class SdagGateImpl : public GateBase<FloatType> {
 public:
-    using GateBase::GateBase;
+    using GateBase<FloatType>::GateBase;
 
-    Gate get_inverse() const override {
-        return std::make_shared<const SGateImpl<FloatType>>(_target_mask, _control_mask);
+    Gate<FloatType> get_inverse() const override {
+        return std::make_shared<const SGateImpl<FloatType>>(this->_target_mask,
+                                                            this->_control_mask);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
@@ -233,24 +237,25 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        sdag_gate(_target_mask, _control_mask, state_vector);
+        sdag_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: Sdag\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class TGateImpl : public GateBase {
+class TGateImpl : public GateBase<FloatType> {
 public:
-    using GateBase::GateBase;
+    using GateBase<FloatType>::GateBase;
 
-    Gate get_inverse() const override {
-        return std::make_shared<const TdagGateImpl<FloatType>>(_target_mask, _control_mask);
+    Gate<FloatType> get_inverse() const override {
+        return std::make_shared<const TdagGateImpl<FloatType>>(this->_target_mask,
+                                                               this->_control_mask);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
@@ -260,24 +265,25 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        t_gate(_target_mask, _control_mask, state_vector);
+        t_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: T\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class TdagGateImpl : public GateBase {
+class TdagGateImpl : public GateBase<FloatType> {
 public:
-    using GateBase::GateBase;
+    using GateBase<FloatType>::GateBase;
 
-    Gate get_inverse() const override {
-        return std::make_shared<const TGateImpl<FloatType>>(_target_mask, _control_mask);
+    Gate<FloatType> get_inverse() const override {
+        return std::make_shared<const TGateImpl<FloatType>>(this->_target_mask,
+                                                            this->_control_mask);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
@@ -287,24 +293,25 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        tdag_gate(_target_mask, _control_mask, state_vector);
+        tdag_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: Tdag\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class SqrtXGateImpl : public GateBase {
+class SqrtXGateImpl : public GateBase<FloatType> {
 public:
-    using GateBase::GateBase;
+    using GateBase<FloatType>::GateBase;
 
-    Gate get_inverse() const override {
-        return std::make_shared<const SqrtXdagGateImpl<FloatType>>(_target_mask, _control_mask);
+    Gate<FloatType> get_inverse() const override {
+        return std::make_shared<const SqrtXdagGateImpl<FloatType>>(this->_target_mask,
+                                                                   this->_control_mask);
     }
 
     internal::ComplexMatrix get_matrix() const override {
@@ -315,24 +322,25 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        sqrtx_gate(_target_mask, _control_mask, state_vector);
+        sqrtx_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: SqrtX\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class SqrtXdagGateImpl : public GateBase {
+class SqrtXdagGateImpl : public GateBase<FloatType> {
 public:
-    using GateBase::GateBase;
+    using GateBase<FloatType>::GateBase;
 
-    Gate get_inverse() const override {
-        return std::make_shared<const SqrtXGateImpl<FloatType>>(_target_mask, _control_mask);
+    Gate<FloatType> get_inverse() const override {
+        return std::make_shared<const SqrtXGateImpl<FloatType>>(this->_target_mask,
+                                                                this->_control_mask);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
@@ -342,24 +350,25 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        sqrtxdag_gate(_target_mask, _control_mask, state_vector);
+        sqrtxdag_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: SqrtXdag\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class SqrtYGateImpl : public GateBase {
+class SqrtYGateImpl : public GateBase<FloatType> {
 public:
-    using GateBase::GateBase;
+    using GateBase<FloatType>::GateBase;
 
-    Gate get_inverse() const override {
-        return std::make_shared<const SqrtYdagGateImpl<FloatType>>(_target_mask, _control_mask);
+    Gate<FloatType> get_inverse() const override {
+        return std::make_shared<const SqrtYdagGateImpl<FloatType>>(this->_target_mask,
+                                                                   this->_control_mask);
     }
 
     internal::ComplexMatrix get_matrix() const override {
@@ -370,24 +379,25 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        sqrty_gate(_target_mask, _control_mask, state_vector);
+        sqrty_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: SqrtY\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class SqrtYdagGateImpl : public GateBase {
+class SqrtYdagGateImpl : public GateBase<FloatType> {
 public:
-    using GateBase::GateBase;
+    using GateBase<FloatType>::GateBase;
 
-    Gate get_inverse() const override {
-        return std::make_shared<const SqrtYGateImpl<FloatType>>(_target_mask, _control_mask);
+    Gate<FloatType> get_inverse() const override {
+        return std::make_shared<const SqrtYGateImpl<FloatType>>(this->_target_mask,
+                                                                this->_control_mask);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
@@ -397,23 +407,23 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        sqrtydag_gate(_target_mask, _control_mask, state_vector);
+        sqrtydag_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: SqrtYdag\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class P0GateImpl : public GateBase {
+class P0GateImpl : public GateBase<FloatType> {
 public:
-    using GateBase::GateBase;
+    using GateBase<FloatType>::GateBase;
 
-    Gate get_inverse() const override {
+    Gate<FloatType> get_inverse() const override {
         throw std::runtime_error("P0::get_inverse: Projection gate doesn't have inverse gate");
     }
     internal::ComplexMatrix get_matrix() const override {
@@ -424,23 +434,23 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        p0_gate(_target_mask, _control_mask, state_vector);
+        p0_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: P0\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class P1GateImpl : public GateBase {
+class P1GateImpl : public GateBase<FloatType> {
 public:
-    using GateBase::GateBase;
+    using GateBase<FloatType>::GateBase;
 
-    Gate get_inverse() const override {
+    Gate<FloatType> get_inverse() const override {
         throw std::runtime_error("P1::get_inverse: Projection gate doesn't have inverse gate");
     }
     internal::ComplexMatrix get_matrix() const override {
@@ -451,115 +461,119 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        p1_gate(_target_mask, _control_mask, state_vector);
+        p1_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: P1\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class RXGateImpl : public RotationGateBase {
+class RXGateImpl : public RotationGateBase<FloatType> {
 public:
-    using RotationGateBase::RotationGateBase;
+    using RotationGateBase<FloatType>::RotationGateBase;
 
-    Gate get_inverse() const override {
-        return std::make_shared<const RXGateImpl<FloatType>>(_target_mask, _control_mask, -_angle);
+    Gate<FloatType> get_inverse() const override {
+        return std::make_shared<const RXGateImpl<FloatType>>(
+            this->_target_mask, this->_control_mask, -this->_angle);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
-        mat << std::cos(_angle / 2), -1i * std::sin(_angle / 2), -1i * std::sin(_angle / 2),
-            std::cos(_angle / 2);
+        mat << std::cos(this->_angle / 2), -1i * std::sin(this->_angle / 2),
+            -1i * std::sin(this->_angle / 2), std::cos(this->_angle / 2);
         return mat;
     }
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        rx_gate(_target_mask, _control_mask, _angle, state_vector);
+        rx_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: RX\n";
         ss << indent << "  Angle: " << this->_angle << "\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class RYGateImpl : public RotationGateBase {
+class RYGateImpl : public RotationGateBase<FloatType> {
 public:
-    using RotationGateBase::RotationGateBase;
+    using RotationGateBase<FloatType>::RotationGateBase;
 
-    Gate get_inverse() const override {
-        return std::make_shared<const RYGateImpl<FloatType>>(_target_mask, _control_mask, -_angle);
+    Gate<FloatType> get_inverse() const override {
+        return std::make_shared<const RYGateImpl<FloatType>>(
+            this->_target_mask, this->_control_mask, -this->_angle);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
-        mat << std::cos(_angle / 2), -std::sin(_angle / 2), std::sin(_angle / 2),
-            std::cos(_angle / 2);
+        mat << std::cos(this->_angle / 2), -std::sin(this->_angle / 2), std::sin(this->_angle / 2),
+            std::cos(this->_angle / 2);
         return mat;
     }
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        ry_gate(_target_mask, _control_mask, _angle, state_vector);
+        ry_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: RY\n";
         ss << indent << "  Angle: " << this->_angle << "\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class RZGateImpl : public RotationGateBase {
+class RZGateImpl : public RotationGateBase<FloatType> {
 public:
-    using RotationGateBase::RotationGateBase;
+    using RotationGateBase<FloatType>::RotationGateBase;
 
-    Gate get_inverse() const override {
-        return std::make_shared<const RZGateImpl<FloatType>>(_target_mask, _control_mask, -_angle);
+    Gate<FloatType> get_inverse() const override {
+        return std::make_shared<const RZGateImpl<FloatType>>(
+            this->_target_mask, this->_control_mask, -this->_angle);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
-        mat << std::exp(-0.5i * _angle), 0, 0, std::exp(0.5i * _angle);
+        mat << std::exp(-0.5i * this->_angle), 0, 0, std::exp(0.5i * this->_angle);
         return mat;
     }
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        rz_gate(_target_mask, _control_mask, _angle, state_vector);
+        rz_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: RZ\n";
         ss << indent << "  Angle: " << this->_angle << "\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class U1GateImpl : public GateBase {
+class U1GateImpl : public GateBase<FloatType> {
     double _lambda;
 
 public:
     U1GateImpl(std::uint64_t target_mask, std::uint64_t control_mask, double lambda)
-        : GateBase(target_mask, control_mask), _lambda(lambda) {}
+        : GateBase<FloatType>(target_mask, control_mask), _lambda(lambda) {}
 
     double lambda() const { return _lambda; }
 
-    Gate get_inverse() const override {
-        return std::make_shared<const U1GateImpl<FloatType>>(_target_mask, _control_mask, -_lambda);
+    Gate<FloatType> get_inverse() const override {
+        return std::make_shared<const U1GateImpl<FloatType>>(
+            this->_target_mask, this->_control_mask, -_lambda);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
@@ -569,30 +583,30 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        u1_gate(_target_mask, _control_mask, _lambda, state_vector);
+        u1_gate(this->_target_mask, this->_control_mask, _lambda, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: U1\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 template <std::floating_point FloatType>
-class U2GateImpl : public GateBase {
+class U2GateImpl : public GateBase<FloatType> {
     double _phi, _lambda;
 
 public:
     U2GateImpl(std::uint64_t target_mask, std::uint64_t control_mask, double phi, double lambda)
-        : GateBase(target_mask, control_mask), _phi(phi), _lambda(lambda) {}
+        : GateBase<FloatType>(target_mask, control_mask), _phi(phi), _lambda(lambda) {}
 
     double phi() const { return _phi; }
     double lambda() const { return _lambda; }
 
-    Gate get_inverse() const override {
-        return std::make_shared<const U2GateImpl<FloatType>>(_target_mask,
-                                                             _control_mask,
+    Gate<FloatType> get_inverse() const override {
+        return std::make_shared<const U2GateImpl<FloatType>>(this->_target_mask,
+                                                             this->_control_mask,
                                                              -_lambda - Kokkos::numbers::pi,
                                                              -_phi + Kokkos::numbers::pi);
     }
@@ -607,19 +621,19 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        u2_gate(_target_mask, _control_mask, _phi, _lambda, state_vector);
+        u2_gate(this->_target_mask, this->_control_mask, _phi, _lambda, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: U2\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class U3GateImpl : public GateBase {
+class U3GateImpl : public GateBase<FloatType> {
     double _theta, _phi, _lambda;
 
 public:
@@ -628,15 +642,18 @@ public:
                double theta,
                double phi,
                double lambda)
-        : GateBase(target_mask, control_mask), _theta(theta), _phi(phi), _lambda(lambda) {}
+        : GateBase<FloatType>(target_mask, control_mask),
+          _theta(theta),
+          _phi(phi),
+          _lambda(lambda) {}
 
     double theta() const { return _theta; }
     double phi() const { return _phi; }
     double lambda() const { return _lambda; }
 
-    Gate get_inverse() const override {
+    Gate<FloatType> get_inverse() const override {
         return std::make_shared<const U3GateImpl<FloatType>>(
-            _target_mask, _control_mask, -_theta, -_lambda, -_phi);
+            this->_target_mask, this->_control_mask, -_theta, -_lambda, -_phi);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
@@ -648,23 +665,23 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        u3_gate(_target_mask, _control_mask, _theta, _phi, _lambda, state_vector);
+        u3_gate(this->_target_mask, this->_control_mask, _theta, _phi, _lambda, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: U3\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 template <std::floating_point FloatType>
-class SwapGateImpl : public GateBase {
+class SwapGateImpl : public GateBase<FloatType> {
 public:
-    using GateBase::GateBase;
+    using GateBase<FloatType>::GateBase;
 
-    Gate get_inverse() const override { return shared_from_this(); }
+    Gate<FloatType> get_inverse() const override { return this->shared_from_this(); }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat = internal::ComplexMatrix::Identity(1 << 2, 1 << 2);
         mat << 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1;
@@ -673,13 +690,13 @@ public:
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         check_qubit_mask_within_bounds(state_vector);
-        swap_gate(_target_mask, _control_mask, state_vector);
+        swap_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: Swap\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };

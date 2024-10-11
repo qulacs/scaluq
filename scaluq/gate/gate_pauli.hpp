@@ -11,27 +11,29 @@ namespace scaluq {
 namespace internal {
 
 template <std::floating_point FloatType>
-class PauliGateImpl : public GateBase {
-    const PauliOperator _pauli;
+class PauliGateImpl : public GateBase<FloatType> {
+    const PauliOperator<FloatType> _pauli;
 
 public:
-    PauliGateImpl(std::uint64_t control_mask, const PauliOperator& pauli)
-        : GateBase(vector_to_mask<false>(pauli.target_qubit_list()), control_mask), _pauli(pauli) {}
+    PauliGateImpl(std::uint64_t control_mask, const PauliOperator<FloatType>& pauli)
+        : GateBase<FloatType>(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
+          _pauli(pauli) {}
 
-    PauliOperator pauli() const { return _pauli; };
+    PauliOperator<FloatType> pauli() const { return _pauli; };
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
 
-    Gate get_inverse() const override { return shared_from_this(); }
+    Gate<FloatType> get_inverse() const override { return this->shared_from_this(); }
     internal::ComplexMatrix get_matrix() const override { return this->_pauli.get_matrix(); }
 
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
-        apply_pauli(_control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), state_vector);
+        apply_pauli(
+            this->_control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
-        auto controls = control_qubit_list();
+        auto controls = this->control_qubit_list();
         ss << indent << "Gate Type: Pauli\n";
         ss << indent << "  Control Qubits: {";
         for (std::uint32_t i = 0; i < controls.size(); ++i)
@@ -43,22 +45,25 @@ public:
 };
 
 template <std::floating_point FloatType>
-class PauliRotationGateImpl : public GateBase {
-    const PauliOperator _pauli;
+class PauliRotationGateImpl : public GateBase<FloatType> {
+    const PauliOperator<FloatType> _pauli;
     const FloatType _angle;
 
 public:
-    PauliRotationGateImpl(std::uint64_t control_mask, const PauliOperator& pauli, FloatType angle)
-        : GateBase(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
+    PauliRotationGateImpl(std::uint64_t control_mask,
+                          const PauliOperator<FloatType>& pauli,
+                          FloatType angle)
+        : GateBase<FloatType>(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
           _pauli(pauli),
           _angle(angle) {}
 
-    PauliOperator pauli() const { return _pauli; }
+    PauliOperator<FloatType> pauli() const { return _pauli; }
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
     FloatType angle() const { return _angle; }
 
-    Gate get_inverse() const override {
-        return std::make_shared<const PauliRotationGateImpl>(_control_mask, _pauli, -_angle);
+    Gate<FloatType> get_inverse() const override {
+        return std::make_shared<const PauliRotationGateImpl<FloatType>>(
+            this->_control_mask, _pauli, -_angle);
     }
 
     internal::ComplexMatrix get_matrix() const override {
@@ -72,13 +77,17 @@ public:
     }
     void update_quantum_state(StateVector<FloatType>& state_vector) const override {
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
-        apply_pauli_rotation(
-            _control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), _angle, state_vector);
+        apply_pauli_rotation(this->_control_mask,
+                             bit_flip_mask,
+                             phase_flip_mask,
+                             _pauli.coef(),
+                             _angle,
+                             state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
-        auto controls = control_qubit_list();
+        auto controls = this->control_qubit_list();
         ss << indent << "Gate Type: PauliRotation\n";
         ss << indent << "  Angle: " << _angle << "\n";
         ss << indent << "  Control Qubits: {";

@@ -218,33 +218,34 @@ inline Gate<FloatType> DenseMatrix(const std::vector<std::uint64_t>& targets,
             "gate::DenseMatrix(const std::vector<std::uint64_t>&, const internal::ComplexMatrix&): "
             "matrix size must be 2^{n_qubits} x 2^{n_qubits}.");
     }
-    if (targets.size() == 0) return I();
+    if (targets.size() == 0) return I<FloatType>();
     if (targets.size() == 1) {
-        return OneTargetMatrix(targets[0],
-                               std::array{std::array{Complex(matrix(0, 0)), Complex(matrix(0, 1))},
-                                          std::array{Complex(matrix(1, 0)), Complex(matrix(1, 1))}},
-                               controls);
+        return OneTargetMatrix<FloatType>(
+            targets[0],
+            std::array{std::array{Complex(matrix(0, 0)), Complex(matrix(0, 1))},
+                       std::array{Complex(matrix(1, 0)), Complex(matrix(1, 1))}},
+            controls);
     }
     if (targets.size() == 2) {
-        return TwoTargetMatrix(targets[0],
-                               targets[1],
-                               std::array{std::array{Complex(matrix(0, 0)),
-                                                     Complex(matrix(0, 1)),
-                                                     Complex(matrix(0, 2)),
-                                                     Complex(matrix(0, 3))},
-                                          std::array{Complex(matrix(1, 0)),
-                                                     Complex(matrix(1, 1)),
-                                                     Complex(matrix(1, 2)),
-                                                     Complex(matrix(1, 3))},
-                                          std::array{Complex(matrix(2, 0)),
-                                                     Complex(matrix(2, 1)),
-                                                     Complex(matrix(2, 2)),
-                                                     Complex(matrix(2, 3))},
-                                          std::array{Complex(matrix(3, 0)),
-                                                     Complex(matrix(3, 1)),
-                                                     Complex(matrix(3, 2)),
-                                                     Complex(matrix(3, 3))}},
-                               controls);
+        return TwoTargetMatrix<FloatType>(targets[0],
+                                          targets[1],
+                                          std::array{std::array{Complex(matrix(0, 0)),
+                                                                Complex(matrix(0, 1)),
+                                                                Complex(matrix(0, 2)),
+                                                                Complex(matrix(0, 3))},
+                                                     std::array{Complex(matrix(1, 0)),
+                                                                Complex(matrix(1, 1)),
+                                                                Complex(matrix(1, 2)),
+                                                                Complex(matrix(1, 3))},
+                                                     std::array{Complex(matrix(2, 0)),
+                                                                Complex(matrix(2, 1)),
+                                                                Complex(matrix(2, 2)),
+                                                                Complex(matrix(2, 3))},
+                                                     std::array{Complex(matrix(3, 0)),
+                                                                Complex(matrix(3, 1)),
+                                                                Complex(matrix(3, 2)),
+                                                                Complex(matrix(3, 3))}},
+                                          controls);
     }
     throw std::runtime_error(
         "gate::DenseMatrix(const std::vector<std::uint64_t>&, const internal::ComplexMatrix&): "
