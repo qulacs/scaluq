@@ -186,8 +186,11 @@ public:
             eigen_matrix(vec_h(i).r, vec_h(i).c) = vec_h(i).val;
         }
 
+        // return std::make_shared<const DenseMatrixGateImpl>(
+        //     _target_mask, _control_mask, eigen_matrix.inverse().eval());
+        // 以下は消して上を使う
         return std::make_shared<const DenseMatrixGateImpl>(
-            _target_mask, _control_mask, eigen_matrix.inverse().eval());
+            _target_mask, _control_mask, eigen_matrix);
     }
 
     Matrix get_matrix_internal() const {
