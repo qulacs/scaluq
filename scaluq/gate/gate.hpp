@@ -9,64 +9,64 @@ namespace scaluq {
 namespace internal {
 // forward declarations
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class GateBase;
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class IGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class GlobalPhaseGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class XGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class YGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class ZGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class HGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class SGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class SdagGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class TGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class TdagGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class SqrtXGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class SqrtXdagGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class SqrtYGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class SqrtYdagGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class P0GateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class P1GateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class RXGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class RYGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class RZGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class U1GateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class U2GateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class U3GateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class OneTargetMatrixGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class SwapGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class TwoTargetMatrixGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class PauliGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class PauliRotationGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class ProbablisticGateImpl;
 
 }  // namespace internal
@@ -173,12 +173,12 @@ namespace internal {
 template <std::floating_point _FloatType>
 class GateBase : public std::enable_shared_from_this<GateBase<_FloatType>> {
 public:
-    using FloatType = _FloatType;
+    using Fp = _FloatType;
 
 protected:
     std::uint64_t _target_mask, _control_mask;
 
-    void check_qubit_mask_within_bounds(const StateVector<FloatType>& state_vector) const {
+    void check_qubit_mask_within_bounds(const StateVector<Fp>& state_vector) const {
         std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
         if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
             throw std::runtime_error(
@@ -228,23 +228,23 @@ public:
         return _target_mask | _control_mask;
     }
 
-    [[nodiscard]] virtual std::shared_ptr<const GateBase<FloatType>> get_inverse() const = 0;
+    [[nodiscard]] virtual std::shared_ptr<const GateBase<Fp>> get_inverse() const = 0;
     [[nodiscard]] virtual internal::ComplexMatrix get_matrix() const = 0;
 
-    virtual void update_quantum_state(StateVector<FloatType>& state_vector) const = 0;
+    virtual void update_quantum_state(StateVector<Fp>& state_vector) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 };
 
 template <typename T>
-concept GateImpl = std::derived_from<T, GateBase<typename T::FloatType>>;
+concept GateImpl = std::derived_from<T, GateBase<typename T::Fp>>;
 
 template <GateImpl T>
 class GatePtr {
     friend class GateFactory;
     template <GateImpl U>
     friend class GatePtr;
-    using FloatType = typename T::FloatType;
+    using Fp = typename T::Fp;
 
 private:
     std::shared_ptr<const T> _gate_ptr;
@@ -252,19 +252,18 @@ private:
 
 public:
     GatePtr() : _gate_ptr(nullptr), _gate_type(get_gate_type<T>()) {}
-    GatePtr(const GatePtr& gate) = default;
     template <GateImpl U>
     GatePtr(const std::shared_ptr<const U>& gate_ptr) {
         if constexpr (std::is_same_v<T, U>) {
-            _gate_type = get_gate_type<T, FloatType>();
+            _gate_type = get_gate_type<T, Fp>();
             _gate_ptr = gate_ptr;
-        } else if constexpr (std::is_same_v<T, internal::GateBase<FloatType>>) {
+        } else if constexpr (std::is_same_v<T, internal::GateBase<Fp>>) {
             // upcast
-            _gate_type = get_gate_type<U, FloatType>();
+            _gate_type = get_gate_type<U, Fp>();
             _gate_ptr = std::static_pointer_cast<const T>(gate_ptr);
         } else {
             // downcast
-            _gate_type = get_gate_type<T, FloatType>();
+            _gate_type = get_gate_type<T, Fp>();
             if (!(_gate_ptr = std::dynamic_pointer_cast<const T>(gate_ptr))) {
                 throw std::runtime_error("invalid gate cast");
             }
@@ -275,13 +274,13 @@ public:
         if constexpr (std::is_same_v<T, U>) {
             _gate_type = gate._gate_type;
             _gate_ptr = gate._gate_ptr;
-        } else if constexpr (std::is_same_v<T, internal::GateBase<FloatType>>) {
+        } else if constexpr (std::is_same_v<T, internal::GateBase<Fp>>) {
             // upcast
             _gate_type = gate._gate_type;
             _gate_ptr = std::static_pointer_cast<const T>(gate._gate_ptr);
         } else {
             // downcast
-            if (gate._gate_type != get_gate_type<T, FloatType>()) {
+            if (gate._gate_type != get_gate_type<T, Fp>()) {
                 throw std::runtime_error("invalid gate cast");
             }
             _gate_type = gate._gate_type;
@@ -306,8 +305,8 @@ public:
 
 }  // namespace internal
 
-template <std::floating_point FloatType>
-using Gate = internal::GatePtr<internal::GateBase<FloatType>>;
+template <std::floating_point Fp>
+using Gate = internal::GatePtr<internal::GateBase<Fp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {

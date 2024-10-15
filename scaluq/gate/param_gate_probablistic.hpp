@@ -8,16 +8,17 @@
 
 namespace scaluq {
 namespace internal {
-class ParamProbablisticGateImpl : public ParamGateBase {
-    using EitherGate = std::variant<Gate, ParamGate>;
-    std::vector<double> _distribution;
-    std::vector<double> _cumlative_distribution;
+template <std::floating_point Fp>
+class ParamProbablisticGateImpl : public ParamGateBase<Fp> {
+    using EitherGate = std::variant<Gate<Fp>, ParamGate<Fp>>;
+    std::vector<Fp> _distribution;
+    std::vector<Fp> _cumlative_distribution;
     std::vector<EitherGate> _gate_list;
 
 public:
-    ParamProbablisticGateImpl(const std::vector<double>& distribution,
-                              const std::vector<std::variant<Gate, ParamGate>>& gate_list)
-        : ParamGateBase(0, 0), _distribution(distribution), _gate_list(gate_list) {
+    ParamProbablisticGateImpl(const std::vector<Fp>& distribution,
+                              const std::vector<std::variant<Gate<Fp>, ParamGate<Fp>>>& gate_list)
+        : ParamGateBase<Fp>(0, 0), _distribution(distribution), _gate_list(gate_list) {
         std::uint64_t n = distribution.size();
         if (n == 0) {
             throw std::runtime_error("At least one gate is required.");
@@ -32,8 +33,8 @@ public:
             throw std::runtime_error("Sum of distribution must be equal to 1.");
         }
     }
-    const std::vector<std::variant<Gate, ParamGate>>& gate_list() const { return _gate_list; }
-    const std::vector<double>& distribution() const { return _distribution; }
+    const std::vector<EitherGate>& gate_list() const { return _gate_list; }
+    const std::vector<Fp>& distribution() const { return _distribution; }
 
     std::vector<std::uint64_t> target_qubit_list() const override {
         throw std::runtime_error(
@@ -66,7 +67,7 @@ public:
             "ParamProbablisticGateImpl.");
     }
 
-    ParamGate get_inverse() const override {
+    std::shared_ptr<const ParamGateBase<Fp>> get_inverse() const override {
         std::vector<EitherGate> inv_gate_list;
         inv_gate_list.reserve(_gate_list.size());
         std::ranges::transform(
@@ -75,15 +76,15 @@ public:
             });
         return std::make_shared<const ParamProbablisticGateImpl>(_distribution, inv_gate_list);
     }
-    internal::ComplexMatrix get_matrix(double) const override {
+    internal::ComplexMatrix get_matrix(Fp) const override {
         throw std::runtime_error(
             "ParamProbablisticGateImpl::get_matrix(): This function must not be used in "
             "ParamProbablisticGateImpl.");
     }
 
-    void update_quantum_state(StateVector& state_vector, double param) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override {
         Random random;
-        double r = random.uniform();
+        Fp r = random.uniform();
         std::uint64_t i = std::distance(_cumlative_distribution.begin(),
                                         std::ranges::upper_bound(_cumlative_distribution, r)) -
                           1;
@@ -114,7 +115,8 @@ public:
 };
 }  // namespace internal
 
-using ParamProbablisticGate = internal::ParamGatePtr<internal::ParamProbablisticGateImpl>;
+template <std::floating_point Fp>
+using ParamProbablisticGate = internal::ParamGatePtr<internal::ParamProbablisticGateImpl<Fp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {

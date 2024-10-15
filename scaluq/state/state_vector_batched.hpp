@@ -5,12 +5,12 @@
 
 namespace scaluq {
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class StateVectorBatched {
     std::uint64_t _batch_size;
     std::uint64_t _n_qubits;
     std::uint64_t _dim;
-    using ComplexType = Kokkos::complex<FloatType>;
+    using ComplexType = Kokkos::complex<Fp>;
 
     // static_assert(std::is_same_v<Space, HostSpace> || std::is_same_v<Space, DefaultSpace>,
     //               "Unsupported execution space tag");
@@ -36,7 +36,7 @@ public:
 
     [[nodiscard]] std::uint64_t batch_size() const { return this->_batch_size; }
 
-    void set_state_vector(const StateVector<FloatType>& state) {
+    void set_state_vector(const StateVector<Fp>& state) {
         if (_raw.extent(1) != state._raw.extent(0)) [[unlikely]] {
             throw std::runtime_error(
                 "Error: StateVectorBatched::set_state_vector(const StateVector&): Dimensions of "
@@ -50,7 +50,7 @@ public:
         Kokkos::fence();
     }
 
-    void set_state_vector_at(std::uint64_t batch_id, const StateVector<FloatType>& state) {
+    void set_state_vector_at(std::uint64_t batch_id, const StateVector<Fp>& state) {
         if (_raw.extent(1) != state._raw.extent(0)) [[unlikely]] {
             throw std::runtime_error(
                 "Error: StateVectorBatched::set_state_vector(std::uint64_t, const StateVector&): "
@@ -61,8 +61,8 @@ public:
         Kokkos::fence();
     }
 
-    [[nodiscard]] StateVector<FloatType> get_state_vector_at(std::uint64_t batch_id) const {
-        StateVector<FloatType> ret(_n_qubits);
+    [[nodiscard]] StateVector<Fp> get_state_vector_at(std::uint64_t batch_id) const {
+        StateVector<Fp> ret(_n_qubits);
         Kokkos::parallel_for(
             _dim, KOKKOS_CLASS_LAMBDA(std::uint64_t i) { ret._raw(i) = _raw(batch_id, i); });
         Kokkos::fence();
@@ -94,7 +94,7 @@ public:
 
     [[nodiscard]] std::vector<std::vector<std::uint64_t>> sampling(
         std::uint64_t sampling_count, std::uint64_t seed = std::random_device()()) const {
-        Kokkos::View<FloatType**> stacked_prob("prob", _batch_size, _dim + 1);
+        Kokkos::View<Fp**> stacked_prob("prob", _batch_size, _dim + 1);
 
         Kokkos::parallel_for(
             Kokkos::TeamPolicy<>(_batch_size, Kokkos::AUTO()),
@@ -103,7 +103,7 @@ public:
                     team) {
                 std::uint64_t batch_id = team.league_rank();
                 Kokkos::parallel_scan(Kokkos::TeamThreadRange(team, _dim),
-                                      [&](std::uint64_t i, FloatType& update, const bool final) {
+                                      [&](std::uint64_t i, Fp& update, const bool final) {
                                           update += internal::squared_norm(this->_raw(batch_id, i));
                                           if (final) {
                                               stacked_prob(batch_id, i + 1) = update;
@@ -120,7 +120,7 @@ public:
             Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, sampling_count}),
             KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
                 auto rand_gen = rand_pool.get_state();
-                FloatType r = rand_gen.drand(0., 1.);
+                Fp r = rand_gen.drand(0., 1.);
                 std::uint64_t lo = 0, hi = stacked_prob.extent(1);
                 while (hi - lo > 1) {
                     std::uint64_t mid = (lo + hi) / 2;
@@ -154,7 +154,7 @@ public:
         Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
         StateVectorBatched states(batch_size, n_qubits);
         if (set_same_state) {
-            states.set_state_vector(StateVector<FloatType>::Haar_random_state(n_qubits, seed));
+            states.set_state_vector(StateVector<Fp>::Haar_random_state(n_qubits, seed));
         } else {
             Kokkos::parallel_for(
                 Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {states.batch_size(), states.dim()}),
@@ -181,19 +181,18 @@ public:
         return vv;
     }
 
-    [[nodiscard]] std::vector<FloatType> get_squared_norm() const {
-        Kokkos::View<FloatType*> norms(Kokkos::ViewAllocateWithoutInitializing("norms"),
-                                       _batch_size);
+    [[nodiscard]] std::vector<Fp> get_squared_norm() const {
+        Kokkos::View<Fp*> norms(Kokkos::ViewAllocateWithoutInitializing("norms"), _batch_size);
         Kokkos::parallel_for(
             Kokkos::TeamPolicy<>(_batch_size, Kokkos::AUTO()),
             KOKKOS_CLASS_LAMBDA(
                 const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                     team) {
-                FloatType nrm = 0;
+                Fp nrm = 0;
                 std::uint64_t batch_id = team.league_rank();
                 Kokkos::parallel_reduce(
                     Kokkos::TeamThreadRange(team, _dim),
-                    [&](const std::uint64_t& i, FloatType& lcl) {
+                    [&](const std::uint64_t& i, Fp& lcl) {
                         lcl += internal::squared_norm(_raw(batch_id, i));
                     },
                     nrm);
@@ -201,7 +200,7 @@ public:
                 Kokkos::single(Kokkos::PerTeam(team), [&] { norms[batch_id] = nrm; });
             });
         Kokkos::fence();
-        return internal::convert_device_view_to_host_vector<FloatType>(norms);
+        return internal::convert_device_view_to_host_vector<Fp>(norms);
     }
 
     void normalize() {
@@ -210,11 +209,11 @@ public:
             KOKKOS_CLASS_LAMBDA(
                 const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                     team) {
-                FloatType nrm = 0;
+                Fp nrm = 0;
                 std::uint64_t batch_id = team.league_rank();
                 Kokkos::parallel_reduce(
                     Kokkos::TeamThreadRange(team, _dim),
-                    [&](const std::uint64_t& i, FloatType& lcl) {
+                    [&](const std::uint64_t& i, Fp& lcl) {
                         lcl += internal::squared_norm(_raw(batch_id, i));
                     },
                     nrm);
@@ -226,24 +225,23 @@ public:
         Kokkos::fence();
     }
 
-    [[nodiscard]] std::vector<FloatType> get_zero_probability(
-        std::uint64_t target_qubit_index) const {
+    [[nodiscard]] std::vector<Fp> get_zero_probability(std::uint64_t target_qubit_index) const {
         if (target_qubit_index >= _n_qubits) {
             throw std::runtime_error(
                 "Error: StateVectorBatched::get_zero_probability(std::uint64_t): index "
                 "of target qubit must be smaller than qubit_count");
         }
-        Kokkos::View<FloatType*> probs("probs", _batch_size);
+        Kokkos::View<Fp*> probs("probs", _batch_size);
         Kokkos::parallel_for(
             Kokkos::TeamPolicy<>(_batch_size, Kokkos::AUTO()),
             KOKKOS_CLASS_LAMBDA(
                 const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                     team) {
-                FloatType sum = 0;
+                Fp sum = 0;
                 std::uint64_t batch_id = team.league_rank();
                 Kokkos::parallel_reduce(
                     Kokkos::TeamThreadRange(team, _dim >> 1),
-                    [&](std::uint64_t i, FloatType& lsum) {
+                    [&](std::uint64_t i, Fp& lsum) {
                         std::uint64_t basis_0 =
                             internal::insert_zero_to_basis_index(i, target_qubit_index);
                         lsum += internal::squared_norm(_raw(batch_id, basis_0));
@@ -253,10 +251,10 @@ public:
                 Kokkos::single(Kokkos::PerTeam(team), [&] { probs[batch_id] = sum; });
             });
         Kokkos::fence();
-        return internal::convert_device_view_to_host_vector<FloatType>(probs);
+        return internal::convert_device_view_to_host_vector<Fp>(probs);
     }
 
-    [[nodiscard]] std::vector<FloatType> get_marginal_probability(
+    [[nodiscard]] std::vector<Fp> get_marginal_probability(
         const std::vector<std::uint64_t>& measured_values) const {
         if (measured_values.size() != _n_qubits) {
             throw std::runtime_error(
@@ -272,7 +270,7 @@ public:
             if (measured_value == 0 || measured_value == 1) {
                 target_index.push_back(i);
                 target_value.push_back(measured_value);
-            } else if (measured_value != StateVector<FloatType>::UNMEASURED) {
+            } else if (measured_value != StateVector<Fp>::UNMEASURED) {
                 throw std::runtime_error(
                     "Error:StateVectorBatched::get_marginal_probability(const "
                     "vector<std::uint64_t>&): Invalid qubit state specified. Each qubit state must "
@@ -282,17 +280,17 @@ public:
 
         auto target_index_d = internal::convert_host_vector_to_device_view(target_index);
         auto target_value_d = internal::convert_host_vector_to_device_view(target_value);
-        Kokkos::View<FloatType*> probs("probs", _batch_size);
+        Kokkos::View<Fp*> probs("probs", _batch_size);
         Kokkos::parallel_for(
             Kokkos::TeamPolicy<>(_batch_size, Kokkos::AUTO()),
             KOKKOS_CLASS_LAMBDA(
                 const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                     team) {
-                FloatType sum = 0;
+                Fp sum = 0;
                 std::uint64_t batch_id = team.league_rank();
                 Kokkos::parallel_reduce(
                     Kokkos::TeamThreadRange(team, _dim >> target_index_d.size()),
-                    [&](std::uint64_t i, FloatType& lsum) {
+                    [&](std::uint64_t i, Fp& lsum) {
                         std::uint64_t basis = i;
                         for (std::uint64_t cursor = 0; cursor < target_index_d.size(); cursor++) {
                             std::uint64_t insert_index = target_index_d[cursor];
@@ -306,23 +304,23 @@ public:
                 Kokkos::single(Kokkos::PerTeam(team), [&] { probs[batch_id] = sum; });
             });
         Kokkos::fence();
-        return internal::convert_device_view_to_host_vector<FloatType>(probs);
+        return internal::convert_device_view_to_host_vector<Fp>(probs);
     }
 
-    [[nodiscard]] std::vector<FloatType> get_entropy() const {
-        Kokkos::View<FloatType*> ents("ents", _batch_size);
-        const FloatType eps = 1e-15;
+    [[nodiscard]] std::vector<Fp> get_entropy() const {
+        Kokkos::View<Fp*> ents("ents", _batch_size);
+        const Fp eps = 1e-15;
         Kokkos::parallel_for(
             Kokkos::TeamPolicy<>(_batch_size, Kokkos::AUTO()),
             KOKKOS_CLASS_LAMBDA(
                 const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::TeamPolicy::member_type&
                     team) {
-                FloatType sum = 0;
+                Fp sum = 0;
                 std::uint64_t batch_id = team.league_rank();
                 Kokkos::parallel_reduce(
                     Kokkos::TeamThreadRange(team, _dim),
-                    [&](std::uint64_t idx, FloatType& lsum) {
-                        FloatType prob = internal::squared_norm(_raw(batch_id, idx));
+                    [&](std::uint64_t idx, Fp& lsum) {
+                        Fp prob = internal::squared_norm(_raw(batch_id, idx));
                         prob = Kokkos::max(prob, eps);
                         lsum += -prob * Kokkos::log2(prob);
                     },

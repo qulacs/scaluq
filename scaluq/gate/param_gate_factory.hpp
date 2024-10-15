@@ -9,39 +9,45 @@ namespace internal {
 class ParamGateFactory {
 public:
     template <ParamGateImpl T, typename... Args>
-    static ParamGate create_gate(Args... args) {
+    static ParamGate<typename T::Fp> create_gate(Args... args) {
         return {std::make_shared<const T>(args...)};
     }
 };
 }  // namespace internal
 namespace gate {
-inline ParamGate ParamRX(std::uint64_t target,
-                         double param_coef = 1.,
-                         const std::vector<std::uint64_t>& controls = {}) {
-    return internal::ParamGateFactory::create_gate<internal::ParamRXGateImpl>(
+template <std::floating_point Fp>
+inline ParamGate<Fp> ParamRX(std::uint64_t target,
+                             Fp param_coef = 1.,
+                             const std::vector<std::uint64_t>& controls = {}) {
+    return internal::ParamGateFactory::create_gate<internal::ParamRXGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), param_coef);
 }
-inline ParamGate ParamRY(std::uint64_t target,
-                         double param_coef = 1.,
-                         const std::vector<std::uint64_t>& controls = {}) {
-    return internal::ParamGateFactory::create_gate<internal::ParamRYGateImpl>(
+template <std::floating_point Fp>
+inline ParamGate<Fp> ParamRY(std::uint64_t target,
+                             Fp param_coef = 1.,
+                             const std::vector<std::uint64_t>& controls = {}) {
+    return internal::ParamGateFactory::create_gate<internal::ParamRYGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), param_coef);
 }
-inline ParamGate ParamRZ(std::uint64_t target,
-                         double param_coef = 1.,
-                         const std::vector<std::uint64_t>& controls = {}) {
-    return internal::ParamGateFactory::create_gate<internal::ParamRZGateImpl>(
+template <std::floating_point Fp>
+inline ParamGate<Fp> ParamRZ(std::uint64_t target,
+                             Fp param_coef = 1.,
+                             const std::vector<std::uint64_t>& controls = {}) {
+    return internal::ParamGateFactory::create_gate<internal::ParamRZGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), param_coef);
 }
-inline ParamGate ParamPauliRotation(const PauliOperator& pauli,
-                                    double param_coef = 1.,
-                                    const std::vector<std::uint64_t>& controls = {}) {
-    return internal::ParamGateFactory::create_gate<internal::ParamPauliRotationGateImpl>(
+template <std::floating_point Fp>
+inline ParamGate<Fp> ParamPauliRotation(const PauliOperator<Fp>& pauli,
+                                        Fp param_coef = 1.,
+                                        const std::vector<std::uint64_t>& controls = {}) {
+    return internal::ParamGateFactory::create_gate<internal::ParamPauliRotationGateImpl<Fp>>(
         internal::vector_to_mask(controls), pauli, param_coef);
 }
-inline ParamGate ParamProbablistic(const std::vector<double>& distribution,
-                                   const std::vector<std::variant<Gate, ParamGate>>& gate_list) {
-    return internal::ParamGateFactory::create_gate<internal::ParamProbablisticGateImpl>(
+template <std::floating_point Fp>
+inline ParamGate<Fp> ParamProbablistic(
+    const std::vector<Fp>& distribution,
+    const std::vector<std::variant<Gate<Fp>, ParamGate<Fp>>>& gate_list) {
+    return internal::ParamGateFactory::create_gate<internal::ParamProbablisticGateImpl<Fp>>(
         distribution, gate_list);
 }
 }  // namespace gate
@@ -78,8 +84,8 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
               "Generate general ParamGate class instance of ParamProbablistic.");
     mgate.def(
         "ParamProbablistic",
-        [](const std::vector<std::pair<double, std::variant<Gate, ParamGate>>>& prob_gate_list) {
-            std::vector<double> distribution;
+        [](const std::vector<std::pair<Fp, std::variant<Gate, ParamGate>>>& prob_gate_list) {
+            std::vector<Fp> distribution;
             std::vector<std::variant<Gate, ParamGate>> gate_list;
             distribution.reserve(prob_gate_list.size());
             gate_list.reserve(prob_gate_list.size());

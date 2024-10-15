@@ -9,16 +9,14 @@
 
 namespace scaluq {
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class Operator {
 public:
     explicit Operator(std::uint64_t n_qubits) : _n_qubits(n_qubits) {}
 
     [[nodiscard]] inline bool is_hermitian() { return _is_hermitian; }
     [[nodiscard]] inline std::uint64_t n_qubits() { return _n_qubits; }
-    [[nodiscard]] inline const std::vector<PauliOperator<FloatType>>& terms() const {
-        return _terms;
-    }
+    [[nodiscard]] inline const std::vector<PauliOperator<Fp>>& terms() const { return _terms; }
     [[nodiscard]] std::string to_string() const {
         std::stringstream ss;
         for (auto itr = _terms.begin(); itr != _terms.end(); ++itr) {
@@ -30,10 +28,8 @@ public:
         return ss.str();
     }
 
-    void add_operator(const PauliOperator<FloatType>& mpt) {
-        add_operator(PauliOperator<FloatType>{mpt});
-    }
-    void add_operator(PauliOperator<FloatType>&& mpt) {
+    void add_operator(const PauliOperator<Fp>& mpt) { add_operator(PauliOperator<Fp>{mpt}); }
+    void add_operator(PauliOperator<Fp>&& mpt) {
         _is_hermitian &= mpt.coef().imag() == 0.;
         if (![&] {
                 const auto& target_list = mpt.target_qubit_list();
@@ -84,24 +80,24 @@ public:
     // not implemented yet
     void get_matrix() const;
 
-    void apply_to_state(StateVector<FloatType>& state_vector) const {
-        StateVector<FloatType> res(state_vector.n_qubits());
+    void apply_to_state(StateVector<Fp>& state_vector) const {
+        StateVector<Fp> res(state_vector.n_qubits());
         res.set_zero_norm_state();
         for (const auto& term : _terms) {
-            StateVector<double> tmp = state_vector.copy();
+            StateVector<Fp> tmp = state_vector.copy();
             term.apply_to_state(tmp);
             res.add_state_vector_with_coef(1, tmp);
         }
         state_vector = res;
     }
 
-    [[nodiscard]] Complex get_expectation_value(const StateVector<FloatType>& state_vector) const {
+    [[nodiscard]] Complex get_expectation_value(const StateVector<Fp>& state_vector) const {
         if (_n_qubits > state_vector.n_qubits()) {
             throw std::runtime_error(
                 "Operator::get_expectation_value: n_qubits of state_vector is too small");
         }
         std::uint64_t nterms = _terms.size();
-        Kokkos::View<const PauliOperator<FloatType>*,
+        Kokkos::View<const PauliOperator<Fp>*,
                      Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>
             terms_view(_terms.data(), nterms);
@@ -112,17 +108,17 @@ public:
             Kokkos::DefaultHostExecutionSpace(),
             terms_view,
             bmasks_host,
-            [](const PauliOperator<FloatType>& pauli) { return pauli._ptr->_bit_flip_mask; });
+            [](const PauliOperator<Fp>& pauli) { return pauli._ptr->_bit_flip_mask; });
         Kokkos::Experimental::transform(
             Kokkos::DefaultHostExecutionSpace(),
             terms_view,
             pmasks_host,
-            [](const PauliOperator<FloatType>& pauli) { return pauli._ptr->_phase_flip_mask; });
+            [](const PauliOperator<Fp>& pauli) { return pauli._ptr->_phase_flip_mask; });
         Kokkos::Experimental::transform(
             Kokkos::DefaultHostExecutionSpace(),
             terms_view,
             coefs_host,
-            [](const PauliOperator<FloatType>& pauli) { return pauli._ptr->_coef; });
+            [](const PauliOperator<Fp>& pauli) { return pauli._ptr->_coef; });
         Kokkos::View<std::uint64_t*> bmasks("bmasks", nterms);
         Kokkos::View<std::uint64_t*> pmasks("pmasks", nterms);
         Kokkos::View<Complex*> coefs("coefs", nterms);
@@ -139,14 +135,14 @@ public:
                 Complex coef = coefs[term_id];
                 if (bit_flip_mask == 0) {
                     std::uint64_t state_idx1 = state_idx << 1;
-                    double tmp1 = (Kokkos::conj(state_vector._raw[state_idx1]) *
-                                   state_vector._raw[state_idx1])
-                                      .real();
+                    Fp tmp1 = (Kokkos::conj(state_vector._raw[state_idx1]) *
+                               state_vector._raw[state_idx1])
+                                  .real();
                     if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
                     std::uint64_t state_idx2 = state_idx1 | 1;
-                    double tmp2 = (Kokkos::conj(state_vector._raw[state_idx2]) *
-                                   state_vector._raw[state_idx2])
-                                      .real();
+                    Fp tmp2 = (Kokkos::conj(state_vector._raw[state_idx2]) *
+                               state_vector._raw[state_idx2])
+                                  .real();
                     if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
                     res_lcl += coef * (tmp1 + tmp2);
                 } else {
@@ -157,7 +153,7 @@ public:
                     Complex global_phase = internal::PHASE_90ROT()[global_phase_90rot_count % 4];
                     std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
                     std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-                    double tmp =
+                    Fp tmp =
                         Kokkos::real(state_vector._raw[basis_0] *
                                      Kokkos::conj(state_vector._raw[basis_1]) * global_phase * 2.);
                     if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
@@ -169,9 +165,8 @@ public:
         return res;
     }
 
-    [[nodiscard]] Complex get_transition_amplitude(
-        const StateVector<FloatType>& state_vector_bra,
-        const StateVector<FloatType>& state_vector_ket) const {
+    [[nodiscard]] Complex get_transition_amplitude(const StateVector<Fp>& state_vector_bra,
+                                                   const StateVector<Fp>& state_vector_ket) const {
         if (state_vector_bra.n_qubits() != state_vector_ket.n_qubits()) {
             throw std::runtime_error(
                 "Operator::get_transition_amplitude: n_qubits of state_vector_bra and "
@@ -186,20 +181,18 @@ public:
         std::vector<std::uint64_t> bmasks_vector(nterms);
         std::vector<std::uint64_t> pmasks_vector(nterms);
         std::vector<Complex> coefs_vector(nterms);
-        std::transform(
-            _terms.begin(),
-            _terms.end(),
-            bmasks_vector.begin(),
-            [](const PauliOperator<FloatType>& pauli) { return pauli._ptr->_bit_flip_mask; });
-        std::transform(
-            _terms.begin(),
-            _terms.end(),
-            pmasks_vector.begin(),
-            [](const PauliOperator<FloatType>& pauli) { return pauli._ptr->_phase_flip_mask; });
         std::transform(_terms.begin(),
                        _terms.end(),
-                       coefs_vector.begin(),
-                       [](const PauliOperator<FloatType>& pauli) { return pauli._ptr->_coef; });
+                       bmasks_vector.begin(),
+                       [](const PauliOperator<Fp>& pauli) { return pauli._ptr->_bit_flip_mask; });
+        std::transform(_terms.begin(),
+                       _terms.end(),
+                       pmasks_vector.begin(),
+                       [](const PauliOperator<Fp>& pauli) { return pauli._ptr->_phase_flip_mask; });
+        std::transform(
+            _terms.begin(), _terms.end(), coefs_vector.begin(), [](const PauliOperator<Fp>& pauli) {
+                return pauli._ptr->_coef;
+            });
         Kokkos::View<std::uint64_t*> bmasks =
             internal::convert_host_vector_to_device_view(bmasks_vector);
         Kokkos::View<std::uint64_t*> pmasks =
@@ -247,10 +240,11 @@ public:
 
     // not implemented yet
     [[nodiscard]] Complex solve_gound_state_eigenvalue_by_arnoldi_method(
-        const StateVector<FloatType>& state, std::uint64_t iter_count, Complex mu = 0.) const;
+        const StateVector<Fp>& state, std::uint64_t iter_count, Complex mu = 0.) const;
     // not implemented yet
-    [[nodiscard]] Complex solve_gound_state_eigenvalue_by_power_method(
-        const StateVector<FloatType>& state, std::uint64_t iter_count, Complex mu = 0.) const;
+    [[nodiscard]] Complex solve_gound_state_eigenvalue_by_power_method(const StateVector<Fp>& state,
+                                                                       std::uint64_t iter_count,
+                                                                       Complex mu = 0.) const;
 
     Operator& operator*=(Complex coef) {
         for (auto& pauli : _terms) {
@@ -286,29 +280,23 @@ public:
         return ret;
     }
     Operator& operator*=(const Operator& target) { return *this = *this * target; }
-    Operator& operator+=(const PauliOperator<FloatType>& pauli) {
+    Operator& operator+=(const PauliOperator<Fp>& pauli) {
         add_operator(pauli);
         return *this;
     }
-    Operator operator+(const PauliOperator<FloatType>& pauli) const {
-        return Operator(*this) += pauli;
-    }
-    Operator& operator-=(const PauliOperator<FloatType>& pauli) { return *this += pauli * -1; }
-    Operator operator-(const PauliOperator<FloatType>& pauli) const {
-        return Operator(*this) -= pauli;
-    }
-    Operator& operator*=(const PauliOperator<FloatType>& pauli) {
+    Operator operator+(const PauliOperator<Fp>& pauli) const { return Operator(*this) += pauli; }
+    Operator& operator-=(const PauliOperator<Fp>& pauli) { return *this += pauli * -1; }
+    Operator operator-(const PauliOperator<Fp>& pauli) const { return Operator(*this) -= pauli; }
+    Operator& operator*=(const PauliOperator<Fp>& pauli) {
         for (auto& pauli1 : _terms) {
             pauli1 = pauli1 * pauli;
         }
         return *this;
     }
-    Operator operator*(const PauliOperator<FloatType>& pauli) const {
-        return Operator(*this) *= pauli;
-    }
+    Operator operator*(const PauliOperator<Fp>& pauli) const { return Operator(*this) *= pauli; }
 
 private:
-    std::vector<PauliOperator<FloatType>> _terms;
+    std::vector<PauliOperator<Fp>> _terms;
     std::uint64_t _n_qubits;
     bool _is_hermitian = true;
 };

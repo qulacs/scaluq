@@ -6,16 +6,16 @@
 namespace scaluq {
 namespace internal {
 
-template <std::floating_point FloatType>
-class ProbablisticGateImpl : public GateBase<FloatType> {
-    std::vector<FloatType> _distribution;
-    std::vector<FloatType> _cumlative_distribution;
-    std::vector<std::shared_ptr<const GateBase<FloatType>>> _gate_list;
+template <std::floating_point Fp>
+class ProbablisticGateImpl : public GateBase<Fp> {
+    std::vector<Fp> _distribution;
+    std::vector<Fp> _cumlative_distribution;
+    std::vector<std::shared_ptr<const GateBase<Fp>>> _gate_list;
 
 public:
-    ProbablisticGateImpl(const std::vector<FloatType>& distribution,
-                         const std::vector<std::shared_ptr<const GateBase<FloatType>>>& gate_list)
-        : GateBase<FloatType>(0, 0), _distribution(distribution), _gate_list(gate_list) {
+    ProbablisticGateImpl(const std::vector<Fp>& distribution,
+                         const std::vector<std::shared_ptr<const GateBase<Fp>>>& gate_list)
+        : GateBase<Fp>(0, 0), _distribution(distribution), _gate_list(gate_list) {
         std::uint64_t n = distribution.size();
         if (n == 0) {
             throw std::runtime_error("At least one gate is required.");
@@ -30,10 +30,8 @@ public:
             throw std::runtime_error("Sum of distribution must be equal to 1.");
         }
     }
-    const std::vector<std::shared_ptr<const GateBase<FloatType>>>& gate_list() const {
-        return _gate_list;
-    }
-    const std::vector<FloatType>& distribution() const { return _distribution; }
+    const std::vector<std::shared_ptr<const GateBase<Fp>>>& gate_list() const { return _gate_list; }
+    const std::vector<Fp>& distribution() const { return _distribution; }
 
     std::vector<std::uint64_t> target_qubit_list() const override {
         throw std::runtime_error(
@@ -66,14 +64,13 @@ public:
             "ProbablisticGateImpl.");
     }
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
-        std::vector<std::shared_ptr<const GateBase<FloatType>>> inv_gate_list;
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        std::vector<std::shared_ptr<const GateBase<Fp>>> inv_gate_list;
         inv_gate_list.reserve(_gate_list.size());
-        std::ranges::transform(_gate_list,
-                               std::back_inserter(inv_gate_list),
-                               [](const std::shared_ptr<const GateBase<FloatType>>& gate) {
-                                   return gate->get_inverse();
-                               });
+        std::ranges::transform(
+            _gate_list,
+            std::back_inserter(inv_gate_list),
+            [](const std::shared_ptr<const GateBase<Fp>>& gate) { return gate->get_inverse(); });
         return std::make_shared<const ProbablisticGateImpl>(_distribution, inv_gate_list);
     }
     internal::ComplexMatrix get_matrix() const override {
@@ -82,9 +79,9 @@ public:
             "ProbablisticGateImpl.");
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         Random random;
-        FloatType r = random.uniform();
+        Fp r = random.uniform();
         std::uint64_t i = std::distance(_cumlative_distribution.begin(),
                                         std::ranges::upper_bound(_cumlative_distribution, r)) -
                           1;
@@ -106,8 +103,8 @@ public:
 };
 }  // namespace internal
 
-template <std::floating_point FloatType>
-using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl<FloatType>>;
+template <std::floating_point Fp>
+using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl<Fp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {

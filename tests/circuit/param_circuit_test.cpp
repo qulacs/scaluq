@@ -18,8 +18,8 @@ TEST(ParamCircuitTest, ApplyParamCircuit) {
     std::uint64_t n_qubits = 5;
     Random random;
     for ([[maybe_unused]] std::uint64_t repeat : std::views::iota(0, 10)) {
-        Circuit circuit(n_qubits);
-        Circuit pcircuit(n_qubits);
+        Circuit<double> circuit(n_qubits);
+        Circuit<double> pcircuit(n_qubits);
         constexpr std::uint64_t nparams = 5;
         std::array<std::string, nparams> pkeys = {};
         for (std::uint64_t pidx : std::views::iota(std::uint64_t{0}, nparams))
@@ -53,22 +53,23 @@ TEST(ParamCircuitTest, ApplyParamCircuit) {
                         target_vec.emplace_back(target);
                         pauli_id_vec.emplace_back(random.int64() % 4);
                     }
-                    PauliOperator pauli(target_vec, pauli_id_vec, 1.0);
-                    circuit.add_gate(gate::PauliRotation(pauli, coef * params[pidx]));
-                    pcircuit.add_param_gate(gate::ParamPauliRotation(pauli, coef), pkeys[pidx]);
+                    PauliOperator<double> pauli(target_vec, pauli_id_vec, 1.0);
+                    circuit.add_gate(gate::PauliRotation<double>(pauli, coef * params[pidx]));
+                    pcircuit.add_param_gate(gate::ParamPauliRotation<double>(pauli, coef),
+                                            pkeys[pidx]);
                 }
             } else {
                 std::uint64_t control = random.int32() % n_qubits;
                 std::uint64_t target = random.int32() % (n_qubits - 1);
                 if (target == control) target = n_qubits - 1;
-                circuit.add_gate(gate::CX(control, target));
-                pcircuit.add_gate(gate::CX(control, target));
+                circuit.add_gate(gate::CX<double>(control, target));
+                pcircuit.add_gate(gate::CX<double>(control, target));
             }
         };
         for ([[maybe_unused]] std::uint64_t _ : std::views::iota(0ULL, 20ULL)) {
             add_random_rotation_or_cnot();
         }
-        StateVector state = StateVector::Haar_random_state(n_qubits);
+        StateVector state = StateVector<double>::Haar_random_state(n_qubits);
         StateVector state_cp = state.copy();
         auto amplitudes_base = state.get_amplitudes();
         circuit.update_quantum_state(state);
@@ -92,11 +93,11 @@ TEST(ParamCircuitTest, ApplyParamCircuit) {
 }
 
 TEST(ParamCircuitTest, InsufficientParameterGiven) {
-    Circuit circuit(1);
-    circuit.add_param_gate(gate::ParamRX(0), "0");
-    circuit.add_param_gate(gate::ParamRX(0), "1");
-    circuit.add_param_gate(gate::ParamRX(0), "0");
-    StateVector state(1);
+    Circuit<double> circuit(1);
+    circuit.add_param_gate(gate::ParamRX<double>(0), "0");
+    circuit.add_param_gate(gate::ParamRX<double>(0), "1");
+    circuit.add_param_gate(gate::ParamRX<double>(0), "0");
+    StateVector<double> state(1);
     ASSERT_NO_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"1", 0}}));
     ASSERT_NO_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"1", 0}, {"2", 0}}));
     ASSERT_THROW(circuit.update_quantum_state(state), std::runtime_error);

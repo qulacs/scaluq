@@ -10,17 +10,17 @@
 
 namespace scaluq {
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class Operator;
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class PauliOperator {
-    friend class Operator<FloatType>;
+    friend class Operator<Fp>;
 
 public:
     class Data {
-        friend class PauliOperator<FloatType>;
-        friend class Operator<FloatType>;
+        friend class PauliOperator<Fp>;
+        friend class Operator<Fp>;
         std::vector<std::uint64_t> _target_qubit_list, _pauli_id_list;
         Complex _coef;
         std::uint64_t _bit_flip_mask, _phase_flip_mask;
@@ -182,7 +182,7 @@ public:
         return std::ranges::max(_ptr->_target_qubit_list) + 1;
     }
 
-    void apply_to_state(StateVector<FloatType>& state_vector) const {
+    void apply_to_state(StateVector<Fp>& state_vector) const {
         if (state_vector.n_qubits() < get_qubit_count()) {
             throw std::runtime_error(
                 "PauliOperator::apply_to_state: n_qubits of state_vector is too small to apply the "
@@ -192,7 +192,7 @@ public:
             0ULL, _ptr->_bit_flip_mask, _ptr->_phase_flip_mask, _ptr->_coef, state_vector);
     }
 
-    [[nodiscard]] Complex get_expectation_value(const StateVector<FloatType>& state_vector) const {
+    [[nodiscard]] Complex get_expectation_value(const StateVector<Fp>& state_vector) const {
         if (state_vector.n_qubits() < get_qubit_count()) {
             throw std::runtime_error(
                 "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to "
@@ -202,11 +202,11 @@ public:
         std::uint64_t bit_flip_mask = _ptr->_bit_flip_mask;
         std::uint64_t phase_flip_mask = _ptr->_phase_flip_mask;
         if (bit_flip_mask == 0) {
-            double res;
+            Fp res;
             Kokkos::parallel_reduce(
                 state_vector.dim(),
-                KOKKOS_LAMBDA(std::uint64_t state_idx, double& sum) {
-                    double tmp =
+                KOKKOS_LAMBDA(std::uint64_t state_idx, Fp & sum) {
+                    Fp tmp =
                         (Kokkos::conj(state_vector._raw[state_idx]) * state_vector._raw[state_idx])
                             .real();
                     if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
@@ -218,24 +218,22 @@ public:
         std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
         std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
         Complex global_phase = internal::PHASE_90ROT()[global_phase_90rot_count % 4];
-        double res;
+        Fp res;
         Kokkos::parallel_reduce(
             state_vector.dim() >> 1,
-            KOKKOS_LAMBDA(std::uint64_t state_idx, double& sum) {
+            KOKKOS_LAMBDA(std::uint64_t state_idx, Fp & sum) {
                 std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
                 std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-                double tmp =
-                    Kokkos::real(state_vector._raw[basis_0] *
-                                 Kokkos::conj(state_vector._raw[basis_1]) * global_phase * 2.);
+                Fp tmp = Kokkos::real(state_vector._raw[basis_0] *
+                                      Kokkos::conj(state_vector._raw[basis_1]) * global_phase * 2.);
                 if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
                 sum += tmp;
             },
             res);
         return _ptr->_coef * res;
     }
-    [[nodiscard]] Complex get_transition_amplitude(
-        const StateVector<FloatType>& state_vector_bra,
-        const StateVector<FloatType>& state_vector_ket) const {
+    [[nodiscard]] Complex get_transition_amplitude(const StateVector<Fp>& state_vector_bra,
+                                                   const StateVector<Fp>& state_vector_ket) const {
         if (state_vector_bra.n_qubits() != state_vector_ket.n_qubits()) {
             throw std::runtime_error(
                 "state_vector_bra must have same n_qubits to state_vector_ket.");

@@ -9,207 +9,199 @@ namespace scaluq {
 namespace internal {
 class GateFactory {
 public:
-    template <std::floating_point FloatType, GateImpl T, typename... Args>
-    static Gate<FloatType> create_gate(Args... args) {
+    template <GateImpl T, typename... Args>
+    static Gate<typename T::Fp> create_gate(Args... args) {
         return {std::make_shared<const T>(args...)};
     }
 };
 }  // namespace internal
 namespace gate {
 
-template <std::floating_point FloatType>
-inline Gate<FloatType> I() {
-    return internal::GateFactory::create_gate<FloatType, internal::IGateImpl<FloatType>>();
+template <std::floating_point Fp>
+inline Gate<Fp> I() {
+    return internal::GateFactory::create_gate<internal::IGateImpl<Fp>>();
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> GlobalPhase(FloatType phase,
-                                   const std::vector<std::uint64_t>& control_qubits = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::GlobalPhaseGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> GlobalPhase(Fp phase, const std::vector<std::uint64_t>& control_qubits = {}) {
+    return internal::GateFactory::create_gate<internal::GlobalPhaseGateImpl<Fp>>(
         internal::vector_to_mask(control_qubits), phase);
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> X(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::XGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> X(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::XGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> Y(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::YGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> Y(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::YGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> Z(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::ZGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> Z(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::ZGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> H(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::HGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> H(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::HGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> S(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::SGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> S(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::SGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> Sdag(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::SdagGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> Sdag(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::SdagGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> T(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::TGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> T(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::TGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> Tdag(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::TdagGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> Tdag(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::TdagGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> SqrtX(std::uint64_t target,
-                             const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::SqrtXGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> SqrtX(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::SqrtXGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> SqrtXdag(std::uint64_t target,
-                                const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::SqrtXdagGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> SqrtXdag(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::SqrtXdagGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> SqrtY(std::uint64_t target,
-                             const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::SqrtYGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> SqrtY(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::SqrtYGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> SqrtYdag(std::uint64_t target,
-                                const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::SqrtYdagGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> SqrtYdag(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::SqrtYdagGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> P0(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::P0GateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> P0(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::P0GateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> P1(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::P1GateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> P1(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::P1GateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> RX(std::uint64_t target,
-                          FloatType angle,
-                          const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::RXGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> RX(std::uint64_t target,
+                   Fp angle,
+                   const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::RXGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), angle);
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> RY(std::uint64_t target,
-                          FloatType angle,
-                          const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::RYGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> RY(std::uint64_t target,
+                   Fp angle,
+                   const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::RYGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), angle);
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> RZ(std::uint64_t target,
-                          FloatType angle,
-                          const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::RZGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> RZ(std::uint64_t target,
+                   Fp angle,
+                   const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::RZGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), angle);
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> U1(std::uint64_t target,
-                          FloatType lambda,
-                          const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::U1GateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> U1(std::uint64_t target,
+                   Fp lambda,
+                   const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::U1GateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), lambda);
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> U2(std::uint64_t target,
-                          FloatType phi,
-                          FloatType lambda,
-                          const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::U2GateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> U2(std::uint64_t target,
+                   Fp phi,
+                   Fp lambda,
+                   const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::U2GateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), phi, lambda);
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> U3(std::uint64_t target,
-                          FloatType theta,
-                          FloatType phi,
-                          FloatType lambda,
-                          const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::U3GateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> U3(std::uint64_t target,
+                   Fp theta,
+                   Fp phi,
+                   Fp lambda,
+                   const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::U3GateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), theta, phi, lambda);
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> OneTargetMatrix(std::uint64_t target,
-                                       const std::array<std::array<Complex, 2>, 2>& matrix,
-                                       const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType,
-                                              internal::OneTargetMatrixGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> OneTargetMatrix(std::uint64_t target,
+                                const std::array<std::array<Complex, 2>, 2>& matrix,
+                                const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::OneTargetMatrixGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), matrix);
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> CX(std::uint64_t control, std::uint64_t target) {
-    return internal::GateFactory::create_gate<FloatType, internal::XGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> CX(std::uint64_t control, std::uint64_t target) {
+    return internal::GateFactory::create_gate<internal::XGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask({control}));
 }
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline auto& CNot = CX;
-template <std::floating_point FloatType>
-inline Gate<FloatType> CZ(std::uint64_t control, std::uint64_t target) {
-    return internal::GateFactory::create_gate<FloatType, internal::ZGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> CZ(std::uint64_t control, std::uint64_t target) {
+    return internal::GateFactory::create_gate<internal::ZGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask({control}));
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> CCX(std::uint64_t control1, std::uint64_t control2, std::uint64_t target) {
-    return internal::GateFactory::create_gate<FloatType, internal::XGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> CCX(std::uint64_t control1, std::uint64_t control2, std::uint64_t target) {
+    return internal::GateFactory::create_gate<internal::XGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask({control1, control2}));
 }
-template <std::floating_point FloatType>
-inline auto& Toffoli = CCX<FloatType>;
-template <std::floating_point FloatType>
-inline auto& CCNot = CCX<FloatType>;
-template <std::floating_point FloatType>
-inline Gate<FloatType> Swap(std::uint64_t target1,
-                            std::uint64_t target2,
-                            const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType, internal::SwapGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline auto& Toffoli = CCX<Fp>;
+template <std::floating_point Fp>
+inline auto& CCNot = CCX<Fp>;
+template <std::floating_point Fp>
+inline Gate<Fp> Swap(std::uint64_t target1,
+                     std::uint64_t target2,
+                     const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::SwapGateImpl<Fp>>(
         internal::vector_to_mask({target1, target2}), internal::vector_to_mask(controls));
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> TwoTargetMatrix(std::uint64_t target1,
-                                       std::uint64_t target2,
-                                       const std::array<std::array<Complex, 4>, 4>& matrix,
-                                       const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType,
-                                              internal::TwoTargetMatrixGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> TwoTargetMatrix(std::uint64_t target1,
+                                std::uint64_t target2,
+                                const std::array<std::array<Complex, 4>, 4>& matrix,
+                                const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::TwoTargetMatrixGateImpl<Fp>>(
         internal::vector_to_mask({target1, target2}), internal::vector_to_mask(controls), matrix);
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> Pauli(const PauliOperator<FloatType>& pauli,
-                             const std::vector<std::uint64_t>& controls = {}) {
+template <std::floating_point Fp>
+inline Gate<Fp> Pauli(const PauliOperator<Fp>& pauli,
+                      const std::vector<std::uint64_t>& controls = {}) {
     auto tar = pauli.target_qubit_list();
-    return internal::GateFactory::create_gate<FloatType, internal::PauliGateImpl<FloatType>>(
+    return internal::GateFactory::create_gate<internal::PauliGateImpl<Fp>>(
         internal::vector_to_mask(controls), pauli);
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> PauliRotation(const PauliOperator<FloatType>& pauli,
-                                     FloatType angle,
-                                     const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<FloatType,
-                                              internal::PauliRotationGateImpl<FloatType>>(
+template <std::floating_point Fp>
+inline Gate<Fp> PauliRotation(const PauliOperator<Fp>& pauli,
+                              Fp angle,
+                              const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::PauliRotationGateImpl<Fp>>(
         internal::vector_to_mask(controls), pauli, angle);
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> DenseMatrix(const std::vector<std::uint64_t>& targets,
-                                   const internal::ComplexMatrix& matrix,
-                                   const std::vector<std::uint64_t>& controls = {}) {
+template <std::floating_point Fp>
+inline Gate<Fp> DenseMatrix(const std::vector<std::uint64_t>& targets,
+                            const internal::ComplexMatrix& matrix,
+                            const std::vector<std::uint64_t>& controls = {}) {
     std::uint64_t nqubits = targets.size();
     std::uint64_t dim = 1ULL << nqubits;
     if (static_cast<std::uint64_t>(matrix.rows()) != dim ||
@@ -218,34 +210,34 @@ inline Gate<FloatType> DenseMatrix(const std::vector<std::uint64_t>& targets,
             "gate::DenseMatrix(const std::vector<std::uint64_t>&, const internal::ComplexMatrix&): "
             "matrix size must be 2^{n_qubits} x 2^{n_qubits}.");
     }
-    if (targets.size() == 0) return I<FloatType>();
+    if (targets.size() == 0) return I<Fp>();
     if (targets.size() == 1) {
-        return OneTargetMatrix<FloatType>(
+        return OneTargetMatrix<Fp>(
             targets[0],
             std::array{std::array{Complex(matrix(0, 0)), Complex(matrix(0, 1))},
                        std::array{Complex(matrix(1, 0)), Complex(matrix(1, 1))}},
             controls);
     }
     if (targets.size() == 2) {
-        return TwoTargetMatrix<FloatType>(targets[0],
-                                          targets[1],
-                                          std::array{std::array{Complex(matrix(0, 0)),
-                                                                Complex(matrix(0, 1)),
-                                                                Complex(matrix(0, 2)),
-                                                                Complex(matrix(0, 3))},
-                                                     std::array{Complex(matrix(1, 0)),
-                                                                Complex(matrix(1, 1)),
-                                                                Complex(matrix(1, 2)),
-                                                                Complex(matrix(1, 3))},
-                                                     std::array{Complex(matrix(2, 0)),
-                                                                Complex(matrix(2, 1)),
-                                                                Complex(matrix(2, 2)),
-                                                                Complex(matrix(2, 3))},
-                                                     std::array{Complex(matrix(3, 0)),
-                                                                Complex(matrix(3, 1)),
-                                                                Complex(matrix(3, 2)),
-                                                                Complex(matrix(3, 3))}},
-                                          controls);
+        return TwoTargetMatrix<Fp>(targets[0],
+                                   targets[1],
+                                   std::array{std::array{Complex(matrix(0, 0)),
+                                                         Complex(matrix(0, 1)),
+                                                         Complex(matrix(0, 2)),
+                                                         Complex(matrix(0, 3))},
+                                              std::array{Complex(matrix(1, 0)),
+                                                         Complex(matrix(1, 1)),
+                                                         Complex(matrix(1, 2)),
+                                                         Complex(matrix(1, 3))},
+                                              std::array{Complex(matrix(2, 0)),
+                                                         Complex(matrix(2, 1)),
+                                                         Complex(matrix(2, 2)),
+                                                         Complex(matrix(2, 3))},
+                                              std::array{Complex(matrix(3, 0)),
+                                                         Complex(matrix(3, 1)),
+                                                         Complex(matrix(3, 2)),
+                                                         Complex(matrix(3, 3))}},
+                                   controls);
     }
     throw std::runtime_error(
         "gate::DenseMatrix(const std::vector<std::uint64_t>&, const internal::ComplexMatrix&): "
@@ -254,11 +246,11 @@ inline Gate<FloatType> DenseMatrix(const std::vector<std::uint64_t>& targets,
         "more "
         "than two qubits is not implemented yet.");
 }
-template <std::floating_point FloatType>
-inline Gate<FloatType> Probablistic(const std::vector<FloatType>& distribution,
-                                    const std::vector<Gate<FloatType>>& gate_list) {
-    return internal::GateFactory::create_gate<FloatType, internal::ProbablisticGateImpl<FloatType>>(
-        distribution, gate_list);
+template <std::floating_point Fp>
+inline Gate<Fp> Probablistic(const std::vector<Fp>& distribution,
+                             const std::vector<Gate<Fp>>& gate_list) {
+    return internal::GateFactory::create_gate<internal::ProbablisticGateImpl<Fp>>(distribution,
+                                                                                  gate_list);
 }
 }  // namespace gate
 

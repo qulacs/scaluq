@@ -5,12 +5,12 @@
 
 namespace scaluq::internal {
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t bit_flip_mask,
                  std::uint64_t phase_flip_mask,
                  Complex coef,
-                 StateVector<FloatType>& state_vector) {
+                 StateVector<Fp>& state_vector) {
     if (bit_flip_mask == 0) {
         Kokkos::parallel_for(
             state_vector.dim() >> std::popcount(control_mask), KOKKOS_LAMBDA(std::uint64_t i) {
@@ -43,13 +43,13 @@ void apply_pauli(std::uint64_t control_mask,
     Kokkos::fence();
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t bit_flip_mask,
                           std::uint64_t phase_flip_mask,
                           Complex coef,
-                          double angle,
-                          StateVector<FloatType>& state_vector) {
+                          Fp angle,
+                          StateVector<Fp>& state_vector) {
     std::uint64_t global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     Complex true_angle = angle * coef;
     const Complex cosval = Kokkos::cos(-true_angle / 2);

@@ -6,19 +6,19 @@
 namespace scaluq {
 namespace internal {
 
-template <std::floating_point FloatType>
-class IGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class IGateImpl : public GateBase<Fp> {
 public:
-    IGateImpl() : GateBase<FloatType>(0, 0) {}
+    IGateImpl() : GateBase<Fp>(0, 0) {}
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return this->shared_from_this();
     }
     internal::ComplexMatrix get_matrix() const override {
         return internal::ComplexMatrix::Identity(1, 1);
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         i_gate(this->_target_mask, this->_control_mask, state_vector);
     }
 
@@ -30,25 +30,25 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class GlobalPhaseGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class GlobalPhaseGateImpl : public GateBase<Fp> {
 protected:
-    double _phase;
+    Fp _phase;
 
 public:
-    GlobalPhaseGateImpl(std::uint64_t control_mask, double phase)
-        : GateBase<FloatType>(0, control_mask), _phase(phase){};
+    GlobalPhaseGateImpl(std::uint64_t control_mask, Fp phase)
+        : GateBase<Fp>(0, control_mask), _phase(phase){};
 
-    [[nodiscard]] double phase() const { return _phase; }
+    [[nodiscard]] Fp phase() const { return _phase; }
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
-        return std::make_shared<const GlobalPhaseGateImpl<FloatType>>(this->_control_mask, -_phase);
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        return std::make_shared<const GlobalPhaseGateImpl<Fp>>(this->_control_mask, -_phase);
     }
     internal::ComplexMatrix get_matrix() const override {
-        return internal::ComplexMatrix::Identity(1, 1) * std::exp(std::complex<double>(0, _phase));
+        return internal::ComplexMatrix::Identity(1, 1) * std::exp(std::complex<Fp>(0, _phase));
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         global_phase_gate(this->_target_mask, this->_control_mask, _phase, state_vector);
     }
@@ -62,24 +62,24 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class RotationGateBase : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class RotationGateBase : public GateBase<Fp> {
 protected:
-    double _angle;
+    Fp _angle;
 
 public:
-    RotationGateBase(std::uint64_t target_mask, std::uint64_t control_mask, double angle)
-        : GateBase<FloatType>(target_mask, control_mask), _angle(angle) {}
+    RotationGateBase(std::uint64_t target_mask, std::uint64_t control_mask, Fp angle)
+        : GateBase<Fp>(target_mask, control_mask), _angle(angle) {}
 
-    double angle() const { return _angle; }
+    Fp angle() const { return _angle; }
 };
 
-template <std::floating_point FloatType>
-class XGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class XGateImpl : public GateBase<Fp> {
 public:
-    using GateBase<FloatType>::GateBase;
+    using GateBase<Fp>::GateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return this->shared_from_this();
     }
     internal::ComplexMatrix get_matrix() const override {
@@ -88,7 +88,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         x_gate(this->_target_mask, this->_control_mask, state_vector);
     }
@@ -101,12 +101,12 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class YGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class YGateImpl : public GateBase<Fp> {
 public:
-    using GateBase<FloatType>::GateBase;
+    using GateBase<Fp>::GateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return this->shared_from_this();
     }
     internal::ComplexMatrix get_matrix() const override {
@@ -115,7 +115,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         y_gate(this->_target_mask, this->_control_mask, state_vector);
     }
@@ -128,12 +128,12 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class ZGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class ZGateImpl : public GateBase<Fp> {
 public:
-    using GateBase<FloatType>::GateBase;
+    using GateBase<Fp>::GateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return this->shared_from_this();
     }
     internal::ComplexMatrix get_matrix() const override {
@@ -142,7 +142,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         z_gate(this->_target_mask, this->_control_mask, state_vector);
     }
@@ -155,12 +155,12 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class HGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class HGateImpl : public GateBase<Fp> {
 public:
-    using GateBase<FloatType>::GateBase;
+    using GateBase<Fp>::GateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return this->shared_from_this();
     }
     internal::ComplexMatrix get_matrix() const override {
@@ -170,7 +170,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         h_gate(this->_target_mask, this->_control_mask, state_vector);
     }
@@ -183,31 +183,30 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class SGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class SdagGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class TGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class TdagGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class SqrtXGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class SqrtXdagGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class SqrtYGateImpl;
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class SqrtYdagGateImpl;
 
-template <std::floating_point FloatType>
-class SGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class SGateImpl : public GateBase<Fp> {
 public:
-    using GateBase<FloatType>::GateBase;
+    using GateBase<Fp>::GateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
-        return std::make_shared<const SdagGateImpl<FloatType>>(this->_target_mask,
-                                                               this->_control_mask);
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        return std::make_shared<const SdagGateImpl<Fp>>(this->_target_mask, this->_control_mask);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
@@ -215,7 +214,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         s_gate(this->_target_mask, this->_control_mask, state_vector);
     }
@@ -228,14 +227,13 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class SdagGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class SdagGateImpl : public GateBase<Fp> {
 public:
-    using GateBase<FloatType>::GateBase;
+    using GateBase<Fp>::GateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
-        return std::make_shared<const SGateImpl<FloatType>>(this->_target_mask,
-                                                            this->_control_mask);
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        return std::make_shared<const SGateImpl<Fp>>(this->_target_mask, this->_control_mask);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
@@ -243,7 +241,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         sdag_gate(this->_target_mask, this->_control_mask, state_vector);
     }
@@ -256,14 +254,13 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class TGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class TGateImpl : public GateBase<Fp> {
 public:
-    using GateBase<FloatType>::GateBase;
+    using GateBase<Fp>::GateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
-        return std::make_shared<const TdagGateImpl<FloatType>>(this->_target_mask,
-                                                               this->_control_mask);
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        return std::make_shared<const TdagGateImpl<Fp>>(this->_target_mask, this->_control_mask);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
@@ -271,7 +268,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         t_gate(this->_target_mask, this->_control_mask, state_vector);
     }
@@ -284,14 +281,13 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class TdagGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class TdagGateImpl : public GateBase<Fp> {
 public:
-    using GateBase<FloatType>::GateBase;
+    using GateBase<Fp>::GateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
-        return std::make_shared<const TGateImpl<FloatType>>(this->_target_mask,
-                                                            this->_control_mask);
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        return std::make_shared<const TGateImpl<Fp>>(this->_target_mask, this->_control_mask);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
@@ -299,7 +295,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         tdag_gate(this->_target_mask, this->_control_mask, state_vector);
     }
@@ -312,14 +308,14 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class SqrtXGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class SqrtXGateImpl : public GateBase<Fp> {
 public:
-    using GateBase<FloatType>::GateBase;
+    using GateBase<Fp>::GateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
-        return std::make_shared<const SqrtXdagGateImpl<FloatType>>(this->_target_mask,
-                                                                   this->_control_mask);
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        return std::make_shared<const SqrtXdagGateImpl<Fp>>(this->_target_mask,
+                                                            this->_control_mask);
     }
 
     internal::ComplexMatrix get_matrix() const override {
@@ -328,7 +324,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         sqrtx_gate(this->_target_mask, this->_control_mask, state_vector);
     }
@@ -341,14 +337,13 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class SqrtXdagGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class SqrtXdagGateImpl : public GateBase<Fp> {
 public:
-    using GateBase<FloatType>::GateBase;
+    using GateBase<Fp>::GateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
-        return std::make_shared<const SqrtXGateImpl<FloatType>>(this->_target_mask,
-                                                                this->_control_mask);
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        return std::make_shared<const SqrtXGateImpl<Fp>>(this->_target_mask, this->_control_mask);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
@@ -356,7 +351,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         sqrtxdag_gate(this->_target_mask, this->_control_mask, state_vector);
     }
@@ -369,14 +364,14 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class SqrtYGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class SqrtYGateImpl : public GateBase<Fp> {
 public:
-    using GateBase<FloatType>::GateBase;
+    using GateBase<Fp>::GateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
-        return std::make_shared<const SqrtYdagGateImpl<FloatType>>(this->_target_mask,
-                                                                   this->_control_mask);
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        return std::make_shared<const SqrtYdagGateImpl<Fp>>(this->_target_mask,
+                                                            this->_control_mask);
     }
 
     internal::ComplexMatrix get_matrix() const override {
@@ -385,7 +380,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         sqrty_gate(this->_target_mask, this->_control_mask, state_vector);
     }
@@ -398,14 +393,13 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class SqrtYdagGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class SqrtYdagGateImpl : public GateBase<Fp> {
 public:
-    using GateBase<FloatType>::GateBase;
+    using GateBase<Fp>::GateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
-        return std::make_shared<const SqrtYGateImpl<FloatType>>(this->_target_mask,
-                                                                this->_control_mask);
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        return std::make_shared<const SqrtYGateImpl<Fp>>(this->_target_mask, this->_control_mask);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
@@ -413,7 +407,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         sqrtydag_gate(this->_target_mask, this->_control_mask, state_vector);
     }
@@ -426,12 +420,12 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class P0GateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class P0GateImpl : public GateBase<Fp> {
 public:
-    using GateBase<FloatType>::GateBase;
+    using GateBase<Fp>::GateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         throw std::runtime_error("P0::get_inverse: Projection gate doesn't have inverse gate");
     }
     internal::ComplexMatrix get_matrix() const override {
@@ -440,7 +434,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         p0_gate(this->_target_mask, this->_control_mask, state_vector);
     }
@@ -453,12 +447,12 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class P1GateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class P1GateImpl : public GateBase<Fp> {
 public:
-    using GateBase<FloatType>::GateBase;
+    using GateBase<Fp>::GateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         throw std::runtime_error("P1::get_inverse: Projection gate doesn't have inverse gate");
     }
     internal::ComplexMatrix get_matrix() const override {
@@ -467,7 +461,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         p1_gate(this->_target_mask, this->_control_mask, state_vector);
     }
@@ -480,13 +474,13 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class RXGateImpl : public RotationGateBase<FloatType> {
+template <std::floating_point Fp>
+class RXGateImpl : public RotationGateBase<Fp> {
 public:
-    using RotationGateBase<FloatType>::RotationGateBase;
+    using RotationGateBase<Fp>::RotationGateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
-        return std::make_shared<const RXGateImpl<FloatType>>(
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        return std::make_shared<const RXGateImpl<Fp>>(
             this->_target_mask, this->_control_mask, -this->_angle);
     }
     internal::ComplexMatrix get_matrix() const override {
@@ -496,7 +490,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         rx_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
     }
@@ -510,13 +504,13 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class RYGateImpl : public RotationGateBase<FloatType> {
+template <std::floating_point Fp>
+class RYGateImpl : public RotationGateBase<Fp> {
 public:
-    using RotationGateBase<FloatType>::RotationGateBase;
+    using RotationGateBase<Fp>::RotationGateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
-        return std::make_shared<const RYGateImpl<FloatType>>(
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        return std::make_shared<const RYGateImpl<Fp>>(
             this->_target_mask, this->_control_mask, -this->_angle);
     }
     internal::ComplexMatrix get_matrix() const override {
@@ -526,7 +520,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         ry_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
     }
@@ -540,13 +534,13 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class RZGateImpl : public RotationGateBase<FloatType> {
+template <std::floating_point Fp>
+class RZGateImpl : public RotationGateBase<Fp> {
 public:
-    using RotationGateBase<FloatType>::RotationGateBase;
+    using RotationGateBase<Fp>::RotationGateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
-        return std::make_shared<const RZGateImpl<FloatType>>(
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        return std::make_shared<const RZGateImpl<Fp>>(
             this->_target_mask, this->_control_mask, -this->_angle);
     }
     internal::ComplexMatrix get_matrix() const override {
@@ -555,7 +549,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         rz_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
     }
@@ -569,18 +563,18 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class U1GateImpl : public GateBase<FloatType> {
-    double _lambda;
+template <std::floating_point Fp>
+class U1GateImpl : public GateBase<Fp> {
+    Fp _lambda;
 
 public:
-    U1GateImpl(std::uint64_t target_mask, std::uint64_t control_mask, double lambda)
-        : GateBase<FloatType>(target_mask, control_mask), _lambda(lambda) {}
+    U1GateImpl(std::uint64_t target_mask, std::uint64_t control_mask, Fp lambda)
+        : GateBase<Fp>(target_mask, control_mask), _lambda(lambda) {}
 
-    double lambda() const { return _lambda; }
+    Fp lambda() const { return _lambda; }
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
-        return std::make_shared<const U1GateImpl<FloatType>>(
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        return std::make_shared<const U1GateImpl<Fp>>(
             this->_target_mask, this->_control_mask, -_lambda);
     }
     internal::ComplexMatrix get_matrix() const override {
@@ -589,7 +583,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         u1_gate(this->_target_mask, this->_control_mask, _lambda, state_vector);
     }
@@ -601,22 +595,22 @@ public:
         return ss.str();
     }
 };
-template <std::floating_point FloatType>
-class U2GateImpl : public GateBase<FloatType> {
-    double _phi, _lambda;
+template <std::floating_point Fp>
+class U2GateImpl : public GateBase<Fp> {
+    Fp _phi, _lambda;
 
 public:
-    U2GateImpl(std::uint64_t target_mask, std::uint64_t control_mask, double phi, double lambda)
-        : GateBase<FloatType>(target_mask, control_mask), _phi(phi), _lambda(lambda) {}
+    U2GateImpl(std::uint64_t target_mask, std::uint64_t control_mask, Fp phi, Fp lambda)
+        : GateBase<Fp>(target_mask, control_mask), _phi(phi), _lambda(lambda) {}
 
-    double phi() const { return _phi; }
-    double lambda() const { return _lambda; }
+    Fp phi() const { return _phi; }
+    Fp lambda() const { return _lambda; }
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
-        return std::make_shared<const U2GateImpl<FloatType>>(this->_target_mask,
-                                                             this->_control_mask,
-                                                             -_lambda - Kokkos::numbers::pi,
-                                                             -_phi + Kokkos::numbers::pi);
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        return std::make_shared<const U2GateImpl<Fp>>(this->_target_mask,
+                                                      this->_control_mask,
+                                                      -_lambda - Kokkos::numbers::pi,
+                                                      -_phi + Kokkos::numbers::pi);
     }
     internal::ComplexMatrix get_matrix() const override {
         internal::ComplexMatrix mat(2, 2);
@@ -627,7 +621,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         u2_gate(this->_target_mask, this->_control_mask, _phi, _lambda, state_vector);
     }
@@ -640,27 +634,20 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class U3GateImpl : public GateBase<FloatType> {
-    double _theta, _phi, _lambda;
+template <std::floating_point Fp>
+class U3GateImpl : public GateBase<Fp> {
+    Fp _theta, _phi, _lambda;
 
 public:
-    U3GateImpl(std::uint64_t target_mask,
-               std::uint64_t control_mask,
-               double theta,
-               double phi,
-               double lambda)
-        : GateBase<FloatType>(target_mask, control_mask),
-          _theta(theta),
-          _phi(phi),
-          _lambda(lambda) {}
+    U3GateImpl(std::uint64_t target_mask, std::uint64_t control_mask, Fp theta, Fp phi, Fp lambda)
+        : GateBase<Fp>(target_mask, control_mask), _theta(theta), _phi(phi), _lambda(lambda) {}
 
-    double theta() const { return _theta; }
-    double phi() const { return _phi; }
-    double lambda() const { return _lambda; }
+    Fp theta() const { return _theta; }
+    Fp phi() const { return _phi; }
+    Fp lambda() const { return _lambda; }
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
-        return std::make_shared<const U3GateImpl<FloatType>>(
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        return std::make_shared<const U3GateImpl<Fp>>(
             this->_target_mask, this->_control_mask, -_theta, -_lambda, -_phi);
     }
     internal::ComplexMatrix get_matrix() const override {
@@ -671,7 +658,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         u3_gate(this->_target_mask, this->_control_mask, _theta, _phi, _lambda, state_vector);
     }
@@ -684,12 +671,12 @@ public:
     }
 };
 
-template <std::floating_point FloatType>
-class SwapGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class SwapGateImpl : public GateBase<Fp> {
 public:
-    using GateBase<FloatType>::GateBase;
+    using GateBase<Fp>::GateBase;
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return this->shared_from_this();
     }
     internal::ComplexMatrix get_matrix() const override {
@@ -698,7 +685,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         swap_gate(this->_target_mask, this->_control_mask, state_vector);
     }
@@ -713,52 +700,52 @@ public:
 
 }  // namespace internal
 
-template <std::floating_point FloatType>
-using IGate = internal::GatePtr<internal::IGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using GlobalPhaseGate = internal::GatePtr<internal::GlobalPhaseGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using XGate = internal::GatePtr<internal::XGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using YGate = internal::GatePtr<internal::YGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using ZGate = internal::GatePtr<internal::ZGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using HGate = internal::GatePtr<internal::HGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using SGate = internal::GatePtr<internal::SGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using SdagGate = internal::GatePtr<internal::SdagGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using TGate = internal::GatePtr<internal::TGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using TdagGate = internal::GatePtr<internal::TdagGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using SqrtXGate = internal::GatePtr<internal::SqrtXGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using SqrtXdagGate = internal::GatePtr<internal::SqrtXdagGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using SqrtYGate = internal::GatePtr<internal::SqrtYGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using SqrtYdagGate = internal::GatePtr<internal::SqrtYdagGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using P0Gate = internal::GatePtr<internal::P0GateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using P1Gate = internal::GatePtr<internal::P1GateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using RXGate = internal::GatePtr<internal::RXGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using RYGate = internal::GatePtr<internal::RYGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using RZGate = internal::GatePtr<internal::RZGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using U1Gate = internal::GatePtr<internal::U1GateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using U2Gate = internal::GatePtr<internal::U2GateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using U3Gate = internal::GatePtr<internal::U3GateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using SwapGate = internal::GatePtr<internal::SwapGateImpl<FloatType>>;
+template <std::floating_point Fp>
+using IGate = internal::GatePtr<internal::IGateImpl<Fp>>;
+template <std::floating_point Fp>
+using GlobalPhaseGate = internal::GatePtr<internal::GlobalPhaseGateImpl<Fp>>;
+template <std::floating_point Fp>
+using XGate = internal::GatePtr<internal::XGateImpl<Fp>>;
+template <std::floating_point Fp>
+using YGate = internal::GatePtr<internal::YGateImpl<Fp>>;
+template <std::floating_point Fp>
+using ZGate = internal::GatePtr<internal::ZGateImpl<Fp>>;
+template <std::floating_point Fp>
+using HGate = internal::GatePtr<internal::HGateImpl<Fp>>;
+template <std::floating_point Fp>
+using SGate = internal::GatePtr<internal::SGateImpl<Fp>>;
+template <std::floating_point Fp>
+using SdagGate = internal::GatePtr<internal::SdagGateImpl<Fp>>;
+template <std::floating_point Fp>
+using TGate = internal::GatePtr<internal::TGateImpl<Fp>>;
+template <std::floating_point Fp>
+using TdagGate = internal::GatePtr<internal::TdagGateImpl<Fp>>;
+template <std::floating_point Fp>
+using SqrtXGate = internal::GatePtr<internal::SqrtXGateImpl<Fp>>;
+template <std::floating_point Fp>
+using SqrtXdagGate = internal::GatePtr<internal::SqrtXdagGateImpl<Fp>>;
+template <std::floating_point Fp>
+using SqrtYGate = internal::GatePtr<internal::SqrtYGateImpl<Fp>>;
+template <std::floating_point Fp>
+using SqrtYdagGate = internal::GatePtr<internal::SqrtYdagGateImpl<Fp>>;
+template <std::floating_point Fp>
+using P0Gate = internal::GatePtr<internal::P0GateImpl<Fp>>;
+template <std::floating_point Fp>
+using P1Gate = internal::GatePtr<internal::P1GateImpl<Fp>>;
+template <std::floating_point Fp>
+using RXGate = internal::GatePtr<internal::RXGateImpl<Fp>>;
+template <std::floating_point Fp>
+using RYGate = internal::GatePtr<internal::RYGateImpl<Fp>>;
+template <std::floating_point Fp>
+using RZGate = internal::GatePtr<internal::RZGateImpl<Fp>>;
+template <std::floating_point Fp>
+using U1Gate = internal::GatePtr<internal::U1GateImpl<Fp>>;
+template <std::floating_point Fp>
+using U2Gate = internal::GatePtr<internal::U2GateImpl<Fp>>;
+template <std::floating_point Fp>
+using U3Gate = internal::GatePtr<internal::U3GateImpl<Fp>>;
+template <std::floating_point Fp>
+using SwapGate = internal::GatePtr<internal::SwapGateImpl<Fp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {

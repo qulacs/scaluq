@@ -8,8 +8,8 @@
 namespace scaluq {
 namespace internal {
 
-template <std::floating_point FloatType>
-inline Matrix2x2 get_IBMQ_matrix(FloatType _theta, FloatType _phi, FloatType _lambda) {
+template <std::floating_point Fp>
+inline Matrix2x2 get_IBMQ_matrix(Fp _theta, Fp _phi, Fp _lambda) {
     Complex exp_val1 = Kokkos::exp(Complex(0, _phi));
     Complex exp_val2 = Kokkos::exp(Complex(0, _lambda));
     Complex cos_val = Kokkos::cos(_theta / 2.);
@@ -17,11 +17,11 @@ inline Matrix2x2 get_IBMQ_matrix(FloatType _theta, FloatType _phi, FloatType _la
     return {cos_val, -exp_val2 * sin_val, exp_val1 * sin_val, exp_val1 * exp_val2 * cos_val};
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                          std::uint64_t control_mask,
                                          const Matrix2x2& matrix,
-                                         StateVector<FloatType>& state) {
+                                         StateVector<Fp>& state) {
     Kokkos::parallel_for(
         state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis_0 =
@@ -37,11 +37,11 @@ inline void one_target_dense_matrix_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void two_target_dense_matrix_gate(std::uint64_t target_mask,
                                          std::uint64_t control_mask,
                                          const Matrix4x4& matrix,
-                                         StateVector<FloatType>& state) {
+                                         StateVector<Fp>& state) {
     std::uint64_t lower_target_mask = -target_mask & target_mask;
     std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;
     Kokkos::parallel_for(
@@ -72,11 +72,11 @@ inline void two_target_dense_matrix_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
                                             std::uint64_t control_mask,
                                             const DiagonalMatrix2x2& diag,
-                                            StateVector<FloatType>& state) {
+                                            StateVector<Fp>& state) {
     Kokkos::parallel_for(
         state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis =
@@ -87,16 +87,14 @@ inline void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
-template <std::floating_point FloatType>
-inline void i_gate(std::uint64_t target_mask,
-                   std::uint64_t control_mask,
-                   StateVector<FloatType>& state) {}
+template <std::floating_point Fp>
+inline void i_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {}
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void global_phase_gate(std::uint64_t target_mask,
                               std::uint64_t control_mask,
-                              FloatType angle,
-                              StateVector<FloatType>& state) {
+                              Fp angle,
+                              StateVector<Fp>& state) {
     Complex coef = Kokkos::polar(1., angle);
     Kokkos::parallel_for(
         state.dim() >> std::popcount(control_mask), KOKKOS_LAMBDA(std::uint64_t i) {
@@ -105,10 +103,8 @@ inline void global_phase_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
-template <std::floating_point FloatType>
-inline void x_gate(std::uint64_t target_mask,
-                   std::uint64_t control_mask,
-                   StateVector<FloatType>& state) {
+template <std::floating_point Fp>
+inline void x_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
     Kokkos::parallel_for(
         state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t i =
@@ -118,10 +114,8 @@ inline void x_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
-template <std::floating_point FloatType>
-inline void y_gate(std::uint64_t target_mask,
-                   std::uint64_t control_mask,
-                   StateVector<FloatType>& state) {
+template <std::floating_point Fp>
+inline void y_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
     Kokkos::parallel_for(
         state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t i =
@@ -133,10 +127,8 @@ inline void y_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
-template <std::floating_point FloatType>
-inline void z_gate(std::uint64_t target_mask,
-                   std::uint64_t control_mask,
-                   StateVector<FloatType>& state) {
+template <std::floating_point Fp>
+inline void z_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
     Kokkos::parallel_for(
         state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t i =
@@ -146,18 +138,16 @@ inline void z_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
-template <std::floating_point FloatType>
-inline void h_gate(std::uint64_t target_mask,
-                   std::uint64_t control_mask,
-                   StateVector<FloatType>& state) {
+template <std::floating_point Fp>
+inline void h_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
     one_target_dense_matrix_gate(target_mask, control_mask, HADAMARD_MATRIX(), state);
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void one_target_phase_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   Complex phase,
-                                  StateVector<FloatType>& state) {
+                                  StateVector<Fp>& state) {
     Kokkos::parallel_for(
         state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t i =
@@ -167,116 +157,108 @@ inline void one_target_phase_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
-template <std::floating_point FloatType>
-inline void s_gate(std::uint64_t target_mask,
-                   std::uint64_t control_mask,
-                   StateVector<FloatType>& state) {
+template <std::floating_point Fp>
+inline void s_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
     one_target_phase_gate(target_mask, control_mask, Complex(0, 1), state);
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void sdag_gate(std::uint64_t target_mask,
                       std::uint64_t control_mask,
-                      StateVector<FloatType>& state) {
+                      StateVector<Fp>& state) {
     one_target_phase_gate(target_mask, control_mask, Complex(0, -1), state);
 }
 
-template <std::floating_point FloatType>
-inline void t_gate(std::uint64_t target_mask,
-                   std::uint64_t control_mask,
-                   StateVector<FloatType>& state) {
+template <std::floating_point Fp>
+inline void t_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
     one_target_phase_gate(
         target_mask, control_mask, Complex(INVERSE_SQRT2(), INVERSE_SQRT2()), state);
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void tdag_gate(std::uint64_t target_mask,
                       std::uint64_t control_mask,
-                      StateVector<FloatType>& state) {
+                      StateVector<Fp>& state) {
     one_target_phase_gate(
         target_mask, control_mask, Complex(INVERSE_SQRT2(), -INVERSE_SQRT2()), state);
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void sqrtx_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
-                       StateVector<FloatType>& state) {
+                       StateVector<Fp>& state) {
     one_target_dense_matrix_gate(target_mask, control_mask, SQRT_X_GATE_MATRIX(), state);
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void sqrtxdag_gate(std::uint64_t target_mask,
                           std::uint64_t control_mask,
-                          StateVector<FloatType>& state) {
+                          StateVector<Fp>& state) {
     one_target_dense_matrix_gate(target_mask, control_mask, SQRT_X_DAG_GATE_MATRIX(), state);
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void sqrty_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
-                       StateVector<FloatType>& state) {
+                       StateVector<Fp>& state) {
     one_target_dense_matrix_gate(target_mask, control_mask, SQRT_Y_GATE_MATRIX(), state);
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void sqrtydag_gate(std::uint64_t target_mask,
                           std::uint64_t control_mask,
-                          StateVector<FloatType>& state) {
+                          StateVector<Fp>& state) {
     one_target_dense_matrix_gate(target_mask, control_mask, SQRT_Y_DAG_GATE_MATRIX(), state);
 }
 
-template <std::floating_point FloatType>
-inline void p0_gate(std::uint64_t target_mask,
-                    std::uint64_t control_mask,
-                    StateVector<FloatType>& state) {
+template <std::floating_point Fp>
+inline void p0_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
     one_target_dense_matrix_gate(target_mask, control_mask, PROJ_0_MATRIX(), state);
 }
 
-template <std::floating_point FloatType>
-inline void p1_gate(std::uint64_t target_mask,
-                    std::uint64_t control_mask,
-                    StateVector<FloatType>& state) {
+template <std::floating_point Fp>
+inline void p1_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
     one_target_dense_matrix_gate(target_mask, control_mask, PROJ_1_MATRIX(), state);
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void rx_gate(std::uint64_t target_mask,
                     std::uint64_t control_mask,
-                    FloatType angle,
-                    StateVector<FloatType>& state) {
-    const FloatType cosval = std::cos(angle / 2.);
-    const FloatType sinval = std::sin(angle / 2.);
+                    Fp angle,
+                    StateVector<Fp>& state) {
+    const Fp cosval = std::cos(angle / 2.);
+    const Fp sinval = std::sin(angle / 2.);
     Matrix2x2 matrix = {cosval, Complex(0, -sinval), Complex(0, -sinval), cosval};
     one_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void ry_gate(std::uint64_t target_mask,
                     std::uint64_t control_mask,
-                    FloatType angle,
-                    StateVector<FloatType>& state) {
-    const FloatType cosval = std::cos(angle / 2.);
-    const FloatType sinval = std::sin(angle / 2.);
+                    Fp angle,
+                    StateVector<Fp>& state) {
+    const Fp cosval = std::cos(angle / 2.);
+    const Fp sinval = std::sin(angle / 2.);
     Matrix2x2 matrix = {cosval, -sinval, sinval, cosval};
     one_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void rz_gate(std::uint64_t target_mask,
                     std::uint64_t control_mask,
-                    FloatType angle,
-                    StateVector<FloatType>& state) {
-    const FloatType cosval = std::cos(angle / 2.);
-    const FloatType sinval = std::sin(angle / 2.);
+                    Fp angle,
+                    StateVector<Fp>& state) {
+    const Fp cosval = std::cos(angle / 2.);
+    const Fp sinval = std::sin(angle / 2.);
     DiagonalMatrix2x2 diag = {Complex(cosval, -sinval), Complex(cosval, sinval)};
     one_target_diagonal_matrix_gate(target_mask, control_mask, diag, state);
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void u1_gate(std::uint64_t target_mask,
                     std::uint64_t control_mask,
-                    FloatType lambda,
-                    StateVector<FloatType>& state) {
+                    Fp lambda,
+                    StateVector<Fp>& state) {
     Complex exp_val = Kokkos::exp(Complex(0, lambda));
     Kokkos::parallel_for(
         state.dim() >> (std::popcount(target_mask | control_mask)),
@@ -289,31 +271,31 @@ inline void u1_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void u2_gate(std::uint64_t target_mask,
                     std::uint64_t control_mask,
-                    FloatType phi,
-                    FloatType lambda,
-                    StateVector<FloatType>& state) {
+                    Fp phi,
+                    Fp lambda,
+                    StateVector<Fp>& state) {
     one_target_dense_matrix_gate(
         target_mask, control_mask, get_IBMQ_matrix(Kokkos::numbers::pi / 2., phi, lambda), state);
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void u3_gate(std::uint64_t target_mask,
                     std::uint64_t control_mask,
-                    FloatType theta,
-                    FloatType phi,
-                    FloatType lambda,
-                    StateVector<FloatType>& state) {
+                    Fp theta,
+                    Fp phi,
+                    Fp lambda,
+                    StateVector<Fp>& state) {
     one_target_dense_matrix_gate(
         target_mask, control_mask, get_IBMQ_matrix(theta, phi, lambda), state);
 }
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 inline void swap_gate(std::uint64_t target_mask,
                       std::uint64_t control_mask,
-                      StateVector<FloatType>& state) {
+                      StateVector<Fp>& state) {
     // '- target' is used for bit manipulation on unsigned type, not for its numerical meaning.
     std::uint64_t lower_target_mask = target_mask & -target_mask;
     std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;

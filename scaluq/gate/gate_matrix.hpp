@@ -11,15 +11,15 @@
 namespace scaluq {
 namespace internal {
 
-template <std::floating_point FloatType>
-class OneTargetMatrixGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class OneTargetMatrixGateImpl : public GateBase<Fp> {
     Matrix2x2 _matrix;
 
 public:
     OneTargetMatrixGateImpl(std::uint64_t target_mask,
                             std::uint64_t control_mask,
                             const std::array<std::array<Complex, 2>, 2>& matrix)
-        : GateBase<FloatType>(target_mask, control_mask) {
+        : GateBase<Fp>(target_mask, control_mask) {
         _matrix[0][0] = matrix[0][0];
         _matrix[0][1] = matrix[0][1];
         _matrix[1][0] = matrix[1][0];
@@ -30,7 +30,7 @@ public:
         return {_matrix[0][0], _matrix[0][1], _matrix[1][0], _matrix[1][1]};
     }
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return std::make_shared<const OneTargetMatrixGateImpl>(
             this->_target_mask,
             this->_control_mask,
@@ -45,7 +45,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         one_target_dense_matrix_gate(
             this->_target_mask, this->_control_mask, _matrix, state_vector);
@@ -53,21 +53,21 @@ public:
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
-        ss << indent << "std::shared_ptr<const GateBase<FloatType>> Type: OneTargetMatrix\n";
+        ss << indent << "std::shared_ptr<const GateBase<Fp>> Type: OneTargetMatrix\n";
         ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
-template <std::floating_point FloatType>
-class TwoTargetMatrixGateImpl : public GateBase<FloatType> {
+template <std::floating_point Fp>
+class TwoTargetMatrixGateImpl : public GateBase<Fp> {
     Matrix4x4 _matrix;
 
 public:
     TwoTargetMatrixGateImpl(std::uint64_t target_mask,
                             std::uint64_t control_mask,
                             const std::array<std::array<Complex, 4>, 4>& matrix)
-        : GateBase<FloatType>(target_mask, control_mask) {
+        : GateBase<Fp>(target_mask, control_mask) {
         for (std::uint64_t i : std::views::iota(0, 4)) {
             for (std::uint64_t j : std::views::iota(0, 4)) {
                 _matrix[i][j] = matrix[i][j];
@@ -85,7 +85,7 @@ public:
         return matrix;
     }
 
-    std::shared_ptr<const GateBase<FloatType>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         std::array<std::array<Complex, 4>, 4> matrix_dag;
         for (std::uint64_t i : std::views::iota(0, 4)) {
             for (std::uint64_t j : std::views::iota(0, 4)) {
@@ -104,7 +104,7 @@ public:
         return mat;
     }
 
-    void update_quantum_state(StateVector<FloatType>& state_vector) const override {
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
         this->check_qubit_mask_within_bounds(state_vector);
         two_target_dense_matrix_gate(
             this->_target_mask, this->_control_mask, _matrix, state_vector);
@@ -112,17 +112,17 @@ public:
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
-        ss << indent << "std::shared_ptr<const GateBase<FloatType>> Type: TwoTargetMatrix\n";
+        ss << indent << "std::shared_ptr<const GateBase<Fp>> Type: TwoTargetMatrix\n";
         ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 }  // namespace internal
 
-template <std::floating_point FloatType>
-using OneTargetMatrixGate = internal::GatePtr<internal::OneTargetMatrixGateImpl<FloatType>>;
-template <std::floating_point FloatType>
-using TwoTargetMatrixGate = internal::GatePtr<internal::TwoTargetMatrixGateImpl<FloatType>>;
+template <std::floating_point Fp>
+using OneTargetMatrixGate = internal::GatePtr<internal::OneTargetMatrixGateImpl<Fp>>;
+template <std::floating_point Fp>
+using TwoTargetMatrixGate = internal::GatePtr<internal::TwoTargetMatrixGateImpl<Fp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {

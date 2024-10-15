@@ -9,10 +9,10 @@
 
 namespace scaluq {
 
-template <std::floating_point FloatType>
+template <std::floating_point Fp>
 class Circuit {
 public:
-    using GateWithKey = std::variant<Gate, std::pair<ParamGate, std::string>>;
+    using GateWithKey = std::variant<Gate<Fp>, std::pair<ParamGate<Fp>, std::string>>;
     explicit Circuit(std::uint64_t n_qubits) : _n_qubits(n_qubits) {}
 
     [[nodiscard]] inline std::uint64_t n_qubits() const { return _n_qubits; }
@@ -71,29 +71,36 @@ public:
         return *std::ranges::max_element(filled_step);
     }
 
-    void add_gate(const Gate& gate) {
+    void add_gate(const Gate<Fp>& gate) {
         check_gate_is_valid(gate);
         _gate_list.push_back(gate);
     }
-    void add_gate(Gate&& gate) {
+    void add_gate(Gate<Fp>&& gate) {
         check_gate_is_valid(gate);
         _gate_list.push_back(std::move(gate));
     }
-    void add_param_gate(const ParamGate& param_gate, std::string_view key) {
+    void add_param_gate(const ParamGate<Fp>& param_gate, std::string_view parameter_key) {
         check_gate_is_valid(param_gate);
         _gate_list.push_back(std::make_pair(param_gate, std::string(parameter_key)));
     }
-    void add_param_gate(ParamGate&& param_gate, std::string_view parameter_key) {
+    void add_param_gate(ParamGate<Fp>&& param_gate, std::string_view parameter_key) {
         check_gate_is_valid(param_gate);
         _gate_list.push_back(std::make_pair(std::move(param_gate), std::string(parameter_key)));
     }
 
-    void add_circuit(const Circuit& circuit) void Circuit::add_param_gate(
-        ParamGate&& param_gate, std::string_view parameter_key) {
-        check_gate_is_valid(param_gate);
-        _gate_list.push_back(std::make_pair(std::move(param_gate), std::string(parameter_key)));
+    void add_circuit(const Circuit<Fp>& circuit) {
+        if (circuit._n_qubits != _n_qubits) {
+            throw std::runtime_error(
+                "Circuit::add_circuit(const Circuit&): circuit with different qubit count cannot "
+                "be "
+                "merged.");
+        }
+        _gate_list.reserve(_gate_list.size() + circuit._gate_list.size());
+        for (const auto& gate : circuit._gate_list) {
+            _gate_list.push_back(gate);
+        }
     }
-    void add_circuit(Circuit&& circuit) {
+    void add_circuit(Circuit<Fp>&& circuit) {
         if (circuit._n_qubits != _n_qubits) {
             throw std::runtime_error(
                 "Circuit::add_circuit(Circuit&&): circuit with different qubit count cannot be "
@@ -105,7 +112,7 @@ public:
         }
     }
 
-    void update_quantum_state(StateVector<FloatType>& state,
+    void update_quantum_state(StateVector<Fp>& state,
                               const std::map<std::string, double>& parameters = {}) const {
         for (auto&& gate : _gate_list) {
             if (gate.index() == 0) continue;
@@ -160,7 +167,7 @@ private:
 
     std::vector<GateWithKey> _gate_list;
 
-    void check_gate_is_valid(const Gate& gate) const {
+    void check_gate_is_valid(const Gate<Fp>& gate) const {
         auto targets = gate->target_qubit_list();
         auto controls = gate->control_qubit_list();
         bool valid = true;
@@ -173,9 +180,9 @@ private:
         }
     }
 
-    void check_gate_is_valid(const ParamGate& gate) const {
-        auto targets = param_gate->target_qubit_list();
-        auto controls = param_gate->control_qubit_list();
+    void check_gate_is_valid(const ParamGate<Fp>& gate) const {
+        auto targets = gate->target_qubit_list();
+        auto controls = gate->control_qubit_list();
         bool valid = true;
         if (!targets.empty())
             valid &= *std::max_element(targets.begin(), targets.end()) < _n_qubits;
