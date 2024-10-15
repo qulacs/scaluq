@@ -2,7 +2,8 @@
 
 set -eux
 
-GXX_COMMAND=${CXX_COMPILER:-"g++"}
+CMAKE_C_COMPILER=${CMAKE_C_COMPILER:-"gcc"}
+CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER:-"g++"}
 
 SCALUQ_USE_OMP=${SCALUQ_USE_OMP:-"ON"}
 SCALUQ_USE_CUDA=${SCALUQ_USE_CUDA:-"OFF"}
@@ -11,7 +12,8 @@ SCALUQ_USE_EXE=${SCALUQ_USE_EXE:-"ON"}
 
 CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-"Release"}
 
-CMAKE_OPS="-D CMAKE_CXX_COMPILER=${GXX_COMMAND} \
+CMAKE_OPS="-D CMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+  -D CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} \
   -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
   -D SCALUQ_USE_OMP=${SCALUQ_USE_OMP} \
   -D SCALUQ_USE_CUDA=${SCALUQ_USE_CUDA} \
@@ -21,6 +23,12 @@ if [ -n "${SCALUQ_CUDA_ARCH:-""}" ]; then
   CMAKE_OPS="${CMAKE_OPS} -D SCALUQ_CUDA_ARCH=${SCALUQ_CUDA_ARCH}"
 fi
 
+if [ "$(uname)" == 'Darwin' ]; then
+  NPROC=$(sysctl -n hw.logicalcpu)
+else
+  NPROC=$(nproc)
+fi
+
 mkdir -p ./build
 cmake -B build -G Ninja ${CMAKE_OPS}
-ninja -C build -j $(nproc)
+ninja -C build -j ${NPROC}

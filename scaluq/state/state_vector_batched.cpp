@@ -280,7 +280,7 @@ std::vector<double> StateVectorBatched::get_entropy() const {
                 [&](std::uint64_t idx, double& lsum) {
                     double prob = internal::squared_norm(_raw(batch_id, idx));
                     prob = Kokkos::max(prob, eps);
-                    lsum += -prob * Kokkos::log(prob);
+                    lsum += -prob * Kokkos::log2(prob);
                 },
                 sum);
             team.team_barrier();
