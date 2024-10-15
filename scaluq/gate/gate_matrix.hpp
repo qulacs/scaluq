@@ -131,13 +131,11 @@ public:
     Gate get_inverse() const override {
         ComplexMatrix mat_eigen = convert_internal_matrix_to_external_matrix(_matrix);
         ComplexMatrix inv_eigen;
-        // if (_is_unitary) {
-        //     inv_eigen = mat_eigen.adjoint();
-        // } else {
-        //     inv_eigen = mat_eigen.inverse().eval();
-        // }
-        // 以下は消して上を使う
-        inv_eigen = mat_eigen.adjoint();
+        if (_is_unitary) {
+            inv_eigen = mat_eigen.adjoint();
+        } else {
+            inv_eigen = mat_eigen.inverse().eval();
+        }
         return std::make_shared<const DenseMatrixGateImpl>(
             _target_mask, _control_mask, inv_eigen, _is_unitary);
     }
@@ -185,12 +183,8 @@ public:
         for (std::size_t i = 0; i < vec_h.extent(0); i++) {
             eigen_matrix(vec_h(i).r, vec_h(i).c) = vec_h(i).val;
         }
-
-        // return std::make_shared<const DenseMatrixGateImpl>(
-        //     _target_mask, _control_mask, eigen_matrix.inverse().eval());
-        // 以下は消して上を使う
         return std::make_shared<const DenseMatrixGateImpl>(
-            _target_mask, _control_mask, eigen_matrix);
+            _target_mask, _control_mask, eigen_matrix.inverse().eval());
     }
 
     Matrix get_matrix_internal() const {
