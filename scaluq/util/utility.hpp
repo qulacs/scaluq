@@ -218,15 +218,15 @@ inline ComplexMatrix transform_dense_matrix_by_order(const ComplexMatrix& mat,
     return ret;
 }
 
-inline SparseComplexMatrix transform_sparse_matrix_by_order(
-    // This is temporary implementation.
-    // SparseComplexMatrix will be replaced with std::vector<std::vector<std::Complex<double>>>
-    // hence this function will be refactored.
-    const SparseComplexMatrix& mat,
-    const std::vector<std::uint64_t>& targets) {
-    ComplexMatrix dense_mat = mat.toDense();
-    return transform_dense_matrix_by_order(dense_mat, targets).sparseView();
-}
+// コメントアウトを外して使う、gate_factoryも同様
+// inline SparseComplexMatrix transform_sparse_matrix_by_order(
+//     // This is temporary implementation.
+//     // SparseComplexMatrix will be replaced with std::vector<std::vector<std::Complex<double>>>
+//     // hence this function will be refactored.
+//     const SparseComplexMatrix& mat,
+//     const std::vector<std::uint64_t>& targets) {
+//     return transform_dense_matrix_by_order(mat.toDense(), targets).sparseView();
+// }
 
 }  // namespace internal
 

@@ -192,14 +192,18 @@ inline Gate DenseMatrix(const std::vector<std::uint64_t>& targets,
 inline Gate SparseMatrix(const std::vector<std::uint64_t>& targets,
                          const internal::SparseComplexMatrix& matrix,
                          const std::vector<std::uint64_t>& controls = {}) {
-    if (std::is_sorted(targets.begin(), targets.end())) {
-        return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl>(
-            internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix);
-    }
-    internal::SparseComplexMatrix matrix_transformed =
-        internal::transform_sparse_matrix_by_order(matrix, targets);
+    // if (std::is_sorted(targets.begin(), targets.end())) {
+    //     return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl>(
+    //         internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix);
+    // }
+    // internal::SparseComplexMatrix matrix_transformed =
+    //     internal::transform_sparse_matrix_by_order(matrix, targets);
+    // return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl>(
+    //     internal::vector_to_mask(targets), internal::vector_to_mask(controls),
+    //     matrix_transformed);
+    // 以下は消して上を使う
     return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl>(
-        internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix_transformed);
+        internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix);
 }
 inline Gate Probablistic(const std::vector<double>& distribution,
                          const std::vector<Gate>& gate_list) {

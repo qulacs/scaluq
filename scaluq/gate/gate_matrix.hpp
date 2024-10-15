@@ -131,11 +131,13 @@ public:
     Gate get_inverse() const override {
         ComplexMatrix mat_eigen = convert_internal_matrix_to_external_matrix(_matrix);
         ComplexMatrix inv_eigen;
-        if (_is_unitary) {
-            inv_eigen = mat_eigen.adjoint();
-        } else {
-            inv_eigen = mat_eigen.inverse().eval();
-        }
+        // if (_is_unitary) {
+        //     inv_eigen = mat_eigen.adjoint();
+        // } else {
+        //     inv_eigen = mat_eigen.inverse().eval();
+        // }
+        // 以下は消して上を使う
+        inv_eigen = mat_eigen.adjoint();
         return std::make_shared<const DenseMatrixGateImpl>(
             _target_mask, _control_mask, inv_eigen, _is_unitary);
     }
