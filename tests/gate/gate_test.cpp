@@ -421,7 +421,6 @@ void run_random_gate_apply_sparse(std::uint64_t n_qubits) {
         u3 = get_eigen_matrix_random_one_target_unitary();
         std::vector<std::uint64_t> target_list = {targets[0], targets[1], targets[2]};
         std::vector<std::uint64_t> control_list = {};
-        std::sort(target_list.begin(), target_list.end());
 
         test_state = get_expanded_eigen_matrix_with_identity(target_list[2], u3, n_qubits) *
                      get_expanded_eigen_matrix_with_identity(target_list[1], u2, n_qubits) *
@@ -490,13 +489,6 @@ void run_random_gate_apply_general_dense(std::uint64_t n_qubits) {
             std::shuffle(index_list.begin(), index_list.end(), engine);
             targets[0] = index_list[0];
             targets[1] = index_list[1];
-            // if (targets[0] > targets[1]) {
-            //     std::swap(targets[0], targets[1]);
-            // }
-            // check when the order is not ascending
-            if (targets[0] < targets[1]) {
-                std::swap(targets[0], targets[1]);
-            }
             Umerge = internal::kronecker_product(U2, U1);
             test_state = get_expanded_eigen_matrix_with_identity(targets[1], U2, n_qubits) *
                          get_expanded_eigen_matrix_with_identity(targets[0], U1, n_qubits) *
@@ -528,7 +520,6 @@ void run_random_gate_apply_general_dense(std::uint64_t n_qubits) {
             targets[0] = index_list[0];
             targets[1] = index_list[1];
             targets[2] = index_list[2];
-            std::sort(targets.begin(), targets.end());
             Umerge = internal::kronecker_product(U3, internal::kronecker_product(U2, U1));
 
             test_state = get_expanded_eigen_matrix_with_identity(targets[2], U3, n_qubits) *

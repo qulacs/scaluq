@@ -184,22 +184,6 @@ inline ComplexMatrix convert_coo_to_external_matrix(SparseMatrix mat) {
     return eigen_matrix;
 }
 
-inline ComplexMatrix move_eigen_to_host(ComplexMatrix eigen_mat) {
-    if (eigen_mat.data() == nullptr) {
-        return ComplexMatrix();
-    }
-    Kokkos::View<Complex**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> device_view(
-        reinterpret_cast<Complex*>(eigen_mat.data()), eigen_mat.rows(), eigen_mat.cols());
-    Kokkos::View<Complex**, Kokkos::HostSpace> host_view(
-        "host_view", eigen_mat.rows(), eigen_mat.cols());
-    Kokkos::deep_copy(host_view, device_view);
-    ComplexMatrix host_mat(eigen_mat.rows(), eigen_mat.cols());
-    std::copy(host_view.data(),
-              host_view.data() + host_view.extent(0) * host_view.extent(1),
-              host_mat.data());
-    return host_mat;
-}
-
 inline ComplexMatrix transform_dense_matrix_by_order(const ComplexMatrix& mat,
                                                      const std::vector<std::uint64_t>& targets) {
     std::vector<std::uint64_t> sorted(targets);
@@ -225,10 +209,10 @@ inline ComplexMatrix transform_dense_matrix_by_order(const ComplexMatrix& mat,
     ComplexMatrix ret(matrix_size, matrix_size);
 
     for (std::size_t i = 0; i < matrix_size; i++) {
-        std::size_t row_dst = transformed[i];
+        std::size_t row_src = transformed[i];
         for (std::size_t j = 0; j < matrix_size; j++) {
-            std::size_t col_dst = transformed[j];
-            ret(row_dst, col_dst) = mat(i, j);
+            std::size_t col_src = transformed[j];
+            ret(i, j) = mat(row_src, col_src);
         }
     }
     return ret;
@@ -240,7 +224,6 @@ inline SparseComplexMatrix transform_sparse_matrix_by_order(
     // hence this function will be refactored.
     const SparseComplexMatrix& mat,
     const std::vector<std::uint64_t>& targets) {
-    ComplexMatrix mat_h = move_eigen_to_host(mat);
     ComplexMatrix dense_mat = mat.toDense();
     return transform_dense_matrix_by_order(dense_mat, targets).sparseView();
 }
