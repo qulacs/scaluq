@@ -64,8 +64,9 @@ jobs:
           key: "${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.device }}"
           verbose: 2
       
-      - name: which ccache
-        run: which ccache
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ always() }}
 
       - name: Install CUDA toolkit
         if: ${{ matrix.device == 'cuda' }}
