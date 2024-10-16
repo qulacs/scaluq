@@ -54,7 +54,7 @@ jobs:
       CMAKE_CXX_COMPILER: ${{ matrix.os == 'macos' && 'g++-14' || 'g++' }}
       CIBW_BUILD: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}
       PYTHON: ${{ matrix.python-version }}
-      MACOSX_DEPLOYMENT_TARGET: "13.0"
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.runs-on == 'macos-14' && "14.0" || "13.0" }}
     steps:
       - uses: actions/checkout@v4
 
