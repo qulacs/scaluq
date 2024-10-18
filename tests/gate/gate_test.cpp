@@ -356,6 +356,38 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
     }
 }
 
+void run_random_gate_apply_none_dense(std::uint64_t n_qubits) {
+    const std::uint64_t dim = 1ULL << n_qubits;
+    const std::uint64_t max_repeat = 10;
+    Eigen::Matrix<StdComplex, 1, 1, Eigen::RowMajor> U;
+    Random random;
+    for (std::uint64_t rep = 0; rep < max_repeat; rep++) {
+        StateVector state = StateVector::Haar_random_state(n_qubits);
+        auto state_cp = state.get_amplitudes();
+        Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
+        for (std::uint64_t i = 0; i < dim; i++) {
+            test_state[i] = state_cp[i];
+        }
+        std::vector<std::uint64_t> target_list = {};
+        auto re = random.uniform();
+        auto im = random.uniform();
+        auto val = StdComplex(re, im);
+        auto norm = std::sqrt(std::norm(val));
+        U(0, 0) = val / norm;
+        // matは全ての要素がval/normの対角行列
+        internal::ComplexMatrix mat = internal::ComplexMatrix::Identity(dim, dim);
+        mat *= val / norm;
+        std::vector<std::uint64_t> control_list = {};
+        Gate dense_gate = gate::DenseMatrix(target_list, U, control_list);
+        dense_gate->update_quantum_state(state);
+        test_state = mat * test_state;
+        state_cp = state.get_amplitudes();
+        for (std::uint64_t i = 0; i < dim; i++) {
+            ASSERT_NEAR(std::abs((StdComplex)state_cp[i] - test_state[i]), 0, eps);
+        }
+    }
+}
+
 void run_random_gate_apply_single_dense(std::uint64_t n_qubits) {
     const std::uint64_t dim = 1ULL << n_qubits;
     const std::uint64_t max_repeat = 10;
@@ -564,6 +596,7 @@ TEST(GateTest, ApplyTwoTarget) { run_random_gate_apply_two_target(5); }
 
 TEST(GateTest, ApplySparseMatrixGate) { run_random_gate_apply_sparse(6); }
 TEST(GateTest, ApplyDenseMatrixGate) {
+    run_random_gate_apply_none_dense(6);
     run_random_gate_apply_single_dense(6);
     run_random_gate_apply_general_dense(6);
 }
@@ -737,7 +770,20 @@ void test_matrix_control(std::uint64_t n_qubits) {
         return new_targets;
     };
     auto new_targets = adjust(targets, control_mask);
-    if constexpr (num_target == 1) {
+    if constexpr (num_target == 0) {
+        auto re = random.uniform();
+        auto im = random.uniform();
+        auto val = StdComplex(re, im);
+        auto norm = std::sqrt(std::norm(val));
+        internal::ComplexMatrix mat(1, 1);
+        mat(0, 0) = val / norm;
+        Gate d1 = gate::DenseMatrix(targets, mat, controls);
+        Gate d2 = gate::DenseMatrix(new_targets, mat, {});
+        Gate s1 = gate::SparseMatrix(targets, mat.sparseView(), controls);
+        Gate s2 = gate::SparseMatrix(new_targets, mat.sparseView(), {});
+        test_gate(d1, d2, n_qubits, control_mask);
+        test_gate(s1, s2, n_qubits, control_mask);
+    } else if constexpr (num_target == 1) {
         Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> U =
             get_eigen_matrix_random_one_target_unitary();
         internal::ComplexMatrix mat(U.rows(), U.cols());
@@ -819,6 +865,7 @@ TEST(GateTest, Control) {
         test_standard_gate_control<2, 0>(gate::Swap, n);
         test_pauli_control<false>(n);
         test_pauli_control<true>(n);
+        test_matrix_control<0>(n);
         test_matrix_control<1>(n);
         test_matrix_control<2>(n);
         test_matrix_control<3>(n);
