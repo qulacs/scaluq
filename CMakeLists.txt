@@ -112,6 +112,7 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
         target_compile_options(scaluq PUBLIC
             -Wno-unknown-pragmas
             --expt-relaxed-constexpr
+            -DEIGEN_NO_CUDA
         ) 
     endif()
 
