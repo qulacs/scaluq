@@ -54,7 +54,7 @@ set_property(TARGET kokkoscore PROPERTY POSITION_INDEPENDENT_CODE ON)
 FetchContent_Declare(
     eigen
     GIT_REPOSITORY https://gitlab.com/libeigen/eigen
-    GIT_TAG 3.4.0
+    GIT_TAG b396a6fbb2e173f52edb3360485dedf3389ef830 # Since Eigen has not released since 3.4.0(3 years ago), a commit hash is directly specified.
 )
 FetchContent_MakeAvailable(eigen)
 
