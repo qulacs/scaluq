@@ -57,9 +57,6 @@ FetchContent_Declare(
     GIT_TAG 3.4.0
 )
 FetchContent_MakeAvailable(eigen)
-if(SCALUQ_USE_CUDA)
-    set(EIGEN_NO_CUDA ON "Enable host-only build for Eigen")
-endif(SCALUQ_USE_CUDA)
 
 # nanobind
 if(SKBUILD)
@@ -115,6 +112,7 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
         target_compile_options(scaluq PUBLIC
             -Wno-unknown-pragmas
             --expt-relaxed-constexpr
+            -DEIGEN_NO_CUDA
         ) 
     endif()
 
