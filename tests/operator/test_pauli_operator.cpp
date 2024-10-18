@@ -192,13 +192,13 @@ TEST(PauliOperatorTest, ApplyToStateTest) {
     const std::uint64_t n_qubits = 3;
     StateVector<double> state_vector(n_qubits);
     state_vector.load([n_qubits] {
-        std::vector<Complex> tmp(1 << n_qubits);
-        for (std::uint64_t i = 0; i < tmp.size(); ++i) tmp[i] = Complex(i, 0);
+        std::vector<Complex<double>> tmp(1 << n_qubits);
+        for (std::uint64_t i = 0; i < tmp.size(); ++i) tmp[i] = Complex<double>(i, 0);
         return tmp;
     }());
 
-    PauliOperator<double> op(0b001, 0b010, Complex(2));
+    PauliOperator<double> op(0b001, 0b010, Complex<double>(2));
     op.apply_to_state(state_vector);
-    std::vector<Complex> expected = {2, 0, -6, -4, 10, 8, -14, -12};
+    std::vector<Complex<double>> expected = {2, 0, -6, -4, 10, 8, -14, -12};
     ASSERT_EQ(state_vector.get_amplitudes(), expected);
 }

@@ -121,8 +121,8 @@ inline Eigen::MatrixXcd get_expanded_eigen_matrix_with_identity(
     const std::uint64_t right_dim = 1ULL << (qubit_count - target_qubit_index - 1);
     auto left_identity = Eigen::MatrixXcd::Identity(left_dim, left_dim);
     auto right_identity = Eigen::MatrixXcd::Identity(right_dim, right_dim);
-    return internal::kronecker_product(
-        internal::kronecker_product(right_identity, one_target_matrix), left_identity);
+    return internal::kronecker_product<double>(
+        internal::kronecker_product<double>(right_identity, one_target_matrix), left_identity);
 }
 
 // get expanded matrix
@@ -130,7 +130,8 @@ inline Eigen::MatrixXcd get_eigen_matrix_full_qubit_pauli(std::vector<std::uint6
     Eigen::MatrixXcd result = Eigen::MatrixXcd::Identity(1, 1);
     for (std::uint64_t i = 0; i < pauli_ids.size(); ++i) {
         result =
-            internal::kronecker_product(get_eigen_matrix_single_Pauli(pauli_ids[i]), result).eval();
+            internal::kronecker_product<double>(get_eigen_matrix_single_Pauli(pauli_ids[i]), result)
+                .eval();
     }
     return result;
 }

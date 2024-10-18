@@ -13,12 +13,12 @@ namespace internal {
 
 template <std::floating_point Fp>
 class OneTargetMatrixGateImpl : public GateBase<Fp> {
-    Matrix2x2 _matrix;
+    Matrix2x2<Fp> _matrix;
 
 public:
     OneTargetMatrixGateImpl(std::uint64_t target_mask,
                             std::uint64_t control_mask,
-                            const std::array<std::array<Complex, 2>, 2>& matrix)
+                            const std::array<std::array<Complex<Fp>, 2>, 2>& matrix)
         : GateBase<Fp>(target_mask, control_mask) {
         _matrix[0][0] = matrix[0][0];
         _matrix[0][1] = matrix[0][1];
@@ -26,7 +26,7 @@ public:
         _matrix[1][1] = matrix[1][1];
     }
 
-    std::array<std::array<Complex, 2>, 2> matrix() const {
+    std::array<std::array<Complex<Fp>, 2>, 2> matrix() const {
         return {_matrix[0][0], _matrix[0][1], _matrix[1][0], _matrix[1][1]};
     }
 
@@ -34,13 +34,13 @@ public:
         return std::make_shared<const OneTargetMatrixGateImpl>(
             this->_target_mask,
             this->_control_mask,
-            std::array<std::array<Complex, 2>, 2>{Kokkos::conj(_matrix[0][0]),
-                                                  Kokkos::conj(_matrix[1][0]),
-                                                  Kokkos::conj(_matrix[0][1]),
-                                                  Kokkos::conj(_matrix[1][1])});
+            std::array<std::array<Complex<Fp>, 2>, 2>{Kokkos::conj(_matrix[0][0]),
+                                                      Kokkos::conj(_matrix[1][0]),
+                                                      Kokkos::conj(_matrix[0][1]),
+                                                      Kokkos::conj(_matrix[1][1])});
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << this->_matrix[0][0], this->_matrix[0][1], this->_matrix[1][0], this->_matrix[1][1];
         return mat;
     }
@@ -61,12 +61,12 @@ public:
 
 template <std::floating_point Fp>
 class TwoTargetMatrixGateImpl : public GateBase<Fp> {
-    Matrix4x4 _matrix;
+    Matrix4x4<Fp> _matrix;
 
 public:
     TwoTargetMatrixGateImpl(std::uint64_t target_mask,
                             std::uint64_t control_mask,
-                            const std::array<std::array<Complex, 4>, 4>& matrix)
+                            const std::array<std::array<Complex<Fp>, 4>, 4>& matrix)
         : GateBase<Fp>(target_mask, control_mask) {
         for (std::uint64_t i : std::views::iota(0, 4)) {
             for (std::uint64_t j : std::views::iota(0, 4)) {
@@ -75,8 +75,8 @@ public:
         }
     }
 
-    std::array<std::array<Complex, 4>, 4> matrix() const {
-        std::array<std::array<Complex, 4>, 4> matrix;
+    std::array<std::array<Complex<Fp>, 4>, 4> matrix() const {
+        std::array<std::array<Complex<Fp>, 4>, 4> matrix;
         for (std::uint64_t i : std::views::iota(0, 4)) {
             for (std::uint64_t j : std::views::iota(0, 4)) {
                 matrix[i][j] = _matrix[i][j];
@@ -86,7 +86,7 @@ public:
     }
 
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
-        std::array<std::array<Complex, 4>, 4> matrix_dag;
+        std::array<std::array<Complex<Fp>, 4>, 4> matrix_dag;
         for (std::uint64_t i : std::views::iota(0, 4)) {
             for (std::uint64_t j : std::views::iota(0, 4)) {
                 matrix_dag[i][j] = Kokkos::conj(_matrix[j][i]);
@@ -95,8 +95,8 @@ public:
         return std::make_shared<const TwoTargetMatrixGateImpl>(
             this->_target_mask, this->_control_mask, matrix_dag);
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(4, 4);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(4, 4);
         mat << this->_matrix[0][0], this->_matrix[0][1], this->_matrix[0][2], this->_matrix[0][3],
             this->_matrix[1][0], this->_matrix[1][1], this->_matrix[1][2], this->_matrix[1][3],
             this->_matrix[2][0], this->_matrix[2][1], this->_matrix[2][2], this->_matrix[2][3],

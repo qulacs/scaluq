@@ -24,7 +24,7 @@ TEST(StateVectorBatchedTest, HaarRandomStateNorm) {
 TEST(StateVectorBatchedTest, LoadAndAmplitues) {
     const std::uint64_t batch_size = 4, n_qubits = 3;
     const std::uint64_t dim = 1 << n_qubits;
-    std::vector states_h(batch_size, std::vector<Complex>(dim));
+    std::vector states_h(batch_size, std::vector<Complex<double>>(dim));
     for (std::uint64_t b = 0; b < batch_size; ++b) {
         for (std::uint64_t i = 0; i < dim; ++i) {
             states_h[b][i] = b * dim + i;
@@ -45,7 +45,7 @@ TEST(StateVectorBatchedTest, OperateState) {
     const std::uint64_t batch_size = 4, n_qubits = 3;
     auto states = StateVectorBatched<double>::Haar_random_state(batch_size, n_qubits, false);
     auto states_add = StateVectorBatched<double>::Haar_random_state(batch_size, n_qubits, false);
-    const Complex coef(2.1, 3.5);
+    const Complex<double> coef(2.1, 3.5);
 
     auto states_cp = states.copy();
     for (std::uint64_t b = 0; b < batch_size; ++b) {
@@ -121,8 +121,8 @@ TEST(StateVectorBatchedTest, Entropy) {
 TEST(StateVectorBatchedTest, Sampling) {
     const std::uint64_t batch_size = 2, n_qubits = 3;
     StateVectorBatched<double> states(batch_size, n_qubits);
-    states.load(
-        std::vector<std::vector<Complex>>{{1, 4, 5, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 6, 4, 1}});
+    states.load(std::vector<std::vector<Complex<double>>>{{1, 4, 5, 0, 0, 0, 0, 0},
+                                                          {0, 0, 0, 0, 0, 6, 4, 1}});
     states.normalize();
     auto result = states.sampling(4096);
     std::vector cnt(2, std::vector<std::uint64_t>(states.dim(), 0));

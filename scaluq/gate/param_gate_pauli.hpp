@@ -28,14 +28,14 @@ public:
         return std::make_shared<const ParamPauliRotationGateImpl<Fp>>(
             this->_control_mask, _pauli, -this->_pcoef);
     }
-    internal::ComplexMatrix get_matrix(Fp param) const override {
+    internal::ComplexMatrix<Fp> get_matrix(Fp param) const override {
         Fp angle = this->_pcoef * param;
-        Complex true_angle = angle * this->_pauli.coef();
-        internal::ComplexMatrix mat = this->_pauli.get_matrix_ignoring_coef();
-        StdComplex imag_unit(0, 1);
-        mat = (StdComplex)Kokkos::cos(-true_angle / 2) *
-                  internal::ComplexMatrix::Identity(mat.rows(), mat.cols()) +
-              imag_unit * (StdComplex)Kokkos::sin(-true_angle / 2) * mat;
+        Complex<Fp> true_angle = angle * this->_pauli.coef();
+        internal::ComplexMatrix<Fp> mat = this->_pauli.get_matrix_ignoring_coef();
+        StdComplex<Fp> imag_unit(0, 1);
+        mat = (StdComplex<Fp>)Kokkos::cos(-true_angle / 2) *
+                  internal::ComplexMatrix<Fp>::Identity(mat.rows(), mat.cols()) +
+              imag_unit * (StdComplex<Fp>)Kokkos::sin(-true_angle / 2) * mat;
         return mat;
     }
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override {

@@ -76,7 +76,7 @@ public:
             });
         return std::make_shared<const ParamProbablisticGateImpl>(_distribution, inv_gate_list);
     }
-    internal::ComplexMatrix get_matrix(Fp) const override {
+    internal::ComplexMatrix<Fp> get_matrix(Fp) const override {
         throw std::runtime_error(
             "ParamProbablisticGateImpl::get_matrix(): This function must not be used in "
             "ParamProbablisticGateImpl.");

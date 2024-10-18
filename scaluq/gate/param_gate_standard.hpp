@@ -17,9 +17,9 @@ public:
         return std::make_shared<const ParamRXGateImpl<Fp>>(
             this->_target_mask, this->_control_mask, -this->_pcoef);
     }
-    internal::ComplexMatrix get_matrix(Fp param) const override {
+    internal::ComplexMatrix<Fp> get_matrix(Fp param) const override {
         Fp angle = this->_pcoef * param;
-        internal::ComplexMatrix mat(2, 2);
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << std::cos(angle / 2), -1i * std::sin(angle / 2), -1i * std::sin(angle / 2),
             std::cos(angle / 2);
         return mat;
@@ -47,9 +47,9 @@ public:
         return std::make_shared<const ParamRYGateImpl<Fp>>(
             this->_target_mask, this->_control_mask, -this->_pcoef);
     }
-    internal::ComplexMatrix get_matrix(Fp param) const override {
+    internal::ComplexMatrix<Fp> get_matrix(Fp param) const override {
         Fp angle = this->_pcoef * param;
-        internal::ComplexMatrix mat(2, 2);
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << std::cos(angle / 2), -std::sin(angle / 2), std::sin(angle / 2), std::cos(angle / 2);
         return mat;
     }
@@ -76,9 +76,9 @@ public:
         return std::make_shared<const ParamRZGateImpl<Fp>>(
             this->_target_mask, this->_control_mask, -this->_pcoef);
     }
-    internal::ComplexMatrix get_matrix(Fp param) const override {
+    internal::ComplexMatrix<Fp> get_matrix(Fp param) const override {
         Fp angle = param * this->_pcoef;
-        internal::ComplexMatrix mat(2, 2);
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << std::exp(-0.5i * angle), 0, 0, std::exp(0.5i * angle);
         return mat;
     }

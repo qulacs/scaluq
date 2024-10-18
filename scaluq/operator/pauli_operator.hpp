@@ -22,12 +22,13 @@ public:
         friend class PauliOperator<Fp>;
         friend class Operator<Fp>;
         std::vector<std::uint64_t> _target_qubit_list, _pauli_id_list;
-        Complex _coef;
+        Complex<Fp> _coef;
         std::uint64_t _bit_flip_mask, _phase_flip_mask;
 
     public:
-        explicit Data(Complex coef = 1.) : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {}
-        Data(std::string_view pauli_string, Complex coef = 1.)
+        explicit Data(Complex<Fp> coef = 1.)
+            : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {}
+        Data(std::string_view pauli_string, Complex<Fp> coef = 1.)
             : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
             auto ss = std::stringstream(std::string(pauli_string));
             while (1) {
@@ -54,7 +55,7 @@ public:
 
         Data(const std::vector<std::uint64_t>& target_qubit_list,
              const std::vector<std::uint64_t>& pauli_id_list,
-             Complex coef = 1.)
+             Complex<Fp> coef = 1.)
             : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
             if (target_qubit_list.size() != pauli_id_list.size()) {
                 throw std::runtime_error(
@@ -67,14 +68,14 @@ public:
             }
         }
 
-        Data(const std::vector<std::uint64_t>& pauli_id_par_qubit, Complex coef = 1.)
+        Data(const std::vector<std::uint64_t>& pauli_id_par_qubit, Complex<Fp> coef = 1.)
             : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
             for (std::uint64_t i = 0; i < pauli_id_par_qubit.size(); ++i) {
                 add_single_pauli(i, pauli_id_par_qubit[i]);
             }
         }
 
-        Data(std::uint64_t bit_flip_mask, std::uint64_t phase_flip_mask, Complex coef)
+        Data(std::uint64_t bit_flip_mask, std::uint64_t phase_flip_mask, Complex<Fp> coef)
             : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
             for (std::uint64_t target_idx = 0; target_idx < sizeof(std::uint64_t) * 8;
                  target_idx++) {
@@ -120,8 +121,8 @@ public:
             }
         }
 
-        Complex coef() const { return _coef; }
-        void set_coef(Complex c) { _coef = c; }
+        Complex<Fp> coef() const { return _coef; }
+        void set_coef(Complex<Fp> c) { _coef = c; }
         const std::vector<std::uint64_t>& target_qubit_list() const { return _target_qubit_list; }
         const std::vector<std::uint64_t>& pauli_id_list() const { return _pauli_id_list; }
         std::tuple<std::uint64_t, std::uint64_t> get_XZ_mask_representation() const {
@@ -135,20 +136,20 @@ private:
 public:
     enum PauliID : std::uint64_t { I, X, Y, Z };
 
-    explicit PauliOperator(Complex coef = 1.) : _ptr(std::make_shared<const Data>(coef)) {}
+    explicit PauliOperator(Complex<Fp> coef = 1.) : _ptr(std::make_shared<const Data>(coef)) {}
     explicit PauliOperator(Data data) : _ptr(std::make_shared<const Data>(data)) {}
-    PauliOperator(std::string_view pauli_string, Complex coef = 1.)
+    PauliOperator(std::string_view pauli_string, Complex<Fp> coef = 1.)
         : _ptr(std::make_shared<const Data>(pauli_string, coef)) {}
     PauliOperator(const std::vector<std::uint64_t>& target_qubit_list,
                   const std::vector<std::uint64_t>& pauli_id_list,
-                  Complex coef = 1.)
+                  Complex<Fp> coef = 1.)
         : _ptr(std::make_shared<const Data>(target_qubit_list, pauli_id_list, coef)) {}
-    PauliOperator(const std::vector<std::uint64_t>& pauli_id_par_qubit, Complex coef = 1.)
+    PauliOperator(const std::vector<std::uint64_t>& pauli_id_par_qubit, Complex<Fp> coef = 1.)
         : _ptr(std::make_shared<const Data>(pauli_id_par_qubit, coef)) {}
-    PauliOperator(std::uint64_t bit_flip_mask, std::uint64_t phase_flip_mask, Complex coef = 1.)
+    PauliOperator(std::uint64_t bit_flip_mask, std::uint64_t phase_flip_mask, Complex<Fp> coef = 1.)
         : _ptr(std::make_shared<const Data>(bit_flip_mask, phase_flip_mask, coef)) {}
 
-    [[nodiscard]] inline Complex coef() const { return _ptr->coef(); }
+    [[nodiscard]] inline Complex<Fp> coef() const { return _ptr->coef(); }
     [[nodiscard]] inline const std::vector<std::uint64_t>& target_qubit_list() const {
         return _ptr->target_qubit_list();
     }
@@ -192,7 +193,7 @@ public:
             0ULL, _ptr->_bit_flip_mask, _ptr->_phase_flip_mask, _ptr->_coef, state_vector);
     }
 
-    [[nodiscard]] Complex get_expectation_value(const StateVector<Fp>& state_vector) const {
+    [[nodiscard]] Complex<Fp> get_expectation_value(const StateVector<Fp>& state_vector) const {
         if (state_vector.n_qubits() < get_qubit_count()) {
             throw std::runtime_error(
                 "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to "
@@ -217,7 +218,7 @@ public:
         }
         std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
         std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-        Complex global_phase = internal::PHASE_90ROT()[global_phase_90rot_count % 4];
+        Complex<Fp> global_phase = internal::PHASE_90ROT<Fp>()[global_phase_90rot_count % 4];
         Fp res;
         Kokkos::parallel_reduce(
             state_vector.dim() >> 1,
@@ -232,8 +233,8 @@ public:
             res);
         return _ptr->_coef * res;
     }
-    [[nodiscard]] Complex get_transition_amplitude(const StateVector<Fp>& state_vector_bra,
-                                                   const StateVector<Fp>& state_vector_ket) const {
+    [[nodiscard]] Complex<Fp> get_transition_amplitude(
+        const StateVector<Fp>& state_vector_bra, const StateVector<Fp>& state_vector_ket) const {
         if (state_vector_bra.n_qubits() != state_vector_ket.n_qubits()) {
             throw std::runtime_error(
                 "state_vector_bra must have same n_qubits to state_vector_ket.");
@@ -247,12 +248,12 @@ public:
         std::uint64_t bit_flip_mask = _ptr->_bit_flip_mask;
         std::uint64_t phase_flip_mask = _ptr->_phase_flip_mask;
         if (bit_flip_mask == 0) {
-            Complex res;
+            Complex<Fp> res;
             Kokkos::parallel_reduce(
                 state_vector_bra.dim(),
-                KOKKOS_LAMBDA(std::uint64_t state_idx, Complex & sum) {
-                    Complex tmp = Kokkos::conj(state_vector_bra._raw[state_idx]) *
-                                  state_vector_ket._raw[state_idx];
+                KOKKOS_LAMBDA(std::uint64_t state_idx, Complex<Fp> & sum) {
+                    Complex<Fp> tmp = Kokkos::conj(state_vector_bra._raw[state_idx]) *
+                                      state_vector_ket._raw[state_idx];
                     if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
                     sum += tmp;
                 },
@@ -262,18 +263,18 @@ public:
         }
         std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
         std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-        Complex global_phase = internal::PHASE_90ROT()[global_phase_90rot_count % 4];
-        Complex res;
+        Complex<Fp> global_phase = internal::PHASE_90ROT<Fp>()[global_phase_90rot_count % 4];
+        Complex<Fp> res;
         Kokkos::parallel_reduce(
             state_vector_bra.dim() >> 1,
-            KOKKOS_LAMBDA(std::uint64_t state_idx, Complex & sum) {
+            KOKKOS_LAMBDA(std::uint64_t state_idx, Complex<Fp> & sum) {
                 std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
                 std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-                Complex tmp1 = Kokkos::conj(state_vector_bra._raw[basis_1]) *
-                               state_vector_ket._raw[basis_0] * global_phase;
+                Complex<Fp> tmp1 = Kokkos::conj(state_vector_bra._raw[basis_1]) *
+                                   state_vector_ket._raw[basis_0] * global_phase;
                 if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
-                Complex tmp2 = Kokkos::conj(state_vector_bra._raw[basis_0]) *
-                               state_vector_ket._raw[basis_1] * global_phase;
+                Complex<Fp> tmp2 = Kokkos::conj(state_vector_bra._raw[basis_0]) *
+                                   state_vector_ket._raw[basis_1] * global_phase;
                 if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
                 sum += tmp1 + tmp2;
             },
@@ -282,11 +283,11 @@ public:
         return _ptr->_coef * res;
     }
 
-    [[nodiscard]] internal::ComplexMatrix get_matrix() const {
-        return get_matrix_ignoring_coef() * StdComplex(_ptr->_coef);
+    [[nodiscard]] internal::ComplexMatrix<Fp> get_matrix() const {
+        return get_matrix_ignoring_coef() * StdComplex<Fp>(_ptr->_coef);
     }
 
-    [[nodiscard]] internal::ComplexMatrix get_matrix_ignoring_coef() const {
+    [[nodiscard]] internal::ComplexMatrix<Fp> get_matrix_ignoring_coef() const {
         std::uint64_t flip_mask, phase_mask, rot90_count;
         Kokkos::parallel_reduce(
             Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, _ptr->_pauli_id_list.size()),
@@ -308,11 +309,11 @@ public:
             flip_mask,
             phase_mask,
             rot90_count);
-        std::vector<StdComplex> rot = {1, -1.i, -1, 1.i};
+        std::vector<StdComplex<Fp>> rot = {1, -1.i, -1, 1.i};
         std::uint64_t matrix_dim = 1ULL << _ptr->_pauli_id_list.size();
-        internal::ComplexMatrix mat = internal::ComplexMatrix::Zero(matrix_dim, matrix_dim);
+        internal::ComplexMatrix<Fp> mat = internal::ComplexMatrix<Fp>::Zero(matrix_dim, matrix_dim);
         for (std::uint64_t index = 0; index < matrix_dim; index++) {
-            const StdComplex sign = 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
+            const StdComplex<Fp> sign = 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
             mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
         }
         return mat;
@@ -337,9 +338,9 @@ public:
         return PauliOperator(
             _ptr->_bit_flip_mask ^ target._ptr->_bit_flip_mask,
             _ptr->_phase_flip_mask ^ target._ptr->_phase_flip_mask,
-            _ptr->_coef * target._ptr->_coef * internal::PHASE_90ROT()[extra_90rot_cnt]);
+            _ptr->_coef * target._ptr->_coef * internal::PHASE_90ROT<Fp>()[extra_90rot_cnt]);
     }
-    [[nodiscard]] inline PauliOperator operator*(Complex target) const {
+    [[nodiscard]] inline PauliOperator operator*(Complex<Fp> target) const {
         return PauliOperator(_ptr->_target_qubit_list, _ptr->_pauli_id_list, _ptr->_coef * target);
     }
 };
@@ -356,23 +357,23 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
 
     nb::class_<PauliOperator::Data>(
         m, "PauliOperatorData", "Internal data structure for PauliOperator.")
-        .def(nb::init<Complex>(), "coef"_a = 1., "Initialize data with coefficient.")
-        .def(nb::init<std::string_view, Complex>(),
+        .def(nb::init<Complex<Fp>>(), "coef"_a = 1., "Initialize data with coefficient.")
+        .def(nb::init<std::string_view, Complex<Fp>>(),
              "pauli_string"_a,
              "coef"_a = 1.,
              "Initialize data with pauli string.")
         .def(nb::init<const std::vector<std::uint64_t>&,
                       const std::vector<std::uint64_t>&,
-                      Complex>(),
+                      Complex<Fp>>(),
              "target_qubit_list"_a,
              "pauli_id_list"_a,
              "coef"_a = 1.,
              "Initialize data with target qubits and pauli ids.")
-        .def(nb::init<const std::vector<std::uint64_t>&, Complex>(),
+        .def(nb::init<const std::vector<std::uint64_t>&, Complex<Fp>>(),
              "pauli_id_par_qubit"_a,
              "coef"_a = 1.,
              "Initialize data with pauli ids per qubit.")
-        .def(nb::init<std::uint64_t, std::uint64_t, Complex>(),
+        .def(nb::init<std::uint64_t, std::uint64_t, Complex<Fp>>(),
              "bit_flip_mask"_a,
              "phase_flip_mask"_a,
              "coef"_a = 1.,
@@ -402,27 +403,29 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
         m,
         "PauliOperator",
         "Pauli operator as coef and tensor product of single pauli for each qubit.")
-        .def(nb::init<Complex>(), "coef"_a = 1., "Initialize operator which just multiplying coef.")
+        .def(nb::init<Complex<Fp>>(),
+             "coef"_a = 1.,
+             "Initialize operator which just multiplying coef.")
         .def(nb::init<const std::vector<std::uint64_t>&,
                       const std::vector<std::uint64_t>&,
-                      Complex>(),
+                      Complex<Fp>>(),
              "target_qubit_list"_a,
              "pauli_id_list"_a,
              "coef"_a = 1.,
              "Initialize pauli operator. For each `i`, single pauli correspond to "
              "`pauli_id_list[i]` is applied to `target_qubit_list`-th qubit.")
-        .def(nb::init<std::string_view, Complex>(),
+        .def(nb::init<std::string_view, Complex<Fp>>(),
              "pauli_string"_a,
              "coef"_a = 1.,
              "Initialize pauli operator. If `pauli_string` is `\"X0Y2\"`, Pauli-X is applied to "
              "0-th qubit and Pauli-Y is applied to 2-th qubit. In `pauli_string`, spaces are "
              "ignored.")
-        .def(nb::init<const std::vector<std::uint64_t>&, Complex>(),
+        .def(nb::init<const std::vector<std::uint64_t>&, Complex<Fp>>(),
              "pauli_id_par_qubit"_a,
              "coef"_a = 1.,
              "Initialize pauli operator. For each `i`, single pauli correspond to "
              "`paul_id_per_qubit` is applied to `i`-th qubit.")
-        .def(nb::init<std::uint64_t, std::uint64_t, Complex>(),
+        .def(nb::init<std::uint64_t, std::uint64_t, Complex<Fp>>(),
              "bit_flip_mask"_a,
              "phase_flip_mask"_a,
              "coef"_a = 1.,
@@ -460,7 +463,7 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              &PauliOperator::get_transition_amplitude,
              "Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.")
         .def(nb::self * nb::self)
-        .def(nb::self * Complex());
+        .def(nb::self * Complex<Fp>());
 }
 }  // namespace internal
 #endif

@@ -336,7 +336,7 @@ using CComplex = std::complex<double>;
 //             }
 //         }
 //         matrix = std::cos(angle / 2) * Eigen::MatrixXcd::Identity(dim, dim) -
-//                  StdComplex(0, 1) * std::sin(angle / 2) * matrix;
+//                  StdComplex<double>(0, 1) * std::sin(angle / 2) * matrix;
 //         PauliOperator<double> pauli(target_vec, pauli_id_vec, 1.0);
 //         Gate pauli_gate = gate::PauliRotation(pauli, angle);
 //         pauli_gate->update_quantum_state(state);
@@ -410,7 +410,7 @@ void test_gate(Gate<double> gate_control,
     StateVector<double> state = StateVector<double>::Haar_random_state(n_qubits);
     auto amplitudes = state.get_amplitudes();
     StateVector<double> state_controlled(n_qubits - std::popcount(control_mask));
-    std::vector<Complex> amplitudes_controlled(state_controlled.dim());
+    std::vector<Complex<double>> amplitudes_controlled(state_controlled.dim());
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
         amplitudes_controlled[i] =
             amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) | control_mask];

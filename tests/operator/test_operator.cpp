@@ -60,8 +60,8 @@ TEST(OperatorTest, CheckExpectationValue) {
         Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
         for (std::uint64_t i = 0; i < dim; ++i) test_state[i] = state_cp[i];
 
-        Complex res = rand_observable.get_expectation_value(state);
-        Complex test_res = (test_state.adjoint() * test_rand_observable * test_state)(0, 0);
+        Complex<double> res = rand_observable.get_expectation_value(state);
+        Complex<double> test_res = (test_state.adjoint() * test_rand_observable * test_state)(0, 0);
         ASSERT_NEAR(test_res.real(), res.real(), eps);
         ASSERT_NEAR(res.imag(), 0, eps);
         ASSERT_NEAR(test_res.imag(), 0, eps);
@@ -86,8 +86,9 @@ TEST(OperatorTest, CheckTransitionAmplitude) {
         Eigen::VectorXcd test_state_ket = Eigen::VectorXcd::Zero(dim);
         for (std::uint64_t i = 0; i < dim; ++i) test_state_ket[i] = state_ket_cp[i];
 
-        Complex res = rand_observable.get_transition_amplitude(state_bra, state_ket);
-        Complex test_res = (test_state_bra.adjoint() * test_rand_observable * test_state_ket)(0, 0);
+        Complex<double> res = rand_observable.get_transition_amplitude(state_bra, state_ket);
+        Complex<double> test_res =
+            (test_state_bra.adjoint() * test_rand_observable * test_state_ket)(0, 0);
         ASSERT_NEAR(test_res.real(), res.real(), eps);
         ASSERT_NEAR(test_res.imag(), res.imag(), eps);
     }
@@ -131,7 +132,7 @@ TEST(OperatorTest, MultiCoefTest) {
 
     for (std::uint64_t repeat = 0; repeat < 10; ++repeat) {
         auto op1 = generate_random_observable_with_eigen(n, random).first;
-        auto coef = Complex(random.normal(), random.normal());
+        auto coef = Complex<double>(random.normal(), random.normal());
         auto op = op1 * coef;
         auto state = StateVector<double>::Haar_random_state(n);
         auto exp1 = op1.get_expectation_value(state);
@@ -144,25 +145,25 @@ TEST(OperatorTest, ApplyToStateTest) {
     const std::uint64_t n_qubits = 3;
     StateVector<double> state_vector(n_qubits);
     state_vector.load([n_qubits] {
-        std::vector<Complex> tmp(1 << n_qubits);
-        for (std::uint64_t i = 0; i < tmp.size(); ++i) tmp[i] = Complex(i, 0);
+        std::vector<Complex<double>> tmp(1 << n_qubits);
+        for (std::uint64_t i = 0; i < tmp.size(); ++i) tmp[i] = Complex<double>(i, 0);
         return tmp;
     }());
 
     Operator<double> op(n_qubits);
-    op.add_operator({0b001, 0b010, Complex(2)});
+    op.add_operator({0b001, 0b010, Complex<double>(2)});
     op.add_operator({"X 2 Y 1", 1});
     op.apply_to_state(state_vector);
 
-    std::vector<Complex> expected = {
-        Complex(2, -6),
-        Complex(0, -7),
-        Complex(-6, 4),
-        Complex(-4, 5),
-        Complex(10, -2),
-        Complex(8, -3),
-        Complex(-14, 0),
-        Complex(-12, 1),
+    std::vector<Complex<double>> expected = {
+        Complex<double>(2, -6),
+        Complex<double>(0, -7),
+        Complex<double>(-6, 4),
+        Complex<double>(-4, 5),
+        Complex<double>(10, -2),
+        Complex<double>(8, -3),
+        Complex<double>(-14, 0),
+        Complex<double>(-12, 1),
     };
     ASSERT_EQ(state_vector.get_amplitudes(), expected);
 }
@@ -176,9 +177,9 @@ TEST(OperatorTest, Optimize) {
     op.add_operator(PauliOperator<double>("Z 1", 4.));
     op.add_operator(PauliOperator<double>("X 0 Y 1", 5.));
     op.optimize();
-    std::vector<std::pair<std::string, Complex>> expected = {
+    std::vector<std::pair<std::string, Complex<double>>> expected = {
         {"X 0 Y 1", 10.}, {"Y 0 Z 1", 2.}, {"Z 1", 7.}};
-    std::vector<std::pair<std::string, Complex>> test;
+    std::vector<std::pair<std::string, Complex<double>>> test;
     for (const auto& pauli : op.terms()) {
         test.emplace_back(pauli.get_pauli_string(), pauli.coef());
     }

@@ -229,7 +229,7 @@ public:
     }
 
     [[nodiscard]] virtual std::shared_ptr<const GateBase<Fp>> get_inverse() const = 0;
-    [[nodiscard]] virtual internal::ComplexMatrix get_matrix() const = 0;
+    [[nodiscard]] virtual internal::ComplexMatrix<Fp> get_matrix() const = 0;
 
     virtual void update_quantum_state(StateVector<Fp>& state_vector) const = 0;
 

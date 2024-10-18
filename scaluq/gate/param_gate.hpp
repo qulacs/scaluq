@@ -116,7 +116,7 @@ public:
     }
 
     [[nodiscard]] virtual std::shared_ptr<const ParamGateBase<Fp>> get_inverse() const = 0;
-    [[nodiscard]] virtual internal::ComplexMatrix get_matrix(double param) const = 0;
+    [[nodiscard]] virtual internal::ComplexMatrix<Fp> get_matrix(double param) const = 0;
 
     virtual void update_quantum_state(StateVector<Fp>& state_vector, double param) const = 0;
 

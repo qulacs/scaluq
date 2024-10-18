@@ -25,7 +25,7 @@ public:
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return this->shared_from_this();
     }
-    internal::ComplexMatrix get_matrix() const override { return this->_pauli.get_matrix(); }
+    internal::ComplexMatrix<Fp> get_matrix() const override { return this->_pauli.get_matrix(); }
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override {
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
@@ -66,13 +66,13 @@ public:
             this->_control_mask, _pauli, -_angle);
     }
 
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat = this->_pauli.get_matrix_ignoring_coef();
-        Complex true_angle = _angle * _pauli.coef();
-        StdComplex imag_unit(0, 1);
-        mat = (StdComplex)Kokkos::cos(-true_angle / 2) *
-                  internal::ComplexMatrix::Identity(mat.rows(), mat.cols()) +
-              imag_unit * (StdComplex)Kokkos::sin(-true_angle / 2) * mat;
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat = this->_pauli.get_matrix_ignoring_coef();
+        Complex<Fp> true_angle = _angle * _pauli.coef();
+        StdComplex<Fp> imag_unit(0, 1);
+        mat = (StdComplex<Fp>)Kokkos::cos(-true_angle / 2) *
+                  internal::ComplexMatrix<Fp>::Identity(mat.rows(), mat.cols()) +
+              imag_unit * (StdComplex<Fp>)Kokkos::sin(-true_angle / 2) * mat;
         return mat;
     }
     void update_quantum_state(StateVector<Fp>& state_vector) const override {

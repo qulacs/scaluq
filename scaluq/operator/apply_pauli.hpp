@@ -9,7 +9,7 @@ template <std::floating_point Fp>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t bit_flip_mask,
                  std::uint64_t phase_flip_mask,
-                 Complex coef,
+                 Complex<Fp> coef,
                  StateVector<Fp>& state_vector) {
     if (bit_flip_mask == 0) {
         Kokkos::parallel_for(
@@ -27,14 +27,14 @@ void apply_pauli(std::uint64_t control_mask,
     }
     std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex global_phase = PHASE_M90ROT()[global_phase_90rot_count % 4];
+    Complex<Fp> global_phase = PHASE_M90ROT<Fp>()[global_phase_90rot_count % 4];
     Kokkos::parallel_for(
         state_vector.dim() >> (std::popcount(control_mask) + 1), KOKKOS_LAMBDA(std::uint64_t i) {
             std::uint64_t basis_0 =
                 insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) | control_mask;
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-            Complex tmp1 = state_vector._raw[basis_0] * global_phase;
-            Complex tmp2 = state_vector._raw[basis_1] * global_phase;
+            Complex<Fp> tmp1 = state_vector._raw[basis_0] * global_phase;
+            Complex<Fp> tmp2 = state_vector._raw[basis_1] * global_phase;
             if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp2 = -tmp2;
             if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp1 = -tmp1;
             state_vector._raw[basis_0] = tmp2 * coef;
@@ -47,16 +47,16 @@ template <std::floating_point Fp>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t bit_flip_mask,
                           std::uint64_t phase_flip_mask,
-                          Complex coef,
+                          Complex<Fp> coef,
                           Fp angle,
                           StateVector<Fp>& state_vector) {
     std::uint64_t global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex true_angle = angle * coef;
-    const Complex cosval = Kokkos::cos(-true_angle / 2);
-    const Complex sinval = Kokkos::sin(-true_angle / 2);
+    Complex<Fp> true_angle = angle * coef;
+    const Complex<Fp> cosval = Kokkos::cos(-true_angle / 2);
+    const Complex<Fp> sinval = Kokkos::sin(-true_angle / 2);
     if (bit_flip_mask == 0) {
-        const Complex cval_min = cosval - Complex(0, 1) * sinval;
-        const Complex cval_pls = cosval + Complex(0, 1) * sinval;
+        const Complex<Fp> cval_min = cosval - Complex<Fp>(0, 1) * sinval;
+        const Complex<Fp> cval_pls = cosval + Complex<Fp>(0, 1) * sinval;
         Kokkos::parallel_for(
             state_vector.dim() >> std::popcount(control_mask), KOKKOS_LAMBDA(std::uint64_t i) {
                 std::uint64_t state_idx =
@@ -83,18 +83,18 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                 int bit_parity_1 = Kokkos::popcount(basis_1 & phase_flip_mask) & 1;
 
                 // fetch values
-                Complex cval_0 = state_vector._raw[basis_0];
-                Complex cval_1 = state_vector._raw[basis_1];
+                Complex<Fp> cval_0 = state_vector._raw[basis_0];
+                Complex<Fp> cval_1 = state_vector._raw[basis_1];
 
                 // set values
                 state_vector._raw[basis_0] =
                     cosval * cval_0 +
-                    Complex(0, 1) * sinval * cval_1 *
-                        PHASE_M90ROT()[(global_phase_90_rot_count + bit_parity_0 * 2) % 4];
+                    Complex<Fp>(0, 1) * sinval * cval_1 *
+                        PHASE_M90ROT<Fp>()[(global_phase_90_rot_count + bit_parity_0 * 2) % 4];
                 state_vector._raw[basis_1] =
                     cosval * cval_1 +
-                    Complex(0, 1) * sinval * cval_0 *
-                        PHASE_M90ROT()[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
+                    Complex<Fp>(0, 1) * sinval * cval_0 *
+                        PHASE_M90ROT<Fp>()[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
             });
         Kokkos::fence();
     }

@@ -143,7 +143,7 @@ inline Gate<Fp> U3(std::uint64_t target,
 }
 template <std::floating_point Fp>
 inline Gate<Fp> OneTargetMatrix(std::uint64_t target,
-                                const std::array<std::array<Complex, 2>, 2>& matrix,
+                                const std::array<std::array<Complex<Fp>, 2>, 2>& matrix,
                                 const std::vector<std::uint64_t>& controls = {}) {
     return internal::GateFactory::create_gate<internal::OneTargetMatrixGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), matrix);
@@ -179,7 +179,7 @@ inline Gate<Fp> Swap(std::uint64_t target1,
 template <std::floating_point Fp>
 inline Gate<Fp> TwoTargetMatrix(std::uint64_t target1,
                                 std::uint64_t target2,
-                                const std::array<std::array<Complex, 4>, 4>& matrix,
+                                const std::array<std::array<Complex<Fp>, 4>, 4>& matrix,
                                 const std::vector<std::uint64_t>& controls = {}) {
     return internal::GateFactory::create_gate<internal::TwoTargetMatrixGateImpl<Fp>>(
         internal::vector_to_mask({target1, target2}), internal::vector_to_mask(controls), matrix);
@@ -200,47 +200,49 @@ inline Gate<Fp> PauliRotation(const PauliOperator<Fp>& pauli,
 }
 template <std::floating_point Fp>
 inline Gate<Fp> DenseMatrix(const std::vector<std::uint64_t>& targets,
-                            const internal::ComplexMatrix& matrix,
+                            const internal::ComplexMatrix<Fp>& matrix,
                             const std::vector<std::uint64_t>& controls = {}) {
     std::uint64_t nqubits = targets.size();
     std::uint64_t dim = 1ULL << nqubits;
     if (static_cast<std::uint64_t>(matrix.rows()) != dim ||
         static_cast<std::uint64_t>(matrix.cols()) != dim) {
         throw std::runtime_error(
-            "gate::DenseMatrix(const std::vector<std::uint64_t>&, const internal::ComplexMatrix&): "
+            "gate::DenseMatrix(const std::vector<std::uint64_t>&, const "
+            "internal::ComplexMatrix<Fp>&): "
             "matrix size must be 2^{n_qubits} x 2^{n_qubits}.");
     }
     if (targets.size() == 0) return I<Fp>();
     if (targets.size() == 1) {
         return OneTargetMatrix<Fp>(
             targets[0],
-            std::array{std::array{Complex(matrix(0, 0)), Complex(matrix(0, 1))},
-                       std::array{Complex(matrix(1, 0)), Complex(matrix(1, 1))}},
+            std::array{std::array{Complex<Fp>(matrix(0, 0)), Complex<Fp>(matrix(0, 1))},
+                       std::array{Complex<Fp>(matrix(1, 0)), Complex<Fp>(matrix(1, 1))}},
             controls);
     }
     if (targets.size() == 2) {
         return TwoTargetMatrix<Fp>(targets[0],
                                    targets[1],
-                                   std::array{std::array{Complex(matrix(0, 0)),
-                                                         Complex(matrix(0, 1)),
-                                                         Complex(matrix(0, 2)),
-                                                         Complex(matrix(0, 3))},
-                                              std::array{Complex(matrix(1, 0)),
-                                                         Complex(matrix(1, 1)),
-                                                         Complex(matrix(1, 2)),
-                                                         Complex(matrix(1, 3))},
-                                              std::array{Complex(matrix(2, 0)),
-                                                         Complex(matrix(2, 1)),
-                                                         Complex(matrix(2, 2)),
-                                                         Complex(matrix(2, 3))},
-                                              std::array{Complex(matrix(3, 0)),
-                                                         Complex(matrix(3, 1)),
-                                                         Complex(matrix(3, 2)),
-                                                         Complex(matrix(3, 3))}},
+                                   std::array{std::array{Complex<Fp>(matrix(0, 0)),
+                                                         Complex<Fp>(matrix(0, 1)),
+                                                         Complex<Fp>(matrix(0, 2)),
+                                                         Complex<Fp>(matrix(0, 3))},
+                                              std::array{Complex<Fp>(matrix(1, 0)),
+                                                         Complex<Fp>(matrix(1, 1)),
+                                                         Complex<Fp>(matrix(1, 2)),
+                                                         Complex<Fp>(matrix(1, 3))},
+                                              std::array{Complex<Fp>(matrix(2, 0)),
+                                                         Complex<Fp>(matrix(2, 1)),
+                                                         Complex<Fp>(matrix(2, 2)),
+                                                         Complex<Fp>(matrix(2, 3))},
+                                              std::array{Complex<Fp>(matrix(3, 0)),
+                                                         Complex<Fp>(matrix(3, 1)),
+                                                         Complex<Fp>(matrix(3, 2)),
+                                                         Complex<Fp>(matrix(3, 3))}},
                                    controls);
     }
     throw std::runtime_error(
-        "gate::DenseMatrix(const std::vector<std::uint64_t>&, const internal::ComplexMatrix&): "
+        "gate::DenseMatrix(const std::vector<std::uint64_t>&, const "
+        "internal::ComplexMatrix<Fp>&): "
         "DenseMatrix "
         "gate "
         "more "

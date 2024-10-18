@@ -67,17 +67,19 @@ inline std::vector<std::uint64_t> mask_to_vector(std::uint64_t mask) {
     return indices;
 }
 
-KOKKOS_INLINE_FUNCTION Matrix2x2 matrix_multiply(const Matrix2x2& matrix1,
-                                                 const Matrix2x2& matrix2) {
+template <std::floating_point Fp>
+KOKKOS_INLINE_FUNCTION Matrix2x2<Fp> matrix_multiply(const Matrix2x2<Fp>& matrix1,
+                                                     const Matrix2x2<Fp>& matrix2) {
     return {matrix1[0][0] * matrix2[0][0] + matrix1[0][1] * matrix2[1][0],
             matrix1[0][0] * matrix2[0][1] + matrix1[0][1] * matrix2[1][1],
             matrix1[1][0] * matrix2[0][0] + matrix1[1][1] * matrix2[1][0],
             matrix1[1][0] * matrix2[0][1] + matrix1[1][1] * matrix2[1][1]};
 }
 
-inline internal::ComplexMatrix kronecker_product(const internal::ComplexMatrix& lhs,
-                                                 const internal::ComplexMatrix& rhs) {
-    internal::ComplexMatrix result(lhs.rows() * rhs.rows(), lhs.cols() * rhs.cols());
+template <std::floating_point Fp>
+inline internal::ComplexMatrix<Fp> kronecker_product(const internal::ComplexMatrix<Fp>& lhs,
+                                                     const internal::ComplexMatrix<Fp>& rhs) {
+    internal::ComplexMatrix<Fp> result(lhs.rows() * rhs.rows(), lhs.cols() * rhs.cols());
     for (int i = 0; i < lhs.rows(); i++) {
         for (int j = 0; j < lhs.cols(); j++) {
             result.block(i * rhs.rows(), j * rhs.cols(), rhs.rows(), rhs.cols()) = lhs(i, j) * rhs;
@@ -86,9 +88,11 @@ inline internal::ComplexMatrix kronecker_product(const internal::ComplexMatrix& 
     return result;
 }
 
-inline internal::ComplexMatrix get_expanded_matrix(const internal::ComplexMatrix& from_matrix,
-                                                   const std::vector<std::uint64_t>& from_targets,
-                                                   std::vector<std::uint64_t>& to_targets) {
+template <std::floating_point Fp>
+inline internal::ComplexMatrix<Fp> get_expanded_matrix(
+    const internal::ComplexMatrix<Fp>& from_matrix,
+    const std::vector<std::uint64_t>& from_targets,
+    std::vector<std::uint64_t>& to_targets) {
     std::vector<std::uint64_t> targets_map(from_targets.size());
     std::ranges::transform(from_targets, targets_map.begin(), [&](std::uint64_t x) {
         return std::ranges::lower_bound(to_targets, x) - to_targets.begin();
@@ -106,8 +110,8 @@ inline internal::ComplexMatrix get_expanded_matrix(const internal::ComplexMatrix
     for (std::uint64_t i : std::views::iota(0ULL, 1ULL << to_targets.size())) {
         if ((i & targets_idx_mask) == 0) outer_indices.push_back(i);
     }
-    internal::ComplexMatrix to_matrix =
-        internal::ComplexMatrix::Zero(1ULL << to_targets.size(), 1ULL << to_targets.size());
+    internal::ComplexMatrix<Fp> to_matrix =
+        internal::ComplexMatrix<Fp>::Zero(1ULL << to_targets.size(), 1ULL << to_targets.size());
     for (std::uint64_t i : std::views::iota(0ULL, 1ULL << from_targets.size())) {
         for (std::uint64_t j : std::views::iota(0ULL, 1ULL << from_targets.size())) {
             for (std::uint64_t o : outer_indices) {

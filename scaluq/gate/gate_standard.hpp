@@ -14,8 +14,8 @@ public:
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return this->shared_from_this();
     }
-    internal::ComplexMatrix get_matrix() const override {
-        return internal::ComplexMatrix::Identity(1, 1);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        return internal::ComplexMatrix<Fp>::Identity(1, 1);
     }
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override {
@@ -44,8 +44,8 @@ public:
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return std::make_shared<const GlobalPhaseGateImpl<Fp>>(this->_control_mask, -_phase);
     }
-    internal::ComplexMatrix get_matrix() const override {
-        return internal::ComplexMatrix::Identity(1, 1) * std::exp(std::complex<Fp>(0, _phase));
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        return internal::ComplexMatrix<Fp>::Identity(1, 1) * std::exp(std::complex<Fp>(0, _phase));
     }
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override {
@@ -82,8 +82,8 @@ public:
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return this->shared_from_this();
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << 0, 1, 1, 0;
         return mat;
     }
@@ -109,8 +109,8 @@ public:
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return this->shared_from_this();
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << 0, -1i, 1i, 0;
         return mat;
     }
@@ -136,8 +136,8 @@ public:
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return this->shared_from_this();
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << 1, 0, 0, -1;
         return mat;
     }
@@ -163,8 +163,8 @@ public:
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return this->shared_from_this();
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << 1, 1, 1, -1;
         mat /= std::sqrt(2);
         return mat;
@@ -208,8 +208,8 @@ public:
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return std::make_shared<const SdagGateImpl<Fp>>(this->_target_mask, this->_control_mask);
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << 1, 0, 0, 1i;
         return mat;
     }
@@ -235,8 +235,8 @@ public:
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return std::make_shared<const SGateImpl<Fp>>(this->_target_mask, this->_control_mask);
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << 1, 0, 0, -1i;
         return mat;
     }
@@ -262,8 +262,8 @@ public:
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return std::make_shared<const TdagGateImpl<Fp>>(this->_target_mask, this->_control_mask);
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << 1, 0, 0, (1. + 1i) / std::sqrt(2);
         return mat;
     }
@@ -289,8 +289,8 @@ public:
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return std::make_shared<const TGateImpl<Fp>>(this->_target_mask, this->_control_mask);
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << 1, 0, 0, (1. - 1.i) / std::sqrt(2);
         return mat;
     }
@@ -318,9 +318,10 @@ public:
                                                             this->_control_mask);
     }
 
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
-        mat << 0.5 + 0.5i, 0.5 - 0.5i, 0.5 - 0.5i, 0.5 + 0.5i;
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
+        mat << StdComplex<Fp>(0.5, 0.5), StdComplex<Fp>(0.5, -0.5), StdComplex<Fp>(0.5, -0.5),
+            StdComplex<Fp>(0.5, 0.5);
         return mat;
     }
 
@@ -345,9 +346,10 @@ public:
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return std::make_shared<const SqrtXGateImpl<Fp>>(this->_target_mask, this->_control_mask);
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
-        mat << 0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i, 0.5 - 0.5i;
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
+        mat << StdComplex<Fp>(0.5, -0.5), StdComplex<Fp>(0.5, 0.5), StdComplex<Fp>(0.5, 0.5),
+            StdComplex<Fp>(0.5, -0.5);
         return mat;
     }
 
@@ -374,8 +376,8 @@ public:
                                                             this->_control_mask);
     }
 
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << 0.5 + 0.5i, -0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i;
         return mat;
     }
@@ -401,8 +403,8 @@ public:
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return std::make_shared<const SqrtYGateImpl<Fp>>(this->_target_mask, this->_control_mask);
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << 0.5 - 0.5i, 0.5 - 0.5i, -0.5 + 0.5i, 0.5 - 0.5i;
         return mat;
     }
@@ -428,8 +430,8 @@ public:
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         throw std::runtime_error("P0::get_inverse: Projection gate doesn't have inverse gate");
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << 1, 0, 0, 0;
         return mat;
     }
@@ -455,8 +457,8 @@ public:
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         throw std::runtime_error("P1::get_inverse: Projection gate doesn't have inverse gate");
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << 0, 0, 0, 1;
         return mat;
     }
@@ -483,8 +485,8 @@ public:
         return std::make_shared<const RXGateImpl<Fp>>(
             this->_target_mask, this->_control_mask, -this->_angle);
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << std::cos(this->_angle / 2), -1i * std::sin(this->_angle / 2),
             -1i * std::sin(this->_angle / 2), std::cos(this->_angle / 2);
         return mat;
@@ -513,8 +515,8 @@ public:
         return std::make_shared<const RYGateImpl<Fp>>(
             this->_target_mask, this->_control_mask, -this->_angle);
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << std::cos(this->_angle / 2), -std::sin(this->_angle / 2), std::sin(this->_angle / 2),
             std::cos(this->_angle / 2);
         return mat;
@@ -543,8 +545,8 @@ public:
         return std::make_shared<const RZGateImpl<Fp>>(
             this->_target_mask, this->_control_mask, -this->_angle);
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << std::exp(-0.5i * this->_angle), 0, 0, std::exp(0.5i * this->_angle);
         return mat;
     }
@@ -577,8 +579,8 @@ public:
         return std::make_shared<const U1GateImpl<Fp>>(
             this->_target_mask, this->_control_mask, -_lambda);
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << 1, 0, 0, std::exp(1i * _lambda);
         return mat;
     }
@@ -612,8 +614,8 @@ public:
                                                       -_lambda - Kokkos::numbers::pi,
                                                       -_phi + Kokkos::numbers::pi);
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << std::cos(Kokkos::numbers::pi / 4.),
             -std::exp(1i * _lambda) * std::sin(Kokkos::numbers::pi / 4.),
             std::exp(1i * _phi) * std::sin(Kokkos::numbers::pi / 4.),
@@ -650,8 +652,8 @@ public:
         return std::make_shared<const U3GateImpl<Fp>>(
             this->_target_mask, this->_control_mask, -_theta, -_lambda, -_phi);
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat(2, 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat(2, 2);
         mat << std::cos(_theta / 2.), -std::exp(1i * _lambda) * std::sin(_theta / 2.),
             std::exp(1i * _phi) * std::sin(_theta / 2.),
             std::exp(1i * _phi) * std::exp(1i * _lambda) * std::cos(_theta / 2.);
@@ -679,8 +681,8 @@ public:
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
         return this->shared_from_this();
     }
-    internal::ComplexMatrix get_matrix() const override {
-        internal::ComplexMatrix mat = internal::ComplexMatrix::Identity(1 << 2, 1 << 2);
+    internal::ComplexMatrix<Fp> get_matrix() const override {
+        internal::ComplexMatrix<Fp> mat = internal::ComplexMatrix<Fp>::Identity(1 << 2, 1 << 2);
         mat << 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1;
         return mat;
     }
