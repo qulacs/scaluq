@@ -195,15 +195,7 @@ public:
         return ret;
     }
 
-    ComplexMatrix get_matrix() const override {
-        ComplexMatrix ret(_matrix._row, _matrix._col);
-        auto vec_d = _matrix._values;
-        auto vec_h = Kokkos::create_mirror_view(vec_d);
-        for (std::size_t i = 0; i < vec_h.size(); i++) {
-            ret(vec_h(i).r, vec_h(i).c) = vec_h(i).val;
-        }
-        return ret;
-    }
+    ComplexMatrix get_matrix() const override { return convert_coo_to_external_matrix(_matrix); }
 
     SparseComplexMatrix get_sparse_matrix() const { return get_matrix().sparseView(); }
 

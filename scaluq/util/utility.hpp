@@ -178,8 +178,9 @@ inline ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix& ma
 
 inline ComplexMatrix convert_coo_to_external_matrix(SparseMatrix mat) {
     ComplexMatrix eigen_matrix(mat._row, mat._col);
+    auto vec_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), mat._values);
     for (std::size_t i = 0; i < mat._values.extent(0); i++) {
-        eigen_matrix(mat._values(i).r, mat._values(i).c) = mat._values(i).val;
+        eigen_matrix(vec_h(i).r, vec_h(i).c) = vec_h(i).val;
     }
     return eigen_matrix;
 }
@@ -202,7 +203,7 @@ inline ComplexMatrix transform_dense_matrix_by_order(const ComplexMatrix& mat,
     std::vector<std::uint64_t> transformed(matrix_size);
     for (std::size_t index = 0; index < matrix_size; index++) {
         for (std::size_t j = 0; j < targets_order.size(); j++) {
-            transformed[index] |= ((index & (1ULL << targets_order[j])) >> targets_order[j]) << j;
+            transformed[index] |= ((index >> targets_order[j]) & 1ULL) << j;
         }
     }
 

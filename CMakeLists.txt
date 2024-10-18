@@ -52,18 +52,13 @@ set_property(TARGET kokkoscore PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # Eigen
 FetchContent_Declare(
-    eigen_fetch
+    eigen
     GIT_REPOSITORY https://gitlab.com/libeigen/eigen
     GIT_TAG 3.4.0
 )
-FetchContent_GetProperties(eigen_fetch)
-if(NOT eigen_fetch_POPULATED)
-    message(STATUS "Fetch Eigen for matrix operation")
-    FetchContent_Populate(eigen_fetch)
-    add_subdirectory(${eigen_fetch_SOURCE_DIR})
-endif(NOT eigen_fetch_POPULATED)
+FetchContent_MakeAvailable(eigen)
 if(SCALUQ_USE_CUDA)
-    set(EIGEN_NO_CUDA ON CACHE BOOL "Enable host-only build for Eigen")
+    set(EIGEN_NO_CUDA ON "Enable host-only build for Eigen")
 endif(SCALUQ_USE_CUDA)
 
 # nanobind
