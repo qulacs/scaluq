@@ -43,30 +43,20 @@ endif(SCALUQ_USE_CUDA)
 ### Fetch dependencies ###
 # Kokkos
 FetchContent_Declare(
-    kokkos_fetch
+    kokkos
     GIT_REPOSITORY https://github.com/kokkos/kokkos
     GIT_TAG 4.2.00
 )
-FetchContent_GetProperties(kokkos_fetch)
-if(NOT kokkos_fetch_POPULATED)
-    message(STATUS "Fetch Kokkos for parallel execution")
-    FetchContent_Populate(kokkos_fetch)
-    add_subdirectory(${kokkos_fetch_SOURCE_DIR})
-    set_property(TARGET kokkoscore PROPERTY POSITION_INDEPENDENT_CODE ON)
-endif(NOT kokkos_fetch_POPULATED)
+FetchContent_MakeAvailable(kokkos)
+set_property(TARGET kokkoscore PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # Eigen
 FetchContent_Declare(
-    eigen_fetch
+    eigen
     GIT_REPOSITORY https://gitlab.com/libeigen/eigen
-    GIT_TAG 3.4.0
+    GIT_TAG b396a6fbb2e173f52edb3360485dedf3389ef830 # Since Eigen has not released since 3.4.0(3 years ago), a commit hash is directly specified.
 )
-FetchContent_GetProperties(eigen_fetch)
-if(NOT eigen_fetch_POPULATED)
-    message(STATUS "Fetch Eigen for matrix operation")
-    FetchContent_Populate(eigen_fetch)
-    add_subdirectory(${eigen_fetch_SOURCE_DIR})
-endif(NOT eigen_fetch_POPULATED)
+FetchContent_MakeAvailable(eigen)
 
 # nanobind
 if(SKBUILD)
@@ -88,16 +78,11 @@ endif(SKBUILD)
 # Google test
 if(SCALUQ_USE_TEST)
     FetchContent_Declare(
-        googletest_fetch
+        googletest
         GIT_REPOSITORY https://github.com/google/googletest
         GIT_TAG release-1.12.1
     )
-    FetchContent_GetProperties(googletest_fetch)
-    if(NOT googletest_fetch_POPULATED)
-        message(STATUS "Fetch googletest for C++ testing")
-        FetchContent_Populate(googletest_fetch)
-        add_subdirectory(${googletest_fetch_SOURCE_DIR})
-    endif()
+    FetchContent_MakeAvailable(googletest)
 else()
     message(STATUS "Skip downloding googletest")
 endif(SCALUQ_USE_TEST)
@@ -127,6 +112,7 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
         target_compile_options(scaluq PUBLIC
             -Wno-unknown-pragmas
             --expt-relaxed-constexpr
+            -DEIGEN_NO_CUDA
         ) 
     endif()
 
@@ -140,8 +126,12 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
     endif()
     
     # Debug options
-    target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
-    target_link_options(scaluq PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
+    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g,-O3>)
+    else()
+        target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
+        target_link_options(scaluq PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
+    endif()
 endif()
 
 ### Add subdirectories ###

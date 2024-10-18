@@ -35,6 +35,15 @@ void run() {
 
     auto pprob_gate = gate::ParamProbablistic({0.7, 0.3}, {prx_gate, pry_gate});
     std::cout << pprob_gate << std::endl;
+
+    Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> mat(4, 4);
+    mat << 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15;
+
+    auto dense_gate = gate::DenseMatrix({1, 3}, mat);
+    std::cout << dense_gate << std::endl;
+
+    auto sparse_gate = gate::SparseMatrix({2, 0}, mat.sparseView());
+    std::cout << sparse_gate << std::endl;
 }
 
 int main() {

@@ -170,7 +170,7 @@ TEST(StateVectorTest, EntropyCalculation) {
             for (std::uint64_t ind = 0; ind < dim; ++ind) {
                 CComplex z = test_state[ind];
                 double prob = z.real() * z.real() + z.imag() * z.imag();
-                if (prob > eps) ent += -prob * log(prob);
+                if (prob > eps) ent += -prob * std::log2(prob);
             }
             ASSERT_NEAR(ent, state.get_entropy(), eps);
         }
@@ -217,7 +217,7 @@ TEST(StateVectorTest, SamplingSuperpositionState) {
             state.add_state_vector_with_coef(1 << i, tmp_state);
         }
         state.normalize();
-        std::vector<size_t> res = state.sampling(nshot);
+        std::vector<std::uint64_t> res = state.sampling(nshot);
 
         std::array<std::uint64_t, 5> cnt = {};
         for (std::uint64_t i = 0; i < nshot; ++i) {

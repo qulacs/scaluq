@@ -42,6 +42,8 @@ class TwoTargetMatrixGateImpl;
 class PauliGateImpl;
 class PauliRotationGateImpl;
 class ProbablisticGateImpl;
+class SparseMatrixGateImpl;
+class DenseMatrixGateImpl;
 
 template <GateImpl T>
 class GatePtr;
@@ -77,6 +79,8 @@ enum class GateType {
     TwoTargetMatrix,
     Pauli,
     PauliRotation,
+    SparseMatrix,
+    DenseMatrix,
     Probablistic
 };
 
@@ -139,6 +143,10 @@ constexpr GateType get_gate_type() {
         return GateType::Pauli;
     else if constexpr (std::is_same_v<TWithoutConst, internal::PauliRotationGateImpl>)
         return GateType::PauliRotation;
+    else if constexpr (std::is_same_v<T, internal::SparseMatrixGateImpl>)
+        return GateType::SparseMatrix;
+    else if constexpr (std::is_same_v<T, internal::DenseMatrixGateImpl>)
+        return GateType::DenseMatrix;
     else if constexpr (std::is_same_v<TWithoutConst, internal::ProbablisticGateImpl>)
         return GateType::Probablistic;
     else
