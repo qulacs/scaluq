@@ -60,6 +60,17 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
+void none_target_dense_matrix_gate(std::uint64_t control_mask,
+                                   const Matrix& matrix,
+                                   StateVector& state) {
+    Kokkos::parallel_for(
+        state.dim() >> std::popcount(control_mask), KOKKOS_LAMBDA(std::uint64_t it) {
+            std::uint64_t basis = insert_zero_at_mask_positions(it, control_mask) | control_mask;
+            state._raw[basis] *= matrix(0, 0);
+        });
+    Kokkos::fence();
+}
+
 void single_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
                                      const Matrix& matrix,
@@ -164,7 +175,9 @@ void dense_matrix_gate(std::uint64_t target_mask,
                        const Matrix& matrix,
                        StateVector& state) {
     const std::uint64_t target_qubit_index_count = std::popcount(target_mask);
-    if (target_qubit_index_count == 1) {
+    if (target_qubit_index_count == 0) {
+        none_target_dense_matrix_gate(control_mask, matrix, state);
+    } else if (target_qubit_index_count == 1) {
         single_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
     } else if (target_qubit_index_count == 2) {
         double_target_dense_matrix_gate(target_mask, control_mask, matrix, state);

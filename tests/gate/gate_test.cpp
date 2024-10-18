@@ -819,8 +819,8 @@ TEST(GateTest, Control) {
         test_standard_gate_control<2, 0>(gate::Swap, n);
         test_pauli_control<false>(n);
         test_pauli_control<true>(n);
-        // test_matrix_control<1>(n);
-        // test_matrix_control<2>(n);
-        // test_matrix_control<3>(n);
+        test_matrix_control<1>(n);
+        test_matrix_control<2>(n);
+        test_matrix_control<3>(n);
     }
 }
