@@ -200,7 +200,10 @@ inline Eigen::MatrixXcd make_2x2_matrix(const Eigen::dcomplex a00,
     return m;
 }
 
-inline Eigen::MatrixXcd make_I() { return Eigen::MatrixXcd::Identity(2, 2); }
+template <std::floating_point Fp>
+inline Eigen::MatrixXcd make_I() {
+    return Eigen::MatrixXcd::Identity(2, 2);
+}
 
 inline Eigen::MatrixXcd make_X() { return make_2x2_matrix(0, 1, 1, 0); }
 

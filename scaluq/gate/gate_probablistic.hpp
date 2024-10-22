@@ -10,11 +10,11 @@ template <std::floating_point Fp>
 class ProbablisticGateImpl : public GateBase<Fp> {
     std::vector<Fp> _distribution;
     std::vector<Fp> _cumlative_distribution;
-    std::vector<std::shared_ptr<const GateBase<Fp>>> _gate_list;
+    std::vector<Gate<Fp>> _gate_list;
 
 public:
     ProbablisticGateImpl(const std::vector<Fp>& distribution,
-                         const std::vector<std::shared_ptr<const GateBase<Fp>>>& gate_list)
+                         const std::vector<Gate<Fp>>& gate_list)
         : GateBase<Fp>(0, 0), _distribution(distribution), _gate_list(gate_list) {
         std::uint64_t n = distribution.size();
         if (n == 0) {
@@ -30,7 +30,7 @@ public:
             throw std::runtime_error("Sum of distribution must be equal to 1.");
         }
     }
-    const std::vector<std::shared_ptr<const GateBase<Fp>>>& gate_list() const { return _gate_list; }
+    const std::vector<Gate<Fp>>& gate_list() const { return _gate_list; }
     const std::vector<Fp>& distribution() const { return _distribution; }
 
     std::vector<std::uint64_t> target_qubit_list() const override {
@@ -65,12 +65,11 @@ public:
     }
 
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
-        std::vector<std::shared_ptr<const GateBase<Fp>>> inv_gate_list;
+        std::vector<Gate<Fp>> inv_gate_list;
         inv_gate_list.reserve(_gate_list.size());
-        std::ranges::transform(
-            _gate_list,
-            std::back_inserter(inv_gate_list),
-            [](const std::shared_ptr<const GateBase<Fp>>& gate) { return gate->get_inverse(); });
+        std::ranges::transform(_gate_list,
+                               std::back_inserter(inv_gate_list),
+                               [](const Gate<Fp>& gate) { return gate->get_inverse(); });
         return std::make_shared<const ProbablisticGateImpl>(_distribution, inv_gate_list);
     }
     internal::ComplexMatrix<Fp> get_matrix() const override {

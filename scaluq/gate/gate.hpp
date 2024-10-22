@@ -244,13 +244,13 @@ class GatePtr {
     friend class GateFactory;
     template <GateImpl U>
     friend class GatePtr;
-    using Fp = typename T::Fp;
 
 private:
     std::shared_ptr<const T> _gate_ptr;
     GateType _gate_type;
 
 public:
+    using Fp = typename T::Fp;
     GatePtr() : _gate_ptr(nullptr), _gate_type(get_gate_type<T>()) {}
     template <GateImpl U>
     GatePtr(const std::shared_ptr<const U>& gate_ptr) {

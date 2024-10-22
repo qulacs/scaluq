@@ -88,14 +88,14 @@ inline void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
 }
 
 template <std::floating_point Fp>
-inline void i_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {}
+inline void i_gate(std::uint64_t, std::uint64_t, StateVector<Fp>&) {}
 
 template <std::floating_point Fp>
-inline void global_phase_gate(std::uint64_t target_mask,
+inline void global_phase_gate(std::uint64_t,
                               std::uint64_t control_mask,
                               Fp angle,
                               StateVector<Fp>& state) {
-    Complex<Fp> coef = Kokkos::polar(1., angle);
+    Complex<Fp> coef = Kokkos::polar<Fp>(1., angle);
     Kokkos::parallel_for(
         state.dim() >> std::popcount(control_mask), KOKKOS_LAMBDA(std::uint64_t i) {
             state._raw[insert_zero_at_mask_positions(i, control_mask) | control_mask] *= coef;
@@ -250,7 +250,7 @@ inline void rz_gate(std::uint64_t target_mask,
                     StateVector<Fp>& state) {
     const Fp cosval = std::cos(angle / 2.);
     const Fp sinval = std::sin(angle / 2.);
-    DiagonalMatrix2x2<double> diag = {Complex<Fp>(cosval, -sinval), Complex<Fp>(cosval, sinval)};
+    DiagonalMatrix2x2<Fp> diag = {Complex<Fp>(cosval, -sinval), Complex<Fp>(cosval, sinval)};
     one_target_diagonal_matrix_gate(target_mask, control_mask, diag, state);
 }
 
@@ -277,8 +277,10 @@ inline void u2_gate(std::uint64_t target_mask,
                     Fp phi,
                     Fp lambda,
                     StateVector<Fp>& state) {
-    one_target_dense_matrix_gate(
-        target_mask, control_mask, get_IBMQ_matrix(Kokkos::numbers::pi / 2., phi, lambda), state);
+    one_target_dense_matrix_gate(target_mask,
+                                 control_mask,
+                                 get_IBMQ_matrix((Fp)Kokkos::numbers::pi / 2, phi, lambda),
+                                 state);
 }
 
 template <std::floating_point Fp>

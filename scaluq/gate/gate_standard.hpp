@@ -111,7 +111,7 @@ public:
     }
     internal::ComplexMatrix<Fp> get_matrix() const override {
         internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << 0, -1i, 1i, 0;
+        mat << 0, Complex<Fp>(0, -1), Complex<Fp>(0, 1), 0;
         return mat;
     }
 
@@ -378,7 +378,8 @@ public:
 
     internal::ComplexMatrix<Fp> get_matrix() const override {
         internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << 0.5 + 0.5i, -0.5 - 0.5i, 0.5 + 0.5i, 0.5 + 0.5i;
+        mat << StdComplex<Fp>(0.5, 0.5), StdComplex<Fp>(-0.5, -0.5), StdComplex<Fp>(0.5, 0.5),
+            StdComplex<Fp>(0.5, 0.5);
         return mat;
     }
 
@@ -405,7 +406,8 @@ public:
     }
     internal::ComplexMatrix<Fp> get_matrix() const override {
         internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << 0.5 - 0.5i, 0.5 - 0.5i, -0.5 + 0.5i, 0.5 - 0.5i;
+        mat << StdComplex<Fp>(0.5, -0.5), StdComplex<Fp>(0.5, -0.5), StdComplex<Fp>(-0.5, 0.5),
+            StdComplex<Fp>(0.5, -0.5);
         return mat;
     }
 
@@ -487,8 +489,8 @@ public:
     }
     internal::ComplexMatrix<Fp> get_matrix() const override {
         internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << std::cos(this->_angle / 2), -1i * std::sin(this->_angle / 2),
-            -1i * std::sin(this->_angle / 2), std::cos(this->_angle / 2);
+        mat << std::cos(this->_angle / 2), Complex<Fp>(0, -std::sin(this->_angle / 2)),
+            Complex<Fp>(0, std::sin(this->_angle / 2)), std::cos(this->_angle / 2);
         return mat;
     }
 
@@ -547,7 +549,8 @@ public:
     }
     internal::ComplexMatrix<Fp> get_matrix() const override {
         internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << std::exp(-0.5i * this->_angle), 0, 0, std::exp(0.5i * this->_angle);
+        mat << std::exp(StdComplex<Fp>(0, -0.5 * this->_angle)), 0, 0,
+            std::exp(StdComplex<Fp>(0, 0.5 * this->_angle));
         return mat;
     }
 
@@ -581,7 +584,7 @@ public:
     }
     internal::ComplexMatrix<Fp> get_matrix() const override {
         internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << 1, 0, 0, std::exp(1i * _lambda);
+        mat << 1, 0, 0, std::exp(StdComplex<Fp>(0, _lambda));
         return mat;
     }
 
@@ -617,9 +620,10 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override {
         internal::ComplexMatrix<Fp> mat(2, 2);
         mat << std::cos(Kokkos::numbers::pi / 4.),
-            -std::exp(1i * _lambda) * std::sin(Kokkos::numbers::pi / 4.),
-            std::exp(1i * _phi) * std::sin(Kokkos::numbers::pi / 4.),
-            std::exp(1i * _phi) * std::exp(1i * _lambda) * std::cos(Kokkos::numbers::pi / 4.);
+            -std::exp(StdComplex<Fp>(0, _lambda)) * std::sin((Fp)Kokkos::numbers::pi / 4),
+            std::exp(StdComplex<Fp>(0, _phi)) * std::sin((Fp)Kokkos::numbers::pi / 4),
+            std::exp(StdComplex<Fp>(0, _phi)) * std::exp(StdComplex<Fp>(0, _lambda)) *
+                std::cos((Fp)Kokkos::numbers::pi / 4);
         return mat;
     }
 
@@ -654,9 +658,10 @@ public:
     }
     internal::ComplexMatrix<Fp> get_matrix() const override {
         internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << std::cos(_theta / 2.), -std::exp(1i * _lambda) * std::sin(_theta / 2.),
-            std::exp(1i * _phi) * std::sin(_theta / 2.),
-            std::exp(1i * _phi) * std::exp(1i * _lambda) * std::cos(_theta / 2.);
+        mat << std::cos(_theta / 2.), -std::exp(StdComplex<Fp>(0, _lambda)) * std::sin(_theta / 2),
+            std::exp(StdComplex<Fp>(0, _phi)) * std::sin(_theta / 2),
+            std::exp(StdComplex<Fp>(0, _phi)) * std::exp(StdComplex<Fp>(0, _lambda)) *
+                std::cos(_theta / 2);
         return mat;
     }
 

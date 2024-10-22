@@ -309,7 +309,7 @@ public:
             flip_mask,
             phase_mask,
             rot90_count);
-        std::vector<StdComplex<Fp>> rot = {1, -1.i, -1, 1.i};
+        std::vector<StdComplex<Fp>> rot = {1, Complex<Fp>(0, -1), -1, Complex<Fp>(0, 1)};
         std::uint64_t matrix_dim = 1ULL << _ptr->_pauli_id_list.size();
         internal::ComplexMatrix<Fp> mat = internal::ComplexMatrix<Fp>::Zero(matrix_dim, matrix_dim);
         for (std::uint64_t index = 0; index < matrix_dim; index++) {
