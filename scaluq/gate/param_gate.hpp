@@ -61,7 +61,7 @@ public:
 
 protected:
     std::uint64_t _target_mask, _control_mask;
-    double _pcoef;
+    Fp _pcoef;
     void check_qubit_mask_within_bounds(const StateVector<Fp>& state_vector) const {
         std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
         if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
@@ -88,7 +88,7 @@ protected:
     }
 
 public:
-    ParamGateBase(std::uint64_t target_mask, std::uint64_t control_mask, double param_coef = 1.)
+    ParamGateBase(std::uint64_t target_mask, std::uint64_t control_mask, Fp param_coef = 1.)
         : _target_mask(target_mask), _control_mask(control_mask), _pcoef(param_coef) {
         if (_target_mask & _control_mask) [[unlikely]] {
             throw std::runtime_error(
@@ -98,7 +98,7 @@ public:
     }
     virtual ~ParamGateBase() = default;
 
-    [[nodiscard]] double param_coef() const { return _pcoef; }
+    [[nodiscard]] Fp param_coef() const { return _pcoef; }
 
     [[nodiscard]] virtual std::vector<std::uint64_t> target_qubit_list() const {
         return mask_to_vector(_target_mask);
@@ -116,9 +116,9 @@ public:
     }
 
     [[nodiscard]] virtual std::shared_ptr<const ParamGateBase<Fp>> get_inverse() const = 0;
-    [[nodiscard]] virtual internal::ComplexMatrix<Fp> get_matrix(double param) const = 0;
+    [[nodiscard]] virtual internal::ComplexMatrix<Fp> get_matrix(Fp param) const = 0;
 
-    virtual void update_quantum_state(StateVector<Fp>& state_vector, double param) const = 0;
+    virtual void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 };

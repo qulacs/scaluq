@@ -113,7 +113,7 @@ public:
     }
 
     void update_quantum_state(StateVector<Fp>& state,
-                              const std::map<std::string, double>& parameters = {}) const {
+                              const std::map<std::string, Fp>& parameters = {}) const {
         for (auto&& gate : _gate_list) {
             if (gate.index() == 0) continue;
             const auto& key = std::get<1>(gate).second;

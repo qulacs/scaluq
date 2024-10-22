@@ -12,7 +12,15 @@
 using namespace scaluq;
 
 const double eps = 1e-12;
-const float eps_f = 1e-7;
+const float eps_f = 1e-6;
+
+template <std::floating_point Fp>
+void check_near(const StdComplex<Fp>& a, const StdComplex<Fp>& b) {
+    if constexpr (std::is_same_v<Fp, double>)
+        ASSERT_NEAR(std::abs(a - b), 0, eps);
+    else
+        ASSERT_NEAR(std::abs(a - b), 0, eps_f);
+}
 
 template <std::floating_point Fp>
 void circuit_test() {
@@ -178,10 +186,7 @@ void circuit_test() {
 
     state_cp = state.get_amplitudes();
     for (std::uint64_t i = 0; i < dim; ++i) {
-        if constexpr (std::is_same_v<Fp, double>)
-            ASSERT_NEAR(std::abs(state_eigen[i] - (StdComplex<Fp>)state_cp[i]), 0, eps);
-        else
-            ASSERT_NEAR(std::abs(state_eigen[i] - (StdComplex<Fp>)state_cp[i]), 0, eps_f);
+        check_near(state_eigen[i], (StdComplex<Fp>)state_cp[i]);
     }
 }
 
@@ -286,10 +291,7 @@ void circuit_rev_test() {
     revcircuit.update_quantum_state(state);
     state_cp = state.get_amplitudes();
     for (std::uint64_t i = 0; i < dim; ++i) {
-        if constexpr (std::is_same_v<Fp, double>)
-            ASSERT_NEAR(std::abs(state_eigen[i] - (StdComplex<Fp>)state_cp[i]), 0, eps);
-        else
-            ASSERT_NEAR(std::abs(state_eigen[i] - (StdComplex<Fp>)state_cp[i]), 0, eps_f);
+        check_near(state_eigen[i], (StdComplex<Fp>)state_cp[i]);
     }
 }
 
