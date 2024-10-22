@@ -111,7 +111,7 @@ public:
     }
     internal::ComplexMatrix<Fp> get_matrix() const override {
         internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << 0, Complex<Fp>(0, -1), Complex<Fp>(0, 1), 0;
+        mat << 0, StdComplex<Fp>(0, -1), StdComplex<Fp>(0, 1), 0;
         return mat;
     }
 
@@ -166,7 +166,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override {
         internal::ComplexMatrix<Fp> mat(2, 2);
         mat << 1, 1, 1, -1;
-        mat /= std::sqrt(2);
+        mat /= (Fp)Kokkos::numbers::sqrt2;
         return mat;
     }
 
@@ -210,7 +210,7 @@ public:
     }
     internal::ComplexMatrix<Fp> get_matrix() const override {
         internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << 1, 0, 0, 1i;
+        mat << 1, 0, 0, StdComplex<Fp>(0, 1);
         return mat;
     }
 
@@ -237,7 +237,7 @@ public:
     }
     internal::ComplexMatrix<Fp> get_matrix() const override {
         internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << 1, 0, 0, -1i;
+        mat << 1, 0, 0, StdComplex<Fp>(0, -1);
         return mat;
     }
 
@@ -264,7 +264,7 @@ public:
     }
     internal::ComplexMatrix<Fp> get_matrix() const override {
         internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << 1, 0, 0, (1. + 1i) / std::sqrt(2);
+        mat << 1, 0, 0, StdComplex<Fp>(1, 1) / (Fp)Kokkos::numbers::sqrt2;
         return mat;
     }
 
@@ -291,7 +291,7 @@ public:
     }
     internal::ComplexMatrix<Fp> get_matrix() const override {
         internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << 1, 0, 0, (1. - 1.i) / std::sqrt(2);
+        mat << 1, 0, 0, StdComplex<Fp>(1, -1) / (Fp)Kokkos::numbers::sqrt2;
         return mat;
     }
 
@@ -489,8 +489,8 @@ public:
     }
     internal::ComplexMatrix<Fp> get_matrix() const override {
         internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << std::cos(this->_angle / 2), Complex<Fp>(0, -std::sin(this->_angle / 2)),
-            Complex<Fp>(0, std::sin(this->_angle / 2)), std::cos(this->_angle / 2);
+        mat << std::cos(this->_angle / 2), StdComplex<Fp>(0, -std::sin(this->_angle / 2)),
+            StdComplex<Fp>(0, std::sin(this->_angle / 2)), std::cos(this->_angle / 2);
         return mat;
     }
 

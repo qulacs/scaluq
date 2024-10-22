@@ -2,12 +2,12 @@
 
 #include <Eigen/Core>
 #include <complex>
-using namespace std::complex_literals;
-
 #include <types.hpp>
 #include <util/random.hpp>
 #include <util/utility.hpp>
+
 using namespace scaluq;
+using namespace std::complex_literals;
 
 template <std::floating_point Fp>
 inline bool same_state(const StateVector<Fp>& s1,

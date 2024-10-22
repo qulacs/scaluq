@@ -21,7 +21,6 @@ template <std::floating_point Fp>
 using StdComplex = std::complex<Fp>;
 template <std::floating_point Fp>
 using Complex = Kokkos::complex<Fp>;
-using namespace std::complex_literals;
 
 namespace internal {
 template <typename DummyType>

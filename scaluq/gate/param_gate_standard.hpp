@@ -20,8 +20,8 @@ public:
     internal::ComplexMatrix<Fp> get_matrix(Fp param) const override {
         Fp angle = this->_pcoef * param;
         internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << std::cos(angle / 2), -1i * std::sin(angle / 2), -1i * std::sin(angle / 2),
-            std::cos(angle / 2);
+        mat << std::cos(angle / 2), StdComplex<Fp>(0, -std::sin(angle / 2)),
+            StdComplex<Fp>(0, -std::sin(angle / 2)), std::cos(angle / 2);
         return mat;
     }
 
@@ -79,7 +79,8 @@ public:
     internal::ComplexMatrix<Fp> get_matrix(Fp param) const override {
         Fp angle = param * this->_pcoef;
         internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << std::exp(-0.5i * angle), 0, 0, std::exp(0.5i * angle);
+        mat << std::exp(StdComplex<Fp>(0, -angle / 2)), 0, 0,
+            std::exp(StdComplex<Fp>(0, angle / 2));
         return mat;
     }
 
