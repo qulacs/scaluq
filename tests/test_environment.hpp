@@ -4,8 +4,6 @@
 
 #include <Kokkos_Core.hpp>
 
-using namespace std::complex_literals;
-
 namespace scaluq {
 class TestEnvironment : public testing::Environment {
     void SetUp() override { Kokkos::initialize(); }

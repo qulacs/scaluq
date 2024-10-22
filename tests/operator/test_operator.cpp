@@ -23,8 +23,8 @@ std::pair<Operator<double>, Eigen::MatrixXcd> generate_random_observable_with_ei
         for (std::uint64_t i = 0; i < paulis.size(); ++i) {
             paulis[i] = random.int32() % 4;
 
-            test_rand_operator_term *= get_expanded_eigen_matrix_with_identity(
-                i, get_eigen_matrix_single_Pauli(paulis[i]), n);
+            test_rand_operator_term *= get_expanded_eigen_matrix_with_identity<double>(
+                i, get_eigen_matrix_single_Pauli<double>(paulis[i]), n);
         }
         test_rand_observable += coef * test_rand_operator_term;
 
