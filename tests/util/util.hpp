@@ -14,6 +14,17 @@ using scaluq::internal::ComplexMatrix;
 template <std::floating_point Fp>
 using ComplexVector = Eigen::Matrix<StdComplex<Fp>, -1, 1>;
 
+const inline double eps = 1e-12;
+const inline float eps_f = 1e-6;
+
+template <std::floating_point Fp>
+void check_near(const StdComplex<Fp>& a, const StdComplex<Fp>& b) {
+    if constexpr (std::is_same_v<Fp, double>)
+        EXPECT_NEAR(std::abs(a - b), 0, eps);
+    else
+        EXPECT_NEAR(std::abs(a - b), 0, eps_f);
+}
+
 template <std::floating_point Fp>
 inline bool same_state(const StateVector<Fp>& s1, const StateVector<Fp>& s2, const Fp eps = 1e-12) {
     auto s1_cp = s1.get_amplitudes();
@@ -212,7 +223,7 @@ inline ComplexMatrix<Fp> make_2x2_matrix(const StdComplex<Fp>& a00,
 }
 
 template <std::floating_point Fp>
-inline ComplexVector<Fp> make_I() {
+inline ComplexMatrix<Fp> make_I() {
     return ComplexMatrix<Fp>::Identity(2, 2);
 }
 
@@ -233,7 +244,7 @@ inline ComplexMatrix<Fp> make_Z() {
 
 template <std::floating_point Fp>
 inline ComplexMatrix<Fp> make_H() {
-    return make_2x2_matrix<Fp>(1 / sqrt(2.), 1 / sqrt(2.), 1 / sqrt(2.), -1 / sqrt(2.));
+    return make_2x2_matrix<Fp>(1 / sqrt(2), 1 / sqrt(2), 1 / sqrt(2), -1 / sqrt(2));
 }
 template <std::floating_point Fp>
 inline ComplexMatrix<Fp> make_S() {

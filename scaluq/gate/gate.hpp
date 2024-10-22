@@ -251,7 +251,7 @@ private:
 
 public:
     using Fp = typename T::Fp;
-    GatePtr() : _gate_ptr(nullptr), _gate_type(get_gate_type<T>()) {}
+    GatePtr() : _gate_ptr(nullptr), _gate_type(get_gate_type<T, Fp>()) {}
     template <GateImpl U>
     GatePtr(const std::shared_ptr<const U>& gate_ptr) {
         if constexpr (std::is_same_v<T, U>) {

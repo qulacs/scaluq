@@ -12,8 +12,6 @@ using CComplex = std::complex<double>;
 
 using namespace scaluq;
 
-const double eps = 1e-12;
-
 TEST(StateVectorBatchedTest, HaarRandomStateNorm) {
     const std::uint64_t batch_size = 10, n_qubits = 3;
     const auto states = StateVectorBatched<double>::Haar_random_state(batch_size, n_qubits, false);

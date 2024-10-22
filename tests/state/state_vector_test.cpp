@@ -12,8 +12,6 @@ using CComplex = std::complex<double>;
 
 using namespace scaluq;
 
-const double eps = 1e-12;
-
 TEST(StateVectorTest, HaarRandomStateNorm) {
     const int n_tries = 20;
     for (int n = 1; n <= n_tries; n++) {

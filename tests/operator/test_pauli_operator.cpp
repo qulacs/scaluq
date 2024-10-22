@@ -7,8 +7,6 @@
 
 using namespace scaluq;
 
-const double eps = 1e-12;
-
 TEST(PauliOperatorTest, ContainsExtraWhitespace) {
     PauliOperator<double> expected = PauliOperator<double>("X 0", 1.0);
     PauliOperator<double> pauli_whitespace = PauliOperator<double>("X 0 ", 1.0);

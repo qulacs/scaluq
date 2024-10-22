@@ -11,17 +11,6 @@
 
 using namespace scaluq;
 
-const double eps = 1e-12;
-const float eps_f = 1e-6;
-
-template <std::floating_point Fp>
-void check_near(const StdComplex<Fp>& a, const StdComplex<Fp>& b) {
-    if constexpr (std::is_same_v<Fp, double>)
-        ASSERT_NEAR(std::abs(a - b), 0, eps);
-    else
-        ASSERT_NEAR(std::abs(a - b), 0, eps_f);
-}
-
 template <std::floating_point Fp>
 void circuit_test() {
     const std::uint64_t n = 4;

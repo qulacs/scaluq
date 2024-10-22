@@ -8,10 +8,9 @@
 #include <util/random.hpp>
 
 #include "../test_environment.hpp"
+#include "../util/util.hpp"
 
 using namespace scaluq;
-
-const auto eps = 1e-12;
 
 template <typename FactoryFixed, typename FactoryParametric>
 void test_apply_parametric_single_pauli_rotation(std::uint64_t n_qubits,

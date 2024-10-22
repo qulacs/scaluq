@@ -7,8 +7,6 @@
 
 using namespace scaluq;
 
-const double eps = 1e-12;
-
 std::pair<Operator<double>, Eigen::MatrixXcd> generate_random_observable_with_eigen(
     std::uint64_t n, Random& random) {
     std::uint64_t dim = 1ULL << n;
