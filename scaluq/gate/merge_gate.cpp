@@ -5,19 +5,41 @@
 #include "gate/gate_factory.hpp"
 
 namespace scaluq {
-/**
- * @details ignore global phase (because PauliRoation -> matrix ignore global phase)
- */
+std::pair<Gate, double> merge_gate_dense_matrix(const Gate& gate1, const Gate& gate2) {
+    auto merged_operand_mask = gate1->operand_qubit_mask() | gate2->operand_qubit_mask();
+    auto merged_operand_vector = internal::mask_to_vector(merged_operand_mask);
+    auto matrix1 = internal::get_expanded_matrix(
+        gate1->get_matrix(), gate1->target_qubit_list(), merged_operand_vector);
+    auto matrix2 = internal::get_expanded_matrix(
+        gate2->get_matrix(), gate2->target_qubit_list(), merged_operand_vector);
+    auto matrix = matrix2 * matrix1;
+    return {gate::DenseMatrix(merged_operand_vector, matrix), 0.};
+}
+
 std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
     GateType gate_type1 = gate1.gate_type();
     GateType gate_type2 = gate2.gate_type();
     // TODO: Deal with ProbablisticGate
 
+    auto gate1_control_mask = gate1->control_qubit_mask();
+    auto gate2_control_mask = gate2->control_qubit_mask();
+    if (gate1_control_mask != gate2_control_mask) return merge_gate_dense_matrix(gate1, gate2);
+    auto control_list = internal::mask_to_vector(gate1_control_mask);
+
     // Special case: Zero qubit
     if (gate_type1 == GateType::I) return {gate2, 0.};  // copy can be removed by #125
     if (gate_type2 == GateType::I) return {gate1, 0.};
-    if (gate_type1 == GateType::GlobalPhase) return {gate2, GlobalPhaseGate(gate1)->phase()};
-    if (gate_type2 == GateType::GlobalPhase) return {gate1, GlobalPhaseGate(gate2)->phase()};
+    if (gate_type1 == GateType::GlobalPhase || gate_type2 == GateType::GlobalPhase) {
+        const auto& [phase, gate] = [&] {
+            if (gate_type1 == GateType::GlobalPhase)
+                return std::make_pair(GlobalPhaseGate(gate1)->phase(), gate2);
+            return std::make_pair(GlobalPhaseGate(gate2)->phase(), gate1);
+        }();
+        if (gate1_control_mask == 0) return {gate, phase};
+        auto gate_type = gate.gate_type();
+        if (gate_type == GateType::GlobalPhase)
+            return {gate::GlobalPhase(phase + GlobalPhaseGate(gate)->phase(), control_list), 0.};
+    }
 
     // Special case: Pauli
     auto get_pauli_id = [&](GateType gate_type) -> std::optional<std::uint64_t> {
@@ -155,58 +177,12 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
         }
     }
 
-    // Special case: CX,CZ,Swap,FusedSwap duplication
-    if (gate_type1 == gate_type2 && gate_type1 == GateType::CX) {
-        CXGate cx1(gate1), cx2(gate2);
-        if (cx1->target() == cx2->target() && cx1->control() == cx2->control())
-            return {gate::I(), 0.};
-    }
-    if (gate_type1 == gate_type2 && gate_type1 == GateType::CZ) {
-        CZGate cz1(gate1), cz2(gate2);
-        if (cz1->target() == cz2->target() && cz1->control() == cz2->control())
-            return {gate::I(), 0.};
-        if (cz1->target() == cz2->control() && cz1->control() == cz2->target())
-            return {gate::I(), 0.};
-    }
+    // Special case: CZ,Swap duplication
     if (gate_type1 == gate_type2 && gate_type1 == GateType::Swap) {
-        SwapGate swap1(gate1), swap2(gate2);
-        if (swap1->target1() == swap2->target1() && swap1->target2() == swap2->target2())
-            return {gate::I(), 0.};
-        if (swap1->target1() == swap2->target2() && swap1->target2() == swap2->target1())
-            return {gate::I(), 0.};
-    }
-    if (gate_type1 == gate_type2 && gate_type1 == GateType::FusedSwap) {
-        FusedSwapGate swap1(gate1), swap2(gate2);
-        if (swap1->block_size() == swap2->block_size()) {
-            if (swap1->qubit_index1() == swap2->qubit_index1() &&
-                swap1->qubit_index2() == swap2->qubit_index2())
-                return {gate::I(), 0.};
-            if (swap1->qubit_index1() == swap2->qubit_index2() &&
-                swap1->qubit_index2() == swap2->qubit_index1())
-                return {gate::I(), 0.};
-        }
+        if (gate1->target_qubit_mask() == gate2->target_qubit_mask()) return {gate::I(), 0.};
     }
 
     // General case
-    auto gate1_targets = gate1->target_qubit_list();
-    std::ranges::copy(gate1->control_qubit_list(), std::back_inserter(gate1_targets));
-    auto gate2_targets = gate2->target_qubit_list();
-    std::ranges::copy(gate2->control_qubit_list(), std::back_inserter(gate2_targets));
-    std::vector<std::uint64_t> merged_targets(gate1_targets.size() + gate2_targets.size());
-    std::ranges::copy(gate1_targets, merged_targets.begin());
-    std::ranges::copy(gate2_targets, merged_targets.begin() + gate1_targets.size());
-    std::ranges::sort(merged_targets);
-    merged_targets.erase(std::ranges::unique(merged_targets).begin(), merged_targets.end());
-    if (merged_targets.size() >= 3) {
-        throw std::runtime_error(
-            "gate::merge_gate: Result gate's target size is equal or more than three. This is "
-            "currently not implemented.");
-    }
-    auto matrix1 =
-        internal::get_expanded_matrix(gate1->get_matrix().value(), gate1_targets, merged_targets);
-    auto matrix2 =
-        internal::get_expanded_matrix(gate2->get_matrix().value(), gate2_targets, merged_targets);
-    auto matrix = matrix2 * matrix1;
-    return {gate::DenseMatrix(merged_targets, matrix), 0.};
+    return merge_gate_dense_matrix(gate1, gate2);
 }
 }  // namespace scaluq
