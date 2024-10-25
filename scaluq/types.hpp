@@ -5,6 +5,7 @@
 #include <Kokkos_Core.hpp>
 #include <complex>
 #include <cstdint>
+#include <nlohmann/json.hpp>
 
 namespace scaluq {
 
@@ -20,6 +21,8 @@ inline bool is_finalized() { return Kokkos::is_finalized(); }
 using StdComplex = std::complex<double>;
 using Complex = Kokkos::complex<double>;
 using namespace std::complex_literals;
+
+using Json = nlohmann::json;
 
 namespace internal {
 template <typename DummyType>
@@ -48,3 +51,16 @@ void bind_types_hpp(nb::module_& m) {
 }  // namespace internal
 #endif
 }  // namespace scaluq
+
+namespace nlohmann {
+template <>
+struct adl_serializer<scaluq::Complex> {
+    static void to_json(json& j, const scaluq::Complex& c) {
+        j = json{{"real", c.real()}, {"imag", c.imag()}};
+    }
+    static void from_json(const json& j, scaluq::Complex& c) {
+        j.at("real").get_to(c.real());
+        j.at("imag").get_to(c.imag());
+    }
+};
+}  // namespace nlohmann

@@ -71,6 +71,14 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const StateVector& state);
 
     [[nodiscard]] std::string to_string() const;
+
+    friend void to_json(Json& j, const StateVector& state) {
+        j = Json{{"n_qubits", state._n_qubits}, {"amplitudes", state.get_amplitudes()}};
+    }
+    friend void from_json(const Json& j, StateVector& state) {
+        state = StateVector(j.at("n_qubits").get<std::uint64_t>());
+        state.load(j.at("amplitudes").get<std::vector<Complex>>());
+    }
 };
 
 #ifdef SCALUQ_USE_NANOBIND

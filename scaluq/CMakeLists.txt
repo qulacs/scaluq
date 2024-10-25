@@ -14,5 +14,6 @@ target_sources(scaluq PRIVATE
 target_link_libraries(scaluq PRIVATE 
     Kokkos::kokkos
     Eigen3::Eigen
+    nlohmann_json::nlohmann_json
 )
 target_include_directories(scaluq PRIVATE ${PROJECT_SOURCE_DIR}/scaluq)
