@@ -5,6 +5,7 @@
 #include <Kokkos_Core.hpp>
 #include <complex>
 #include <cstdint>
+#include <iostream>
 
 namespace scaluq {
 
@@ -48,6 +49,7 @@ public:
         SparseComplexMatrix mat = sp;
         mat.makeCompressed();
 
+        std::cerr << mat.nonZeros() << std::endl;
         _values = Kokkos::View<SparseValue*>("_values", mat.nonZeros());
         Kokkos::View<SparseValue*, Kokkos::HostSpace> values_h("values_h", mat.nonZeros());
         int idx = 0;

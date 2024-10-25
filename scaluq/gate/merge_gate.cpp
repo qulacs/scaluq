@@ -1,5 +1,7 @@
 #include "merge_gate.hpp"
 
+#include <iostream>
+
 #include "../constant.hpp"
 #include "../util/utility.hpp"
 #include "gate/gate_factory.hpp"
@@ -8,11 +10,18 @@ namespace scaluq {
 std::pair<Gate, double> merge_gate_dense_matrix(const Gate& gate1, const Gate& gate2) {
     auto merged_operand_mask = gate1->operand_qubit_mask() | gate2->operand_qubit_mask();
     auto merged_operand_vector = internal::mask_to_vector(merged_operand_mask);
-    auto matrix1 = internal::get_expanded_matrix(
-        gate1->get_matrix(), gate1->target_qubit_list(), merged_operand_vector);
-    auto matrix2 = internal::get_expanded_matrix(
-        gate2->get_matrix(), gate2->target_qubit_list(), merged_operand_vector);
+    auto matrix1 = internal::get_expanded_matrix(gate1->get_matrix(),
+                                                 gate1->target_qubit_list(),
+                                                 gate1->control_qubit_mask(),
+                                                 merged_operand_vector);
+    auto matrix2 = internal::get_expanded_matrix(gate2->get_matrix(),
+                                                 gate2->target_qubit_list(),
+                                                 gate2->control_qubit_mask(),
+                                                 merged_operand_vector);
+    std::cerr << matrix1 << std::endl;
+    std::cerr << matrix2 << std::endl;
     auto matrix = matrix2 * matrix1;
+    std::cerr << matrix << std::endl;
     return {gate::DenseMatrix(merged_operand_vector, matrix), 0.};
 }
 
@@ -25,14 +34,15 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
             "merge_gate(const Gate&, const Gate&): ProbablisticGate is not supported.");
     }
 
+    if (gate_type1 == GateType::I) return {gate2, 0.};
+    if (gate_type2 == GateType::I) return {gate1, 0.};
+
     auto gate1_control_mask = gate1->control_qubit_mask();
     auto gate2_control_mask = gate2->control_qubit_mask();
     if (gate1_control_mask != gate2_control_mask) return merge_gate_dense_matrix(gate1, gate2);
     auto control_list = internal::mask_to_vector(gate1_control_mask);
 
     // Special case: Zero qubit
-    if (gate_type1 == GateType::I) return {gate2, 0.};
-    if (gate_type2 == GateType::I) return {gate1, 0.};
     if (gate_type1 == GateType::GlobalPhase || gate_type2 == GateType::GlobalPhase) {
         const auto& [phase, gate] = [&] {
             if (gate_type1 == GateType::GlobalPhase)

@@ -88,10 +88,11 @@ inline internal::ComplexMatrix kronecker_product(const internal::ComplexMatrix& 
 
 inline internal::ComplexMatrix get_expanded_matrix(const internal::ComplexMatrix& from_matrix,
                                                    const std::vector<std::uint64_t>& from_targets,
-                                                   std::vector<std::uint64_t>& to_targets) {
+                                                   std::uint64_t from_control_mask,
+                                                   std::vector<std::uint64_t>& to_operands) {
     std::vector<std::uint64_t> targets_map(from_targets.size());
     std::ranges::transform(from_targets, targets_map.begin(), [&](std::uint64_t x) {
-        return std::ranges::lower_bound(to_targets, x) - to_targets.begin();
+        return std::ranges::lower_bound(to_operands, x) - to_operands.begin();
     });
     std::vector<std::uint64_t> idx_map(1ULL << from_targets.size());
     for (std::uint64_t i : std::views::iota(0ULL, 1ULL << from_targets.size())) {
@@ -99,21 +100,32 @@ inline internal::ComplexMatrix get_expanded_matrix(const internal::ComplexMatrix
             idx_map[i] |= (i >> j & 1) << targets_map[j];
         }
     }
+    std::uint64_t to_control_mask = 0;
+    for (std::uint64_t sub_mask = from_control_mask; sub_mask; sub_mask &= (sub_mask - 1)) {
+        to_control_mask |=
+            1ULL << (std::ranges::lower_bound(to_operands, std::countr_zero(sub_mask)) -
+                     to_operands.begin());
+    }
 
     std::uint64_t targets_idx_mask = idx_map.back();
     std::vector<std::uint64_t> outer_indices;
-    outer_indices.reserve(1ULL << (to_targets.size() - from_targets.size()));
-    for (std::uint64_t i : std::views::iota(0ULL, 1ULL << to_targets.size())) {
-        if ((i & targets_idx_mask) == 0) outer_indices.push_back(i);
+    outer_indices.reserve(
+        1ULL << (to_operands.size() - from_targets.size() - std::popcount(from_control_mask)));
+    for (std::uint64_t i : std::views::iota(0ULL, 1ULL << to_operands.size())) {
+        if ((i & (targets_idx_mask | to_control_mask)) == 0) outer_indices.push_back(i);
     }
     internal::ComplexMatrix to_matrix =
-        internal::ComplexMatrix::Zero(1ULL << to_targets.size(), 1ULL << to_targets.size());
+        internal::ComplexMatrix::Zero(1ULL << to_operands.size(), 1ULL << to_operands.size());
     for (std::uint64_t i : std::views::iota(0ULL, 1ULL << from_targets.size())) {
         for (std::uint64_t j : std::views::iota(0ULL, 1ULL << from_targets.size())) {
             for (std::uint64_t o : outer_indices) {
-                to_matrix(idx_map[i] | o, idx_map[j] | o) = from_matrix(i, j);
+                to_matrix(idx_map[i] | to_control_mask | o, idx_map[j] | to_control_mask | o) =
+                    from_matrix(i, j);
             }
         }
+    }
+    for (std::uint64_t i : std::views::iota(0ULL, 1ULL << to_operands.size())) {
+        if ((i & to_control_mask) != to_control_mask) to_matrix(i, i) = 1;
     }
     return to_matrix;
 }

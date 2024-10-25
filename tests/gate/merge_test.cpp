@@ -75,36 +75,38 @@ TEST(GateTest, MergeGate) {
     auto dense_matrix = [&](auto fac) {
         for (auto nt : {0, 1, 2, 3}) {
             for (auto nc : {0, 1, 2}) {
-                if (nt + nc > n) continue;
+                if (nt + nc > static_cast<int>(n)) continue;
                 std::vector<std::uint64_t> shuffled = random.permutation(n);
                 std::vector<uint64_t> targets(shuffled.begin(), shuffled.begin() + nt);
                 std::vector<std::uint64_t> controls(shuffled.begin() + nt,
                                                     shuffled.begin() + nt + nc);
                 internal::ComplexMatrix mat(1 << nt, 1 << nt);
-                for (auto i : std::views::iota(0, 1 << nt))
-                    for (auto j : std::views::iota(1 << nt)) {
+                for (auto i : std::views::iota(0, 1 << nt)) {
+                    for (auto j : std::views::iota(0, 1 << nt)) {
                         mat(i, j) = StdComplex(random.uniform() * 2 - 1, random.uniform() * 2 - 1);
                     }
-                gates.push_back(fac(targets, mat, controls));
+                }
+                gates.push_back(fac(targets, mat, controls, false));
             }
         }
     };
     auto sparse_matrix = [&](auto fac) {
         for (auto nt : {0, 1, 2, 3}) {
             for (auto nc : {0, 1, 2}) {
-                if (nt + nc > n) continue;
+                if (nt + nc > static_cast<int>(n)) continue;
                 std::vector<std::uint64_t> shuffled = random.permutation(n);
                 std::vector<uint64_t> targets(shuffled.begin(), shuffled.begin() + nt);
                 std::vector<std::uint64_t> controls(shuffled.begin() + nt,
                                                     shuffled.begin() + nt + nc);
                 internal::SparseComplexMatrix mat(1 << nt, 1 << nt);
-                for (auto i : std::views::iota(0, 1 << nt))
-                    for (auto j : std::views::iota(1 << nt)) {
+                for (auto i : std::views::iota(0, 1 << nt)) {
+                    for (auto j : std::views::iota(0, 1 << nt)) {
                         if (random.uniform() < .5) {
                             mat.insert(i, j) =
                                 StdComplex(random.uniform() * 2 - 1, random.uniform() * 2 - 1);
                         }
                     }
+                }
                 gates.push_back(fac(targets, mat, controls));
             }
         }
@@ -148,7 +150,11 @@ TEST(GateTest, MergeGate) {
         PauliOperator("Z 1", random.uniform()), random.uniform() * std::numbers::pi * 2, {0, 3}));
     for (auto&& g1 : gates) {
         for (auto&& g2 : gates) {
-            std::uint64_t n = 2;
+            std::cerr << "====" << std::endl;
+            std::cerr << g1 << std::endl;
+            std::cerr << g2 << std::endl;
+            std::cerr << g2->get_matrix() << std::endl;
+            std::cerr << "====" << std::endl;
             auto state1 = StateVector::Haar_random_state(n);
             auto state2 = state1.copy();
             auto [mg, phase] = merge_gate(g1, g2);
