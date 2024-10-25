@@ -229,7 +229,7 @@ TEST(StateVectorTest, SamplingSuperpositionState) {
             state.add_state_vector_with_coef(1 << i, tmp_state);
         }
         state.normalize();
-        std::vector<size_t> res = state.sampling(nshot);
+        std::vector<std::uint64_t> res = state.sampling(nshot);
 
         std::array<std::uint64_t, 5> cnt = {};
         for (std::uint64_t i = 0; i < nshot; ++i) {

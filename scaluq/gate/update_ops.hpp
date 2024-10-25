@@ -311,5 +311,70 @@ inline void swap_gate(std::uint64_t target_mask,
     Kokkos::fence();
 }
 
+void p0_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector& state);
+
+void p1_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector& state);
+
+void rx_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             double angle,
+             StateVector& state);
+
+void ry_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             double angle,
+             StateVector& state);
+
+void rz_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             double angle,
+             StateVector& state);
+
+Matrix2x2 get_IBMQ_matrix(double _theta, double _phi, double _lambda);
+
+void one_target_dense_matrix_gate(std::uint64_t target_mask,
+                                  std::uint64_t control_mask,
+                                  const Matrix2x2& matrix,
+                                  StateVector& state);
+
+void two_target_dense_matrix_gate(std::uint64_t target_mask,
+                                  std::uint64_t control_mask,
+                                  const Matrix4x4& matrix,
+                                  StateVector& state);
+
+void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
+                                     std::uint64_t control_mask,
+                                     const DiagonalMatrix2x2& diag,
+                                     StateVector& state);
+
+void u1_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             double lambda,
+             StateVector& state);
+
+void u2_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             double phi,
+             double lambda,
+             StateVector& state);
+
+void u3_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             double theta,
+             double phi,
+             double lambda,
+             StateVector& state);
+
+void swap_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector& state);
+
+void sparse_matrix_gate(std::uint64_t target_mask,
+                        std::uint64_t control_mask,
+                        const SparseMatrix& matrix,
+                        StateVector& state);
+
+void dense_matrix_gate(std::uint64_t target_mask,
+                       std::uint64_t control_mask,
+                       const Matrix& matrix,
+                       StateVector& state);
 }  // namespace internal
 }  // namespace scaluq

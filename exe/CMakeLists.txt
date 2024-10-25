@@ -6,8 +6,10 @@ function(exe name)
         scaluq
         Eigen3::Eigen
         Kokkos::kokkos
-        GTest::gtest_main
     )
+    if (SCALUQ_USE_TEST)
+        target_link_libraries(${name} PRIVATE GTest::gtest_main)
+    endif(SCALUQ_USE_TEST)
     target_include_directories(${name} PRIVATE ${PROJECT_SOURCE_DIR}/scaluq)
 endfunction()
 

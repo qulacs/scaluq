@@ -25,20 +25,44 @@ using Complex = Kokkos::complex<Fp>;
 namespace internal {
 template <typename DummyType>
 constexpr bool lazy_false_v = false;  // Used for lazy evaluation in static_assert.
+using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex, Eigen::RowMajor>;
 
-template <std::floating_point Fp>
-using ComplexMatrix =
-    Eigen::Matrix<StdComplex<Fp>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+using Matrix = Kokkos::View<Complex**, Kokkos::LayoutRight>;
 
-template <std::floating_point Fp>
-using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex<Fp>>;
+using Matrix2x2 = Kokkos::Array<Kokkos::Array<Complex, 2>, 2>;
+using Matrix4x4 = Kokkos::Array<Kokkos::Array<Complex, 4>, 4>;
+using DiagonalMatrix2x2 = Kokkos::Array<Complex, 2>;
+struct SparseValue {
+    Complex val;
+    uint32_t r, c;
+};
 
-template <std::floating_point Fp>
-using Matrix2x2 = Kokkos::Array<Kokkos::Array<Complex<Fp>, 2>, 2>;
-template <std::floating_point Fp>
-using Matrix4x4 = Kokkos::Array<Kokkos::Array<Complex<Fp>, 4>, 4>;
-template <std::floating_point Fp>
-using DiagonalMatrix2x2 = Kokkos::Array<Complex<Fp>, 2>;
+class SparseMatrix {
+public:
+    Kokkos::View<SparseValue*> _values;
+    std::uint64_t _row, _col;
+
+    SparseMatrix(const SparseComplexMatrix& sp) {
+        _row = sp.rows();
+        _col = sp.cols();
+        SparseComplexMatrix mat = sp;
+        mat.makeCompressed();
+
+        _values = Kokkos::View<SparseValue*>("_values", mat.nonZeros());
+        Kokkos::View<SparseValue*, Kokkos::HostSpace> values_h("values_h", mat.nonZeros());
+        int idx = 0;
+        for (int k = 0; k < mat.outerSize(); ++k) {
+            for (SparseComplexMatrix::InnerIterator it(mat, k); it; ++it) {
+                uint32_t row = it.row();
+                uint32_t col = it.col();
+                Complex value = it.value();
+                values_h(idx++) = {value, row, col};
+            }
+        }
+        Kokkos::deep_copy(_values, values_h);
+    }
+};
 }  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND
@@ -56,4 +80,5 @@ void bind_types_hpp(nb::module_& m) {
 }
 }  // namespace internal
 #endif
+
 }  // namespace scaluq

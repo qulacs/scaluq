@@ -13,6 +13,8 @@
 #include <nanobind/stl/variant.h>
 #include <nanobind/stl/vector.h>
 
+#include "docstring.hpp"
+
 namespace nb = nanobind;
 using namespace nb::literals;
 
