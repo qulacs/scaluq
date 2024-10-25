@@ -343,7 +343,7 @@ namespace internal {
             "Generate inverse gate as `Gate` type. If not exists, return None.")         \
         .def(                                                                            \
             "update_quantum_state",                                                      \
-            [](const GATE_TYPE& gate, StateVector& state_vector) {                       \
+            [](const GATE_TYPE& gate, StateVector<double>& state_vector) {               \
                 gate->update_quantum_state(state_vector);                                \
             },                                                                           \
             "Apply gate to `state_vector`. `state_vector` in args is directly updated.") \
@@ -360,7 +360,7 @@ namespace internal {
             [](const GATE_TYPE& gate) { return gate->to_string(""); },                   \
             "Get string representation of the gate.")
 
-nb::class_<Gate> gate_base_def;
+nb::class_<Gate<double>> gate_base_def;
 
 #define DEF_GATE(GATE_TYPE, DESCRIPTION)                                                           \
     ::scaluq::internal::gate_base_def.def(nb::init<GATE_TYPE>(), "Upcast from `" #GATE_TYPE "`."); \
@@ -368,7 +368,7 @@ nb::class_<Gate> gate_base_def;
         GATE_TYPE,                                                                                 \
         DESCRIPTION                                                                                \
         "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).")    \
-        .def(nb::init<Gate>())
+        .def(nb::init<Gate<double>>())
 
 void bind_gate_gate_hpp(nb::module_& m) {
     nb::enum_<GateType>(m, "GateType", "Enum of Gate Type.")
@@ -401,10 +401,10 @@ void bind_gate_gate_hpp(nb::module_& m) {
         .value("PauliRotation", GateType::PauliRotation);
 
     gate_base_def =
-        DEF_GATE_BASE(Gate,
+        DEF_GATE_BASE(Gate<double>,
                       "General class of QuantumGate.\n\n.. note:: Downcast to requred to use "
                       "gate-specific functions.")
-            .def(nb::init<Gate>(), "Just copy shallowly.");
+            .def(nb::init<Gate<double>>(), "Just copy shallowly.");
 }
 }  // namespace internal
 #endif

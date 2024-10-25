@@ -56,44 +56,45 @@ inline ParamGate<Fp> ParamProbablistic(
 namespace internal {
 void bind_gate_param_gate_factory(nb::module_& mgate) {
     mgate.def("ParamRX",
-              &gate::ParamRX,
+              &gate::ParamRX<double>,
               "Generate general ParamGate class instance of ParamRX.",
               "target"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("ParamRY",
-              &gate::ParamRY,
+              &gate::ParamRY<double>,
               "Generate general ParamGate class instance of ParamRY.",
               "target"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("ParamRZ",
-              &gate::ParamRZ,
+              &gate::ParamRZ<double>,
               "Generate general ParamGate class instance of ParamRZ.",
               "target"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("ParamPauliRotation",
-              &gate::ParamPauliRotation,
+              &gate::ParamPauliRotation<double>,
               "Generate general ParamGate class instance of ParamPauliRotation.",
               "pauli"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("ParamProbablistic",
-              &gate::ParamProbablistic,
+              &gate::ParamProbablistic<double>,
               "Generate general ParamGate class instance of ParamProbablistic.");
     mgate.def(
         "ParamProbablistic",
-        [](const std::vector<std::pair<Fp, std::variant<Gate, ParamGate>>>& prob_gate_list) {
-            std::vector<Fp> distribution;
-            std::vector<std::variant<Gate, ParamGate>> gate_list;
+        [](const std::vector<std::pair<double, std::variant<Gate<double>, ParamGate<double>>>>&
+               prob_gate_list) {
+            std::vector<double> distribution;
+            std::vector<std::variant<Gate<double>, ParamGate<double>>> gate_list;
             distribution.reserve(prob_gate_list.size());
             gate_list.reserve(prob_gate_list.size());
             for (const auto& [prob, gate] : prob_gate_list) {
                 distribution.push_back(prob);
                 gate_list.push_back(gate);
             }
-            return gate::ParamProbablistic(distribution, gate_list);
+            return gate::ParamProbablistic<double>(distribution, gate_list);
         },
         "Generate general ParamGate class instance of ParamProbablistic.");
 }

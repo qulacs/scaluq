@@ -197,37 +197,38 @@ private:
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 void bind_circuit_circuit_hpp(nb::module_& m) {
-    nb::class_<Circuit>(m, "Circuit", "Quantum circuit represented as gate array")
+    nb::class_<Circuit<double>>(m, "Circuit", "Quantum circuit represented as gate array")
         .def(nb::init<std::uint64_t>(), "Initialize empty circuit of specified qubits.")
-        .def("n_qubits", &Circuit::n_qubits, "Get property of `n_qubits`.")
+        .def("n_qubits", &Circuit<double>::n_qubits, "Get property of `n_qubits`.")
         .def("gate_list",
-             &Circuit::gate_list,
+             &Circuit<double>::gate_list,
              "Get property of `gate_list`.",
              nb::rv_policy::reference)
-        .def("n_gates", &Circuit::n_gates, "Get property of `n_gates`.")
-        .def("key_set", &Circuit::key_set, "Get set of keys of parameters.")
-        .def("get_gate_at", &Circuit::get_gate_at, "Get reference of i-th gate.")
+        .def("n_gates", &Circuit<double>::n_gates, "Get property of `n_gates`.")
+        .def("key_set", &Circuit<double>::key_set, "Get set of keys of parameters.")
+        .def("get_gate_at", &Circuit<double>::get_gate_at, "Get reference of i-th gate.")
         .def("get_param_key_at",
-             &Circuit::get_param_key_at,
+             &Circuit<double>::get_param_key_at,
              "Get parameter key of i-th gate. If it is not parametric, return None.")
-        .def("calculate_depth", &Circuit::calculate_depth, "Get depth of circuit.")
+        .def("calculate_depth", &Circuit<double>::calculate_depth, "Get depth of circuit.")
         .def("add_gate",
-             nb::overload_cast<const Gate&>(&Circuit::add_gate),
+             nb::overload_cast<const Gate<double>&>(&Circuit<double>::add_gate),
              "Add gate. Given gate is copied.")
         .def("add_param_gate",
-             nb::overload_cast<const ParamGate&, std::string_view>(&Circuit::add_param_gate),
+             nb::overload_cast<const ParamGate<double>&, std::string_view>(
+                 &Circuit<double>::add_param_gate),
              "Add parametric gate with specifing key. Given param_gate is copied.")
         .def("add_circuit",
-             nb::overload_cast<const Circuit&>(&Circuit::add_circuit),
+             nb::overload_cast<const Circuit<double>&>(&Circuit<double>::add_circuit),
              "Add all gates in specified circuit. Given gates are copied.")
         .def("update_quantum_state",
-             &Circuit::update_quantum_state,
+             &Circuit<double>::update_quantum_state,
              "Apply gate to the StateVector. StateVector in args is directly updated. If the "
              "circuit contains parametric gate, you have to give real value of parameter as "
              "dict[str, float] in 2nd arg.")
         .def(
             "update_quantum_state",
-            [&](const Circuit& circuit, StateVector& state, nb::kwargs kwargs) {
+            [&](const Circuit<double>& circuit, StateVector<double>& state, nb::kwargs kwargs) {
                 std::map<std::string, double> parameters;
                 for (auto&& [key, param] : kwargs) {
                     parameters[nb::cast<std::string>(key)] = nb::cast<double>(param);
@@ -237,12 +238,13 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "Apply gate to the StateVector. StateVector in args is directly updated. If the "
             "circuit contains parametric gate, you have to give real value of parameter as "
             "\"name=value\" format in kwargs.")
-        .def(
-            "update_quantum_state",
-            [](const Circuit& circuit, StateVector& state) { circuit.update_quantum_state(state); })
-        .def("copy", &Circuit::copy, "Copy circuit. All the gates inside is copied.")
+        .def("update_quantum_state",
+             [](const Circuit<double>& circuit, StateVector<double>& state) {
+                 circuit.update_quantum_state(state);
+             })
+        .def("copy", &Circuit<double>::copy, "Copy circuit. All the gates inside is copied.")
         .def("get_inverse",
-             &Circuit::get_inverse,
+             &Circuit<double>::get_inverse,
              "Get inverse of circuit. All the gates are newly created.");
 }
 }  // namespace internal

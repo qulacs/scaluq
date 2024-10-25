@@ -127,10 +127,10 @@ using TwoTargetMatrixGate = internal::GatePtr<internal::TwoTargetMatrixGateImpl<
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 void bind_gate_gate_matrix_hpp(nb::module_& m) {
-    DEF_GATE(OneTargetMatrixGate, "Specific class of one-qubit dense matrix gate.")
-        .def("matrix", [](const OneTargetMatrixGate& gate) { return gate->matrix(); });
-    DEF_GATE(TwoTargetMatrixGate, "Specific class of two-qubit dense matrix gate.")
-        .def("matrix", [](const TwoTargetMatrixGate& gate) { return gate->matrix(); });
+    DEF_GATE(OneTargetMatrixGate<double>, "Specific class of one-qubit dense matrix gate.")
+        .def("matrix", [](const OneTargetMatrixGate<double>& gate) { return gate->matrix(); });
+    DEF_GATE(TwoTargetMatrixGate<double>, "Specific class of two-qubit dense matrix gate.")
+        .def("matrix", [](const TwoTargetMatrixGate<double>& gate) { return gate->matrix(); });
 }
 }  // namespace internal
 #endif

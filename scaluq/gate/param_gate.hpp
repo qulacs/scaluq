@@ -235,9 +235,9 @@ namespace internal {
             "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.")  \
         .def(                                                                                     \
             "update_quantum_state",                                                               \
-            [](const PARAM_GATE_TYPE& param_gate, StateVector& state_vector, double param) {      \
-                param_gate->update_quantum_state(state_vector, param);                            \
-            },                                                                                    \
+            [](const PARAM_GATE_TYPE& param_gate,                                                 \
+               StateVector<double>& state_vector,                                                 \
+               double param) { param_gate->update_quantum_state(state_vector, param); },          \
             "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is " \
             "directly updated.")                                                                  \
         .def(                                                                                     \
@@ -245,7 +245,7 @@ namespace internal {
             [](const PARAM_GATE_TYPE& gate, double param) { return gate->get_matrix(param); },    \
             "Get matrix representation of the gate with holding the parameter.")
 
-nb::class_<ParamGate> param_gate_base_def;
+nb::class_<ParamGate<double>> param_gate_base_def;
 
 #define DEF_PARAM_GATE(PARAM_GATE_TYPE, DESCRIPTION)                                            \
     ::scaluq::internal::param_gate_base_def.def(nb::init<PARAM_GATE_TYPE>(),                    \
@@ -254,7 +254,7 @@ nb::class_<ParamGate> param_gate_base_def;
         PARAM_GATE_TYPE,                                                                        \
         DESCRIPTION                                                                             \
         "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
-        .def(nb::init<ParamGate>())
+        .def(nb::init<ParamGate<double>>())
 
 void bind_gate_param_gate_hpp(nb::module_& m) {
     nb::enum_<ParamGateType>(m, "ParamGateType", "Enum of ParamGate Type.")
@@ -264,7 +264,7 @@ void bind_gate_param_gate_hpp(nb::module_& m) {
         .value("ParamPauliRotation", ParamGateType::ParamPauliRotation);
 
     param_gate_base_def = DEF_PARAM_GATE_BASE(
-        ParamGate,
+        ParamGate<double>,
         "General class of parametric quantum gate.\n\n.. note:: Downcast to requred to use "
         "gate-specific functions.");
 }
