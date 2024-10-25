@@ -6,6 +6,7 @@ function(exe name)
         scaluq
         Eigen3::Eigen
         Kokkos::kokkos
+        nlohmann_json::nlohmann_json
         GTest::gtest_main
     )
     target_include_directories(${name} PRIVATE ${PROJECT_SOURCE_DIR}/scaluq)
