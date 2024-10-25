@@ -22,9 +22,6 @@ class StateVector {
     std::uint64_t _dim;
     using ComplexType = Kokkos::complex<Fp>;
 
-    // static_assert(std::is_same_v<Space, HostSpace> || std::is_same_v<Space, DefaultSpace>,
-    //               "Unsupported execution space tag");
-
 public:
     static constexpr std::uint64_t UNMEASURED = 2;
     Kokkos::View<ComplexType*> _raw;

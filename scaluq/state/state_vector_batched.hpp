@@ -171,11 +171,12 @@ public:
     }
 
     [[nodiscard]] std::vector<std::vector<ComplexType>> get_amplitudes() const {
+        auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), _raw);
         std::vector<std::vector<ComplexType>> vv(_raw.extent(0),
                                                  std::vector<ComplexType>(_raw.extent(1), 0));
-        for (size_t i = 0; i < _raw.extent(0); ++i) {
-            for (size_t j = 0; j < _raw.extent(1); ++j) {
-                vv[i][j] = _raw(i, j);
+        for (size_t i = 0; i < view_h.extent(0); ++i) {
+            for (size_t j = 0; j < view_h.extent(1); ++j) {
+                vv[i][j] = view_h(i, j);
             }
         }
         return vv;

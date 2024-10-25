@@ -13,10 +13,19 @@ using CComplex = std::complex<double>;
 using namespace scaluq;
 
 TEST(StateVectorTest, HaarRandomStateNorm) {
-    const int n_tries = 20;
-    for (int n = 1; n <= n_tries; n++) {
-        const auto state = StateVector<double>::Haar_random_state(n);
-        ASSERT_NEAR(state.get_squared_norm(), 1., eps);
+    {
+        const int n_tries = 20;
+        for (int n = 1; n <= n_tries; n++) {
+            const auto state = StateVector<double>::Haar_random_state(n);
+            ASSERT_NEAR(state.get_squared_norm(), 1., eps);
+        }
+    }
+    {
+        const int n_tries = 20;
+        for (int n = 1; n <= n_tries; n++) {
+            const auto state = StateVector<float>::Haar_random_state(n);
+            ASSERT_NEAR(state.get_squared_norm(), 1., eps_f);
+        }
     }
 }
 
