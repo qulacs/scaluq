@@ -19,7 +19,11 @@ std::pair<Gate, double> merge_gate_dense_matrix(const Gate& gate1, const Gate& g
 std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
     GateType gate_type1 = gate1.gate_type();
     GateType gate_type2 = gate2.gate_type();
-    // TODO: Deal with ProbablisticGate
+
+    if (gate_type1 == GateType::Probablistic || gate_type2 == GateType::Probablistic) {
+        throw std::runtime_error(
+            "merge_gate(const Gate&, const Gate&): ProbablisticGate is not supported.");
+    }
 
     auto gate1_control_mask = gate1->control_qubit_mask();
     auto gate2_control_mask = gate2->control_qubit_mask();
