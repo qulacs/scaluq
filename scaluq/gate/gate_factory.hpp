@@ -199,10 +199,11 @@ inline Gate<Fp> PauliRotation(const PauliOperator<Fp>& pauli,
     return internal::GateFactory::create_gate<internal::PauliRotationGateImpl<Fp>>(
         internal::vector_to_mask(controls), pauli, angle);
 }
-inline Gate DenseMatrix(const std::vector<std::uint64_t>& targets,
-                        const internal::ComplexMatrix& matrix,
-                        const std::vector<std::uint64_t>& controls = {},
-                        bool is_unitary = false) {
+template <std::floating_point Fp>
+inline Gate<Fp> DenseMatrix(const std::vector<std::uint64_t>& targets,
+                            const internal::ComplexMatrix<Fp>& matrix,
+                            const std::vector<std::uint64_t>& controls = {},
+                            bool is_unitary = false) {
     std::uint64_t nqubits = targets.size();
     std::uint64_t dim = 1ULL << nqubits;
     if (static_cast<std::uint64_t>(matrix.rows()) != dim ||
@@ -213,30 +214,31 @@ inline Gate DenseMatrix(const std::vector<std::uint64_t>& targets,
             "matrix size must be 2^{n_qubits} x 2^{n_qubits}.");
     }
     if (std::is_sorted(targets.begin(), targets.end())) {
-        return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl>(
+        return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl<Fp>>(
             internal::vector_to_mask(targets),
             internal::vector_to_mask(controls),
             matrix,
             is_unitary);
     }
-    internal::ComplexMatrix matrix_transformed =
+    internal::ComplexMatrix<Fp> matrix_transformed =
         internal::transform_dense_matrix_by_order(matrix, targets);
-    return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl>(
+    return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl<Fp>>(
         internal::vector_to_mask(targets),
         internal::vector_to_mask(controls),
         matrix_transformed,
         is_unitary);
 }
-inline Gate SparseMatrix(const std::vector<std::uint64_t>& targets,
-                         const internal::SparseComplexMatrix& matrix,
-                         const std::vector<std::uint64_t>& controls = {}) {
+template <std::floating_point Fp>
+inline Gate<Fp> SparseMatrix(const std::vector<std::uint64_t>& targets,
+                             const internal::SparseComplexMatrix<Fp>& matrix,
+                             const std::vector<std::uint64_t>& controls = {}) {
     if (std::is_sorted(targets.begin(), targets.end())) {
-        return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl>(
+        return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl<Fp>>(
             internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix);
     }
-    internal::SparseComplexMatrix matrix_transformed =
+    internal::SparseComplexMatrix<Fp> matrix_transformed =
         internal::transform_sparse_matrix_by_order(matrix, targets);
-    return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl>(
+    return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl<Fp>>(
         internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix_transformed);
 }
 template <std::floating_point Fp>
@@ -408,14 +410,14 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "matrix"_a,
               "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("DenseMatrix",
-              &gate::DenseMatrix,
+              &gate::DenseMatrix<double>,
               "Generate general Gate class instance of DenseMatrix.",
               "targets"_a,
               "matrix"_a,
               "controls"_a = std::vector<std::uint64_t>{},
               "is_unitary"_a = false);
     mgate.def("SparseMatrix",
-              &gate::SparseMatrix,
+              &gate::SparseMatrix<double>,
               "Generate general Gate class instance of SparseMatrix.",
               "targets"_a,
               "matrix"_a,

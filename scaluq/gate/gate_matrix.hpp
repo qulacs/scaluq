@@ -120,79 +120,81 @@ public:
     }
 };
 
-class DenseMatrixGateImpl : public GateBase {
-    Matrix _matrix;
+template <std::floating_point Fp>
+class DenseMatrixGateImpl : public GateBase<Fp> {
+    Matrix<Fp> _matrix;
     bool _is_unitary;
 
 public:
     DenseMatrixGateImpl(std::uint64_t target_mask,
                         std::uint64_t control_mask,
-                        const ComplexMatrix& mat,
+                        const ComplexMatrix<Fp>& mat,
                         bool is_unitary = false)
-        : GateBase(target_mask, control_mask),
+        : GateBase<Fp>(target_mask, control_mask),
           _matrix(convert_external_matrix_to_internal_matrix(mat)),
           _is_unitary(is_unitary) {}
 
-    Gate get_inverse() const override {
-        ComplexMatrix mat_eigen = convert_internal_matrix_to_external_matrix(_matrix);
-        ComplexMatrix inv_eigen;
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        ComplexMatrix<Fp> mat_eigen = convert_internal_matrix_to_external_matrix(_matrix);
+        ComplexMatrix<Fp> inv_eigen;
         if (_is_unitary) {
             inv_eigen = mat_eigen.adjoint();
         } else {
             inv_eigen = mat_eigen.inverse().eval();
         }
         return std::make_shared<const DenseMatrixGateImpl>(
-            _target_mask, _control_mask, inv_eigen, _is_unitary);
+            this->_target_mask, this->_control_mask, inv_eigen, _is_unitary);
     }
 
-    Matrix get_matrix_internal() const {
-        Matrix ret("return matrix", _matrix.extent(0), _matrix.extent(1));
-        Kokkos::deep_copy(ret, _matrix);
+    Matrix<Fp> get_matrix_internal() const {
+        Matrix<Fp> ret("return matrix", _matrix.extent(0), _matrix.extent(1));
+        Kokkos::deep_copy<Fp>(ret, _matrix);
         return ret;
     }
 
-    ComplexMatrix get_matrix() const override {
+    ComplexMatrix<Fp> get_matrix() const override {
         return convert_internal_matrix_to_external_matrix(_matrix);
     }
 
-    void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_mask_within_bounds(state_vector);
-        dense_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
+        this->check_qubit_mask_within_bounds(state_vector);
+        dense_matrix_gate(this->_target_mask, this->_control_mask, _matrix, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: DenseMatrix\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
-class SparseMatrixGateImpl : public GateBase {
-    SparseMatrix _matrix;
+template <std::floating_point Fp>
+class SparseMatrixGateImpl : public GateBase<Fp> {
+    SparseMatrix<Fp> _matrix;
     std::uint64_t num_nnz;
 
 public:
     SparseMatrixGateImpl(std::uint64_t target_mask,
                          std::uint64_t control_mask,
-                         const SparseComplexMatrix& mat)
-        : GateBase(target_mask, control_mask),
+                         const SparseComplexMatrix<Fp>& mat)
+        : GateBase<Fp>(target_mask, control_mask),
           _matrix(SparseMatrix(mat)),
           num_nnz(mat.nonZeros()) {}
 
-    Gate get_inverse() const override {
-        Kokkos::View<SparseValue*, Kokkos::HostSpace> vec_h("h_view", num_nnz);
+    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+        Kokkos::View<SparseValue<Fp>*, Kokkos::HostSpace> vec_h("h_view", num_nnz);
         Kokkos::deep_copy(vec_h, _matrix._values);
         // conversion to Eigen matrix (COO format)
-        ComplexMatrix eigen_matrix(_matrix._row, _matrix._col);
+        ComplexMatrix<Fp> eigen_matrix(_matrix._row, _matrix._col);
         for (std::size_t i = 0; i < vec_h.extent(0); i++) {
             eigen_matrix(vec_h(i).r, vec_h(i).c) = vec_h(i).val;
         }
-        return std::make_shared<const DenseMatrixGateImpl>(
-            _target_mask, _control_mask, eigen_matrix.inverse().eval());
+        return std::make_shared<const DenseMatrixGateImpl<Fp>>(
+            this->_target_mask, this->_control_mask, eigen_matrix.inverse().eval());
     }
 
-    Matrix get_matrix_internal() const {
+    Matrix<Fp> get_matrix_internal() const {
         Matrix ret("return matrix", _matrix._row, _matrix._col);
         auto vec = _matrix._values;
         Kokkos::parallel_for(
@@ -200,43 +202,49 @@ public:
         return ret;
     }
 
-    ComplexMatrix get_matrix() const override { return convert_coo_to_external_matrix(_matrix); }
+    ComplexMatrix<Fp> get_matrix() const override {
+        return convert_coo_to_external_matrix(_matrix);
+    }
 
-    SparseComplexMatrix get_sparse_matrix() const { return get_matrix().sparseView(); }
+    SparseComplexMatrix<Fp> get_sparse_matrix() const { return get_matrix().sparseView(); }
 
-    void update_quantum_state(StateVector& state_vector) const override {
-        check_qubit_mask_within_bounds(state_vector);
-        sparse_matrix_gate(_target_mask, _control_mask, _matrix, state_vector);
+    void update_quantum_state(StateVector<Fp>& state_vector) const override {
+        this->check_qubit_mask_within_bounds(state_vector);
+        sparse_matrix_gate(this->_target_mask, this->_control_mask, _matrix, state_vector);
     }
 
     std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         ss << indent << "Gate Type: SparseMatrix\n";
-        ss << get_qubit_info_as_string(indent);
+        ss << this->get_qubit_info_as_string(indent);
         return ss.str();
     }
 };
 
 }  // namespace internal
 
-using OneTargetMatrixGate = internal::GatePtr<internal::OneTargetMatrixGateImpl>;
-using TwoTargetMatrixGate = internal::GatePtr<internal::TwoTargetMatrixGateImpl>;
-using SparseMatrixGate = internal::GatePtr<internal::SparseMatrixGateImpl>;
-using DenseMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl>;
+template <std::floating_point Fp>
+using OneTargetMatrixGate = internal::GatePtr<internal::OneTargetMatrixGateImpl<Fp>>;
+template <std::floating_point Fp>
+using TwoTargetMatrixGate = internal::GatePtr<internal::TwoTargetMatrixGateImpl<Fp>>;
+template <std::floating_point Fp>
+using SparseMatrixGate = internal::GatePtr<internal::SparseMatrixGateImpl<Fp>>;
+template <std::floating_point Fp>
+using DenseMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl<Fp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 void bind_gate_gate_matrix_hpp(nb::module_& m) {
-    DEF_GATE(OneTargetMatrixGate, "Specific class of one-qubit dense matrix gate.")
-        .def("matrix", [](const OneTargetMatrixGate& gate) { return gate->matrix(); });
-    DEF_GATE(TwoTargetMatrixGate, "Specific class of two-qubit dense matrix gate.")
-        .def("matrix", [](const TwoTargetMatrixGate& gate) { return gate->matrix(); });
-    DEF_GATE(SparseMatrixGate, "Specific class of sparse matrix gate.")
-        .def("matrix", [](const SparseMatrixGate& gate) { return gate->get_matrix(); })
+    DEF_GATE(OneTargetMatrixGate<double>, "Specific class of one-qubit dense matrix gate.")
+        .def("matrix", [](const OneTargetMatrixGate<double>& gate) { return gate->matrix(); });
+    DEF_GATE(TwoTargetMatrixGate<double>, "Specific class of two-qubit dense matrix gate.")
+        .def("matrix", [](const TwoTargetMatrixGate<double>& gate) { return gate->matrix(); });
+    DEF_GATE(SparseMatrixGate<double>, "Specific class of sparse matrix gate.")
+        .def("matrix", [](const SparseMatrixGate<double>& gate) { return gate->get_matrix(); })
         .def("sparse_matrix",
-             [](const SparseMatrixGate& gate) { return gate->get_sparse_matrix(); });
-    DEF_GATE(DenseMatrixGate, "Specific class of dense matrix gate.")
-        .def("matrix", [](const DenseMatrixGate& gate) { return gate->get_matrix(); });
+             [](const SparseMatrixGate<double>& gate) { return gate->get_sparse_matrix(); });
+    DEF_GATE(DenseMatrixGate<double>, "Specific class of dense matrix gate.")
+        .def("matrix", [](const DenseMatrixGate<double>& gate) { return gate->get_matrix(); });
 }
 }  // namespace internal
 #endif

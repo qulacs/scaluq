@@ -156,32 +156,37 @@ inline std::vector<std::vector<T>> convert_2d_device_view_to_host_vector(
     return result;
 }
 
-KOKKOS_INLINE_FUNCTION double squared_norm(const Complex& z) {
+template <std::floating_point Fp>
+KOKKOS_INLINE_FUNCTION double squared_norm(const Complex<Fp>& z) {
     return z.real() * z.real() + z.imag() * z.imag();
 }
 
-inline Matrix convert_external_matrix_to_internal_matrix(const ComplexMatrix& eigen_matrix) {
+template <std::floating_point Fp>
+inline Matrix<Fp> convert_external_matrix_to_internal_matrix(
+    const ComplexMatrix<Fp>& eigen_matrix) {
     std::uint64_t rows = eigen_matrix.rows();
     std::uint64_t cols = eigen_matrix.cols();
-    Kokkos::View<const Complex**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-        host_view(reinterpret_cast<const Complex*>(eigen_matrix.data()), rows, cols);
-    Matrix mat("internal_matrix", rows, cols);
+    Kokkos::View<const Complex<Fp>**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        host_view(reinterpret_cast<const Complex<Fp>*>(eigen_matrix.data()), rows, cols);
+    Matrix<Fp> mat("internal_matrix", rows, cols);
     Kokkos::deep_copy(mat, host_view);
     return mat;
 }
 
-inline ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix& matrix) {
+template <std::floating_point Fp>
+inline ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp>& matrix) {
     int rows = matrix.extent(0);
     int cols = matrix.extent(1);
-    ComplexMatrix eigen_matrix(rows, cols);
-    Kokkos::View<Complex**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
-        reinterpret_cast<Complex*>(eigen_matrix.data()), rows, cols);
+    ComplexMatrix<Fp> eigen_matrix(rows, cols);
+    Kokkos::View<Complex<Fp>**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        host_view(reinterpret_cast<Complex<Fp>*>(eigen_matrix.data()), rows, cols);
     Kokkos::deep_copy(host_view, matrix);
     return eigen_matrix;
 }
 
-inline ComplexMatrix convert_coo_to_external_matrix(SparseMatrix mat) {
-    ComplexMatrix eigen_matrix(mat._row, mat._col);
+template <std::floating_point Fp>
+inline ComplexMatrix<Fp> convert_coo_to_external_matrix(SparseMatrix<Fp> mat) {
+    ComplexMatrix<Fp> eigen_matrix(mat._row, mat._col);
     auto vec_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), mat._values);
     for (std::size_t i = 0; i < mat._values.extent(0); i++) {
         eigen_matrix(vec_h(i).r, vec_h(i).c) = vec_h(i).val;
@@ -189,8 +194,9 @@ inline ComplexMatrix convert_coo_to_external_matrix(SparseMatrix mat) {
     return eigen_matrix;
 }
 
-inline ComplexMatrix transform_dense_matrix_by_order(const ComplexMatrix& mat,
-                                                     const std::vector<std::uint64_t>& targets) {
+template <std::floating_point Fp>
+inline ComplexMatrix<Fp> transform_dense_matrix_by_order(
+    const ComplexMatrix<Fp>& mat, const std::vector<std::uint64_t>& targets) {
     std::vector<std::uint64_t> sorted(targets);
     std::sort(sorted.begin(), sorted.end());
 
@@ -211,7 +217,7 @@ inline ComplexMatrix transform_dense_matrix_by_order(const ComplexMatrix& mat,
         }
     }
 
-    ComplexMatrix ret(matrix_size, matrix_size);
+    ComplexMatrix<Fp> ret(matrix_size, matrix_size);
 
     for (std::size_t i = 0; i < matrix_size; i++) {
         std::size_t row_src = transformed[i];
@@ -223,12 +229,13 @@ inline ComplexMatrix transform_dense_matrix_by_order(const ComplexMatrix& mat,
     return ret;
 }
 
-inline SparseComplexMatrix transform_sparse_matrix_by_order(
+template <std::floating_point Fp>
+inline SparseComplexMatrix<Fp> transform_sparse_matrix_by_order(
     // This is temporary implementation.
     // SparseComplexMatrix will be replaced with std::vector<std::vector<std::Complex<double>>>.
-    const SparseComplexMatrix& mat,
+    const SparseComplexMatrix<Fp>& mat,
     const std::vector<std::uint64_t>& targets) {
-    return transform_dense_matrix_by_order(mat.toDense(), targets).sparseView();
+    return transform_dense_matrix_by_order<Fp>(mat.toDense(), targets).sparseView();
 }
 
 }  // namespace internal

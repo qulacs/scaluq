@@ -10,19 +10,18 @@ class StateVectorBatched {
     std::uint64_t _batch_size;
     std::uint64_t _n_qubits;
     std::uint64_t _dim;
-    using ComplexType = Kokkos::complex<Fp>;
 
     // static_assert(std::is_same_v<Space, HostSpace> || std::is_same_v<Space, DefaultSpace>,
     //               "Unsupported execution space tag");
 
 public:
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight> _raw;
+    Kokkos::View<Kokkos::complex<Fp>**, Kokkos::LayoutRight> _raw;
     StateVectorBatched() = default;
     StateVectorBatched(std::uint64_t batch_size, std::uint64_t n_qubits)
         : _batch_size(batch_size),
           _n_qubits(n_qubits),
           _dim(1ULL << _n_qubits),
-          _raw(Kokkos::View<ComplexType**, Kokkos::LayoutRight>(
+          _raw(Kokkos::View<Kokkos::complex<Fp>**, Kokkos::LayoutRight>(
               Kokkos::ViewAllocateWithoutInitializing("states"), _batch_size, _dim)) {
         set_zero_state();
     }
@@ -161,7 +160,7 @@ public:
                 KOKKOS_LAMBDA(std::uint64_t b, std::uint64_t i) {
                     auto rand_gen = rand_pool.get_state();
                     states._raw(b, i) =
-                        ComplexType(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
+                        Kokkos::complex<Fp>(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
                     rand_pool.free_state(rand_gen);
                 });
             Kokkos::fence();
@@ -170,10 +169,10 @@ public:
         return states;
     }
 
-    [[nodiscard]] std::vector<std::vector<ComplexType>> get_amplitudes() const {
+    [[nodiscard]] std::vector<std::vector<Kokkos::complex<Fp>>> get_amplitudes() const {
         auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), _raw);
-        std::vector<std::vector<ComplexType>> vv(_raw.extent(0),
-                                                 std::vector<ComplexType>(_raw.extent(1), 0));
+        std::vector<std::vector<Kokkos::complex<Fp>>> vv(
+            _raw.extent(0), std::vector<Kokkos::complex<Fp>>(_raw.extent(1), 0));
         for (size_t i = 0; i < view_h.extent(0); ++i) {
             for (size_t j = 0; j < view_h.extent(1); ++j) {
                 vv[i][j] = view_h(i, j);
@@ -333,7 +332,8 @@ public:
         return internal::convert_device_view_to_host_vector(ents);
     }
 
-    void add_state_vector_with_coef(const ComplexType& coef, const StateVectorBatched& states) {
+    void add_state_vector_with_coef(const Kokkos::complex<Fp>& coef,
+                                    const StateVectorBatched& states) {
         if (n_qubits() != states.n_qubits() || batch_size() != states.batch_size()) [[unlikely]] {
             throw std::runtime_error(
                 "Error: StateVectorBatched::add_state_vector(const StateVectorBatched&): invalid "
@@ -347,7 +347,7 @@ public:
         Kokkos::fence();
     }
 
-    void multiply_coef(const ComplexType& coef) {
+    void multiply_coef(const Kokkos::complex<Fp>& coef) {
         Kokkos::parallel_for(
             Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, _dim}),
             KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
@@ -356,16 +356,18 @@ public:
         Kokkos::fence();
     }
 
-    void load(const std::vector<std::vector<ComplexType>>& states) {
+    void load(const std::vector<std::vector<Kokkos::complex<Fp>>>& states) {
         if (states.size() != _batch_size) {
             throw std::runtime_error(
-                "Error: StateVectorBatched::load(std::vector<std::vector<ComplexType>>&): invalid "
+                "Error: StateVectorBatched::load(std::vector<std::vector<Kokkos::complex<Fp>>>&): "
+                "invalid "
                 "batch_size");
         }
         for (std::uint64_t b = 0; b < states.size(); ++b) {
             if (states[b].size() != _dim) {
                 throw std::runtime_error(
-                    "Error: StateVectorBatched::load(std::vector<std::vector<ComplexType>>&): "
+                    "Error: "
+                    "StateVectorBatched::load(std::vector<std::vector<Kokkos::complex<Fp>>>&): "
                     "invalid "
                     "length of state");
             }

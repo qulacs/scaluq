@@ -455,7 +455,10 @@ TEST(GateTest, ApplyDenseMatrixGate) {
     run_random_gate_apply_general_dense(6);
 }
 
-TEST(GateTest, ApplyPauliGate) { run_random_gate_apply_pauli(5); }
+TEST(GateTest, ApplyPauliGate) {
+    run_random_gate_apply_pauli<double>(5);
+    run_random_gate_apply_pauli<float>(5);
+}
 
 TEST(GateTest, ApplyProbablisticGate) {
     {

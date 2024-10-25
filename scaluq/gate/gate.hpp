@@ -68,7 +68,9 @@ template <std::floating_point Fp>
 class PauliRotationGateImpl;
 template <std::floating_point Fp>
 class ProbablisticGateImpl;
+template <std::floating_point Fp>
 class SparseMatrixGateImpl;
+template <std::floating_point Fp>
 class DenseMatrixGateImpl;
 
 }  // namespace internal
@@ -166,11 +168,11 @@ constexpr GateType get_gate_type() {
         return GateType::Pauli;
     else if constexpr (std::is_same_v<TWithoutConst, internal::PauliRotationGateImpl<S>>)
         return GateType::PauliRotation;
-    else if constexpr (std::is_same_v<T, internal::SparseMatrixGateImpl>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SparseMatrixGateImpl<S>>)
         return GateType::SparseMatrix;
-    else if constexpr (std::is_same_v<T, internal::DenseMatrixGateImpl>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::DenseMatrixGateImpl<S>>)
         return GateType::DenseMatrix;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::ProbablisticGateImpl>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ProbablisticGateImpl<S>>)
         return GateType::Probablistic;
     else
         static_assert(internal::lazy_false_v<T>, "unknown GateImpl");
