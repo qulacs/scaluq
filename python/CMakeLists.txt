@@ -7,6 +7,7 @@ nanobind_add_module(scaluq_core STABLE_ABI binding.cpp)
 target_link_libraries(scaluq_core PRIVATE scaluq
     Kokkos::kokkos
     Eigen3::Eigen
+    nlohmann_json::nlohmann_json
 )
 target_include_directories(scaluq_core PRIVATE ${PROJECT_SOURCE_DIR}/scaluq)
 install(TARGETS scaluq_core LIBRARY DESTINATION scaluq)
