@@ -31,7 +31,7 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
     auto control_list = internal::mask_to_vector(gate1_control_mask);
 
     // Special case: Zero qubit
-    if (gate_type1 == GateType::I) return {gate2, 0.};  // copy can be removed by #125
+    if (gate_type1 == GateType::I) return {gate2, 0.};
     if (gate_type2 == GateType::I) return {gate1, 0.};
     if (gate_type1 == GateType::GlobalPhase || gate_type2 == GateType::GlobalPhase) {
         const auto& [phase, gate] = [&] {

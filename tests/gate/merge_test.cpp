@@ -3,6 +3,7 @@
 #include <gate/gate_factory.hpp>
 #include <gate/merge_gate.hpp>
 #include <numbers>
+#include <ranges>
 #include <state/state_vector.hpp>
 #include <types.hpp>
 #include <util/random.hpp>
@@ -15,72 +16,136 @@ using namespace scaluq;
 TEST(GateTest, MergeGate) {
     std::vector<Gate> gates;
     Random random;
-    for (std::uint64_t target = 0; target < 2; target++) {
-        gates.push_back(gate::X(target));
-        gates.push_back(gate::Y(target));
-        gates.push_back(gate::Z(target));
-        gates.push_back(gate::H(target));
-        gates.push_back(gate::S(target));
-        gates.push_back(gate::Sdag(target));
-        gates.push_back(gate::T(target));
-        gates.push_back(gate::Tdag(target));
-        gates.push_back(gate::SqrtX(target));
-        gates.push_back(gate::SqrtXdag(target));
-        gates.push_back(gate::SqrtY(target));
-        gates.push_back(gate::SqrtYdag(target));
-        gates.push_back(gate::P0(target));
-        gates.push_back(gate::P1(target));
-        gates.push_back(gate::RX(target, random.uniform() * std::numbers::pi * 2));
-        gates.push_back(gate::RY(target, random.uniform() * std::numbers::pi * 2));
-        gates.push_back(gate::RZ(target, random.uniform() * std::numbers::pi * 2));
-        gates.push_back(gate::U1(target, random.uniform() * std::numbers::pi * 2));
-        gates.push_back(gate::U2(target,
-                                 random.uniform() * std::numbers::pi * 2,
-                                 random.uniform() * std::numbers::pi * 2));
-        gates.push_back(gate::U3(target,
-                                 random.uniform() * std::numbers::pi * 2,
-                                 random.uniform() * std::numbers::pi * 2,
-                                 random.uniform() * std::numbers::pi * 2));
-        gates.push_back(
-            gate::OneTargetMatrix(target,
-                                  {std::array{Complex(random.uniform(), random.uniform()),
-                                              Complex(random.uniform(), random.uniform())},
-                                   std::array{Complex(random.uniform(), random.uniform()),
-                                              Complex(random.uniform(), random.uniform())}}));
-        gates.push_back(gate::CX(target, target ^ 1));
-        gates.push_back(gate::CZ(target, target ^ 1));
-        gates.push_back(gate::Swap(target, target ^ 1));
-    }
+    std::uint64_t n = 4;
+    auto none_target_rotation = [&](auto fac) {
+        for (auto nc : {0, 1, 2}) {
+            std::vector<std::uint64_t> shuffled = random.permutation(n);
+            std::vector<std::uint64_t> controls(shuffled.begin(), shuffled.begin() + nc);
+            gates.push_back(fac(random.uniform() * std::numbers::pi * 2, controls));
+        }
+    };
+    auto single_target = [&](auto fac) {
+        for (auto nc : {0, 1, 2}) {
+            std::vector<std::uint64_t> shuffled = random.permutation(n);
+            std::uint64_t target = shuffled[0];
+            std::vector<std::uint64_t> controls(shuffled.begin() + 1, shuffled.begin() + 1 + nc);
+            gates.push_back(fac(target, controls));
+        }
+    };
+    auto single_target_rotation = [&](auto fac) {
+        for (auto nc : {0, 1, 2}) {
+            std::vector<std::uint64_t> shuffled = random.permutation(n);
+            std::uint64_t target = shuffled[0];
+            std::vector<std::uint64_t> controls(shuffled.begin() + 1, shuffled.begin() + 1 + nc);
+            gates.push_back(fac(target, random.uniform() * std::numbers::pi * 2, controls));
+        }
+    };
+    auto single_target_rotation2 = [&](auto fac) {
+        for (auto nc : {0, 1, 2}) {
+            std::vector<std::uint64_t> shuffled = random.permutation(n);
+            std::uint64_t target = shuffled[0];
+            std::vector<std::uint64_t> controls(shuffled.begin() + 1, shuffled.begin() + 1 + nc);
+            gates.push_back(fac(target,
+                                random.uniform() * std::numbers::pi * 2,
+                                random.uniform() * std::numbers::pi * 2,
+                                controls));
+        }
+    };
+    auto single_target_rotation3 = [&](auto fac) {
+        for (auto nc : {0, 1, 2}) {
+            std::vector<std::uint64_t> shuffled = random.permutation(n);
+            std::uint64_t target = shuffled[0];
+            std::vector<std::uint64_t> controls(shuffled.begin() + 1, shuffled.begin() + 1 + nc);
+            gates.push_back(fac(target,
+                                random.uniform() * std::numbers::pi * 2,
+                                random.uniform() * std::numbers::pi * 2,
+                                random.uniform() * std::numbers::pi * 2,
+                                controls));
+        }
+    };
+    auto double_target = [&](auto fac) {
+        for (auto nc : {0, 1, 2}) {
+            std::vector<std::uint64_t> shuffled = random.permutation(n);
+            std::uint64_t target0 = shuffled[0];
+            std::uint64_t target1 = shuffled[1];
+            std::vector<std::uint64_t> controls(shuffled.begin() + 2, shuffled.begin() + 2 + nc);
+            gates.push_back(fac(target0, target1, controls));
+        }
+    };
+    auto dense_matrix = [&](auto fac) {
+        for (auto nt : {0, 1, 2, 3}) {
+            for (auto nc : {0, 1, 2}) {
+                if (nt + nc > n) continue;
+                std::vector<std::uint64_t> shuffled = random.permutation(n);
+                std::vector<uint64_t> targets(shuffled.begin(), shuffled.begin() + nt);
+                std::vector<std::uint64_t> controls(shuffled.begin() + nt,
+                                                    shuffled.begin() + nt + nc);
+                internal::ComplexMatrix mat(1 << nt, 1 << nt);
+                for (auto i : std::views::iota(0, 1 << nt))
+                    for (auto j : std::views::iota(1 << nt)) {
+                        mat(i, j) = StdComplex(random.uniform() * 2 - 1, random.uniform() * 2 - 1);
+                    }
+                gates.push_back(fac(targets, mat, controls));
+            }
+        }
+    };
+    auto sparse_matrix = [&](auto fac) {
+        for (auto nt : {0, 1, 2, 3}) {
+            for (auto nc : {0, 1, 2}) {
+                if (nt + nc > n) continue;
+                std::vector<std::uint64_t> shuffled = random.permutation(n);
+                std::vector<uint64_t> targets(shuffled.begin(), shuffled.begin() + nt);
+                std::vector<std::uint64_t> controls(shuffled.begin() + nt,
+                                                    shuffled.begin() + nt + nc);
+                internal::SparseComplexMatrix mat(1 << nt, 1 << nt);
+                for (auto i : std::views::iota(0, 1 << nt))
+                    for (auto j : std::views::iota(1 << nt)) {
+                        if (random.uniform() < .5) {
+                            mat.insert(i, j) =
+                                StdComplex(random.uniform() * 2 - 1, random.uniform() * 2 - 1);
+                        }
+                    }
+                gates.push_back(fac(targets, mat, controls));
+            }
+        }
+    };
     gates.push_back(gate::I());
-    gates.push_back(gate::GlobalPhase(random.uniform() * std::numbers::pi * 2));
-    gates.push_back(
-        gate::TwoTargetMatrix(0,
-                              1,
-                              {std::array{Complex(random.uniform(), random.uniform()),
-                                          Complex(random.uniform(), random.uniform()),
-                                          Complex(random.uniform(), random.uniform()),
-                                          Complex(random.uniform(), random.uniform())},
-                               std::array{Complex(random.uniform(), random.uniform()),
-                                          Complex(random.uniform(), random.uniform()),
-                                          Complex(random.uniform(), random.uniform()),
-                                          Complex(random.uniform(), random.uniform())},
-                               std::array{Complex(random.uniform(), random.uniform()),
-                                          Complex(random.uniform(), random.uniform()),
-                                          Complex(random.uniform(), random.uniform()),
-                                          Complex(random.uniform(), random.uniform())},
-                               std::array{Complex(random.uniform(), random.uniform()),
-                                          Complex(random.uniform(), random.uniform()),
-                                          Complex(random.uniform(), random.uniform()),
-                                          Complex(random.uniform(), random.uniform())}}));
-    gates.push_back(gate::Pauli(PauliOperator("X 0 Y 1", random.uniform())));
+    none_target_rotation(gate::GlobalPhase);
+    single_target(gate::X);
+    single_target(gate::Y);
+    single_target(gate::Z);
+    single_target(gate::H);
+    single_target(gate::S);
+    single_target(gate::Sdag);
+    single_target(gate::T);
+    single_target(gate::Tdag);
+    single_target(gate::SqrtX);
+    single_target(gate::SqrtXdag);
+    single_target(gate::SqrtY);
+    single_target(gate::SqrtYdag);
+    single_target(gate::P0);
+    single_target(gate::P1);
+    single_target_rotation(gate::RX);
+    single_target_rotation(gate::RY);
+    single_target_rotation(gate::RZ);
+    single_target_rotation(gate::U1);
+    single_target_rotation2(gate::U2);
+    single_target_rotation3(gate::U3);
+    double_target(gate::Swap);
+    dense_matrix(gate::DenseMatrix);
+    sparse_matrix(gate::SparseMatrix);
+    gates.push_back(gate::Pauli(PauliOperator("X 0 Y 2", random.uniform())));
     gates.push_back(gate::Pauli(PauliOperator("Z 0", random.uniform())));
-    gates.push_back(gate::Pauli(PauliOperator("Z 1", random.uniform())));
-    gates.push_back(gate::PauliRotation(PauliOperator("X 0 Y 1", random.uniform()),
+    gates.push_back(gate::Pauli(PauliOperator("Z 3", random.uniform()), {1}));
+    gates.push_back(gate::Pauli(PauliOperator("Z 1", random.uniform()), {0, 3}));
+    gates.push_back(gate::PauliRotation(PauliOperator("X 0 Y 2", random.uniform()),
                                         random.uniform() * std::numbers::pi * 2));
     gates.push_back(gate::PauliRotation(PauliOperator("Z 0", random.uniform()),
                                         random.uniform() * std::numbers::pi * 2));
-    gates.push_back(gate::PauliRotation(PauliOperator("Z 1", random.uniform()),
-                                        random.uniform() * std::numbers::pi * 2));
+    gates.push_back(gate::PauliRotation(
+        PauliOperator("Z 3", random.uniform()), random.uniform() * std::numbers::pi * 2, {1}));
+    gates.push_back(gate::PauliRotation(
+        PauliOperator("Z 1", random.uniform()), random.uniform() * std::numbers::pi * 2, {0, 3}));
     for (auto&& g1 : gates) {
         for (auto&& g2 : gates) {
             std::uint64_t n = 2;

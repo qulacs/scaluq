@@ -653,12 +653,7 @@ void test_gate(Gate gate_control,
 template <std::uint64_t num_target, std::uint64_t num_rotation, typename Factory>
 void test_standard_gate_control(Factory factory, std::uint64_t n) {
     Random random;
-    std::vector<std::uint64_t> shuffled(n);
-    std::iota(shuffled.begin(), shuffled.end(), 0ULL);
-    for (std::uint64_t i : std::views::iota(0ULL, n) | std::views::reverse) {
-        std::uint64_t j = random.int32() % (i + 1);
-        if (i != j) std::swap(shuffled[i], shuffled[j]);
-    }
+    std::vector<std::uint64_t> shuffled = random.permutation(n);
     std::vector<std::uint64_t> targets(num_target);
     for (std::uint64_t i : std::views::iota(0ULL, num_target)) {
         targets[i] = shuffled[i];
@@ -745,12 +740,7 @@ void test_pauli_control(std::uint64_t n) {
 template <std::uint64_t num_target>
 void test_matrix_control(std::uint64_t n_qubits) {
     Random random;
-    std::vector<std::uint64_t> shuffled(n_qubits);
-    std::iota(shuffled.begin(), shuffled.end(), 0ULL);
-    for (std::uint64_t i : std::views::iota(0ULL, n_qubits) | std::views::reverse) {
-        std::uint64_t j = random.int32() % (i + 1);
-        if (i != j) std::swap(shuffled[i], shuffled[j]);
-    }
+    std::vector<std::uint64_t> shuffled = random.permutation(n_qubits);
     std::vector<std::uint64_t> targets(num_target);
     for (std::uint64_t i : std::views::iota(0ULL, num_target)) {
         targets[i] = shuffled[i];
