@@ -156,15 +156,24 @@ void u3_gate(std::uint64_t target_mask,
              StateVectorBatched& states);
 
 void swap_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector& state);
+void swap_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVectorBatched& states);
 
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
                         const SparseMatrix& matrix,
                         StateVector& state);
+void sparse_matrix_gate(std::uint64_t target_mask,
+                        std::uint64_t control_mask,
+                        const SparseMatrix& matrix,
+                        StateVectorBatched& state);
 
 void dense_matrix_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
                        const Matrix& matrix,
                        StateVector& state);
+void dense_matrix_gate(std::uint64_t target_mask,
+                       std::uint64_t control_mask,
+                       const Matrix& matrix,
+                       StateVectorBatched& state);
 }  // namespace internal
 }  // namespace scaluq

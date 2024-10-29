@@ -88,22 +88,22 @@ public:
 
     // これでいいのか？わからない...
     void update_quantum_state(StateVectorBatched& states) const override {
-        Random random;
+        std::vector<std::uint64_t> indices(states.batch_size());
         std::vector<double> r(states.batch_size());
-        std::ranges::generate(r, [&random]() { return random.uniform(); });
-        std::vector<std::uint64_t> indicies(states.batch_size());
-        std::ranges::transform(r, indicies.begin(), [this](double r) {
-            return std::distance(_cumulative_distribution.begin(),
-                                 std::ranges::upper_bound(_cumulative_distribution, r)) -
-                   1;
-        });
-        std::ranges::transform(indicies, indicies.begin(), [this](std::uint64_t i) {
-            if (i >= _gate_list.size()) i = _gate_list.size() - 1;
-            return i;
-        });
+
+        Random random;
         for (std::size_t i = 0; i < states.batch_size(); ++i) {
+            r[i] = random.uniform();
+            indices[i] = std::distance(_cumulative_distribution.begin(),
+                                       std::ranges::upper_bound(_cumulative_distribution, r[i])) -
+                         1;
+            if (indices[i] >= _gate_list.size()) indices[i] = _gate_list.size() - 1;
             auto state_vector = states.get_state_vector_at(i);
-            _gate_list[indicies[i]]->update_quantum_state(state_vector);
+            _gate_list[indices[i]]->update_quantum_state(state_vector);
+            Kokkos::parallel_for(
+                "update_states", states.dim(), KOKKOS_CLASS_LAMBDA(const int j) {
+                    states._raw(i, j) = state_vector._raw(j);
+                });
         }
     }
 
