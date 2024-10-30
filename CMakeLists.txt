@@ -135,7 +135,7 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
 endif()
 
 ### Add subdirectories ###
-add_subdirectory(scaluq)
+add_subdirectory(src)
 if(SKBUILD)
     add_subdirectory(python)
 endif(SKBUILD)

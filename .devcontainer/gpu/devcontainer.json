@@ -9,8 +9,7 @@
 		"--cap-add=SYS_PTRACE",
 		"--security-opt",
 		"seccomp=unconfined",
-		"--gpus",
-		"all"
+		"--device=nvidia.com/gpu=all"
 	],
 	// Set *default* container specific settings.json values on container create.
 	"customizations": {
@@ -31,10 +30,10 @@
 				"python.terminal.activateEnvironment": false,
 				// CAVEAT: you need to restart after building scaluq to take effect.
 				"C_Cpp.default.includePath": [
-					"scaluq",
+					"include",
 					"/usr/local/include/kokkos",
-					"build/_deps/eigen_fetch-src",
-					"build/_deps/googletest_fetch-src/googletest/include",
+					"build/_deps/eigen-src",
+					"build/_deps/googletest-src/googletest/include",
 					"~/.local/lib/python3.10/site-packages/nanobind/include",
 					"/usr/include/python3.10"
 				],

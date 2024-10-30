@@ -6,17 +6,9 @@
 #include <complex>
 #include <cstdint>
 
+#include "kokkos.hpp"
+
 namespace scaluq {
-
-using InitializationSettings = Kokkos::InitializationSettings;
-
-inline void initialize(const InitializationSettings& settings = InitializationSettings()) {
-    Kokkos::initialize(settings);
-}
-inline void finalize() { Kokkos::finalize(); }
-inline bool is_initialized() { return Kokkos::is_initialized(); }
-inline bool is_finalized() { return Kokkos::is_finalized(); }
-
 template <std::floating_point Fp>
 using StdComplex = std::complex<Fp>;
 template <std::floating_point Fp>
@@ -53,25 +45,7 @@ public:
     Kokkos::View<SparseValue<Fp>*> _values;
     std::uint64_t _row, _col;
 
-    SparseMatrix(const SparseComplexMatrix<Fp>& sp) {
-        _row = sp.rows();
-        _col = sp.cols();
-        SparseComplexMatrix<Fp> mat = sp;
-        mat.makeCompressed();
-
-        _values = Kokkos::View<SparseValue<Fp>*>("_values", mat.nonZeros());
-        Kokkos::View<SparseValue<Fp>*, Kokkos::HostSpace> values_h("values_h", mat.nonZeros());
-        int idx = 0;
-        for (int k = 0; k < mat.outerSize(); ++k) {
-            for (typename SparseComplexMatrix<Fp>::InnerIterator it(mat, k); it; ++it) {
-                uint32_t row = it.row();
-                uint32_t col = it.col();
-                Complex<Fp> value = it.value();
-                values_h(idx++) = {value, row, col};
-            }
-        }
-        Kokkos::deep_copy(_values, values_h);
-    }
+    SparseMatrix(const SparseComplexMatrix<Fp>& sp);
 };
 }  // namespace internal
 
