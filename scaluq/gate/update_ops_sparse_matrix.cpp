@@ -51,7 +51,6 @@ void sparse_matrix_gate(std::uint64_t target_mask,
                         const SparseMatrix& mat,
                         StateVectorBatched& states) {
     auto values = mat._values;
-    const std::uint64_t matrix_dim = 1ULL << std::popcount(target_mask);
     const std::uint64_t outer_mask = ~target_mask & ((1ULL << states.n_qubits()) - 1);
 
     Kokkos::View<Complex**, Kokkos::LayoutRight> update(
@@ -74,9 +73,9 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         "COO_Update",
         Kokkos::MDRangePolicy<Kokkos::Rank<3>>(
             {0, 0, 0},
-            {states.batch_size(),
-             states.dim() >> std::popcount(target_mask | control_mask),
-             values.size()}),
+            {static_cast<long long int>(states.batch_size()),
+             static_cast<long long int>(states.dim() >> std::popcount(target_mask | control_mask)),
+             static_cast<long long int>(values.size())}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t outer, std::uint64_t inner) {
             std::uint64_t basis =
                 internal::insert_zero_at_mask_positions(outer, target_mask | control_mask) |
