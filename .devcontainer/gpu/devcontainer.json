@@ -9,7 +9,8 @@
 		"--cap-add=SYS_PTRACE",
 		"--security-opt",
 		"seccomp=unconfined",
-		"--device=nvidia.com/gpu=all"
+		"--gpus",
+		"all"
 	],
 	// Set *default* container specific settings.json values on container create.
 	"customizations": {
