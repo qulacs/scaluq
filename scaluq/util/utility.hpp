@@ -186,7 +186,7 @@ inline ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix
 
 template <std::floating_point Fp>
 inline ComplexMatrix<Fp> convert_coo_to_external_matrix(SparseMatrix<Fp> mat) {
-    ComplexMatrix<Fp> eigen_matrix(mat._row, mat._col);
+    ComplexMatrix<Fp> eigen_matrix = ComplexMatrix<Fp>::Zero(mat._row, mat._col);
     auto vec_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), mat._values);
     for (std::size_t i = 0; i < mat._values.extent(0); i++) {
         eigen_matrix(vec_h(i).r, vec_h(i).c) = vec_h(i).val;

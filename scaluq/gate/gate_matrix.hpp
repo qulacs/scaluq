@@ -186,7 +186,7 @@ public:
         Kokkos::View<SparseValue<Fp>*, Kokkos::HostSpace> vec_h("h_view", num_nnz);
         Kokkos::deep_copy(vec_h, _matrix._values);
         // conversion to Eigen matrix (COO format)
-        ComplexMatrix<Fp> eigen_matrix(_matrix._row, _matrix._col);
+        ComplexMatrix<Fp> eigen_matrix = ComplexMatrix<Fp>::Zero(_matrix._row, _matrix._col);
         for (std::size_t i = 0; i < vec_h.extent(0); i++) {
             eigen_matrix(vec_h(i).r, vec_h(i).c) = vec_h(i).val;
         }
@@ -195,7 +195,7 @@ public:
     }
 
     Matrix<Fp> get_matrix_internal() const {
-        Matrix ret("return matrix", _matrix._row, _matrix._col);
+        Matrix<Fp> ret("return matrix", _matrix._row, _matrix._col);
         auto vec = _matrix._values;
         Kokkos::parallel_for(
             vec.size(), KOKKOS_LAMBDA(int i) { ret(vec[i].r, vec[i].c) = vec[i].val; });
