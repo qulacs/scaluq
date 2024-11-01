@@ -6,8 +6,12 @@ target_sources(scaluq PRIVATE
     kokkos.cpp
     types.cpp
 )
-target_link_libraries(scaluq PRIVATE 
+target_link_libraries(scaluq PUBLIC 
     Kokkos::kokkos
-    Eigen3::Eigen
 )
-target_include_directories(scaluq PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(scaluq PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
+target_include_directories(scaluq PRIVATE ${eigen_SOURCE_DIR})
+
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/scaluq DESTINATION include/scaluq)
+install(TARGETS scaluq kokkos kokkoscore kokkoscontainers kokkosalgorithms kokkossimd LIBDL EXPORT scaluqTargets LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include)
+install(EXPORT scaluqTargets FILE scaluq-config.cmake DESTINATION share/cmake/scaluq/ NAMESPACE scaluq::)
