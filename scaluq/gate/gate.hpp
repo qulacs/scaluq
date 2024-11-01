@@ -295,65 +295,59 @@ public:
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 #define DEF_GATE_BASE(GATE_TYPE, DESCRIPTION)                                              \
-    nb::class_<GATE_TYPE>(m, #GATE_TYPE, DESCRIPTION)                                    \
-        .def("gate_type", &GATE_TYPE::gate_type, "Get gate type as `GateType` enum.")    \
-        .def(                                                                            \
-            "target_qubit_list",                                                         \
-            [](const GATE_TYPE& gate) { return gate->target_qubit_list(); },             \
-            "Get target qubits as `list[int]`. **Control qubits is not included.**")     \
-        .def(                                                                            \
-            "control_qubit_list",                                                        \
-            [](const GATE_TYPE& gate) { return gate->control_qubit_list(); },            \
-            "Get control qubits as `list[int]`.")                                        \
-        .def(                                                                            \
-            "operand_qubit_list",                                                        \
-            [](const GATE_TYPE& gate) { return gate->operand_qubit_list(); },            \
-            "Get target and control qubits as `list[int]`.")                             \
-        .def(                                                                            \
-            "target_qubit_mask",                                                         \
-            [](const GATE_TYPE& gate) { return gate->target_qubit_mask(); },             \
-            "Get target qubits as mask. **Control qubits is not included.**")            \
-        .def(                                                                            \
-            "control_qubit_mask",                                                        \
-            [](const GATE_TYPE& gate) { return gate->control_qubit_mask(); },            \
-            "Get control qubits as mask.")                                               \
-        .def(                                                                            \
-            "operand_qubit_mask",                                                        \
-            [](const GATE_TYPE& gate) { return gate->operand_qubit_mask(); },            \
-            "Get target and control qubits as mask.")                                    \
-        .def(                                                                            \
-            "get_inverse",                                                               \
-            [](const GATE_TYPE& gate) { return gate->get_inverse(); },                   \
-            "Generate inverse gate as `Gate` type. If not exists, return None.")         \
-        .def(                                                                            \
-            "update_quantum_state",                                                      \
-            [](const GATE_TYPE& gate, StateVector& state_vector) {                       \
-                gate->update_quantum_state(state_vector);                                \
-            },                                                                           \
-            "Apply gate to `state_vector`. `state_vector` in args is directly updated.") \
-        .def(                                                                            \
-            "update_quantum_state",                                                      \
-            [](const GATE_TYPE& gate, StateVectorBatched& states) {                      \
-                gate->update_quantum_state(states);                                      \
-            },                                                                           \
-            "Apply gate to `state_vector_batched`. `states` in args is directly updated."\
-        )                                                                                \
-        .def(                                                                            \
-            "get_matrix",                                                                \
-            [](const GATE_TYPE& gate) {
-return gate->get_matrix();
-}  // namespace internal
-,                    \
-            "Get matrix representation of the gate.")                                    \
-        .def(                                                                            \
-            "to_string",                                                                 \
-            [](const GATE_TYPE& gate) {
-    return gate->to_string(""); },                   \
-            "Get string representation of the gate.")                                    \
-        .def(                                                                            \
-            "__str__",                                                                   \
-            [](const GATE_TYPE& gate) {
-    return gate->to_string(""); },                   \
+    nb::class_<GATE_TYPE>(m, #GATE_TYPE, DESCRIPTION)                                      \
+        .def("gate_type", &GATE_TYPE::gate_type, "Get gate type as `GateType` enum.")      \
+        .def(                                                                              \
+            "target_qubit_list",                                                           \
+            [](const GATE_TYPE& gate) { return gate->target_qubit_list(); },               \
+            "Get target qubits as `list[int]`. **Control qubits is not included.**")       \
+        .def(                                                                              \
+            "control_qubit_list",                                                          \
+            [](const GATE_TYPE& gate) { return gate->control_qubit_list(); },              \
+            "Get control qubits as `list[int]`.")                                          \
+        .def(                                                                              \
+            "operand_qubit_list",                                                          \
+            [](const GATE_TYPE& gate) { return gate->operand_qubit_list(); },              \
+            "Get target and control qubits as `list[int]`.")                               \
+        .def(                                                                              \
+            "target_qubit_mask",                                                           \
+            [](const GATE_TYPE& gate) { return gate->target_qubit_mask(); },               \
+            "Get target qubits as mask. **Control qubits is not included.**")              \
+        .def(                                                                              \
+            "control_qubit_mask",                                                          \
+            [](const GATE_TYPE& gate) { return gate->control_qubit_mask(); },              \
+            "Get control qubits as mask.")                                                 \
+        .def(                                                                              \
+            "operand_qubit_mask",                                                          \
+            [](const GATE_TYPE& gate) { return gate->operand_qubit_mask(); },              \
+            "Get target and control qubits as mask.")                                      \
+        .def(                                                                              \
+            "get_inverse",                                                                 \
+            [](const GATE_TYPE& gate) { return gate->get_inverse(); },                     \
+            "Generate inverse gate as `Gate` type. If not exists, return None.")           \
+        .def(                                                                              \
+            "update_quantum_state",                                                        \
+            [](const GATE_TYPE& gate, StateVector& state_vector) {                         \
+                gate->update_quantum_state(state_vector);                                  \
+            },                                                                             \
+            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")   \
+        .def(                                                                              \
+            "update_quantum_state",                                                        \
+            [](const GATE_TYPE& gate, StateVectorBatched& states) {                        \
+                gate->update_quantum_state(states);                                        \
+            },                                                                             \
+            "Apply gate to `state_vector_batched`. `states` in args is directly updated.") \
+        .def(                                                                              \
+            "get_matrix",                                                                  \
+            [](const GATE_TYPE& gate) { return gate->get_matrix(); },                      \
+            "Get matrix representation of the gate.")                                      \
+        .def(                                                                              \
+            "to_string",                                                                   \
+            [](const GATE_TYPE& gate) { return gate->to_string(""); },                     \
+            "Get string representation of the gate.")                                      \
+        .def(                                                                              \
+            "__str__",                                                                     \
+            [](const GATE_TYPE& gate) { return gate->to_string(""); },                     \
             "Get string representation of the gate.")
 
 nb::class_<Gate> gate_base_def;
@@ -394,7 +388,9 @@ void bind_gate_gate_hpp(nb::module_& m) {
         .value("Swap", GateType::Swap)
         .value("TwoTargetMatrix", GateType::TwoTargetMatrix)
         .value("Pauli", GateType::Pauli)
-        .value("PauliRotation", GateType::PauliRotation);
+        .value("PauliRotation", GateType::PauliRotation)
+        .value("SparseMatrix", GateType::SparseMatrix)
+        .value("DenseMatrix", GateType::DenseMatrix);
 
     gate_base_def =
         DEF_GATE_BASE(Gate,
