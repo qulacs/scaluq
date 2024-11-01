@@ -23,8 +23,7 @@ Complex<Fp> StateVector<Fp>::get_amplitude_at(std::uint64_t index) {
     return host_view();
 }
 FLOAT(Fp)
-StateVector<Fp> StateVector<Fp>::Haar_random_state(std::uint64_t n_qubits,
-                                                   std::uint64_t seed = std::random_device()()) {
+StateVector<Fp> StateVector<Fp>::Haar_random_state(std::uint64_t n_qubits, std::uint64_t seed) {
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
     StateVector<Fp> state(n_qubits);
     Kokkos::parallel_for(
@@ -55,8 +54,7 @@ void StateVector<Fp>::set_computational_basis(std::uint64_t basis) {
     set_amplitude_at(basis, 1);
 }
 FLOAT(Fp)
-void StateVector<Fp>::set_Haar_random_state(std::uint64_t n_qubits,
-                                            std::uint64_t seed = std::random_device()()) {
+void StateVector<Fp>::set_Haar_random_state(std::uint64_t n_qubits, std::uint64_t seed) {
     *this = Haar_random_state(n_qubits, seed);
 }
 FLOAT(Fp)
@@ -174,8 +172,8 @@ void StateVector<Fp>::multiply_coef(ComplexType coef) {
     Kokkos::fence();
 }
 FLOAT(Fp)
-std::vector<std::uint64_t> StateVector<Fp>::sampling(
-    std::uint64_t sampling_count, std::uint64_t seed = std::random_device()()) const {
+std::vector<std::uint64_t> StateVector<Fp>::sampling(std::uint64_t sampling_count,
+                                                     std::uint64_t seed) const {
     Kokkos::View<Fp*> stacked_prob("prob", _dim + 1);
     Kokkos::parallel_scan(
         "compute_stacked_prob",

@@ -1,5 +1,7 @@
 #include <scaluq/util/utility.hpp>
 
+#include "template.hpp"
+
 namespace scaluq {
 namespace internal {
 // Host std::vector を Device Kokkos::View に変換する関数
@@ -11,6 +13,12 @@ Kokkos::View<T*> convert_host_vector_to_device_view(const std::vector<T>& vec) {
     Kokkos::deep_copy(device_view, host_view);
     return device_view;
 }
+#define FUNC_MACRO(T) \
+    template Kokkos::View<T*> convert_host_vector_to_device_view(const std::vector<T>&);
+CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+CALL_MACRO_FOR_COMPLEX(FUNC_MACRO)
+CALL_MACRO_FOR_UINT(FUNC_MACRO)
+#undef FUNC_MACRO
 
 // Device Kokkos::View を Host std::vector に変換する関数
 template <typename T>
@@ -21,6 +29,12 @@ std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device
     Kokkos::deep_copy(host_view, device_view);
     return host_vector;
 }
+#define FUNC_MACRO(T) \
+    template std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>&);
+CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+CALL_MACRO_FOR_COMPLEX(FUNC_MACRO)
+CALL_MACRO_FOR_UINT(FUNC_MACRO)
+#undef FUNC_MACRO
 
 // Device Kokkos::View を Host std::vector に変換する関数
 template <typename T, typename Layout>
@@ -35,6 +49,16 @@ std::vector<std::vector<T>> convert_2d_device_view_to_host_vector(
     }
     return result;
 }
+#define FUNC_MACRO(T)                                                           \
+    template std::vector<std::vector<T>> convert_2d_device_view_to_host_vector( \
+        const Kokkos::View<T**, Kokkos::LayoutLeft>&);
+CALL_MACRO_FOR_COMPLEX(FUNC_MACRO)
+#undef FUNC_MACRO
+#define FUNC_MACRO(T)                                                           \
+    template std::vector<std::vector<T>> convert_2d_device_view_to_host_vector( \
+        const Kokkos::View<T**, Kokkos::LayoutRight>&);
+CALL_MACRO_FOR_COMPLEX(FUNC_MACRO)
+#undef FUNC_MACRO
 
 template <std::floating_point Fp>
 Matrix<Fp> convert_external_matrix_to_internal_matrix(const ComplexMatrix<Fp>& eigen_matrix) {
@@ -46,6 +70,10 @@ Matrix<Fp> convert_external_matrix_to_internal_matrix(const ComplexMatrix<Fp>& e
     Kokkos::deep_copy(mat, host_view);
     return mat;
 }
+#define FUNC_MACRO(Fp) \
+    template Matrix<Fp> convert_external_matrix_to_internal_matrix(const ComplexMatrix<Fp>&);
+CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#undef FUNC_MACRO
 
 template <std::floating_point Fp>
 ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp>& matrix) {
@@ -57,6 +85,10 @@ ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp>& m
     Kokkos::deep_copy(host_view, matrix);
     return eigen_matrix;
 }
+#define FUNC_MACRO(Fp) \
+    template ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp>&);
+CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#undef FUNC_MACRO
 
 template <std::floating_point Fp>
 ComplexMatrix<Fp> convert_coo_to_external_matrix(SparseMatrix<Fp> mat) {
@@ -67,6 +99,9 @@ ComplexMatrix<Fp> convert_coo_to_external_matrix(SparseMatrix<Fp> mat) {
     }
     return eigen_matrix;
 }
+#define FUNC_MACRO(Fp) template ComplexMatrix<Fp> convert_coo_to_external_matrix(SparseMatrix<Fp>);
+CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#undef FUNC_MACRO
 
 }  // namespace internal
 }  // namespace scaluq
