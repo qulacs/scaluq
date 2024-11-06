@@ -226,7 +226,7 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
         }
     }
 
-    // Special case: CZ,Swap duplication
+    // Special case: Swap duplication
     if (gate_type1 == gate_type2 && gate_type1 == GateType::Swap) {
         if (gate1->target_qubit_mask() == gate2->target_qubit_mask()) return {gate::I(), 0.};
     }
