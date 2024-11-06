@@ -97,12 +97,12 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
             }
             if (pauli_id1 == 3) {
                 if (pauli_id2 == 1) {
-                    if (gate1_control_mask) {
+                    if (gate1_control_mask == 0) {
                         return {gate::Y(target1, control_list), -Kokkos::numbers::pi / 2};
                     }
                 }
                 if (pauli_id2 == 2) {
-                    if (gate1_control_mask) {
+                    if (gate1_control_mask == 0) {
                         return {gate::X(target1, control_list), Kokkos::numbers::pi / 2};
                     }
                 }
