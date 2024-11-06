@@ -148,7 +148,6 @@ void test_gate(ParamGate gate_control,
 
 template <typename Factory>
 void test_param_rotation_control(Factory factory, std::uint64_t n) {
-    std::cerr << "prx" << std::endl;
     Random random;
     std::vector<std::uint64_t> shuffled(n);
     std::iota(shuffled.begin(), shuffled.end(), 0ULL);
@@ -171,7 +170,6 @@ void test_param_rotation_control(Factory factory, std::uint64_t n) {
 }
 
 void test_ppauli_control(std::uint64_t n) {
-    std::cerr << "ppauli" << std::endl;
     PauliOperator::Data data1, data2;
     std::vector<std::uint64_t> controls;
     std::uint64_t control_mask = 0;

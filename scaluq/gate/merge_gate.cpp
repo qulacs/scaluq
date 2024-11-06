@@ -8,21 +8,22 @@
 
 namespace scaluq {
 std::pair<Gate, double> merge_gate_dense_matrix(const Gate& gate1, const Gate& gate2) {
-    auto merged_operand_mask = gate1->operand_qubit_mask() | gate2->operand_qubit_mask();
+    auto common_control_mask = gate1->control_qubit_mask() & gate2->control_qubit_mask();
+    auto merged_operand_mask =
+        (gate1->operand_qubit_mask() | gate2->operand_qubit_mask()) & ~common_control_mask;
     auto merged_operand_vector = internal::mask_to_vector(merged_operand_mask);
     auto matrix1 = internal::get_expanded_matrix(gate1->get_matrix(),
                                                  gate1->target_qubit_list(),
-                                                 gate1->control_qubit_mask(),
+                                                 gate1->control_qubit_mask() & ~common_control_mask,
                                                  merged_operand_vector);
     auto matrix2 = internal::get_expanded_matrix(gate2->get_matrix(),
                                                  gate2->target_qubit_list(),
-                                                 gate2->control_qubit_mask(),
+                                                 gate2->control_qubit_mask() & ~common_control_mask,
                                                  merged_operand_vector);
-    std::cerr << matrix1 << std::endl;
-    std::cerr << matrix2 << std::endl;
     auto matrix = matrix2 * matrix1;
-    std::cerr << matrix << std::endl;
-    return {gate::DenseMatrix(merged_operand_vector, matrix), 0.};
+    return {gate::DenseMatrix(
+                merged_operand_vector, matrix, internal::mask_to_vector(common_control_mask)),
+            0.};
 }
 
 std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
@@ -73,16 +74,40 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
         if (target1 == target2) {
             if (pauli_id1 == pauli_id2) return {gate::I(), 0.};
             if (pauli_id1 == 1) {
-                if (pauli_id2 == 2) return {gate::Z(target1), -Kokkos::numbers::pi / 2};
-                if (pauli_id2 == 3) return {gate::Y(target1), Kokkos::numbers::pi / 2};
+                if (pauli_id2 == 2) {
+                    if (gate1_control_mask == 0) {
+                        return {gate::Z(target1, control_list), -Kokkos::numbers::pi / 2};
+                    }
+                }
+                if (pauli_id2 == 3) {
+                    if (gate1_control_mask == 0) {
+                        return {gate::Y(target1, control_list), Kokkos::numbers::pi / 2};
+                    }
+                }
             }
             if (pauli_id1 == 2) {
-                if (pauli_id2 == 3) return {gate::X(target1), -Kokkos::numbers::pi / 2};
-                if (pauli_id2 == 1) return {gate::Z(target1), Kokkos::numbers::pi / 2};
+                if (pauli_id2 == 3) {
+                    if (gate1_control_mask == 0) {
+                        return {gate::X(target1, control_list), -Kokkos::numbers::pi / 2};
+                    }
+                }
+                if (pauli_id2 == 1) {
+                    if (gate1_control_mask == 0) {
+                        return {gate::Z(target1, control_list), Kokkos::numbers::pi / 2};
+                    }
+                }
             }
             if (pauli_id1 == 3) {
-                if (pauli_id2 == 1) return {gate::Y(target1), -Kokkos::numbers::pi / 2};
-                if (pauli_id2 == 2) return {gate::X(target1), Kokkos::numbers::pi / 2};
+                if (pauli_id2 == 1) {
+                    if (gate1_control_mask) {
+                        return {gate::Y(target1, control_list), -Kokkos::numbers::pi / 2};
+                    }
+                }
+                if (pauli_id2 == 2) {
+                    if (gate1_control_mask) {
+                        return {gate::X(target1, control_list), Kokkos::numbers::pi / 2};
+                    }
+                }
             }
         }
     }
@@ -96,8 +121,10 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
                           ? PauliGate(gate2)->pauli()
                           : PauliOperator(std::vector{gate2->target_qubit_list()[0]},
                                           std::vector{pauli_id2.value()});
-        return {gate::Pauli(pauli2 * pauli1), 0.};
+        return {gate::Pauli(pauli2 * pauli1, control_list), 0.};
     }
+
+    constexpr double eps = 1e-12;
 
     // Special case: Phase
     auto get_oct_phase = [&](GateType gate_type) -> std::optional<std::uint64_t> {
@@ -113,11 +140,11 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
                               std::uint64_t target) -> std::optional<Gate> {
         oct_phase &= 7;
         if (oct_phase == 0) return gate::I();
-        if (oct_phase == 4) return gate::Z(target);
-        if (oct_phase == 2) return gate::S(target);
-        if (oct_phase == 6) return gate::Sdag(target);
-        if (oct_phase == 1) return gate::T(target);
-        if (oct_phase == 7) return gate::Tdag(target);
+        if (oct_phase == 4) return gate::Z(target, control_list);
+        if (oct_phase == 2) return gate::S(target, control_list);
+        if (oct_phase == 6) return gate::Sdag(target, control_list);
+        if (oct_phase == 1) return gate::T(target, control_list);
+        if (oct_phase == 7) return gate::Tdag(target, control_list);
         return std::nullopt;
     };
     auto oct_phase1 = get_oct_phase(gate_type1);
@@ -143,7 +170,11 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
                             : gate_type2 == GateType::RZ ? RZGate(gate2)->angle()
                                                          : U1Gate(gate2)->lambda();
             double global_phase2 = gate_type2 == GateType::RZ ? -RZGate(gate2)->angle() / 2 : 0.;
-            return {gate::U1(target1, phase1 + phase2), global_phase1 + global_phase2};
+            double global_phase = global_phase1 + global_phase2;
+            if (std::abs(global_phase) < eps) {
+                return {gate::U1(target1, phase1 + phase2, control_list),
+                        global_phase1 + global_phase2};
+            }
         }
     }
 
@@ -163,9 +194,12 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
         std::uint64_t target2 = gate2->target_qubit_list()[0];
         double global_phase1 = gate_type1 == GateType::RX ? 0. : rx_param1.value() / 2;
         double global_phase2 = gate_type2 == GateType::RX ? 0. : rx_param2.value() / 2;
+        double global_phase = global_phase1 + global_phase2;
         if (target1 == target2) {
-            return {gate::RX(target1, rx_param1.value() + rx_param2.value()),
-                    global_phase1 + global_phase2};
+            if (std::abs(global_phase) < eps) {
+                return {gate::RX(target1, rx_param1.value() + rx_param2.value(), control_list),
+                        global_phase1 + global_phase2};
+            }
         }
     }
 
@@ -185,9 +219,12 @@ std::pair<Gate, double> merge_gate(const Gate& gate1, const Gate& gate2) {
         std::uint64_t target2 = gate2->target_qubit_list()[0];
         double global_phase1 = gate_type1 == GateType::RY ? 0. : ry_param1.value() / 2;
         double global_phase2 = gate_type2 == GateType::RY ? 0. : ry_param2.value() / 2;
+        double global_phase = global_phase1 + global_phase2;
         if (target1 == target2) {
-            return {gate::RY(target1, ry_param1.value() + ry_param2.value()),
-                    global_phase1 + global_phase2};
+            if (std::abs(global_phase) < eps) {
+                return {gate::RY(target1, ry_param1.value() + ry_param2.value(), control_list),
+                        global_phase1 + global_phase2};
+            }
         }
     }
 

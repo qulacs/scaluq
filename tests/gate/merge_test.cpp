@@ -150,11 +150,6 @@ TEST(GateTest, MergeGate) {
         PauliOperator("Z 1", random.uniform()), random.uniform() * std::numbers::pi * 2, {0, 3}));
     for (auto&& g1 : gates) {
         for (auto&& g2 : gates) {
-            std::cerr << "====" << std::endl;
-            std::cerr << g1 << std::endl;
-            std::cerr << g2 << std::endl;
-            std::cerr << g2->get_matrix() << std::endl;
-            std::cerr << "====" << std::endl;
             auto state1 = StateVector::Haar_random_state(n);
             auto state2 = state1.copy();
             auto [mg, phase] = merge_gate(g1, g2);
