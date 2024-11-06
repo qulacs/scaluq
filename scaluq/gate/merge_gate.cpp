@@ -1,7 +1,5 @@
 #include "merge_gate.hpp"
 
-#include <iostream>
-
 #include "../constant.hpp"
 #include "../util/utility.hpp"
 #include "gate/gate_factory.hpp"
