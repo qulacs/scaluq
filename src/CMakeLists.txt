@@ -1,7 +1,12 @@
 cmake_minimum_required(VERSION 3.21)
 
 target_sources(scaluq PRIVATE
+    gate/gate.cpp
     state/state_vector.cpp
+    state/state_vector_batched.cpp
+    operator/apply_pauli.cpp
+    operator/pauli_operator.cpp
+    operator/operator.cpp
     util/utility.cpp
     kokkos.cpp
     types.cpp

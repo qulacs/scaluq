@@ -243,6 +243,6 @@ std::string StateVector<Fp>::to_string() const {
     return os.str();
 }
 
-FLOAT_DECLARE_CLASS(StateVector);
+FLOAT_DECLARE_CLASS(StateVector)
 
 }  // namespace scaluq

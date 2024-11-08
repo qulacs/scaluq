@@ -1,10 +1,8 @@
-#pragma once
+#include "apply_pauli.hpp"
 
-#include "../constant.hpp"
-#include "../state/state_vector.hpp"
+#include <scaluq/constant.hpp>
 
 namespace scaluq::internal {
-
 template <std::floating_point Fp>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t bit_flip_mask,
@@ -99,5 +97,4 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         Kokkos::fence();
     }
 }
-
 }  // namespace scaluq::internal

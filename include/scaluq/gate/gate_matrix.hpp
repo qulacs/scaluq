@@ -5,10 +5,9 @@
 #include <ranges>
 #include <vector>
 
-#include "constant.hpp"
+#include "../constant.hpp"
 #include "gate.hpp"
 #include "gate_standard.hpp"
-#include "update_ops.hpp"
 
 namespace scaluq {
 namespace internal {
