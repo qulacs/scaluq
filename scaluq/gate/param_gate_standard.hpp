@@ -28,9 +28,10 @@ public:
         rx_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
     }
 
-    void update_quantum_state(StateVectorBatched& states, double param) const override {
-        check_qubit_mask_within_bounds(states.get_state_vector_at(0));
-        rx_gate(_target_mask, _control_mask, _pcoef * param, states);
+    void update_quantum_state(StateVectorBatched& states,
+                              std::vector<double> params) const override {
+        check_qubit_mask_within_bounds(states);
+        rx_gate(_target_mask, _control_mask, _pcoef, params, states);
     }
 
     std::string to_string(const std::string& indent) const override {
@@ -60,9 +61,10 @@ public:
         ry_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
     }
 
-    void update_quantum_state(StateVectorBatched& states, double param) const override {
-        check_qubit_mask_within_bounds(states.get_state_vector_at(0));
-        ry_gate(_target_mask, _control_mask, _pcoef * param, states);
+    void update_quantum_state(StateVectorBatched& states,
+                              std::vector<double> params) const override {
+        check_qubit_mask_within_bounds(states);
+        ry_gate(_target_mask, _control_mask, _pcoef, params, states);
     }
 
     std::string to_string(const std::string& indent) const override {
@@ -92,9 +94,10 @@ public:
         rz_gate(_target_mask, _control_mask, _pcoef * param, state_vector);
     }
 
-    void update_quantum_state(StateVectorBatched& states, double param) const override {
-        check_qubit_mask_within_bounds(states.get_state_vector_at(0));
-        rz_gate(_target_mask, _control_mask, _pcoef * param, states);
+    void update_quantum_state(StateVectorBatched& states,
+                              std::vector<double> params) const override {
+        check_qubit_mask_within_bounds(states);
+        rz_gate(_target_mask, _control_mask, _pcoef, params, states);
     }
 
     std::string to_string(const std::string& indent) const override {

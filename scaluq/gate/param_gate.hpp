@@ -67,6 +67,15 @@ protected:
         }
     }
 
+    void check_qubit_mask_within_bounds(const StateVectorBatched& states) const {
+        std::uint64_t full_mask = (1ULL << states.n_qubits()) - 1;
+        if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
+            throw std::runtime_error(
+                "Error: ParamGate::update_quantum_state(StateVector& state): "
+                "Target/Control qubit exceeds the number of qubits in the system.");
+        }
+    }
+
     std::string get_qubit_info_as_string(const std::string& indent) const {
         std::ostringstream ss;
         auto targets = target_qubit_list();
@@ -115,7 +124,8 @@ public:
     [[nodiscard]] virtual internal::ComplexMatrix get_matrix(double param) const = 0;
 
     virtual void update_quantum_state(StateVector& state_vector, double param) const = 0;
-    virtual void update_quantum_state(StateVectorBatched& states, double param) const = 0;
+    virtual void update_quantum_state(StateVectorBatched& states,
+                                      std::vector<double> params) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 };
@@ -233,9 +243,9 @@ namespace internal {
             "directly updated.")                                                                  \
         .def(                                                                                     \
             "update_quantum_state",                                                               \
-            [](const PARAM_GATE_TYPE& param_gate, StateVectorBatched& states, double param) {     \
-                param_gate->update_quantum_state(states, param);                                  \
-            },                                                                                    \
+            [](const PARAM_GATE_TYPE& param_gate,                                                 \
+               StateVectorBatched& states,                                                        \
+               std::vector<double> params) { param_gate->update_quantum_state(states, param); },  \
             "Apply gate to `states` with holding the parameter. `states` in args is directly "    \
             "updated.")                                                                           \
         .def(                                                                                     \

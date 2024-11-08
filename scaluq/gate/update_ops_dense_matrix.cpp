@@ -96,7 +96,7 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
                 insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
             std::uint64_t basis_1 = basis_0 | lower_target_mask;
             std::uint64_t basis_2 = basis_0 | upper_target_mask;
-            std::uint64_t basis_3 = basis_1 | target_mask;
+            std::uint64_t basis_3 = basis_0 | target_mask;
             Complex val0 = state._raw(batch_id, basis_0);
             Complex val1 = state._raw(batch_id, basis_1);
             Complex val2 = state._raw(batch_id, basis_2);

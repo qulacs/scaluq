@@ -241,6 +241,37 @@ void rx_gate(std::uint64_t target_mask,
     Matrix2x2 matrix = {cosval, Complex(0, -sinval), Complex(0, -sinval), cosval};
     one_target_dense_matrix_gate(target_mask, control_mask, matrix, states);
 }
+void rx_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             double pcoef,
+             std::vector<double> params,
+             StateVectorBatched& states) {
+    auto team_policy = Kokkos::TeamPolicy<>(states.batch_size(), Kokkos::AUTO);
+    Kokkos::parallel_for(
+        team_policy, KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team_member) {
+            const std::uint64_t batch_id = team_member.league_rank();
+            const double angle = params[batch_id] * pcoef;
+            const double cosval = std::cos(angle / 2.);
+            const double sinval = std::sin(angle / 2.);
+            Matrix2x2 matrix = {cosval, Complex(0, -sinval), Complex(0, -sinval), cosval};
+            Kokkos::parallel_for(
+                Kokkos::TeamThreadRange(team_member,
+                                        states.dim() >> std::popcount(target_mask | control_mask)),
+                [&](std::uint64_t it) {
+                    std::uint64_t basis_0 =
+                        insert_zero_at_mask_positions(it, control_mask | target_mask) |
+                        control_mask;
+                    std::uint64_t basis_1 = basis_0 | target_mask;
+                    Complex val0 = states._raw(batch_id, basis_0);
+                    Complex val1 = states._raw(batch_id, basis_1);
+                    Complex res0 = matrix[0][0] * val0 + matrix[0][1] * val1;
+                    Complex res1 = matrix[1][0] * val0 + matrix[1][1] * val1;
+                    states._raw(batch_id, basis_0) = res0;
+                    states._raw(batch_id, basis_1) = res1;
+                });
+        });
+    Kokkos::fence();
+}
 
 void ry_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
@@ -259,6 +290,37 @@ void ry_gate(std::uint64_t target_mask,
     const double sinval = std::sin(angle / 2.);
     Matrix2x2 matrix = {cosval, -sinval, sinval, cosval};
     one_target_dense_matrix_gate(target_mask, control_mask, matrix, states);
+}
+void ry_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             double pcoef,
+             std::vector<double> params,
+             StateVectorBatched& states) {
+    auto team_policy = Kokkos::TeamPolicy<>(states.batch_size(), Kokkos::AUTO);
+    Kokkos::parallel_for(
+        team_policy, KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team_member) {
+            const std::uint64_t batch_id = team_member.league_rank();
+            const double angle = params[batch_id] * pcoef;
+            const double cosval = std::cos(angle / 2.);
+            const double sinval = std::sin(angle / 2.);
+            Matrix2x2 matrix = {cosval, -sinval, sinval, cosval};
+            Kokkos::parallel_for(
+                Kokkos::TeamThreadRange(team_member,
+                                        states.dim() >> std::popcount(target_mask | control_mask)),
+                [&](std::uint64_t it) {
+                    std::uint64_t basis_0 =
+                        insert_zero_at_mask_positions(it, control_mask | target_mask) |
+                        control_mask;
+                    std::uint64_t basis_1 = basis_0 | target_mask;
+                    Complex val0 = states._raw(batch_id, basis_0);
+                    Complex val1 = states._raw(batch_id, basis_1);
+                    Complex res0 = matrix[0][0] * val0 + matrix[0][1] * val1;
+                    Complex res1 = matrix[1][0] * val0 + matrix[1][1] * val1;
+                    states._raw(batch_id, basis_0) = res0;
+                    states._raw(batch_id, basis_1) = res1;
+                });
+        });
+    Kokkos::fence();
 }
 
 void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
@@ -308,6 +370,37 @@ void rz_gate(std::uint64_t target_mask,
     const double sinval = std::sin(angle / 2.);
     DiagonalMatrix2x2 diag = {Complex(cosval, -sinval), Complex(cosval, sinval)};
     one_target_diagonal_matrix_gate(target_mask, control_mask, diag, states);
+}
+void rz_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             double pcoef,
+             std::vector<double> params,
+             StateVectorBatched& states) {
+    auto team_policy = Kokkos::TeamPolicy<>(states.batch_size(), Kokkos::AUTO);
+    Kokkos::parallel_for(
+        team_policy, KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team_member) {
+            const std::uint64_t batch_id = team_member.league_rank();
+            const double angle = params[batch_id] * pcoef;
+            const double cosval = std::cos(angle / 2.);
+            const double sinval = std::sin(angle / 2.);
+            DiagonalMatrix2x2 diag = {Complex(cosval, -sinval), Complex(cosval, sinval)};
+            Kokkos::parallel_for(
+                Kokkos::TeamThreadRange(team_member,
+                                        states.dim() >> std::popcount(target_mask | control_mask)),
+                [&](std::uint64_t it) {
+                    std::uint64_t basis_0 =
+                        insert_zero_at_mask_positions(it, control_mask | target_mask) |
+                        control_mask;
+                    std::uint64_t basis_1 = basis_0 | target_mask;
+                    Complex val0 = states._raw(batch_id, basis_0);
+                    Complex val1 = states._raw(batch_id, basis_1);
+                    Complex res0 = diag[0] * val0;
+                    Complex res1 = diag[1] * val1;
+                    states._raw(batch_id, basis_0) = res0;
+                    states._raw(batch_id, basis_1) = res1;
+                });
+        });
+    Kokkos::fence();
 }
 
 Matrix2x2 get_IBMQ_matrix(double theta, double phi, double lambda) {

@@ -96,8 +96,8 @@ public:
         }
     }
 
-    // これでいいのか？分からない...
-    void update_quantum_state(StateVectorBatched& states, double param) const override {
+    void update_quantum_state(StateVectorBatched& states,
+                              std::vector<double> params) const override {
         Random random;
         std::vector<double> r(states.batch_size());
         std::ranges::generate(r, [&random]() { return random.uniform(); });
@@ -117,7 +117,7 @@ public:
             if (gate.index() == 0) {
                 std::get<0>(gate)->update_quantum_state(state_vector);
             } else {
-                std::get<1>(gate)->update_quantum_state(state_vector, param);
+                std::get<1>(gate)->update_quantum_state(state_vector, params[i]);
             }
         }
     }

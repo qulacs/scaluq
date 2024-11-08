@@ -74,6 +74,11 @@ void rx_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              double angle,
              StateVectorBatched& states);
+void rx_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             double pcoef,
+             std::vector<double> params,
+             StateVectorBatched& states);
 
 void ry_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
@@ -83,6 +88,11 @@ void ry_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              double angle,
              StateVectorBatched& states);
+void ry_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             double pcoef,
+             std::vector<double> params,
+             StateVectorBatched& states);
 
 void rz_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
@@ -91,6 +101,11 @@ void rz_gate(std::uint64_t target_mask,
 void rz_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              double angle,
+             StateVectorBatched& states);
+void rz_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             double pcoef,
+             std::vector<double> params,
              StateVectorBatched& states);
 
 Matrix2x2 get_IBMQ_matrix(double _theta, double _phi, double _lambda);

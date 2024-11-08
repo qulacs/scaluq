@@ -86,7 +86,6 @@ public:
         _gate_list[i]->update_quantum_state(state_vector);
     }
 
-    // これでいいのか？わからない...
     void update_quantum_state(StateVectorBatched& states) const override {
         std::vector<std::uint64_t> indices(states.batch_size());
         std::vector<double> r(states.batch_size());

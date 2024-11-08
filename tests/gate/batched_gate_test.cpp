@@ -645,7 +645,6 @@ TEST(BatchedGateTest, ApplyRX) { run_random_batched_gate_apply<gate::RX>(5, make
 TEST(BatchedGateTest, ApplyRY) { run_random_batched_gate_apply<gate::RY>(5, make_RY); }
 TEST(BatchedGateTest, ApplyRZ) { run_random_batched_gate_apply<gate::RZ>(5, make_RZ); }
 TEST(BatchedGateTest, ApplyIBMQ) { run_random_batched_gate_apply_IBMQ(5, make_U); }
-TEST(BatchedGateTest, ApplyTwoTarget) { run_random_batched_gate_apply_two_target(5); }
 TEST(BatchedGateTest, ApplySparseMatrixGate) { run_random_batched_gate_apply_sparse(6); }
 TEST(BatchedGateTest, ApplyDenseMatrixGate) {
     run_random_batched_gate_apply_none_dense(6);

@@ -117,12 +117,6 @@ inline Gate U3(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::U3GateImpl>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), theta, phi, lambda);
 }
-inline Gate OneTargetMatrix(std::uint64_t target,
-                            const std::array<std::array<Complex, 2>, 2>& matrix,
-                            const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::OneTargetMatrixGateImpl>(
-        internal::vector_to_mask({target}), internal::vector_to_mask(controls), matrix);
-}
 inline Gate CX(std::uint64_t control, std::uint64_t target) {
     return internal::GateFactory::create_gate<internal::XGateImpl>(
         internal::vector_to_mask({target}), internal::vector_to_mask({control}));
@@ -143,13 +137,6 @@ inline Gate Swap(std::uint64_t target1,
                  const std::vector<std::uint64_t>& controls = {}) {
     return internal::GateFactory::create_gate<internal::SwapGateImpl>(
         internal::vector_to_mask({target1, target2}), internal::vector_to_mask(controls));
-}
-inline Gate TwoTargetMatrix(std::uint64_t target1,
-                            std::uint64_t target2,
-                            const std::array<std::array<Complex, 4>, 4>& matrix,
-                            const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::TwoTargetMatrixGateImpl>(
-        internal::vector_to_mask({target1, target2}), internal::vector_to_mask(controls), matrix);
 }
 inline Gate Pauli(const PauliOperator& pauli, const std::vector<std::uint64_t>& controls = {}) {
     auto tar = pauli.target_qubit_list();
@@ -355,19 +342,6 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               &gate::CCX,
               "Generate general Gate class instance of Toffoli.\n\n.. note:: Toffoli is an alias "
               "of CCX.");
-    mgate.def("OneTargetMatrix",
-              &gate::OneTargetMatrix,
-              "Generate general Gate class instance of OneTargetMatrix.",
-              "target"_a,
-              "matrix"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("TwoTargetMatrix",
-              &gate::TwoTargetMatrix,
-              "Generate general Gate class instance of TwoTargetMatrix.",
-              "target1"_a,
-              "target2"_a,
-              "matrix"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("DenseMatrix",
               &gate::DenseMatrix,
               "Generate general Gate class instance of DenseMatrix.",

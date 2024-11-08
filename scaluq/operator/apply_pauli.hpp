@@ -26,4 +26,11 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                           Complex coef,
                           double angle,
                           StateVectorBatched& states);
+void apply_pauli_rotation(std::uint64_t control_mask,
+                          std::uint64_t bit_flip_mask,
+                          std::uint64_t phase_flip_mask,
+                          Complex coef,
+                          double pcoef,
+                          std::vector<double> params,
+                          StateVectorBatched& states);
 }  // namespace scaluq::internal

@@ -591,8 +591,6 @@ TEST(GateTest, ApplyRZ) { run_random_gate_apply<gate::RZ>(5, make_RZ); }
 
 TEST(GateTest, ApplyIBMQ) { run_random_gate_apply_IBMQ(5, make_U); }
 
-TEST(GateTest, ApplyTwoTarget) { run_random_gate_apply_two_target(5); }
-
 TEST(GateTest, ApplySparseMatrixGate) { run_random_gate_apply_sparse(6); }
 TEST(GateTest, ApplyDenseMatrixGate) {
     run_random_gate_apply_none_dense(6);

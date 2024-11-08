@@ -44,10 +44,11 @@ public:
                              _pcoef * param,
                              state_vector);
     }
-    void update_quantum_state(StateVectorBatched& states, double param) const override {
+    void update_quantum_state(StateVectorBatched& states,
+                              std::vector<double> params) const override {
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
         apply_pauli_rotation(
-            _control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), _pcoef * param, states);
+            _control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), _pcoef, params, states);
     }
 
     std::string to_string(const std::string& indent) const override {

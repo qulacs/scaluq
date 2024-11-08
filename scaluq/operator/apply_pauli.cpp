@@ -197,4 +197,62 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         Kokkos::fence();
     }
 }
+void apply_pauli_rotation(std::uint64_t control_mask,
+                          std::uint64_t bit_flip_mask,
+                          std::uint64_t phase_flip_mask,
+                          Complex coef,
+                          double pcoef,
+                          std::vector<double> params,
+                          StateVectorBatched& states) {
+    std::uint64_t global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
+    auto team_policy = Kokkos::TeamPolicy(states.batch_size(), Kokkos::AUTO);
+    Kokkos::parallel_for(
+        team_policy, KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team) {
+            const std::uint64_t batch_id = team.league_rank();
+            const double angle = pcoef * params[batch_id];
+            const Complex true_angle = angle * coef;
+            const Complex cosval = Kokkos::cos(-true_angle / 2);
+            const Complex sinval = Kokkos::sin(-true_angle / 2);
+            if (bit_flip_mask == 0) {
+                const Complex cval_min = cosval - Complex(0, 1) * sinval;
+                const Complex cval_pls = cosval + Complex(0, 1) * sinval;
+                Kokkos::parallel_for(
+                    Kokkos::TeamThreadRange(team, states.dim() >> std::popcount(control_mask)),
+                    [&](const std::uint64_t i) {
+                        std::uint64_t state_idx =
+                            insert_zero_at_mask_positions(i, control_mask) | control_mask;
+                        if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
+                            states._raw(batch_id, state_idx) *= cval_min;
+                        } else {
+                            states._raw(batch_id, state_idx) *= cval_pls;
+                        }
+                    });
+            } else {
+                std::uint64_t pivot =
+                    sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
+                Kokkos::parallel_for(
+                    Kokkos::TeamThreadRange(team,
+                                            states.dim() >> (std::popcount(control_mask) + 1)),
+                    [&](const std::uint64_t i) {
+                        std::uint64_t basis_0 = internal::insert_zero_at_mask_positions(
+                                                    i, control_mask | 1ULL << pivot) |
+                                                control_mask;
+                        std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
+                        int bit_parity_0 = Kokkos::popcount(basis_0 & phase_flip_mask) & 1;
+                        int bit_parity_1 = Kokkos::popcount(basis_1 & phase_flip_mask) & 1;
+                        Complex cval_0 = states._raw(batch_id, basis_0);
+                        Complex cval_1 = states._raw(batch_id, basis_1);
+                        states._raw(batch_id, basis_0) =
+                            cosval * cval_0 +
+                            Complex(0, 1) * sinval * cval_1 *
+                                PHASE_M90ROT()[(global_phase_90_rot_count + bit_parity_0 * 2) % 4];
+                        states._raw(batch_id, basis_1) =
+                            cosval * cval_1 +
+                            Complex(0, 1) * sinval * cval_0 *
+                                PHASE_M90ROT()[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
+                    });
+            }
+        });
+    Kokkos::fence();
+}
 }  // namespace scaluq::internal
