@@ -12,6 +12,9 @@ StateVector::StateVector(std::uint64_t n_qubits)
     set_zero_state();
 }
 
+StateVector::StateVector(Kokkos::View<Complex*> view)
+    : _dim(view.extent(0)), _raw(view), _n_qubits(std::bit_width(_dim) - 1) {}
+
 void StateVector::set_amplitude_at(std::uint64_t index, const Complex& value) {
     Kokkos::View<Complex, Kokkos::HostSpace> host_view("single_value");
     host_view() = value;
