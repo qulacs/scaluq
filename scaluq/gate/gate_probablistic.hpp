@@ -97,7 +97,7 @@ public:
                                        std::ranges::upper_bound(_cumulative_distribution, r[i])) -
                          1;
             if (indices[i] >= _gate_list.size()) indices[i] = _gate_list.size() - 1;
-            auto state_vector = states.get_state_vector_at(i);
+            auto state_vector = StateVector(Kokkos::subview(states._raw, i, Kokkos::ALL));
             _gate_list[indices[i]]->update_quantum_state(state_vector);
             Kokkos::parallel_for(
                 "update_states", states.dim(), KOKKOS_CLASS_LAMBDA(const int j) {

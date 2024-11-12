@@ -113,7 +113,7 @@ public:
         });
         for (std::size_t i = 0; i < states.batch_size(); ++i) {
             const auto& gate = _gate_list[indicies[i]];
-            auto state_vector = states.get_state_vector_at(i);
+            auto state_vector = StateVector(Kokkos::subview(states._raw, i, Kokkos::ALL));
             if (gate.index() == 0) {
                 std::get<0>(gate)->update_quantum_state(state_vector);
             } else {
