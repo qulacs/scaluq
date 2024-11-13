@@ -2,12 +2,7 @@
 
 #include <Eigen/Core>
 #include <functional>
-#include <gate/gate.hpp>
-#include <gate/gate_factory.hpp>
-#include <numbers>
-#include <state/state_vector.hpp>
-#include <types.hpp>
-#include <util/random.hpp>
+#include <scaluq/gate/gate_factory.hpp>
 
 #include "../test_environment.hpp"
 #include "../util/util.hpp"

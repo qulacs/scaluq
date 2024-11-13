@@ -2,7 +2,6 @@
 
 #include "../operator/pauli_operator.hpp"
 #include "param_gate.hpp"
-#include "update_ops.hpp"
 
 namespace scaluq {
 
@@ -17,25 +16,11 @@ public:
         return std::make_shared<const ParamRXGateImpl<Fp>>(
             this->_target_mask, this->_control_mask, -this->_pcoef);
     }
-    internal::ComplexMatrix<Fp> get_matrix(Fp param) const override {
-        Fp angle = this->_pcoef * param;
-        internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << std::cos(angle / 2), StdComplex<Fp>(0, -std::sin(angle / 2)),
-            StdComplex<Fp>(0, -std::sin(angle / 2)), std::cos(angle / 2);
-        return mat;
-    }
+    internal::ComplexMatrix<Fp> get_matrix(Fp param) const override;
 
-    void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override {
-        this->check_qubit_mask_within_bounds(state_vector);
-        rx_gate(this->_target_mask, this->_control_mask, this->_pcoef * param, state_vector);
-    }
+    void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
 
-    std::string to_string(const std::string& indent) const override {
-        std::ostringstream ss;
-        ss << indent << "Gate Type: ParamRX\n";
-        ss << this->get_qubit_info_as_string(indent);
-        return ss.str();
-    }
+    std::string to_string(const std::string& indent) const override;
 };
 
 template <std::floating_point Fp>
@@ -47,24 +32,11 @@ public:
         return std::make_shared<const ParamRYGateImpl<Fp>>(
             this->_target_mask, this->_control_mask, -this->_pcoef);
     }
-    internal::ComplexMatrix<Fp> get_matrix(Fp param) const override {
-        Fp angle = this->_pcoef * param;
-        internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << std::cos(angle / 2), -std::sin(angle / 2), std::sin(angle / 2), std::cos(angle / 2);
-        return mat;
-    }
+    internal::ComplexMatrix<Fp> get_matrix(Fp param) const override;
 
-    void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override {
-        this->check_qubit_mask_within_bounds(state_vector);
-        ry_gate(this->_target_mask, this->_control_mask, this->_pcoef * param, state_vector);
-    }
+    void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
 
-    std::string to_string(const std::string& indent) const override {
-        std::ostringstream ss;
-        ss << indent << "Gate Type: ParamRY\n";
-        ss << this->get_qubit_info_as_string(indent);
-        return ss.str();
-    }
+    std::string to_string(const std::string& indent) const override;
 };
 
 template <std::floating_point Fp>
@@ -76,25 +48,11 @@ public:
         return std::make_shared<const ParamRZGateImpl<Fp>>(
             this->_target_mask, this->_control_mask, -this->_pcoef);
     }
-    internal::ComplexMatrix<Fp> get_matrix(Fp param) const override {
-        Fp angle = param * this->_pcoef;
-        internal::ComplexMatrix<Fp> mat(2, 2);
-        mat << std::exp(StdComplex<Fp>(0, -angle / 2)), 0, 0,
-            std::exp(StdComplex<Fp>(0, angle / 2));
-        return mat;
-    }
+    internal::ComplexMatrix<Fp> get_matrix(Fp param) const override;
 
-    void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override {
-        this->check_qubit_mask_within_bounds(state_vector);
-        rz_gate(this->_target_mask, this->_control_mask, this->_pcoef * param, state_vector);
-    }
+    void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
 
-    std::string to_string(const std::string& indent) const override {
-        std::ostringstream ss;
-        ss << indent << "Gate Type: ParamRZ\n";
-        ss << this->get_qubit_info_as_string(indent);
-        return ss.str();
-    }
+    std::string to_string(const std::string& indent) const override;
 };
 
 }  // namespace internal

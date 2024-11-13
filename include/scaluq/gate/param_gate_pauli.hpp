@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include "../operator/apply_pauli.hpp"
 #include "../operator/pauli_operator.hpp"
 #include "../util/utility.hpp"
 #include "param_gate.hpp"
@@ -28,37 +27,9 @@ public:
         return std::make_shared<const ParamPauliRotationGateImpl<Fp>>(
             this->_control_mask, _pauli, -this->_pcoef);
     }
-    internal::ComplexMatrix<Fp> get_matrix(Fp param) const override {
-        Fp angle = this->_pcoef * param;
-        Complex<Fp> true_angle = angle * this->_pauli.coef();
-        internal::ComplexMatrix<Fp> mat = this->_pauli.get_matrix_ignoring_coef();
-        StdComplex<Fp> imag_unit(0, 1);
-        mat = (StdComplex<Fp>)Kokkos::cos(-true_angle / 2) *
-                  internal::ComplexMatrix<Fp>::Identity(mat.rows(), mat.cols()) +
-              imag_unit * (StdComplex<Fp>)Kokkos::sin(-true_angle / 2) * mat;
-        return mat;
-    }
-    void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override {
-        auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
-        apply_pauli_rotation(this->_control_mask,
-                             bit_flip_mask,
-                             phase_flip_mask,
-                             _pauli.coef(),
-                             this->_pcoef * param,
-                             state_vector);
-    }
-
-    std::string to_string(const std::string& indent) const override {
-        std::ostringstream ss;
-        auto controls = this->control_qubit_list();
-        ss << indent << "Gate Type: ParamPauliRotation\n";
-        ss << indent << "  Control Qubits: {";
-        for (std::uint32_t i = 0; i < controls.size(); ++i)
-            ss << controls[i] << (i == controls.size() - 1 ? "" : ", ");
-        ss << "}\n";
-        ss << indent << "  Pauli Operator: \"" << _pauli.get_pauli_string() << "\"";
-        return ss.str();
-    }
+    internal::ComplexMatrix<Fp> get_matrix(Fp param) const override;
+    void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
+    std::string to_string(const std::string& indent) const override;
 };
 }  // namespace internal
 

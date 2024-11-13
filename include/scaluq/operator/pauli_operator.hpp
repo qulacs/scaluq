@@ -186,9 +186,11 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "bit_flip_mask"_a,
              "phase_flip_mask"_a,
              "coef"_a = 1.,
-             "Initialize pauli operator. For each `i`, single pauli applied to `i`-th qubit is got "
+             "Initialize pauli operator. For each `i`, single pauli applied to `i`-th qubit is "
+             "got "
              "from `i-th` bit of `bit_flip_mask` and `phase_flip_mask` as follows.\n\n.. "
-             "csv-table::\n\n    \"bit_flip\",\"phase_flip\",\"pauli\"\n    \"0\",\"0\",\"I\"\n    "
+             "csv-table::\n\n    \"bit_flip\",\"phase_flip\",\"pauli\"\n    "
+             "\"0\",\"0\",\"I\"\n    "
              "\"0\",\"1\",\"Z\"\n    \"1\",\"0\",\"X\"\n    \"1\",\"1\",\"Y\"")
         .def("coef", &PauliOperator<double>::coef, "Get property `coef`.")
         .def("target_qubit_list",

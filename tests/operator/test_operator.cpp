@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <operator/operator.hpp>
+#include <scaluq/operator/operator.hpp>
 
 #include "../test_environment.hpp"
 #include "../util/util.hpp"

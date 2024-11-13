@@ -1,11 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <gate/gate_factory.hpp>
-#include <gate/param_gate_factory.hpp>
-#include <numbers>
-#include <state/state_vector.hpp>
-#include <types.hpp>
-#include <util/random.hpp>
+#include <scaluq/gate/gate_factory.hpp>
+#include <scaluq/gate/param_gate_factory.hpp>
 
 #include "../test_environment.hpp"
 #include "../util/util.hpp"

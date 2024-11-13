@@ -1,3 +1,4 @@
+#include "../util/template.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
@@ -12,6 +13,10 @@ void none_target_dense_matrix_gate(std::uint64_t control_mask,
         });
     Kokkos::fence();
 }
+#define FUNC_MACRO(Fp) \
+    template void none_target_dense_matrix_gate(std::uint64_t, const Matrix<Fp>&, StateVector<Fp>&);
+CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#undef FUNC_MACRO
 
 template <std::floating_point Fp>
 void single_target_dense_matrix_gate(std::uint64_t target_mask,
@@ -32,6 +37,11 @@ void single_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
+#define FUNC_MACRO(Fp)                             \
+    template void single_target_dense_matrix_gate( \
+        std::uint64_t, std::uint64_t, const Matrix<Fp>&, StateVector<Fp>&);
+CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#undef FUNC_MACRO
 
 template <std::floating_point Fp>
 void double_target_dense_matrix_gate(std::uint64_t target_mask,
@@ -68,6 +78,11 @@ void double_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
+#define FUNC_MACRO(Fp)                             \
+    template void double_target_dense_matrix_gate( \
+        std::uint64_t, std::uint64_t, const Matrix<Fp>&, StateVector<Fp>&);
+CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#undef FUNC_MACRO
 
 template <std::floating_point Fp>
 void multi_target_dense_matrix_gate(std::uint64_t target_mask,
@@ -115,6 +130,11 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
 
     state._raw = update;
 }
+#define FUNC_MACRO(Fp)                            \
+    template void multi_target_dense_matrix_gate( \
+        std::uint64_t, std::uint64_t, const Matrix<Fp>&, StateVector<Fp>&);
+CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#undef FUNC_MACRO
 
 template <std::floating_point Fp>
 void dense_matrix_gate(std::uint64_t target_mask,
@@ -132,4 +152,9 @@ void dense_matrix_gate(std::uint64_t target_mask,
         multi_target_dense_matrix_gate<Fp>(target_mask, control_mask, matrix, state);
     }
 }
+#define FUNC_MACRO(Fp)               \
+    template void dense_matrix_gate( \
+        std::uint64_t, std::uint64_t, const Matrix<Fp>&, StateVector<Fp>&);
+CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#undef FUNC_MACRO
 }  // namespace scaluq::internal

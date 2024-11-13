@@ -1,3 +1,4 @@
+#include "../util/template.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
@@ -40,4 +41,9 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     Kokkos::fence();
     state._raw = update;
 }
+#define FUNC_MACRO(Fp)                \
+    template void sparse_matrix_gate( \
+        std::uint64_t, std::uint64_t, const SparseMatrix<Fp>&, StateVector<Fp>&);
+CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#undef FUNC_MACRO
 }  // namespace scaluq::internal

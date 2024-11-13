@@ -1,9 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <Eigen/Core>
-#include <cmath>
-#include <state/state_vector.hpp>
-#include <util/utility.hpp>
+#include <scaluq/state/state_vector.hpp>
 
 #include "../test_environment.hpp"
 #include "../util/util.hpp"

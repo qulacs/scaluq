@@ -46,6 +46,17 @@ PauliOperator<Fp>::Data::Data(const std::vector<std::uint64_t>& target_qubit_lis
 }
 
 FLOAT(Fp)
+PauliOperator<Fp>::Data::Data(const std::vector<std::uint64_t>& pauli_id_par_qubit,
+                              Complex<Fp> coef)
+    : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
+    for (std::uint64_t i = 0; i < pauli_id_par_qubit.size(); ++i) {
+        if (pauli_id_par_qubit[i] != PauliOperator<Fp>::I) {
+            add_single_pauli(i, pauli_id_par_qubit[i]);
+        }
+    }
+}
+
+FLOAT(Fp)
 PauliOperator<Fp>::Data::Data(std::uint64_t bit_flip_mask,
                               std::uint64_t phase_flip_mask,
                               Complex<Fp> coef)

@@ -2,6 +2,8 @@
 
 #include <scaluq/constant.hpp>
 
+#include "../util/template.hpp"
+
 namespace scaluq::internal {
 template <std::floating_point Fp>
 void apply_pauli(std::uint64_t control_mask,
@@ -40,6 +42,11 @@ void apply_pauli(std::uint64_t control_mask,
         });
     Kokkos::fence();
 }
+#define FUNC_MACRO(Fp)         \
+    template void apply_pauli( \
+        std::uint64_t, std::uint64_t, std::uint64_t, Complex<Fp>, StateVector<Fp>&);
+CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#undef FUNC_MACRO
 
 template <std::floating_point Fp>
 void apply_pauli_rotation(std::uint64_t control_mask,
@@ -97,4 +104,9 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         Kokkos::fence();
     }
 }
+#define FUNC_MACRO(Fp)                  \
+    template void apply_pauli_rotation( \
+        std::uint64_t, std::uint64_t, std::uint64_t, Complex<Fp>, Fp, StateVector<Fp>&);
+CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#undef FUNC_MACRO
 }  // namespace scaluq::internal

@@ -61,16 +61,7 @@ template <std::floating_point Fp>
 void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
                                      const DiagonalMatrix2x2<Fp>& diag,
-                                     StateVector<Fp>& state) {
-    Kokkos::parallel_for(
-        state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(std::uint64_t it) {
-            std::uint64_t basis =
-                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
-            state._raw[basis] *= diag[0];
-            state._raw[basis | target_mask] *= diag[1];
-        });
-    Kokkos::fence();
-}
+                                     StateVector<Fp>& state);
 
 template <std::floating_point Fp>
 inline void i_gate(std::uint64_t, std::uint64_t, StateVector<Fp>&) {}

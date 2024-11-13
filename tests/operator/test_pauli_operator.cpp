@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <operator/pauli_operator.hpp>
-#include <state/state_vector.hpp>
+#include <scaluq/operator/pauli_operator.hpp>
 
 #include "../test_environment.hpp"
 

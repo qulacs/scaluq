@@ -24,5 +24,6 @@ SparseMatrix<Fp>::SparseMatrix(const SparseComplexMatrix<Fp>& sp) {
     }
     Kokkos::deep_copy(_values, values_h);
 }
+FLOAT_DECLARE_CLASS(SparseMatrix)
 }  // namespace internal
 }  // namespace scaluq

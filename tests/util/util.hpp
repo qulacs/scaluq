@@ -2,9 +2,7 @@
 
 #include <Eigen/Core>
 #include <complex>
-#include <types.hpp>
-#include <util/random.hpp>
-#include <util/utility.hpp>
+#include <scaluq/types.hpp>
 
 using namespace scaluq;
 using namespace std::complex_literals;

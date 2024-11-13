@@ -474,4 +474,5 @@ std::string SwapGateImpl<Fp>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
+FLOAT_DECLARE_CLASS(SwapGateImpl)
 }  // namespace scaluq::internal
