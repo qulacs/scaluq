@@ -740,12 +740,10 @@ void test_gate(Gate<Fp> gate_control,
     amplitudes = state.get_amplitudes();
     amplitudes_controlled = state_controlled.get_amplitudes();
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
-        ASSERT_NEAR(
-            Kokkos::abs(amplitudes_controlled[i] -
-                        amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) |
-                                   control_mask]),
-            0.,
-            eps);
+        check_near(
+            (StdComplex<Fp>)amplitudes_controlled[i],
+            (StdComplex<Fp>)amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) |
+                                       control_mask]);
     }
 }
 
@@ -883,12 +881,12 @@ void test_matrix_control(std::uint64_t n_qubits) {
         Gate<Fp> d2 = gate::DenseMatrix<Fp>(new_targets, mat, {});
         Gate<Fp> s1 = gate::SparseMatrix<Fp>(targets, mat.sparseView(), controls);
         Gate<Fp> s2 = gate::SparseMatrix<Fp>(new_targets, mat.sparseView(), {});
-        test_gate(d1, d2, n_qubits, control_mask);
-        test_gate(s1, s2, n_qubits, control_mask);
+        test_gate<Fp>(d1, d2, n_qubits, control_mask);
+        test_gate<Fp>(s1, s2, n_qubits, control_mask);
     } else if constexpr (num_target == 1) {
         Eigen::Matrix<StdComplex<Fp>, 2, 2, Eigen::RowMajor> U =
             get_eigen_matrix_random_one_target_unitary<Fp>();
-        internal::ComplexMatrix<Fp> mat(U.rows(), U.cols());
+        ComplexMatrix<Fp> mat = ComplexMatrix<Fp>::Zero(U.rows(), U.cols());
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < 2; j++) {
                 mat(i, j) = U(i, j);
@@ -906,7 +904,7 @@ void test_matrix_control(std::uint64_t n_qubits) {
         Eigen::Matrix<StdComplex<Fp>, 2, 2, Eigen::RowMajor> U2 =
             get_eigen_matrix_random_one_target_unitary<Fp>();
         auto U = internal::kronecker_product<Fp>(U2, U1);
-        internal::ComplexMatrix<Fp> mat(U.rows(), U.cols());
+        ComplexMatrix<Fp> mat = ComplexMatrix<Fp>::Zero(U.rows(), U.cols());
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
                 mat(i, j) = U(i, j);
@@ -916,8 +914,8 @@ void test_matrix_control(std::uint64_t n_qubits) {
         Gate<Fp> d2 = gate::DenseMatrix<Fp>(new_targets, mat, {});
         Gate<Fp> s1 = gate::SparseMatrix<Fp>(targets, mat.sparseView(), controls);
         Gate<Fp> s2 = gate::SparseMatrix<Fp>(new_targets, mat.sparseView(), {});
-        test_gate(d1, d2, n_qubits, control_mask);
-        test_gate(s1, s2, n_qubits, control_mask);
+        test_gate<Fp>(d1, d2, n_qubits, control_mask);
+        test_gate<Fp>(s1, s2, n_qubits, control_mask);
     } else {
         Eigen::Matrix<StdComplex<Fp>, 2, 2, Eigen::RowMajor> U1 =
             get_eigen_matrix_random_one_target_unitary<Fp>();
@@ -936,8 +934,8 @@ void test_matrix_control(std::uint64_t n_qubits) {
         Gate<Fp> d2 = gate::DenseMatrix<Fp>(new_targets, mat, {});
         Gate<Fp> s1 = gate::SparseMatrix<Fp>(targets, mat.sparseView(), controls);
         Gate<Fp> s2 = gate::SparseMatrix<Fp>(new_targets, mat.sparseView(), {});
-        test_gate(d1, d2, n_qubits, control_mask);
-        test_gate(s1, s2, n_qubits, control_mask);
+        test_gate<Fp>(d1, d2, n_qubits, control_mask);
+        test_gate<Fp>(s1, s2, n_qubits, control_mask);
     }
 }
 

@@ -18,9 +18,9 @@ const inline float eps_f = 1e-6;
 template <std::floating_point Fp>
 inline void check_near(const StdComplex<Fp>& a, const StdComplex<Fp>& b) {
     if constexpr (std::is_same_v<Fp, double>)
-        EXPECT_NEAR(std::abs(a - b), 0, eps);
+        ASSERT_LE(std::abs(a - b), eps);
     else
-        EXPECT_NEAR(std::abs(a - b), 0, eps_f);
+        ASSERT_LE(std::abs(a - b), eps_f);
 }
 
 template <std::floating_point Fp>

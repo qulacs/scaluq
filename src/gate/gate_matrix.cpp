@@ -103,7 +103,7 @@ std::shared_ptr<const GateBase<Fp>> SparseMatrixGateImpl<Fp>::get_inverse() cons
     Kokkos::View<SparseValue<Fp>*, Kokkos::HostSpace> vec_h("h_view", num_nnz);
     Kokkos::deep_copy(vec_h, _matrix._values);
     // conversion to Eigen matrix (COO format)
-    ComplexMatrix<Fp> eigen_matrix(_matrix._row, _matrix._col);
+    ComplexMatrix<Fp> eigen_matrix = ComplexMatrix<Fp>::Zero(_matrix._row, _matrix._col);
     for (std::size_t i = 0; i < vec_h.extent(0); i++) {
         eigen_matrix(vec_h(i).r, vec_h(i).c) = vec_h(i).val;
     }
