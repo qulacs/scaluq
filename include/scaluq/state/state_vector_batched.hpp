@@ -148,7 +148,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
             "seed"_a = std::nullopt,
             "Construct batched state vectors with Haar random states. If seed is not "
             "specified, the value from random device is used.")
-        .def("amplitudes",
+        .def("get_amplitudes",
              &StateVectorBatched<double>::get_amplitudes,
              "Get all amplitudes with as `list[list[complex]]`.")
         .def("get_squared_norm",

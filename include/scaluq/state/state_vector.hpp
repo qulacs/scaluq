@@ -159,7 +159,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
         .def("set_computational_basis",
              &StateVector<double>::set_computational_basis,
              "Initialize with computational basis \\ket{\\mathrm{basis}}.")
-        .def("amplitudes",
+        .def("get_amplitudes",
              &StateVector<double>::get_amplitudes,
              "Get all amplitudes with as `list[complex]`.")
         .def("n_qubits", &StateVector<double>::n_qubits, "Get num of qubits.")
