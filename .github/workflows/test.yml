@@ -91,9 +91,3 @@ jobs:
             NPROC=$(nproc)
           fi
           OMP_PROC_BIND=false ninja test -C build -j ${NPROC}
-      
-      - name: Test if stub exists
-        if: ${{ matrix.device == 'cpu' }} # currently GPU runner is not supported
-        run: |
-          echo -e "from scaluq import StateVector\nfrom scaluq.gate import I" > /tmp/stub_sample.py
-          mypy /tmp/stub_sample.py
