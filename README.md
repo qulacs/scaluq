@@ -12,34 +12,37 @@ scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 - [nanobind](https://github.com/wjakob/nanobind) の導入により、よりコンパクトかつ高速な Python へのバインディングを実現します。
 - 複数の量子状態に対して同じ回路を適用させるようなケースに対して、より高速なインターフェースを提供します（未実装）。
 
-## 依存ライブラリ
+## ビルド時要件
 
 - Ninja 1.10 以上
 - GCC 11 以上
 - CMake 3.21 以上
+
+## 実行時要件
 - CUDA 12.2 以上（GPU利用時のみ）
 
 ## C++ ライブラリとしてインストール
 
-Qulacs2023 を静的ライブラリとしてインストールするには、以下の一連のコマンドを実行します。
+scaluq を静的ライブラリとしてインストールするには、以下の一連のコマンドを実行します。
 
 ```txt
 git clone https://github.com/qulacs/scaluq
 cd scaluq
-./script/build_gcc.sh
+script/configure
+sudo ninja -C build install
 ```
 
-NVIDIA GPU と CUDA が利用可能ならば、以下のコマンドで GPU バージョンをインストールできます。ビルドスクリプトの実行の際に `SCALUQ_USE_CUDA` オプションを付けます。
+- 依存ライブラリのEigenとKokkosも同時にインストールされます
+- `CMAKE_INSTALL_PREFIX`を設定することで `/usr/local`以外にインストールすることもできます。ユーザーローカルにインストールしたい場合や、別の設定でビルドしたKokkosと衝突させたくない場合は明示的に指定してください。例: `CMAKE_INSTALL_PREFIX=~/.local script/configure; ninja -C build install`
+- NVIDIA GPU と CUDA が利用可能ならば、`SCALUQ_USE_CUDA=Yes`を設定してconfigureすることでCUDAを利用するライブラリとしてインストールできます。
 
-```txt
-SCALUQ_USE_CUDA=ON ./script/build_gcc.sh
-```
-
-ただし、オプションを変更して再ビルドする際には、CMake にセットされたキャッシュ変数をクリアするため、必ず以下のコマンドを実行してください。
+オプションを変更して再ビルドする際には、CMake にセットされたキャッシュ変数をクリアするため、必ず以下のコマンドを実行してください。
 
 ```txt
 rm build/CMakeCache.txt
 ```
+
+インストール済みのscaluqを利用したプロジェクトでのCMake設定例を[example_project/](example_project/CMakeLists.txt)に提示しています。
 
 ## Python ライブラリとしてインストール
 Python のライブラリとしても使用することができます。
@@ -65,10 +68,10 @@ https://scaluq.readthedocs.io/en/latest/index.html
 #include <iostream>
 #include <cstdint>
 
-#include <circuit/circuit.hpp>
-#include <gate/gate_factory.hpp>
-#include <operator/operator.hpp>
-#include <state/state_vector.hpp>
+#include <scaluq/circuit/circuit.hpp>
+#include <scaluq/gate/gate_factory.hpp>
+#include <scaluq/operator/operator.hpp>
+#include <scaluq/state/state_vector.hpp>
 
 int main() {
     scaluq::initialize();  // must be called before using any scaluq methods
