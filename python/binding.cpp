@@ -20,7 +20,7 @@ using namespace nb::literals;
 
 #define SCALUQ_USE_NANOBIND
 
-#include <all.hpp>
+#include <scaluq/all.hpp>
 
 using namespace scaluq;
 using namespace std::string_literals;
