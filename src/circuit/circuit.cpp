@@ -144,4 +144,6 @@ void Circuit<Fp>::check_gate_is_valid(const ParamGate<Fp>& gate) const {
         throw std::runtime_error("Gate to be added to the circuit has invalid qubit range");
     }
 }
+
+FLOAT_DECLARE_CLASS(Circuit)
 }  // namespace scaluq
