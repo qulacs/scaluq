@@ -87,7 +87,7 @@ jobs:
       - name: Build and Run other project
         run: |
           cd example_project/
-          cmake -B build/
+          cmake -B build/ -D "CMAKE_C_COMPILER=$CMAKE_C_COPMILER" -D "CMAKE_CXX_COMPILER=$CMAKE_CXX_COMPILER"
           make -C build
           if [ "$SCALUQ_USE_CUDA" != 'ON']; then
             build/main
