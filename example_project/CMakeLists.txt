@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.21)
 project(example)
 
 find_package(OpenMP)
+find_package(CUDAToolkit)
 find_package(Kokkos)
 find_package(scaluq)
 add_executable(main main.cpp)
