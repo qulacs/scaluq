@@ -40,7 +40,8 @@ using ParamPauliRotationGate = internal::ParamGatePtr<internal::ParamPauliRotati
 namespace internal {
 void bind_gate_param_gate_pauli_hpp(nb::module_& m) {
     DEF_PARAM_GATE(
-        ParamPauliRotationGate<double>,
+        ParamPauliRotationGate,
+        double,
         "Specific class of parametric multi-qubit pauli-rotation gate, represented as "
         "$e^{-i\\frac{\\mathrm{angle}}{2}P}$. `angle` is given as `param * param_coef`.");
 }

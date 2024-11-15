@@ -67,11 +67,13 @@ using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl<Fp>>
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 void bind_gate_gate_pauli_hpp(nb::module_& m) {
-    DEF_GATE(PauliGate<double>,
+    DEF_GATE(PauliGate,
+             double,
              "Specific class of multi-qubit pauli gate, which applies single-qubit Pauli "
              "gate to "
              "each of qubit.");
-    DEF_GATE(PauliRotationGate<double>,
+    DEF_GATE(PauliRotationGate,
+             double,
              "Specific class of multi-qubit pauli-rotation gate, represented as "
              "$e^{-i\\frac{\\mathrm{angle}}{2}P}$.");
 }

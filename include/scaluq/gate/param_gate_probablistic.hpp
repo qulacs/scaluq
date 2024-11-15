@@ -72,7 +72,8 @@ using ParamProbablisticGate = internal::ParamGatePtr<internal::ParamProbablistic
 namespace internal {
 void bind_gate_param_gate_probablistic_hpp(nb::module_& m) {
     DEF_PARAM_GATE(
-        ParamProbablisticGate<double>,
+        ParamProbablisticGate,
+        double,
         "Specific class of parametric probablistic gate. The gate to apply is picked from a "
         "cirtain "
         "distribution.")

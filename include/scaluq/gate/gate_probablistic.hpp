@@ -68,7 +68,8 @@ using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl<Fp>>;
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 void bind_gate_gate_probablistic(nb::module_& m) {
-    DEF_GATE(ProbablisticGate<double>,
+    DEF_GATE(ProbablisticGate,
+             double,
              "Specific class of probablistic gate. The gate to apply is picked from a cirtain "
              "distribution.")
         .def(
