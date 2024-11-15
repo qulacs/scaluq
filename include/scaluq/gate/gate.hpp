@@ -293,7 +293,7 @@ using Gate = internal::GatePtr<internal::GateBase<Fp>>;
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 #define DEF_GATE_BASE(GATE_TYPE, FLOAT, DESCRIPTION)                                         \
-    nb::class_<GATE_TYPE<FLOAT>>(m, #GATE_TYPE "_" #FLOAT, DESCRIPTION)                      \
+    nb::class_<GATE_TYPE<FLOAT>>(m, #GATE_TYPE, DESCRIPTION)                                 \
         .def("gate_type", &GATE_TYPE<FLOAT>::gate_type, "Get gate type as `GateType` enum.") \
         .def(                                                                                \
             "target_qubit_list",                                                             \

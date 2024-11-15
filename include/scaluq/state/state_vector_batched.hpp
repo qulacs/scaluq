@@ -89,7 +89,7 @@ namespace internal {
 void bind_state_state_vector_batched_hpp(nb::module_& m) {
     nb::class_<StateVectorBatched<double>>(
         m,
-        "StateVectorBatched_double",
+        "StateVectorBatched",
         "Batched vector representation of quantum state.\n\n.. note:: Qubit index is start from 0. "
         "If the amplitudes of $\\ket{b_{n-1}\\dots b_0}$ is $b_i$, the state is $\\sum_i b_i "
         "2^i$.")
