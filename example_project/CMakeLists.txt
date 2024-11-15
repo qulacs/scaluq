@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.21)
 
 project(example)
 
-find_package(scaluq)
 find_package(OpenMP)
+find_package(Kokkos)
+find_package(scaluq)
 add_executable(main main.cpp)
 target_include_directories(main PUBLIC /usr/local/include/scaluq)
 target_include_directories(main PUBLIC /usr/local/include/kokkos)
