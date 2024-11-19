@@ -223,6 +223,7 @@ public:
     virtual void update_quantum_state(StateVectorBatched& states) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
+    [[nodiscard]] virtual bool is_noise() const { return false; }
 };
 
 template <GateImpl T>

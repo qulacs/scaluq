@@ -117,6 +117,8 @@ public:
         }
         return ss.str();
     }
+
+    [[nodiscard]] bool is_noise() const override { return true; }
 };
 }  // namespace internal
 

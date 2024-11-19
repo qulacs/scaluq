@@ -11,6 +11,7 @@
 #include "operator/apply_pauli.hpp"
 #include "operator/operator.hpp"
 #include "operator/pauli_operator.hpp"
+#include "simulator/noisesimulator.hpp"
 #include "state/state_vector.hpp"
 #include "state/state_vector_batched.hpp"
 #include "types.hpp"

@@ -128,6 +128,7 @@ public:
                                       std::vector<double> params) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
+    [[nodiscard]] virtual bool is_noise() { return false; }
 };
 
 template <ParamGateImpl T>

@@ -9,6 +9,7 @@ target_sources(scaluq PRIVATE
     operator/apply_pauli.cpp
     operator/pauli_operator.cpp
     operator/operator.cpp
+    simulator/noisesimulator.cpp
     state/state_vector.cpp
     state/state_vector_batched.cpp
 )
