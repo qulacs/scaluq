@@ -343,6 +343,7 @@ namespace internal {
             "Get string representation of the gate.")
 
 nb::class_<Gate<double>> gate_base_def_double;
+nb::class_<Gate<float>> gate_base_def_float;
 
 #define DEF_GATE(GATE_TYPE, FLOAT, DESCRIPTION)                                                 \
     ::scaluq::internal::gate_base_def_##FLOAT.def(nb::init<GATE_TYPE<FLOAT>>(),                 \
@@ -354,6 +355,7 @@ nb::class_<Gate<double>> gate_base_def_double;
         "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
         .def(nb::init<Gate<FLOAT>>())
 
+template <std::floating_point Fp>
 void bind_gate_gate_hpp(nb::module_& m) {
     nb::enum_<GateType>(m, "GateType", "Enum of Gate Type.")
         .value("I", GateType::I)
@@ -384,12 +386,23 @@ void bind_gate_gate_hpp(nb::module_& m) {
         .value("Pauli", GateType::Pauli)
         .value("PauliRotation", GateType::PauliRotation);
 
-    gate_base_def_double =
-        DEF_GATE_BASE(Gate,
-                      double,
-                      "General class of QuantumGate.\n\n.. note:: Downcast to requred to use "
-                      "gate-specific functions.")
-            .def(nb::init<Gate<double>>(), "Just copy shallowly.");
+    if constexpr (std::is_same_v<Fp, double>) {
+        gate_base_def_double =
+            DEF_GATE_BASE(Gate,
+                          double,
+                          "General class of QuantumGate.\n\n.. note:: Downcast to requred to use "
+                          "gate-specific functions.")
+                .def(nb::init<Gate<double>>(), "Just copy shallowly.");
+    } else if constexpr (std::is_same_v<Fp, float>) {
+        gate_base_def_float =
+            DEF_GATE_BASE(Gate,
+                          float,
+                          "General class of QuantumGate.\n\n.. note:: Downcast to requred to use "
+                          "gate-specific functions.")
+                .def(nb::init<Gate<float>>(), "Just copy shallowly.");
+    } else {
+        static_assert(internal::lazy_false_v<void>);
+    }
 }
 }  // namespace internal
 #endif

@@ -88,8 +88,9 @@ public:
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
+template <std::floating_point Fp>
 void bind_state_state_vector_hpp(nb::module_& m) {
-    nb::class_<StateVector<double>>(
+    nb::class_<StateVector<Fp>>(
         m,
         "StateVector",
         "Vector representation of quantum state.\n\n.. note:: Qubit index is "
@@ -98,13 +99,13 @@ void bind_state_state_vector_hpp(nb::module_& m) {
         .def(nb::init<std::uint64_t>(),
              "Construct state vector with specified qubits, initialized with computational "
              "basis $\\ket{0\\dots0}$.")
-        .def(nb::init<const StateVector<double>&>(),
+        .def(nb::init<const StateVector<Fp>&>(),
              "Constructing state vector by copying other state.")
         .def_static(
             "Haar_random_state",
             [](std::uint64_t n_qubits, std::optional<std::uint64_t> seed) {
-                return StateVector<double>::Haar_random_state(
-                    n_qubits, seed.value_or(std::random_device{}()));
+                return StateVector<Fp>::Haar_random_state(n_qubits,
+                                                          seed.value_or(std::random_device{}()));
             },
             "n_qubits"_a,
             "seed"_a = std::nullopt,
@@ -143,57 +144,57 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                 .build_as_google_style()
                 .c_str())
         .def("set_amplitude_at",
-             &StateVector<double>::set_amplitude_at,
+             &StateVector<Fp>::set_amplitude_at,
              "Manually set amplitude at one index.")
         .def("get_amplitude_at",
-             &StateVector<double>::get_amplitude_at,
+             &StateVector<Fp>::get_amplitude_at,
              "Get amplitude at one index.\n\n.. note:: If you want to get all amplitudes, you "
              "should "
              "use `StateVector::get_amplitudes()`.")
         .def("set_zero_state",
-             &StateVector<double>::set_zero_state,
+             &StateVector<Fp>::set_zero_state,
              "Initialize with computational basis $\\ket{00\\dots0}$.")
         .def("set_zero_norm_state",
-             &StateVector<double>::set_zero_norm_state,
+             &StateVector<Fp>::set_zero_norm_state,
              "Initialize with 0 (null vector).")
         .def("set_computational_basis",
-             &StateVector<double>::set_computational_basis,
+             &StateVector<Fp>::set_computational_basis,
              "Initialize with computational basis \\ket{\\mathrm{basis}}.")
         .def("get_amplitudes",
-             &StateVector<double>::get_amplitudes,
+             &StateVector<Fp>::get_amplitudes,
              "Get all amplitudes with as `list[complex]`.")
-        .def("n_qubits", &StateVector<double>::n_qubits, "Get num of qubits.")
+        .def("n_qubits", &StateVector<Fp>::n_qubits, "Get num of qubits.")
         .def("dim",
-             &StateVector<double>::dim,
+             &StateVector<Fp>::dim,
              "Get dimension of the vector ($=2^\\mathrm{n\\_qubits}$).")
         .def("get_squared_norm",
-             &StateVector<double>::get_squared_norm,
+             &StateVector<Fp>::get_squared_norm,
              "Get squared norm of the state. $\\braket{\\psi|\\psi}$.")
         .def("normalize",
-             &StateVector<double>::normalize,
+             &StateVector<Fp>::normalize,
              "Normalize state (let $\\braket{\\psi|\\psi} = 1$ by multiplying coef).")
         .def("get_zero_probability",
-             &StateVector<double>::get_zero_probability,
+             &StateVector<Fp>::get_zero_probability,
              "Get the probability to observe $\\ket{0}$ at specified index.")
         .def("get_marginal_probability",
-             &StateVector<double>::get_marginal_probability,
+             &StateVector<Fp>::get_marginal_probability,
              "Get the marginal probability to observe as specified. Specify the result as n-length "
              "list. `0` and `1` represent the qubit is observed and get the value. `2` represents "
              "the qubit is not observed.")
-        .def("get_entropy", &StateVector<double>::get_entropy, "Get the entropy of the vector.")
+        .def("get_entropy", &StateVector<Fp>::get_entropy, "Get the entropy of the vector.")
         .def("add_state_vector_with_coef",
-             &StateVector<double>::add_state_vector_with_coef,
+             &StateVector<Fp>::add_state_vector_with_coef,
              "add other state vector with multiplying the coef and make superposition. "
              "$\\ket{\\mathrm{this}}\\leftarrow\\ket{\\mathrm{this}}+\\mathrm{coef}"
              "\\ket{\\mathrm{"
              "state}}$.")
         .def("multiply_coef",
-             &StateVector<double>::multiply_coef,
+             &StateVector<Fp>::multiply_coef,
              "Multiply coef. "
              "$\\ket{\\mathrm{this}}\\leftarrow\\mathrm{coef}\\ket{\\mathrm{this}}$.")
         .def(
             "sampling",
-            [](const StateVector<double>& state,
+            [](const StateVector<Fp>& state,
                std::uint64_t sampling_count,
                std::optional<std::uint64_t> seed) {
                 return state.sampling(sampling_count, seed.value_or(std::random_device{}()));
@@ -201,12 +202,11 @@ void bind_state_state_vector_hpp(nb::module_& m) {
             "sampling_count"_a,
             "seed"_a = std::nullopt,
             "Sampling specified times. Result is `list[int]` with the `sampling_count` length.")
-        .def("to_string", &StateVector<double>::to_string, "Information as `str`.")
-        .def(
-            "load", &StateVector<double>::load, "Load amplitudes of `list[int]` with `dim` length.")
-        .def("__str__", &StateVector<double>::to_string, "Information as `str`.")
+        .def("to_string", &StateVector<Fp>::to_string, "Information as `str`.")
+        .def("load", &StateVector<Fp>::load, "Load amplitudes of `list[int]` with `dim` length.")
+        .def("__str__", &StateVector<Fp>::to_string, "Information as `str`.")
         .def_ro_static("UNMEASURED",
-                       &StateVector<double>::UNMEASURED,
+                       &StateVector<Fp>::UNMEASURED,
                        "Constant used for `StateVector::get_marginal_probability` to express the "
                        "the qubit is not measured.");
 }

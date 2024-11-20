@@ -466,48 +466,49 @@ using SwapGate = internal::GatePtr<internal::SwapGateImpl<Fp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
+template <std::floating_point Fp>
 void bind_gate_gate_standard_hpp(nb::module_& m) {
-    DEF_GATE(IGate, double, "Specific class of Pauli-I gate.");
+    DEF_GATE(IGate, Fp, "Specific class of Pauli-I gate.");
     DEF_GATE(GlobalPhaseGate,
-             double,
+             Fp,
              "Specific class of gate, which rotate global phase, represented as "
              "$e^{i\\mathrm{phase}}I$.")
         .def(
             "phase",
-            [](const GlobalPhaseGate<double>& gate) { return gate->phase(); },
+            [](const GlobalPhaseGate<Fp>& gate) { return gate->phase(); },
             "Get `phase` property");
-    DEF_GATE(XGate, double, "Specific class of Pauli-X gate.");
-    DEF_GATE(YGate, double, "Specific class of Pauli-Y gate.");
-    DEF_GATE(ZGate, double, "Specific class of Pauli-Z gate.");
-    DEF_GATE(HGate, double, "Specific class of Hadamard gate.");
+    DEF_GATE(XGate, Fp, "Specific class of Pauli-X gate.");
+    DEF_GATE(YGate, Fp, "Specific class of Pauli-Y gate.");
+    DEF_GATE(ZGate, Fp, "Specific class of Pauli-Z gate.");
+    DEF_GATE(HGate, Fp, "Specific class of Hadamard gate.");
     DEF_GATE(SGate,
-             double,
+             Fp,
              "Specific class of S gate, represented as $\\begin { bmatrix }\n1 & 0\\\\\n0 &"
              "i\n\\end{bmatrix}$.");
-    DEF_GATE(SdagGate, double, "Specific class of inverse of S gate.");
+    DEF_GATE(SdagGate, Fp, "Specific class of inverse of S gate.");
     DEF_GATE(TGate,
-             double,
+             Fp,
              "Specific class of T gate, represented as $\\begin { bmatrix }\n1 & 0\\\\\n0 &"
              "e^{i\\pi/4}\n\\end{bmatrix}$.");
-    DEF_GATE(TdagGate, double, "Specific class of inverse of T gate.");
+    DEF_GATE(TdagGate, Fp, "Specific class of inverse of T gate.");
     DEF_GATE(
         SqrtXGate,
-        double,
+        Fp,
         "Specific class of sqrt(X) gate, represented as $\\begin{ bmatrix }\n1+i & 1-i\\\\\n1-i "
         "& 1+i\n\\end{bmatrix}$.");
-    DEF_GATE(SqrtXdagGate, double, "Specific class of inverse of sqrt(X) gate.");
+    DEF_GATE(SqrtXdagGate, Fp, "Specific class of inverse of sqrt(X) gate.");
     DEF_GATE(SqrtYGate,
-             double,
+             Fp,
              "Specific class of sqrt(Y) gate, represented as $\\begin{ bmatrix }\n1+i & -1-i "
              "\\\\\n1+i & 1+i\n\\end{bmatrix}$.");
-    DEF_GATE(SqrtYdagGate, double, "Specific class of inverse of sqrt(Y) gate.");
+    DEF_GATE(SqrtYdagGate, Fp, "Specific class of inverse of sqrt(Y) gate.");
     DEF_GATE(
         P0Gate,
-        double,
+        Fp,
         "Specific class of projection gate to $\\ket{0}$.\n\n.. note:: This gate is not unitary.");
     DEF_GATE(
         P1Gate,
-        double,
+        Fp,
         "Specific class of projection gate to $\\ket{1}$.\n\n.. note:: This gate is not unitary.");
 
 #define DEF_ROTATION_GATE(GATE_TYPE, FLOAT, DESCRIPTION)                \
@@ -519,40 +520,40 @@ void bind_gate_gate_standard_hpp(nb::module_& m) {
 
     DEF_ROTATION_GATE(
         RXGate,
-        double,
+        Fp,
         "Specific class of X rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}X}$.");
     DEF_ROTATION_GATE(
         RYGate,
-        double,
+        Fp,
         "Specific class of Y rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Y}$.");
     DEF_ROTATION_GATE(
         RZGate,
-        double,
+        Fp,
         "Specific class of Z rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Z}$.");
 
     DEF_GATE(U1Gate,
-             double,
+             Fp,
              "Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, "
              "represented as "
              "$\\begin{bmatrix}\n1 & 0\\\\\n0 & e^{i\\lambda}\n\\end{bmatrix}$.")
         .def(
             "lambda_",
-            [](const U1Gate<double>& gate) { return gate->lambda(); },
+            [](const U1Gate<Fp>& gate) { return gate->lambda(); },
             "Get `lambda` property.");
     DEF_GATE(U2Gate,
-             double,
+             Fp,
              "Specific class of IBMQ's U2 Gate, which is a rotation about X+Z-axis, "
              "represented as "
              "$\\frac{1}{\\sqrt{2}} \\begin{bmatrix}1 & -e^{-i\\lambda}\\\\\n"
              "e^{i\\phi} & e^{i(\\phi+\\lambda)}\n\\end{bmatrix}$.")
         .def(
-            "phi", [](const U2Gate<double>& gate) { return gate->phi(); }, "Get `phi` property.")
+            "phi", [](const U2Gate<Fp>& gate) { return gate->phi(); }, "Get `phi` property.")
         .def(
             "lambda_",
-            [](const U2Gate<double>& gate) { return gate->lambda(); },
+            [](const U2Gate<Fp>& gate) { return gate->lambda(); },
             "Get `lambda` property.");
     DEF_GATE(U3Gate,
-             double,
+             Fp,
              "Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, "
              "represented as "
              "$\\begin{bmatrix}\n\\cos \\frac{\\theta}{2} & "
@@ -560,16 +561,14 @@ void bind_gate_gate_standard_hpp(nb::module_& m) {
              "e^{i\\phi}\\sin\\frac{\\theta}{2} & "
              "e^{i(\\phi+\\lambda)}\\cos\\frac{\\theta}{2}\n\\end{bmatrix}$.")
         .def(
-            "theta",
-            [](const U3Gate<double>& gate) { return gate->theta(); },
-            "Get `theta` property.")
+            "theta", [](const U3Gate<Fp>& gate) { return gate->theta(); }, "Get `theta` property.")
         .def(
-            "phi", [](const U3Gate<double>& gate) { return gate->phi(); }, "Get `phi` property.")
+            "phi", [](const U3Gate<Fp>& gate) { return gate->phi(); }, "Get `phi` property.")
         .def(
             "lambda_",
-            [](const U3Gate<double>& gate) { return gate->lambda(); },
+            [](const U3Gate<Fp>& gate) { return gate->lambda(); },
             "Get `lambda` property.");
-    DEF_GATE(SwapGate, double, "Specific class of two-qubit swap gate.");
+    DEF_GATE(SwapGate, Fp, "Specific class of two-qubit swap gate.");
 }
 }  // namespace internal
 #endif
