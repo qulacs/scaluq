@@ -31,7 +31,7 @@ void test_apply_parametric_single_pauli_rotation(std::uint64_t n_qubits,
         auto state_cp_amp = state_cp.get_amplitudes();
 
         for (std::uint64_t i = 0; i < dim; i++) {
-            ASSERT_NEAR(Kokkos::abs(state_cp_amp[i] - state_amp[i]), 0, eps);
+            ASSERT_NEAR(Kokkos::abs(state_cp_amp[i] - state_amp[i]), 0, eps<double>);
         }
 
         ParamGate<double> pgate_inv = pgate->get_inverse();
@@ -39,7 +39,7 @@ void test_apply_parametric_single_pauli_rotation(std::uint64_t n_qubits,
         state_amp = state.get_amplitudes();
         auto state_bef_amp = state_bef.get_amplitudes();
         for (std::uint64_t i = 0; i < dim; i++) {
-            ASSERT_NEAR(Kokkos::abs(state_bef_amp[i] - state_amp[i]), 0, eps);
+            ASSERT_NEAR(Kokkos::abs(state_bef_amp[i] - state_amp[i]), 0, eps<double>);
         }
     }
 }
@@ -69,7 +69,7 @@ void test_apply_parametric_multi_pauli_rotation(std::uint64_t n_qubits) {
         auto state_cp_amp = state_cp.get_amplitudes();
         // check if the state is updated correctly
         for (std::uint64_t i = 0; i < dim; i++) {
-            ASSERT_NEAR(Kokkos::abs(state_cp_amp[i] - state_amp[i]), 0, eps);
+            ASSERT_NEAR(Kokkos::abs(state_cp_amp[i] - state_amp[i]), 0, eps<double>);
         }
         ParamGate<double> pgate_inv = pgate->get_inverse();
         pgate_inv->update_quantum_state(state, param);
@@ -77,7 +77,7 @@ void test_apply_parametric_multi_pauli_rotation(std::uint64_t n_qubits) {
         auto state_bef_amp = state_bef.get_amplitudes();
         // check if the state is restored correctly
         for (std::uint64_t i = 0; i < dim; i++) {
-            ASSERT_NEAR(Kokkos::abs((state_bef_amp[i] - state_amp[i])), 0, eps);
+            ASSERT_NEAR(Kokkos::abs((state_bef_amp[i] - state_amp[i])), 0, eps<double>);
         }
     }
 }
@@ -138,19 +138,14 @@ void test_gate(ParamGate<double> gate_control,
                         amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) |
                                    control_mask]),
             0.,
-            eps);
+            eps<double>);
     }
 }
 
 template <typename Factory>
 void test_param_rotation_control(Factory factory, std::uint64_t n) {
     Random random;
-    std::vector<std::uint64_t> shuffled(n);
-    std::iota(shuffled.begin(), shuffled.end(), 0ULL);
-    for (std::uint64_t i : std::views::iota(0ULL, n) | std::views::reverse) {
-        std::uint64_t j = random.int32() % (i + 1);
-        if (i != j) std::swap(shuffled[i], shuffled[j]);
-    }
+    std::vector<std::uint64_t> shuffled = random.permutation(n);
     std::uint64_t target = shuffled[0];
     std::uint64_t num_control = random.int32() % n;
     std::vector<std::uint64_t> controls(num_control);
