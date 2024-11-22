@@ -122,7 +122,7 @@ public:
         }
     }
 
-    std::string to_string(const std::string& indent) const override {
+    [[nodiscard]] std::string to_string(const std::string& indent) const override {
         std::ostringstream ss;
         const auto dist = distribution();
         ss << indent << "Gate Type: Probablistic\n";

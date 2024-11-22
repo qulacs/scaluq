@@ -54,6 +54,10 @@ NoiseSimulator::generate_sampling_request(const std::uint64_t sample_count) {
             if (std::holds_alternative<Gate>(gate_variant)) {
                 const auto& gate = std::get<Gate>(gate_variant);
                 selected_gate_pos[i][j] = randomly_select_which_gate_pos_to_apply(gate);
+            } else {
+                auto p = std::get<std::pair<ParamGate, std::string>>(gate_variant);
+                const auto& gate = p.first;
+                selected_gate_pos[i][j] = randomly_select_which_gate_pos_to_apply(gate);
             }
         }
     }
@@ -99,10 +103,16 @@ std::vector<std::pair<StateVector, std::uint64_t>> NoiseSimulator::simulate(
                 const auto& gate = std::get<Gate>(gate_variant);
                 if (!gate->is_noise()) {
                     gate->update_quantum_state(common_state);
-                } else if (auto* prob_gate =
-                               dynamic_cast<const internal::ProbablisticGateImpl*>(gate.get())) {
-                    prob_gate->gate_list()[current_gate_pos[done_itr]].update_quantum_state(
-                        common_state);
+                } else {
+                    gate.gate_list()[current_gate_pos[done_itr]].update_quantum_state(common_state);
+                }
+            } else {
+                auto p = std::get<std::pair<ParamGate, std::string>>(gate_variant);
+                const auto& gate = std::get<Gate>(gate_variant);
+                if (!gate->is_noise()) {
+                    gate->update_quantum_state(common_state);
+                } else {
+                    gate.gate_list()[current_gate_pos[done_itr]].update_quantum_state(common_state);
                 }
             }
             done_itr++;
@@ -112,11 +122,29 @@ std::vector<std::pair<StateVector, std::uint64_t>> NoiseSimulator::simulate(
         apply_gates(current_gate_pos, buffer, done_itr);
         simulation_result.emplace_back(buffer, request->num_of_sampling);
     }
-
     return simulation_result;
 }
 
 std::uint64_t NoiseSimulator::randomly_select_which_gate_pos_to_apply(const Gate& gate) {
+    if (!gate->is_noise()) {
+        return 0;
+    }
+
+    if (auto* prob_gate = dynamic_cast<const internal::ProbablisticGateImpl*>(gate.get())) {
+        const auto& current_cumulative_distribution = prob_gate->get_cumulative_distribution();
+
+        double tmp = _random.uniform();
+        auto gate_iterator = std::lower_bound(
+            current_cumulative_distribution.begin(), current_cumulative_distribution.end(), tmp);
+
+        auto gate_pos = std::distance(current_cumulative_distribution.begin(), gate_iterator);
+        return std::max(0UL, gate_pos - 1);
+    }
+
+    return 0;
+}
+
+std::uint64_t NoiseSimulator::randomly_select_which_gate_pos_to_apply(const ParamGate& gate) {
     if (!gate->is_noise()) {
         return 0;
     }
