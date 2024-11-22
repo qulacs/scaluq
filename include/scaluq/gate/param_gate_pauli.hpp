@@ -38,10 +38,11 @@ using ParamPauliRotationGate = internal::ParamGatePtr<internal::ParamPauliRotati
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
+template <std::floating_point Fp>
 void bind_gate_param_gate_pauli_hpp(nb::module_& m) {
     DEF_PARAM_GATE(
         ParamPauliRotationGate,
-        double,
+        Fp,
         "Specific class of parametric multi-qubit pauli-rotation gate, represented as "
         "$e^{-i\\frac{\\mathrm{angle}}{2}P}$. `angle` is given as `param * param_coef`.");
 }

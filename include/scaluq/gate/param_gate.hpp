@@ -218,12 +218,12 @@ namespace internal {
             },                                                                                    \
             "Get matrix representation of the gate with holding the parameter.")
 
-nb::class_<ParamGate<double>> param_gate_base_def_double;
-nb::class_<ParamGate<float>> param_gate_base_def_float;
+template <std::floating_point Fp>
+nb::class_<ParamGate<Fp>> param_gate_base_def;
 
 #define DEF_PARAM_GATE(PARAM_GATE_TYPE, FLOAT, DESCRIPTION)                                     \
-    ::scaluq::internal::param_gate_base_def_##FLOAT.def(nb::init<PARAM_GATE_TYPE<FLOAT>>(),     \
-                                                        "Upcast from `" #PARAM_GATE_TYPE "`."); \
+    ::scaluq::internal::param_gate_base_def<Fp>.def(nb::init<PARAM_GATE_TYPE<FLOAT>>(),         \
+                                                    "Upcast from `" #PARAM_GATE_TYPE "`.");     \
     DEF_PARAM_GATE_BASE(                                                                        \
         PARAM_GATE_TYPE,                                                                        \
         FLOAT,                                                                                  \
@@ -231,33 +231,23 @@ nb::class_<ParamGate<float>> param_gate_base_def_float;
         "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
         .def(nb::init<ParamGate<FLOAT>>())
 
-template <std::floating_point Fp>
-void bind_gate_param_gate_hpp(nb::module_& m) {
+void bind_gate_param_gate_hpp_without_precision(nb::module_& m) {
     nb::enum_<ParamGateType>(m, "ParamGateType", "Enum of ParamGate Type.")
         .value("ParamRX", ParamGateType::ParamRX)
         .value("ParamRY", ParamGateType::ParamRY)
         .value("ParamRZ", ParamGateType::ParamRZ)
         .value("ParamPauliRotation", ParamGateType::ParamPauliRotation);
+}
 
-    if constexpr (std::is_same_v<Fp, double>) {
-        param_gate_base_def_double =
-            DEF_PARAM_GATE_BASE(
-                ParamGate,
-                double,
-                "General class of parametric quantum gate.\n\n.. note:: Downcast to requred to use "
-                "gate-specific functions.")
-                .def(nb::init<ParamGate<double>>(), "Just copy shallowly.");
-    } else if constexpr (std::is_same_v<Fp, float>) {
-        param_gate_base_def_float =
-            DEF_PARAM_GATE_BASE(
-                ParamGate,
-                float,
-                "General class of parametric quantum gate.\n\n.. note:: Downcast to requred to use "
-                "gate-specific functions.")
-                .def(nb::init<ParamGate<float>>(), "Just copy shallowly.");
-    } else {
-        static_asert(internal::lazy_false_v<void>);
-    }
+template <std::floating_point Fp>
+void bind_gate_param_gate_hpp(nb::module_& m) {
+    param_gate_base_def<Fp> =
+        DEF_PARAM_GATE_BASE(
+            ParamGate,
+            Fp,
+            "General class of parametric quantum gate.\n\n.. note:: Downcast to requred to use "
+            "gate-specific functions.")
+            .def(nb::init<ParamGate<Fp>>(), "Just copy shallowly.");
 }
 
 }  // namespace internal
