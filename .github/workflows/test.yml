@@ -65,7 +65,7 @@ jobs:
       
       - name: Install CUDA toolkit
         if: ${{ matrix.device == 'cuda' }}
-        uses: Jimver/cuda-toolkit@v0.2.11
+        uses: Jimver/cuda-toolkit@v0.2.19
         with:
           cuda: "12.6.1"
           method: "network"
