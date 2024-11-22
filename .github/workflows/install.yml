@@ -81,7 +81,7 @@ jobs:
         run: ./script/configure
 
       - name: Install to system
-        run: sudo env "PATH=$PATH" ninja -C build install
+        run: sudo sh -c 'PATH=$PATH:/usr/local/cuda/bin ninja -C build install'
 
       - name: Build and Run other project
         run: |

@@ -34,7 +34,8 @@ sudo ninja -C build install
 
 - 依存ライブラリのEigenとKokkosも同時にインストールされます
 - `CMAKE_INSTALL_PREFIX`を設定することで `/usr/local`以外にインストールすることもできます。ユーザーローカルにインストールしたい場合や、別の設定でビルドしたKokkosと衝突させたくない場合は明示的に指定してください。例: `CMAKE_INSTALL_PREFIX=~/.local script/configure; ninja -C build install`
-- NVIDIA GPU と CUDA が利用可能ならば、`SCALUQ_USE_CUDA=Yes`を設定してconfigureすることでCUDAを利用するライブラリとしてインストールできます。
+- NVIDIA GPU と CUDA が利用可能ならば、`SCALUQ_USE_CUDA=Yes`を設定してconfigureすることでCUDAを利用するライブラリとしてインストールできます。例: `SCALUQ_USE_CUDA=Yes script/configure;  sudo sh -c 'PATH=$PATH:/usr/local/cuda/bin ninja -C build install'`
+  - `nvcc`コマンドへのパスがrootの`PATH`環境変数に含まれていない場合があるので、その場合パスを追加して実行します。
 
 オプションを変更して再ビルドする際には、CMake にセットされたキャッシュ変数をクリアするため、必ず以下のコマンドを実行してください。
 
