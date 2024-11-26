@@ -35,7 +35,7 @@ std::uint64_t CircuitSimulator::get_gate_count() const { return _cirq.n_gates();
 
 void CircuitSimulator::copy_state_to_buffer() { _buffer = _initial_state; }
 
-void CircuitSimulator::copy_buffer_to_state() { _initial_state = _buffer; }
+void CircuitSimulator::copy_state_from_buffer() { _initial_state = _buffer; }
 
 void CircuitSimulator::swap_state_and_buffer() {
     if (_buffer == nullptr) {
