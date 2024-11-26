@@ -35,6 +35,7 @@ private:
         std::uint64_t sample_count);
 
     std::uint64_t randomly_select_which_gate_pos_to_apply(const Gate& gate);
+    std::uint64_t randomly_select_which_gate_pos_to_apply(const ParamGate& gate);
 
     std::vector<std::pair<StateVector, std::uint64_t>> simulate(
         const std::vector<std::unique_ptr<SamplingRequest>>& sampling_request_vector);

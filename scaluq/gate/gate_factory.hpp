@@ -5,6 +5,7 @@
 #include "gate_pauli.hpp"
 #include "gate_probablistic.hpp"
 #include "gate_standard.hpp"
+#include "param_gate_probablistic.hpp"
 
 namespace scaluq {
 namespace internal {

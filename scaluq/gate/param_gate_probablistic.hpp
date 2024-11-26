@@ -34,6 +34,9 @@ public:
     }
     const std::vector<std::variant<Gate, ParamGate>>& gate_list() const { return _gate_list; }
     const std::vector<double>& distribution() const { return _distribution; }
+    const std::vector<double>& get_cumulative_distribution() const {
+        return _cumulative_distribution;
+    }
 
     std::vector<std::uint64_t> target_qubit_list() const override {
         throw std::runtime_error(
