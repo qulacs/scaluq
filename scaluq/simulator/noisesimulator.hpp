@@ -11,6 +11,9 @@
 
 namespace scaluq {
 
+template <typename GateType>
+concept IsValidGate = std::is_same_v<GateType, Gate> || std::is_same_v<GateType, ParamGate>;
+
 class NoiseSimulator {
 private:
     Random _random;
@@ -29,16 +32,18 @@ private:
 
     void apply_gates(const std::vector<std::uint64_t>& chosen_gate,
                      StateVector& sampling_state,
-                     std::size_t start_pos);
+                     std::size_t start_pos,
+                     const std::map<std::string, double>& parameters = {});
 
     std::vector<std::unique_ptr<SamplingRequest>> generate_sampling_request(
         std::uint64_t sample_count);
 
-    std::uint64_t randomly_select_which_gate_pos_to_apply(const Gate& gate);
-    std::uint64_t randomly_select_which_gate_pos_to_apply(const ParamGate& gate);
+    template <IsValidGate GateType>
+    std::uint64_t randomly_select_which_gate_pos_to_apply(const GateType& gate);
 
     std::vector<std::pair<StateVector, std::uint64_t>> simulate(
-        const std::vector<std::unique_ptr<SamplingRequest>>& sampling_request_vector);
+        const std::vector<std::unique_ptr<SamplingRequest>>& sampling_request_vector,
+        const std::map<std::string, double>& parameters = {});
 
 public:
     class Result {
