@@ -81,7 +81,7 @@ jobs:
         run: ./script/configure
 
       - name: Install to system
-        run: sudo -E env "PATH=$PATH" ninja -C build install'
+        run: sudo -E env "PATH=$PATH" ninja -C build install
 
       - name: Build and Run other project
         run: |
