@@ -18,8 +18,11 @@ NoiseSimulator::NoiseSimulator(const Circuit& init_circuit, const StateVector& i
     }
 }
 
-NoiseSimulator::Result::Result(std::vector<std::pair<StateVector, std::uint64_t>> result)
-    : _result(std::move(result)) {}
+NoiseSimulator::Result::Result(std::vector<std::pair<StateVector, std::uint64_t>> result) {
+    std::transform(result.begin(), result.end(), std::back_inserter(_result), [](const auto& p) {
+        return std::make_pair(p.first, p.second);
+    });
+}
 
 std::vector<std::uint64_t> NoiseSimulator::Result::sampling() const {
     std::vector<std::uint64_t> sampling_result;
@@ -116,15 +119,13 @@ std::vector<std::pair<StateVector, std::uint64_t>> NoiseSimulator::simulate(
                     param_gate->update_quantum_state(common_state, parameters.at(key));
                 } else {
                     ParamProbablisticGate prob_gate(param_gate);
-                    const auto& param_gate_variant =
-                        prob_gate->gate_list()[current_gate_pos[done_itr]];
-                    if (std::holds_alternative<Gate>(param_gate_variant)) {
-                        const auto& gate = std::get<Gate>(param_gate_variant);
+                    const auto& p_gate_variant = prob_gate->gate_list()[current_gate_pos[done_itr]];
+                    if (std::holds_alternative<Gate>(p_gate_variant)) {
+                        const auto& gate = std::get<Gate>(p_gate_variant);
                         gate->update_quantum_state(common_state);
                     } else {
-                        const auto& [param_gate, key] =
-                            std::get<std::pair<ParamGate, std::string>>(param_gate_variant);
-                        param_gate->update_quantum_state(common_state, parameters.at(key));
+                        const auto& gate = std::get<ParamGate>(p_gate_variant);
+                        gate->update_quantum_state(common_state, parameters.at(key));
                     }
                 }
             }
@@ -182,14 +183,13 @@ void NoiseSimulator::apply_gates(const std::vector<std::uint64_t>& chosen_gate,
                 param_gate->update_quantum_state(sampling_state, parameters.at(key));
             } else {
                 ParamProbablisticGate prob_gate(param_gate);
-                const auto& param_gate_variant = prob_gate->gate_list()[chosen_gate[q]];
-                if (std::holds_alternative<Gate>(param_gate_variant)) {
-                    const auto& gate = std::get<Gate>(param_gate_variant);
+                const auto& p_gate_variant = prob_gate->gate_list()[chosen_gate[q]];
+                if (std::holds_alternative<Gate>(p_gate_variant)) {
+                    const auto& gate = std::get<Gate>(p_gate_variant);
                     gate->update_quantum_state(sampling_state);
                 } else {
-                    const auto& [param_gate, key] =
-                        std::get<std::pair<ParamGate, std::string>>(param_gate_variant);
-                    param_gate->update_quantum_state(sampling_state, parameters.at(key));
+                    const auto& gate = std::get<ParamGate>(p_gate_variant);
+                    gate->update_quantum_state(sampling_state, parameters.at(key));
                 }
             }
         }
