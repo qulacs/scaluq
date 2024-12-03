@@ -21,7 +21,7 @@ scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 
 ## C++ ライブラリとしてインストール
 
-Qulacs2023 を静的ライブラリとしてインストールするには、以下の一連のコマンドを実行します。
+scaluq を静的ライブラリとしてインストールするには、以下の一連のコマンドを実行します。
 
 ```txt
 git clone https://github.com/qulacs/scaluq
