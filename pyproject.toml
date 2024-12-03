@@ -50,21 +50,6 @@ write_to = "python/scaluq/_version.py"
 homepage = "http://www.scaluq.org"
 
 [project.optional-dependencies]
-dev = [
-    "mypy == 1.11.2",
-    "scikit-build == 0.17.6",
-    "typing_extensions == 4.12.0",
-    "numpy == 1.26.0",
-    "nanobind == 2.0.0"
-]
-
-ci = [
-    "mypy == 1.11.2",
-    "scikit-build == 0.17.6",
-    "typing_extensions == 4.12.0",
-    "nanobind == 2.0.0"
-]
-
 doc = [
     "black == 24.4.2",
     "isort == 5.13.2",
