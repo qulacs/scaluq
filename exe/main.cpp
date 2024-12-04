@@ -5,10 +5,11 @@
 #include <scaluq/state/state_vector.hpp>
 #include <sstream>
 #include <stdexcept>
+#include <stdfloat>
 #include <type_traits>
 #include <vector>
 
-using Fp = float;
+using Fp = std::float16_t;
 
 int main() {
     Kokkos::initialize();

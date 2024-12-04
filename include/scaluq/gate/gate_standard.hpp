@@ -365,10 +365,11 @@ public:
     Fp lambda() const { return _lambda; }
 
     std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
-        return std::make_shared<const U2GateImpl<Fp>>(this->_target_mask,
-                                                      this->_control_mask,
-                                                      -_lambda - Kokkos::numbers::pi,
-                                                      -_phi + Kokkos::numbers::pi);
+        return std::make_shared<const U2GateImpl<Fp>>(
+            this->_target_mask,
+            this->_control_mask,
+            static_cast<Fp>(-_lambda - Kokkos::numbers::pi),
+            static_cast<Fp>(-_phi + Kokkos::numbers::pi));
     }
     internal::ComplexMatrix<Fp> get_matrix() const override;
 

@@ -1,5 +1,6 @@
 #include <scaluq/state/state_vector.hpp>
 
+#include "../util/math.hpp"
 #include "../util/template.hpp"
 
 namespace scaluq {
@@ -29,7 +30,8 @@ StateVector<Fp> StateVector<Fp>::Haar_random_state(std::uint64_t n_qubits, std::
     Kokkos::parallel_for(
         state._dim, KOKKOS_LAMBDA(std::uint64_t i) {
             auto rand_gen = rand_pool.get_state();
-            state._raw(i) = ComplexType(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
+            state._raw(i) = ComplexType(static_cast<Fp>(rand_gen.normal(0.0, 1.0)),
+                                        static_cast<Fp>(rand_gen.normal(0.0, 1.0)));
             rand_pool.free_state(rand_gen);
         });
     Kokkos::fence();
@@ -87,7 +89,7 @@ Fp StateVector<Fp>::get_zero_probability(std::uint64_t target_qubit_index) const
             "Error: StateVector::get_zero_probability(std::uint64_t): index "
             "of target qubit must be smaller than qubit_count");
     }
-    Fp sum = 0.;
+    Fp sum = 0;
     Kokkos::parallel_reduce(
         "zero_prob",
         _dim >> 1,
@@ -122,7 +124,7 @@ Fp StateVector<Fp>::get_marginal_probability(
         }
     }
 
-    Fp sum = 0.;
+    Fp sum = 0;
     auto d_target_index = internal::convert_host_vector_to_device_view(target_index);
     auto d_target_value = internal::convert_host_vector_to_device_view(target_value);
 
@@ -145,14 +147,14 @@ Fp StateVector<Fp>::get_marginal_probability(
 FLOAT(Fp)
 Fp StateVector<Fp>::get_entropy() const {
     Fp ent = 0;
-    const Fp eps = 1e-15;
+    const Fp eps = static_cast<Fp>(1e-15);
     Kokkos::parallel_reduce(
         "get_entropy",
         _dim,
         KOKKOS_CLASS_LAMBDA(std::uint64_t idx, Fp & lsum) {
             Fp prob = internal::squared_norm(_raw[idx]);
             prob = (prob > eps) ? prob : eps;
-            lsum += -prob * Kokkos::log2(prob);
+            lsum += -prob * internal::log2(prob);
         },
         ent);
     return ent;
@@ -191,7 +193,7 @@ std::vector<std::uint64_t> StateVector<Fp>::sampling(std::uint64_t sampling_coun
     Kokkos::parallel_for(
         sampling_count, KOKKOS_LAMBDA(std::uint64_t i) {
             auto rand_gen = rand_pool.get_state();
-            Fp r = rand_gen.drand(0., 1.);
+            Fp r = static_cast<Fp>(rand_gen.drand(0., 1.));
             std::uint64_t lo = 0, hi = stacked_prob.size();
             while (hi - lo > 1) {
                 std::uint64_t mid = (lo + hi) / 2;

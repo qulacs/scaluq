@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.2.0-devel-ubuntu22.04
+FROM nvidia/cuda:12.6.1-devel-ubuntu24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -10,11 +10,9 @@ ENV PYTHONPATH="${PROJECT_DIR}/build:${PYTHONPATH}"
 
 RUN apt-get update && \
     apt-get install -y software-properties-common && \
-    apt-get install -y gcc-11 g++-11 && \
-    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 && \
-    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100 \
-    # Remove imagemagick due to https://security-tracker.debian.org/tracker/CVE-2019-10131, which is done in Microsoft's devcontainer image.
-    && apt-get purge -y imagemagick imagemagick-6-common \
+    apt-get install -y gcc-13 g++-13 && \
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100 \
     && apt-get install -y --no-install-recommends \
     ca-certificates \
     clang-format \
@@ -25,7 +23,6 @@ RUN apt-get update && \
     libpython3-dev \
     ninja-build \
     python3 \
-    python3-distutils \
     python3-pip \
     wget \
     && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
@@ -45,4 +42,4 @@ RUN git clone --recursive https://github.com/kokkos/kokkos.git /tmp/kokkos --dep
     cp -r /tmp/kokkos-build/include /usr/local/include/kokkos && \
     rm -rf /tmp/kokkos /tmp/kokkos-build
 
-USER vscode
+USER ubuntu

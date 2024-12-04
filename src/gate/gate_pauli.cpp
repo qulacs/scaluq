@@ -1,6 +1,7 @@
 #include <scaluq/gate/gate_pauli.hpp>
 
 #include "../operator/apply_pauli.hpp"
+#include "../util/math.hpp"
 #include "../util/template.hpp"
 
 namespace scaluq::internal {
@@ -28,9 +29,9 @@ ComplexMatrix<Fp> PauliRotationGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat = this->_pauli.get_matrix_ignoring_coef();
     Complex<Fp> true_angle = _angle * _pauli.coef();
     StdComplex<Fp> imag_unit(0, 1);
-    mat = (StdComplex<Fp>)Kokkos::cos(-true_angle / 2) *
+    mat = (StdComplex<Fp>)internal::cos(-true_angle / 2) *
               internal::ComplexMatrix<Fp>::Identity(mat.rows(), mat.cols()) +
-          imag_unit * (StdComplex<Fp>)Kokkos::sin(-true_angle / 2) * mat;
+          imag_unit * (StdComplex<Fp>)internal::sin(-true_angle / 2) * mat;
     return mat;
 }
 FLOAT(Fp)

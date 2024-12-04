@@ -204,8 +204,9 @@ FLOAT_DECLARE_CLASS(TdagGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> SqrtXGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << StdComplex<Fp>(0.5, 0.5), StdComplex<Fp>(0.5, -0.5), StdComplex<Fp>(0.5, -0.5),
-        StdComplex<Fp>(0.5, 0.5);
+    constexpr Fp half = static_cast<Fp>(0.5);
+    mat << StdComplex<Fp>(half, half), StdComplex<Fp>(half, -half), StdComplex<Fp>(half, -half),
+        StdComplex<Fp>(half, half);
     return mat;
 }
 FLOAT(Fp)
@@ -225,8 +226,9 @@ FLOAT_DECLARE_CLASS(SqrtXGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> SqrtXdagGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << StdComplex<Fp>(0.5, -0.5), StdComplex<Fp>(0.5, 0.5), StdComplex<Fp>(0.5, 0.5),
-        StdComplex<Fp>(0.5, -0.5);
+    constexpr Fp half = static_cast<Fp>(0.5);
+    mat << StdComplex<Fp>(half, -half), StdComplex<Fp>(half, half), StdComplex<Fp>(half, half),
+        StdComplex<Fp>(half, -half);
     return mat;
 }
 FLOAT(Fp)
@@ -246,8 +248,9 @@ FLOAT_DECLARE_CLASS(SqrtXdagGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> SqrtYGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << StdComplex<Fp>(0.5, 0.5), StdComplex<Fp>(-0.5, -0.5), StdComplex<Fp>(0.5, 0.5),
-        StdComplex<Fp>(0.5, 0.5);
+    constexpr Fp half = static_cast<Fp>(0.5);
+    mat << StdComplex<Fp>(half, half), StdComplex<Fp>(-half, -half), StdComplex<Fp>(half, half),
+        StdComplex<Fp>(half, half);
     return mat;
 }
 FLOAT(Fp)
@@ -371,8 +374,9 @@ FLOAT_DECLARE_CLASS(RYGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> RZGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << std::exp(StdComplex<Fp>(0, -0.5 * this->_angle)), 0, 0,
-        std::exp(StdComplex<Fp>(0, 0.5 * this->_angle));
+    constexpr Fp half = static_cast<Fp>(0.5);
+    mat << std::exp(StdComplex<Fp>(0, -half * this->_angle)), 0, 0,
+        std::exp(StdComplex<Fp>(0, half * this->_angle));
     return mat;
 }
 FLOAT(Fp)

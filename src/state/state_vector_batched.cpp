@@ -1,5 +1,6 @@
 #include <scaluq/state/state_vector_batched.hpp>
 
+#include "../util/math.hpp"
 #include "../util/template.hpp"
 
 namespace scaluq {
@@ -58,8 +59,7 @@ void StateVectorBatched<Fp>::set_computational_basis(std::uint64_t basis) {
             "index of computational basis must be smaller than 2^qubit_count");
     }
     Kokkos::deep_copy(_raw, 0);
-    Kokkos::parallel_for(
-        _batch_size, KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw(i, basis) = 1; });
+    Kokkos::parallel_for(_batch_size, KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw(i, basis) = 1; });
     Kokkos::fence();
 }
 
@@ -103,7 +103,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Fp>::sampling(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, sampling_count}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
             auto rand_gen = rand_pool.get_state();
-            Fp r = rand_gen.drand(0., 1.);
+            Fp r = static_cast<Fp>(rand_gen.drand(0., 1.));
             std::uint64_t lo = 0, hi = stacked_prob.extent(1);
             while (hi - lo > 1) {
                 std::uint64_t mid = (lo + hi) / 2;
@@ -143,8 +143,8 @@ StateVectorBatched<Fp> StateVectorBatched<Fp>::Haar_random_state(std::uint64_t b
             Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {states.batch_size(), states.dim()}),
             KOKKOS_LAMBDA(std::uint64_t b, std::uint64_t i) {
                 auto rand_gen = rand_pool.get_state();
-                states._raw(b, i) =
-                    Kokkos::complex<Fp>(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
+                states._raw(b, i) = Kokkos::complex<Fp>(static_cast<Fp>(rand_gen.normal(0.0, 1.0)),
+                                                        static_cast<Fp>(rand_gen.normal(0.0, 1.0)));
                 rand_pool.free_state(rand_gen);
             });
         Kokkos::fence();
@@ -181,7 +181,7 @@ std::vector<Fp> StateVectorBatched<Fp>::get_squared_norm() const {
                 [&](const std::uint64_t& i, Fp& lcl) {
                     lcl += internal::squared_norm(_raw(batch_id, i));
                 },
-                nrm);
+                internal::Sum<Fp>(nrm));
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { norms[batch_id] = nrm; });
         });
@@ -205,7 +205,7 @@ void StateVectorBatched<Fp>::normalize() {
                 },
                 nrm);
             team.team_barrier();
-            nrm = Kokkos::sqrt(nrm);
+            nrm = internal::sqrt(nrm);
             Kokkos::parallel_for(Kokkos::TeamThreadRange(team, _dim),
                                  [&](const std::uint64_t& i) { _raw(batch_id, i) /= nrm; });
         });
@@ -300,7 +300,7 @@ std::vector<Fp> StateVectorBatched<Fp>::get_marginal_probability(
 FLOAT(Fp)
 std::vector<Fp> StateVectorBatched<Fp>::get_entropy() const {
     Kokkos::View<Fp*> ents("ents", _batch_size);
-    const Fp eps = 1e-15;
+    const Fp eps = static_cast<Fp>(1e-15);
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<>(_batch_size, Kokkos::AUTO()),
         KOKKOS_CLASS_LAMBDA(
@@ -313,7 +313,7 @@ std::vector<Fp> StateVectorBatched<Fp>::get_entropy() const {
                 [&](std::uint64_t idx, Fp& lsum) {
                     Fp prob = internal::squared_norm(_raw(batch_id, idx));
                     prob = Kokkos::max(prob, eps);
-                    lsum += -prob * Kokkos::log2(prob);
+                    lsum += -prob * internal::log2(prob);
                 },
                 sum);
             team.team_barrier();

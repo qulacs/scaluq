@@ -66,7 +66,7 @@ protected:
     std::string get_qubit_info_as_string(const std::string& indent) const;
 
 public:
-    ParamGateBase(std::uint64_t target_mask, std::uint64_t control_mask, Fp param_coef = 1.);
+    ParamGateBase(std::uint64_t target_mask, std::uint64_t control_mask, Fp param_coef = 1);
     virtual ~ParamGateBase() = default;
 
     [[nodiscard]] Fp param_coef() const { return _pcoef; }

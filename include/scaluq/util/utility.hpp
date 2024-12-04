@@ -136,7 +136,7 @@ std::vector<std::vector<T>> convert_2d_device_view_to_host_vector(
     const Kokkos::View<T**, Layout>& view_d);
 
 template <std::floating_point Fp>
-KOKKOS_INLINE_FUNCTION double squared_norm(const Complex<Fp>& z) {
+KOKKOS_INLINE_FUNCTION Fp squared_norm(const Complex<Fp>& z) {
     return z.real() * z.real() + z.imag() * z.imag();
 }
 

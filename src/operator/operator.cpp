@@ -39,7 +39,7 @@ void Operator<Fp>::add_random_operator(const std::uint64_t operator_count, std::
             target_qubit_list[qubit_idx] = qubit_idx;
             pauli_id_list[qubit_idx] = random.int32() & 0b11;
         }
-        Complex<Fp> coef = random.uniform() * 2. - 1.;
+        Complex<Fp> coef = static_cast<Fp>(random.uniform() * 2. - 1.);
         this->add_operator(PauliOperator(target_qubit_list, pauli_id_list, coef));
     }
 }
@@ -141,8 +141,9 @@ Complex<Fp> Operator<Fp>::get_expectation_value(const StateVector<Fp>& state_vec
                     internal::PHASE_90ROT<Fp>()[global_phase_90rot_count % 4];
                 std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
                 std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-                Fp tmp = Kokkos::real(state_vector._raw[basis_0] *
-                                      Kokkos::conj(state_vector._raw[basis_1]) * global_phase * 2.);
+                Fp tmp =
+                    Kokkos::real(state_vector._raw[basis_0] *
+                                 Kokkos::conj(state_vector._raw[basis_1]) * global_phase * Fp(2));
                 if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
                 res_lcl += coef * tmp;
             }

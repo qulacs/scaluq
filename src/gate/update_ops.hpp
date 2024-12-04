@@ -104,7 +104,10 @@ inline void sdag_gate(std::uint64_t target_mask,
 template <std::floating_point Fp>
 inline void t_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
     one_target_phase_gate(
-        target_mask, control_mask, Complex<Fp>(INVERSE_SQRT2(), INVERSE_SQRT2()), state);
+        target_mask,
+        control_mask,
+        Complex<Fp>(static_cast<Fp>(INVERSE_SQRT2()), static_cast<Fp>(INVERSE_SQRT2())),
+        state);
 }
 
 template <std::floating_point Fp>
@@ -112,7 +115,10 @@ inline void tdag_gate(std::uint64_t target_mask,
                       std::uint64_t control_mask,
                       StateVector<Fp>& state) {
     one_target_phase_gate(
-        target_mask, control_mask, Complex<Fp>(INVERSE_SQRT2(), -INVERSE_SQRT2()), state);
+        target_mask,
+        control_mask,
+        Complex<Fp>(static_cast<Fp>(INVERSE_SQRT2()), -static_cast<Fp>(INVERSE_SQRT2())),
+        state);
 }
 
 template <std::floating_point Fp>

@@ -35,7 +35,7 @@ FLOAT(Fp)
 void ParamProbablisticGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector,
                                                          Fp param) const {
     Random random;
-    Fp r = random.uniform();
+    Fp r = static_cast<Fp>(random.uniform());
     std::uint64_t i = std::distance(_cumlative_distribution.begin(),
                                     std::ranges::upper_bound(_cumlative_distribution, r)) -
                       1;
