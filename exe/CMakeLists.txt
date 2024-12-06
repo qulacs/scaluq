@@ -15,5 +15,4 @@ function(exe name)
     target_include_directories(${name} PRIVATE ${PROJECT_SOURCE_DIR}/include)
 endfunction()
 
-# exe({file}) を追加すると、{file}.cpp をコンパイルして実行ファイルを build/exe/{file} として生成する
 exe(main)

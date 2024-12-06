@@ -35,10 +35,7 @@
 					"/usr/local/include/kokkos",
 					"build/_deps/eigen-src",
 					"build/_deps/googletest-src/googletest/include",
-<<<<<<< HEAD
-=======
 					"build/_deps/json-src/include",
->>>>>>> 151-json
 					"~/.local/lib/python3.10/site-packages/nanobind/include",
 					"/usr/include/python3.10"
 				],

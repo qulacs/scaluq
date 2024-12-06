@@ -82,6 +82,38 @@ public:
         os << states.to_string();
         return os;
     }
+
+    friend void to_json(Json& j, const StateVectorBatched& states) {
+        auto amplitudes = states.get_amplitudes();
+
+        j = Json{{"n_qubits", states._n_qubits},
+                 {"batch_size", states._batch_size},
+                 {"batched_amplitudes", Json::array()}};
+        for (size_t i = 0; i < amplitudes.size(); ++i) {
+            Json state = {{"id", i}, {"amplitudes", Json::array()}};
+            for (const auto& amp : amplitudes[i]) {
+                state["amplitudes"].push_back({{"real", amp.real()}, {"imag", amp.imag()}});
+            }
+            j["batched_amplitudes"].push_back(state);
+        }
+    }
+    friend void from_json(const Json& j, StateVectorBatched& states) {
+        // states = StateVectorBatched(j.at("batch_size").get<size_t>(),
+        // j.at("n_qubits").get<int>())
+
+        //     const auto& batched_amplitudes = j.at("batched_amplitudes");
+        // states._amplitudes.clear();  // 必要なら既存データをクリア
+
+        // for (const auto& state : batched_amplitudes) {
+        //     std::vector<std::complex<double>> amplitudes;
+        //     for (const auto& amp : state.at("amplitudes")) {
+        //         double real = amp.at("real").get<double>();
+        //         double imag = amp.at("imag").get<double>();
+        //         amplitudes.emplace_back(real, imag);
+        //     }
+        //     states._amplitudes.push_back(amplitudes);
+        // }
+    }
 };
 
 #ifdef SCALUQ_USE_NANOBIND
