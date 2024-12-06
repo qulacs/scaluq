@@ -17,9 +17,12 @@ scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 - Ninja 1.10 以上
 - GCC 11 以上
 - CMake 3.21 以上
+- CUDA 12.6 以上（GPU利用時のみ）
+※これより低いバージョンでも動作する可能性はありますが確認していません
 
 ## 実行時要件
-- CUDA 12.2 以上（GPU利用時のみ）
+- CUDA 12.6 以上（GPU利用時のみ）
+※これより低いバージョンでも動作する可能性はありますが確認していません
 
 ## C++ ライブラリとしてインストール
 
@@ -29,12 +32,13 @@ scaluq を静的ライブラリとしてインストールするには、以下�
 git clone https://github.com/qulacs/scaluq
 cd scaluq
 script/configure
-sudo ninja -C build install
+sudo -E env "PATH=$PATH" ninja -C build install
 ```
 
 - 依存ライブラリのEigenとKokkosも同時にインストールされます
 - `CMAKE_INSTALL_PREFIX`を設定することで `/usr/local`以外にインストールすることもできます。ユーザーローカルにインストールしたい場合や、別の設定でビルドしたKokkosと衝突させたくない場合は明示的に指定してください。例: `CMAKE_INSTALL_PREFIX=~/.local script/configure; ninja -C build install`
-- NVIDIA GPU と CUDA が利用可能ならば、`SCALUQ_USE_CUDA=Yes`を設定してconfigureすることでCUDAを利用するライブラリとしてインストールできます。
+- ビルドしたものを`/usr/local/bin`に配置するため`sudo`コマンドを用いていますが、ビルド時の環境変数をユーザーのものにするため例では`-E`と`env "PATH=$PATH"`を指定しています。
+- NVIDIA GPU と CUDA が利用可能ならば、`SCALUQ_USE_CUDA=Yes`を設定してconfigureすることでCUDAを利用するライブラリとしてインストールできます。例: `SCALUQ_USE_CUDA=Yes script/configure; sudo env -E "PATH=$PATH" ninja -C build install'`
 
 オプションを変更して再ビルドする際には、CMake にセットされたキャッシュ変数をクリアするため、必ず以下のコマンドを実行してください。
 

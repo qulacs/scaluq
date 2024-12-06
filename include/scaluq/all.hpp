@@ -4,6 +4,7 @@
 #include "constant.hpp"
 #include "gate/gate.hpp"
 #include "gate/gate_factory.hpp"
+#include "gate/merge_gate.hpp"
 #include "gate/param_gate.hpp"
 #include "gate/param_gate_factory.hpp"
 #include "kokkos.hpp"

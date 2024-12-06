@@ -1,6 +1,7 @@
 #pragma once
 
 #include <random>
+#include <ranges>
 
 #include "../types.hpp"
 
@@ -21,5 +22,15 @@ public:
     [[nodiscard]] std::uint64_t int64() { return this->mt(); }
 
     [[nodiscard]] std::uint32_t int32() { return this->mt() % UINT32_MAX; }
+
+    [[nodiscard]] std::vector<std::uint64_t> permutation(std::uint64_t n) {
+        std::vector<std::uint64_t> shuffled(n);
+        std::iota(shuffled.begin(), shuffled.end(), 0ULL);
+        for (std::uint64_t i : std::views::iota(0ULL, n) | std::views::reverse) {
+            std::uint64_t j = int32() % (i + 1);
+            if (i != j) std::swap(shuffled[i], shuffled[j]);
+        }
+        return shuffled;
+    }
 };
 }  // namespace scaluq

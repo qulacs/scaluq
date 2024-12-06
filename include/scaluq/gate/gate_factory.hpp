@@ -155,9 +155,7 @@ inline Gate<Fp> CX(std::uint64_t control, std::uint64_t target) {
         internal::vector_to_mask({target}), internal::vector_to_mask({control}));
 }
 template <std::floating_point Fp>
-inline Gate<Fp> CNot(std::uint64_t control, std::uint64_t target) {
-    return CX<Fp>(control, target);
-}
+inline auto& CNot = CX<Fp>;
 template <std::floating_point Fp>
 inline Gate<Fp> CZ(std::uint64_t control, std::uint64_t target) {
     return internal::GateFactory::create_gate<internal::ZGateImpl<Fp>>(
