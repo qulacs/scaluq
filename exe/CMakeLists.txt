@@ -6,6 +6,8 @@ function(exe name)
         scaluq
         Eigen3::Eigen
         Kokkos::kokkos
+        nlohmann_json::nlohmann_json
+        GTest::gtest_main
     )
     if (SCALUQ_USE_TEST)
         target_link_libraries(${name} PRIVATE GTest::gtest_main)

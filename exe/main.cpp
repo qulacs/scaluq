@@ -8,7 +8,18 @@
 #include <type_traits>
 #include <vector>
 
-using Fp = float;
+#include "../scaluq/all.hpp"
+
+using namespace scaluq;
+using namespace std;
+
+void run() {
+    StateVector state = StateVector::Haar_random_state(3);
+    Json j = state;
+    cout << j.dump() << endl;
+    StateVector state2 = j.get<StateVector>();
+    cout << state2 << endl;
+}
 
 int main() {
     Kokkos::initialize();
