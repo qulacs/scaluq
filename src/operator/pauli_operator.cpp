@@ -175,7 +175,7 @@ Complex<Fp> PauliOperator<Fp>::get_expectation_value(const StateVector<Fp>& stat
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
             Fp tmp = Kokkos::real(state_vector._raw[basis_0] *
-                                  Kokkos::conj(state_vector._raw[basis_1]) * global_phase * 2.);
+                                  Kokkos::conj(state_vector._raw[basis_1]) * global_phase * Fp{2});
             if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
             sum += tmp;
         },

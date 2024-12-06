@@ -118,7 +118,11 @@ set_property(TARGET scaluq PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 ### Compiler options ###
 # Standard
-target_compile_features(scaluq PUBLIC cxx_std_23)
+if(SCALUQ_USE_CUDA)
+    target_compile_features(scaluq PUBLIC cxx_std_20)
+else()
+    target_compile_features(scaluq PUBLIC cxx_std_23)
+endif()
 
 # Warning
 target_compile_options(scaluq PUBLIC
@@ -133,6 +137,7 @@ target_compile_options(scaluq PUBLIC
 )
 
 if(SCALUQ_USE_CUDA)
+    target_compile_definitions(scaluq PUBLIC SCALUQ_USE_CUDA)
     # to remove tremendous warnings of Eigen
     target_compile_options(scaluq PUBLIC
         -Wno-unknown-pragmas
@@ -163,7 +168,6 @@ set(PRECISION_FLAGS
     SCALUQ_FLOAT16
     SCALUQ_FLOAT32
     SCALUQ_FLOAT64
-    SCALUQ_FLOAT128
     SCALUQ_BFLOAT16
 )
 foreach(flag IN LISTS PRECISION_FLAGS)

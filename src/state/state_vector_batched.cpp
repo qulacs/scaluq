@@ -59,7 +59,8 @@ void StateVectorBatched<Fp>::set_computational_basis(std::uint64_t basis) {
             "index of computational basis must be smaller than 2^qubit_count");
     }
     Kokkos::deep_copy(_raw, 0);
-    Kokkos::parallel_for(_batch_size, KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw(i, basis) = 1; });
+    Kokkos::parallel_for(
+        _batch_size, KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw(i, basis) = 1; });
     Kokkos::fence();
 }
 
@@ -181,7 +182,7 @@ std::vector<Fp> StateVectorBatched<Fp>::get_squared_norm() const {
                 [&](const std::uint64_t& i, Fp& lcl) {
                     lcl += internal::squared_norm(_raw(batch_id, i));
                 },
-                internal::Sum<Fp>(nrm));
+                internal::Sum<Fp, Kokkos::DefaultExecutionSpace>(nrm));
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { norms[batch_id] = nrm; });
         });
@@ -203,7 +204,7 @@ void StateVectorBatched<Fp>::normalize() {
                 [&](const std::uint64_t& i, Fp& lcl) {
                     lcl += internal::squared_norm(_raw(batch_id, i));
                 },
-                nrm);
+                internal::Sum<Fp, Kokkos::DefaultExecutionSpace>(nrm));
             team.team_barrier();
             nrm = internal::sqrt(nrm);
             Kokkos::parallel_for(Kokkos::TeamThreadRange(team, _dim),
@@ -235,7 +236,7 @@ std::vector<Fp> StateVectorBatched<Fp>::get_zero_probability(
                         internal::insert_zero_to_basis_index(i, target_qubit_index);
                     lsum += internal::squared_norm(_raw(batch_id, basis_0));
                 },
-                sum);
+                internal::Sum<Fp, Kokkos::DefaultExecutionSpace>(sum));
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { probs[batch_id] = sum; });
         });
@@ -289,7 +290,7 @@ std::vector<Fp> StateVectorBatched<Fp>::get_marginal_probability(
                     }
                     lsum += internal::squared_norm(_raw(batch_id, basis));
                 },
-                sum);
+                internal::Sum<Fp, Kokkos::DefaultExecutionSpace>(sum));
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { probs[batch_id] = sum; });
         });
@@ -315,7 +316,7 @@ std::vector<Fp> StateVectorBatched<Fp>::get_entropy() const {
                     prob = Kokkos::max(prob, eps);
                     lsum += -prob * internal::log2(prob);
                 },
-                sum);
+                internal::Sum<Fp, Kokkos::DefaultExecutionSpace>(sum));
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { ents[batch_id] = sum; });
         });

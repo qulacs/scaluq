@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.6.1-devel-ubuntu24.04
+FROM nvidia/cuda:12.6.1-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -10,6 +10,8 @@ ENV PYTHONPATH="${PROJECT_DIR}/build:${PYTHONPATH}"
 
 RUN apt-get update && \
     apt-get install -y software-properties-common && \
+    add-apt-repository ppa:ubuntu-toolchain-r/test && \
+    apt-get update && \
     apt-get install -y gcc-13 g++-13 && \
     update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 && \
     update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100 \
@@ -42,4 +44,4 @@ RUN git clone --recursive https://github.com/kokkos/kokkos.git /tmp/kokkos --dep
     cp -r /tmp/kokkos-build/include /usr/local/include/kokkos && \
     rm -rf /tmp/kokkos /tmp/kokkos-build
 
-USER ubuntu
+USER vscode

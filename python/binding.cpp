@@ -13,6 +13,8 @@
 #include <nanobind/stl/variant.h>
 #include <nanobind/stl/vector.h>
 
+#include <stdfloat>
+
 #include "docstring.hpp"
 
 namespace nb = nanobind;
@@ -113,8 +115,18 @@ NB_MODULE(scaluq_core, m) {
     internal::bind_kokkos_hpp(m);
     internal::bind_gate_gate_hpp_without_precision(m);
 
-    bind_on_precision<double>(m, "f64");
-    bind_on_precision<float>(m, "f32");
+#ifdef SCALUQ_FLOAT16
+    bind_on_precision<std::float16_t>(m, "f16");
+#endif
+#ifdef SCALUQ_FLOAT32
+    bind_on_precision<std::float32_t>(m, "f32");
+#endif
+#ifdef SCALUQ_FLOAT64
+    bind_on_precision<std::float64_t>(m, "f64");
+#endif
+#ifdef SCALUQ_BFLOAT16
+    bind_on_precision<std::bfloat16_t>(m, "bf16");
+#endif
 
     initialize();
     std::atexit(&cleanup);

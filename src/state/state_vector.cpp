@@ -72,7 +72,7 @@ Fp StateVector<Fp>::get_squared_norm() const {
         KOKKOS_CLASS_LAMBDA(std::uint64_t it, Fp & tmp) {
             tmp += internal::squared_norm(this->_raw[it]);
         },
-        norm);
+        internal::Sum<Fp, Kokkos::DefaultExecutionSpace>(norm));
     return norm;
 }
 FLOAT(Fp)
@@ -97,7 +97,7 @@ Fp StateVector<Fp>::get_zero_probability(std::uint64_t target_qubit_index) const
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(i, target_qubit_index);
             lsum += internal::squared_norm(this->_raw[basis_0]);
         },
-        sum);
+        internal::Sum<Fp, Kokkos::DefaultExecutionSpace>(sum));
     return sum;
 }
 FLOAT(Fp)
@@ -140,7 +140,7 @@ Fp StateVector<Fp>::get_marginal_probability(
             }
             lsum += internal::squared_norm(this->_raw[basis]);
         },
-        sum);
+        internal::Sum<Fp, Kokkos::DefaultExecutionSpace>(sum));
 
     return sum;
 }
@@ -156,7 +156,7 @@ Fp StateVector<Fp>::get_entropy() const {
             prob = (prob > eps) ? prob : eps;
             lsum += -prob * internal::log2(prob);
         },
-        ent);
+        internal::Sum<Fp, Kokkos::DefaultExecutionSpace>(ent));
     return ent;
 }
 

@@ -55,7 +55,7 @@ private:
 public:
     enum PauliID : std::uint64_t { I, X, Y, Z };
 
-    explicit PauliOperator(Complex<Fp> coef = 1.) : _ptr(std::make_shared<const Data>(coef)) {}
+    explicit PauliOperator(Complex<Fp> coef = Fp{1}) : _ptr(std::make_shared<const Data>(coef)) {}
     explicit PauliOperator(Data data) : _ptr(std::make_shared<const Data>(data)) {}
     PauliOperator(std::string_view pauli_string, Complex<Fp> coef = 1.)
         : _ptr(std::make_shared<const Data>(pauli_string, coef)) {}
