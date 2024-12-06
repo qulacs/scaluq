@@ -155,7 +155,9 @@ inline Gate<Fp> CX(std::uint64_t control, std::uint64_t target) {
         internal::vector_to_mask({target}), internal::vector_to_mask({control}));
 }
 template <std::floating_point Fp>
-inline auto& CNot = CX;
+inline Gate<Fp> CNOT(std::uint64_t control, std::uint64_t target) {
+    return CX<Fp>(control, target);
+}
 template <std::floating_point Fp>
 inline Gate<Fp> CZ(std::uint64_t control, std::uint64_t target) {
     return internal::GateFactory::create_gate<internal::ZGateImpl<Fp>>(
@@ -167,9 +169,13 @@ inline Gate<Fp> CCX(std::uint64_t control1, std::uint64_t control2, std::uint64_
         internal::vector_to_mask({target}), internal::vector_to_mask({control1, control2}));
 }
 template <std::floating_point Fp>
-inline auto& Toffoli = CCX<Fp>;
+inline Gate<Fp> Toffoli(std::uint64_t control1, std::uint64_t control2, std::uint64_t target) {
+    return CCX<Fp>(control1, control2, target);
+}
 template <std::floating_point Fp>
-inline auto& CCNot = CCX<Fp>;
+inline Gate<Fp> CCNot(std::uint64_t control1, std::uint64_t control2, std::uint64_t target) {
+    return CCX<Fp>(control1, control2, target);
+}
 template <std::floating_point Fp>
 inline Gate<Fp> Swap(std::uint64_t target1,
                      std::uint64_t target2,
