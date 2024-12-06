@@ -77,17 +77,17 @@ int main() {
     scaluq::initialize();  // must be called before using any scaluq methods
     {
         const std::uint64_t n_qubits = 3;
-        scaluq::StateVector<std::float64_t> state = scaluq::StateVector::Haar_random_state(n_qubits, 0);
+        scaluq::StateVector<double> state = scaluq::StateVector::Haar_random_state(n_qubits, 0);
         std::cout << state << std::endl;
 
-        scaluq::Circuit<std::float64_t> circuit(n_qubits);
+        scaluq::Circuit<double> circuit(n_qubits);
         circuit.add_gate(scaluq::gate::X(0));
         circuit.add_gate(scaluq::gate::CNot(0, 1));
         circuit.add_gate(scaluq::gate::Y(1));
         circuit.add_gate(scaluq::gate::RX(1, std::numbers::pi / 2));
         circuit.update_quantum_state(state);
 
-        scaluq::Operator<std::float64_t> observable(n_qubits);
+        scaluq::Operator<double> observable(n_qubits);
         observable.add_random_operator(1, 0);
         auto value = observable.get_expectation_value(state);
         std::cout << value << std::endl;
