@@ -77,17 +77,17 @@ int main() {
     scaluq::initialize();  // must be called before using any scaluq methods
     {
         const std::uint64_t n_qubits = 3;
-        scaluq::StateVector state = scaluq::StateVector::Haar_random_state(n_qubits, 0);
+        scaluq::StateVector<std::float64_t> state = scaluq::StateVector::Haar_random_state(n_qubits, 0);
         std::cout << state << std::endl;
 
-        scaluq::Circuit circuit(n_qubits);
+        scaluq::Circuit<std::float64_t> circuit(n_qubits);
         circuit.add_gate(scaluq::gate::X(0));
         circuit.add_gate(scaluq::gate::CNot(0, 1));
         circuit.add_gate(scaluq::gate::Y(1));
         circuit.add_gate(scaluq::gate::RX(1, std::numbers::pi / 2));
         circuit.update_quantum_state(state);
 
-        scaluq::Operator observable(n_qubits);
+        scaluq::Operator<std::float64_t> observable(n_qubits);
         observable.add_random_operator(1, 0);
         auto value = observable.get_expectation_value(state);
         std::cout << value << std::endl;
@@ -99,7 +99,7 @@ int main() {
 ## サンプルコード(Python)
 
 ```Python
-from scaluq import *
+from scaluq.f64 import *
 import math
 
 n_qubits = 3
@@ -118,3 +118,14 @@ value = observable.get_expectation_value(state)
 print(value)
 
 ```
+
+# 精度指定について
+scaluqでは、計算に使用する浮動小数点数のサイズとして32bitと64bitが選択できます。
+通常は64bitの使用が推奨されますが、量子機械学習での利用などあまり精度が必要でない場合は32bitを使用すると最大2倍程度の高速化が見込めます。
+
+同じ精度のオブジェクト同士でしか演算を行うことができません。
+例えば32bit用に作成したゲートでは64bitの`StateVector`を更新できません。
+
+C++の場合、状態、ゲート、演算子、回路のクラスやゲートを生成する関数が、テンプレート引数を取るようになっており、そこに`float`または`double`を指定することで選択します。
+
+Pythonの場合、精度に合わせて`scaluq.f32`と`scaluq.f64`のどちらかのサブモジュールからオブジェクトを`import`します。
