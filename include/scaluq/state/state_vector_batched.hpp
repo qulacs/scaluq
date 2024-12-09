@@ -83,36 +83,36 @@ public:
         return os;
     }
 
-    friend void to_json(Json& j, const StateVectorBatched& states) {
+    friend void to_json(Json& j, const StateVectorBatched<Fp>& states) {
         auto amplitudes = states.get_amplitudes();
 
         j = Json{{"n_qubits", states._n_qubits},
                  {"batch_size", states._batch_size},
                  {"batched_amplitudes", Json::array()}};
-        for (size_t i = 0; i < amplitudes.size(); ++i) {
-            Json state = {{"id", i}, {"amplitudes", Json::array()}};
+        for (std::uint32_t i = 0; i < amplitudes.size(); ++i) {
+            Json state = {{"amplitudes", Json::array()}};
             for (const auto& amp : amplitudes[i]) {
                 state["amplitudes"].push_back({{"real", amp.real()}, {"imag", amp.imag()}});
             }
             j["batched_amplitudes"].push_back(state);
         }
     }
-    friend void from_json(const Json& j, StateVectorBatched& states) {
-        // states = StateVectorBatched(j.at("batch_size").get<size_t>(),
-        // j.at("n_qubits").get<int>())
+    friend void from_json(const Json& j, StateVectorBatched<Fp>& states) {
+        std::uint32_t b = j.at("batch_size").get<std::uint32_t>();
+        std::uint32_t n = j.at("n_qubits").get<std::uint32_t>();
+        states = StateVectorBatched(b, n);
 
-        //     const auto& batched_amplitudes = j.at("batched_amplitudes");
-        // states._amplitudes.clear();  // 必要なら既存データをクリア
-
-        // for (const auto& state : batched_amplitudes) {
-        //     std::vector<std::complex<double>> amplitudes;
-        //     for (const auto& amp : state.at("amplitudes")) {
-        //         double real = amp.at("real").get<double>();
-        //         double imag = amp.at("imag").get<double>();
-        //         amplitudes.emplace_back(real, imag);
-        //     }
-        //     states._amplitudes.push_back(amplitudes);
-        // }
+        const auto& batched_amplitudes = j.at("batched_amplitudes");
+        std::vector res(b, std::vector<Kokkos::complex<Fp>>(1ULL << n));
+        for (std::uint32_t i = 0; i < b; ++i) {
+            const auto& amplitudes = batched_amplitudes[i].at("amplitudes");
+            for (std::uint32_t j = 0; j < (1ULL << n); ++j) {
+                Fp real = amplitudes[j].at("real").get<Fp>();
+                Fp imag = amplitudes[j].at("imag").get<Fp>();
+                res[i][j] = Kokkos::complex<Fp>(real, imag);
+            }
+        }
+        states.load(res);
     }
 };
 
