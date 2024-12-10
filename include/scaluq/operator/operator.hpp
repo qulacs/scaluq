@@ -72,10 +72,12 @@ public:
         }
     }
     friend void from_json(const Json& j, Operator& op) {
-        Operator<Fp> res(j.at("n_qubits").get<std::uint32_t>());
-        for (const auto& pauli : j.at("terms")) {
-            PauliOperator<Fp> tmp = pauli;
-            res.add_operator(tmp);
+        std::uint32_t n = j.at("n_qubits").get<std::uint32_t>();
+        Operator<Fp> res(n);
+        for (const auto& term : j.at("terms")) {
+            std::string pauli_string = term.at("pauli_string").get<std::string>();
+            Kokkos::complex<Fp> coef = term.at("coef").get<Kokkos::complex<Fp>>();
+            res.add_operator({pauli_string, coef});
         }
         op = res;
     }

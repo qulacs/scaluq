@@ -58,6 +58,11 @@ int main() {
         std::cout << j.dump(2) << std::endl;
         op = j;
     }
+    // {
+    //     XGate<double> x = gate::X<double>(2);
+    //     Json j = x;
+    //     std::cout << j << std::endl;
+    // }
 
     Kokkos::finalize();
 }
