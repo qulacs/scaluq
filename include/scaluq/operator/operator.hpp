@@ -12,10 +12,11 @@ namespace scaluq {
 template <std::floating_point Fp>
 class Operator {
 public:
+    Operator() = default;  // for enable operator= from json
     explicit Operator(std::uint64_t n_qubits) : _n_qubits(n_qubits) {}
 
-    [[nodiscard]] inline bool is_hermitian() { return _is_hermitian; }
-    [[nodiscard]] inline std::uint64_t n_qubits() { return _n_qubits; }
+    [[nodiscard]] inline bool is_hermitian() const { return _is_hermitian; }
+    [[nodiscard]] inline std::uint64_t n_qubits() const { return _n_qubits; }
     [[nodiscard]] inline const std::vector<PauliOperator<Fp>>& terms() const { return _terms; }
     [[nodiscard]] std::string to_string() const;
 
@@ -62,6 +63,22 @@ public:
     Operator operator-(const PauliOperator<Fp>& pauli) const { return Operator(*this) -= pauli; }
     Operator& operator*=(const PauliOperator<Fp>& pauli);
     Operator operator*(const PauliOperator<Fp>& pauli) const { return Operator(*this) *= pauli; }
+
+    friend void to_json(Json& j, const Operator& op) {
+        j = Json{{"n_qubits", op.n_qubits()}, {"terms", Json::array()}};
+        for (const auto& pauli : op.terms()) {
+            Json tmp = pauli;
+            j["terms"].push_back(tmp);
+        }
+    }
+    friend void from_json(const Json& j, Operator& op) {
+        Operator<Fp> res(j.at("n_qubits").get<std::uint32_t>());
+        for (const auto& pauli : j.at("terms")) {
+            PauliOperator<Fp> tmp = pauli;
+            res.add_operator(tmp);
+        }
+        op = res;
+    }
 
 private:
     std::vector<PauliOperator<Fp>> _terms;

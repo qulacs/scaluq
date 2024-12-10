@@ -55,6 +55,7 @@ private:
 public:
     enum PauliID : std::uint64_t { I, X, Y, Z };
 
+    PauliOperator() = default;  // for enable operator= from json
     explicit PauliOperator(Complex<Fp> coef = 1.) : _ptr(std::make_shared<const Data>(coef)) {}
     explicit PauliOperator(Data data) : _ptr(std::make_shared<const Data>(data)) {}
     PauliOperator(std::string_view pauli_string, Complex<Fp> coef = 1.)
@@ -95,6 +96,14 @@ public:
     [[nodiscard]] PauliOperator operator*(const PauliOperator& target) const;
     [[nodiscard]] inline PauliOperator operator*(Complex<Fp> target) const {
         return PauliOperator(_ptr->_target_qubit_list, _ptr->_pauli_id_list, _ptr->_coef * target);
+    }
+
+    friend void to_json(Json& j, const PauliOperator& pauli) {
+        j = Json{{"pauli_string", pauli.get_pauli_string()}, {"coef", pauli.coef()}};
+    }
+    friend void from_json(const Json& j, PauliOperator& pauli) {
+        pauli = PauliOperator(j.at("pauli_string").get<std::string>(),
+                              j.at("coef").get<Kokkos::complex<Fp>>());
     }
 };
 

@@ -41,6 +41,23 @@ int main() {
         states = j;
         std::cout << states << std::endl;
     }
+    {
+        double coef = 2.0;
+        std::string pauli_string = "X 0 Z 1 Y 2";
+        PauliOperator<double> pauli(pauli_string, coef);
+        Json j = pauli;
+        std::cout << j.dump(2) << std::endl;
+        pauli = j;
+    }
+    {
+        std::uint64_t n_qubits = 3;
+        Operator<double> op(n_qubits);
+        op.add_operator({0b001, 0b010, Complex<double>(2)});
+        op.add_operator({"X 2 Y 1", 1});
+        Json j = op;
+        std::cout << j.dump(2) << std::endl;
+        op = j;
+    }
 
     Kokkos::finalize();
 }
