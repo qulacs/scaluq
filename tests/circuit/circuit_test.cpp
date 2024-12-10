@@ -1,142 +1,153 @@
-#include "circuit/circuit.hpp"
-
 #include <gtest/gtest.h>
 
-#include <Eigen/Core>
-#include <numbers>
+#include <scaluq/circuit/circuit.hpp>
+#include <scaluq/gate/gate_factory.hpp>
+#include <scaluq/gate/param_gate_factory.hpp>
 
 #include "../util/util.hpp"
-#include "gate/gate_factory.hpp"
-#include "util/random.hpp"
 
 using namespace scaluq;
 
-const auto eps = 1e-12;
-using CComplex = std::complex<double>;
-
-TEST(CircuitTest, CircuitBasic) {
+template <std::floating_point Fp>
+void circuit_test() {
     const std::uint64_t n = 4;
     const std::uint64_t dim = 1ULL << n;
 
     Random random;
 
-    StateVector state = StateVector::Haar_random_state(n);
-    Eigen::VectorXcd state_eigen(dim);
+    StateVector state = StateVector<Fp>::Haar_random_state(n);
+    ComplexVector<Fp> state_eigen(dim);
 
     auto state_cp = state.get_amplitudes();
     for (std::uint64_t i = 0; i < dim; ++i) state_eigen[i] = state_cp[i];
 
-    Circuit circuit(n);
+    Circuit<Fp> circuit(n);
     std::uint64_t target, target_sub;
-    double angle;
-    std::complex<double> imag_unit(0, 1);
+    Fp angle;
+    std::complex<Fp> imag_unit(0, 1);
 
     target = random.int32() % n;
-    circuit.add_gate(gate::X(target));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_X(), n) * state_eigen;
-
-    target = random.int32() % n;
-    circuit.add_gate(gate::Y(target));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_Y(), n) * state_eigen;
-
-    target = random.int32() % n;
-    circuit.add_gate(gate::Z(target));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_Z(), n) * state_eigen;
-
-    target = random.int32() % n;
-    circuit.add_gate(gate::H(target));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_H(), n) * state_eigen;
-
-    target = random.int32() % n;
-    circuit.add_gate(gate::S(target));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_S(), n) * state_eigen;
-
-    target = random.int32() % n;
-    circuit.add_gate(gate::Sdag(target));
+    circuit.add_gate(gate::X<Fp>(target));
     state_eigen =
-        get_expanded_eigen_matrix_with_identity(target, make_S().adjoint(), n) * state_eigen;
+        get_expanded_eigen_matrix_with_identity<Fp>(target, make_X<Fp>(), n) * state_eigen;
 
     target = random.int32() % n;
-    circuit.add_gate(gate::T(target));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_T(), n) * state_eigen;
-
-    target = random.int32() % n;
-    circuit.add_gate(gate::Tdag(target));
+    circuit.add_gate(gate::Y<Fp>(target));
     state_eigen =
-        get_expanded_eigen_matrix_with_identity(target, make_T().adjoint(), n) * state_eigen;
+        get_expanded_eigen_matrix_with_identity<Fp>(target, make_Y<Fp>(), n) * state_eigen;
 
     target = random.int32() % n;
-    circuit.add_gate(gate::SqrtX(target));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_SqrtX(), n) * state_eigen;
-
-    target = random.int32() % n;
-    circuit.add_gate(gate::SqrtXdag(target));
+    circuit.add_gate(gate::Z<Fp>(target));
     state_eigen =
-        get_expanded_eigen_matrix_with_identity(target, make_SqrtX().adjoint(), n) * state_eigen;
+        get_expanded_eigen_matrix_with_identity<Fp>(target, make_Z<Fp>(), n) * state_eigen;
 
     target = random.int32() % n;
-    circuit.add_gate(gate::SqrtY(target));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_SqrtY(), n) * state_eigen;
-
-    target = random.int32() % n;
-    circuit.add_gate(gate::SqrtYdag(target));
+    circuit.add_gate(gate::H<Fp>(target));
     state_eigen =
-        get_expanded_eigen_matrix_with_identity(target, make_SqrtY().adjoint(), n) * state_eigen;
+        get_expanded_eigen_matrix_with_identity<Fp>(target, make_H<Fp>(), n) * state_eigen;
 
     target = random.int32() % n;
-    circuit.add_gate(gate::P0(target));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_P0(), n) * state_eigen;
+    circuit.add_gate(gate::S<Fp>(target));
+    state_eigen =
+        get_expanded_eigen_matrix_with_identity<Fp>(target, make_S<Fp>(), n) * state_eigen;
+
+    target = random.int32() % n;
+    circuit.add_gate(gate::Sdag<Fp>(target));
+    state_eigen = get_expanded_eigen_matrix_with_identity<Fp>(target, make_S<Fp>().adjoint(), n) *
+                  state_eigen;
+
+    target = random.int32() % n;
+    circuit.add_gate(gate::T<Fp>(target));
+    state_eigen =
+        get_expanded_eigen_matrix_with_identity<Fp>(target, make_T<Fp>(), n) * state_eigen;
+
+    target = random.int32() % n;
+    circuit.add_gate(gate::Tdag<Fp>(target));
+    state_eigen = get_expanded_eigen_matrix_with_identity<Fp>(target, make_T<Fp>().adjoint(), n) *
+                  state_eigen;
+
+    target = random.int32() % n;
+    circuit.add_gate(gate::SqrtX<Fp>(target));
+    state_eigen =
+        get_expanded_eigen_matrix_with_identity<Fp>(target, make_SqrtX<Fp>(), n) * state_eigen;
+
+    target = random.int32() % n;
+    circuit.add_gate(gate::SqrtXdag<Fp>(target));
+    state_eigen =
+        get_expanded_eigen_matrix_with_identity<Fp>(target, make_SqrtX<Fp>().adjoint(), n) *
+        state_eigen;
+
+    target = random.int32() % n;
+    circuit.add_gate(gate::SqrtY<Fp>(target));
+    state_eigen =
+        get_expanded_eigen_matrix_with_identity<Fp>(target, make_SqrtY<Fp>(), n) * state_eigen;
+
+    target = random.int32() % n;
+    circuit.add_gate(gate::SqrtYdag<Fp>(target));
+    state_eigen =
+        get_expanded_eigen_matrix_with_identity<Fp>(target, make_SqrtY<Fp>().adjoint(), n) *
+        state_eigen;
+
+    target = random.int32() % n;
+    circuit.add_gate(gate::P0<Fp>(target));
+    state_eigen =
+        get_expanded_eigen_matrix_with_identity<Fp>(target, make_P0<Fp>(), n) * state_eigen;
 
     target = (target + 1) % n;
-    circuit.add_gate(gate::P1(target));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_P1(), n) * state_eigen;
-
-    target = random.int32() % n;
-    angle = random.uniform() * 3.14159;
-    circuit.add_gate(gate::RX(target, angle));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_RX(angle), n) * state_eigen;
-
-    target = random.int32() % n;
-    angle = random.uniform() * 3.14159;
-    circuit.add_gate(gate::RY(target, angle));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_RY(angle), n) * state_eigen;
-
-    target = random.int32() % n;
-    angle = random.uniform() * 3.14159;
-    circuit.add_gate(gate::RZ(target, angle));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_RZ(angle), n) * state_eigen;
-
-    target = random.int32() % n;
-    target_sub = random.int32() % (n - 1);
-    if (target_sub >= target) target_sub++;
-    circuit.add_gate(gate::CX(target, target_sub));
-    state_eigen = get_eigen_matrix_full_qubit_CX(target, target_sub, n) * state_eigen;
-
-    target = random.int32() % n;
-    target_sub = random.int32() % (n - 1);
-    if (target_sub >= target) target_sub++;
-    circuit.add_gate(gate::CZ(target, target_sub));
-    state_eigen = get_eigen_matrix_full_qubit_CZ(target, target_sub, n) * state_eigen;
-
-    target = random.int32() % n;
-    target_sub = random.int32() % (n - 1);
-    if (target_sub >= target) target_sub++;
-    circuit.add_gate(gate::Swap(target, target_sub));
-    state_eigen = get_eigen_matrix_full_qubit_Swap(target, target_sub, n) * state_eigen;
-
-    target = random.int32() % n;
-    circuit.add_gate(gate::U1(target, std::numbers::pi));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_Z(), n) * state_eigen;
-
-    target = random.int32() % n;
-    circuit.add_gate(gate::U2(target, 0, std::numbers::pi));
-    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_H(), n) * state_eigen;
-
-    target = random.int32() % n;
-    angle = random.uniform() * 3.14159;
-    circuit.add_gate(gate::U3(target, -angle, 0, 0));
+    circuit.add_gate(gate::P1<Fp>(target));
     state_eigen =
-        get_expanded_eigen_matrix_with_identity(target, make_U(-angle, 0, 0), n) * state_eigen;
+        get_expanded_eigen_matrix_with_identity<Fp>(target, make_P1<Fp>(), n) * state_eigen;
+
+    target = random.int32() % n;
+    angle = random.uniform() * 3.14159;
+    circuit.add_gate(gate::RX<Fp>(target, angle));
+    state_eigen =
+        get_expanded_eigen_matrix_with_identity<Fp>(target, make_RX<Fp>(angle), n) * state_eigen;
+
+    target = random.int32() % n;
+    angle = random.uniform() * 3.14159;
+    circuit.add_gate(gate::RY<Fp>(target, angle));
+    state_eigen =
+        get_expanded_eigen_matrix_with_identity<Fp>(target, make_RY<Fp>(angle), n) * state_eigen;
+
+    target = random.int32() % n;
+    angle = random.uniform() * 3.14159;
+    circuit.add_gate(gate::RZ<Fp>(target, angle));
+    state_eigen =
+        get_expanded_eigen_matrix_with_identity<Fp>(target, make_RZ<Fp>(angle), n) * state_eigen;
+
+    target = random.int32() % n;
+    target_sub = random.int32() % (n - 1);
+    if (target_sub >= target) target_sub++;
+    circuit.add_gate(gate::CX<Fp>(target, target_sub));
+    state_eigen = get_eigen_matrix_full_qubit_CX<Fp>(target, target_sub, n) * state_eigen;
+
+    target = random.int32() % n;
+    target_sub = random.int32() % (n - 1);
+    if (target_sub >= target) target_sub++;
+    circuit.add_gate(gate::CZ<Fp>(target, target_sub));
+    state_eigen = get_eigen_matrix_full_qubit_CZ<Fp>(target, target_sub, n) * state_eigen;
+
+    target = random.int32() % n;
+    target_sub = random.int32() % (n - 1);
+    if (target_sub >= target) target_sub++;
+    circuit.add_gate(gate::Swap<Fp>(target, target_sub));
+    state_eigen = get_eigen_matrix_full_qubit_Swap<Fp>(target, target_sub, n) * state_eigen;
+
+    target = random.int32() % n;
+    circuit.add_gate(gate::U1<Fp>(target, std::numbers::pi));
+    state_eigen = get_expanded_eigen_matrix_with_identity(target, make_Z<Fp>(), n) * state_eigen;
+
+    target = random.int32() % n;
+    circuit.add_gate(gate::U2<Fp>(target, 0, std::numbers::pi));
+    state_eigen =
+        get_expanded_eigen_matrix_with_identity<Fp>(target, make_H<Fp>(), n) * state_eigen;
+
+    target = random.int32() % n;
+    angle = random.uniform() * 3.14159;
+    circuit.add_gate(gate::U3<Fp>(target, -angle, 0, 0));
+    state_eigen = get_expanded_eigen_matrix_with_identity<Fp>(target, make_U<Fp>(-angle, 0, 0), n) *
+                  state_eigen;
 
     /*
     std::vector<std::uint64_t> target_index_list{0, 1, 2, 3};
@@ -147,7 +158,7 @@ TEST(CircuitTest, CircuitBasic) {
     PauliOperator pauli = PauliOperator("I 0 X 1 Y 2 Z 3");
     circuit.add_gate(multi_Pauli(pauli));
 
-    internal::ComplexMatrix mat_x(2, 2);
+    internal::ComplexMatrix<Fp> mat_x(2, 2);
     target = random.int32() % n;
     mat_x << 0, 1, 1, 0;
     circuit.add_gate(dense_matrix(target, mat_x));
@@ -160,87 +171,94 @@ TEST(CircuitTest, CircuitBasic) {
     circuit.update_quantum_state(state);
 
     state_cp = state.get_amplitudes();
-    for (std::uint64_t i = 0; i < dim; ++i)
-        ASSERT_NEAR(std::abs(state_eigen[i] - (CComplex)state_cp[i]), 0, eps);
+    for (std::uint64_t i = 0; i < dim; ++i) {
+        check_near(state_eigen[i], (StdComplex<Fp>)state_cp[i]);
+    }
 }
 
-TEST(CircuitTest, CircuitRev) {
+TEST(CircuitTest, CircuitBasic) {
+    circuit_test<double>();
+    circuit_test<float>();
+}
+
+template <std::floating_point Fp>
+void circuit_rev_test() {
     const std::uint64_t n = 4;
     const std::uint64_t dim = 1ULL << n;
 
     Random random;
 
-    StateVector state = StateVector::Haar_random_state(n);
+    StateVector<Fp> state = StateVector<Fp>::Haar_random_state(n);
     auto state_cp = state.get_amplitudes();
-    Eigen::VectorXcd state_eigen(dim);
+    ComplexVector<Fp> state_eigen(dim);
     for (std::uint64_t i = 0; i < dim; ++i) state_eigen[i] = state_cp[i];
 
-    Circuit circuit(n);
+    Circuit<Fp> circuit(n);
     std::uint64_t target, target_sub;
-    double angle;
+    Fp angle;
 
     target = random.int32() % n;
-    circuit.add_gate(gate::X(target));
+    circuit.add_gate(gate::X<Fp>(target));
 
     target = random.int32() % n;
-    circuit.add_gate(gate::Y(target));
+    circuit.add_gate(gate::Y<Fp>(target));
 
     target = random.int32() % n;
-    circuit.add_gate(gate::Z(target));
+    circuit.add_gate(gate::Z<Fp>(target));
 
     target = random.int32() % n;
-    circuit.add_gate(gate::H(target));
+    circuit.add_gate(gate::H<Fp>(target));
 
     target = random.int32() % n;
-    circuit.add_gate(gate::S(target));
+    circuit.add_gate(gate::S<Fp>(target));
 
     target = random.int32() % n;
-    circuit.add_gate(gate::Sdag(target));
+    circuit.add_gate(gate::Sdag<Fp>(target));
 
     target = random.int32() % n;
-    circuit.add_gate(gate::T(target));
+    circuit.add_gate(gate::T<Fp>(target));
 
     target = random.int32() % n;
-    circuit.add_gate(gate::Tdag(target));
+    circuit.add_gate(gate::Tdag<Fp>(target));
 
     target = random.int32() % n;
-    circuit.add_gate(gate::SqrtX(target));
+    circuit.add_gate(gate::SqrtX<Fp>(target));
 
     target = random.int32() % n;
-    circuit.add_gate(gate::SqrtXdag(target));
+    circuit.add_gate(gate::SqrtXdag<Fp>(target));
 
     target = random.int32() % n;
-    circuit.add_gate(gate::SqrtY(target));
+    circuit.add_gate(gate::SqrtY<Fp>(target));
 
     target = random.int32() % n;
-    circuit.add_gate(gate::SqrtYdag(target));
-
-    target = random.int32() % n;
-    angle = random.uniform() * 3.14159;
-    circuit.add_gate(gate::RX(target, angle));
+    circuit.add_gate(gate::SqrtYdag<Fp>(target));
 
     target = random.int32() % n;
     angle = random.uniform() * 3.14159;
-    circuit.add_gate(gate::RY(target, angle));
+    circuit.add_gate(gate::RX<Fp>(target, angle));
 
     target = random.int32() % n;
     angle = random.uniform() * 3.14159;
-    circuit.add_gate(gate::RZ(target, angle));
+    circuit.add_gate(gate::RY<Fp>(target, angle));
+
+    target = random.int32() % n;
+    angle = random.uniform() * 3.14159;
+    circuit.add_gate(gate::RZ<Fp>(target, angle));
 
     target = random.int32() % n;
     target_sub = random.int32() % (n - 1);
     if (target_sub >= target) target_sub++;
-    circuit.add_gate(gate::CX(target, target_sub));
+    circuit.add_gate(gate::CX<Fp>(target, target_sub));
 
     target = random.int32() % n;
     target_sub = random.int32() % (n - 1);
     if (target_sub >= target) target_sub++;
-    circuit.add_gate(gate::CZ(target, target_sub));
+    circuit.add_gate(gate::CZ<Fp>(target, target_sub));
 
     target = random.int32() % n;
     target_sub = random.int32() % (n - 1);
     if (target_sub >= target) target_sub++;
-    circuit.add_gate(gate::Swap(target, target_sub));
+    circuit.add_gate(gate::Swap<Fp>(target, target_sub));
 
     /*
     Observable observable(n);
@@ -258,6 +276,12 @@ TEST(CircuitTest, CircuitRev) {
 
     revcircuit.update_quantum_state(state);
     state_cp = state.get_amplitudes();
-    for (std::uint64_t i = 0; i < dim; ++i)
-        ASSERT_NEAR(abs(state_eigen[i] - (CComplex)state_cp[i]), 0, eps);
+    for (std::uint64_t i = 0; i < dim; ++i) {
+        check_near(state_eigen[i], (StdComplex<Fp>)state_cp[i]);
+    }
+}
+
+TEST(CircuitTest, CircuitRev) {
+    circuit_rev_test<double>();
+    circuit_rev_test<float>();
 }
