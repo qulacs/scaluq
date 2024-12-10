@@ -59,6 +59,12 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "ProbablisticGate"},
+                 {"gate_list", this->gate_list()},
+                 {"distribution", this->distribution()}};
+    }
 };
 }  // namespace internal
 

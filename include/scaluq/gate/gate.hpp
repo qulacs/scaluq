@@ -216,6 +216,8 @@ public:
     virtual void update_quantum_state(StateVector<Fp>& state_vector) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
+
+    virtual void get_info_as_json(Json& j) const { j = Json{{"type", "Unknown"}}; }
 };
 
 template <typename T>
@@ -283,6 +285,9 @@ public:
         os << gate->to_string();
         return os;
     }
+
+    friend void to_json(Json& j, const GatePtr& gate) { gate->get_info_as_json(j); }
+    friend void from_json(const Json& j, GatePtr& gate) {}
 };
 
 }  // namespace internal

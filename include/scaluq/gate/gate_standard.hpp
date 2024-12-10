@@ -19,6 +19,8 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override { j = Json{{"type", "I"}}; }
 };
 
 template <std::floating_point Fp>
@@ -40,6 +42,13 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "GlobalPhase"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"phase", this->phase()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -67,6 +76,12 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "X"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -82,6 +97,12 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "Y"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -97,6 +118,12 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "Z"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -112,6 +139,12 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "H"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -144,6 +177,12 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "S"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -159,6 +198,12 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "Sdag"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -174,6 +219,12 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "T"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -189,6 +240,12 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "Tdag"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -206,6 +263,12 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "SqrtX"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -221,6 +284,12 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "SqrtXdag"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -238,6 +307,12 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "SqrtY"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -253,6 +328,12 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "SqrtYdag"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -268,6 +349,12 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "P0"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -283,6 +370,12 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "P1"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -299,6 +392,13 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "RX"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"angle", this->angle()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -315,6 +415,13 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "RY"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"angle", this->angle()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -331,6 +438,13 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "RZ"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"angle", this->angle()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -352,6 +466,13 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "U1"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"lambda", this->lambda()}};
+    }
 };
 template <std::floating_point Fp>
 class U2GateImpl : public GateBase<Fp> {
@@ -375,6 +496,14 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "U2"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"lambda", this->lambda()},
+                 {"phi", this->phi()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -398,6 +527,15 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "U3"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"lambda", this->lambda()},
+                 {"phi", this->phi()},
+                 {"theta", this->theta()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -413,6 +551,12 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "Swap"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 }  // namespace internal

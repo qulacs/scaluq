@@ -28,7 +28,7 @@ int main() {
         scaluq::StateVector<double> state(n_qubits);
         state.load({0, 1, 2, 3, 4, 5, 6, 7});
         Json j = state;
-        std::cout << j.dump(2) << std::endl;
+        std::cout << j << std::endl;
         state = j;
         std::cout << state << std::endl;
     }
@@ -37,7 +37,7 @@ int main() {
         scaluq::StateVectorBatched<double> states(batch_size, n_qubits);
         states.set_Haar_random_state(batch_size, n_qubits, false);
         Json j = states;
-        std::cout << j.dump(2) << std::endl;
+        std::cout << j << std::endl;
         states = j;
         std::cout << states << std::endl;
     }
@@ -46,7 +46,7 @@ int main() {
         std::string pauli_string = "X 0 Z 1 Y 2";
         PauliOperator<double> pauli(pauli_string, coef);
         Json j = pauli;
-        std::cout << j.dump(2) << std::endl;
+        std::cout << j << std::endl;
         pauli = j;
     }
     {
@@ -55,14 +55,44 @@ int main() {
         op.add_operator({0b001, 0b010, Complex<double>(2)});
         op.add_operator({"X 2 Y 1", 1});
         Json j = op;
-        std::cout << j.dump(2) << std::endl;
+        std::cout << j << std::endl;
         op = j;
     }
-    // {
-    //     XGate<double> x = gate::X<double>(2);
-    //     Json j = x;
-    //     std::cout << j << std::endl;
-    // }
+    {
+        std::cout << Json(gate::I<double>()) << std::endl;
+        std::cout << Json(gate::X<double>(2, {0, 3})) << std::endl;
+        std::cout << Json(gate::Y<double>(2, {0, 3})) << std::endl;
+        std::cout << Json(gate::Z<double>(2, {0, 3})) << std::endl;
+        std::cout << Json(gate::H<double>(2, {0, 3})) << std::endl;
+        std::cout << Json(gate::S<double>(2, {0, 3})) << std::endl;
+        std::cout << Json(gate::Sdag<double>(2, {0, 3})) << std::endl;
+        std::cout << Json(gate::T<double>(2, {0, 3})) << std::endl;
+        std::cout << Json(gate::Tdag<double>(2, {0, 3})) << std::endl;
+        std::cout << Json(gate::SqrtX<double>(2, {0, 3})) << std::endl;
+        std::cout << Json(gate::SqrtXdag<double>(2, {0, 3})) << std::endl;
+        std::cout << Json(gate::SqrtY<double>(2, {0, 3})) << std::endl;
+        std::cout << Json(gate::SqrtYdag<double>(2, {0, 3})) << std::endl;
+        std::cout << Json(gate::RX<double>(2, 0.5, {0, 3})) << std::endl;
+        std::cout << Json(gate::RY<double>(2, 0.5, {0, 3})) << std::endl;
+        std::cout << Json(gate::RZ<double>(2, 0.5, {0, 3})) << std::endl;
+        std::cout << Json(gate::U1<double>(2, 0.5, {0, 3})) << std::endl;
+        std::cout << Json(gate::U2<double>(2, 0.5, 0.3, {0, 3})) << std::endl;
+        std::cout << Json(gate::U3<double>(2, 0.5, 0.3, 0.1, {0, 3})) << std::endl;
+        std::cout << Json(gate::Swap<double>(1, 2, {0, 3})) << std::endl;
+
+        PauliOperator<double> pauli("X 2 Y 1");
+        std::cout << Json(gate::Pauli<double>(pauli)) << std::endl;
+        std::cout << Json(gate::PauliRotation<double>(pauli, 0.5)) << std::endl;
+
+        std::cout << Json(gate::OneTargetMatrix<double>(2, {0, 1, 2, 3})) << std::endl;
+        std::cout << Json(gate::TwoTargetMatrix<double>(
+                         2, 3, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}))
+                  << std::endl;
+
+        auto probgate =
+            gate::Probablistic<double>({.1, .9}, {gate::X<double>(0), gate::I<double>()});
+        std::cout << Json(probgate) << std::endl;
+    }
 
     Kokkos::finalize();
 }
