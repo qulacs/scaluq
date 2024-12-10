@@ -14,9 +14,10 @@ ProbablisticGateImpl<Fp>::ProbablisticGateImpl(const std::vector<Fp>& distributi
     if (n != gate_list.size()) {
         throw std::runtime_error("distribution and gate_list have different size.");
     }
-    _cumlative_distribution.resize(n + 1);
-    std::partial_sum(distribution.begin(), distribution.end(), _cumlative_distribution.begin() + 1);
-    if (std::abs(_cumlative_distribution.back() - 1.) > 1e-6) {
+    _cumulative_distribution.resize(n + 1);
+    std::partial_sum(
+        distribution.begin(), distribution.end(), _cumulative_distribution.begin() + 1);
+    if (std::abs(_cumulative_distribution.back() - 1.) > 1e-6) {
         throw std::runtime_error("Sum of distribution must be equal to 1.");
     }
 }
@@ -33,8 +34,8 @@ FLOAT(Fp)
 void ProbablisticGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     Random random;
     Fp r = random.uniform();
-    std::uint64_t i = std::distance(_cumlative_distribution.begin(),
-                                    std::ranges::upper_bound(_cumlative_distribution, r)) -
+    std::uint64_t i = std::distance(_cumulative_distribution.begin(),
+                                    std::ranges::upper_bound(_cumulative_distribution, r)) -
                       1;
     if (i >= _gate_list.size()) i = _gate_list.size() - 1;
     _gate_list[i]->update_quantum_state(state_vector);

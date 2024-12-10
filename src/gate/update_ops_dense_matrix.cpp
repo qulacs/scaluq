@@ -159,10 +159,10 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
                                matrix[2][3] * val3;
             Complex<Fp> res3 = matrix[3][0] * val0 + matrix[3][1] * val1 + matrix[3][2] * val2 +
                                matrix[3][3] * val3;
-            state._raw(batch_id, basis_0) = res0;
-            state._raw(batch_id, basis_1) = res1;
-            state._raw(batch_id, basis_2) = res2;
-            state._raw(batch_id, basis_3) = res3;
+            states._raw(batch_id, basis_0) = res0;
+            states._raw(batch_id, basis_1) = res1;
+            states._raw(batch_id, basis_2) = res2;
+            states._raw(batch_id, basis_3) = res3;
         });
     Kokkos::fence();
 }

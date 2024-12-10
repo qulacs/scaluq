@@ -15,9 +15,10 @@ ParamProbablisticGateImpl<Fp>::ParamProbablisticGateImpl(
     if (n != gate_list.size()) {
         throw std::runtime_error("distribution and gate_list have different size.");
     }
-    _cumlative_distribution.resize(n + 1);
-    std::partial_sum(distribution.begin(), distribution.end(), _cumlative_distribution.begin() + 1);
-    if (std::abs(_cumlative_distribution.back() - 1.) > 1e-6) {
+    _cumulative_distribution.resize(n + 1);
+    std::partial_sum(
+        distribution.begin(), distribution.end(), _cumulative_distribution.begin() + 1);
+    if (std::abs(_cumulative_distribution.back() - 1.) > 1e-6) {
         throw std::runtime_error("Sum of distribution must be equal to 1.");
     }
 }
@@ -36,8 +37,8 @@ void ParamProbablisticGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_
                                                          Fp param) const {
     Random random;
     Fp r = random.uniform();
-    std::uint64_t i = std::distance(_cumlative_distribution.begin(),
-                                    std::ranges::upper_bound(_cumlative_distribution, r)) -
+    std::uint64_t i = std::distance(_cumulative_distribution.begin(),
+                                    std::ranges::upper_bound(_cumulative_distribution, r)) -
                       1;
     if (i >= _gate_list.size()) i = _gate_list.size() - 1;
     const auto& gate = _gate_list[i];
@@ -65,7 +66,7 @@ void ParamProbablisticGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>&
     });
     for (std::size_t i = 0; i < states.batch_size(); ++i) {
         const auto& gate = _gate_list[indicies[i]];
-        auto state_vector = StateVector(Kokkos::subview(states._raw, i, Kokkos::ALL));
+        auto state_vector = StateVector<Fp>(Kokkos::subview(states._raw, i, Kokkos::ALL));
         if (gate.index() == 0) {
             std::get<0>(gate)->update_quantum_state(state_vector);
         } else {

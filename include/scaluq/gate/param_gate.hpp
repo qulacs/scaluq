@@ -63,6 +63,7 @@ protected:
     std::uint64_t _target_mask, _control_mask;
     Fp _pcoef;
     void check_qubit_mask_within_bounds(const StateVector<Fp>& state_vector) const;
+    void check_qubit_mask_within_bounds(const StateVectorBatched<Fp>& states) const;
 
     std::string get_qubit_info_as_string(const std::string& indent) const;
 
@@ -90,7 +91,7 @@ public:
     [[nodiscard]] virtual std::shared_ptr<const ParamGateBase<Fp>> get_inverse() const = 0;
     [[nodiscard]] virtual internal::ComplexMatrix<Fp> get_matrix(Fp param) const = 0;
 
-    virtual void update_quantum_state(StateVector<Fp>& state_vector, double param) const = 0;
+    virtual void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const = 0;
     virtual void update_quantum_state(StateVectorBatched<Fp>& states,
                                       std::vector<Fp> params) const = 0;
 

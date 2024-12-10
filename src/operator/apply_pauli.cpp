@@ -66,7 +66,7 @@ void apply_pauli(std::uint64_t control_mask,
     }
     std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex<Fp> global_phase = PHASE_M90ROT()[global_phase_90rot_count % 4];
+    Complex<Fp> global_phase = PHASE_M90ROT<Fp>()[global_phase_90rot_count % 4];
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
             {0, 0}, {states.batch_size(), states.dim() >> (std::popcount(control_mask) + 1)}),
@@ -201,11 +201,11 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                 states._raw(batch_id, basis_0) =
                     cosval * cval_0 +
                     Complex<Fp>(0, 1) * sinval * cval_1 *
-                        PHASE_M90ROT()[(global_phase_90_rot_count + bit_parity_0 * 2) % 4];
+                        PHASE_M90ROT<Fp>()[(global_phase_90_rot_count + bit_parity_0 * 2) % 4];
                 states._raw(batch_id, basis_1) =
                     cosval * cval_1 +
                     Complex<Fp>(0, 1) * sinval * cval_0 *
-                        PHASE_M90ROT()[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
+                        PHASE_M90ROT<Fp>()[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
             });
         Kokkos::fence();
     }
@@ -217,7 +217,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                           Complex<Fp> coef,
                           Fp pcoef,
                           std::vector<Fp> params,
-                          StateVectorBatched& states) {
+                          StateVectorBatched<Fp>& states) {
     std::uint64_t global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     auto team_policy = Kokkos::TeamPolicy(states.batch_size(), Kokkos::AUTO);
     Kokkos::parallel_for(
@@ -259,11 +259,13 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                         states._raw(batch_id, basis_0) =
                             cosval * cval_0 +
                             Complex<Fp>(0, 1) * sinval * cval_1 *
-                                PHASE_M90ROT()[(global_phase_90_rot_count + bit_parity_0 * 2) % 4];
+                                PHASE_M90ROT<Fp>()[(global_phase_90_rot_count + bit_parity_0 * 2) %
+                                                   4];
                         states._raw(batch_id, basis_1) =
                             cosval * cval_1 +
                             Complex<Fp>(0, 1) * sinval * cval_0 *
-                                PHASE_M90ROT()[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
+                                PHASE_M90ROT<Fp>()[(global_phase_90_rot_count + bit_parity_1 * 2) %
+                                                   4];
                     });
             }
         });
@@ -277,6 +279,16 @@ CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #define FUNC_MACRO(Fp)                  \
     template void apply_pauli_rotation( \
         std::uint64_t, std::uint64_t, std::uint64_t, Complex<Fp>, Fp, StateVectorBatched<Fp>&);
+CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#undef FUNC_MACRO
+#define FUNC_MACRO(Fp)                                  \
+    template void apply_pauli_rotation(std::uint64_t,   \
+                                       std::uint64_t,   \
+                                       std::uint64_t,   \
+                                       Complex<Fp>,     \
+                                       Fp,              \
+                                       std::vector<Fp>, \
+                                       StateVectorBatched<Fp>&);
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 }  // namespace scaluq::internal

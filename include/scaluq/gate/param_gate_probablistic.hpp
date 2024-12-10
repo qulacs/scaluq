@@ -12,7 +12,7 @@ template <std::floating_point Fp>
 class ParamProbablisticGateImpl : public ParamGateBase<Fp> {
     using EitherGate = std::variant<Gate<Fp>, ParamGate<Fp>>;
     std::vector<Fp> _distribution;
-    std::vector<Fp> _cumlative_distribution;
+    std::vector<Fp> _cumulative_distribution;
     std::vector<EitherGate> _gate_list;
 
 public:

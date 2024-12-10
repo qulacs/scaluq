@@ -61,10 +61,6 @@ public:
 }  // namespace internal
 
 template <std::floating_point Fp>
-using OneTargetMatrixGate = internal::GatePtr<internal::OneTargetMatrixGateImpl<Fp>>;
-template <std::floating_point Fp>
-using TwoTargetMatrixGate = internal::GatePtr<internal::TwoTargetMatrixGateImpl<Fp>>;
-template <std::floating_point Fp>
 using SparseMatrixGate = internal::GatePtr<internal::SparseMatrixGateImpl<Fp>>;
 template <std::floating_point Fp>
 using DenseMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl<Fp>>;

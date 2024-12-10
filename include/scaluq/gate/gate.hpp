@@ -179,6 +179,7 @@ protected:
     std::uint64_t _target_mask, _control_mask;
 
     void check_qubit_mask_within_bounds(const StateVector<Fp>& state_vector) const;
+    void check_qubit_mask_within_bounds(const StateVectorBatched<Fp>& states) const;
 
     std::string get_qubit_info_as_string(const std::string& indent) const;
 

@@ -9,7 +9,7 @@ namespace internal {
 template <std::floating_point Fp>
 class ProbablisticGateImpl : public GateBase<Fp> {
     std::vector<Fp> _distribution;
-    std::vector<Fp> _cumlative_distribution;
+    std::vector<Fp> _cumulative_distribution;
     std::vector<Gate<Fp>> _gate_list;
 
 public:

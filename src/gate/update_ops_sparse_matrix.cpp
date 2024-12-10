@@ -50,7 +50,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     auto values = mat._values;
     const std::uint64_t outer_mask = ~target_mask & ((1ULL << states.n_qubits()) - 1);
 
-    Kokkos::View<Complex**, Kokkos::LayoutRight> update(
+    Kokkos::View<Complex<Fp>**, Kokkos::LayoutRight> update(
         Kokkos::ViewAllocateWithoutInitializing("update"), states.batch_size(), states.dim());
 
     Kokkos::parallel_for(
@@ -64,7 +64,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 
-    Kokkos::View<Complex**, Kokkos::LayoutRight, Kokkos::MemoryTraits<Kokkos::Atomic>>
+    Kokkos::View<Complex<Fp>**, Kokkos::LayoutRight, Kokkos::MemoryTraits<Kokkos::Atomic>>
         update_atomic(update);
     Kokkos::parallel_for(
         "COO_Update",
