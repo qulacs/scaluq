@@ -31,14 +31,15 @@
 				"python.terminal.activateEnvironment": false,
 				// CAVEAT: you need to restart after building scaluq to take effect.
 				"C_Cpp.default.includePath": [
-					"scaluq",
+					"include",
 					"/usr/local/include/kokkos",
-					"build/_deps/eigen_fetch-src",
-					"build/_deps/googletest_fetch-src/googletest/include",
+					"build/_deps/eigen-src",
+					"build/_deps/googletest-src/googletest/include",
 					"~/.local/lib/python3.10/site-packages/nanobind/include",
 					"/usr/include/python3.10"
 				],
-				"C_Cpp.default.cppStandard": "c++20"
+				"C_Cpp.default.cppStandard": "c++23",
+				"C_Cpp.default.defines": ["SCALUQ_FLOAT32", "SCALUQ_FLOAT64"]
 			},
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
