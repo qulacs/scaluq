@@ -217,7 +217,7 @@ public:
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 
-    virtual void get_info_as_json(Json& j) const { j = Json{{"type", "Unknown"}}; }
+    virtual void get_as_json(Json& j) const { j = Json{{"type", "Unknown"}}; }
 };
 
 template <typename T>
@@ -286,8 +286,15 @@ public:
         return os;
     }
 
-    friend void to_json(Json& j, const GatePtr& gate) { gate->get_info_as_json(j); }
-    friend void from_json(const Json& j, GatePtr& gate) {}
+    friend void to_json(Json& j, const GatePtr& gate) { gate->get_as_json(j); }
+    friend void from_json(const Json& j, GatePtr& gate) {
+        std::string type = j.at("type");
+        if (type == "X") {
+            auto target = j.at("target");
+            auto control = j.at("control");
+            gate = std::shared_ptr<const XGateImpl>();
+        }
+    }
 };
 
 }  // namespace internal

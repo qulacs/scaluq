@@ -93,7 +93,7 @@ public:
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 
-    virtual void get_info_as_json(Json& j) const { j = Json{{"type", "Unknown"}}; }
+    virtual void get_as_json(Json& j) const { j = Json{{"type", "Unknown"}}; }
 };
 
 template <typename T>
@@ -162,7 +162,7 @@ public:
         return os;
     }
 
-    friend void to_json(Json& j, const ParamGatePtr& gate) { gate->get_info_as_json(j); }
+    friend void to_json(Json& j, const ParamGatePtr& gate) { gate->get_as_json(j); }
     friend void from_json(const Json& j, ParamGatePtr& gate) {}
 };
 }  // namespace internal

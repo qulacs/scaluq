@@ -102,6 +102,11 @@ int main() {
             {.1, .9}, {gate::ParamRX<double>(0), gate::I<double>()});
         std::cout << Json(paramprobgate) << std::endl;
     }
+    {
+        Gate<double> g;
+        XGate<double> x;
+        g = x;
+    }
 
     Kokkos::finalize();
 }

@@ -22,7 +22,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "ParamRX"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
@@ -45,7 +45,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "ParamRY"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
@@ -68,7 +68,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "ParamRZ"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},

@@ -63,7 +63,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "ParamProbablisticGate"},
                  {"gate_list", Json::array()},
                  {"distribution", this->distribution()}};

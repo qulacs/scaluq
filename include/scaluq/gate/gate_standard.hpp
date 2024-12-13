@@ -20,7 +20,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override { j = Json{{"type", "I"}}; }
+    void get_as_json(Json& j) const override { j = Json{{"type", "I"}}; }
 };
 
 template <std::floating_point Fp>
@@ -43,7 +43,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "GlobalPhase"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
@@ -77,7 +77,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "X"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()}};
@@ -98,7 +98,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "Y"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()}};
@@ -119,7 +119,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "Z"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()}};
@@ -140,7 +140,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "H"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()}};
@@ -178,7 +178,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "S"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()}};
@@ -199,7 +199,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "Sdag"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()}};
@@ -220,7 +220,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "T"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()}};
@@ -241,7 +241,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "Tdag"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()}};
@@ -264,7 +264,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "SqrtX"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()}};
@@ -285,7 +285,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "SqrtXdag"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()}};
@@ -308,7 +308,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "SqrtY"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()}};
@@ -329,7 +329,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "SqrtYdag"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()}};
@@ -350,7 +350,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "P0"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()}};
@@ -371,7 +371,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "P1"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()}};
@@ -393,7 +393,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "RX"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
@@ -416,7 +416,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "RY"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
@@ -439,7 +439,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "RZ"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
@@ -467,7 +467,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "U1"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
@@ -497,7 +497,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "U2"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
@@ -528,7 +528,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "U3"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
@@ -552,7 +552,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "Swap"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()}};
@@ -560,53 +560,6 @@ public:
 };
 
 }  // namespace internal
-
-template <std::floating_point Fp>
-using IGate = internal::GatePtr<internal::IGateImpl<Fp>>;
-template <std::floating_point Fp>
-using GlobalPhaseGate = internal::GatePtr<internal::GlobalPhaseGateImpl<Fp>>;
-template <std::floating_point Fp>
-using XGate = internal::GatePtr<internal::XGateImpl<Fp>>;
-template <std::floating_point Fp>
-using YGate = internal::GatePtr<internal::YGateImpl<Fp>>;
-template <std::floating_point Fp>
-using ZGate = internal::GatePtr<internal::ZGateImpl<Fp>>;
-template <std::floating_point Fp>
-using HGate = internal::GatePtr<internal::HGateImpl<Fp>>;
-template <std::floating_point Fp>
-using SGate = internal::GatePtr<internal::SGateImpl<Fp>>;
-template <std::floating_point Fp>
-using SdagGate = internal::GatePtr<internal::SdagGateImpl<Fp>>;
-template <std::floating_point Fp>
-using TGate = internal::GatePtr<internal::TGateImpl<Fp>>;
-template <std::floating_point Fp>
-using TdagGate = internal::GatePtr<internal::TdagGateImpl<Fp>>;
-template <std::floating_point Fp>
-using SqrtXGate = internal::GatePtr<internal::SqrtXGateImpl<Fp>>;
-template <std::floating_point Fp>
-using SqrtXdagGate = internal::GatePtr<internal::SqrtXdagGateImpl<Fp>>;
-template <std::floating_point Fp>
-using SqrtYGate = internal::GatePtr<internal::SqrtYGateImpl<Fp>>;
-template <std::floating_point Fp>
-using SqrtYdagGate = internal::GatePtr<internal::SqrtYdagGateImpl<Fp>>;
-template <std::floating_point Fp>
-using P0Gate = internal::GatePtr<internal::P0GateImpl<Fp>>;
-template <std::floating_point Fp>
-using P1Gate = internal::GatePtr<internal::P1GateImpl<Fp>>;
-template <std::floating_point Fp>
-using RXGate = internal::GatePtr<internal::RXGateImpl<Fp>>;
-template <std::floating_point Fp>
-using RYGate = internal::GatePtr<internal::RYGateImpl<Fp>>;
-template <std::floating_point Fp>
-using RZGate = internal::GatePtr<internal::RZGateImpl<Fp>>;
-template <std::floating_point Fp>
-using U1Gate = internal::GatePtr<internal::U1GateImpl<Fp>>;
-template <std::floating_point Fp>
-using U2Gate = internal::GatePtr<internal::U2GateImpl<Fp>>;
-template <std::floating_point Fp>
-using U3Gate = internal::GatePtr<internal::U3GateImpl<Fp>>;
-template <std::floating_point Fp>
-using SwapGate = internal::GatePtr<internal::SwapGateImpl<Fp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {

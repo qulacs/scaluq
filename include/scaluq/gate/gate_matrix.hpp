@@ -45,7 +45,7 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "OneTargetMatrix"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
@@ -97,7 +97,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "TwoTargetMatrix"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
@@ -131,7 +131,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "DensetMatrix"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
@@ -161,7 +161,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 
-    void get_info_as_json(Json& j) const override {
+    void get_as_json(Json& j) const override {
         j = Json{{"type", "SparseMatrix"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
