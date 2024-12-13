@@ -36,7 +36,7 @@
 					"~/.local/lib/python3.10/site-packages/nanobind/include",
 					"/usr/include/python3.10"
 				],
-				"C_Cpp.default.cppStandard": "c++20",
+				"C_Cpp.default.cppStandard": "c++23",
 				"C_Cpp.default.defines": ["SCALUQ_FLOAT32", "SCALUQ_FLOAT64"]
 			},
 			// Add the IDs of extensions you want installed when the container is created.
