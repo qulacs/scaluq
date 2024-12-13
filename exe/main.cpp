@@ -1,53 +1,28 @@
-#include <functional>
+#include <cstdint>
 #include <iostream>
-#include <types.hpp>
-#include <util/random.hpp>
-
-#include "../scaluq/all.hpp"
-
-using namespace scaluq;
-using namespace std;
-
-void run() {
-    auto y_gate = gate::Y(2);
-    std::cout << y_gate->to_string() << "\n\n";
-
-    auto cx_gate = gate::CX(0, 2);
-    std::cout << cx_gate << "\n\n";
-
-    auto swap_gate = gate::Swap(2, 3, {4, 6});
-    std::cout << swap_gate << "\n\n";
-
-    auto rx_gate = gate::RX(2, 0.5);
-    std::cout << rx_gate << "\n\n";
-
-    auto prob_gate = gate::Probablistic({0.1, 0.1, 0.8}, {cx_gate, y_gate, swap_gate});
-    std::cout << prob_gate << "\n\n";
-
-    auto prob_prob_gate = gate::Probablistic({0.5, 0.5}, {cx_gate, prob_gate});
-    std::cout << prob_prob_gate << "\n\n";
-
-    auto prx_gate = gate::ParamRX(2);
-    std::cout << prx_gate << "\n\n";
-
-    auto pry_gate = gate::ParamRY(2, 2.5, {1, 3});
-    std::cout << pry_gate << "\n\n";
-
-    auto pprob_gate = gate::ParamProbablistic({0.7, 0.3}, {prx_gate, pry_gate});
-    std::cout << pprob_gate << std::endl;
-
-    Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> mat(4, 4);
-    mat << 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15;
-
-    auto dense_gate = gate::DenseMatrix({1, 3}, mat);
-    std::cout << dense_gate << std::endl;
-
-    auto sparse_gate = gate::SparseMatrix({2, 0}, mat.sparseView());
-    std::cout << sparse_gate << std::endl;
-}
+#include <scaluq/circuit/circuit.hpp>
+#include <scaluq/gate/gate_factory.hpp>
+#include <scaluq/operator/operator.hpp>
+#include <scaluq/state/state_vector.hpp>
 
 int main() {
-    Kokkos::initialize();
-    run();
-    Kokkos::finalize();
+    scaluq::initialize();  // must be called before using any scaluq methods
+    {
+        const std::uint64_t n_qubits = 3;
+        scaluq::StateVector state = scaluq::StateVector<double>::Haar_random_state(n_qubits, 0);
+        std::cout << state << std::endl;
+
+        scaluq::Circuit<double> circuit(n_qubits);
+        circuit.add_gate(scaluq::gate::X<double>(0));
+        circuit.add_gate(scaluq::gate::CNot<double>(0, 1));
+        circuit.add_gate(scaluq::gate::Y<double>(1));
+        circuit.add_gate(scaluq::gate::RX<double>(1, std::numbers::pi / 2));
+        circuit.update_quantum_state(state);
+
+        scaluq::Operator<double> observable(n_qubits);
+        observable.add_random_operator(1, 0);
+        auto value = observable.get_expectation_value(state);
+        std::cout << value << std::endl;
+    }
+    scaluq::finalize();  // must be called last
 }
