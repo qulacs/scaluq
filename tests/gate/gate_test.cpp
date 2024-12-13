@@ -914,7 +914,7 @@ void test_matrix_control(std::uint64_t n_qubits) {
         Eigen::Matrix<StdComplex<Fp>, 2, 2, Eigen::RowMajor> U3 =
             get_eigen_matrix_random_one_target_unitary<Fp>();
         auto U = internal::kronecker_product<Fp>(U3, internal::kronecker_product<Fp>(U2, U1));
-        internal::ComplexMatrix<Fp> mat(U.rows(), U.cols());
+        internal::ComplexMatrix<Fp> mat = ComplexMatrix<Fp>::Zero(U.rows(), U.cols());
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 mat(i, j) = U(i, j);
