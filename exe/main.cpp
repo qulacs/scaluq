@@ -92,6 +92,15 @@ int main() {
         auto probgate =
             gate::Probablistic<double>({.1, .9}, {gate::X<double>(0), gate::I<double>()});
         std::cout << Json(probgate) << std::endl;
+
+        std::cout << Json(gate::ParamRX<double>(2, 1.5, {0, 3})) << std::endl;
+        std::cout << Json(gate::ParamRY<double>(2, 1.5, {0, 3})) << std::endl;
+        std::cout << Json(gate::ParamRZ<double>(2, 1.5, {0, 3})) << std::endl;
+        std::cout << Json(gate::ParamPauliRotation<double>(pauli, 0.5)) << std::endl;
+
+        auto paramprobgate = gate::ParamProbablistic<double>(
+            {.1, .9}, {gate::ParamRX<double>(0), gate::I<double>()});
+        std::cout << Json(paramprobgate) << std::endl;
     }
 
     Kokkos::finalize();

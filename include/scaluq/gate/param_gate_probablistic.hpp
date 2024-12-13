@@ -62,6 +62,16 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "ParamProbablisticGate"},
+                 {"gate_list", Json::array()},
+                 {"distribution", this->distribution()}};
+
+        for (const auto& gate : this->gate_list()) {
+            std::visit([&](auto&& arg) { j["gate_list"].push_back(arg); }, gate);
+        }
+    }
 };
 }  // namespace internal
 

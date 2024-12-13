@@ -21,6 +21,13 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "ParamRX"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"param_coef", this->param_coef()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -37,6 +44,13 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "ParamRY"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"param_coef", this->param_coef()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -53,6 +67,13 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "ParamRZ"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"param_coef", this->param_coef()}};
+    }
 };
 
 }  // namespace internal

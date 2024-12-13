@@ -30,6 +30,13 @@ public:
     internal::ComplexMatrix<Fp> get_matrix(Fp param) const override;
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
     std::string to_string(const std::string& indent) const override;
+
+    void get_info_as_json(Json& j) const override {
+        j = Json{{"type", "ParamPauliRotation"},
+                 {"control", this->control_qubit_list()},
+                 {"pauli", this->pauli()},
+                 {"param_coef", this->param_coef()}};
+    }
 };
 }  // namespace internal
 
