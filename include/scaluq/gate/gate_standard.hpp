@@ -561,6 +561,131 @@ public:
 
 }  // namespace internal
 
+template <std::floating_point Fp>
+using IGate = internal::GatePtr<internal::IGateImpl<Fp>>;
+template <std::floating_point Fp>
+using GlobalPhaseGate = internal::GatePtr<internal::GlobalPhaseGateImpl<Fp>>;
+template <std::floating_point Fp>
+using XGate = internal::GatePtr<internal::XGateImpl<Fp>>;
+template <std::floating_point Fp>
+using YGate = internal::GatePtr<internal::YGateImpl<Fp>>;
+template <std::floating_point Fp>
+using ZGate = internal::GatePtr<internal::ZGateImpl<Fp>>;
+template <std::floating_point Fp>
+using HGate = internal::GatePtr<internal::HGateImpl<Fp>>;
+template <std::floating_point Fp>
+using SGate = internal::GatePtr<internal::SGateImpl<Fp>>;
+template <std::floating_point Fp>
+using SdagGate = internal::GatePtr<internal::SdagGateImpl<Fp>>;
+template <std::floating_point Fp>
+using TGate = internal::GatePtr<internal::TGateImpl<Fp>>;
+template <std::floating_point Fp>
+using TdagGate = internal::GatePtr<internal::TdagGateImpl<Fp>>;
+template <std::floating_point Fp>
+using SqrtXGate = internal::GatePtr<internal::SqrtXGateImpl<Fp>>;
+template <std::floating_point Fp>
+using SqrtXdagGate = internal::GatePtr<internal::SqrtXdagGateImpl<Fp>>;
+template <std::floating_point Fp>
+using SqrtYGate = internal::GatePtr<internal::SqrtYGateImpl<Fp>>;
+template <std::floating_point Fp>
+using SqrtYdagGate = internal::GatePtr<internal::SqrtYdagGateImpl<Fp>>;
+template <std::floating_point Fp>
+using P0Gate = internal::GatePtr<internal::P0GateImpl<Fp>>;
+template <std::floating_point Fp>
+using P1Gate = internal::GatePtr<internal::P1GateImpl<Fp>>;
+template <std::floating_point Fp>
+using RXGate = internal::GatePtr<internal::RXGateImpl<Fp>>;
+template <std::floating_point Fp>
+using RYGate = internal::GatePtr<internal::RYGateImpl<Fp>>;
+template <std::floating_point Fp>
+using RZGate = internal::GatePtr<internal::RZGateImpl<Fp>>;
+template <std::floating_point Fp>
+using U1Gate = internal::GatePtr<internal::U1GateImpl<Fp>>;
+template <std::floating_point Fp>
+using U2Gate = internal::GatePtr<internal::U2GateImpl<Fp>>;
+template <std::floating_point Fp>
+using U3Gate = internal::GatePtr<internal::U3GateImpl<Fp>>;
+template <std::floating_point Fp>
+using SwapGate = internal::GatePtr<internal::SwapGateImpl<Fp>>;
+
+namespace internal {  // for json implemention
+template <>
+inline std::shared_ptr<const IGateImpl<double>> get_from_json(const Json&) {
+    return std::make_shared<const IGateImpl<double>>();
+}
+template <>
+inline std::shared_ptr<const IGateImpl<float>> get_from_json(const Json&) {
+    return std::make_shared<const IGateImpl<float>>();
+}
+
+template <>
+inline std::shared_ptr<const GlobalPhaseGateImpl<double>> get_from_json(const Json& j) {
+    auto controls = j.at("control").get<std::vector<std::uint64_t>>();
+    double phase = j.at("phase").get<double>();
+    return std::make_shared<const GlobalPhaseGateImpl<double>>(vector_to_mask(controls), phase);
+}
+template <>
+inline std::shared_ptr<const GlobalPhaseGateImpl<float>> get_from_json(const Json& j) {
+    auto controls = j.at("control").get<std::vector<std::uint64_t>>();
+    float phase = j.at("phase").get<float>();
+    return std::make_shared<const GlobalPhaseGateImpl<float>>(vector_to_mask(controls), phase);
+}
+
+#define DECLARE_GET_FROM_JSON(Impl)                                            \
+    template <>                                                                \
+    inline std::shared_ptr<const Impl<double>> get_from_json(const Json& j) {  \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();       \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();     \
+        return std::make_shared<const Impl<double>>(vector_to_mask(targets),   \
+                                                    vector_to_mask(controls)); \
+    }                                                                          \
+    template <>                                                                \
+    inline std::shared_ptr<const Impl<float>> get_from_json(const Json& j) {   \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();       \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();     \
+        return std::make_shared<const Impl<float>>(vector_to_mask(targets),    \
+                                                   vector_to_mask(controls));  \
+    }
+
+DECLARE_GET_FROM_JSON(XGateImpl);
+DECLARE_GET_FROM_JSON(YGateImpl);
+DECLARE_GET_FROM_JSON(ZGateImpl);
+DECLARE_GET_FROM_JSON(HGateImpl);
+DECLARE_GET_FROM_JSON(SGateImpl);
+DECLARE_GET_FROM_JSON(SdagGateImpl);
+DECLARE_GET_FROM_JSON(TGateImpl);
+DECLARE_GET_FROM_JSON(TdagGateImpl);
+DECLARE_GET_FROM_JSON(SqrtXGateImpl);
+DECLARE_GET_FROM_JSON(SqrtXdagGateImpl);
+DECLARE_GET_FROM_JSON(SqrtYGateImpl);
+DECLARE_GET_FROM_JSON(SqrtYdagGateImpl);
+DECLARE_GET_FROM_JSON(P0GateImpl);
+DECLARE_GET_FROM_JSON(P1GateImpl);
+
+#define DECLARE_GET_FROM_JSON_RGATE(Impl)                                     \
+    template <>                                                               \
+    inline std::shared_ptr<const Impl<double>> get_from_json(const Json& j) { \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();      \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();    \
+        double angle = j.at("angle").get<double>();                           \
+        return std::make_shared<const Impl<double>>(                          \
+            vector_to_mask(targets), vector_to_mask(controls), angle);        \
+    }                                                                         \
+    template <>                                                               \
+    inline std::shared_ptr<const Impl<float>> get_from_json(const Json& j) {  \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();      \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();    \
+        float angle = j.at("angle").get<float>();                             \
+        return std::make_shared<const Impl<float>>(                           \
+            vector_to_mask(targets), vector_to_mask(controls), angle);        \
+    }
+
+DECLARE_GET_FROM_JSON_RGATE(RXGateImpl);
+DECLARE_GET_FROM_JSON_RGATE(RYGateImpl);
+DECLARE_GET_FROM_JSON_RGATE(RZGateImpl);
+
+}  // namespace internal
+
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 void bind_gate_gate_standard_hpp(nb::module_& m) {

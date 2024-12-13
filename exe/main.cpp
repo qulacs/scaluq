@@ -103,9 +103,18 @@ int main() {
         std::cout << Json(paramprobgate) << std::endl;
     }
     {
-        Gate<double> g;
-        XGate<double> x;
-        g = x;
+        auto x = gate::X<double>(1, {2});
+        Json j = x;
+        std::cout << j << std::endl;
+        Gate<double> gate = j;
+        std::cout << gate << std::endl;
+    }
+    {
+        auto x = gate::RX<double>(1, 0.5, {2});
+        Json j = x;
+        std::cout << j << std::endl;
+        Gate<double> gate = j;
+        std::cout << gate << std::endl;
     }
 
     Kokkos::finalize();

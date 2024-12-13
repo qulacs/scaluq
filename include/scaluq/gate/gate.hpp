@@ -224,6 +224,9 @@ template <typename T>
 concept GateImpl = std::derived_from<T, GateBase<typename T::Fp>>;
 
 template <GateImpl T>
+inline std::shared_ptr<const T> get_from_json(const Json&);
+
+template <GateImpl T>
 class GatePtr {
     friend class GateFactory;
     template <GateImpl U>
@@ -289,10 +292,34 @@ public:
     friend void to_json(Json& j, const GatePtr& gate) { gate->get_as_json(j); }
     friend void from_json(const Json& j, GatePtr& gate) {
         std::string type = j.at("type");
-        if (type == "X") {
-            auto target = j.at("target");
-            auto control = j.at("control");
-            gate = std::shared_ptr<const XGateImpl>();
+        if (type == "I") {
+            gate = get_from_json<IGateImpl<Fp>>(j);
+        } else if (type == "GlobalPhase") {
+            gate = get_from_json<GlobalPhaseGateImpl<Fp>>(j);
+        } else if (type == "X") {
+            gate = get_from_json<XGateImpl<Fp>>(j);
+        } else if (type == "Y") {
+            gate = get_from_json<YGateImpl<Fp>>(j);
+        } else if (type == "Z") {
+            gate = get_from_json<ZGateImpl<Fp>>(j);
+        } else if (type == "H") {
+            gate = get_from_json<HGateImpl<Fp>>(j);
+        } else if (type == "S") {
+            gate = get_from_json<SGateImpl<Fp>>(j);
+        } else if (type == "Sdag") {
+            gate = get_from_json<SdagGateImpl<Fp>>(j);
+        } else if (type == "T") {
+            gate = get_from_json<TGateImpl<Fp>>(j);
+        } else if (type == "Tdag") {
+            gate = get_from_json<TdagGateImpl<Fp>>(j);
+        }
+
+        else if (type == "RX") {
+            gate = get_from_json<RXGateImpl<Fp>>(j);
+        } else if (type == "RY") {
+            gate = get_from_json<RYGateImpl<Fp>>(j);
+        } else if (type == "RZ") {
+            gate = get_from_json<RZGateImpl<Fp>>(j);
         }
     }
 };
