@@ -1,9 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <Eigen/Core>
-#include <cmath>
-#include <state/state_vector_batched.hpp>
-#include <util/utility.hpp>
+#include <scaluq/state/state_vector_batched.hpp>
 
 #include "../test_environment.hpp"
 #include "../util/util.hpp"
@@ -16,7 +13,7 @@ TEST(StateVectorBatchedTest, HaarRandomStateNorm) {
     const std::uint64_t batch_size = 10, n_qubits = 3;
     const auto states = StateVectorBatched<double>::Haar_random_state(batch_size, n_qubits, false);
     auto norms = states.get_squared_norm();
-    for (auto x : norms) ASSERT_NEAR(x, 1., eps);
+    for (auto x : norms) ASSERT_NEAR(x, 1., eps<double>);
 }
 
 TEST(StateVectorBatchedTest, LoadAndAmplitues) {
@@ -82,7 +79,7 @@ TEST(StateVectorBatchedTest, ZeroProbs) {
         auto zero_probs = states.get_zero_probability(i);
         for (std::uint64_t b = 0; b < batch_size; ++b) {
             auto state = states.get_state_vector_at(b);
-            ASSERT_NEAR(zero_probs[b], state.get_zero_probability(i), eps);
+            ASSERT_NEAR(zero_probs[b], state.get_zero_probability(i), eps<double>);
         }
     }
 }
@@ -100,7 +97,7 @@ TEST(StateVectorBatchedTest, MarginalProbs) {
         auto mg_probs = states.get_marginal_probability(targets);
         for (std::uint64_t b = 0; b < batch_size; ++b) {
             auto state = states.get_state_vector_at(b);
-            ASSERT_NEAR(mg_probs[b], state.get_marginal_probability(targets), eps);
+            ASSERT_NEAR(mg_probs[b], state.get_marginal_probability(targets), eps<double>);
         }
     }
 }
@@ -112,7 +109,7 @@ TEST(StateVectorBatchedTest, Entropy) {
     auto entropies = states.get_entropy();
     for (std::uint64_t b = 0; b < batch_size; ++b) {
         auto state = states.get_state_vector_at(b);
-        ASSERT_NEAR(entropies[b], state.get_entropy(), eps);
+        ASSERT_NEAR(entropies[b], state.get_entropy(), eps<double>);
     }
 }
 

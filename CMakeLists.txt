@@ -12,10 +12,10 @@ if(NOT DEFINED SCALUQ_USE_CUDA)
     set(SCALUQ_USE_CUDA OFF)
 endif(NOT DEFINED SCALUQ_USE_CUDA)
 if(NOT DEFINED SCALUQ_USE_TEST)
-    set(SCALUQ_USE_TEST ON)
+    set(SCALUQ_USE_TEST OFF)
 endif(NOT DEFINED SCALUQ_USE_TEST)
 if(NOT DEFINED SCALUQ_USE_EXE)
-    set(SCALUQ_USE_EXE ON)
+    set(SCALUQ_USE_EXE OFF)
 endif(NOT DEFINED SCALUQ_USE_EXE)
 
 message(STATUS "SKBUILD = ${SKBUILD}")
@@ -135,7 +135,7 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
 endif()
 
 ### Add subdirectories ###
-add_subdirectory(scaluq)
+add_subdirectory(src)
 if(SKBUILD)
     add_subdirectory(python)
 endif(SKBUILD)

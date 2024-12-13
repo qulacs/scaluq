@@ -1,13 +1,10 @@
-#include "circuit/circuit.hpp"
-
 #include <gtest/gtest.h>
 
-#include <Eigen/Core>
-#include <numbers>
+#include <scaluq/circuit/circuit.hpp>
+#include <scaluq/gate/gate_factory.hpp>
+#include <scaluq/gate/param_gate_factory.hpp>
 
 #include "../util/util.hpp"
-#include "gate/gate_factory.hpp"
-#include "util/random.hpp"
 
 using namespace scaluq;
 

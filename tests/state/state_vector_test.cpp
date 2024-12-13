@@ -1,9 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <Eigen/Core>
-#include <cmath>
-#include <state/state_vector.hpp>
-#include <util/utility.hpp>
+#include <scaluq/state/state_vector.hpp>
 
 #include "../test_environment.hpp"
 #include "../util/util.hpp"
@@ -17,14 +14,14 @@ TEST(StateVectorTest, HaarRandomStateNorm) {
         const int n_tries = 20;
         for (int n = 1; n <= n_tries; n++) {
             const auto state = StateVector<double>::Haar_random_state(n);
-            ASSERT_NEAR(state.get_squared_norm(), 1., eps);
+            ASSERT_NEAR(state.get_squared_norm(), 1., eps<double>);
         }
     }
     {
         const int n_tries = 20;
         for (int n = 1; n <= n_tries; n++) {
             const auto state = StateVector<float>::Haar_random_state(n);
-            ASSERT_NEAR(state.get_squared_norm(), 1., eps_f);
+            ASSERT_NEAR(state.get_squared_norm(), 1., eps<float>);
         }
     }
 }
@@ -33,8 +30,8 @@ TEST(StateVectorTest, OperationAtIndex) {
     auto state = StateVector<double>::Haar_random_state(10);
     for (std::uint64_t i = 0; i < state.dim(); ++i) {
         state.set_amplitude_at(i, 1);
-        ASSERT_NEAR(state.get_amplitude_at(i).real(), 1., eps);
-        ASSERT_NEAR(state.get_amplitude_at(i).imag(), 0., eps);
+        ASSERT_NEAR(state.get_amplitude_at(i).real(), 1., eps<double>);
+        ASSERT_NEAR(state.get_amplitude_at(i).imag(), 0., eps<double>);
     }
 }
 
@@ -104,8 +101,8 @@ TEST(StateVectorTest, AddState) {
 
     for (std::uint64_t i = 0; i < state1.dim(); ++i) {
         CComplex res = new_vec[i], val = (CComplex)vec1[i] + (CComplex)vec2[i];
-        ASSERT_NEAR(res.real(), val.real(), eps);
-        ASSERT_NEAR(res.imag(), val.imag(), eps);
+        ASSERT_NEAR(res.real(), val.real(), eps<double>);
+        ASSERT_NEAR(res.imag(), val.imag(), eps<double>);
     }
 }
 
@@ -122,8 +119,8 @@ TEST(StateVectorTest, AddStateWithCoef) {
 
     for (std::uint64_t i = 0; i < state1.dim(); ++i) {
         CComplex res = new_vec[i], val = (CComplex)vec1[i] + coef * (CComplex)vec2[i];
-        ASSERT_NEAR(res.real(), val.real(), eps);
-        ASSERT_NEAR(res.imag(), val.imag(), eps);
+        ASSERT_NEAR(res.real(), val.real(), eps<double>);
+        ASSERT_NEAR(res.imag(), val.imag(), eps<double>);
     }
 }
 
@@ -138,8 +135,8 @@ TEST(StateVectorTest, MultiplyCoef) {
 
     for (std::uint64_t i = 0; i < state.dim(); ++i) {
         CComplex res = new_vec[i], val = coef * (CComplex)vec[i];
-        ASSERT_NEAR(res.real(), val.real(), eps);
-        ASSERT_NEAR(res.imag(), val.imag(), eps);
+        ASSERT_NEAR(res.real(), val.real(), eps<double>);
+        ASSERT_NEAR(res.imag(), val.imag(), eps<double>);
     }
 }
 
@@ -153,10 +150,10 @@ TEST(StateVectorTest, GetZeroProbability) {
         state.add_state_vector_with_coef(std::sqrt(i), tmp_state);
     }
     state.normalize();
-    ASSERT_NEAR(state.get_zero_probability(0), 30.0 / 55.0, eps);
-    ASSERT_NEAR(state.get_zero_probability(1), 27.0 / 55.0, eps);
-    ASSERT_NEAR(state.get_zero_probability(2), 33.0 / 55.0, eps);
-    ASSERT_NEAR(state.get_zero_probability(3), 28.0 / 55.0, eps);
+    ASSERT_NEAR(state.get_zero_probability(0), 30.0 / 55.0, eps<double>);
+    ASSERT_NEAR(state.get_zero_probability(1), 27.0 / 55.0, eps<double>);
+    ASSERT_NEAR(state.get_zero_probability(2), 33.0 / 55.0, eps<double>);
+    ASSERT_NEAR(state.get_zero_probability(3), 28.0 / 55.0, eps<double>);
 }
 
 TEST(StateVectorTest, EntropyCalculation) {
@@ -168,7 +165,7 @@ TEST(StateVectorTest, EntropyCalculation) {
     for (std::uint64_t rep = 0; rep < max_repeat; ++rep) {
         state = StateVector<double>::Haar_random_state(n);
         auto state_cp = state.get_amplitudes();
-        ASSERT_NEAR(state.get_squared_norm(), 1, eps);
+        ASSERT_NEAR(state.get_squared_norm(), 1, eps<double>);
         Eigen::VectorXcd test_state(dim);
         for (std::uint64_t i = 0; i < dim; ++i) test_state[i] = (CComplex)state_cp[i];
 
@@ -177,9 +174,9 @@ TEST(StateVectorTest, EntropyCalculation) {
             for (std::uint64_t ind = 0; ind < dim; ++ind) {
                 CComplex z = test_state[ind];
                 double prob = z.real() * z.real() + z.imag() * z.imag();
-                if (prob > eps) ent += -prob * std::log2(prob);
+                if (prob > eps<double>) ent += -prob * std::log2(prob);
             }
-            ASSERT_NEAR(ent, state.get_entropy(), eps);
+            ASSERT_NEAR(ent, state.get_entropy(), eps<double>);
         }
     }
 }
@@ -193,26 +190,26 @@ TEST(StateVectorTest, GetMarginalProbability) {
     for (std::uint64_t i = 0; i < dim; ++i) {
         probs.push_back(internal::squared_norm(state_cp[i]));
     }
-    ASSERT_NEAR(state.get_marginal_probability({0, 0}), probs[0], eps);
-    ASSERT_NEAR(state.get_marginal_probability({1, 0}), probs[1], eps);
-    ASSERT_NEAR(state.get_marginal_probability({0, 1}), probs[2], eps);
-    ASSERT_NEAR(state.get_marginal_probability({1, 1}), probs[3], eps);
+    ASSERT_NEAR(state.get_marginal_probability({0, 0}), probs[0], eps<double>);
+    ASSERT_NEAR(state.get_marginal_probability({1, 0}), probs[1], eps<double>);
+    ASSERT_NEAR(state.get_marginal_probability({0, 1}), probs[2], eps<double>);
+    ASSERT_NEAR(state.get_marginal_probability({1, 1}), probs[3], eps<double>);
     ASSERT_NEAR(state.get_marginal_probability({0, StateVector<double>::UNMEASURED}),
                 probs[0] + probs[2],
-                eps);
+                eps<double>);
     ASSERT_NEAR(state.get_marginal_probability({1, StateVector<double>::UNMEASURED}),
                 probs[1] + probs[3],
-                eps);
+                eps<double>);
     ASSERT_NEAR(state.get_marginal_probability({StateVector<double>::UNMEASURED, 0}),
                 probs[0] + probs[1],
-                eps);
+                eps<double>);
     ASSERT_NEAR(state.get_marginal_probability({StateVector<double>::UNMEASURED, 1}),
                 probs[2] + probs[3],
-                eps);
+                eps<double>);
     ASSERT_NEAR(state.get_marginal_probability(
                     {StateVector<double>::UNMEASURED, StateVector<double>::UNMEASURED}),
                 1.,
-                eps);
+                eps<double>);
 }
 
 TEST(StateVectorTest, SamplingSuperpositionState) {

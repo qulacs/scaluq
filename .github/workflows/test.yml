@@ -22,7 +22,6 @@ jobs:
         os: ["linux", "macos"]
         architecture: ["x86_64", "arm64"]
         device: ["cpu", "cuda"]
-        python-version: ["3.10"]
         exclude:
           - os: "macos"
             device: "cuda"
@@ -66,9 +65,9 @@ jobs:
       
       - name: Install CUDA toolkit
         if: ${{ matrix.device == 'cuda' }}
-        uses: Jimver/cuda-toolkit@v0.2.11
+        uses: Jimver/cuda-toolkit@v0.2.19
         with:
-          cuda: "12.2.0"
+          cuda: "12.6.1"
           method: "network"
       
       - name: Show installed Compiler version
@@ -83,9 +82,6 @@ jobs:
       - name: Install scaluq for Ubuntu
         run: ./script/build_gcc.sh
 
-      - name: Install scaluq Python module
-        run: pip install .[ci]
-
       - name: Test in Ubuntu
         if: ${{ matrix.device == 'cpu' }} # currently GPU runner is not supported
         run: |
@@ -95,9 +91,3 @@ jobs:
             NPROC=$(nproc)
           fi
           OMP_PROC_BIND=false ninja test -C build -j ${NPROC}
-      
-      - name: Test if stub exists
-        if: ${{ matrix.device == 'cpu' }} # currently GPU runner is not supported
-        run: |
-          echo -e "from scaluq import StateVector\nfrom scaluq.gate import I" > /tmp/stub_sample.py
-          mypy /tmp/stub_sample.py

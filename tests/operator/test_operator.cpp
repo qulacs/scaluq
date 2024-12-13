@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <operator/operator.hpp>
+#include <scaluq/operator/operator.hpp>
 
 #include "../test_environment.hpp"
 #include "../util/util.hpp"
@@ -60,9 +60,9 @@ TEST(OperatorTest, CheckExpectationValue) {
 
         Complex<double> res = rand_observable.get_expectation_value(state);
         Complex<double> test_res = (test_state.adjoint() * test_rand_observable * test_state)(0, 0);
-        ASSERT_NEAR(test_res.real(), res.real(), eps);
-        ASSERT_NEAR(res.imag(), 0, eps);
-        ASSERT_NEAR(test_res.imag(), 0, eps);
+        ASSERT_NEAR(test_res.real(), res.real(), eps<double>);
+        ASSERT_NEAR(res.imag(), 0, eps<double>);
+        ASSERT_NEAR(test_res.imag(), 0, eps<double>);
     }
 }
 
@@ -87,8 +87,8 @@ TEST(OperatorTest, CheckTransitionAmplitude) {
         Complex<double> res = rand_observable.get_transition_amplitude(state_bra, state_ket);
         Complex<double> test_res =
             (test_state_bra.adjoint() * test_rand_observable * test_state_ket)(0, 0);
-        ASSERT_NEAR(test_res.real(), res.real(), eps);
-        ASSERT_NEAR(test_res.imag(), res.imag(), eps);
+        ASSERT_NEAR(test_res.real(), res.real(), eps<double>);
+        ASSERT_NEAR(test_res.imag(), res.imag(), eps<double>);
     }
 }
 
@@ -104,7 +104,7 @@ TEST(OperatorTest, AddTest) {
         auto exp1 = op1.get_expectation_value(state);
         auto exp2 = op2.get_expectation_value(state);
         auto exp = op.get_expectation_value(state);
-        ASSERT_NEAR(Kokkos::abs(exp1 + exp2 - exp), 0, eps);
+        ASSERT_NEAR(Kokkos::abs(exp1 + exp2 - exp), 0, eps<double>);
     }
 }
 
@@ -120,7 +120,7 @@ TEST(OperatorTest, SubTest) {
         auto exp1 = op1.get_expectation_value(state);
         auto exp2 = op2.get_expectation_value(state);
         auto exp = op.get_expectation_value(state);
-        ASSERT_NEAR(Kokkos::abs(exp1 - exp2 - exp), 0, eps);
+        ASSERT_NEAR(Kokkos::abs(exp1 - exp2 - exp), 0, eps<double>);
     }
 }
 
@@ -135,7 +135,7 @@ TEST(OperatorTest, MultiCoefTest) {
         auto state = StateVector<double>::Haar_random_state(n);
         auto exp1 = op1.get_expectation_value(state);
         auto exp = op.get_expectation_value(state);
-        ASSERT_NEAR(Kokkos::abs(exp1 * coef - exp), 0, eps);
+        ASSERT_NEAR(Kokkos::abs(exp1 * coef - exp), 0, eps<double>);
     }
 }
 
@@ -186,6 +186,6 @@ TEST(OperatorTest, Optimize) {
     ASSERT_EQ(expected.size(), test.size());
     for (std::uint64_t i = 0; i < expected.size(); i++) {
         ASSERT_EQ(expected[i].first, test[i].first);
-        ASSERT_NEAR(Kokkos::abs(expected[i].second - test[i].second), 0, eps);
+        ASSERT_NEAR(Kokkos::abs(expected[i].second - test[i].second), 0, eps<double>);
     }
 }
