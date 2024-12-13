@@ -31,8 +31,8 @@ NAMESPACE_BEGIN(NB_NAMESPACE)
 NAMESPACE_BEGIN(detail)
 
 template <typename T>
-struct type_caster<Kokkos::complex<T>> {
-    NB_TYPE_CASTER(Kokkos::complex<T>, const_name("complex"))
+struct type_caster<scaluq::Complex<T>> {
+    NB_TYPE_CASTER(scaluq::Complex<T>, const_name("complex"))
 
     template <bool Recursive = true>
     bool from_python(handle src, uint8_t flags, cleanup_list* cleanup) noexcept {
@@ -40,7 +40,7 @@ struct type_caster<Kokkos::complex<T>> {
         (void)cleanup;
 
         if (PyComplex_Check(src.ptr())) {
-            value = Kokkos::complex<T>((T)PyComplex_RealAsDouble(src.ptr()),
+            value = scaluq::Complex<T>((T)PyComplex_RealAsDouble(src.ptr()),
                                        (T)PyComplex_ImagAsDouble(src.ptr()));
             return true;
         }
@@ -59,7 +59,7 @@ struct type_caster<Kokkos::complex<T>> {
 
         make_caster<T> caster;
         if (caster.from_python(src, flags, cleanup)) {
-            value = Kokkos::complex<T>(caster.operator cast_t<T>());
+            value = scaluq::Complex<T>(caster.operator cast_t<T>());
             return true;
         }
 
