@@ -15,35 +15,35 @@ public:
 };
 }  // namespace internal
 namespace gate {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 inline ParamGate<Fp> ParamRX(std::uint64_t target,
                              Fp param_coef = 1.,
                              const std::vector<std::uint64_t>& controls = {}) {
     return internal::ParamGateFactory::create_gate<internal::ParamRXGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), param_coef);
 }
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 inline ParamGate<Fp> ParamRY(std::uint64_t target,
                              Fp param_coef = 1.,
                              const std::vector<std::uint64_t>& controls = {}) {
     return internal::ParamGateFactory::create_gate<internal::ParamRYGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), param_coef);
 }
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 inline ParamGate<Fp> ParamRZ(std::uint64_t target,
                              Fp param_coef = 1.,
                              const std::vector<std::uint64_t>& controls = {}) {
     return internal::ParamGateFactory::create_gate<internal::ParamRZGateImpl<Fp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), param_coef);
 }
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 inline ParamGate<Fp> ParamPauliRotation(const PauliOperator<Fp>& pauli,
                                         Fp param_coef = 1.,
                                         const std::vector<std::uint64_t>& controls = {}) {
     return internal::ParamGateFactory::create_gate<internal::ParamPauliRotationGateImpl<Fp>>(
         internal::vector_to_mask(controls), pauli, param_coef);
 }
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 inline ParamGate<Fp> ParamProbablistic(
     const std::vector<Fp>& distribution,
     const std::vector<std::variant<Gate<Fp>, ParamGate<Fp>>>& gate_list) {
@@ -54,7 +54,7 @@ inline ParamGate<Fp> ParamProbablistic(
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_gate_param_gate_factory(nb::module_& mgate) {
     mgate.def("ParamRX",
               &gate::ParamRX<Fp>,

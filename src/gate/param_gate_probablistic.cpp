@@ -5,7 +5,7 @@
 namespace scaluq::internal {
 FLOAT(Fp)
 ParamProbablisticGateImpl<Fp>::ParamProbablisticGateImpl(
-    const std::vector<Fp>& distribution,
+    const std::vector<double>& distribution,
     const std::vector<std::variant<Gate<Fp>, ParamGate<Fp>>>& gate_list)
     : ParamGateBase<Fp>(0, 0), _distribution(distribution), _gate_list(gate_list) {
     std::uint64_t n = distribution.size();
@@ -35,7 +35,7 @@ FLOAT(Fp)
 void ParamProbablisticGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector,
                                                          Fp param) const {
     Random random;
-    Fp r = static_cast<Fp>(random.uniform());
+    double r = random.uniform();
     std::uint64_t i = std::distance(_cumlative_distribution.begin(),
                                     std::ranges::upper_bound(_cumlative_distribution, r)) -
                       1;

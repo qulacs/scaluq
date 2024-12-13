@@ -8,18 +8,18 @@
 
 namespace scaluq {
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamProbablisticGateImpl : public ParamGateBase<Fp> {
     using EitherGate = std::variant<Gate<Fp>, ParamGate<Fp>>;
-    std::vector<Fp> _distribution;
-    std::vector<Fp> _cumlative_distribution;
+    std::vector<double> _distribution;
+    std::vector<double> _cumlative_distribution;
     std::vector<EitherGate> _gate_list;
 
 public:
-    ParamProbablisticGateImpl(const std::vector<Fp>& distribution,
+    ParamProbablisticGateImpl(const std::vector<double>& distribution,
                               const std::vector<std::variant<Gate<Fp>, ParamGate<Fp>>>& gate_list);
     const std::vector<EitherGate>& gate_list() const { return _gate_list; }
-    const std::vector<Fp>& distribution() const { return _distribution; }
+    const std::vector<double>& distribution() const { return _distribution; }
 
     std::vector<std::uint64_t> target_qubit_list() const override {
         throw std::runtime_error(
@@ -65,12 +65,12 @@ public:
 };
 }  // namespace internal
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using ParamProbablisticGate = internal::ParamGatePtr<internal::ParamProbablisticGateImpl<Fp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_gate_param_gate_probablistic_hpp(nb::module_& m) {
     DEF_PARAM_GATE(
         ParamProbablisticGate,

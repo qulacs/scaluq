@@ -9,7 +9,7 @@
 namespace scaluq {
 namespace internal {
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class PauliGateImpl : public GateBase<Fp> {
     const PauliOperator<Fp> _pauli;
 
@@ -31,7 +31,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class PauliRotationGateImpl : public GateBase<Fp> {
     const PauliOperator<Fp> _pauli;
     const Fp _angle;
@@ -59,14 +59,14 @@ public:
 };
 }  // namespace internal
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using PauliGate = internal::GatePtr<internal::PauliGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl<Fp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_gate_gate_pauli_hpp(nb::module_& m) {
     DEF_GATE(PauliGate,
              Fp,

@@ -46,5 +46,17 @@ int main() {
         std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(ed - st).count()
                   << std::endl;
     }
+    {
+        using Fp = scaluq::BF16;
+        scaluq::StateVector<Fp> state(n_qubits);
+        auto st = std::chrono::system_clock::now();
+        for (int i = 0; i < 10000; i++) {
+            auto x_gate = scaluq::gate::X<Fp>(dist(mt));
+            x_gate->update_quantum_state(state);
+        }
+        auto ed = std::chrono::system_clock::now();
+        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(ed - st).count()
+                  << std::endl;
+    }
     Kokkos::finalize();
 }

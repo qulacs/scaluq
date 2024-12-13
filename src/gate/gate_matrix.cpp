@@ -62,7 +62,8 @@ std::shared_ptr<const GateBase<Fp>> DenseMatrixGateImpl<Fp>::get_inverse() const
     if (_is_unitary) {
         inv_eigen = mat_eigen.adjoint();
     } else {
-        inv_eigen = mat_eigen.inverse().eval();
+        // inv_eigen = mat_eigen.inverse().eval();
+        throw std::runtime_error("inverse of non-unitary matrix gate is currently not available.");
     }
     return std::make_shared<const DenseMatrixGateImpl>(
         this->_target_mask, this->_control_mask, inv_eigen, _is_unitary);
@@ -100,6 +101,8 @@ SparseMatrixGateImpl<Fp>::SparseMatrixGateImpl(std::uint64_t target_mask,
       num_nnz(mat.nonZeros()) {}
 FLOAT(Fp)
 std::shared_ptr<const GateBase<Fp>> SparseMatrixGateImpl<Fp>::get_inverse() const {
+    throw std::runtime_error("inverse of sparse matrix gate is currently not available.");
+    /*
     Kokkos::View<SparseValue<Fp>*, Kokkos::HostSpace> vec_h("h_view", num_nnz);
     Kokkos::deep_copy(vec_h, _matrix._values);
     // conversion to Eigen matrix (COO format)
@@ -109,6 +112,7 @@ std::shared_ptr<const GateBase<Fp>> SparseMatrixGateImpl<Fp>::get_inverse() cons
     }
     return std::make_shared<const DenseMatrixGateImpl<Fp>>(
         this->_target_mask, this->_control_mask, eigen_matrix.inverse().eval());
+        */
 }
 FLOAT(Fp)
 Matrix<Fp> SparseMatrixGateImpl<Fp>::get_matrix_internal() const {

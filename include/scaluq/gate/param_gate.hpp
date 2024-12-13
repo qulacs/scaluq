@@ -7,18 +7,18 @@ namespace scaluq {
 namespace internal {
 // forward declarations
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamGateBase;
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamRXGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamRYGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamRZGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamPauliRotationGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamProbablisticGateImpl;
 
 }  // namespace internal
@@ -33,7 +33,7 @@ enum class ParamGateType {
     Error
 };
 
-template <typename T, std::floating_point Fp>
+template <typename T, FloatingPoint Fp>
 constexpr ParamGateType get_param_gate_type() {
     using TWithoutConst = std::remove_cv_t<T>;
     if constexpr (std::is_same_v<TWithoutConst, internal::ParamGateBase<Fp>>)
@@ -53,7 +53,7 @@ constexpr ParamGateType get_param_gate_type() {
 }
 
 namespace internal {
-template <std::floating_point _FloatType>
+template <FloatingPoint _FloatType>
 class ParamGateBase {
 public:
     using Fp = _FloatType;
@@ -162,7 +162,7 @@ public:
 };
 }  // namespace internal
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using ParamGate = internal::ParamGatePtr<internal::ParamGateBase<Fp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
@@ -218,7 +218,7 @@ namespace internal {
             },                                                                                    \
             "Get matrix representation of the gate with holding the parameter.")
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 nb::class_<ParamGate<Fp>> param_gate_base_def;
 
 #define DEF_PARAM_GATE(PARAM_GATE_TYPE, FLOAT, DESCRIPTION)                                     \
@@ -239,7 +239,7 @@ void bind_gate_param_gate_hpp_without_precision(nb::module_& m) {
         .value("ParamPauliRotation", ParamGateType::ParamPauliRotation);
 }
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_gate_param_gate_hpp(nb::module_& m) {
     param_gate_base_def<Fp> =
         DEF_PARAM_GATE_BASE(

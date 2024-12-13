@@ -8,68 +8,68 @@ namespace scaluq {
 namespace internal {
 // forward declarations
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class GateBase;
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class IGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class GlobalPhaseGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class XGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class YGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ZGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class HGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SdagGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class TGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class TdagGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SqrtXGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SqrtXdagGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SqrtYGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SqrtYdagGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class P0GateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class P1GateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class RXGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class RYGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class RZGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class U1GateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class U2GateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class U3GateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class OneTargetMatrixGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SwapGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class TwoTargetMatrixGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class PauliGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class PauliRotationGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ProbablisticGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SparseMatrixGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class DenseMatrixGateImpl;
 
 }  // namespace internal
@@ -108,7 +108,7 @@ enum class GateType {
     Probablistic
 };
 
-template <typename T, std::floating_point S>
+template <typename T, FloatingPoint S>
 constexpr GateType get_gate_type() {
     using TWithoutConst = std::remove_cv_t<T>;
     if constexpr (std::is_same_v<TWithoutConst, internal::GateBase<S>>)
@@ -179,7 +179,7 @@ constexpr GateType get_gate_type() {
 
 namespace internal {
 // GateBase テンプレートクラス
-template <std::floating_point _FloatType>
+template <FloatingPoint _FloatType>
 class GateBase : public std::enable_shared_from_this<GateBase<_FloatType>> {
 public:
     using Fp = _FloatType;
@@ -287,7 +287,7 @@ public:
 
 }  // namespace internal
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using Gate = internal::GatePtr<internal::GateBase<Fp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
@@ -342,7 +342,7 @@ namespace internal {
             [](const GATE_TYPE<FLOAT>& gate) { return gate->to_string(""); },                \
             "Get string representation of the gate.")
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 nb::class_<Gate<Fp>> gate_base_def;
 
 #define DEF_GATE(GATE_TYPE, FLOAT, DESCRIPTION)                                                 \
@@ -386,7 +386,7 @@ void bind_gate_gate_hpp_without_precision(nb::module_& m) {
         .value("PauliRotation", GateType::PauliRotation);
 }
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_gate_gate_hpp(nb::module_& m) {
     gate_base_def<Fp> =
         DEF_GATE_BASE(Gate,

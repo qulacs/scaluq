@@ -9,10 +9,10 @@
 
 namespace scaluq {
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class Operator;
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class PauliOperator {
     friend class Operator<Fp>;
 
@@ -100,7 +100,7 @@ public:
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_operator_pauli_operator_hpp(nb::module_& m) {
     nb::enum_<typename PauliOperator<Fp>::PauliID>(m, "PauliID")
         .value("I", PauliOperator<Fp>::I)

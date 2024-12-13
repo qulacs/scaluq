@@ -16,11 +16,11 @@ namespace scaluq {
 using HostSpace = Kokkos::HostSpace;
 using DefaultSpace = Kokkos::DefaultExecutionSpace;
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class StateVector {
     std::uint64_t _n_qubits;
     std::uint64_t _dim;
-    using ComplexType = Kokkos::complex<Fp>;
+    using ComplexType = scaluq::Complex<Fp>;
 
 public:
     static constexpr std::uint64_t UNMEASURED = 2;
@@ -88,7 +88,7 @@ public:
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_state_state_vector_hpp(nb::module_& m) {
     nb::class_<StateVector<Fp>>(m,
                                 "StateVector",

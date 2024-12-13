@@ -4,7 +4,7 @@
 
 namespace scaluq::internal {
 FLOAT(Fp)
-ProbablisticGateImpl<Fp>::ProbablisticGateImpl(const std::vector<Fp>& distribution,
+ProbablisticGateImpl<Fp>::ProbablisticGateImpl(const std::vector<double>& distribution,
                                                const std::vector<Gate<Fp>>& gate_list)
     : GateBase<Fp>(0, 0), _distribution(distribution), _gate_list(gate_list) {
     std::uint64_t n = distribution.size();
@@ -32,7 +32,7 @@ std::shared_ptr<const GateBase<Fp>> ProbablisticGateImpl<Fp>::get_inverse() cons
 FLOAT(Fp)
 void ProbablisticGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     Random random;
-    Fp r = static_cast<Fp>(random.uniform());
+    double r = random.uniform();
     std::uint64_t i = std::distance(_cumlative_distribution.begin(),
                                     std::ranges::upper_bound(_cumlative_distribution, r)) -
                       1;

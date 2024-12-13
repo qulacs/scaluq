@@ -9,7 +9,7 @@
 
 namespace scaluq {
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class Operator {
 public:
     explicit Operator(std::uint64_t n_qubits) : _n_qubits(n_qubits) {}
@@ -49,7 +49,7 @@ public:
     Operator& operator*=(Complex<Fp> coef);
     Operator operator*(Complex<Fp> coef) const { return Operator(*this) *= coef; }
     inline Operator operator+() const { return *this; }
-    Operator operator-() const { return *this * -1; }
+    Operator operator-() const { return *this * -Fp{1}; }
     Operator& operator+=(const Operator& target);
     Operator operator+(const Operator& target) const { return Operator(*this) += target; }
     Operator& operator-=(const Operator& target) { return *this += -target; }
@@ -58,7 +58,7 @@ public:
     Operator& operator*=(const Operator& target) { return *this = *this * target; }
     Operator& operator+=(const PauliOperator<Fp>& pauli);
     Operator operator+(const PauliOperator<Fp>& pauli) const { return Operator(*this) += pauli; }
-    Operator& operator-=(const PauliOperator<Fp>& pauli) { return *this += pauli * -1; }
+    Operator& operator-=(const PauliOperator<Fp>& pauli) { return *this += pauli * -Fp{1}; }
     Operator operator-(const PauliOperator<Fp>& pauli) const { return Operator(*this) -= pauli; }
     Operator& operator*=(const PauliOperator<Fp>& pauli);
     Operator operator*(const PauliOperator<Fp>& pauli) const { return Operator(*this) *= pauli; }
@@ -71,7 +71,7 @@ private:
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_operator_operator_hpp(nb::module_& m) {
     nb::class_<Operator<Fp>>(m, "Operator", "General quantum operator class.")
         .def(nb::init<std::uint64_t>(),

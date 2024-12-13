@@ -1,5 +1,6 @@
 #include <scaluq/gate/gate_standard.hpp>
 
+#include "../util/math.hpp"
 #include "../util/template.hpp"
 #include "update_ops.hpp"
 
@@ -23,7 +24,7 @@ FLOAT_DECLARE_CLASS(IGateImpl)
 
 FLOAT(Fp)
 ComplexMatrix<Fp> GlobalPhaseGateImpl<Fp>::get_matrix() const {
-    return internal::ComplexMatrix<Fp>::Identity(1, 1) * std::exp(std::complex<Fp>(0, _phase));
+    return internal::ComplexMatrix<Fp>::Identity(1, 1) * internal::exp(Complex<Fp>(Fp{0}, _phase));
 }
 FLOAT(Fp)
 void GlobalPhaseGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
@@ -43,7 +44,7 @@ FLOAT_DECLARE_CLASS(GlobalPhaseGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> XGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << 0, 1, 1, 0;
+    mat << Fp{0}, Fp{1}, Fp{1}, Fp{0};
     return mat;
 }
 FLOAT(Fp)
@@ -63,7 +64,7 @@ FLOAT_DECLARE_CLASS(XGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> YGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << 0, StdComplex<Fp>(0, -1), StdComplex<Fp>(0, 1), 0;
+    mat << Fp{0}, StdComplex<Fp>(Fp{0}, -Fp{1}), StdComplex<Fp>(Fp{0}, Fp{1}), Fp{0};
     return mat;
 }
 FLOAT(Fp)
@@ -83,7 +84,7 @@ FLOAT_DECLARE_CLASS(YGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> ZGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << 1, 0, 0, -1;
+    mat << Fp{1}, Fp{0}, Fp{0}, -Fp{1};
     return mat;
 }
 FLOAT(Fp)
@@ -103,7 +104,7 @@ FLOAT_DECLARE_CLASS(ZGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> HGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << 1, 1, 1, -1;
+    mat << Fp{1}, Fp{1}, Fp{1}, -Fp{1};
     mat /= (Fp)Kokkos::numbers::sqrt2;
     return mat;
 }
@@ -124,7 +125,7 @@ FLOAT_DECLARE_CLASS(HGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> SGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << 1, 0, 0, StdComplex<Fp>(0, 1);
+    mat << Fp{1}, Fp{0}, Fp{0}, StdComplex<Fp>(0, 1);
     return mat;
 }
 FLOAT(Fp)
@@ -144,7 +145,7 @@ FLOAT_DECLARE_CLASS(SGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> SdagGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << 1, 0, 0, StdComplex<Fp>(0, -1);
+    mat << Fp{1}, Fp{0}, Fp{0}, StdComplex<Fp>(0, -1);
     return mat;
 }
 FLOAT(Fp)
@@ -164,7 +165,7 @@ FLOAT_DECLARE_CLASS(SdagGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> TGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << 1, 0, 0, StdComplex<Fp>(1, 1) / (Fp)Kokkos::numbers::sqrt2;
+    mat << Fp{1}, Fp{0}, Fp{0}, StdComplex<Fp>(1, 1) / (Fp)Kokkos::numbers::sqrt2;
     return mat;
 }
 FLOAT(Fp)
@@ -184,7 +185,7 @@ FLOAT_DECLARE_CLASS(TGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> TdagGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << 1, 0, 0, StdComplex<Fp>(1, -1) / (Fp)Kokkos::numbers::sqrt2;
+    mat << Fp{1}, Fp{0}, Fp{0}, StdComplex<Fp>(1, -1) / (Fp)Kokkos::numbers::sqrt2;
     return mat;
 }
 FLOAT(Fp)
@@ -204,7 +205,7 @@ FLOAT_DECLARE_CLASS(TdagGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> SqrtXGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    constexpr Fp half = static_cast<Fp>(0.5);
+    Fp half = static_cast<Fp>(0.5);
     mat << StdComplex<Fp>(half, half), StdComplex<Fp>(half, -half), StdComplex<Fp>(half, -half),
         StdComplex<Fp>(half, half);
     return mat;
@@ -226,7 +227,7 @@ FLOAT_DECLARE_CLASS(SqrtXGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> SqrtXdagGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    constexpr Fp half = static_cast<Fp>(0.5);
+    Fp half = static_cast<Fp>(0.5);
     mat << StdComplex<Fp>(half, -half), StdComplex<Fp>(half, half), StdComplex<Fp>(half, half),
         StdComplex<Fp>(half, -half);
     return mat;
@@ -248,7 +249,7 @@ FLOAT_DECLARE_CLASS(SqrtXdagGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> SqrtYGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    constexpr Fp half = static_cast<Fp>(0.5);
+    Fp half = static_cast<Fp>(0.5);
     mat << StdComplex<Fp>(half, half), StdComplex<Fp>(-half, -half), StdComplex<Fp>(half, half),
         StdComplex<Fp>(half, half);
     return mat;
@@ -270,7 +271,7 @@ FLOAT_DECLARE_CLASS(SqrtYGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> SqrtYdagGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << 0, StdComplex<Fp>(0, -1), StdComplex<Fp>(0, 1), 0;
+    mat << Fp{0}, StdComplex<Fp>(0, -1), StdComplex<Fp>(0, 1), Fp{0};
     return mat;
 }
 FLOAT(Fp)
@@ -290,7 +291,7 @@ FLOAT_DECLARE_CLASS(SqrtYdagGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> P0GateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << 1, 0, 0, 0;
+    mat << Fp{1}, Fp{0}, Fp{0}, Fp{0};
     return mat;
 }
 FLOAT(Fp)
@@ -310,7 +311,7 @@ FLOAT_DECLARE_CLASS(P0GateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> P1GateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << 0, 0, 0, 1;
+    mat << Fp{0}, Fp{0}, Fp{0}, Fp{1};
     return mat;
 }
 FLOAT(Fp)
@@ -330,8 +331,9 @@ FLOAT_DECLARE_CLASS(P1GateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> RXGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << std::cos(this->_angle / 2), StdComplex<Fp>(0, -std::sin(this->_angle / 2)),
-        StdComplex<Fp>(0, std::sin(this->_angle / 2)), std::cos(this->_angle / 2);
+    Fp half_angle = this->_angle / Fp{2};
+    mat << internal::cos(half_angle), Complex<Fp>(Fp{0}, -internal::sin(half_angle)),
+        Complex<Fp>(Fp{0}, internal::sin(half_angle)), internal::cos(half_angle);
     return mat;
 }
 FLOAT(Fp)
@@ -352,8 +354,9 @@ FLOAT_DECLARE_CLASS(RXGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> RYGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << std::cos(this->_angle / 2), -std::sin(this->_angle / 2), std::sin(this->_angle / 2),
-        std::cos(this->_angle / 2);
+    Fp half_angle = this->_angle / Fp{2};
+    mat << internal::cos(half_angle), -internal::sin(half_angle), internal::sin(half_angle),
+        internal::cos(half_angle);
     return mat;
 }
 FLOAT(Fp)
@@ -374,9 +377,9 @@ FLOAT_DECLARE_CLASS(RYGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> RZGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    constexpr Fp half = static_cast<Fp>(0.5);
-    mat << std::exp(StdComplex<Fp>(0, -half * this->_angle)), 0, 0,
-        std::exp(StdComplex<Fp>(0, half * this->_angle));
+    Fp half = static_cast<Fp>(0.5);
+    mat << internal::exp(Complex<Fp>(Fp{0}, -half * this->_angle)), Fp{0}, Fp{0},
+        internal::exp(Complex<Fp>(Fp{0}, half * this->_angle));
     return mat;
 }
 FLOAT(Fp)
@@ -396,7 +399,7 @@ FLOAT_DECLARE_CLASS(RZGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> U1GateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << 1, 0, 0, std::exp(StdComplex<Fp>(0, _lambda));
+    mat << Fp{1}, Fp{0}, Fp{0}, internal::exp(Complex<Fp>(Fp{0}, _lambda));
     return mat;
 }
 FLOAT(Fp)
@@ -416,11 +419,12 @@ FLOAT_DECLARE_CLASS(U1GateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> U2GateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << std::cos(Kokkos::numbers::pi / 4.),
-        -std::exp(StdComplex<Fp>(0, _lambda)) * std::sin((Fp)Kokkos::numbers::pi / 4),
-        std::exp(StdComplex<Fp>(0, _phi)) * std::sin((Fp)Kokkos::numbers::pi / 4),
-        std::exp(StdComplex<Fp>(0, _phi)) * std::exp(StdComplex<Fp>(0, _lambda)) *
-            std::cos((Fp)Kokkos::numbers::pi / 4);
+    mat << internal::cos(static_cast<Fp>(Kokkos::numbers::pi / 4.)),
+        -internal::exp(Complex<Fp>(Fp{0}, _lambda)) *
+            internal::sin((Fp)Kokkos::numbers::pi / Fp{4}),
+        internal::exp(Complex<Fp>(Fp{0}, _phi)) * internal::sin((Fp)Kokkos::numbers::pi / Fp{4}),
+        internal::exp(Complex<Fp>(Fp{0}, _phi)) * internal::exp(Complex<Fp>(Fp{0}, _lambda)) *
+            internal::cos((Fp)Kokkos::numbers::pi / Fp{4});
     return mat;
 }
 FLOAT(Fp)
@@ -440,10 +444,11 @@ FLOAT_DECLARE_CLASS(U2GateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> U3GateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << std::cos(_theta / 2.), -std::exp(StdComplex<Fp>(0, _lambda)) * std::sin(_theta / 2),
-        std::exp(StdComplex<Fp>(0, _phi)) * std::sin(_theta / 2),
-        std::exp(StdComplex<Fp>(0, _phi)) * std::exp(StdComplex<Fp>(0, _lambda)) *
-            std::cos(_theta / 2);
+    mat << internal::cos(_theta / Fp{2}),
+        -internal::exp(Complex<Fp>(Fp{0}, _lambda)) * internal::sin(_theta / Fp{2}),
+        internal::exp(Complex<Fp>(Fp{0}, _phi)) * internal::sin(_theta / Fp{2}),
+        internal::exp(Complex<Fp>(Fp{0}, _phi)) * internal::exp(Complex<Fp>(Fp{0}, _lambda)) *
+            internal::cos(_theta / Fp{2});
     return mat;
 }
 FLOAT(Fp)
@@ -463,7 +468,8 @@ FLOAT_DECLARE_CLASS(U3GateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> SwapGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat = internal::ComplexMatrix<Fp>::Identity(1 << 2, 1 << 2);
-    mat << 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1;
+    mat << Fp{1}, Fp{0}, Fp{0}, Fp{0}, Fp{0}, Fp{0}, Fp{1}, Fp{0}, Fp{0}, Fp{1}, Fp{0}, Fp{0},
+        Fp{0}, Fp{0}, Fp{0}, Fp{1};
     return mat;
 }
 FLOAT(Fp)

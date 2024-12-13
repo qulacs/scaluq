@@ -7,7 +7,7 @@ namespace scaluq {
 
 namespace internal {
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamRXGateImpl : public ParamGateBase<Fp> {
 public:
     using ParamGateBase<Fp>::ParamGateBase;
@@ -23,7 +23,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamRYGateImpl : public ParamGateBase<Fp> {
 public:
     using ParamGateBase<Fp>::ParamGateBase;
@@ -39,7 +39,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamRZGateImpl : public ParamGateBase<Fp> {
 public:
     using ParamGateBase<Fp>::ParamGateBase;
@@ -57,16 +57,16 @@ public:
 
 }  // namespace internal
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using ParamRXGate = internal::ParamGatePtr<internal::ParamRXGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using ParamRYGate = internal::ParamGatePtr<internal::ParamRYGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl<Fp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_gate_param_gate_standard_hpp(nb::module_& m) {
     DEF_PARAM_GATE(
         ParamRXGate,

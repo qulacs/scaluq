@@ -12,7 +12,7 @@
 namespace scaluq {
 namespace internal {
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class OneTargetMatrixGateImpl : public GateBase<Fp> {
     Matrix2x2<Fp> _matrix;
 
@@ -35,10 +35,10 @@ public:
         return std::make_shared<const OneTargetMatrixGateImpl>(
             this->_target_mask,
             this->_control_mask,
-            std::array<std::array<Complex<Fp>, 2>, 2>{Kokkos::conj(_matrix[0][0]),
-                                                      Kokkos::conj(_matrix[1][0]),
-                                                      Kokkos::conj(_matrix[0][1]),
-                                                      Kokkos::conj(_matrix[1][1])});
+            std::array<std::array<Complex<Fp>, 2>, 2>{scaluq::conj(_matrix[0][0]),
+                                                      scaluq::conj(_matrix[1][0]),
+                                                      scaluq::conj(_matrix[0][1]),
+                                                      scaluq::conj(_matrix[1][1])});
     }
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
@@ -46,7 +46,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class TwoTargetMatrixGateImpl : public GateBase<Fp> {
     Matrix4x4<Fp> _matrix;
 
@@ -76,7 +76,7 @@ public:
         std::array<std::array<Complex<Fp>, 4>, 4> matrix_dag;
         for (std::uint64_t i : std::views::iota(0, 4)) {
             for (std::uint64_t j : std::views::iota(0, 4)) {
-                matrix_dag[i][j] = Kokkos::conj(_matrix[j][i]);
+                matrix_dag[i][j] = scaluq::conj(_matrix[j][i]);
             }
         }
         return std::make_shared<const TwoTargetMatrixGateImpl>(
@@ -89,7 +89,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class DenseMatrixGateImpl : public GateBase<Fp> {
     Matrix<Fp> _matrix;
     bool _is_unitary;
@@ -111,7 +111,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SparseMatrixGateImpl : public GateBase<Fp> {
     SparseMatrix<Fp> _matrix;
     std::uint64_t num_nnz;
@@ -136,18 +136,18 @@ public:
 
 }  // namespace internal
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using OneTargetMatrixGate = internal::GatePtr<internal::OneTargetMatrixGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using TwoTargetMatrixGate = internal::GatePtr<internal::TwoTargetMatrixGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using SparseMatrixGate = internal::GatePtr<internal::SparseMatrixGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using DenseMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl<Fp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_gate_gate_matrix_hpp(nb::module_& m) {
     DEF_GATE(OneTargetMatrixGate, Fp, "Specific class of one-qubit dense matrix gate.")
         .def("matrix", [](const OneTargetMatrixGate<double>& gate) { return gate->matrix(); });

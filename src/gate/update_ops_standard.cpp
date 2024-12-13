@@ -3,7 +3,7 @@
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 Matrix2x2<Fp> get_IBMQ_matrix(Fp _theta, Fp _phi, Fp _lambda) {
     Complex<Fp> exp_val1 = internal::exp(Complex<Fp>(0, _phi));
     Complex<Fp> exp_val2 = internal::exp(Complex<Fp>(0, _lambda));
@@ -15,7 +15,7 @@ Matrix2x2<Fp> get_IBMQ_matrix(Fp _theta, Fp _phi, Fp _lambda) {
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   const Matrix2x2<Fp>& matrix,
@@ -40,7 +40,7 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void two_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   const Matrix4x4<Fp>& matrix,
@@ -80,7 +80,7 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
                                      const DiagonalMatrix2x2<Fp>& diag,
@@ -100,7 +100,7 @@ void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void global_phase_gate(std::uint64_t,
                        std::uint64_t control_mask,
                        Fp angle,
@@ -117,7 +117,7 @@ void global_phase_gate(std::uint64_t,
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void x_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
     Kokkos::parallel_for(
         state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(std::uint64_t it) {
@@ -131,7 +131,7 @@ void x_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<F
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void y_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
     Kokkos::parallel_for(
         state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(std::uint64_t it) {
@@ -147,7 +147,7 @@ void y_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<F
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void z_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
     Kokkos::parallel_for(
         state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(std::uint64_t it) {
@@ -161,7 +161,7 @@ void z_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<F
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void one_target_phase_gate(std::uint64_t target_mask,
                            std::uint64_t control_mask,
                            Complex<Fp> phase,
@@ -180,13 +180,13 @@ void one_target_phase_gate(std::uint64_t target_mask,
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void rx_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              Fp angle,
              StateVector<Fp>& state) {
-    const Fp cosval = std::cos(angle / Fp{2});
-    const Fp sinval = std::sin(angle / Fp{2});
+    const Fp cosval = internal::cos(angle / Fp{2});
+    const Fp sinval = internal::sin(angle / Fp{2});
     Matrix2x2<Fp> matrix = {cosval, Complex<Fp>(0, -sinval), Complex<Fp>(0, -sinval), cosval};
     one_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
 }
@@ -194,13 +194,13 @@ void rx_gate(std::uint64_t target_mask,
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void ry_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              Fp angle,
              StateVector<Fp>& state) {
-    const Fp cosval = std::cos(angle / Fp{2});
-    const Fp sinval = std::sin(angle / Fp{2});
+    const Fp cosval = internal::cos(angle / Fp{2});
+    const Fp sinval = internal::sin(angle / Fp{2});
     Matrix2x2<Fp> matrix = {cosval, -sinval, sinval, cosval};
     one_target_dense_matrix_gate(target_mask, control_mask, matrix, state);
 }
@@ -208,13 +208,13 @@ void ry_gate(std::uint64_t target_mask,
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void rz_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              Fp angle,
              StateVector<Fp>& state) {
-    const Fp cosval = std::cos(angle / Fp{2});
-    const Fp sinval = std::sin(angle / Fp{2});
+    const Fp cosval = internal::cos(angle / Fp{2});
+    const Fp sinval = internal::sin(angle / Fp{2});
     DiagonalMatrix2x2<Fp> diag = {Complex<Fp>(cosval, -sinval), Complex<Fp>(cosval, sinval)};
     one_target_diagonal_matrix_gate(target_mask, control_mask, diag, state);
 }
@@ -222,7 +222,7 @@ void rz_gate(std::uint64_t target_mask,
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void u1_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              Fp lambda,
@@ -242,7 +242,7 @@ void u1_gate(std::uint64_t target_mask,
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void u2_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              Fp phi,
@@ -250,7 +250,7 @@ void u2_gate(std::uint64_t target_mask,
              StateVector<Fp>& state) {
     one_target_dense_matrix_gate(target_mask,
                                  control_mask,
-                                 get_IBMQ_matrix((Fp)Kokkos::numbers::pi / 2, phi, lambda),
+                                 get_IBMQ_matrix((Fp)Kokkos::numbers::pi / Fp{2}, phi, lambda),
                                  state);
 }
 #define FUNC_MACRO(Fp) \
@@ -258,7 +258,7 @@ void u2_gate(std::uint64_t target_mask,
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void u3_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              Fp theta,
@@ -273,7 +273,7 @@ void u3_gate(std::uint64_t target_mask,
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void swap_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
     // '- target' is used for bit manipulation on unsigned type, not for its numerical meaning.
     std::uint64_t lower_target_mask = target_mask & -target_mask;

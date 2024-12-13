@@ -2,7 +2,7 @@
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void none_target_dense_matrix_gate(std::uint64_t control_mask,
                                    const Matrix<Fp>& matrix,
                                    StateVector<Fp>& state) {
@@ -18,7 +18,7 @@ void none_target_dense_matrix_gate(std::uint64_t control_mask,
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void single_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
                                      const Matrix<Fp>& matrix,
@@ -43,7 +43,7 @@ void single_target_dense_matrix_gate(std::uint64_t target_mask,
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void double_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
                                      const Matrix<Fp>& matrix,
@@ -84,7 +84,7 @@ void double_target_dense_matrix_gate(std::uint64_t target_mask,
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void multi_target_dense_matrix_gate(std::uint64_t target_mask,
                                     std::uint64_t control_mask,
                                     const Matrix<Fp>& matrix,
@@ -113,7 +113,7 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
             Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim), [&](std::uint64_t r) {
                 std::uint64_t dst_index =
                     internal::insert_zero_at_mask_positions(r, outer_mask) | basis;
-                Complex<Fp> sum = 0;
+                Complex<Fp> sum = Fp{0};
                 Kokkos::parallel_reduce(
                     Kokkos::ThreadVectorRange(team, matrix_dim),
                     [&](std::uint64_t c, Complex<Fp>& inner_sum) {
@@ -136,7 +136,7 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void dense_matrix_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
                        const Matrix<Fp>& matrix,

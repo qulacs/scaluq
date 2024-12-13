@@ -4,14 +4,14 @@
 
 namespace scaluq::internal {
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t bit_flip_mask,
                  std::uint64_t phase_flip_mask,
                  Complex<Fp> coef,
                  StateVector<Fp>& state_vector);
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t bit_flip_mask,
                           std::uint64_t phase_flip_mask,

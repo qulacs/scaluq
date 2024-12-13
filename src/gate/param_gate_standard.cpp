@@ -1,5 +1,6 @@
 #include <scaluq/gate/param_gate_standard.hpp>
 
+#include "../util/math.hpp"
 #include "../util/template.hpp"
 #include "update_ops.hpp"
 
@@ -7,9 +8,10 @@ namespace scaluq::internal {
 FLOAT(Fp)
 ComplexMatrix<Fp> ParamRXGateImpl<Fp>::get_matrix(Fp param) const {
     Fp angle = this->_pcoef * param;
+    Fp half_angle = angle / Fp{2};
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << std::cos(angle / 2), StdComplex<Fp>(0, -std::sin(angle / 2)),
-        StdComplex<Fp>(0, -std::sin(angle / 2)), std::cos(angle / 2);
+    mat << internal::cos(half_angle), StdComplex<Fp>(0, -internal::sin(half_angle)),
+        StdComplex<Fp>(0, -internal::sin(half_angle)), internal::cos(half_angle);
     return mat;
 }
 FLOAT(Fp)
@@ -29,8 +31,10 @@ FLOAT_DECLARE_CLASS(ParamRXGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> ParamRYGateImpl<Fp>::get_matrix(Fp param) const {
     Fp angle = this->_pcoef * param;
+    Fp half_angle = angle / Fp{2};
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << std::cos(angle / 2), -std::sin(angle / 2), std::sin(angle / 2), std::cos(angle / 2);
+    mat << internal::cos(half_angle), -internal::sin(half_angle), internal::sin(half_angle),
+        internal::cos(half_angle);
     return mat;
 }
 FLOAT(Fp)
@@ -50,8 +54,10 @@ FLOAT_DECLARE_CLASS(ParamRYGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> ParamRZGateImpl<Fp>::get_matrix(Fp param) const {
     Fp angle = this->_pcoef * param;
+    Fp half_angle = angle / Fp{2};
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << std::exp(StdComplex<Fp>(0, -angle / 2)), 0, 0, std::exp(StdComplex<Fp>(0, angle / 2));
+    mat << internal::exp(Complex<Fp>(0, -half_angle)), 0, 0,
+        internal::exp(Complex<Fp>(0, half_angle));
     return mat;
 }
 FLOAT(Fp)

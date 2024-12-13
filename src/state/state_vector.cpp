@@ -40,11 +40,11 @@ StateVector<Fp> StateVector<Fp>::Haar_random_state(std::uint64_t n_qubits, std::
 }
 FLOAT(Fp)
 void StateVector<Fp>::set_zero_state() {
-    Kokkos::deep_copy(_raw, 0);
-    set_amplitude_at(0, 1);
+    Kokkos::deep_copy(_raw, Fp{0});
+    set_amplitude_at(0, Fp{1});
 }
 FLOAT(Fp)
-void StateVector<Fp>::set_zero_norm_state() { Kokkos::deep_copy(_raw, 0); }
+void StateVector<Fp>::set_zero_norm_state() { Kokkos::deep_copy(_raw, {0}); }
 FLOAT(Fp)
 void StateVector<Fp>::set_computational_basis(std::uint64_t basis) {
     if (basis >= _dim) {
@@ -52,8 +52,8 @@ void StateVector<Fp>::set_computational_basis(std::uint64_t basis) {
             "Error: StateVector::set_computational_basis(std::uint64_t): "
             "index of computational basis must be smaller than 2^qubit_count");
     }
-    Kokkos::deep_copy(_raw, 0);
-    set_amplitude_at(basis, 1);
+    Kokkos::deep_copy(_raw, Fp{0});
+    set_amplitude_at(basis, Fp{1});
 }
 FLOAT(Fp)
 void StateVector<Fp>::set_Haar_random_state(std::uint64_t n_qubits, std::uint64_t seed) {
@@ -77,7 +77,7 @@ Fp StateVector<Fp>::get_squared_norm() const {
 }
 FLOAT(Fp)
 void StateVector<Fp>::normalize() {
-    const Fp norm = std::sqrt(this->get_squared_norm());
+    const Fp norm = internal::sqrt(this->get_squared_norm());
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(std::uint64_t it) { this->_raw[it] /= norm; });
     Kokkos::fence();

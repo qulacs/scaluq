@@ -1,7 +1,7 @@
 #pragma once
 #include <scaluq/types.hpp>
 
-#define FLOAT(Fp) template <std::floating_point Fp>
+#define FLOAT(Fp) template <::scaluq::FloatingPoint Fp>
 
 #ifdef SCALUQ_FLOAT16
 #define CALL_MACRO_FLOAT16(MACRO) MACRO(F16)

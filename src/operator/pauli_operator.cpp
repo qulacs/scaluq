@@ -122,7 +122,7 @@ std::string PauliOperator<Fp>::get_pauli_string() const {
 
 FLOAT(Fp)
 PauliOperator<Fp> PauliOperator<Fp>::get_dagger() const {
-    return PauliOperator(_ptr->_target_qubit_list, _ptr->_pauli_id_list, Kokkos::conj(_ptr->_coef));
+    return PauliOperator(_ptr->_target_qubit_list, _ptr->_pauli_id_list, scaluq::conj(_ptr->_coef));
 }
 
 FLOAT(Fp)
@@ -157,7 +157,7 @@ Complex<Fp> PauliOperator<Fp>::get_expectation_value(const StateVector<Fp>& stat
         Kokkos::parallel_reduce(
             state_vector.dim(),
             KOKKOS_LAMBDA(std::uint64_t state_idx, Fp & sum) {
-                Fp tmp = (Kokkos::conj(state_vector._raw[state_idx]) * state_vector._raw[state_idx])
+                Fp tmp = (scaluq::conj(state_vector._raw[state_idx]) * state_vector._raw[state_idx])
                              .real();
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
                 sum += tmp;
@@ -174,8 +174,8 @@ Complex<Fp> PauliOperator<Fp>::get_expectation_value(const StateVector<Fp>& stat
         KOKKOS_LAMBDA(std::uint64_t state_idx, Fp & sum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-            Fp tmp = Kokkos::real(state_vector._raw[basis_0] *
-                                  Kokkos::conj(state_vector._raw[basis_1]) * global_phase * Fp{2});
+            Fp tmp = scaluq::real(state_vector._raw[basis_0] *
+                                  scaluq::conj(state_vector._raw[basis_1]) * global_phase * Fp{2});
             if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
             sum += tmp;
         },
@@ -202,7 +202,7 @@ Complex<Fp> PauliOperator<Fp>::get_transition_amplitude(
         Kokkos::parallel_reduce(
             state_vector_bra.dim(),
             KOKKOS_LAMBDA(std::uint64_t state_idx, Complex<Fp> & sum) {
-                Complex<Fp> tmp = Kokkos::conj(state_vector_bra._raw[state_idx]) *
+                Complex<Fp> tmp = scaluq::conj(state_vector_bra._raw[state_idx]) *
                                   state_vector_ket._raw[state_idx];
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
                 sum += tmp;
@@ -220,10 +220,10 @@ Complex<Fp> PauliOperator<Fp>::get_transition_amplitude(
         KOKKOS_LAMBDA(std::uint64_t state_idx, Complex<Fp> & sum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-            Complex<Fp> tmp1 = Kokkos::conj(state_vector_bra._raw[basis_1]) *
+            Complex<Fp> tmp1 = scaluq::conj(state_vector_bra._raw[basis_1]) *
                                state_vector_ket._raw[basis_0] * global_phase;
             if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
-            Complex<Fp> tmp2 = Kokkos::conj(state_vector_bra._raw[basis_0]) *
+            Complex<Fp> tmp2 = scaluq::conj(state_vector_bra._raw[basis_0]) *
                                state_vector_ket._raw[basis_1] * global_phase;
             if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
             sum += tmp1 + tmp2;
@@ -261,11 +261,11 @@ internal::ComplexMatrix<Fp> PauliOperator<Fp>::get_matrix_ignoring_coef() const 
         flip_mask,
         phase_mask,
         rot90_count);
-    std::vector<StdComplex<Fp>> rot = {1, Complex<Fp>(0, -1), -1, Complex<Fp>(0, 1)};
+    std::vector<StdComplex<Fp>> rot = {Fp{1}, Complex<Fp>(0, -1), -Fp{1}, Complex<Fp>(0, 1)};
     std::uint64_t matrix_dim = 1ULL << _ptr->_pauli_id_list.size();
     internal::ComplexMatrix<Fp> mat = internal::ComplexMatrix<Fp>::Zero(matrix_dim, matrix_dim);
     for (std::uint64_t index = 0; index < matrix_dim; index++) {
-        const StdComplex<Fp> sign = 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
+        const StdComplex<Fp> sign = Fp{1 - 2 * (Kokkos::popcount(index & phase_mask) % 2)};
         mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
     }
     return mat;

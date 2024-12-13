@@ -5,7 +5,7 @@
 
 namespace scaluq {
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class StateVectorBatched {
     std::uint64_t _batch_size;
     std::uint64_t _n_qubits;
@@ -15,7 +15,7 @@ class StateVectorBatched {
     //               "Unsupported execution space tag");
 
 public:
-    Kokkos::View<Kokkos::complex<Fp>**, Kokkos::LayoutRight> _raw;
+    Kokkos::View<Complex<Fp>**, Kokkos::LayoutRight> _raw;
     StateVectorBatched() = default;
     StateVectorBatched(std::uint64_t batch_size, std::uint64_t n_qubits);
     StateVectorBatched(const StateVectorBatched& other) = default;
@@ -54,7 +54,7 @@ public:
         bool set_same_state,
         std::uint64_t seed = std::random_device()());
 
-    [[nodiscard]] std::vector<std::vector<Kokkos::complex<Fp>>> get_amplitudes() const;
+    [[nodiscard]] std::vector<std::vector<Complex<Fp>>> get_amplitudes() const;
 
     [[nodiscard]] std::vector<Fp> get_squared_norm() const;
 
@@ -67,12 +67,11 @@ public:
 
     [[nodiscard]] std::vector<Fp> get_entropy() const;
 
-    void add_state_vector_with_coef(const Kokkos::complex<Fp>& coef,
-                                    const StateVectorBatched& states);
+    void add_state_vector_with_coef(const Complex<Fp>& coef, const StateVectorBatched& states);
 
-    void multiply_coef(const Kokkos::complex<Fp>& coef);
+    void multiply_coef(const Complex<Fp>& coef);
 
-    void load(const std::vector<std::vector<Kokkos::complex<Fp>>>& states);
+    void load(const std::vector<std::vector<Complex<Fp>>>& states);
 
     [[nodiscard]] StateVectorBatched copy() const;
 
@@ -86,7 +85,7 @@ public:
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_state_state_vector_batched_hpp(nb::module_& m) {
     nb::class_<StateVectorBatched<Fp>>(
         m,

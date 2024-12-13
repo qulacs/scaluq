@@ -9,7 +9,7 @@ StateVectorBatched<Fp>::StateVectorBatched(std::uint64_t batch_size, std::uint64
     : _batch_size(batch_size),
       _n_qubits(n_qubits),
       _dim(1ULL << _n_qubits),
-      _raw(Kokkos::View<Kokkos::complex<Fp>**, Kokkos::LayoutRight>(
+      _raw(Kokkos::View<Complex<Fp>**, Kokkos::LayoutRight>(
           Kokkos::ViewAllocateWithoutInitializing("states"), _batch_size, _dim)) {
     set_zero_state();
 }
@@ -58,14 +58,14 @@ void StateVectorBatched<Fp>::set_computational_basis(std::uint64_t basis) {
             "Error: StateVectorBatched::set_computational_basis(std::uint64_t): "
             "index of computational basis must be smaller than 2^qubit_count");
     }
-    Kokkos::deep_copy(_raw, 0);
+    Kokkos::deep_copy(_raw, Fp{0});
     Kokkos::parallel_for(
         _batch_size, KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw(i, basis) = 1; });
     Kokkos::fence();
 }
 
 FLOAT(Fp)
-void StateVectorBatched<Fp>::set_zero_norm_state() { Kokkos::deep_copy(_raw, 0); }
+void StateVectorBatched<Fp>::set_zero_norm_state() { Kokkos::deep_copy(_raw, Fp{0}); }
 
 FLOAT(Fp)
 void StateVectorBatched<Fp>::set_Haar_random_state(std::uint64_t batch_size,
@@ -144,8 +144,8 @@ StateVectorBatched<Fp> StateVectorBatched<Fp>::Haar_random_state(std::uint64_t b
             Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {states.batch_size(), states.dim()}),
             KOKKOS_LAMBDA(std::uint64_t b, std::uint64_t i) {
                 auto rand_gen = rand_pool.get_state();
-                states._raw(b, i) = Kokkos::complex<Fp>(static_cast<Fp>(rand_gen.normal(0.0, 1.0)),
-                                                        static_cast<Fp>(rand_gen.normal(0.0, 1.0)));
+                states._raw(b, i) = Complex<Fp>(static_cast<Fp>(rand_gen.normal(0.0, 1.0)),
+                                                static_cast<Fp>(rand_gen.normal(0.0, 1.0)));
                 rand_pool.free_state(rand_gen);
             });
         Kokkos::fence();
@@ -155,10 +155,10 @@ StateVectorBatched<Fp> StateVectorBatched<Fp>::Haar_random_state(std::uint64_t b
 }
 
 FLOAT(Fp)
-std::vector<std::vector<Kokkos::complex<Fp>>> StateVectorBatched<Fp>::get_amplitudes() const {
+std::vector<std::vector<Complex<Fp>>> StateVectorBatched<Fp>::get_amplitudes() const {
     auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), _raw);
-    std::vector<std::vector<Kokkos::complex<Fp>>> vv(
-        _raw.extent(0), std::vector<Kokkos::complex<Fp>>(_raw.extent(1), 0));
+    std::vector<std::vector<Complex<Fp>>> vv(_raw.extent(0),
+                                             std::vector<Complex<Fp>>(_raw.extent(1), Fp{0}));
     for (size_t i = 0; i < view_h.extent(0); ++i) {
         for (size_t j = 0; j < view_h.extent(1); ++j) {
             vv[i][j] = view_h(i, j);
@@ -325,7 +325,7 @@ std::vector<Fp> StateVectorBatched<Fp>::get_entropy() const {
 }
 
 FLOAT(Fp)
-void StateVectorBatched<Fp>::add_state_vector_with_coef(const Kokkos::complex<Fp>& coef,
+void StateVectorBatched<Fp>::add_state_vector_with_coef(const Complex<Fp>& coef,
                                                         const StateVectorBatched& states) {
     if (n_qubits() != states.n_qubits() || batch_size() != states.batch_size()) [[unlikely]] {
         throw std::runtime_error(
@@ -341,7 +341,7 @@ void StateVectorBatched<Fp>::add_state_vector_with_coef(const Kokkos::complex<Fp
 }
 
 FLOAT(Fp)
-void StateVectorBatched<Fp>::multiply_coef(const Kokkos::complex<Fp>& coef) {
+void StateVectorBatched<Fp>::multiply_coef(const Complex<Fp>& coef) {
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, _dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
@@ -351,10 +351,10 @@ void StateVectorBatched<Fp>::multiply_coef(const Kokkos::complex<Fp>& coef) {
 }
 
 FLOAT(Fp)
-void StateVectorBatched<Fp>::load(const std::vector<std::vector<Kokkos::complex<Fp>>>& states) {
+void StateVectorBatched<Fp>::load(const std::vector<std::vector<Complex<Fp>>>& states) {
     if (states.size() != _batch_size) {
         throw std::runtime_error(
-            "Error: StateVectorBatched::load(std::vector<std::vector<Kokkos::complex<Fp>>>&): "
+            "Error: StateVectorBatched::load(std::vector<std::vector<Complex<Fp>>>&): "
             "invalid "
             "batch_size");
     }
@@ -362,7 +362,7 @@ void StateVectorBatched<Fp>::load(const std::vector<std::vector<Kokkos::complex<
         if (states[b].size() != _dim) {
             throw std::runtime_error(
                 "Error: "
-                "StateVectorBatched::load(std::vector<std::vector<Kokkos::complex<Fp>>>&): "
+                "StateVectorBatched::load(std::vector<std::vector<Complex<Fp>>>&): "
                 "invalid "
                 "length of state");
         }

@@ -9,7 +9,7 @@
 
 namespace scaluq {
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class Circuit {
 public:
     using GateWithKey = std::variant<Gate<Fp>, std::pair<ParamGate<Fp>, std::string>>;
@@ -76,7 +76,7 @@ private:
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_circuit_circuit_hpp(nb::module_& m) {
     nb::class_<Circuit<Fp>>(m, "Circuit", "Quantum circuit represented as gate array")
         .def(nb::init<std::uint64_t>(), "Initialize empty circuit of specified qubits.")

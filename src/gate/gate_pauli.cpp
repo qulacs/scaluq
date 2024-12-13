@@ -28,10 +28,11 @@ FLOAT(Fp)
 ComplexMatrix<Fp> PauliRotationGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat = this->_pauli.get_matrix_ignoring_coef();
     Complex<Fp> true_angle = _angle * _pauli.coef();
+    Complex<Fp> half_angle = true_angle / Fp{2};
     StdComplex<Fp> imag_unit(0, 1);
-    mat = (StdComplex<Fp>)internal::cos(-true_angle / 2) *
+    mat = (StdComplex<Fp>)internal::cos(-half_angle) *
               internal::ComplexMatrix<Fp>::Identity(mat.rows(), mat.cols()) +
-          imag_unit * (StdComplex<Fp>)internal::sin(-true_angle / 2) * mat;
+          imag_unit * (StdComplex<Fp>)internal::sin(-half_angle) * mat;
     return mat;
 }
 FLOAT(Fp)

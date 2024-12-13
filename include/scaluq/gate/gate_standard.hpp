@@ -6,7 +6,7 @@
 namespace scaluq {
 namespace internal {
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class IGateImpl : public GateBase<Fp> {
 public:
     IGateImpl() : GateBase<Fp>(0, 0) {}
@@ -21,7 +21,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class GlobalPhaseGateImpl : public GateBase<Fp> {
 protected:
     Fp _phase;
@@ -42,7 +42,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class RotationGateBase : public GateBase<Fp> {
 protected:
     Fp _angle;
@@ -54,7 +54,7 @@ public:
     Fp angle() const { return _angle; }
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class XGateImpl : public GateBase<Fp> {
 public:
     using GateBase<Fp>::GateBase;
@@ -69,7 +69,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class YGateImpl : public GateBase<Fp> {
 public:
     using GateBase<Fp>::GateBase;
@@ -84,7 +84,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ZGateImpl : public GateBase<Fp> {
 public:
     using GateBase<Fp>::GateBase;
@@ -99,7 +99,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class HGateImpl : public GateBase<Fp> {
 public:
     using GateBase<Fp>::GateBase;
@@ -114,24 +114,24 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SdagGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class TGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class TdagGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SqrtXGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SqrtXdagGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SqrtYGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SqrtYdagGateImpl;
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SGateImpl : public GateBase<Fp> {
 public:
     using GateBase<Fp>::GateBase;
@@ -146,7 +146,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SdagGateImpl : public GateBase<Fp> {
 public:
     using GateBase<Fp>::GateBase;
@@ -161,7 +161,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class TGateImpl : public GateBase<Fp> {
 public:
     using GateBase<Fp>::GateBase;
@@ -176,7 +176,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class TdagGateImpl : public GateBase<Fp> {
 public:
     using GateBase<Fp>::GateBase;
@@ -191,7 +191,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SqrtXGateImpl : public GateBase<Fp> {
 public:
     using GateBase<Fp>::GateBase;
@@ -208,7 +208,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SqrtXdagGateImpl : public GateBase<Fp> {
 public:
     using GateBase<Fp>::GateBase;
@@ -223,7 +223,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SqrtYGateImpl : public GateBase<Fp> {
 public:
     using GateBase<Fp>::GateBase;
@@ -240,7 +240,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SqrtYdagGateImpl : public GateBase<Fp> {
 public:
     using GateBase<Fp>::GateBase;
@@ -255,7 +255,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class P0GateImpl : public GateBase<Fp> {
 public:
     using GateBase<Fp>::GateBase;
@@ -270,7 +270,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class P1GateImpl : public GateBase<Fp> {
 public:
     using GateBase<Fp>::GateBase;
@@ -285,7 +285,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class RXGateImpl : public RotationGateBase<Fp> {
 public:
     using RotationGateBase<Fp>::RotationGateBase;
@@ -301,7 +301,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class RYGateImpl : public RotationGateBase<Fp> {
 public:
     using RotationGateBase<Fp>::RotationGateBase;
@@ -317,7 +317,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class RZGateImpl : public RotationGateBase<Fp> {
 public:
     using RotationGateBase<Fp>::RotationGateBase;
@@ -333,7 +333,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class U1GateImpl : public GateBase<Fp> {
     Fp _lambda;
 
@@ -353,7 +353,7 @@ public:
 
     std::string to_string(const std::string& indent) const override;
 };
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class U2GateImpl : public GateBase<Fp> {
     Fp _phi, _lambda;
 
@@ -368,8 +368,8 @@ public:
         return std::make_shared<const U2GateImpl<Fp>>(
             this->_target_mask,
             this->_control_mask,
-            static_cast<Fp>(-_lambda - Kokkos::numbers::pi),
-            static_cast<Fp>(-_phi + Kokkos::numbers::pi));
+            -_lambda - static_cast<Fp>(Kokkos::numbers::pi),
+            -_phi + static_cast<Fp>(Kokkos::numbers::pi));
     }
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
@@ -378,7 +378,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class U3GateImpl : public GateBase<Fp> {
     Fp _theta, _phi, _lambda;
 
@@ -401,7 +401,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class SwapGateImpl : public GateBase<Fp> {
 public:
     using GateBase<Fp>::GateBase;
@@ -418,56 +418,56 @@ public:
 
 }  // namespace internal
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using IGate = internal::GatePtr<internal::IGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using GlobalPhaseGate = internal::GatePtr<internal::GlobalPhaseGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using XGate = internal::GatePtr<internal::XGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using YGate = internal::GatePtr<internal::YGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using ZGate = internal::GatePtr<internal::ZGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using HGate = internal::GatePtr<internal::HGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using SGate = internal::GatePtr<internal::SGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using SdagGate = internal::GatePtr<internal::SdagGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using TGate = internal::GatePtr<internal::TGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using TdagGate = internal::GatePtr<internal::TdagGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using SqrtXGate = internal::GatePtr<internal::SqrtXGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using SqrtXdagGate = internal::GatePtr<internal::SqrtXdagGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using SqrtYGate = internal::GatePtr<internal::SqrtYGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using SqrtYdagGate = internal::GatePtr<internal::SqrtYdagGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using P0Gate = internal::GatePtr<internal::P0GateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using P1Gate = internal::GatePtr<internal::P1GateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using RXGate = internal::GatePtr<internal::RXGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using RYGate = internal::GatePtr<internal::RYGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using RZGate = internal::GatePtr<internal::RZGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using U1Gate = internal::GatePtr<internal::U1GateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using U2Gate = internal::GatePtr<internal::U2GateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using U3Gate = internal::GatePtr<internal::U3GateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using SwapGate = internal::GatePtr<internal::SwapGateImpl<Fp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_gate_gate_standard_hpp(nb::module_& m) {
     DEF_GATE(IGate, Fp, "Specific class of Pauli-I gate.");
     DEF_GATE(GlobalPhaseGate,
