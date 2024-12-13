@@ -80,30 +80,41 @@ void cleanup() {
     if (!is_finalized()) finalize();
 }
 
+template <std::floating_point Fp>
+void bind_on_precision(nb::module_& m, const char* submodule_name) {
+    auto mp = m.def_submodule(
+        submodule_name,
+        (std::ostringstream("module for ") << submodule_name << "precision").str().c_str());
+
+    internal::bind_state_state_vector_hpp<Fp>(mp);
+    internal::bind_state_state_vector_batched_hpp<Fp>(mp);
+
+    auto mgate = mp.def_submodule("gate", "Define gates.");
+
+    internal::bind_gate_gate_hpp<Fp>(mp);
+    internal::bind_gate_gate_standard_hpp<Fp>(mp);
+    internal::bind_gate_gate_matrix_hpp<Fp>(mp);
+    internal::bind_gate_gate_pauli_hpp<Fp>(mp);
+    internal::bind_gate_gate_factory_hpp<Fp>(mgate);
+    internal::bind_gate_param_gate_hpp<Fp>(mp);
+    internal::bind_gate_param_gate_standard_hpp<Fp>(mp);
+    internal::bind_gate_param_gate_pauli_hpp<Fp>(mp);
+    internal::bind_gate_param_gate_probablistic_hpp<Fp>(mp);
+    internal::bind_gate_param_gate_factory<Fp>(mgate);
+    // internal::bind_gate_merge_gate_hpp<Fp>(mp);
+
+    internal::bind_circuit_circuit_hpp<Fp>(mp);
+
+    internal::bind_operator_pauli_operator_hpp<Fp>(mp);
+    internal::bind_operator_operator_hpp<Fp>(mp);
+}
+
 NB_MODULE(scaluq_core, m) {
-    internal::bind_types_hpp(m);
+    internal::bind_kokkos_hpp(m);
+    internal::bind_gate_gate_hpp_without_precision(m);
 
-    internal::bind_state_state_vector_hpp(m);
-    internal::bind_state_state_vector_batched_hpp(m);
-
-    auto mgate = m.def_submodule("gate", "Define gates.");
-
-    internal::bind_gate_gate_hpp(m);
-    internal::bind_gate_gate_standard_hpp(m);
-    internal::bind_gate_gate_matrix_hpp(m);
-    internal::bind_gate_gate_pauli_hpp(m);
-    internal::bind_gate_gate_factory_hpp(mgate);
-    internal::bind_gate_param_gate_hpp(m);
-    internal::bind_gate_param_gate_standard_hpp(m);
-    internal::bind_gate_param_gate_pauli_hpp(m);
-    internal::bind_gate_param_gate_probablistic_hpp(m);
-    internal::bind_gate_param_gate_factory(mgate);
-    // internal::bind_gate_merge_gate_hpp(m);
-
-    internal::bind_circuit_circuit_hpp(m);
-
-    internal::bind_operator_pauli_operator_hpp(m);
-    internal::bind_operator_operator_hpp(m);
+    bind_on_precision<double>(m, "f64");
+    bind_on_precision<float>(m, "f32");
 
     initialize();
     std::atexit(&cleanup);
