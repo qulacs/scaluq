@@ -85,6 +85,39 @@ using ParamRYGate = internal::ParamGatePtr<internal::ParamRYGateImpl<Fp>>;
 template <std::floating_point Fp>
 using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl<Fp>>;
 
+namespace internal {
+
+#define DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE(Type)                              \
+    template <>                                                                        \
+    inline std::shared_ptr<const ParamRXGateImpl<Type>> get_from_json(const Json& j) { \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();               \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();             \
+        auto param_coef = j.at("param_coef").get<Type>();                              \
+        return std::make_shared<const ParamRXGateImpl<Type>>(                          \
+            vector_to_mask(targets), vector_to_mask(controls), param_coef);            \
+    }                                                                                  \
+    template <>                                                                        \
+    inline std::shared_ptr<const ParamRYGateImpl<Type>> get_from_json(const Json& j) { \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();               \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();             \
+        auto param_coef = j.at("param_coef").get<Type>();                              \
+        return std::make_shared<const ParamRYGateImpl<Type>>(                          \
+            vector_to_mask(targets), vector_to_mask(controls), param_coef);            \
+    }                                                                                  \
+    template <>                                                                        \
+    inline std::shared_ptr<const ParamRZGateImpl<Type>> get_from_json(const Json& j) { \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();               \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();             \
+        auto param_coef = j.at("param_coef").get<Type>();                              \
+        return std::make_shared<const ParamRZGateImpl<Type>>(                          \
+            vector_to_mask(targets), vector_to_mask(controls), param_coef);            \
+    }
+
+DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE(float)
+
+}  // namespace internal
+
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 void bind_gate_param_gate_standard_hpp(nb::module_& m) {

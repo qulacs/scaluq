@@ -83,12 +83,7 @@ namespace internal {
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();                   \
         auto pauli = j.at("pauli").get<PauliOperator<Type>>();                               \
         return std::make_shared<const PauliGateImpl<Type>>(vector_to_mask(controls), pauli); \
-    }
-
-DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(double)
-DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(float)
-
-#define DECLARE_GET_FROM_JSON_PAULIROTATIONGATE_WITH_TYPE(Type)                              \
+    }                                                                                        \
     template <>                                                                              \
     inline std::shared_ptr<const PauliRotationGateImpl<Type>> get_from_json(const Json& j) { \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();                   \
@@ -98,8 +93,8 @@ DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(float)
             vector_to_mask(controls), pauli, angle);                                         \
     }
 
-DECLARE_GET_FROM_JSON_PAULIROTATIONGATE_WITH_TYPE(double)
-DECLARE_GET_FROM_JSON_PAULIROTATIONGATE_WITH_TYPE(float)
+DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(float)
 
 }  // namespace internal
 

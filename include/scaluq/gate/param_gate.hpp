@@ -100,6 +100,9 @@ template <typename T>
 concept ParamGateImpl = std::derived_from<T, ParamGateBase<typename T::Fp>>;
 
 template <ParamGateImpl T>
+inline std::shared_ptr<const T> get_from_json(const Json&);
+
+template <ParamGateImpl T>
 class ParamGatePtr {
     friend class ParamGateFactory;
     template <ParamGateImpl U>
@@ -111,7 +114,7 @@ private:
     ParamGateType _param_gate_type;
 
 public:
-    ParamGatePtr() : _param_gate_ptr(nullptr), _param_gate_type(get_param_gate_type<T>()) {}
+    ParamGatePtr() : _param_gate_ptr(nullptr), _param_gate_type(get_param_gate_type<T, Fp>()) {}
     template <ParamGateImpl U>
     ParamGatePtr(const std::shared_ptr<const U>& param_gate_ptr) {
         if constexpr (std::is_same_v<T, U>) {
@@ -163,7 +166,18 @@ public:
     }
 
     friend void to_json(Json& j, const ParamGatePtr& gate) { gate->get_as_json(j); }
-    friend void from_json(const Json& j, ParamGatePtr& gate) {}
+
+    friend void from_json(const Json& j, ParamGatePtr& gate) {
+        std::string type = j.at("type");
+
+        // clang-format off
+        if (type == "ParamRX") gate = get_from_json<ParamRXGateImpl<Fp>>(j);
+        else if (type == "ParamRY") gate = get_from_json<ParamRYGateImpl<Fp>>(j);
+        else if (type == "ParamRZ") gate = get_from_json<ParamRZGateImpl<Fp>>(j);
+        else if (type == "ParamPauliRotation") gate = get_from_json<ParamPauliRotationGateImpl<Fp>>(j);
+        else if (type == "ParamProbablistic") gate = get_from_json<ParamProbablisticGateImpl<Fp>>(j);
+        // clang-format on
+    }
 };
 }  // namespace internal
 

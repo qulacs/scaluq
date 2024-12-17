@@ -146,6 +146,21 @@ int main() {
         Gate<double> gate = j;
         std::cout << gate << std::endl;
     }
+    {
+        auto x = gate::ParamRX<double>(1, {2});
+        Json j = x;
+        std::cout << j << std::endl;
+        ParamGate<double> gate = j;
+        std::cout << gate << std::endl;
+    }
+    {
+        auto paramprobgate = gate::ParamProbablistic<double>(
+            {.1, .9}, {gate::ParamRX<double>(0), gate::I<double>()});
+        Json j = paramprobgate;
+        std::cout << j << std::endl;
+        ParamGate<double> gate = j;
+        std::cout << gate << std::endl;
+    }
 
     Kokkos::finalize();
 }

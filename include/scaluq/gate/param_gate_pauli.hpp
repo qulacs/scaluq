@@ -43,6 +43,22 @@ public:
 template <std::floating_point Fp>
 using ParamPauliRotationGate = internal::ParamGatePtr<internal::ParamPauliRotationGateImpl<Fp>>;
 
+namespace internal {
+#define DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_TYPE(Type)                                     \
+    template <>                                                                                   \
+    inline std::shared_ptr<const ParamPauliRotationGateImpl<Type>> get_from_json(const Json& j) { \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                        \
+        auto pauli = j.at("pauli").get<PauliOperator<Type>>();                                    \
+        auto param_coef = j.at("param_coef").get<Type>();                                         \
+        return std::make_shared<const ParamPauliRotationGateImpl<Type>>(                          \
+            vector_to_mask(controls), pauli, param_coef);                                         \
+    }
+
+DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_TYPE(float)
+
+}  // namespace internal
+
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 void bind_gate_param_gate_pauli_hpp(nb::module_& m) {
