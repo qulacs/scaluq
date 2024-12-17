@@ -76,6 +76,33 @@ using PauliGate = internal::GatePtr<internal::PauliGateImpl<Fp>>;
 template <std::floating_point Fp>
 using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl<Fp>>;
 
+namespace internal {
+#define DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(Type)                                      \
+    template <>                                                                              \
+    inline std::shared_ptr<const PauliGateImpl<Type>> get_from_json(const Json& j) {         \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                   \
+        auto pauli = j.at("pauli").get<PauliOperator<Type>>();                               \
+        return std::make_shared<const PauliGateImpl<Type>>(vector_to_mask(controls), pauli); \
+    }
+
+DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(float)
+
+#define DECLARE_GET_FROM_JSON_PAULIROTATIONGATE_WITH_TYPE(Type)                              \
+    template <>                                                                              \
+    inline std::shared_ptr<const PauliRotationGateImpl<Type>> get_from_json(const Json& j) { \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                   \
+        auto pauli = j.at("pauli").get<PauliOperator<Type>>();                               \
+        auto angle = j.at("angle").get<Type>();                                              \
+        return std::make_shared<const PauliRotationGateImpl<Type>>(                          \
+            vector_to_mask(controls), pauli, angle);                                         \
+    }
+
+DECLARE_GET_FROM_JSON_PAULIROTATIONGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_PAULIROTATIONGATE_WITH_TYPE(float)
+
+}  // namespace internal
+
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 void bind_gate_gate_pauli_hpp(nb::module_& m) {

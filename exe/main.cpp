@@ -116,6 +116,36 @@ int main() {
         Gate<double> gate = j;
         std::cout << gate << std::endl;
     }
+    {
+        auto x = gate::Swap<double>(1, 3, {2});
+        Json j = x;
+        std::cout << j << std::endl;
+        Gate<double> gate = j;
+        std::cout << gate << std::endl;
+    }
+    {
+        auto x = gate::OneTargetMatrix<double>(1, {2., 3., 0., 10.}, {0, 3});
+        Json j = x;
+        std::cout << j << std::endl;
+        Gate<double> gate = j;
+        std::cout << gate << std::endl;
+    }
+    {
+        PauliOperator<double> pauli("X 2 Y 1");
+        auto x = gate::PauliRotation<double>(pauli, 1.5, {0, 3});
+        Json j = x;
+        std::cout << j << std::endl;
+        Gate<double> gate = j;
+        std::cout << gate << std::endl;
+    }
+    {
+        auto probgate =
+            gate::Probablistic<double>({.1, .9}, {gate::X<double>(0, {2, 3}), gate::I<double>()});
+        Json j = probgate;
+        std::cout << j << std::endl;
+        Gate<double> gate = j;
+        std::cout << gate << std::endl;
+    }
 
     Kokkos::finalize();
 }
