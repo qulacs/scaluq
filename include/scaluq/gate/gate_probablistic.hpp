@@ -90,18 +90,19 @@ DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(float)
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
+template <std::floating_point Fp>
 void bind_gate_gate_probablistic(nb::module_& m) {
     DEF_GATE(ProbablisticGate,
-             double,
+             Fp,
              "Specific class of probablistic gate. The gate to apply is picked from a cirtain "
              "distribution.")
         .def(
             "gate_list",
-            [](const ProbablisticGate<double>& gate) { return gate->gate_list(); },
+            [](const ProbablisticGate<Fp>& gate) { return gate->gate_list(); },
             nb::rv_policy::reference)
         .def(
             "distribution",
-            [](const ProbablisticGate<double>& gate) { return gate->distribution(); },
+            [](const ProbablisticGate<Fp>& gate) { return gate->distribution(); },
             nb::rv_policy::reference);
 }
 }  // namespace internal

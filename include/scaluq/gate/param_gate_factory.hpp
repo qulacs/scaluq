@@ -54,47 +54,48 @@ inline ParamGate<Fp> ParamProbablistic(
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
+template <std::floating_point Fp>
 void bind_gate_param_gate_factory(nb::module_& mgate) {
     mgate.def("ParamRX",
-              &gate::ParamRX<double>,
+              &gate::ParamRX<Fp>,
               "Generate general ParamGate class instance of ParamRX.",
               "target"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("ParamRY",
-              &gate::ParamRY<double>,
+              &gate::ParamRY<Fp>,
               "Generate general ParamGate class instance of ParamRY.",
               "target"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("ParamRZ",
-              &gate::ParamRZ<double>,
+              &gate::ParamRZ<Fp>,
               "Generate general ParamGate class instance of ParamRZ.",
               "target"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("ParamPauliRotation",
-              &gate::ParamPauliRotation<double>,
+              &gate::ParamPauliRotation<Fp>,
               "Generate general ParamGate class instance of ParamPauliRotation.",
               "pauli"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("ParamProbablistic",
-              &gate::ParamProbablistic<double>,
+              &gate::ParamProbablistic<Fp>,
               "Generate general ParamGate class instance of ParamProbablistic.");
     mgate.def(
         "ParamProbablistic",
-        [](const std::vector<std::pair<double, std::variant<Gate<double>, ParamGate<double>>>>&
+        [](const std::vector<std::pair<Fp, std::variant<Gate<Fp>, ParamGate<Fp>>>>&
                prob_gate_list) {
-            std::vector<double> distribution;
-            std::vector<std::variant<Gate<double>, ParamGate<double>>> gate_list;
+            std::vector<Fp> distribution;
+            std::vector<std::variant<Gate<Fp>, ParamGate<Fp>>> gate_list;
             distribution.reserve(prob_gate_list.size());
             gate_list.reserve(prob_gate_list.size());
             for (const auto& [prob, gate] : prob_gate_list) {
                 distribution.push_back(prob);
                 gate_list.push_back(gate);
             }
-            return gate::ParamProbablistic<double>(distribution, gate_list);
+            return gate::ParamProbablistic<Fp>(distribution, gate_list);
         },
         "Generate general ParamGate class instance of ParamProbablistic.");
 }

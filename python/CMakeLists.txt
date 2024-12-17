@@ -26,12 +26,23 @@ nanobind_add_stub(
     MARKER_FILE scaluq/py.typed
     VERBOSE
 )
-nanobind_add_stub(
-    scaluq_stub
-    INSTALL_TIME
-    MODULE scaluq.scaluq_core.gate
-    OUTPUT scaluq/gate.pyi
-    PYTHON_PATH $<TARGET_FILE_DIR:scaluq>
-    MARKER_FILE scaluq/py.typed
-    VERBOSE
-)
+foreach(FLOAT IN ITEMS f64 f32)
+    nanobind_add_stub(
+        scaluq_stub
+        INSTALL_TIME
+        MODULE scaluq.scaluq_core.${FLOAT}
+        OUTPUT scaluq/${FLOAT}/__init__.pyi
+        PYTHON_PATH $<TARGET_FILE_DIR:scaluq>
+        MARKER_FILE scaluq/py.typed
+        VERBOSE
+    )
+    nanobind_add_stub(
+        scaluq_stub
+        INSTALL_TIME
+        MODULE scaluq.scaluq_core.${FLOAT}.gate
+        OUTPUT scaluq/${FLOAT}/gate/__init__.pyi
+        PYTHON_PATH $<TARGET_FILE_DIR:scaluq>
+        MARKER_FILE scaluq/py.typed
+        VERBOSE
+    )
+endforeach()

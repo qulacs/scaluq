@@ -230,17 +230,18 @@ DECLARE_GET_FROM_JSON_TWOTARGETMATRIXGATE_WITH_TYPE(float)
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
+template <std::floating_point Fp>
 void bind_gate_gate_matrix_hpp(nb::module_& m) {
-    DEF_GATE(OneTargetMatrixGate, double, "Specific class of one-qubit dense matrix gate.")
+    DEF_GATE(OneTargetMatrixGate, Fp, "Specific class of one-qubit dense matrix gate.")
         .def("matrix", [](const OneTargetMatrixGate<double>& gate) { return gate->matrix(); });
-    DEF_GATE(TwoTargetMatrixGate, double, "Specific class of two-qubit dense matrix gate.")
+    DEF_GATE(TwoTargetMatrixGate, Fp, "Specific class of two-qubit dense matrix gate.")
         .def("matrix", [](const TwoTargetMatrixGate<double>& gate) { return gate->matrix(); });
-    DEF_GATE(SparseMatrixGate, double, "Specific class of sparse matrix gate.")
+    DEF_GATE(SparseMatrixGate, Fp, "Specific class of sparse matrix gate.")
         .def("matrix", [](const SparseMatrixGate<double>& gate) { return gate->get_matrix(); })
         .def("sparse_matrix",
-             [](const SparseMatrixGate<double>& gate) { return gate->get_sparse_matrix(); });
-    DEF_GATE(DenseMatrixGate, double, "Specific class of dense matrix gate.")
-        .def("matrix", [](const DenseMatrixGate<double>& gate) { return gate->get_matrix(); });
+             [](const SparseMatrixGate<Fp>& gate) { return gate->get_sparse_matrix(); });
+    DEF_GATE(DenseMatrixGate, Fp, "Specific class of dense matrix gate.")
+        .def("matrix", [](const DenseMatrixGate<Fp>& gate) { return gate->get_matrix(); });
 }
 }  // namespace internal
 #endif
