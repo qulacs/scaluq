@@ -151,7 +151,17 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def("copy", &Circuit<Fp>::copy, "Copy circuit. All the gates inside is copied.")
         .def("get_inverse",
              &Circuit<Fp>::get_inverse,
-             "Get inverse of circuit. All the gates are newly created.");
+             "Get inverse of circuit. All the gates are newly created.")
+        .def(
+            "to_json",
+            [](const Circuit<Fp>& circuit) { return Json(circuit).dump(); },
+            "Information as json style.")
+        .def(
+            "load_json",
+            [](Circuit<Fp>& circuit, const std::string& str) {
+                circuit = nlohmann::json::parse(str);
+            },
+            "Read an object from the JSON representation of the circuit.");
 }
 }  // namespace internal
 #endif

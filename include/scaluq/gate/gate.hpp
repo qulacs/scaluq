@@ -380,7 +380,17 @@ namespace internal {
         .def(                                                                                \
             "__str__",                                                                       \
             [](const GATE_TYPE<FLOAT>& gate) { return gate->to_string(""); },                \
-            "Get string representation of the gate.")
+            "Get string representation of the gate.")                                        \
+        .def(                                                                                \
+            "to_json",                                                                       \
+            [](const GATE_TYPE<FLOAT>& gate) { return Json(gate).dump(); },                  \
+            "Get JSON representation of the gate.")                                          \
+        .def(                                                                                \
+            "load_json",                                                                     \
+            [](GATE_TYPE<FLOAT>& gate, const std::string& str) {                             \
+                gate = nlohmann::json::parse(str);                                           \
+            },                                                                               \
+            "Read an object from the JSON representation of the gate.")
 
 template <std::floating_point Fp>
 nb::class_<Gate<Fp>> gate_base_def;

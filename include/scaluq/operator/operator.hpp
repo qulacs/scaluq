@@ -143,7 +143,15 @@ void bind_operator_operator_hpp(nb::module_& m) {
         .def(nb::self -= PauliOperator<Fp>())
         .def(nb::self - PauliOperator<Fp>())
         .def(nb::self *= PauliOperator<Fp>())
-        .def(nb::self * PauliOperator<Fp>());
+        .def(nb::self * PauliOperator<Fp>())
+        .def(
+            "to_json",
+            [](const Operator<Fp>& op) { return Json(op).dump(); },
+            "Information as json style.")
+        .def(
+            "load_json",
+            [](Operator<Fp>& op, const std::string& str) { op = nlohmann::json::parse(str); },
+            "Read an object from the JSON representation of the operator.");
 }
 }  // namespace internal
 #endif

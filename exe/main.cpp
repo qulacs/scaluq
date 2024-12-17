@@ -1,9 +1,9 @@
 #include <cstdint>
 #include <iostream>
-#include <scaluq/circuit/circuit.hpp>
-#include <scaluq/gate/gate_factory.hpp>
-#include <scaluq/operator/operator.hpp>
-#include <scaluq/state/state_vector.hpp>
+#include <scaluq/all.hpp>
+
+using namespace scaluq;
+using namespace nlohmann;
 
 int main() {
     scaluq::initialize();  // must be called before using any scaluq methods

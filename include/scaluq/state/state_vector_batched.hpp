@@ -212,7 +212,17 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
              "Load batched amplitudes from `list[list[complex]]`.")
         .def("copy", &StateVectorBatched<Fp>::copy, "Create a copy of the batched state vector.")
         .def("to_string", &StateVectorBatched<Fp>::to_string, "Information as `str`.")
-        .def("__str__", &StateVectorBatched<Fp>::to_string, "Information as `str`.");
+        .def("__str__", &StateVectorBatched<Fp>::to_string, "Information as `str`.")
+        .def(
+            "to_json",
+            [](const StateVectorBatched<Fp>& states) { return Json(states).dump(); },
+            "Get JSON representation of the states.")
+        .def(
+            "load_json",
+            [](StateVectorBatched<Fp>& states, const std::string& str) {
+                states = nlohmann::json::parse(str);
+            },
+            "Read an object from the JSON representation of the states.");
 }
 }  // namespace internal
 #endif

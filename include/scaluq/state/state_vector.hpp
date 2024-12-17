@@ -500,6 +500,27 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                 .desc("Constant used for `StateVector::get_marginal_probability` to express the "
                       "the qubit is not measured.")
                 .build_as_google_style()
+                .c_str())
+        .def(
+            "to_json",
+            [](const StateVector<Fp>& state) { return Json(state).dump(); },
+            DocString()
+                .desc("Information as json style.")
+                .ret("str", "information as json style")
+                .ex(DocString::Code{
+                    ">>> state = StateVector(1)",
+                    ">>> state.to_json()",
+                    R"('{"amplitudes":[{"imag":0.0,"real":1.0},{"imag":0.0,"real":0.0}],"n_qubits":1}')"})
+                .build_as_google_style()
+                .c_str())
+        .def(
+            "load_json",
+            [](StateVector<Fp>& state, const std::string& str) {
+                state = nlohmann::json::parse(str);
+            },
+            DocString()
+                .desc("Read an object from the JSON representation of the state vector.")
+                .build_as_google_style()
                 .c_str());
 }
 }  // namespace internal

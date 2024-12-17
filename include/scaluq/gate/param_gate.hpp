@@ -235,7 +235,25 @@ namespace internal {
             [](const PARAM_GATE_TYPE<FLOAT>& gate, FLOAT param) {                                 \
                 return gate->get_matrix(param);                                                   \
             },                                                                                    \
-            "Get matrix representation of the gate with holding the parameter.")
+            "Get matrix representation of the gate with holding the parameter.")                  \
+        .def(                                                                                     \
+            "to_string",                                                                          \
+            [](const PARAM_GATE_TYPE<FLOAT>& gate) { return gate->to_string(""); },               \
+            "Get string representation of the gate.")                                             \
+        .def(                                                                                     \
+            "__str__",                                                                            \
+            [](const PARAM_GATE_TYPE<FLOAT>& gate) { return gate->to_string(""); },               \
+            "Get string representation of the gate.")                                             \
+        .def(                                                                                     \
+            "to_json",                                                                            \
+            [](const PARAM_GATE_TYPE<FLOAT>& gate) { return Json(gate).dump(); },                 \
+            "Get JSON representation of the gate.")                                               \
+        .def(                                                                                     \
+            "load_json",                                                                          \
+            [](PARAM_GATE_TYPE<FLOAT>& gate, const std::string& str) {                            \
+                gate = nlohmann::json::parse(str);                                                \
+            },                                                                                    \
+            "Read an object from the JSON representation of the gate.")
 
 template <std::floating_point Fp>
 nb::class_<ParamGate<Fp>> param_gate_base_def;
