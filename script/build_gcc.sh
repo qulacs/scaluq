@@ -2,7 +2,7 @@
 
 set -eux
 
-script/configure
+script/configure_dev
 
 if [ "$(uname)" = 'Darwin' ]; then
   NPROC=$(sysctl -n hw.logicalcpu)

@@ -21,6 +21,13 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "ParamRX"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"param_coef", this->param_coef()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -37,6 +44,13 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "ParamRY"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"param_coef", this->param_coef()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -53,6 +67,13 @@ public:
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "ParamRZ"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"param_coef", this->param_coef()}};
+    }
 };
 
 }  // namespace internal
@@ -63,6 +84,39 @@ template <std::floating_point Fp>
 using ParamRYGate = internal::ParamGatePtr<internal::ParamRYGateImpl<Fp>>;
 template <std::floating_point Fp>
 using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl<Fp>>;
+
+namespace internal {
+
+#define DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE(Type)                              \
+    template <>                                                                        \
+    inline std::shared_ptr<const ParamRXGateImpl<Type>> get_from_json(const Json& j) { \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();               \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();             \
+        auto param_coef = j.at("param_coef").get<Type>();                              \
+        return std::make_shared<const ParamRXGateImpl<Type>>(                          \
+            vector_to_mask(targets), vector_to_mask(controls), param_coef);            \
+    }                                                                                  \
+    template <>                                                                        \
+    inline std::shared_ptr<const ParamRYGateImpl<Type>> get_from_json(const Json& j) { \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();               \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();             \
+        auto param_coef = j.at("param_coef").get<Type>();                              \
+        return std::make_shared<const ParamRYGateImpl<Type>>(                          \
+            vector_to_mask(targets), vector_to_mask(controls), param_coef);            \
+    }                                                                                  \
+    template <>                                                                        \
+    inline std::shared_ptr<const ParamRZGateImpl<Type>> get_from_json(const Json& j) { \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();               \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();             \
+        auto param_coef = j.at("param_coef").get<Type>();                              \
+        return std::make_shared<const ParamRZGateImpl<Type>>(                          \
+            vector_to_mask(targets), vector_to_mask(controls), param_coef);            \
+    }
+
+DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE(float)
+
+}  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
