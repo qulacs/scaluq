@@ -13,14 +13,6 @@
 using namespace scaluq;
 using namespace std;
 
-// void run() {
-//     StateVector state = StateVector<double>::Haar_random_state(3);
-//     Json j = state;
-//     cout << j.dump() << endl;
-//     StateVector state2 = j.get<StateVector>();
-//     cout << state2 << endl;
-// }
-
 int main() {
     Kokkos::initialize();
     {
@@ -160,6 +152,15 @@ int main() {
         std::cout << j << std::endl;
         ParamGate<double> gate = j;
         std::cout << gate << std::endl;
+    }
+    {
+        Circuit<double> circuit(10);
+        circuit.add_gate(gate::X<double>(0, {3}));
+        circuit.add_param_gate(gate::ParamRX<double>(0, 0.5, {3}), "RX");
+        Json j = circuit;
+        std::cout << j << std::endl;
+        Circuit<double> c = j;
+        std::cout << Json(c) << std::endl;
     }
 
     Kokkos::finalize();
