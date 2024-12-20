@@ -27,6 +27,7 @@ public:
     Kokkos::View<ComplexType*> _raw;
     StateVector() = default;
     StateVector(std::uint64_t n_qubits);
+    StateVector(Kokkos::View<ComplexType*> view);
     StateVector(const StateVector& other) = default;
 
     StateVector& operator=(const StateVector& other) = default;
