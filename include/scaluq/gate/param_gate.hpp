@@ -217,9 +217,9 @@ namespace internal {
             "directly updated.")                                                                  \
         .def(                                                                                     \
             "update_quantum_state",                                                               \
-            [](const PARAM_GATE_TYPE& param_gate,                                                 \
-               StateVectorBatched& states,                                                        \
-               std::vector<double> params) { param_gate->update_quantum_state(states, params); }, \
+            [](const PARAM_GATE_TYPE<FLOAT>& param_gate,                                          \
+               StateVectorBatched<FLOAT>& states,                                                 \
+               std::vector<FLOAT> params) { param_gate->update_quantum_state(states, params); },  \
             "Apply gate to `states` with holding the parameter. `states` in args is directly "    \
             "updated.")                                                                           \
         .def(                                                                                     \

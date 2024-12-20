@@ -382,19 +382,6 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               &gate::CCX<Fp>,
               "Generate general Gate class instance of Toffoli.\n\n.. note:: Toffoli is an alias "
               "of CCX.");
-    mgate.def("OneTargetMatrix",
-              &gate::OneTargetMatrix<double>,
-              "Generate general Gate class instance of OneTargetMatrix.",
-              "target"_a,
-              "matrix"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("TwoTargetMatrix",
-              &gate::TwoTargetMatrix<double>,
-              "Generate general Gate class instance of TwoTargetMatrix.",
-              "target1"_a,
-              "target2"_a,
-              "matrix"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
     mgate.def("DenseMatrix",
               &gate::DenseMatrix<Fp>,
               "Generate general Gate class instance of DenseMatrix.",
