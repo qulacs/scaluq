@@ -70,7 +70,7 @@ namespace internal {
 template <std::floating_point Fp>
 void bind_gate_gate_matrix_hpp(nb::module_& m) {
     DEF_GATE(SparseMatrixGate, Fp, "Specific class of sparse matrix gate.")
-        .def("matrix", [](const SparseMatrixGate<double>& gate) { return gate->get_matrix(); })
+        .def("matrix", [](const SparseMatrixGate<Fp>& gate) { return gate->get_matrix(); })
         .def("sparse_matrix",
              [](const SparseMatrixGate<Fp>& gate) { return gate->get_sparse_matrix(); });
     DEF_GATE(DenseMatrixGate, Fp, "Specific class of dense matrix gate.")
