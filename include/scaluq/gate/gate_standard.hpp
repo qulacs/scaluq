@@ -615,9 +615,9 @@ namespace internal {
     inline std::shared_ptr<const IGateImpl<Type>> get_from_json(const Json&) { \
         return std::make_shared<const IGateImpl<Type>>();                      \
     }
-
 DECLARE_GET_FROM_JSON_IGATE_WITH_TYPE(double)
 DECLARE_GET_FROM_JSON_IGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_IGATE_WITH_TYPE
 
 #define DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_TYPE(Type)                                      \
     template <>                                                                                    \
@@ -626,9 +626,9 @@ DECLARE_GET_FROM_JSON_IGATE_WITH_TYPE(float)
         Type phase = j.at("phase").get<Type>();                                                    \
         return std::make_shared<const GlobalPhaseGateImpl<Type>>(vector_to_mask(controls), phase); \
     }
-
 DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_TYPE(double)
 DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_TYPE
 
 #define DECLARE_GET_FROM_JSON_WITH_TYPE(Impl, Type)                          \
     template <>                                                              \
@@ -638,25 +638,25 @@ DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_TYPE(float)
         return std::make_shared<const Impl<Type>>(vector_to_mask(targets),   \
                                                   vector_to_mask(controls)); \
     }
-
 #define DECLARE_GET_FROM_JSON(Impl)               \
     DECLARE_GET_FROM_JSON_WITH_TYPE(Impl, double) \
     DECLARE_GET_FROM_JSON_WITH_TYPE(Impl, float)
-
-DECLARE_GET_FROM_JSON(XGateImpl);
-DECLARE_GET_FROM_JSON(YGateImpl);
-DECLARE_GET_FROM_JSON(ZGateImpl);
-DECLARE_GET_FROM_JSON(HGateImpl);
-DECLARE_GET_FROM_JSON(SGateImpl);
-DECLARE_GET_FROM_JSON(SdagGateImpl);
-DECLARE_GET_FROM_JSON(TGateImpl);
-DECLARE_GET_FROM_JSON(TdagGateImpl);
-DECLARE_GET_FROM_JSON(SqrtXGateImpl);
-DECLARE_GET_FROM_JSON(SqrtXdagGateImpl);
-DECLARE_GET_FROM_JSON(SqrtYGateImpl);
-DECLARE_GET_FROM_JSON(SqrtYdagGateImpl);
-DECLARE_GET_FROM_JSON(P0GateImpl);
-DECLARE_GET_FROM_JSON(P1GateImpl);
+DECLARE_GET_FROM_JSON(XGateImpl)
+DECLARE_GET_FROM_JSON(YGateImpl)
+DECLARE_GET_FROM_JSON(ZGateImpl)
+DECLARE_GET_FROM_JSON(HGateImpl)
+DECLARE_GET_FROM_JSON(SGateImpl)
+DECLARE_GET_FROM_JSON(SdagGateImpl)
+DECLARE_GET_FROM_JSON(TGateImpl)
+DECLARE_GET_FROM_JSON(TdagGateImpl)
+DECLARE_GET_FROM_JSON(SqrtXGateImpl)
+DECLARE_GET_FROM_JSON(SqrtXdagGateImpl)
+DECLARE_GET_FROM_JSON(SqrtYGateImpl)
+DECLARE_GET_FROM_JSON(SqrtYdagGateImpl)
+DECLARE_GET_FROM_JSON(P0GateImpl)
+DECLARE_GET_FROM_JSON(P1GateImpl)
+#undef DECLARE_GET_FROM_JSON
+#undef DECLARE_GET_FROM_JSON_WITH_TYPE
 
 #define DECLARE_GET_FROM_JSON_RGATE_WITH_TYPE(Impl, Type)                   \
     template <>                                                             \
@@ -667,14 +667,14 @@ DECLARE_GET_FROM_JSON(P1GateImpl);
         return std::make_shared<const Impl<Type>>(                          \
             vector_to_mask(targets), vector_to_mask(controls), angle);      \
     }
-
-#define DECLARE_GET_FROM_JSON_RGATE(Impl)               \
-    DECLARE_GET_FROM_JSON_RGATE_WITH_TYPE(Impl, double) \
-    DECLARE_GET_FROM_JSON_RGATE_WITH_TYPE(Impl, float)
-
-DECLARE_GET_FROM_JSON_RGATE(RXGateImpl);
-DECLARE_GET_FROM_JSON_RGATE(RYGateImpl);
-DECLARE_GET_FROM_JSON_RGATE(RZGateImpl);
+#define DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_TYPE(Type)    \
+    DECLARE_GET_FROM_JSON_RGATE_WITH_TYPE(RXGateImpl, Type) \
+    DECLARE_GET_FROM_JSON_RGATE_WITH_TYPE(RYGateImpl, Type) \
+    DECLARE_GET_FROM_JSON_RGATE_WITH_TYPE(RZGateImpl, Type)
+DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_RGATE_WITH_TYPE
+#undef DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_TYPE
 
 #define DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE(Type)                                 \
     template <>                                                                     \
@@ -704,9 +704,9 @@ DECLARE_GET_FROM_JSON_RGATE(RZGateImpl);
         return std::make_shared<const U3GateImpl<Type>>(                            \
             vector_to_mask(targets), vector_to_mask(controls), theta, phi, lambda); \
     }
-
-DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE(double);
-DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE(float);
+DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE
 
 #define DECLARE_GET_FROM_JSON_SWAPGATE_WITH_TYPE(Type)                               \
     template <>                                                                      \
@@ -716,9 +716,9 @@ DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE(float);
         return std::make_shared<const SwapGateImpl<Type>>(vector_to_mask(targets),   \
                                                           vector_to_mask(controls)); \
     }
-
 DECLARE_GET_FROM_JSON_SWAPGATE_WITH_TYPE(double)
 DECLARE_GET_FROM_JSON_SWAPGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_SWAPGATE_WITH_TYPE
 
 }  // namespace internal
 

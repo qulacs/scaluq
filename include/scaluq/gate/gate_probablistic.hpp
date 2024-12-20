@@ -85,6 +85,7 @@ namespace internal {
 
 DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(double)
 DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE
 
 }  // namespace internal
 

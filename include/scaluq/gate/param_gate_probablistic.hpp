@@ -95,9 +95,9 @@ namespace internal {
         }                                                                                        \
         return std::make_shared<const ParamProbablisticGateImpl<Type>>(distribution, gate_list); \
     }
-
 DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE(double)
 DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE
 
 }  // namespace internal
 

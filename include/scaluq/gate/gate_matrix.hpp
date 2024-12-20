@@ -192,9 +192,9 @@ namespace internal {
             std::array<std::array<Kokkos::complex<Type>, 2>, 2>{                               \
                 matrix[0][0], matrix[0][1], matrix[1][0], matrix[1][1]});                      \
     }
-
 DECLARE_GET_FROM_JSON_ONETARGETMATRIXGATE_WITH_TYPE(double)
 DECLARE_GET_FROM_JSON_ONETARGETMATRIXGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_ONETARGETMATRIXGATE_WITH_TYPE
 
 #define DECLARE_GET_FROM_JSON_TWOTARGETMATRIXGATE_WITH_TYPE(Type)                              \
     template <>                                                                                \
@@ -222,9 +222,9 @@ DECLARE_GET_FROM_JSON_ONETARGETMATRIXGATE_WITH_TYPE(float)
                                                                 matrix[3][2],                  \
                                                                 matrix[3][3]});                \
     }
-
 DECLARE_GET_FROM_JSON_TWOTARGETMATRIXGATE_WITH_TYPE(double)
 DECLARE_GET_FROM_JSON_TWOTARGETMATRIXGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_TWOTARGETMATRIXGATE_WITH_TYPE
 
 }  // namespace internal
 
