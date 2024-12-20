@@ -331,7 +331,8 @@ FLOAT_DECLARE_CLASS(SqrtYGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> SqrtYdagGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << 0, StdComplex<Fp>(0, -1), StdComplex<Fp>(0, 1), 0;
+    mat << StdComplex<Fp>(0.5, -0.5), StdComplex<Fp>(0.5, -0.5), StdComplex<Fp>(-0.5, 0.5),
+        StdComplex<Fp>(0.5, -0.5);
     return mat;
 }
 FLOAT(Fp)
@@ -407,7 +408,7 @@ FLOAT(Fp)
 ComplexMatrix<Fp> RXGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
     mat << std::cos(this->_angle / 2), StdComplex<Fp>(0, -std::sin(this->_angle / 2)),
-        StdComplex<Fp>(0, std::sin(this->_angle / 2)), std::cos(this->_angle / 2);
+        StdComplex<Fp>(0, -std::sin(this->_angle / 2)), std::cos(this->_angle / 2);
     return mat;
 }
 FLOAT(Fp)

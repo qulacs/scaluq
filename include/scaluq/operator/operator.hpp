@@ -71,28 +71,23 @@ private:
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
+template <std::floating_point Fp>
 void bind_operator_operator_hpp(nb::module_& m) {
-    nb::class_<Operator<double>>(m, "Operator", "General quantum operator class.")
+    nb::class_<Operator<Fp>>(m, "Operator", "General quantum operator class.")
         .def(nb::init<std::uint64_t>(),
              "qubit_count"_a,
              "Initialize operator with specified number of qubits.")
-        .def("is_hermitian", &Operator<double>::is_hermitian, "Check if the operator is Hermitian.")
-        .def("n_qubits",
-             &Operator<double>::n_qubits,
-             "Get the number of qubits the operator acts on.")
-        .def("terms",
-             &Operator<double>::terms,
-             "Get the list of Pauli terms that make up the operator.")
+        .def("is_hermitian", &Operator<Fp>::is_hermitian, "Check if the operator is Hermitian.")
+        .def("n_qubits", &Operator<Fp>::n_qubits, "Get the number of qubits the operator acts on.")
         .def(
-            "to_string", &Operator<double>::to_string, "Get string representation of the operator.")
+            "terms", &Operator<Fp>::terms, "Get the list of Pauli terms that make up the operator.")
+        .def("to_string", &Operator<Fp>::to_string, "Get string representation of the operator.")
         .def("add_operator",
-             nb::overload_cast<const PauliOperator<double>&>(&Operator<double>::add_operator),
+             nb::overload_cast<const PauliOperator<Fp>&>(&Operator<Fp>::add_operator),
              "Add a Pauli operator to this operator.")
         .def(
             "add_random_operator",
-            [](Operator<double>& op,
-               std::uint64_t operator_count,
-               std::optional<std::uint64_t> seed) {
+            [](Operator<Fp>& op, std::uint64_t operator_count, std::optional<std::uint64_t> seed) {
                 return op.add_random_operator(operator_count,
                                               seed.value_or(std::random_device{}()));
             },
@@ -101,23 +96,21 @@ void bind_operator_operator_hpp(nb::module_& m) {
             "Add a specified number of random Pauli operators to this operator. An optional "
             "seed "
             "can be provided for reproducibility.")
-        .def("optimize",
-             &Operator<double>::optimize,
-             "Optimize the operator by combining like terms.")
+        .def("optimize", &Operator<Fp>::optimize, "Optimize the operator by combining like terms.")
         .def("get_dagger",
-             &Operator<double>::get_dagger,
+             &Operator<Fp>::get_dagger,
              "Get the adjoint (Hermitian conjugate) of the operator.")
         .def("apply_to_state",
-             &Operator<double>::apply_to_state,
+             &Operator<Fp>::apply_to_state,
              "Apply the operator to a state vector.")
         .def("get_expectation_value",
-             &Operator<double>::get_expectation_value,
+             &Operator<Fp>::get_expectation_value,
              "Get the expectation value of the operator with respect to a state vector.")
         .def("get_transition_amplitude",
-             &Operator<double>::get_transition_amplitude,
+             &Operator<Fp>::get_transition_amplitude,
              "Get the transition amplitude of the operator between two state vectors.")
-        .def(nb::self *= Complex<double>())
-        .def(nb::self * Complex<double>())
+        .def(nb::self *= Complex<Fp>())
+        .def(nb::self * Complex<Fp>())
         .def(+nb::self)
         .def(-nb::self)
         .def(nb::self += nb::self)
@@ -126,12 +119,12 @@ void bind_operator_operator_hpp(nb::module_& m) {
         .def(nb::self - nb::self)
         .def(nb::self * nb::self)
         .def(nb::self *= nb::self)
-        .def(nb::self += PauliOperator<double>())
-        .def(nb::self + PauliOperator<double>())
-        .def(nb::self -= PauliOperator<double>())
-        .def(nb::self - PauliOperator<double>())
-        .def(nb::self *= PauliOperator<double>())
-        .def(nb::self * PauliOperator<double>());
+        .def(nb::self += PauliOperator<Fp>())
+        .def(nb::self + PauliOperator<Fp>())
+        .def(nb::self -= PauliOperator<Fp>())
+        .def(nb::self - PauliOperator<Fp>())
+        .def(nb::self *= PauliOperator<Fp>())
+        .def(nb::self * PauliOperator<Fp>());
 }
 }  // namespace internal
 #endif

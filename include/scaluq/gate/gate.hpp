@@ -335,11 +335,12 @@ namespace internal {
             [](const GATE_TYPE<FLOAT>& gate) { return gate->to_string(""); },                \
             "Get string representation of the gate.")
 
-nb::class_<Gate<double>> gate_base_def_double;
+template <std::floating_point Fp>
+nb::class_<Gate<Fp>> gate_base_def;
 
 #define DEF_GATE(GATE_TYPE, FLOAT, DESCRIPTION)                                                 \
-    ::scaluq::internal::gate_base_def_##FLOAT.def(nb::init<GATE_TYPE<FLOAT>>(),                 \
-                                                  "Upcast from `" #GATE_TYPE "`.");             \
+    ::scaluq::internal::gate_base_def<FLOAT>.def(nb::init<GATE_TYPE<FLOAT>>(),                  \
+                                                 "Upcast from `" #GATE_TYPE "`.");              \
     DEF_GATE_BASE(                                                                              \
         GATE_TYPE,                                                                              \
         FLOAT,                                                                                  \
@@ -347,7 +348,7 @@ nb::class_<Gate<double>> gate_base_def_double;
         "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
         .def(nb::init<Gate<FLOAT>>())
 
-void bind_gate_gate_hpp(nb::module_& m) {
+void bind_gate_gate_hpp_without_precision(nb::module_& m) {
     nb::enum_<GateType>(m, "GateType", "Enum of Gate Type.")
         .value("I", GateType::I)
         .value("GlobalPhase", GateType::GlobalPhase)
@@ -376,13 +377,16 @@ void bind_gate_gate_hpp(nb::module_& m) {
         .value("PauliRotation", GateType::PauliRotation)
         .value("SparseMatrix", GateType::SparseMatrix)
         .value("DenseMatrix", GateType::DenseMatrix);
+}
 
-    gate_base_def_double =
+template <std::floating_point Fp>
+void bind_gate_gate_hpp(nb::module_& m) {
+    gate_base_def<Fp> =
         DEF_GATE_BASE(Gate,
-                      double,
+                      Fp,
                       "General class of QuantumGate.\n\n.. note:: Downcast to requred to use "
                       "gate-specific functions.")
-            .def(nb::init<Gate<double>>(), "Just copy shallowly.");
+            .def(nb::init<Gate<Fp>>(), "Just copy shallowly.");
 }
 }  // namespace internal
 #endif

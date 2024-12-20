@@ -72,20 +72,21 @@ using ParamProbablisticGate = internal::ParamGatePtr<internal::ParamProbablistic
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
+template <std::floating_point Fp>
 void bind_gate_param_gate_probablistic_hpp(nb::module_& m) {
     DEF_PARAM_GATE(
         ParamProbablisticGate,
-        double,
+        Fp,
         "Specific class of parametric probablistic gate. The gate to apply is picked from a "
         "cirtain "
         "distribution.")
         .def(
             "gate_list",
-            [](const ParamProbablisticGate<double>& gate) { return gate->gate_list(); },
+            [](const ParamProbablisticGate<Fp>& gate) { return gate->gate_list(); },
             nb::rv_policy::reference)
         .def(
             "distribution",
-            [](const ParamProbablisticGate<double>& gate) { return gate->distribution(); },
+            [](const ParamProbablisticGate<Fp>& gate) { return gate->distribution(); },
             nb::rv_policy::reference);
 }
 }  // namespace internal

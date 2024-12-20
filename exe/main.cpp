@@ -1,31 +1,28 @@
-#include <Kokkos_Core.hpp>
-#include <functional>
+#include <cstdint>
 #include <iostream>
-#include <memory>
+#include <scaluq/circuit/circuit.hpp>
+#include <scaluq/gate/gate_factory.hpp>
+#include <scaluq/operator/operator.hpp>
 #include <scaluq/state/state_vector.hpp>
-#include <sstream>
-#include <stdexcept>
-#include <type_traits>
-#include <vector>
-
-using Fp = float;
 
 int main() {
-    Kokkos::initialize();
+    scaluq::initialize();  // must be called before using any scaluq methods
     {
-        std::uint64_t n_qubits = 3;
-        scaluq::StateVector<Fp> state(n_qubits);
-        state.load({0, 1, 2, 3, 4, 5, 6, 7});
-        /*
-        auto x_gate = scaluq::gate::X<Fp>(1, {0, 2});
-        x_gate->update_quantum_state(state);
-        auto sqrtx_gate = scaluq::gate::SqrtX<Fp>(1, {0});
-        sqrtx_gate->update_quantum_state(state);
-        auto sqrtxdag_gate = scaluq::gate::SqrtXdag<Fp>(0);
-        sqrtxdag_gate->update_quantum_state(state);
-        */
-
+        const std::uint64_t n_qubits = 3;
+        scaluq::StateVector state = scaluq::StateVector<double>::Haar_random_state(n_qubits, 0);
         std::cout << state << std::endl;
+
+        scaluq::Circuit<double> circuit(n_qubits);
+        circuit.add_gate(scaluq::gate::X<double>(0));
+        circuit.add_gate(scaluq::gate::CNot<double>(0, 1));
+        circuit.add_gate(scaluq::gate::Y<double>(1));
+        circuit.add_gate(scaluq::gate::RX<double>(1, std::numbers::pi / 2));
+        circuit.update_quantum_state(state);
+
+        scaluq::Operator<double> observable(n_qubits);
+        observable.add_random_operator(1, 0);
+        auto value = observable.get_expectation_value(state);
+        std::cout << value << std::endl;
     }
-    Kokkos::finalize();
+    scaluq::finalize();  // must be called last
 }
