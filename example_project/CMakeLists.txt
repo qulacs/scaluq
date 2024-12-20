@@ -9,9 +9,11 @@ endif()
 find_package(Kokkos)
 find_package(scaluq)
 add_executable(main main.cpp)
-target_include_directories(main PUBLIC /usr/local/include/scaluq)
-target_include_directories(main PUBLIC /usr/local/include/kokkos)
-target_include_directories(main PUBLIC /usr/local/include/eigen3)
+target_link_libraries(scluq PUBLIC 
+    Kokkos::kokkos
+    nlohmann_json::nlohmann_json
+    OpenMP::OpenMP_CXX
+)
 target_compile_features(main PUBLIC cxx_std_20)
 target_compile_options(main PUBLIC -fopenmp)
 target_compile_definitions(main PUBLIC OPENMP)
