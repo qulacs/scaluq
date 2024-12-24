@@ -18,7 +18,7 @@ void OneTargetMatrixGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_ve
 FLOAT(Fp)
 std::string OneTargetMatrixGateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
-    ss << indent << "std::shared_ptr<const GateBase<Fp>> Type: OneTargetMatrix\n";
+    ss << indent << "Gate Type: OneTargetMatrix\n";
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
@@ -41,7 +41,7 @@ void TwoTargetMatrixGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_ve
 FLOAT(Fp)
 std::string TwoTargetMatrixGateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
-    ss << indent << "std::shared_ptr<const GateBase<Fp>> Type: TwoTargetMatrix\n";
+    ss << indent << "Gate Type: TwoTargetMatrix\n";
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
