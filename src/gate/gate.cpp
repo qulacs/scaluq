@@ -18,7 +18,7 @@ void GateBase<Fp>::check_qubit_mask_within_bounds(const StateVectorBatched<Fp>& 
     std::uint64_t full_mask = (1ULL << states.n_qubits()) - 1;
     if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
         throw std::runtime_error(
-            "Error: Gate::update_quantum_state(StateVector& state): "
+            "Error: Gate::update_quantum_state(StateVectorBatched& states): "
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }

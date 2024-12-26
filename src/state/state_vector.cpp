@@ -12,7 +12,7 @@ StateVector<Fp>::StateVector(std::uint64_t n_qubits)
 }
 FLOAT(Fp)
 StateVector<Fp>::StateVector(Kokkos::View<ComplexType*> view)
-    : _dim(view.extent(0)), _raw(view), _n_qubits(std::bit_width(_dim) - 1) {}
+    : _n_qubits(std::bit_width(view.extent(0)) - 1), _dim(view.extent(0)), _raw(view) {}
 FLOAT(Fp)
 void StateVector<Fp>::set_amplitude_at(std::uint64_t index, ComplexType c) {
     Kokkos::View<ComplexType, Kokkos::HostSpace> host_view("single_value");
