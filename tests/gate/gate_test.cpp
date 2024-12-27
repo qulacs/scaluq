@@ -656,11 +656,6 @@ TEST(GateTest, ApplyIBMQ) {
     run_random_gate_apply_IBMQ<float>(5, make_U<float>);
 }
 
-TEST(GateTest, ApplyTwoTarget) {
-    run_random_gate_apply_two_target<double>(5);
-    run_random_gate_apply_two_target<float>(5);
-}
-
 TEST(GateTest, ApplySparseMatrixGate) {
     run_random_gate_apply_sparse<double>(6);
     run_random_gate_apply_sparse<float>(6);
@@ -753,12 +748,7 @@ template <std::floating_point Fp,
           typename Factory>
 void test_standard_gate_control(Factory factory, std::uint64_t n) {
     Random random;
-    std::vector<std::uint64_t> shuffled(n);
-    std::iota(shuffled.begin(), shuffled.end(), 0ULL);
-    for (std::uint64_t i : std::views::iota(0ULL, n) | std::views::reverse) {
-        std::uint64_t j = random.int32() % (i + 1);
-        if (i != j) std::swap(shuffled[i], shuffled[j]);
-    }
+    std::vector<std::uint64_t> shuffled = random.permutation(n);
     std::vector<std::uint64_t> targets(num_target);
     for (std::uint64_t i : std::views::iota(0ULL, num_target)) {
         targets[i] = shuffled[i];
@@ -845,12 +835,7 @@ void test_pauli_control(std::uint64_t n) {
 template <std::floating_point Fp, std::uint64_t num_target>
 void test_matrix_control(std::uint64_t n_qubits) {
     Random random;
-    std::vector<std::uint64_t> shuffled(n_qubits);
-    std::iota(shuffled.begin(), shuffled.end(), 0ULL);
-    for (std::uint64_t i : std::views::iota(0ULL, n_qubits) | std::views::reverse) {
-        std::uint64_t j = random.int32() % (i + 1);
-        if (i != j) std::swap(shuffled[i], shuffled[j]);
-    }
+    std::vector<std::uint64_t> shuffled = random.permutation(n_qubits);
     std::vector<std::uint64_t> targets(num_target);
     for (std::uint64_t i : std::views::iota(0ULL, num_target)) {
         targets[i] = shuffled[i];
@@ -924,7 +909,7 @@ void test_matrix_control(std::uint64_t n_qubits) {
         Eigen::Matrix<StdComplex<Fp>, 2, 2, Eigen::RowMajor> U3 =
             get_eigen_matrix_random_one_target_unitary<Fp>();
         auto U = internal::kronecker_product<Fp>(U3, internal::kronecker_product<Fp>(U2, U1));
-        internal::ComplexMatrix<Fp> mat(U.rows(), U.cols());
+        internal::ComplexMatrix<Fp> mat = ComplexMatrix<Fp>::Zero(U.rows(), U.cols());
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 mat(i, j) = U(i, j);

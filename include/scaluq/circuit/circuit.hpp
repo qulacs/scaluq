@@ -13,11 +13,12 @@ template <FloatingPoint Fp>
 class Circuit {
 public:
     using GateWithKey = std::variant<Gate<Fp>, std::pair<ParamGate<Fp>, std::string>>;
+    Circuit() = default;
     explicit Circuit(std::uint64_t n_qubits) : _n_qubits(n_qubits) {}
 
     [[nodiscard]] inline std::uint64_t n_qubits() const { return _n_qubits; }
     [[nodiscard]] inline const std::vector<GateWithKey>& gate_list() const { return _gate_list; }
-    [[nodiscard]] inline std::uint64_t n_gates() { return _gate_list.size(); }
+    [[nodiscard]] inline std::uint64_t n_gates() const { return _gate_list.size(); }
     [[nodiscard]] std::set<std::string> key_set() const;
     [[nodiscard]] inline const GateWithKey& get_gate_at(std::uint64_t idx) const {
         if (idx >= _gate_list.size()) {
@@ -25,7 +26,7 @@ public:
         }
         return _gate_list[idx];
     }
-    [[nodiscard]] inline std::optional<std::string> get_param_key_at(std::uint64_t idx) {
+    [[nodiscard]] inline std::optional<std::string> get_param_key_at(std::uint64_t idx) const {
         if (idx >= _gate_list.size()) {
             throw std::runtime_error(
                 "Circuit::get_parameter_key(std::uint64_t): index out of bounds");
@@ -63,6 +64,30 @@ public:
     Circuit copy() const;
 
     Circuit get_inverse() const;
+
+    friend void to_json(Json& j, const Circuit& circuit) {
+        j = Json{{"n_qubits", circuit.n_qubits()}, {"gate_list", Json::array()}};
+        for (auto&& gate : circuit.gate_list()) {
+            if (gate.index() == 0)
+                j["gate_list"].emplace_back(Json{{"gate", std::get<0>(gate)}});
+            else
+                j["gate_list"].emplace_back(
+                    Json{{"gate", std::get<1>(gate).first}, {"key", std::get<1>(gate).second}});
+        }
+    }
+
+    friend void from_json(const Json& j, Circuit& circuit) {
+        circuit = Circuit(j.at("n_qubits").get<std::uint64_t>());
+        const Json& tmp_list = j.at("gate_list");
+        for (const Json& gate_with_key : tmp_list) {
+            if (gate_with_key.contains("key")) {
+                circuit.add_param_gate(gate_with_key.at("gate").get<ParamGate<Fp>>(),
+                                       gate_with_key.at("key").get<std::string>());
+            } else {
+                circuit.add_gate(gate_with_key.at("gate").get<Gate<Fp>>());
+            }
+        }
+    }
 
 private:
     std::uint64_t _n_qubits;
@@ -126,7 +151,17 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def("copy", &Circuit<Fp>::copy, "Copy circuit. All the gates inside is copied.")
         .def("get_inverse",
              &Circuit<Fp>::get_inverse,
-             "Get inverse of circuit. All the gates are newly created.");
+             "Get inverse of circuit. All the gates are newly created.")
+        .def(
+            "to_json",
+            [](const Circuit<Fp>& circuit) { return Json(circuit).dump(); },
+            "Information as json style.")
+        .def(
+            "load_json",
+            [](Circuit<Fp>& circuit, const std::string& str) {
+                circuit = nlohmann::json::parse(str);
+            },
+            "Read an object from the JSON representation of the circuit.");
 }
 }  // namespace internal
 #endif

@@ -5,6 +5,7 @@
 #include <Kokkos_Core.hpp>
 #include <complex>
 #include <cstdint>
+#include <nlohmann/json.hpp>
 
 #include "kokkos.hpp"
 #include "type/complex.hpp"
@@ -13,6 +14,9 @@
 namespace scaluq {
 template <FloatingPoint Fp>
 using StdComplex = std::complex<Fp>;
+template <FloatingPoint Fp>
+using Complex = Kokkos::complex<Fp>;
+using Json = nlohmann::json;
 
 namespace internal {
 template <typename DummyType>
@@ -49,3 +53,16 @@ public:
 };
 }  // namespace internal
 }  // namespace scaluq
+
+namespace nlohmann {
+template <std::floating_point Fp>
+struct adl_serializer<scaluq::Complex<Fp>> {
+    static void to_json(json& j, const scaluq::Complex<Fp>& c) {
+        j = json{{"real", c.real()}, {"imag", c.imag()}};
+    }
+    static void from_json(const json& j, scaluq::Complex<Fp>& c) {
+        j.at("real").get_to(c.real());
+        j.at("imag").get_to(c.imag());
+    }
+};
+}  // namespace nlohmann

@@ -14,6 +14,10 @@ void IGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     i_gate(this->_target_mask, this->_control_mask, state_vector);
 }
 FLOAT(Fp)
+void IGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    i_gate(this->_target_mask, this->_control_mask, states);
+}
+FLOAT(Fp)
 std::string IGateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: I\n";
@@ -30,6 +34,11 @@ FLOAT(Fp)
 void GlobalPhaseGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
     global_phase_gate(this->_target_mask, this->_control_mask, _phase, state_vector);
+}
+FLOAT(Fp)
+void GlobalPhaseGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    global_phase_gate(this->_target_mask, this->_control_mask, _phase, states);
 }
 FLOAT(Fp)
 std::string GlobalPhaseGateImpl<Fp>::to_string(const std::string& indent) const {
@@ -53,6 +62,11 @@ void XGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     x_gate(this->_target_mask, this->_control_mask, state_vector);
 }
 FLOAT(Fp)
+void XGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    x_gate(this->_target_mask, this->_control_mask, states);
+}
+FLOAT(Fp)
 std::string XGateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: X\n";
@@ -73,6 +87,11 @@ void YGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     y_gate(this->_target_mask, this->_control_mask, state_vector);
 }
 FLOAT(Fp)
+void YGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    y_gate(this->_target_mask, this->_control_mask, states);
+}
+FLOAT(Fp)
 std::string YGateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: Y\n";
@@ -91,6 +110,11 @@ FLOAT(Fp)
 void ZGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
     z_gate(this->_target_mask, this->_control_mask, state_vector);
+}
+FLOAT(Fp)
+void ZGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    z_gate(this->_target_mask, this->_control_mask, states);
 }
 FLOAT(Fp)
 std::string ZGateImpl<Fp>::to_string(const std::string& indent) const {
@@ -114,6 +138,11 @@ void HGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     h_gate(this->_target_mask, this->_control_mask, state_vector);
 }
 FLOAT(Fp)
+void HGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    h_gate(this->_target_mask, this->_control_mask, states);
+}
+FLOAT(Fp)
 std::string HGateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: H\n";
@@ -132,6 +161,11 @@ FLOAT(Fp)
 void SGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
     s_gate(this->_target_mask, this->_control_mask, state_vector);
+}
+FLOAT(Fp)
+void SGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    s_gate(this->_target_mask, this->_control_mask, states);
 }
 FLOAT(Fp)
 std::string SGateImpl<Fp>::to_string(const std::string& indent) const {
@@ -154,6 +188,11 @@ void SdagGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const
     sdag_gate(this->_target_mask, this->_control_mask, state_vector);
 }
 FLOAT(Fp)
+void SdagGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    sdag_gate(this->_target_mask, this->_control_mask, states);
+}
+FLOAT(Fp)
 std::string SdagGateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: Sdag\n";
@@ -174,6 +213,11 @@ void TGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     t_gate(this->_target_mask, this->_control_mask, state_vector);
 }
 FLOAT(Fp)
+void TGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    t_gate(this->_target_mask, this->_control_mask, states);
+}
+FLOAT(Fp)
 std::string TGateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: T\n";
@@ -192,6 +236,11 @@ FLOAT(Fp)
 void TdagGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
     tdag_gate(this->_target_mask, this->_control_mask, state_vector);
+}
+FLOAT(Fp)
+void TdagGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    tdag_gate(this->_target_mask, this->_control_mask, states);
 }
 FLOAT(Fp)
 std::string TdagGateImpl<Fp>::to_string(const std::string& indent) const {
@@ -216,6 +265,11 @@ void SqrtXGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) cons
     sqrtx_gate(this->_target_mask, this->_control_mask, state_vector);
 }
 FLOAT(Fp)
+void SqrtXGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    sqrtx_gate(this->_target_mask, this->_control_mask, states);
+}
+FLOAT(Fp)
 std::string SqrtXGateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: SqrtX\n";
@@ -236,6 +290,11 @@ FLOAT(Fp)
 void SqrtXdagGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
     sqrtxdag_gate(this->_target_mask, this->_control_mask, state_vector);
+}
+FLOAT(Fp)
+void SqrtXdagGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    sqrtxdag_gate(this->_target_mask, this->_control_mask, states);
 }
 FLOAT(Fp)
 std::string SqrtXdagGateImpl<Fp>::to_string(const std::string& indent) const {
@@ -260,6 +319,11 @@ void SqrtYGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) cons
     sqrty_gate(this->_target_mask, this->_control_mask, state_vector);
 }
 FLOAT(Fp)
+void SqrtYGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    sqrty_gate(this->_target_mask, this->_control_mask, states);
+}
+FLOAT(Fp)
 std::string SqrtYGateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: SqrtY\n";
@@ -271,13 +335,20 @@ FLOAT_DECLARE_CLASS(SqrtYGateImpl)
 FLOAT(Fp)
 ComplexMatrix<Fp> SqrtYdagGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << Fp{0}, StdComplex<Fp>(0, -1), StdComplex<Fp>(0, 1), Fp{0};
+    Fp half = static_cast<Fp>(0.5);
+    mat << StdComplex<Fp>(half, -half), StdComplex<Fp>(half, -half), StdComplex<Fp>(-half, half),
+        StdComplex<Fp>(half, -half);
     return mat;
 }
 FLOAT(Fp)
 void SqrtYdagGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
     sqrtydag_gate(this->_target_mask, this->_control_mask, state_vector);
+}
+FLOAT(Fp)
+void SqrtYdagGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    sqrtydag_gate(this->_target_mask, this->_control_mask, states);
 }
 FLOAT(Fp)
 std::string SqrtYdagGateImpl<Fp>::to_string(const std::string& indent) const {
@@ -300,6 +371,11 @@ void P0GateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     p0_gate(this->_target_mask, this->_control_mask, state_vector);
 }
 FLOAT(Fp)
+void P0GateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    p0_gate(this->_target_mask, this->_control_mask, states);
+}
+FLOAT(Fp)
 std::string P0GateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: P0\n";
@@ -320,6 +396,11 @@ void P1GateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     p1_gate(this->_target_mask, this->_control_mask, state_vector);
 }
 FLOAT(Fp)
+void P1GateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    p1_gate(this->_target_mask, this->_control_mask, states);
+}
+FLOAT(Fp)
 std::string P1GateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: P1\n";
@@ -332,14 +413,19 @@ FLOAT(Fp)
 ComplexMatrix<Fp> RXGateImpl<Fp>::get_matrix() const {
     internal::ComplexMatrix<Fp> mat(2, 2);
     Fp half_angle = this->_angle / Fp{2};
-    mat << internal::cos(half_angle), Complex<Fp>(Fp{0}, -internal::sin(half_angle)),
-        Complex<Fp>(Fp{0}, internal::sin(half_angle)), internal::cos(half_angle);
+    mat << internal::cos(half_angle), StdComplex<Fp>(Fp{0}, -internal::sin(half_angle)),
+        StdComplex<Fp>(Fp{0}, -internal::sin(half_angle)), internal::cos(half_angle);
     return mat;
 }
 FLOAT(Fp)
 void RXGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
     rx_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
+}
+FLOAT(Fp)
+void RXGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    rx_gate(this->_target_mask, this->_control_mask, this->_angle, states);
 }
 FLOAT(Fp)
 std::string RXGateImpl<Fp>::to_string(const std::string& indent) const {
@@ -365,6 +451,11 @@ void RYGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     ry_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
 }
 FLOAT(Fp)
+void RYGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    ry_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+}
+FLOAT(Fp)
 std::string RYGateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: RY\n";
@@ -388,6 +479,11 @@ void RZGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     rz_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
 }
 FLOAT(Fp)
+void RZGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    rz_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+}
+FLOAT(Fp)
 std::string RZGateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: RZ\n";
@@ -406,6 +502,11 @@ FLOAT(Fp)
 void U1GateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
     u1_gate(this->_target_mask, this->_control_mask, _lambda, state_vector);
+}
+FLOAT(Fp)
+void U1GateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    u1_gate(this->_target_mask, this->_control_mask, _lambda, states);
 }
 FLOAT(Fp)
 std::string U1GateImpl<Fp>::to_string(const std::string& indent) const {
@@ -433,6 +534,11 @@ void U2GateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     u2_gate(this->_target_mask, this->_control_mask, _phi, _lambda, state_vector);
 }
 FLOAT(Fp)
+void U2GateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    u2_gate(this->_target_mask, this->_control_mask, _phi, _lambda, states);
+}
+FLOAT(Fp)
 std::string U2GateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: U2\n";
@@ -457,6 +563,11 @@ void U3GateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     u3_gate(this->_target_mask, this->_control_mask, _theta, _phi, _lambda, state_vector);
 }
 FLOAT(Fp)
+void U3GateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    u3_gate(this->_target_mask, this->_control_mask, _theta, _phi, _lambda, states);
+}
+FLOAT(Fp)
 std::string U3GateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: U3\n";
@@ -476,6 +587,11 @@ FLOAT(Fp)
 void SwapGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
     swap_gate(this->_target_mask, this->_control_mask, state_vector);
+}
+FLOAT(Fp)
+void SwapGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    swap_gate(this->_target_mask, this->_control_mask, states);
 }
 FLOAT(Fp)
 std::string SwapGateImpl<Fp>::to_string(const std::string& indent) const {

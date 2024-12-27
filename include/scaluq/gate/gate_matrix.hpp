@@ -7,88 +7,9 @@
 
 #include "../constant.hpp"
 #include "gate.hpp"
-#include "gate_standard.hpp"
 
 namespace scaluq {
 namespace internal {
-
-template <FloatingPoint Fp>
-class OneTargetMatrixGateImpl : public GateBase<Fp> {
-    Matrix2x2<Fp> _matrix;
-
-public:
-    OneTargetMatrixGateImpl(std::uint64_t target_mask,
-                            std::uint64_t control_mask,
-                            const std::array<std::array<Complex<Fp>, 2>, 2>& matrix)
-        : GateBase<Fp>(target_mask, control_mask) {
-        _matrix[0][0] = matrix[0][0];
-        _matrix[0][1] = matrix[0][1];
-        _matrix[1][0] = matrix[1][0];
-        _matrix[1][1] = matrix[1][1];
-    }
-
-    std::array<std::array<Complex<Fp>, 2>, 2> matrix() const {
-        return {_matrix[0][0], _matrix[0][1], _matrix[1][0], _matrix[1][1]};
-    }
-
-    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
-        return std::make_shared<const OneTargetMatrixGateImpl>(
-            this->_target_mask,
-            this->_control_mask,
-            std::array<std::array<Complex<Fp>, 2>, 2>{scaluq::conj(_matrix[0][0]),
-                                                      scaluq::conj(_matrix[1][0]),
-                                                      scaluq::conj(_matrix[0][1]),
-                                                      scaluq::conj(_matrix[1][1])});
-    }
-    internal::ComplexMatrix<Fp> get_matrix() const override;
-
-    void update_quantum_state(StateVector<Fp>& state_vector) const override;
-    std::string to_string(const std::string& indent) const override;
-};
-
-template <FloatingPoint Fp>
-class TwoTargetMatrixGateImpl : public GateBase<Fp> {
-    Matrix4x4<Fp> _matrix;
-
-public:
-    TwoTargetMatrixGateImpl(std::uint64_t target_mask,
-                            std::uint64_t control_mask,
-                            const std::array<std::array<Complex<Fp>, 4>, 4>& matrix)
-        : GateBase<Fp>(target_mask, control_mask) {
-        for (std::uint64_t i : std::views::iota(0, 4)) {
-            for (std::uint64_t j : std::views::iota(0, 4)) {
-                _matrix[i][j] = matrix[i][j];
-            }
-        }
-    }
-
-    std::array<std::array<Complex<Fp>, 4>, 4> matrix() const {
-        std::array<std::array<Complex<Fp>, 4>, 4> matrix;
-        for (std::uint64_t i : std::views::iota(0, 4)) {
-            for (std::uint64_t j : std::views::iota(0, 4)) {
-                matrix[i][j] = _matrix[i][j];
-            }
-        }
-        return matrix;
-    }
-
-    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
-        std::array<std::array<Complex<Fp>, 4>, 4> matrix_dag;
-        for (std::uint64_t i : std::views::iota(0, 4)) {
-            for (std::uint64_t j : std::views::iota(0, 4)) {
-                matrix_dag[i][j] = scaluq::conj(_matrix[j][i]);
-            }
-        }
-        return std::make_shared<const TwoTargetMatrixGateImpl>(
-            this->_target_mask, this->_control_mask, matrix_dag);
-    }
-    internal::ComplexMatrix<Fp> get_matrix() const override;
-
-    void update_quantum_state(StateVector<Fp>& state_vector) const override;
-
-    std::string to_string(const std::string& indent) const override;
-};
-
 template <FloatingPoint Fp>
 class DenseMatrixGateImpl : public GateBase<Fp> {
     Matrix<Fp> _matrix;
@@ -107,8 +28,16 @@ public:
     ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "DensetMatrix"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"matrix", "Not inplemented yet"}};
+    }
 };
 
 template <FloatingPoint Fp>
@@ -130,16 +59,20 @@ public:
     SparseComplexMatrix<Fp> get_sparse_matrix() const { return get_matrix().sparseView(); }
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "SparseMatrix"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"matrix", "Not inplemented yet"}};
+    }
 };
 
 }  // namespace internal
 
-template <FloatingPoint Fp>
-using OneTargetMatrixGate = internal::GatePtr<internal::OneTargetMatrixGateImpl<Fp>>;
-template <FloatingPoint Fp>
-using TwoTargetMatrixGate = internal::GatePtr<internal::TwoTargetMatrixGateImpl<Fp>>;
 template <FloatingPoint Fp>
 using SparseMatrixGate = internal::GatePtr<internal::SparseMatrixGateImpl<Fp>>;
 template <FloatingPoint Fp>
@@ -149,10 +82,6 @@ using DenseMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl<Fp>>;
 namespace internal {
 template <FloatingPoint Fp>
 void bind_gate_gate_matrix_hpp(nb::module_& m) {
-    DEF_GATE(OneTargetMatrixGate, Fp, "Specific class of one-qubit dense matrix gate.")
-        .def("matrix", [](const OneTargetMatrixGate<Fp>& gate) { return gate->matrix(); });
-    DEF_GATE(TwoTargetMatrixGate, Fp, "Specific class of two-qubit dense matrix gate.")
-        .def("matrix", [](const TwoTargetMatrixGate<Fp>& gate) { return gate->matrix(); });
     DEF_GATE(SparseMatrixGate, Fp, "Specific class of sparse matrix gate.")
         .def("matrix", [](const SparseMatrixGate<Fp>& gate) { return gate->get_matrix(); })
         .def("sparse_matrix",

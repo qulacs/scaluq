@@ -80,6 +80,15 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(eigen)
 
+# nlohmann_json
+FetchContent_Declare(
+    json
+    URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+FetchContent_MakeAvailable(json)
+install(DIRECTORY ${json_SOURCE_DIR}/single_include/nlohmann DESTINATION include)
+
 # nanobind
 if(SKBUILD)
     find_package(Python 3.8

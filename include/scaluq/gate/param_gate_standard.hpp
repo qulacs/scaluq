@@ -19,8 +19,17 @@ public:
     internal::ComplexMatrix<Fp> get_matrix(Fp param) const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states,
+                              std::vector<Fp> params) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "ParamRX"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"param_coef", this->param_coef()}};
+    }
 };
 
 template <FloatingPoint Fp>
@@ -35,8 +44,17 @@ public:
     internal::ComplexMatrix<Fp> get_matrix(Fp param) const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states,
+                              std::vector<Fp> params) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "ParamRY"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"param_coef", this->param_coef()}};
+    }
 };
 
 template <FloatingPoint Fp>
@@ -51,8 +69,17 @@ public:
     internal::ComplexMatrix<Fp> get_matrix(Fp param) const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states,
+                              std::vector<Fp> params) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "ParamRZ"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"param_coef", this->param_coef()}};
+    }
 };
 
 }  // namespace internal
@@ -63,6 +90,30 @@ template <FloatingPoint Fp>
 using ParamRYGate = internal::ParamGatePtr<internal::ParamRYGateImpl<Fp>>;
 template <FloatingPoint Fp>
 using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl<Fp>>;
+
+namespace internal {
+
+#define DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE(Impl, Type)             \
+    template <>                                                             \
+    inline std::shared_ptr<const Impl<Type>> get_from_json(const Json& j) { \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();    \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();  \
+        auto param_coef = j.at("param_coef").get<Type>();                   \
+        return std::make_shared<const Impl<Type>>(                          \
+            vector_to_mask(targets), vector_to_mask(controls), param_coef); \
+    }
+
+#define DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_TYPE(Type)         \
+    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE(ParamRXGateImpl, Type) \
+    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE(ParamRYGateImpl, Type) \
+    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE(ParamRZGateImpl, Type)
+
+DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE
+#undef DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_TYPE
+
+}  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {

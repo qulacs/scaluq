@@ -5,49 +5,6 @@
 
 namespace scaluq::internal {
 FLOAT(Fp)
-ComplexMatrix<Fp> OneTargetMatrixGateImpl<Fp>::get_matrix() const {
-    internal::ComplexMatrix<Fp> mat(2, 2);
-    mat << this->_matrix[0][0], this->_matrix[0][1], this->_matrix[1][0], this->_matrix[1][1];
-    return mat;
-}
-FLOAT(Fp)
-void OneTargetMatrixGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
-    this->check_qubit_mask_within_bounds(state_vector);
-    one_target_dense_matrix_gate(this->_target_mask, this->_control_mask, _matrix, state_vector);
-}
-FLOAT(Fp)
-std::string OneTargetMatrixGateImpl<Fp>::to_string(const std::string& indent) const {
-    std::ostringstream ss;
-    ss << indent << "std::shared_ptr<const GateBase<Fp>> Type: OneTargetMatrix\n";
-    ss << this->get_qubit_info_as_string(indent);
-    return ss.str();
-}
-FLOAT_DECLARE_CLASS(OneTargetMatrixGateImpl)
-
-FLOAT(Fp)
-ComplexMatrix<Fp> TwoTargetMatrixGateImpl<Fp>::get_matrix() const {
-    internal::ComplexMatrix<Fp> mat(4, 4);
-    mat << this->_matrix[0][0], this->_matrix[0][1], this->_matrix[0][2], this->_matrix[0][3],
-        this->_matrix[1][0], this->_matrix[1][1], this->_matrix[1][2], this->_matrix[1][3],
-        this->_matrix[2][0], this->_matrix[2][1], this->_matrix[2][2], this->_matrix[2][3],
-        this->_matrix[3][0], this->_matrix[3][1], this->_matrix[3][2], this->_matrix[3][3];
-    return mat;
-}
-FLOAT(Fp)
-void TwoTargetMatrixGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
-    this->check_qubit_mask_within_bounds(state_vector);
-    two_target_dense_matrix_gate(this->_target_mask, this->_control_mask, _matrix, state_vector);
-}
-FLOAT(Fp)
-std::string TwoTargetMatrixGateImpl<Fp>::to_string(const std::string& indent) const {
-    std::ostringstream ss;
-    ss << indent << "std::shared_ptr<const GateBase<Fp>> Type: TwoTargetMatrix\n";
-    ss << this->get_qubit_info_as_string(indent);
-    return ss.str();
-}
-FLOAT_DECLARE_CLASS(TwoTargetMatrixGateImpl)
-
-FLOAT(Fp)
 DenseMatrixGateImpl<Fp>::DenseMatrixGateImpl(std::uint64_t target_mask,
                                              std::uint64_t control_mask,
                                              const ComplexMatrix<Fp>& mat,
@@ -82,6 +39,11 @@ FLOAT(Fp)
 void DenseMatrixGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
     dense_matrix_gate(this->_target_mask, this->_control_mask, _matrix, state_vector);
+}
+FLOAT(Fp)
+void DenseMatrixGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    dense_matrix_gate(this->_target_mask, this->_control_mask, _matrix, states);
 }
 FLOAT(Fp)
 std::string DenseMatrixGateImpl<Fp>::to_string(const std::string& indent) const {
@@ -130,6 +92,11 @@ FLOAT(Fp)
 void SparseMatrixGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
     sparse_matrix_gate(this->_target_mask, this->_control_mask, _matrix, state_vector);
+}
+FLOAT(Fp)
+void SparseMatrixGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    this->check_qubit_mask_within_bounds(states);
+    sparse_matrix_gate(this->_target_mask, this->_control_mask, _matrix, states);
 }
 FLOAT(Fp)
 std::string SparseMatrixGateImpl<Fp>::to_string(const std::string& indent) const {

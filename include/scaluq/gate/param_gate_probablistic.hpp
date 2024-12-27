@@ -3,8 +3,9 @@
 #include <variant>
 
 #include "../util/random.hpp"
-#include "gate.hpp"
-#include "param_gate.hpp"
+#include "gate_probablistic.hpp"
+#include "param_gate_pauli.hpp"
+#include "param_gate_standard.hpp"
 
 namespace scaluq {
 namespace internal {
@@ -12,7 +13,7 @@ template <FloatingPoint Fp>
 class ParamProbablisticGateImpl : public ParamGateBase<Fp> {
     using EitherGate = std::variant<Gate<Fp>, ParamGate<Fp>>;
     std::vector<double> _distribution;
-    std::vector<double> _cumlative_distribution;
+    std::vector<double> _cumulative_distribution;
     std::vector<EitherGate> _gate_list;
 
 public:
@@ -60,13 +61,47 @@ public:
     }
 
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states,
+                              std::vector<Fp> params) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "ParamProbablistic"},
+                 {"gate_list", Json::array()},
+                 {"distribution", this->distribution()}};
+
+        for (const auto& gate : this->gate_list()) {
+            std::visit([&](auto&& arg) { j["gate_list"].push_back(arg); }, gate);
+        }
+    }
 };
 }  // namespace internal
 
 template <FloatingPoint Fp>
 using ParamProbablisticGate = internal::ParamGatePtr<internal::ParamProbablisticGateImpl<Fp>>;
+
+namespace internal {
+
+#define DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE(Type)                                     \
+    template <>                                                                                  \
+    inline std::shared_ptr<const ParamProbablisticGateImpl<Type>> get_from_json(const Json& j) { \
+        auto distribution = j.at("distribution").get<std::vector<Type>>();                       \
+        std::vector<std::variant<Gate<Type>, ParamGate<Type>>> gate_list;                        \
+        const Json& tmp_list = j.at("gate_list");                                                \
+        for (const Json& tmp_j : tmp_list) {                                                     \
+            if (tmp_j.at("type").get<std::string>().starts_with("Param"))                        \
+                gate_list.emplace_back(tmp_j.get<ParamGate<Type>>());                            \
+            else                                                                                 \
+                gate_list.emplace_back(tmp_j.get<Gate<Type>>());                                 \
+        }                                                                                        \
+        return std::make_shared<const ParamProbablisticGateImpl<Type>>(distribution, gate_list); \
+    }
+DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE
+
+}  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {

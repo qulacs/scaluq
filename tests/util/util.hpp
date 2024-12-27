@@ -12,24 +12,30 @@ using scaluq::internal::ComplexMatrix;
 template <std::floating_point Fp>
 using ComplexVector = Eigen::Matrix<StdComplex<Fp>, -1, 1>;
 
-const inline double eps = 1e-12;
-const inline float eps_f = 1e-4;
+template <std::floating_point Fp>
+constexpr Fp eps_() {
+    if constexpr (std::is_same_v<Fp, double>)
+        return 1e-12;
+    else if constexpr (std::is_same_v<Fp, float>)
+        return 1e-4;
+    else
+        static_assert(internal::lazy_false_v<void>, "unknown GateImpl");
+}
+template <std::floating_point Fp>
+constexpr Fp eps = eps_<Fp>();
 
 template <std::floating_point Fp>
 inline void check_near(const StdComplex<Fp>& a, const StdComplex<Fp>& b) {
-    if constexpr (std::is_same_v<Fp, double>)
-        ASSERT_LE(std::abs(a - b), eps);
-    else
-        ASSERT_LE(std::abs(a - b), eps_f);
+    ASSERT_LE(std::abs(a - b), eps<Fp>);
 }
 
 template <std::floating_point Fp>
-inline bool same_state(const StateVector<Fp>& s1, const StateVector<Fp>& s2, const Fp eps = 1e-12) {
+inline bool same_state(const StateVector<Fp>& s1, const StateVector<Fp>& s2, const Fp e = eps<Fp>) {
     auto s1_cp = s1.get_amplitudes();
     auto s2_cp = s2.get_amplitudes();
     assert(s1.n_qubits() == s2.n_qubits());
     for (std::uint64_t i = 0; i < s1.dim(); ++i) {
-        if (std::abs((std::complex<Fp>)s1_cp[i] - (std::complex<Fp>)s2_cp[i]) > eps) return false;
+        if (std::abs((std::complex<Fp>)s1_cp[i] - (std::complex<Fp>)s2_cp[i]) > e) return false;
     }
     return true;
 };
@@ -37,7 +43,7 @@ inline bool same_state(const StateVector<Fp>& s1, const StateVector<Fp>& s2, con
 template <std::floating_point Fp>
 inline bool same_state_except_global_phase(const StateVector<Fp>& s1,
                                            const StateVector<Fp>& s2,
-                                           const Fp eps = 1e-12) {
+                                           const Fp e = eps<Fp>) {
     auto s1_cp = s1.get_amplitudes();
     auto s2_cp = s2.get_amplitudes();
     assert(s1.n_qubits() == s2.n_qubits());
@@ -47,16 +53,16 @@ inline bool same_state_except_global_phase(const StateVector<Fp>& s1,
             significant = i;
         }
     }
-    if (std::abs((std::complex<Fp>)s1_cp[significant]) < eps) {
+    if (std::abs((std::complex<Fp>)s1_cp[significant]) < e) {
         for (std::uint64_t i = 0; i < s2.dim(); ++i) {
-            if (std::abs((std::complex<Fp>)s2_cp[i]) > eps) return false;
+            if (std::abs((std::complex<Fp>)s2_cp[i]) > e) return false;
         }
         return true;
     }
     Fp phase = std::arg(std::complex<Fp>(s2_cp[significant] / s1_cp[significant]));
     std::complex<Fp> phase_coef = std::polar(1., phase);
     for (std::uint64_t i = 0; i < s1.dim(); ++i) {
-        if (std::abs(phase_coef * (std::complex<Fp>)s1_cp[i] - (std::complex<Fp>)s2_cp[i]) > eps)
+        if (std::abs(phase_coef * (std::complex<Fp>)s1_cp[i] - (std::complex<Fp>)s2_cp[i]) > e)
             return false;
     }
     return true;

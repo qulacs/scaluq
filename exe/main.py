@@ -1,46 +1,26 @@
-import random
-import time
+from scaluq.f64 import *
 
 def main():
-    n_qubits = 20
+    state = StateVector(1)
+    x_gate = gate.X(0, [1])
+    print(state.to_json())
+    print(x_gate.to_json())
+    print(gate.ParamRX(0, 0.5, [1]).to_json())
 
-    import numpy as np
-    np.set_printoptions(threshold=np.inf)
-    from scaluq.f16 import gate, StateVector
-    state = StateVector(2)
-    print(state.get_amplitudes())
+    circuit = Circuit(3)
+    circuit.add_gate(x_gate)
+    print(circuit.to_json())
 
-    # from scaluq.f16 import StateVector, gate
-    # state = StateVector(n_qubits)
-    # st = time.time()
-    # for i in range(10000):
-    #     gate.X(random.randint(0, n_qubits-1)).update_quantum_state(state)
-    # ed = time.time()
-    # print(ed-st)
+    pauli = PauliOperator("X 3 Y 2")
 
-    # from scaluq.f32 import StateVector, gate
-    # state = StateVector(n_qubits)
-    # st = time.time()
-    # for i in range(10000):
-    #     gate.X(random.randint(0, n_qubits-1)).update_quantum_state(state)
-    # ed = time.time()
-    # print(ed-st)
+    operator = Operator(4)
+    operator.add_operator(pauli)
 
-    # from scaluq.f64 import StateVector, gate
-    # state = StateVector(n_qubits)
-    # st = time.time()
-    # for i in range(10000):
-    #     gate.X(random.randint(0, n_qubits-1)).update_quantum_state(state)
-    # ed = time.time()
-    # print(ed-st)
+    print(operator.to_json())
 
-    # from scaluq.bf16 import StateVector, gate
-    # state = StateVector(n_qubits)
-    # st = time.time()
-    # for i in range(10000):
-    #     gate.X(random.randint(0, n_qubits-1)).update_quantum_state(state)
-    # ed = time.time()
-    # print(ed-st)
+    states = StateVectorBatched(3, 3)
+    print(states.to_json())
+
 
 if __name__ == "__main__":
     main()

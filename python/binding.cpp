@@ -1,4 +1,5 @@
 #include <nanobind/eigen/dense.h>
+#include <nanobind/eigen/sparse.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
 #include <nanobind/stl/array.h>
@@ -104,9 +105,9 @@ void cleanup() {
 
 template <std::floating_point Fp>
 void bind_on_precision(nb::module_& m, const char* submodule_name) {
-    auto mp = m.def_submodule(
-        submodule_name,
-        (std::ostringstream("module for ") << submodule_name << "precision").str().c_str());
+    std::ostringstream oss;
+    oss << "module for " << submodule_name << "precision";
+    auto mp = m.def_submodule(submodule_name, oss.str().c_str());
 
     internal::bind_state_state_vector_hpp<Fp>(mp);
     internal::bind_state_state_vector_batched_hpp<Fp>(mp);

@@ -63,9 +63,9 @@ jobs:
       
       - name: Install CUDA toolkit
         if: ${{ matrix.device == 'cuda' }}
-        uses: Jimver/cuda-toolkit@v0.2.11
+        uses: Jimver/cuda-toolkit@v0.2.19
         with:
-          cuda: "12.2.0"
+          cuda: "12.6.1"
           method: "network"
       
       - name: Show installed Compiler version
@@ -81,14 +81,14 @@ jobs:
         run: ./script/configure
 
       - name: Install to system
-        run: sudo env "PATH=$PATH" ninja -C build install
+        run: sudo -E env "PATH=$PATH" ninja -C build install
 
       - name: Build and Run other project
         run: |
           cd example_project/
           cmake -B build/ -D "CMAKE_C_COMPILER=$CMAKE_C_COMPILER" -D "CMAKE_CXX_COMPILER=$CMAKE_CXX_COMPILER" -D "SCALUQ_USE_CUDA=$SCALUQ_USE_CUDA"
           make -C build
-          if [ "$SCALUQ_USE_CUDA" != 'ON']; then
+          if [ "$SCALUQ_USE_CUDA" != 'ON' ]; then
             build/main
           fi
 
@@ -137,9 +137,9 @@ jobs:
       
       - name: Install CUDA toolkit
         if: ${{ matrix.device == 'cuda' }}
-        uses: Jimver/cuda-toolkit@v0.2.11
+        uses: Jimver/cuda-toolkit@v0.2.19
         with:
-          cuda: "12.2.0"
+          cuda: "12.6.1"
           method: "network"
       
       - name: Show installed Compiler version
