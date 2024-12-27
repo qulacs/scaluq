@@ -265,7 +265,8 @@ internal::ComplexMatrix<Fp> PauliOperator<Fp>::get_matrix_ignoring_coef() const 
     std::uint64_t matrix_dim = 1ULL << _ptr->_pauli_id_list.size();
     internal::ComplexMatrix<Fp> mat = internal::ComplexMatrix<Fp>::Zero(matrix_dim, matrix_dim);
     for (std::uint64_t index = 0; index < matrix_dim; index++) {
-        const StdComplex<Fp> sign = Fp{1 - 2 * (Kokkos::popcount(index & phase_mask) % 2)};
+        const StdComplex<Fp> sign =
+            static_cast<Fp>(1 - 2 * (Kokkos::popcount(index & phase_mask) % 2));
         mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
     }
     return mat;

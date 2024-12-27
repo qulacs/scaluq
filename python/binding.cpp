@@ -31,8 +31,8 @@ NAMESPACE_BEGIN(NB_NAMESPACE)
 NAMESPACE_BEGIN(detail)
 
 template <typename T>
-struct type_caster<scaluq::Complex<T>> {
-    NB_TYPE_CASTER(scaluq::Complex<T>, const_name("complex"))
+struct type_caster<Complex<T>> {
+    NB_TYPE_CASTER(Complex<T>, const_name("complex"))
 
     template <bool Recursive = true>
     bool from_python(handle src, uint8_t flags, cleanup_list* cleanup) noexcept {
@@ -40,8 +40,8 @@ struct type_caster<scaluq::Complex<T>> {
         (void)cleanup;
 
         if (PyComplex_Check(src.ptr())) {
-            value = scaluq::Complex<T>((T)PyComplex_RealAsDouble(src.ptr()),
-                                       (T)PyComplex_ImagAsDouble(src.ptr()));
+            value = Complex<T>((T)PyComplex_RealAsDouble(src.ptr()),
+                               (T)PyComplex_ImagAsDouble(src.ptr()));
             return true;
         }
 
@@ -59,7 +59,7 @@ struct type_caster<scaluq::Complex<T>> {
 
         make_caster<T> caster;
         if (caster.from_python(src, flags, cleanup)) {
-            value = scaluq::Complex<T>(caster.operator cast_t<T>());
+            value = Complex<T>(caster.operator cast_t<T>());
             return true;
         }
 
@@ -74,6 +74,26 @@ struct type_caster<scaluq::Complex<T>> {
         return PyComplex_FromDoubles((double)value.real(), (double)value.imag());
     }
 };
+
+// template <>
+// struct dtype_traits<scaluq::F16> {
+//     static constexpr dlpack::dtype value{
+//         (uint8_t)dlpack::dtype_code::Float,  // type code
+//         16,                                  // size in bits
+//         1                                    // lanes (simd), usually set to 1
+//     };
+//     static constexpr auto name = const_name("float16");
+// };
+
+// template <>
+// struct dtype_traits<scaluq::BF16> {
+//     static constexpr dlpack::dtype value{
+//         (uint8_t)dlpack::dtype_code::Float,  // type code
+//         16,                                  // size in bits
+//         1                                    // lanes (simd), usually set to 1
+//     };
+//     static constexpr auto name = const_name("bfloat16");
+// };
 
 NAMESPACE_END(detail)
 NAMESPACE_END(NB_NAMESPACE)
@@ -116,16 +136,16 @@ NB_MODULE(scaluq_core, m) {
     internal::bind_gate_gate_hpp_without_precision(m);
 
 #ifdef SCALUQ_FLOAT16
-    bind_on_precision<std::float16_t>(m, "f16");
+    bind_on_precision<F16>(m, "f16");
 #endif
 #ifdef SCALUQ_FLOAT32
-    bind_on_precision<std::float32_t>(m, "f32");
+    bind_on_precision<F32>(m, "f32");
 #endif
 #ifdef SCALUQ_FLOAT64
-    bind_on_precision<std::float64_t>(m, "f64");
+    bind_on_precision<F64>(m, "f64");
 #endif
 #ifdef SCALUQ_BFLOAT16
-    bind_on_precision<std::bfloat16_t>(m, "bf16");
+    bind_on_precision<BF16>(m, "bf16");
 #endif
 
     initialize();

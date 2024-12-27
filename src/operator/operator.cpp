@@ -17,7 +17,7 @@ std::string Operator<Fp>::to_string() const {
 
 FLOAT(Fp)
 void Operator<Fp>::add_operator(PauliOperator<Fp>&& mpt) {
-    _is_hermitian &= mpt.coef().imag() == Fp{0.};
+    _is_hermitian &= mpt.coef().imag() == Fp{0};
     if (![&] {
             const auto& target_list = mpt.target_qubit_list();
             if (target_list.empty()) return true;

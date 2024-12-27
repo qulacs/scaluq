@@ -45,7 +45,7 @@ inline ParamGate<Fp> ParamPauliRotation(const PauliOperator<Fp>& pauli,
 }
 template <FloatingPoint Fp>
 inline ParamGate<Fp> ParamProbablistic(
-    const std::vector<Fp>& distribution,
+    const std::vector<double>& distribution,
     const std::vector<std::variant<Gate<Fp>, ParamGate<Fp>>>& gate_list) {
     return internal::ParamGateFactory::create_gate<internal::ParamProbablisticGateImpl<Fp>>(
         distribution, gate_list);
@@ -85,9 +85,9 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
               "Generate general ParamGate class instance of ParamProbablistic.");
     mgate.def(
         "ParamProbablistic",
-        [](const std::vector<std::pair<Fp, std::variant<Gate<Fp>, ParamGate<Fp>>>>&
+        [](const std::vector<std::pair<double, std::variant<Gate<Fp>, ParamGate<Fp>>>>&
                prob_gate_list) {
-            std::vector<Fp> distribution;
+            std::vector<double> distribution;
             std::vector<std::variant<Gate<Fp>, ParamGate<Fp>>> gate_list;
             distribution.reserve(prob_gate_list.size());
             gate_list.reserve(prob_gate_list.size());

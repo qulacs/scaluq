@@ -242,7 +242,7 @@ inline Gate<Fp> SparseMatrix(const std::vector<std::uint64_t>& targets,
         internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix_transformed);
 }
 template <FloatingPoint Fp>
-inline Gate<Fp> Probablistic(const std::vector<Fp>& distribution,
+inline Gate<Fp> Probablistic(const std::vector<double>& distribution,
                              const std::vector<Gate<Fp>>& gate_list) {
     return internal::GateFactory::create_gate<internal::ProbablisticGateImpl<Fp>>(distribution,
                                                                                   gate_list);

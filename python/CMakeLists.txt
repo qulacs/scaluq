@@ -21,7 +21,20 @@ nanobind_add_stub(
     MARKER_FILE scaluq/py.typed
     VERBOSE
 )
-foreach(FLOAT IN ITEMS f64 f32)
+set(FLOATS)
+if(SCALUQ_FLOAT16)
+    list(APPEND FLOATS f16)
+endif()
+if(SCALUQ_FLOAT32)
+    list(APPEND FLOATS f32)
+endif()
+if(SCALUQ_FLOAT64)
+    list(APPEND FLOATS f64)
+endif()
+if(SCALUQ_BFLOAT16)
+    list(APPEND FLOATS bf16)
+endif()
+foreach(FLOAT IN LISTS FLOATS)
     nanobind_add_stub(
         scaluq_stub
         INSTALL_TIME

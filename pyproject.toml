@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core >= 0.4.3", "nanobind >= 2.0.0", "typing_extensions >= 4.0.0", "setuptools >= 64", "setuptools_scm >= 8"]
+requires = ["scikit-build-core >= 0.4.3", "nanobind @ git+https://github.com/hpkfft/nanobind.git@floatingpoint", "typing_extensions >= 4.0.0", "setuptools >= 64", "setuptools_scm >= 8"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -63,5 +63,4 @@ doc = [
     "sphinxcontrib-napoleon == 0.7",
     "sphinx_rtd_theme == 2.0.0",
     "sphinx-math-dollar == 1.2.1",
-    "nanobind == 2.0.0"
 ]
