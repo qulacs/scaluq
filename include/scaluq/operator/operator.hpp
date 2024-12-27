@@ -9,13 +9,14 @@
 
 namespace scaluq {
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class Operator {
 public:
+    Operator() = default;  // for enable operator= from json
     explicit Operator(std::uint64_t n_qubits) : _n_qubits(n_qubits) {}
 
-    [[nodiscard]] inline bool is_hermitian() { return _is_hermitian; }
-    [[nodiscard]] inline std::uint64_t n_qubits() { return _n_qubits; }
+    [[nodiscard]] inline bool is_hermitian() const { return _is_hermitian; }
+    [[nodiscard]] inline std::uint64_t n_qubits() const { return _n_qubits; }
     [[nodiscard]] inline const std::vector<PauliOperator<Fp>>& terms() const { return _terms; }
     [[nodiscard]] std::string to_string() const;
 
@@ -49,7 +50,7 @@ public:
     Operator& operator*=(Complex<Fp> coef);
     Operator operator*(Complex<Fp> coef) const { return Operator(*this) *= coef; }
     inline Operator operator+() const { return *this; }
-    Operator operator-() const { return *this * -1; }
+    Operator operator-() const { return *this * -Fp{1}; }
     Operator& operator+=(const Operator& target);
     Operator operator+(const Operator& target) const { return Operator(*this) += target; }
     Operator& operator-=(const Operator& target) { return *this += -target; }
@@ -58,10 +59,28 @@ public:
     Operator& operator*=(const Operator& target) { return *this = *this * target; }
     Operator& operator+=(const PauliOperator<Fp>& pauli);
     Operator operator+(const PauliOperator<Fp>& pauli) const { return Operator(*this) += pauli; }
-    Operator& operator-=(const PauliOperator<Fp>& pauli) { return *this += pauli * -1; }
+    Operator& operator-=(const PauliOperator<Fp>& pauli) { return *this += pauli * -Fp{1}; }
     Operator operator-(const PauliOperator<Fp>& pauli) const { return Operator(*this) -= pauli; }
     Operator& operator*=(const PauliOperator<Fp>& pauli);
     Operator operator*(const PauliOperator<Fp>& pauli) const { return Operator(*this) *= pauli; }
+
+    friend void to_json(Json& j, const Operator& op) {
+        j = Json{{"n_qubits", op.n_qubits()}, {"terms", Json::array()}};
+        for (const auto& pauli : op.terms()) {
+            Json tmp = pauli;
+            j["terms"].push_back(tmp);
+        }
+    }
+    friend void from_json(const Json& j, Operator& op) {
+        std::uint32_t n = j.at("n_qubits").get<std::uint32_t>();
+        Operator<Fp> res(n);
+        for (const auto& term : j.at("terms")) {
+            std::string pauli_string = term.at("pauli_string").get<std::string>();
+            Kokkos::complex<Fp> coef = term.at("coef").get<Kokkos::complex<Fp>>();
+            res.add_operator({pauli_string, coef});
+        }
+        op = res;
+    }
 
 private:
     std::vector<PauliOperator<Fp>> _terms;
@@ -71,7 +90,7 @@ private:
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_operator_operator_hpp(nb::module_& m) {
     nb::class_<Operator<Fp>>(m, "Operator", "General quantum operator class.")
         .def(nb::init<std::uint64_t>(),
@@ -124,7 +143,15 @@ void bind_operator_operator_hpp(nb::module_& m) {
         .def(nb::self -= PauliOperator<Fp>())
         .def(nb::self - PauliOperator<Fp>())
         .def(nb::self *= PauliOperator<Fp>())
-        .def(nb::self * PauliOperator<Fp>());
+        .def(nb::self * PauliOperator<Fp>())
+        .def(
+            "to_json",
+            [](const Operator<Fp>& op) { return Json(op).dump(); },
+            "Information as json style.")
+        .def(
+            "load_json",
+            [](Operator<Fp>& op, const std::string& str) { op = nlohmann::json::parse(str); },
+            "Read an object from the JSON representation of the operator.");
 }
 }  // namespace internal
 #endif

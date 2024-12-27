@@ -16,17 +16,18 @@ namespace scaluq {
 using HostSpace = Kokkos::HostSpace;
 using DefaultSpace = Kokkos::DefaultExecutionSpace;
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class StateVector {
     std::uint64_t _n_qubits;
     std::uint64_t _dim;
-    using ComplexType = Kokkos::complex<Fp>;
+    using ComplexType = scaluq::Complex<Fp>;
 
 public:
     static constexpr std::uint64_t UNMEASURED = 2;
     Kokkos::View<ComplexType*> _raw;
     StateVector() = default;
     StateVector(std::uint64_t n_qubits);
+    StateVector(Kokkos::View<ComplexType*> view);
     StateVector(const StateVector& other) = default;
 
     StateVector& operator=(const StateVector& other) = default;
@@ -84,11 +85,19 @@ public:
     }
 
     [[nodiscard]] std::string to_string() const;
+
+    friend void to_json(Json& j, const StateVector& state) {
+        j = Json{{"n_qubits", state._n_qubits}, {"amplitudes", state.get_amplitudes()}};
+    }
+    friend void from_json(const Json& j, StateVector& state) {
+        state = StateVector(j.at("n_qubits").get<std::uint64_t>());
+        state.load(j.at("amplitudes").get<std::vector<ComplexType>>());
+    }
 };
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_state_state_vector_hpp(nb::module_& m) {
     nb::class_<StateVector<Fp>>(m,
                                 "StateVector",
@@ -491,6 +500,27 @@ void bind_state_state_vector_hpp(nb::module_& m) {
             DocString()
                 .desc("Constant used for `StateVector::get_marginal_probability` to express the "
                       "the qubit is not measured.")
+                .build_as_google_style()
+                .c_str())
+        .def(
+            "to_json",
+            [](const StateVector<Fp>& state) { return Json(state).dump(); },
+            DocString()
+                .desc("Information as json style.")
+                .ret("str", "information as json style")
+                .ex(DocString::Code{
+                    ">>> state = StateVector(1)",
+                    ">>> state.to_json()",
+                    R"('{"amplitudes":[{"imag":0.0,"real":1.0},{"imag":0.0,"real":0.0}],"n_qubits":1}')"})
+                .build_as_google_style()
+                .c_str())
+        .def(
+            "load_json",
+            [](StateVector<Fp>& state, const std::string& str) {
+                state = nlohmann::json::parse(str);
+            },
+            DocString()
+                .desc("Read an object from the JSON representation of the state vector.")
                 .build_as_google_style()
                 .c_str());
 }

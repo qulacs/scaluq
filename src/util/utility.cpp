@@ -41,7 +41,7 @@ template <typename T, typename Layout>
 std::vector<std::vector<T>> convert_2d_device_view_to_host_vector(
     const Kokkos::View<T**, Layout>& view_d) {
     auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), view_d);
-    std::vector<std::vector<T>> result(view_d.extent(0), std::vector<T>(view_d.extent(1), 0));
+    std::vector<std::vector<T>> result(view_d.extent(0), std::vector<T>(view_d.extent(1), T{0}));
     for (std::size_t i = 0; i < view_d.extent(0); ++i) {
         for (std::size_t j = 0; j < view_d.extent(1); ++j) {
             result[i][j] = view_h(i, j);
@@ -60,7 +60,7 @@ CALL_MACRO_FOR_COMPLEX(FUNC_MACRO)
 CALL_MACRO_FOR_COMPLEX(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+FLOAT(Fp)
 Matrix<Fp> convert_external_matrix_to_internal_matrix(const ComplexMatrix<Fp>& eigen_matrix) {
     std::uint64_t rows = eigen_matrix.rows();
     std::uint64_t cols = eigen_matrix.cols();
@@ -75,7 +75,7 @@ Matrix<Fp> convert_external_matrix_to_internal_matrix(const ComplexMatrix<Fp>& e
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+FLOAT(Fp)
 ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp>& matrix) {
     int rows = matrix.extent(0);
     int cols = matrix.extent(1);
@@ -90,7 +90,7 @@ ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp>& m
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+FLOAT(Fp)
 ComplexMatrix<Fp> convert_coo_to_external_matrix(SparseMatrix<Fp> mat) {
     ComplexMatrix<Fp> eigen_matrix = ComplexMatrix<Fp>::Zero(mat._row, mat._col);
     auto vec_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), mat._values);

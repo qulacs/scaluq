@@ -5,7 +5,7 @@
 
 namespace scaluq {
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class StateVectorBatched {
     std::uint64_t _batch_size;
     std::uint64_t _n_qubits;
@@ -15,7 +15,7 @@ class StateVectorBatched {
     //               "Unsupported execution space tag");
 
 public:
-    Kokkos::View<Kokkos::complex<Fp>**, Kokkos::LayoutRight> _raw;
+    Kokkos::View<Complex<Fp>**, Kokkos::LayoutRight> _raw;
     StateVectorBatched() = default;
     StateVectorBatched(std::uint64_t batch_size, std::uint64_t n_qubits);
     StateVectorBatched(const StateVectorBatched& other) = default;
@@ -54,7 +54,7 @@ public:
         bool set_same_state,
         std::uint64_t seed = std::random_device()());
 
-    [[nodiscard]] std::vector<std::vector<Kokkos::complex<Fp>>> get_amplitudes() const;
+    [[nodiscard]] std::vector<std::vector<Complex<Fp>>> get_amplitudes() const;
 
     [[nodiscard]] std::vector<Fp> get_squared_norm() const;
 
@@ -67,12 +67,11 @@ public:
 
     [[nodiscard]] std::vector<Fp> get_entropy() const;
 
-    void add_state_vector_with_coef(const Kokkos::complex<Fp>& coef,
-                                    const StateVectorBatched& states);
+    void add_state_vector_with_coef(const Complex<Fp>& coef, const StateVectorBatched& states);
 
-    void multiply_coef(const Kokkos::complex<Fp>& coef);
+    void multiply_coef(const Complex<Fp>& coef);
 
-    void load(const std::vector<std::vector<Kokkos::complex<Fp>>>& states);
+    void load(const std::vector<std::vector<Complex<Fp>>>& states);
 
     [[nodiscard]] StateVectorBatched copy() const;
 
@@ -82,11 +81,43 @@ public:
         os << states.to_string();
         return os;
     }
+
+    friend void to_json(Json& j, const StateVectorBatched<Fp>& states) {
+        auto amplitudes = states.get_amplitudes();
+
+        j = Json{{"n_qubits", states._n_qubits},
+                 {"batch_size", states._batch_size},
+                 {"batched_amplitudes", Json::array()}};
+        for (std::uint32_t i = 0; i < amplitudes.size(); ++i) {
+            Json state = {{"amplitudes", Json::array()}};
+            for (const auto& amp : amplitudes[i]) {
+                state["amplitudes"].push_back({{"real", amp.real()}, {"imag", amp.imag()}});
+            }
+            j["batched_amplitudes"].push_back(state);
+        }
+    }
+    friend void from_json(const Json& j, StateVectorBatched<Fp>& states) {
+        std::uint32_t b = j.at("batch_size").get<std::uint32_t>();
+        std::uint32_t n = j.at("n_qubits").get<std::uint32_t>();
+        states = StateVectorBatched(b, n);
+
+        const auto& batched_amplitudes = j.at("batched_amplitudes");
+        std::vector res(b, std::vector<Kokkos::complex<Fp>>(1ULL << n));
+        for (std::uint32_t i = 0; i < b; ++i) {
+            const auto& amplitudes = batched_amplitudes[i].at("amplitudes");
+            for (std::uint32_t j = 0; j < (1ULL << n); ++j) {
+                Fp real = amplitudes[j].at("real").get<Fp>();
+                Fp imag = amplitudes[j].at("imag").get<Fp>();
+                res[i][j] = Kokkos::complex<Fp>(real, imag);
+            }
+        }
+        states.load(res);
+    }
 };
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_state_state_vector_batched_hpp(nb::module_& m) {
     nb::class_<StateVectorBatched<Fp>>(
         m,
@@ -180,7 +211,17 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
              "Load batched amplitudes from `list[list[complex]]`.")
         .def("copy", &StateVectorBatched<Fp>::copy, "Create a copy of the batched state vector.")
         .def("to_string", &StateVectorBatched<Fp>::to_string, "Information as `str`.")
-        .def("__str__", &StateVectorBatched<Fp>::to_string, "Information as `str`.");
+        .def("__str__", &StateVectorBatched<Fp>::to_string, "Information as `str`.")
+        .def(
+            "to_json",
+            [](const StateVectorBatched<Fp>& states) { return Json(states).dump(); },
+            "Get JSON representation of the states.")
+        .def(
+            "load_json",
+            [](StateVectorBatched<Fp>& states, const std::string& str) {
+                states = nlohmann::json::parse(str);
+            },
+            "Read an object from the JSON representation of the states.");
 }
 }  // namespace internal
 #endif

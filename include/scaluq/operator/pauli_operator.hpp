@@ -9,10 +9,10 @@
 
 namespace scaluq {
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class Operator;
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class PauliOperator {
     friend class Operator<Fp>;
 
@@ -55,7 +55,7 @@ private:
 public:
     enum PauliID : std::uint64_t { I, X, Y, Z };
 
-    explicit PauliOperator(Complex<Fp> coef = 1.) : _ptr(std::make_shared<const Data>(coef)) {}
+    explicit PauliOperator(Complex<Fp> coef = Fp{1}) : _ptr(std::make_shared<const Data>(coef)) {}
     explicit PauliOperator(Data data) : _ptr(std::make_shared<const Data>(data)) {}
     PauliOperator(std::string_view pauli_string, Complex<Fp> coef = 1.)
         : _ptr(std::make_shared<const Data>(pauli_string, coef)) {}
@@ -96,11 +96,19 @@ public:
     [[nodiscard]] inline PauliOperator operator*(Complex<Fp> target) const {
         return PauliOperator(_ptr->_target_qubit_list, _ptr->_pauli_id_list, _ptr->_coef * target);
     }
+
+    friend void to_json(Json& j, const PauliOperator& pauli) {
+        j = Json{{"pauli_string", pauli.get_pauli_string()}, {"coef", pauli.coef()}};
+    }
+    friend void from_json(const Json& j, PauliOperator& pauli) {
+        pauli = PauliOperator(j.at("pauli_string").get<std::string>(),
+                              j.at("coef").get<Kokkos::complex<Fp>>());
+    }
 };
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_operator_pauli_operator_hpp(nb::module_& m) {
     nb::enum_<typename PauliOperator<Fp>::PauliID>(m, "PauliID")
         .value("I", PauliOperator<Fp>::I)
@@ -219,7 +227,17 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              &PauliOperator<Fp>::get_transition_amplitude,
              "Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.")
         .def(nb::self * nb::self)
-        .def(nb::self * Complex<Fp>());
+        .def(nb::self * Complex<Fp>())
+        .def(
+            "to_json",
+            [](const PauliOperator<Fp>& pauli) { return Json(pauli).dump(); },
+            "Information as json style.")
+        .def(
+            "load_json",
+            [](PauliOperator<Fp>& pauli, const std::string& str) {
+                pauli = nlohmann::json::parse(str);
+            },
+            "Read an object from the JSON representation of the Pauli operator.");
 }
 }  // namespace internal
 #endif
