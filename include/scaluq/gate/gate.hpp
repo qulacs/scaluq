@@ -309,8 +309,6 @@ public:
         else if (type == "U2") gate = get_from_json<U2GateImpl<Fp>>(j);
         else if (type == "U3") gate = get_from_json<U3GateImpl<Fp>>(j);
         else if (type == "Swap") gate = get_from_json<SwapGateImpl<Fp>>(j);
-        else if (type == "OneTargetMatrix") gate = get_from_json<OneTargetMatrixGateImpl<Fp>>(j);
-        else if (type == "TwoTargetMatrix") gate = get_from_json<TwoTargetMatrixGateImpl<Fp>>(j);
         else if (type == "Pauli") gate = get_from_json<PauliGateImpl<Fp>>(j);
         else if (type == "PauliRotation") gate = get_from_json<PauliRotationGateImpl<Fp>>(j);
         else if (type == "Probablistic") gate = get_from_json<ProbablisticGateImpl<Fp>>(j);

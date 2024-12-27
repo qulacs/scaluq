@@ -656,11 +656,6 @@ TEST(GateTest, ApplyIBMQ) {
     run_random_gate_apply_IBMQ<float>(5, make_U<float>);
 }
 
-TEST(GateTest, ApplyTwoTarget) {
-    run_random_gate_apply_two_target<double>(5);
-    run_random_gate_apply_two_target<float>(5);
-}
-
 TEST(GateTest, ApplySparseMatrixGate) {
     run_random_gate_apply_sparse<double>(6);
     run_random_gate_apply_sparse<float>(6);
