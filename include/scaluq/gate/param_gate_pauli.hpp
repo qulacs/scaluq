@@ -32,11 +32,35 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states,
                               std::vector<Fp> params) const override;
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "ParamPauliRotation"},
+                 {"control", this->control_qubit_list()},
+                 {"pauli", this->pauli()},
+                 {"param_coef", this->param_coef()}};
+    }
 };
 }  // namespace internal
 
 template <std::floating_point Fp>
 using ParamPauliRotationGate = internal::ParamGatePtr<internal::ParamPauliRotationGateImpl<Fp>>;
+
+namespace internal {
+#define DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_TYPE(Type)                                     \
+    template <>                                                                                   \
+    inline std::shared_ptr<const ParamPauliRotationGateImpl<Type>> get_from_json(const Json& j) { \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                        \
+        auto pauli = j.at("pauli").get<PauliOperator<Type>>();                                    \
+        auto param_coef = j.at("param_coef").get<Type>();                                         \
+        return std::make_shared<const ParamPauliRotationGateImpl<Type>>(                          \
+            vector_to_mask(controls), pauli, param_coef);                                         \
+    }
+
+DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_TYPE
+
+}  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {

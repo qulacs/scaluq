@@ -20,6 +20,8 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override { j = Json{{"type", "I"}}; }
 };
 
 template <std::floating_point Fp>
@@ -42,6 +44,13 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "GlobalPhase"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"phase", this->phase()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -70,6 +79,12 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "X"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -86,6 +101,12 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "Y"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -102,6 +123,12 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "Z"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -118,6 +145,12 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "H"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -151,6 +184,12 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "S"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -167,6 +206,12 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "Sdag"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -183,6 +228,12 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "T"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -199,6 +250,12 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "Tdag"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -217,6 +274,12 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "SqrtX"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -233,6 +296,12 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "SqrtXdag"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -251,6 +320,12 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "SqrtY"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -267,6 +342,12 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "SqrtYdag"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -283,6 +364,12 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "P0"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -299,6 +386,12 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "P1"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -316,6 +409,13 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "RX"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"angle", this->angle()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -333,6 +433,13 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "RY"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"angle", this->angle()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -350,6 +457,13 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "RZ"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"angle", this->angle()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -372,6 +486,13 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "U1"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"lambda", this->lambda()}};
+    }
 };
 template <std::floating_point Fp>
 class U2GateImpl : public GateBase<Fp> {
@@ -396,6 +517,14 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "U2"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"lambda", this->lambda()},
+                 {"phi", this->phi()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -420,6 +549,15 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "U3"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"lambda", this->lambda()},
+                 {"phi", this->phi()},
+                 {"theta", this->theta()}};
+    }
 };
 
 template <std::floating_point Fp>
@@ -436,6 +574,12 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "Swap"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()}};
+    }
 };
 
 }  // namespace internal
@@ -486,6 +630,120 @@ template <std::floating_point Fp>
 using U3Gate = internal::GatePtr<internal::U3GateImpl<Fp>>;
 template <std::floating_point Fp>
 using SwapGate = internal::GatePtr<internal::SwapGateImpl<Fp>>;
+
+namespace internal {
+
+#define DECLARE_GET_FROM_JSON_IGATE_WITH_TYPE(Type)                            \
+    template <>                                                                \
+    inline std::shared_ptr<const IGateImpl<Type>> get_from_json(const Json&) { \
+        return std::make_shared<const IGateImpl<Type>>();                      \
+    }
+DECLARE_GET_FROM_JSON_IGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_IGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_IGATE_WITH_TYPE
+
+#define DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_TYPE(Type)                                      \
+    template <>                                                                                    \
+    inline std::shared_ptr<const GlobalPhaseGateImpl<Type>> get_from_json(const Json& j) {         \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                         \
+        Type phase = j.at("phase").get<Type>();                                                    \
+        return std::make_shared<const GlobalPhaseGateImpl<Type>>(vector_to_mask(controls), phase); \
+    }
+DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_TYPE
+
+#define DECLARE_GET_FROM_JSON_WITH_TYPE(Impl, Type)                          \
+    template <>                                                              \
+    inline std::shared_ptr<const Impl<Type>> get_from_json(const Json& j) {  \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();     \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();   \
+        return std::make_shared<const Impl<Type>>(vector_to_mask(targets),   \
+                                                  vector_to_mask(controls)); \
+    }
+#define DECLARE_GET_FROM_JSON(Impl)               \
+    DECLARE_GET_FROM_JSON_WITH_TYPE(Impl, double) \
+    DECLARE_GET_FROM_JSON_WITH_TYPE(Impl, float)
+DECLARE_GET_FROM_JSON(XGateImpl)
+DECLARE_GET_FROM_JSON(YGateImpl)
+DECLARE_GET_FROM_JSON(ZGateImpl)
+DECLARE_GET_FROM_JSON(HGateImpl)
+DECLARE_GET_FROM_JSON(SGateImpl)
+DECLARE_GET_FROM_JSON(SdagGateImpl)
+DECLARE_GET_FROM_JSON(TGateImpl)
+DECLARE_GET_FROM_JSON(TdagGateImpl)
+DECLARE_GET_FROM_JSON(SqrtXGateImpl)
+DECLARE_GET_FROM_JSON(SqrtXdagGateImpl)
+DECLARE_GET_FROM_JSON(SqrtYGateImpl)
+DECLARE_GET_FROM_JSON(SqrtYdagGateImpl)
+DECLARE_GET_FROM_JSON(P0GateImpl)
+DECLARE_GET_FROM_JSON(P1GateImpl)
+#undef DECLARE_GET_FROM_JSON
+#undef DECLARE_GET_FROM_JSON_WITH_TYPE
+
+#define DECLARE_GET_FROM_JSON_RGATE_WITH_TYPE(Impl, Type)                   \
+    template <>                                                             \
+    inline std::shared_ptr<const Impl<Type>> get_from_json(const Json& j) { \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();    \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();  \
+        Type angle = j.at("angle").get<Type>();                             \
+        return std::make_shared<const Impl<Type>>(                          \
+            vector_to_mask(targets), vector_to_mask(controls), angle);      \
+    }
+#define DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_TYPE(Type)    \
+    DECLARE_GET_FROM_JSON_RGATE_WITH_TYPE(RXGateImpl, Type) \
+    DECLARE_GET_FROM_JSON_RGATE_WITH_TYPE(RYGateImpl, Type) \
+    DECLARE_GET_FROM_JSON_RGATE_WITH_TYPE(RZGateImpl, Type)
+DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_RGATE_WITH_TYPE
+#undef DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_TYPE
+
+#define DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE(Type)                                 \
+    template <>                                                                     \
+    inline std::shared_ptr<const U1GateImpl<Type>> get_from_json(const Json& j) {   \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();            \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();          \
+        Type theta = j.at("theta").get<Type>();                                     \
+        return std::make_shared<const U1GateImpl<Type>>(                            \
+            vector_to_mask(targets), vector_to_mask(controls), theta);              \
+    }                                                                               \
+    template <>                                                                     \
+    inline std::shared_ptr<const U2GateImpl<Type>> get_from_json(const Json& j) {   \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();            \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();          \
+        Type theta = j.at("theta").get<Type>();                                     \
+        Type phi = j.at("phi").get<Type>();                                         \
+        return std::make_shared<const U2GateImpl<Type>>(                            \
+            vector_to_mask(targets), vector_to_mask(controls), theta, phi);         \
+    }                                                                               \
+    template <>                                                                     \
+    inline std::shared_ptr<const U3GateImpl<Type>> get_from_json(const Json& j) {   \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();            \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();          \
+        Type theta = j.at("theta").get<Type>();                                     \
+        Type phi = j.at("phi").get<Type>();                                         \
+        Type lambda = j.at("lambda").get<Type>();                                   \
+        return std::make_shared<const U3GateImpl<Type>>(                            \
+            vector_to_mask(targets), vector_to_mask(controls), theta, phi, lambda); \
+    }
+DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE
+
+#define DECLARE_GET_FROM_JSON_SWAPGATE_WITH_TYPE(Type)                               \
+    template <>                                                                      \
+    inline std::shared_ptr<const SwapGateImpl<Type>> get_from_json(const Json& j) {  \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();             \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();           \
+        return std::make_shared<const SwapGateImpl<Type>>(vector_to_mask(targets),   \
+                                                          vector_to_mask(controls)); \
+    }
+DECLARE_GET_FROM_JSON_SWAPGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_SWAPGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_SWAPGATE_WITH_TYPE
+
+}  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {

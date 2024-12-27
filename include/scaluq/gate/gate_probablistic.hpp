@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../util/random.hpp"
-#include "gate.hpp"
+#include "gate_matrix.hpp"
+#include "gate_pauli.hpp"
+#include "gate_standard.hpp"
 
 namespace scaluq {
 namespace internal {
@@ -60,11 +62,33 @@ public:
     void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "Probablistic"},
+                 {"gate_list", this->gate_list()},
+                 {"distribution", this->distribution()}};
+    }
 };
 }  // namespace internal
 
 template <std::floating_point Fp>
 using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl<Fp>>;
+
+namespace internal {
+
+#define DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(Type)                                      \
+    template <>                                                                             \
+    inline std::shared_ptr<const ProbablisticGateImpl<Type>> get_from_json(const Json& j) { \
+        auto distribution = j.at("distribution").get<std::vector<Type>>();                  \
+        auto gate_list = j.at("gate_list").get<std::vector<Gate<Type>>>();                  \
+        return std::make_shared<const ProbablisticGateImpl<Type>>(distribution, gate_list); \
+    }
+
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE
+
+}  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {

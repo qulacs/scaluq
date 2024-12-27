@@ -96,10 +96,15 @@ public:
                                       std::vector<Fp> params) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
+
+    virtual void get_as_json(Json& j) const { j = Json{{"type", "Unknown"}}; }
 };
 
 template <typename T>
 concept ParamGateImpl = std::derived_from<T, ParamGateBase<typename T::Fp>>;
+
+template <ParamGateImpl T>
+inline std::shared_ptr<const T> get_from_json(const Json&);
 
 template <ParamGateImpl T>
 class ParamGatePtr {
@@ -113,7 +118,7 @@ private:
     ParamGateType _param_gate_type;
 
 public:
-    ParamGatePtr() : _param_gate_ptr(nullptr), _param_gate_type(get_param_gate_type<T>()) {}
+    ParamGatePtr() : _param_gate_ptr(nullptr), _param_gate_type(get_param_gate_type<T, Fp>()) {}
     template <ParamGateImpl U>
     ParamGatePtr(const std::shared_ptr<const U>& param_gate_ptr) {
         if constexpr (std::is_same_v<T, U>) {
@@ -162,6 +167,20 @@ public:
     friend std::ostream& operator<<(std::ostream& os, ParamGatePtr gate) {
         os << gate->to_string();
         return os;
+    }
+
+    friend void to_json(Json& j, const ParamGatePtr& gate) { gate->get_as_json(j); }
+
+    friend void from_json(const Json& j, ParamGatePtr& gate) {
+        std::string type = j.at("type");
+
+        // clang-format off
+        if (type == "ParamRX") gate = get_from_json<ParamRXGateImpl<Fp>>(j);
+        else if (type == "ParamRY") gate = get_from_json<ParamRYGateImpl<Fp>>(j);
+        else if (type == "ParamRZ") gate = get_from_json<ParamRZGateImpl<Fp>>(j);
+        else if (type == "ParamPauliRotation") gate = get_from_json<ParamPauliRotationGateImpl<Fp>>(j);
+        else if (type == "ParamProbablistic") gate = get_from_json<ParamProbablisticGateImpl<Fp>>(j);
+        // clang-format on
     }
 };
 }  // namespace internal
@@ -227,7 +246,25 @@ namespace internal {
             [](const PARAM_GATE_TYPE<FLOAT>& gate, FLOAT param) {                                 \
                 return gate->get_matrix(param);                                                   \
             },                                                                                    \
-            "Get matrix representation of the gate with holding the parameter.")
+            "Get matrix representation of the gate with holding the parameter.")                  \
+        .def(                                                                                     \
+            "to_string",                                                                          \
+            [](const PARAM_GATE_TYPE<FLOAT>& gate) { return gate->to_string(""); },               \
+            "Get string representation of the gate.")                                             \
+        .def(                                                                                     \
+            "__str__",                                                                            \
+            [](const PARAM_GATE_TYPE<FLOAT>& gate) { return gate->to_string(""); },               \
+            "Get string representation of the gate.")                                             \
+        .def(                                                                                     \
+            "to_json",                                                                            \
+            [](const PARAM_GATE_TYPE<FLOAT>& gate) { return Json(gate).dump(); },                 \
+            "Get JSON representation of the gate.")                                               \
+        .def(                                                                                     \
+            "load_json",                                                                          \
+            [](PARAM_GATE_TYPE<FLOAT>& gate, const std::string& str) {                            \
+                gate = nlohmann::json::parse(str);                                                \
+            },                                                                                    \
+            "Read an object from the JSON representation of the gate.")
 
 template <std::floating_point Fp>
 nb::class_<ParamGate<Fp>> param_gate_base_def;

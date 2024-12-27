@@ -209,10 +209,15 @@ public:
     virtual void update_quantum_state(StateVectorBatched<Fp>& states) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
+
+    virtual void get_as_json(Json& j) const { j = Json{{"type", "Unknown"}}; }
 };
 
 template <typename T>
 concept GateImpl = std::derived_from<T, GateBase<typename T::Fp>>;
+
+template <GateImpl T>
+inline std::shared_ptr<const T> get_from_json(const Json&);
 
 template <GateImpl T>
 class GatePtr {
@@ -276,6 +281,41 @@ public:
         os << gate->to_string();
         return os;
     }
+
+    friend void to_json(Json& j, const GatePtr& gate) { gate->get_as_json(j); }
+
+    friend void from_json(const Json& j, GatePtr& gate) {
+        std::string type = j.at("type");
+
+        // clang-format off
+        if (type == "I") gate = get_from_json<IGateImpl<Fp>>(j);
+        else if (type == "GlobalPhase") gate = get_from_json<GlobalPhaseGateImpl<Fp>>(j);
+        else if (type == "X") gate = get_from_json<XGateImpl<Fp>>(j);
+        else if (type == "Y") gate = get_from_json<YGateImpl<Fp>>(j);
+        else if (type == "Z") gate = get_from_json<ZGateImpl<Fp>>(j);
+        else if (type == "H") gate = get_from_json<HGateImpl<Fp>>(j);
+        else if (type == "S") gate = get_from_json<SGateImpl<Fp>>(j);
+        else if (type == "Sdag") gate = get_from_json<SdagGateImpl<Fp>>(j);
+        else if (type == "T") gate = get_from_json<TGateImpl<Fp>>(j);
+        else if (type == "Tdag") gate = get_from_json<TdagGateImpl<Fp>>(j);
+        else if (type == "SqrtX") gate = get_from_json<SqrtXGateImpl<Fp>>(j);
+        else if (type == "SqrtXdag") gate = get_from_json<SqrtXdagGateImpl<Fp>>(j);
+        else if (type == "SqrtY") gate = get_from_json<SqrtYGateImpl<Fp>>(j);
+        else if (type == "SqrtYdag") gate = get_from_json<SqrtYdagGateImpl<Fp>>(j);
+        else if (type == "RX") gate = get_from_json<RXGateImpl<Fp>>(j);
+        else if (type == "RY") gate = get_from_json<RYGateImpl<Fp>>(j);
+        else if (type == "RZ") gate = get_from_json<RZGateImpl<Fp>>(j);
+        else if (type == "U1") gate = get_from_json<U1GateImpl<Fp>>(j);
+        else if (type == "U2") gate = get_from_json<U2GateImpl<Fp>>(j);
+        else if (type == "U3") gate = get_from_json<U3GateImpl<Fp>>(j);
+        else if (type == "Swap") gate = get_from_json<SwapGateImpl<Fp>>(j);
+        else if (type == "OneTargetMatrix") gate = get_from_json<OneTargetMatrixGateImpl<Fp>>(j);
+        else if (type == "TwoTargetMatrix") gate = get_from_json<TwoTargetMatrixGateImpl<Fp>>(j);
+        else if (type == "Pauli") gate = get_from_json<PauliGateImpl<Fp>>(j);
+        else if (type == "PauliRotation") gate = get_from_json<PauliRotationGateImpl<Fp>>(j);
+        else if (type == "Probablistic") gate = get_from_json<ProbablisticGateImpl<Fp>>(j);
+        // clang-format on
+    }
 };
 
 }  // namespace internal
@@ -333,7 +373,17 @@ namespace internal {
         .def(                                                                                \
             "__str__",                                                                       \
             [](const GATE_TYPE<FLOAT>& gate) { return gate->to_string(""); },                \
-            "Get string representation of the gate.")
+            "Get string representation of the gate.")                                        \
+        .def(                                                                                \
+            "to_json",                                                                       \
+            [](const GATE_TYPE<FLOAT>& gate) { return Json(gate).dump(); },                  \
+            "Get JSON representation of the gate.")                                          \
+        .def(                                                                                \
+            "load_json",                                                                     \
+            [](GATE_TYPE<FLOAT>& gate, const std::string& str) {                             \
+                gate = nlohmann::json::parse(str);                                           \
+            },                                                                               \
+            "Read an object from the JSON representation of the gate.")
 
 template <std::floating_point Fp>
 nb::class_<Gate<Fp>> gate_base_def;
