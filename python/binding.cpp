@@ -134,6 +134,7 @@ void bind_on_precision(nb::module_& m, const char* submodule_name) {
 NB_MODULE(scaluq_core, m) {
     internal::bind_kokkos_hpp(m);
     internal::bind_gate_gate_hpp_without_precision(m);
+    internal::bind_gate_param_gate_hpp_without_precision(m);
 
 #ifdef SCALUQ_FLOAT16
     bind_on_precision<F16>(m, "f16");
@@ -147,6 +148,53 @@ NB_MODULE(scaluq_core, m) {
 #ifdef SCALUQ_BFLOAT16
     bind_on_precision<BF16>(m, "bf16");
 #endif
+
+    m.def(
+        "precision_available",
+        [](std::string_view precision) {
+            if (precision == "f16") {
+#ifdef SCALUQ_FLOAT16
+                return true;
+#else
+                return false;
+#endif
+            }
+            if (precision == "f32") {
+#ifdef SCALUQ_FLOAT32
+                return true;
+#else
+                return false;
+#endif
+            }
+            if (precision == "f64") {
+#ifdef SCALUQ_FLOAT64
+                return true;
+#else
+                return false;
+#endif
+            }
+            if (precision == "bf16") {
+#ifdef SCALUQ_BFLOAT16
+                return true;
+#else
+                return false;
+#endif
+            }
+            throw std::runtime_error("precision_available: Unknown precision name.");
+        },
+        DocString()
+            .desc("Return the precision is supported.")
+            .arg("precision",
+                 "str",
+                 "precision name",
+                 "This must be one of `f16` `f32` `f64` `bf16`.")
+            .ret("bool", "the precision is supported")
+            .ex(DocString::Code{">>> precision_available('f64')",
+                                "True",
+                                ">>> precision_available('bf16')",
+                                "False"})
+            .build_as_google_style()
+            .c_str());
 
     initialize();
     std::atexit(&cleanup);
