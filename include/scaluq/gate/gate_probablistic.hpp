@@ -11,7 +11,7 @@ namespace internal {
 template <std::floating_point Fp>
 class ProbablisticGateImpl : public GateBase<Fp> {
     std::vector<Fp> _distribution;
-    std::vector<Fp> _cumlative_distribution;
+    std::vector<Fp> _cumulative_distribution;
     std::vector<Gate<Fp>> _gate_list;
 
 public:
@@ -59,6 +59,7 @@ public:
     }
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 

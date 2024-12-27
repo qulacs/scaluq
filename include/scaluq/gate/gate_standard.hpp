@@ -17,6 +17,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -40,6 +41,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -74,6 +76,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -95,6 +98,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -116,6 +120,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -137,6 +142,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -175,6 +181,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -196,6 +203,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -217,6 +225,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -238,6 +247,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -261,6 +271,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -282,6 +293,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -305,6 +317,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -326,6 +339,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -347,6 +361,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -368,6 +383,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -390,6 +406,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -413,6 +430,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -436,6 +454,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -464,6 +483,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -494,6 +514,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -525,6 +546,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -549,6 +571,7 @@ public:
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 

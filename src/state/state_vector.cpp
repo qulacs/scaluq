@@ -11,6 +11,9 @@ StateVector<Fp>::StateVector(std::uint64_t n_qubits)
     set_zero_state();
 }
 FLOAT(Fp)
+StateVector<Fp>::StateVector(Kokkos::View<ComplexType*> view)
+    : _n_qubits(std::bit_width(view.extent(0)) - 1), _dim(view.extent(0)), _raw(view) {}
+FLOAT(Fp)
 void StateVector<Fp>::set_amplitude_at(std::uint64_t index, ComplexType c) {
     Kokkos::View<ComplexType, Kokkos::HostSpace> host_view("single_value");
     host_view() = c;
@@ -157,7 +160,6 @@ Fp StateVector<Fp>::get_entropy() const {
         ent);
     return ent;
 }
-
 FLOAT(Fp)
 void StateVector<Fp>::add_state_vector_with_coef(ComplexType coef, const StateVector& state) {
     Kokkos::parallel_for(

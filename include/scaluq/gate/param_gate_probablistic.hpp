@@ -13,7 +13,7 @@ template <std::floating_point Fp>
 class ParamProbablisticGateImpl : public ParamGateBase<Fp> {
     using EitherGate = std::variant<Gate<Fp>, ParamGate<Fp>>;
     std::vector<Fp> _distribution;
-    std::vector<Fp> _cumlative_distribution;
+    std::vector<Fp> _cumulative_distribution;
     std::vector<EitherGate> _gate_list;
 
 public:
@@ -61,6 +61,8 @@ public:
     }
 
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states,
+                              std::vector<Fp> params) const override;
 
     std::string to_string(const std::string& indent) const override;
 

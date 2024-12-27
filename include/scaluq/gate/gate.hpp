@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../state/state_vector.hpp"
+#include "../state/state_vector_batched.hpp"
 #include "../types.hpp"
 #include "../util/utility.hpp"
 
@@ -56,11 +57,7 @@ class U2GateImpl;
 template <std::floating_point Fp>
 class U3GateImpl;
 template <std::floating_point Fp>
-class OneTargetMatrixGateImpl;
-template <std::floating_point Fp>
 class SwapGateImpl;
-template <std::floating_point Fp>
-class TwoTargetMatrixGateImpl;
 template <std::floating_point Fp>
 class PauliGateImpl;
 template <std::floating_point Fp>
@@ -98,9 +95,7 @@ enum class GateType {
     U1,
     U2,
     U3,
-    OneTargetMatrix,
     Swap,
-    TwoTargetMatrix,
     Pauli,
     PauliRotation,
     SparseMatrix,
@@ -157,12 +152,8 @@ constexpr GateType get_gate_type() {
         return GateType::U2;
     else if constexpr (std::is_same_v<TWithoutConst, internal::U3GateImpl<S>>)
         return GateType::U3;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::OneTargetMatrixGateImpl<S>>)
-        return GateType::OneTargetMatrix;
     else if constexpr (std::is_same_v<TWithoutConst, internal::SwapGateImpl<S>>)
         return GateType::Swap;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::TwoTargetMatrixGateImpl<S>>)
-        return GateType::TwoTargetMatrix;
     else if constexpr (std::is_same_v<TWithoutConst, internal::PauliGateImpl<S>>)
         return GateType::Pauli;
     else if constexpr (std::is_same_v<TWithoutConst, internal::PauliRotationGateImpl<S>>)
@@ -188,6 +179,7 @@ protected:
     std::uint64_t _target_mask, _control_mask;
 
     void check_qubit_mask_within_bounds(const StateVector<Fp>& state_vector) const;
+    void check_qubit_mask_within_bounds(const StateVectorBatched<Fp>& states) const;
 
     std::string get_qubit_info_as_string(const std::string& indent) const;
 
@@ -214,6 +206,7 @@ public:
     [[nodiscard]] virtual internal::ComplexMatrix<Fp> get_matrix() const = 0;
 
     virtual void update_quantum_state(StateVector<Fp>& state_vector) const = 0;
+    virtual void update_quantum_state(StateVectorBatched<Fp>& states) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 
@@ -316,8 +309,6 @@ public:
         else if (type == "U2") gate = get_from_json<U2GateImpl<Fp>>(j);
         else if (type == "U3") gate = get_from_json<U3GateImpl<Fp>>(j);
         else if (type == "Swap") gate = get_from_json<SwapGateImpl<Fp>>(j);
-        else if (type == "OneTargetMatrix") gate = get_from_json<OneTargetMatrixGateImpl<Fp>>(j);
-        else if (type == "TwoTargetMatrix") gate = get_from_json<TwoTargetMatrixGateImpl<Fp>>(j);
         else if (type == "Pauli") gate = get_from_json<PauliGateImpl<Fp>>(j);
         else if (type == "PauliRotation") gate = get_from_json<PauliRotationGateImpl<Fp>>(j);
         else if (type == "Probablistic") gate = get_from_json<ProbablisticGateImpl<Fp>>(j);
@@ -429,11 +420,11 @@ void bind_gate_gate_hpp_without_precision(nb::module_& m) {
         .value("U1", GateType::U1)
         .value("U2", GateType::U2)
         .value("U3", GateType::U3)
-        .value("OneTargetMatrix", GateType::OneTargetMatrix)
         .value("Swap", GateType::Swap)
-        .value("TwoTargetMatrix", GateType::TwoTargetMatrix)
         .value("Pauli", GateType::Pauli)
-        .value("PauliRotation", GateType::PauliRotation);
+        .value("PauliRotation", GateType::PauliRotation)
+        .value("SparseMatrix", GateType::SparseMatrix)
+        .value("DenseMatrix", GateType::DenseMatrix);
 }
 
 template <std::floating_point Fp>

@@ -10,6 +10,11 @@ void PauliGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) cons
     apply_pauli(this->_control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), state_vector);
 }
 FLOAT(Fp)
+void PauliGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
+    apply_pauli(this->_control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), states);
+}
+FLOAT(Fp)
 std::string PauliGateImpl<Fp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     auto controls = this->control_qubit_list();
@@ -38,6 +43,12 @@ void PauliRotationGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vect
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
     apply_pauli_rotation(
         this->_control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), _angle, state_vector);
+}
+FLOAT(Fp)
+void PauliRotationGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+    auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
+    apply_pauli_rotation(
+        this->_control_mask, bit_flip_mask, phase_flip_mask, _pauli.coef(), _angle, states);
 }
 FLOAT(Fp)
 std::string PauliRotationGateImpl<Fp>::to_string(const std::string& indent) const {

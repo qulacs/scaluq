@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../state/state_vector.hpp"
+#include "../state/state_vector_batched.hpp"
 #include "../types.hpp"
 
 namespace scaluq {
@@ -62,6 +63,7 @@ protected:
     std::uint64_t _target_mask, _control_mask;
     Fp _pcoef;
     void check_qubit_mask_within_bounds(const StateVector<Fp>& state_vector) const;
+    void check_qubit_mask_within_bounds(const StateVectorBatched<Fp>& states) const;
 
     std::string get_qubit_info_as_string(const std::string& indent) const;
 
@@ -90,6 +92,8 @@ public:
     [[nodiscard]] virtual internal::ComplexMatrix<Fp> get_matrix(Fp param) const = 0;
 
     virtual void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const = 0;
+    virtual void update_quantum_state(StateVectorBatched<Fp>& states,
+                                      std::vector<Fp> params) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 
@@ -230,6 +234,13 @@ namespace internal {
                FLOAT param) { param_gate->update_quantum_state(state_vector, param); },           \
             "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is " \
             "directly updated.")                                                                  \
+        .def(                                                                                     \
+            "update_quantum_state",                                                               \
+            [](const PARAM_GATE_TYPE<FLOAT>& param_gate,                                          \
+               StateVectorBatched<FLOAT>& states,                                                 \
+               std::vector<FLOAT> params) { param_gate->update_quantum_state(states, params); },  \
+            "Apply gate to `states` with holding the parameter. `states` in args is directly "    \
+            "updated.")                                                                           \
         .def(                                                                                     \
             "get_matrix",                                                                         \
             [](const PARAM_GATE_TYPE<FLOAT>& gate, FLOAT param) {                                 \
