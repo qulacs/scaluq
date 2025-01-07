@@ -135,11 +135,15 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQ
     endif()
     
     # Debug options
-    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    if (SCALUQ_USE_CUDA)
         target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g,-O3>)
     else()
-        target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
-        target_link_options(scaluq PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
+        if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+            target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g,-O3>)
+        else()
+            target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address,-O3>)
+            target_link_options(scaluq PUBLIC $<$<CONFIG:Debug>:-fsanitize=address>)
+        endif()
     endif()
 endif()
 
