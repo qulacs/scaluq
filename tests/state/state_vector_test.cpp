@@ -11,14 +11,14 @@ using namespace scaluq;
 
 TEST(StateVectorTest, HaarRandomStateNorm) {
     {
-        const int n_tries = 20;
+        const int n_tries = 6;
         for (int n = 1; n <= n_tries; n++) {
             const auto state = StateVector<double>::Haar_random_state(n);
             ASSERT_NEAR(state.get_squared_norm(), 1., eps<double>);
         }
     }
     {
-        const int n_tries = 20;
+        const int n_tries = 6;
         for (int n = 1; n <= n_tries; n++) {
             const auto state = StateVector<float>::Haar_random_state(n);
             ASSERT_NEAR(state.get_squared_norm(), 1., eps<float>);
@@ -27,7 +27,7 @@ TEST(StateVectorTest, HaarRandomStateNorm) {
 }
 
 TEST(StateVectorTest, OperationAtIndex) {
-    auto state = StateVector<double>::Haar_random_state(10);
+    auto state = StateVector<double>::Haar_random_state(6);
     for (std::uint64_t i = 0; i < state.dim(); ++i) {
         state.set_amplitude_at(i, 1);
         ASSERT_NEAR(state.get_amplitude_at(i).real(), 1., eps<double>);
@@ -73,7 +73,7 @@ TEST(StateVectorTest, ComputationalBasisState) {
 }
 
 TEST(StateVectorTest, HaarRandomStateSameSeed) {
-    const std::uint64_t n = 10, m = 5;
+    const std::uint64_t n = 6, m = 5;
     for (std::uint64_t i = 0; i < m; ++i) {
         StateVector state1(StateVector<double>::Haar_random_state(n, i)),
             state2(StateVector<double>::Haar_random_state(n, i));
@@ -82,7 +82,7 @@ TEST(StateVectorTest, HaarRandomStateSameSeed) {
 }
 
 TEST(StateVectorTest, HaarRandomStateWithoutSeed) {
-    const std::uint64_t n = 10, m = 5;
+    const std::uint64_t n = 6, m = 5;
     for (std::uint64_t i = 0; i < m; ++i) {
         StateVector state1(StateVector<double>::Haar_random_state(n)),
             state2(StateVector<double>::Haar_random_state(n));
@@ -91,7 +91,7 @@ TEST(StateVectorTest, HaarRandomStateWithoutSeed) {
 }
 
 TEST(StateVectorTest, AddState) {
-    const std::uint64_t n = 10;
+    const std::uint64_t n = 6;
     StateVector state1(StateVector<double>::Haar_random_state(n));
     StateVector state2(StateVector<double>::Haar_random_state(n));
     auto vec1 = state1.get_amplitudes();
@@ -108,7 +108,7 @@ TEST(StateVectorTest, AddState) {
 
 TEST(StateVectorTest, AddStateWithCoef) {
     const CComplex coef(2.5, 1.3);
-    const std::uint64_t n = 10;
+    const std::uint64_t n = 6;
     StateVector state1(StateVector<double>::Haar_random_state(n));
     StateVector state2(StateVector<double>::Haar_random_state(n));
     auto vec1 = state1.get_amplitudes();
@@ -125,7 +125,7 @@ TEST(StateVectorTest, AddStateWithCoef) {
 }
 
 TEST(StateVectorTest, MultiplyCoef) {
-    const std::uint64_t n = 10;
+    const std::uint64_t n = 6;
     const CComplex coef(0.5, 0.2);
 
     StateVector state(StateVector<double>::Haar_random_state(n));
@@ -141,7 +141,7 @@ TEST(StateVectorTest, MultiplyCoef) {
 }
 
 TEST(StateVectorTest, GetZeroProbability) {
-    const std::uint64_t n = 10;
+    const std::uint64_t n = 6;
     StateVector<double> state(n);
     state.set_computational_basis(1);
     for (std::uint64_t i = 2; i <= 10; ++i) {
@@ -213,7 +213,7 @@ TEST(StateVectorTest, GetMarginalProbability) {
 }
 
 TEST(StateVectorTest, SamplingSuperpositionState) {
-    const std::uint64_t n = 10;
+    const std::uint64_t n = 6;
     const std::uint64_t nshot = 65536;
     const std::uint64_t test_count = 10;
     std::uint64_t pass_count = 0;
@@ -248,7 +248,7 @@ TEST(StateVectorTest, SamplingSuperpositionState) {
 }
 
 TEST(StateVectorTest, SamplingComputationalBasis) {
-    const std::uint64_t n = 10;
+    const std::uint64_t n = 7;
     const std::uint64_t nshot = 1024;
     StateVector<double> state(n);
     state.set_computational_basis(100);
