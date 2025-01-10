@@ -123,48 +123,132 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
     nb::class_<StateVectorBatched<Fp>>(
         m,
         "StateVectorBatched",
-        "Batched vector representation of quantum state.\n\n.. note:: Qubit index is start from 0. "
-        "If the amplitudes of $\\ket{b_{n-1}\\dots b_0}$ is $b_i$, the state is $\\sum_i b_i "
-        "2^i$.")
+        DocString()
+            .desc("Batched vector representation of quantum state.")
+            .desc("Qubit index starts from 0. If the amplitudes of $\\ket{b_{n-1}\\dots b_0}$ "
+                  "are $b_i$, the state is $\\sum_i b_i 2^i$.")
+            .build_as_google_style()
+            .c_str())
+        // Constructor: batch size and number of qubits
         .def(nb::init<std::uint64_t, std::uint64_t>(),
-             "Construct batched state vector with specified batch size and qubits.")
+             "batch_size"_a,
+             "n_qubits"_a,
+             DocString()
+                 .desc("Construct batched state vector with specified batch size and qubits.")
+                 .arg("batch_size", "int", "Number of batches.")
+                 .arg("n_qubits", "int", "Number of qubits in each state vector.")
+                 .ex(DocString::Code({">>> states = StateVectorBatched(3, 2)",
+                                      ">>> print(states)",
+                                      " *** Quantum States ***",
+                                      " * Qubit Count : 2",
+                                      " * Dimension : 4",
+                                      "--------------------",
+                                      " * Batch_id : 0",
+                                      " * State vector : ",
+                                      "  00 : (1,0)\n  01 : (0,0)\n  10 : (0,0)\n  11 : (0,0)",
+                                      "--------------------",
+                                      " * Batch_id : 1",
+                                      " * State vector : ",
+                                      "  00 : (1,0)\n  01 : (0,0)\n  10 : (0,0)\n  11 : (0,0)"}))
+                 .build_as_google_style()
+                 .c_str())
+        // Constructor: Copy constructor
         .def(nb::init<const StateVectorBatched<Fp>&>(),
-             "Constructing batched state vector by copying other batched state.")
-        .def("n_qubits", &StateVectorBatched<Fp>::n_qubits, "Get num of qubits.")
+             "other"_a,
+             DocString()
+                 .desc("Construct a batched state vector by copying another batched state.")
+                 .arg("other", "StateVectorBatched", "The batched state vector to copy.")
+                 .build_as_google_style()
+                 .c_str())
+        // Basic getters
+        .def("n_qubits",
+             &StateVectorBatched<Fp>::n_qubits,
+             DocString()
+                 .desc("Get the number of qubits in each state vector.")
+                 .ret("int", "The number of qubits.")
+                 .build_as_google_style()
+                 .c_str())
         .def("dim",
              &StateVectorBatched<Fp>::dim,
-             "Get dimension of the vector ($=2^\\mathrm{n\\_qubits}$).")
-        .def("batch_size", &StateVectorBatched<Fp>::batch_size, "Get batch size.")
+             DocString()
+                 .desc("Get the dimension of each state vector (=$2^{\\mathrm{n\\_qubits}}$).")
+                 .ret("int", "The dimension of the vector.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("batch_size",
+             &StateVectorBatched<Fp>::batch_size,
+             DocString()
+                 .desc("Get the batch size (number of state vectors).")
+                 .ret("int", "The batch size.")
+                 .build_as_google_style()
+                 .c_str())
+        // State manipulation methods
         .def("set_state_vector",
-             nb::overload_cast<const StateVector<Fp>&>(&StateVectorBatched<Fp>::set_state_vector),
-             "Set the state vector for all batches.")
+             &StateVectorBatched<Fp>::set_state_vector,
+             "state"_a,
+             DocString()
+                 .desc("Set all state vectors in the batch to the given state.")
+                 .arg("state", "StateVector", "State to set for all batches.")
+                 .build_as_google_style()
+                 .c_str())
         .def("set_state_vector_at",
-             nb::overload_cast<std::uint64_t, const StateVector<Fp>&>(
-                 &StateVectorBatched<Fp>::set_state_vector_at),
-             "Set the state vector for a specific batch.")
+             &StateVectorBatched<Fp>::set_state_vector_at,
+             "batch_id"_a,
+             "state"_a,
+             DocString()
+                 .desc("Set the state vector at a specific batch index.")
+                 .arg("batch_id", "int", "Index in batch to set.")
+                 .arg("state", "StateVector", "State to set at the specified index.")
+                 .build_as_google_style()
+                 .c_str())
         .def("get_state_vector_at",
              &StateVectorBatched<Fp>::get_state_vector_at,
-             "Get the state vector for a specific batch.")
+             "batch_id"_a,
+             DocString()
+                 .desc("Get the state vector at a specific batch index.")
+                 .arg("batch_id", "int", "Index in batch to get.")
+                 .ret("StateVector", "The state vector at the specified batch index.")
+                 .build_as_google_style()
+                 .c_str())
+        // State initialization methods
         .def("set_zero_state",
              &StateVectorBatched<Fp>::set_zero_state,
-             "Initialize all batches with computational basis $\\ket{00\\dots0}$.")
-        .def("set_zero_norm_state",
-             &StateVectorBatched<Fp>::set_zero_norm_state,
-             "Initialize with 0 (null vector).")
+             DocString().desc("Initialize all states to |0...0⟩.").build_as_google_style().c_str())
         .def("set_computational_basis",
              &StateVectorBatched<Fp>::set_computational_basis,
-             "Initialize with computational basis \\ket{\\mathrm{basis}}.")
+             "basis"_a,
+             DocString()
+                 .desc("Set all states to the specified computational basis state.")
+                 .arg("basis", "int", "Index of the computational basis state.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("set_zero_norm_state",
+             &StateVectorBatched<Fp>::set_zero_norm_state,
+             DocString().desc("Set all amplitudes to zero.").build_as_google_style().c_str())
+        // Haar random state methods
         .def(
-            "sampling",
-            [](const StateVectorBatched<Fp>& states,
-               std::uint64_t sampling_count,
+            "set_Haar_random_state",
+            [](StateVectorBatched<Fp>& states,
+               std::uint64_t batch_size,
+               std::uint64_t n_qubits,
+               bool set_same_state,
                std::optional<std::uint64_t> seed) {
-                return states.sampling(sampling_count, seed.value_or(std::random_device{}()));
+                states.set_Haar_random_state(
+                    batch_size, n_qubits, set_same_state, seed.value_or(std::random_device()()));
             },
-            "sampling_count"_a,
+            "batch_size"_a,
+            "n_qubits"_a,
+            "set_same_state"_a,
             "seed"_a = std::nullopt,
-            "Sampling specified times. Result is `list[list[int]]` with the `sampling_count` "
-            "length.")
+            DocString()
+                .desc("Initialize with Haar random states.")
+                .arg("batch_size", "int", "Number of states in batch.")
+                .arg("n_qubits", "int", "Number of qubits per state.")
+                .arg(
+                    "set_same_state", "bool", "Whether to set all states to the same random state.")
+                .arg("seed", "int, optional", "Random seed (default: random).")
+                .build_as_google_style()
+                .c_str())
         .def_static(
             "Haar_random_state",
             [](std::uint64_t batch_size,
@@ -172,57 +256,152 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                bool set_same_state,
                std::optional<std::uint64_t> seed) {
                 return StateVectorBatched<Fp>::Haar_random_state(
-                    batch_size, n_qubits, set_same_state, seed.value_or(std::random_device{}()));
+                    batch_size, n_qubits, set_same_state, seed.value_or(std::random_device()()));
             },
             "batch_size"_a,
             "n_qubits"_a,
             "set_same_state"_a,
             "seed"_a = std::nullopt,
-            "Construct batched state vectors with Haar random states. If seed is not "
-            "specified, the value from random device is used.")
-        .def("get_amplitudes",
-             &StateVectorBatched<Fp>::get_amplitudes,
-             "Get all amplitudes with as `list[list[complex]]`.")
+            DocString()
+                .desc("Construct :class:`StateVectorBatched` with Haar random state.")
+                .arg("batch_size", "int", "Number of states in batch.")
+                .arg("n_qubits", "int", "Number of qubits per state.")
+                .arg(
+                    "set_same_state", "bool", "Whether to set all states to the same random state.")
+                .arg("seed", "int, optional", "Random seed (default: random).")
+                .ret("StateVectorBatched", "New batched state vector with random states.")
+                .build_as_google_style()
+                .c_str())
+        // Measurement and probability methods
         .def("get_squared_norm",
              &StateVectorBatched<Fp>::get_squared_norm,
-             "Get squared norm of each state in the batch. $\\braket{\\psi|\\psi}$.")
+             DocString()
+                 .desc("Get squared norm for each state in the batch.")
+                 .ret("list[float]", "List of squared norms.")
+                 .build_as_google_style()
+                 .c_str())
         .def("normalize",
              &StateVectorBatched<Fp>::normalize,
-             "Normalize each state in the batch (let $\\braket{\\psi|\\psi} = 1$ by "
-             "multiplying coef).")
+             DocString().desc("Normalize all states in the batch.").build_as_google_style().c_str())
         .def("get_zero_probability",
              &StateVectorBatched<Fp>::get_zero_probability,
-             "Get the probability to observe $\\ket{0}$ at specified index for each state in "
-             "the batch.")
+             "target_qubit_index"_a,
+             DocString()
+                 .desc("Get probability of measuring |0⟩ on specified qubit for each state.")
+                 .arg("target_qubit_index", "int", "Index of qubit to measure.")
+                 .ret("list[float]", "Probabilities for each state in batch.")
+                 .build_as_google_style()
+                 .c_str())
         .def("get_marginal_probability",
              &StateVectorBatched<Fp>::get_marginal_probability,
-             "Get the marginal probability to observe as specified for each state in the batch. "
-             "Specify the result as n-length list. `0` and `1` represent the qubit is observed "
-             "and get the value. `2` represents the qubit is not observed.")
+             "measured_values"_a,
+             DocString()
+                 .desc("Get marginal probabilities for specified measurement outcomes.")
+                 .arg("measured_values", "list[int]", "Measurement configuration.")
+                 .ret("list[float]", "Probabilities for each state in batch.")
+                 .build_as_google_style()
+                 .c_str())
+        // Entropy and sampling methods
         .def("get_entropy",
              &StateVectorBatched<Fp>::get_entropy,
-             "Get the entropy of each state in the batch.")
+             DocString()
+                 .desc("Calculate von Neumann entropy for each state.")
+                 .ret("list[float]", "Entropy values for each state.")
+                 .build_as_google_style()
+                 .c_str())
+        .def(
+            "sampling",
+            [](const StateVectorBatched<Fp>& states,
+               std::uint64_t sampling_count,
+               std::optional<std::uint64_t> seed) {
+                return states.sampling(sampling_count, seed.value_or(std::random_device()()));
+            },
+            "sampling_count"_a,
+            "seed"_a = std::nullopt,
+            DocString()
+                .desc("Sample from the probability distribution of each state.")
+                .arg("sampling_count", "int", "Number of samples to take.")
+                .arg("seed", "int, optional", "Random seed (default: random).")
+                .ret("list[list[int]]", "Samples for each state in batch.")
+                .build_as_google_style()
+                .c_str())
+        // State manipulation methods
         .def("add_state_vector_with_coef",
              &StateVectorBatched<Fp>::add_state_vector_with_coef,
-             "Add other batched state vectors with multiplying the coef and make superposition. "
-             "$\\ket{\\mathrm{this}}\\leftarrow\\ket{\\mathrm{this}}+\\mathrm{coef}"
-             "\\ket{\\mathrm{states}}$.")
+             "coef"_a,
+             "states"_a,
+             DocString()
+                 .desc("Add another batched state vector multiplied by a coefficient.")
+                 .arg("coef", "complex", "Coefficient to multiply with states.")
+                 .arg("states", "StateVectorBatched", "States to add.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("multiply_coef",
+             &StateVectorBatched<Fp>::multiply_coef,
+             "coef"_a,
+             DocString()
+                 .desc("Multiply all states by a coefficient.")
+                 .arg("coef", "complex", "Coefficient to multiply.")
+                 .build_as_google_style()
+                 .c_str())
+        // Data access methods
         .def("load",
              &StateVectorBatched<Fp>::load,
-             "Load batched amplitudes from `list[list[complex]]`.")
-        .def("copy", &StateVectorBatched<Fp>::copy, "Create a copy of the batched state vector.")
-        .def("to_string", &StateVectorBatched<Fp>::to_string, "Information as `str`.")
-        .def("__str__", &StateVectorBatched<Fp>::to_string, "Information as `str`.")
+             "states"_a,
+             DocString()
+                 .desc("Load amplitudes for all states in batch.")
+                 .arg("states", "list[list[complex]]", "Amplitudes for each state.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("get_amplitudes",
+             &StateVectorBatched<Fp>::get_amplitudes,
+             DocString()
+                 .desc("Get amplitudes of all states in batch.")
+                 .ret("list[list[complex]]", "Amplitudes for each state.")
+                 .build_as_google_style()
+                 .c_str())
+        // Copy and string representation
+        .def("copy",
+             &StateVectorBatched<Fp>::copy,
+             DocString()
+                 .desc("Create a deep copy of this batched state vector.")
+                 .ret("StateVectorBatched", "New copy of the states.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("to_string",
+             &StateVectorBatched<Fp>::to_string,
+             DocString()
+                 .desc("Get string representation of the batched states.")
+                 .ret("str", "String representation of states.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("__str__",
+             &StateVectorBatched<Fp>::to_string,
+             DocString()
+                 .desc("Get string representation of the batched states.")
+                 .ret("str", "String representation of states.")
+                 .build_as_google_style()
+                 .c_str())
+        // JSON serialization
         .def(
             "to_json",
             [](const StateVectorBatched<Fp>& states) { return Json(states).dump(); },
-            "Get JSON representation of the states.")
+            DocString()
+                .desc("Convert states to JSON string.")
+                .ret("str", "JSON representation of states.")
+                .build_as_google_style()
+                .c_str())
         .def(
             "load_json",
             [](StateVectorBatched<Fp>& states, const std::string& str) {
                 states = nlohmann::json::parse(str);
             },
-            "Read an object from the JSON representation of the states.");
+            "json_str"_a,
+            DocString()
+                .desc("Load states from JSON string.")
+                .arg("json_str", "str", "JSON string to load from.")
+                .build_as_google_style()
+                .c_str());
 }
 }  // namespace internal
 #endif
