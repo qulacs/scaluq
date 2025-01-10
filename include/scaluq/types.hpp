@@ -14,8 +14,6 @@
 namespace scaluq {
 template <FloatingPoint Fp>
 using StdComplex = std::complex<Fp>;
-template <FloatingPoint Fp>
-using Complex = Kokkos::complex<Fp>;
 using Json = nlohmann::json;
 
 namespace internal {
@@ -55,7 +53,7 @@ public:
 }  // namespace scaluq
 
 namespace nlohmann {
-template <std::floating_point Fp>
+template <::scaluq::FloatingPoint Fp>
 struct adl_serializer<scaluq::Complex<Fp>> {
     static void to_json(json& j, const scaluq::Complex<Fp>& c) {
         j = json{{"real", c.real()}, {"imag", c.imag()}};

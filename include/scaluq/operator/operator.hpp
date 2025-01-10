@@ -76,7 +76,7 @@ public:
         Operator<Fp> res(n);
         for (const auto& term : j.at("terms")) {
             std::string pauli_string = term.at("pauli_string").get<std::string>();
-            Kokkos::complex<Fp> coef = term.at("coef").get<Kokkos::complex<Fp>>();
+            Complex<Fp> coef = term.at("coef").get<Complex<Fp>>();
             res.add_operator({pauli_string, coef});
         }
         op = res;

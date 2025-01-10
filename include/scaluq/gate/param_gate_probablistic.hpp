@@ -82,11 +82,10 @@ template <FloatingPoint Fp>
 using ParamProbablisticGate = internal::ParamGatePtr<internal::ParamProbablisticGateImpl<Fp>>;
 
 namespace internal {
-
-#define DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE(Type)                                     \
+#define DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_TYPE(Type)                              \
     template <>                                                                                  \
     inline std::shared_ptr<const ParamProbablisticGateImpl<Type>> get_from_json(const Json& j) { \
-        auto distribution = j.at("distribution").get<std::vector<Type>>();                       \
+        auto distribution = j.at("distribution").get<std::vector<double>>();                     \
         std::vector<std::variant<Gate<Type>, ParamGate<Type>>> gate_list;                        \
         const Json& tmp_list = j.at("gate_list");                                                \
         for (const Json& tmp_j : tmp_list) {                                                     \
@@ -97,10 +96,19 @@ namespace internal {
         }                                                                                        \
         return std::make_shared<const ParamProbablisticGateImpl<Type>>(distribution, gate_list); \
     }
-DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE(double)
-DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE(float)
-#undef DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE
-
+#ifdef SCALUQ_FLOAT16
+DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_TYPE(F16)
+#endif
+#ifdef SCALUQ_FLOAT32
+DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_TYPE(F32)
+#endif
+#ifdef SCALUQ_FLOAT64
+DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_TYPE(F64)
+#endif
+#ifdef SCALUQ_BFLOAT16
+DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_TYPE(BF16)
+#endif
+#undef DECLARE_GET_FROM_JSON_PARAM_PROBABLISTICGATE_WITH_TYPE
 }  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND

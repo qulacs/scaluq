@@ -95,8 +95,18 @@ namespace internal {
             vector_to_mask(controls), pauli, angle);                                         \
     }
 
-DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(double)
-DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(float)
+#ifdef SCALUQ_FLOAT16
+DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(F16)
+#endif
+#ifdef SCALUQ_FLOAT32
+DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(F32)
+#endif
+#ifdef SCALUQ_FLOAT64
+DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(F64)
+#endif
+#ifdef SCALUQ_BFLOAT16
+DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(BF16)
+#endif
 #undef DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE
 
 }  // namespace internal

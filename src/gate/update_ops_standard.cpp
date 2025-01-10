@@ -215,7 +215,7 @@ void global_phase_gate(std::uint64_t,
                        std::uint64_t control_mask,
                        Fp angle,
                        StateVectorBatched<Fp>& states) {
-    Complex<Fp> coef = Kokkos::polar<Fp>(1., angle);
+    Complex<Fp> coef = internal::polar<Fp>(Fp{1}, angle);
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
             {0, 0}, {states.batch_size(), states.dim() >> std::popcount(control_mask)}),
@@ -389,8 +389,8 @@ void rx_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              Fp angle,
              StateVectorBatched<Fp>& states) {
-    const Fp cosval = std::cos(angle / 2.);
-    const Fp sinval = std::sin(angle / 2.);
+    const Fp cosval = internal::cos(angle / Fp{2});
+    const Fp sinval = internal::sin(angle / Fp{2});
     Matrix2x2<Fp> matrix = {cosval, Complex<Fp>(0, -sinval), Complex<Fp>(0, -sinval), cosval};
     one_target_dense_matrix_gate(target_mask, control_mask, matrix, states);
 }
@@ -410,8 +410,8 @@ void rx_gate(std::uint64_t target_mask,
         team_policy, KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team_member) {
             const std::uint64_t batch_id = team_member.league_rank();
             const Fp angle = params[batch_id] * pcoef;
-            const Fp cosval = std::cos(angle / 2.);
-            const Fp sinval = std::sin(angle / 2.);
+            const Fp cosval = internal::cos(angle / Fp{2});
+            const Fp sinval = internal::sin(angle / Fp{2});
             Matrix2x2<Fp> matrix = {
                 cosval, Complex<Fp>(0, -sinval), Complex<Fp>(0, -sinval), cosval};
             Kokkos::parallel_for(
@@ -457,8 +457,8 @@ void ry_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              Fp angle,
              StateVectorBatched<Fp>& states) {
-    const Fp cosval = std::cos(angle / 2.);
-    const Fp sinval = std::sin(angle / 2.);
+    const Fp cosval = internal::cos(angle / Fp{2});
+    const Fp sinval = internal::sin(angle / Fp{2});
     Matrix2x2<Fp> matrix = {cosval, -sinval, sinval, cosval};
     one_target_dense_matrix_gate(target_mask, control_mask, matrix, states);
 }
@@ -478,8 +478,8 @@ void ry_gate(std::uint64_t target_mask,
         team_policy, KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team_member) {
             const std::uint64_t batch_id = team_member.league_rank();
             const Fp angle = params[batch_id] * pcoef;
-            const Fp cosval = std::cos(angle / 2.);
-            const Fp sinval = std::sin(angle / 2.);
+            const Fp cosval = internal::cos(angle / Fp{2});
+            const Fp sinval = internal::sin(angle / Fp{2});
             Matrix2x2<Fp> matrix = {cosval, -sinval, sinval, cosval};
             Kokkos::parallel_for(
                 Kokkos::TeamThreadRange(team_member,
@@ -524,8 +524,8 @@ void rz_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              Fp angle,
              StateVectorBatched<Fp>& states) {
-    const Fp cosval = std::cos(angle / 2.);
-    const Fp sinval = std::sin(angle / 2.);
+    const Fp cosval = internal::cos(angle / Fp{2});
+    const Fp sinval = internal::sin(angle / Fp{2});
     DiagonalMatrix2x2<Fp> diag = {Complex<Fp>(cosval, -sinval), Complex<Fp>(cosval, sinval)};
     one_target_diagonal_matrix_gate(target_mask, control_mask, diag, states);
 }
@@ -545,8 +545,8 @@ void rz_gate(std::uint64_t target_mask,
         team_policy, KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type& team_member) {
             const std::uint64_t batch_id = team_member.league_rank();
             const Fp angle = params[batch_id] * pcoef;
-            const Fp cosval = std::cos(angle / 2.);
-            const Fp sinval = std::sin(angle / 2.);
+            const Fp cosval = internal::cos(angle / Fp{2});
+            const Fp sinval = internal::sin(angle / Fp{2});
             DiagonalMatrix2x2<Fp> diag = {Complex<Fp>(cosval, -sinval),
                                           Complex<Fp>(cosval, sinval)};
             Kokkos::parallel_for(
@@ -594,7 +594,7 @@ void u1_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              Fp lambda,
              StateVectorBatched<Fp>& states) {
-    Complex<Fp> exp_val = Kokkos::exp(Complex<Fp>(0, lambda));
+    Complex<Fp> exp_val = internal::exp(Complex<Fp>(0, lambda));
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
             {0, 0},
@@ -618,10 +618,11 @@ void u2_gate(std::uint64_t target_mask,
              Fp phi,
              Fp lambda,
              StateVector<Fp>& state) {
-    one_target_dense_matrix_gate(target_mask,
-                                 control_mask,
-                                 get_IBMQ_matrix((Fp)Kokkos::numbers::pi / Fp{2}, phi, lambda),
-                                 state);
+    one_target_dense_matrix_gate(
+        target_mask,
+        control_mask,
+        get_IBMQ_matrix(static_cast<Fp>(Kokkos::numbers::pi / 2), phi, lambda),
+        state);
 }
 #define FUNC_MACRO(Fp) \
     template void u2_gate(std::uint64_t, std::uint64_t, Fp, Fp, StateVector<Fp>&);
@@ -634,10 +635,11 @@ void u2_gate(std::uint64_t target_mask,
              Fp phi,
              Fp lambda,
              StateVectorBatched<Fp>& states) {
-    one_target_dense_matrix_gate(target_mask,
-                                 control_mask,
-                                 get_IBMQ_matrix((Fp)Kokkos::numbers::pi / 2, phi, lambda),
-                                 states);
+    one_target_dense_matrix_gate(
+        target_mask,
+        control_mask,
+        get_IBMQ_matrix(static_cast<Fp>(Kokkos::numbers::pi / 2), phi, lambda),
+        states);
 }
 #define FUNC_MACRO(Fp) \
     template void u2_gate(std::uint64_t, std::uint64_t, Fp, Fp, StateVectorBatched<Fp>&);

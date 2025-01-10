@@ -102,7 +102,7 @@ public:
         states = StateVectorBatched(b, n);
 
         const auto& batched_amplitudes = j.at("batched_amplitudes");
-        std::vector res(b, std::vector<Kokkos::complex<Fp>>(1ULL << n));
+        std::vector res(b, std::vector<Complex<Fp>>(1ULL << n));
         for (std::uint32_t i = 0; i < b; ++i) {
             const auto& amplitudes = batched_amplitudes[i].at("amplitudes");
             for (std::uint32_t j = 0; j < (1ULL << n); ++j) {

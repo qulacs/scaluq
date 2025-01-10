@@ -79,13 +79,23 @@ namespace internal {
 #define DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(Type)                                      \
     template <>                                                                             \
     inline std::shared_ptr<const ProbablisticGateImpl<Type>> get_from_json(const Json& j) { \
-        auto distribution = j.at("distribution").get<std::vector<Type>>();                  \
+        auto distribution = j.at("distribution").get<std::vector<double>>();                \
         auto gate_list = j.at("gate_list").get<std::vector<Gate<Type>>>();                  \
         return std::make_shared<const ProbablisticGateImpl<Type>>(distribution, gate_list); \
     }
 
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(double)
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(float)
+#ifdef SCALUQ_FLOAT16
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(F16)
+#endif
+#ifdef SCALUQ_FLOAT32
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(F32)
+#endif
+#ifdef SCALUQ_FLOAT64
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(F64)
+#endif
+#ifdef SCALUQ_BFLOAT16
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(BF16)
+#endif
 #undef DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE
 
 }  // namespace internal

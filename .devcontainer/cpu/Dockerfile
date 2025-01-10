@@ -14,8 +14,8 @@ RUN apt-get update && \
     apt-get update && \
     apt-get install -y gcc-13 g++-13 && \
     update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 && \
-    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100 \
-    && apt-get install -y --no-install-recommends \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100 && \
+    apt-get install -y --no-install-recommends \
     build-essential \
     ca-certificates \
     clang-format \
@@ -27,8 +27,13 @@ RUN apt-get update && \
     ninja-build \
     python3 \
     python3-pip \
-    wget \
-    && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+    wget && \
+    apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* && \
+    update-alternatives --set gcc /usr/bin/gcc-13 && \
+    update-alternatives --set g++ /usr/bin/g++-13
+
+ENV CC=gcc
+ENV CXX=g++
 
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.28.0/cmake-3.28.0-Linux-x86_64.sh -q -O /tmp/cmake-install.sh && \
     chmod u+x /tmp/cmake-install.sh && \

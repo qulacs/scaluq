@@ -42,17 +42,9 @@ public:
         check_gate_is_valid(gate);
         _gate_list.push_back(gate);
     }
-    void add_gate(Gate<Fp>&& gate) {
-        check_gate_is_valid(gate);
-        _gate_list.push_back(std::move(gate));
-    }
     void add_param_gate(const ParamGate<Fp>& param_gate, std::string_view parameter_key) {
         check_gate_is_valid(param_gate);
         _gate_list.push_back(std::make_pair(param_gate, std::string(parameter_key)));
-    }
-    void add_param_gate(ParamGate<Fp>&& param_gate, std::string_view parameter_key) {
-        check_gate_is_valid(param_gate);
-        _gate_list.push_back(std::make_pair(std::move(param_gate), std::string(parameter_key)));
     }
 
     void add_circuit(const Circuit<Fp>& circuit);

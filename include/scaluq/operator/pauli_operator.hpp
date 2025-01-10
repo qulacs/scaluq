@@ -25,7 +25,7 @@ public:
         std::uint64_t _bit_flip_mask, _phase_flip_mask;
 
     public:
-        explicit Data(Complex<Fp> coef = 1.)
+        explicit Data(Complex<Fp> coef = Fp{1})
             : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {}
 
         Data(std::string_view pauli_string, Complex<Fp> coef = 1.);
@@ -57,15 +57,17 @@ public:
 
     explicit PauliOperator(Complex<Fp> coef = Fp{1}) : _ptr(std::make_shared<const Data>(coef)) {}
     explicit PauliOperator(Data data) : _ptr(std::make_shared<const Data>(data)) {}
-    PauliOperator(std::string_view pauli_string, Complex<Fp> coef = 1.)
+    PauliOperator(std::string_view pauli_string, Complex<Fp> coef = Fp{1})
         : _ptr(std::make_shared<const Data>(pauli_string, coef)) {}
     PauliOperator(const std::vector<std::uint64_t>& target_qubit_list,
                   const std::vector<std::uint64_t>& pauli_id_list,
-                  Complex<Fp> coef = 1.)
+                  Complex<Fp> coef = Fp{1})
         : _ptr(std::make_shared<const Data>(target_qubit_list, pauli_id_list, coef)) {}
-    PauliOperator(const std::vector<std::uint64_t>& pauli_id_par_qubit, Complex<Fp> coef = 1.)
+    PauliOperator(const std::vector<std::uint64_t>& pauli_id_par_qubit, Complex<Fp> coef = Fp{1})
         : _ptr(std::make_shared<const Data>(pauli_id_par_qubit, coef)) {}
-    PauliOperator(std::uint64_t bit_flip_mask, std::uint64_t phase_flip_mask, Complex<Fp> coef = 1.)
+    PauliOperator(std::uint64_t bit_flip_mask,
+                  std::uint64_t phase_flip_mask,
+                  Complex<Fp> coef = Fp{1})
         : _ptr(std::make_shared<const Data>(bit_flip_mask, phase_flip_mask, coef)) {}
 
     [[nodiscard]] Complex<Fp> coef() const { return _ptr->coef(); }
@@ -101,8 +103,8 @@ public:
         j = Json{{"pauli_string", pauli.get_pauli_string()}, {"coef", pauli.coef()}};
     }
     friend void from_json(const Json& j, PauliOperator& pauli) {
-        pauli = PauliOperator(j.at("pauli_string").get<std::string>(),
-                              j.at("coef").get<Kokkos::complex<Fp>>());
+        pauli =
+            PauliOperator(j.at("pauli_string").get<std::string>(), j.at("coef").get<Complex<Fp>>());
     }
 };
 
@@ -119,26 +121,26 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
 
     nb::class_<typename PauliOperator<Fp>::Data>(
         m, "PauliOperatorData", "Internal data structure for PauliOperator.")
-        .def(nb::init<Complex<Fp>>(), "coef"_a = 1., "Initialize data with coefficient.")
+        .def(nb::init<Complex<Fp>>(), "coef"_a = Fp{1}, "Initialize data with coefficient.")
         .def(nb::init<std::string_view, Complex<Fp>>(),
              "pauli_string"_a,
-             "coef"_a = 1.,
+             "coef"_a = Fp{1},
              "Initialize data with pauli string.")
         .def(nb::init<const std::vector<std::uint64_t>&,
                       const std::vector<std::uint64_t>&,
                       Complex<Fp>>(),
              "target_qubit_list"_a,
              "pauli_id_list"_a,
-             "coef"_a = 1.,
+             "coef"_a = Fp{1},
              "Initialize data with target qubits and pauli ids.")
         .def(nb::init<const std::vector<std::uint64_t>&, Complex<Fp>>(),
              "pauli_id_par_qubit"_a,
-             "coef"_a = 1.,
+             "coef"_a = Fp{1},
              "Initialize data with pauli ids per qubit.")
         .def(nb::init<std::uint64_t, std::uint64_t, Complex<Fp>>(),
              "bit_flip_mask"_a,
              "phase_flip_mask"_a,
-             "coef"_a = 1.,
+             "coef"_a = Fp{1},
              "Initialize data with bit flip and phase flip masks.")
         .def(nb::init<const typename PauliOperator<Fp>::Data&>(),
              "data"_a,
@@ -166,31 +168,31 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
         "PauliOperator",
         "Pauli operator as coef and tensor product of single pauli for each qubit.")
         .def(nb::init<Complex<Fp>>(),
-             "coef"_a = 1.,
+             "coef"_a = Fp{1},
              "Initialize operator which just multiplying coef.")
         .def(nb::init<const std::vector<std::uint64_t>&,
                       const std::vector<std::uint64_t>&,
                       Complex<Fp>>(),
              "target_qubit_list"_a,
              "pauli_id_list"_a,
-             "coef"_a = 1.,
+             "coef"_a = Fp{1},
              "Initialize pauli operator. For each `i`, single pauli correspond to "
              "`pauli_id_list[i]` is applied to `target_qubit_list`-th qubit.")
         .def(nb::init<std::string_view, Complex<Fp>>(),
              "pauli_string"_a,
-             "coef"_a = 1.,
+             "coef"_a = Fp{1},
              "Initialize pauli operator. If `pauli_string` is `\"X0Y2\"`, Pauli-X is applied to "
              "0-th qubit and Pauli-Y is applied to 2-th qubit. In `pauli_string`, spaces are "
              "ignored.")
         .def(nb::init<const std::vector<std::uint64_t>&, Complex<Fp>>(),
              "pauli_id_par_qubit"_a,
-             "coef"_a = 1.,
+             "coef"_a = Fp{1},
              "Initialize pauli operator. For each `i`, single pauli correspond to "
              "`paul_id_per_qubit` is applied to `i`-th qubit.")
         .def(nb::init<std::uint64_t, std::uint64_t, Complex<Fp>>(),
              "bit_flip_mask"_a,
              "phase_flip_mask"_a,
-             "coef"_a = 1.,
+             "coef"_a = Fp{1},
              "Initialize pauli operator. For each `i`, single pauli applied to `i`-th qubit is "
              "got "
              "from `i-th` bit of `bit_flip_mask` and `phase_flip_mask` as follows.\n\n.. "

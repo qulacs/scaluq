@@ -67,10 +67,32 @@ concept FloatingPoint = IsFloatingPointV<T>;
 #ifdef SCALUQ_USE_CUDA
 #ifdef SCALUQ_FLOAT16
 inline std::ostream& operator<<(std::ostream& out, scaluq::F16 x) { return out << __half2float(x); }
+namespace nlohmann {
+template <>
+struct adl_serializer<::scaluq::F16> {
+    static void to_json(json& j, const ::scaluq::F16& x) { j = __half2float(x); }
+    static void from_json(const json& j, scaluq::F16& x) {
+        float f;
+        j.get_to(f);
+        x = __float2half(f);
+    }
+};
+}  // namespace nlohmann
 #endif
 #ifdef SCALUQ_BFLOAT16
 inline std::ostream& operator<<(std::ostream& out, scaluq::BF16 x) {
     return out << __bfloat162float(x);
 }
+namespace nlohmann {
+template <>
+struct adl_serializer<::scaluq::BF16> {
+    static void to_json(json& j, const ::scaluq::BF16& x) { j = __bfloat162float(x); }
+    static void from_json(const json& j, scaluq::BF16& x) {
+        float f;
+        j.get_to(f);
+        x = __float2bfloat16(f);
+    }
+};
+}  // namespace nlohmann
 #endif
 #endif

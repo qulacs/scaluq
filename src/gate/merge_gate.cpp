@@ -6,6 +6,39 @@
 #include "../util/template.hpp"
 
 namespace scaluq {
+template <FloatingPoint Fp>
+inline Fp eps();
+
+#ifdef SCALUQ_FLOAT16
+template <>
+inline F16 eps<F16>() {
+    return static_cast<F16>(1e-3);
+}
+#endif
+#ifdef SCALUQ_FLOAT32
+template <>
+inline F32 eps<F32>() {
+    return static_cast<F32>(1e-6);
+}
+#endif
+#ifdef SCALUQ_FLOAT64
+template <>
+inline F64 eps<F64>() {
+    return static_cast<F64>(1e-12);
+}
+#endif
+#ifdef SCALUQ_BFLOAT16
+template <>
+inline BF16 eps<BF16>() {
+    return static_cast<BF16>(1e-2);
+}
+#endif
+
+template <FloatingPoint Fp>
+inline Fp abs(Fp x) {
+    return x > Fp{0} ? x : -x;
+}
+
 FLOAT(Fp)
 std::pair<Gate<Fp>, Fp> merge_gate_dense_matrix(const Gate<Fp>& gate1, const Gate<Fp>& gate2) {
     auto common_control_mask = gate1->control_qubit_mask() & gate2->control_qubit_mask();
@@ -26,7 +59,7 @@ std::pair<Gate<Fp>, Fp> merge_gate_dense_matrix(const Gate<Fp>& gate1, const Gat
     std::cerr << matrix << std::endl;
     return {gate::DenseMatrix<Fp>(
                 merged_operand_vector, matrix, internal::mask_to_vector(common_control_mask)),
-            0.};
+            Fp{0}};
 }
 
 FLOAT(Fp)
@@ -39,8 +72,8 @@ std::pair<Gate<Fp>, Fp> merge_gate(const Gate<Fp>& gate1, const Gate<Fp>& gate2)
             "merge_gate(const Gate<Fp>&, const Gate<Fp>&): ProbablisticGate is not supported.");
     }
 
-    if (gate_type1 == GateType::I) return {gate2, 0.};
-    if (gate_type2 == GateType::I) return {gate1, 0.};
+    if (gate_type1 == GateType::I) return {gate2, Fp{0}};
+    if (gate_type2 == GateType::I) return {gate1, Fp{0}};
 
     auto gate1_control_mask = gate1->control_qubit_mask();
     auto gate2_control_mask = gate2->control_qubit_mask();
@@ -58,7 +91,7 @@ std::pair<Gate<Fp>, Fp> merge_gate(const Gate<Fp>& gate1, const Gate<Fp>& gate2)
         return {gate::GlobalPhase<Fp>(
                     GlobalPhaseGate<Fp>(gate1)->phase() + GlobalPhaseGate<Fp>(gate2)->phase(),
                     control_list),
-                0.};
+                Fp{0}};
     }
 
     // Special case: Pauli
@@ -77,40 +110,46 @@ std::pair<Gate<Fp>, Fp> merge_gate(const Gate<Fp>& gate1, const Gate<Fp>& gate2)
         std::uint64_t target1 = gate1->target_qubit_list()[0];
         std::uint64_t target2 = gate2->target_qubit_list()[0];
         if (target1 == target2) {
-            if (pauli_id1 == pauli_id2) return {gate::I<Fp>(), 0.};
+            if (pauli_id1 == pauli_id2) return {gate::I<Fp>(), Fp{0}};
             if (pauli_id1 == 1) {
                 if (pauli_id2 == 2) {
                     if (gate1_control_mask == 0) {
-                        return {gate::Z<Fp>(target1, control_list), -Kokkos::numbers::pi / 2};
+                        return {gate::Z<Fp>(target1, control_list),
+                                -static_cast<Fp>(Kokkos::numbers::pi / 2)};
                     }
                 }
                 if (pauli_id2 == 3) {
                     if (gate1_control_mask == 0) {
-                        return {gate::Y<Fp>(target1, control_list), Kokkos::numbers::pi / 2};
+                        return {gate::Y<Fp>(target1, control_list),
+                                static_cast<Fp>(Kokkos::numbers::pi / 2)};
                     }
                 }
             }
             if (pauli_id1 == 2) {
                 if (pauli_id2 == 3) {
                     if (gate1_control_mask == 0) {
-                        return {gate::X<Fp>(target1, control_list), -Kokkos::numbers::pi / 2};
+                        return {gate::X<Fp>(target1, control_list),
+                                -static_cast<Fp>(Kokkos::numbers::pi / 2)};
                     }
                 }
                 if (pauli_id2 == 1) {
                     if (gate1_control_mask == 0) {
-                        return {gate::Z<Fp>(target1, control_list), Kokkos::numbers::pi / 2};
+                        return {gate::Z<Fp>(target1, control_list),
+                                static_cast<Fp>(Kokkos::numbers::pi / 2)};
                     }
                 }
             }
             if (pauli_id1 == 3) {
                 if (pauli_id2 == 1) {
                     if (gate1_control_mask == 0) {
-                        return {gate::Y<Fp>(target1, control_list), -Kokkos::numbers::pi / 2};
+                        return {gate::Y<Fp>(target1, control_list),
+                                -static_cast<Fp>(Kokkos::numbers::pi / 2)};
                     }
                 }
                 if (pauli_id2 == 2) {
                     if (gate1_control_mask == 0) {
-                        return {gate::X<Fp>(target1, control_list), Kokkos::numbers::pi / 2};
+                        return {gate::X<Fp>(target1, control_list),
+                                static_cast<Fp>(Kokkos::numbers::pi / 2)};
                     }
                 }
             }
@@ -126,10 +165,8 @@ std::pair<Gate<Fp>, Fp> merge_gate(const Gate<Fp>& gate1, const Gate<Fp>& gate2)
                           ? PauliGate<Fp>(gate2)->pauli()
                           : PauliOperator<Fp>(std::vector{gate2->target_qubit_list()[0]},
                                               std::vector{pauli_id2.value()});
-        return {gate::Pauli<Fp>(pauli2 * pauli1, control_list), 0.};
+        return {gate::Pauli<Fp>(pauli2 * pauli1, control_list), Fp{0}};
     }
-
-    constexpr Fp eps = 1e-12;
 
     // Special case: Phase
     auto get_oct_phase = [&](GateType gate_type) -> std::optional<std::uint64_t> {
@@ -159,7 +196,7 @@ std::pair<Gate<Fp>, Fp> merge_gate(const Gate<Fp>& gate1, const Gate<Fp>& gate2)
         std::uint64_t target2 = gate2->target_qubit_list()[0];
         if (target1 == target2) {
             auto g = oct_phase_gate(oct_phase1.value() + oct_phase2.value(), target1);
-            if (g) return {g.value(), 0.};
+            if (g) return {g.value(), Fp{0}};
         }
     }
     if ((oct_phase1 || gate_type1 == GateType::RZ || gate_type1 == GateType::U1) &&
@@ -167,16 +204,18 @@ std::pair<Gate<Fp>, Fp> merge_gate(const Gate<Fp>& gate1, const Gate<Fp>& gate2)
         std::uint64_t target1 = gate1->target_qubit_list()[0];
         std::uint64_t target2 = gate2->target_qubit_list()[0];
         if (target1 == target2) {
-            Fp phase1 = oct_phase1                   ? oct_phase1.value() * Kokkos::numbers::pi / 4
+            Fp phase1 = oct_phase1 ? static_cast<Fp>(oct_phase1.value() * Kokkos::numbers::pi / 4)
                         : gate_type1 == GateType::RZ ? RZGate<Fp>(gate1)->angle()
                                                      : U1Gate<Fp>(gate1)->lambda();
-            Fp global_phase1 = gate_type1 == GateType::RZ ? -RZGate<Fp>(gate1)->angle() / 2 : 0.;
-            Fp phase2 = oct_phase2                   ? oct_phase2.value() * Kokkos::numbers::pi / 4
+            Fp global_phase1 =
+                gate_type1 == GateType::RZ ? -RZGate<Fp>(gate1)->angle() / Fp{2} : Fp{0};
+            Fp phase2 = oct_phase2 ? static_cast<Fp>(oct_phase2.value() * Kokkos::numbers::pi / 4)
                         : gate_type2 == GateType::RZ ? RZGate<Fp>(gate2)->angle()
                                                      : U1Gate<Fp>(gate2)->lambda();
-            Fp global_phase2 = gate_type2 == GateType::RZ ? -RZGate<Fp>(gate2)->angle() / 2 : 0.;
+            Fp global_phase2 =
+                gate_type2 == GateType::RZ ? -RZGate<Fp>(gate2)->angle() / Fp{2} : Fp{0};
             Fp global_phase = global_phase1 + global_phase2;
-            if (std::abs(global_phase) < eps) {
+            if (abs(global_phase) < eps<Fp>()) {
                 return {gate::U1<Fp>(target1, phase1 + phase2, control_list),
                         global_phase1 + global_phase2};
             }
@@ -185,10 +224,10 @@ std::pair<Gate<Fp>, Fp> merge_gate(const Gate<Fp>& gate1, const Gate<Fp>& gate2)
 
     // Special case: RX
     auto get_rx_angle = [&](Gate<Fp> gate, GateType gate_type) -> std::optional<Fp> {
-        if (gate_type == GateType::I) return 0.;
-        if (gate_type == GateType::X) return Kokkos::numbers::pi;
-        if (gate_type == GateType::SqrtX) return Kokkos::numbers::pi / 2;
-        if (gate_type == GateType::SqrtXdag) return -Kokkos::numbers::pi / 2;
+        if (gate_type == GateType::I) return Fp{0};
+        if (gate_type == GateType::X) return static_cast<Fp>(Kokkos::numbers::pi);
+        if (gate_type == GateType::SqrtX) return static_cast<Fp>(Kokkos::numbers::pi / 2);
+        if (gate_type == GateType::SqrtXdag) return -static_cast<Fp>(Kokkos::numbers::pi / 2);
         if (gate_type == GateType::RX) return RXGate<Fp>(gate)->angle();
         return std::nullopt;
     };
@@ -197,11 +236,11 @@ std::pair<Gate<Fp>, Fp> merge_gate(const Gate<Fp>& gate1, const Gate<Fp>& gate2)
     if (rx_param1 && rx_param2) {
         std::uint64_t target1 = gate1->target_qubit_list()[0];
         std::uint64_t target2 = gate2->target_qubit_list()[0];
-        Fp global_phase1 = gate_type1 == GateType::RX ? 0. : rx_param1.value() / 2;
-        Fp global_phase2 = gate_type2 == GateType::RX ? 0. : rx_param2.value() / 2;
+        Fp global_phase1 = gate_type1 == GateType::RX ? Fp{0} : rx_param1.value() / Fp{2};
+        Fp global_phase2 = gate_type2 == GateType::RX ? Fp{0} : rx_param2.value() / Fp{2};
         Fp global_phase = global_phase1 + global_phase2;
         if (target1 == target2) {
-            if (std::abs(global_phase) < eps) {
+            if (abs(global_phase) < eps<Fp>()) {
                 return {gate::RX<Fp>(target1, rx_param1.value() + rx_param2.value(), control_list),
                         global_phase1 + global_phase2};
             }
@@ -210,10 +249,10 @@ std::pair<Gate<Fp>, Fp> merge_gate(const Gate<Fp>& gate1, const Gate<Fp>& gate2)
 
     // Special case: RY
     auto get_ry_angle = [&](Gate<Fp> gate, GateType gate_type) -> std::optional<Fp> {
-        if (gate_type == GateType::I) return 0.;
-        if (gate_type == GateType::Y) return Kokkos::numbers::pi;
-        if (gate_type == GateType::SqrtY) return Kokkos::numbers::pi / 2;
-        if (gate_type == GateType::SqrtYdag) return -Kokkos::numbers::pi / 2;
+        if (gate_type == GateType::I) return Fp{0};
+        if (gate_type == GateType::Y) return static_cast<Fp>(Kokkos::numbers::pi);
+        if (gate_type == GateType::SqrtY) return static_cast<Fp>(Kokkos::numbers::pi / 2);
+        if (gate_type == GateType::SqrtYdag) return -static_cast<Fp>(Kokkos::numbers::pi / 2);
         if (gate_type == GateType::RY) return RYGate<Fp>(gate)->angle();
         return std::nullopt;
     };
@@ -222,11 +261,11 @@ std::pair<Gate<Fp>, Fp> merge_gate(const Gate<Fp>& gate1, const Gate<Fp>& gate2)
     if (ry_param1 && ry_param2) {
         std::uint64_t target1 = gate1->target_qubit_list()[0];
         std::uint64_t target2 = gate2->target_qubit_list()[0];
-        Fp global_phase1 = gate_type1 == GateType::RY ? 0. : ry_param1.value() / 2;
-        Fp global_phase2 = gate_type2 == GateType::RY ? 0. : ry_param2.value() / 2;
+        Fp global_phase1 = gate_type1 == GateType::RY ? Fp{0} : ry_param1.value() / Fp{2};
+        Fp global_phase2 = gate_type2 == GateType::RY ? Fp{0} : ry_param2.value() / Fp{2};
         Fp global_phase = global_phase1 + global_phase2;
         if (target1 == target2) {
-            if (std::abs(global_phase) < eps) {
+            if (abs(global_phase) < eps<Fp>()) {
                 return {gate::RY<Fp>(target1, ry_param1.value() + ry_param2.value(), control_list),
                         global_phase1 + global_phase2};
             }
@@ -235,7 +274,7 @@ std::pair<Gate<Fp>, Fp> merge_gate(const Gate<Fp>& gate1, const Gate<Fp>& gate2)
 
     // Special case: Swap duplication
     if (gate_type1 == gate_type2 && gate_type1 == GateType::Swap) {
-        if (gate1->target_qubit_mask() == gate2->target_qubit_mask()) return {gate::I<Fp>(), 0.};
+        if (gate1->target_qubit_mask() == gate2->target_qubit_mask()) return {gate::I<Fp>(), Fp{0}};
     }
 
     // General case

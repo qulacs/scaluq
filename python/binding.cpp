@@ -124,7 +124,7 @@ void bind_on_precision(nb::module_& m, const char* submodule_name) {
     internal::bind_gate_param_gate_pauli_hpp<Fp>(mp);
     internal::bind_gate_param_gate_probablistic_hpp<Fp>(mp);
     internal::bind_gate_param_gate_factory<Fp>(mgate);
-    // internal::bind_gate_merge_gate_hpp<Fp>(mp);
+    internal::bind_gate_merge_gate_hpp<Fp>(mp);
 
     internal::bind_circuit_circuit_hpp<Fp>(mp);
 

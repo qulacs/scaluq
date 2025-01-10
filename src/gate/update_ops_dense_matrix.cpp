@@ -62,7 +62,7 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <FloatingPonit Fp>
+template <FloatingPoint Fp>
 void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   const Matrix2x2<Fp>& matrix,

@@ -42,7 +42,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     state._raw = update;
 }
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
                         const SparseMatrix<Fp>& mat,

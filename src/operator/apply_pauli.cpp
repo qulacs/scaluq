@@ -43,7 +43,7 @@ void apply_pauli(std::uint64_t control_mask,
         });
     Kokkos::fence();
 }
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t bit_flip_mask,
                  std::uint64_t phase_flip_mask,
@@ -153,7 +153,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         Kokkos::fence();
     }
 }
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t bit_flip_mask,
                           std::uint64_t phase_flip_mask,
@@ -162,8 +162,8 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                           StateVectorBatched<Fp>& states) {
     std::uint64_t global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     Complex<Fp> true_angle = angle * coef;
-    const Complex<Fp> cosval = Kokkos::cos(-true_angle / 2);
-    const Complex<Fp> sinval = Kokkos::sin(-true_angle / 2);
+    const Complex<Fp> cosval = internal::cos(-true_angle / Fp{2});
+    const Complex<Fp> sinval = internal::sin(-true_angle / Fp{2});
     if (bit_flip_mask == 0) {
         const Complex<Fp> cval_min = cosval - Complex<Fp>(0, 1) * sinval;
         const Complex<Fp> cval_pls = cosval + Complex<Fp>(0, 1) * sinval;
@@ -212,7 +212,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         Kokkos::fence();
     }
 }
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t bit_flip_mask,
                           std::uint64_t phase_flip_mask,
@@ -227,8 +227,8 @@ void apply_pauli_rotation(std::uint64_t control_mask,
             const std::uint64_t batch_id = team.league_rank();
             const Fp angle = pcoef * params[batch_id];
             const Complex<Fp> true_angle = angle * coef;
-            const Complex<Fp> cosval = Kokkos::cos(-true_angle / 2);
-            const Complex<Fp> sinval = Kokkos::sin(-true_angle / 2);
+            const Complex<Fp> cosval = internal::cos(-true_angle / Fp{2});
+            const Complex<Fp> sinval = internal::sin(-true_angle / Fp{2});
             if (bit_flip_mask == 0) {
                 const Complex<Fp> cval_min = cosval - Complex<Fp>(0, 1) * sinval;
                 const Complex<Fp> cval_pls = cosval + Complex<Fp>(0, 1) * sinval;

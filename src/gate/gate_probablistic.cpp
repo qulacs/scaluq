@@ -43,7 +43,7 @@ void ProbablisticGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vecto
 FLOAT(Fp)
 void ProbablisticGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
     std::vector<std::uint64_t> indices(states.batch_size());
-    std::vector<Fp> r(states.batch_size());
+    std::vector<double> r(states.batch_size());
 
     Random random;
     for (std::size_t i = 0; i < states.batch_size(); ++i) {
