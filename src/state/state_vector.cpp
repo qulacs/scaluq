@@ -3,32 +3,33 @@
 #include "../util/template.hpp"
 
 namespace scaluq {
-FLOAT(Fp)
-StateVector<Fp>::StateVector(std::uint64_t n_qubits)
+FLOAT_AND_SPACE(Fp, Sp)
+StateVector<Fp, Sp>::StateVector(std::uint64_t n_qubits)
     : _n_qubits(n_qubits),
       _dim(1ULL << n_qubits),
       _raw(Kokkos::ViewAllocateWithoutInitializing("state"), this->_dim) {
     set_zero_state();
 }
-FLOAT(Fp)
-StateVector<Fp>::StateVector(Kokkos::View<ComplexType*> view)
+FLOAT_AND_SPACE(Fp, Sp)
+StateVector<Fp, Sp>::StateVector(Kokkos::View<ComplexType*> view)
     : _n_qubits(std::bit_width(view.extent(0)) - 1), _dim(view.extent(0)), _raw(view) {}
-FLOAT(Fp)
-void StateVector<Fp>::set_amplitude_at(std::uint64_t index, ComplexType c) {
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVector<Fp, Sp>::set_amplitude_at(std::uint64_t index, ComplexType c) {
     Kokkos::View<ComplexType, Kokkos::HostSpace> host_view("single_value");
     host_view() = c;
     Kokkos::deep_copy(Kokkos::subview(_raw, index), host_view());
 }
-FLOAT(Fp)
-Complex<Fp> StateVector<Fp>::get_amplitude_at(std::uint64_t index) {
+FLOAT_AND_SPACE(Fp, Sp)
+Complex<Fp> StateVector<Fp, Sp>::get_amplitude_at(std::uint64_t index) {
     Kokkos::View<ComplexType, Kokkos::HostSpace> host_view("single_value");
     Kokkos::deep_copy(host_view, Kokkos::subview(_raw, index));
     return host_view();
 }
-FLOAT(Fp)
-StateVector<Fp> StateVector<Fp>::Haar_random_state(std::uint64_t n_qubits, std::uint64_t seed) {
+FLOAT_AND_SPACE(Fp, Sp)
+StateVector<Fp, Sp> StateVector<Fp, Sp>::Haar_random_state(std::uint64_t n_qubits,
+                                                           std::uint64_t seed) {
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
-    StateVector<Fp> state(n_qubits);
+    StateVector<Fp, Sp> state(n_qubits);
     Kokkos::parallel_for(
         state._dim, KOKKOS_LAMBDA(std::uint64_t i) {
             auto rand_gen = rand_pool.get_state();
@@ -39,15 +40,15 @@ StateVector<Fp> StateVector<Fp>::Haar_random_state(std::uint64_t n_qubits, std::
     state.normalize();
     return state;
 }
-FLOAT(Fp)
-void StateVector<Fp>::set_zero_state() {
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVector<Fp, Sp>::set_zero_state() {
     Kokkos::deep_copy(_raw, 0);
     set_amplitude_at(0, 1);
 }
-FLOAT(Fp)
-void StateVector<Fp>::set_zero_norm_state() { Kokkos::deep_copy(_raw, 0); }
-FLOAT(Fp)
-void StateVector<Fp>::set_computational_basis(std::uint64_t basis) {
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVector<Fp, Sp>::set_zero_norm_state() { Kokkos::deep_copy(_raw, 0); }
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVector<Fp, Sp>::set_computational_basis(std::uint64_t basis) {
     if (basis >= _dim) {
         throw std::runtime_error(
             "Error: StateVector::set_computational_basis(std::uint64_t): "
@@ -56,17 +57,17 @@ void StateVector<Fp>::set_computational_basis(std::uint64_t basis) {
     Kokkos::deep_copy(_raw, 0);
     set_amplitude_at(basis, 1);
 }
-FLOAT(Fp)
-void StateVector<Fp>::set_Haar_random_state(std::uint64_t n_qubits, std::uint64_t seed) {
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVector<Fp, Sp>::set_Haar_random_state(std::uint64_t n_qubits, std::uint64_t seed) {
     *this = Haar_random_state(n_qubits, seed);
 }
-FLOAT(Fp)
-[[nodiscard]] std::vector<typename StateVector<Fp>::ComplexType> StateVector<Fp>::get_amplitudes()
-    const {
+FLOAT_AND_SPACE(Fp, Sp)
+[[nodiscard]] std::vector<typename StateVector<Fp, Sp>::ComplexType>
+StateVector<Fp, Sp>::get_amplitudes() const {
     return internal::convert_device_view_to_host_vector<ComplexType>(_raw);
 }
-FLOAT(Fp)
-Fp StateVector<Fp>::get_squared_norm() const {
+FLOAT_AND_SPACE(Fp, Sp)
+Fp StateVector<Fp, Sp>::get_squared_norm() const {
     Fp norm;
     Kokkos::parallel_reduce(
         this->_dim,
@@ -76,15 +77,15 @@ Fp StateVector<Fp>::get_squared_norm() const {
         norm);
     return norm;
 }
-FLOAT(Fp)
-void StateVector<Fp>::normalize() {
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVector<Fp, Sp>::normalize() {
     const Fp norm = std::sqrt(this->get_squared_norm());
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(std::uint64_t it) { this->_raw[it] /= norm; });
     Kokkos::fence();
 }
-FLOAT(Fp)
-Fp StateVector<Fp>::get_zero_probability(std::uint64_t target_qubit_index) const {
+FLOAT_AND_SPACE(Fp, Sp)
+Fp StateVector<Fp, Sp>::get_zero_probability(std::uint64_t target_qubit_index) const {
     if (target_qubit_index >= _n_qubits) {
         throw std::runtime_error(
             "Error: StateVector::get_zero_probability(std::uint64_t): index "
@@ -101,8 +102,8 @@ Fp StateVector<Fp>::get_zero_probability(std::uint64_t target_qubit_index) const
         sum);
     return sum;
 }
-FLOAT(Fp)
-Fp StateVector<Fp>::get_marginal_probability(
+FLOAT_AND_SPACE(Fp, Sp)
+Fp StateVector<Fp, Sp>::get_marginal_probability(
     const std::vector<std::uint64_t>& measured_values) const {
     if (measured_values.size() != _n_qubits) {
         throw std::runtime_error(
@@ -145,8 +146,8 @@ Fp StateVector<Fp>::get_marginal_probability(
 
     return sum;
 }
-FLOAT(Fp)
-Fp StateVector<Fp>::get_entropy() const {
+FLOAT_AND_SPACE(Fp, Sp)
+Fp StateVector<Fp, Sp>::get_entropy() const {
     Fp ent = 0;
     const Fp eps = 1e-15;
     Kokkos::parallel_reduce(
@@ -160,22 +161,22 @@ Fp StateVector<Fp>::get_entropy() const {
         ent);
     return ent;
 }
-FLOAT(Fp)
-void StateVector<Fp>::add_state_vector_with_coef(ComplexType coef, const StateVector& state) {
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVector<Fp, Sp>::add_state_vector_with_coef(ComplexType coef, const StateVector& state) {
     Kokkos::parallel_for(
         this->_dim,
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { this->_raw[i] += coef * state._raw[i]; });
     Kokkos::fence();
 }
-FLOAT(Fp)
-void StateVector<Fp>::multiply_coef(ComplexType coef) {
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVector<Fp, Sp>::multiply_coef(ComplexType coef) {
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(std::uint64_t i) { this->_raw[i] *= coef; });
     Kokkos::fence();
 }
-FLOAT(Fp)
-std::vector<std::uint64_t> StateVector<Fp>::sampling(std::uint64_t sampling_count,
-                                                     std::uint64_t seed) const {
+FLOAT_AND_SPACE(Fp, Sp)
+std::vector<std::uint64_t> StateVector<Fp, Sp>::sampling(std::uint64_t sampling_count,
+                                                         std::uint64_t seed) const {
     Kokkos::View<Fp*> stacked_prob("prob", _dim + 1);
     Kokkos::parallel_scan(
         "compute_stacked_prob",
@@ -209,8 +210,8 @@ std::vector<std::uint64_t> StateVector<Fp>::sampling(std::uint64_t sampling_coun
     Kokkos::fence();
     return internal::convert_device_view_to_host_vector<std::uint64_t>(result);
 }
-FLOAT(Fp)
-void StateVector<Fp>::load(const std::vector<ComplexType>& other) {
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVector<Fp, Sp>::load(const std::vector<ComplexType>& other) {
     if (other.size() != _dim) {
         throw std::runtime_error(
             "Error: StateVector::load(const vector<ComplexType>&): invalid "
@@ -218,14 +219,14 @@ void StateVector<Fp>::load(const std::vector<ComplexType>& other) {
     }
     _raw = internal::convert_host_vector_to_device_view(other);
 }
-FLOAT(Fp)
-StateVector<Fp> StateVector<Fp>::copy() const {
+FLOAT_AND_SPACE(Fp, Sp)
+StateVector<Fp, Sp> StateVector<Fp, Sp>::copy() const {
     StateVector new_vec(_n_qubits);
     Kokkos::deep_copy(new_vec._raw, _raw);
     return new_vec;
 }
-FLOAT(Fp)
-std::string StateVector<Fp>::to_string() const {
+FLOAT_AND_SPACE(Fp, Sp)
+std::string StateVector<Fp, Sp>::to_string() const {
     std::stringstream os;
     auto amp = this->get_amplitudes();
     os << "Qubit Count : " << _n_qubits << '\n';

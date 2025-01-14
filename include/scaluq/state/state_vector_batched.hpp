@@ -5,7 +5,7 @@
 
 namespace scaluq {
 
-template <std::floating_point Fp>
+template <std::floating_point Fp, ExecutionSpace Sp = DefaultSpace>
 class StateVectorBatched {
     std::uint64_t _batch_size;
     std::uint64_t _n_qubits;
@@ -15,7 +15,7 @@ class StateVectorBatched {
     //               "Unsupported execution space tag");
 
 public:
-    Kokkos::View<Kokkos::complex<Fp>**, Kokkos::LayoutRight> _raw;
+    Kokkos::View<Kokkos::complex<Fp>**, Kokkos::LayoutRight, Sp> _raw;
     StateVectorBatched() = default;
     StateVectorBatched(std::uint64_t batch_size, std::uint64_t n_qubits);
     StateVectorBatched(const StateVectorBatched& other) = default;

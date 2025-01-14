@@ -3,18 +3,17 @@
 #include "../util/template.hpp"
 
 namespace scaluq {
-FLOAT(Fp)
-StateVectorBatched<Fp>::StateVectorBatched(std::uint64_t batch_size, std::uint64_t n_qubits)
+FLOAT_AND_SPACE(Fp, Sp)
+StateVectorBatched<Fp, Sp>::StateVectorBatched(std::uint64_t batch_size, std::uint64_t n_qubits)
     : _batch_size(batch_size),
       _n_qubits(n_qubits),
       _dim(1ULL << _n_qubits),
-      _raw(Kokkos::View<Kokkos::complex<Fp>**, Kokkos::LayoutRight>(
-          Kokkos::ViewAllocateWithoutInitializing("states"), _batch_size, _dim)) {
+      _raw(Kokkos::ViewAllocateWithoutInitializing("states"), _batch_size, _dim) {
     set_zero_state();
 }
 
-FLOAT(Fp)
-void StateVectorBatched<Fp>::set_state_vector(const StateVector<Fp>& state) {
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVectorBatched<Fp, Sp>::set_state_vector(const StateVector<Fp>& state) {
     if (_raw.extent(1) != state._raw.extent(0)) [[unlikely]] {
         throw std::runtime_error(
             "Error: StateVectorBatched::set_state_vector(const StateVector&): Dimensions of "
@@ -28,9 +27,9 @@ void StateVectorBatched<Fp>::set_state_vector(const StateVector<Fp>& state) {
     Kokkos::fence();
 }
 
-FLOAT(Fp)
-void StateVectorBatched<Fp>::set_state_vector_at(std::uint64_t batch_id,
-                                                 const StateVector<Fp>& state) {
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVectorBatched<Fp, Sp>::set_state_vector_at(std::uint64_t batch_id,
+                                                     const StateVector<Fp>& state) {
     if (_raw.extent(1) != state._raw.extent(0)) [[unlikely]] {
         throw std::runtime_error(
             "Error: StateVectorBatched::set_state_vector(std::uint64_t, const StateVector&): "
@@ -41,8 +40,8 @@ void StateVectorBatched<Fp>::set_state_vector_at(std::uint64_t batch_id,
     Kokkos::fence();
 }
 
-FLOAT(Fp)
-StateVector<Fp> StateVectorBatched<Fp>::get_state_vector_at(std::uint64_t batch_id) const {
+FLOAT_AND_SPACE(Fp, Sp)
+StateVector<Fp> StateVectorBatched<Fp, Sp>::get_state_vector_at(std::uint64_t batch_id) const {
     StateVector<Fp> ret(_n_qubits);
     Kokkos::parallel_for(
         _dim, KOKKOS_CLASS_LAMBDA(std::uint64_t i) { ret._raw(i) = _raw(batch_id, i); });
@@ -50,8 +49,8 @@ StateVector<Fp> StateVectorBatched<Fp>::get_state_vector_at(std::uint64_t batch_
     return ret;
 }
 
-FLOAT(Fp)
-void StateVectorBatched<Fp>::set_computational_basis(std::uint64_t basis) {
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVectorBatched<Fp, Sp>::set_computational_basis(std::uint64_t basis) {
     if (basis >= _dim) [[unlikely]] {
         throw std::runtime_error(
             "Error: StateVectorBatched::set_computational_basis(std::uint64_t): "
@@ -63,19 +62,19 @@ void StateVectorBatched<Fp>::set_computational_basis(std::uint64_t basis) {
     Kokkos::fence();
 }
 
-FLOAT(Fp)
-void StateVectorBatched<Fp>::set_zero_norm_state() { Kokkos::deep_copy(_raw, 0); }
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVectorBatched<Fp, Sp>::set_zero_norm_state() { Kokkos::deep_copy(_raw, 0); }
 
-FLOAT(Fp)
-void StateVectorBatched<Fp>::set_Haar_random_state(std::uint64_t batch_size,
-                                                   std::uint64_t n_qubits,
-                                                   bool set_same_state,
-                                                   std::uint64_t seed) {
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVectorBatched<Fp, Sp>::set_Haar_random_state(std::uint64_t batch_size,
+                                                       std::uint64_t n_qubits,
+                                                       bool set_same_state,
+                                                       std::uint64_t seed) {
     *this = Haar_random_state(batch_size, n_qubits, set_same_state, seed);
 }
 
-FLOAT(Fp)
-std::vector<std::vector<std::uint64_t>> StateVectorBatched<Fp>::sampling(
+FLOAT_AND_SPACE(Fp, Sp)
+std::vector<std::vector<std::uint64_t>> StateVectorBatched<Fp, Sp>::sampling(
     std::uint64_t sampling_count, std::uint64_t seed) const {
     Kokkos::View<Fp**> stacked_prob("prob", _batch_size, _dim + 1);
 
@@ -129,11 +128,11 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Fp>::sampling(
     return vv;
 }
 
-FLOAT(Fp)
-StateVectorBatched<Fp> StateVectorBatched<Fp>::Haar_random_state(std::uint64_t batch_size,
-                                                                 std::uint64_t n_qubits,
-                                                                 bool set_same_state,
-                                                                 std::uint64_t seed) {
+FLOAT_AND_SPACE(Fp, Sp)
+StateVectorBatched<Fp, Sp> StateVectorBatched<Fp, Sp>::Haar_random_state(std::uint64_t batch_size,
+                                                                         std::uint64_t n_qubits,
+                                                                         bool set_same_state,
+                                                                         std::uint64_t seed) {
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
     StateVectorBatched states(batch_size, n_qubits);
     if (set_same_state) {
@@ -153,8 +152,8 @@ StateVectorBatched<Fp> StateVectorBatched<Fp>::Haar_random_state(std::uint64_t b
     return states;
 }
 
-FLOAT(Fp)
-std::vector<std::vector<Kokkos::complex<Fp>>> StateVectorBatched<Fp>::get_amplitudes() const {
+FLOAT_AND_SPACE(Fp, Sp)
+std::vector<std::vector<Kokkos::complex<Fp>>> StateVectorBatched<Fp, Sp>::get_amplitudes() const {
     auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), _raw);
     std::vector<std::vector<Kokkos::complex<Fp>>> vv(
         _raw.extent(0), std::vector<Kokkos::complex<Fp>>(_raw.extent(1), 0));
@@ -166,8 +165,8 @@ std::vector<std::vector<Kokkos::complex<Fp>>> StateVectorBatched<Fp>::get_amplit
     return vv;
 }
 
-FLOAT(Fp)
-std::vector<Fp> StateVectorBatched<Fp>::get_squared_norm() const {
+FLOAT_AND_SPACE(Fp, Sp)
+std::vector<Fp> StateVectorBatched<Fp, Sp>::get_squared_norm() const {
     Kokkos::View<Fp*> norms(Kokkos::ViewAllocateWithoutInitializing("norms"), _batch_size);
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<>(_batch_size, Kokkos::AUTO()),
@@ -189,8 +188,8 @@ std::vector<Fp> StateVectorBatched<Fp>::get_squared_norm() const {
     return internal::convert_device_view_to_host_vector<Fp>(norms);
 }
 
-FLOAT(Fp)
-void StateVectorBatched<Fp>::normalize() {
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVectorBatched<Fp, Sp>::normalize() {
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<>(_batch_size, Kokkos::AUTO()),
         KOKKOS_CLASS_LAMBDA(
@@ -212,8 +211,8 @@ void StateVectorBatched<Fp>::normalize() {
     Kokkos::fence();
 }
 
-FLOAT(Fp)
-std::vector<Fp> StateVectorBatched<Fp>::get_zero_probability(
+FLOAT_AND_SPACE(Fp, Sp)
+std::vector<Fp> StateVectorBatched<Fp, Sp>::get_zero_probability(
     std::uint64_t target_qubit_index) const {
     if (target_qubit_index >= _n_qubits) {
         throw std::runtime_error(
@@ -243,8 +242,8 @@ std::vector<Fp> StateVectorBatched<Fp>::get_zero_probability(
     return internal::convert_device_view_to_host_vector<Fp>(probs);
 }
 
-FLOAT(Fp)
-std::vector<Fp> StateVectorBatched<Fp>::get_marginal_probability(
+FLOAT_AND_SPACE(Fp, Sp)
+std::vector<Fp> StateVectorBatched<Fp, Sp>::get_marginal_probability(
     const std::vector<std::uint64_t>& measured_values) const {
     if (measured_values.size() != _n_qubits) {
         throw std::runtime_error(
@@ -297,8 +296,8 @@ std::vector<Fp> StateVectorBatched<Fp>::get_marginal_probability(
     return internal::convert_device_view_to_host_vector<Fp>(probs);
 }
 
-FLOAT(Fp)
-std::vector<Fp> StateVectorBatched<Fp>::get_entropy() const {
+FLOAT_AND_SPACE(Fp, Sp)
+std::vector<Fp> StateVectorBatched<Fp, Sp>::get_entropy() const {
     Kokkos::View<Fp*> ents("ents", _batch_size);
     const Fp eps = 1e-15;
     Kokkos::parallel_for(
@@ -323,9 +322,9 @@ std::vector<Fp> StateVectorBatched<Fp>::get_entropy() const {
     return internal::convert_device_view_to_host_vector(ents);
 }
 
-FLOAT(Fp)
-void StateVectorBatched<Fp>::add_state_vector_with_coef(const Kokkos::complex<Fp>& coef,
-                                                        const StateVectorBatched& states) {
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVectorBatched<Fp, Sp>::add_state_vector_with_coef(const Kokkos::complex<Fp>& coef,
+                                                            const StateVectorBatched& states) {
     if (n_qubits() != states.n_qubits() || batch_size() != states.batch_size()) [[unlikely]] {
         throw std::runtime_error(
             "Error: StateVectorBatched::add_state_vector(const StateVectorBatched&): invalid "
@@ -339,8 +338,8 @@ void StateVectorBatched<Fp>::add_state_vector_with_coef(const Kokkos::complex<Fp
     Kokkos::fence();
 }
 
-FLOAT(Fp)
-void StateVectorBatched<Fp>::multiply_coef(const Kokkos::complex<Fp>& coef) {
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVectorBatched<Fp, Sp>::multiply_coef(const Kokkos::complex<Fp>& coef) {
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, _dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
@@ -349,8 +348,8 @@ void StateVectorBatched<Fp>::multiply_coef(const Kokkos::complex<Fp>& coef) {
     Kokkos::fence();
 }
 
-FLOAT(Fp)
-void StateVectorBatched<Fp>::load(const std::vector<std::vector<Kokkos::complex<Fp>>>& states) {
+FLOAT_AND_SPACE(Fp, Sp)
+void StateVectorBatched<Fp, Sp>::load(const std::vector<std::vector<Kokkos::complex<Fp>>>& states) {
     if (states.size() != _batch_size) {
         throw std::runtime_error(
             "Error: StateVectorBatched::load(std::vector<std::vector<Kokkos::complex<Fp>>>&): "
@@ -376,15 +375,15 @@ void StateVectorBatched<Fp>::load(const std::vector<std::vector<Kokkos::complex<
     Kokkos::deep_copy(_raw, view_h);
 }
 
-FLOAT(Fp)
-StateVectorBatched<Fp> StateVectorBatched<Fp>::copy() const {
+FLOAT_AND_SPACE(Fp, Sp)
+StateVectorBatched<Fp, Sp> StateVectorBatched<Fp, Sp>::copy() const {
     StateVectorBatched cp(_batch_size, _n_qubits);
     Kokkos::deep_copy(cp._raw, _raw);
     return cp;
 }
 
-FLOAT(Fp)
-std::string StateVectorBatched<Fp>::to_string() const {
+FLOAT_AND_SPACE(Fp, Sp)
+std::string StateVectorBatched<Fp, Sp>::to_string() const {
     std::stringstream os;
     auto states_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), _raw);
     Kokkos::fence();
