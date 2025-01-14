@@ -352,7 +352,11 @@ namespace internal {
             "Get target and control qubits as mask.")                                        \
         .def(                                                                                \
             "get_inverse",                                                                   \
-            [](const GATE_TYPE<FLOAT>& gate) { return gate->get_inverse(); },                \
+            [](const GATE_TYPE<FLOAT>& gate) {                                               \
+                auto inv = gate->get_inverse();                                              \
+                if (!inv) nb::none();                                                        \
+                return Gate<FLOAT>(inv);                                                     \
+            },                                                                               \
             "Generate inverse gate as `Gate` type. If not exists, return None.")             \
         .def(                                                                                \
             "update_quantum_state",                                                          \

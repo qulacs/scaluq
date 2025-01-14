@@ -53,7 +53,7 @@ private:
     std::shared_ptr<const Data> _ptr;
 
 public:
-    enum PauliID : std::uint64_t { I, X, Y, Z };
+    enum PauliID : std::uint64_t { PAULI_I, PAULI_X, PAULI_Y, PAULI_Z };
 
     explicit PauliOperator(Complex<Fp> coef = 1.) : _ptr(std::make_shared<const Data>(coef)) {}
     explicit PauliOperator(Data data) : _ptr(std::make_shared<const Data>(data)) {}
@@ -110,12 +110,17 @@ public:
 namespace internal {
 template <std::floating_point Fp>
 void bind_operator_pauli_operator_hpp(nb::module_& m) {
-    nb::enum_<typename PauliOperator<Fp>::PauliID>(m, "PauliID")
-        .value("I", PauliOperator<Fp>::I)
-        .value("X", PauliOperator<Fp>::X)
-        .value("Y", PauliOperator<Fp>::Y)
-        .value("Z", PauliOperator<Fp>::Z)
-        .export_values();
+    auto pauli_enum = nb::enum_<typename PauliOperator<Fp>::PauliID>(m, "PauliID")
+                          .value("PAULI_I", PauliOperator<Fp>::PAULI_I)
+                          .value("PAULI_X", PauliOperator<Fp>::PAULI_X)
+                          .value("PAULI_Y", PauliOperator<Fp>::PAULI_Y)
+                          .value("PAULI_Z", PauliOperator<Fp>::PAULI_Z)
+                          .export_values();
+
+    m.attr("PAULI_I") = (int)PauliOperator<Fp>::PAULI_I;
+    m.attr("PAULI_X") = (int)PauliOperator<Fp>::PAULI_X;
+    m.attr("PAULI_Y") = (int)PauliOperator<Fp>::PAULI_Y;
+    m.attr("PAULI_Z") = (int)PauliOperator<Fp>::PAULI_Z;
 
     nb::class_<typename PauliOperator<Fp>::Data>(
         m, "PauliOperatorData", "Internal data structure for PauliOperator.")
