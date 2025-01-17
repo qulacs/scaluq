@@ -9,25 +9,25 @@
 namespace scaluq {
 namespace internal {
 
-template <std::floating_point Fp>
-class PauliGateImpl : public GateBase<Fp> {
-    const PauliOperator<Fp> _pauli;
+template <std::floating_point Fp, ExecutionSpace Sp>
+class PauliGateImpl : public GateBase<Fp, Sp> {
+    const PauliOperator<Fp, Sp> _pauli;
 
 public:
-    PauliGateImpl(std::uint64_t control_mask, const PauliOperator<Fp>& pauli)
-        : GateBase<Fp>(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
+    PauliGateImpl(std::uint64_t control_mask, const PauliOperator<Fp, Sp>& pauli)
+        : GateBase<Fp, Sp>(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
           _pauli(pauli) {}
 
-    PauliOperator<Fp> pauli() const { return _pauli; };
+    PauliOperator<Fp, Sp> pauli() const { return _pauli; };
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
 
-    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Fp, Sp>> get_inverse() const override {
         return this->shared_from_this();
     }
     internal::ComplexMatrix<Fp> get_matrix() const override { return this->_pauli.get_matrix(); }
 
-    void update_quantum_state(StateVector<Fp>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
+    void update_quantum_state(StateVector<Fp, Sp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp, Sp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -37,30 +37,30 @@ public:
     }
 };
 
-template <std::floating_point Fp>
-class PauliRotationGateImpl : public GateBase<Fp> {
-    const PauliOperator<Fp> _pauli;
+template <std::floating_point Fp, ExecutionSpace Sp>
+class PauliRotationGateImpl : public GateBase<Fp, Sp> {
+    const PauliOperator<Fp, Sp> _pauli;
     const Fp _angle;
 
 public:
-    PauliRotationGateImpl(std::uint64_t control_mask, const PauliOperator<Fp>& pauli, Fp angle)
-        : GateBase<Fp>(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
+    PauliRotationGateImpl(std::uint64_t control_mask, const PauliOperator<Fp, Sp>& pauli, Fp angle)
+        : GateBase<Fp, Sp>(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
           _pauli(pauli),
           _angle(angle) {}
 
-    PauliOperator<Fp> pauli() const { return _pauli; }
+    PauliOperator<Fp, Sp> pauli() const { return _pauli; }
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
     Fp angle() const { return _angle; }
 
-    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
-        return std::make_shared<const PauliRotationGateImpl<Fp>>(
+    std::shared_ptr<const GateBase<Fp, Sp>> get_inverse() const override {
+        return std::make_shared<const PauliRotationGateImpl<Fp, Sp>>(
             this->_control_mask, _pauli, -_angle);
     }
 
     internal::ComplexMatrix<Fp> get_matrix() const override;
 
-    void update_quantum_state(StateVector<Fp>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
+    void update_quantum_state(StateVector<Fp, Sp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp, Sp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -73,13 +73,13 @@ public:
 };
 }  // namespace internal
 
-template <std::floating_point Fp>
-using PauliGate = internal::GatePtr<internal::PauliGateImpl<Fp>>;
-template <std::floating_point Fp>
-using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl<Fp>>;
+template <std::floating_point Fp, ExecutionSpace Sp>
+using PauliGate = internal::GatePtr<internal::PauliGateImpl<Fp, Sp>>;
+template <std::floating_point Fp, ExecutionSpace Sp>
+using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl<Fp, Sp>>;
 
 namespace internal {
-#define DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(Type)                                      \
+/*#define DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(Type)                                      \
     template <>                                                                              \
     inline std::shared_ptr<const PauliGateImpl<Type>> get_from_json(const Json& j) {         \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();                   \
@@ -97,13 +97,13 @@ namespace internal {
 
 DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(double)
 DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(float)
-#undef DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE
+#undef DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE*/
 
 }  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <std::floating_point Fp, ExecutionSpace Sp>
 void bind_gate_gate_pauli_hpp(nb::module_& m) {
     DEF_GATE(PauliGate,
              Fp,

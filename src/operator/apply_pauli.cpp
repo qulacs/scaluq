@@ -5,12 +5,12 @@
 #include "../util/template.hpp"
 
 namespace scaluq::internal {
-template <std::floating_point Fp>
+template <std::floating_point Fp, ExecutionSpace Sp>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t bit_flip_mask,
                  std::uint64_t phase_flip_mask,
                  Complex<Fp> coef,
-                 StateVector<Fp>& state_vector) {
+                 StateVector<Fp, Sp>& state_vector) {
     if (bit_flip_mask == 0) {
         Kokkos::parallel_for(
             state_vector.dim() >> std::popcount(control_mask), KOKKOS_LAMBDA(std::uint64_t i) {
@@ -42,12 +42,12 @@ void apply_pauli(std::uint64_t control_mask,
         });
     Kokkos::fence();
 }
-template <std::floating_point Fp>
+template <std::floating_point Fp, ExecutionSpace Sp>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t bit_flip_mask,
                  std::uint64_t phase_flip_mask,
                  Complex<Fp> coef,
-                 StateVectorBatched<Fp>& states) {
+                 StateVectorBatched<Fp, Sp>& states) {
     if (bit_flip_mask == 0) {
         Kokkos::parallel_for(
             Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
@@ -84,24 +84,24 @@ void apply_pauli(std::uint64_t control_mask,
     Kokkos::fence();
 }
 
-#define FUNC_MACRO(Fp)         \
+#define FUNC_MACRO(Fp, Sp)     \
     template void apply_pauli( \
-        std::uint64_t, std::uint64_t, std::uint64_t, Complex<Fp>, StateVector<Fp>&);
-CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+        std::uint64_t, std::uint64_t, std::uint64_t, Complex<Fp>, StateVector<Fp, Sp>&);
+CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
-#define FUNC_MACRO(Fp)         \
+#define FUNC_MACRO(Fp, Sp)     \
     template void apply_pauli( \
-        std::uint64_t, std::uint64_t, std::uint64_t, Complex<Fp>, StateVectorBatched<Fp>&);
-CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+        std::uint64_t, std::uint64_t, std::uint64_t, Complex<Fp>, StateVectorBatched<Fp, Sp>&);
+CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
+template <std::floating_point Fp, ExecutionSpace Sp>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t bit_flip_mask,
                           std::uint64_t phase_flip_mask,
                           Complex<Fp> coef,
                           Fp angle,
-                          StateVector<Fp>& state_vector) {
+                          StateVector<Fp, Sp>& state_vector) {
     std::uint64_t global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     Complex<Fp> true_angle = angle * coef;
     const Complex<Fp> cosval = Kokkos::cos(-true_angle / 2);
@@ -151,13 +151,13 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         Kokkos::fence();
     }
 }
-template <std::floating_point Fp>
+template <std::floating_point Fp, ExecutionSpace Sp>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t bit_flip_mask,
                           std::uint64_t phase_flip_mask,
                           Complex<Fp> coef,
                           Fp angle,
-                          StateVectorBatched<Fp>& states) {
+                          StateVectorBatched<Fp, Sp>& states) {
     std::uint64_t global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     Complex<Fp> true_angle = angle * coef;
     const Complex<Fp> cosval = Kokkos::cos(-true_angle / 2);
@@ -210,14 +210,14 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         Kokkos::fence();
     }
 }
-template <std::floating_point Fp>
+template <std::floating_point Fp, ExecutionSpace Sp>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t bit_flip_mask,
                           std::uint64_t phase_flip_mask,
                           Complex<Fp> coef,
                           Fp pcoef,
                           std::vector<Fp> params,
-                          StateVectorBatched<Fp>& states) {
+                          StateVectorBatched<Fp, Sp>& states) {
     std::uint64_t global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     auto team_policy = Kokkos::TeamPolicy(states.batch_size(), Kokkos::AUTO);
     Kokkos::parallel_for(
@@ -271,24 +271,28 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         });
     Kokkos::fence();
 }
-#define FUNC_MACRO(Fp)                  \
+#define FUNC_MACRO(Fp, Sp)              \
     template void apply_pauli_rotation( \
-        std::uint64_t, std::uint64_t, std::uint64_t, Complex<Fp>, Fp, StateVector<Fp>&);
-CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+        std::uint64_t, std::uint64_t, std::uint64_t, Complex<Fp>, Fp, StateVector<Fp, Sp>&);
+CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
-#define FUNC_MACRO(Fp)                  \
-    template void apply_pauli_rotation( \
-        std::uint64_t, std::uint64_t, std::uint64_t, Complex<Fp>, Fp, StateVectorBatched<Fp>&);
-CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#define FUNC_MACRO(Fp, Sp)                            \
+    template void apply_pauli_rotation(std::uint64_t, \
+                                       std::uint64_t, \
+                                       std::uint64_t, \
+                                       Complex<Fp>,   \
+                                       Fp,            \
+                                       StateVectorBatched<Fp, Sp>&);
+CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
-#define FUNC_MACRO(Fp)                                  \
+#define FUNC_MACRO(Fp, Sp)                              \
     template void apply_pauli_rotation(std::uint64_t,   \
                                        std::uint64_t,   \
                                        std::uint64_t,   \
                                        Complex<Fp>,     \
                                        Fp,              \
                                        std::vector<Fp>, \
-                                       StateVectorBatched<Fp>&);
-CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+                                       StateVectorBatched<Fp, Sp>&);
+CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 }  // namespace scaluq::internal

@@ -1,4 +1,5 @@
 #include <scaluq/state/state_vector.hpp>
+#include <type_traits>
 
 #include "../util/template.hpp"
 
@@ -11,7 +12,7 @@ StateVector<Fp, Sp>::StateVector(std::uint64_t n_qubits)
     set_zero_state();
 }
 FLOAT_AND_SPACE(Fp, Sp)
-StateVector<Fp, Sp>::StateVector(Kokkos::View<ComplexType*> view)
+StateVector<Fp, Sp>::StateVector(Kokkos::View<ComplexType*, Sp> view)
     : _n_qubits(std::bit_width(view.extent(0)) - 1), _dim(view.extent(0)), _raw(view) {}
 FLOAT_AND_SPACE(Fp, Sp)
 void StateVector<Fp, Sp>::set_amplitude_at(std::uint64_t index, ComplexType c) {
@@ -62,9 +63,12 @@ void StateVector<Fp, Sp>::set_Haar_random_state(std::uint64_t n_qubits, std::uin
     *this = Haar_random_state(n_qubits, seed);
 }
 FLOAT_AND_SPACE(Fp, Sp)
-[[nodiscard]] std::vector<typename StateVector<Fp, Sp>::ComplexType>
-StateVector<Fp, Sp>::get_amplitudes() const {
-    return internal::convert_device_view_to_host_vector<ComplexType>(_raw);
+[[nodiscard]] std::vector<Complex<Fp>> StateVector<Fp, Sp>::get_amplitudes() const {
+    if constexpr (std::is_same_v<Sp, DefaultSpace>) {
+        return internal::convert_device_view_to_host_vector<ComplexType>(_raw);
+    } else {
+        return std::vector<Complex<Fp>>(_raw.data(), _raw.data() + _raw.size());
+    }
 }
 FLOAT_AND_SPACE(Fp, Sp)
 Fp StateVector<Fp, Sp>::get_squared_norm() const {
@@ -211,13 +215,17 @@ std::vector<std::uint64_t> StateVector<Fp, Sp>::sampling(std::uint64_t sampling_
     return internal::convert_device_view_to_host_vector<std::uint64_t>(result);
 }
 FLOAT_AND_SPACE(Fp, Sp)
-void StateVector<Fp, Sp>::load(const std::vector<ComplexType>& other) {
+void StateVector<Fp, Sp>::load(const std::vector<Complex<Fp>>& other) {
     if (other.size() != _dim) {
         throw std::runtime_error(
             "Error: StateVector::load(const vector<ComplexType>&): invalid "
             "length of state");
     }
-    _raw = internal::convert_host_vector_to_device_view(other);
+    if constexpr (std::is_same_v<Sp, DefaultSpace>) {
+        _raw = internal::convert_host_vector_to_device_view(other);
+    } else {
+        std::copy(other.begin(), other.end(), _raw.data());
+    }
 }
 FLOAT_AND_SPACE(Fp, Sp)
 StateVector<Fp, Sp> StateVector<Fp, Sp>::copy() const {
@@ -246,6 +254,6 @@ std::string StateVector<Fp, Sp>::to_string() const {
     return os.str();
 }
 
-FLOAT_DECLARE_CLASS(StateVector)
+FLOAT_AND_SPACE_DECLARE_CLASS(StateVector)
 
 }  // namespace scaluq

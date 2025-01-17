@@ -13,7 +13,7 @@
 
 namespace scaluq {
 
-using CPUSpace = Kokkos::HostSpace;
+using CPUSpace = Kokkos::DefaultHostExecutionSpace;
 using DefaultSpace = Kokkos::DefaultExecutionSpace;
 template <typename T>
 concept ExecutionSpace = std::is_same_v<T, CPUSpace> || std::is_same_v<T, DefaultSpace>;
@@ -29,7 +29,7 @@ public:
     Kokkos::View<ComplexType*, Sp> _raw;
     StateVector() = default;
     StateVector(std::uint64_t n_qubits);
-    StateVector(Kokkos::View<ComplexType*> view);
+    StateVector(Kokkos::View<ComplexType*, Sp> view);
     StateVector(const StateVector& other) = default;
 
     StateVector& operator=(const StateVector& other) = default;
@@ -59,7 +59,7 @@ public:
 
     [[nodiscard]] std::uint64_t dim() const { return this->_dim; }
 
-    [[nodiscard]] std::vector<ComplexType> get_amplitudes() const;
+    [[nodiscard]] std::vector<Complex<Fp>> get_amplitudes() const;
 
     [[nodiscard]] Fp get_squared_norm() const;
 
@@ -77,7 +77,7 @@ public:
     [[nodiscard]] std::vector<std::uint64_t> sampling(
         std::uint64_t sampling_count, std::uint64_t seed = std::random_device()()) const;
 
-    void load(const std::vector<ComplexType>& other);
+    void load(const std::vector<Complex<Fp>>& other);
 
     [[nodiscard]] StateVector copy() const;
 

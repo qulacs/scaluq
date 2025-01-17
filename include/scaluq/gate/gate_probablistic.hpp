@@ -8,16 +8,16 @@
 namespace scaluq {
 namespace internal {
 
-template <std::floating_point Fp>
-class ProbablisticGateImpl : public GateBase<Fp> {
+template <std::floating_point Fp, ExecutionSpace Sp>
+class ProbablisticGateImpl : public GateBase<Fp, Sp> {
     std::vector<Fp> _distribution;
     std::vector<Fp> _cumulative_distribution;
-    std::vector<Gate<Fp>> _gate_list;
+    std::vector<Gate<Fp, Sp>> _gate_list;
 
 public:
     ProbablisticGateImpl(const std::vector<Fp>& distribution,
-                         const std::vector<Gate<Fp>>& gate_list);
-    const std::vector<Gate<Fp>>& gate_list() const { return _gate_list; }
+                         const std::vector<Gate<Fp, Sp>>& gate_list);
+    const std::vector<Gate<Fp, Sp>>& gate_list() const { return _gate_list; }
     const std::vector<Fp>& distribution() const { return _distribution; }
 
     std::vector<std::uint64_t> target_qubit_list() const override {
@@ -51,15 +51,15 @@ public:
             "ProbablisticGateImpl.");
     }
 
-    std::shared_ptr<const GateBase<Fp>> get_inverse() const override;
+    std::shared_ptr<const GateBase<Fp, Sp>> get_inverse() const override;
     internal::ComplexMatrix<Fp> get_matrix() const override {
         throw std::runtime_error(
             "ProbablisticGateImpl::get_matrix(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
 
-    void update_quantum_state(StateVector<Fp>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
+    void update_quantum_state(StateVector<Fp, Sp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp, Sp>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -71,12 +71,12 @@ public:
 };
 }  // namespace internal
 
-template <std::floating_point Fp>
-using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl<Fp>>;
+template <std::floating_point Fp, ExecutionSpace Sp>
+using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl<Fp, Sp>>;
 
 namespace internal {
 
-#define DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(Type)                                      \
+/*#define DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(Type)                                      \
     template <>                                                                             \
     inline std::shared_ptr<const ProbablisticGateImpl<Type>> get_from_json(const Json& j) { \
         auto distribution = j.at("distribution").get<std::vector<Type>>();                  \
@@ -86,7 +86,7 @@ namespace internal {
 
 DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(double)
 DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(float)
-#undef DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE
+#undef DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE*/
 
 }  // namespace internal
 
@@ -100,11 +100,11 @@ void bind_gate_gate_probablistic(nb::module_& m) {
              "distribution.")
         .def(
             "gate_list",
-            [](const ProbablisticGate<Fp>& gate) { return gate->gate_list(); },
+            [](const ProbablisticGate<Fp, Sp>& gate) { return gate->gate_list(); },
             nb::rv_policy::reference)
         .def(
             "distribution",
-            [](const ProbablisticGate<Fp>& gate) { return gate->distribution(); },
+            [](const ProbablisticGate<Fp, Sp>& gate) { return gate->distribution(); },
             nb::rv_policy::reference);
 }
 }  // namespace internal
