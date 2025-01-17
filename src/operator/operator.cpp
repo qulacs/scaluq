@@ -17,7 +17,7 @@ std::string Operator<Fp>::to_string() const {
 
 FLOAT(Fp)
 void Operator<Fp>::add_operator(PauliOperator<Fp>&& mpt) {
-    _is_hermitian &= mpt.coef().imag() == 0.;
+    _is_hermitian &= mpt.coef().imag() == Fp{0};
     if (![&] {
             const auto& target_list = mpt.target_qubit_list();
             if (target_list.empty()) return true;
@@ -39,7 +39,7 @@ void Operator<Fp>::add_random_operator(const std::uint64_t operator_count, std::
             target_qubit_list[qubit_idx] = qubit_idx;
             pauli_id_list[qubit_idx] = random.int32() & 0b11;
         }
-        Complex<Fp> coef = random.uniform() * 2. - 1.;
+        Complex<Fp> coef = static_cast<Fp>(random.uniform() * 2. - 1.);
         this->add_operator(PauliOperator(target_qubit_list, pauli_id_list, coef));
     }
 }
@@ -73,7 +73,7 @@ void Operator<Fp>::apply_to_state(StateVector<Fp>& state_vector) const {
     for (const auto& term : _terms) {
         StateVector<Fp> tmp = state_vector.copy();
         term.apply_to_state(tmp);
-        res.add_state_vector_with_coef(1, tmp);
+        res.add_state_vector_with_coef(Fp{1}, tmp);
     }
     state_vector = res;
 }
@@ -123,12 +123,12 @@ Complex<Fp> Operator<Fp>::get_expectation_value(const StateVector<Fp>& state_vec
             if (bit_flip_mask == 0) {
                 std::uint64_t state_idx1 = state_idx << 1;
                 Fp tmp1 =
-                    (Kokkos::conj(state_vector._raw[state_idx1]) * state_vector._raw[state_idx1])
+                    (scaluq::conj(state_vector._raw[state_idx1]) * state_vector._raw[state_idx1])
                         .real();
                 if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
                 std::uint64_t state_idx2 = state_idx1 | 1;
                 Fp tmp2 =
-                    (Kokkos::conj(state_vector._raw[state_idx2]) * state_vector._raw[state_idx2])
+                    (scaluq::conj(state_vector._raw[state_idx2]) * state_vector._raw[state_idx2])
                         .real();
                 if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
                 res_lcl += coef * (tmp1 + tmp2);
@@ -141,8 +141,9 @@ Complex<Fp> Operator<Fp>::get_expectation_value(const StateVector<Fp>& state_vec
                     internal::PHASE_90ROT<Fp>()[global_phase_90rot_count % 4];
                 std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
                 std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-                Fp tmp = Kokkos::real(state_vector._raw[basis_0] *
-                                      Kokkos::conj(state_vector._raw[basis_1]) * global_phase * 2.);
+                Fp tmp =
+                    scaluq::real(state_vector._raw[basis_0] *
+                                 scaluq::conj(state_vector._raw[basis_1]) * global_phase * Fp(2));
                 if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
                 res_lcl += coef * tmp;
             }
@@ -196,11 +197,11 @@ Complex<Fp> Operator<Fp>::get_transition_amplitude(const StateVector<Fp>& state_
             Complex<Fp> coef = coefs[term_id];
             if (bit_flip_mask == 0) {
                 std::uint64_t state_idx1 = state_idx << 1;
-                Complex<Fp> tmp1 = (Kokkos::conj(state_vector_bra._raw[state_idx1]) *
+                Complex<Fp> tmp1 = (scaluq::conj(state_vector_bra._raw[state_idx1]) *
                                     state_vector_ket._raw[state_idx1]);
                 if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
                 std::uint64_t state_idx2 = state_idx1 | 1;
-                Complex<Fp> tmp2 = (Kokkos::conj(state_vector_bra._raw[state_idx2]) *
+                Complex<Fp> tmp2 = (scaluq::conj(state_vector_bra._raw[state_idx2]) *
                                     state_vector_ket._raw[state_idx2]);
                 if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
                 res_lcl += coef * (tmp1 + tmp2);
@@ -213,10 +214,10 @@ Complex<Fp> Operator<Fp>::get_transition_amplitude(const StateVector<Fp>& state_
                     internal::PHASE_90ROT<Fp>()[global_phase_90rot_count % 4];
                 std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
                 std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-                Complex<Fp> tmp1 = Kokkos::conj(state_vector_bra._raw[basis_1]) *
+                Complex<Fp> tmp1 = scaluq::conj(state_vector_bra._raw[basis_1]) *
                                    state_vector_ket._raw[basis_0] * global_phase;
                 if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
-                Complex<Fp> tmp2 = Kokkos::conj(state_vector_bra._raw[basis_0]) *
+                Complex<Fp> tmp2 = scaluq::conj(state_vector_bra._raw[basis_0]) *
                                    state_vector_ket._raw[basis_1] * global_phase;
                 if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
                 res_lcl += coef * (tmp1 + tmp2);

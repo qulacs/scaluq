@@ -1,24 +1,25 @@
 #pragma once
 
 #include "../state/state_vector.hpp"
+#include "../state/state_vector_batched.hpp"
 #include "../types.hpp"
 
 namespace scaluq {
 namespace internal {
 // forward declarations
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamGateBase;
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamRXGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamRYGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamRZGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamPauliRotationGateImpl;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamProbablisticGateImpl;
 
 }  // namespace internal
@@ -33,7 +34,7 @@ enum class ParamGateType {
     Error
 };
 
-template <typename T, std::floating_point Fp>
+template <typename T, FloatingPoint Fp>
 constexpr ParamGateType get_param_gate_type() {
     using TWithoutConst = std::remove_cv_t<T>;
     if constexpr (std::is_same_v<TWithoutConst, internal::ParamGateBase<Fp>>)
@@ -53,7 +54,7 @@ constexpr ParamGateType get_param_gate_type() {
 }
 
 namespace internal {
-template <std::floating_point _FloatType>
+template <FloatingPoint _FloatType>
 class ParamGateBase {
 public:
     using Fp = _FloatType;
@@ -62,11 +63,12 @@ protected:
     std::uint64_t _target_mask, _control_mask;
     Fp _pcoef;
     void check_qubit_mask_within_bounds(const StateVector<Fp>& state_vector) const;
+    void check_qubit_mask_within_bounds(const StateVectorBatched<Fp>& states) const;
 
     std::string get_qubit_info_as_string(const std::string& indent) const;
 
 public:
-    ParamGateBase(std::uint64_t target_mask, std::uint64_t control_mask, Fp param_coef = 1.);
+    ParamGateBase(std::uint64_t target_mask, std::uint64_t control_mask, Fp param_coef = 1);
     virtual ~ParamGateBase() = default;
 
     [[nodiscard]] Fp param_coef() const { return _pcoef; }
@@ -90,12 +92,19 @@ public:
     [[nodiscard]] virtual internal::ComplexMatrix<Fp> get_matrix(Fp param) const = 0;
 
     virtual void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const = 0;
+    virtual void update_quantum_state(StateVectorBatched<Fp>& states,
+                                      std::vector<Fp> params) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
+
+    virtual void get_as_json(Json& j) const { j = Json{{"type", "Unknown"}}; }
 };
 
 template <typename T>
 concept ParamGateImpl = std::derived_from<T, ParamGateBase<typename T::Fp>>;
+
+template <ParamGateImpl T>
+inline std::shared_ptr<const T> get_from_json(const Json&);
 
 template <ParamGateImpl T>
 class ParamGatePtr {
@@ -109,7 +118,7 @@ private:
     ParamGateType _param_gate_type;
 
 public:
-    ParamGatePtr() : _param_gate_ptr(nullptr), _param_gate_type(get_param_gate_type<T>()) {}
+    ParamGatePtr() : _param_gate_ptr(nullptr), _param_gate_type(get_param_gate_type<T, Fp>()) {}
     template <ParamGateImpl U>
     ParamGatePtr(const std::shared_ptr<const U>& param_gate_ptr) {
         if constexpr (std::is_same_v<T, U>) {
@@ -159,10 +168,24 @@ public:
         os << gate->to_string();
         return os;
     }
+
+    friend void to_json(Json& j, const ParamGatePtr& gate) { gate->get_as_json(j); }
+
+    friend void from_json(const Json& j, ParamGatePtr& gate) {
+        std::string type = j.at("type");
+
+        // clang-format off
+        if (type == "ParamRX") gate = get_from_json<ParamRXGateImpl<Fp>>(j);
+        else if (type == "ParamRY") gate = get_from_json<ParamRYGateImpl<Fp>>(j);
+        else if (type == "ParamRZ") gate = get_from_json<ParamRZGateImpl<Fp>>(j);
+        else if (type == "ParamPauliRotation") gate = get_from_json<ParamPauliRotationGateImpl<Fp>>(j);
+        else if (type == "ParamProbablistic") gate = get_from_json<ParamProbablisticGateImpl<Fp>>(j);
+        // clang-format on
+    }
 };
 }  // namespace internal
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using ParamGate = internal::ParamGatePtr<internal::ParamGateBase<Fp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
@@ -212,13 +235,38 @@ namespace internal {
             "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is " \
             "directly updated.")                                                                  \
         .def(                                                                                     \
+            "update_quantum_state",                                                               \
+            [](const PARAM_GATE_TYPE<FLOAT>& param_gate,                                          \
+               StateVectorBatched<FLOAT>& states,                                                 \
+               std::vector<FLOAT> params) { param_gate->update_quantum_state(states, params); },  \
+            "Apply gate to `states` with holding the parameter. `states` in args is directly "    \
+            "updated.")                                                                           \
+        .def(                                                                                     \
             "get_matrix",                                                                         \
             [](const PARAM_GATE_TYPE<FLOAT>& gate, FLOAT param) {                                 \
                 return gate->get_matrix(param);                                                   \
             },                                                                                    \
-            "Get matrix representation of the gate with holding the parameter.")
+            "Get matrix representation of the gate with holding the parameter.")                  \
+        .def(                                                                                     \
+            "to_string",                                                                          \
+            [](const PARAM_GATE_TYPE<FLOAT>& gate) { return gate->to_string(""); },               \
+            "Get string representation of the gate.")                                             \
+        .def(                                                                                     \
+            "__str__",                                                                            \
+            [](const PARAM_GATE_TYPE<FLOAT>& gate) { return gate->to_string(""); },               \
+            "Get string representation of the gate.")                                             \
+        .def(                                                                                     \
+            "to_json",                                                                            \
+            [](const PARAM_GATE_TYPE<FLOAT>& gate) { return Json(gate).dump(); },                 \
+            "Get JSON representation of the gate.")                                               \
+        .def(                                                                                     \
+            "load_json",                                                                          \
+            [](PARAM_GATE_TYPE<FLOAT>& gate, const std::string& str) {                            \
+                gate = nlohmann::json::parse(str);                                                \
+            },                                                                                    \
+            "Read an object from the JSON representation of the gate.")
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 nb::class_<ParamGate<Fp>> param_gate_base_def;
 
 #define DEF_PARAM_GATE(PARAM_GATE_TYPE, FLOAT, DESCRIPTION)                                     \
@@ -239,7 +287,7 @@ void bind_gate_param_gate_hpp_without_precision(nb::module_& m) {
         .value("ParamPauliRotation", ParamGateType::ParamPauliRotation);
 }
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_gate_param_gate_hpp(nb::module_& m) {
     param_gate_base_def<Fp> =
         DEF_PARAM_GATE_BASE(

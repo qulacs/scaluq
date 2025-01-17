@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.21)
 
-
 message(STATUS "Building library for python...")
 
 nanobind_add_module(scaluq_core STABLE_ABI binding.cpp)
 target_link_libraries(scaluq_core PRIVATE
     scaluq
     Kokkos::kokkos
+    nlohmann_json::nlohmann_json
 )
 target_include_directories(scaluq_core PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(scaluq_core PRIVATE ${eigen_SOURCE_DIR})
@@ -21,7 +21,20 @@ nanobind_add_stub(
     MARKER_FILE scaluq/py.typed
     VERBOSE
 )
-foreach(FLOAT IN ITEMS f64 f32)
+set(FLOATS)
+if(SCALUQ_FLOAT16)
+    list(APPEND FLOATS f16)
+endif()
+if(SCALUQ_FLOAT32)
+    list(APPEND FLOATS f32)
+endif()
+if(SCALUQ_FLOAT64)
+    list(APPEND FLOATS f64)
+endif()
+if(SCALUQ_BFLOAT16)
+    list(APPEND FLOATS bf16)
+endif()
+foreach(FLOAT IN LISTS FLOATS)
     nanobind_add_stub(
         scaluq_stub
         INSTALL_TIME

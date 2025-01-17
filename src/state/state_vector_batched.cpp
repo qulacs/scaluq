@@ -1,5 +1,6 @@
 #include <scaluq/state/state_vector_batched.hpp>
 
+#include "../util/math.hpp"
 #include "../util/template.hpp"
 
 namespace scaluq {
@@ -8,7 +9,7 @@ StateVectorBatched<Fp>::StateVectorBatched(std::uint64_t batch_size, std::uint64
     : _batch_size(batch_size),
       _n_qubits(n_qubits),
       _dim(1ULL << _n_qubits),
-      _raw(Kokkos::View<Kokkos::complex<Fp>**, Kokkos::LayoutRight>(
+      _raw(Kokkos::View<Complex<Fp>**, Kokkos::LayoutRight>(
           Kokkos::ViewAllocateWithoutInitializing("states"), _batch_size, _dim)) {
     set_zero_state();
 }
@@ -57,14 +58,14 @@ void StateVectorBatched<Fp>::set_computational_basis(std::uint64_t basis) {
             "Error: StateVectorBatched::set_computational_basis(std::uint64_t): "
             "index of computational basis must be smaller than 2^qubit_count");
     }
-    Kokkos::deep_copy(_raw, 0);
+    Kokkos::deep_copy(_raw, Fp{0});
     Kokkos::parallel_for(
         _batch_size, KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw(i, basis) = 1; });
     Kokkos::fence();
 }
 
 FLOAT(Fp)
-void StateVectorBatched<Fp>::set_zero_norm_state() { Kokkos::deep_copy(_raw, 0); }
+void StateVectorBatched<Fp>::set_zero_norm_state() { Kokkos::deep_copy(_raw, Fp{0}); }
 
 FLOAT(Fp)
 void StateVectorBatched<Fp>::set_Haar_random_state(std::uint64_t batch_size,
@@ -103,7 +104,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Fp>::sampling(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, sampling_count}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
             auto rand_gen = rand_pool.get_state();
-            Fp r = rand_gen.drand(0., 1.);
+            Fp r = static_cast<Fp>(rand_gen.drand(0., 1.));
             std::uint64_t lo = 0, hi = stacked_prob.extent(1);
             while (hi - lo > 1) {
                 std::uint64_t mid = (lo + hi) / 2;
@@ -143,8 +144,8 @@ StateVectorBatched<Fp> StateVectorBatched<Fp>::Haar_random_state(std::uint64_t b
             Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {states.batch_size(), states.dim()}),
             KOKKOS_LAMBDA(std::uint64_t b, std::uint64_t i) {
                 auto rand_gen = rand_pool.get_state();
-                states._raw(b, i) =
-                    Kokkos::complex<Fp>(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
+                states._raw(b, i) = Complex<Fp>(static_cast<Fp>(rand_gen.normal(0.0, 1.0)),
+                                                static_cast<Fp>(rand_gen.normal(0.0, 1.0)));
                 rand_pool.free_state(rand_gen);
             });
         Kokkos::fence();
@@ -154,10 +155,10 @@ StateVectorBatched<Fp> StateVectorBatched<Fp>::Haar_random_state(std::uint64_t b
 }
 
 FLOAT(Fp)
-std::vector<std::vector<Kokkos::complex<Fp>>> StateVectorBatched<Fp>::get_amplitudes() const {
+std::vector<std::vector<Complex<Fp>>> StateVectorBatched<Fp>::get_amplitudes() const {
     auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), _raw);
-    std::vector<std::vector<Kokkos::complex<Fp>>> vv(
-        _raw.extent(0), std::vector<Kokkos::complex<Fp>>(_raw.extent(1), 0));
+    std::vector<std::vector<Complex<Fp>>> vv(_raw.extent(0),
+                                             std::vector<Complex<Fp>>(_raw.extent(1), Fp{0}));
     for (size_t i = 0; i < view_h.extent(0); ++i) {
         for (size_t j = 0; j < view_h.extent(1); ++j) {
             vv[i][j] = view_h(i, j);
@@ -181,7 +182,7 @@ std::vector<Fp> StateVectorBatched<Fp>::get_squared_norm() const {
                 [&](const std::uint64_t& i, Fp& lcl) {
                     lcl += internal::squared_norm(_raw(batch_id, i));
                 },
-                nrm);
+                internal::Sum<Fp, Kokkos::DefaultExecutionSpace>(nrm));
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { norms[batch_id] = nrm; });
         });
@@ -203,9 +204,9 @@ void StateVectorBatched<Fp>::normalize() {
                 [&](const std::uint64_t& i, Fp& lcl) {
                     lcl += internal::squared_norm(_raw(batch_id, i));
                 },
-                nrm);
+                internal::Sum<Fp, Kokkos::DefaultExecutionSpace>(nrm));
             team.team_barrier();
-            nrm = Kokkos::sqrt(nrm);
+            nrm = internal::sqrt(nrm);
             Kokkos::parallel_for(Kokkos::TeamThreadRange(team, _dim),
                                  [&](const std::uint64_t& i) { _raw(batch_id, i) /= nrm; });
         });
@@ -235,7 +236,7 @@ std::vector<Fp> StateVectorBatched<Fp>::get_zero_probability(
                         internal::insert_zero_to_basis_index(i, target_qubit_index);
                     lsum += internal::squared_norm(_raw(batch_id, basis_0));
                 },
-                sum);
+                internal::Sum<Fp, Kokkos::DefaultExecutionSpace>(sum));
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { probs[batch_id] = sum; });
         });
@@ -289,7 +290,7 @@ std::vector<Fp> StateVectorBatched<Fp>::get_marginal_probability(
                     }
                     lsum += internal::squared_norm(_raw(batch_id, basis));
                 },
-                sum);
+                internal::Sum<Fp, Kokkos::DefaultExecutionSpace>(sum));
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { probs[batch_id] = sum; });
         });
@@ -300,7 +301,7 @@ std::vector<Fp> StateVectorBatched<Fp>::get_marginal_probability(
 FLOAT(Fp)
 std::vector<Fp> StateVectorBatched<Fp>::get_entropy() const {
     Kokkos::View<Fp*> ents("ents", _batch_size);
-    const Fp eps = 1e-15;
+    const Fp eps = static_cast<Fp>(1e-15);
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<>(_batch_size, Kokkos::AUTO()),
         KOKKOS_CLASS_LAMBDA(
@@ -313,9 +314,9 @@ std::vector<Fp> StateVectorBatched<Fp>::get_entropy() const {
                 [&](std::uint64_t idx, Fp& lsum) {
                     Fp prob = internal::squared_norm(_raw(batch_id, idx));
                     prob = Kokkos::max(prob, eps);
-                    lsum += -prob * Kokkos::log2(prob);
+                    lsum += -prob * internal::log2(prob);
                 },
-                sum);
+                internal::Sum<Fp, Kokkos::DefaultExecutionSpace>(sum));
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { ents[batch_id] = sum; });
         });
@@ -324,7 +325,7 @@ std::vector<Fp> StateVectorBatched<Fp>::get_entropy() const {
 }
 
 FLOAT(Fp)
-void StateVectorBatched<Fp>::add_state_vector_with_coef(const Kokkos::complex<Fp>& coef,
+void StateVectorBatched<Fp>::add_state_vector_with_coef(const Complex<Fp>& coef,
                                                         const StateVectorBatched& states) {
     if (n_qubits() != states.n_qubits() || batch_size() != states.batch_size()) [[unlikely]] {
         throw std::runtime_error(
@@ -340,7 +341,7 @@ void StateVectorBatched<Fp>::add_state_vector_with_coef(const Kokkos::complex<Fp
 }
 
 FLOAT(Fp)
-void StateVectorBatched<Fp>::multiply_coef(const Kokkos::complex<Fp>& coef) {
+void StateVectorBatched<Fp>::multiply_coef(const Complex<Fp>& coef) {
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, _dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
@@ -350,10 +351,10 @@ void StateVectorBatched<Fp>::multiply_coef(const Kokkos::complex<Fp>& coef) {
 }
 
 FLOAT(Fp)
-void StateVectorBatched<Fp>::load(const std::vector<std::vector<Kokkos::complex<Fp>>>& states) {
+void StateVectorBatched<Fp>::load(const std::vector<std::vector<Complex<Fp>>>& states) {
     if (states.size() != _batch_size) {
         throw std::runtime_error(
-            "Error: StateVectorBatched::load(std::vector<std::vector<Kokkos::complex<Fp>>>&): "
+            "Error: StateVectorBatched::load(std::vector<std::vector<Complex<Fp>>>&): "
             "invalid "
             "batch_size");
     }
@@ -361,7 +362,7 @@ void StateVectorBatched<Fp>::load(const std::vector<std::vector<Kokkos::complex<
         if (states[b].size() != _dim) {
             throw std::runtime_error(
                 "Error: "
-                "StateVectorBatched::load(std::vector<std::vector<Kokkos::complex<Fp>>>&): "
+                "StateVectorBatched::load(std::vector<std::vector<Complex<Fp>>>&): "
                 "invalid "
                 "length of state");
         }

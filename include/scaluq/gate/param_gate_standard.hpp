@@ -7,7 +7,7 @@ namespace scaluq {
 
 namespace internal {
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamRXGateImpl : public ParamGateBase<Fp> {
 public:
     using ParamGateBase<Fp>::ParamGateBase;
@@ -19,11 +19,20 @@ public:
     internal::ComplexMatrix<Fp> get_matrix(Fp param) const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states,
+                              std::vector<Fp> params) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "ParamRX"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"param_coef", this->param_coef()}};
+    }
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamRYGateImpl : public ParamGateBase<Fp> {
 public:
     using ParamGateBase<Fp>::ParamGateBase;
@@ -35,11 +44,20 @@ public:
     internal::ComplexMatrix<Fp> get_matrix(Fp param) const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states,
+                              std::vector<Fp> params) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "ParamRY"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"param_coef", this->param_coef()}};
+    }
 };
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 class ParamRZGateImpl : public ParamGateBase<Fp> {
 public:
     using ParamGateBase<Fp>::ParamGateBase;
@@ -51,22 +69,65 @@ public:
     internal::ComplexMatrix<Fp> get_matrix(Fp param) const override;
 
     void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
+    void update_quantum_state(StateVectorBatched<Fp>& states,
+                              std::vector<Fp> params) const override;
 
     std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "ParamRZ"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"param_coef", this->param_coef()}};
+    }
 };
 
 }  // namespace internal
 
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using ParamRXGate = internal::ParamGatePtr<internal::ParamRXGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using ParamRYGate = internal::ParamGatePtr<internal::ParamRYGateImpl<Fp>>;
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl<Fp>>;
+
+namespace internal {
+
+#define DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE(Impl, Type)             \
+    template <>                                                             \
+    inline std::shared_ptr<const Impl<Type>> get_from_json(const Json& j) { \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();    \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();  \
+        auto param_coef = j.at("param_coef").get<Type>();                   \
+        return std::make_shared<const Impl<Type>>(                          \
+            vector_to_mask(targets), vector_to_mask(controls), param_coef); \
+    }
+
+#define DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_TYPE(Type)         \
+    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE(ParamRXGateImpl, Type) \
+    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE(ParamRYGateImpl, Type) \
+    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE(ParamRZGateImpl, Type)
+
+#ifdef SCALUQ_FLOAT16
+DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_TYPE(F16)
+#endif
+#ifdef SCALUQ_FLOAT32
+DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_TYPE(F32)
+#endif
+#ifdef SCALUQ_FLOAT64
+DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_TYPE(F64)
+#endif
+#ifdef SCALUQ_BFLOAT16
+DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_TYPE(BF16)
+#endif
+#undef DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE
+#undef DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_TYPE
+
+}  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <FloatingPoint Fp>
 void bind_gate_param_gate_standard_hpp(nb::module_& m) {
     DEF_PARAM_GATE(
         ParamRXGate,
