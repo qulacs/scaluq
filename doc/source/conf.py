@@ -33,16 +33,6 @@ extensions = [
     'autoapi.extension',
 ]
 
-mathjax3_config = {
-    'tex': {
-        'inlineMath': [['$', '$'], ['\\(', '\\)']],
-        'displayMath': [['$$', '$$'], ['\\[', '\\]']],
-        'packages': ['base', 'ams', 'braket', 'noerrors', 'noundefined'],
-        'processEscapes': True, 
-        'processEnvironments': True
-    }
-}
-
 autoapi_type = "python"
 autoapi_keep_files = True
 
@@ -66,9 +56,6 @@ html_theme = "sphinx_rtd_theme"
 html_theme_options = {
     'math_number_all': True,
 }
-# html_js_files = [
-#     'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js'
-# ]
 
 # `version` is only used for local build.
 # On Read the Docs, the latest version is `latest`` and the specific version
