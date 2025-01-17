@@ -83,7 +83,7 @@ public:
         return os;
     }
 
-    friend void to_json(Json& j, const StateVectorBatched<Fp>& states) {
+    friend void to_json(Json& j, const StateVectorBatched& states) {
         auto amplitudes = states.get_amplitudes();
 
         j = Json{{"n_qubits", states._n_qubits},
@@ -97,7 +97,7 @@ public:
             j["batched_amplitudes"].push_back(state);
         }
     }
-    friend void from_json(const Json& j, StateVectorBatched<Fp>& states) {
+    friend void from_json(const Json& j, StateVectorBatched& states) {
         std::uint32_t b = j.at("batch_size").get<std::uint32_t>();
         std::uint32_t n = j.at("n_qubits").get<std::uint32_t>();
         states = StateVectorBatched(b, n);
@@ -118,9 +118,9 @@ public:
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <std::floating_point Fp, ExecutionSpace Sp>
 void bind_state_state_vector_batched_hpp(nb::module_& m) {
-    nb::class_<StateVectorBatched<Fp>>(
+    nb::class_<StateVectorBatched<Fp, Sp>>(
         m,
         "StateVectorBatched",
         "Batched vector representation of quantum state.\n\n.. note:: Qubit index is start from 0. "
@@ -128,35 +128,36 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
         "2^i$.")
         .def(nb::init<std::uint64_t, std::uint64_t>(),
              "Construct batched state vector with specified batch size and qubits.")
-        .def(nb::init<const StateVectorBatched<Fp>&>(),
+        .def(nb::init<const StateVectorBatched<Fp, Sp>&>(),
              "Constructing batched state vector by copying other batched state.")
-        .def("n_qubits", &StateVectorBatched<Fp>::n_qubits, "Get num of qubits.")
+        .def("n_qubits", &StateVectorBatched<Fp, Sp>::n_qubits, "Get num of qubits.")
         .def("dim",
-             &StateVectorBatched<Fp>::dim,
+             &StateVectorBatched<Fp, Sp>::dim,
              "Get dimension of the vector ($=2^\\mathrm{n\\_qubits}$).")
-        .def("batch_size", &StateVectorBatched<Fp>::batch_size, "Get batch size.")
+        .def("batch_size", &StateVectorBatched<Fp, Sp>::batch_size, "Get batch size.")
         .def("set_state_vector",
-             nb::overload_cast<const StateVector<Fp>&>(&StateVectorBatched<Fp>::set_state_vector),
+             nb::overload_cast<const StateVector<Fp>&>(
+                 &StateVectorBatched<Fp, Sp>::set_state_vector),
              "Set the state vector for all batches.")
         .def("set_state_vector_at",
              nb::overload_cast<std::uint64_t, const StateVector<Fp>&>(
-                 &StateVectorBatched<Fp>::set_state_vector_at),
+                 &StateVectorBatched<Fp, Sp>::set_state_vector_at),
              "Set the state vector for a specific batch.")
         .def("get_state_vector_at",
-             &StateVectorBatched<Fp>::get_state_vector_at,
+             &StateVectorBatched<Fp, Sp>::get_state_vector_at,
              "Get the state vector for a specific batch.")
         .def("set_zero_state",
-             &StateVectorBatched<Fp>::set_zero_state,
+             &StateVectorBatched<Fp, Sp>::set_zero_state,
              "Initialize all batches with computational basis $\\ket{00\\dots0}$.")
         .def("set_zero_norm_state",
-             &StateVectorBatched<Fp>::set_zero_norm_state,
+             &StateVectorBatched<Fp, Sp>::set_zero_norm_state,
              "Initialize with 0 (null vector).")
         .def("set_computational_basis",
-             &StateVectorBatched<Fp>::set_computational_basis,
+             &StateVectorBatched<Fp, Sp>::set_computational_basis,
              "Initialize with computational basis \\ket{\\mathrm{basis}}.")
         .def(
             "sampling",
-            [](const StateVectorBatched<Fp>& states,
+            [](const StateVectorBatched<Fp, Sp>& states,
                std::uint64_t sampling_count,
                std::optional<std::uint64_t> seed) {
                 return states.sampling(sampling_count, seed.value_or(std::random_device{}()));
@@ -171,7 +172,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                std::uint64_t n_qubits,
                bool set_same_state,
                std::optional<std::uint64_t> seed) {
-                return StateVectorBatched<Fp>::Haar_random_state(
+                return StateVectorBatched<Fp, Sp>::Haar_random_state(
                     batch_size, n_qubits, set_same_state, seed.value_or(std::random_device{}()));
             },
             "batch_size"_a,
@@ -181,45 +182,46 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
             "Construct batched state vectors with Haar random states. If seed is not "
             "specified, the value from random device is used.")
         .def("get_amplitudes",
-             &StateVectorBatched<Fp>::get_amplitudes,
+             &StateVectorBatched<Fp, Sp>::get_amplitudes,
              "Get all amplitudes with as `list[list[complex]]`.")
         .def("get_squared_norm",
-             &StateVectorBatched<Fp>::get_squared_norm,
+             &StateVectorBatched<Fp, Sp>::get_squared_norm,
              "Get squared norm of each state in the batch. $\\braket{\\psi|\\psi}$.")
         .def("normalize",
-             &StateVectorBatched<Fp>::normalize,
+             &StateVectorBatched<Fp, Sp>::normalize,
              "Normalize each state in the batch (let $\\braket{\\psi|\\psi} = 1$ by "
              "multiplying coef).")
         .def("get_zero_probability",
-             &StateVectorBatched<Fp>::get_zero_probability,
+             &StateVectorBatched<Fp, Sp>::get_zero_probability,
              "Get the probability to observe $\\ket{0}$ at specified index for each state in "
              "the batch.")
         .def("get_marginal_probability",
-             &StateVectorBatched<Fp>::get_marginal_probability,
+             &StateVectorBatched<Fp, Sp>::get_marginal_probability,
              "Get the marginal probability to observe as specified for each state in the batch. "
              "Specify the result as n-length list. `0` and `1` represent the qubit is observed "
              "and get the value. `2` represents the qubit is not observed.")
         .def("get_entropy",
-             &StateVectorBatched<Fp>::get_entropy,
+             &StateVectorBatched<Fp, Sp>::get_entropy,
              "Get the entropy of each state in the batch.")
         .def("add_state_vector_with_coef",
-             &StateVectorBatched<Fp>::add_state_vector_with_coef,
+             &StateVectorBatched<Fp, Sp>::add_state_vector_with_coef,
              "Add other batched state vectors with multiplying the coef and make superposition. "
              "$\\ket{\\mathrm{this}}\\leftarrow\\ket{\\mathrm{this}}+\\mathrm{coef}"
              "\\ket{\\mathrm{states}}$.")
         .def("load",
-             &StateVectorBatched<Fp>::load,
+             &StateVectorBatched<Fp, Sp>::load,
              "Load batched amplitudes from `list[list[complex]]`.")
-        .def("copy", &StateVectorBatched<Fp>::copy, "Create a copy of the batched state vector.")
-        .def("to_string", &StateVectorBatched<Fp>::to_string, "Information as `str`.")
-        .def("__str__", &StateVectorBatched<Fp>::to_string, "Information as `str`.")
+        .def(
+            "copy", &StateVectorBatched<Fp, Sp>::copy, "Create a copy of the batched state vector.")
+        .def("to_string", &StateVectorBatched<Fp, Sp>::to_string, "Information as `str`.")
+        .def("__str__", &StateVectorBatched<Fp, Sp>::to_string, "Information as `str`.")
         .def(
             "to_json",
-            [](const StateVectorBatched<Fp>& states) { return Json(states).dump(); },
+            [](const StateVectorBatched<Fp, Sp>& states) { return Json(states).dump(); },
             "Get JSON representation of the states.")
         .def(
             "load_json",
-            [](StateVectorBatched<Fp>& states, const std::string& str) {
+            [](StateVectorBatched<Fp, Sp>& states, const std::string& str) {
                 states = nlohmann::json::parse(str);
             },
             "Read an object from the JSON representation of the states.");
