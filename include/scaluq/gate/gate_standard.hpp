@@ -770,7 +770,7 @@ void bind_gate_gate_standard_hpp(nb::module_& m) {
     DEF_GATE(TGate,
              Fp,
              "Specific class of T gate, represented as $\\begin{bmatrix} 1 & 0 \\\\ 0 &"
-             "e^{i\\pi/4} \\end{bmatrix}$.");
+             "e^{i \\pi/4} \\end{bmatrix}$.");
     DEF_GATE(TdagGate, Fp, "Specific class of inverse of T gate.");
     DEF_GATE(SqrtXGate,
              Fp,
@@ -784,11 +784,11 @@ void bind_gate_gate_standard_hpp(nb::module_& m) {
     DEF_GATE(SqrtYdagGate, Fp, "Specific class of inverse of sqrt(Y) gate.");
     DEF_GATE(P0Gate,
              Fp,
-             "Specific class of projection gate to $\\vert 0 \\rangle$.\n\n.. note:: This gate is "
+             "Specific class of projection gate to $\\ket{0}$.\n\n.. note:: This gate is "
              "not unitary.");
     DEF_GATE(P1Gate,
              Fp,
-             "Specific class of projection gate to $\\vert 1 \\rangle$.\n\n.. note:: This gate is "
+             "Specific class of projection gate to $\\ket{1}$.\n\n.. note:: This gate is "
              "not unitary.");
 
 #define DEF_ROTATION_GATE(GATE_TYPE, FLOAT, DESCRIPTION)                \
@@ -815,7 +815,7 @@ void bind_gate_gate_standard_hpp(nb::module_& m) {
              Fp,
              "Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, "
              "represented as "
-             "$\\begin{bmatrix} 1 & 0\\\\ 0 & e^{i\\lambda} \\end{bmatrix}$.")
+             "$\\begin{bmatrix} 1 & 0 \\\\ 0 & e^{i\\lambda} \\end{bmatrix}$.")
         .def(
             "lambda_",
             [](const U1Gate<Fp>& gate) { return gate->lambda(); },
