@@ -1,6 +1,6 @@
 #include <cstdint>
 #include <iostream>
-#include <scaluq/all.hpp>
+#include <scaluq/gate/gate.hpp>
 
 using namespace scaluq;
 using namespace nlohmann;
