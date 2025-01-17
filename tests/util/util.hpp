@@ -19,7 +19,7 @@ constexpr Fp eps_() {
     else if constexpr (std::is_same_v<Fp, float>)
         return 1e-4;
     else
-        static_assert(internal::lazy_false_v<void>, "unknown GateImpl");
+        static_assert(internal::lazy_false_v<Fp>, "unknown GateImpl");
 }
 template <std::floating_point Fp>
 constexpr Fp eps = eps_<Fp>();
