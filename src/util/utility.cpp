@@ -15,9 +15,7 @@ Kokkos::View<T*> convert_host_vector_to_device_view(const std::vector<T>& vec) {
 }
 #define FUNC_MACRO(T) \
     template Kokkos::View<T*> convert_host_vector_to_device_view(const std::vector<T>&);
-CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
-CALL_MACRO_FOR_COMPLEX(FUNC_MACRO)
-CALL_MACRO_FOR_UINT(FUNC_MACRO)
+SCALUQ_CALL_MACRO_FOR_TYPES(FUNC_MACRO)
 #undef FUNC_MACRO
 
 // Device Kokkos::View を Host std::vector に変換する関数
@@ -31,9 +29,7 @@ std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device
 }
 #define FUNC_MACRO(T) \
     template std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>&);
-CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
-CALL_MACRO_FOR_COMPLEX(FUNC_MACRO)
-CALL_MACRO_FOR_UINT(FUNC_MACRO)
+SCALUQ_CALL_MACRO_FOR_TYPES(FUNC_MACRO)
 #undef FUNC_MACRO
 
 // Device Kokkos::View を Host std::vector に変換する関数
@@ -52,55 +48,69 @@ std::vector<std::vector<T>> convert_2d_device_view_to_host_vector(
 #define FUNC_MACRO(T)                                                           \
     template std::vector<std::vector<T>> convert_2d_device_view_to_host_vector( \
         const Kokkos::View<T**, Kokkos::LayoutLeft>&);
-CALL_MACRO_FOR_COMPLEX(FUNC_MACRO)
+SCALUQ_CALL_MACRO_FOR_TYPES(FUNC_MACRO)
 #undef FUNC_MACRO
 #define FUNC_MACRO(T)                                                           \
     template std::vector<std::vector<T>> convert_2d_device_view_to_host_vector( \
         const Kokkos::View<T**, Kokkos::LayoutRight>&);
-CALL_MACRO_FOR_COMPLEX(FUNC_MACRO)
+SCALUQ_CALL_MACRO_FOR_TYPES(FUNC_MACRO)
 #undef FUNC_MACRO
 
-FLOAT(Fp)
-Matrix<Fp> convert_external_matrix_to_internal_matrix(const ComplexMatrix<Fp>& eigen_matrix) {
+template <Precision Prec>
+Matrix<Prec> convert_external_matrix_to_internal_matrix(const ComplexMatrix& eigen_matrix) {
     std::uint64_t rows = eigen_matrix.rows();
     std::uint64_t cols = eigen_matrix.cols();
-    Kokkos::View<const Complex<Fp>**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+    Matrix<Precision::F64> mat_f64("internal_matrix", rows, cols);
+    Kokkos::View<const Complex<Prec>**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
         host_view(reinterpret_cast<const Complex<Fp>*>(eigen_matrix.data()), rows, cols);
-    Matrix<Fp> mat("internal_matrix", rows, cols);
-    Kokkos::deep_copy(mat, host_view);
+    Kokkos::deep_copy(mat_f64, host_view);
+    if constexpr (Prec == Precision::F64) return mat_f64;
+    Matrix<Prec> mat("internal_matrix", rows, cols);
+    Kokkos::parallel_for(
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {rows, cols}),
+        KOKKOS_LAMBDA(std::uint64_t r, std::uint64_t c) { mat(r, c) = mat_f64(r, c); });
     return mat;
 }
-#define FUNC_MACRO(Fp) \
-    template Matrix<Fp> convert_external_matrix_to_internal_matrix(const ComplexMatrix<Fp>&);
-CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#define FUNC_MACRO(Prec) \
+    template Matrix<Prec> convert_external_matrix_to_internal_matrix(const ComplexMatrix&);
+SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
 #undef FUNC_MACRO
 
-FLOAT(Fp)
-ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp>& matrix) {
+template <Precision Prec>
+ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix<Prec>& matrix) {
     int rows = matrix.extent(0);
     int cols = matrix.extent(1);
-    ComplexMatrix<Fp> eigen_matrix(rows, cols);
-    Kokkos::View<Complex<Fp>**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-        host_view(reinterpret_cast<Complex<Fp>*>(eigen_matrix.data()), rows, cols);
-    Kokkos::deep_copy(host_view, matrix);
+    ComplexMatrix eigen_matrix(rows, cols);
+    Kokkos::
+        View<Complex<Precision::F64>**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+            host_view(reinterpret_cast<Complex<Precision::F64>*>(eigen_matrix.data()), rows, cols);
+    if constexpr (Prec == Precision::F64) {
+        Kokkos::deep_copy(host_view, matrix);
+    } else {
+        Matrix<Precision::F64> matrix_f64("internal_matrix", rows, cols);
+        Kokkos::parallel_for(
+            Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {rows, cols}),
+            KOKKOS_LAMBDA(std::uint64_t r, std::uint64_t c) { matrix_f64(r, c) = matrix(r, c); });
+        Kokkos::deep_copy(host_view, matrix_f64);
+    }
     return eigen_matrix;
 }
-#define FUNC_MACRO(Fp) \
-    template ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp>&);
-CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#define FUNC_MACRO(Prec) \
+    template ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix<Prec>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
 #undef FUNC_MACRO
 
-FLOAT(Fp)
-ComplexMatrix<Fp> convert_coo_to_external_matrix(SparseMatrix<Fp> mat) {
-    ComplexMatrix<Fp> eigen_matrix = ComplexMatrix<Fp>::Zero(mat._row, mat._col);
+template <Precision Prec>
+ComplexMatrix convert_coo_to_external_matrix(SparseMatrix<Prec> mat) {
+    ComplexMatrix eigen_matrix = ComplexMatrix::Zero(mat._row, mat._col);
     auto vec_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), mat._values);
     for (std::size_t i = 0; i < mat._values.extent(0); i++) {
         eigen_matrix(vec_h(i).r, vec_h(i).c) = vec_h(i).val;
     }
     return eigen_matrix;
 }
-#define FUNC_MACRO(Fp) template ComplexMatrix<Fp> convert_coo_to_external_matrix(SparseMatrix<Fp>);
-CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#define FUNC_MACRO(Prec) template ComplexMatrix convert_coo_to_external_matrix(SparseMatrix<Prec>);
+SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
 #undef FUNC_MACRO
 
 }  // namespace internal

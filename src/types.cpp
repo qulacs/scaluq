@@ -4,26 +4,26 @@
 
 namespace scaluq {
 namespace internal {
-FLOAT(Fp)
-SparseMatrix<Fp>::SparseMatrix(const SparseComplexMatrix<Fp>& sp) {
+template <Precision Prec>
+SparseMatrix<Prec>::SparseMatrix(const SparseComplexMatrix& sp) {
     _row = sp.rows();
     _col = sp.cols();
-    SparseComplexMatrix<Fp> mat = sp;
+    SparseComplexMatrix mat = sp;
     mat.makeCompressed();
 
-    _values = Kokkos::View<SparseValue<Fp>*>("_values", mat.nonZeros());
-    Kokkos::View<SparseValue<Fp>*, Kokkos::HostSpace> values_h("values_h", mat.nonZeros());
+    _values = Kokkos::View<SparseValue<Prec>*>("_values", mat.nonZeros());
+    Kokkos::View<SparseValue<Prec>*, Kokkos::HostSpace> values_h("values_h", mat.nonZeros());
     int idx = 0;
     for (int k = 0; k < mat.outerSize(); ++k) {
-        for (typename SparseComplexMatrix<Fp>::InnerIterator it(mat, k); it; ++it) {
+        for (typename SparseComplexMatrix::InnerIterator it(mat, k); it; ++it) {
             uint32_t row = it.row();
             uint32_t col = it.col();
-            Complex<Fp> value = it.value();
+            Complex<Prec> value = it.value();
             values_h(idx++) = {value, row, col};
         }
     }
     Kokkos::deep_copy(_values, values_h);
 }
-FLOAT_DECLARE_CLASS(SparseMatrix)
+SCALUQ_DECLARE_CLASS_FOR_PRECISION(SparseMatrix)
 }  // namespace internal
 }  // namespace scaluq

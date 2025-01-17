@@ -12,55 +12,52 @@
 #include "type/floating_point.hpp"
 
 namespace scaluq {
-template <FloatingPoint Fp>
-using StdComplex = std::complex<Fp>;
+using StdComplex = std::complex<double>;
 using Json = nlohmann::json;
 
 namespace internal {
 template <typename DummyType>
 constexpr bool lazy_false_v = false;  // Used for lazy evaluation in static_assert.
 
-template <FloatingPoint Fp>
-using ComplexMatrix =
-    Eigen::Matrix<StdComplex<Fp>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
-template <FloatingPoint Fp>
-using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex<Fp>, Eigen::RowMajor>;
+using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex, Eigen::RowMajor>;
 
-template <FloatingPoint Fp>
-using Matrix = Kokkos::View<Complex<Fp>**, Kokkos::LayoutRight>;
+template <Precision Prec>
+using Matrix = Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight>;
 
-template <FloatingPoint Fp>
-using Matrix2x2 = Kokkos::Array<Kokkos::Array<Complex<Fp>, 2>, 2>;
-template <FloatingPoint Fp>
-using Matrix4x4 = Kokkos::Array<Kokkos::Array<Complex<Fp>, 4>, 4>;
-template <FloatingPoint Fp>
-using DiagonalMatrix2x2 = Kokkos::Array<Complex<Fp>, 2>;
-template <FloatingPoint Fp>
+template <Precision Prec>
+using Matrix2x2 = Kokkos::Array<Kokkos::Array<Complex<Prec>, 2>, 2>;
+template <Precision Prec>
+using Matrix4x4 = Kokkos::Array<Kokkos::Array<Complex<Prec>, 4>, 4>;
+template <Precision Prec>
+using DiagonalMatrix2x2 = Kokkos::Array<Complex<Prec>, 2>;
+template <Precision Prec>
 struct SparseValue {
-    Complex<Fp> val;
+    Complex<Prec> val;
     uint32_t r, c;
 };
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 class SparseMatrix {
 public:
-    Kokkos::View<SparseValue<Fp>*> _values;
+    Kokkos::View<SparseValue<Prec>*> _values;
     std::uint64_t _row, _col;
 
-    SparseMatrix(const SparseComplexMatrix<Fp>& sp);
+    SparseMatrix(const SparseComplexMatrix& sp);
 };
 }  // namespace internal
 }  // namespace scaluq
 
 namespace nlohmann {
-template <::scaluq::FloatingPoint Fp>
-struct adl_serializer<scaluq::Complex<Fp>> {
-    static void to_json(json& j, const scaluq::Complex<Fp>& c) {
-        j = json{{"real", c.real()}, {"imag", c.imag()}};
+template <>
+struct adl_serializer<::scaluq::StdComplex> {
+    static void to_json(json& j, const ::scaluq::StdComplex& value) {
+        j["real"] = value.real();
+        j["imag"] = value.imag();
     }
-    static void from_json(const json& j, scaluq::Complex<Fp>& c) {
-        j.at("real").get_to(c.real());
-        j.at("imag").get_to(c.imag());
+    static void from_json(const json& j, ::scaluq::StdComplex& value) {
+        value.real(j["real"].get<double>());
+        value.imag(j["imag"].get<double>());
     }
 };
 }  // namespace nlohmann

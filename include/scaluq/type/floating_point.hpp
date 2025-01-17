@@ -7,6 +7,13 @@
 #endif
 
 namespace scaluq {
+enum class Precision { F16, F32, F64, BF16 };
+}
+
+namespace scaluq::internal {
+template <Precision precision>
+struct FloatTypeImpl {};
+
 template <typename T>
 struct IsFloatingPoint : public std::false_type {};
 #ifdef SCALUQ_FLOAT16
@@ -21,6 +28,10 @@ static_assert(false && "float16 is not supported")
 #endif
 template <>
 struct IsFloatingPoint<F16> : public std::true_type {};
+template <>
+struct FloatTypeImpl<Precision::F16> {
+    using Type = F16;
+};
 #endif
 #ifdef SCALUQ_FLOAT32
 #ifdef SCALUQ_USE_CUDA
@@ -33,6 +44,10 @@ static_assert(false && "float32 is not supported")
 #endif
 template <>
 struct IsFloatingPoint<F32> : public std::true_type {};
+template <>
+struct FloatTypeImpl<Precision::F32> {
+    using Type = F32;
+};
 #endif
 #ifdef SCALUQ_FLOAT64
 #ifdef SCALUQ_USE_CUDA
@@ -45,6 +60,10 @@ static_assert(false && "float64 is not supported")
 #endif
 template <>
 struct IsFloatingPoint<F64> : public std::true_type {};
+template <>
+struct FloatTypeImpl<Precision::F64> {
+    using Type = F64;
+};
 #endif
 #ifdef SCALUQ_BFLOAT16
 #ifdef SCALUQ_USE_CUDA
@@ -57,42 +76,15 @@ static_assert(false && "bfloat16 is not supported")
 #endif
 template <>
 struct IsFloatingPoint<BF16> : public std::true_type {};
+template <>
+struct FloatTypeImpl<Precision::BF16> {
+    using Type = BF16;
+};
 #endif
 template <typename T>
 constexpr bool IsFloatingPointV = IsFloatingPoint<T>::value;
 template <typename T>
 concept FloatingPoint = IsFloatingPointV<T>;
-};  // namespace scaluq
-
-#ifdef SCALUQ_USE_CUDA
-#ifdef SCALUQ_FLOAT16
-inline std::ostream& operator<<(std::ostream& out, scaluq::F16 x) { return out << __half2float(x); }
-namespace nlohmann {
-template <>
-struct adl_serializer<::scaluq::F16> {
-    static void to_json(json& j, const ::scaluq::F16& x) { j = __half2float(x); }
-    static void from_json(const json& j, scaluq::F16& x) {
-        float f;
-        j.get_to(f);
-        x = __float2half(f);
-    }
-};
-}  // namespace nlohmann
-#endif
-#ifdef SCALUQ_BFLOAT16
-inline std::ostream& operator<<(std::ostream& out, scaluq::BF16 x) {
-    return out << __bfloat162float(x);
-}
-namespace nlohmann {
-template <>
-struct adl_serializer<::scaluq::BF16> {
-    static void to_json(json& j, const ::scaluq::BF16& x) { j = __bfloat162float(x); }
-    static void from_json(const json& j, scaluq::BF16& x) {
-        float f;
-        j.get_to(f);
-        x = __float2bfloat16(f);
-    }
-};
-}  // namespace nlohmann
-#endif
-#endif
+template <Precision Prec>
+using Float = FloatTypeImpl<Prec>::Type;
+};  // namespace scaluq::internal

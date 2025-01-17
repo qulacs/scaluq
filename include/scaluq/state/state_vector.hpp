@@ -16,11 +16,12 @@ namespace scaluq {
 using HostSpace = Kokkos::HostSpace;
 using DefaultSpace = Kokkos::DefaultExecutionSpace;
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 class StateVector {
     std::uint64_t _n_qubits;
     std::uint64_t _dim;
-    using ComplexType = scaluq::Complex<Fp>;
+    using FloatType = internal::Float<Prec>;
+    using ComplexType = internal::Complex<Prec>;
 
 public:
     static constexpr std::uint64_t UNMEASURED = 2;
@@ -35,12 +36,12 @@ public:
     /**
      * @attention Very slow. You should use load() instead if you can.
      */
-    void set_amplitude_at(std::uint64_t index, ComplexType c);
+    void set_amplitude_at(std::uint64_t index, StdComplex c);
 
     /**
      * @attention Very slow. You should use get_amplitudes() instead if you can.
      */
-    [[nodiscard]] ComplexType get_amplitude_at(std::uint64_t index);
+    [[nodiscard]] StdComplex get_amplitude_at(std::uint64_t index);
 
     [[nodiscard]] static StateVector Haar_random_state(std::uint64_t n_qubits,
                                                        std::uint64_t seed = std::random_device()());
@@ -57,25 +58,25 @@ public:
 
     [[nodiscard]] std::uint64_t dim() const { return this->_dim; }
 
-    [[nodiscard]] std::vector<ComplexType> get_amplitudes() const;
+    [[nodiscard]] std::vector<StdComplex> get_amplitudes() const;
 
-    [[nodiscard]] Fp get_squared_norm() const;
+    [[nodiscard]] double get_squared_norm() const;
 
     void normalize();
 
-    [[nodiscard]] Fp get_zero_probability(std::uint64_t target_qubit_index) const;
+    [[nodiscard]] double get_zero_probability(std::uint64_t target_qubit_index) const;
 
-    [[nodiscard]] Fp get_marginal_probability(
+    [[nodiscard]] double get_marginal_probability(
         const std::vector<std::uint64_t>& measured_values) const;
-    [[nodiscard]] Fp get_entropy() const;
+    [[nodiscard]] double get_entropy() const;
 
-    void add_state_vector_with_coef(ComplexType coef, const StateVector& state);
-    void multiply_coef(ComplexType coef);
+    void add_state_vector_with_coef(StdComplex coef, const StateVector& state);
+    void multiply_coef(StdComplex coef);
 
     [[nodiscard]] std::vector<std::uint64_t> sampling(
         std::uint64_t sampling_count, std::uint64_t seed = std::random_device()()) const;
 
-    void load(const std::vector<ComplexType>& other);
+    void load(const std::vector<StdComplex>& other);
 
     [[nodiscard]] StateVector copy() const;
 
@@ -91,36 +92,37 @@ public:
     }
     friend void from_json(const Json& j, StateVector& state) {
         state = StateVector(j.at("n_qubits").get<std::uint64_t>());
-        state.load(j.at("amplitudes").get<std::vector<ComplexType>>());
+        state.load(j.at("amplitudes").get<std::vector<StdComplex>>());
     }
 };
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <FloatingPoint Fp>
+template <Precision Prec>
 void bind_state_state_vector_hpp(nb::module_& m) {
-    nb::class_<StateVector<Fp>>(m,
-                                "StateVector",
-                                DocString()
-                                    .desc("Vector representation of quantum state.")
-                                    .desc("Qubit index is "
-                                          "start from 0. If the i-th value of the vector is "
-                                          "$a_i$, the state is $\\sum_i a_i \\ket{i}$.")
-                                    .desc("Given `n_qubits: int`, construct with bases "
-                                          "$\\ket{0\\dots 0}$ holding `n_qubits` number of qubits.")
-                                    .ex(DocString::Code({">>> state1 = StateVector(2)",
-                                                         ">>> print(state1)",
-                                                         " *** Quantum State ***",
-                                                         " * Qubit Count : 2",
-                                                         " * Dimension   : 4",
-                                                         " * State vector : ",
-                                                         "00: (1,0)",
-                                                         "01: (0,0)",
-                                                         "10: (0,0)",
-                                                         "11: (0,0)",
-                                                         ""}))
-                                    .build_as_google_style()
-                                    .c_str())
+    nb::class_<StateVector<Prec>>(
+        m,
+        "StateVector",
+        DocString()
+            .desc("Vector representation of quantum state.")
+            .desc("Qubit index is "
+                  "start from 0. If the i-th value of the vector is "
+                  "$a_i$, the state is $\\sum_i a_i \\ket{i}$.")
+            .desc("Given `n_qubits: int`, construct with bases "
+                  "$\\ket{0\\dots 0}$ holding `n_qubits` number of qubits.")
+            .ex(DocString::Code({">>> state1 = StateVector(2)",
+                                 ">>> print(state1)",
+                                 " *** Quantum State ***",
+                                 " * Qubit Count : 2",
+                                 " * Dimension   : 4",
+                                 " * State vector : ",
+                                 "00: (1,0)",
+                                 "01: (0,0)",
+                                 "10: (0,0)",
+                                 "11: (0,0)",
+                                 ""}))
+            .build_as_google_style()
+            .c_str())
         .def(nb::init<std::uint64_t>(),
              "n_qubits"_a,
              DocString()
@@ -143,8 +145,8 @@ void bind_state_state_vector_hpp(nb::module_& m) {
         .def_static(
             "Haar_random_state",
             [](std::uint64_t n_qubits, std::optional<std::uint64_t> seed) {
-                return StateVector<Fp>::Haar_random_state(n_qubits,
-                                                          seed.value_or(std::random_device{}()));
+                return StateVector<Prec>::Haar_random_state(n_qubits,
+                                                            seed.value_or(std::random_device{}()));
             },
             "n_qubits"_a,
             "seed"_a = std::nullopt,
@@ -183,7 +185,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                 .build_as_google_style()
                 .c_str())
         .def("set_amplitude_at",
-             &StateVector<Fp>::set_amplitude_at,
+             &StateVector<Prec>::set_amplitude_at,
              "index"_a,
              "value"_a,
              DocString()
@@ -204,7 +206,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("get_amplitude_at",
-             &StateVector<Fp>::get_amplitude_at,
+             &StateVector<Prec>::get_amplitude_at,
              "index"_a,
              DocString()
                  .desc("Get amplitude at one index.")
@@ -228,7 +230,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("set_zero_state",
-             &StateVector<Fp>::set_zero_state,
+             &StateVector<Prec>::set_zero_state,
              DocString()
                  .desc("Initialize with computational basis $\\ket{00\\dots0}$.")
                  .ex(DocString::Code{">>> state = StateVector.Haar_random_state(2)",
@@ -243,7 +245,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("set_zero_norm_state",
-             &StateVector<Fp>::set_zero_norm_state,
+             &StateVector<Prec>::set_zero_norm_state,
              DocString()
                  .desc("Initialize with 0 (null vector).")
                  .ex(DocString::Code{">>> state = StateVector(2)",
@@ -255,7 +257,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("set_computational_basis",
-             &StateVector<Fp>::set_computational_basis,
+             &StateVector<Prec>::set_computational_basis,
              "basis"_a,
              DocString()
                  .desc("Initialize with computational basis \\ket{\\mathrm{basis}}.")
@@ -279,7 +281,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("get_amplitudes",
-             &StateVector<Fp>::get_amplitudes,
+             &StateVector<Prec>::get_amplitudes,
              DocString()
                  .desc("Get all amplitudes as `list[complex]`.")
                  .ret("list[complex]", "amplitudes of list with len $2^{\\mathrm{n\\_qubits}}$")
@@ -289,7 +291,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("n_qubits",
-             &StateVector<Fp>::n_qubits,
+             &StateVector<Prec>::n_qubits,
              DocString()
                  .desc("Get num of qubits.")
                  .ret("int", "num of qubits")
@@ -297,7 +299,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("dim",
-             &StateVector<Fp>::dim,
+             &StateVector<Prec>::dim,
              DocString()
                  .desc("Get dimension of the vector ($=2^\\mathrm{n\\_qubits}$).")
                  .ret("int", "dimension of the vector")
@@ -305,7 +307,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("get_squared_norm",
-             &StateVector<Fp>::get_squared_norm,
+             &StateVector<Prec>::get_squared_norm,
              DocString()
                  .desc("Get squared norm of the state. $\\braket{\\psi|\\psi}$.")
                  .ret("float", "squared norm of the state")
@@ -319,7 +321,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("normalize",
-             &StateVector<Fp>::normalize,
+             &StateVector<Prec>::normalize,
              DocString()
                  .desc("Normalize state.")
                  .desc("Let $\\braket{\\psi|\\psi} = 1$ by multiplying constant.")
@@ -342,7 +344,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .c_str())
         .def(
             "get_zero_probability",
-            &StateVector<Fp>::get_zero_probability,
+            &StateVector<Prec>::get_zero_probability,
             "index"_a,
             DocString()
                 .desc("Get the probability to observe $\\ket{0}$ at specified index.")
@@ -363,7 +365,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                 .build_as_google_style()
                 .c_str())
         .def("get_marginal_probability",
-             &StateVector<Fp>::get_marginal_probability,
+             &StateVector<Prec>::get_marginal_probability,
              "measured_values"_a,
              DocString()
                  .desc("Get the marginal probability to observe as given.")
@@ -386,7 +388,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("get_entropy",
-             &StateVector<Fp>::get_entropy,
+             &StateVector<Prec>::get_entropy,
              DocString()
                  .desc("Get the entropy of the vector.")
                  .desc("**State must be normalized.**")
@@ -406,7 +408,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("add_state_vector_with_coef",
-             &StateVector<Fp>::add_state_vector_with_coef,
+             &StateVector<Prec>::add_state_vector_with_coef,
              "coef"_a,
              "state"_a,
              DocString()
@@ -425,7 +427,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("multiply_coef",
-             &StateVector<Fp>::multiply_coef,
+             &StateVector<Prec>::multiply_coef,
              "coef"_a,
              DocString()
                  .desc("Multiply coef.")
@@ -440,7 +442,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .c_str())
         .def(
             "sampling",
-            [](const StateVector<Fp>& state,
+            [](const StateVector<Prec>& state,
                std::uint64_t sampling_count,
                std::optional<std::uint64_t> seed) {
                 return state.sampling(sampling_count, seed.value_or(std::random_device{}()));
@@ -467,7 +469,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                 .c_str())
         .def(
             "to_string",
-            &StateVector<Fp>::to_string,
+            &StateVector<Prec>::to_string,
             DocString()
                 .desc("Information as `str`.")
                 .ret("str", "information as str")
@@ -478,7 +480,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                 .build_as_google_style()
                 .c_str())
         .def("load",
-             &StateVector<Fp>::load,
+             &StateVector<Prec>::load,
              "other"_a,
              DocString()
                  .desc("Load amplitudes of `Sequence`")
@@ -488,7 +490,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("__str__",
-             &StateVector<Fp>::to_string,
+             &StateVector<Prec>::to_string,
              DocString()
                  .desc("Information as `str`.")
                  .desc("Same as :meth:`.to_string()`")
@@ -496,7 +498,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .c_str())
         .def_ro_static(
             "UNMEASURED",
-            &StateVector<Fp>::UNMEASURED,
+            &StateVector<Prec>::UNMEASURED,
             DocString()
                 .desc("Constant used for `StateVector::get_marginal_probability` to express the "
                       "the qubit is not measured.")
@@ -504,7 +506,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                 .c_str())
         .def(
             "to_json",
-            [](const StateVector<Fp>& state) { return Json(state).dump(); },
+            [](const StateVector<Prec>& state) { return Json(state).dump(); },
             DocString()
                 .desc("Information as json style.")
                 .ret("str", "information as json style")
@@ -516,7 +518,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                 .c_str())
         .def(
             "load_json",
-            [](StateVector<Fp>& state, const std::string& str) {
+            [](StateVector<Prec>& state, const std::string& str) {
                 state = nlohmann::json::parse(str);
             },
             DocString()
