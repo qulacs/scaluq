@@ -32,6 +32,12 @@ int main() {
         std::uint64_t n_qubits = 2, batch_size = 2;
         scaluq::StateVectorBatched<double> states(batch_size, n_qubits);
         states.set_Haar_random_state(batch_size, n_qubits, false);
+
+        Circuit<double> cirq(n_qubits);
+        cirq.add_param_gate(gate::ParamRX<double>(1, {2}), "RX");
+        std::map<std::string, std::vector<double>> params = {{"RX", {0.5, 1.5}}};
+        cirq.update_quantum_state(states, params);
+
         Json j = states;
         std::cout << j << std::endl;
         states = j;
@@ -155,5 +161,5 @@ int main() {
         std::cout << Json(c) << std::endl;
     }
 
-    Kokkos::finalize();
+    scaluq::finalize();
 }

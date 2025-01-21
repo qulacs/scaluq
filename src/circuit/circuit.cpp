@@ -92,6 +92,30 @@ void Circuit<Fp>::update_quantum_state(StateVector<Fp>& state,
 }
 
 FLOAT(Fp)
+void Circuit<Fp>::update_quantum_state(
+    StateVectorBatched<Fp>& states,
+    const std::map<std::string, std::vector<Fp>>& parameters) const {
+    for (auto&& gate : _gate_list) {
+        if (gate.index() == 0) continue;
+        const auto& key = std::get<1>(gate).second;
+        if (!parameters.contains(key)) {
+            using namespace std::string_literals;
+            throw std::runtime_error(
+                "Circuit::update_quantum_state(StateVector&, const std::map<std::string_view, double>&) const: parameter named "s +
+                std::string(key) + "is not given.");
+        }
+    }
+    for (auto&& gate : _gate_list) {
+        if (gate.index() == 0) {
+            std::get<0>(gate)->update_quantum_state(states);
+        } else {
+            const auto& [param_gate, key] = std::get<1>(gate);
+            param_gate->update_quantum_state(states, parameters.at(key));
+        }
+    }
+}
+
+FLOAT(Fp)
 Circuit<Fp> Circuit<Fp>::copy() const {
     Circuit ccircuit(_n_qubits);
     ccircuit._gate_list.reserve(_gate_list.size());
