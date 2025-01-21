@@ -50,7 +50,7 @@ CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
 FLOAT_AND_SPACE(Fp, Sp)
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
-                        const SparseMatrix<Fp>& mat,
+                        const SparseMatrix<Fp, Sp>& mat,
                         StateVector<Fp, Sp>& state) {
     auto values = mat._values;
 
@@ -92,7 +92,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
 FLOAT_AND_SPACE(Fp, Sp)
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
-                        const SparseMatrix<Fp>& mat,
+                        const SparseMatrix<Fp, Sp>& mat,
                         StateVectorBatched<Fp, Sp>& states) {
     auto values = mat._values;
     const std::uint64_t outer_mask = ~target_mask & ((1ULL << states.n_qubits()) - 1);
@@ -135,13 +135,13 @@ void sparse_matrix_gate(std::uint64_t target_mask,
 
 #define FUNC_MACRO(Fp, Sp)            \
     template void sparse_matrix_gate( \
-        std::uint64_t, std::uint64_t, const SparseMatrix<Fp>&, StateVector<Fp, Sp>&);
+        std::uint64_t, std::uint64_t, const SparseMatrix<Fp, Sp>&, StateVector<Fp, Sp>&);
 CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
 #define FUNC_MACRO(Fp, Sp)            \
     template void sparse_matrix_gate( \
-        std::uint64_t, std::uint64_t, const SparseMatrix<Fp>&, StateVectorBatched<Fp, Sp>&);
+        std::uint64_t, std::uint64_t, const SparseMatrix<Fp, Sp>&, StateVectorBatched<Fp, Sp>&);
 CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 }  // namespace scaluq::internal

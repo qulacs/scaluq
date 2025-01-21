@@ -7,19 +7,19 @@ namespace scaluq {
 
 namespace internal {
 
-template <std::floating_point Fp>
-class ParamRXGateImpl : public ParamGateBase<Fp> {
+template <std::floating_point Fp, ExecutionSpace Sp>
+class ParamRXGateImpl : public ParamGateBase<Fp, Sp> {
 public:
-    using ParamGateBase<Fp>::ParamGateBase;
+    using ParamGateBase<Fp, Sp>::ParamGateBase;
 
-    std::shared_ptr<const ParamGateBase<Fp>> get_inverse() const override {
-        return std::make_shared<const ParamRXGateImpl<Fp>>(
+    std::shared_ptr<const ParamGateBase<Fp, Sp>> get_inverse() const override {
+        return std::make_shared<const ParamRXGateImpl<Fp, Sp>>(
             this->_target_mask, this->_control_mask, -this->_pcoef);
     }
     internal::ComplexMatrix<Fp> get_matrix(Fp param) const override;
 
-    void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
-    void update_quantum_state(StateVectorBatched<Fp>& states,
+    void update_quantum_state(StateVector<Fp, Sp>& state_vector, Fp param) const override;
+    void update_quantum_state(StateVectorBatched<Fp, Sp>& states,
                               std::vector<Fp> params) const override;
 
     std::string to_string(const std::string& indent) const override;
@@ -32,19 +32,19 @@ public:
     }
 };
 
-template <std::floating_point Fp>
-class ParamRYGateImpl : public ParamGateBase<Fp> {
+template <std::floating_point Fp, ExecutionSpace Sp>
+class ParamRYGateImpl : public ParamGateBase<Fp, Sp> {
 public:
-    using ParamGateBase<Fp>::ParamGateBase;
+    using ParamGateBase<Fp, Sp>::ParamGateBase;
 
-    std::shared_ptr<const ParamGateBase<Fp>> get_inverse() const override {
-        return std::make_shared<const ParamRYGateImpl<Fp>>(
+    std::shared_ptr<const ParamGateBase<Fp, Sp>> get_inverse() const override {
+        return std::make_shared<const ParamRYGateImpl<Fp, Sp>>(
             this->_target_mask, this->_control_mask, -this->_pcoef);
     }
     internal::ComplexMatrix<Fp> get_matrix(Fp param) const override;
 
-    void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
-    void update_quantum_state(StateVectorBatched<Fp>& states,
+    void update_quantum_state(StateVector<Fp, Sp>& state_vector, Fp param) const override;
+    void update_quantum_state(StateVectorBatched<Fp, Sp>& states,
                               std::vector<Fp> params) const override;
 
     std::string to_string(const std::string& indent) const override;
@@ -57,19 +57,19 @@ public:
     }
 };
 
-template <std::floating_point Fp>
-class ParamRZGateImpl : public ParamGateBase<Fp> {
+template <std::floating_point Fp, ExecutionSpace Sp>
+class ParamRZGateImpl : public ParamGateBase<Fp, Sp> {
 public:
-    using ParamGateBase<Fp>::ParamGateBase;
+    using ParamGateBase<Fp, Sp>::ParamGateBase;
 
-    std::shared_ptr<const ParamGateBase<Fp>> get_inverse() const override {
-        return std::make_shared<const ParamRZGateImpl<Fp>>(
+    std::shared_ptr<const ParamGateBase<Fp, Sp>> get_inverse() const override {
+        return std::make_shared<const ParamRZGateImpl<Fp, Sp>>(
             this->_target_mask, this->_control_mask, -this->_pcoef);
     }
     internal::ComplexMatrix<Fp> get_matrix(Fp param) const override;
 
-    void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
-    void update_quantum_state(StateVectorBatched<Fp>& states,
+    void update_quantum_state(StateVector<Fp, Sp>& state_vector, Fp param) const override;
+    void update_quantum_state(StateVectorBatched<Fp, Sp>& states,
                               std::vector<Fp> params) const override;
 
     std::string to_string(const std::string& indent) const override;
@@ -84,16 +84,16 @@ public:
 
 }  // namespace internal
 
-template <std::floating_point Fp>
-using ParamRXGate = internal::ParamGatePtr<internal::ParamRXGateImpl<Fp>>;
-template <std::floating_point Fp>
-using ParamRYGate = internal::ParamGatePtr<internal::ParamRYGateImpl<Fp>>;
-template <std::floating_point Fp>
-using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl<Fp>>;
+template <std::floating_point Fp, ExecutionSpace Sp>
+using ParamRXGate = internal::ParamGatePtr<internal::ParamRXGateImpl<Fp, Sp>>;
+template <std::floating_point Fp, ExecutionSpace Sp>
+using ParamRYGate = internal::ParamGatePtr<internal::ParamRYGateImpl<Fp, Sp>>;
+template <std::floating_point Fp, ExecutionSpace Sp>
+using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl<Fp, Sp>>;
 
 namespace internal {
 
-#define DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE(Impl, Type)             \
+/*#define DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE(Impl, Type)             \
     template <>                                                             \
     inline std::shared_ptr<const Impl<Type>> get_from_json(const Json& j) { \
         auto targets = j.at("target").get<std::vector<std::uint64_t>>();    \
@@ -111,13 +111,13 @@ namespace internal {
 DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_TYPE(double)
 DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_TYPE(float)
 #undef DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_TYPE
-#undef DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_TYPE
+#undef DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_TYPE*/
 
 }  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <std::floating_point Fp, ExecutionSpace Sp>
 void bind_gate_param_gate_standard_hpp(nb::module_& m) {
     DEF_PARAM_GATE(
         ParamRXGate,

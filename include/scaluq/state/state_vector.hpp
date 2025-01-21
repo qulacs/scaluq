@@ -13,12 +13,7 @@
 
 namespace scaluq {
 
-using CPUSpace = Kokkos::DefaultHostExecutionSpace;
-using DefaultSpace = Kokkos::DefaultExecutionSpace;
-template <typename T>
-concept ExecutionSpace = std::is_same_v<T, CPUSpace> || std::is_same_v<T, DefaultSpace>;
-
-template <std::floating_point Fp, ExecutionSpace Sp = DefaultSpace>
+template <std::floating_point Fp, ExecutionSpace Sp>
 class StateVector {
     std::uint64_t _n_qubits;
     std::uint64_t _dim;

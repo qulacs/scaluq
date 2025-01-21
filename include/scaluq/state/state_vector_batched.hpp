@@ -28,11 +28,11 @@ public:
 
     [[nodiscard]] std::uint64_t batch_size() const { return this->_batch_size; }
 
-    void set_state_vector(const StateVector<Fp>& state);
+    void set_state_vector(const StateVector<Fp, Sp>& state);
 
-    void set_state_vector_at(std::uint64_t batch_id, const StateVector<Fp>& state);
+    void set_state_vector_at(std::uint64_t batch_id, const StateVector<Fp, Sp>& state);
 
-    [[nodiscard]] StateVector<Fp> get_state_vector_at(std::uint64_t batch_id) const;
+    [[nodiscard]] StateVector<Fp, Sp> get_state_vector_at(std::uint64_t batch_id) const;
 
     void set_zero_state() { set_computational_basis(0); }
 

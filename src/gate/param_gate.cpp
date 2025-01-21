@@ -3,8 +3,9 @@
 #include "../util/template.hpp"
 
 namespace scaluq::internal {
-FLOAT(Fp)
-void ParamGateBase<Fp>::check_qubit_mask_within_bounds(const StateVector<Fp>& state_vector) const {
+FLOAT_AND_SPACE(Fp, Sp)
+void ParamGateBase<Fp, Sp>::check_qubit_mask_within_bounds(
+    const StateVector<Fp, Sp>& state_vector) const {
     std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
     if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
         throw std::runtime_error(
@@ -12,8 +13,9 @@ void ParamGateBase<Fp>::check_qubit_mask_within_bounds(const StateVector<Fp>& st
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
-FLOAT(Fp)
-void ParamGateBase<Fp>::check_qubit_mask_within_bounds(const StateVectorBatched<Fp>& states) const {
+FLOAT_AND_SPACE(Fp, Sp)
+void ParamGateBase<Fp, Sp>::check_qubit_mask_within_bounds(
+    const StateVectorBatched<Fp, Sp>& states) const {
     std::uint64_t full_mask = (1ULL << states.n_qubits()) - 1;
     if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
         throw std::runtime_error(
@@ -21,8 +23,8 @@ void ParamGateBase<Fp>::check_qubit_mask_within_bounds(const StateVectorBatched<
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
-FLOAT(Fp)
-std::string ParamGateBase<Fp>::get_qubit_info_as_string(const std::string& indent) const {
+FLOAT_AND_SPACE(Fp, Sp)
+std::string ParamGateBase<Fp, Sp>::get_qubit_info_as_string(const std::string& indent) const {
     std::ostringstream ss;
     auto targets = target_qubit_list();
     auto controls = control_qubit_list();
@@ -37,10 +39,10 @@ std::string ParamGateBase<Fp>::get_qubit_info_as_string(const std::string& inden
     ss << "}";
     return ss.str();
 }
-FLOAT(Fp)
-ParamGateBase<Fp>::ParamGateBase(std::uint64_t target_mask,
-                                 std::uint64_t control_mask,
-                                 Fp param_coef)
+FLOAT_AND_SPACE(Fp, Sp)
+ParamGateBase<Fp, Sp>::ParamGateBase(std::uint64_t target_mask,
+                                     std::uint64_t control_mask,
+                                     Fp param_coef)
     : _target_mask(target_mask), _control_mask(control_mask), _pcoef(param_coef) {
     if (_target_mask & _control_mask) [[unlikely]] {
         throw std::runtime_error(
@@ -48,5 +50,5 @@ ParamGateBase<Fp>::ParamGateBase(std::uint64_t target_mask,
             "control_mask) : Target and control qubits must not overlap.");
     }
 }
-FLOAT_DECLARE_CLASS(ParamGateBase)
+FLOAT_AND_SPACE_DECLARE_CLASS(ParamGateBase)
 }  // namespace scaluq::internal

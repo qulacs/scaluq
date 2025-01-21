@@ -158,8 +158,8 @@ Matrix<Fp> convert_external_matrix_to_internal_matrix(const ComplexMatrix<Fp>& e
 template <std::floating_point Fp>
 ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp>& matrix);
 
-template <std::floating_point Fp>
-ComplexMatrix<Fp> convert_coo_to_external_matrix(SparseMatrix<Fp> mat);
+template <std::floating_point Fp, ExecutionSpace Sp>
+ComplexMatrix<Fp> convert_coo_to_external_matrix(const SparseMatrix<Fp, Sp>& mat);
 
 template <std::floating_point Fp>
 inline ComplexMatrix<Fp> transform_dense_matrix_by_order(

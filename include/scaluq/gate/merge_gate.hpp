@@ -3,8 +3,8 @@
 #include "gate.hpp"
 
 namespace scaluq {
-template <std::floating_point Fp>
-std::pair<Gate<Fp>, Fp> merge_gate(const Gate<Fp>& gate1, const Gate<Fp>& gate2);
+template <std::floating_point Fp, ExecutionSpace Sp>
+std::pair<Gate<Fp, Sp>, Fp> merge_gate(const Gate<Fp, Sp>& gate1, const Gate<Fp, Sp>& gate2);
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {

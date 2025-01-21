@@ -4,8 +4,8 @@
 #include "../util/template.hpp"
 
 namespace scaluq::internal {
-FLOAT(Fp)
-ComplexMatrix<Fp> ParamPauliRotationGateImpl<Fp>::get_matrix(Fp param) const {
+FLOAT_AND_SPACE(Fp, Sp)
+ComplexMatrix<Fp> ParamPauliRotationGateImpl<Fp, Sp>::get_matrix(Fp param) const {
     Fp angle = this->_pcoef * param;
     Complex<Fp> true_angle = angle * this->_pauli.coef();
     internal::ComplexMatrix<Fp> mat = this->_pauli.get_matrix_ignoring_coef();
@@ -15,9 +15,9 @@ ComplexMatrix<Fp> ParamPauliRotationGateImpl<Fp>::get_matrix(Fp param) const {
           imag_unit * (StdComplex<Fp>)Kokkos::sin(-true_angle / 2) * mat;
     return mat;
 }
-FLOAT(Fp)
-void ParamPauliRotationGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector,
-                                                          Fp param) const {
+FLOAT_AND_SPACE(Fp, Sp)
+void ParamPauliRotationGateImpl<Fp, Sp>::update_quantum_state(StateVector<Fp, Sp>& state_vector,
+                                                              Fp param) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
     apply_pauli_rotation(this->_control_mask,
                          bit_flip_mask,
@@ -26,9 +26,9 @@ void ParamPauliRotationGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state
                          this->_pcoef * param,
                          state_vector);
 }
-FLOAT(Fp)
-void ParamPauliRotationGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states,
-                                                          std::vector<Fp> params) const {
+FLOAT_AND_SPACE(Fp, Sp)
+void ParamPauliRotationGateImpl<Fp, Sp>::update_quantum_state(StateVectorBatched<Fp, Sp>& states,
+                                                              std::vector<Fp> params) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
     apply_pauli_rotation(this->_control_mask,
                          bit_flip_mask,
@@ -38,8 +38,8 @@ void ParamPauliRotationGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>
                          params,
                          states);
 }
-FLOAT(Fp)
-std::string ParamPauliRotationGateImpl<Fp>::to_string(const std::string& indent) const {
+FLOAT_AND_SPACE(Fp, Sp)
+std::string ParamPauliRotationGateImpl<Fp, Sp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     auto controls = this->control_qubit_list();
     ss << indent << "Gate Type: ParamPauliRotation\n";
@@ -50,5 +50,5 @@ std::string ParamPauliRotationGateImpl<Fp>::to_string(const std::string& indent)
     ss << indent << "  Pauli Operator: \"" << _pauli.get_pauli_string() << "\"";
     return ss.str();
 }
-FLOAT_DECLARE_CLASS(ParamPauliRotationGateImpl)
+FLOAT_AND_SPACE_DECLARE_CLASS(ParamPauliRotationGateImpl)
 }  // namespace scaluq::internal

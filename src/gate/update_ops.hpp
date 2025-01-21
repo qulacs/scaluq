@@ -86,12 +86,12 @@ void dense_matrix_gate(std::uint64_t target_mask,
 template <std::floating_point Fp, ExecutionSpace Sp>
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
-                        const SparseMatrix<Fp>& mat,
+                        const SparseMatrix<Fp, Sp>& mat,
                         StateVector<Fp, Sp>& state);
 template <std::floating_point Fp, ExecutionSpace Sp>
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
-                        const SparseMatrix<Fp>& mat,
+                        const SparseMatrix<Fp, Sp>& mat,
                         StateVectorBatched<Fp, Sp>& states);
 
 template <std::floating_point Fp, ExecutionSpace Sp>

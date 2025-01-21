@@ -9,16 +9,17 @@
 
 namespace scaluq {
 namespace internal {
-template <std::floating_point Fp>
-class ParamProbablisticGateImpl : public ParamGateBase<Fp> {
-    using EitherGate = std::variant<Gate<Fp>, ParamGate<Fp>>;
+template <std::floating_point Fp, ExecutionSpace Sp>
+class ParamProbablisticGateImpl : public ParamGateBase<Fp, Sp> {
+    using EitherGate = std::variant<Gate<Fp, Sp>, ParamGate<Fp, Sp>>;
     std::vector<Fp> _distribution;
     std::vector<Fp> _cumulative_distribution;
     std::vector<EitherGate> _gate_list;
 
 public:
-    ParamProbablisticGateImpl(const std::vector<Fp>& distribution,
-                              const std::vector<std::variant<Gate<Fp>, ParamGate<Fp>>>& gate_list);
+    ParamProbablisticGateImpl(
+        const std::vector<Fp>& distribution,
+        const std::vector<std::variant<Gate<Fp, Sp>, ParamGate<Fp, Sp>>>& gate_list);
     const std::vector<EitherGate>& gate_list() const { return _gate_list; }
     const std::vector<Fp>& distribution() const { return _distribution; }
 
@@ -53,15 +54,15 @@ public:
             "ParamProbablisticGateImpl.");
     }
 
-    std::shared_ptr<const ParamGateBase<Fp>> get_inverse() const override;
+    std::shared_ptr<const ParamGateBase<Fp, Sp>> get_inverse() const override;
     internal::ComplexMatrix<Fp> get_matrix(Fp) const override {
         throw std::runtime_error(
             "ParamProbablisticGateImpl::get_matrix(): This function must not be used in "
             "ParamProbablisticGateImpl.");
     }
 
-    void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
-    void update_quantum_state(StateVectorBatched<Fp>& states,
+    void update_quantum_state(StateVector<Fp, Sp>& state_vector, Fp param) const override;
+    void update_quantum_state(StateVectorBatched<Fp, Sp>& states,
                               std::vector<Fp> params) const override;
 
     std::string to_string(const std::string& indent) const override;
@@ -78,11 +79,11 @@ public:
 };
 }  // namespace internal
 
-template <std::floating_point Fp>
-using ParamProbablisticGate = internal::ParamGatePtr<internal::ParamProbablisticGateImpl<Fp>>;
+template <std::floating_point Fp, ExecutionSpace Sp>
+using ParamProbablisticGate = internal::ParamGatePtr<internal::ParamProbablisticGateImpl<Fp, Sp>>;
 
 namespace internal {
-
+/*
 #define DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE(Type)                                     \
     template <>                                                                                  \
     inline std::shared_ptr<const ParamProbablisticGateImpl<Type>> get_from_json(const Json& j) { \
@@ -100,7 +101,7 @@ namespace internal {
 DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE(double)
 DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE(float)
 #undef DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE
-
+*/
 }  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND

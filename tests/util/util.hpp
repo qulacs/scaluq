@@ -29,8 +29,10 @@ inline void check_near(const StdComplex<Fp>& a, const StdComplex<Fp>& b) {
     ASSERT_LE(std::abs(a - b), eps<Fp>);
 }
 
-template <std::floating_point Fp>
-inline bool same_state(const StateVector<Fp>& s1, const StateVector<Fp>& s2, const Fp e = eps<Fp>) {
+template <std::floating_point Fp, ExecutionSpace Sp>
+inline bool same_state(const StateVector<Fp, Sp>& s1,
+                       const StateVector<Fp, Sp>& s2,
+                       const Fp e = eps<Fp>) {
     auto s1_cp = s1.get_amplitudes();
     auto s2_cp = s2.get_amplitudes();
     assert(s1.n_qubits() == s2.n_qubits());
@@ -40,9 +42,9 @@ inline bool same_state(const StateVector<Fp>& s1, const StateVector<Fp>& s2, con
     return true;
 };
 
-template <std::floating_point Fp>
-inline bool same_state_except_global_phase(const StateVector<Fp>& s1,
-                                           const StateVector<Fp>& s2,
+template <std::floating_point Fp, ExecutionSpace Sp>
+inline bool same_state_except_global_phase(const StateVector<Fp, Sp>& s1,
+                                           const StateVector<Fp, Sp>& s2,
                                            const Fp e = eps<Fp>) {
     auto s1_cp = s1.get_amplitudes();
     auto s2_cp = s2.get_amplitudes();

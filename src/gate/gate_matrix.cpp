@@ -57,9 +57,7 @@ FLOAT_AND_SPACE(Fp, Sp)
 SparseMatrixGateImpl<Fp, Sp>::SparseMatrixGateImpl(std::uint64_t target_mask,
                                                    std::uint64_t control_mask,
                                                    const SparseComplexMatrix<Fp>& mat)
-    : GateBase<Fp, Sp>(target_mask, control_mask),
-      _matrix(SparseMatrix(mat)),
-      num_nnz(mat.nonZeros()) {}
+    : GateBase<Fp, Sp>(target_mask, control_mask), _matrix(mat), num_nnz(mat.nonZeros()) {}
 FLOAT_AND_SPACE(Fp, Sp)
 std::shared_ptr<const GateBase<Fp, Sp>> SparseMatrixGateImpl<Fp, Sp>::get_inverse() const {
     Kokkos::View<SparseValue<Fp>*, Kokkos::HostSpace> vec_h("h_view", num_nnz);

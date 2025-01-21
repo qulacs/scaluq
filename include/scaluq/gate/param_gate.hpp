@@ -8,18 +8,18 @@ namespace scaluq {
 namespace internal {
 // forward declarations
 
-template <std::floating_point Fp>
+template <std::floating_point Fp, ExecutionSpace sp>
 class ParamGateBase;
 
-template <std::floating_point Fp>
+template <std::floating_point Fp, ExecutionSpace sp>
 class ParamRXGateImpl;
-template <std::floating_point Fp>
+template <std::floating_point Fp, ExecutionSpace sp>
 class ParamRYGateImpl;
-template <std::floating_point Fp>
+template <std::floating_point Fp, ExecutionSpace sp>
 class ParamRZGateImpl;
-template <std::floating_point Fp>
+template <std::floating_point Fp, ExecutionSpace sp>
 class ParamPauliRotationGateImpl;
-template <std::floating_point Fp>
+template <std::floating_point Fp, ExecutionSpace sp>
 class ParamProbablisticGateImpl;
 
 }  // namespace internal
@@ -34,36 +34,37 @@ enum class ParamGateType {
     Error
 };
 
-template <typename T, std::floating_point Fp>
+template <typename T, std::floating_point Fp, ExecutionSpace Sp>
 constexpr ParamGateType get_param_gate_type() {
     using TWithoutConst = std::remove_cv_t<T>;
-    if constexpr (std::is_same_v<TWithoutConst, internal::ParamGateBase<Fp>>)
+    if constexpr (std::is_same_v<TWithoutConst, internal::ParamGateBase<Fp, Sp>>)
         return ParamGateType::Unknown;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRXGateImpl<Fp>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRXGateImpl<Fp, Sp>>)
         return ParamGateType::ParamRX;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRYGateImpl<Fp>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRYGateImpl<Fp, Sp>>)
         return ParamGateType::ParamRY;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRZGateImpl<Fp>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRZGateImpl<Fp, Sp>>)
         return ParamGateType::ParamRZ;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamPauliRotationGateImpl<Fp>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamPauliRotationGateImpl<Fp, Sp>>)
         return ParamGateType::ParamPauliRotation;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamProbablisticGateImpl<Fp>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamProbablisticGateImpl<Fp, Sp>>)
         return ParamGateType::ParamProbablistic;
     else
         static_assert(internal::lazy_false_v<T>, "unknown GateImpl");
 }
 
 namespace internal {
-template <std::floating_point _FloatType>
+template <std::floating_point _FloatType, ExecutionSpace _SpaceType>
 class ParamGateBase {
 public:
     using Fp = _FloatType;
+    using Sp = _SpaceType;
 
 protected:
     std::uint64_t _target_mask, _control_mask;
     Fp _pcoef;
-    void check_qubit_mask_within_bounds(const StateVector<Fp>& state_vector) const;
-    void check_qubit_mask_within_bounds(const StateVectorBatched<Fp>& states) const;
+    void check_qubit_mask_within_bounds(const StateVector<Fp, Sp>& state_vector) const;
+    void check_qubit_mask_within_bounds(const StateVectorBatched<Fp, Sp>& states) const;
 
     std::string get_qubit_info_as_string(const std::string& indent) const;
 
@@ -88,11 +89,11 @@ public:
         return _target_mask | _control_mask;
     }
 
-    [[nodiscard]] virtual std::shared_ptr<const ParamGateBase<Fp>> get_inverse() const = 0;
+    [[nodiscard]] virtual std::shared_ptr<const ParamGateBase<Fp, Sp>> get_inverse() const = 0;
     [[nodiscard]] virtual internal::ComplexMatrix<Fp> get_matrix(Fp param) const = 0;
 
-    virtual void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const = 0;
-    virtual void update_quantum_state(StateVectorBatched<Fp>& states,
+    virtual void update_quantum_state(StateVector<Fp, Sp>& state_vector, Fp param) const = 0;
+    virtual void update_quantum_state(StateVectorBatched<Fp, Sp>& states,
                                       std::vector<Fp> params) const = 0;
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
@@ -101,7 +102,7 @@ public:
 };
 
 template <typename T>
-concept ParamGateImpl = std::derived_from<T, ParamGateBase<typename T::Fp>>;
+concept ParamGateImpl = std::derived_from<T, ParamGateBase<typename T::Fp, typename T::Sp>>;
 
 template <ParamGateImpl T>
 inline std::shared_ptr<const T> get_from_json(const Json&);
@@ -112,6 +113,7 @@ class ParamGatePtr {
     template <ParamGateImpl U>
     friend class ParamGatePtr;
     using Fp = typename T::Fp;
+    using Sp = typename T::Sp;
 
 private:
     std::shared_ptr<const T> _param_gate_ptr;
@@ -122,15 +124,15 @@ public:
     template <ParamGateImpl U>
     ParamGatePtr(const std::shared_ptr<const U>& param_gate_ptr) {
         if constexpr (std::is_same_v<T, U>) {
-            _param_gate_type = get_param_gate_type<T, Fp>();
+            _param_gate_type = get_param_gate_type<T, Fp, Sp>();
             _param_gate_ptr = param_gate_ptr;
-        } else if constexpr (std::is_same_v<T, internal::ParamGateBase<Fp>>) {
+        } else if constexpr (std::is_same_v<T, internal::ParamGateBase<Fp, Sp>>) {
             // upcast
-            _param_gate_type = get_param_gate_type<U, Fp>();
+            _param_gate_type = get_param_gate_type<U, Fp, Sp>();
             _param_gate_ptr = std::static_pointer_cast<const T>(param_gate_ptr);
         } else {
             // downcast
-            _param_gate_type = get_param_gate_type<T, Fp>();
+            _param_gate_type = get_param_gate_type<T, Fp, Sp>();
             if (!(_param_gate_ptr = std::dynamic_pointer_cast<const T>(param_gate_ptr))) {
                 throw std::runtime_error("invalid gate cast");
             }
@@ -141,13 +143,13 @@ public:
         if constexpr (std::is_same_v<T, U>) {
             _param_gate_type = param_gate._param_gate_type;
             _param_gate_ptr = param_gate._param_gate_ptr;
-        } else if constexpr (std::is_same_v<T, internal::ParamGateBase<Fp>>) {
+        } else if constexpr (std::is_same_v<T, internal::ParamGateBase<Fp, Sp>>) {
             // upcast
             _param_gate_type = param_gate._param_gate_type;
             _param_gate_ptr = std::static_pointer_cast<const T>(param_gate._param_gate_ptr);
         } else {
             // downcast
-            if (param_gate._param_gate_type != get_param_gate_type<T, Fp>()) {
+            if (param_gate._param_gate_type != get_param_gate_type<T, Fp, Sp>()) {
                 throw std::runtime_error("invalid gate cast");
             }
             _param_gate_type = param_gate._param_gate_type;
@@ -175,18 +177,18 @@ public:
         std::string type = j.at("type");
 
         // clang-format off
-        if (type == "ParamRX") gate = get_from_json<ParamRXGateImpl<Fp>>(j);
-        else if (type == "ParamRY") gate = get_from_json<ParamRYGateImpl<Fp>>(j);
-        else if (type == "ParamRZ") gate = get_from_json<ParamRZGateImpl<Fp>>(j);
-        else if (type == "ParamPauliRotation") gate = get_from_json<ParamPauliRotationGateImpl<Fp>>(j);
-        else if (type == "ParamProbablistic") gate = get_from_json<ParamProbablisticGateImpl<Fp>>(j);
+        if (type == "ParamRX") gate = get_from_json<ParamRXGateImpl<Fp, Sp>>(j);
+        else if (type == "ParamRY") gate = get_from_json<ParamRYGateImpl<Fp, Sp>>(j);
+        else if (type == "ParamRZ") gate = get_from_json<ParamRZGateImpl<Fp, Sp>>(j);
+        else if (type == "ParamPauliRotation") gate = get_from_json<ParamPauliRotationGateImpl<Fp, Sp>>(j);
+        else if (type == "ParamProbablistic") gate = get_from_json<ParamProbablisticGateImpl<Fp, Sp>>(j);
         // clang-format on
     }
 };
 }  // namespace internal
 
-template <std::floating_point Fp>
-using ParamGate = internal::ParamGatePtr<internal::ParamGateBase<Fp>>;
+template <std::floating_point Fp, ExecutionSpace Sp>
+using ParamGate = internal::ParamGatePtr<internal::ParamGateBase<Fp, Sp>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
@@ -267,11 +269,11 @@ namespace internal {
             "Read an object from the JSON representation of the gate.")
 
 template <std::floating_point Fp>
-nb::class_<ParamGate<Fp>> param_gate_base_def;
+nb::class_<ParamGate<Fp, Sp>> param_gate_base_def;
 
 #define DEF_PARAM_GATE(PARAM_GATE_TYPE, FLOAT, DESCRIPTION)                                     \
-    ::scaluq::internal::param_gate_base_def<Fp>.def(nb::init<PARAM_GATE_TYPE<FLOAT>>(),         \
-                                                    "Upcast from `" #PARAM_GATE_TYPE "`.");     \
+    ::scaluq::internal::param_gate_base_def<Fp, Sp>.def(nb::init<PARAM_GATE_TYPE<FLOAT>>(),     \
+                                                        "Upcast from `" #PARAM_GATE_TYPE "`."); \
     DEF_PARAM_GATE_BASE(                                                                        \
         PARAM_GATE_TYPE,                                                                        \
         FLOAT,                                                                                  \
@@ -289,13 +291,13 @@ void bind_gate_param_gate_hpp_without_precision(nb::module_& m) {
 
 template <std::floating_point Fp>
 void bind_gate_param_gate_hpp(nb::module_& m) {
-    param_gate_base_def<Fp> =
+    param_gate_base_def<Fp, Sp> =
         DEF_PARAM_GATE_BASE(
             ParamGate,
             Fp,
             "General class of parametric quantum gate.\n\n.. note:: Downcast to requred to use "
             "gate-specific functions.")
-            .def(nb::init<ParamGate<Fp>>(), "Just copy shallowly.");
+            .def(nb::init<ParamGate<Fp, Sp>>(), "Just copy shallowly.");
 }
 
 }  // namespace internal

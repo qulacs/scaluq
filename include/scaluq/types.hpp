@@ -16,6 +16,11 @@ template <std::floating_point Fp>
 using Complex = Kokkos::complex<Fp>;
 using Json = nlohmann::json;
 
+using CPUSpace = Kokkos::DefaultHostExecutionSpace;
+using DefaultSpace = Kokkos::DefaultExecutionSpace;
+template <typename T>
+concept ExecutionSpace = std::is_same_v<T, CPUSpace> || std::is_same_v<T, DefaultSpace>;
+
 namespace internal {
 template <typename DummyType>
 constexpr bool lazy_false_v = false;  // Used for lazy evaluation in static_assert.
@@ -41,10 +46,10 @@ struct SparseValue {
     uint32_t r, c;
 };
 
-template <std::floating_point Fp>
+template <std::floating_point Fp, ExecutionSpace Sp>
 class SparseMatrix {
 public:
-    Kokkos::View<SparseValue<Fp>*> _values;
+    Kokkos::View<SparseValue<Fp>*, Sp> _values;
     std::uint64_t _row, _col;
 
     SparseMatrix(const SparseComplexMatrix<Fp>& sp);

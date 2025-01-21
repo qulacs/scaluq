@@ -9,19 +9,19 @@
 
 using namespace scaluq;
 
-template <std::floating_point Fp, Gate<Fp> (*QuantumGateConstructor)()>
+template <std::floating_point Fp, ExecutionSpace Sp, Gate<Fp, Sp> (*QuantumGateConstructor)()>
 void run_random_gate_apply(std::uint64_t n_qubits) {
     const int dim = 1ULL << n_qubits;
 
     ComplexVector<Fp> test_state = ComplexVector<Fp>::Zero(dim);
     for (int repeat = 0; repeat < 10; repeat++) {
-        auto state = StateVector<Fp>::Haar_random_state(n_qubits);
+        auto state = StateVector<Fp, Sp>::Haar_random_state(n_qubits);
         auto state_cp = state.get_amplitudes();
         for (int i = 0; i < dim; i++) {
             test_state[i] = state_cp[i];
         }
 
-        const Gate<Fp> gate = QuantumGateConstructor();
+        const Gate<Fp, Sp> gate = QuantumGateConstructor();
         gate->update_quantum_state(state);
         state_cp = state.get_amplitudes();
 
@@ -34,21 +34,22 @@ void run_random_gate_apply(std::uint64_t n_qubits) {
 }
 
 template <std::floating_point Fp,
-          Gate<Fp> (*QuantumGateConstructor)(Fp, const std::vector<std::uint64_t>&)>
+          ExecutionSpace Sp,
+          Gate<Fp, Sp> (*QuantumGateConstructor)(Fp, const std::vector<std::uint64_t>&)>
 void run_random_gate_apply(std::uint64_t n_qubits) {
     const int dim = 1ULL << n_qubits;
     Random random;
 
     ComplexVector<Fp> test_state = ComplexVector<Fp>::Zero(dim);
     for (int repeat = 0; repeat < 10; repeat++) {
-        auto state = StateVector<Fp>::Haar_random_state(n_qubits);
+        auto state = StateVector<Fp, Sp>::Haar_random_state(n_qubits);
         auto state_cp = state.get_amplitudes();
         for (int i = 0; i < dim; i++) {
             test_state[i] = state_cp[i];
         }
 
         const Fp angle = std::numbers::pi * random.uniform();
-        const Gate<Fp> gate = QuantumGateConstructor(angle, {});
+        const Gate<Fp, Sp> gate = QuantumGateConstructor(angle, {});
         gate->update_quantum_state(state);
         state_cp = state.get_amplitudes();
 
@@ -61,7 +62,8 @@ void run_random_gate_apply(std::uint64_t n_qubits) {
 }
 
 template <std::floating_point Fp,
-          Gate<Fp> (*QuantumGateConstructor)(std::uint64_t, const std::vector<std::uint64_t>&)>
+          ExecutionSpace Sp,
+          Gate<Fp, Sp> (*QuantumGateConstructor)(std::uint64_t, const std::vector<std::uint64_t>&)>
 void run_random_gate_apply(std::uint64_t n_qubits,
                            std::function<ComplexMatrix<Fp>()> matrix_factory) {
     const auto matrix = matrix_factory();
@@ -77,7 +79,7 @@ void run_random_gate_apply(std::uint64_t n_qubits,
         }
 
         const std::uint64_t target = random.int64() % n_qubits;
-        const Gate<Fp> gate = QuantumGateConstructor(target, {});
+        const Gate<Fp, Sp> gate = QuantumGateConstructor(target, {});
         gate->update_quantum_state(state);
         state_cp = state.get_amplitudes();
 
@@ -90,8 +92,10 @@ void run_random_gate_apply(std::uint64_t n_qubits,
     }
 }
 
-template <std::floating_point Fp,
-          Gate<Fp> (*QuantumGateConstructor)(std::uint64_t, Fp, const std::vector<std::uint64_t>&)>
+template <
+    std::floating_point Fp,
+    ExecutionSpace Sp,
+    Gate<Fp, Sp> (*QuantumGateConstructor)(std::uint64_t, Fp, const std::vector<std::uint64_t>&)>
 void run_random_gate_apply(std::uint64_t n_qubits,
                            std::function<ComplexMatrix<Fp>(Fp)> matrix_factory) {
     const int dim = 1ULL << n_qubits;
@@ -108,7 +112,7 @@ void run_random_gate_apply(std::uint64_t n_qubits,
         const Fp angle = std::numbers::pi * random.uniform();
         const auto matrix = matrix_factory(angle);
         const std::uint64_t target = random.int64() % n_qubits;
-        const Gate<Fp> gate = QuantumGateConstructor(target, angle, {});
+        const Gate<Fp, Sp> gate = QuantumGateConstructor(target, angle, {});
         gate->update_quantum_state(state);
         state_cp = state.get_amplitudes();
 
@@ -147,7 +151,7 @@ void run_random_gate_apply_IBMQ(std::uint64_t n_qubits,
             }
             const auto matrix = matrix_factory(theta, phi, lambda);
             const std::uint64_t target = random.int64() % n_qubits;
-            Gate<Fp> gate;
+            Gate<Fp, Sp> gate;
             if (gate_type == 0) {
                 gate = gate::U1<Fp>(target, lambda, {});
             } else if (gate_type == 1) {
@@ -178,7 +182,7 @@ void run_random_gate_apply_two_target(std::uint64_t n_qubits) {
     for (int repeat = 0; repeat < 10; repeat++) {
         auto state = StateVector<Fp>::Haar_random_state(n_qubits);
         for (int g = 0; g < 2; g++) {
-            Gate<Fp> gate;
+            Gate<Fp, Sp> gate;
             auto state_cp = state.get_amplitudes();
             for (int i = 0; i < dim; i++) {
                 test_state[i] = state_cp[i];
@@ -253,7 +257,7 @@ void run_random_gate_apply_none_dense(std::uint64_t n_qubits) {
         ComplexMatrix<Fp> mat = ComplexMatrix<Fp>::Identity(dim, dim);
         mat *= val / norm;
         std::vector<std::uint64_t> control_list = {};
-        Gate<Fp> dense_gate = gate::DenseMatrix<Fp>(target_list, U, control_list);
+        Gate<Fp, Sp> dense_gate = gate::DenseMatrix<Fp>(target_list, U, control_list);
         dense_gate->update_quantum_state(state);
         test_state = mat * test_state;
         state_cp = state.get_amplitudes();
@@ -289,7 +293,7 @@ void run_random_gate_apply_single_dense(std::uint64_t n_qubits) {
             }
         }
         std::vector<std::uint64_t> control_list = {};
-        Gate<Fp> dense_gate = gate::DenseMatrix(target_list, mat, control_list);
+        Gate<Fp, Sp> dense_gate = gate::DenseMatrix(target_list, mat, control_list);
         dense_gate->update_quantum_state(state);
         test_state = get_expanded_eigen_matrix_with_identity<Fp>(target, U, n_qubits) * test_state;
         state_cp = state.get_amplitudes();
@@ -328,7 +332,7 @@ void run_random_gate_apply_general_dense(std::uint64_t n_qubits) {
                 get_expanded_eigen_matrix_with_identity<Fp>(targets[0], U1, n_qubits) * test_state;
             std::vector<std::uint64_t> target_list = {targets[0]};
             std::vector<std::uint64_t> control_list = {};
-            Gate<Fp> dense_gate = gate::DenseMatrix<Fp>(target_list, U1, control_list);
+            Gate<Fp, Sp> dense_gate = gate::DenseMatrix<Fp>(target_list, U1, control_list);
             dense_gate->update_quantum_state(state);
             state_cp = state.get_amplitudes();
             for (std::uint64_t i = 0; i < dim; i++) {
@@ -357,7 +361,7 @@ void run_random_gate_apply_general_dense(std::uint64_t n_qubits) {
                          test_state;
             std::vector<std::uint64_t> target_list = {targets[0], targets[1]};
             std::vector<std::uint64_t> control_list = {};
-            Gate<Fp> dense_gate = gate::DenseMatrix<Fp>(target_list, Umerge, control_list);
+            Gate<Fp, Sp> dense_gate = gate::DenseMatrix<Fp>(target_list, Umerge, control_list);
             dense_gate->update_quantum_state(state);
             state_cp = state.get_amplitudes();
             for (std::uint64_t i = 0; i < dim; i++) {
@@ -390,7 +394,7 @@ void run_random_gate_apply_general_dense(std::uint64_t n_qubits) {
                          test_state;
             std::vector<std::uint64_t> target_list = {targets[0], targets[1], targets[2]};
             std::vector<std::uint64_t> control_list = {};
-            Gate<Fp> dense_gate = gate::DenseMatrix<Fp>(target_list, Umerge, control_list);
+            Gate<Fp, Sp> dense_gate = gate::DenseMatrix<Fp>(target_list, Umerge, control_list);
             dense_gate->update_quantum_state(state);
             state_cp = state.get_amplitudes();
             for (std::uint64_t i = 0; i < dim; i++) {
@@ -439,7 +443,7 @@ void run_random_gate_apply_sparse(std::uint64_t n_qubits) {
 
         Umerge = internal::kronecker_product<Fp>(u3, internal::kronecker_product<Fp>(u2, u1));
         mat = Umerge.sparseView();
-        Gate<Fp> sparse_gate = gate::SparseMatrix<Fp>(target_list, mat, control_list);
+        Gate<Fp, Sp> sparse_gate = gate::SparseMatrix<Fp>(target_list, mat, control_list);
         sparse_gate->update_quantum_state(state);
         state_cp = state.get_amplitudes();
         for (std::uint64_t i = 0; i < dim; i++) {
@@ -554,7 +558,7 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
         matrix = std::cos(angle / 2) * ComplexMatrix<Fp>::Identity(dim, dim) -
                  StdComplex<Fp>(0, 1) * std::sin(angle / 2) * matrix;
         PauliOperator<Fp> pauli(target_vec, pauli_id_vec, 1.0);
-        Gate<Fp> pauli_gate = gate::PauliRotation(pauli, angle);
+        Gate<Fp, Sp> pauli_gate = gate::PauliRotation(pauli, angle);
         pauli_gate->update_quantum_state(state);
         state_cp = state.get_amplitudes();
         test_state = matrix * test_state;
@@ -575,80 +579,156 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
 }
 
 TEST(GateTest, ApplyI) {
-    run_random_gate_apply<double, gate::I<double>>(5);
-    run_random_gate_apply<float, gate::I<float>>(5);
+    run_random_gate_apply<double, DefaultSpace, gate::I<double>>(5);
+    run_random_gate_apply<float, DefaultSpace, gate::I<float>>(5);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::I<double>>(5);
+    run_random_gate_apply<float, CPUSpace, gate::I<float>>(5);
+#endif
 }
 TEST(GateTest, ApplyGlobalPhase) {
-    run_random_gate_apply<double, gate::GlobalPhase<double>>(5);
-    run_random_gate_apply<float, gate::GlobalPhase<float>>(5);
+    run_random_gate_apply<double, DefaultSpace, gate::GlobalPhase<double>>(5);
+    run_random_gate_apply<float, DefaultSpace, gate::GlobalPhase<float>>(5);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::GlobalPhase<double>>(5);
+    run_random_gate_apply<float, CPUSpace, gate::GlobalPhase<float>>(5);
+#endif
 }
 TEST(GateTest, ApplyX) {
-    run_random_gate_apply<double, gate::X<double>>(5, make_X<double>);
-    run_random_gate_apply<float, gate::X<float>>(5, make_X<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::X<double>>(5, make_X<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::X<float>>(5, make_X<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::X<double>>(5, make_X<double>);
+    run_random_gate_apply<float, CPUSpace, gate::X<float>>(5, make_X<float>);
+#endif
 }
 TEST(GateTest, ApplyY) {
-    run_random_gate_apply<double, gate::Y<double>>(5, make_Y<double>);
-    run_random_gate_apply<float, gate::Y<float>>(5, make_Y<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::Y<double>>(5, make_Y<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::Y<float>>(5, make_Y<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::Y<double>>(5, make_Y<double>);
+    run_random_gate_apply<float, CPUSpace, gate::Y<float>>(5, make_Y<float>);
+#endif
 }
 TEST(GateTest, ApplyZ) {
-    run_random_gate_apply<double, gate::Z<double>>(5, make_Z<double>);
-    run_random_gate_apply<float, gate::Z<float>>(5, make_Z<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::Z<double>>(5, make_Z<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::Z<float>>(5, make_Z<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::Z<double>>(5, make_Z<double>);
+    run_random_gate_apply<float, CPUSpace, gate::Z<float>>(5, make_Z<float>);
+#endif
 }
 TEST(GateTest, ApplyH) {
-    run_random_gate_apply<double, gate::H<double>>(5, make_H<double>);
-    run_random_gate_apply<float, gate::H<float>>(5, make_H<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::H<double>>(5, make_H<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::H<float>>(5, make_H<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::H<double>>(5, make_H<double>);
+    run_random_gate_apply<float, CPUSpace, gate::H<float>>(5, make_H<float>);
+#endif
 }
 TEST(GateTest, ApplyS) {
-    run_random_gate_apply<double, gate::S<double>>(5, make_S<double>);
-    run_random_gate_apply<float, gate::S<float>>(5, make_S<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::S<double>>(5, make_S<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::S<float>>(5, make_S<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::S<double>>(5, make_S<double>);
+    run_random_gate_apply<float, CPUSpace, gate::S<float>>(5, make_S<float>);
+#endif
 }
 TEST(GateTest, ApplySdag) {
-    run_random_gate_apply<double, gate::Sdag<double>>(5, make_Sdag<double>);
-    run_random_gate_apply<float, gate::Sdag<float>>(5, make_Sdag<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::Sdag<double>>(5, make_Sdag<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::Sdag<float>>(5, make_Sdag<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::Sdag<double>>(5, make_Sdag<double>);
+    run_random_gate_apply<float, CPUSpace, gate::Sdag<float>>(5, make_Sdag<float>);
+#endif
 }
 TEST(GateTest, ApplyT) {
-    run_random_gate_apply<double, gate::T<double>>(5, make_T<double>);
-    run_random_gate_apply<float, gate::T<float>>(5, make_T<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::T<double>>(5, make_T<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::T<float>>(5, make_T<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::T<double>>(5, make_T<double>);
+    run_random_gate_apply<float, CPUSpace, gate::T<float>>(5, make_T<float>);
+#endif
 }
 TEST(GateTest, ApplyTdag) {
-    run_random_gate_apply<double, gate::Tdag<double>>(5, make_Tdag<double>);
-    run_random_gate_apply<float, gate::Tdag<float>>(5, make_Tdag<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::Tdag<double>>(5, make_Tdag<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::Tdag<float>>(5, make_Tdag<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::Tdag<double>>(5, make_Tdag<double>);
+    run_random_gate_apply<float, CPUSpace, gate::Tdag<float>>(5, make_Tdag<float>);
+#endif
 }
 TEST(GateTest, ApplySqrtX) {
-    run_random_gate_apply<double, gate::SqrtX<double>>(5, make_SqrtX<double>);
-    run_random_gate_apply<float, gate::SqrtX<float>>(5, make_SqrtX<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::SqrtX<double>>(5, make_SqrtX<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::SqrtX<float>>(5, make_SqrtX<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::SqrtX<double>>(5, make_SqrtX<double>);
+    run_random_gate_apply<float, CPUSpace, gate::SqrtX<float>>(5, make_SqrtX<float>);
+#endif
 }
 TEST(GateTest, ApplySqrtY) {
-    run_random_gate_apply<double, gate::SqrtY<double>>(5, make_SqrtY<double>);
-    run_random_gate_apply<float, gate::SqrtY<float>>(5, make_SqrtY<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::SqrtY<double>>(5, make_SqrtY<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::SqrtY<float>>(5, make_SqrtY<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::SqrtY<double>>(5, make_SqrtY<double>);
+    run_random_gate_apply<float, CPUSpace, gate::SqrtY<float>>(5, make_SqrtY<float>);
+#endif
 }
 TEST(GateTest, ApplySqrtXdag) {
-    run_random_gate_apply<double, gate::SqrtXdag<double>>(5, make_SqrtXdag<double>);
-    run_random_gate_apply<float, gate::SqrtXdag<float>>(5, make_SqrtXdag<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::SqrtXdag<double>>(5, make_SqrtXdag<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::SqrtXdag<float>>(5, make_SqrtXdag<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::SqrtXdag<double>>(5, make_SqrtXdag<double>);
+    run_random_gate_apply<float, CPUSpace, gate::SqrtXdag<float>>(5, make_SqrtXdag<float>);
+#endif
 }
 TEST(GateTest, ApplySqrtYdag) {
-    run_random_gate_apply<double, gate::SqrtYdag<double>>(5, make_SqrtYdag<double>);
-    run_random_gate_apply<float, gate::SqrtYdag<float>>(5, make_SqrtYdag<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::SqrtYdag<double>>(5, make_SqrtYdag<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::SqrtYdag<float>>(5, make_SqrtYdag<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::SqrtYdag<double>>(5, make_SqrtYdag<double>);
+    run_random_gate_apply<float, CPUSpace, gate::SqrtYdag<float>>(5, make_SqrtYdag<float>);
+#endif
 }
 TEST(GateTest, ApplyP0) {
-    run_random_gate_apply<double, gate::P0<double>>(5, make_P0<double>);
-    run_random_gate_apply<float, gate::P0<float>>(5, make_P0<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::P0<double>>(5, make_P0<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::P0<float>>(5, make_P0<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::P0<double>>(5, make_P0<double>);
+    run_random_gate_apply<float, CPUSpace, gate::P0<float>>(5, make_P0<float>);
+#endif
 }
 TEST(GateTest, ApplyP1) {
-    run_random_gate_apply<double, gate::P1<double>>(5, make_P1<double>);
-    run_random_gate_apply<float, gate::P1<float>>(5, make_P1<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::P1<double>>(5, make_P1<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::P1<float>>(5, make_P1<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::P1<double>>(5, make_P1<double>);
+    run_random_gate_apply<float, CPUSpace, gate::P1<float>>(5, make_P1<float>);
+#endif
 }
 TEST(GateTest, ApplyRX) {
-    run_random_gate_apply<double, gate::RX<double>>(5, make_RX<double>);
-    run_random_gate_apply<float, gate::RX<float>>(5, make_RX<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::RX<double>>(5, make_RX<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::RX<float>>(5, make_RX<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::RX<double>>(5, make_RX<double>);
+    run_random_gate_apply<float, CPUSpace, gate::RX<float>>(5, make_RX<float>);
+#endif
 }
 TEST(GateTest, ApplyRY) {
-    run_random_gate_apply<double, gate::RY<double>>(5, make_RY<double>);
-    run_random_gate_apply<float, gate::RY<float>>(5, make_RY<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::RY<double>>(5, make_RY<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::RY<float>>(5, make_RY<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::RY<double>>(5, make_RY<double>);
+    run_random_gate_apply<float, CPUSpace, gate::RY<float>>(5, make_RY<float>);
+#endif
 }
 TEST(GateTest, ApplyRZ) {
-    run_random_gate_apply<double, gate::RZ<double>>(5, make_RZ<double>);
-    run_random_gate_apply<float, gate::RZ<float>>(5, make_RZ<float>);
+    run_random_gate_apply<double, DefaultSpace, gate::RZ<double>>(5, make_RZ<double>);
+    run_random_gate_apply<float, DefaultSpace, gate::RZ<float>>(5, make_RZ<float>);
+#ifdef __CUDACC__
+    run_random_gate_apply<double, CPUSpace, gate::RZ<double>>(5, make_RZ<double>);
+    run_random_gate_apply<float, CPUSpace, gate::RZ<float>>(5, make_RZ<float>);
+#endif
 }
 
 TEST(GateTest, ApplyIBMQ) {
@@ -717,8 +797,8 @@ TEST(GateTest, ApplyProbablisticGate) {
 }
 
 template <std::floating_point Fp>
-void test_gate(Gate<Fp> gate_control,
-               Gate<Fp> gate_simple,
+void test_gate(Gate<Fp, Sp> gate_control,
+               Gate<Fp, Sp> gate_simple,
                std::uint64_t n_qubits,
                std::uint64_t control_mask) {
     StateVector<Fp> state = StateVector<Fp>::Haar_random_state(n_qubits);
@@ -743,6 +823,7 @@ void test_gate(Gate<Fp> gate_control,
 }
 
 template <std::floating_point Fp,
+          ExecutionSpace Sp,
           std::uint64_t num_target,
           std::uint64_t num_rotation,
           typename Factory>
@@ -763,46 +844,49 @@ void test_standard_gate_control(Factory factory, std::uint64_t n) {
     std::vector<Fp> angles(num_rotation);
     for (Fp& angle : angles) angle = random.uniform() * std::numbers::pi * 2;
     if constexpr (num_target == 0 && num_rotation == 1) {
-        Gate<Fp> g1 = factory(angles[0], controls);
-        Gate<Fp> g2 = factory(angles[0], {});
+        Gate<Fp, Sp> g1 = factory(angles[0], controls);
+        Gate<Fp, Sp> g2 = factory(angles[0], {});
         test_gate(g1, g2, n, control_mask);
     } else if constexpr (num_target == 1 && num_rotation == 0) {
-        Gate<Fp> g1 = factory(targets[0], controls);
-        Gate<Fp> g2 =
+        Gate<Fp, Sp> g1 = factory(targets[0], controls);
+        Gate<Fp, Sp> g2 =
             factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)), {});
         test_gate(g1, g2, n, control_mask);
     } else if constexpr (num_target == 1 && num_rotation == 1) {
-        Gate<Fp> g1 = factory(targets[0], angles[0], controls);
-        Gate<Fp> g2 = factory(
+        Gate<Fp, Sp> g1 = factory(targets[0], angles[0], controls);
+        Gate<Fp, Sp> g2 = factory(
             targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)), angles[0], {});
         test_gate(g1, g2, n, control_mask);
     } else if constexpr (num_target == 1 && num_rotation == 2) {
-        Gate<Fp> g1 = factory(targets[0], angles[0], angles[1], controls);
-        Gate<Fp> g2 = factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
-                              angles[0],
-                              angles[1],
-                              {});
+        Gate<Fp, Sp> g1 = factory(targets[0], angles[0], angles[1], controls);
+        Gate<Fp, Sp> g2 =
+            factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
+                    angles[0],
+                    angles[1],
+                    {});
         test_gate(g1, g2, n, control_mask);
     } else if constexpr (num_target == 1 && num_rotation == 3) {
-        Gate<Fp> g1 = factory(targets[0], angles[0], angles[1], angles[2], controls);
-        Gate<Fp> g2 = factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
-                              angles[0],
-                              angles[1],
-                              angles[2],
-                              {});
+        Gate<Fp, Sp> g1 = factory(targets[0], angles[0], angles[1], angles[2], controls);
+        Gate<Fp, Sp> g2 =
+            factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
+                    angles[0],
+                    angles[1],
+                    angles[2],
+                    {});
         test_gate(g1, g2, n, control_mask);
     } else if constexpr (num_target == 2 && num_rotation == 0) {
-        Gate<Fp> g1 = factory(targets[0], targets[1], controls);
-        Gate<Fp> g2 = factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
-                              targets[1] - std::popcount(control_mask & ((1ULL << targets[1]) - 1)),
-                              {});
+        Gate<Fp, Sp> g1 = factory(targets[0], targets[1], controls);
+        Gate<Fp, Sp> g2 =
+            factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
+                    targets[1] - std::popcount(control_mask & ((1ULL << targets[1]) - 1)),
+                    {});
         test_gate(g1, g2, n, control_mask);
     } else {
         FAIL();
     }
 }
 
-template <std::floating_point Fp, bool rotation>
+template <std::floating_point Fp, ExecutionSpace Sp, bool rotation>
 void test_pauli_control(std::uint64_t n) {
     typename PauliOperator<Fp>::Data data1, data2;
     std::vector<std::uint64_t> controls;
@@ -821,18 +905,18 @@ void test_pauli_control(std::uint64_t n) {
         }
     }
     if constexpr (!rotation) {
-        Gate<Fp> g1 = gate::Pauli(PauliOperator<Fp>(data1), controls);
-        Gate<Fp> g2 = gate::Pauli(PauliOperator<Fp>(data2), {});
+        Gate<Fp, Sp> g1 = gate::Pauli(PauliOperator<Fp>(data1), controls);
+        Gate<Fp, Sp> g2 = gate::Pauli(PauliOperator<Fp>(data2), {});
         test_gate(g1, g2, n, control_mask);
     } else {
         Fp angle = random.uniform() * std::numbers::pi * 2;
-        Gate<Fp> g1 = gate::PauliRotation(PauliOperator<Fp>(data1), angle, controls);
-        Gate<Fp> g2 = gate::PauliRotation(PauliOperator<Fp>(data2), angle, {});
+        Gate<Fp, Sp> g1 = gate::PauliRotation(PauliOperator<Fp>(data1), angle, controls);
+        Gate<Fp, Sp> g2 = gate::PauliRotation(PauliOperator<Fp>(data2), angle, {});
         test_gate(g1, g2, n, control_mask);
     }
 }
 
-template <std::floating_point Fp, std::uint64_t num_target>
+template <std::floating_point Fp, ExecutionSpace Sp, std::uint64_t num_target>
 void test_matrix_control(std::uint64_t n_qubits) {
     Random random;
     std::vector<std::uint64_t> shuffled = random.permutation(n_qubits);
@@ -862,10 +946,10 @@ void test_matrix_control(std::uint64_t n_qubits) {
         auto norm = std::sqrt(std::norm(val));
         ComplexMatrix<Fp> mat(1, 1);
         mat(0, 0) = val / norm;
-        Gate<Fp> d1 = gate::DenseMatrix<Fp>(targets, mat, controls);
-        Gate<Fp> d2 = gate::DenseMatrix<Fp>(new_targets, mat, {});
-        Gate<Fp> s1 = gate::SparseMatrix<Fp>(targets, mat.sparseView(), controls);
-        Gate<Fp> s2 = gate::SparseMatrix<Fp>(new_targets, mat.sparseView(), {});
+        Gate<Fp, Sp> d1 = gate::DenseMatrix<Fp>(targets, mat, controls);
+        Gate<Fp, Sp> d2 = gate::DenseMatrix<Fp>(new_targets, mat, {});
+        Gate<Fp, Sp> s1 = gate::SparseMatrix<Fp>(targets, mat.sparseView(), controls);
+        Gate<Fp, Sp> s2 = gate::SparseMatrix<Fp>(new_targets, mat.sparseView(), {});
         test_gate<Fp>(d1, d2, n_qubits, control_mask);
         test_gate<Fp>(s1, s2, n_qubits, control_mask);
     } else if constexpr (num_target == 1) {
@@ -877,10 +961,10 @@ void test_matrix_control(std::uint64_t n_qubits) {
                 mat(i, j) = U(i, j);
             }
         }
-        Gate<Fp> d1 = gate::DenseMatrix<Fp>(targets, mat, controls);
-        Gate<Fp> d2 = gate::DenseMatrix<Fp>(new_targets, mat, {});
-        Gate<Fp> s1 = gate::SparseMatrix<Fp>(targets, mat.sparseView(), controls);
-        Gate<Fp> s2 = gate::SparseMatrix<Fp>(new_targets, mat.sparseView(), {});
+        Gate<Fp, Sp> d1 = gate::DenseMatrix<Fp>(targets, mat, controls);
+        Gate<Fp, Sp> d2 = gate::DenseMatrix<Fp>(new_targets, mat, {});
+        Gate<Fp, Sp> s1 = gate::SparseMatrix<Fp>(targets, mat.sparseView(), controls);
+        Gate<Fp, Sp> s2 = gate::SparseMatrix<Fp>(new_targets, mat.sparseView(), {});
         test_gate(d1, d2, n_qubits, control_mask);
         test_gate(s1, s2, n_qubits, control_mask);
     } else if constexpr (num_target == 2) {
@@ -895,10 +979,10 @@ void test_matrix_control(std::uint64_t n_qubits) {
                 mat(i, j) = U(i, j);
             }
         }
-        Gate<Fp> d1 = gate::DenseMatrix<Fp>(targets, mat, controls);
-        Gate<Fp> d2 = gate::DenseMatrix<Fp>(new_targets, mat, {});
-        Gate<Fp> s1 = gate::SparseMatrix<Fp>(targets, mat.sparseView(), controls);
-        Gate<Fp> s2 = gate::SparseMatrix<Fp>(new_targets, mat.sparseView(), {});
+        Gate<Fp, Sp> d1 = gate::DenseMatrix<Fp>(targets, mat, controls);
+        Gate<Fp, Sp> d2 = gate::DenseMatrix<Fp>(new_targets, mat, {});
+        Gate<Fp, Sp> s1 = gate::SparseMatrix<Fp>(targets, mat.sparseView(), controls);
+        Gate<Fp, Sp> s2 = gate::SparseMatrix<Fp>(new_targets, mat.sparseView(), {});
         test_gate<Fp>(d1, d2, n_qubits, control_mask);
         test_gate<Fp>(s1, s2, n_qubits, control_mask);
     } else {
@@ -915,10 +999,10 @@ void test_matrix_control(std::uint64_t n_qubits) {
                 mat(i, j) = U(i, j);
             }
         }
-        Gate<Fp> d1 = gate::DenseMatrix<Fp>(targets, mat, controls);
-        Gate<Fp> d2 = gate::DenseMatrix<Fp>(new_targets, mat, {});
-        Gate<Fp> s1 = gate::SparseMatrix<Fp>(targets, mat.sparseView(), controls);
-        Gate<Fp> s2 = gate::SparseMatrix<Fp>(new_targets, mat.sparseView(), {});
+        Gate<Fp, Sp> d1 = gate::DenseMatrix<Fp>(targets, mat, controls);
+        Gate<Fp, Sp> d2 = gate::DenseMatrix<Fp>(new_targets, mat, {});
+        Gate<Fp, Sp> s1 = gate::SparseMatrix<Fp>(targets, mat.sparseView(), controls);
+        Gate<Fp, Sp> s2 = gate::SparseMatrix<Fp>(new_targets, mat.sparseView(), {});
         test_gate<Fp>(d1, d2, n_qubits, control_mask);
         test_gate<Fp>(s1, s2, n_qubits, control_mask);
     }

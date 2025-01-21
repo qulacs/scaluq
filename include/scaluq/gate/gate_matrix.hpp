@@ -42,7 +42,7 @@ public:
 
 template <std::floating_point Fp, ExecutionSpace Sp>
 class SparseMatrixGateImpl : public GateBase<Fp, Sp> {
-    SparseMatrix<Fp> _matrix;
+    SparseMatrix<Fp, Sp> _matrix;
     std::uint64_t num_nnz;
 
 public:

@@ -3,11 +3,11 @@
 #include "../util/template.hpp"
 
 namespace scaluq::internal {
-FLOAT(Fp)
-ParamProbablisticGateImpl<Fp>::ParamProbablisticGateImpl(
+FLOAT_AND_SPACE(Fp, Sp)
+ParamProbablisticGateImpl<Fp, Sp>::ParamProbablisticGateImpl(
     const std::vector<Fp>& distribution,
-    const std::vector<std::variant<Gate<Fp>, ParamGate<Fp>>>& gate_list)
-    : ParamGateBase<Fp>(0, 0), _distribution(distribution), _gate_list(gate_list) {
+    const std::vector<std::variant<Gate<Fp, Sp>, ParamGate<Fp, Sp>>>& gate_list)
+    : ParamGateBase<Fp, Sp>(0, 0), _distribution(distribution), _gate_list(gate_list) {
     std::uint64_t n = distribution.size();
     if (n == 0) {
         throw std::runtime_error("At least one gate is required.");
@@ -22,8 +22,9 @@ ParamProbablisticGateImpl<Fp>::ParamProbablisticGateImpl(
         throw std::runtime_error("Sum of distribution must be equal to 1.");
     }
 }
-FLOAT(Fp)
-std::shared_ptr<const ParamGateBase<Fp>> ParamProbablisticGateImpl<Fp>::get_inverse() const {
+FLOAT_AND_SPACE(Fp, Sp)
+std::shared_ptr<const ParamGateBase<Fp, Sp>> ParamProbablisticGateImpl<Fp, Sp>::get_inverse()
+    const {
     std::vector<EitherGate> inv_gate_list;
     inv_gate_list.reserve(_gate_list.size());
     std::ranges::transform(
@@ -32,9 +33,9 @@ std::shared_ptr<const ParamGateBase<Fp>> ParamProbablisticGateImpl<Fp>::get_inve
         });
     return std::make_shared<const ParamProbablisticGateImpl>(_distribution, inv_gate_list);
 }
-FLOAT(Fp)
-void ParamProbablisticGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector,
-                                                         Fp param) const {
+FLOAT_AND_SPACE(Fp, Sp)
+void ParamProbablisticGateImpl<Fp, Sp>::update_quantum_state(StateVector<Fp, Sp>& state_vector,
+                                                             Fp param) const {
     Random random;
     Fp r = random.uniform();
     std::uint64_t i = std::distance(_cumulative_distribution.begin(),
@@ -48,9 +49,9 @@ void ParamProbablisticGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_
         std::get<1>(gate)->update_quantum_state(state_vector, param);
     }
 }
-FLOAT(Fp)
-void ParamProbablisticGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states,
-                                                         std::vector<Fp> params) const {
+FLOAT_AND_SPACE(Fp, Sp)
+void ParamProbablisticGateImpl<Fp, Sp>::update_quantum_state(StateVectorBatched<Fp, Sp>& states,
+                                                             std::vector<Fp> params) const {
     Random random;
     std::vector<double> r(states.batch_size());
     std::ranges::generate(r, [&random]() { return random.uniform(); });
@@ -66,7 +67,7 @@ void ParamProbablisticGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>&
     });
     for (std::size_t i = 0; i < states.batch_size(); ++i) {
         const auto& gate = _gate_list[indicies[i]];
-        auto state_vector = StateVector<Fp>(Kokkos::subview(states._raw, i, Kokkos::ALL));
+        auto state_vector = StateVector<Fp, Sp>(Kokkos::subview(states._raw, i, Kokkos::ALL));
         if (gate.index() == 0) {
             std::get<0>(gate)->update_quantum_state(state_vector);
         } else {
@@ -74,8 +75,8 @@ void ParamProbablisticGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>&
         }
     }
 }
-FLOAT(Fp)
-std::string ParamProbablisticGateImpl<Fp>::to_string(const std::string& indent) const {
+FLOAT_AND_SPACE(Fp, Sp)
+std::string ParamProbablisticGateImpl<Fp, Sp>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     const auto dist = distribution();
     ss << indent << "Gate Type: Probablistic\n";
@@ -90,5 +91,5 @@ std::string ParamProbablisticGateImpl<Fp>::to_string(const std::string& indent) 
     }
     return ss.str();
 }
-FLOAT_DECLARE_CLASS(ParamProbablisticGateImpl)
+FLOAT_AND_SPACE_DECLARE_CLASS(ParamProbablisticGateImpl)
 }  // namespace scaluq::internal

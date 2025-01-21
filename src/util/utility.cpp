@@ -90,8 +90,8 @@ ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp>& m
 CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
-ComplexMatrix<Fp> convert_coo_to_external_matrix(SparseMatrix<Fp> mat) {
+template <std::floating_point Fp, ExecutionSpace Sp>
+ComplexMatrix<Fp> convert_coo_to_external_matrix(const SparseMatrix<Fp, Sp>& mat) {
     ComplexMatrix<Fp> eigen_matrix = ComplexMatrix<Fp>::Zero(mat._row, mat._col);
     auto vec_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), mat._values);
     for (std::size_t i = 0; i < mat._values.extent(0); i++) {
@@ -99,8 +99,9 @@ ComplexMatrix<Fp> convert_coo_to_external_matrix(SparseMatrix<Fp> mat) {
     }
     return eigen_matrix;
 }
-#define FUNC_MACRO(Fp) template ComplexMatrix<Fp> convert_coo_to_external_matrix(SparseMatrix<Fp>);
-CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#define FUNC_MACRO(Fp, Sp) \
+    template ComplexMatrix<Fp> convert_coo_to_external_matrix(const SparseMatrix<Fp, Sp>&);
+CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
 }  // namespace internal

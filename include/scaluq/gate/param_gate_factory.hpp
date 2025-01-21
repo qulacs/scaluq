@@ -9,45 +9,45 @@ namespace internal {
 class ParamGateFactory {
 public:
     template <ParamGateImpl T, typename... Args>
-    static ParamGate<typename T::Fp> create_gate(Args... args) {
+    static ParamGate<typename T::Fp, typename T::Sp> create_gate(Args... args) {
         return {std::make_shared<const T>(args...)};
     }
 };
 }  // namespace internal
 namespace gate {
-template <std::floating_point Fp>
-inline ParamGate<Fp> ParamRX(std::uint64_t target,
-                             Fp param_coef = 1.,
-                             const std::vector<std::uint64_t>& controls = {}) {
-    return internal::ParamGateFactory::create_gate<internal::ParamRXGateImpl<Fp>>(
+template <std::floating_point Fp, ExecutionSpace Sp>
+inline ParamGate<Fp, Sp> ParamRX(std::uint64_t target,
+                                 Fp param_coef = 1.,
+                                 const std::vector<std::uint64_t>& controls = {}) {
+    return internal::ParamGateFactory::create_gate<internal::ParamRXGateImpl<Fp, Sp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), param_coef);
 }
-template <std::floating_point Fp>
-inline ParamGate<Fp> ParamRY(std::uint64_t target,
-                             Fp param_coef = 1.,
-                             const std::vector<std::uint64_t>& controls = {}) {
-    return internal::ParamGateFactory::create_gate<internal::ParamRYGateImpl<Fp>>(
+template <std::floating_point Fp, ExecutionSpace Sp>
+inline ParamGate<Fp, Sp> ParamRY(std::uint64_t target,
+                                 Fp param_coef = 1.,
+                                 const std::vector<std::uint64_t>& controls = {}) {
+    return internal::ParamGateFactory::create_gate<internal::ParamRYGateImpl<Fp, Sp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), param_coef);
 }
-template <std::floating_point Fp>
-inline ParamGate<Fp> ParamRZ(std::uint64_t target,
-                             Fp param_coef = 1.,
-                             const std::vector<std::uint64_t>& controls = {}) {
-    return internal::ParamGateFactory::create_gate<internal::ParamRZGateImpl<Fp>>(
+template <std::floating_point Fp, ExecutionSpace Sp>
+inline ParamGate<Fp, Sp> ParamRZ(std::uint64_t target,
+                                 Fp param_coef = 1.,
+                                 const std::vector<std::uint64_t>& controls = {}) {
+    return internal::ParamGateFactory::create_gate<internal::ParamRZGateImpl<Fp, Sp>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls), param_coef);
 }
-template <std::floating_point Fp>
-inline ParamGate<Fp> ParamPauliRotation(const PauliOperator<Fp>& pauli,
-                                        Fp param_coef = 1.,
-                                        const std::vector<std::uint64_t>& controls = {}) {
-    return internal::ParamGateFactory::create_gate<internal::ParamPauliRotationGateImpl<Fp>>(
+template <std::floating_point Fp, ExecutionSpace Sp>
+inline ParamGate<Fp, Sp> ParamPauliRotation(const PauliOperator<Fp, Sp>& pauli,
+                                            Fp param_coef = 1.,
+                                            const std::vector<std::uint64_t>& controls = {}) {
+    return internal::ParamGateFactory::create_gate<internal::ParamPauliRotationGateImpl<Fp, Sp>>(
         internal::vector_to_mask(controls), pauli, param_coef);
 }
-template <std::floating_point Fp>
-inline ParamGate<Fp> ParamProbablistic(
+template <std::floating_point Fp, ExecutionSpace Sp>
+inline ParamGate<Fp, Sp> ParamProbablistic(
     const std::vector<Fp>& distribution,
-    const std::vector<std::variant<Gate<Fp>, ParamGate<Fp>>>& gate_list) {
-    return internal::ParamGateFactory::create_gate<internal::ParamProbablisticGateImpl<Fp>>(
+    const std::vector<std::variant<Gate<Fp, Sp>, ParamGate<Fp, Sp>>>& gate_list) {
+    return internal::ParamGateFactory::create_gate<internal::ParamProbablisticGateImpl<Fp, Sp>>(
         distribution, gate_list);
 }
 }  // namespace gate
