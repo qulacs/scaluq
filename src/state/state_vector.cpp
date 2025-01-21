@@ -172,8 +172,9 @@ double StateVector<Prec>::get_entropy() const {
 template <Precision Prec>
 void StateVector<Prec>::add_state_vector_with_coef(StdComplex coef, const StateVector& state) {
     Kokkos::parallel_for(
-        this->_dim,
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { this->_raw[i] += coef * state._raw[i]; });
+        this->_dim, KOKKOS_CLASS_LAMBDA(std::uint64_t i) {
+            this->_raw[i] += ComplexType(coef) * state._raw[i];
+        });
     Kokkos::fence();
 }
 template <Precision Prec>

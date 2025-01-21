@@ -20,9 +20,14 @@ public:
         : _real(static_cast<FloatType>(real)), _imag(static_cast<FloatType>(imag)) {}
     template <Precision Prec2>
     Complex(const Complex<Prec2>& other)
-        : _real(static_cast<FloatType>(other._real)), _imag(static_cast<FloatType>(other._imag)) {}
+        : _real(static_cast<FloatType>(other.real())),
+          _imag(static_cast<FloatType>(other.imag())) {}
     Complex(const std::complex<double>& c)
         : _real(static_cast<FloatType>(c.real())), _imag(static_cast<FloatType>(c.imag())) {}
+
+    operator std::complex<double>() const {
+        return std::complex(static_cast<double>(_real), static_cast<double>(_imag));
+    }
 
     const FloatType& real() const { return _real; };
     FloatType& real() { return _real; };
@@ -61,10 +66,10 @@ public:
         return *this;
     }
     Complex operator*(const double& rhs) const { return Complex(*this) *= rhs; }
-    friend Complex operator*(const FloatType& lhs, const Complex& rhs) const {
+    friend Complex operator*(const FloatType& lhs, const Complex& rhs) {
         return Complex(lhs * rhs._real, lhs * rhs._imag);
     }
-    friend Complex operator*(const double& lhs, const Complex& rhs) const {
+    friend Complex operator*(const double& lhs, const Complex& rhs) {
         return Complex(static_cast<FloatType>(lhs) * rhs._real,
                        static_cast<FloatType>(lhs) * rhs._imag);
     }
