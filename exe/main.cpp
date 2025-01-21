@@ -9,10 +9,10 @@ int main() {
     scaluq::initialize();  // must be called before using any scaluq methods
 
     {
+        Kokkos::Timer tm;
         std::uint64_t n_qubits = 28;
         scaluq::StateVector<double, DefaultSpace> gpu_state(n_qubits);
 
-        Kokkos::Timer tm;
         for (int i = 0; i < 10; ++i) {
             auto xgate = scaluq::gate::X<double, DefaultSpace>(2);
             xgate->update_quantum_state(gpu_state);
@@ -20,10 +20,10 @@ int main() {
         std::cout << tm.seconds() << std::endl;
     }
     {
+        Kokkos::Timer tm;
         std::uint64_t n_qubits = 28;
         scaluq::StateVector<double, CPUSpace> cpu_state(n_qubits);
 
-        Kokkos::Timer tm;
         for (int i = 0; i < 10; ++i) {
             auto xgate = scaluq::gate::X<double, CPUSpace>(2);
             xgate->update_quantum_state(cpu_state);
@@ -31,10 +31,10 @@ int main() {
         std::cout << tm.seconds() << std::endl;
     }
     {
+        Kokkos::Timer tm;
         std::uint64_t n_qubits = 28;
         scaluq::StateVector<float, DefaultSpace> gpu_state(n_qubits);
 
-        Kokkos::Timer tm;
         for (int i = 0; i < 10; ++i) {
             auto xgate = scaluq::gate::X<float, DefaultSpace>(2);
             xgate->update_quantum_state(gpu_state);
@@ -42,10 +42,10 @@ int main() {
         std::cout << tm.seconds() << std::endl;
     }
     {
+        Kokkos::Timer tm;
         std::uint64_t n_qubits = 28;
         scaluq::StateVector<float, CPUSpace> cpu_state(n_qubits);
 
-        Kokkos::Timer tm;
         for (int i = 0; i < 10; ++i) {
             auto xgate = scaluq::gate::X<float, CPUSpace>(2);
             xgate->update_quantum_state(cpu_state);
@@ -54,10 +54,10 @@ int main() {
     }
 
     {
+        Kokkos::Timer tm;
         std::uint64_t n_qubits = 5;
         scaluq::StateVector<double, DefaultSpace> gpu_state(n_qubits);
 
-        Kokkos::Timer tm;
         for (int i = 0; i < 1000; ++i) {
             auto xgate = scaluq::gate::X<double, DefaultSpace>(2);
             xgate->update_quantum_state(gpu_state);
@@ -65,10 +65,10 @@ int main() {
         std::cout << tm.seconds() << std::endl;
     }
     {
+        Kokkos::Timer tm;
         std::uint64_t n_qubits = 5;
         scaluq::StateVector<double, CPUSpace> cpu_state(n_qubits);
 
-        Kokkos::Timer tm;
         for (int i = 0; i < 1000; ++i) {
             auto xgate = scaluq::gate::X<double, CPUSpace>(2);
             xgate->update_quantum_state(cpu_state);
@@ -76,10 +76,10 @@ int main() {
         std::cout << tm.seconds() << std::endl;
     }
     {
+        Kokkos::Timer tm;
         std::uint64_t n_qubits = 5;
         scaluq::StateVector<float, DefaultSpace> gpu_state(n_qubits);
 
-        Kokkos::Timer tm;
         for (int i = 0; i < 1000; ++i) {
             auto xgate = scaluq::gate::X<float, DefaultSpace>(2);
             xgate->update_quantum_state(gpu_state);

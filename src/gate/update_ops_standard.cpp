@@ -53,24 +53,13 @@ CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
 
 FLOAT_AND_SPACE(Fp, Sp)
 void x_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp, Sp>& state) {
-    if constexpr (std::is_same_v<Sp, CPUSpace>) {
-        Kokkos::parallel_for(Kokkos::RangePolicy<CPUSpace>(
-                                 0, state.dim() >> std::popcount(target_mask | control_mask)),
-                             [&](std::uint64_t it) {
-                                 std::uint64_t i =
-                                     insert_zero_at_mask_positions(it, control_mask | target_mask) |
-                                     control_mask;
-                                 std::swap(state._raw[i], state._raw[i | target_mask]);
-                             });
-    } else {
-        Kokkos::parallel_for(
-            state.dim() >> std::popcount(target_mask | control_mask),
-            KOKKOS_LAMBDA(std::uint64_t it) {
-                std::uint64_t i =
-                    insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
-                Kokkos::Experimental::swap(state._raw[i], state._raw[i | target_mask]);
-            });
-    }
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<Sp>(0, state.dim() >> std::popcount(target_mask | control_mask)),
+        KOKKOS_LAMBDA(std::uint64_t it) {
+            std::uint64_t i =
+                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
+            Kokkos::Experimental::swap(state._raw[i], state._raw[i | target_mask]);
+        });
     Kokkos::fence();
 }
 #define FUNC_MACRO(Fp, Sp) template void x_gate(std::uint64_t, std::uint64_t, StateVector<Fp, Sp>&);
@@ -82,7 +71,7 @@ void x_gate(std::uint64_t target_mask,
             std::uint64_t control_mask,
             StateVectorBatched<Fp, Sp>& states) {
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<Sp, Kokkos::Rank<2>>(
             {0, 0},
             {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
