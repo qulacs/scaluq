@@ -9,7 +9,8 @@ void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
                                      const DiagonalMatrix2x2<Fp>& diag,
                                      StateVector<Fp, Sp>& state) {
     Kokkos::parallel_for(
-        state.dim() >> std::popcount(target_mask | control_mask), KOKKOS_LAMBDA(std::uint64_t it) {
+        Kokkos::RangePolicy<Sp>(0, state.dim() >> std::popcount(target_mask | control_mask)),
+        KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis =
                 insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
             state._raw[basis] *= diag[0];
@@ -29,7 +30,7 @@ void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
                                      const DiagonalMatrix2x2<Fp>& diag,
                                      StateVectorBatched<Fp, Sp>& states) {
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<Sp, Kokkos::Rank<2>>(
             {0, 0},
             {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
@@ -56,7 +57,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     Kokkos::View<Complex<Fp>*, Sp> update(Kokkos::ViewAllocateWithoutInitializing("update"),
                                           state.dim());
     Kokkos::parallel_for(
-        state.dim(), KOKKOS_LAMBDA(std::uint64_t i) {
+        Kokkos::RangePolicy<Sp>(0, state.dim()), KOKKOS_LAMBDA(std::uint64_t i) {
             if ((i | control_mask) == i) {
                 update(i) = 0;
             } else {
@@ -69,17 +70,19 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     Kokkos::View<Complex<Fp>*, Sp, Kokkos::MemoryTraits<Kokkos::Atomic>> update_atomic(update);
     Kokkos::parallel_for(
         "COO_Update",
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<Sp, Kokkos::Rank<2>>(
             {0, 0},
-            {static_cast<std::int64_t>(state.dim() >> std::popcount(target_mask | control_mask)),
-             static_cast<std::int64_t>(values.size())}),
+            {(std::int64_t)(state.dim() >> std::popcount(target_mask | control_mask)),
+             (std::int64_t)values.size()}),
         KOKKOS_LAMBDA(std::uint64_t outer, std::uint64_t inner) {
             std::uint64_t basis =
                 internal::insert_zero_at_mask_positions(outer, target_mask | control_mask) |
                 control_mask;
             auto [v, r, c] = values(inner);
-            uint32_t src_index = internal::insert_zero_at_mask_positions(c, outer_mask) | basis;
-            uint32_t dst_index = internal::insert_zero_at_mask_positions(r, outer_mask) | basis;
+            std::uint32_t src_index =
+                internal::insert_zero_at_mask_positions(c, outer_mask) | basis;
+            std::uint32_t dst_index =
+                internal::insert_zero_at_mask_positions(r, outer_mask) | basis;
             update_atomic(dst_index) += v * state._raw(src_index);
         });
     Kokkos::fence();
@@ -98,7 +101,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         Kokkos::ViewAllocateWithoutInitializing("update"), states.batch_size(), states.dim());
 
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {states.batch_size(), states.dim()}),
+        Kokkos::MDRangePolicy<Sp, Kokkos::Rank<2>>({0, 0}, {states.batch_size(), states.dim()}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
             if ((i | control_mask) == i) {
                 update(batch_id, i) = 0;
@@ -112,11 +115,11 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         update_atomic(update);
     Kokkos::parallel_for(
         "COO_Update",
-        Kokkos::MDRangePolicy<Kokkos::Rank<3>>(
+        Kokkos::MDRangePolicy<Sp, Kokkos::Rank<3>>(
             {0, 0, 0},
-            {static_cast<long long int>(states.batch_size()),
-             static_cast<long long int>(states.dim() >> std::popcount(target_mask | control_mask)),
-             static_cast<long long int>(values.size())}),
+            {(std::int64_t)states.batch_size(),
+             (std::int64_t)(states.dim() >> std::popcount(target_mask | control_mask)),
+             (std::int64_t)values.size()}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t outer, std::uint64_t inner) {
             std::uint64_t basis =
                 internal::insert_zero_at_mask_positions(outer, target_mask | control_mask) |
