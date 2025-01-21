@@ -9,40 +9,39 @@ using CComplex = std::complex<double>;
 
 using namespace scaluq;
 
-TEST(StateVectorTest, HaarRandomStateNorm) {
-    {
-        const int n_tries = 6;
-        for (int n = 1; n <= n_tries; n++) {
-            const auto state = StateVector<double, DefaultSpace>::Haar_random_state(n);
-            ASSERT_NEAR(state.get_squared_norm(), 1., eps<double>);
-        }
+#define TEMPLATE(Fp, Sp) template <std::floating_point Fp, ExecutionSpace Sp>
+
+TEMPLATE(Fp, Sp)
+void TestHaarRandomStateNorm() {
+    const int n_tries = 6;
+    for (int n = 1; n <= n_tries; n++) {
+        const auto state = StateVector<Fp, Sp>::Haar_random_state(n);
+        ASSERT_NEAR(state.get_squared_norm(), 1.0, eps<Fp>);
     }
-    {
-        const int n_tries = 6;
-        for (int n = 1; n <= n_tries; n++) {
-            const auto state = StateVector<double, CPUSpace>::Haar_random_state(n);
-            ASSERT_NEAR(state.get_squared_norm(), 1., eps<float>);
-        }
+}
+
+TEST(StateVectorTest, HaarRandomStateNorm) {
+    TestHaarRandomStateNorm<double, DefaultSpace>();
+    TestHaarRandomStateNorm<double, CPUSpace>();
+    TestHaarRandomStateNorm<float, DefaultSpace>();
+    TestHaarRandomStateNorm<float, CPUSpace>();
+}
+
+TEMPLATE(Fp, Sp)
+void TestOperationAtIndex() {
+    auto state = StateVector<Fp, Sp>::Haar_random_state(6);
+    for (std::uint64_t i = 0; i < state.dim(); ++i) {
+        state.set_amplitude_at(i, 1);
+        ASSERT_NEAR(state.get_amplitude_at(i).real(), 1.0, eps<Fp>);
+        ASSERT_NEAR(state.get_amplitude_at(i).imag(), 0.0, eps<Fp>);
     }
 }
 
 TEST(StateVectorTest, OperationAtIndex) {
-    {
-        auto state = StateVector<double, DefaultSpace>::Haar_random_state(6);
-        for (std::uint64_t i = 0; i < state.dim(); ++i) {
-            state.set_amplitude_at(i, 1);
-            ASSERT_NEAR(state.get_amplitude_at(i).real(), 1., eps<double>);
-            ASSERT_NEAR(state.get_amplitude_at(i).imag(), 0., eps<double>);
-        }
-    }
-    {
-        auto state = StateVector<double, CPUSpace>::Haar_random_state(6);
-        for (std::uint64_t i = 0; i < state.dim(); ++i) {
-            state.set_amplitude_at(i, 1);
-            ASSERT_NEAR(state.get_amplitude_at(i).real(), 1., eps<double>);
-            ASSERT_NEAR(state.get_amplitude_at(i).imag(), 0., eps<double>);
-        }
-    }
+    TestOperationAtIndex<double, DefaultSpace>();
+    TestOperationAtIndex<double, CPUSpace>();
+    TestOperationAtIndex<float, DefaultSpace>();
+    TestOperationAtIndex<float, CPUSpace>();
 }
 
 TEST(StateVectorTest, CopyState) {
@@ -64,51 +63,97 @@ TEST(StateVectorTest, CopyState) {
     }
 }
 
-// TEST(StateVectorTest, ZeroNormState) {
-//     const std::uint64_t n = 5;
+TEST(StateVectorTest, ZeroNormState) {
+    {
+        const std::uint64_t n = 5;
+        auto state = StateVector<double, DefaultSpace>::Haar_random_state(n);
+        state.set_zero_norm_state();
+        auto state_cp = state.get_amplitudes();
 
-//     StateVector state(StateVector<double>::Haar_random_state(n));
-//     state.set_zero_norm_state();
-//     auto state_cp = state.get_amplitudes();
+        for (std::uint64_t i = 0; i < state.dim(); ++i) {
+            ASSERT_EQ((CComplex)state_cp[i], CComplex(0, 0));
+        }
+    }
+    {
+        const std::uint64_t n = 5;
+        auto state = StateVector<double, CPUSpace>::Haar_random_state(n);
+        state.set_zero_norm_state();
+        auto state_cp = state.get_amplitudes();
 
-//     for (std::uint64_t i = 0; i < state.dim(); ++i) {
-//         ASSERT_EQ((CComplex)state_cp[i], CComplex(0, 0));
-//     }
-// }
+        for (std::uint64_t i = 0; i < state.dim(); ++i) {
+            ASSERT_EQ((CComplex)state_cp[i], CComplex(0, 0));
+        }
+    }
+}
 
-// TEST(StateVectorTest, ComputationalBasisState) {
-//     const std::uint64_t n = 5;
+TEST(StateVectorTest, ComputationalBasisState) {
+    {
+        const std::uint64_t n = 5;
+        auto state = StateVector<double, DefaultSpace>::Haar_random_state(n);
+        state.set_computational_basis(31);
+        auto state_cp = state.get_amplitudes();
 
-//     StateVector state(StateVector<double>::Haar_random_state(n));
-//     state.set_computational_basis(31);
-//     auto state_cp = state.get_amplitudes();
+        for (std::uint64_t i = 0; i < state.dim(); ++i) {
+            if (i == 31) {
+                ASSERT_EQ((CComplex)state_cp[i], CComplex(1, 0));
+            } else {
+                ASSERT_EQ((CComplex)state_cp[i], CComplex(0, 0));
+            }
+        }
+    }
+    {
+        const std::uint64_t n = 5;
+        auto state = StateVector<double, CPUSpace>::Haar_random_state(n);
+        state.set_computational_basis(31);
+        auto state_cp = state.get_amplitudes();
 
-//     for (std::uint64_t i = 0; i < state.dim(); ++i) {
-//         if (i == 31) {
-//             ASSERT_EQ((CComplex)state_cp[i], CComplex(1, 0));
-//         } else {
-//             ASSERT_EQ((CComplex)state_cp[i], CComplex(0, 0));
-//         }
-//     }
-// }
+        for (std::uint64_t i = 0; i < state.dim(); ++i) {
+            if (i == 31) {
+                ASSERT_EQ((CComplex)state_cp[i], CComplex(1, 0));
+            } else {
+                ASSERT_EQ((CComplex)state_cp[i], CComplex(0, 0));
+            }
+        }
+    }
+}
 
-// TEST(StateVectorTest, HaarRandomStateSameSeed) {
-//     const std::uint64_t n = 6, m = 5;
-//     for (std::uint64_t i = 0; i < m; ++i) {
-//         StateVector state1(StateVector<double>::Haar_random_state(n, i)),
-//             state2(StateVector<double>::Haar_random_state(n, i));
-//         ASSERT_TRUE(same_state(state1, state2));
-//     }
-// }
+TEST(StateVectorTest, HaarRandomStateSameSeed) {
+    {
+        const std::uint64_t n = 6, m = 5;
+        for (std::uint64_t i = 0; i < m; ++i) {
+            auto state1 = StateVector<double, DefaultSpace>::Haar_random_state(n, i),
+                 state2 = StateVector<double, DefaultSpace>::Haar_random_state(n, i);
+            ASSERT_TRUE(same_state(state1, state2));
+        }
+    }
+    {
+        const std::uint64_t n = 6, m = 5;
+        for (std::uint64_t i = 0; i < m; ++i) {
+            auto state1 = StateVector<double, CPUSpace>::Haar_random_state(n, i),
+                 state2 = StateVector<double, CPUSpace>::Haar_random_state(n, i);
+            ASSERT_TRUE(same_state(state1, state2));
+        }
+    }
+}
 
-// TEST(StateVectorTest, HaarRandomStateWithoutSeed) {
-//     const std::uint64_t n = 6, m = 5;
-//     for (std::uint64_t i = 0; i < m; ++i) {
-//         StateVector state1(StateVector<double>::Haar_random_state(n)),
-//             state2(StateVector<double>::Haar_random_state(n));
-//         ASSERT_FALSE(same_state(state1, state2));
-//     }
-// }
+TEST(StateVectorTest, HaarRandomStateWithoutSeed) {
+    {
+        const std::uint64_t n = 6, m = 5;
+        for (std::uint64_t i = 0; i < m; ++i) {
+            auto state1 = StateVector<double, DefaultSpace>::Haar_random_state(n, 2 * i),
+                 state2 = StateVector<double, DefaultSpace>::Haar_random_state(n, 2 * i + 1);
+            ASSERT_FALSE(same_state(state1, state2));
+        }
+    }
+    {
+        const std::uint64_t n = 6, m = 5;
+        for (std::uint64_t i = 0; i < m; ++i) {
+            auto state1 = StateVector<double, CPUSpace>::Haar_random_state(n, 2 * i),
+                 state2 = StateVector<double, CPUSpace>::Haar_random_state(n, 2 * i + 1);
+            ASSERT_FALSE(same_state(state1, state2));
+        }
+    }
+}
 
 // TEST(StateVectorTest, AddState) {
 //     const std::uint64_t n = 6;
