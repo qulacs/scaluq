@@ -130,7 +130,8 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
              nb::overload_cast<const Circuit<Fp>&>(&Circuit<Fp>::add_circuit),
              "Add all gates in specified circuit. Given gates are copied.")
         .def("update_quantum_state",
-             &Circuit<Fp>::update_quantum_state,
+             static_cast<void (Circuit<Fp>::*)(StateVector<Fp>&, const std::map<std::string, Fp>&)
+                             const>(&Circuit<Fp>::update_quantum_state),
              "Apply gate to the StateVector. StateVector in args is directly updated. If the "
              "circuit contains parametric gate, you have to give real value of parameter as "
              "dict[str, float] in 2nd arg.")
@@ -146,13 +147,11 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "Apply gate to the StateVector. StateVector in args is directly updated. If the "
             "circuit contains parametric gate, you have to give real value of parameter as "
             "\"name=value\" format in kwargs.")
-        .def("update_quantum_state",
-             [](const Circuit<Fp>& circuit, StateVector<Fp>& state) {
-                 circuit.update_quantum_state(state);
-             })
         .def(
             "update_quantum_state",
-            &Circuit<Fp>::update_quantum_state,
+            static_cast<void (Circuit<Fp>::*)(StateVectorBatched<Fp>&,
+                                              const std::map<std::string, std::vector<Fp>>&) const>(
+                &Circuit<Fp>::update_quantum_state),
             "Apply gate to the StateVectorBatched. StateVectorBatched in args is directly updated. "
             "If the circuit contains parametric gate, you have to give real value of parameter as "
             "dict[str, list[float]] in 2nd arg.")
@@ -168,10 +167,6 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "Apply gate to the StateVectorBatched. StateVectorBatched in args is directly updated. "
             "If the circuit contains parametric gate, you have to give real value of parameter as "
             "\"name=[value1, value2, ...]\" format in kwargs.")
-        .def("update_quantum_state",
-             [](const Circuit<Fp>& circuit, StateVectorBatched<Fp>& states) {
-                 circuit.update_quantum_state(states);
-             })
         .def("copy", &Circuit<Fp>::copy, "Copy circuit. All the gates inside is copied.")
         .def("get_inverse",
              &Circuit<Fp>::get_inverse,
