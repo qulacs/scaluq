@@ -70,7 +70,7 @@ public:
         const std::vector<std::uint64_t>& measured_values) const;
     [[nodiscard]] double get_entropy() const;
 
-    void add_state_vector_with_coef(StdComplex coef, const StateVector& state);
+    void add_state_vector_with_coef(const StdComplex& coef, const StateVector& state);
     void multiply_coef(StdComplex coef);
 
     [[nodiscard]] std::vector<std::uint64_t> sampling(

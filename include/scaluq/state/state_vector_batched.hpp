@@ -10,14 +10,14 @@ class StateVectorBatched {
     std::uint64_t _batch_size;
     std::uint64_t _n_qubits;
     std::uint64_t _dim;
-    using FloatType = internal::Float;
+    using FloatType = internal::Float<Prec>;
     using ComplexType = internal::Complex<Prec>;
 
     // static_assert(std::is_same_v<Space, HostSpace> || std::is_same_v<Space, DefaultSpace>,
     //               "Unsupported execution space tag");
 
 public:
-    Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight> _raw;
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight> _raw;
     StateVectorBatched() = default;
     StateVectorBatched(std::uint64_t batch_size, std::uint64_t n_qubits);
     StateVectorBatched(const StateVectorBatched& other) = default;
@@ -56,7 +56,7 @@ public:
         bool set_same_state,
         std::uint64_t seed = std::random_device()());
 
-    [[nodiscard]] std::vector<std::vector<Complex<Prec>>> get_amplitudes() const;
+    [[nodiscard]] std::vector<std::vector<StdComplex>> get_amplitudes() const;
 
     [[nodiscard]] std::vector<double> get_squared_norm() const;
 
@@ -69,11 +69,11 @@ public:
 
     [[nodiscard]] std::vector<double> get_entropy() const;
 
-    void add_state_vector_with_coef(const Complex<Prec>& coef, const StateVectorBatched& states);
+    void add_state_vector_with_coef(const StdComplex& coef, const StateVectorBatched& states);
 
-    void multiply_coef(const Complex<Prec>& coef);
+    void multiply_coef(const StdComplex& coef);
 
-    void load(const std::vector<std::vector<Complex<Prec>>>& states);
+    void load(const std::vector<std::vector<StdComplex>>& states);
 
     [[nodiscard]] StateVectorBatched copy() const;
 
@@ -85,35 +85,27 @@ public:
     }
 
     friend void to_json(Json& j, const StateVectorBatched<Prec>& states) {
-        auto amplitudes = states.get_amplitudes();
-
         j = Json{{"n_qubits", states._n_qubits},
                  {"batch_size", states._batch_size},
-                 {"batched_amplitudes", Json::array()}};
-        for (std::uint32_t i = 0; i < amplitudes.size(); ++i) {
-            Json state = {{"amplitudes", Json::array()}};
-            for (const auto& amp : amplitudes[i]) {
-                state["amplitudes"].push_back({{"real", amp.real()}, {"imag", amp.imag()}});
-            }
-            j["batched_amplitudes"].push_back(state);
-        }
+                 {"amplitudes", states.get_amplitudes()}};
     }
     friend void from_json(const Json& j, StateVectorBatched<Prec>& states) {
-        std::uint32_t b = j.at("batch_size").get<std::uint32_t>();
-        std::uint32_t n = j.at("n_qubits").get<std::uint32_t>();
+        std::uint64_t b = j.at("batch_size").get<std::uint64_t>();
+        std::uint64_t n = j.at("n_qubits").get<std::uint64_t>();
         states = StateVectorBatched(b, n);
+        states.load(j.at("amplitudes").get<std::vector<std::vector<StdComplex>>>());
 
-        const auto& batched_amplitudes = j.at("batched_amplitudes");
-        std::vector res(b, std::vector<Complex<Prec>>(1ULL << n));
-        for (std::uint32_t i = 0; i < b; ++i) {
-            const auto& amplitudes = batched_amplitudes[i].at("amplitudes");
-            for (std::uint32_t j = 0; j < (1ULL << n); ++j) {
-                double real = amplitudes[j].at("real").get<double>();
-                double imag = amplitudes[j].at("imag").get<double>();
-                res[i][j] = ComplexType(real, imag);
-            }
-        }
-        states.load(res);
+        // const auto& batched_amplitudes = j.at("batched_amplitudes");
+        // std::vector res(b, std::vector<StdComplex>(1ULL << n));
+        // for (std::uint32_t i = 0; i < b; ++i) {
+        //     const auto& amplitudes = batched_amplitudes[i].at("amplitudes");
+        //     for (std::uint32_t j = 0; j < (1ULL << n); ++j) {
+        //         double real = amplitudes[j].at("real").get<double>();
+        //         double imag = amplitudes[j].at("imag").get<double>();
+        //         res[i][j] = ComplexType(real, imag);
+        //     }
+        // }
+        // states.load(res);
     }
 };
 
