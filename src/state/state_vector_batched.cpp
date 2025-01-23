@@ -342,7 +342,7 @@ std::vector<double> StateVectorBatched<Prec>::get_entropy() const {
 }
 
 template <Precision Prec>
-void StateVectorBatched<Prec>::add_state_vector_with_coef(const StdComplex& coef,
+void StateVectorBatched<Prec>::add_state_vector_with_coef(StdComplex coef,
                                                           const StateVectorBatched& states) {
     if (n_qubits() != states.n_qubits() || batch_size() != states.batch_size()) [[unlikely]] {
         throw std::runtime_error(

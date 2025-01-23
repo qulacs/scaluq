@@ -69,7 +69,7 @@ public:
 
     [[nodiscard]] std::vector<double> get_entropy() const;
 
-    void add_state_vector_with_coef(const StdComplex& coef, const StateVectorBatched& states);
+    void add_state_vector_with_coef(StdComplex coef, const StateVectorBatched& states);
 
     void multiply_coef(const StdComplex& coef);
 

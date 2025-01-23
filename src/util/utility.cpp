@@ -68,7 +68,10 @@ Matrix<Prec> convert_external_matrix_to_internal_matrix(const ComplexMatrix& eig
     Matrix<Prec> mat("internal_matrix", rows, cols);
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {rows, cols}),
-        KOKKOS_LAMBDA(std::uint64_t r, std::uint64_t c) { mat(r, c) = mat_f64(r, c); });
+        KOKKOS_LAMBDA(std::uint64_t r, std::uint64_t c) {
+            mat(r, c) = Complex<Prec>(static_cast<Float<Prec>>(mat_f64(r, c).real()),
+                                      static_cast<Float<Prec>>(mat_f64(r, c).imag()));
+        });
     return mat;
 }
 #define FUNC_MACRO(Prec) \
@@ -90,7 +93,11 @@ ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix<Prec>& mat
         Matrix<Precision::F64> matrix_f64("internal_matrix", rows, cols);
         Kokkos::parallel_for(
             Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {rows, cols}),
-            KOKKOS_LAMBDA(std::uint64_t r, std::uint64_t c) { matrix_f64(r, c) = matrix(r, c); });
+            KOKKOS_LAMBDA(std::uint64_t r, std::uint64_t c) {
+                matrix_f64(r, c) = Complex<Precision::F64>(
+                    static_cast<Float<Precision::F64>>(matrix(r, c).real()),
+                    static_cast<Float<Precision::F64>>(matrix(r, c).imag()));
+            });
         Kokkos::deep_copy(host_view, matrix_f64);
     }
     return eigen_matrix;

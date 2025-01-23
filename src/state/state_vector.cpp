@@ -162,7 +162,7 @@ double StateVector<Prec>::get_entropy() const {
         _dim,
         KOKKOS_CLASS_LAMBDA(std::uint64_t idx, FloatType & lsum) {
             FloatType prob = internal::squared_norm(_raw[idx]);
-            if (prob > 0.) {
+            if (prob > FloatType{0}) {
                 lsum += -prob * internal::log2(prob);
             }
         },
@@ -170,8 +170,7 @@ double StateVector<Prec>::get_entropy() const {
     return ent;
 }
 template <Precision Prec>
-void StateVector<Prec>::add_state_vector_with_coef(const StdComplex& coef,
-                                                   const StateVector& state) {
+void StateVector<Prec>::add_state_vector_with_coef(StdComplex coef, const StateVector& state) {
     Kokkos::parallel_for(
         this->_dim, KOKKOS_CLASS_LAMBDA(std::uint64_t i) {
             this->_raw[i] += ComplexType(coef) * state._raw[i];

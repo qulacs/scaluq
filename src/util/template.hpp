@@ -52,6 +52,20 @@
     SCALUQ_DECLARE_CLASS_FLOAT32(Class)           \
     SCALUQ_DECLARE_CLASS_FLOAT64(Class)           \
     SCALUQ_DECLARE_CLASS_BFLOAT16(Class)
+
+#ifdef SCALUQ_USE_CUDA
+// If CUDA, Float<Precision::F64> equals double, so double is skipped
+#define SCALUQ_CALL_MACRO_FOR_TYPES(MACRO)  \
+    SCALUQ_CALL_MACRO_TYPES_FLOAT16(MACRO)  \
+    SCALUQ_CALL_MACRO_TYPES_FLOAT32(MACRO)  \
+    SCALUQ_CALL_MACRO_TYPES_FLOAT64(MACRO)  \
+    SCALUQ_CALL_MACRO_TYPES_BFLOAT16(MACRO) \
+    MACRO(std::uint8_t)                     \
+    MACRO(std::uint16_t)                    \
+    MACRO(std::uint32_t)                    \
+    MACRO(std::uint64_t)                    \
+    MACRO(::scaluq::StdComplex)
+#else
 #define SCALUQ_CALL_MACRO_FOR_TYPES(MACRO)  \
     SCALUQ_CALL_MACRO_TYPES_FLOAT16(MACRO)  \
     SCALUQ_CALL_MACRO_TYPES_FLOAT32(MACRO)  \
@@ -63,3 +77,4 @@
     MACRO(std::uint64_t)                    \
     MACRO(double)                           \
     MACRO(::scaluq::StdComplex)
+#endif
