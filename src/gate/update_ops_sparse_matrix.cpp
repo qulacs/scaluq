@@ -2,15 +2,15 @@
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
-template <FloatingPoint Fp>
+template <Precision Prec>
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
-                        const SparseMatrix<Fp>& mat,
-                        StateVector<Fp>& state) {
+                        const SparseMatrix<Prec>& mat,
+                        StateVector<Prec>& state) {
     auto values = mat._values;
 
-    Kokkos::View<Complex<Fp>*> update(Kokkos::ViewAllocateWithoutInitializing("update"),
-                                      state.dim());
+    Kokkos::View<Complex<Prec>*> update(Kokkos::ViewAllocateWithoutInitializing("update"),
+                                        state.dim());
     Kokkos::parallel_for(
         state.dim(), KOKKOS_LAMBDA(std::uint64_t i) {
             if ((i | control_mask) == i) {
@@ -22,7 +22,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     Kokkos::fence();
 
     std::uint64_t outer_mask = ~target_mask & ((1ULL << state.n_qubits()) - 1);
-    Kokkos::View<Complex<Fp>*, Kokkos::MemoryTraits<Kokkos::Atomic>> update_atomic(update);
+    Kokkos::View<Complex<Prec>*, Kokkos::MemoryTraits<Kokkos::Atomic>> update_atomic(update);
     Kokkos::parallel_for(
         "COO_Update",
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
@@ -42,15 +42,15 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     state._raw = update;
 }
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
-                        const SparseMatrix<Fp>& mat,
-                        StateVectorBatched<Fp>& states) {
+                        const SparseMatrix<Prec>& mat,
+                        StateVectorBatched<Prec>& states) {
     auto values = mat._values;
     const std::uint64_t outer_mask = ~target_mask & ((1ULL << states.n_qubits()) - 1);
 
-    Kokkos::View<Complex<Fp>**, Kokkos::LayoutRight> update(
+    Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight> update(
         Kokkos::ViewAllocateWithoutInitializing("update"), states.batch_size(), states.dim());
 
     Kokkos::parallel_for(
@@ -64,7 +64,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 
-    Kokkos::View<Complex<Fp>**, Kokkos::LayoutRight, Kokkos::MemoryTraits<Kokkos::Atomic>>
+    Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight, Kokkos::MemoryTraits<Kokkos::Atomic>>
         update_atomic(update);
     Kokkos::parallel_for(
         "COO_Update",
@@ -86,15 +86,15 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     states._raw = update;
 }
 
-#define FUNC_MACRO(Fp)                \
+#define FUNC_MACRO(Prec)              \
     template void sparse_matrix_gate( \
-        std::uint64_t, std::uint64_t, const SparseMatrix<Fp>&, StateVector<Fp>&);
-CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+        std::uint64_t, std::uint64_t, const SparseMatrix<Prec>&, StateVector<Prec>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
 #undef FUNC_MACRO
 
-#define FUNC_MACRO(Fp)                \
+#define FUNC_MACRO(Prec)              \
     template void sparse_matrix_gate( \
-        std::uint64_t, std::uint64_t, const SparseMatrix<Fp>&, StateVectorBatched<Fp>&);
-CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+        std::uint64_t, std::uint64_t, const SparseMatrix<Prec>&, StateVectorBatched<Prec>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
 #undef FUNC_MACRO
 }  // namespace scaluq::internal

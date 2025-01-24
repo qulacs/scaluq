@@ -13,9 +13,9 @@ target_sources(scaluq PRIVATE
     #gate/param_gate_probablistic.cpp
     #gate/param_gate_standard.cpp
     #gate/param_gate.cpp
-    #gate/update_ops_dense_matrix.cpp
-    #gate/update_ops_sparse_matrix.cpp
-    #gate/update_ops_standard.cpp
+    gate/update_ops_dense_matrix.cpp
+    gate/update_ops_sparse_matrix.cpp
+    gate/update_ops_standard.cpp
     state/state_vector.cpp
     state/state_vector_batched.cpp
     operator/apply_pauli.cpp

@@ -8,412 +8,419 @@
 namespace scaluq {
 namespace internal {
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void none_target_dense_matrix_gate(std::uint64_t control_mask,
-                                   const Matrix<Fp>& matrix,
-                                   StateVector<Fp>& state);
-template <FloatingPoint Fp>
+                                   const Matrix<Prec>& matrix,
+                                   StateVector<Prec>& state);
+template <Precision Prec>
 void none_target_dense_matrix_gate(std::uint64_t control_mask,
-                                   const Matrix<Fp>& matrix,
-                                   StateVectorBatched<Fp>& states);
+                                   const Matrix<Prec>& matrix,
+                                   StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
-                                  const Matrix2x2<Fp>& matrix,
-                                  StateVector<Fp>& state);
-template <FloatingPoint Fp>
+                                  const Matrix2x2<Prec>& matrix,
+                                  StateVector<Prec>& state);
+template <Precision Prec>
 void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
-                                  const Matrix2x2<Fp>& matrix,
-                                  StateVectorBatched<Fp>& states);
+                                  const Matrix2x2<Prec>& matrix,
+                                  StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void two_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
-                                  const Matrix4x4<Fp>& matrix,
-                                  StateVector<Fp>& state);
-template <FloatingPoint Fp>
+                                  const Matrix4x4<Prec>& matrix,
+                                  StateVector<Prec>& state);
+template <Precision Prec>
 void two_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
-                                  const Matrix4x4<Fp>& matrix,
-                                  StateVectorBatched<Fp>& states);
+                                  const Matrix4x4<Prec>& matrix,
+                                  StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void single_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
-                                     const Matrix<Fp>& matrix,
-                                     StateVector<Fp>& state);
-template <FloatingPoint Fp>
+                                     const Matrix<Prec>& matrix,
+                                     StateVector<Prec>& state);
+template <Precision Prec>
 void single_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
-                                     const Matrix<Fp>& matrix,
-                                     StateVectorBatched<Fp>& states);
+                                     const Matrix<Prec>& matrix,
+                                     StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void double_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
-                                     const Matrix<Fp>& matrix,
-                                     StateVector<Fp>& state);
-template <FloatingPoint Fp>
+                                     const Matrix<Prec>& matrix,
+                                     StateVector<Prec>& state);
+template <Precision Prec>
 void double_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
-                                     const Matrix<Fp>& matrix,
-                                     StateVectorBatched<Fp>& states);
+                                     const Matrix<Prec>& matrix,
+                                     StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void multi_target_dense_matrix_gate(std::uint64_t target_mask,
                                     std::uint64_t control_mask,
-                                    const Matrix<Fp>& matrix,
-                                    StateVector<Fp>& state);
-template <FloatingPoint Fp>
+                                    const Matrix<Prec>& matrix,
+                                    StateVector<Prec>& state);
+template <Precision Prec>
 void multi_target_dense_matrix_gate(std::uint64_t target_mask,
                                     std::uint64_t control_mask,
-                                    const Matrix<Fp>& matrix,
-                                    StateVectorBatched<Fp>& states);
+                                    const Matrix<Prec>& matrix,
+                                    StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void dense_matrix_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
-                       const Matrix<Fp>& matrix,
-                       StateVector<Fp>& state);
-template <FloatingPoint Fp>
+                       const Matrix<Prec>& matrix,
+                       StateVector<Prec>& state);
+template <Precision Prec>
 void dense_matrix_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
-                       const Matrix<Fp>& matrix,
-                       StateVectorBatched<Fp>& states);
+                       const Matrix<Prec>& matrix,
+                       StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
-                        const SparseMatrix<Fp>& mat,
-                        StateVector<Fp>& state);
-template <FloatingPoint Fp>
+                        const SparseMatrix<Prec>& mat,
+                        StateVector<Prec>& state);
+template <Precision Prec>
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
-                        const SparseMatrix<Fp>& mat,
-                        StateVectorBatched<Fp>& states);
+                        const SparseMatrix<Prec>& mat,
+                        StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
-inline Matrix2x2<Fp> get_IBMQ_matrix(Fp _theta, Fp _phi, Fp _lambda);
+template <Precision Prec>
+inline Matrix2x2<Prec> get_IBMQ_matrix(Float<Prec> _theta, Float<Prec> _phi, Float<Prec> _lambda);
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
-                                     const DiagonalMatrix2x2<Fp>& diag,
-                                     StateVector<Fp>& state);
-template <FloatingPoint Fp>
+                                     const DiagonalMatrix2x2<Prec>& diag,
+                                     StateVector<Prec>& state);
+template <Precision Prec>
 void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
-                                     const DiagonalMatrix2x2<Fp>& diag,
-                                     StateVectorBatched<Fp>& states);
+                                     const DiagonalMatrix2x2<Prec>& diag,
+                                     StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
-inline void i_gate(std::uint64_t, std::uint64_t, StateVector<Fp>&) {}
-template <FloatingPoint Fp>
-inline void i_gate(std::uint64_t, std::uint64_t, StateVectorBatched<Fp>&) {}
+template <Precision Prec>
+inline void i_gate(std::uint64_t, std::uint64_t, StateVector<Prec>&) {}
+template <Precision Prec>
+inline void i_gate(std::uint64_t, std::uint64_t, StateVectorBatched<Prec>&) {}
 
-template <FloatingPoint Fp>
-void global_phase_gate(std::uint64_t, std::uint64_t control_mask, Fp angle, StateVector<Fp>& state);
-template <FloatingPoint Fp>
+template <Precision Prec>
 void global_phase_gate(std::uint64_t,
                        std::uint64_t control_mask,
-                       Fp angle,
-                       StateVectorBatched<Fp>& states);
+                       Float<Prec> angle,
+                       StateVector<Prec>& state);
+template <Precision Prec>
+void global_phase_gate(std::uint64_t,
+                       std::uint64_t control_mask,
+                       Float<Prec> angle,
+                       StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
-void x_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state);
-template <FloatingPoint Fp>
-void x_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVectorBatched<Fp>& states);
+template <Precision Prec>
+void x_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Prec>& state);
+template <Precision Prec>
+void x_gate(std::uint64_t target_mask,
+            std::uint64_t control_mask,
+            StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
-void y_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state);
-template <FloatingPoint Fp>
-void y_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVectorBatched<Fp>& states);
+template <Precision Prec>
+void y_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Prec>& state);
+template <Precision Prec>
+void y_gate(std::uint64_t target_mask,
+            std::uint64_t control_mask,
+            StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
-void z_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state);
-template <FloatingPoint Fp>
-void z_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVectorBatched<Fp>& states);
+template <Precision Prec>
+void z_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Prec>& state);
+template <Precision Prec>
+void z_gate(std::uint64_t target_mask,
+            std::uint64_t control_mask,
+            StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
-inline void h_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
-    one_target_dense_matrix_gate(target_mask, control_mask, HADAMARD_MATRIX<Fp>(), state);
-}
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void h_gate(std::uint64_t target_mask,
                    std::uint64_t control_mask,
-                   StateVectorBatched<Fp>& states) {
-    one_target_dense_matrix_gate(target_mask, control_mask, HADAMARD_MATRIX<Fp>(), states);
+                   StateVector<Prec>& state) {
+    one_target_dense_matrix_gate(target_mask, control_mask, HADAMARD_MATRIX<Prec>(), state);
+}
+template <Precision Prec>
+inline void h_gate(std::uint64_t target_mask,
+                   std::uint64_t control_mask,
+                   StateVectorBatched<Prec>& states) {
+    one_target_dense_matrix_gate(target_mask, control_mask, HADAMARD_MATRIX<Prec>(), states);
 }
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void one_target_phase_gate(std::uint64_t target_mask,
                            std::uint64_t control_mask,
-                           Complex<Fp> phase,
-                           StateVector<Fp>& state);
-template <FloatingPoint Fp>
+                           Complex<Prec> phase,
+                           StateVector<Prec>& state);
+template <Precision Prec>
 void one_target_phase_gate(std::uint64_t target_mask,
                            std::uint64_t control_mask,
-                           Complex<Fp> phase,
-                           StateVectorBatched<Fp>& states);
+                           Complex<Prec> phase,
+                           StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
-inline void s_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
-    one_target_phase_gate(target_mask, control_mask, Complex<Fp>(0, 1), state);
-}
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void s_gate(std::uint64_t target_mask,
                    std::uint64_t control_mask,
-                   StateVectorBatched<Fp>& states) {
-    one_target_phase_gate(target_mask, control_mask, Complex<Fp>(0, 1), states);
+                   StateVector<Prec>& state) {
+    one_target_phase_gate(target_mask, control_mask, Complex<Prec>(0, 1), state);
+}
+template <Precision Prec>
+inline void s_gate(std::uint64_t target_mask,
+                   std::uint64_t control_mask,
+                   StateVectorBatched<Prec>& states) {
+    one_target_phase_gate(target_mask, control_mask, Complex<Prec>(0, 1), states);
 }
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void sdag_gate(std::uint64_t target_mask,
                       std::uint64_t control_mask,
-                      StateVector<Fp>& state) {
-    one_target_phase_gate(target_mask, control_mask, Complex<Fp>(0, -1), state);
+                      StateVector<Prec>& state) {
+    one_target_phase_gate(target_mask, control_mask, Complex<Prec>(0, -1), state);
 }
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void sdag_gate(std::uint64_t target_mask,
                       std::uint64_t control_mask,
-                      StateVectorBatched<Fp>& states) {
-    one_target_phase_gate(target_mask, control_mask, Complex<Fp>(0, -1), states);
+                      StateVectorBatched<Prec>& states) {
+    one_target_phase_gate(target_mask, control_mask, Complex<Prec>(0, -1), states);
 }
 
-template <FloatingPoint Fp>
-inline void t_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
-    one_target_phase_gate(
-        target_mask,
-        control_mask,
-        Complex<Fp>(static_cast<Fp>(INVERSE_SQRT2()), static_cast<Fp>(INVERSE_SQRT2())),
-        state);
-}
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void t_gate(std::uint64_t target_mask,
                    std::uint64_t control_mask,
-                   StateVectorBatched<Fp>& states) {
+                   StateVector<Prec>& state) {
     one_target_phase_gate(
-        target_mask,
-        control_mask,
-        Complex<Fp>(static_cast<Fp>(INVERSE_SQRT2()), static_cast<Fp>(INVERSE_SQRT2())),
-        states);
+        target_mask, control_mask, Complex<Prec>(INVERSE_SQRT2(), INVERSE_SQRT2()), state);
+}
+template <Precision Prec>
+inline void t_gate(std::uint64_t target_mask,
+                   std::uint64_t control_mask,
+                   StateVectorBatched<Prec>& states) {
+    one_target_phase_gate(
+        target_mask, control_mask, Complex<Prec>(INVERSE_SQRT2(), INVERSE_SQRT2()), states);
 }
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void tdag_gate(std::uint64_t target_mask,
                       std::uint64_t control_mask,
-                      StateVector<Fp>& state) {
+                      StateVector<Prec>& state) {
     one_target_phase_gate(
-        target_mask,
-        control_mask,
-        Complex<Fp>(static_cast<Fp>(INVERSE_SQRT2()), -static_cast<Fp>(INVERSE_SQRT2())),
-        state);
+        target_mask, control_mask, Complex<Prec>(INVERSE_SQRT2(), -INVERSE_SQRT2()), state);
 }
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void tdag_gate(std::uint64_t target_mask,
                       std::uint64_t control_mask,
-                      StateVectorBatched<Fp>& states) {
+                      StateVectorBatched<Prec>& states) {
     one_target_phase_gate(
-        target_mask,
-        control_mask,
-        Complex<Fp>(static_cast<Fp>(INVERSE_SQRT2()), -static_cast<Fp>(INVERSE_SQRT2())),
-        states);
+        target_mask, control_mask, Complex<Prec>(INVERSE_SQRT2(), -INVERSE_SQRT2()), states);
 }
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void sqrtx_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
-                       StateVector<Fp>& state) {
-    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_X_GATE_MATRIX<Fp>(), state);
+                       StateVector<Prec>& state) {
+    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_X_GATE_MATRIX<Prec>(), state);
 }
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void sqrtx_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
-                       StateVectorBatched<Fp>& states) {
-    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_X_GATE_MATRIX<Fp>(), states);
+                       StateVectorBatched<Prec>& states) {
+    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_X_GATE_MATRIX<Prec>(), states);
 }
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void sqrtxdag_gate(std::uint64_t target_mask,
                           std::uint64_t control_mask,
-                          StateVector<Fp>& state) {
-    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_X_DAG_GATE_MATRIX<Fp>(), state);
+                          StateVector<Prec>& state) {
+    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_X_DAG_GATE_MATRIX<Prec>(), state);
 }
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void sqrtxdag_gate(std::uint64_t target_mask,
                           std::uint64_t control_mask,
-                          StateVectorBatched<Fp>& states) {
-    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_X_DAG_GATE_MATRIX<Fp>(), states);
+                          StateVectorBatched<Prec>& states) {
+    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_X_DAG_GATE_MATRIX<Prec>(), states);
 }
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void sqrty_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
-                       StateVector<Fp>& state) {
-    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_Y_GATE_MATRIX<Fp>(), state);
+                       StateVector<Prec>& state) {
+    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_Y_GATE_MATRIX<Prec>(), state);
 }
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void sqrty_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
-                       StateVectorBatched<Fp>& states) {
-    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_Y_GATE_MATRIX<Fp>(), states);
+                       StateVectorBatched<Prec>& states) {
+    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_Y_GATE_MATRIX<Prec>(), states);
 }
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void sqrtydag_gate(std::uint64_t target_mask,
                           std::uint64_t control_mask,
-                          StateVector<Fp>& state) {
-    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_Y_DAG_GATE_MATRIX<Fp>(), state);
+                          StateVector<Prec>& state) {
+    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_Y_DAG_GATE_MATRIX<Prec>(), state);
 }
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void sqrtydag_gate(std::uint64_t target_mask,
                           std::uint64_t control_mask,
-                          StateVectorBatched<Fp>& states) {
-    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_Y_DAG_GATE_MATRIX<Fp>(), states);
+                          StateVectorBatched<Prec>& states) {
+    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_Y_DAG_GATE_MATRIX<Prec>(), states);
 }
 
-template <FloatingPoint Fp>
-inline void p0_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
-    one_target_dense_matrix_gate(target_mask, control_mask, PROJ_0_MATRIX<Fp>(), state);
-}
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void p0_gate(std::uint64_t target_mask,
                     std::uint64_t control_mask,
-                    StateVectorBatched<Fp>& states) {
-    one_target_dense_matrix_gate(target_mask, control_mask, PROJ_0_MATRIX<Fp>(), states);
+                    StateVector<Prec>& state) {
+    one_target_dense_matrix_gate(target_mask, control_mask, PROJ_0_MATRIX<Prec>(), state);
+}
+template <Precision Prec>
+inline void p0_gate(std::uint64_t target_mask,
+                    std::uint64_t control_mask,
+                    StateVectorBatched<Prec>& states) {
+    one_target_dense_matrix_gate(target_mask, control_mask, PROJ_0_MATRIX<Prec>(), states);
 }
 
-template <FloatingPoint Fp>
-inline void p1_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state) {
-    one_target_dense_matrix_gate(target_mask, control_mask, PROJ_1_MATRIX<Fp>(), state);
-}
-template <FloatingPoint Fp>
+template <Precision Prec>
 inline void p1_gate(std::uint64_t target_mask,
                     std::uint64_t control_mask,
-                    StateVectorBatched<Fp>& states) {
-    one_target_dense_matrix_gate(target_mask, control_mask, PROJ_1_MATRIX<Fp>(), states);
+                    StateVector<Prec>& state) {
+    one_target_dense_matrix_gate(target_mask, control_mask, PROJ_1_MATRIX<Prec>(), state);
+}
+template <Precision Prec>
+inline void p1_gate(std::uint64_t target_mask,
+                    std::uint64_t control_mask,
+                    StateVectorBatched<Prec>& states) {
+    one_target_dense_matrix_gate(target_mask, control_mask, PROJ_1_MATRIX<Prec>(), states);
 }
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void rx_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
-             Fp angle,
-             StateVector<Fp>& state);
-template <FloatingPoint Fp>
+             Float<Prec> angle,
+             StateVector<Prec>& state);
+template <Precision Prec>
 void rx_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
-             Fp angle,
-             StateVectorBatched<Fp>& states);
-template <FloatingPoint Fp>
+             Float<Prec> angle,
+             StateVectorBatched<Prec>& states);
+template <Precision Prec>
 void rx_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
-             Fp pcoef,
-             std::vector<Fp> params,
-             StateVectorBatched<Fp>& states);
+             Float<Prec> pcoef,
+             std::vector<Float<Prec>> params,
+             StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void ry_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
-             Fp angle,
-             StateVector<Fp>& state);
-template <FloatingPoint Fp>
+             Float<Prec> angle,
+             StateVector<Prec>& state);
+template <Precision Prec>
 void ry_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
-             Fp angle,
-             StateVectorBatched<Fp>& states);
-template <FloatingPoint Fp>
+             Float<Prec> angle,
+             StateVectorBatched<Prec>& states);
+template <Precision Prec>
 void ry_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
-             Fp pcoef,
-             std::vector<Fp> params,
-             StateVectorBatched<Fp>& states);
+             Float<Prec> pcoef,
+             std::vector<Float<Prec>> params,
+             StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void rz_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
-             Fp angle,
-             StateVector<Fp>& state);
-template <FloatingPoint Fp>
+             Float<Prec> angle,
+             StateVector<Prec>& state);
+template <Precision Prec>
 void rz_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
-             Fp angle,
-             StateVectorBatched<Fp>& states);
-template <FloatingPoint Fp>
+             Float<Prec> angle,
+             StateVectorBatched<Prec>& states);
+template <Precision Prec>
 void rz_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
-             Fp pcoef,
-             std::vector<Fp> params,
-             StateVectorBatched<Fp>& states);
+             Float<Prec> pcoef,
+             std::vector<Float<Prec>> params,
+             StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void u1_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
-             Fp lambda,
-             StateVector<Fp>& state);
-template <FloatingPoint Fp>
+             Float<Prec> lambda,
+             StateVector<Prec>& state);
+template <Precision Prec>
 void u1_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
-             Fp lambda,
-             StateVectorBatched<Fp>& states);
+             Float<Prec> lambda,
+             StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void u2_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
-             Fp phi,
-             Fp lambda,
-             StateVector<Fp>& state);
-template <FloatingPoint Fp>
+             Float<Prec> phi,
+             Float<Prec> lambda,
+             StateVector<Prec>& state);
+template <Precision Prec>
 void u2_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
-             Fp phi,
-             Fp lambda,
-             StateVectorBatched<Fp>& states);
+             Float<Prec> phi,
+             Float<Prec> lambda,
+             StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void u3_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
-             Fp theta,
-             Fp phi,
-             Fp lambda,
-             StateVector<Fp>& state);
-template <FloatingPoint Fp>
+             Float<Prec> theta,
+             Float<Prec> phi,
+             Float<Prec> lambda,
+             StateVector<Prec>& state);
+template <Precision Prec>
 void u3_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
-             Fp theta,
-             Fp phi,
-             Fp lambda,
-             StateVectorBatched<Fp>& states);
+             Float<Prec> theta,
+             Float<Prec> phi,
+             Float<Prec> lambda,
+             StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
-void swap_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Fp>& state);
-template <FloatingPoint Fp>
+template <Precision Prec>
+void swap_gate(std::uint64_t target_mask, std::uint64_t control_mask, StateVector<Prec>& state);
+template <Precision Prec>
 void swap_gate(std::uint64_t target_mask,
                std::uint64_t control_mask,
-               StateVectorBatched<Fp>& states);
+               StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
-                        const SparseMatrix<Fp>& matrix,
-                        StateVector<Fp>& state);
-template <FloatingPoint Fp>
+                        const SparseMatrix<Prec>& matrix,
+                        StateVector<Prec>& state);
+template <Precision Prec>
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
-                        const SparseMatrix<Fp>& matrix,
-                        StateVectorBatched<Fp>& states);
+                        const SparseMatrix<Prec>& matrix,
+                        StateVectorBatched<Prec>& states);
 
-template <FloatingPoint Fp>
+template <Precision Prec>
 void dense_matrix_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
-                       const Matrix<Fp>& matrix,
-                       StateVector<Fp>& state);
-template <FloatingPoint Fp>
+                       const Matrix<Prec>& matrix,
+                       StateVector<Prec>& state);
+template <Precision Prec>
 void dense_matrix_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
-                       const Matrix<Fp>& matrix,
-                       StateVectorBatched<Fp>& states);
+                       const Matrix<Prec>& matrix,
+                       StateVectorBatched<Prec>& states);
 
 }  // namespace internal
 }  // namespace scaluq

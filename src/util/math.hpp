@@ -90,6 +90,7 @@ DEFINE_HYPERBOLIC(BF16)
 #endif
 
 namespace scaluq::internal {
+
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Complex<Prec> sin(const Complex<Prec>& x) {
     return Complex<Prec>(sin(x.real()) * cosh(x.imag()), cos(x.real()) * sinh(x.imag()));
@@ -99,6 +100,7 @@ template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Complex<Prec> cos(const Complex<Prec>& x) {
     return Complex<Prec>(cos(x.real()) * cosh(x.imag()), -sin(x.real()) * sinh(x.imag()));
 }
+
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Complex<Prec> exp(const Complex<Prec>& x) {
     return exp(x.real()) * Complex<Prec>(cos(x.imag()), sin(x.imag()));
