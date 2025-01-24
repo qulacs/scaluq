@@ -135,12 +135,24 @@ inline internal::ComplexMatrix<Fp> get_expanded_matrix(
 }
 
 // Host std::vector を Device Kokkos::View に変換する関数
-template <typename T>
-Kokkos::View<T*> convert_host_vector_to_device_view(const std::vector<T>& vec);
+template <typename T, ExecutionSpace Sp>
+Kokkos::View<T*, Sp> convert_vector_to_view(const std::vector<T>& vec) {
+    Kokkos::View<const T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
+        vec.data(), vec.size());
+    Kokkos::View<T*, Sp> device_view("device_view", vec.size());
+    Kokkos::deep_copy(device_view, host_view);
+    return device_view;
+}
 
 // Device Kokkos::View を Host std::vector に変換する関数
-template <typename T>
-std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device_view);
+template <typename T, ExecutionSpace Sp>
+std::vector<T> convert_view_to_vector(const Kokkos::View<T*, Sp>& device_view) {
+    std::vector<T> host_vector(device_view.extent(0));
+    Kokkos::View<T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
+        host_vector.data(), host_vector.size());
+    Kokkos::deep_copy(host_view, device_view);
+    return host_vector;
+}
 
 // Device Kokkos::View を Host std::vector に変換する関数
 template <typename T, typename Layout>

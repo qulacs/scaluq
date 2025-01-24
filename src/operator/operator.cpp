@@ -183,11 +183,9 @@ Complex<Fp> Operator<Fp, Sp>::get_transition_amplitude(
         _terms.begin(), _terms.end(), coefs_vector.begin(), [](const PauliOperator<Fp, Sp>& pauli) {
             return pauli._ptr->_coef;
         });
-    Kokkos::View<std::uint64_t*> bmasks =
-        internal::convert_host_vector_to_device_view(bmasks_vector);
-    Kokkos::View<std::uint64_t*> pmasks =
-        internal::convert_host_vector_to_device_view(pmasks_vector);
-    Kokkos::View<Complex<Fp>*> coefs = internal::convert_host_vector_to_device_view(coefs_vector);
+    auto bmasks = internal::convert_vector_to_view<std::uint64_t, Sp>(bmasks_vector);
+    auto pmasks = internal::convert_vector_to_view<std::uint64_t, Sp>(pmasks_vector);
+    auto coefs = internal::convert_vector_to_view<Complex<Fp>, Sp>(coefs_vector);
     std::uint64_t dim = state_vector_bra.dim();
     Complex<Fp> res;
     Kokkos::parallel_reduce(

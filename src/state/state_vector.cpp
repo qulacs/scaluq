@@ -65,7 +65,7 @@ void StateVector<Fp, Sp>::set_Haar_random_state(std::uint64_t n_qubits, std::uin
 FLOAT_AND_SPACE(Fp, Sp)
 [[nodiscard]] std::vector<Complex<Fp>> StateVector<Fp, Sp>::get_amplitudes() const {
     if constexpr (std::is_same_v<Sp, DefaultSpace>) {
-        return internal::convert_device_view_to_host_vector<ComplexType>(_raw);
+        return internal::convert_view_to_vector<ComplexType>(_raw);
     } else {
         return std::vector<Complex<Fp>>(_raw.data(), _raw.data() + _raw.size());
     }
@@ -132,8 +132,8 @@ Fp StateVector<Fp, Sp>::get_marginal_probability(
     }
 
     Fp sum = 0.;
-    auto d_target_index = internal::convert_host_vector_to_device_view(target_index);
-    auto d_target_value = internal::convert_host_vector_to_device_view(target_value);
+    auto d_target_index = internal::convert_vector_to_view<std::uint64_t, Sp>(target_index);
+    auto d_target_value = internal::convert_vector_to_view<std::uint64_t, Sp>(target_value);
 
     Kokkos::parallel_reduce(
         "marginal_prob",
@@ -169,24 +169,24 @@ Fp StateVector<Fp, Sp>::get_entropy() const {
 FLOAT_AND_SPACE(Fp, Sp)
 void StateVector<Fp, Sp>::add_state_vector_with_coef(ComplexType coef, const StateVector& state) {
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<Sp>(0, this->_dim >> 1),
+        Kokkos::RangePolicy<Sp>(0, this->_dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { this->_raw[i] += coef * state._raw[i]; });
     Kokkos::fence();
 }
 FLOAT_AND_SPACE(Fp, Sp)
 void StateVector<Fp, Sp>::multiply_coef(ComplexType coef) {
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<Sp>(0, this->_dim >> 1),
+        Kokkos::RangePolicy<Sp>(0, this->_dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { this->_raw[i] *= coef; });
     Kokkos::fence();
 }
 FLOAT_AND_SPACE(Fp, Sp)
 std::vector<std::uint64_t> StateVector<Fp, Sp>::sampling(std::uint64_t sampling_count,
                                                          std::uint64_t seed) const {
-    Kokkos::View<Fp*> stacked_prob("prob", _dim + 1);
+    Kokkos::View<Fp*, Sp> stacked_prob("prob", _dim + 1);
     Kokkos::parallel_scan(
         "compute_stacked_prob",
-        Kokkos::RangePolicy<Sp>(0, this->_dim >> 1),
+        Kokkos::RangePolicy<Sp>(0, this->_dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, Fp & update, const bool final) {
             update += internal::squared_norm(this->_raw[i]);
             if (final) {
@@ -194,8 +194,8 @@ std::vector<std::uint64_t> StateVector<Fp, Sp>::sampling(std::uint64_t sampling_
             }
         });
 
-    Kokkos::View<std::uint64_t*> result(Kokkos::ViewAllocateWithoutInitializing("result"),
-                                        sampling_count);
+    Kokkos::View<std::uint64_t*, Sp> result(Kokkos::ViewAllocateWithoutInitializing("result"),
+                                            sampling_count);
     Kokkos::Random_XorShift64_Pool<Sp> rand_pool(seed);
     Kokkos::parallel_for(
         Kokkos::RangePolicy<Sp>(0, sampling_count), KOKKOS_LAMBDA(std::uint64_t i) {
@@ -214,7 +214,7 @@ std::vector<std::uint64_t> StateVector<Fp, Sp>::sampling(std::uint64_t sampling_
             rand_pool.free_state(rand_gen);
         });
     Kokkos::fence();
-    return internal::convert_device_view_to_host_vector<std::uint64_t>(result);
+    return internal::convert_view_to_vector<std::uint64_t, Sp>(result);
 }
 FLOAT_AND_SPACE(Fp, Sp)
 void StateVector<Fp, Sp>::load(const std::vector<Complex<Fp>>& other) {
@@ -223,11 +223,7 @@ void StateVector<Fp, Sp>::load(const std::vector<Complex<Fp>>& other) {
             "Error: StateVector::load(const vector<ComplexType>&): invalid "
             "length of state");
     }
-    if constexpr (std::is_same_v<Sp, DefaultSpace>) {
-        _raw = internal::convert_host_vector_to_device_view(other);
-    } else {
-        std::copy(other.begin(), other.end(), _raw.data());
-    }
+    _raw = internal::convert_vector_to_view<Complex<Fp>, Sp>(other);
 }
 FLOAT_AND_SPACE(Fp, Sp)
 StateVector<Fp, Sp> StateVector<Fp, Sp>::copy() const {

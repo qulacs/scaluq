@@ -184,7 +184,7 @@ std::vector<Fp> StateVectorBatched<Fp, Sp>::get_squared_norm() const {
             Kokkos::single(Kokkos::PerTeam(team), [&] { norms[batch_id] = nrm; });
         });
     Kokkos::fence();
-    return internal::convert_device_view_to_host_vector<Fp>(norms);
+    return internal::convert_view_to_vector<Fp, Sp>(norms);
 }
 
 FLOAT_AND_SPACE(Fp, Sp)
@@ -234,7 +234,7 @@ std::vector<Fp> StateVectorBatched<Fp, Sp>::get_zero_probability(
             Kokkos::single(Kokkos::PerTeam(team), [&] { probs[batch_id] = sum; });
         });
     Kokkos::fence();
-    return internal::convert_device_view_to_host_vector<Fp>(probs);
+    return internal::convert_view_to_vector<Fp, Sp>(probs);
 }
 
 FLOAT_AND_SPACE(Fp, Sp)
@@ -262,8 +262,8 @@ std::vector<Fp> StateVectorBatched<Fp, Sp>::get_marginal_probability(
         }
     }
 
-    auto target_index_d = internal::convert_host_vector_to_device_view(target_index);
-    auto target_value_d = internal::convert_host_vector_to_device_view(target_value);
+    auto target_index_d = internal::convert_vector_to_view<std::uint64_t, Sp>(target_index);
+    auto target_value_d = internal::convert_vector_to_view<std::uint64_t, Sp>(target_value);
     Kokkos::View<Fp*> probs("probs", _batch_size);
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<Sp>(Sp(), _batch_size, Kokkos::AUTO),
@@ -286,7 +286,7 @@ std::vector<Fp> StateVectorBatched<Fp, Sp>::get_marginal_probability(
             Kokkos::single(Kokkos::PerTeam(team), [&] { probs[batch_id] = sum; });
         });
     Kokkos::fence();
-    return internal::convert_device_view_to_host_vector<Fp>(probs);
+    return internal::convert_view_to_vector<Fp, Sp>(probs);
 }
 
 FLOAT_AND_SPACE(Fp, Sp)
@@ -310,7 +310,7 @@ std::vector<Fp> StateVectorBatched<Fp, Sp>::get_entropy() const {
             Kokkos::single(Kokkos::PerTeam(team), [&] { ents[batch_id] = sum; });
         });
     Kokkos::fence();
-    return internal::convert_device_view_to_host_vector(ents);
+    return internal::convert_view_to_vector<Fp, Sp>(ents);
 }
 
 FLOAT_AND_SPACE(Fp, Sp)
