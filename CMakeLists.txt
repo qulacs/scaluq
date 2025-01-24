@@ -147,6 +147,7 @@ if(SCALUQ_USE_CUDA)
     target_compile_options(scaluq PUBLIC
         -Wno-unknown-pragmas
         --expt-relaxed-constexpr
+        -DEIGEN_NO_CUDA
     ) 
 endif()
 
