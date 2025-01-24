@@ -3,10 +3,10 @@
 #include "../util/template.hpp"
 
 namespace scaluq::internal {
-FLOAT(Fp)
-ProbablisticGateImpl<Fp>::ProbablisticGateImpl(const std::vector<double>& distribution,
-                                               const std::vector<Gate<Fp>>& gate_list)
-    : GateBase<Fp>(0, 0), _distribution(distribution), _gate_list(gate_list) {
+template <Precision Prec>
+ProbablisticGateImpl<Prec>::ProbablisticGateImpl(const std::vector<double>& distribution,
+                                                 const std::vector<Gate<Prec>>& gate_list)
+    : GateBase<Prec>(0, 0), _distribution(distribution), _gate_list(gate_list) {
     std::uint64_t n = distribution.size();
     if (n == 0) {
         throw std::runtime_error("At least one gate is required.");
@@ -21,17 +21,17 @@ ProbablisticGateImpl<Fp>::ProbablisticGateImpl(const std::vector<double>& distri
         throw std::runtime_error("Sum of distribution must be equal to 1.");
     }
 }
-FLOAT(Fp)
-std::shared_ptr<const GateBase<Fp>> ProbablisticGateImpl<Fp>::get_inverse() const {
-    std::vector<Gate<Fp>> inv_gate_list;
+template <Precision Prec>
+std::shared_ptr<const GateBase<Prec>> ProbablisticGateImpl<Prec>::get_inverse() const {
+    std::vector<Gate<Prec>> inv_gate_list;
     inv_gate_list.reserve(_gate_list.size());
-    std::ranges::transform(_gate_list, std::back_inserter(inv_gate_list), [](const Gate<Fp>& gate) {
-        return gate->get_inverse();
-    });
+    std::ranges::transform(_gate_list,
+                           std::back_inserter(inv_gate_list),
+                           [](const Gate<Prec>& gate) { return gate->get_inverse(); });
     return std::make_shared<const ProbablisticGateImpl>(_distribution, inv_gate_list);
 }
-FLOAT(Fp)
-void ProbablisticGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector) const {
+template <Precision Prec>
+void ProbablisticGateImpl<Prec>::update_quantum_state(StateVector<Prec>& state_vector) const {
     Random random;
     double r = random.uniform();
     std::uint64_t i = std::distance(_cumulative_distribution.begin(),
@@ -40,8 +40,8 @@ void ProbablisticGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vecto
     if (i >= _gate_list.size()) i = _gate_list.size() - 1;
     _gate_list[i]->update_quantum_state(state_vector);
 }
-FLOAT(Fp)
-void ProbablisticGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states) const {
+template <Precision Prec>
+void ProbablisticGateImpl<Prec>::update_quantum_state(StateVectorBatched<Prec>& states) const {
     std::vector<std::uint64_t> indices(states.batch_size());
     std::vector<double> r(states.batch_size());
 
@@ -52,7 +52,7 @@ void ProbablisticGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& stat
                                    std::ranges::upper_bound(_cumulative_distribution, r[i])) -
                      1;
         if (indices[i] >= _gate_list.size()) indices[i] = _gate_list.size() - 1;
-        auto state_vector = StateVector<Fp>(Kokkos::subview(states._raw, i, Kokkos::ALL));
+        auto state_vector = StateVector<Prec>(Kokkos::subview(states._raw, i, Kokkos::ALL));
         _gate_list[indices[i]]->update_quantum_state(state_vector);
         Kokkos::parallel_for(
             "update_states", states.dim(), KOKKOS_CLASS_LAMBDA(const int j) {
@@ -60,8 +60,8 @@ void ProbablisticGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& stat
             });
     }
 }
-FLOAT(Fp)
-std::string ProbablisticGateImpl<Fp>::to_string(const std::string& indent) const {
+template <Precision Prec>
+std::string ProbablisticGateImpl<Prec>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     const auto dist = distribution();
     ss << indent << "Gate Type: Probablistic\n";
@@ -72,5 +72,5 @@ std::string ProbablisticGateImpl<Fp>::to_string(const std::string& indent) const
     }
     return ss.str();
 }
-FLOAT_DECLARE_CLASS(ProbablisticGateImpl)
+SCALUQ_DECLARE_CLASS_FOR_PRECISION(ProbablisticGateImpl)
 }  // namespace scaluq::internal

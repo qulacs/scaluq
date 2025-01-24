@@ -8,16 +8,16 @@
 namespace scaluq {
 namespace internal {
 
-template <FloatingPoint Fp>
-class ProbablisticGateImpl : public GateBase<Fp> {
+template <Precision Prec>
+class ProbablisticGateImpl : public GateBase<Prec> {
     std::vector<double> _distribution;
     std::vector<double> _cumulative_distribution;
-    std::vector<Gate<Fp>> _gate_list;
+    std::vector<Gate<Prec>> _gate_list;
 
 public:
     ProbablisticGateImpl(const std::vector<double>& distribution,
-                         const std::vector<Gate<Fp>>& gate_list);
-    const std::vector<Gate<Fp>>& gate_list() const { return _gate_list; }
+                         const std::vector<Gate<Prec>>& gate_list);
+    const std::vector<Gate<Prec>>& gate_list() const { return _gate_list; }
     const std::vector<double>& distribution() const { return _distribution; }
 
     std::vector<std::uint64_t> target_qubit_list() const override {
@@ -51,15 +51,15 @@ public:
             "ProbablisticGateImpl.");
     }
 
-    std::shared_ptr<const GateBase<Fp>> get_inverse() const override;
-    internal::ComplexMatrix<Fp> get_matrix() const override {
+    std::shared_ptr<const GateBase<Prec>> get_inverse() const override;
+    internal::ComplexMatrix get_matrix() const override {
         throw std::runtime_error(
             "ProbablisticGateImpl::get_matrix(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
 
-    void update_quantum_state(StateVector<Fp>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
+    void update_quantum_state(StateVector<Prec>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -71,8 +71,8 @@ public:
 };
 }  // namespace internal
 
-template <FloatingPoint Fp>
-using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl<Fp>>;
+template <Precision Prec>
+using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl<Prec>>;
 
 namespace internal {
 
@@ -102,19 +102,19 @@ DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(BF16)
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <FloatingPoint Fp>
+template <Precision Prec>
 void bind_gate_gate_probablistic(nb::module_& m) {
     DEF_GATE(ProbablisticGate,
-             Fp,
+             Prec,
              "Specific class of probablistic gate. The gate to apply is picked from a cirtain "
              "distribution.")
         .def(
             "gate_list",
-            [](const ProbablisticGate<Fp>& gate) { return gate->gate_list(); },
+            [](const ProbablisticGate<Prec>& gate) { return gate->gate_list(); },
             nb::rv_policy::reference)
         .def(
             "distribution",
-            [](const ProbablisticGate<Fp>& gate) { return gate->distribution(); },
+            [](const ProbablisticGate<Prec>& gate) { return gate->distribution(); },
             nb::rv_policy::reference);
 }
 }  // namespace internal

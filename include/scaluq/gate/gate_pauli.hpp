@@ -9,25 +9,25 @@
 namespace scaluq {
 namespace internal {
 
-template <FloatingPoint Fp>
-class PauliGateImpl : public GateBase<Fp> {
-    const PauliOperator<Fp> _pauli;
+template <Precision Prec>
+class PauliGateImpl : public GateBase<Prec> {
+    const PauliOperator<Prec> _pauli;
 
 public:
-    PauliGateImpl(std::uint64_t control_mask, const PauliOperator<Fp>& pauli)
-        : GateBase<Fp>(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
+    PauliGateImpl(std::uint64_t control_mask, const PauliOperator<Prec>& pauli)
+        : GateBase<Prec>(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
           _pauli(pauli) {}
 
-    PauliOperator<Fp> pauli() const { return _pauli; };
+    PauliOperator<Prec> pauli() const { return _pauli; };
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
 
-    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
-    internal::ComplexMatrix<Fp> get_matrix() const override { return this->_pauli.get_matrix(); }
+    internal::ComplexMatrix get_matrix() const override { return this->_pauli.get_matrix(); }
 
-    void update_quantum_state(StateVector<Fp>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
+    void update_quantum_state(StateVector<Prec>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -37,30 +37,32 @@ public:
     }
 };
 
-template <FloatingPoint Fp>
-class PauliRotationGateImpl : public GateBase<Fp> {
-    const PauliOperator<Fp> _pauli;
-    const Fp _angle;
+template <Precision Prec>
+class PauliRotationGateImpl : public GateBase<Prec> {
+    const PauliOperator<Prec> _pauli;
+    const Float<Prec> _angle;
 
 public:
-    PauliRotationGateImpl(std::uint64_t control_mask, const PauliOperator<Fp>& pauli, Fp angle)
-        : GateBase<Fp>(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
+    PauliRotationGateImpl(std::uint64_t control_mask,
+                          const PauliOperator<Prec>& pauli,
+                          Float<Prec> angle)
+        : GateBase<Prec>(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
           _pauli(pauli),
           _angle(angle) {}
 
-    PauliOperator<Fp> pauli() const { return _pauli; }
+    PauliOperator<Prec> pauli() const { return _pauli; }
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
-    Fp angle() const { return _angle; }
+    double angle() const { return _angle; }
 
-    std::shared_ptr<const GateBase<Fp>> get_inverse() const override {
-        return std::make_shared<const PauliRotationGateImpl<Fp>>(
+    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
+        return std::make_shared<const PauliRotationGateImpl<Prec>>(
             this->_control_mask, _pauli, -_angle);
     }
 
-    internal::ComplexMatrix<Fp> get_matrix() const override;
+    internal::ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Fp>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
+    void update_quantum_state(StateVector<Prec>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -73,10 +75,10 @@ public:
 };
 }  // namespace internal
 
-template <FloatingPoint Fp>
-using PauliGate = internal::GatePtr<internal::PauliGateImpl<Fp>>;
-template <FloatingPoint Fp>
-using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl<Fp>>;
+template <Precision Prec>
+using PauliGate = internal::GatePtr<internal::PauliGateImpl<Prec>>;
+template <Precision Prec>
+using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl<Prec>>;
 
 namespace internal {
 #define DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(Type)                                      \
@@ -113,15 +115,15 @@ DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(BF16)
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <FloatingPoint Fp>
+template <Precision Prec>
 void bind_gate_gate_pauli_hpp(nb::module_& m) {
     DEF_GATE(PauliGate,
-             Fp,
+             Prec,
              "Specific class of multi-qubit pauli gate, which applies single-qubit Pauli "
              "gate to "
              "each of qubit.");
     DEF_GATE(PauliRotationGate,
-             Fp,
+             Prec,
              "Specific class of multi-qubit pauli-rotation gate, represented as "
              "$e^{-i\\frac{\\mathrm{angle}}{2}P}$.");
 }
