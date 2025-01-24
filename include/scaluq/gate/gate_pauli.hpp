@@ -94,7 +94,7 @@ namespace internal {
         auto pauli = j.at("pauli").get<PauliOperator<Prec>>();                               \
         auto angle = j.at("angle").get<double>();                                            \
         return std::make_shared<const PauliRotationGateImpl<Prec>>(                          \
-            vector_to_mask(controls), pauli, angle);                                         \
+            vector_to_mask(controls), pauli, static_cast<Float<Prec>>(angle));               \
     }
 
 #ifdef SCALUQ_FLOAT16

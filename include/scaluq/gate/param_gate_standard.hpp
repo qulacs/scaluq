@@ -93,14 +93,15 @@ using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl<Prec>>;
 
 namespace internal {
 
-#define DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION(Impl, Prec)        \
-    template <>                                                             \
-    inline std::shared_ptr<const Impl<Prec>> get_from_json(const Json& j) { \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();    \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();  \
-        auto param_coef = j.at("param_coef").get<double>();                 \
-        return std::make_shared<const Impl<Prec>>(                          \
-            vector_to_mask(targets), vector_to_mask(controls), param_coef); \
+#define DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION(Impl, Prec)                     \
+    template <>                                                                          \
+    inline std::shared_ptr<const Impl<Prec>> get_from_json(const Json& j) {              \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                 \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();               \
+        auto param_coef = j.at("param_coef").get<double>();                              \
+        return std::make_shared<const Impl<Prec>>(vector_to_mask(targets),               \
+                                                  vector_to_mask(controls),              \
+                                                  static_cast<Float<Prec>>(param_coef)); \
     }
 
 #define DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION(Prec)         \

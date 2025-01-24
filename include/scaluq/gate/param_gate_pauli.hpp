@@ -53,7 +53,7 @@ namespace internal {
         auto pauli = j.at("pauli").get<PauliOperator<Prec>>();                                    \
         auto param_coef = j.at("param_coef").get<double>();                                       \
         return std::make_shared<const ParamPauliRotationGateImpl<Prec>>(                          \
-            vector_to_mask(controls), pauli, param_coef);                                         \
+            vector_to_mask(controls), pauli, static_cast<Float<Prec>>(param_coef));               \
     }
 
 #ifdef SCALUQ_FLOAT16
