@@ -170,10 +170,10 @@ constexpr GateType get_gate_type() {
 
 namespace internal {
 // GateBase テンプレートクラス
-template <Precision Prec>
-class GateBase : public std::enable_shared_from_this<GateBase<Prec>> {
+template <Precision _Prec>
+class GateBase : public std::enable_shared_from_this<GateBase<_Prec>> {
 public:
-    constexpr static Precision Prec = Prec;
+    constexpr static Precision Prec = _Prec;
     using FloatType = Float<Prec>;
     using ComplexType = Complex<Prec>;
 
@@ -205,7 +205,7 @@ public:
     }
 
     [[nodiscard]] virtual std::shared_ptr<const GateBase<Prec>> get_inverse() const = 0;
-    [[nodiscard]] virtual internal::ComplexMatrix get_matrix() const = 0;
+    [[nodiscard]] virtual ComplexMatrix get_matrix() const = 0;
 
     virtual void update_quantum_state(StateVector<Prec>& state_vector) const = 0;
     virtual void update_quantum_state(StateVectorBatched<Prec>& states) const = 0;
@@ -232,7 +232,7 @@ private:
     GateType _gate_type;
 
 public:
-    constexpr Precision Prec = T::Prec;
+    constexpr static Precision Prec = T::Prec;
     using FloatType = Float<Prec>;
     using ComplexType = Complex<Prec>;
     GatePtr() : _gate_ptr(nullptr), _gate_type(get_gate_type<T, Prec>()) {}
@@ -241,7 +241,7 @@ public:
         if constexpr (std::is_same_v<T, U>) {
             _gate_type = get_gate_type<T, Prec>();
             _gate_ptr = gate_ptr;
-        } else if constexpr (std::is_same_v<T, internal::GateBase<Prec>>) {
+        } else if constexpr (std::is_same_v<T, GateBase<Prec>>) {
             // upcast
             _gate_type = get_gate_type<U, Prec>();
             _gate_ptr = std::static_pointer_cast<const T>(gate_ptr);
@@ -258,7 +258,7 @@ public:
         if constexpr (std::is_same_v<T, U>) {
             _gate_type = gate._gate_type;
             _gate_ptr = gate._gate_ptr;
-        } else if constexpr (std::is_same_v<T, internal::GateBase<Prec>>) {
+        } else if constexpr (std::is_same_v<T, GateBase<Prec>>) {
             // upcast
             _gate_type = gate._gate_type;
             _gate_ptr = std::static_pointer_cast<const T>(gate._gate_ptr);

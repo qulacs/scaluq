@@ -24,7 +24,7 @@ public:
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
-    internal::ComplexMatrix get_matrix() const override { return this->_pauli.get_matrix(); }
+    ComplexMatrix get_matrix() const override { return this->_pauli.get_matrix(); }
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -59,7 +59,7 @@ public:
             this->_control_mask, _pauli, -_angle);
     }
 
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -81,35 +81,35 @@ template <Precision Prec>
 using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl<Prec>>;
 
 namespace internal {
-#define DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(Type)                                      \
+#define DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION(Prec)                                 \
     template <>                                                                              \
-    inline std::shared_ptr<const PauliGateImpl<Type>> get_from_json(const Json& j) {         \
+    inline std::shared_ptr<const PauliGateImpl<Prec>> get_from_json(const Json& j) {         \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();                   \
-        auto pauli = j.at("pauli").get<PauliOperator<Type>>();                               \
-        return std::make_shared<const PauliGateImpl<Type>>(vector_to_mask(controls), pauli); \
+        auto pauli = j.at("pauli").get<PauliOperator<Prec>>();                               \
+        return std::make_shared<const PauliGateImpl<Prec>>(vector_to_mask(controls), pauli); \
     }                                                                                        \
     template <>                                                                              \
-    inline std::shared_ptr<const PauliRotationGateImpl<Type>> get_from_json(const Json& j) { \
+    inline std::shared_ptr<const PauliRotationGateImpl<Prec>> get_from_json(const Json& j) { \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();                   \
-        auto pauli = j.at("pauli").get<PauliOperator<Type>>();                               \
-        auto angle = j.at("angle").get<Type>();                                              \
-        return std::make_shared<const PauliRotationGateImpl<Type>>(                          \
+        auto pauli = j.at("pauli").get<PauliOperator<Prec>>();                               \
+        auto angle = j.at("angle").get<double>();                                            \
+        return std::make_shared<const PauliRotationGateImpl<Prec>>(                          \
             vector_to_mask(controls), pauli, angle);                                         \
     }
 
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(F16)
+DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION(Precision::F16)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(F32)
+DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION(Precision::F32)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(F64)
+DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION(Precision::F64)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(BF16)
+DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION(Precision::BF16)
 #endif
-#undef DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE
+#undef DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION
 
 }  // namespace internal
 

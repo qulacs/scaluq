@@ -44,7 +44,7 @@ template <Precision Prec>
 std::string GlobalPhaseGateImpl<Prec>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: GlobalPhase\n";
-    ss << indent << "  Phase: " << _phase << "\n";
+    ss << indent << "  Phase: " << static_cast<double>(_phase) << "\n";
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
@@ -329,8 +329,7 @@ SCALUQ_DECLARE_CLASS_FOR_PRECISION(SqrtYGateImpl)
 template <Precision Prec>
 ComplexMatrix SqrtYdagGateImpl<Prec>::get_matrix() const {
     ComplexMatrix mat(2, 2);
-    mat << StdComplex(half, -half), StdComplex(half, -half), StdComplex(-half, half),
-        StdComplex(half, -half);
+    mat << StdComplex(.5, -.5), StdComplex(.5, -.5), StdComplex(-.5, .5), StdComplex(.5, -.5);
     return mat;
 }
 template <Precision Prec>
@@ -460,7 +459,7 @@ SCALUQ_DECLARE_CLASS_FOR_PRECISION(RYGateImpl)
 template <Precision Prec>
 ComplexMatrix RZGateImpl<Prec>::get_matrix() const {
     ComplexMatrix mat(2, 2);
-    double half_angle = static_cast<double>(this->_angle / 2);
+    double half_angle = static_cast<double>(this->_angle) / 2;
     mat << std::exp(StdComplex(0, -half_angle)), 0, 0, std::exp(StdComplex(0, half_angle));
     return mat;
 }

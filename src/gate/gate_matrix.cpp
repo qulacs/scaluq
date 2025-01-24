@@ -10,7 +10,7 @@ DenseMatrixGateImpl<Prec>::DenseMatrixGateImpl(std::uint64_t target_mask,
                                                const ComplexMatrix& mat,
                                                bool is_unitary)
     : GateBase<Prec>(target_mask, control_mask),
-      _matrix(convert_external_matrix_to_internal_matrix(mat)),
+      _matrix(convert_external_matrix_to_internal_matrix<Prec>(mat)),
       _is_unitary(is_unitary) {}
 template <Precision Prec>
 std::shared_ptr<const GateBase<Prec>> DenseMatrixGateImpl<Prec>::get_inverse() const {
@@ -59,7 +59,7 @@ SparseMatrixGateImpl<Prec>::SparseMatrixGateImpl(std::uint64_t target_mask,
                                                  std::uint64_t control_mask,
                                                  const SparseComplexMatrix& mat)
     : GateBase<Prec>(target_mask, control_mask),
-      _matrix(SparseMatrix(mat)),
+      _matrix(SparseMatrix<Prec>(mat)),
       num_nnz(mat.nonZeros()) {}
 template <Precision Prec>
 std::shared_ptr<const GateBase<Prec>> SparseMatrixGateImpl<Prec>::get_inverse() const {

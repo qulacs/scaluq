@@ -14,7 +14,7 @@ public:
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -33,12 +33,12 @@ public:
     GlobalPhaseGateImpl(std::uint64_t control_mask, Float<Prec> phase)
         : GateBase<Prec>(0, control_mask), _phase(phase){};
 
-    [[nodiscard]] Float<Prec> phase() const { return _phase; }
+    [[nodiscard]] double phase() const { return _phase; }
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const GlobalPhaseGateImpl<Prec>>(this->_control_mask, -_phase);
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -62,7 +62,7 @@ public:
     RotationGateBase(std::uint64_t target_mask, std::uint64_t control_mask, Float<Prec> angle)
         : GateBase<Prec>(target_mask, control_mask), _angle(angle) {}
 
-    Float<Prec> angle() const { return _angle; }
+    double angle() const { return _angle; }
 };
 
 template <Precision Prec>
@@ -73,7 +73,7 @@ public:
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -95,7 +95,7 @@ public:
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -117,7 +117,7 @@ public:
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -139,7 +139,7 @@ public:
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -178,7 +178,7 @@ public:
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const SdagGateImpl<Prec>>(this->_target_mask, this->_control_mask);
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -200,7 +200,7 @@ public:
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const SGateImpl<Prec>>(this->_target_mask, this->_control_mask);
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -222,7 +222,7 @@ public:
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const TdagGateImpl<Prec>>(this->_target_mask, this->_control_mask);
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -244,7 +244,7 @@ public:
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const TGateImpl<Prec>>(this->_target_mask, this->_control_mask);
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -268,7 +268,7 @@ public:
                                                               this->_control_mask);
     }
 
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -290,7 +290,7 @@ public:
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const SqrtXGateImpl<Prec>>(this->_target_mask, this->_control_mask);
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -314,7 +314,7 @@ public:
                                                               this->_control_mask);
     }
 
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -336,7 +336,7 @@ public:
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const SqrtYGateImpl<Prec>>(this->_target_mask, this->_control_mask);
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -358,7 +358,7 @@ public:
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         throw std::runtime_error("P0::get_inverse: Projection gate doesn't have inverse gate");
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -380,7 +380,7 @@ public:
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         throw std::runtime_error("P1::get_inverse: Projection gate doesn't have inverse gate");
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -403,7 +403,7 @@ public:
         return std::make_shared<const RXGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, -this->_angle);
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -427,7 +427,7 @@ public:
         return std::make_shared<const RYGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, -this->_angle);
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -451,7 +451,7 @@ public:
         return std::make_shared<const RZGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, -this->_angle);
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -480,7 +480,7 @@ public:
         return std::make_shared<const U1GateImpl<Prec>>(
             this->_target_mask, this->_control_mask, -_lambda);
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -515,7 +515,7 @@ public:
             -_lambda - static_cast<Float<Prec>>(Kokkos::numbers::pi),
             -_phi + static_cast<Float<Prec>>(Kokkos::numbers::pi));
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -551,7 +551,7 @@ public:
         return std::make_shared<const U3GateImpl<Prec>>(
             this->_target_mask, this->_control_mask, -_theta, -_lambda, -_phi);
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -576,7 +576,7 @@ public:
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
-    internal::ComplexMatrix get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
@@ -641,175 +641,175 @@ using SwapGate = internal::GatePtr<internal::SwapGateImpl<Prec>>;
 
 namespace internal {
 
-#define DECLARE_GET_FROM_JSON_IGATE_WITH_TYPE(Type)                            \
+#define DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION(Prec)                       \
     template <>                                                                \
-    inline std::shared_ptr<const IGateImpl<Type>> get_from_json(const Json&) { \
-        return std::make_shared<const IGateImpl<Type>>();                      \
+    inline std::shared_ptr<const IGateImpl<Prec>> get_from_json(const Json&) { \
+        return std::make_shared<const IGateImpl<Prec>>();                      \
     }
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_IGATE_WITH_TYPE(F16)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION(Precision::F16)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_IGATE_WITH_TYPE(F32)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION(Precision::F32)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_IGATE_WITH_TYPE(F64)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION(Precision::F64)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_IGATE_WITH_TYPE(BF16)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION(Precision::BF16)
 #endif
-#undef DECLARE_GET_FROM_JSON_IGATE_WITH_TYPE
+#undef DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION
 
-#define DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_TYPE(Type)                                      \
+#define DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION(Prec)                                 \
     template <>                                                                                    \
-    inline std::shared_ptr<const GlobalPhaseGateImpl<Type>> get_from_json(const Json& j) {         \
+    inline std::shared_ptr<const GlobalPhaseGateImpl<Prec>> get_from_json(const Json& j) {         \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();                         \
-        Type phase = j.at("phase").get<Type>();                                                    \
-        return std::make_shared<const GlobalPhaseGateImpl<Type>>(vector_to_mask(controls), phase); \
+        double phase = j.at("phase").get<double>();                                                \
+        return std::make_shared<const GlobalPhaseGateImpl<Prec>>(vector_to_mask(controls), phase); \
     }
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_TYPE(F16)
+DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION(Precision::F16)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_TYPE(F32)
+DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION(Precision::F32)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_TYPE(F64)
+DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION(Precision::F64)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_TYPE(BF16)
+DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION(Precision::BF16)
 #endif
-#undef DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_TYPE
+#undef DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION
 
-#define DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_TYPE(Impl, Type)         \
+#define DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(Impl, Prec)    \
     template <>                                                              \
-    inline std::shared_ptr<const Impl<Type>> get_from_json(const Json& j) {  \
+    inline std::shared_ptr<const Impl<Prec>> get_from_json(const Json& j) {  \
         auto targets = j.at("target").get<std::vector<std::uint64_t>>();     \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();   \
-        return std::make_shared<const Impl<Type>>(vector_to_mask(targets),   \
+        return std::make_shared<const Impl<Prec>>(vector_to_mask(targets),   \
                                                   vector_to_mask(controls)); \
     }
-#define DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_TYPE(Type)          \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_TYPE(XGateImpl, Type)        \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_TYPE(YGateImpl, Type)        \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_TYPE(ZGateImpl, Type)        \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_TYPE(HGateImpl, Type)        \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_TYPE(SGateImpl, Type)        \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_TYPE(SdagGateImpl, Type)     \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_TYPE(TGateImpl, Type)        \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_TYPE(TdagGateImpl, Type)     \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_TYPE(SqrtXGateImpl, Type)    \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_TYPE(SqrtXdagGateImpl, Type) \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_TYPE(SqrtYGateImpl, Type)    \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_TYPE(SqrtYdagGateImpl, Type) \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_TYPE(P0GateImpl, Type)       \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_TYPE(P1GateImpl, Type)
+#define DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION(Prec)          \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(XGateImpl, Prec)        \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(YGateImpl, Prec)        \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(ZGateImpl, Prec)        \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(HGateImpl, Prec)        \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(SGateImpl, Prec)        \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(SdagGateImpl, Prec)     \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(TGateImpl, Prec)        \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(TdagGateImpl, Prec)     \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(SqrtXGateImpl, Prec)    \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(SqrtXdagGateImpl, Prec) \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(SqrtYGateImpl, Prec)    \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(SqrtYdagGateImpl, Prec) \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(P0GateImpl, Prec)       \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(P1GateImpl, Prec)
 #ifdef SCALUQ_FLOAT16
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_TYPE(F16)
+DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION(Precision::F16)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_TYPE(F32)
+DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION(Precision::F32)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_TYPE(F64)
+DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION(Precision::F64)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_TYPE(BF16)
+DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION(Precision::BF16)
 #endif
-#undef DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_TYPE
-#undef DECLARE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_TYPE
+#undef DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION
+#undef DECLARE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION
 
-#define DECLARE_GET_FROM_JSON_RGATE_WITH_TYPE(Impl, Type)                   \
+#define DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION(Impl, Prec)              \
     template <>                                                             \
-    inline std::shared_ptr<const Impl<Type>> get_from_json(const Json& j) { \
+    inline std::shared_ptr<const Impl<Prec>> get_from_json(const Json& j) { \
         auto targets = j.at("target").get<std::vector<std::uint64_t>>();    \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();  \
-        Type angle = j.at("angle").get<Type>();                             \
-        return std::make_shared<const Impl<Type>>(                          \
+        double angle = j.at("angle").get<double>();                         \
+        return std::make_shared<const Impl<Prec>>(                          \
             vector_to_mask(targets), vector_to_mask(controls), angle);      \
     }
-#define DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_TYPE(Type)    \
-    DECLARE_GET_FROM_JSON_RGATE_WITH_TYPE(RXGateImpl, Type) \
-    DECLARE_GET_FROM_JSON_RGATE_WITH_TYPE(RYGateImpl, Type) \
-    DECLARE_GET_FROM_JSON_RGATE_WITH_TYPE(RZGateImpl, Type)
+#define DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION(Prec)    \
+    DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION(RXGateImpl, Prec) \
+    DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION(RYGateImpl, Prec) \
+    DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION(RZGateImpl, Prec)
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_TYPE(F16)
+DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION(Precision::F16)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_TYPE(F32)
+DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION(Precision::F32)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_TYPE(F64)
+DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION(Precision::F64)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_TYPE(BF16)
+DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION(Precision::BF16)
 #endif
 #undef DECLARE_GET_FROM_JSON_RGATE
-#undef DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_TYPE
+#undef DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION
 
-#define DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE(Type)                                 \
+#define DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION(Prec)                            \
     template <>                                                                     \
-    inline std::shared_ptr<const U1GateImpl<Type>> get_from_json(const Json& j) {   \
+    inline std::shared_ptr<const U1GateImpl<Prec>> get_from_json(const Json& j) {   \
         auto targets = j.at("target").get<std::vector<std::uint64_t>>();            \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();          \
-        Type theta = j.at("theta").get<Type>();                                     \
-        return std::make_shared<const U1GateImpl<Type>>(                            \
+        double theta = j.at("theta").get<double>();                                 \
+        return std::make_shared<const U1GateImpl<Prec>>(                            \
             vector_to_mask(targets), vector_to_mask(controls), theta);              \
     }                                                                               \
     template <>                                                                     \
-    inline std::shared_ptr<const U2GateImpl<Type>> get_from_json(const Json& j) {   \
+    inline std::shared_ptr<const U2GateImpl<Prec>> get_from_json(const Json& j) {   \
         auto targets = j.at("target").get<std::vector<std::uint64_t>>();            \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();          \
-        Type theta = j.at("theta").get<Type>();                                     \
-        Type phi = j.at("phi").get<Type>();                                         \
-        return std::make_shared<const U2GateImpl<Type>>(                            \
+        double theta = j.at("theta").get<double>();                                 \
+        double phi = j.at("phi").get<double>();                                     \
+        return std::make_shared<const U2GateImpl<Prec>>(                            \
             vector_to_mask(targets), vector_to_mask(controls), theta, phi);         \
     }                                                                               \
     template <>                                                                     \
-    inline std::shared_ptr<const U3GateImpl<Type>> get_from_json(const Json& j) {   \
+    inline std::shared_ptr<const U3GateImpl<Prec>> get_from_json(const Json& j) {   \
         auto targets = j.at("target").get<std::vector<std::uint64_t>>();            \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();          \
-        Type theta = j.at("theta").get<Type>();                                     \
-        Type phi = j.at("phi").get<Type>();                                         \
-        Type lambda = j.at("lambda").get<Type>();                                   \
-        return std::make_shared<const U3GateImpl<Type>>(                            \
+        double theta = j.at("theta").get<double>();                                 \
+        double phi = j.at("phi").get<double>();                                     \
+        double lambda = j.at("lambda").get<double>();                               \
+        return std::make_shared<const U3GateImpl<Prec>>(                            \
             vector_to_mask(targets), vector_to_mask(controls), theta, phi, lambda); \
     }
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE(F16)
+DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION(Precision::F16)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE(F32)
+DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION(Precision::F32)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE(F64)
+DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION(Precision::F64)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE(BF16)
+DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION(Precision::BF16)
 #endif
-#undef DECLARE_GET_FROM_JSON_UGATE_WITH_TYPE
+#undef DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION
 
-#define DECLARE_GET_FROM_JSON_SWAPGATE_WITH_TYPE(Type)                               \
+#define DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION(Prec)                          \
     template <>                                                                      \
-    inline std::shared_ptr<const SwapGateImpl<Type>> get_from_json(const Json& j) {  \
+    inline std::shared_ptr<const SwapGateImpl<Prec>> get_from_json(const Json& j) {  \
         auto targets = j.at("target").get<std::vector<std::uint64_t>>();             \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();           \
-        return std::make_shared<const SwapGateImpl<Type>>(vector_to_mask(targets),   \
+        return std::make_shared<const SwapGateImpl<Prec>>(vector_to_mask(targets),   \
                                                           vector_to_mask(controls)); \
     }
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_SWAPGATE_WITH_TYPE(F16)
+DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION(Precision::F16)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_SWAPGATE_WITH_TYPE(F32)
+DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION(Precision::F32)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_SWAPGATE_WITH_TYPE(F64)
+DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION(Precision::F64)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_SWAPGATE_WITH_TYPE(BF16)
+DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION(Precision::BF16)
 #endif
-#undef DECLARE_GET_FROM_JSON_SWAPGATE_WITH_TYPE
+#undef DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION
 
 }  // namespace internal
 

@@ -5,43 +5,44 @@
 #include "../util/template.hpp"
 
 namespace scaluq::internal {
-FLOAT(Fp)
-ComplexMatrix<Fp> ParamPauliRotationGateImpl<Fp>::get_matrix(Fp param) const {
-    Fp angle = this->_pcoef * param;
-    Complex<Fp> true_angle = angle * this->_pauli.coef();
-    Complex<Fp> half_angle = true_angle / Fp{2};
-    internal::ComplexMatrix<Fp> mat = this->_pauli.get_matrix_ignoring_coef();
-    StdComplex<Fp> imag_unit(0, 1);
-    mat = (StdComplex<Fp>)internal::cos(-half_angle) *
-              internal::ComplexMatrix<Fp>::Identity(mat.rows(), mat.cols()) +
-          imag_unit * (StdComplex<Fp>)internal::sin(-half_angle) * mat;
+template <Precision Prec>
+ComplexMatrix ParamPauliRotationGateImpl<Prec>::get_matrix(double param) const {
+    double angle = static_cast<double>(this->_pcoef) * param;
+    StdComplex true_angle = angle * this->_pauli.coef();
+    StdComplex half_angle = true_angle / 2.;
+    ComplexMatrix mat = this->_pauli.get_matrix_ignoring_coef();
+    StdComplex imag_unit(0, 1);
+    mat = std::cos(-half_angle) * ComplexMatrix::Identity(mat.rows(), mat.cols()) +
+          imag_unit * std::sin(-half_angle) * mat;
     return mat;
 }
-FLOAT(Fp)
-void ParamPauliRotationGateImpl<Fp>::update_quantum_state(StateVector<Fp>& state_vector,
-                                                          Fp param) const {
+template <Precision Prec>
+void ParamPauliRotationGateImpl<Prec>::update_quantum_state(StateVector<Prec>& state_vector,
+                                                            double param) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
     apply_pauli_rotation(this->_control_mask,
                          bit_flip_mask,
                          phase_flip_mask,
-                         _pauli.coef(),
-                         this->_pcoef * param,
+                         Complex<Prec>(_pauli.coef()),
+                         this->_pcoef * Float<Prec>{param},
                          state_vector);
 }
-FLOAT(Fp)
-void ParamPauliRotationGateImpl<Fp>::update_quantum_state(StateVectorBatched<Fp>& states,
-                                                          std::vector<Fp> params) const {
+template <Precision Prec>
+void ParamPauliRotationGateImpl<Prec>::update_quantum_state(StateVectorBatched<Prec>& states,
+                                                            std::vector<double> params) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
+    std::vector<Float<Prec>> params_prec(params.size());
+    std::ranges::transform(params, params_prec.begin(), [](double p) { return Float<Prec>{p}; });
     apply_pauli_rotation(this->_control_mask,
                          bit_flip_mask,
                          phase_flip_mask,
-                         _pauli.coef(),
+                         Complex<Prec>(_pauli.coef()),
                          this->_pcoef,
-                         params,
+                         params_prec,
                          states);
 }
-FLOAT(Fp)
-std::string ParamPauliRotationGateImpl<Fp>::to_string(const std::string& indent) const {
+template <Precision Prec>
+std::string ParamPauliRotationGateImpl<Prec>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     auto controls = this->control_qubit_list();
     ss << indent << "Gate Type: ParamPauliRotation\n";
@@ -52,5 +53,5 @@ std::string ParamPauliRotationGateImpl<Fp>::to_string(const std::string& indent)
     ss << indent << "  Pauli Operator: \"" << _pauli.get_pauli_string() << "\"";
     return ss.str();
 }
-FLOAT_DECLARE_CLASS(ParamPauliRotationGateImpl)
+SCALUQ_DECLARE_CLASS_FOR_PRECISION(ParamPauliRotationGateImpl)
 }  // namespace scaluq::internal

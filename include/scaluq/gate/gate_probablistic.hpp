@@ -52,7 +52,7 @@ public:
     }
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override;
-    internal::ComplexMatrix get_matrix() const override {
+    ComplexMatrix get_matrix() const override {
         throw std::runtime_error(
             "ProbablisticGateImpl::get_matrix(): This function must not be used in "
             "ProbablisticGateImpl.");
@@ -76,27 +76,27 @@ using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl<Prec>>
 
 namespace internal {
 
-#define DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(Type)                                      \
+#define DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION(Prec)                                 \
     template <>                                                                             \
-    inline std::shared_ptr<const ProbablisticGateImpl<Type>> get_from_json(const Json& j) { \
+    inline std::shared_ptr<const ProbablisticGateImpl<Prec>> get_from_json(const Json& j) { \
         auto distribution = j.at("distribution").get<std::vector<double>>();                \
-        auto gate_list = j.at("gate_list").get<std::vector<Gate<Type>>>();                  \
-        return std::make_shared<const ProbablisticGateImpl<Type>>(distribution, gate_list); \
+        auto gate_list = j.at("gate_list").get<std::vector<Gate<Prec>>>();                  \
+        return std::make_shared<const ProbablisticGateImpl<Prec>>(distribution, gate_list); \
     }
 
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(F16)
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION(Precision::F16)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(F32)
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION(Precision::F32)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(F64)
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION(Precision::F64)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(BF16)
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION(Precision::BF16)
 #endif
-#undef DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE
+#undef DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION
 
 }  // namespace internal
 
