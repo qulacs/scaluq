@@ -25,7 +25,7 @@ inline Gate<Prec> I() {
 template <Precision Prec>
 inline Gate<Prec> GlobalPhase(double phase, const std::vector<std::uint64_t>& control_qubits = {}) {
     return internal::GateFactory::create_gate<internal::GlobalPhaseGateImpl<Prec>>(
-        internal::vector_to_mask(control_qubits), Float<Prec>{phase});
+        internal::vector_to_mask(control_qubits), static_cast<internal::Float<Prec>>(phase));
 }
 template <Precision Prec>
 inline Gate<Prec> X(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
@@ -104,7 +104,7 @@ inline Gate<Prec> RX(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::RXGateImpl<Prec>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(controls),
-        internal::Float<Prec>{angle});
+        static_cast<internal::Float<Prec>>(angle));
 }
 template <Precision Prec>
 inline Gate<Prec> RY(std::uint64_t target,
@@ -113,7 +113,7 @@ inline Gate<Prec> RY(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::RYGateImpl<Prec>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(controls),
-        internal::Float<Prec>{angle});
+        static_cast<internal::Float<Prec>>(angle));
 }
 template <Precision Prec>
 inline Gate<Prec> RZ(std::uint64_t target,
@@ -122,7 +122,7 @@ inline Gate<Prec> RZ(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::RZGateImpl<Prec>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(controls),
-        internal::Float<Prec>{angle});
+        static_cast<internal::Float<Prec>>(angle));
 }
 template <Precision Prec>
 inline Gate<Prec> U1(std::uint64_t target,
@@ -131,7 +131,7 @@ inline Gate<Prec> U1(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::U1GateImpl<Prec>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(controls),
-        internal::Float<Prec>{lambda});
+        static_cast<internal::Float<Prec>>(lambda));
 }
 template <Precision Prec>
 inline Gate<Prec> U2(std::uint64_t target,
@@ -141,8 +141,8 @@ inline Gate<Prec> U2(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::U2GateImpl<Prec>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(controls),
-        internal::Float<Prec>{phi},
-        internal::Float<Prec>{lambda});
+        static_cast<internal::Float<Prec>>(phi),
+        static_cast<internal::Float<Prec>>(lambda));
 }
 template <Precision Prec>
 inline Gate<Prec> U3(std::uint64_t target,
@@ -153,9 +153,9 @@ inline Gate<Prec> U3(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::U3GateImpl<Prec>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(controls),
-        internal::Float<Prec>{theta},
-        internal::Float<Prec>{phi},
-        internal::Float<Prec>{lambda});
+        static_cast<internal::Float<Prec>>(theta),
+        static_cast<internal::Float<Prec>>(phi),
+        static_cast<internal::Float<Prec>>(lambda));
 }
 template <Precision Prec>
 inline Gate<Prec> CX(std::uint64_t control, std::uint64_t target) {
@@ -197,7 +197,7 @@ inline Gate<Prec> PauliRotation(const PauliOperator<Prec>& pauli,
                                 double angle,
                                 const std::vector<std::uint64_t>& controls = {}) {
     return internal::GateFactory::create_gate<internal::PauliRotationGateImpl<Prec>>(
-        internal::vector_to_mask(controls), pauli, internal::Float<Prec>{Pangle});
+        internal::vector_to_mask(controls), pauli, static_cast<internal::Float<Prec>>(angle));
 }
 template <Precision Prec>
 inline Gate<Prec> DenseMatrix(const std::vector<std::uint64_t>& targets,
@@ -236,7 +236,7 @@ inline Gate<Prec> SparseMatrix(const std::vector<std::uint64_t>& targets,
         return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl<Prec>>(
             internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix);
     }
-    internal::SparseComplexMatrix<Prec> matrix_transformed =
+    internal::SparseComplexMatrix matrix_transformed =
         internal::transform_sparse_matrix_by_order(matrix, targets);
     return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl<Prec>>(
         internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix_transformed);

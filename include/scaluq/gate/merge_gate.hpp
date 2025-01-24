@@ -3,15 +3,15 @@
 #include "gate.hpp"
 
 namespace scaluq {
-template <FloatingPoint Fp>
-inline std::pair<Gate<Fp>, Fp> merge_gate(const Gate<Fp>& gate1, const Gate<Fp>& gate2);
+template <Precision Prec>
+inline std::pair<Gate<Prec>, double> merge_gate(const Gate<Prec>& gate1, const Gate<Prec>& gate2);
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <FloatingPoint Fp>
+template <Precision Prec>
 void bind_gate_merge_gate_hpp(nb::module_& m) {
     m.def("merge_gate",
-          &merge_gate<Fp>,
+          &merge_gate<Prec>,
           "Merge two gates. return value is (merged gate, global phase).");
 }
 }  // namespace internal
