@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 target_sources(scaluq PRIVATE
-    #circuit/circuit.cpp
+    circuit/circuit.cpp
     gate/merge_gate.cpp
     gate/gate_matrix.cpp
     gate/gate_pauli.cpp

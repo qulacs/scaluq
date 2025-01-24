@@ -18,15 +18,18 @@ template <Precision Prec>
 void ParamRXGateImpl<Prec>::update_quantum_state(StateVector<Prec>& state_vector,
                                                  double param) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    rx_gate(
-        this->_target_mask, this->_control_mask, this->_pcoef * Float<Prec>{param}, state_vector);
+    rx_gate(this->_target_mask,
+            this->_control_mask,
+            this->_pcoef * static_cast<Float<Prec>>(param),
+            state_vector);
 }
 template <Precision Prec>
 void ParamRXGateImpl<Prec>::update_quantum_state(StateVectorBatched<Prec>& states,
                                                  std::vector<double> params) const {
     this->check_qubit_mask_within_bounds(states);
     std::vector<Float<Prec>> params_prec(params.size());
-    std::ranges::transform(params, params_prec.begin(), [](double p) { return Float<Prec>{p}; });
+    std::ranges::transform(
+        params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
     rx_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
 }
 template <Precision Prec>
@@ -50,15 +53,18 @@ template <Precision Prec>
 void ParamRYGateImpl<Prec>::update_quantum_state(StateVector<Prec>& state_vector,
                                                  double param) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    ry_gate(
-        this->_target_mask, this->_control_mask, this->_pcoef * Float<Prec>{param}, state_vector);
+    ry_gate(this->_target_mask,
+            this->_control_mask,
+            this->_pcoef * static_cast<Float<Prec>>(param),
+            state_vector);
 }
 template <Precision Prec>
 void ParamRYGateImpl<Prec>::update_quantum_state(StateVectorBatched<Prec>& states,
                                                  std::vector<double> params) const {
     this->check_qubit_mask_within_bounds(states);
     std::vector<Float<Prec>> params_prec(params.size());
-    std::ranges::transform(params, params_prec.begin(), [](double p) { return Float<Prec>{p}; });
+    std::ranges::transform(
+        params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
     ry_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
 }
 template <Precision Prec>
@@ -82,15 +88,18 @@ template <Precision Prec>
 void ParamRZGateImpl<Prec>::update_quantum_state(StateVector<Prec>& state_vector,
                                                  double param) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    rz_gate(
-        this->_target_mask, this->_control_mask, this->_pcoef * Float<Prec>{param}, state_vector);
+    rz_gate(this->_target_mask,
+            this->_control_mask,
+            this->_pcoef * static_cast<Float<Prec>>(param),
+            state_vector);
 }
 template <Precision Prec>
 void ParamRZGateImpl<Prec>::update_quantum_state(StateVectorBatched<Prec>& states,
                                                  std::vector<double> params) const {
     this->check_qubit_mask_within_bounds(states);
     std::vector<Float<Prec>> params_prec(params.size());
-    std::ranges::transform(params, params_prec.begin(), [](double p) { return Float<Prec>{p}; });
+    std::ranges::transform(
+        params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
     rz_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
 }
 template <Precision Prec>
