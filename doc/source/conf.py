@@ -40,6 +40,7 @@ autoapi_file_patterns = ["*.py"]
 autoapi_dirs = ["./stub/scaluq"]
 autoapi_add_toctree_entry = True
 autoapi_python_class_content = 'class'
+# autoapi_python_class_content = 'both'
 
 autoapi_options = [
     "members",
@@ -49,7 +50,7 @@ autoapi_options = [
     "imported-members",
 ]
 
-autodoc_typehints = 'none'
+autodoc_typehints = 'description'
 
 html_theme = "sphinx_rtd_theme"
 

@@ -110,17 +110,17 @@ public:
 namespace internal {
 template <std::floating_point Fp>
 void bind_operator_pauli_operator_hpp(nb::module_& m) {
-    auto pauli_enum = nb::enum_<typename PauliOperator<Fp>::PauliID>(m, "PauliID")
+    auto pauli_enum = nb::enum_<typename PauliOperator<Fp>::PauliID>(
+                          m, "PauliID", "Enumeration for Pauli operations.")
                           .value("PAULI_I", PauliOperator<Fp>::PAULI_I)
                           .value("PAULI_X", PauliOperator<Fp>::PAULI_X)
                           .value("PAULI_Y", PauliOperator<Fp>::PAULI_Y)
-                          .value("PAULI_Z", PauliOperator<Fp>::PAULI_Z)
-                          .export_values();
+                          .value("PAULI_Z", PauliOperator<Fp>::PAULI_Z);
 
-    m.attr("PAULI_I") = (int)PauliOperator<Fp>::PAULI_I;
-    m.attr("PAULI_X") = (int)PauliOperator<Fp>::PAULI_X;
-    m.attr("PAULI_Y") = (int)PauliOperator<Fp>::PAULI_Y;
-    m.attr("PAULI_Z") = (int)PauliOperator<Fp>::PAULI_Z;
+    // m.attr("PAULI_I") = (int)PauliOperator<Fp>::PAULI_I;
+    // m.attr("PAULI_X") = (int)PauliOperator<Fp>::PAULI_X;
+    // m.attr("PAULI_Y") = (int)PauliOperator<Fp>::PAULI_Y;
+    // m.attr("PAULI_Z") = (int)PauliOperator<Fp>::PAULI_Z;
 
     nb::class_<typename PauliOperator<Fp>::Data>(
         m, "PauliOperatorData", "Internal data structure for PauliOperator.")
