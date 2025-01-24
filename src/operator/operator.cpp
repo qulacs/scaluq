@@ -90,7 +90,7 @@ StdComplex Operator<Prec>::get_expectation_value(const StateVector<Prec>& state_
             terms_view(_terms.data(), nterms);
     Kokkos::View<std::uint64_t*, Kokkos::HostSpace> bmasks_host("bmasks_host", nterms);
     Kokkos::View<std::uint64_t*, Kokkos::HostSpace> pmasks_host("pmasks_host", nterms);
-    Kokkos::View<ComplexType*> coefs_host("coefs_host", nterms);
+    Kokkos::View<ComplexType*, Kokkos::HostSpace> coefs_host("coefs_host", nterms);
     Kokkos::Experimental::transform(
         Kokkos::DefaultHostExecutionSpace(),
         terms_view,
