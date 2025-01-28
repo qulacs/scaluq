@@ -107,9 +107,9 @@ Complex<Fp> Operator<Fp, Sp>::get_expectation_value(const StateVector<Fp, Sp>& s
         terms_view,
         coefs_host,
         [](const PauliOperator<Fp, Sp>& pauli) { return pauli._ptr->_coef; });
-    Kokkos::View<std::uint64_t*> bmasks("bmasks", nterms);
-    Kokkos::View<std::uint64_t*> pmasks("pmasks", nterms);
-    Kokkos::View<Complex<Fp>*> coefs("coefs", nterms);
+    Kokkos::View<std::uint64_t*, Sp> bmasks("bmasks", nterms);
+    Kokkos::View<std::uint64_t*, Sp> pmasks("pmasks", nterms);
+    Kokkos::View<Complex<Fp>*, Sp> coefs("coefs", nterms);
     Kokkos::deep_copy(bmasks, bmasks_host);
     Kokkos::deep_copy(pmasks, pmasks_host);
     Kokkos::deep_copy(coefs, coefs_host);
