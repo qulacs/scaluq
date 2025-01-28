@@ -7,9 +7,6 @@
 
 using namespace scaluq;
 
-template <std::floating_point Fp>
-using Vec = Eigen::Vector<StdComplex<Fp>, Eigen::Dynamic>;
-
 #define FLOAT_AND_SPACE(Fp, Sp) template <std::floating_point Fp, ExecutionSpace Sp>
 #define EXECUTE_TEST(Name)                  \
     TEST(OperatorTest, Name) {              \
@@ -70,7 +67,7 @@ void TestCheckExpectationValue() {
 
         auto state = StateVector<Fp, Sp>::Haar_random_state(n);
         auto state_cp = state.get_amplitudes();
-        Vec<Fp> test_state = Vec<Fp>::Zero(dim);
+        ComplexVector<Fp> test_state = ComplexVector<Fp>::Zero(dim);
         for (std::uint64_t i = 0; i < dim; ++i) test_state[i] = state_cp[i];
 
         Complex<Fp> res = rand_observable.get_expectation_value(state);
@@ -94,11 +91,11 @@ void TestCheckTransitionAmplitude() {
 
         auto state_bra = StateVector<Fp, Sp>::Haar_random_state(n);
         auto state_bra_cp = state_bra.get_amplitudes();
-        Vec<Fp> test_state_bra = Vec<Fp>::Zero(dim);
+        ComplexVector<Fp> test_state_bra = ComplexVector<Fp>::Zero(dim);
         for (std::uint64_t i = 0; i < dim; ++i) test_state_bra[i] = state_bra_cp[i];
         auto state_ket = StateVector<Fp, Sp>::Haar_random_state(n);
         auto state_ket_cp = state_ket.get_amplitudes();
-        Vec<Fp> test_state_ket = Vec<Fp>::Zero(dim);
+        ComplexVector<Fp> test_state_ket = ComplexVector<Fp>::Zero(dim);
         for (std::uint64_t i = 0; i < dim; ++i) test_state_ket[i] = state_ket_cp[i];
 
         StdComplex<Fp> res = rand_observable.get_transition_amplitude(state_bra, state_ket);

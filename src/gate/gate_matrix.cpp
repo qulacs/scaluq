@@ -10,7 +10,7 @@ DenseMatrixGateImpl<Fp, Sp>::DenseMatrixGateImpl(std::uint64_t target_mask,
                                                  const ComplexMatrix<Fp>& mat,
                                                  bool is_unitary)
     : GateBase<Fp, Sp>(target_mask, control_mask),
-      _matrix(convert_external_matrix_to_internal_matrix(mat)),
+      _matrix(convert_external_matrix_to_internal_matrix<Fp, Sp>(mat)),
       _is_unitary(is_unitary) {}
 FLOAT_AND_SPACE(Fp, Sp)
 std::shared_ptr<const GateBase<Fp, Sp>> DenseMatrixGateImpl<Fp, Sp>::get_inverse() const {
@@ -25,8 +25,8 @@ std::shared_ptr<const GateBase<Fp, Sp>> DenseMatrixGateImpl<Fp, Sp>::get_inverse
         this->_target_mask, this->_control_mask, inv_eigen, _is_unitary);
 }
 FLOAT_AND_SPACE(Fp, Sp)
-Matrix<Fp> DenseMatrixGateImpl<Fp, Sp>::get_matrix_internal() const {
-    Matrix<Fp> ret("return matrix", _matrix.extent(0), _matrix.extent(1));
+Matrix<Fp, Sp> DenseMatrixGateImpl<Fp, Sp>::get_matrix_internal() const {
+    Matrix<Fp, Sp> ret("return matrix", _matrix.extent(0), _matrix.extent(1));
     Kokkos::deep_copy(ret, _matrix);
     return ret;
 }
@@ -71,8 +71,8 @@ std::shared_ptr<const GateBase<Fp, Sp>> SparseMatrixGateImpl<Fp, Sp>::get_invers
         this->_target_mask, this->_control_mask, eigen_matrix.inverse().eval());
 }
 FLOAT_AND_SPACE(Fp, Sp)
-Matrix<Fp> SparseMatrixGateImpl<Fp, Sp>::get_matrix_internal() const {
-    Matrix<Fp> ret("return matrix", _matrix._row, _matrix._col);
+Matrix<Fp, Sp> SparseMatrixGateImpl<Fp, Sp>::get_matrix_internal() const {
+    Matrix<Fp, Sp> ret("return matrix", _matrix._row, _matrix._col);
     auto vec = _matrix._values;
     Kokkos::parallel_for(
         vec.size(), KOKKOS_LAMBDA(int i) { ret(vec[i].r, vec[i].c) = vec[i].val; });

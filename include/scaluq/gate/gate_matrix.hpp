@@ -12,7 +12,7 @@ namespace scaluq {
 namespace internal {
 template <std::floating_point Fp, ExecutionSpace Sp>
 class DenseMatrixGateImpl : public GateBase<Fp, Sp> {
-    Matrix<Fp> _matrix;
+    Matrix<Fp, Sp> _matrix;
     bool _is_unitary;
 
 public:
@@ -23,7 +23,7 @@ public:
 
     std::shared_ptr<const GateBase<Fp, Sp>> get_inverse() const override;
 
-    Matrix<Fp> get_matrix_internal() const;
+    Matrix<Fp, Sp> get_matrix_internal() const;
 
     ComplexMatrix<Fp> get_matrix() const override;
 
@@ -52,7 +52,7 @@ public:
 
     std::shared_ptr<const GateBase<Fp, Sp>> get_inverse() const override;
 
-    Matrix<Fp> get_matrix_internal() const;
+    Matrix<Fp, Sp> get_matrix_internal() const;
 
     ComplexMatrix<Fp> get_matrix() const override;
 

@@ -29,23 +29,23 @@ CALL_MACRO_FOR_COMPLEX(FUNC_MACRO)
 CALL_MACRO_FOR_COMPLEX(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
-Matrix<Fp> convert_external_matrix_to_internal_matrix(const ComplexMatrix<Fp>& eigen_matrix) {
+template <std::floating_point Fp, ExecutionSpace Sp>
+Matrix<Fp, Sp> convert_external_matrix_to_internal_matrix(const ComplexMatrix<Fp>& eigen_matrix) {
     std::uint64_t rows = eigen_matrix.rows();
     std::uint64_t cols = eigen_matrix.cols();
     Kokkos::View<const Complex<Fp>**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
         host_view(reinterpret_cast<const Complex<Fp>*>(eigen_matrix.data()), rows, cols);
-    Matrix<Fp> mat("internal_matrix", rows, cols);
+    Matrix<Fp, Sp> mat("internal_matrix", rows, cols);
     Kokkos::deep_copy(mat, host_view);
     return mat;
 }
-#define FUNC_MACRO(Fp) \
-    template Matrix<Fp> convert_external_matrix_to_internal_matrix(const ComplexMatrix<Fp>&);
-CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#define FUNC_MACRO(Fp, Sp) \
+    template Matrix<Fp, Sp> convert_external_matrix_to_internal_matrix(const ComplexMatrix<Fp>&);
+CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <std::floating_point Fp>
-ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp>& matrix) {
+template <std::floating_point Fp, ExecutionSpace Sp>
+ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp, Sp>& matrix) {
     int rows = matrix.extent(0);
     int cols = matrix.extent(1);
     ComplexMatrix<Fp> eigen_matrix(rows, cols);
@@ -54,9 +54,9 @@ ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp>& m
     Kokkos::deep_copy(host_view, matrix);
     return eigen_matrix;
 }
-#define FUNC_MACRO(Fp) \
-    template ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp>&);
-CALL_MACRO_FOR_FLOAT(FUNC_MACRO)
+#define FUNC_MACRO(Fp, Sp) \
+    template ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp, Sp>&);
+CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
 template <std::floating_point Fp, ExecutionSpace Sp>

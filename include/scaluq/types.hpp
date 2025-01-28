@@ -31,8 +31,8 @@ using ComplexMatrix =
 template <std::floating_point Fp>
 using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex<Fp>, Eigen::RowMajor>;
 
-template <std::floating_point Fp>
-using Matrix = Kokkos::View<Complex<Fp>**, Kokkos::LayoutRight>;
+template <std::floating_point Fp, ExecutionSpace Sp>
+using Matrix = Kokkos::View<Complex<Fp>**, Kokkos::LayoutRight, Sp>;
 
 template <std::floating_point Fp>
 using Matrix2x2 = Kokkos::Array<Kokkos::Array<Complex<Fp>, 2>, 2>;

@@ -10,11 +10,11 @@ namespace internal {
 
 template <std::floating_point Fp, ExecutionSpace Sp>
 void none_target_dense_matrix_gate(std::uint64_t control_mask,
-                                   const Matrix<Fp>& matrix,
+                                   const Matrix<Fp, Sp>& matrix,
                                    StateVector<Fp, Sp>& state);
 template <std::floating_point Fp, ExecutionSpace Sp>
 void none_target_dense_matrix_gate(std::uint64_t control_mask,
-                                   const Matrix<Fp>& matrix,
+                                   const Matrix<Fp, Sp>& matrix,
                                    StateVectorBatched<Fp, Sp>& states);
 
 template <std::floating_point Fp, ExecutionSpace Sp>
@@ -42,45 +42,45 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
 template <std::floating_point Fp, ExecutionSpace Sp>
 void single_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
-                                     const Matrix<Fp>& matrix,
+                                     const Matrix<Fp, Sp>& matrix,
                                      StateVector<Fp, Sp>& state);
 template <std::floating_point Fp, ExecutionSpace Sp>
 void single_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
-                                     const Matrix<Fp>& matrix,
+                                     const Matrix<Fp, Sp>& matrix,
                                      StateVectorBatched<Fp, Sp>& states);
 
 template <std::floating_point Fp, ExecutionSpace Sp>
 void double_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
-                                     const Matrix<Fp>& matrix,
+                                     const Matrix<Fp, Sp>& matrix,
                                      StateVector<Fp, Sp>& state);
 template <std::floating_point Fp, ExecutionSpace Sp>
 void double_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
-                                     const Matrix<Fp>& matrix,
+                                     const Matrix<Fp, Sp>& matrix,
                                      StateVectorBatched<Fp, Sp>& states);
 
 template <std::floating_point Fp, ExecutionSpace Sp>
 void multi_target_dense_matrix_gate(std::uint64_t target_mask,
                                     std::uint64_t control_mask,
-                                    const Matrix<Fp>& matrix,
+                                    const Matrix<Fp, Sp>& matrix,
                                     StateVector<Fp, Sp>& state);
 template <std::floating_point Fp, ExecutionSpace Sp>
 void multi_target_dense_matrix_gate(std::uint64_t target_mask,
                                     std::uint64_t control_mask,
-                                    const Matrix<Fp>& matrix,
+                                    const Matrix<Fp, Sp>& matrix,
                                     StateVectorBatched<Fp, Sp>& states);
 
 template <std::floating_point Fp, ExecutionSpace Sp>
 void dense_matrix_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
-                       const Matrix<Fp>& matrix,
+                       const Matrix<Fp, Sp>& matrix,
                        StateVector<Fp, Sp>& state);
 template <std::floating_point Fp, ExecutionSpace Sp>
 void dense_matrix_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
-                       const Matrix<Fp>& matrix,
+                       const Matrix<Fp, Sp>& matrix,
                        StateVectorBatched<Fp, Sp>& states);
 
 template <std::floating_point Fp, ExecutionSpace Sp>

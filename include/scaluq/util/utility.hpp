@@ -164,11 +164,11 @@ KOKKOS_INLINE_FUNCTION double squared_norm(const Complex<Fp>& z) {
     return z.real() * z.real() + z.imag() * z.imag();
 }
 
-template <std::floating_point Fp>
-Matrix<Fp> convert_external_matrix_to_internal_matrix(const ComplexMatrix<Fp>& eigen_matrix);
+template <std::floating_point Fp, ExecutionSpace Sp>
+Matrix<Fp, Sp> convert_external_matrix_to_internal_matrix(const ComplexMatrix<Fp>& eigen_matrix);
 
-template <std::floating_point Fp>
-ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp>& matrix);
+template <std::floating_point Fp, ExecutionSpace Sp>
+ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp, Sp>& matrix);
 
 template <std::floating_point Fp, ExecutionSpace Sp>
 ComplexMatrix<Fp> convert_coo_to_external_matrix(const SparseMatrix<Fp, Sp>& mat);
