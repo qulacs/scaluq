@@ -18,9 +18,17 @@ def main():
 
     print(operator.to_json())
 
-    states = StateVectorBatched(3, 3)
+    states = StateVectorBatched.Haar_random_state(2, 3)
+    prx = gate.ParamRX(0, 2.0, [1])
+    pry = gate.ParamRY(1, 2.0, [2])
+    params = {
+        "rx": [0.0, 0.1, 0.2],
+        "ry": [0.3, 0.4, 0.5]
+    }
+    circuit.add_param_gate(prx, "rx")
+    circuit.add_param_gate(pry, "ry")
+    circuit.update_quantum_state(states, params)
     print(states.to_json())
-
 
 if __name__ == "__main__":
     main()
