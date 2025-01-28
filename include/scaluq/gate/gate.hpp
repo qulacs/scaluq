@@ -390,14 +390,17 @@ namespace internal {
 template <std::floating_point Fp>
 nb::class_<Gate<Fp>> gate_base_def;
 
-#define DEF_GATE(GATE_TYPE, FLOAT, DESCRIPTION)                                                 \
-    ::scaluq::internal::gate_base_def<FLOAT>.def(nb::init<GATE_TYPE<FLOAT>>(),                  \
-                                                 "Upcast from `" #GATE_TYPE "`.");              \
-    DEF_GATE_BASE(                                                                              \
-        GATE_TYPE,                                                                              \
-        FLOAT,                                                                                  \
-        DESCRIPTION                                                                             \
-        "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
+inline nb::sig concatenate_description(const std::string& desc) {
+    std::string combined =
+        desc +
+        "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).";
+    return nb::sig(combined.c_str());
+}
+
+#define DEF_GATE(GATE_TYPE, FLOAT, DESCRIPTION)                                    \
+    ::scaluq::internal::gate_base_def<FLOAT>.def(nb::init<GATE_TYPE<FLOAT>>(),     \
+                                                 "Upcast from `" #GATE_TYPE "`."); \
+    DEF_GATE_BASE(GATE_TYPE, FLOAT, concatenate_description(DESCRIPTION))          \
         .def(nb::init<Gate<FLOAT>>())
 
 void bind_gate_gate_hpp_without_precision(nb::module_& m) {

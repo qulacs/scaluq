@@ -117,11 +117,6 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
                           .value("PAULI_Y", PauliOperator<Fp>::PAULI_Y)
                           .value("PAULI_Z", PauliOperator<Fp>::PAULI_Z);
 
-    // m.attr("PAULI_I") = (int)PauliOperator<Fp>::PAULI_I;
-    // m.attr("PAULI_X") = (int)PauliOperator<Fp>::PAULI_X;
-    // m.attr("PAULI_Y") = (int)PauliOperator<Fp>::PAULI_Y;
-    // m.attr("PAULI_Z") = (int)PauliOperator<Fp>::PAULI_Z;
-
     nb::class_<typename PauliOperator<Fp>::Data>(
         m, "PauliOperatorData", "Internal data structure for PauliOperator.")
         .def(nb::init<Complex<Fp>>(), "coef"_a = 1., "Initialize data with coefficient.")
