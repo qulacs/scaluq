@@ -205,36 +205,26 @@ EXECUTE_TEST(GetMarginalProbability, 6);
 FLOAT_AND_SPACE(Fp, Sp)
 void TestSamplingSuperpositionState(std::uint32_t n) {
     const std::uint64_t nshot = 65536;
-    const std::uint64_t test_count = 10;
-    std::uint64_t pass_count = 0;
-    for (std::uint64_t test_i = 0; test_i < test_count; test_i++) {
-        StateVector<Fp, Sp> state(n);
-        state.set_computational_basis(0);
-        for (std::uint64_t i = 1; i <= 4; ++i) {
-            StateVector<Fp, Sp> tmp_state(n);
-            tmp_state.set_computational_basis(i);
-            state.add_state_vector_with_coef(1 << i, tmp_state);
-        }
-        state.normalize();
-        std::vector<std::uint64_t> res = state.sampling(nshot);
-
-        std::array<std::uint64_t, 5> cnt = {};
-        for (std::uint64_t i = 0; i < nshot; ++i) {
-            ASSERT_GE(res[i], 0);
-            ASSERT_LE(res[i], 4);
-            cnt[res[i]] += 1;
-        }
-        bool pass = true;
-        for (std::uint64_t i = 0; i < 4; i++) {
-            std::string err_message = _CHECK_GT(cnt[i + 1], cnt[i]);
-            if (err_message != "") {
-                pass = false;
-                std::cerr << err_message;
-            }
-        }
-        if (pass) pass_count++;
+    StateVector<Fp, Sp> state(n);
+    state.set_computational_basis(0);
+    for (std::uint64_t i = 1; i <= 4; ++i) {
+        StateVector<Fp, Sp> tmp_state(n);
+        tmp_state.set_computational_basis(i);
+        state.add_state_vector_with_coef(1 << i, tmp_state);
     }
-    ASSERT_GE(pass_count, test_count - 1);
+    state.normalize();
+    std::vector<std::uint64_t> res = state.sampling(nshot);
+
+    std::array<std::uint64_t, 5> cnt = {};
+    for (std::uint64_t i = 0; i < nshot; ++i) {
+        ASSERT_GE(res[i], 0);
+        ASSERT_LE(res[i], 4);
+        cnt[res[i]] += 1;
+    }
+    bool pass = true;
+    for (std::uint64_t i = 0; i < 4; i++) {
+        ASSERT_GT(cnt[i + 1], cnt[i]);
+    }
 }
 EXECUTE_TEST(SamplingSuperpositionState, 6);
 

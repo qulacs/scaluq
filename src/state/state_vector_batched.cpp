@@ -79,7 +79,7 @@ void StateVectorBatched<Fp, Sp>::set_Haar_random_state(std::uint64_t batch_size,
 FLOAT_AND_SPACE(Fp, Sp)
 std::vector<std::vector<std::uint64_t>> StateVectorBatched<Fp, Sp>::sampling(
     std::uint64_t sampling_count, std::uint64_t seed) const {
-    Kokkos::View<Fp**> stacked_prob("prob", _batch_size, _dim + 1);
+    Kokkos::View<Fp**, Sp> stacked_prob("prob", _batch_size, _dim + 1);
 
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<Sp>(Sp(), _batch_size, Kokkos::AUTO),
@@ -95,7 +95,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Fp, Sp>::sampling(
         });
     Kokkos::fence();
 
-    Kokkos::View<std::uint64_t**> result(
+    Kokkos::View<std::uint64_t**, Sp> result(
         Kokkos::ViewAllocateWithoutInitializing("result"), _batch_size, sampling_count);
     Kokkos::Random_XorShift64_Pool<Sp> rand_pool(seed);
 
@@ -168,7 +168,7 @@ std::vector<std::vector<Kokkos::complex<Fp>>> StateVectorBatched<Fp, Sp>::get_am
 
 FLOAT_AND_SPACE(Fp, Sp)
 std::vector<Fp> StateVectorBatched<Fp, Sp>::get_squared_norm() const {
-    Kokkos::View<Fp*> norms(Kokkos::ViewAllocateWithoutInitializing("norms"), _batch_size);
+    Kokkos::View<Fp*, Sp> norms(Kokkos::ViewAllocateWithoutInitializing("norms"), _batch_size);
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<Sp>(Sp(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(const Kokkos::TeamPolicy<Sp>::TeamPolicy::member_type& team) {
@@ -216,7 +216,7 @@ std::vector<Fp> StateVectorBatched<Fp, Sp>::get_zero_probability(
             "Error: StateVectorBatched::get_zero_probability(std::uint64_t): index "
             "of target qubit must be smaller than qubit_count");
     }
-    Kokkos::View<Fp*> probs("probs", _batch_size);
+    Kokkos::View<Fp*, Sp> probs("probs", _batch_size);
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<Sp>(Sp(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(const Kokkos::TeamPolicy<Sp>::TeamPolicy::member_type& team) {
@@ -264,7 +264,7 @@ std::vector<Fp> StateVectorBatched<Fp, Sp>::get_marginal_probability(
 
     auto target_index_d = internal::convert_vector_to_view<std::uint64_t, Sp>(target_index);
     auto target_value_d = internal::convert_vector_to_view<std::uint64_t, Sp>(target_value);
-    Kokkos::View<Fp*> probs("probs", _batch_size);
+    Kokkos::View<Fp*, Sp> probs("probs", _batch_size);
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<Sp>(Sp(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(const Kokkos::TeamPolicy<Sp>::TeamPolicy::member_type& team) {
@@ -291,7 +291,7 @@ std::vector<Fp> StateVectorBatched<Fp, Sp>::get_marginal_probability(
 
 FLOAT_AND_SPACE(Fp, Sp)
 std::vector<Fp> StateVectorBatched<Fp, Sp>::get_entropy() const {
-    Kokkos::View<Fp*> ents("ents", _batch_size);
+    Kokkos::View<Fp*, Sp> ents("ents", _batch_size);
     const Fp eps = 1e-15;
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<Sp>(Sp(), _batch_size, Kokkos::AUTO()),
@@ -344,16 +344,14 @@ void StateVectorBatched<Fp, Sp>::load(const std::vector<std::vector<Kokkos::comp
     if (states.size() != _batch_size) {
         throw std::runtime_error(
             "Error: StateVectorBatched::load(std::vector<std::vector<Kokkos::complex<Fp>>>&): "
-            "invalid "
-            "batch_size");
+            "invalid batch_size");
     }
     for (std::uint64_t b = 0; b < states.size(); ++b) {
         if (states[b].size() != _dim) {
             throw std::runtime_error(
                 "Error: "
                 "StateVectorBatched::load(std::vector<std::vector<Kokkos::complex<Fp>>>&): "
-                "invalid "
-                "length of state");
+                "invalid length of state");
         }
     }
 
@@ -400,6 +398,6 @@ std::string StateVectorBatched<Fp, Sp>::to_string() const {
     return os.str();
 }
 
-FLOAT_DECLARE_CLASS(StateVectorBatched)
+FLOAT_AND_SPACE_DECLARE_CLASS(StateVectorBatched)
 
 }  // namespace scaluq

@@ -9,10 +9,10 @@ add_executable(scaluq_test EXCLUDE_FROM_ALL
     # gate/batched_gate_test.cpp
     # gate/merge_test.cpp
     # gate/param_gate_test.cpp
-    # operator/test_pauli_operator.cpp
+    operator/test_pauli_operator.cpp
     # operator/test_operator.cpp
     state/state_vector_test.cpp
-    # state/state_vector_batched_test.cpp
+    state/state_vector_batched_test.cpp
 )
 
 target_link_libraries(scaluq_test PUBLIC 

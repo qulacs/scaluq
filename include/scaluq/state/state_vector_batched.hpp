@@ -5,7 +5,7 @@
 
 namespace scaluq {
 
-template <std::floating_point Fp, ExecutionSpace Sp = DefaultSpace>
+template <std::floating_point Fp, ExecutionSpace Sp>
 class StateVectorBatched {
     std::uint64_t _batch_size;
     std::uint64_t _n_qubits;

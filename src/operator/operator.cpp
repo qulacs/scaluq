@@ -116,7 +116,7 @@ Complex<Fp> Operator<Fp, Sp>::get_expectation_value(const StateVector<Fp, Sp>& s
     std::uint64_t dim = state_vector.dim();
     Complex<Fp> res;
     Kokkos::parallel_reduce(
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {nterms, dim >> 1}),
+        Kokkos::MDRangePolicy<Sp, Kokkos::Rank<2>>({0, 0}, {nterms, dim >> 1}),
         KOKKOS_LAMBDA(std::uint64_t term_id, std::uint64_t state_idx, Complex<Fp> & res_lcl) {
             std::uint64_t bit_flip_mask = bmasks[term_id];
             std::uint64_t phase_flip_mask = pmasks[term_id];
@@ -189,7 +189,7 @@ Complex<Fp> Operator<Fp, Sp>::get_transition_amplitude(
     std::uint64_t dim = state_vector_bra.dim();
     Complex<Fp> res;
     Kokkos::parallel_reduce(
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {nterms, dim >> 1}),
+        Kokkos::MDRangePolicy<Sp, Kokkos::Rank<2>>({0, 0}, {nterms, dim >> 1}),
         KOKKOS_LAMBDA(std::uint64_t term_id, std::uint64_t state_idx, Complex<Fp> & res_lcl) {
             std::uint64_t bit_flip_mask = bmasks[term_id];
             std::uint64_t phase_flip_mask = pmasks[term_id];

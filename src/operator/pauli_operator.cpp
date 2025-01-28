@@ -157,7 +157,7 @@ Complex<Fp> PauliOperator<Fp, Sp>::get_expectation_value(
     if (bit_flip_mask == 0) {
         Fp res;
         Kokkos::parallel_reduce(
-            state_vector.dim(),
+            Kokkos::RangePolicy<Sp>(0, state_vector.dim()),
             KOKKOS_LAMBDA(std::uint64_t state_idx, Fp & sum) {
                 Fp tmp = (Kokkos::conj(state_vector._raw[state_idx]) * state_vector._raw[state_idx])
                              .real();
@@ -172,7 +172,7 @@ Complex<Fp> PauliOperator<Fp, Sp>::get_expectation_value(
     Complex<Fp> global_phase = internal::PHASE_90ROT<Fp>()[global_phase_90rot_count % 4];
     Fp res;
     Kokkos::parallel_reduce(
-        state_vector.dim() >> 1,
+        Kokkos::RangePolicy<Sp>(0, state_vector.dim() >> 1),
         KOKKOS_LAMBDA(std::uint64_t state_idx, Fp & sum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
@@ -203,7 +203,7 @@ Complex<Fp> PauliOperator<Fp, Sp>::get_transition_amplitude(
     if (bit_flip_mask == 0) {
         Complex<Fp> res;
         Kokkos::parallel_reduce(
-            state_vector_bra.dim(),
+            Kokkos::RangePolicy<Sp>(0, state_vector_bra.dim()),
             KOKKOS_LAMBDA(std::uint64_t state_idx, Complex<Fp> & sum) {
                 Complex<Fp> tmp = Kokkos::conj(state_vector_bra._raw[state_idx]) *
                                   state_vector_ket._raw[state_idx];
@@ -219,7 +219,7 @@ Complex<Fp> PauliOperator<Fp, Sp>::get_transition_amplitude(
     Complex<Fp> global_phase = internal::PHASE_90ROT<Fp>()[global_phase_90rot_count % 4];
     Complex<Fp> res;
     Kokkos::parallel_reduce(
-        state_vector_bra.dim() >> 1,
+        Kokkos::RangePolicy<Sp>(0, state_vector_bra.dim() >> 1),
         KOKKOS_LAMBDA(std::uint64_t state_idx, Complex<Fp> & sum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
