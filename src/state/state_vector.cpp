@@ -197,27 +197,46 @@ std::vector<std::uint64_t> StateVector<Prec>::sampling(std::uint64_t sampling_co
             }
         });
 
-    Kokkos::View<std::uint64_t*> result(Kokkos::ViewAllocateWithoutInitializing("result"),
-                                        sampling_count);
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
-    Kokkos::parallel_for(
-        sampling_count, KOKKOS_LAMBDA(std::uint64_t i) {
-            auto rand_gen = rand_pool.get_state();
-            FloatType r = static_cast<FloatType>(rand_gen.drand(0., 1.));
-            std::uint64_t lo = 0, hi = stacked_prob.size();
-            while (hi - lo > 1) {
-                std::uint64_t mid = (lo + hi) / 2;
-                if (stacked_prob[mid] > r) {
-                    hi = mid;
-                } else {
-                    lo = mid;
+    std::vector<std::uint64_t> result(sampling_count);
+    std::vector<std::uint64_t> todo(sampling_count);
+    std::iota(todo.begin(), todo.end(), 0);
+    while (!todo.empty()) {
+        std::size_t todo_count = todo.size();
+        Kokkos::View<std::uint64_t*> result_buf(
+            Kokkos::ViewAllocateWithoutInitializing("result_buf"), todo_count);
+        Kokkos::parallel_for(
+            todo_count, KOKKOS_LAMBDA(std::uint64_t i) {
+                auto rand_gen = rand_pool.get_state();
+                FloatType r = static_cast<FloatType>(rand_gen.drand(0., 1.));
+                std::uint64_t lo = 0, hi = stacked_prob.size();
+                while (hi - lo > 1) {
+                    std::uint64_t mid = (lo + hi) / 2;
+                    if (stacked_prob[mid] > r) {
+                        hi = mid;
+                    } else {
+                        lo = mid;
+                    }
                 }
+                result_buf[i] = lo;
+                rand_pool.free_state(rand_gen);
+            });
+        Kokkos::fence();
+        auto result_buf_host =
+            internal::convert_device_view_to_host_vector<std::uint64_t>(result_buf);
+        // Especially for F16 and BF16, sampling sometimes fails with result == _dim.
+        // In this case, re-sampling is performed.
+        std::vector<std::uint64_t> next_todo;
+        for (std::size_t i = 0; i < todo_count; i++) {
+            if (result_buf_host[i] == _dim) {
+                next_todo.push_back(i);
+            } else {
+                result[todo[i]] = result_buf_host[i];
             }
-            result[i] = lo;
-            rand_pool.free_state(rand_gen);
-        });
-    Kokkos::fence();
-    return internal::convert_device_view_to_host_vector<std::uint64_t>(result);
+        }
+        todo.swap(next_todo);
+    }
+    return result;
 }
 template <Precision Prec>
 void StateVector<Prec>::load(const std::vector<StdComplex>& other) {
