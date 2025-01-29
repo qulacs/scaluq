@@ -98,38 +98,58 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec>::sampling(
         });
     Kokkos::fence();
 
-    Kokkos::View<std::uint64_t**> result(
-        Kokkos::ViewAllocateWithoutInitializing("result"), _batch_size, sampling_count);
+    std::vector result(_batch_size, std::vector<std::uint64_t>(sampling_count));
     Kokkos::Random_XorShift64_Pool<> rand_pool(seed);
-
-    Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {_batch_size, sampling_count}),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
-            auto rand_gen = rand_pool.get_state();
-            FloatType r = static_cast<FloatType>(rand_gen.drand(0., 1.));
-            std::uint64_t lo = 0, hi = stacked_prob.extent(1);
-            while (hi - lo > 1) {
-                std::uint64_t mid = (lo + hi) / 2;
-                if (stacked_prob(batch_id, mid) > r) {
-                    hi = mid;
-                } else {
-                    lo = mid;
-                }
-            }
-            result(batch_id, i) = lo;
-            rand_pool.free_state(rand_gen);
-        });
-    Kokkos::fence();
-
-    auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), result);
-    std::vector<std::vector<std::uint64_t>> vv(result.extent(0),
-                                               std::vector<std::uint64_t>(result.extent(1), 0));
-    for (size_t i = 0; i < result.extent(0); ++i) {
-        for (size_t j = 0; j < result.extent(1); ++j) {
-            vv[i][j] = view_h(i, j);
+    std::vector<std::uint64_t> batch_todo(_batch_size * sampling_count);
+    std::vector<std::uint64_t> sample_todo(_batch_size * sampling_count);
+    for (std::uint64_t i = 0; i < _batch_size; i++) {
+        for (std::uint64_t j = 0; j < sampling_count; j++) {
+            std::uint64_t idx = i * sampling_count + j;
+            batch_todo[idx] = i;
+            sample_todo[idx] = j;
         }
     }
-    return vv;
+    while (!batch_todo.empty()) {
+        std::size_t todo_count = batch_todo.size();
+        Kokkos::View<std::uint64_t*> batch_ids =
+            internal::convert_host_vector_to_device_view(batch_todo);
+        Kokkos::View<std::uint64_t*> result_buf(
+            Kokkos::ViewAllocateWithoutInitializing("result_buf"), todo_count);
+        Kokkos::parallel_for(
+            todo_count, KOKKOS_CLASS_LAMBDA(std::uint64_t idx) {
+                std::uint64_t batch_id = batch_ids[idx];
+                auto rand_gen = rand_pool.get_state();
+                FloatType r = static_cast<FloatType>(rand_gen.drand(0., 1.));
+                std::uint64_t lo = 0, hi = stacked_prob.extent(1);
+                while (hi - lo > 1) {
+                    std::uint64_t mid = (lo + hi) / 2;
+                    if (stacked_prob(batch_id, mid) > r) {
+                        hi = mid;
+                    } else {
+                        lo = mid;
+                    }
+                }
+                result_buf(idx) = lo;
+                rand_pool.free_state(rand_gen);
+            });
+        Kokkos::fence();
+        auto result_buf_host = internal::convert_device_view_to_host_vector(result_buf);
+        // Especially for F16 and BF16, sampling sometimes fails with result == _dim.
+        // In this case, re-sampling is performed.
+        std::vector<std::uint64_t> next_batch_todo;
+        std::vector<std::uint64_t> next_sample_todo;
+        for (std::size_t i = 0; i < todo_count; i++) {
+            if (result_buf_host[i] == _dim) {
+                next_batch_todo.push_back(batch_todo[i]);
+                next_sample_todo.push_back(sample_todo[i]);
+            } else {
+                result[batch_todo[i]][sample_todo[i]] = result_buf_host[i];
+            }
+        }
+        batch_todo.swap(next_batch_todo);
+        sample_todo.swap(next_sample_todo);
+    }
+    return result;
 }
 
 template <Precision Prec>

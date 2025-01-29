@@ -13,7 +13,7 @@ add_executable(scaluq_test EXCLUDE_FROM_ALL
     #operator/test_pauli_operator.cpp
     #operator/test_operator.cpp
     state/state_vector_test.cpp
-    #state/state_vector_batched_test.cpp
+    state/state_vector_batched_test.cpp
 )
 
 target_link_libraries(scaluq_test PUBLIC 

@@ -229,7 +229,7 @@ std::vector<std::uint64_t> StateVector<Prec>::sampling(std::uint64_t sampling_co
         std::vector<std::uint64_t> next_todo;
         for (std::size_t i = 0; i < todo_count; i++) {
             if (result_buf_host[i] == _dim) {
-                next_todo.push_back(i);
+                next_todo.push_back(todo[i]);
             } else {
                 result[todo[i]] = result_buf_host[i];
             }

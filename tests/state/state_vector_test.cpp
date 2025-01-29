@@ -5,8 +5,6 @@
 #include "../test_environment.hpp"
 #include "../util/util.hpp"
 
-using CComplex = std::complex<double>;
-
 using namespace scaluq;
 
 template <typename T>
@@ -51,7 +49,7 @@ TYPED_TEST(StateVectorTest, ZeroNormState) {
     auto state_cp = state.get_amplitudes();
 
     for (std::uint64_t i = 0; i < state.dim(); ++i) {
-        ASSERT_EQ((CComplex)state_cp[i], CComplex(0, 0));
+        ASSERT_EQ((StdComplex)state_cp[i], StdComplex(0, 0));
     }
 }
 
@@ -65,9 +63,9 @@ TYPED_TEST(StateVectorTest, ComputationalBasisState) {
 
     for (std::uint64_t i = 0; i < state.dim(); ++i) {
         if (i == 31) {
-            ASSERT_EQ((CComplex)state_cp[i], CComplex(1, 0));
+            ASSERT_EQ((StdComplex)state_cp[i], StdComplex(1, 0));
         } else {
-            ASSERT_EQ((CComplex)state_cp[i], CComplex(0, 0));
+            ASSERT_EQ((StdComplex)state_cp[i], StdComplex(0, 0));
         }
     }
 }
@@ -103,7 +101,7 @@ TYPED_TEST(StateVectorTest, AddState) {
     auto new_vec = state1.get_amplitudes();
 
     for (std::uint64_t i = 0; i < state1.dim(); ++i) {
-        CComplex res = new_vec[i], val = (CComplex)vec1[i] + (CComplex)vec2[i];
+        StdComplex res = new_vec[i], val = vec1[i] + vec2[i];
         ASSERT_NEAR(res.real(), val.real(), eps<Prec>);
         ASSERT_NEAR(res.imag(), val.imag(), eps<Prec>);
     }
@@ -111,7 +109,7 @@ TYPED_TEST(StateVectorTest, AddState) {
 
 TYPED_TEST(StateVectorTest, AddStateWithCoef) {
     constexpr Precision Prec = TestFixture::Prec;
-    const CComplex coef(2.5, 1.3);
+    const StdComplex coef(2.5, 1.3);
     const std::uint64_t n = 10;
     StateVector state1(StateVector<Prec>::Haar_random_state(n));
     StateVector state2(StateVector<Prec>::Haar_random_state(n));
@@ -122,7 +120,7 @@ TYPED_TEST(StateVectorTest, AddStateWithCoef) {
     auto new_vec = state1.get_amplitudes();
 
     for (std::uint64_t i = 0; i < state1.dim(); ++i) {
-        CComplex res = new_vec[i], val = (CComplex)vec1[i] + coef * (CComplex)vec2[i];
+        StdComplex res = new_vec[i], val = vec1[i] + coef * vec2[i];
         ASSERT_NEAR(res.real(), val.real(), eps<Prec>);
         ASSERT_NEAR(res.imag(), val.imag(), eps<Prec>);
     }
@@ -131,7 +129,7 @@ TYPED_TEST(StateVectorTest, AddStateWithCoef) {
 TYPED_TEST(StateVectorTest, MultiplyCoef) {
     constexpr Precision Prec = TestFixture::Prec;
     const std::uint64_t n = 10;
-    const CComplex coef(0.5, 0.2);
+    const StdComplex coef(0.5, 0.2);
 
     StateVector state(StateVector<Prec>::Haar_random_state(n));
     auto vec = state.get_amplitudes();
@@ -139,7 +137,7 @@ TYPED_TEST(StateVectorTest, MultiplyCoef) {
     auto new_vec = state.get_amplitudes();
 
     for (std::uint64_t i = 0; i < state.dim(); ++i) {
-        CComplex res = new_vec[i], val = coef * (CComplex)vec[i];
+        StdComplex res = new_vec[i], val = coef * vec[i];
         ASSERT_NEAR(res.real(), val.real(), eps<Prec>);
         ASSERT_NEAR(res.imag(), val.imag(), eps<Prec>);
     }
@@ -174,12 +172,12 @@ TYPED_TEST(StateVectorTest, EntropyCalculation) {
         auto state_cp = state.get_amplitudes();
         ASSERT_NEAR(state.get_squared_norm(), 1, eps<Prec>);
         Eigen::VectorXcd test_state(dim);
-        for (std::uint64_t i = 0; i < dim; ++i) test_state[i] = (CComplex)state_cp[i];
+        for (std::uint64_t i = 0; i < dim; ++i) test_state[i] = state_cp[i];
 
         for (std::uint64_t target = 0; target < n; ++target) {
             double ent = 0;
             for (std::uint64_t ind = 0; ind < dim; ++ind) {
-                CComplex z = test_state[ind];
+                StdComplex z = test_state[ind];
                 double prob = z.real() * z.real() + z.imag() * z.imag();
                 if (prob > 0.) ent += -prob * std::log2(prob);
             }
