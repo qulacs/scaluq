@@ -193,8 +193,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Fp, Sp>::sampling(
     }
     while (!batch_todo.empty()) {
         std::size_t todo_count = batch_todo.size();
-        Kokkos::View<std::uint64_t*> batch_ids =
-            internal::convert_host_vector_to_device_view(batch_todo);
+        Kokkos::View<std::uint64_t*> batch_ids = internal::convert_vector_to_view(batch_todo);
         Kokkos::View<std::uint64_t*> result_buf(
             Kokkos::ViewAllocateWithoutInitializing("result_buf"), todo_count);
         Kokkos::parallel_for(
@@ -215,7 +214,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Fp, Sp>::sampling(
                 rand_pool.free_state(rand_gen);
             });
         Kokkos::fence();
-        auto result_buf_host = internal::convert_device_view_to_host_vector(result_buf);
+        auto result_buf_host = internal::convert_view_to_vector(result_buf);
         // Especially for F16 and BF16, sampling sometimes fails with result == _dim.
         // In this case, re-sampling is performed.
         std::vector<std::uint64_t> next_batch_todo;
@@ -318,8 +317,7 @@ std::vector<Fp> StateVectorBatched<Fp, Sp>::get_squared_norm() const {
         });
     Kokkos::fence();
 <<<<<<< HEAD
-    std::vector<FloatType> norms_host_prec =
-        internal::convert_device_view_to_host_vector<FloatType>(norms);
+    std::vector<FloatType> norms_host_prec = internal::convert_view_to_vector<FloatType>(norms);
     std::vector<double> norms_double(_batch_size);
     std::ranges::copy(norms_host_prec, norms_double.begin());
     return norms_double;
@@ -401,8 +399,7 @@ std::vector<Fp> StateVectorBatched<Fp, Sp>::get_zero_probability(
         });
     Kokkos::fence();
 <<<<<<< HEAD
-    std::vector<FloatType> probs_host_prec =
-        internal::convert_device_view_to_host_vector<FloatType>(probs);
+    std::vector<FloatType> probs_host_prec = internal::convert_view_to_vector<FloatType>(probs);
     std::vector<double> probs_double(_batch_size);
     std::ranges::copy(probs_host_prec, probs_double.begin());
     return probs_double;
@@ -445,8 +442,8 @@ std::vector<Fp> StateVectorBatched<Fp, Sp>::get_marginal_probability(
     }
 
 <<<<<<< HEAD
-    auto target_index_d = internal::convert_host_vector_to_device_view(target_index);
-    auto target_value_d = internal::convert_host_vector_to_device_view(target_value);
+    auto target_index_d = internal::convert_vector_to_view(target_index);
+    auto target_value_d = internal::convert_vector_to_view(target_value);
     Kokkos::View<FloatType*> probs("probs", _batch_size);
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<>(_batch_size, Kokkos::AUTO()),
@@ -481,8 +478,7 @@ std::vector<Fp> StateVectorBatched<Fp, Sp>::get_marginal_probability(
         });
     Kokkos::fence();
 <<<<<<< HEAD
-    std::vector<FloatType> probs_host_prec =
-        internal::convert_device_view_to_host_vector<FloatType>(probs);
+    std::vector<FloatType> probs_host_prec = internal::convert_view_to_vector<FloatType>(probs);
     std::vector<double> probs_double(_batch_size);
     std::ranges::copy(probs_host_prec, probs_double.begin());
     return probs_double;
@@ -525,8 +521,7 @@ std::vector<Fp> StateVectorBatched<Fp, Sp>::get_entropy() const {
         });
     Kokkos::fence();
 <<<<<<< HEAD
-    std::vector<FloatType> ents_host_prec =
-        internal::convert_device_view_to_host_vector<FloatType>(ents);
+    std::vector<FloatType> ents_host_prec = internal::convert_view_to_vector<FloatType>(ents);
     std::vector<double> ents_double(_batch_size);
     std::ranges::copy(ents_host_prec, ents_double.begin());
     return ents_double;
