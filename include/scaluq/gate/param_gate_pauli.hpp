@@ -8,6 +8,7 @@
 
 namespace scaluq {
 namespace internal {
+<<<<<<< HEAD
 template <Precision Prec>
 class ParamPauliRotationGateImpl : public ParamGateBase<Prec> {
     const PauliOperator<Prec> _pauli;
@@ -31,6 +32,31 @@ public:
     void update_quantum_state(StateVector<Prec>& state_vector, double param) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states,
                               std::vector<double> params) const override;
+=======
+template <std::floating_point Fp, ExecutionSpace Sp>
+class ParamPauliRotationGateImpl : public ParamGateBase<Fp, Sp> {
+    const PauliOperator<Fp, Sp> _pauli;
+
+public:
+    ParamPauliRotationGateImpl(std::uint64_t control_mask,
+                               const PauliOperator<Fp, Sp>& pauli,
+                               Fp param_coef = 1.)
+        : ParamGateBase<Fp, Sp>(
+              vector_to_mask<false>(pauli.target_qubit_list()), control_mask, param_coef),
+          _pauli(pauli) {}
+
+    PauliOperator<Fp, Sp> pauli() const { return _pauli; }
+    std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
+
+    std::shared_ptr<const ParamGateBase<Fp, Sp>> get_inverse() const override {
+        return std::make_shared<const ParamPauliRotationGateImpl<Fp, Sp>>(
+            this->_control_mask, _pauli, -this->_pcoef);
+    }
+    internal::ComplexMatrix<Fp> get_matrix(Fp param) const override;
+    void update_quantum_state(StateVector<Fp, Sp>& state_vector, Fp param) const override;
+    void update_quantum_state(StateVectorBatched<Fp, Sp>& states,
+                              std::vector<Fp> params) const override;
+>>>>>>> set-space
     std::string to_string(const std::string& indent) const override;
 
     void get_as_json(Json& j) const override {
@@ -42,11 +68,19 @@ public:
 };
 }  // namespace internal
 
+<<<<<<< HEAD
 template <Precision Prec>
 using ParamPauliRotationGate = internal::ParamGatePtr<internal::ParamPauliRotationGateImpl<Prec>>;
 
 namespace internal {
 #define DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_PRECISION(Prec)                                \
+=======
+template <std::floating_point Fp, ExecutionSpace Sp>
+using ParamPauliRotationGate = internal::ParamGatePtr<internal::ParamPauliRotationGateImpl<Fp, Sp>>;
+
+namespace internal {
+/*#define DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_TYPE(Type) \
+>>>>>>> set-space
     template <>                                                                                   \
     inline std::shared_ptr<const ParamPauliRotationGateImpl<Prec>> get_from_json(const Json& j) { \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();                        \
@@ -56,6 +90,7 @@ namespace internal {
             vector_to_mask(controls), pauli, static_cast<Float<Prec>>(param_coef));               \
     }
 
+<<<<<<< HEAD
 #ifdef SCALUQ_FLOAT16
 DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_PRECISION(Precision::F16)
 #endif
@@ -70,6 +105,12 @@ DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_PRECISION(Precision::BF16)
 #endif
 #undef DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_PRECISION
 
+=======
+DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_TYPE
+*/
+>>>>>>> set-space
 }  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND

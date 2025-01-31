@@ -22,15 +22,31 @@ constexpr double eps_() {
     else if constexpr (Prec == Precision::BF16)
         return 1e-1;
     else
+<<<<<<< HEAD
         static_assert(internal::lazy_false_v<void>, "unknown Precision");
+=======
+        static_assert(internal::lazy_false_v<Fp>, "unknown GateImpl");
+>>>>>>> set-space
 }
 template <Precision Prec>
 constexpr double eps = eps_<Prec>();
 
+<<<<<<< HEAD
 template <Precision Prec>
 inline bool same_state(const StateVector<Prec>& s1,
                        const StateVector<Prec>& s2,
                        const double e = eps<Prec>) {
+=======
+template <std::floating_point Fp>
+inline void check_near(const StdComplex<Fp>& a, const StdComplex<Fp>& b) {
+    ASSERT_LE(std::abs(a - b), eps<Fp>);
+}
+
+template <std::floating_point Fp, ExecutionSpace Sp>
+inline bool same_state(const StateVector<Fp, Sp>& s1,
+                       const StateVector<Fp, Sp>& s2,
+                       const Fp e = eps<Fp>) {
+>>>>>>> set-space
     auto s1_cp = s1.get_amplitudes();
     auto s2_cp = s2.get_amplitudes();
     assert(s1.n_qubits() == s2.n_qubits());
@@ -40,10 +56,17 @@ inline bool same_state(const StateVector<Prec>& s1,
     return true;
 };
 
+<<<<<<< HEAD
 template <Precision Prec>
 inline bool same_state_except_global_phase(const StateVector<Prec>& s1,
                                            const StateVector<Prec>& s2,
                                            const double e = eps<Prec>) {
+=======
+template <std::floating_point Fp, ExecutionSpace Sp>
+inline bool same_state_except_global_phase(const StateVector<Fp, Sp>& s1,
+                                           const StateVector<Fp, Sp>& s2,
+                                           const Fp e = eps<Fp>) {
+>>>>>>> set-space
     auto s1_cp = s1.get_amplitudes();
     auto s2_cp = s2.get_amplitudes();
     assert(s1.n_qubits() == s2.n_qubits());

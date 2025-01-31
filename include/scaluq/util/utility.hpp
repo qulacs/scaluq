@@ -132,12 +132,24 @@ inline internal::ComplexMatrix get_expanded_matrix(const internal::ComplexMatrix
 }
 
 // Host std::vector を Device Kokkos::View に変換する関数
-template <typename T>
-Kokkos::View<T*> convert_host_vector_to_device_view(const std::vector<T>& vec);
+template <typename T, ExecutionSpace Sp>
+Kokkos::View<T*, Sp> convert_vector_to_view(const std::vector<T>& vec) {
+    Kokkos::View<const T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
+        vec.data(), vec.size());
+    Kokkos::View<T*, Sp> device_view("device_view", vec.size());
+    Kokkos::deep_copy(device_view, host_view);
+    return device_view;
+}
 
 // Device Kokkos::View を Host std::vector に変換する関数
-template <typename T>
-std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device_view);
+template <typename T, ExecutionSpace Sp>
+std::vector<T> convert_view_to_vector(const Kokkos::View<T*, Sp>& device_view) {
+    std::vector<T> host_vector(device_view.extent(0));
+    Kokkos::View<T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
+        host_vector.data(), host_vector.size());
+    Kokkos::deep_copy(host_view, device_view);
+    return host_vector;
+}
 
 // Device Kokkos::View を Host std::vector に変換する関数
 template <typename T, typename Layout>
@@ -149,6 +161,7 @@ KOKKOS_INLINE_FUNCTION Float<Prec> squared_norm(const Complex<Prec>& z) {
     return z.real() * z.real() + z.imag() * z.imag();
 }
 
+<<<<<<< HEAD
 template <Precision Prec>
 Matrix<Prec> convert_external_matrix_to_internal_matrix(const ComplexMatrix& eigen_matrix);
 
@@ -157,6 +170,16 @@ ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix<Prec>& mat
 
 template <Precision Prec>
 ComplexMatrix convert_coo_to_external_matrix(SparseMatrix<Prec> mat);
+=======
+template <std::floating_point Fp, ExecutionSpace Sp>
+Matrix<Fp, Sp> convert_external_matrix_to_internal_matrix(const ComplexMatrix<Fp>& eigen_matrix);
+
+template <std::floating_point Fp, ExecutionSpace Sp>
+ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp, Sp>& matrix);
+
+template <std::floating_point Fp, ExecutionSpace Sp>
+ComplexMatrix<Fp> convert_coo_to_external_matrix(const SparseMatrix<Fp, Sp>& mat);
+>>>>>>> set-space
 
 inline ComplexMatrix transform_dense_matrix_by_order(const ComplexMatrix& mat,
                                                      const std::vector<std::uint64_t>& targets) {

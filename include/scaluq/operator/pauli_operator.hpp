@@ -9,6 +9,7 @@
 
 namespace scaluq {
 
+<<<<<<< HEAD
 template <Precision Prec>
 class Operator;
 
@@ -22,6 +23,19 @@ public:
     class Data {
         friend class PauliOperator<Prec>;
         friend class Operator<Prec>;
+=======
+template <std::floating_point Fp, ExecutionSpace Sp>
+class Operator;
+
+template <std::floating_point Fp, ExecutionSpace Sp>
+class PauliOperator {
+    friend class Operator<Fp, Sp>;
+
+public:
+    class Data {
+        friend class PauliOperator<Fp, Sp>;
+        friend class Operator<Fp, Sp>;
+>>>>>>> set-space
         std::vector<std::uint64_t> _target_qubit_list, _pauli_id_list;
         ComplexType _coef;
         std::uint64_t _bit_flip_mask, _phase_flip_mask;
@@ -83,11 +97,20 @@ public:
     [[nodiscard]] PauliOperator get_dagger() const;
     [[nodiscard]] std::uint64_t get_qubit_count() const;
 
+<<<<<<< HEAD
     void apply_to_state(StateVector<Prec>& state_vector) const;
 
     [[nodiscard]] StdComplex get_expectation_value(const StateVector<Prec>& state_vector) const;
     [[nodiscard]] StdComplex get_transition_amplitude(
         const StateVector<Prec>& state_vector_bra, const StateVector<Prec>& state_vector_ket) const;
+=======
+    void apply_to_state(StateVector<Fp, Sp>& state_vector) const;
+
+    [[nodiscard]] Complex<Fp> get_expectation_value(const StateVector<Fp, Sp>& state_vector) const;
+    [[nodiscard]] Complex<Fp> get_transition_amplitude(
+        const StateVector<Fp, Sp>& state_vector_bra,
+        const StateVector<Fp, Sp>& state_vector_ket) const;
+>>>>>>> set-space
 
     [[nodiscard]] internal::ComplexMatrix get_matrix() const;
 
@@ -103,7 +126,11 @@ public:
     }
     friend void from_json(const Json& j, PauliOperator& pauli) {
         pauli =
+<<<<<<< HEAD
             PauliOperator(j.at("pauli_string").get<std::string>(), j.at("coef").get<StdComplex>());
+=======
+            PauliOperator(j.at("pauli_string").get<std::string>(), j.at("coef").get<Complex<Fp>>());
+>>>>>>> set-space
     }
 };
 
@@ -111,6 +138,7 @@ public:
 namespace internal {
 template <Precision Prec>
 void bind_operator_pauli_operator_hpp(nb::module_& m) {
+<<<<<<< HEAD
     nb::enum_<typename PauliOperator<Prec>::PauliID>(m, "PauliID")
         .value("I", PauliOperator<Prec>::I)
         .value("X", PauliOperator<Prec>::X)
@@ -119,6 +147,16 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
         .export_values();
 
     nb::class_<typename PauliOperator<Prec>::Data>(
+=======
+    nb::enum_<typename PauliOperator<Fp, Sp>::PauliID>(m, "PauliID")
+        .value("I", PauliOperator<Fp, Sp>::I)
+        .value("X", PauliOperator<Fp, Sp>::X)
+        .value("Y", PauliOperator<Fp, Sp>::Y)
+        .value("Z", PauliOperator<Fp, Sp>::Z)
+        .export_values();
+
+    nb::class_<typename PauliOperator<Fp, Sp>::Data>(
+>>>>>>> set-space
         m, "PauliOperatorData", "Internal data structure for PauliOperator.")
         .def(nb::init<StdComplex>(), "coef"_a = 1., "Initialize data with coefficient.")
         .def(nb::init<std::string_view, StdComplex>(),
@@ -141,6 +179,7 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "phase_flip_mask"_a,
              "coef"_a = 1.,
              "Initialize data with bit flip and phase flip masks.")
+<<<<<<< HEAD
         .def(nb::init<const typename PauliOperator<Prec>::Data&>(),
              "data"_a,
              "Initialize pauli operator from Data object.")
@@ -165,6 +204,34 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "Get the X and Z mask representation as a tuple of vectors.");
 
     nb::class_<PauliOperator<Prec>>(
+=======
+        .def(nb::init<const typename PauliOperator<Fp, Sp>::Data&>(),
+             "data"_a,
+             "Initialize pauli operator from Data object.")
+        .def("add_single_pauli",
+             &PauliOperator<Fp, Sp>::Data::add_single_pauli,
+             "target_qubit"_a,
+             "pauli_id"_a,
+             "Add a single pauli operation to the data.")
+        .def("coef",
+             &PauliOperator<Fp, Sp>::Data::coef,
+             "Get the coefficient of the Pauli operator.")
+        .def("set_coef",
+             &PauliOperator<Fp, Sp>::Data::set_coef,
+             "c"_a,
+             "Set the coefficient of the Pauli operator.")
+        .def("target_qubit_list",
+             &PauliOperator<Fp, Sp>::Data::target_qubit_list,
+             "Get the list of target qubits.")
+        .def("pauli_id_list",
+             &PauliOperator<Fp, Sp>::Data::pauli_id_list,
+             "Get the list of Pauli IDs.")
+        .def("get_XZ_mask_representation",
+             &PauliOperator<Fp, Sp>::Data::get_XZ_mask_representation,
+             "Get the X and Z mask representation as a tuple of vectors.");
+
+    nb::class_<PauliOperator<Fp, Sp>>(
+>>>>>>> set-space
         m,
         "PauliOperator",
         "Pauli operator as coef and tensor product of single pauli for each qubit.")
@@ -200,6 +267,7 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "csv-table::\n\n    \"bit_flip\",\"phase_flip\",\"pauli\"\n    "
              "\"0\",\"0\",\"I\"\n    "
              "\"0\",\"1\",\"Z\"\n    \"1\",\"0\",\"X\"\n    \"1\",\"1\",\"Y\"")
+<<<<<<< HEAD
         .def("coef", &PauliOperator<Prec>::coef, "Get property `coef`.")
         .def("target_qubit_list",
              &PauliOperator<Prec>::target_qubit_list,
@@ -210,10 +278,23 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "`target_qubit_list`")
         .def("get_XZ_mask_representation",
              &PauliOperator<Prec>::get_XZ_mask_representation,
+=======
+        .def("coef", &PauliOperator<Fp, Sp>::coef, "Get property `coef`.")
+        .def("target_qubit_list",
+             &PauliOperator<Fp, Sp>::target_qubit_list,
+             "Get qubits to be applied pauli.")
+        .def("pauli_id_list",
+             &PauliOperator<Fp, Sp>::pauli_id_list,
+             "Get pauli id to be applied. The order is correspond to the result of "
+             "`target_qubit_list`")
+        .def("get_XZ_mask_representation",
+             &PauliOperator<Fp, Sp>::get_XZ_mask_representation,
+>>>>>>> set-space
              "Get single-pauli property as binary integer representation. See description of "
              "`__init__(bit_flip_mask_py: int, phase_flip_mask_py: int, coef: float=1.)` for "
              "details.")
         .def("get_pauli_string",
+<<<<<<< HEAD
              &PauliOperator<Prec>::get_pauli_string,
              "Get single-pauli property as string representation. See description of "
              "`__init__(pauli_string: str, coef: float=1.)` for details.")
@@ -228,16 +309,42 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "Get expectation value of measuring state vector. $\\bra{\\psi}P\\ket{\\psi}$.")
         .def("get_transition_amplitude",
              &PauliOperator<Prec>::get_transition_amplitude,
+=======
+             &PauliOperator<Fp, Sp>::get_pauli_string,
+             "Get single-pauli property as string representation. See description of "
+             "`__init__(pauli_string: str, coef: float=1.)` for details.")
+        .def("get_dagger", &PauliOperator<Fp, Sp>::get_dagger, "Get adjoint operator.")
+        .def("get_qubit_count",
+             &PauliOperator<Fp, Sp>::get_qubit_count,
+             "Get num of qubits to applied with, when count from 0-th qubit. Subset of $[0, "
+             "\\mathrm{qubit_count})$ is the target.")
+        .def("apply_to_state",
+             &PauliOperator<Fp, Sp>::apply_to_state,
+             "Apply pauli to state vector.")
+        .def("get_expectation_value",
+             &PauliOperator<Fp, Sp>::get_expectation_value,
+             "Get expectation value of measuring state vector. $\\bra{\\psi}P\\ket{\\psi}$.")
+        .def("get_transition_amplitude",
+             &PauliOperator<Fp, Sp>::get_transition_amplitude,
+>>>>>>> set-space
              "Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.")
         .def(nb::self * nb::self)
         .def(nb::self * StdComplex())
         .def(
             "to_json",
+<<<<<<< HEAD
             [](const PauliOperator<Prec>& pauli) { return Json(pauli).dump(); },
             "Information as json style.")
         .def(
             "load_json",
             [](PauliOperator<Prec>& pauli, const std::string& str) {
+=======
+            [](const PauliOperator<Fp, Sp>& pauli) { return Json(pauli).dump(); },
+            "Information as json style.")
+        .def(
+            "load_json",
+            [](PauliOperator<Fp, Sp>& pauli, const std::string& str) {
+>>>>>>> set-space
                 pauli = nlohmann::json::parse(str);
             },
             "Read an object from the JSON representation of the Pauli operator.");

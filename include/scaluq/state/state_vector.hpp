@@ -13,10 +13,14 @@
 
 namespace scaluq {
 
+<<<<<<< HEAD
 using HostSpace = Kokkos::HostSpace;
 using DefaultSpace = Kokkos::DefaultExecutionSpace;
 
 template <Precision Prec>
+=======
+template <std::floating_point Fp, ExecutionSpace Sp>
+>>>>>>> set-space
 class StateVector {
     std::uint64_t _n_qubits;
     std::uint64_t _dim;
@@ -25,10 +29,10 @@ class StateVector {
 
 public:
     static constexpr std::uint64_t UNMEASURED = 2;
-    Kokkos::View<ComplexType*> _raw;
+    Kokkos::View<ComplexType*, Sp> _raw;
     StateVector() = default;
     StateVector(std::uint64_t n_qubits);
-    StateVector(Kokkos::View<ComplexType*> view);
+    StateVector(Kokkos::View<ComplexType*, Sp> view);
     StateVector(const StateVector& other) = default;
 
     StateVector& operator=(const StateVector& other) = default;
@@ -58,7 +62,11 @@ public:
 
     [[nodiscard]] std::uint64_t dim() const { return this->_dim; }
 
+<<<<<<< HEAD
     [[nodiscard]] std::vector<StdComplex> get_amplitudes() const;
+=======
+    [[nodiscard]] std::vector<Complex<Fp>> get_amplitudes() const;
+>>>>>>> set-space
 
     [[nodiscard]] double get_squared_norm() const;
 
@@ -76,7 +84,11 @@ public:
     [[nodiscard]] std::vector<std::uint64_t> sampling(
         std::uint64_t sampling_count, std::uint64_t seed = std::random_device()()) const;
 
+<<<<<<< HEAD
     void load(const std::vector<StdComplex>& other);
+=======
+    void load(const std::vector<Complex<Fp>>& other);
+>>>>>>> set-space
 
     [[nodiscard]] StateVector copy() const;
 

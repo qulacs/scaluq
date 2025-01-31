@@ -146,6 +146,7 @@ if(SCALUQ_USE_CUDA)
     # to remove tremendous warnings of Eigen
     target_compile_options(scaluq PUBLIC
         -Wno-unknown-pragmas
+        -Wno-deprecated-enum-enum-conversion
         --expt-relaxed-constexpr
         -DEIGEN_NO_CUDA
     ) 

@@ -4,8 +4,13 @@
 #include "apply_pauli.hpp"
 
 namespace scaluq {
+<<<<<<< HEAD
 template <Precision Prec>
 PauliOperator<Prec>::Data::Data(std::string_view pauli_string, StdComplex coef)
+=======
+FLOAT_AND_SPACE(Fp, Sp)
+PauliOperator<Fp, Sp>::Data::Data(std::string_view pauli_string, Complex<Fp> coef)
+>>>>>>> set-space
     : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
     auto ss = std::stringstream(std::string(pauli_string));
     while (1) {
@@ -28,10 +33,17 @@ PauliOperator<Prec>::Data::Data(std::string_view pauli_string, StdComplex coef)
     }
 }
 
+<<<<<<< HEAD
 template <Precision Prec>
 PauliOperator<Prec>::Data::Data(const std::vector<std::uint64_t>& target_qubit_list,
                                 const std::vector<std::uint64_t>& pauli_id_list,
                                 StdComplex coef)
+=======
+FLOAT_AND_SPACE(Fp, Sp)
+PauliOperator<Fp, Sp>::Data::Data(const std::vector<std::uint64_t>& target_qubit_list,
+                                  const std::vector<std::uint64_t>& pauli_id_list,
+                                  Complex<Fp> coef)
+>>>>>>> set-space
     : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
     if (target_qubit_list.size() != pauli_id_list.size()) {
         throw std::runtime_error(
@@ -45,21 +57,37 @@ PauliOperator<Prec>::Data::Data(const std::vector<std::uint64_t>& target_qubit_l
     }
 }
 
+<<<<<<< HEAD
 template <Precision Prec>
 PauliOperator<Prec>::Data::Data(const std::vector<std::uint64_t>& pauli_id_par_qubit,
                                 StdComplex coef)
     : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
     for (std::uint64_t i = 0; i < pauli_id_par_qubit.size(); ++i) {
         if (pauli_id_par_qubit[i] != PauliOperator<Prec>::I) {
+=======
+FLOAT_AND_SPACE(Fp, Sp)
+PauliOperator<Fp, Sp>::Data::Data(const std::vector<std::uint64_t>& pauli_id_par_qubit,
+                                  Complex<Fp> coef)
+    : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
+    for (std::uint64_t i = 0; i < pauli_id_par_qubit.size(); ++i) {
+        if (pauli_id_par_qubit[i] != PauliOperator<Fp, Sp>::I) {
+>>>>>>> set-space
             add_single_pauli(i, pauli_id_par_qubit[i]);
         }
     }
 }
 
+<<<<<<< HEAD
 template <Precision Prec>
 PauliOperator<Prec>::Data::Data(std::uint64_t bit_flip_mask,
                                 std::uint64_t phase_flip_mask,
                                 StdComplex coef)
+=======
+FLOAT_AND_SPACE(Fp, Sp)
+PauliOperator<Fp, Sp>::Data::Data(std::uint64_t bit_flip_mask,
+                                  std::uint64_t phase_flip_mask,
+                                  Complex<Fp> coef)
+>>>>>>> set-space
     : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
     for (std::uint64_t target_idx = 0; target_idx < sizeof(std::uint64_t) * 8; target_idx++) {
         bool bit_flip = bit_flip_mask >> target_idx & 1;
@@ -79,9 +107,15 @@ PauliOperator<Prec>::Data::Data(std::uint64_t bit_flip_mask,
     }
 }
 
+<<<<<<< HEAD
 template <Precision Prec>
 void PauliOperator<Prec>::Data::add_single_pauli(std::uint64_t target_qubit,
                                                  std::uint64_t pauli_id) {
+=======
+FLOAT_AND_SPACE(Fp, Sp)
+void PauliOperator<Fp, Sp>::Data::add_single_pauli(std::uint64_t target_qubit,
+                                                   std::uint64_t pauli_id) {
+>>>>>>> set-space
     if (target_qubit >= sizeof(std::uint64_t) * 8) {
         throw std::runtime_error(
             "PauliOperator::Data::add_single_pauli: target_qubit is too large");
@@ -105,8 +139,13 @@ void PauliOperator<Prec>::Data::add_single_pauli(std::uint64_t target_qubit,
     }
 }
 
+<<<<<<< HEAD
 template <Precision Prec>
 std::string PauliOperator<Prec>::get_pauli_string() const {
+=======
+FLOAT_AND_SPACE(Fp, Sp)
+std::string PauliOperator<Fp, Sp>::get_pauli_string() const {
+>>>>>>> set-space
     std::stringstream ss;
     std::uint64_t size = _ptr->_target_qubit_list.size();
     if (size == 0) return "";
@@ -121,6 +160,7 @@ std::string PauliOperator<Prec>::get_pauli_string() const {
     return res;
 }
 
+<<<<<<< HEAD
 template <Precision Prec>
 PauliOperator<Prec> PauliOperator<Prec>::get_dagger() const {
     return PauliOperator(
@@ -129,12 +169,26 @@ PauliOperator<Prec> PauliOperator<Prec>::get_dagger() const {
 
 template <Precision Prec>
 std::uint64_t PauliOperator<Prec>::get_qubit_count() const {
+=======
+FLOAT_AND_SPACE(Fp, Sp)
+PauliOperator<Fp, Sp> PauliOperator<Fp, Sp>::get_dagger() const {
+    return PauliOperator(_ptr->_target_qubit_list, _ptr->_pauli_id_list, Kokkos::conj(_ptr->_coef));
+}
+
+FLOAT_AND_SPACE(Fp, Sp)
+std::uint64_t PauliOperator<Fp, Sp>::get_qubit_count() const {
+>>>>>>> set-space
     if (_ptr->_target_qubit_list.empty()) return 0;
     return std::ranges::max(_ptr->_target_qubit_list) + 1;
 }
 
+<<<<<<< HEAD
 template <Precision Prec>
 void PauliOperator<Prec>::apply_to_state(StateVector<Prec>& state_vector) const {
+=======
+FLOAT_AND_SPACE(Fp, Sp)
+void PauliOperator<Fp, Sp>::apply_to_state(StateVector<Fp, Sp>& state_vector) const {
+>>>>>>> set-space
     if (state_vector.n_qubits() < get_qubit_count()) {
         throw std::runtime_error(
             "PauliOperator::apply_to_state: n_qubits of state_vector is too small to apply the "
@@ -144,8 +198,14 @@ void PauliOperator<Prec>::apply_to_state(StateVector<Prec>& state_vector) const 
         0ULL, _ptr->_bit_flip_mask, _ptr->_phase_flip_mask, _ptr->_coef, state_vector);
 }
 
+<<<<<<< HEAD
 template <Precision Prec>
 StdComplex PauliOperator<Prec>::get_expectation_value(const StateVector<Prec>& state_vector) const {
+=======
+FLOAT_AND_SPACE(Fp, Sp)
+Complex<Fp> PauliOperator<Fp, Sp>::get_expectation_value(
+    const StateVector<Fp, Sp>& state_vector) const {
+>>>>>>> set-space
     if (state_vector.n_qubits() < get_qubit_count()) {
         throw std::runtime_error(
             "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to "
@@ -157,11 +217,18 @@ StdComplex PauliOperator<Prec>::get_expectation_value(const StateVector<Prec>& s
     if (bit_flip_mask == 0) {
         FloatType res;
         Kokkos::parallel_reduce(
+<<<<<<< HEAD
             state_vector.dim(),
             KOKKOS_LAMBDA(std::uint64_t state_idx, FloatType & sum) {
                 FloatType tmp = (scaluq::internal::conj(state_vector._raw[state_idx]) *
                                  state_vector._raw[state_idx])
                                     .real();
+=======
+            Kokkos::RangePolicy<Sp>(0, state_vector.dim()),
+            KOKKOS_LAMBDA(std::uint64_t state_idx, Fp & sum) {
+                Fp tmp = (Kokkos::conj(state_vector._raw[state_idx]) * state_vector._raw[state_idx])
+                             .real();
+>>>>>>> set-space
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
                 sum += tmp;
             },
@@ -173,8 +240,13 @@ StdComplex PauliOperator<Prec>::get_expectation_value(const StateVector<Prec>& s
     ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
     FloatType res;
     Kokkos::parallel_reduce(
+<<<<<<< HEAD
         state_vector.dim() >> 1,
         KOKKOS_LAMBDA(std::uint64_t state_idx, FloatType & sum) {
+=======
+        Kokkos::RangePolicy<Sp>(0, state_vector.dim() >> 1),
+        KOKKOS_LAMBDA(std::uint64_t state_idx, Fp & sum) {
+>>>>>>> set-space
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
             FloatType tmp = scaluq::internal::real(
@@ -187,9 +259,16 @@ StdComplex PauliOperator<Prec>::get_expectation_value(const StateVector<Prec>& s
     return static_cast<StdComplex>(_ptr->_coef * res);
 }
 
+<<<<<<< HEAD
 template <Precision Prec>
 StdComplex PauliOperator<Prec>::get_transition_amplitude(
     const StateVector<Prec>& state_vector_bra, const StateVector<Prec>& state_vector_ket) const {
+=======
+FLOAT_AND_SPACE(Fp, Sp)
+Complex<Fp> PauliOperator<Fp, Sp>::get_transition_amplitude(
+    const StateVector<Fp, Sp>& state_vector_bra,
+    const StateVector<Fp, Sp>& state_vector_ket) const {
+>>>>>>> set-space
     if (state_vector_bra.n_qubits() != state_vector_ket.n_qubits()) {
         throw std::runtime_error("state_vector_bra must have same n_qubits to state_vector_ket.");
     }
@@ -204,9 +283,15 @@ StdComplex PauliOperator<Prec>::get_transition_amplitude(
     if (bit_flip_mask == 0) {
         ComplexType res;
         Kokkos::parallel_reduce(
+<<<<<<< HEAD
             state_vector_bra.dim(),
             KOKKOS_LAMBDA(std::uint64_t state_idx, ComplexType & sum) {
                 ComplexType tmp = scaluq::internal::conj(state_vector_bra._raw[state_idx]) *
+=======
+            Kokkos::RangePolicy<Sp>(0, state_vector_bra.dim()),
+            KOKKOS_LAMBDA(std::uint64_t state_idx, Complex<Fp> & sum) {
+                Complex<Fp> tmp = Kokkos::conj(state_vector_bra._raw[state_idx]) *
+>>>>>>> set-space
                                   state_vector_ket._raw[state_idx];
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
                 sum += tmp;
@@ -220,8 +305,13 @@ StdComplex PauliOperator<Prec>::get_transition_amplitude(
     ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
     ComplexType res;
     Kokkos::parallel_reduce(
+<<<<<<< HEAD
         state_vector_bra.dim() >> 1,
         KOKKOS_LAMBDA(std::uint64_t state_idx, ComplexType & sum) {
+=======
+        Kokkos::RangePolicy<Sp>(0, state_vector_bra.dim() >> 1),
+        KOKKOS_LAMBDA(std::uint64_t state_idx, Complex<Fp> & sum) {
+>>>>>>> set-space
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
             ComplexType tmp1 = scaluq::internal::conj(state_vector_bra._raw[basis_1]) *
@@ -237,6 +327,7 @@ StdComplex PauliOperator<Prec>::get_transition_amplitude(
     return static_cast<StdComplex>(_ptr->_coef * res);
 }
 
+<<<<<<< HEAD
 template <Precision Prec>
 internal::ComplexMatrix PauliOperator<Prec>::get_matrix() const {
     return get_matrix_ignoring_coef() * static_cast<StdComplex>(_ptr->_coef);
@@ -244,6 +335,15 @@ internal::ComplexMatrix PauliOperator<Prec>::get_matrix() const {
 
 template <Precision Prec>
 internal::ComplexMatrix PauliOperator<Prec>::get_matrix_ignoring_coef() const {
+=======
+FLOAT_AND_SPACE(Fp, Sp)
+internal::ComplexMatrix<Fp> PauliOperator<Fp, Sp>::get_matrix() const {
+    return get_matrix_ignoring_coef() * StdComplex<Fp>(_ptr->_coef);
+}
+
+FLOAT_AND_SPACE(Fp, Sp)
+internal::ComplexMatrix<Fp> PauliOperator<Fp, Sp>::get_matrix_ignoring_coef() const {
+>>>>>>> set-space
     std::uint64_t flip_mask, phase_mask, rot90_count;
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, _ptr->_pauli_id_list.size()),
@@ -275,8 +375,13 @@ internal::ComplexMatrix PauliOperator<Prec>::get_matrix_ignoring_coef() const {
     return mat;
 }
 
+<<<<<<< HEAD
 template <Precision Prec>
 PauliOperator<Prec> PauliOperator<Prec>::operator*(const PauliOperator& target) const {
+=======
+FLOAT_AND_SPACE(Fp, Sp)
+PauliOperator<Fp, Sp> PauliOperator<Fp, Sp>::operator*(const PauliOperator& target) const {
+>>>>>>> set-space
     int extra_90rot_cnt = 0;
     auto x_left = _ptr->_bit_flip_mask & ~_ptr->_phase_flip_mask;
     auto y_left = _ptr->_bit_flip_mask & _ptr->_phase_flip_mask;
@@ -298,6 +403,10 @@ PauliOperator<Prec> PauliOperator<Prec>::operator*(const PauliOperator& target) 
         _ptr->_coef * target._ptr->_coef * internal::PHASE_90ROT<Prec>()[extra_90rot_cnt]);
 }
 
+<<<<<<< HEAD
 SCALUQ_DECLARE_CLASS_FOR_PRECISION(PauliOperator)
+=======
+FLOAT_AND_SPACE_DECLARE_CLASS(PauliOperator)
+>>>>>>> set-space
 
 }  // namespace scaluq

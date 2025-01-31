@@ -9,6 +9,7 @@
 namespace scaluq {
 namespace internal {
 
+<<<<<<< HEAD
 template <Precision Prec>
 class PauliGateImpl : public GateBase<Prec> {
     const PauliOperator<Prec> _pauli;
@@ -22,12 +23,32 @@ public:
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
+=======
+template <std::floating_point Fp, ExecutionSpace Sp>
+class PauliGateImpl : public GateBase<Fp, Sp> {
+    const PauliOperator<Fp, Sp> _pauli;
+
+public:
+    PauliGateImpl(std::uint64_t control_mask, const PauliOperator<Fp, Sp>& pauli)
+        : GateBase<Fp, Sp>(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
+          _pauli(pauli) {}
+
+    PauliOperator<Fp, Sp> pauli() const { return _pauli; };
+    std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
+
+    std::shared_ptr<const GateBase<Fp, Sp>> get_inverse() const override {
+>>>>>>> set-space
         return this->shared_from_this();
     }
     ComplexMatrix get_matrix() const override { return this->_pauli.get_matrix(); }
 
+<<<<<<< HEAD
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+=======
+    void update_quantum_state(StateVector<Fp, Sp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp, Sp>& states) const override;
+>>>>>>> set-space
 
     std::string to_string(const std::string& indent) const override;
 
@@ -37,6 +58,7 @@ public:
     }
 };
 
+<<<<<<< HEAD
 template <Precision Prec>
 class PauliRotationGateImpl : public GateBase<Prec> {
     const PauliOperator<Prec> _pauli;
@@ -51,18 +73,42 @@ public:
           _angle(angle) {}
 
     PauliOperator<Prec> pauli() const { return _pauli; }
+=======
+template <std::floating_point Fp, ExecutionSpace Sp>
+class PauliRotationGateImpl : public GateBase<Fp, Sp> {
+    const PauliOperator<Fp, Sp> _pauli;
+    const Fp _angle;
+
+public:
+    PauliRotationGateImpl(std::uint64_t control_mask, const PauliOperator<Fp, Sp>& pauli, Fp angle)
+        : GateBase<Fp, Sp>(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
+          _pauli(pauli),
+          _angle(angle) {}
+
+    PauliOperator<Fp, Sp> pauli() const { return _pauli; }
+>>>>>>> set-space
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
     double angle() const { return _angle; }
 
+<<<<<<< HEAD
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const PauliRotationGateImpl<Prec>>(
+=======
+    std::shared_ptr<const GateBase<Fp, Sp>> get_inverse() const override {
+        return std::make_shared<const PauliRotationGateImpl<Fp, Sp>>(
+>>>>>>> set-space
             this->_control_mask, _pauli, -_angle);
     }
 
     ComplexMatrix get_matrix() const override;
 
+<<<<<<< HEAD
     void update_quantum_state(StateVector<Prec>& state_vector) const override;
     void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+=======
+    void update_quantum_state(StateVector<Fp, Sp>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Fp, Sp>& states) const override;
+>>>>>>> set-space
 
     std::string to_string(const std::string& indent) const override;
 
@@ -75,6 +121,7 @@ public:
 };
 }  // namespace internal
 
+<<<<<<< HEAD
 template <Precision Prec>
 using PauliGate = internal::GatePtr<internal::PauliGateImpl<Prec>>;
 template <Precision Prec>
@@ -82,6 +129,15 @@ using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl<Prec
 
 namespace internal {
 #define DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION(Prec)                                 \
+=======
+template <std::floating_point Fp, ExecutionSpace Sp>
+using PauliGate = internal::GatePtr<internal::PauliGateImpl<Fp, Sp>>;
+template <std::floating_point Fp, ExecutionSpace Sp>
+using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl<Fp, Sp>>;
+
+namespace internal {
+/*#define DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(Type)                                      \
+>>>>>>> set-space
     template <>                                                                              \
     inline std::shared_ptr<const PauliGateImpl<Prec>> get_from_json(const Json& j) {         \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();                   \
@@ -97,6 +153,7 @@ namespace internal {
             vector_to_mask(controls), pauli, static_cast<Float<Prec>>(angle));               \
     }
 
+<<<<<<< HEAD
 #ifdef SCALUQ_FLOAT16
 DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION(Precision::F16)
 #endif
@@ -110,12 +167,21 @@ DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION(Precision::F64)
 DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION(Precision::BF16)
 #endif
 #undef DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION
+=======
+DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(double)
+DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE(float)
+#undef DECLARE_GET_FROM_JSON_PAULIGATE_WITH_TYPE*/
+>>>>>>> set-space
 
 }  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
+<<<<<<< HEAD
 template <Precision Prec>
+=======
+template <std::floating_point Fp, ExecutionSpace Sp>
+>>>>>>> set-space
 void bind_gate_gate_pauli_hpp(nb::module_& m) {
     DEF_GATE(PauliGate,
              Prec,

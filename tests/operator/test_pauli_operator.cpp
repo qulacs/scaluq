@@ -6,99 +6,105 @@
 
 using namespace scaluq;
 
-TEST(PauliOperatorTest, ContainsExtraWhitespace) {
-    PauliOperator<double> expected = PauliOperator<double>("X 0", 1.0);
-    PauliOperator<double> pauli_whitespace = PauliOperator<double>("X 0 ", 1.0);
+#define FLOAT_AND_SPACE(Fp, Sp) template <std::floating_point Fp, ExecutionSpace Sp>
+#define EXECUTE_TEST(Name)                  \
+    TEST(PauliOperatorTest, Name) {         \
+        Test##Name<double, DefaultSpace>(); \
+        Test##Name<double, HostSpace>();    \
+        Test##Name<float, DefaultSpace>();  \
+        Test##Name<float, HostSpace>();     \
+    }
+
+FLOAT_AND_SPACE(Fp, Sp)
+void TestContainsExtraWhitespace() {
+    PauliOperator<Fp, Sp> expected("X 0", 1.0), pauli_whitespace("X 0 ", 1.0);
 
     EXPECT_EQ(1, pauli_whitespace.target_qubit_list().size());
     EXPECT_EQ(1, pauli_whitespace.pauli_id_list().size());
     EXPECT_EQ(expected.get_pauli_string(), pauli_whitespace.get_pauli_string());
 }
+EXECUTE_TEST(ContainsExtraWhitespace)
 
-TEST(PauliOperatorTest, EmptyStringConstructsIdentity) {
-    const auto identity = PauliOperator<double>("", 1.0);
+FLOAT_AND_SPACE(Fp, Sp)
+void TestEmptyStringConstructsIdentity() {
+    const auto identity = PauliOperator<Fp, Sp>("", 1.0);
     ASSERT_EQ(0, identity.target_qubit_list().size());
     ASSERT_EQ(0, identity.pauli_id_list().size());
     ASSERT_EQ("", identity.get_pauli_string());
 }
+EXECUTE_TEST(EmptyStringConstructsIdentity)
 
-TEST(PauliOperatorTest, PauliQubitOverflow) {
+FLOAT_AND_SPACE(Fp, Sp)
+void TestPauliQubitOverflow() {
     int n = 2;
     double coef = 2.0;
-    std::string Pauli_string = "X 0 X 1 X 3";
-    PauliOperator<double> pauli = PauliOperator<double>(Pauli_string, coef);
-    StateVector state = StateVector<double>::Haar_random_state(n);
+    std::string pauli_string = "X 0 X 1 X 3";
+    PauliOperator<Fp, Sp> pauli(pauli_string, coef);
+    auto state = StateVector<Fp, Sp>::Haar_random_state(n);
     EXPECT_THROW((void)pauli.get_expectation_value(state), std::runtime_error);
 }
+EXECUTE_TEST(PauliQubitOverflow)
 
-TEST(PauliOperatorTest, BrokenPauliStringA) {
-    double coef = 2.0;
-    std::string Pauli_string = "X 0 X Z 1 Y 2";
-    EXPECT_THROW(PauliOperator<double>(Pauli_string, coef), std::runtime_error);
+FLOAT_AND_SPACE(Fp, Sp)
+void TestBrokenPauliString() {
+    Fp coef = 2.0;
+    std::string pauli_string1 = "4 X";
+    std::string pauli_string2 = "X {i}";
+    std::string pauli_string3 = "X 0 Y ";
+    using PO = PauliOperator<Fp, Sp>;
+    ASSERT_THROW(PO(pauli_string1, coef), std::runtime_error);
+    ASSERT_THROW(PO(pauli_string2, coef), std::runtime_error);
+    ASSERT_THROW(PO(pauli_string3, coef), std::runtime_error);
 }
+EXECUTE_TEST(BrokenPauliString)
 
-TEST(PauliOperatorTest, BrokenPauliStringB) {
-    double coef = 2.0;
-    std::string Pauli_string = "X {i}";
-    EXPECT_THROW(PauliOperator<double>(Pauli_string, coef), std::runtime_error);
-}
-
-TEST(PauliOperatorTest, BrokenPauliStringC) {
-    double coef = 2.0;
-    std::string Pauli_string = "X 4x";
-    EXPECT_THROW(PauliOperator<double>(Pauli_string, coef), std::runtime_error);
-}
-
-TEST(PauliOperatorTest, BrokenPauliStringD) {
-    double coef = 2.0;
-    std::string Pauli_string = "4 X";
-    EXPECT_THROW(PauliOperator<double>(Pauli_string, coef), std::runtime_error);
-}
-
-TEST(PauliOperatorTest, SpacedPauliString) {
-    double coef = 2.0;
-    std::string Pauli_string = "X 0 Y 1 ";
-    PauliOperator<double> pauli = PauliOperator<double>(Pauli_string, coef);
+FLOAT_AND_SPACE(Fp, Sp)
+void TestSpacedPauliString() {
+    Fp coef = 2.0;
+    std::string pauli_string = "X 0 Y 1 ";
+    PauliOperator<Fp, Sp> pauli(pauli_string, coef);
     size_t PauliSize = pauli.target_qubit_list().size();
     ASSERT_EQ(PauliSize, 2);
 }
-
-TEST(PauliOperatorTest, PartedPauliString) {
-    double coef = 2.0;
-    std::string Pauli_string = "X 0 Y ";
-    EXPECT_THROW(PauliOperator<double>(Pauli_string, coef), std::runtime_error);
-}
+EXECUTE_TEST(SpacedPauliString)
 
 struct PauliTestParam {
     std::string test_name;
-    PauliOperator<double> op1;
-    PauliOperator<double> op2;
-    PauliOperator<double> expected;
+    PauliOperator<double, DefaultSpace> op1, op2, expected;
+    PauliOperator<double, HostSpace> op1_cpu, op2_cpu, expected_cpu;
+    PauliOperator<float, DefaultSpace> op1_f, op2_f, expected_f;
+    PauliOperator<float, HostSpace> op1_f_cpu, op2_f_cpu, expected_f_cpu;
+    using Clx = StdComplex<double>;
+    using Clx_f = StdComplex<float>;
 
-    PauliTestParam(const std::string& test_name_,
-                   const PauliOperator<double>& op1_,
-                   const PauliOperator<double>& op2_,
-                   const PauliOperator<double>& expected_)
-        : test_name(test_name_), op1(op1_), op2(op2_), expected(expected_) {}
+    PauliTestParam(const std::string& _test_name,
+                   const std::tuple<std::string, double, double>& _op1,  // pauli_string, real, imag
+                   const std::tuple<std::string, double, double>& _op2,
+                   const std::tuple<std::string, double, double>& _exp)
+        : test_name(_test_name),
+          op1(std::get<0>(_op1), Clx(std::get<1>(_op1), std::get<2>(_op1))),
+          op2(std::get<0>(_op2), Clx(std::get<1>(_op2), std::get<2>(_op2))),
+          expected(std::get<0>(_exp), Clx(std::get<1>(_exp), std::get<2>(_exp))),
+          op1_cpu(std::get<0>(_op1), Clx(std::get<1>(_op1), std::get<2>(_op1))),
+          op2_cpu(std::get<0>(_op2), Clx(std::get<1>(_op2), std::get<2>(_op2))),
+          expected_cpu(std::get<0>(_exp), Clx(std::get<1>(_exp), std::get<2>(_exp))),
+          op1_f(std::get<0>(_op1), Clx_f(std::get<1>(_op1), std::get<2>(_op1))),
+          op2_f(std::get<0>(_op2), Clx_f(std::get<1>(_op2), std::get<2>(_op2))),
+          expected_f(std::get<0>(_exp), Clx_f(std::get<1>(_exp), std::get<2>(_exp))),
+          op1_f_cpu(std::get<0>(_op1), Clx_f(std::get<1>(_op1), std::get<2>(_op1))),
+          op2_f_cpu(std::get<0>(_op2), Clx_f(std::get<1>(_op2), std::get<2>(_op2))),
+          expected_f_cpu(std::get<0>(_exp), Clx_f(std::get<1>(_exp), std::get<2>(_exp))) {}
+
+    friend std::ostream& operator<<(std::ostream& stream, const PauliTestParam& p) {
+        return stream << p.test_name;
+    }
 };
-
-std::ostream& operator<<(std::ostream& stream, const PauliTestParam& p) {
-    return stream << p.test_name;
-}
 
 class PauliOperatorMultiplyTest : public testing::TestWithParam<PauliTestParam> {};
 
-TEST_P(PauliOperatorMultiplyTest, MultiplyTest) {
+TEST_P(PauliOperatorMultiplyTest, Multiply) {
     const auto p = GetParam();
-    PauliOperator<double> res = p.op1 * p.op2;
-    EXPECT_EQ(p.expected.get_pauli_string(), res.get_pauli_string());
-    EXPECT_EQ(p.expected.coef(), res.coef());
-}
-
-TEST_P(PauliOperatorMultiplyTest, MultiplyAssignmentTest) {
-    const auto p = GetParam();
-    PauliOperator<double> res = p.op1;
-    res = res * p.op2;
+    PauliOperator<double, DefaultSpace> res = p.op1 * p.op2;
     EXPECT_EQ(p.expected.get_pauli_string(), res.get_pauli_string());
     EXPECT_EQ(p.expected.coef(), res.coef());
 }
@@ -106,61 +112,33 @@ TEST_P(PauliOperatorMultiplyTest, MultiplyAssignmentTest) {
 INSTANTIATE_TEST_CASE_P(
     SinglePauli,
     PauliOperatorMultiplyTest,
-    testing::Values(PauliTestParam("XX",
-                                   PauliOperator<double>("X 0", 2.0),
-                                   PauliOperator<double>("X 0", 2.0),
-                                   PauliOperator<double>("I 0", 4.0)),
-                    PauliTestParam("XY",
-                                   PauliOperator<double>("X 0", 2.0),
-                                   PauliOperator<double>("Y 0", 2.0),
-                                   PauliOperator<double>("Z 0", StdComplex<double>(0, 4))),
-                    PauliTestParam("XZ",
-                                   PauliOperator<double>("X 0", 2.0),
-                                   PauliOperator<double>("Z 0", 2.0),
-                                   PauliOperator<double>("Y 0", StdComplex<double>(0, -4))),
-                    PauliTestParam("YX",
-                                   PauliOperator<double>("Y 0", 2.0),
-                                   PauliOperator<double>("X 0", 2.0),
-                                   PauliOperator<double>("Z 0", StdComplex<double>(0, -4))),
-                    PauliTestParam("YY",
-                                   PauliOperator<double>("Y 0", 2.0),
-                                   PauliOperator<double>("Y 0", 2.0),
-                                   PauliOperator<double>("I 0", 4.0)),
-                    PauliTestParam("YZ",
-                                   PauliOperator<double>("Y 0", 2.0),
-                                   PauliOperator<double>("Z 0", 2.0),
-                                   PauliOperator<double>("X 0", StdComplex<double>(0, 4))),
-                    PauliTestParam("ZX",
-                                   PauliOperator<double>("Z 0", 2.0),
-                                   PauliOperator<double>("X 0", 2.0),
-                                   PauliOperator<double>("Y 0", StdComplex<double>(0, 4))),
-                    PauliTestParam("ZY",
-                                   PauliOperator<double>("Z 0", 2.0),
-                                   PauliOperator<double>("Y 0", 2.0),
-                                   PauliOperator<double>("X 0", StdComplex<double>(0, -4))),
-                    PauliTestParam("ZZ",
-                                   PauliOperator<double>("Z 0", 2.0),
-                                   PauliOperator<double>("Z 0", 2.0),
-                                   PauliOperator<double>("I 0", 4.0))),
+    testing::Values(PauliTestParam("XX", {"X 0", 2.0, 0.0}, {"X 0", 2.0, 0.0}, {"I 0", 4.0, 0.0}),
+                    PauliTestParam("XY", {"X 0", 2.0, 0.0}, {"Y 0", 2.0, 0.0}, {"Z 0", 0.0, 4.0}),
+                    PauliTestParam("XZ", {"X 0", 2.0, 0.0}, {"Z 0", 2.0, 0.0}, {"Y 0", 0.0, -4.0}),
+                    PauliTestParam("YX", {"Y 0", 2.0, 0.0}, {"X 0", 2.0, 0.0}, {"Z 0", 0.0, -4.0}),
+                    PauliTestParam("YY", {"Y 0", 2.0, 0.0}, {"Y 0", 2.0, 0.0}, {"I 0", 4.0, 0.0}),
+                    PauliTestParam("YZ", {"Y 0", 2.0, 0.0}, {"Z 0", 2.0, 0.0}, {"X 0", 0.0, 4.0}),
+                    PauliTestParam("ZX", {"Z 0", 2.0, 0.0}, {"X 0", 2.0, 0.0}, {"Y 0", 0.0, 4.0}),
+                    PauliTestParam("ZY", {"Z 0", 2.0, 0.0}, {"Y 0", 2.0, 0.0}, {"X 0", 0.0, -4.0}),
+                    PauliTestParam("ZZ", {"Z 0", 2.0, 0.0}, {"Z 0", 2.0, 0.0}, {"I 0", 4.0, 0.0})),
     testing::PrintToStringParamName());
 
 INSTANTIATE_TEST_CASE_P(MultiPauli,
                         PauliOperatorMultiplyTest,
                         testing::Values(PauliTestParam("X_Y",
-                                                       PauliOperator<double>("X 0", 2.0),
-                                                       PauliOperator<double>("Y 1", 2.0),
-                                                       PauliOperator<double>("X 0 Y 1", 4.0)),
+                                                       {"X 0", 2.0, 0.0},
+                                                       {"Y 1", 2.0, 0.0},
+                                                       {"X 0 Y 1", 4.0, 0.0}),
                                         PauliTestParam("XY_YX",
-                                                       PauliOperator<double>("X 0 Y 1", 2.0),
-                                                       PauliOperator<double>("Y 0 X 1", 2.0),
-                                                       PauliOperator<double>("Z 0 Z 1", 4.0))),
+                                                       {"X 0 Y 1", 2.0, 0.0},
+                                                       {"Y 0 X 1", 2.0, 0.0},
+                                                       {"Z 0 Z 1", 4.0, 0.0})),
                         testing::PrintToStringParamName());
 
-// 並列化した場合でも、計算結果のindexの順序が保たれることを確認する
 INSTANTIATE_TEST_CASE_P(
-    MultiPauliPauli,
+    LongPauli,
     PauliOperatorMultiplyTest,
-    []() {
+    [] {
         double coef = 2.0;
         std::uint64_t MAX_TERM = 64;
         std::string pauli_string_x = "";
@@ -178,25 +156,26 @@ INSTANTIATE_TEST_CASE_P(
             }
         }
 
-        PauliOperator<double> expected = PauliOperator<double>(pauli_string_x, coef * coef);
-        PauliOperator<double> pauli_y = PauliOperator<double>(pauli_string_y, coef);
-        PauliOperator<double> pauli_z = PauliOperator<double>(pauli_string_z, coef);
-
-        return testing::Values(PauliTestParam("Z_Y", pauli_z, pauli_y, expected));
+        return testing::Values(PauliTestParam("Z_Y",
+                                              {pauli_string_z, coef, 0.0},
+                                              {pauli_string_y, coef, 0.0},
+                                              {pauli_string_x, coef * coef, 0.0}));
     }(),
     testing::PrintToStringParamName());
 
-TEST(PauliOperatorTest, ApplyToStateTest) {
+FLOAT_AND_SPACE(Fp, Sp)
+void TestApplyToState() {
     const std::uint64_t n_qubits = 3;
-    StateVector<double> state_vector(n_qubits);
+    StateVector<Fp, Sp> state_vector(n_qubits);
     state_vector.load([n_qubits] {
-        std::vector<Complex<double>> tmp(1 << n_qubits);
-        for (std::uint64_t i = 0; i < tmp.size(); ++i) tmp[i] = Complex<double>(i, 0);
+        std::vector<Complex<Fp>> tmp(1 << n_qubits);
+        for (std::uint64_t i = 0; i < tmp.size(); ++i) tmp[i] = Complex<Fp>(i, 0);
         return tmp;
     }());
 
-    PauliOperator<double> op(0b001, 0b010, Complex<double>(2));
+    PauliOperator<Fp, Sp> op(0b001, 0b010, StdComplex<Fp>(2));
     op.apply_to_state(state_vector);
-    std::vector<Complex<double>> expected = {2, 0, -6, -4, 10, 8, -14, -12};
+    std::vector<Complex<Fp>> expected = {2, 0, -6, -4, 10, 8, -14, -12};
     ASSERT_EQ(state_vector.get_amplitudes(), expected);
 }
+EXECUTE_TEST(ApplyToState)
