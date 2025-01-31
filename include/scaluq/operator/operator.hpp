@@ -92,7 +92,19 @@ private:
 namespace internal {
 template <std::floating_point Fp>
 void bind_operator_operator_hpp(nb::module_& m) {
-    nb::class_<Operator<Fp>>(m, "Operator", "General quantum operator class.")
+    nb::class_<Operator<Fp>>(
+        m,
+        "Operator",
+        DocString()
+            .desc("General quantum operator class.")
+            .ex(DocString::Code(
+                {">>> pauli = PauliOperator(\"X 3 Y 2\")",
+                 ">>> operator = Operator(4)",
+                 ">>> operator.add_operator(pauli)",
+                 ">>> print(operator.to_json())",
+                 "{\"coef\":{\"imag\":0.0,\"real\":1.0},\"pauli_string\":\"X 3 Y 2\"}"}))
+            .build_as_google_style()
+            .c_str())
         .def(nb::init<std::uint64_t>(),
              "qubit_count"_a,
              "Initialize operator with specified number of qubits.")

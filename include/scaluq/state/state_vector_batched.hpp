@@ -127,6 +127,31 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
             .desc("Batched vector representation of quantum state.")
             .desc("Qubit index starts from 0. If the amplitudes of $\\ket{b_{n-1}\\dots b_0}$ "
                   "are $b_i$, the state is $\\sum_i b_i 2^i$.")
+            .ex(DocString::Code({">>> states = StateVectorBatched(3, 2)",
+                                 ">>> print(states)",
+                                 "Qubit Count : 2",
+                                 "Dimension : 4",
+                                 "--------------------",
+                                 "Batch_id : 0",
+                                 "State vector : ",
+                                 "  00 : (1,0)",
+                                 "  01 : (0,0)",
+                                 "  10 : (0,0)",
+                                 "  11 : (0,0)",
+                                 "--------------------",
+                                 "Batch_id : 1",
+                                 "State vector : ",
+                                 "  00 : (1,0)",
+                                 "  01 : (0,0)",
+                                 "  10 : (0,0)",
+                                 "  11 : (0,0)",
+                                 "--------------------",
+                                 "Batch_id : 2",
+                                 "State vector : ",
+                                 "  00 : (1,0)",
+                                 "  01 : (0,0)",
+                                 "  10 : (0,0)",
+                                 "  11 : (0,0)"}))
             .build_as_google_style()
             .c_str())
         // Constructor: batch size and number of qubits
@@ -139,17 +164,29 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .arg("n_qubits", "int", "Number of qubits in each state vector.")
                  .ex(DocString::Code({">>> states = StateVectorBatched(3, 2)",
                                       ">>> print(states)",
-                                      " *** Quantum States ***",
-                                      " * Qubit Count : 2",
-                                      " * Dimension : 4",
+                                      "Qubit Count : 2",
+                                      "Dimension : 4",
                                       "--------------------",
-                                      " * Batch_id : 0",
-                                      " * State vector : ",
-                                      "  00 : (1,0)\n  01 : (0,0)\n  10 : (0,0)\n  11 : (0,0)",
+                                      "Batch_id : 0",
+                                      "State vector : ",
+                                      "  00 : (1,0)",
+                                      "  01 : (0,0)",
+                                      "  10 : (0,0)",
+                                      "  11 : (0,0)",
                                       "--------------------",
-                                      " * Batch_id : 1",
-                                      " * State vector : ",
-                                      "  00 : (1,0)\n  01 : (0,0)\n  10 : (0,0)\n  11 : (0,0)"}))
+                                      "Batch_id : 1",
+                                      "State vector : ",
+                                      "  00 : (1,0)",
+                                      "  01 : (0,0)",
+                                      "  10 : (0,0)",
+                                      "  11 : (0,0)",
+                                      "--------------------",
+                                      "Batch_id : 2",
+                                      "State vector : ",
+                                      "  00 : (1,0)",
+                                      "  01 : (0,0)",
+                                      "  10 : (0,0)",
+                                      "  11 : (0,0)"}))
                  .build_as_google_style()
                  .c_str())
         // Constructor: Copy constructor

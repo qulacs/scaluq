@@ -164,7 +164,14 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
     nb::class_<PauliOperator<Fp>>(
         m,
         "PauliOperator",
-        "Pauli operator as coef and tensor product of single pauli for each qubit.")
+        DocString()
+            .desc("Pauli operator as coef and tensor product of single pauli for each qubit.")
+            .ex(DocString::Code(
+                {">>> pauli = PauliOperator(\"X 3 Y 2\")",
+                 ">>> print(pauli.to_json())",
+                 "{\"coef\":{\"imag\":0.0,\"real\":1.0},\"pauli_string\":\"X 3 Y 2\"}"}))
+            .build_as_google_style()
+            .c_str())
         .def(nb::init<Complex<Fp>>(),
              "coef"_a = 1.,
              "Initialize operator which just multiplying coef.")

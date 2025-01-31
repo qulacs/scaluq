@@ -105,7 +105,16 @@ private:
 namespace internal {
 template <std::floating_point Fp>
 void bind_circuit_circuit_hpp(nb::module_& m) {
-    nb::class_<Circuit<Fp>>(m, "Circuit", "Quantum circuit represented as gate array")
+    nb::class_<Circuit<Fp>>(m,
+                            "Circuit",
+                            DocString()
+                                .desc("Quantum circuit representation.")
+                                .arg("n_qubits", "Number of qubits in the circuit.")
+                                .ex(DocString::Code({">>> circuit = Circuit(3)",
+                                                     ">>> print(circuit.to_json())",
+                                                     "{\"gate_list\":[],\"n_qubits\":3}"}))
+                                .build_as_google_style()
+                                .c_str())
         .def(nb::init<std::uint64_t>(), "Initialize empty circuit of specified qubits.")
         .def("n_qubits", &Circuit<Fp>::n_qubits, "Get property of `n_qubits`.")
         .def("gate_list",
