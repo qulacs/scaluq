@@ -57,7 +57,7 @@ public:
     FloatType& imag() { return _imag; };
 
     KOKKOS_INLINE_FUNCTION Complex operator+() const { return *this; }
-    KOKKOS_INLINE_FUNCTION Complex operator-() const { return Complex(-_real, _imag); }
+    KOKKOS_INLINE_FUNCTION Complex operator-() const { return Complex(-_real, -_imag); }
 
     KOKKOS_INLINE_FUNCTION Complex& operator+=(const Complex& rhs) {
         _real += rhs._real;

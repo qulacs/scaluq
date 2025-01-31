@@ -83,4 +83,9 @@ class FixtureBase : public ::testing::Test {
 public:
     constexpr static Precision Prec = T::Prec;
 };
+template <typename T, typename Param>
+class ParamFixtureBase : public ::testing::TestWithParam<Param> {
+public:
+    constexpr static Precision Prec = T::Prec;
+};
 }  // namespace scaluq
