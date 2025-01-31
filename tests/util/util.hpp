@@ -22,10 +22,15 @@ constexpr double eps_() {
     else if constexpr (Prec == Precision::BF16)
         return 1e-1;
     else
-        static_assert(internal::lazy_false_v<void>, "unknown Precision");
+        static_assert(internal::lazy_false_v<internal::Float<Prec>>, "unknown Precision");
 }
 template <Precision Prec>
 constexpr double eps = eps_<Prec>();
+
+template <Precision Prec>
+inline void check_near(const StdComplex& a, const StdComplex& b) {
+    ASSERT_LE(std::abs(a - b), eps<Prec>);
+}
 
 template <Precision Prec>
 inline bool same_state(const StateVector<Prec>& s1,
