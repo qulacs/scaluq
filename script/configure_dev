@@ -5,5 +5,7 @@ set -eux
 export CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-"Debug"}
 export SCALUQ_USE_TEST=${SCALUQ_USE_TEST:-"ON"}
 export SCALUQ_USE_EXE=${SCALUQ_USE_EXE:-"ON"}
+export SCALUQ_FLOAT16=${SCALUQ_FLOAT16:-"ON"}
+export SCALUQ_BFLOAT16=${SCALUQ_BFLOAT16:-"ON"}
 
 script/configure
