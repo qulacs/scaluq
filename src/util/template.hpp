@@ -162,17 +162,21 @@
     MACRO(::scaluq::StdComplex, DefaultSpace)                   \
     MACRO(::scaluq::StdComplex, HostSpace)
 #else
-#define SCALUQ_CALL_MACRO_FOR_TYPES_AND_EXECUTION_SPACE(MACRO)                               \
-    SCALUQ_CALL_MACRO_TYPES_FLOAT16_AND_EXECUTION_SPACE(MACRO)                               \
-    SCALUQ_CALL_MACRO_TYPES_FLOAT32_AND_EXECUTION_SPACE(MACRO)                               \
-    SCALUQ_CALL_MACRO_TYPES_FLOAT64_AND_EXECUTION_SPACE(MACRO)                               \
-    SCALUQ_CALL_MACRO_TYPES_BFLOAT16_AND_EXECUTION_SPACE(MACRO)                              \
-    MACRO(std::uint8_t, DefaultSpace)                                                        \
-    MACRO(std::uint8_t, HostSpace)                                                           \
-    MACRO(std::uint16_t, DefaultSpace)                                                       \
-    MACRO(std::uint16_t, HostSpace)                                                          \
-    MACRO(std::uint32_t, DefaultSpace)                                                       \
-    MACRO(std::uint32_t, HostSpace) MACRO(std::uint64_t, DefaultSpace)                       \
-        MACRO(std::uint64_t, HostSpace) MACRO(double, DefaultSpace) MACRO(double, HostSpace) \
-            MACRO(::scaluq::StdComplex, DefaultSpace) MACRO(::scaluq::StdComplex, HostSpace)
+#define SCALUQ_CALL_MACRO_FOR_TYPES_AND_EXECUTION_SPACE(MACRO)  \
+    SCALUQ_CALL_MACRO_TYPES_FLOAT16_AND_EXECUTION_SPACE(MACRO)  \
+    SCALUQ_CALL_MACRO_TYPES_FLOAT32_AND_EXECUTION_SPACE(MACRO)  \
+    SCALUQ_CALL_MACRO_TYPES_FLOAT64_AND_EXECUTION_SPACE(MACRO)  \
+    SCALUQ_CALL_MACRO_TYPES_BFLOAT16_AND_EXECUTION_SPACE(MACRO) \
+    MACRO(std::uint8_t, DefaultSpace)                           \
+    MACRO(std::uint8_t, HostSpace)                              \
+    MACRO(std::uint16_t, DefaultSpace)                          \
+    MACRO(std::uint16_t, HostSpace)                             \
+    MACRO(std::uint32_t, DefaultSpace)                          \
+    MACRO(std::uint32_t, HostSpace)                             \
+    MACRO(std::uint64_t, DefaultSpace)                          \
+    MACRO(std::uint64_t, HostSpace)                             \
+    MACRO(double, DefaultSpace)                                 \
+    MACRO(double, HostSpace)                                    \
+    MACRO(::scaluq::StdComplex, DefaultSpace)                   \
+    MACRO(::scaluq::StdComplex, HostSpace)
 #endif
