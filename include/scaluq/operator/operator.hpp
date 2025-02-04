@@ -51,26 +51,10 @@ public:
 
     // not implemented yet
     [[nodiscard]] StdComplex solve_gound_state_eigenvalue_by_arnoldi_method(
-        const StateVector<Prec>& state, std::uint64_t iter_count, StdComplex mu = 0.) const;
+        const StateVector<Prec, Space>& state, std::uint64_t iter_count, StdComplex mu = 0.) const;
     // not implemented yet
     [[nodiscard]] StdComplex solve_gound_state_eigenvalue_by_power_method(
-        const StateVector<Prec>& state, std::uint64_t iter_count, StdComplex mu = 0.) const;
-=======
-    void apply_to_state(StateVector<Fp, Sp>& state_vector) const;
-
-    [[nodiscard]] Complex<Fp> get_expectation_value(const StateVector<Fp, Sp>& state_vector) const;
-
-    [[nodiscard]] Complex<Fp> get_transition_amplitude(
-        const StateVector<Fp, Sp>& state_vector_bra,
-        const StateVector<Fp, Sp>& state_vector_ket) const;
-
-    // not implemented yet
-    [[nodiscard]] Complex<Fp> solve_gound_state_eigenvalue_by_arnoldi_method(
-        const StateVector<Fp, Sp>& state, std::uint64_t iter_count, Complex<Fp> mu = 0.) const;
-    // not implemented yet
-    [[nodiscard]] Complex<Fp> solve_gound_state_eigenvalue_by_power_method(
-        const StateVector<Fp, Sp>& state, std::uint64_t iter_count, Complex<Fp> mu = 0.) const;
->>>>>>> set-space
+        const StateVector<Prec, Space>& state, std::uint64_t iter_count, StdComplex mu = 0.) const;
 
     Operator& operator*=(StdComplex coef);
     Operator operator*(StdComplex coef) const { return Operator(*this) *= coef; }
@@ -140,29 +124,6 @@ void bind_operator_operator_hpp(nb::module_& m) {
         .def(
             "add_random_operator",
             [](Operator<Prec>& op,
-=======
-template <std::floating_point Fp, ExecutionSpace Sp>
-void bind_operator_operator_hpp(nb::module_& m) {
-    nb::class_<Operator<Fp, Sp>>(m, "Operator", "General quantum operator class.")
-        .def(nb::init<std::uint64_t>(),
-             "qubit_count"_a,
-             "Initialize operator with specified number of qubits.")
-        .def("is_hermitian", &Operator<Fp, Sp>::is_hermitian, "Check if the operator is Hermitian.")
-        .def("n_qubits",
-             &Operator<Fp, Sp>::n_qubits,
-             "Get the number of qubits the operator acts on.")
-        .def("terms",
-             &Operator<Fp, Sp>::terms,
-             "Get the list of Pauli terms that make up the operator.")
-        .def(
-            "to_string", &Operator<Fp, Sp>::to_string, "Get string representation of the operator.")
-        .def("add_operator",
-             nb::overload_cast<const PauliOperator<Fp, Sp>&>(&Operator<Fp, Sp>::add_operator),
-             "Add a Pauli operator to this operator.")
-        .def(
-            "add_random_operator",
-            [](Operator<Fp, Sp>& op,
->>>>>>> set-space
                std::uint64_t operator_count,
                std::optional<std::uint64_t> seed) {
                 return op.add_random_operator(operator_count,
