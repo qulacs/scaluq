@@ -45,6 +45,7 @@ void apply_pauli(std::uint64_t control_mask,
         });
     Kokkos::fence();
 }
+
 template <Precision Prec, ExecutionSpace Space>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t bit_flip_mask,

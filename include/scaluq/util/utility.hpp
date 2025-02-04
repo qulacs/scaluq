@@ -139,11 +139,6 @@ Kokkos::View<T*, Sp> convert_vector_to_view(const std::vector<T>& vec);
 template <typename T, ExecutionSpace Sp>
 std::vector<T> convert_view_to_vector(const Kokkos::View<T*, Sp>& device_view);
 
-// Device Kokkos::View を Host std::vector に変換する関数
-template <typename T, ExecutionSpace Space, typename Layout>
-std::vector<std::vector<T>> convert_2d_device_view_to_host_vector(
-    const Kokkos::View<T**, Layout, Space>& view_d);
-
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Float<Prec> squared_norm(const Complex<Prec>& z) {
     return z.real() * z.real() + z.imag() * z.imag();

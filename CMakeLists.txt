@@ -143,6 +143,7 @@ target_compile_options(scaluq PUBLIC
 
 if(SCALUQ_USE_CUDA)
     target_compile_definitions(scaluq PUBLIC SCALUQ_USE_CUDA)
+    target_compile_definitions(scaluq PUBLIC JSON_HAS_RANGES=0) # cite: https://github.com/nlohmann/json/issues/3907
     # to remove tremendous warnings of Eigen
     target_compile_options(scaluq PUBLIC
         -Wno-unknown-pragmas

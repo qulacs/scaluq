@@ -31,26 +31,6 @@ std::vector<T> convert_view_to_vector(const Kokkos::View<T*, Space>& device_view
 SCALUQ_CALL_MACRO_FOR_TYPES_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
-// Device Kokkos::View を Host std::vector に変換する関数
-// template <typename T, ExecutionSpace Space>
-// std::vector<std::vector<T>> convert_2d_device_view_to_host_vector(
-//     const Kokkos::View<T**, Space>& view_d) {
-//     auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), view_d);
-//     std::vector<std::vector<T>> result(view_d.extent(0), std::vector<T>(view_d.extent(1), T{0}));
-//     for (std::size_t i = 0; i < view_d.extent(0); ++i) {
-//         for (std::size_t j = 0; j < view_d.extent(1); ++j) {
-//             result[i][j] = view_h(i, j);
-//         }
-//     }
-//     return result;
-// }
-// #define FUNC_MACRO(T, Space)                                                    \
-//     template std::vector<std::vector<T>> convert_2d_device_view_to_host_vector( \
-//         const Kokkos::View<T**, Space>&);
-// SCALUQ_CALL_MACRO_FOR_TYPES_AND_EXECUTION_SPACE(FUNC_MACRO)
-// #undef FUNC_MACRO
-// #define FUNC_MACRO(T, Space)
-
 template <Precision Prec, ExecutionSpace Space>
 Matrix<Prec, Space> convert_external_matrix_to_internal_matrix(const ComplexMatrix& eigen_matrix) {
     std::uint64_t rows = eigen_matrix.rows();

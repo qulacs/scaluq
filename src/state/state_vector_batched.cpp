@@ -384,8 +384,7 @@ void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComp
     if (states.size() != _batch_size) {
         throw std::runtime_error(
             "Error: StateVectorBatched::load(std::vector<std::vector<Complex<Prec>>>&): "
-            "invalid "
-            "batch_size");
+            "invalid batch_size");
     }
     for (std::uint64_t b = 0; b < states.size(); ++b) {
         if (states[b].size() != _dim) {
@@ -406,7 +405,7 @@ void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComp
 
 template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::copy() const {
-    StateVectorBatched cp(_batch_size, _n_qubits);
+    StateVectorBatched<Prec, Space> cp(_batch_size, _n_qubits);
     Kokkos::deep_copy(cp._raw, _raw);
     return cp;
 }

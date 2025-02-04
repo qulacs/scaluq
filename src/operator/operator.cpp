@@ -175,20 +175,18 @@ StdComplex Operator<Prec, Space>::get_transition_amplitude(
     std::vector<std::uint64_t> bmasks_vector(nterms);
     std::vector<std::uint64_t> pmasks_vector(nterms);
     std::vector<ComplexType> coefs_vector(nterms);
-    std::transform(
-        _terms.begin(),
-        _terms.end(),
-        bmasks_vector.begin(),
-        [](const PauliOperator<Prec, Space>& pauli) { return pauli._ptr->_bit_flip_mask; });
-    std::transform(
-        _terms.begin(),
-        _terms.end(),
-        pmasks_vector.begin(),
-        [](const PauliOperator<Prec, Space>& pauli) { return pauli._ptr->_phase_flip_mask; });
-    std::transform(_terms.begin(),
-                   _terms.end(),
-                   coefs_vector.begin(),
-                   [](const PauliOperator<Prec, Space>& pauli) { return pauli._ptr->_coef; });
+    std::ranges::transform(
+        _terms, bmasks_vector.begin(), [](const PauliOperator<Prec, Space>& pauli) {
+            return pauli._ptr->_bit_flip_mask;
+        });
+    std::ranges::transform(
+        _terms, pmasks_vector.begin(), [](const PauliOperator<Prec, Space>& pauli) {
+            return pauli._ptr->_phase_flip_mask;
+        });
+    std::ranges::transform(
+        _terms, coefs_vector.begin(), [](const PauliOperator<Prec, Space>& pauli) {
+            return pauli._ptr->_coef;
+        });
     Kokkos::View<std::uint64_t*, Space> bmasks =
         internal::convert_vector_to_view<std::uint64_t, Space>(bmasks_vector);
     Kokkos::View<std::uint64_t*, Space> pmasks =

@@ -73,9 +73,8 @@ PauliOperator<Prec, Space>::Data::Data(std::uint64_t bit_flip_mask,
         } else {
             if (!phase_flip)
                 add_single_pauli(target_idx, 1);
-            else {
+            else
                 add_single_pauli(target_idx, 2);
-            }
         }
     }
 }
