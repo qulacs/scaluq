@@ -53,7 +53,7 @@
     SCALUQ_DECLARE_CLASS_FLOAT64(Class)           \
     SCALUQ_DECLARE_CLASS_BFLOAT16(Class)
 
-#ifdef SCALUQ_FLOAT16_AND_EXECUTION_SPACE
+#ifdef SCALUQ_FLOAT16
 #define SCALUQ_CALL_MACRO_FLOAT16_AND_EXECUTION_SPACE(MACRO) \
     MACRO(::scaluq::Precision::F16, ::scaluq::HostSpace)     \
     MACRO(::scaluq::Precision::F16, ::scaluq::DefaultSpace)
@@ -70,7 +70,7 @@
 #define SCALUQ_CALL_MACRO_TYPES_FLOAT16_AND_EXECUTION_SPACE(MACRO)
 #define SCALUQ_DECLARE_CLASS_FLOAT16_AND_EXECUTION_SPACE(Class)
 #endif
-#ifdef SCALUQ_FLOAT32_AND_EXECUTION_SPACE
+#ifdef SCALUQ_FLOAT32
 #define SCALUQ_CALL_MACRO_FLOAT32_AND_EXECUTION_SPACE(MACRO) \
     MACRO(::scaluq::Precision::F32, ::scaluq::HostSpace)     \
     MACRO(::scaluq::Precision::F32, ::scaluq::DefaultSpace)

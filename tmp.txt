@@ -1,13 +1,28 @@
 ninja: Entering directory `build'
-[1/41] Building CXX object CMakeFiles/scaluq.dir/src/state/state_vector.cpp.o
+[1/38] cd /workspaces/scaluq/build/_deps/kokkos-build && /opt/cmake-3.28.0/bin/cmake -DRUN_CHECK_GIT_VERSION=1 -DKOKKOS_SOURCE_DIR=/workspaces/scaluq/build/_deps/kokkos-src -P /workspaces/scaluq/build/_deps/kokkos-src/cmake/build_env_info.cmake
+-- Configured git information in /workspaces/scaluq/build/_deps/kokkos-build/generated/Kokkos_Version_Info.cpp
+[2/38] Building CXX object _deps/kokkos-build/CMakeFiles/impl_git_version.dir/__/__/generated/Kokkos_Version_Info.cpp.o
+[3/38] Linking CXX static library _deps/kokkos-build/libimpl_git_version.a
+[4/38] Building CXX object _deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_CPUDiscovery.cpp.o
+[5/38] Building CXX object _deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_Abort.cpp.o
+[6/38] Building CXX object _deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_Error.cpp.o
+[7/38] Building CXX object _deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_Command_Line_Parsing.cpp.o
+[8/38] Building CXX object CMakeFiles/scaluq.dir/src/state/state_vector.cpp.o
 FAILED: CMakeFiles/scaluq.dir/src/state/state_vector.cpp.o 
-/workspaces/scaluq/build/_deps/kokkos-src/bin/kokkos_launch_compiler /workspaces/scaluq/build/_deps/kokkos-src/bin/nvcc_wrapper /usr/bin/c++ /usr/bin/c++ -DJSON_HAS_RANGES=0 -DKOKKOS_DEPENDENCE -DOPENMP -DSCALUQ_BFLOAT16 -DSCALUQ_FLOAT32 -DSCALUQ_FLOAT64 -DSCALUQ_USE_CUDA -I/workspaces/scaluq/include -I/workspaces/scaluq/build/_deps/eigen-src -I/workspaces/scaluq/build/_deps/kokkos-build -I/workspaces/scaluq/build/_deps/kokkos-build/core/src -I/workspaces/scaluq/build/_deps/kokkos-src/core/src -I/workspaces/scaluq/build/_deps/kokkos-src/core/src/../../tpls/desul/include -I/workspaces/scaluq/build/_deps/kokkos-build/containers/src -I/workspaces/scaluq/build/_deps/kokkos-src/containers/src -I/workspaces/scaluq/build/_deps/kokkos-build/algorithms/src -I/workspaces/scaluq/build/_deps/kokkos-src/algorithms/src -I/workspaces/scaluq/build/_deps/kokkos-build/simd/src -I/workspaces/scaluq/build/_deps/kokkos-src/simd/src -I/workspaces/scaluq/build/_deps/json-src/include -isystem /usr/local/cuda/targets/x86_64-linux/include -std=c++20 -fPIC -Wall -Wextra -Wunused-parameter -Wsign-compare -Wtype-limits -Wuninitialized -Wno-unknown-pragmas -Wno-deprecated-enum-enum-conversion --expt-relaxed-constexpr -DEIGEN_NO_CUDA -pthread -fopenmp -O3 -extended-lambda -Wext-lambda-captures-this -arch=sm_86 -fopenmp -MD -MT CMakeFiles/scaluq.dir/src/state/state_vector.cpp.o -MF CMakeFiles/scaluq.dir/src/state/state_vector.cpp.o.d -o CMakeFiles/scaluq.dir/src/state/state_vector.cpp.o -c /workspaces/scaluq/src/state/state_vector.cpp
+/workspaces/scaluq/build/_deps/kokkos-src/bin/kokkos_launch_compiler /workspaces/scaluq/build/_deps/kokkos-src/bin/nvcc_wrapper /usr/bin/c++ /usr/bin/c++ -DJSON_HAS_RANGES=0 -DKOKKOS_DEPENDENCE -DOPENMP -DSCALUQ_FLOAT32 -DSCALUQ_FLOAT64 -DSCALUQ_USE_CUDA -I/workspaces/scaluq/include -I/workspaces/scaluq/build/_deps/eigen-src -I/workspaces/scaluq/build/_deps/kokkos-build -I/workspaces/scaluq/build/_deps/kokkos-build/core/src -I/workspaces/scaluq/build/_deps/kokkos-src/core/src -I/workspaces/scaluq/build/_deps/kokkos-src/core/src/../../tpls/desul/include -I/workspaces/scaluq/build/_deps/kokkos-build/containers/src -I/workspaces/scaluq/build/_deps/kokkos-src/containers/src -I/workspaces/scaluq/build/_deps/kokkos-build/algorithms/src -I/workspaces/scaluq/build/_deps/kokkos-src/algorithms/src -I/workspaces/scaluq/build/_deps/kokkos-build/simd/src -I/workspaces/scaluq/build/_deps/kokkos-src/simd/src -I/workspaces/scaluq/build/_deps/json-src/include -isystem /usr/local/cuda/targets/x86_64-linux/include -std=c++20 -fPIC -Wall -Wextra -Wunused-parameter -Wsign-compare -Wtype-limits -Wuninitialized -Wno-unknown-pragmas -Wno-deprecated-enum-enum-conversion --expt-relaxed-constexpr -DEIGEN_NO_CUDA -pthread -fopenmp -O3 -extended-lambda -Wext-lambda-captures-this -arch=sm_86 -fopenmp -MD -MT CMakeFiles/scaluq.dir/src/state/state_vector.cpp.o -MF CMakeFiles/scaluq.dir/src/state/state_vector.cpp.o.d -o CMakeFiles/scaluq.dir/src/state/state_vector.cpp.o -c /workspaces/scaluq/src/state/state_vector.cpp
 /workspaces/scaluq/include/scaluq/state/../type/floating_point.hpp(89): error: class "scaluq::internal::FloatTypeImpl<scaluq::Precision::F16>" has no member "Type"
   using Float = FloatTypeImpl<Prec>::Type;
                                      ^
           detected during:
             instantiation of type "scaluq::internal::Float<scaluq::Precision::F16>" at line 20 of /workspaces/scaluq/include/scaluq/state/state_vector.hpp
             instantiation of class "scaluq::StateVector<Prec, Space> [with Prec=scaluq::Precision::F16, Space=scaluq::DefaultSpace]" at line 289 of /workspaces/scaluq/src/state/state_vector.cpp
+
+/workspaces/scaluq/include/scaluq/state/../type/floating_point.hpp(89): error: class "scaluq::internal::FloatTypeImpl<scaluq::Precision::BF16>" has no member "Type"
+  using Float = FloatTypeImpl<Prec>::Type;
+                                     ^
+          detected during:
+            instantiation of type "scaluq::internal::Float<scaluq::Precision::BF16>" at line 20 of /workspaces/scaluq/include/scaluq/state/state_vector.hpp
+            instantiation of class "scaluq::StateVector<Prec, Space> [with Prec=scaluq::Precision::BF16, Space=scaluq::DefaultSpace]" at line 291 of /workspaces/scaluq/src/state/state_vector.cpp
 
 /workspaces/scaluq/src/state/state_vector.cpp(75): error: no instance of overloaded function "std::ranges::__transform_fn::operator()" matches the argument list
             argument types are: (std::vector<scaluq::internal::Complex<scaluq::Precision::F16>, std::allocator<scaluq::internal::Complex<scaluq::Precision::F16>>>, __gnu_cxx::__normal_iterator<scaluq::StdComplex *, std::vector<scaluq::StdComplex, std::allocator<scaluq::StdComplex>>>, lambda [](const scaluq::internal::Complex<scaluq::Precision::F16> &)-><error-type>)
@@ -641,8 +656,196 @@ FAILED: CMakeFiles/scaluq.dir/src/state/state_vector.cpp.o
                                       ^
           detected during instantiation of "std::vector<size_t, std::allocator<std::_Bit_type>> scaluq::StateVector<Prec, Space>::sampling(uint64_t, uint64_t) const [with Prec=scaluq::Precision::F16, Space=scaluq::HostSpace]" at line 290
 
-65 errors detected in the compilation of "/workspaces/scaluq/src/state/state_vector.cpp".
-[2/41] Building CXX object CMakeFiles/scaluq.dir/src/kokkos.cpp.o
-[3/41] Building CXX object CMakeFiles/scaluq.dir/src/types.cpp.o
-[4/41] Building CXX object CMakeFiles/scaluq.dir/src/util/utility.cpp.o
+/workspaces/scaluq/src/state/state_vector.cpp(75): error: no instance of overloaded function "std::ranges::__transform_fn::operator()" matches the argument list
+            argument types are: (std::vector<scaluq::internal::Complex<scaluq::Precision::BF16>, std::allocator<scaluq::internal::Complex<scaluq::Precision::BF16>>>, __gnu_cxx::__normal_iterator<scaluq::StdComplex *, std::vector<scaluq::StdComplex, std::allocator<scaluq::StdComplex>>>, lambda [](const scaluq::internal::Complex<scaluq::Precision::BF16> &)-><error-type>)
+            object type is: const std::ranges::__transform_fn
+      std::ranges::transform(v, ret.begin(), [&](const ComplexType& c) {
+      ^
+/usr/include/c++/11/bits/ranges_algo.h(795): note #3322-D: number of parameters of function template "std::ranges::__transform_fn::operator()(_Range1 &&, _Range2 &&, _Out, _Fp, _Proj1, _Proj2) const" does not match the call
+        operator()(_Range1&& __r1, _Range2&& __r2, _Out __result, _Fp __binary_op,
+        ^
+/usr/include/c++/11/bits/ranges_algo.h(773): note #3322-D: number of parameters of function template "std::ranges::__transform_fn::operator()(_Iter1, _Sent1, _Iter2, _Sent2, _Out, _Fp, _Proj1, _Proj2) const" does not match the call
+        operator()(_Iter1 __first1, _Sent1 __last1,
+        ^
+/usr/include/c++/11/bits/ranges_algo.h(757): note #3327-D: candidate function template "std::ranges::__transform_fn::operator()(_Range &&, _Out, _Fp, _Proj) const" failed deduction
+        operator()(_Range&& __r, _Out __result, _Fp __op, _Proj __proj = {}) const
+        ^
+/usr/include/c++/11/bits/ranges_algo.h(743): note #3322-D: number of parameters of function template "std::ranges::__transform_fn::operator()(_Iter, _Sent, _Out, _Fp, _Proj) const" does not match the call
+        operator()(_Iter __first1, _Sent __last1, _Out __result,
+        ^
+          detected during instantiation of "std::vector<scaluq::StdComplex, std::allocator<scaluq::StdComplex>> scaluq::StateVector<Prec, Space>::get_amplitudes() const [with Prec=scaluq::Precision::BF16, Space=scaluq::DefaultSpace]" at line 291
+
+/workspaces/scaluq/src/state/state_vector.cpp(86): error: no instance of function template "scaluq::internal::squared_norm" matches the argument list
+            argument types are: (scaluq::internal::Complex<scaluq::Precision::BF16>)
+              tmp += internal::squared_norm<Prec>(this->_raw[it]);
+                     ^
+/workspaces/scaluq/include/scaluq/state/../util/utility.hpp(143): note #3323-D: substituting explicit template arguments "<<expression>>" for function template "scaluq::internal::squared_norm" failed
+  inline Float<Prec> squared_norm(const Complex<Prec>& z) {
+                     ^
+          detected during instantiation of "double scaluq::StateVector<Prec, Space>::get_squared_norm() const [with Prec=scaluq::Precision::BF16, Space=scaluq::DefaultSpace]" at line 291
+
+/workspaces/scaluq/src/state/state_vector.cpp(112): error: no instance of function template "scaluq::internal::squared_norm" matches the argument list
+            argument types are: (scaluq::internal::Complex<scaluq::Precision::BF16>)
+              lsum += internal::squared_norm(this->_raw[basis_0]);
+                      ^
+/workspaces/scaluq/include/scaluq/state/../util/utility.hpp(143): note #3327-D: candidate function template "scaluq::internal::squared_norm" failed deduction
+  inline Float<Prec> squared_norm(const Complex<Prec>& z) {
+                     ^
+          detected during instantiation of "double scaluq::StateVector<Prec, Space>::get_zero_probability(uint64_t) const [with Prec=scaluq::Precision::BF16, Space=scaluq::DefaultSpace]" at line 291
+
+/workspaces/scaluq/src/state/state_vector.cpp(155): error: no instance of function template "scaluq::internal::squared_norm" matches the argument list
+            argument types are: (scaluq::internal::Complex<scaluq::Precision::BF16>)
+              lsum += internal::squared_norm(this->_raw[basis]);
+                      ^
+/workspaces/scaluq/include/scaluq/state/../util/utility.hpp(143): note #3327-D: candidate function template "scaluq::internal::squared_norm" failed deduction
+  inline Float<Prec> squared_norm(const Complex<Prec>& z) {
+                     ^
+          detected during instantiation of "double scaluq::StateVector<Prec, Space>::get_marginal_probability(const std::vector<size_t, std::allocator<std::_Bit_type>> &) const [with Prec=scaluq::Precision::BF16, Space=scaluq::DefaultSpace]" at line 291
+
+/workspaces/scaluq/src/state/state_vector.cpp(168): error: no instance of function template "scaluq::internal::squared_norm" matches the argument list
+            argument types are: (scaluq::internal::Complex<scaluq::Precision::BF16>)
+              FloatType prob = internal::squared_norm(_raw[idx]);
+                               ^
+/workspaces/scaluq/include/scaluq/state/../util/utility.hpp(143): note #3327-D: candidate function template "scaluq::internal::squared_norm" failed deduction
+  inline Float<Prec> squared_norm(const Complex<Prec>& z) {
+                     ^
+          detected during instantiation of "double scaluq::StateVector<Prec, Space>::get_entropy() const [with Prec=scaluq::Precision::BF16, Space=scaluq::DefaultSpace]" at line 291
+
+/workspaces/scaluq/src/state/state_vector.cpp(200): error: no instance of function template "scaluq::internal::squared_norm" matches the argument list
+            argument types are: (scaluq::internal::Complex<scaluq::Precision::BF16>)
+              update += internal::squared_norm(this->_raw[i]);
+                        ^
+/workspaces/scaluq/include/scaluq/state/../util/utility.hpp(143): note #3327-D: candidate function template "scaluq::internal::squared_norm" failed deduction
+  inline Float<Prec> squared_norm(const Complex<Prec>& z) {
+                     ^
+          detected during instantiation of "std::vector<size_t, std::allocator<std::_Bit_type>> scaluq::StateVector<Prec, Space>::sampling(uint64_t, uint64_t) const [with Prec=scaluq::Precision::BF16, Space=scaluq::DefaultSpace]" at line 291
+
+/workspaces/scaluq/src/state/state_vector.cpp(202): error: more than one operator "[]" matches these operands:
+            function template "std::enable_if_t<<expression>, <error-type>> Kokkos::View<DataType, Properties...>::operator[](I0) const [with DataType=<error-type> *, Properties=<scaluq::DefaultSpace>]" (declared at line 861 of /workspaces/scaluq/build/_deps/kokkos-src/core/src/Kokkos_View.hpp)
+            function template "std::enable_if_t<<expression>, <error-type>> Kokkos::View<DataType, Properties...>::operator[](I0) const [with DataType=<error-type> *, Properties=<scaluq::DefaultSpace>]" (declared at line 871 of /workspaces/scaluq/build/_deps/kokkos-src/core/src/Kokkos_View.hpp)
+            function template "std::enable_if_t<<expression>, <error-type>> Kokkos::View<DataType, Properties...>::operator[](I0) const [with DataType=<error-type> *, Properties=<scaluq::DefaultSpace>]" (declared at line 881 of /workspaces/scaluq/build/_deps/kokkos-src/core/src/Kokkos_View.hpp)
+            operand types are: const Kokkos::View<<error-type> *, scaluq::DefaultSpace> [ unsigned long ]
+                  stacked_prob[i + 1] = update;
+                              ^
+/workspaces/scaluq/src/state/state_vector.cpp(202): note #3328-D: built-in operator[](<pointer to object>, <ptrdiff_t>) does not match because argument #1 does not match parameter
+                  stacked_prob[i + 1] = update;
+                              ^
+/workspaces/scaluq/src/state/state_vector.cpp(202): note #3328-D: built-in operator[](<ptrdiff_t>, <pointer to object>) does not match because argument #1 does not match parameter
+                  stacked_prob[i + 1] = update;
+                              ^
+          detected during instantiation of "std::vector<size_t, std::allocator<std::_Bit_type>> scaluq::StateVector<Prec, Space>::sampling(uint64_t, uint64_t) const [with Prec=scaluq::Precision::BF16, Space=scaluq::DefaultSpace]" at line 291
+
+/workspaces/scaluq/src/state/state_vector.cpp(221): error: more than one operator "[]" matches these operands:
+            function template "std::enable_if_t<<expression>, <error-type>> Kokkos::View<DataType, Properties...>::operator[](I0) const [with DataType=<error-type> *, Properties=<scaluq::DefaultSpace>]" (declared at line 861 of /workspaces/scaluq/build/_deps/kokkos-src/core/src/Kokkos_View.hpp)
+            function template "std::enable_if_t<<expression>, <error-type>> Kokkos::View<DataType, Properties...>::operator[](I0) const [with DataType=<error-type> *, Properties=<scaluq::DefaultSpace>]" (declared at line 871 of /workspaces/scaluq/build/_deps/kokkos-src/core/src/Kokkos_View.hpp)
+            function template "std::enable_if_t<<expression>, <error-type>> Kokkos::View<DataType, Properties...>::operator[](I0) const [with DataType=<error-type> *, Properties=<scaluq::DefaultSpace>]" (declared at line 881 of /workspaces/scaluq/build/_deps/kokkos-src/core/src/Kokkos_View.hpp)
+            operand types are: const Kokkos::View<<error-type> *, scaluq::DefaultSpace> [ uint64_t ]
+                      if (stacked_prob[mid] > r) {
+                                      ^
+/workspaces/scaluq/src/state/state_vector.cpp(221): note #3328-D: built-in operator[](<pointer to object>, <ptrdiff_t>) does not match because argument #1 does not match parameter
+                      if (stacked_prob[mid] > r) {
+                                      ^
+/workspaces/scaluq/src/state/state_vector.cpp(221): note #3328-D: built-in operator[](<ptrdiff_t>, <pointer to object>) does not match because argument #1 does not match parameter
+                      if (stacked_prob[mid] > r) {
+                                      ^
+          detected during instantiation of "std::vector<size_t, std::allocator<std::_Bit_type>> scaluq::StateVector<Prec, Space>::sampling(uint64_t, uint64_t) const [with Prec=scaluq::Precision::BF16, Space=scaluq::DefaultSpace]" at line 291
+
+/workspaces/scaluq/src/state/state_vector.cpp(75): error: no instance of overloaded function "std::ranges::__transform_fn::operator()" matches the argument list
+            argument types are: (std::vector<scaluq::internal::Complex<scaluq::Precision::BF16>, std::allocator<scaluq::internal::Complex<scaluq::Precision::BF16>>>, __gnu_cxx::__normal_iterator<scaluq::StdComplex *, std::vector<scaluq::StdComplex, std::allocator<scaluq::StdComplex>>>, lambda [](const scaluq::internal::Complex<scaluq::Precision::BF16> &)-><error-type>)
+            object type is: const std::ranges::__transform_fn
+      std::ranges::transform(v, ret.begin(), [&](const ComplexType& c) {
+      ^
+/usr/include/c++/11/bits/ranges_algo.h(795): note #3322-D: number of parameters of function template "std::ranges::__transform_fn::operator()(_Range1 &&, _Range2 &&, _Out, _Fp, _Proj1, _Proj2) const" does not match the call
+        operator()(_Range1&& __r1, _Range2&& __r2, _Out __result, _Fp __binary_op,
+        ^
+/usr/include/c++/11/bits/ranges_algo.h(773): note #3322-D: number of parameters of function template "std::ranges::__transform_fn::operator()(_Iter1, _Sent1, _Iter2, _Sent2, _Out, _Fp, _Proj1, _Proj2) const" does not match the call
+        operator()(_Iter1 __first1, _Sent1 __last1,
+        ^
+/usr/include/c++/11/bits/ranges_algo.h(757): note #3327-D: candidate function template "std::ranges::__transform_fn::operator()(_Range &&, _Out, _Fp, _Proj) const" failed deduction
+        operator()(_Range&& __r, _Out __result, _Fp __op, _Proj __proj = {}) const
+        ^
+/usr/include/c++/11/bits/ranges_algo.h(743): note #3322-D: number of parameters of function template "std::ranges::__transform_fn::operator()(_Iter, _Sent, _Out, _Fp, _Proj) const" does not match the call
+        operator()(_Iter __first1, _Sent __last1, _Out __result,
+        ^
+          detected during instantiation of "std::vector<scaluq::StdComplex, std::allocator<scaluq::StdComplex>> scaluq::StateVector<Prec, Space>::get_amplitudes() const [with Prec=scaluq::Precision::BF16, Space=scaluq::HostSpace]" at line 292
+
+/workspaces/scaluq/src/state/state_vector.cpp(86): error: no instance of function template "scaluq::internal::squared_norm" matches the argument list
+            argument types are: (scaluq::internal::Complex<scaluq::Precision::BF16>)
+              tmp += internal::squared_norm<Prec>(this->_raw[it]);
+                     ^
+/workspaces/scaluq/include/scaluq/state/../util/utility.hpp(143): note #3323-D: substituting explicit template arguments "<<expression>>" for function template "scaluq::internal::squared_norm" failed
+  inline Float<Prec> squared_norm(const Complex<Prec>& z) {
+                     ^
+          detected during instantiation of "double scaluq::StateVector<Prec, Space>::get_squared_norm() const [with Prec=scaluq::Precision::BF16, Space=scaluq::HostSpace]" at line 292
+
+/workspaces/scaluq/src/state/state_vector.cpp(112): error: no instance of function template "scaluq::internal::squared_norm" matches the argument list
+            argument types are: (scaluq::internal::Complex<scaluq::Precision::BF16>)
+              lsum += internal::squared_norm(this->_raw[basis_0]);
+                      ^
+/workspaces/scaluq/include/scaluq/state/../util/utility.hpp(143): note #3327-D: candidate function template "scaluq::internal::squared_norm" failed deduction
+  inline Float<Prec> squared_norm(const Complex<Prec>& z) {
+                     ^
+          detected during instantiation of "double scaluq::StateVector<Prec, Space>::get_zero_probability(uint64_t) const [with Prec=scaluq::Precision::BF16, Space=scaluq::HostSpace]" at line 292
+
+/workspaces/scaluq/src/state/state_vector.cpp(155): error: no instance of function template "scaluq::internal::squared_norm" matches the argument list
+            argument types are: (scaluq::internal::Complex<scaluq::Precision::BF16>)
+              lsum += internal::squared_norm(this->_raw[basis]);
+                      ^
+/workspaces/scaluq/include/scaluq/state/../util/utility.hpp(143): note #3327-D: candidate function template "scaluq::internal::squared_norm" failed deduction
+  inline Float<Prec> squared_norm(const Complex<Prec>& z) {
+                     ^
+          detected during instantiation of "double scaluq::StateVector<Prec, Space>::get_marginal_probability(const std::vector<size_t, std::allocator<std::_Bit_type>> &) const [with Prec=scaluq::Precision::BF16, Space=scaluq::HostSpace]" at line 292
+
+/workspaces/scaluq/src/state/state_vector.cpp(168): error: no instance of function template "scaluq::internal::squared_norm" matches the argument list
+            argument types are: (scaluq::internal::Complex<scaluq::Precision::BF16>)
+              FloatType prob = internal::squared_norm(_raw[idx]);
+                               ^
+/workspaces/scaluq/include/scaluq/state/../util/utility.hpp(143): note #3327-D: candidate function template "scaluq::internal::squared_norm" failed deduction
+  inline Float<Prec> squared_norm(const Complex<Prec>& z) {
+                     ^
+          detected during instantiation of "double scaluq::StateVector<Prec, Space>::get_entropy() const [with Prec=scaluq::Precision::BF16, Space=scaluq::HostSpace]" at line 292
+
+/workspaces/scaluq/src/state/state_vector.cpp(200): error: no instance of function template "scaluq::internal::squared_norm" matches the argument list
+            argument types are: (scaluq::internal::Complex<scaluq::Precision::BF16>)
+              update += internal::squared_norm(this->_raw[i]);
+                        ^
+/workspaces/scaluq/include/scaluq/state/../util/utility.hpp(143): note #3327-D: candidate function template "scaluq::internal::squared_norm" failed deduction
+  inline Float<Prec> squared_norm(const Complex<Prec>& z) {
+                     ^
+          detected during instantiation of "std::vector<size_t, std::allocator<std::_Bit_type>> scaluq::StateVector<Prec, Space>::sampling(uint64_t, uint64_t) const [with Prec=scaluq::Precision::BF16, Space=scaluq::HostSpace]" at line 292
+
+/workspaces/scaluq/src/state/state_vector.cpp(202): error: more than one operator "[]" matches these operands:
+            function template "std::enable_if_t<<expression>, <error-type>> Kokkos::View<DataType, Properties...>::operator[](I0) const [with DataType=<error-type> *, Properties=<scaluq::HostSpace>]" (declared at line 861 of /workspaces/scaluq/build/_deps/kokkos-src/core/src/Kokkos_View.hpp)
+            function template "std::enable_if_t<<expression>, <error-type>> Kokkos::View<DataType, Properties...>::operator[](I0) const [with DataType=<error-type> *, Properties=<scaluq::HostSpace>]" (declared at line 871 of /workspaces/scaluq/build/_deps/kokkos-src/core/src/Kokkos_View.hpp)
+            function template "std::enable_if_t<<expression>, <error-type>> Kokkos::View<DataType, Properties...>::operator[](I0) const [with DataType=<error-type> *, Properties=<scaluq::HostSpace>]" (declared at line 881 of /workspaces/scaluq/build/_deps/kokkos-src/core/src/Kokkos_View.hpp)
+            operand types are: const Kokkos::View<<error-type> *, scaluq::HostSpace> [ unsigned long ]
+                  stacked_prob[i + 1] = update;
+                              ^
+/workspaces/scaluq/src/state/state_vector.cpp(202): note #3328-D: built-in operator[](<pointer to object>, <ptrdiff_t>) does not match because argument #1 does not match parameter
+                  stacked_prob[i + 1] = update;
+                              ^
+/workspaces/scaluq/src/state/state_vector.cpp(202): note #3328-D: built-in operator[](<ptrdiff_t>, <pointer to object>) does not match because argument #1 does not match parameter
+                  stacked_prob[i + 1] = update;
+                              ^
+          detected during instantiation of "std::vector<size_t, std::allocator<std::_Bit_type>> scaluq::StateVector<Prec, Space>::sampling(uint64_t, uint64_t) const [with Prec=scaluq::Precision::BF16, Space=scaluq::HostSpace]" at line 292
+
+/workspaces/scaluq/src/state/state_vector.cpp(221): error: more than one operator "[]" matches these operands:
+            function template "std::enable_if_t<<expression>, <error-type>> Kokkos::View<DataType, Properties...>::operator[](I0) const [with DataType=<error-type> *, Properties=<scaluq::HostSpace>]" (declared at line 861 of /workspaces/scaluq/build/_deps/kokkos-src/core/src/Kokkos_View.hpp)
+            function template "std::enable_if_t<<expression>, <error-type>> Kokkos::View<DataType, Properties...>::operator[](I0) const [with DataType=<error-type> *, Properties=<scaluq::HostSpace>]" (declared at line 871 of /workspaces/scaluq/build/_deps/kokkos-src/core/src/Kokkos_View.hpp)
+            function template "std::enable_if_t<<expression>, <error-type>> Kokkos::View<DataType, Properties...>::operator[](I0) const [with DataType=<error-type> *, Properties=<scaluq::HostSpace>]" (declared at line 881 of /workspaces/scaluq/build/_deps/kokkos-src/core/src/Kokkos_View.hpp)
+            operand types are: const Kokkos::View<<error-type> *, scaluq::HostSpace> [ uint64_t ]
+                      if (stacked_prob[mid] > r) {
+                                      ^
+/workspaces/scaluq/src/state/state_vector.cpp(221): note #3328-D: built-in operator[](<pointer to object>, <ptrdiff_t>) does not match because argument #1 does not match parameter
+                      if (stacked_prob[mid] > r) {
+                                      ^
+/workspaces/scaluq/src/state/state_vector.cpp(221): note #3328-D: built-in operator[](<ptrdiff_t>, <pointer to object>) does not match because argument #1 does not match parameter
+                      if (stacked_prob[mid] > r) {
+                                      ^
+          detected during instantiation of "std::vector<size_t, std::allocator<std::_Bit_type>> scaluq::StateVector<Prec, Space>::sampling(uint64_t, uint64_t) const [with Prec=scaluq::Precision::BF16, Space=scaluq::HostSpace]" at line 292
+
+82 errors detected in the compilation of "/workspaces/scaluq/src/state/state_vector.cpp".
+[9/38] Building CXX object _deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_HostBarrier.cpp.o
+[10/38] Building CXX object _deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_ExecPolicy.cpp.o
+[11/38] Building CXX object _deps/kokkos-build/core/src/CMakeFiles/kokkoscore.dir/impl/Kokkos_Core.cpp.o
 ninja: build stopped: subcommand failed.
