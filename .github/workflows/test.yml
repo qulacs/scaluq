@@ -31,7 +31,7 @@ jobs:
         include:
           - os: "linux"
             architecture: "x86_64"
-            runs-on: "ubuntu-22.04"
+            runs-on: "ubuntu-24.04"
           - os: "macos"
             architecture: "x86_64"
             runs-on: "macos-13"
@@ -52,14 +52,6 @@ jobs:
       SCALUQ_BFLOAT16: "ON"
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install libomp
-        if: ${{ matrix.os == 'macos' }}
-        run: |
-          brew install libomp
-          export OpenMP_ROOT=$(brew --prefix)/opt/libomp
-          export LDFLAGS="$LDFLAGS -L/opt/homebrew/opt/libomp/lib"
-          export CPPFLAGS="$CPPFLAGS -I/opt/homebrew/opt/libomp/include"
 
       - name: Install Ninja
         if: ${{ matrix.os == 'linux' }}

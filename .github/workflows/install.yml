@@ -31,7 +31,7 @@ jobs:
         include:
           - os: "linux"
             architecture: "x86_64"
-            runs-on: "ubuntu-22.04"
+            runs-on: "ubuntu-24.04"
           - os: "macos"
             architecture: "x86_64"
             runs-on: "macos-13"
