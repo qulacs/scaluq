@@ -47,7 +47,7 @@ inline ParamGate<Prec> ParamPauliRotation(const PauliOperator<Prec>& pauli,
                                           double param_coef = 1.,
                                           const std::vector<std::uint64_t>& controls = {}) {
     return internal::ParamGateFactory::create_gate<internal::ParamPauliRotationGateImpl<Prec>>(
-        internal::vector_to_mask(controls), pauli, static_cast < internal::Float<Prec>(param_coef));
+        internal::vector_to_mask(controls), pauli, static_cast<internal::Float<Prec>>(param_coef));
 }
 template <Precision Prec>
 inline ParamGate<Prec> ParamProbablistic(

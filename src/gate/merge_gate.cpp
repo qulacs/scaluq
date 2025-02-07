@@ -21,10 +21,7 @@ std::pair<Gate<Prec>, double> merge_gate_dense_matrix(const Gate<Prec>& gate1,
                                                  gate2->target_qubit_list(),
                                                  gate2->control_qubit_mask() & ~common_control_mask,
                                                  merged_operand_vector);
-    std::cerr << matrix1 << std::endl;
-    std::cerr << matrix2 << std::endl;
     auto matrix = matrix2 * matrix1;
-    std::cerr << matrix << std::endl;
     return {gate::DenseMatrix<Prec>(
                 merged_operand_vector, matrix, internal::mask_to_vector(common_control_mask)),
             0.};

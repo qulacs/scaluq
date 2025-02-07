@@ -4,7 +4,7 @@
 
 namespace scaluq {
 template <Precision Prec>
-inline std::pair<Gate<Prec>, double> merge_gate(const Gate<Prec>& gate1, const Gate<Prec>& gate2);
+std::pair<Gate<Prec>, double> merge_gate(const Gate<Prec>& gate1, const Gate<Prec>& gate2);
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
