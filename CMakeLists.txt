@@ -30,6 +30,7 @@ if(NOT DEFINED SCALUQ_BFLOAT16)
     set(SCALUQ_BFLOAT16 OFF)
 endif(NOT DEFINED SCALUQ_BFLOAT16)
 
+message(STATUS "CMAKE_C_COMPILER = ${CMAKE_C_COMPILER}")
 message(STATUS "CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER}")
 message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 message(STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
@@ -91,7 +92,7 @@ install(DIRECTORY ${json_SOURCE_DIR}/single_include/nlohmann DESTINATION include
 
 # nanobind
 if(SKBUILD)
-    find_package(Python 3.8
+    find_package(Python 3.12
         REQUIRED COMPONENTS Interpreter Development.Module
         OPTIONAL_COMPONENTS Development.SABIModule)
     if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -159,7 +160,6 @@ target_compile_options(scaluq PUBLIC -pthread)
 # Enable openmp
 if(SCALUQ_USE_OMP)
     target_compile_options(scaluq PUBLIC -fopenmp)
-    target_compile_definitions(scaluq PUBLIC OPENMP)
 endif()
 
 # Debug options

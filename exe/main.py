@@ -1,4 +1,4 @@
-from scaluq.f64 import *
+from scaluq.f16 import *
 
 def main():
     state = StateVector(1)

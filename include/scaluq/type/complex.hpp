@@ -2,7 +2,6 @@
 
 #include <Kokkos_Core.hpp>
 #include <complex>
-#include <nlohmann/json.hpp>
 
 #include "floating_point.hpp"
 
@@ -14,11 +13,16 @@ class Complex {
 public:
     KOKKOS_INLINE_FUNCTION Complex() : _real{0}, _imag{0} {}
     template <typename Scalar>
-    requires std::is_same_v<Scalar, FloatType> || std::is_same_v<Scalar, double>
-        KOKKOS_INLINE_FUNCTION Complex(Scalar real, Scalar imag = {0})
-        : _real(static_cast<FloatType>(real)), _imag(static_cast<FloatType>(imag)) {}
-    KOKKOS_INLINE_FUNCTION Complex(int real, int imag = 0)
-        : _real(static_cast<FloatType>(real)), _imag(static_cast<FloatType>(imag)) {}
+    requires std::is_same_v<Scalar, FloatType> || std::is_same_v<Scalar, double> ||
+        std::is_same_v<Scalar, int>
+        Complex(Scalar real) : _real(static_cast<FloatType>(real)), _imag{0} {}
+    template <typename Scalar1, typename Scalar2>
+    requires(std::is_same_v<Scalar1, FloatType> || std::is_same_v<Scalar1, double> ||
+             std::is_same_v<Scalar1, int>) &&
+        (std::is_same_v<Scalar2, FloatType> || std::is_same_v<Scalar2, double> ||
+         std::is_same_v<Scalar2, int>)KOKKOS_INLINE_FUNCTION Complex(Scalar1 real, Scalar2 imag)
+        : _real(static_cast<FloatType>(real)),
+    _imag(static_cast<FloatType>(imag)) {}
     KOKKOS_INLINE_FUNCTION Complex(const Complex& other)
         : _real(other.real()), _imag(other.imag()) {}
     KOKKOS_INLINE_FUNCTION Complex(const std::complex<double>& c)
@@ -35,13 +39,9 @@ public:
         return *this;
     }
     template <typename Scalar>
-    requires std::is_same_v<Scalar, FloatType> || std::is_same_v<Scalar, double>
-        KOKKOS_INLINE_FUNCTION Complex& operator=(Scalar real) {
-        _real = static_cast<FloatType>(real);
-        _imag = FloatType{0};
-        return *this;
-    }
-    KOKKOS_INLINE_FUNCTION Complex& operator=(int real) {
+    requires std::is_same_v<Scalar, FloatType> || std::is_same_v<Scalar, double> ||
+        std::is_same_v<Scalar, int>
+            KOKKOS_INLINE_FUNCTION Complex& operator=(Scalar real) {
         _real = static_cast<FloatType>(real);
         _imag = FloatType{0};
         return *this;
@@ -52,12 +52,12 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION const FloatType& real() const { return _real; };
-    FloatType& real() { return _real; };
+    KOKKOS_INLINE_FUNCTION FloatType& real() { return _real; };
     KOKKOS_INLINE_FUNCTION const FloatType& imag() const { return _imag; };
-    FloatType& imag() { return _imag; };
+    KOKKOS_INLINE_FUNCTION FloatType& imag() { return _imag; };
 
     KOKKOS_INLINE_FUNCTION Complex operator+() const { return *this; }
-    KOKKOS_INLINE_FUNCTION Complex operator-() const { return Complex(-_real, _imag); }
+    KOKKOS_INLINE_FUNCTION Complex operator-() const { return Complex(-_real, -_imag); }
 
     KOKKOS_INLINE_FUNCTION Complex& operator+=(const Complex& rhs) {
         _real += rhs._real;
@@ -81,33 +81,39 @@ public:
     }
     KOKKOS_INLINE_FUNCTION Complex& operator*=(const Complex& rhs) { return *this = *this * rhs; }
     template <typename Scalar>
-    requires std::is_same_v<Scalar, FloatType> || std::is_same_v<Scalar, double>
-        KOKKOS_INLINE_FUNCTION Complex& operator*=(Scalar rhs) {
-        _real *= rhs;
-        _imag *= rhs;
+    requires std::is_same_v<Scalar, FloatType> || std::is_same_v<Scalar, double> ||
+        std::is_same_v<Scalar, int>
+            KOKKOS_INLINE_FUNCTION Complex& operator*=(Scalar rhs) {
+        _real *= static_cast<FloatType>(rhs);
+        _imag *= static_cast<FloatType>(rhs);
         return *this;
     }
     template <typename Scalar>
-    requires std::is_same_v<Scalar, FloatType> || std::is_same_v<Scalar, double>
-        KOKKOS_INLINE_FUNCTION Complex operator*(Scalar rhs) const {
-        return Complex(*this) *= rhs;
+    requires std::is_same_v<Scalar, FloatType> || std::is_same_v<Scalar, double> ||
+        std::is_same_v<Scalar, int>
+            KOKKOS_INLINE_FUNCTION Complex operator*(Scalar rhs) const {
+        return Complex(*this) *= static_cast<FloatType>(rhs);
     }
     template <typename Scalar>
-    requires std::is_same_v<Scalar, FloatType> || std::is_same_v<Scalar, double>
-        KOKKOS_INLINE_FUNCTION friend Complex operator*(Scalar lhs, const Complex& rhs) {
-        return Complex(lhs * rhs._real, lhs * rhs._imag);
+    requires std::is_same_v<Scalar, FloatType> || std::is_same_v<Scalar, double> ||
+        std::is_same_v<Scalar, int>
+            KOKKOS_INLINE_FUNCTION friend Complex operator*(Scalar lhs, const Complex& rhs) {
+        return Complex(static_cast<FloatType>(lhs) * rhs._real,
+                       static_cast<FloatType>(lhs) * rhs._imag);
     }
     template <typename Scalar>
-    requires std::is_same_v<Scalar, FloatType> || std::is_same_v<Scalar, double>
-        KOKKOS_INLINE_FUNCTION Complex& operator/=(Scalar rhs) {
-        _real /= rhs;
-        _imag /= rhs;
+    requires std::is_same_v<Scalar, FloatType> || std::is_same_v<Scalar, double> ||
+        std::is_same_v<Scalar, int>
+            KOKKOS_INLINE_FUNCTION Complex& operator/=(Scalar rhs) {
+        _real /= static_cast<FloatType>(rhs);
+        _imag /= static_cast<FloatType>(rhs);
         return *this;
     }
     template <typename Scalar>
-    requires std::is_same_v<Scalar, FloatType> || std::is_same_v<Scalar, double>
-        KOKKOS_INLINE_FUNCTION Complex operator/(Scalar rhs) const {
-        return Complex(*this) /= rhs;
+    requires std::is_same_v<Scalar, FloatType> || std::is_same_v<Scalar, double> ||
+        std::is_same_v<Scalar, int>
+            KOKKOS_INLINE_FUNCTION Complex operator/(Scalar rhs) const {
+        return Complex(*this) /= static_cast<FloatType>(rhs);
     }
 
 private:

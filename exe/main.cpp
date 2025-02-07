@@ -7,6 +7,7 @@ using namespace scaluq;
 using namespace nlohmann;
 
 int main() {
+    constexpr Precision Prec = Precision::F64;
     scaluq::initialize();  // must be called before using any scaluq methods
 
     {

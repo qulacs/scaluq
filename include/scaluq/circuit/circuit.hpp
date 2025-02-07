@@ -124,19 +124,18 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
              &Circuit<Prec, Space>::update_quantum_state,
              "Apply gate to the StateVector. StateVector in args is directly updated. If the "
              "circuit contains parametric gate, you have to give real value of parameter as "
-             "dict[str, float] in 2nd arg.", )
+             "dict[str, float] in 2nd arg.")
         .def(
             "update_quantum_state",
-            &Circuit < Prec nb::overload_cast <
-                [&](const Circuit<Prec, Space>& circuit,
-                    StateVector<Prec, Space>& state,
-                    nb::kwargs kwargs) {
-                    std::map<std::string, double> parameters;
-                    for (auto&& [key, param] : kwargs) {
-                        parameters[nb::cast<std::string>(key)] = nb::cast<double>(param);
-                    }
-                    circuit.update_quantum_state(state, parameters);
-                },
+            [&](const Circuit<Prec, Space>& circuit,
+                StateVector<Prec, Space>& state,
+                nb::kwargs kwargs) {
+                std::map<std::string, double> parameters;
+                for (auto&& [key, param] : kwargs) {
+                    parameters[nb::cast<std::string>(key)] = nb::cast<double>(param);
+                }
+                circuit.update_quantum_state(state, parameters);
+            },
             "Apply gate to the StateVector. StateVector in args is directly updated. If the "
             "circuit contains parametric gate, you have to give real value of parameter as "
             "\"name=value\" format in kwargs.")

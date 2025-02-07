@@ -39,7 +39,7 @@
 					"/usr/include/python3.10"
 				],
 				"C_Cpp.default.cppStandard": "c++23",
-				"C_Cpp.default.defines": ["SCALUQ_FLOAT32", "SCALUQ_FLOAT64"]
+				"C_Cpp.default.defines": ["SCALUQ_FLOAT16", "SCALUQ_FLOAT32", "SCALUQ_FLOAT64", "SCALUQ_BFLOAT16", "SCALUQ_USE_NANOBIND"]
 			},
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
