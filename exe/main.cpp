@@ -1,6 +1,6 @@
 #include <cstdint>
 #include <iostream>
-#include <scaluq/all.hpp>
+#include <scaluq/gate/gate_factory.hpp>
 
 using namespace scaluq;
 using namespace nlohmann;
@@ -8,28 +8,28 @@ using namespace nlohmann;
 int main() {
     scaluq::initialize();  // must be called before using any scaluq methods
 
-    // {
-    //     Kokkos::Timer tm;
-    //     std::uint64_t n_qubits = 28;
-    //     scaluq::StateVector<double, DefaultSpace> gpu_state(n_qubits);
+    {
+        Kokkos::Timer tm;
+        std::uint64_t n_qubits = 28;
+        scaluq::StateVector<scaluq::Precision::F64, scaluq::DefaultSpace> gpu_state(n_qubits);
 
-    //     for (int i = 0; i < 10; ++i) {
-    //         auto xgate = scaluq::gate::X<double, DefaultSpace>(2);
-    //         xgate->update_quantum_state(gpu_state);
-    //     }
-    //     std::cout << tm.seconds() << std::endl;
-    // }
-    // {
-    //     Kokkos::Timer tm;
-    //     std::uint64_t n_qubits = 28;
-    //     scaluq::StateVector<double, HostSpace> cpu_state(n_qubits);
+        for (int i = 0; i < 10; ++i) {
+            auto xgate = scaluq::gate::X<scaluq::Precision::F64, scaluq::DefaultSpace>(2);
+            xgate->update_quantum_state(gpu_state);
+        }
+        std::cout << tm.seconds() << std::endl;
+    }
+    {
+        Kokkos::Timer tm;
+        std::uint64_t n_qubits = 28;
+        scaluq::StateVector<scaluq::Precision::F64, scaluq::HostSpace> cpu_state(n_qubits);
 
-    //     for (int i = 0; i < 10; ++i) {
-    //         auto xgate = scaluq::gate::X<double, HostSpace>(2);
-    //         xgate->update_quantum_state(cpu_state);
-    //     }
-    //     std::cout << tm.seconds() << std::endl;
-    // }
+        for (int i = 0; i < 10; ++i) {
+            auto xgate = scaluq::gate::X<scaluq::Precision::F64, scaluq::HostSpace>(2);
+            xgate->update_quantum_state(cpu_state);
+        }
+        std::cout << tm.seconds() << std::endl;
+    }
     // {
     //     Kokkos::Timer tm;
     //     std::uint64_t n_qubits = 28;

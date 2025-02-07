@@ -2,50 +2,30 @@
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
-<<<<<<< HEAD
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void none_target_dense_matrix_gate(std::uint64_t control_mask,
-                                   const Matrix<Prec>& matrix,
-                                   StateVector<Prec>& state) {
-=======
-FLOAT_AND_SPACE(Fp, Sp)
-void none_target_dense_matrix_gate(std::uint64_t control_mask,
-                                   const Matrix<Fp, Sp>& matrix,
-                                   StateVector<Fp, Sp>& state) {
->>>>>>> set-space
+                                   const Matrix<Prec, Space>& matrix,
+                                   StateVector<Prec, Space>& state) {
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<Sp>(0, state.dim() >> std::popcount(control_mask)),
+        Kokkos::RangePolicy<Space>(0, state.dim() >> std::popcount(control_mask)),
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis = insert_zero_at_mask_positions(it, control_mask) | control_mask;
             state._raw[basis] *= matrix(0, 0);
         });
     Kokkos::fence();
 }
-<<<<<<< HEAD
-#define FUNC_MACRO(Prec)                         \
+#define FUNC_MACRO(Prec, Space)                  \
     template void none_target_dense_matrix_gate( \
-        std::uint64_t, const Matrix<Prec>&, StateVector<Prec>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
+        std::uint64_t, const Matrix<Prec, Space>&, StateVector<Prec, Space>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void none_target_dense_matrix_gate(std::uint64_t control_mask,
-                                   const Matrix<Prec>& matrix,
-                                   StateVectorBatched<Prec>& states) {
-=======
-#define FUNC_MACRO(Fp, Sp)                       \
-    template void none_target_dense_matrix_gate( \
-        std::uint64_t, const Matrix<Fp, Sp>&, StateVector<Fp, Sp>&);
-CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-
-FLOAT_AND_SPACE(Fp, Sp)
-void none_target_dense_matrix_gate(std::uint64_t control_mask,
-                                   const Matrix<Fp, Sp>& matrix,
-                                   StateVectorBatched<Fp, Sp>& states) {
->>>>>>> set-space
+                                   const Matrix<Prec, Space>& matrix,
+                                   StateVectorBatched<Prec, Space>& states) {
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Sp, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<Space, Kokkos::Rank<2>>(
             {0, 0}, {states.batch_size(), states.dim() >> std::popcount(control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
             std::uint64_t basis = insert_zero_at_mask_positions(it, control_mask) | control_mask;
@@ -53,33 +33,19 @@ void none_target_dense_matrix_gate(std::uint64_t control_mask,
         });
     Kokkos::fence();
 }
-<<<<<<< HEAD
-#define FUNC_MACRO(Prec)                         \
+#define FUNC_MACRO(Prec, Space)                  \
     template void none_target_dense_matrix_gate( \
-        std::uint64_t, const Matrix<Prec>&, StateVectorBatched<Prec>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
+        std::uint64_t, const Matrix<Prec, Space>&, StateVectorBatched<Prec, Space>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   const Matrix2x2<Prec>& matrix,
-                                  StateVector<Prec>& state) {
-=======
-#define FUNC_MACRO(Fp, Sp)                       \
-    template void none_target_dense_matrix_gate( \
-        std::uint64_t, const Matrix<Fp, Sp>&, StateVectorBatched<Fp, Sp>&);
-CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-
-FLOAT_AND_SPACE(Fp, Sp)
-void one_target_dense_matrix_gate(std::uint64_t target_mask,
-                                  std::uint64_t control_mask,
-                                  const Matrix2x2<Fp>& matrix,
-                                  StateVector<Fp, Sp>& state) {
->>>>>>> set-space
+                                  StateVector<Prec, Space>& state) {
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<Sp>(0, state.dim() >> std::popcount(target_mask | control_mask)),
+        Kokkos::RangePolicy<Space>(0, state.dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis_0 =
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
@@ -93,33 +59,19 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
-<<<<<<< HEAD
-#define FUNC_MACRO(Prec)                        \
+#define FUNC_MACRO(Prec, Space)                 \
     template void one_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix2x2<Prec>&, StateVector<Prec>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
+        std::uint64_t, std::uint64_t, const Matrix2x2<Prec>&, StateVector<Prec, Space>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   const Matrix2x2<Prec>& matrix,
-                                  StateVectorBatched<Prec>& states) {
-=======
-#define FUNC_MACRO(Fp, Sp)                      \
-    template void one_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix2x2<Fp>&, StateVector<Fp, Sp>&);
-CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-
-FLOAT_AND_SPACE(Fp, Sp)
-void one_target_dense_matrix_gate(std::uint64_t target_mask,
-                                  std::uint64_t control_mask,
-                                  const Matrix2x2<Fp>& matrix,
-                                  StateVectorBatched<Fp, Sp>& states) {
->>>>>>> set-space
+                                  StateVectorBatched<Prec, Space>& states) {
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Sp, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<Space, Kokkos::Rank<2>>(
             {0, 0},
             {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
@@ -135,35 +87,21 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
-<<<<<<< HEAD
-#define FUNC_MACRO(Prec)                        \
+#define FUNC_MACRO(Prec, Space)                 \
     template void one_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix2x2<Prec>&, StateVectorBatched<Prec>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
+        std::uint64_t, std::uint64_t, const Matrix2x2<Prec>&, StateVectorBatched<Prec, Space>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void two_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   const Matrix4x4<Prec>& matrix,
-                                  StateVector<Prec>& state) {
-=======
-#define FUNC_MACRO(Fp, Sp)                      \
-    template void one_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix2x2<Fp>&, StateVectorBatched<Fp, Sp>&);
-CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-
-FLOAT_AND_SPACE(Fp, Sp)
-void two_target_dense_matrix_gate(std::uint64_t target_mask,
-                                  std::uint64_t control_mask,
-                                  const Matrix4x4<Fp>& matrix,
-                                  StateVector<Fp, Sp>& state) {
->>>>>>> set-space
+                                  StateVector<Prec, Space>& state) {
     std::uint64_t lower_target_mask = -target_mask & target_mask;
     std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<Sp>(0, state.dim() >> std::popcount(target_mask | control_mask)),
+        Kokkos::RangePolicy<Space>(0, state.dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(const std::uint64_t it) {
             std::uint64_t basis_0 =
                 insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
@@ -189,35 +127,21 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
-<<<<<<< HEAD
-#define FUNC_MACRO(Prec)                        \
+#define FUNC_MACRO(Prec, Space)                 \
     template void two_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix4x4<Prec>&, StateVector<Prec>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
+        std::uint64_t, std::uint64_t, const Matrix4x4<Prec>&, StateVector<Prec, Space>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void two_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   const Matrix4x4<Prec>& matrix,
-                                  StateVectorBatched<Prec>& states) {
-=======
-#define FUNC_MACRO(Fp, Sp)                      \
-    template void two_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix4x4<Fp>&, StateVector<Fp, Sp>&);
-CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-
-FLOAT_AND_SPACE(Fp, Sp)
-void two_target_dense_matrix_gate(std::uint64_t target_mask,
-                                  std::uint64_t control_mask,
-                                  const Matrix4x4<Fp>& matrix,
-                                  StateVectorBatched<Fp, Sp>& states) {
->>>>>>> set-space
+                                  StateVectorBatched<Prec, Space>& states) {
     std::uint64_t lower_target_mask = -target_mask & target_mask;
     std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Sp, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<Space, Kokkos::Rank<2>>(
             {0, 0},
             {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
@@ -245,33 +169,19 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
-<<<<<<< HEAD
-#define FUNC_MACRO(Prec)                        \
+#define FUNC_MACRO(Prec, Space)                 \
     template void two_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix4x4<Prec>&, StateVectorBatched<Prec>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
+        std::uint64_t, std::uint64_t, const Matrix4x4<Prec>&, StateVectorBatched<Prec, Space>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void single_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
-                                     const Matrix<Prec>& matrix,
-                                     StateVector<Prec>& state) {
-=======
-#define FUNC_MACRO(Fp, Sp)                      \
-    template void two_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix4x4<Fp>&, StateVectorBatched<Fp, Sp>&);
-CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-
-FLOAT_AND_SPACE(Fp, Sp)
-void single_target_dense_matrix_gate(std::uint64_t target_mask,
-                                     std::uint64_t control_mask,
-                                     const Matrix<Fp, Sp>& matrix,
-                                     StateVector<Fp, Sp>& state) {
->>>>>>> set-space
+                                     const Matrix<Prec, Space>& matrix,
+                                     StateVector<Prec, Space>& state) {
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<Sp>(0, state.dim() >> std::popcount(target_mask | control_mask)),
+        Kokkos::RangePolicy<Space>(0, state.dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis_0 =
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
@@ -285,33 +195,19 @@ void single_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
-<<<<<<< HEAD
-#define FUNC_MACRO(Prec)                           \
+#define FUNC_MACRO(Prec, Space)                    \
     template void single_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Prec>&, StateVector<Prec>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
+        std::uint64_t, std::uint64_t, const Matrix<Prec, Space>&, StateVector<Prec, Space>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void single_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
-                                     const Matrix<Prec>& matrix,
-                                     StateVectorBatched<Prec>& states) {
-=======
-#define FUNC_MACRO(Fp, Sp)                         \
-    template void single_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Fp, Sp>&, StateVector<Fp, Sp>&);
-CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-
-FLOAT_AND_SPACE(Fp, Sp)
-void single_target_dense_matrix_gate(std::uint64_t target_mask,
-                                     std::uint64_t control_mask,
-                                     const Matrix<Fp, Sp>& matrix,
-                                     StateVectorBatched<Fp, Sp>& states) {
->>>>>>> set-space
+                                     const Matrix<Prec, Space>& matrix,
+                                     StateVectorBatched<Prec, Space>& states) {
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Sp, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<Space, Kokkos::Rank<2>>(
             {0, 0},
             {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
@@ -327,36 +223,24 @@ void single_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
-<<<<<<< HEAD
-#define FUNC_MACRO(Prec)                           \
-    template void single_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Prec>&, StateVectorBatched<Prec>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
+#define FUNC_MACRO(Prec, Space)                                               \
+    template void single_target_dense_matrix_gate(std::uint64_t,              \
+                                                  std::uint64_t,              \
+                                                  const Matrix<Prec, Space>&, \
+                                                  StateVectorBatched<Prec, Space>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void double_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
-                                     const Matrix<Prec>& matrix,
-                                     StateVector<Prec>& state) {
-=======
-#define FUNC_MACRO(Fp, Sp)                         \
-    template void single_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Fp, Sp>&, StateVectorBatched<Fp, Sp>&);
-CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-
-FLOAT_AND_SPACE(Fp, Sp)
-void double_target_dense_matrix_gate(std::uint64_t target_mask,
-                                     std::uint64_t control_mask,
-                                     const Matrix<Fp, Sp>& matrix,
-                                     StateVector<Fp, Sp>& state) {
->>>>>>> set-space
+                                     const Matrix<Prec, Space>& matrix,
+                                     StateVector<Prec, Space>& state) {
     std::uint64_t target_bit_right = -target_mask & target_mask;
     std::uint64_t target_bit_left = target_mask ^ target_bit_right;
 
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<Sp>(0, state.dim() >> std::popcount(target_mask | control_mask)),
+        Kokkos::RangePolicy<Space>(0, state.dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(const std::uint64_t it) {
             std::uint64_t basis_0 =
                 insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
@@ -382,36 +266,22 @@ void double_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
-<<<<<<< HEAD
-#define FUNC_MACRO(Prec)                           \
+#define FUNC_MACRO(Prec, Space)                    \
     template void double_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Prec>&, StateVector<Prec>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
+        std::uint64_t, std::uint64_t, const Matrix<Prec, Space>&, StateVector<Prec, Space>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void double_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
-                                     const Matrix<Prec>& matrix,
-                                     StateVectorBatched<Prec>& states) {
-=======
-#define FUNC_MACRO(Fp, Sp)                         \
-    template void double_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Fp, Sp>&, StateVector<Fp, Sp>&);
-CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-
-FLOAT_AND_SPACE(Fp, Sp)
-void double_target_dense_matrix_gate(std::uint64_t target_mask,
-                                     std::uint64_t control_mask,
-                                     const Matrix<Fp, Sp>& matrix,
-                                     StateVectorBatched<Fp, Sp>& states) {
->>>>>>> set-space
+                                     const Matrix<Prec, Space>& matrix,
+                                     StateVectorBatched<Prec, Space>& states) {
     std::uint64_t target_bit_right = -target_mask & target_mask;
     std::uint64_t target_bit_left = target_mask ^ target_bit_right;
 
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Sp, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<Space, Kokkos::Rank<2>>(
             {0, 0},
             {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
@@ -439,41 +309,25 @@ void double_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
-<<<<<<< HEAD
-#define FUNC_MACRO(Prec)                           \
-    template void double_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Prec>&, StateVectorBatched<Prec>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
+#define FUNC_MACRO(Prec, Space)                                               \
+    template void double_target_dense_matrix_gate(std::uint64_t,              \
+                                                  std::uint64_t,              \
+                                                  const Matrix<Prec, Space>&, \
+                                                  StateVectorBatched<Prec, Space>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void multi_target_dense_matrix_gate(std::uint64_t target_mask,
                                     std::uint64_t control_mask,
-                                    const Matrix<Prec>& matrix,
-                                    StateVector<Prec>& state) {
+                                    const Matrix<Prec, Space>& matrix,
+                                    StateVector<Prec, Space>& state) {
     const std::uint64_t matrix_dim = 1ULL << std::popcount(target_mask);
 
-    Kokkos::View<Complex<Prec>*> update(Kokkos::ViewAllocateWithoutInitializing("update"),
-                                        state.dim());
-=======
-#define FUNC_MACRO(Fp, Sp)                         \
-    template void double_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Fp, Sp>&, StateVectorBatched<Fp, Sp>&);
-CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-
-FLOAT_AND_SPACE(Fp, Sp)
-void multi_target_dense_matrix_gate(std::uint64_t target_mask,
-                                    std::uint64_t control_mask,
-                                    const Matrix<Fp, Sp>& matrix,
-                                    StateVector<Fp, Sp>& state) {
-    const std::uint64_t matrix_dim = 1ULL << std::popcount(target_mask);
-
-    Kokkos::View<Complex<Fp>*, Sp> update(Kokkos::ViewAllocateWithoutInitializing("update"),
-                                          state.dim());
->>>>>>> set-space
+    Kokkos::View<Complex<Prec>*, Space> update(Kokkos::ViewAllocateWithoutInitializing("update"),
+                                               state.dim());
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<Sp>(0, state.dim()), KOKKOS_LAMBDA(std::uint64_t i) {
+        Kokkos::RangePolicy<Space>(0, state.dim()), KOKKOS_LAMBDA(std::uint64_t i) {
             if ((i | control_mask) == i) {
                 update(i) = 0;
             } else {
@@ -484,9 +338,9 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
 
     std::uint64_t outer_mask = ~target_mask & ((1ULL << state.n_qubits()) - 1);
     Kokkos::parallel_for(
-        Kokkos::TeamPolicy<Sp>(
-            Sp(), state.dim() >> std::popcount(target_mask | control_mask), Kokkos::AUTO),
-        KOKKOS_LAMBDA(const Kokkos::TeamPolicy<Sp>::member_type& team) {
+        Kokkos::TeamPolicy<Space>(
+            Space(), state.dim() >> std::popcount(target_mask | control_mask), Kokkos::AUTO),
+        KOKKOS_LAMBDA(const Kokkos::TeamPolicy<Space>::member_type& team) {
             std::uint64_t basis = team.league_rank();
             basis = insert_zero_at_mask_positions(basis, target_mask | control_mask) | control_mask;
             Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim), [&](std::uint64_t r) {
@@ -509,43 +363,25 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
 
     state._raw = update;
 }
-<<<<<<< HEAD
-#define FUNC_MACRO(Prec)                          \
+#define FUNC_MACRO(Prec, Space)                   \
     template void multi_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Prec>&, StateVector<Prec>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
+        std::uint64_t, std::uint64_t, const Matrix<Prec, Space>&, StateVector<Prec, Space>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void multi_target_dense_matrix_gate(std::uint64_t target_mask,
                                     std::uint64_t control_mask,
-                                    const Matrix<Prec>& matrix,
-                                    StateVectorBatched<Prec>& states) {
+                                    const Matrix<Prec, Space>& matrix,
+                                    StateVectorBatched<Prec, Space>& states) {
     const std::uint64_t matrix_dim = 1ULL << std::popcount(target_mask);
     const std::uint64_t outer_mask = ~target_mask & ((1ULL << states.n_qubits()) - 1);
 
-    Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight> update(
-=======
-#define FUNC_MACRO(Fp, Sp)                        \
-    template void multi_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Fp, Sp>&, StateVector<Fp, Sp>&);
-CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-
-FLOAT_AND_SPACE(Fp, Sp)
-void multi_target_dense_matrix_gate(std::uint64_t target_mask,
-                                    std::uint64_t control_mask,
-                                    const Matrix<Fp, Sp>& matrix,
-                                    StateVectorBatched<Fp, Sp>& states) {
-    const std::uint64_t matrix_dim = 1ULL << std::popcount(target_mask);
-    const std::uint64_t outer_mask = ~target_mask & ((1ULL << states.n_qubits()) - 1);
-
-    Kokkos::View<Complex<Fp>**, Kokkos::LayoutRight, Sp> update(
->>>>>>> set-space
+    Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight, Space> update(
         Kokkos::ViewAllocateWithoutInitializing("update"), states.batch_size(), states.dim());
 
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Sp, Kokkos::Rank<2>>({0, 0}, {states.batch_size(), states.dim()}),
+        Kokkos::MDRangePolicy<Space, Kokkos::Rank<2>>({0, 0}, {states.batch_size(), states.dim()}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
             if ((i | control_mask) == i) {
                 update(batch_id, i) = 0;
@@ -555,16 +391,12 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 
-<<<<<<< HEAD
-    Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight, Kokkos::MemoryTraits<Kokkos::Atomic>>
-=======
-    Kokkos::View<Complex<Fp>**, Kokkos::LayoutRight, Sp, Kokkos::MemoryTraits<Kokkos::Atomic>>
->>>>>>> set-space
+    Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight, Space, Kokkos::MemoryTraits<Kokkos::Atomic>>
         update_atomic(update);
 
     const std::uint64_t outer_dim = states.dim() >> std::popcount(target_mask | control_mask);
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Sp, Kokkos::Rank<4>>(
+        Kokkos::MDRangePolicy<Space, Kokkos::Rank<4>>(
             {0, 0, 0, 0}, {states.batch_size(), outer_dim, matrix_dim, matrix_dim}),
         KOKKOS_LAMBDA(const std::uint64_t batch_id,
                       const std::uint64_t outer_idx,
@@ -584,31 +416,19 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
 
     states._raw = update;
 }
-<<<<<<< HEAD
-#define FUNC_MACRO(Prec)                          \
-    template void multi_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Prec>&, StateVectorBatched<Prec>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
+#define FUNC_MACRO(Prec, Space)                                              \
+    template void multi_target_dense_matrix_gate(std::uint64_t,              \
+                                                 std::uint64_t,              \
+                                                 const Matrix<Prec, Space>&, \
+                                                 StateVectorBatched<Prec, Space>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void dense_matrix_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
-                       const Matrix<Prec>& matrix,
-                       StateVector<Prec>& state) {
-=======
-#define FUNC_MACRO(Fp, Sp)                        \
-    template void multi_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Fp, Sp>&, StateVectorBatched<Fp, Sp>&);
-CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-
-FLOAT_AND_SPACE(Fp, Sp)
-void dense_matrix_gate(std::uint64_t target_mask,
-                       std::uint64_t control_mask,
-                       const Matrix<Fp, Sp>& matrix,
-                       StateVector<Fp, Sp>& state) {
->>>>>>> set-space
+                       const Matrix<Prec, Space>& matrix,
+                       StateVector<Prec, Space>& state) {
     const std::uint64_t target_qubit_index_count = std::popcount(target_mask);
     if (target_qubit_index_count == 0) {
         none_target_dense_matrix_gate<Prec>(control_mask, matrix, state);
@@ -620,31 +440,17 @@ void dense_matrix_gate(std::uint64_t target_mask,
         multi_target_dense_matrix_gate<Prec>(target_mask, control_mask, matrix, state);
     }
 }
-<<<<<<< HEAD
-#define FUNC_MACRO(Prec)             \
+#define FUNC_MACRO(Prec, Space)      \
     template void dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Prec>&, StateVector<Prec>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
+        std::uint64_t, std::uint64_t, const Matrix<Prec, Space>&, StateVector<Prec, Space>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void dense_matrix_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
-                       const Matrix<Prec>& matrix,
-                       StateVectorBatched<Prec>& states) {
-=======
-#define FUNC_MACRO(Fp, Sp)           \
-    template void dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Fp, Sp>&, StateVector<Fp, Sp>&);
-CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-
-FLOAT_AND_SPACE(Fp, Sp)
-void dense_matrix_gate(std::uint64_t target_mask,
-                       std::uint64_t control_mask,
-                       const Matrix<Fp, Sp>& matrix,
-                       StateVectorBatched<Fp, Sp>& states) {
->>>>>>> set-space
+                       const Matrix<Prec, Space>& matrix,
+                       StateVectorBatched<Prec, Space>& states) {
     const std::uint64_t target_qubit_index_count = std::popcount(target_mask);
     if (target_qubit_index_count == 0) {
         none_target_dense_matrix_gate<Prec>(control_mask, matrix, states);
@@ -656,16 +462,11 @@ void dense_matrix_gate(std::uint64_t target_mask,
         multi_target_dense_matrix_gate<Prec>(target_mask, control_mask, matrix, states);
     }
 }
-<<<<<<< HEAD
-#define FUNC_MACRO(Prec)             \
-    template void dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Prec>&, StateVectorBatched<Prec>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION(FUNC_MACRO)
-=======
-#define FUNC_MACRO(Fp, Sp)           \
-    template void dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Fp, Sp>&, StateVectorBatched<Fp, Sp>&);
-CALL_MACRO_FOR_FLOAT_AND_SPACE(FUNC_MACRO)
->>>>>>> set-space
+#define FUNC_MACRO(Prec, Space)                                 \
+    template void dense_matrix_gate(std::uint64_t,              \
+                                    std::uint64_t,              \
+                                    const Matrix<Prec, Space>&, \
+                                    StateVectorBatched<Prec, Space>&);
+SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 }  // namespace scaluq::internal

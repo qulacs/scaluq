@@ -1,38 +1,22 @@
 #pragma once
 
 #include "../util/random.hpp"
-#include "gate_matrix.hpp"
-#include "gate_pauli.hpp"
 #include "gate_standard.hpp"
 
 namespace scaluq {
 namespace internal {
 
-<<<<<<< HEAD
-template <Precision Prec>
-class ProbablisticGateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class ProbablisticGateImpl : public GateBase<Prec, Space> {
     std::vector<double> _distribution;
     std::vector<double> _cumulative_distribution;
-    std::vector<Gate<Prec>> _gate_list;
+    std::vector<Gate<Prec, Space>> _gate_list;
 
 public:
     ProbablisticGateImpl(const std::vector<double>& distribution,
-                         const std::vector<Gate<Prec>>& gate_list);
-    const std::vector<Gate<Prec>>& gate_list() const { return _gate_list; }
+                         const std::vector<Gate<Prec, Space>>& gate_list);
+    const std::vector<Gate<Prec, Space>>& gate_list() const { return _gate_list; }
     const std::vector<double>& distribution() const { return _distribution; }
-=======
-template <std::floating_point Fp, ExecutionSpace Sp>
-class ProbablisticGateImpl : public GateBase<Fp, Sp> {
-    std::vector<Fp> _distribution;
-    std::vector<Fp> _cumulative_distribution;
-    std::vector<Gate<Fp, Sp>> _gate_list;
-
-public:
-    ProbablisticGateImpl(const std::vector<Fp>& distribution,
-                         const std::vector<Gate<Fp, Sp>>& gate_list);
-    const std::vector<Gate<Fp, Sp>>& gate_list() const { return _gate_list; }
-    const std::vector<Fp>& distribution() const { return _distribution; }
->>>>>>> set-space
 
     std::vector<std::uint64_t> target_qubit_list() const override {
         throw std::runtime_error(
@@ -65,25 +49,15 @@ public:
             "ProbablisticGateImpl.");
     }
 
-<<<<<<< HEAD
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override;
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override;
     ComplexMatrix get_matrix() const override {
-=======
-    std::shared_ptr<const GateBase<Fp, Sp>> get_inverse() const override;
-    internal::ComplexMatrix<Fp> get_matrix() const override {
->>>>>>> set-space
         throw std::runtime_error(
             "ProbablisticGateImpl::get_matrix(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
 
-<<<<<<< HEAD
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
-=======
-    void update_quantum_state(StateVector<Fp, Sp>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Fp, Sp>& states) const override;
->>>>>>> set-space
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -95,53 +69,42 @@ public:
 };
 }  // namespace internal
 
-<<<<<<< HEAD
-template <Precision Prec>
-using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl<Prec>>;
+template <Precision Prec, ExecutionSpace Space>
+using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl<Prec, Space>>;
 
 namespace internal {
 
-#define DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION(Prec)                                 \
-=======
-template <std::floating_point Fp, ExecutionSpace Sp>
-using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl<Fp, Sp>>;
-
-namespace internal {
-
-/*#define DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(Type)                                      \
->>>>>>> set-space
-    template <>                                                                             \
-    inline std::shared_ptr<const ProbablisticGateImpl<Prec>> get_from_json(const Json& j) { \
-        auto distribution = j.at("distribution").get<std::vector<double>>();                \
-        auto gate_list = j.at("gate_list").get<std::vector<Gate<Prec>>>();                  \
-        return std::make_shared<const ProbablisticGateImpl<Prec>>(distribution, gate_list); \
+#define DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec, Space)             \
+    template <>                                                                                    \
+    inline std::shared_ptr<const ProbablisticGateImpl<Prec, Space>> get_from_json(const Json& j) { \
+        auto distribution = j.at("distribution").get<std::vector<double>>();                       \
+        auto gate_list = j.at("gate_list").get<std::vector<Gate<Prec, Space>>>();                  \
+        return std::make_shared<const ProbablisticGateImpl<Prec, Space>>(distribution, gate_list); \
     }
 
-<<<<<<< HEAD
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION(Precision::F16)
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16, HostSpace)
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16, DefaultSpace)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION(Precision::F32)
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32, HostSpace)
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32, DefaultSpace)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION(Precision::F64)
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64, HostSpace)
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64, DefaultSpace)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION(Precision::BF16)
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16, HostSpace)
+DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16, DefaultSpace)
 #endif
-#undef DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION
-=======
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(double)
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE(float)
-#undef DECLARE_GET_FROM_JSON_PROBGATE_WITH_TYPE*/
->>>>>>> set-space
+#undef DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 
 }  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void bind_gate_gate_probablistic(nb::module_& m) {
     DEF_GATE(ProbablisticGate,
              Prec,
@@ -149,19 +112,11 @@ void bind_gate_gate_probablistic(nb::module_& m) {
              "distribution.")
         .def(
             "gate_list",
-<<<<<<< HEAD
-            [](const ProbablisticGate<Prec>& gate) { return gate->gate_list(); },
+            [](const ProbablisticGate<Prec, Space>& gate) { return gate->gate_list(); },
             nb::rv_policy::reference)
         .def(
             "distribution",
-            [](const ProbablisticGate<Prec>& gate) { return gate->distribution(); },
-=======
-            [](const ProbablisticGate<Fp, Sp>& gate) { return gate->gate_list(); },
-            nb::rv_policy::reference)
-        .def(
-            "distribution",
-            [](const ProbablisticGate<Fp, Sp>& gate) { return gate->distribution(); },
->>>>>>> set-space
+            [](const ProbablisticGate<Prec, Space>& gate) { return gate->distribution(); },
             nb::rv_policy::reference);
 }
 }  // namespace internal

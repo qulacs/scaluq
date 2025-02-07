@@ -1,0 +1,30 @@
+ninja: Entering directory `build'
+[1/9] cd /workspaces/scaluq/build/_deps/kokkos-build && /opt/cmake-3.28.0/bin/cmake -DRUN_CHECK_GIT_VERSION=1 -DKOKKOS_SOURCE_DIR=/workspaces/scaluq/build/_deps/kokkos-src -P /workspaces/scaluq/build/_deps/kokkos-src/cmake/build_env_info.cmake
+[2/7] Building CXX object CMakeFiles/scaluq.dir/src/types.cpp.o
+[3/7] Building CXX object CMakeFiles/scaluq.dir/src/state/state_vector.cpp.o
+[4/7] Building CXX object CMakeFiles/scaluq.dir/src/util/utility.cpp.o
+[5/7] Linking CXX static library libscaluq.a
+[6/7] Building CXX object exe/CMakeFiles/main.dir/main.cpp.o
+/workspaces/scaluq/build/_deps/eigen-src/Eigen/src/LU/arch/InverseSize4.h(45): warning #1675-D: unrecognized GCC pragma
+  #pragma GCC optimize("no-fast-math")
+              ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+/workspaces/scaluq/build/_deps/eigen-src/Eigen/src/LU/arch/InverseSize4.h(45): warning #1675-D: unrecognized GCC pragma
+  #pragma GCC optimize("no-fast-math")
+              ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+[7/7] Linking CXX executable exe/main
+FAILED: exe/main 
+: && /workspaces/scaluq/build/_deps/kokkos-src/bin/kokkos_launch_compiler /workspaces/scaluq/build/_deps/kokkos-src/bin/nvcc_wrapper /usr/bin/c++ /usr/bin/c++ -g -DKOKKOS_DEPENDENCE -arch=sm_86 exe/CMakeFiles/main.dir/main.cpp.o -o exe/main  -Wl,-rpath,/usr/local/cuda-12.6/targets/x86_64-linux/lib  libscaluq.a  lib/libgtest_main.a  lib/libgtest_main.a  _deps/kokkos-build/containers/src/libkokkoscontainers.a  _deps/kokkos-build/core/src/libkokkoscore.a  /usr/local/cuda/targets/x86_64-linux/lib/stubs/libcuda.so  /usr/local/cuda-12.6/targets/x86_64-linux/lib/libcudart.so  -ldl  /usr/lib/gcc/x86_64-linux-gnu/11/libgomp.so  /usr/lib/x86_64-linux-gnu/libpthread.a  _deps/kokkos-build/simd/src/libkokkossimd.a  lib/libgtest.a && :
+/usr/bin/ld: exe/CMakeFiles/main.dir/main.cpp.o: in function `scaluq::internal::XGateImpl<(scaluq::Precision)2, Kokkos::Cuda>::GateBase(unsigned long, unsigned long)':
+/workspaces/scaluq/include/scaluq/gate/gate_standard.hpp:72: undefined reference to `scaluq::internal::GateBase<(scaluq::Precision)2, Kokkos::Cuda>::GateBase(unsigned long, unsigned long)'
+/usr/bin/ld: exe/CMakeFiles/main.dir/main.cpp.o:(.data.rel.ro._ZTVN6scaluq8internal9XGateImplILNS_9PrecisionE2EN6Kokkos4CudaEEE[_ZTVN6scaluq8internal9XGateImplILNS_9PrecisionE2EN6Kokkos4CudaEEE]+0x58): undefined reference to `scaluq::internal::XGateImpl<(scaluq::Precision)2, Kokkos::Cuda>::get_matrix() const'
+/usr/bin/ld: exe/CMakeFiles/main.dir/main.cpp.o:(.data.rel.ro._ZTVN6scaluq8internal9XGateImplILNS_9PrecisionE2EN6Kokkos4CudaEEE[_ZTVN6scaluq8internal9XGateImplILNS_9PrecisionE2EN6Kokkos4CudaEEE]+0x60): undefined reference to `scaluq::internal::XGateImpl<(scaluq::Precision)2, Kokkos::Cuda>::update_quantum_state(scaluq::StateVector<(scaluq::Precision)2, Kokkos::Cuda>&) const'
+/usr/bin/ld: exe/CMakeFiles/main.dir/main.cpp.o:(.data.rel.ro._ZTVN6scaluq8internal9XGateImplILNS_9PrecisionE2EN6Kokkos4CudaEEE[_ZTVN6scaluq8internal9XGateImplILNS_9PrecisionE2EN6Kokkos4CudaEEE]+0x68): undefined reference to `scaluq::internal::XGateImpl<(scaluq::Precision)2, Kokkos::Cuda>::update_quantum_state(scaluq::StateVectorBatched<(scaluq::Precision)2, Kokkos::Cuda>&) const'
+/usr/bin/ld: exe/CMakeFiles/main.dir/main.cpp.o:(.data.rel.ro._ZTVN6scaluq8internal9XGateImplILNS_9PrecisionE2EN6Kokkos4CudaEEE[_ZTVN6scaluq8internal9XGateImplILNS_9PrecisionE2EN6Kokkos4CudaEEE]+0x70): undefined reference to `scaluq::internal::XGateImpl<(scaluq::Precision)2, Kokkos::Cuda>::to_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) const'
+collect2: error: ld returned 1 exit status
+ninja: build stopped: subcommand failed.
