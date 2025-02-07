@@ -83,7 +83,7 @@ double StateVector<Prec, Space>::get_squared_norm() const {
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<Space>(0, this->_dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t it, FloatType & tmp) {
-            tmp += internal::squared_norm(this->_raw[it]);
+            tmp += internal::squared_norm<Prec>(this->_raw[it]);
         },
         internal::Sum<FloatType, Space>(norm));
     return static_cast<double>(norm);

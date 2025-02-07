@@ -1,7 +1,8 @@
 #include <cstdint>
 #include <iostream>
-#include <scaluq/all.hpp>
-
+// #include <scaluq/all.hpp>
+#include <scaluq/state/state_vector.hpp>
+#include <scaluq/util/utility.hpp>
 using namespace scaluq;
 using namespace nlohmann;
 
@@ -14,8 +15,8 @@ int main() {
         scaluq::StateVector<scaluq::Precision::F64, scaluq::DefaultSpace> gpu_state(n_qubits);
 
         for (int i = 0; i < 10; ++i) {
-            auto xgate = scaluq::gate::X<scaluq::Precision::F64, scaluq::DefaultSpace>(2);
-            xgate->update_quantum_state(gpu_state);
+            // auto xgate = scaluq::gate::X<scaluq::Precision::F64, scaluq::DefaultSpace>(2);
+            // xgate->update_quantum_state(gpu_state);
         }
         std::cout << tm.seconds() << std::endl;
     }
@@ -25,8 +26,8 @@ int main() {
         scaluq::StateVector<scaluq::Precision::F64, scaluq::HostSpace> cpu_state(n_qubits);
 
         for (int i = 0; i < 10; ++i) {
-            auto xgate = scaluq::gate::X<scaluq::Precision::F64, scaluq::HostSpace>(2);
-            xgate->update_quantum_state(cpu_state);
+            // auto xgate = scaluq::gate::X<scaluq::Precision::F64, scaluq::HostSpace>(2);
+            // xgate->update_quantum_state(cpu_state);
         }
         std::cout << tm.seconds() << std::endl;
     }
@@ -36,8 +37,8 @@ int main() {
         scaluq::StateVector<scaluq::Precision::F32, scaluq::DefaultSpace> gpu_state(n_qubits);
 
         for (int i = 0; i < 10; ++i) {
-            auto xgate = scaluq::gate::X<scaluq::Precision::F32, DefaultSpace>(2);
-            xgate->update_quantum_state(gpu_state);
+            // auto xgate = scaluq::gate::X<scaluq::Precision::F32, DefaultSpace>(2);
+            // xgate->update_quantum_state(gpu_state);
         }
         std::cout << tm.seconds() << std::endl;
     }

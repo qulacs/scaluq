@@ -6,7 +6,7 @@ namespace scaluq {
 namespace internal {
 // std::vector を Kokkos::View に変換する関数
 template <typename T, ExecutionSpace Space>
-Kokkos::View<T*, Space> convert_vector_to_view(const std::vector<T>& vec) {
+inline Kokkos::View<T*, Space> convert_vector_to_view(const std::vector<T>& vec) {
     Kokkos::View<const T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
         vec.data(), vec.size());
     Kokkos::View<T*, Space> device_view("device_view", vec.size());
@@ -20,7 +20,7 @@ SCALUQ_CALL_MACRO_FOR_TYPES_AND_EXECUTION_SPACE(FUNC_MACRO)
 
 // Kokkos::View を std::vector に変換する関数
 template <typename T, ExecutionSpace Space>
-std::vector<T> convert_view_to_vector(const Kokkos::View<T*, Space>& device_view) {
+inline std::vector<T> convert_view_to_vector(const Kokkos::View<T*, Space>& device_view) {
     std::vector<T> host_vector(device_view.extent(0));
     auto host_view = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), device_view);
     std::copy(host_view.data(), host_view.data() + host_view.size(), host_vector.begin());
@@ -32,7 +32,8 @@ SCALUQ_CALL_MACRO_FOR_TYPES_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
 template <Precision Prec, ExecutionSpace Space>
-Matrix<Prec, Space> convert_external_matrix_to_internal_matrix(const ComplexMatrix& eigen_matrix) {
+inline Matrix<Prec, Space> convert_external_matrix_to_internal_matrix(
+    const ComplexMatrix& eigen_matrix) {
     std::uint64_t rows = eigen_matrix.rows();
     std::uint64_t cols = eigen_matrix.cols();
     Matrix<Precision::F64, Space> mat_f64("internal_matrix", rows, cols);
@@ -55,7 +56,7 @@ SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
 template <Precision Prec, ExecutionSpace Space>
-ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix<Prec, Space>& matrix) {
+inline ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix<Prec, Space>& matrix) {
     int rows = matrix.extent(0);
     int cols = matrix.extent(1);
     ComplexMatrix eigen_matrix(rows, cols);
@@ -83,7 +84,7 @@ SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 
 template <Precision Prec, ExecutionSpace Space>
-ComplexMatrix convert_coo_to_external_matrix(SparseMatrix<Prec, Space> mat) {
+inline ComplexMatrix convert_coo_to_external_matrix(SparseMatrix<Prec, Space> mat) {
     ComplexMatrix eigen_matrix = ComplexMatrix::Zero(mat._row, mat._col);
     auto vec_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), mat._values);
     for (std::size_t i = 0; i < mat._values.extent(0); i++) {
