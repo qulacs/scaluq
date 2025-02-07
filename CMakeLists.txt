@@ -46,6 +46,7 @@ message(STATUS "SCALUQ_USE_EXE = ${SCALUQ_USE_EXE}")
 ### Kokkos options ###
 set(Kokkos_ENABLE_SERIAL ON CACHE BOOL "Enable Kokkos Serial backend")
 if(SCALUQ_USE_OMP)
+    find_package(OpenMP REQUIRED)
     set(Kokkos_ENABLE_OPENMP ON CACHE BOOL "Enable Kokkos OpenMP backend")
 endif(SCALUQ_USE_OMP)
 if(SCALUQ_USE_CUDA)
@@ -91,7 +92,7 @@ install(DIRECTORY ${json_SOURCE_DIR}/single_include/nlohmann DESTINATION include
 
 # nanobind
 if(SKBUILD)
-    find_package(Python 3.8
+    find_package(Python 3.13
         REQUIRED COMPONENTS Interpreter Development.Module
         OPTIONAL_COMPONENTS Development.SABIModule)
     if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)

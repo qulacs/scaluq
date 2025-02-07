@@ -46,6 +46,10 @@ jobs:
       SCALUQ_USE_TEST: "ON"
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
       SCALUQ_CUDA_ARCH: "PASCAL61"
+      SCALUQ_FLOAT16: "ON"
+      SCALUQ_FLOAT32: "ON"
+      SCALUQ_FLOAT64: "ON"
+      SCALUQ_BFLOAT16: "ON"
     steps:
       - uses: actions/checkout@v4
 
