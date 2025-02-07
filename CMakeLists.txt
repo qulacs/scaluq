@@ -46,7 +46,6 @@ message(STATUS "SCALUQ_USE_EXE = ${SCALUQ_USE_EXE}")
 ### Kokkos options ###
 set(Kokkos_ENABLE_SERIAL ON CACHE BOOL "Enable Kokkos Serial backend")
 if(SCALUQ_USE_OMP)
-    find_package(OpenMP REQUIRED)
     set(Kokkos_ENABLE_OPENMP ON CACHE BOOL "Enable Kokkos OpenMP backend")
 endif(SCALUQ_USE_OMP)
 if(SCALUQ_USE_CUDA)
@@ -158,7 +157,6 @@ target_compile_options(scaluq PUBLIC -pthread)
 # Enable openmp
 if(SCALUQ_USE_OMP)
     target_compile_options(scaluq PUBLIC -fopenmp)
-    target_compile_definitions(scaluq PUBLIC OPENMP)
 endif()
 
 # Debug options
