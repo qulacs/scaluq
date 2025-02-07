@@ -61,8 +61,11 @@ Matrix<Prec> convert_external_matrix_to_internal_matrix(const ComplexMatrix& eig
     std::uint64_t rows = eigen_matrix.rows();
     std::uint64_t cols = eigen_matrix.cols();
     Matrix<Precision::F64> mat_f64("internal_matrix", rows, cols);
-    Kokkos::View<const Complex<Prec>**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-        host_view(reinterpret_cast<const Complex<Prec>*>(eigen_matrix.data()), rows, cols);
+    Kokkos::View<const Complex<Precision::F64>**,
+                 Kokkos::HostSpace,
+                 Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        host_view(
+            reinterpret_cast<const Complex<Precision::F64>*>(eigen_matrix.data()), rows, cols);
     Kokkos::deep_copy(mat_f64, host_view);
     if constexpr (Prec == Precision::F64) return mat_f64;
     Matrix<Prec> mat("internal_matrix", rows, cols);
