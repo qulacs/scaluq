@@ -44,6 +44,10 @@ jobs:
       CMAKE_CXX_COMPILER: ${{ matrix.runs-on == 'macos-13' && '/usr/local/opt/ccache/libexec/g++-14'|| matrix.runs-on == 'macos-14' && '/opt/homebrew/opt/ccache/libexec/g++-14' || '/usr/lib/ccache/g++' }}
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
       SCALUQ_CUDA_ARCH: "PASCAL61"
+      SCALUQ_FLOAT16: "ON"
+      SCALUQ_FLOAT32: "ON"
+      SCALUQ_FLOAT64: "ON"
+      SCALUQ_BFLOAT16: "ON"
     steps:
       - uses: actions/checkout@v4
 

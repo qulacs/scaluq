@@ -124,11 +124,11 @@ void bind_gate_param_gate_probablistic_hpp(nb::module_& m) {
         "distribution.")
         .def(
             "gate_list",
-            [](const ParamProbablisticGate<Fp>& gate) { return gate->gate_list(); },
+            [](const ParamProbablisticGate<Prec>& gate) { return gate->gate_list(); },
             nb::rv_policy::reference)
         .def(
             "distribution",
-            [](const ParamProbablisticGate<Fp>& gate) { return gate->distribution(); },
+            [](const ParamProbablisticGate<Prec>& gate) { return gate->distribution(); },
             nb::rv_policy::reference);
 }
 }  // namespace internal
