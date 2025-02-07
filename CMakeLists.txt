@@ -92,7 +92,7 @@ install(DIRECTORY ${json_SOURCE_DIR}/single_include/nlohmann DESTINATION include
 
 # nanobind
 if(SKBUILD)
-    find_package(Python 3.13
+    find_package(Python 3.12
         REQUIRED COMPONENTS Interpreter Development.Module
         OPTIONAL_COMPONENTS Development.SABIModule)
     if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
