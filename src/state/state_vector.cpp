@@ -281,6 +281,14 @@ std::string StateVector<Prec, Space>::to_string() const {
     return os.str();
 }
 
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(StateVector)
+// SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(StateVector)
+template class StateVector<Precision::F64, DefaultSpace>;
+template class StateVector<Precision::F64, HostSpace>;
+template class StateVector<Precision::F32, DefaultSpace>;
+template class StateVector<Precision::F32, HostSpace>;
+template class StateVector<Precision::F16, DefaultSpace>;
+template class StateVector<Precision::F16, HostSpace>;
+template class StateVector<Precision::BF16, DefaultSpace>;
+template class StateVector<Precision::BF16, HostSpace>;
 
 }  // namespace scaluq
