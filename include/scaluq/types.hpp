@@ -28,7 +28,7 @@ using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, 
 using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex, Eigen::RowMajor>;
 
 template <Precision Prec, ExecutionSpace Space>
-using Matrix = Kokkos::View<Complex<Prec>**, Space>;
+using Matrix = Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight, Space>;
 
 template <Precision Prec>
 using Matrix2x2 = Kokkos::Array<Kokkos::Array<Complex<Prec>, 2>, 2>;

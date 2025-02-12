@@ -27,8 +27,8 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         "COO_Update",
         Kokkos::MDRangePolicy<Space, Kokkos::Rank<2>>(
             {0, 0},
-            {(std::int64_t)(state.dim() >> std::popcount(target_mask | control_mask)),
-             (std::int64_t)values.size()}),
+            {static_cast<std::int64_t>(state.dim() >> std::popcount(target_mask | control_mask)),
+             static_cast<std::int64_t>(values.size())}),
         KOKKOS_LAMBDA(std::uint64_t outer, std::uint64_t inner) {
             std::uint64_t basis =
                 internal::insert_zero_at_mask_positions(outer, target_mask | control_mask) |
@@ -72,9 +72,9 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         "COO_Update",
         Kokkos::MDRangePolicy<Space, Kokkos::Rank<3>>(
             {0, 0, 0},
-            {(std::int64_t)states.batch_size(),
-             (std::int64_t)(states.dim() >> std::popcount(target_mask | control_mask)),
-             (std::int64_t)values.size()}),
+            {static_cast<std::int64_t>(states.batch_size()),
+             static_cast<std::int64_t>(states.dim() >> std::popcount(target_mask | control_mask)),
+             static_cast<std::int64_t>(values.size())}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t outer, std::uint64_t inner) {
             std::uint64_t basis =
                 internal::insert_zero_at_mask_positions(outer, target_mask | control_mask) |
