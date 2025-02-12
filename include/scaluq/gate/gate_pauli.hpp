@@ -52,7 +52,7 @@ public:
 
     PauliOperator<Prec> pauli() const { return _pauli; }
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
-    double angle() const { return _angle; }
+    double angle() const { return static_cast<double>(_angle); }
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const PauliRotationGateImpl<Prec>>(

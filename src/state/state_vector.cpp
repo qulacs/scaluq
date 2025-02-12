@@ -82,7 +82,7 @@ double StateVector<Prec>::get_squared_norm() const {
         KOKKOS_CLASS_LAMBDA(std::uint64_t it, FloatType & tmp) {
             tmp += internal::squared_norm(this->_raw[it]);
         },
-        internal::Sum<FloatType, Kokkos::DefaultExecutionSpace>(norm));
+        norm);
     return static_cast<double>(norm);
 }
 template <Precision Prec>
@@ -107,7 +107,7 @@ double StateVector<Prec>::get_zero_probability(std::uint64_t target_qubit_index)
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(i, target_qubit_index);
             lsum += internal::squared_norm(this->_raw[basis_0]);
         },
-        internal::Sum<FloatType, Kokkos::DefaultExecutionSpace>(sum));
+        sum);
     return static_cast<double>(sum);
 }
 template <Precision Prec>
@@ -150,7 +150,7 @@ double StateVector<Prec>::get_marginal_probability(
             }
             lsum += internal::squared_norm(this->_raw[basis]);
         },
-        internal::Sum<FloatType, Kokkos::DefaultExecutionSpace>(sum));
+        sum);
 
     return static_cast<double>(sum);
 }
@@ -166,7 +166,7 @@ double StateVector<Prec>::get_entropy() const {
                 lsum += -prob * internal::log2(prob);
             }
         },
-        internal::Sum<FloatType, Kokkos::DefaultExecutionSpace>(ent));
+        ent);
     return ent;
 }
 template <Precision Prec>
