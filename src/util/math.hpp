@@ -113,7 +113,7 @@ KOKKOS_INLINE_FUNCTION Complex<Prec> polar(const Float<Prec>& r,
     return Complex<Prec>(r * cos(theta), r * sin(theta));
 }
 
-template <class Scalar, class Space>
+template <class Scalar, ExecutionSpace Space>
 struct Sum {
 public:
     // Required

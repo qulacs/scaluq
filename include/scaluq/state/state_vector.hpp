@@ -13,10 +13,7 @@
 
 namespace scaluq {
 
-using HostSpace = Kokkos::HostSpace;
-using DefaultSpace = Kokkos::DefaultExecutionSpace;
-
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 class StateVector {
     std::uint64_t _n_qubits;
     std::uint64_t _dim;
@@ -25,10 +22,10 @@ class StateVector {
 
 public:
     static constexpr std::uint64_t UNMEASURED = 2;
-    Kokkos::View<ComplexType*> _raw;
+    Kokkos::View<ComplexType*, Space> _raw;
     StateVector() = default;
     StateVector(std::uint64_t n_qubits);
-    StateVector(Kokkos::View<ComplexType*> view);
+    StateVector(Kokkos::View<ComplexType*, Space> view);
     StateVector(const StateVector& other) = default;
 
     StateVector& operator=(const StateVector& other) = default;
