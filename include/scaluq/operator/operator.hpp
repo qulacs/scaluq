@@ -97,6 +97,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
         "Operator",
         DocString()
             .desc("General quantum operator class.")
+            .desc("Given `qubit_count: int`, Initialize operator with specified number of qubits.")
             .ex(DocString::Code(
                 {">>> pauli = PauliOperator(\"X 3 Y 2\")",
                  ">>> operator = Operator(4)",
