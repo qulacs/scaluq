@@ -18,7 +18,7 @@ def main():
 
     print(operator.to_json())
 
-    states = StateVectorBatched.Haar_random_state(2, 3)
+    states = StateVectorBatched.Haar_random_state(2, 3, False)
     prx = gate.ParamRX(0, 2.0, [1])
     pry = gate.ParamRY(1, 2.0, [2])
     params = {

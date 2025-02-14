@@ -53,7 +53,7 @@ private:
     std::shared_ptr<const Data> _ptr;
 
 public:
-    enum PauliID : std::uint64_t { I, X, Y, Z };
+    enum PauliID : std::uint64_t { PAULI_I, PAULI_X, PAULI_Y, PAULI_Z };
 
     explicit PauliOperator(Complex<Fp> coef = 1.) : _ptr(std::make_shared<const Data>(coef)) {}
     explicit PauliOperator(Data data) : _ptr(std::make_shared<const Data>(data)) {}
@@ -110,12 +110,12 @@ public:
 namespace internal {
 template <std::floating_point Fp>
 void bind_operator_pauli_operator_hpp(nb::module_& m) {
-    nb::enum_<typename PauliOperator<Fp>::PauliID>(m, "PauliID")
-        .value("I", PauliOperator<Fp>::I)
-        .value("X", PauliOperator<Fp>::X)
-        .value("Y", PauliOperator<Fp>::Y)
-        .value("Z", PauliOperator<Fp>::Z)
-        .export_values();
+    auto pauli_enum = nb::enum_<typename PauliOperator<Fp>::PauliID>(
+                          m, "PauliID", "Enumeration for Pauli operations.")
+                          .value("PAULI_I", PauliOperator<Fp>::PAULI_I)
+                          .value("PAULI_X", PauliOperator<Fp>::PAULI_X)
+                          .value("PAULI_Y", PauliOperator<Fp>::PAULI_Y)
+                          .value("PAULI_Z", PauliOperator<Fp>::PAULI_Z);
 
     nb::class_<typename PauliOperator<Fp>::Data>(
         m, "PauliOperatorData", "Internal data structure for PauliOperator.")
@@ -164,7 +164,33 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
     nb::class_<PauliOperator<Fp>>(
         m,
         "PauliOperator",
-        "Pauli operator as coef and tensor product of single pauli for each qubit.")
+        DocString()
+            .desc("Pauli operator as coef and tensor product of single pauli for each qubit.")
+            .desc("Given `coef: Complex<Fp>`, Initialize operator which just multiplying coef.")
+            .desc("Given `target_qubit_list: std::vector<std::uint64_t>, pauli_id_list: "
+                  "std::vector<std::uint64_t>, coef: Complex<Fp>`, Initialize pauli operator. For "
+                  "each `i`, single pauli correspond to `pauli_id_list[i]` is applied to "
+                  "`target_qubit_list`-th qubit.")
+            .desc("Given `pauli_string: std::string_view, coef: Complex<Fp>`, Initialize pauli "
+                  "operator. For each `i`, single pauli correspond to `pauli_id_list[i]` is "
+                  "applied to `target_qubit_list`-th qubit.")
+            .desc("Given `pauli_id_par_qubit: std::vector<std::uint64_t>, coef: Complex<Fp>`, "
+                  "Initialize pauli operator. For each `i`, single pauli correspond to "
+                  "`paul_id_per_qubit` is applied to `i`-th qubit.")
+            .desc("Given `bit_flip_mask: std::uint64_t, phase_flip_mask: std::uint64_t, coef: "
+                  "Complex<Fp>`, Initialize pauli operator. For each `i`, single pauli applied to "
+                  "`i`-th qubit is "
+                  "got "
+                  "from `i-th` bit of `bit_flip_mask` and `phase_flip_mask` as follows.\n\n.. "
+                  "csv-table::\n\n    \"bit_flip\",\"phase_flip\",\"pauli\"\n    "
+                  "\"0\",\"0\",\"I\"\n    "
+                  "\"0\",\"1\",\"Z\"\n    \"1\",\"0\",\"X\"\n    \"1\",\"1\",\"Y\"")
+            .ex(DocString::Code(
+                {">>> pauli = PauliOperator(\"X 3 Y 2\")",
+                 ">>> print(pauli.to_json())",
+                 "{\"coef\":{\"imag\":0.0,\"real\":1.0},\"pauli_string\":\"X 3 Y 2\"}"}))
+            .build_as_google_style()
+            .c_str())
         .def(nb::init<Complex<Fp>>(),
              "coef"_a = 1.,
              "Initialize operator which just multiplying coef.")

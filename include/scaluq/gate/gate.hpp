@@ -352,7 +352,11 @@ namespace internal {
             "Get target and control qubits as mask.")                                        \
         .def(                                                                                \
             "get_inverse",                                                                   \
-            [](const GATE_TYPE<FLOAT>& gate) { return gate->get_inverse(); },                \
+            [](const GATE_TYPE<FLOAT>& gate) {                                               \
+                auto inv = gate->get_inverse();                                              \
+                if (!inv) nb::none();                                                        \
+                return Gate<FLOAT>(inv);                                                     \
+            },                                                                               \
             "Generate inverse gate as `Gate` type. If not exists, return None.")             \
         .def(                                                                                \
             "update_quantum_state",                                                          \
@@ -386,15 +390,17 @@ namespace internal {
 template <std::floating_point Fp>
 nb::class_<Gate<Fp>> gate_base_def;
 
-#define DEF_GATE(GATE_TYPE, FLOAT, DESCRIPTION)                                                 \
-    ::scaluq::internal::gate_base_def<FLOAT>.def(nb::init<GATE_TYPE<FLOAT>>(),                  \
-                                                 "Upcast from `" #GATE_TYPE "`.");              \
-    DEF_GATE_BASE(                                                                              \
-        GATE_TYPE,                                                                              \
-        FLOAT,                                                                                  \
-        DESCRIPTION                                                                             \
-        "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
-        .def(nb::init<Gate<FLOAT>>())
+inline nb::sig concatenate_description(const std::string& desc) {
+    std::string combined =
+        desc +
+        "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).";
+    return nb::sig(combined.c_str());
+}
+
+#define DEF_GATE(GATE_TYPE, FLOAT, DESCRIPTION)                                  \
+    ::scaluq::internal::gate_base_def<FLOAT>.def(nb::init<GATE_TYPE<FLOAT>>(),   \
+                                                 "Upcast from " #GATE_TYPE "."); \
+    DEF_GATE_BASE(GATE_TYPE, FLOAT, DESCRIPTION)
 
 void bind_gate_gate_hpp_without_precision(nb::module_& m) {
     nb::enum_<GateType>(m, "GateType", "Enum of Gate Type.")
