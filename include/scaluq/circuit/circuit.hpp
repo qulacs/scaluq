@@ -9,10 +9,11 @@
 
 namespace scaluq {
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 class Circuit {
 public:
-    using GateWithKey = std::variant<Gate<Prec>, std::pair<ParamGate<Prec>, std::string>>;
+    using GateWithKey =
+        std::variant<Gate<Prec, Space>, std::pair<ParamGate<Prec, Space>, std::string>>;
     Circuit() = default;
     explicit Circuit(std::uint64_t n_qubits) : _n_qubits(n_qubits) {}
 
@@ -38,19 +39,19 @@ public:
 
     [[nodiscard]] std::uint64_t calculate_depth() const;
 
-    void add_gate(const Gate<Prec>& gate) {
+    void add_gate(const Gate<Prec, Space>& gate) {
         check_gate_is_valid(gate);
         _gate_list.push_back(gate);
     }
-    void add_param_gate(const ParamGate<Prec>& param_gate, std::string_view parameter_key) {
+    void add_param_gate(const ParamGate<Prec, Space>& param_gate, std::string_view parameter_key) {
         check_gate_is_valid(param_gate);
         _gate_list.push_back(std::make_pair(param_gate, std::string(parameter_key)));
     }
 
-    void add_circuit(const Circuit<Prec>& circuit);
-    void add_circuit(Circuit<Prec>&& circuit);
+    void add_circuit(const Circuit<Prec, Space>& circuit);
+    void add_circuit(Circuit<Prec, Space>&& circuit);
 
-    void update_quantum_state(StateVector<Prec>& state,
+    void update_quantum_state(StateVector<Prec, Space>& state,
                               const std::map<std::string, double>& parameters = {}) const;
 
     Circuit copy() const;
@@ -73,10 +74,10 @@ public:
         const Json& tmp_list = j.at("gate_list");
         for (const Json& gate_with_key : tmp_list) {
             if (gate_with_key.contains("key")) {
-                circuit.add_param_gate(gate_with_key.at("gate").get<ParamGate<Prec>>(),
+                circuit.add_param_gate(gate_with_key.at("gate").get<ParamGate<Prec, Space>>(),
                                        gate_with_key.at("key").get<std::string>());
             } else {
-                circuit.add_gate(gate_with_key.at("gate").get<Gate<Prec>>());
+                circuit.add_gate(gate_with_key.at("gate").get<Gate<Prec, Space>>());
             }
         }
     }
@@ -86,47 +87,49 @@ private:
 
     std::vector<GateWithKey> _gate_list;
 
-    void check_gate_is_valid(const Gate<Prec>& gate) const;
+    void check_gate_is_valid(const Gate<Prec, Space>& gate) const;
 
-    void check_gate_is_valid(const ParamGate<Prec>& gate) const;
+    void check_gate_is_valid(const ParamGate<Prec, Space>& gate) const;
 };
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void bind_circuit_circuit_hpp(nb::module_& m) {
-    nb::class_<Circuit<Prec>>(m, "Circuit", "Quantum circuit represented as gate array")
+    nb::class_<Circuit<Prec, Space>>(m, "Circuit", "Quantum circuit represented as gate array")
         .def(nb::init<std::uint64_t>(), "Initialize empty circuit of specified qubits.")
-        .def("n_qubits", &Circuit<Prec>::n_qubits, "Get property of `n_qubits`.")
+        .def("n_qubits", &Circuit<Prec, Space>::n_qubits, "Get property of `n_qubits`.")
         .def("gate_list",
-             &Circuit<Prec>::gate_list,
+             &Circuit<Prec, Space>::gate_list,
              "Get property of `gate_list`.",
              nb::rv_policy::reference)
-        .def("n_gates", &Circuit<Prec>::n_gates, "Get property of `n_gates`.")
-        .def("key_set", &Circuit<Prec>::key_set, "Get set of keys of parameters.")
-        .def("get_gate_at", &Circuit<Prec>::get_gate_at, "Get reference of i-th gate.")
+        .def("n_gates", &Circuit<Prec, Space>::n_gates, "Get property of `n_gates`.")
+        .def("key_set", &Circuit<Prec, Space>::key_set, "Get set of keys of parameters.")
+        .def("get_gate_at", &Circuit<Prec, Space>::get_gate_at, "Get reference of i-th gate.")
         .def("get_param_key_at",
-             &Circuit<Prec>::get_param_key_at,
+             &Circuit<Prec, Space>::get_param_key_at,
              "Get parameter key of i-th gate. If it is not parametric, return None.")
-        .def("calculate_depth", &Circuit<Prec>::calculate_depth, "Get depth of circuit.")
+        .def("calculate_depth", &Circuit<Prec, Space>::calculate_depth, "Get depth of circuit.")
         .def("add_gate",
-             nb::overload_cast<const Gate<Prec>&>(&Circuit<Prec>::add_gate),
+             nb::overload_cast<const Gate<Prec, Space>&>(&Circuit<Prec, Space>::add_gate),
              "Add gate. Given gate is copied.")
         .def("add_param_gate",
-             nb::overload_cast<const ParamGate<Prec>&, std::string_view>(
-                 &Circuit<Prec>::add_param_gate),
+             nb::overload_cast<const ParamGate<Prec, Space>&, std::string_view>(
+                 &Circuit<Prec, Space>::add_param_gate),
              "Add parametric gate with specifing key. Given param_gate is copied.")
         .def("add_circuit",
-             nb::overload_cast<const Circuit<Prec>&>(&Circuit<Prec>::add_circuit),
+             nb::overload_cast<const Circuit<Prec, Space>&>(&Circuit<Prec, Space>::add_circuit),
              "Add all gates in specified circuit. Given gates are copied.")
         .def("update_quantum_state",
-             &Circuit<Prec>::update_quantum_state,
+             &Circuit<Prec, Space>::update_quantum_state,
              "Apply gate to the StateVector. StateVector in args is directly updated. If the "
              "circuit contains parametric gate, you have to give real value of parameter as "
              "dict[str, float] in 2nd arg.")
         .def(
             "update_quantum_state",
-            [&](const Circuit<Prec>& circuit, StateVector<Prec>& state, nb::kwargs kwargs) {
+            [&](const Circuit<Prec, Space>& circuit,
+                StateVector<Prec, Space>& state,
+                nb::kwargs kwargs) {
                 std::map<std::string, double> parameters;
                 for (auto&& [key, param] : kwargs) {
                     parameters[nb::cast<std::string>(key)] = nb::cast<double>(param);
@@ -136,17 +139,17 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "Apply gate to the StateVector. StateVector in args is directly updated. If the "
             "circuit contains parametric gate, you have to give real value of parameter as "
             "\"name=value\" format in kwargs.")
-        .def("copy", &Circuit<Prec>::copy, "Copy circuit. All the gates inside is copied.")
+        .def("copy", &Circuit<Prec, Space>::copy, "Copy circuit. All the gates inside is copied.")
         .def("get_inverse",
-             &Circuit<Prec>::get_inverse,
+             &Circuit<Prec, Space>::get_inverse,
              "Get inverse of circuit. All the gates are newly created.")
         .def(
             "to_json",
-            [](const Circuit<Prec>& circuit) { return Json(circuit).dump(); },
+            [](const Circuit<Prec, Space>& circuit) { return Json(circuit).dump(); },
             "Information as json style.")
         .def(
             "load_json",
-            [](Circuit<Prec>& circuit, const std::string& str) {
+            [](Circuit<Prec, Space>& circuit, const std::string& str) {
                 circuit = nlohmann::json::parse(str);
             },
             "Read an object from the JSON representation of the circuit.");

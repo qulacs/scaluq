@@ -8,7 +8,7 @@
 
 namespace scaluq {
 enum class Precision { F16, F32, F64, BF16 };
-}
+}  // namespace scaluq
 
 namespace scaluq::internal {
 template <Precision precision>

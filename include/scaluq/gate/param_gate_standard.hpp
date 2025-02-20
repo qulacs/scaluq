@@ -7,19 +7,19 @@ namespace scaluq {
 
 namespace internal {
 
-template <Precision Prec>
-class ParamRXGateImpl : public ParamGateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class ParamRXGateImpl : public ParamGateBase<Prec, Space> {
 public:
-    using ParamGateBase<Prec>::ParamGateBase;
+    using ParamGateBase<Prec, Space>::ParamGateBase;
 
-    std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const ParamRXGateImpl<Prec>>(
+    std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const ParamRXGateImpl<Prec, Space>>(
             this->_target_mask, this->_control_mask, -this->_pcoef);
     }
     ComplexMatrix get_matrix(double param) const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector, double param) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states,
+    void update_quantum_state(StateVector<Prec, Space>& state_vector, double param) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states,
                               std::vector<double> params) const override;
 
     std::string to_string(const std::string& indent) const override;
@@ -32,19 +32,19 @@ public:
     }
 };
 
-template <Precision Prec>
-class ParamRYGateImpl : public ParamGateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class ParamRYGateImpl : public ParamGateBase<Prec, Space> {
 public:
-    using ParamGateBase<Prec>::ParamGateBase;
+    using ParamGateBase<Prec, Space>::ParamGateBase;
 
-    std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const ParamRYGateImpl<Prec>>(
+    std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const ParamRYGateImpl<Prec, Space>>(
             this->_target_mask, this->_control_mask, -this->_pcoef);
     }
     ComplexMatrix get_matrix(double param) const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector, double param) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states,
+    void update_quantum_state(StateVector<Prec, Space>& state_vector, double param) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states,
                               std::vector<double> params) const override;
 
     std::string to_string(const std::string& indent) const override;
@@ -57,19 +57,19 @@ public:
     }
 };
 
-template <Precision Prec>
-class ParamRZGateImpl : public ParamGateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class ParamRZGateImpl : public ParamGateBase<Prec, Space> {
 public:
-    using ParamGateBase<Prec>::ParamGateBase;
+    using ParamGateBase<Prec, Space>::ParamGateBase;
 
-    std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const ParamRZGateImpl<Prec>>(
+    std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const ParamRZGateImpl<Prec, Space>>(
             this->_target_mask, this->_control_mask, -this->_pcoef);
     }
     ComplexMatrix get_matrix(double param) const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector, double param) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states,
+    void update_quantum_state(StateVector<Prec, Space>& state_vector, double param) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states,
                               std::vector<double> params) const override;
 
     std::string to_string(const std::string& indent) const override;
@@ -84,65 +84,80 @@ public:
 
 }  // namespace internal
 
-template <Precision Prec>
-using ParamRXGate = internal::ParamGatePtr<internal::ParamRXGateImpl<Prec>>;
-template <Precision Prec>
-using ParamRYGate = internal::ParamGatePtr<internal::ParamRYGateImpl<Prec>>;
-template <Precision Prec>
-using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl<Prec>>;
+template <Precision Prec, ExecutionSpace Space>
+using ParamRXGate = internal::ParamGatePtr<internal::ParamRXGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using ParamRYGate = internal::ParamGatePtr<internal::ParamRYGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl<Prec, Space>>;
 
 namespace internal {
 
-#define DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION(Impl, Prec)                     \
-    template <>                                                                          \
-    inline std::shared_ptr<const Impl<Prec>> get_from_json(const Json& j) {              \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                 \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();               \
-        auto param_coef = j.at("param_coef").get<double>();                              \
-        return std::make_shared<const Impl<Prec>>(vector_to_mask(targets),               \
-                                                  vector_to_mask(controls),              \
-                                                  static_cast<Float<Prec>>(param_coef)); \
+#define DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Impl, Prec, Space) \
+    template <>                                                                                 \
+    inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {              \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                        \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                      \
+        auto param_coef = j.at("param_coef").get<double>();                                     \
+        return std::make_shared<const Impl<Prec, Space>>(vector_to_mask(targets),               \
+                                                         vector_to_mask(controls),              \
+                                                         static_cast<Float<Prec>>(param_coef)); \
     }
 
-#define DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION(Prec)         \
-    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION(ParamRXGateImpl, Prec) \
-    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION(ParamRYGateImpl, Prec) \
-    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION(ParamRZGateImpl, Prec)
+#define DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec, Space) \
+    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                      \
+        ParamRXGateImpl, Prec, Space)                                                          \
+    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                      \
+        ParamRYGateImpl, Prec, Space)                                                          \
+    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                      \
+        ParamRZGateImpl, Prec, Space)
 
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION(Precision::F16)
+DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
+                                                                          DefaultSpace)
+DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16, HostSpace)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION(Precision::F32)
+DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
+                                                                          DefaultSpace)
+DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32, HostSpace)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION(Precision::F64)
+DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
+                                                                          DefaultSpace)
+DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64, HostSpace)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION(Precision::BF16)
+DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
+                                                                          DefaultSpace)
+DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
+                                                                          HostSpace)
 #endif
-#undef DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION
-#undef DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION
+#undef DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE
+#undef DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 
 }  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void bind_gate_param_gate_standard_hpp(nb::module_& m) {
     DEF_PARAM_GATE(
         ParamRXGate,
         Prec,
+        Space,
         "Specific class of parametric X rotation gate, represented as "
         "$e^{-i\\frac{\\mathrm{angle}}{2}X}$. `angle` is given as `param * param_coef`.");
     DEF_PARAM_GATE(
         ParamRYGate,
         Prec,
+        Space,
         "Specific class of parametric Y rotation gate, represented as "
         "$e^{-i\\frac{\\mathrm{angle}}{2}Y}$. `angle` is given as `param * param_coef`.");
     DEF_PARAM_GATE(
         ParamRZGate,
         Prec,
+        Space,
         "Specific class of parametric Z rotation gate, represented as "
         "$e^{-i\\frac{\\mathrm{angle}}{2}Z}$. `angle` is given as `param * param_coef`.");
 }

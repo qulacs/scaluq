@@ -3,11 +3,11 @@
 #include "../util/template.hpp"
 
 namespace scaluq::internal {
-template <Precision Prec>
-ParamProbablisticGateImpl<Prec>::ParamProbablisticGateImpl(
+template <Precision Prec, ExecutionSpace Space>
+ParamProbablisticGateImpl<Prec, Space>::ParamProbablisticGateImpl(
     const std::vector<double>& distribution,
-    const std::vector<std::variant<Gate<Prec>, ParamGate<Prec>>>& gate_list)
-    : ParamGateBase<Prec>(0, 0), _distribution(distribution), _gate_list(gate_list) {
+    const std::vector<std::variant<Gate<Prec, Space>, ParamGate<Prec, Space>>>& gate_list)
+    : ParamGateBase<Prec, Space>(0, 0), _distribution(distribution), _gate_list(gate_list) {
     std::uint64_t n = distribution.size();
     if (n == 0) {
         throw std::runtime_error("At least one gate is required.");
@@ -22,8 +22,9 @@ ParamProbablisticGateImpl<Prec>::ParamProbablisticGateImpl(
         throw std::runtime_error("Sum of distribution must be equal to 1.");
     }
 }
-template <Precision Prec>
-std::shared_ptr<const ParamGateBase<Prec>> ParamProbablisticGateImpl<Prec>::get_inverse() const {
+template <Precision Prec, ExecutionSpace Space>
+std::shared_ptr<const ParamGateBase<Prec, Space>>
+ParamProbablisticGateImpl<Prec, Space>::get_inverse() const {
     std::vector<EitherGate> inv_gate_list;
     inv_gate_list.reserve(_gate_list.size());
     std::ranges::transform(
@@ -32,9 +33,9 @@ std::shared_ptr<const ParamGateBase<Prec>> ParamProbablisticGateImpl<Prec>::get_
         });
     return std::make_shared<const ParamProbablisticGateImpl>(_distribution, inv_gate_list);
 }
-template <Precision Prec>
-void ParamProbablisticGateImpl<Prec>::update_quantum_state(StateVector<Prec>& state_vector,
-                                                           double param) const {
+template <Precision Prec, ExecutionSpace Space>
+void ParamProbablisticGateImpl<Prec, Space>::update_quantum_state(
+    StateVector<Prec, Space>& state_vector, double param) const {
     Random random;
     double r = random.uniform();
     std::uint64_t i = std::distance(_cumulative_distribution.begin(),
@@ -48,9 +49,9 @@ void ParamProbablisticGateImpl<Prec>::update_quantum_state(StateVector<Prec>& st
         std::get<1>(gate)->update_quantum_state(state_vector, param);
     }
 }
-template <Precision Prec>
-void ParamProbablisticGateImpl<Prec>::update_quantum_state(StateVectorBatched<Prec>& states,
-                                                           std::vector<double> params) const {
+template <Precision Prec, ExecutionSpace Space>
+void ParamProbablisticGateImpl<Prec, Space>::update_quantum_state(
+    StateVectorBatched<Prec, Space>& states, std::vector<double> params) const {
     Random random;
     std::vector<double> r(states.batch_size());
     std::ranges::generate(r, [&random]() { return random.uniform(); });
@@ -66,7 +67,7 @@ void ParamProbablisticGateImpl<Prec>::update_quantum_state(StateVectorBatched<Pr
     });
     for (std::size_t i = 0; i < states.batch_size(); ++i) {
         const auto& gate = _gate_list[indicies[i]];
-        auto state_vector = StateVector<Prec>(Kokkos::subview(states._raw, i, Kokkos::ALL));
+        auto state_vector = StateVector<Prec, Space>(Kokkos::subview(states._raw, i, Kokkos::ALL));
         if (gate.index() == 0) {
             std::get<0>(gate)->update_quantum_state(state_vector);
         } else {
@@ -74,8 +75,8 @@ void ParamProbablisticGateImpl<Prec>::update_quantum_state(StateVectorBatched<Pr
         }
     }
 }
-template <Precision Prec>
-std::string ParamProbablisticGateImpl<Prec>::to_string(const std::string& indent) const {
+template <Precision Prec, ExecutionSpace Space>
+std::string ParamProbablisticGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     const auto dist = distribution();
     ss << indent << "Gate Type: Probablistic\n";
@@ -90,5 +91,5 @@ std::string ParamProbablisticGateImpl<Prec>::to_string(const std::string& indent
     }
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION(ParamProbablisticGateImpl)
+SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ParamProbablisticGateImpl)
 }  // namespace scaluq::internal
