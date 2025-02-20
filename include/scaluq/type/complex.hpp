@@ -15,7 +15,8 @@ public:
     template <typename Scalar>
     requires std::is_same_v<Scalar, FloatType> || std::is_same_v<Scalar, double> ||
         std::is_same_v<Scalar, int>
-        Complex(Scalar real) : _real(static_cast<FloatType>(real)), _imag{0} {}
+            KOKKOS_INLINE_FUNCTION Complex(Scalar real)
+        : _real(static_cast<FloatType>(real)), _imag{0} {}
     template <typename Scalar1, typename Scalar2>
     requires(std::is_same_v<Scalar1, FloatType> || std::is_same_v<Scalar1, double> ||
              std::is_same_v<Scalar1, int>) &&
