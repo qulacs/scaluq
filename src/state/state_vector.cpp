@@ -85,7 +85,7 @@ double StateVector<Prec, Space>::get_squared_norm() const {
         KOKKOS_CLASS_LAMBDA(std::uint64_t it, FloatType & tmp) {
             tmp += internal::squared_norm<Prec>(this->_raw[it]);
         },
-        internal::Sum<FloatType, Space>(norm));
+        norm);
     return static_cast<double>(norm);
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -111,7 +111,7 @@ double StateVector<Prec, Space>::get_zero_probability(std::uint64_t target_qubit
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(i, target_qubit_index);
             lsum += internal::squared_norm(this->_raw[basis_0]);
         },
-        internal::Sum<FloatType, Space>(sum));
+        sum);
     return static_cast<double>(sum);
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -154,7 +154,7 @@ double StateVector<Prec, Space>::get_marginal_probability(
             }
             lsum += internal::squared_norm(this->_raw[basis]);
         },
-        internal::Sum<FloatType, Space>(sum));
+        sum);
 
     return static_cast<double>(sum);
 }
@@ -170,7 +170,7 @@ double StateVector<Prec, Space>::get_entropy() const {
                 lsum += -prob * internal::log2(prob);
             }
         },
-        internal::Sum<FloatType, Space>(ent));
+        ent);
     return ent;
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -212,7 +212,7 @@ std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(std::uint64_t samp
         Kokkos::View<std::uint64_t*, Space> result_buf(
             Kokkos::ViewAllocateWithoutInitializing("result_buf"), todo_count);
         Kokkos::parallel_for(
-            todo_count, KOKKOS_LAMBDA(std::uint64_t i) {
+            Kokkos::RangePolicy<Space>(0, todo_count), KOKKOS_LAMBDA(std::uint64_t i) {
                 auto rand_gen = rand_pool.get_state();
                 FloatType r = static_cast<FloatType>(rand_gen.drand(0., 1.));
                 std::uint64_t lo = 0, hi = stacked_prob.size();
