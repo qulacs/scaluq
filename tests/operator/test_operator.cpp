@@ -11,11 +11,11 @@ template <typename T>
 class OperatorTest : public FixtureBase<T> {};
 TYPED_TEST_SUITE(OperatorTest, TestTypes, NameGenerator);
 
-template <Precision Prec>
-std::pair<Operator<Prec>, Eigen::MatrixXcd> generate_random_observable_with_eigen(std::uint64_t n,
-                                                                                  Random& random) {
+template <Precision Prec, ExecutionSpace Space>
+std::pair<Operator<Prec, Space>, Eigen::MatrixXcd> generate_random_observable_with_eigen(
+    std::uint64_t n, Random& random) {
     std::uint64_t dim = 1ULL << n;
-    Operator<Prec> rand_observable(n);
+    Operator<Prec, Space> rand_observable(n);
     Eigen::MatrixXcd test_rand_observable = Eigen::MatrixXcd::Zero(dim, dim);
 
     std::uint64_t term_count = random.int32() % 10 + 1;
@@ -44,22 +44,23 @@ std::pair<Operator<Prec>, Eigen::MatrixXcd> generate_random_observable_with_eige
                 str += " " + std::to_string(ind);
             }
         }
-        rand_observable.add_operator(PauliOperator<Prec>(str.c_str(), coef));
+        rand_observable.add_operator(PauliOperator<Prec, Space>(str.c_str(), coef));
     }
     return {std::move(rand_observable), std::move(test_rand_observable)};
 }
 
 TYPED_TEST(OperatorTest, CheckExpectationValue) {
     constexpr Precision Prec = TestFixture::Prec;
+    using Space = typename TestFixture::Space;
     std::uint64_t n = 4;
     std::uint64_t dim = 1ULL << n;
     Random random;
 
     for (std::uint64_t repeat = 0; repeat < 10; ++repeat) {
         auto [rand_observable, test_rand_observable] =
-            generate_random_observable_with_eigen<Prec>(n, random);
+            generate_random_observable_with_eigen<Prec, Space>(n, random);
 
-        auto state = StateVector<Prec>::Haar_random_state(n);
+        auto state = StateVector<Prec, Space>::Haar_random_state(n);
         auto state_cp = state.get_amplitudes();
         Eigen::VectorXcd test_state = Eigen::VectorXcd::Zero(dim);
         for (std::uint64_t i = 0; i < dim; ++i) test_state[i] = state_cp[i];
@@ -74,19 +75,20 @@ TYPED_TEST(OperatorTest, CheckExpectationValue) {
 
 TYPED_TEST(OperatorTest, CheckTransitionAmplitude) {
     constexpr Precision Prec = TestFixture::Prec;
+    using Space = typename TestFixture::Space;
     std::uint64_t n = 4;
     std::uint64_t dim = 1ULL << n;
     Random random;
 
     for (std::uint64_t repeat = 0; repeat < 10; ++repeat) {
         auto [rand_observable, test_rand_observable] =
-            generate_random_observable_with_eigen<Prec>(n, random);
+            generate_random_observable_with_eigen<Prec, Space>(n, random);
 
-        auto state_bra = StateVector<Prec>::Haar_random_state(n);
+        auto state_bra = StateVector<Prec, Space>::Haar_random_state(n);
         auto state_bra_cp = state_bra.get_amplitudes();
         Eigen::VectorXcd test_state_bra = Eigen::VectorXcd::Zero(dim);
         for (std::uint64_t i = 0; i < dim; ++i) test_state_bra[i] = state_bra_cp[i];
-        auto state_ket = StateVector<Prec>::Haar_random_state(n);
+        auto state_ket = StateVector<Prec, Space>::Haar_random_state(n);
         auto state_ket_cp = state_ket.get_amplitudes();
         Eigen::VectorXcd test_state_ket = Eigen::VectorXcd::Zero(dim);
         for (std::uint64_t i = 0; i < dim; ++i) test_state_ket[i] = state_ket_cp[i];
@@ -101,14 +103,15 @@ TYPED_TEST(OperatorTest, CheckTransitionAmplitude) {
 
 TYPED_TEST(OperatorTest, AddTest) {
     constexpr Precision Prec = TestFixture::Prec;
+    using Space = typename TestFixture::Space;
     std::uint64_t n = 4;
     Random random;
 
     for (std::uint64_t repeat = 0; repeat < 10; ++repeat) {
-        auto op1 = generate_random_observable_with_eigen<Prec>(n, random).first;
-        auto op2 = generate_random_observable_with_eigen<Prec>(n, random).first;
+        auto op1 = generate_random_observable_with_eigen<Prec, Space>(n, random).first;
+        auto op2 = generate_random_observable_with_eigen<Prec, Space>(n, random).first;
         auto op = op1 + op2;
-        auto state = StateVector<Prec>::Haar_random_state(n);
+        auto state = StateVector<Prec, Space>::Haar_random_state(n);
         auto exp1 = op1.get_expectation_value(state);
         auto exp2 = op2.get_expectation_value(state);
         auto exp = op.get_expectation_value(state);
@@ -118,14 +121,15 @@ TYPED_TEST(OperatorTest, AddTest) {
 
 TYPED_TEST(OperatorTest, SubTest) {
     constexpr Precision Prec = TestFixture::Prec;
+    using Space = typename TestFixture::Space;
     std::uint64_t n = 4;
     Random random;
 
     for (std::uint64_t repeat = 0; repeat < 10; ++repeat) {
-        auto op1 = generate_random_observable_with_eigen<Prec>(n, random).first;
-        auto op2 = generate_random_observable_with_eigen<Prec>(n, random).first;
+        auto op1 = generate_random_observable_with_eigen<Prec, Space>(n, random).first;
+        auto op2 = generate_random_observable_with_eigen<Prec, Space>(n, random).first;
         auto op = op1 - op2;
-        auto state = StateVector<Prec>::Haar_random_state(n);
+        auto state = StateVector<Prec, Space>::Haar_random_state(n);
         auto exp1 = op1.get_expectation_value(state);
         auto exp2 = op2.get_expectation_value(state);
         auto exp = op.get_expectation_value(state);
@@ -135,14 +139,15 @@ TYPED_TEST(OperatorTest, SubTest) {
 
 TYPED_TEST(OperatorTest, MultiCoefTest) {
     constexpr Precision Prec = TestFixture::Prec;
+    using Space = typename TestFixture::Space;
     std::uint64_t n = 4;
     Random random;
 
     for (std::uint64_t repeat = 0; repeat < 10; ++repeat) {
-        auto op1 = generate_random_observable_with_eigen<Prec>(n, random).first;
+        auto op1 = generate_random_observable_with_eigen<Prec, Space>(n, random).first;
         auto coef = StdComplex(random.normal(), random.normal());
         auto op = op1 * coef;
-        auto state = StateVector<Prec>::Haar_random_state(n);
+        auto state = StateVector<Prec, Space>::Haar_random_state(n);
         auto exp1 = op1.get_expectation_value(state);
         auto exp = op.get_expectation_value(state);
         ASSERT_NEAR(std::abs(exp1 * coef - exp), 0, eps<Prec>);
@@ -151,15 +156,16 @@ TYPED_TEST(OperatorTest, MultiCoefTest) {
 
 TYPED_TEST(OperatorTest, ApplyToStateTest) {
     constexpr Precision Prec = TestFixture::Prec;
+    using Space = typename TestFixture::Space;
     const std::uint64_t n_qubits = 3;
-    StateVector<Prec> state_vector(n_qubits);
+    StateVector<Prec, Space> state_vector(n_qubits);
     state_vector.load([n_qubits] {
         std::vector<StdComplex> tmp(1 << n_qubits);
         for (std::uint64_t i = 0; i < tmp.size(); ++i) tmp[i] = StdComplex(i, 0);
         return tmp;
     }());
 
-    Operator<Prec> op(n_qubits);
+    Operator<Prec, Space> op(n_qubits);
     op.add_operator({0b001, 0b010, StdComplex(2)});
     op.add_operator({"X 2 Y 1", 1});
     op.apply_to_state(state_vector);
@@ -179,13 +185,14 @@ TYPED_TEST(OperatorTest, ApplyToStateTest) {
 
 TYPED_TEST(OperatorTest, Optimize) {
     constexpr Precision Prec = TestFixture::Prec;
-    Operator<Prec> op(2);
-    op.add_operator(PauliOperator<Prec>("X 0 Y 1", 1.));
-    op.add_operator(PauliOperator<Prec>("Y 0 Z 1", 2.));
-    op.add_operator(PauliOperator<Prec>("Z 1", 3.));
-    op.add_operator(PauliOperator<Prec>("X 0 Y 1", 4.));
-    op.add_operator(PauliOperator<Prec>("Z 1", 4.));
-    op.add_operator(PauliOperator<Prec>("X 0 Y 1", 5.));
+    using Space = typename TestFixture::Space;
+    Operator<Prec, Space> op(2);
+    op.add_operator(PauliOperator<Prec, Space>("X 0 Y 1", 1.));
+    op.add_operator(PauliOperator<Prec, Space>("Y 0 Z 1", 2.));
+    op.add_operator(PauliOperator<Prec, Space>("Z 1", 3.));
+    op.add_operator(PauliOperator<Prec, Space>("X 0 Y 1", 4.));
+    op.add_operator(PauliOperator<Prec, Space>("Z 1", 4.));
+    op.add_operator(PauliOperator<Prec, Space>("X 0 Y 1", 5.));
     op.optimize();
     std::vector<std::pair<std::string, StdComplex>> expected = {
         {"X 0 Y 1", 10.}, {"Y 0 Z 1", 2.}, {"Z 1", 7.}};

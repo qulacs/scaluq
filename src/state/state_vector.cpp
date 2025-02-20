@@ -212,7 +212,7 @@ std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(std::uint64_t samp
         Kokkos::View<std::uint64_t*, Space> result_buf(
             Kokkos::ViewAllocateWithoutInitializing("result_buf"), todo_count);
         Kokkos::parallel_for(
-            todo_count, KOKKOS_LAMBDA(std::uint64_t i) {
+            Kokkos::RangePolicy<Space>(0, todo_count), KOKKOS_LAMBDA(std::uint64_t i) {
                 auto rand_gen = rand_pool.get_state();
                 FloatType r = static_cast<FloatType>(rand_gen.drand(0., 1.));
                 std::uint64_t lo = 0, hi = stacked_prob.size();
