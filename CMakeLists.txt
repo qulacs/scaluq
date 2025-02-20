@@ -92,7 +92,7 @@ install(DIRECTORY ${json_SOURCE_DIR}/single_include/nlohmann DESTINATION include
 
 # nanobind
 if(SKBUILD)
-    find_package(Python 3.12
+    find_package(Python 3.9
         REQUIRED COMPONENTS Interpreter Development.Module
         OPTIONAL_COMPONENTS Development.SABIModule)
     if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -148,6 +148,7 @@ if(SCALUQ_USE_CUDA)
     target_compile_options(scaluq PUBLIC
         -Wno-unknown-pragmas
         --expt-relaxed-constexpr
+        -Werror=cross-execution-space-call # prevent call of non __device__ function in device call
         -DEIGEN_NO_CUDA
     ) 
 endif()
