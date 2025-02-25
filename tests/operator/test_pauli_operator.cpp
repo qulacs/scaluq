@@ -46,7 +46,7 @@ TYPED_TEST(PauliOperatorTest, BrokenPauliStringA) {
     using Space = typename TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "X 0 X Z 1 Y 2";
-    EXPECT_THROW(PauliOperator<Prec, Space>(Pauli_string, coef), std::runtime_error);
+    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
 }
 
 TYPED_TEST(PauliOperatorTest, BrokenPauliStringB) {
@@ -54,7 +54,7 @@ TYPED_TEST(PauliOperatorTest, BrokenPauliStringB) {
     using Space = typename TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "X {i}";
-    EXPECT_THROW(PauliOperator<Prec, Space>(Pauli_string, coef), std::runtime_error);
+    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
 }
 
 TYPED_TEST(PauliOperatorTest, BrokenPauliStringC) {
@@ -62,7 +62,7 @@ TYPED_TEST(PauliOperatorTest, BrokenPauliStringC) {
     using Space = typename TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "X 4x";
-    EXPECT_THROW(PauliOperator<Prec, Space>(Pauli_string, coef), std::runtime_error);
+    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
 }
 
 TYPED_TEST(PauliOperatorTest, BrokenPauliStringD) {
@@ -70,7 +70,7 @@ TYPED_TEST(PauliOperatorTest, BrokenPauliStringD) {
     using Space = typename TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "4 X";
-    EXPECT_THROW(PauliOperator<Prec, Space>(Pauli_string, coef), std::runtime_error);
+    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
 }
 
 TYPED_TEST(PauliOperatorTest, SpacedPauliString) {
@@ -88,10 +88,10 @@ TYPED_TEST(PauliOperatorTest, PartedPauliString) {
     using Space = typename TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "X 0 Y ";
-    EXPECT_THROW(PauliOperator<Prec, Space>(Pauli_string, coef), std::runtime_error);
+    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
 }
 
-template <Precision Prec, ExecutionSPace Space>
+template <Precision Prec, ExecutionSpace Space>
 struct PauliTestParam {
     std::string test_name;
     PauliOperator<Prec, Space> op1;
@@ -123,7 +123,7 @@ std::ostream& operator<<(std::ostream& stream, const PauliTestParam<Prec, Space>
         EXPECT_EQ(p.expected.coef(), res.coef());                                               \
     }                                                                                           \
                                                                                                 \
-    TEST_P(PauliOperatorMultiplyTest_##PREC, MultiplyAssignmentTest) {                          \
+    TEST_P(PauliOperatorMultiplyTest_##PREC##SPACE, MultiplyAssignmentTest) {                   \
         constexpr Precision Prec = Precision::PREC;                                             \
         using Space = SPACE;                                                                    \
         const auto p = GetParam();                                                              \
@@ -232,6 +232,7 @@ TEST_FOR_PRECISION_AND_SPACE(F64, HostSpace)
 TEST_FOR_PRECISION_AND_SPACE(BF16, HostSpace)
 #endif
 #ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_FLOAT16
 TEST_FOR_PRECISION_AND_SPACE(F16, DefaultSpace)
 #endif
 #ifdef SCALUQ_FLOAT32
