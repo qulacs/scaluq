@@ -191,7 +191,7 @@ std::ostream& operator<<(std::ostream& stream, const PauliTestParam<Prec, Space>
     INSTANTIATE_TEST_CASE_P(                                                                    \
         MultiPauliPauli,                                                                        \
         PauliOperatorMultiplyTest_##PREC##SPACE,                                                \
-        []() {                                                                                  \
+        ([]() {                                                                                 \
             double coef = 2.0;                                                                  \
             std::uint64_t MAX_TERM = 64;                                                        \
             std::string pauli_string_x = "";                                                    \
@@ -217,7 +217,7 @@ std::ostream& operator<<(std::ostream& stream, const PauliTestParam<Prec, Space>
                 PauliOperator<Precision::PREC, SPACE>(pauli_string_z, coef);                    \
                                                                                                 \
             return testing::Values(PauliTestParam("Z_Y", pauli_z, pauli_y, expected));          \
-        }(),                                                                                    \
+        }()),                                                                                   \
         testing::PrintToStringParamName());
 #ifdef SCALUQ_FLOAT16
 TEST_FOR_PRECISION_AND_SPACE(F16, HostSpace)
