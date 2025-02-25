@@ -363,6 +363,7 @@ namespace internal {
             [](const GATE_TYPE<FLOAT>& gate, StateVector<FLOAT>& state_vector) {             \
                 gate->update_quantum_state(state_vector);                                    \
             },                                                                               \
+            "state"_a,                                                                       \
             "Apply gate to `state_vector`. `state_vector` in args is directly updated.")     \
         .def(                                                                                \
             "get_matrix",                                                                    \
@@ -385,17 +386,11 @@ namespace internal {
             [](GATE_TYPE<FLOAT>& gate, const std::string& str) {                             \
                 gate = nlohmann::json::parse(str);                                           \
             },                                                                               \
+            "json_str"_a,                                                                    \
             "Read an object from the JSON representation of the gate.")
 
 template <std::floating_point Fp>
 nb::class_<Gate<Fp>> gate_base_def;
-
-inline nb::sig concatenate_description(const std::string& desc) {
-    std::string combined =
-        desc +
-        "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).";
-    return nb::sig(combined.c_str());
-}
 
 #define DEF_GATE(GATE_TYPE, FLOAT, DESCRIPTION)                                  \
     ::scaluq::internal::gate_base_def<FLOAT>.def(nb::init<GATE_TYPE<FLOAT>>(),   \
@@ -438,7 +433,7 @@ void bind_gate_gate_hpp(nb::module_& m) {
     gate_base_def<Fp> =
         DEF_GATE_BASE(Gate,
                       Fp,
-                      "General class of QuantumGate.\n\n.. note:: Downcast to requred to use "
+                      "General class of QuantumGate.\n\nNotes:\n\tDowncast to required to use "
                       "gate-specific functions.")
             .def(nb::init<Gate<Fp>>(), "Just copy shallowly.");
 }

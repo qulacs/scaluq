@@ -18,10 +18,10 @@ PauliOperator<Fp>::Data::Data(std::string_view pauli_string, Complex<Fp> coef)
             throw std::runtime_error("PauliOperator::PauliOperator: invalid pauli_string format");
         }
         std::uint64_t pauli_id = [&] {
-            if (pauli == 'I' || pauli == 'i') return PauliOperator::PAULI_I;
-            if (pauli == 'X' || pauli == 'x') return PauliOperator::PAULI_X;
-            if (pauli == 'Y' || pauli == 'y') return PauliOperator::PAULI_Y;
-            if (pauli == 'Z' || pauli == 'z') return PauliOperator::PAULI_Z;
+            if (pauli == 'I' || pauli == 'i') return PauliOperator::I;
+            if (pauli == 'X' || pauli == 'x') return PauliOperator::X;
+            if (pauli == 'Y' || pauli == 'y') return PauliOperator::Y;
+            if (pauli == 'Z' || pauli == 'z') return PauliOperator::Z;
             throw std::runtime_error("PauliOperator::PauliOperator: invalid pauli_string format");
         }();
         if (pauli_id != 0) add_single_pauli(target, pauli_id);
@@ -50,7 +50,7 @@ PauliOperator<Fp>::Data::Data(const std::vector<std::uint64_t>& pauli_id_par_qub
                               Complex<Fp> coef)
     : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
     for (std::uint64_t i = 0; i < pauli_id_par_qubit.size(); ++i) {
-        if (pauli_id_par_qubit[i] != PauliOperator<Fp>::PAULI_I) {
+        if (pauli_id_par_qubit[i] != PauliOperator<Fp>::I) {
             add_single_pauli(i, pauli_id_par_qubit[i]);
         }
     }
@@ -96,10 +96,10 @@ void PauliOperator<Fp>::Data::add_single_pauli(std::uint64_t target_qubit, std::
             "same "
             "qubit.");
     }
-    if (pauli_id == PauliOperator::PAULI_X || pauli_id == PauliOperator::PAULI_Y) {
+    if (pauli_id == PauliOperator::X || pauli_id == PauliOperator::Y) {
         _bit_flip_mask |= 1ULL << target_qubit;
     }
-    if (pauli_id == PauliOperator::PAULI_Y || pauli_id == PauliOperator::PAULI_Z) {
+    if (pauli_id == PauliOperator::Y || pauli_id == PauliOperator::Z) {
         _phase_flip_mask |= 1ULL << target_qubit;
     }
 }

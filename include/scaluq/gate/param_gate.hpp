@@ -232,6 +232,8 @@ namespace internal {
             [](const PARAM_GATE_TYPE<FLOAT>& param_gate,                                          \
                StateVector<FLOAT>& state_vector,                                                  \
                FLOAT param) { param_gate->update_quantum_state(state_vector, param); },           \
+            "state"_a,                                                                            \
+            "param"_a,                                                                            \
             "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is " \
             "directly updated.")                                                                  \
         .def(                                                                                     \
@@ -239,6 +241,8 @@ namespace internal {
             [](const PARAM_GATE_TYPE<FLOAT>& param_gate,                                          \
                StateVectorBatched<FLOAT>& states,                                                 \
                std::vector<FLOAT> params) { param_gate->update_quantum_state(states, params); },  \
+            "states"_a,                                                                           \
+            "params"_a,                                                                           \
             "Apply gate to `states` with holding the parameter. `states` in args is directly "    \
             "updated.")                                                                           \
         .def(                                                                                     \
@@ -246,6 +250,7 @@ namespace internal {
             [](const PARAM_GATE_TYPE<FLOAT>& gate, FLOAT param) {                                 \
                 return gate->get_matrix(param);                                                   \
             },                                                                                    \
+            "param"_a,                                                                            \
             "Get matrix representation of the gate with holding the parameter.")                  \
         .def(                                                                                     \
             "to_string",                                                                          \
@@ -264,6 +269,7 @@ namespace internal {
             [](PARAM_GATE_TYPE<FLOAT>& gate, const std::string& str) {                            \
                 gate = nlohmann::json::parse(str);                                                \
             },                                                                                    \
+            "json_str"_a,                                                                         \
             "Read an object from the JSON representation of the gate.")
 
 template <std::floating_point Fp>
@@ -271,12 +277,13 @@ nb::class_<ParamGate<Fp>> param_gate_base_def;
 
 #define DEF_PARAM_GATE(PARAM_GATE_TYPE, FLOAT, DESCRIPTION)                                     \
     ::scaluq::internal::param_gate_base_def<Fp>.def(nb::init<PARAM_GATE_TYPE<FLOAT>>(),         \
+                                                    "param_gate"_a,                             \
                                                     "Upcast from `" #PARAM_GATE_TYPE "`.");     \
     DEF_PARAM_GATE_BASE(                                                                        \
         PARAM_GATE_TYPE,                                                                        \
         FLOAT,                                                                                  \
         DESCRIPTION                                                                             \
-        "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
+        "\n\nNotes:\n\tUpcast is required to use gate-general functions (ex: add to Circuit).") \
         .def(nb::init<ParamGate<FLOAT>>())
 
 void bind_gate_param_gate_hpp_without_precision(nb::module_& m) {
@@ -293,7 +300,7 @@ void bind_gate_param_gate_hpp(nb::module_& m) {
         DEF_PARAM_GATE_BASE(
             ParamGate,
             Fp,
-            "General class of parametric quantum gate.\n\n.. note:: Downcast to requred to use "
+            "General class of parametric quantum gate.\n\nNotes:\n\tDowncast to required to use "
             "gate-specific functions.")
             .def(nb::init<ParamGate<Fp>>(), "Just copy shallowly.");
 }

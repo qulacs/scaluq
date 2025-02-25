@@ -784,11 +784,11 @@ void bind_gate_gate_standard_hpp(nb::module_& m) {
     DEF_GATE(SqrtYdagGate, Fp, "Specific class of inverse of sqrt(Y) gate.");
     DEF_GATE(P0Gate,
              Fp,
-             "Specific class of projection gate to $\\ket{0}$.\n\n.. note:: This gate is "
+             "Specific class of projection gate to $\\ket{0}$.\n\nNotes:\n\tThis gate is "
              "not unitary.");
     DEF_GATE(P1Gate,
              Fp,
-             "Specific class of projection gate to $\\ket{1}$.\n\n.. note:: This gate is "
+             "Specific class of projection gate to $\\ket{1}$.\n\nNotes:\n\tThis gate is "
              "not unitary.");
 
 #define DEF_ROTATION_GATE(GATE_TYPE, FLOAT, DESCRIPTION)                \

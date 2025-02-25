@@ -238,21 +238,25 @@ inline Gate<Fp> Probablistic(const std::vector<Fp>& distribution,
 namespace internal {
 template <std::floating_point Fp>
 void bind_gate_gate_factory_hpp(nb::module_& mgate) {
-    mgate.def("I",
-              &gate::I<Fp>,
-              DocString()
-                  .desc("Generate identity gate.")
-                  .ret("Gate", "Identity gate instance")
-                  .ex(DocString::Code({">>> gate = I()", ">>> print(gate)", "Identity Gate"}))
-                  .build_as_google_style()
-                  .c_str());
+    mgate.def(
+        "I",
+        &gate::I<Fp>,
+        DocString()
+            .desc("Generate general :class:`~f64.Gate` class instance of :class:`~f64.IGate`.")
+            .ret("Gate", "Identity gate instance")
+            .ex(DocString::Code({">>> gate = I()", ">>> print(gate)", "Identity Gate"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def(
         "GlobalPhase",
         &gate::GlobalPhase<Fp>,
         "phase"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate global phase gate.")
+            .desc("Generate general :class:`~f64.Gate` class instance of "
+                  ":class:`~f64.GlobalPhaseGate`.")
+            .note("If you need to use functions specific to the :class:`~f64.GlobalPhaseGate` "
+                  "class, please downcast it.")
             .arg("phase", "float", "Global phase angle in radians")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .ret("Gate", "Global phase gate instance")
@@ -266,8 +270,11 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "target"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate Pauli-X (NOT) gate.")
-            .desc("Performs bit flip operation.")
+            .desc("Generate general :class:`~f64.Gate` class instance of :class:`~f64.XGate`. "
+                  "Performs bit flip operation.")
+            .note("XGate represents the Pauli-X (NOT) gate class.If you need to use functions "
+                  "specific to the :class:`~f64.XGate` "
+                  "class, please downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .ret("Gate", "Pauli-X gate instance")
@@ -278,11 +285,14 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
     mgate.def(
         "Y",
         &gate::Y<Fp>,
-        "taget"_a,
+        "target"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate Pauli-Y gate.")
-            .desc("Performs bit flip and phase flip operation.")
+            .desc("Generate general :class:`~f64.Gate` class instance of :class:`~f64.YGate`. "
+                  "Performs bit flip and phase flip operation.")
+            .note("YGate represents the Pauli-Y gate class. If you need to use functions specific "
+                  "to the :class:`~f64.YGate` "
+                  "class, please downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .ret("Gate", "Pauli-Y gate instance")
@@ -296,8 +306,11 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "target"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate Pauli-Z gate.")
-            .desc("Performs phase flip operation.")
+            .desc("Generate general :class:`~f64.Gate` class instance of :class:`~f64.ZGate`. "
+                  "Performs bit flip and phase flip operation.")
+            .note("ZGate represents the Pauli-Z gate class. If you need to use functions specific "
+                  "to the :class:`~f64.ZGate` "
+                  "class, please downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .ret("Gate", "Pauli-Z gate instance")
@@ -311,8 +324,10 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "target"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate Hadamard gate.")
-            .desc("Performs superposition operation.")
+            .desc("Generate general :class:`~f64.Gate` class instance of :class:`~f64.HGate`. "
+                  "Performs superposition operation.")
+            .note("If you need to use functions specific to the :class:`~f64.HGate` class, please "
+                  "downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .ret("Gate", "Hadamard gate instance")
@@ -326,8 +341,9 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "target"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate general Gate class instance of S.")
-            .desc("Performs phase flip operation.")
+            .desc("Generate general :class:`~f64.Gate` class instance of :class:`~f64.SGate`.")
+            .note("If you need to use functions specific to the :class:`~f64.SGate` class, please "
+                  "downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .ret("Gate", "S gate instance")
@@ -335,29 +351,33 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                                  ">>> gate = S(1, [0])  # Controlled-S with control on qubit 0"}))
             .build_as_google_style()
             .c_str());
-    mgate.def("Sdag",
-              &gate::Sdag<Fp>,
-              "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{},
-              DocString()
-                  .desc("Generate general Gate class instance of Sdag.")
-                  .desc("Performs phase flip operation.")
-                  .arg("target", "int", "Target qubit index")
-                  .arg("controls", "list[int]", true, "Control qubit indices")
-                  .ret("Gate", "Sdag gate instance")
-                  .ex(DocString::Code(
-                      {">>> gate = Sdag(0)  # Sdag gate on qubit 0",
-                       ">>> gate = Sdag(1, [0])  # Controlled-Sdag with control on qubit 0"}))
-                  .build_as_google_style()
-                  .c_str());
+    mgate.def(
+        "Sdag",
+        &gate::Sdag<Fp>,
+        "target"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~f64.Gate` class instance of :class:`~f64.SdagGate`.")
+            .note(
+                "If you need to use functions specific to the :class:`~f64.SdagGate` class, please "
+                "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "Sdag gate instance")
+            .ex(DocString::Code(
+                {">>> gate = Sdag(0)  # Sdag gate on qubit 0",
+                 ">>> gate = Sdag(1, [0])  # Controlled-Sdag with control on qubit 0"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def(
         "T",
         &gate::T<Fp>,
         "target"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate general Gate class instance of T.")
-            .desc("Performs phase flip operation.")
+            .desc("Generate general :class:`~f64.Gate` class instance of :class:`~f64.TGate`.")
+            .note("If you need to use functions specific to the :class:`~f64.TGate` class, please "
+                  "downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .ret("Gate", "T gate instance")
@@ -365,28 +385,34 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                                  ">>> gate = T(1, [0])  # Controlled-T with control on qubit 0"}))
             .build_as_google_style()
             .c_str());
-    mgate.def("Tdag",
-              &gate::Tdag<Fp>,
-              "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{},
-              DocString()
-                  .desc("Generate general Gate class instance of Tdag.")
-                  .desc("Performs phase flip operation.")
-                  .arg("target", "int", "Target qubit index")
-                  .arg("controls", "list[int]", true, "Control qubit indices")
-                  .ret("Gate", "Tdag gate instance")
-                  .ex(DocString::Code(
-                      {">>> gate = Tdag(0)  # Tdag gate on qubit 0",
-                       ">>> gate = Tdag(1, [0])  # Controlled-Tdag with control on qubit 0"}))
-                  .build_as_google_style()
-                  .c_str());
+    mgate.def(
+        "Tdag",
+        &gate::Tdag<Fp>,
+        "target"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~f64.Gate` class instance of :class:`~f64.TdagGate`.")
+            .note(
+                "If you need to use functions specific to the :class:`~f64.TdagGate` class, please "
+                "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "Tdag gate instance")
+            .ex(DocString::Code(
+                {">>> gate = Tdag(0)  # Tdag gate on qubit 0",
+                 ">>> gate = Tdag(1, [0])  # Controlled-Tdag with control on qubit 0"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def("SqrtX",
               &gate::SqrtX<Fp>,
               "target"_a,
               "controls"_a = std::vector<std::uint64_t>{},
               DocString()
-                  .desc("Generate general Gate class instance of SqrtX.")
-                  .desc("Performs phase flip operation.")
+                  .desc("Generate general :class:`~f64.Gate` class instance of "
+                        ":class:`~f64.SqrtXGate`, represented as "
+                        "$\\frac{1}{2}\\begin{bmatrix} 1+i & 1-i \\\\ 1-i & 1+i \\end{bmatrix}$.")
+                  .note("If you need to use functions specific to the :class:`~f64.SqrtXGate` "
+                        "class, please downcast it.")
                   .arg("target", "int", "Target qubit index")
                   .arg("controls", "list[int]", true, "Control qubit indices")
                   .ret("Gate", "SqrtX gate instance")
@@ -399,8 +425,12 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "target"_a,
               "controls"_a = std::vector<std::uint64_t>{},
               DocString()
-                  .desc("Generate general Gate class instance of SqrtXdag.")
-                  .desc("Performs phase flip operation.")
+                  .desc("Generate general :class:`~f64.Gate` class instance of "
+                        ":class:`~f64.SqrtXdagGate`, represented as "
+                        "$\\begin{bmatrix} 1-i & 1+i\\\\ 1+i "
+                        "& 1-i \\end{bmatrix}$.")
+                  .note("If you need to use functions specific to the :class:`~f64.SqrtXdagGate` "
+                        "class, please downcast it.")
                   .arg("target", "int", "Target qubit index")
                   .arg("controls", "list[int]", true, "Control qubit indices")
                   .ret("Gate", "SqrtXdag gate instance")
@@ -413,8 +443,12 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "target"_a,
               "controls"_a = std::vector<std::uint64_t>{},
               DocString()
-                  .desc("Generate general Gate class instance of SqrtY.")
-                  .desc("Performs phase flip operation.")
+                  .desc("Generate general :class:`~f64.Gate` class instance of "
+                        ":class:`~f64.SqrtYGate`, represented as "
+                        "$\\begin{bmatrix} 1+i & -1-i "
+                        "\\\\ 1+i & 1+i \\end{bmatrix}$.")
+                  .note("If you need to use functions specific to the :class:`~f64.SqrtYGate` "
+                        "class, please downcast it.")
                   .arg("target", "int", "Target qubit index")
                   .arg("controls", "list[int]", true, "Control qubit indices")
                   .ret("Gate", "SqrtY gate instance")
@@ -427,8 +461,12 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "target"_a,
               "controls"_a = std::vector<std::uint64_t>{},
               DocString()
-                  .desc("Generate general Gate class instance of SqrtYdag.")
-                  .desc("Performs phase flip operation.")
+                  .desc("Generate general :class:`~f64.Gate` class instance of "
+                        ":class:`~f64.SqrtYdagGate`, represented as "
+                        "$\\begin{bmatrix} 1-i & 1-i "
+                        "\\\\ -1+i & 1-i \\end{bmatrix}$.")
+                  .note("If you need to use functions specific to the :class:`~f64.SqrtYdagGate` "
+                        "class, please downcast it.")
                   .arg("target", "int", "Target qubit index")
                   .arg("controls", "list[int]", true, "Control qubit indices")
                   .ret("Gate", "SqrtYdag gate instance")
@@ -436,117 +474,131 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                                        ">>> gate = SqrtYdag(1, [0])  # Controlled-SqrtYdag"}))
                   .build_as_google_style()
                   .c_str());
-    mgate.def("P0",
-              &gate::P0<Fp>,
-              "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{},
-              DocString()
-                  .desc("Generate general Gate class instance of P0.")
-                  .desc("Performs phase flip operation.")
-                  .arg("target", "int", "Target qubit index")
-                  .arg("controls", "list[int]", true, "Control qubit indices")
-                  .ret("Gate", "P0 gate instance")
-                  .ex(DocString::Code({">>> gate = P0(0)  # P0 gate on qubit 0",
-                                       ">>> gate = P0(1, [0])  # Controlled-P0"}))
-                  .build_as_google_style()
-                  .c_str());
-    mgate.def("P1",
-              &gate::P1<Fp>,
-              "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{},
-              DocString()
-                  .desc("Generate general Gate class instance of P1.")
-                  .desc("Performs phase flip operation.")
-                  .arg("target", "int", "Target qubit index")
-                  .arg("controls", "list[int]", true, "Control qubit indices")
-                  .ret("Gate", "P1 gate instance")
-                  .ex(DocString::Code({">>> gate = P1(0)  # P1 gate on qubit 0",
-                                       ">>> gate = P1(1, [0])  # Controlled-P1"}))
-                  .build_as_google_style()
-                  .c_str());
-    mgate.def("RX",
-              &gate::RX<Fp>,
-              "target"_a,
-              "angle"_a,
-              "controls"_a = std::vector<std::uint64_t>{},
-              DocString()
-                  .desc("Generate rotation gate around X-axis.")
-                  .desc("Rotation angle is specified in radians.")
-                  .arg("target", "int", "Target qubit index")
-                  .arg("angle", "float", "Rotation angle in radians")
-                  .arg("controls", "list[int]", true, "Control qubit indices")
-                  .ret("Gate", "RX gate instance")
-                  .ex(DocString::Code({">>> gate = RX(0, math.pi/2)  # π/2 rotation around X-axis",
-                                       ">>> gate = RX(1, math.pi, [0])  # Controlled-RX"}))
-                  .build_as_google_style()
-                  .c_str());
-    mgate.def("RY",
-              &gate::RY<Fp>,
-              "target"_a,
-              "angle"_a,
-              "controls"_a = std::vector<std::uint64_t>{},
-              DocString()
-                  .desc("Generate rotation gate around Y-axis.")
-                  .desc("Rotation angle is specified in radians.")
-                  .arg("target", "int", "Target qubit index")
-                  .arg("angle", "float", "Rotation angle in radians")
-                  .arg("controls", "list[int]", true, "Control qubit indices")
-                  .ret("Gate", "RY gate instance")
-                  .ex(DocString::Code({">>> gate = RY(0, math.pi/2)  # π/2 rotation around Y-axis",
-                                       ">>> gate = RY(1, math.pi, [0])  # Controlled-RY"}))
-                  .build_as_google_style()
-                  .c_str());
-    mgate.def("RZ",
-              &gate::RZ<Fp>,
-              "target"_a,
-              "angle"_a,
-              "controls"_a = std::vector<std::uint64_t>{},
-              DocString()
-                  .desc("Generate rotation gate around Z-axis.")
-                  .desc("Rotation angle is specified in radians.")
-                  .arg("target", "int", "Target qubit index")
-                  .arg("angle", "float", "Rotation angle in radians")
-                  .arg("controls", "list[int]", true, "Control qubit indices")
-                  .ret("Gate", "RZ gate instance")
-                  .ex(DocString::Code({">>> gate = RZ(0, math.pi/2)  # π/2 rotation around Z-axis",
-                                       ">>> gate = RZ(1, math.pi, [0])  # Controlled-RZ"}))
-                  .build_as_google_style()
-                  .c_str());
-    mgate.def("U1",
-              &gate::U1<Fp>,
-              "target"_a,
-              "lambda_"_a,
-              "controls"_a = std::vector<std::uint64_t>{},
-              DocString()
-                  .desc("Generate general Gate class instance of U1.")
-                  .desc("Performs phase flip operation.")
-                  .arg("target", "int", "Target qubit index")
-                  .arg("lambda_", "float", "Rotation angle in radians")
-                  .arg("controls", "list[int]", true, "Control qubit indices")
-                  .ret("Gate", "U1 gate instance")
-                  .ex(DocString::Code({">>> gate = U1(0, math.pi/2)  # π/2 rotation around Z-axis",
-                                       ">>> gate = U1(1, math.pi, [0])  # Controlled-U1"}))
-                  .build_as_google_style()
-                  .c_str());
-    mgate.def("U2",
-              &gate::U2<Fp>,
-              "target"_a,
-              "phi"_a,
-              "lambda_"_a,
-              "controls"_a = std::vector<std::uint64_t>{},
-              DocString()
-                  .desc("Generate general Gate class instance of U2.")
-                  .desc("Performs phase flip operation.")
-                  .arg("target", "int", "Target qubit index")
-                  .arg("phi", "float", "Rotation angle in radians")
-                  .arg("lambda_", "float", "Rotation angle in radians")
-                  .arg("controls", "list[int]", true, "Control qubit indices")
-                  .ret("Gate", "U2 gate instance")
-                  .ex(DocString::Code(
-                      {">>> gate = U2(0, math.pi/2, math.pi)  # π/2 rotation around Z-axis",
-                       ">>> gate = U2(1, math.pi, math.pi/2, [0])  # Controlled-U2"}))
-                  .build_as_google_style()
-                  .c_str());
+    mgate.def(
+        "P0",
+        &gate::P0<Fp>,
+        "target"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~f64.Gate` class instance of :class:`~f64.P0Gate`.")
+            .note("If you need to use functions specific to the :class:`~f64.P0Gate` class, please "
+                  "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "P0 gate instance")
+            .ex(DocString::Code({">>> gate = P0(0)  # P0 gate on qubit 0",
+                                 ">>> gate = P0(1, [0])  # Controlled-P0"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "P1",
+        &gate::P1<Fp>,
+        "target"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~f64.Gate` class instance of :class:`~f64.P1Gate`.")
+            .note("If you need to use functions specific to the :class:`~f64.P1Gate` class, please "
+                  "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "P1 gate instance")
+            .ex(DocString::Code({">>> gate = P1(0)  # P1 gate on qubit 0",
+                                 ">>> gate = P1(1, [0])  # Controlled-P1"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "RX",
+        &gate::RX<Fp>,
+        "target"_a,
+        "angle"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate rotation gate around X-axis. Rotation angle is specified in radians.")
+            .note("If you need to use functions specific to the :class:`~f64.RXGate` class, please "
+                  "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("angle", "float", "Rotation angle in radians")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "RX gate instance")
+            .ex(DocString::Code({">>> gate = RX(0, math.pi/2)  # π/2 rotation around X-axis",
+                                 ">>> gate = RX(1, math.pi, [0])  # Controlled-RX"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "RY",
+        &gate::RY<Fp>,
+        "target"_a,
+        "angle"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate rotation gate around Y-axis. Rotation angle is specified in radians.")
+            .note("If you need to use functions specific to the :class:`~f64.RYGate` class, please "
+                  "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("angle", "float", "Rotation angle in radians")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "RY gate instance")
+            .ex(DocString::Code({">>> gate = RY(0, math.pi/2)  # π/2 rotation around Y-axis",
+                                 ">>> gate = RY(1, math.pi, [0])  # Controlled-RY"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "RZ",
+        &gate::RZ<Fp>,
+        "target"_a,
+        "angle"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate rotation gate around Z-axis. Rotation angle is specified in radians.")
+            .note("If you need to use functions specific to the :class:`~f64.RZGate` class, please "
+                  "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("angle", "float", "Rotation angle in radians")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "RZ gate instance")
+            .ex(DocString::Code({">>> gate = RZ(0, math.pi/2)  # π/2 rotation around Z-axis",
+                                 ">>> gate = RZ(1, math.pi, [0])  # Controlled-RZ"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "U1",
+        &gate::U1<Fp>,
+        "target"_a,
+        "lambda_"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~f64.Gate` class instance of :class:`~f64.U1Gate`.")
+            .note("If you need to use functions specific to the :class:`~f64.U1Gate` class, please "
+                  "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("lambda_", "float", "Rotation angle in radians")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "U1 gate instance")
+            .ex(DocString::Code({">>> gate = U1(0, math.pi/2)  # π/2 rotation around Z-axis",
+                                 ">>> gate = U1(1, math.pi, [0])  # Controlled-U1"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "U2",
+        &gate::U2<Fp>,
+        "target"_a,
+        "phi"_a,
+        "lambda_"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~f64.Gate` class instance of :class:`~f64.U2Gate`.")
+            .note("If you need to use functions specific to the :class:`~f64.U2Gate` class, please "
+                  "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("phi", "float", "Rotation angle in radians")
+            .arg("lambda_", "float", "Rotation angle in radians")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "U2 gate instance")
+            .ex(DocString::Code(
+                {">>> gate = U2(0, math.pi/2, math.pi)  # π/2 rotation around Z-axis",
+                 ">>> gate = U2(1, math.pi, math.pi/2, [0])  # Controlled-U2"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def(
         "U3",
         &gate::U3<Fp>,
@@ -556,8 +608,9 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "lambda_"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate general Gate class instance of U3.")
-            .desc("Performs phase flip operation.")
+            .desc("Generate general :class:`~f64.Gate` class instance of :class:`~f64.U3Gate`.")
+            .note("If you need to use functions specific to the :class:`~f64.U3Gate` class, please "
+                  "downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("theta", "float", "Rotation angle in radians")
             .arg("phi", "float", "Rotation angle in radians")
@@ -569,29 +622,33 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                  ">>> gate = U3(1, math.pi, math.pi/2, math.pi, [0])  # Controlled-U3"}))
             .build_as_google_style()
             .c_str());
-    mgate.def("Swap",
-              &gate::Swap<Fp>,
-              "target1"_a,
-              "target2"_a,
-              "controls"_a = std::vector<std::uint64_t>{},
-              DocString()
-                  .desc("Generate SWAP gate.")
-                  .desc("Swaps the states of two qubits.")
-                  .arg("target1", "int", "First target qubit index")
-                  .arg("target2", "int", "Second target qubit index")
-                  .arg("controls", "list[int]", true, "Control qubit indices")
-                  .ret("Gate", "SWAP gate instance")
-                  .ex(DocString::Code({">>> gate = Swap(0, 1)  # Swap qubits 0 and 1",
-                                       ">>> gate = Swap(1, 2, [0])  # Controlled-SWAP"}))
-                  .build_as_google_style()
-                  .c_str());
+    mgate.def(
+        "Swap",
+        &gate::Swap<Fp>,
+        "target1"_a,
+        "target2"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate SWAP gate. Swaps the states of two qubits.")
+            .note("If you need to use functions specific to the :class:`~f64.SwapGate` class, "
+                  "please downcast it.")
+            .arg("target1", "int", "First target qubit index")
+            .arg("target2", "int", "Second target qubit index")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "SWAP gate instance")
+            .ex(DocString::Code({">>> gate = Swap(0, 1)  # Swap qubits 0 and 1",
+                                 ">>> gate = Swap(1, 2, [0])  # Controlled-SWAP"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def("CX",
               &gate::CX<Fp>,
               "control"_a,
               "target"_a,
               DocString()
-                  .desc("Generate general Gate class instance of CX.")
-                  .desc("Performs controlled-X operation.")
+                  .desc("Generate general :class:`~f64.Gate` class instance of CXGate. Performs "
+                        "controlled-X operation.")
+                  .note("CX is a specialization of X. If you need to use functions specific to the "
+                        "CXGate class, please downcast it.")
                   .arg("control", "int", "Control qubit index")
                   .arg("target", "int", "Target qubit index")
                   .ret("Gate", "CX gate instance")
@@ -605,8 +662,10 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "control"_a,
         "target"_a,
         DocString()
-            .desc("Generate general Gate class instance of CNot.")
-            .desc("Performs controlled-X operation.")
+            .desc("Generate general :class:`~f64.Gate` class instance of CNotGate. Performs "
+                  "controlled-X operation.")
+            .note("CNot is an alias of CX. If you need to use functions specific to the CNotGate "
+                  "class, please downcast it.")
             .arg("control", "int", "Control qubit index")
             .arg("target", "int", "Target qubit index")
             .ret("Gate", "CNot gate instance")
@@ -619,8 +678,10 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "control"_a,
               "target"_a,
               DocString()
-                  .desc("Generate general Gate class instance of CZ.")
-                  .desc("Performs controlled-Z operation.")
+                  .desc("Generate general :class:`~f64.Gate` class instance of CZGate. Performs "
+                        "controlled-Z operation.")
+                  .note("If you need to use functions specific to the CZGate class, please "
+                        "downcast it.")
                   .arg("control", "int", "Control qubit index")
                   .arg("target", "int", "Target qubit index")
                   .ret("Gate", "CZ gate instance")
@@ -634,8 +695,10 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "control2"_a,
               "target"_a,
               DocString()
-                  .desc("Generate general Gate class instance of CCX.")
-                  .desc("Performs controlled-controlled-X operation.")
+                  .desc("Generate general :class:`~f64.Gate` class instance of CCXGate. Performs "
+                        "controlled-controlled-X operation.")
+                  .note("If you need to use functions specific to the CCXGate class, please "
+                        "downcast it.")
                   .arg("control1", "int", "First control qubit index")
                   .arg("control2", "int", "Second control qubit index")
                   .arg("target", "int", "Target qubit index")
@@ -651,8 +714,10 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "control2"_a,
               "target"_a,
               DocString()
-                  .desc("Generate general Gate class instance of CCNot.")
-                  .desc("Performs controlled-controlled-X operation.")
+                  .desc("Generate general :class:`~f64.Gate` class instance of CCNotGate. Performs "
+                        "controlled-controlled-X operation.")
+                  .note("CCNot is an alias of CCX. If you need to use functions specific to the "
+                        "CCNotGate class, please downcast it.")
                   .arg("control1", "int", "First control qubit index")
                   .arg("control2", "int", "Second control qubit index")
                   .arg("target", "int", "Target qubit index")
@@ -669,9 +734,10 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "control2"_a,
         "target"_a,
         DocString()
-            .desc("Toffoli is an alias of CCX.")
-            .desc("Generate general Gate class instance of Toffoli.")
-            .desc("Performs controlled-controlled-X operation.")
+            .desc("Generate general :class:`~f64.Gate` class instance of ToffoliGate. Performs "
+                  "controlled-controlled-X operation.")
+            .note("Toffoli is an alias of CCX. If you need to use functions specific to the "
+                  "ToffoliGate class, please downcast it.")
             .arg("control1", "int", "First control qubit index")
             .arg("control2", "int", "Second control qubit index")
             .arg("target", "int", "Target qubit index")
@@ -681,92 +747,112 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                  ">>> gate = Toffoli(1, 2, 3)  # Toffoli gate with controls on qubits 1 and 2"}))
             .build_as_google_style()
             .c_str());
-    mgate.def("DenseMatrix",
-              &gate::DenseMatrix<Fp>,
-              "targets"_a,
-              "matrix"_a,
-              "controls"_a = std::vector<std::uint64_t>{},
-              "is_unitary"_a = false,
-              DocString()
-                  .desc("Generate general Gate class instance of DenseMatrix.")
-                  .desc("Performs dense matrix operation.")
-                  .arg("targets", "list[int]", "Target qubit indices")
-                  .arg("matrix", "numpy.ndarray", "Matrix to be applied")
-                  .arg("controls", "list[int]", true, "Control qubit indices")
-                  .arg("is_unitary", "bool", true, "Whether the matrix is unitary")
-                  .ret("Gate", "DenseMatrix gate instance")
-                  .ex(DocString::Code(
-                      {">>> matrix = np.array([[1, 0], [0, 1]])",
-                       ">>> gate = DenseMatrix([0], matrix)",
-                       ">>> gate = DenseMatrix([0], matrix, [1])  # Controlled-DenseMatrix"}))
-                  .build_as_google_style()
-                  .c_str());
-    mgate.def("SparseMatrix",
-              &gate::SparseMatrix<Fp>,
-              "targets"_a,
-              "matrix"_a,
-              "controls"_a = std::vector<std::uint64_t>{},
-              DocString()
-                  .desc("Generate general Gate class instance of SparseMatrix.")
-                  .desc("Performs sparse matrix operation.")
-                  .arg("targets", "list[int]", "Target qubit indices")
-                  .arg("matrix", "scipy.sparse.csr_matrix", "Matrix to be applied")
-                  .arg("controls", "list[int]", true, "Control qubit indices")
-                  .ret("Gate", "SparseMatrix gate instance")
-                  .ex(DocString::Code(
-                      {">>> matrix = scipy.sparse.csr_matrix([[1, 0], [0, 1]])",
-                       ">>> gate = SparseMatrix([0], matrix)",
-                       ">>> gate = SparseMatrix([0], matrix, [1])  # Controlled-SparseMatrix"}))
-                  .build_as_google_style()
-                  .c_str());
+    mgate.def(
+        "DenseMatrix",
+        &gate::DenseMatrix<Fp>,
+        "targets"_a,
+        "matrix"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        "is_unitary"_a = false,
+        DocString()
+            .desc("Generate general :class:`~f64.Gate` class instance of "
+                  ":class:`~f64.DenseMatrixGate`. Performs dense matrix operation.")
+            .note("If you need to use functions specific to the :class:`~f64.DenseMatrixGate` "
+                  "class, please downcast it.")
+            .arg("targets", "list[int]", "Target qubit indices")
+            .arg("matrix", "numpy.ndarray", "Matrix to be applied")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .arg("is_unitary",
+                 "bool",
+                 true,
+                 "Whether the matrix is unitary. When the flag indicating that the gate is "
+                 "unitary is set to True, a more efficient implementation is used.")
+            .ret("Gate", "DenseMatrix gate instance")
+            .ex(DocString::Code(
+                {">>> matrix = np.array([[1, 0], [0, 1]])",
+                 ">>> gate = DenseMatrix([0], matrix)",
+                 ">>> gate = DenseMatrix([0], matrix, [1])  # Controlled-DenseMatrix"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "SparseMatrix",
+        &gate::SparseMatrix<Fp>,
+        "targets"_a,
+        "matrix"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~f64.Gate` class instance of "
+                  ":class:`~f64.SparseMatrixGate`. Performs sparse matrix operation.")
+            .note("If you need to use functions specific to the :class:`~f64.SparseMatrixGate` "
+                  "class, please downcast it.")
+            .arg("targets", "list[int]", "Target qubit indices")
+            .arg("matrix", "scipy.sparse.csr_matrix", "Matrix to be applied")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "SparseMatrix gate instance")
+            .ex(DocString::Code(
+                {">>> matrix = scipy.sparse.csr_matrix([[1, 0], [0, 1]])",
+                 ">>> gate = SparseMatrix([0], matrix)",
+                 ">>> gate = SparseMatrix([0], matrix, [1])  # Controlled-SparseMatrix"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def("Pauli",
               &gate::Pauli<Fp>,
               "pauli"_a,
               "controls"_a = std::vector<std::uint64_t>{},
               DocString()
-                  .desc("Generate general Gate class instance of Pauli.")
-                  .desc("Performs Pauli operation.")
+                  .desc("Generate general :class:`~f64.Gate` class instance of "
+                        ":class:`~f64.PauliGate`. Performs Pauli operation.")
+                  .note("If you need to use functions specific to the :class:`~f64.PauliGate` "
+                        "class, please downcast it.")
                   .arg("pauli", "PauliOperator", "Pauli operator")
                   .arg("controls", "list[int]", true, "Control qubit indices")
                   .ret("Gate", "Pauli gate instance")
-                  .ex(DocString::Code({">>> pauli = PauliOperator('X', 0)",
+                  .ex(DocString::Code({">>> pauli = PauliOperator('X 0')",
                                        ">>> gate = Pauli(pauli)",
                                        ">>> gate = Pauli(pauli, [1])  # Controlled-Pauli"}))
                   .build_as_google_style()
                   .c_str());
-    mgate.def("PauliRotation",
-              &gate::PauliRotation<Fp>,
-              "pauli"_a,
-              "angle"_a,
-              "controls"_a = std::vector<std::uint64_t>{},
-              DocString()
-                  .desc("Generate general Gate class instance of PauliRotation.")
-                  .desc("Performs Pauli rotation operation.")
-                  .arg("pauli", "PauliOperator", "Pauli operator")
-                  .arg("angle", "float", "Rotation angle in radians")
-                  .arg("controls", "list[int]", true, "Control qubit indices")
-                  .ret("Gate", "PauliRotation gate instance")
-                  .ex(DocString::Code(
-                      {">>> pauli = PauliOperator('X', 0)",
-                       ">>> gate = PauliRotation(pauli, math.pi/2)",
-                       ">>> gate = PauliRotation(pauli, math.pi/2, [1])  # Controlled-Pauli"}))
-                  .build_as_google_style()
-                  .c_str());
-    mgate.def("Probablistic",
-              &gate::Probablistic<Fp>,
-              "distribution"_a,
-              "gate_list"_a,
-              DocString()
-                  .desc("Generate general Gate class instance of Probablistic.")
-                  .desc("Performs probablistic operation.")
-                  .arg("distribution", "list[float]", "Probablistic distribution")
-                  .arg("gate_list", "list[Gate]", "List of gates")
-                  .ret("Gate", "Probablistic gate instance")
-                  .ex(DocString::Code({">>> distribution = [0.5, 0.5]",
-                                       ">>> gate_list = [X(0), Y(0)]",
-                                       ">>> gate = Probablistic(distribution, gate_list)"}))
-                  .build_as_google_style()
-                  .c_str());
+    mgate.def(
+        "PauliRotation",
+        &gate::PauliRotation<Fp>,
+        "pauli"_a,
+        "angle"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~f64.Gate` class instance of "
+                  ":class:`~f64.PauliRotationGate`. Performs Pauli rotation operation.")
+            .note("If you need to use functions specific to the :class:`~f64.PauliRotationGate` "
+                  "class, please downcast it.")
+            .arg("pauli", "PauliOperator", "Pauli operator")
+            .arg("angle", "float", "Rotation angle in radians")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "PauliRotation gate instance")
+            .ex(DocString::Code(
+                {">>> pauli = PauliOperator('X', 0)",
+                 ">>> gate = PauliRotation(pauli, math.pi/2)",
+                 ">>> gate = PauliRotation(pauli, math.pi/2, [1])  # Controlled-Pauli"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "Probablistic",
+        &gate::Probablistic<Fp>,
+        "distribution"_a,
+        "gate_list"_a,
+        DocString()
+            .desc("Generate general :class:`~f64.Gate` class instance of "
+                  ":class:`~f64.ProbablisticGate`. Performs probablistic operation.")
+            .note("If you need to use functions specific to the :class:`~f64.ProbablisticGate` "
+                  "class, please downcast it.")
+            .arg("distribution", "list[float]", "Probablistic distribution")
+            .arg("gate_list", "list[Gate]", "List of gates")
+            .ret("Gate", "Probablistic gate instance")
+            .ex(DocString::Code(
+                {">>> distribution = [0.3, 0.7]",
+                 ">>> gate_list = [X(0), Y(0)]",
+                 ">>> # X is applied with probability 0.3, Y is applied with probability 0.7",
+                 ">>> gate = Probablistic(distribution, gate_list)"}))
+            .build_as_google_style()
+            .c_str());
 }
 }  // namespace internal
 #endif
