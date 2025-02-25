@@ -142,7 +142,7 @@ void circuit_test() {
 
     state_cp = state.get_amplitudes();
     for (std::uint64_t i = 0; i < dim; ++i) {
-        check_near<Prec, Space>(state_eigen[i], state_cp[i]);
+        check_near<Prec>(state_eigen[i], state_cp[i]);
     }
 }
 
