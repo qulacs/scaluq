@@ -13,7 +13,7 @@ TYPED_TEST_SUITE(StateVectorTest, TestTypes, NameGenerator);
 
 TYPED_TEST(StateVectorTest, HaarRandomStateNorm) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const int n_tries = 10;
     for (int n = 1; n <= n_tries; n++) {
         const auto state = StateVector<Prec, Space>::Haar_random_state(n);
@@ -23,7 +23,7 @@ TYPED_TEST(StateVectorTest, HaarRandomStateNorm) {
 
 TYPED_TEST(StateVectorTest, OperationAtIndex) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     auto state = StateVector<Prec, Space>::Haar_random_state(10);
     for (std::uint64_t i = 0; i < state.dim(); ++i) {
         state.set_amplitude_at(i, 1);
@@ -34,7 +34,7 @@ TYPED_TEST(StateVectorTest, OperationAtIndex) {
 
 TYPED_TEST(StateVectorTest, CopyState) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const int n = 5;
     const auto state = StateVector<Prec, Space>::Haar_random_state(n);
     StateVector state_cp = state.copy();
@@ -45,7 +45,7 @@ TYPED_TEST(StateVectorTest, CopyState) {
 
 TYPED_TEST(StateVectorTest, ZeroNormState) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t n = 5;
 
     StateVector state(StateVector<Prec, Space>::Haar_random_state(n));
@@ -59,7 +59,7 @@ TYPED_TEST(StateVectorTest, ZeroNormState) {
 
 TYPED_TEST(StateVectorTest, ComputationalBasisState) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t n = 5;
 
     StateVector state(StateVector<Prec, Space>::Haar_random_state(n));
@@ -77,7 +77,7 @@ TYPED_TEST(StateVectorTest, ComputationalBasisState) {
 
 TYPED_TEST(StateVectorTest, HaarRandomStateSameSeed) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t n = 10, m = 5;
     for (std::uint64_t i = 0; i < m; ++i) {
         StateVector state1(StateVector<Prec, Space>::Haar_random_state(n, i)),
@@ -88,7 +88,7 @@ TYPED_TEST(StateVectorTest, HaarRandomStateSameSeed) {
 
 TYPED_TEST(StateVectorTest, HaarRandomStateWithoutSeed) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t n = 10, m = 5;
     for (std::uint64_t i = 0; i < m; ++i) {
         StateVector state1(StateVector<Prec, Space>::Haar_random_state(n)),
@@ -99,7 +99,7 @@ TYPED_TEST(StateVectorTest, HaarRandomStateWithoutSeed) {
 
 TYPED_TEST(StateVectorTest, AddState) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t n = 10;
     StateVector state1(StateVector<Prec, Space>::Haar_random_state(n));
     StateVector state2(StateVector<Prec, Space>::Haar_random_state(n));
@@ -117,7 +117,7 @@ TYPED_TEST(StateVectorTest, AddState) {
 
 TYPED_TEST(StateVectorTest, AddStateWithCoef) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const StdComplex coef(2.5, 1.3);
     const std::uint64_t n = 10;
     StateVector state1(StateVector<Prec, Space>::Haar_random_state(n));
@@ -137,7 +137,7 @@ TYPED_TEST(StateVectorTest, AddStateWithCoef) {
 
 TYPED_TEST(StateVectorTest, MultiplyCoef) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t n = 10;
     const StdComplex coef(0.5, 0.2);
 
@@ -155,7 +155,7 @@ TYPED_TEST(StateVectorTest, MultiplyCoef) {
 
 TYPED_TEST(StateVectorTest, GetZeroProbability) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t n = 10;
     StateVector<Prec, Space> state(n);
     state.set_computational_basis(1);
@@ -173,7 +173,7 @@ TYPED_TEST(StateVectorTest, GetZeroProbability) {
 
 TYPED_TEST(StateVectorTest, EntropyCalculation) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t n = 6;
     const std::uint64_t dim = 1ULL << n;
     const std::uint64_t max_repeat = 10;
@@ -200,7 +200,7 @@ TYPED_TEST(StateVectorTest, EntropyCalculation) {
 
 TYPED_TEST(StateVectorTest, GetMarginalProbability) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t n = 2;
     const std::uint64_t dim = 1 << n;
     StateVector state(StateVector<Prec, Space>::Haar_random_state(n));
@@ -233,7 +233,7 @@ TYPED_TEST(StateVectorTest, GetMarginalProbability) {
 
 TYPED_TEST(StateVectorTest, SamplingSuperpositionState) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t n = 10;
     const std::uint64_t nshot = 65536;
     const std::uint64_t test_count = 10;
@@ -270,7 +270,7 @@ TYPED_TEST(StateVectorTest, SamplingSuperpositionState) {
 
 TYPED_TEST(StateVectorTest, SamplingComputationalBasis) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t n = 10;
     const std::uint64_t nshot = 1024;
     StateVector<Prec, Space> state(n);

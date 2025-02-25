@@ -102,28 +102,28 @@ namespace internal {
                                                                               gate_list);     \
     }
 #ifdef SCALUQ_FLOAT16
+DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
+    Precision::F16, ExecutionSpace::Default)
 DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                               DefaultSpace)
-DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                               HostSpace)
+                                                                               ExecutionSpace::Host)
 #endif
 #ifdef SCALUQ_FLOAT32
+DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
+    Precision::F32, ExecutionSpace::Default)
 DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                               DefaultSpace)
-DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                               HostSpace)
+                                                                               ExecutionSpace::Host)
 #endif
 #ifdef SCALUQ_FLOAT64
+DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
+    Precision::F64, ExecutionSpace::Default)
 DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                               DefaultSpace)
-DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                               HostSpace)
+                                                                               ExecutionSpace::Host)
 #endif
 #ifdef SCALUQ_BFLOAT16
+DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
+    Precision::BF16, ExecutionSpace::Default)
 DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                               DefaultSpace)
-DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                               HostSpace)
+                                                                               ExecutionSpace::Host)
 #endif
 #undef DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 }  // namespace internal

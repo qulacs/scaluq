@@ -51,7 +51,7 @@ std::pair<Operator<Prec, Space>, Eigen::MatrixXcd> generate_random_observable_wi
 
 TYPED_TEST(OperatorTest, CheckExpectationValue) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     std::uint64_t n = 4;
     std::uint64_t dim = 1ULL << n;
     Random random;
@@ -75,7 +75,7 @@ TYPED_TEST(OperatorTest, CheckExpectationValue) {
 
 TYPED_TEST(OperatorTest, CheckTransitionAmplitude) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     std::uint64_t n = 4;
     std::uint64_t dim = 1ULL << n;
     Random random;
@@ -103,7 +103,7 @@ TYPED_TEST(OperatorTest, CheckTransitionAmplitude) {
 
 TYPED_TEST(OperatorTest, AddTest) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     std::uint64_t n = 4;
     Random random;
 
@@ -121,7 +121,7 @@ TYPED_TEST(OperatorTest, AddTest) {
 
 TYPED_TEST(OperatorTest, SubTest) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     std::uint64_t n = 4;
     Random random;
 
@@ -139,7 +139,7 @@ TYPED_TEST(OperatorTest, SubTest) {
 
 TYPED_TEST(OperatorTest, MultiCoefTest) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     std::uint64_t n = 4;
     Random random;
 
@@ -156,7 +156,7 @@ TYPED_TEST(OperatorTest, MultiCoefTest) {
 
 TYPED_TEST(OperatorTest, ApplyToStateTest) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t n_qubits = 3;
     StateVector<Prec, Space> state_vector(n_qubits);
     state_vector.load([n_qubits] {
@@ -185,7 +185,7 @@ TYPED_TEST(OperatorTest, ApplyToStateTest) {
 
 TYPED_TEST(OperatorTest, Optimize) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     Operator<Prec, Space> op(2);
     op.add_operator(PauliOperator<Prec, Space>("X 0 Y 1", 1.));
     op.add_operator(PauliOperator<Prec, Space>("Y 0 Z 1", 2.));

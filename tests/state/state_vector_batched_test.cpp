@@ -13,7 +13,7 @@ TYPED_TEST_SUITE(StateVectorBatchedTest, TestTypes, NameGenerator);
 
 TYPED_TEST(StateVectorBatchedTest, HaarRandomStateNorm) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t batch_size = 10, n_qubits = 3;
     const auto states =
         StateVectorBatched<Prec, Space>::Haar_random_state(batch_size, n_qubits, false);
@@ -23,7 +23,7 @@ TYPED_TEST(StateVectorBatchedTest, HaarRandomStateNorm) {
 
 TYPED_TEST(StateVectorBatchedTest, LoadAndAmplitues) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t batch_size = 4, n_qubits = 3;
     const std::uint64_t dim = 1 << n_qubits;
     std::vector states_h(batch_size, std::vector<StdComplex>(dim));
@@ -45,7 +45,7 @@ TYPED_TEST(StateVectorBatchedTest, LoadAndAmplitues) {
 
 TYPED_TEST(StateVectorBatchedTest, OperateState) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t batch_size = 4, n_qubits = 3;
     auto states = StateVectorBatched<Prec, Space>::Haar_random_state(batch_size, n_qubits, false);
     auto states_add =
@@ -83,7 +83,7 @@ TYPED_TEST(StateVectorBatchedTest, OperateState) {
 
 TYPED_TEST(StateVectorBatchedTest, ZeroProbs) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t batch_size = 4, n_qubits = 3;
     auto states = StateVectorBatched<Prec, Space>::Haar_random_state(batch_size, n_qubits, false);
 
@@ -98,7 +98,7 @@ TYPED_TEST(StateVectorBatchedTest, ZeroProbs) {
 
 TYPED_TEST(StateVectorBatchedTest, MarginalProbs) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t batch_size = 4, n_qubits = 5;
     auto states = StateVectorBatched<Prec, Space>::Haar_random_state(batch_size, n_qubits, false);
 
@@ -118,7 +118,7 @@ TYPED_TEST(StateVectorBatchedTest, MarginalProbs) {
 
 TYPED_TEST(StateVectorBatchedTest, Entropy) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t batch_size = 4, n_qubits = 3;
     auto states = StateVectorBatched<Prec, Space>::Haar_random_state(batch_size, n_qubits, false);
 
@@ -131,7 +131,7 @@ TYPED_TEST(StateVectorBatchedTest, Entropy) {
 
 TYPED_TEST(StateVectorBatchedTest, Sampling) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t batch_size = 2, n_qubits = 3;
     StateVectorBatched<Prec, Space> states(batch_size, n_qubits);
     states.load(

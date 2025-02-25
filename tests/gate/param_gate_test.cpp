@@ -89,31 +89,31 @@ void test_apply_parametric_multi_pauli_rotation(std::uint64_t n_qubits) {
 
 TYPED_TEST(ParamGateTest, ApplyParamRXGate) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     test_apply_parametric_single_pauli_rotation<Prec, Space>(
         5, &gate::RX<Prec, Space>, &gate::ParamRX<Prec, Space>);
 }
 TYPED_TEST(ParamGateTest, ApplyParamRYGate) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     test_apply_parametric_single_pauli_rotation<Prec, Space>(
         5, &gate::RX<Prec, Space>, &gate::ParamRX<Prec, Space>);
 }
 TYPED_TEST(ParamGateTest, ApplyParamRZGate) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     test_apply_parametric_single_pauli_rotation<Prec, Space>(
         5, &gate::RX<Prec, Space>, &gate::ParamRX<Prec, Space>);
 }
 TYPED_TEST(ParamGateTest, ApplyParamPauliRotationGate) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     test_apply_parametric_multi_pauli_rotation<Prec, Space>(5);
 }
 
 TYPED_TEST(ParamGateTest, ApplyParamProbablisticGate) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     auto probgate = gate::ParamProbablistic<Prec, Space>(
         {.1, .9}, {gate::ParamRX<Prec, Space>(0), gate::I<Prec, Space>()});
     std::uint64_t x_cnt = 0, i_cnt = 0;
@@ -205,7 +205,7 @@ void test_ppauli_control(std::uint64_t n) {
 
 TYPED_TEST(ParamGateTest, Control) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     std::uint64_t n = 10;
     for ([[maybe_unused]] std::uint64_t _ : std::views::iota(0, 10)) {
         test_param_rotation_control<Prec, Space>(gate::ParamRX<Prec, Space>, n);

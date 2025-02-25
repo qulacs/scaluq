@@ -657,21 +657,25 @@ namespace internal {
         return std::make_shared<const IGateImpl<Prec, Space>>();                      \
     }
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16, scaluq::HostSpace)
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16, scaluq::DefaultSpace)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16, ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
+                                                               ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32, scaluq::HostSpace)
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32, scaluq::DefaultSpace)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32, ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
+                                                               ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64, scaluq::HostSpace)
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64, scaluq::DefaultSpace)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64, ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
+                                                               ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16, scaluq::HostSpace)
 DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                               scaluq::DefaultSpace)
+                                                               ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
+                                                               ExecutionSpace::Default)
 #endif
 #undef DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 
@@ -685,27 +689,27 @@ DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
     }
 #ifdef SCALUQ_FLOAT16
 DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                         scaluq::HostSpace)
+                                                                         ExecutionSpace::Host)
 DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                         scaluq::DefaultSpace)
+                                                                         ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT32
 DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                         scaluq::HostSpace)
+                                                                         ExecutionSpace::Host)
 DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                         scaluq::DefaultSpace)
+                                                                         ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT64
 DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                         scaluq::HostSpace)
+                                                                         ExecutionSpace::Host)
 DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                         scaluq::DefaultSpace)
+                                                                         ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_BFLOAT16
 DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                         scaluq::HostSpace)
+                                                                         ExecutionSpace::Host)
 DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                         scaluq::DefaultSpace)
+                                                                         ExecutionSpace::Default)
 #endif
 #undef DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 
@@ -750,27 +754,27 @@ DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precisi
         P1GateImpl, Prec, Space)
 #ifdef SCALUQ_FLOAT16
 DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                               scaluq::HostSpace)
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                               scaluq::DefaultSpace)
+                                                                               ExecutionSpace::Host)
+DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
+    Precision::F16, ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT32
 DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                               scaluq::HostSpace)
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                               scaluq::DefaultSpace)
+                                                                               ExecutionSpace::Host)
+DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
+    Precision::F32, ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT64
 DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                               scaluq::HostSpace)
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                               scaluq::DefaultSpace)
+                                                                               ExecutionSpace::Host)
+DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
+    Precision::F64, ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_BFLOAT16
 DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                               scaluq::HostSpace)
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                               scaluq::DefaultSpace)
+                                                                               ExecutionSpace::Host)
+DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
+    Precision::BF16, ExecutionSpace::Default)
 #endif
 #undef DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 #undef DECLARE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE
@@ -790,27 +794,27 @@ DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(P
     DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(RZGateImpl, Prec, Space)
 #ifdef SCALUQ_FLOAT16
 DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                    scaluq::HostSpace)
+                                                                    ExecutionSpace::Host)
 DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                    scaluq::DefaultSpace)
+                                                                    ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT32
 DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                    scaluq::HostSpace)
+                                                                    ExecutionSpace::Host)
 DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                    scaluq::DefaultSpace)
+                                                                    ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT64
 DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                    scaluq::HostSpace)
+                                                                    ExecutionSpace::Host)
 DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                    scaluq::DefaultSpace)
+                                                                    ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_BFLOAT16
 DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                    scaluq::HostSpace)
+                                                                    ExecutionSpace::Host)
 DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                    scaluq::DefaultSpace)
+                                                                    ExecutionSpace::Default)
 #endif
 #undef DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 #undef DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE
@@ -851,34 +855,34 @@ DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::B
 #ifdef SCALUQ_FLOAT16
 DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
                                                                Precision::F16,
-                                                               scaluq::HostSpace)
+                                                               ExecutionSpace::Host)
 DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
                                                                Precision::F16,
-                                                               scaluq::DefaultSpace)
+                                                               ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT32
 DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
                                                                Precision::F32,
-                                                               scaluq::HostSpace)
+                                                               ExecutionSpace::Host)
 DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
                                                                Precision::F32,
-                                                               scaluq::DefaultSpace)
+                                                               ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT64
 DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
                                                                Precision::F64,
-                                                               scaluq::HostSpace)
+                                                               ExecutionSpace::Host)
 DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
                                                                Precision::F64,
-                                                               scaluq::DefaultSpace)
+                                                               ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_BFLOAT16
 DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
                                                                Precision::BF16,
-                                                               scaluq::HostSpace)
+                                                               ExecutionSpace::Host)
 DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
                                                                Precision::BF16,
-                                                               scaluq::DefaultSpace)
+                                                               ExecutionSpace::Default)
 #endif
 #undef DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 
@@ -893,34 +897,34 @@ DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
 #ifdef SCALUQ_FLOAT16
 DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
                                                                   Precision::F16,
-                                                                  scaluq::HostSpace)
+                                                                  ExecutionSpace::Host)
 DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
                                                                   Precision::F16,
-                                                                  scaluq::DefaultSpace)
+                                                                  ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT32
 DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
                                                                   Precision::F32,
-                                                                  scaluq::HostSpace)
+                                                                  ExecutionSpace::Host)
 DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
                                                                   Precision::F32,
-                                                                  scaluq::DefaultSpace)
+                                                                  ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT64
 DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
                                                                   Precision::F64,
-                                                                  scaluq::HostSpace)
+                                                                  ExecutionSpace::Host)
 DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
                                                                   Precision::F64,
-                                                                  scaluq::DefaultSpace)
+                                                                  ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_BFLOAT16
 DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
                                                                   Precision::BF16,
-                                                                  scaluq::HostSpace)
+                                                                  ExecutionSpace::Host)
 DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
                                                                   Precision::BF16,
-                                                                  scaluq::DefaultSpace)
+                                                                  ExecutionSpace::Default)
 #endif
 #undef DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 }  // namespace internal

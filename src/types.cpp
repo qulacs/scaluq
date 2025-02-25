@@ -11,7 +11,7 @@ SparseMatrix<Prec, Space>::SparseMatrix(const SparseComplexMatrix& sp) {
     SparseComplexMatrix mat = sp;
     mat.makeCompressed();
 
-    _values = Kokkos::View<SparseValue<Prec>*, Space>("_values", mat.nonZeros());
+    _values = Kokkos::View<SparseValue<Prec>*, SpaceType<Space>>("_values", mat.nonZeros());
     Kokkos::View<SparseValue<Prec>*, Kokkos::HostSpace> values_h("values_h", mat.nonZeros());
     int idx = 0;
     for (int k = 0; k < mat.outerSize(); ++k) {

@@ -585,114 +585,114 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
 
 TYPED_TEST(GateTest, ApplyI) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::I<Prec, Space>>(5);
 }
 TYPED_TEST(GateTest, ApplyGlobalPhase) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::GlobalPhase<Prec, Space>>(5);
 }
 TYPED_TEST(GateTest, ApplyX) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::X<Prec, Space>>(5, make_X);
 }
 TYPED_TEST(GateTest, ApplyY) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::Y<Prec, Space>>(5, make_Y);
 }
 TYPED_TEST(GateTest, ApplyZ) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::Z<Prec, Space>>(5, make_Z);
 }
 TYPED_TEST(GateTest, ApplyH) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::H<Prec, Space>>(5, make_H);
 }
 TYPED_TEST(GateTest, ApplyS) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::S<Prec, Space>>(5, make_S);
 }
 TYPED_TEST(GateTest, ApplySdag) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::Sdag<Prec, Space>>(5, make_Sdag);
 }
 TYPED_TEST(GateTest, ApplyT) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::T<Prec, Space>>(5, make_T);
 }
 TYPED_TEST(GateTest, ApplyTdag) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::Tdag<Prec, Space>>(5, make_Tdag);
 }
 TYPED_TEST(GateTest, ApplySqrtX) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::SqrtX<Prec, Space>>(5, make_SqrtX);
 }
 TYPED_TEST(GateTest, ApplySqrtY) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::SqrtY<Prec, Space>>(5, make_SqrtY);
 }
 TYPED_TEST(GateTest, ApplySqrtXdag) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::SqrtXdag<Prec, Space>>(5, make_SqrtXdag);
 }
 TYPED_TEST(GateTest, ApplySqrtYdag) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::SqrtYdag<Prec, Space>>(5, make_SqrtYdag);
 }
 TYPED_TEST(GateTest, ApplyP0) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::P0<Prec, Space>>(5, make_P0);
 }
 TYPED_TEST(GateTest, ApplyP1) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::P1<Prec, Space>>(5, make_P1);
 }
 TYPED_TEST(GateTest, ApplyRX) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::RX<Prec, Space>>(5, make_RX);
 }
 TYPED_TEST(GateTest, ApplyRY) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::RY<Prec, Space>>(5, make_RY);
 }
 TYPED_TEST(GateTest, ApplyRZ) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply<Prec, Space, gate::RZ<Prec, Space>>(5, make_RZ);
 }
 
 TYPED_TEST(GateTest, ApplyIBMQ) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply_IBMQ<Prec, Space>(5, make_U);
 }
 
 TYPED_TEST(GateTest, ApplySparseMatrixGate) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply_sparse<Prec, Space>(6);
 }
 TYPED_TEST(GateTest, ApplyDenseMatrixGate) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply_none_dense<Prec, Space>(6);
     run_random_gate_apply_single_dense<Prec, Space>(6);
     run_random_gate_apply_general_dense<Prec, Space>(6);
@@ -700,13 +700,13 @@ TYPED_TEST(GateTest, ApplyDenseMatrixGate) {
 
 TYPED_TEST(GateTest, ApplyPauliGate) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_gate_apply_pauli<Prec, Space>(5);
 }
 
 TYPED_TEST(GateTest, ApplyProbablisticGate) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     {
         auto probgate = gate::Probablistic<Prec, Space>(
             {.1, .9}, {gate::X<Prec, Space>(0), gate::I<Prec, Space>()});
@@ -943,7 +943,7 @@ void test_matrix_control(std::uint64_t n_qubits) {
 
 TYPED_TEST(GateTest, Control) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     std::uint64_t n = 10;
     for ([[maybe_unused]] std::uint64_t _ : std::views::iota(0, 10)) {
         test_standard_gate_control<Prec, Space, 0, 1>(gate::GlobalPhase<Prec, Space>, n);

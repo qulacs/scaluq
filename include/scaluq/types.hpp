@@ -15,12 +15,22 @@ namespace scaluq {
 using StdComplex = std::complex<double>;
 using Json = nlohmann::json;
 
-using HostSpace = Kokkos::DefaultHostExecutionSpace;
-using DefaultSpace = Kokkos::DefaultExecutionSpace;
-template <typename T>
-concept ExecutionSpace = std::is_same_v<T, HostSpace> || std::is_same_v<T, DefaultSpace>;
+enum class ExecutionSpace { Host, Default };
 
 namespace internal {
+template <ExecutionSpace Space>
+struct SpaceTypeImpl {};
+template <>
+struct SpaceTypeImpl<ExecutionSpace::Host> {
+    using Type = Kokkos::DefaultHostExecutionSpace;
+};
+template <>
+struct SpaceTypeImpl<ExecutionSpace::Default> {
+    using Type = Kokkos::DefaultExecutionSpace;
+};
+template <ExecutionSpace Space>
+using SpaceType = typename SpaceTypeImpl<Space>::Type;
+
 template <typename DummyType>
 constexpr bool lazy_false_v = false;  // Used for lazy evaluation in static_assert.
 
@@ -28,7 +38,7 @@ using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, 
 using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex, Eigen::RowMajor>;
 
 template <Precision Prec, ExecutionSpace Space>
-using Matrix = Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight, Space>;
+using Matrix = Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight, SpaceType<Space>>;
 
 template <Precision Prec>
 using Matrix2x2 = Kokkos::Array<Kokkos::Array<Complex<Prec>, 2>, 2>;
@@ -45,7 +55,7 @@ struct SparseValue {
 template <Precision Prec, ExecutionSpace Space>
 class SparseMatrix {
 public:
-    Kokkos::View<SparseValue<Prec>*, Space> _values;
+    Kokkos::View<SparseValue<Prec>*, SpaceType<Space>> _values;
     std::uint64_t _row, _col;
 
     SparseMatrix(const SparseComplexMatrix& sp);

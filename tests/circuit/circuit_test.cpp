@@ -148,7 +148,7 @@ void circuit_test() {
 
 TYPED_TEST(CircuitTest, CircuitBasic) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     circuit_test<Prec, Space>();
 }
 
@@ -244,6 +244,6 @@ void circuit_rev_test() {
 
 TYPED_TEST(CircuitTest, CircuitRev) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     circuit_rev_test<Prec, Space>();
 }

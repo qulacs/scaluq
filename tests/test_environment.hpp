@@ -16,7 +16,7 @@ inline auto kokkos_environment_this_variable_is_not_used =
 template <Precision _Prec, ExecutionSpace _Space>
 struct TestType {
     constexpr static Precision Prec = _Prec;
-    using Space = _Space;
+    constexpr static ExecutionSpace Space = _Space;
     static std::string name() {
         std::string ret;
         if constexpr (Prec == Precision::F16)
@@ -28,9 +28,9 @@ struct TestType {
         else if constexpr (Prec == Precision::BF16)
             ret += "BF16";
 
-        if constexpr (std::is_same_v<Space, HostSpace>)
+        if constexpr (Space == ExecutionSpace::Host)
             ret += "HostSpace";
-        else if constexpr (std::is_same_v<Space, DefaultSpace>)
+        else if constexpr (Space == ExecutionSpace::Default)
             ret += "DefaultSpace";
         return ret;
     }
@@ -38,10 +38,13 @@ struct TestType {
 
 template <Precision Prec, typename... Types>
 struct AddPrecision {
-    using Type = std::conditional_t<
-        std::is_same_v<HostSpace, DefaultSpace>,
-        ::testing::Types<TestType<Prec, HostSpace>, Types...>,
-        ::testing::Types<TestType<Prec, HostSpace>, TestType<Prec, DefaultSpace>, Types...>>;
+    using Type =
+        std::conditional_t<std::is_same_v<internal::SpaceType<ExecutionSpace::Host>,
+                                          internal::SpaceType<ExecutionSpace::Default>>,
+                           ::testing::Types<TestType<Prec, ExecutionSpace::Host>, Types...>,
+                           ::testing::Types<TestType<Prec, ExecutionSpace::Host>,
+                                            TestType<Prec, ExecutionSpace::Default>,
+                                            Types...>>;
 };
 
 template <typename List>
@@ -96,6 +99,6 @@ template <typename T>
 class FixtureBase : public ::testing::Test {
 public:
     constexpr static Precision Prec = T::Prec;
-    using Space = typename T::Space;
+    constexpr static ExecutionSpace Space = T::Space;
 };
 }  // namespace scaluq

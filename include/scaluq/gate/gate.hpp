@@ -174,7 +174,7 @@ template <Precision _Prec, ExecutionSpace _Space>
 class GateBase : public std::enable_shared_from_this<GateBase<_Prec, _Space>> {
 public:
     constexpr static Precision Prec = _Prec;
-    using Space = _Space;
+    constexpr static ExecutionSpace Space = _Space;
     using FloatType = Float<Prec>;
     using ComplexType = Complex<Prec>;
 
@@ -217,7 +217,7 @@ public:
 };
 
 template <typename T>
-concept GateImpl = std::derived_from<T, GateBase<T::Prec, typename T::Space>>;
+concept GateImpl = std::derived_from<T, GateBase<T::Prec, T::Space>>;
 
 template <GateImpl T>
 inline std::shared_ptr<const T> get_from_json(const Json&);
@@ -234,7 +234,7 @@ private:
 
 public:
     constexpr static Precision Prec = T::Prec;
-    using Space = typename T::Space;
+    constexpr static ExecutionSpace Space = T::Space;
     using FloatType = Float<Prec>;
     using ComplexType = Complex<Prec>;
     GatePtr() : _gate_ptr(nullptr), _gate_type(get_gate_type<T, Prec, Space>()) {}

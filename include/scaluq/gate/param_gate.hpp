@@ -60,7 +60,7 @@ template <Precision _Prec, ExecutionSpace _Space>
 class ParamGateBase : public std::enable_shared_from_this<ParamGateBase<_Prec, _Space>> {
 public:
     constexpr static Precision Prec = _Prec;
-    using Space = _Space;
+    constexpr static ExecutionSpace Space = _Space;
     using FloatType = Float<Prec>;
     using ComplexType = Complex<Prec>;
 
@@ -109,7 +109,7 @@ public:
 };
 
 template <typename T>
-concept ParamGateImpl = std::derived_from<T, ParamGateBase<T::Prec, typename T::Space>>;
+concept ParamGateImpl = std::derived_from<T, ParamGateBase<T::Prec, T::Space>>;
 
 template <ParamGateImpl T>
 inline std::shared_ptr<const T> get_from_json(const Json&);
@@ -120,7 +120,7 @@ class ParamGatePtr {
     template <ParamGateImpl U>
     friend class ParamGatePtr;
     constexpr static Precision Prec = T::Prec;
-    using Space = typename T::Space;
+    constexpr static ExecutionSpace Space = T::Space;
     using FloatType = Float<Prec>;
     using ComplexType = Complex<Prec>;
 

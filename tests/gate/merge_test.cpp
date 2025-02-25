@@ -178,6 +178,6 @@ void merge_gate_test() {
 
 TYPED_TEST(MergeGateTest, MergeGate) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     merge_gate_test<Prec, Space>();
 }

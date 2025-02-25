@@ -19,13 +19,14 @@ class StateVector {
     std::uint64_t _dim;
     using FloatType = internal::Float<Prec>;
     using ComplexType = internal::Complex<Prec>;
+    using ExecutionSpaceType = internal::SpaceType<Space>;
 
 public:
     static constexpr std::uint64_t UNMEASURED = 2;
-    Kokkos::View<ComplexType*, Space> _raw;
+    Kokkos::View<ComplexType*, ExecutionSpaceType> _raw;
     StateVector() = default;
     StateVector(std::uint64_t n_qubits);
-    StateVector(Kokkos::View<ComplexType*, Space> view);
+    StateVector(Kokkos::View<ComplexType*, ExecutionSpaceType> view);
     StateVector(const StateVector& other) = default;
 
     StateVector& operator=(const StateVector& other) = default;
