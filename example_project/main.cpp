@@ -2,10 +2,10 @@
 
 int main() {
     constexpr scaluq::Precision Prec = scaluq::Precision::F64;
-    constexpr scaluq::Space Space = scaluq::Space::Default;
+    constexpr scaluq::ExecutionSpace Space = scaluq::ExecutionSpace::Default;
     scaluq::initialize();
     {
-        scaluq::StateVector<Prec, Default> state(2);
+        scaluq::StateVector<Prec, Space> state(2);
         std::cout << state << std::endl;
     }
     scaluq::finalize();
