@@ -66,3 +66,10 @@ struct adl_serializer<::scaluq::StdComplex> {
     }
 };
 }  // namespace nlohmann
+
+#ifdef SCALUQ_USE_NANOBIND
+#include <nanobind/nanobind.h>
+namespace scaluq {
+namespace nb = nanobind;
+}
+#endif
