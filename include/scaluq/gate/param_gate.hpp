@@ -279,37 +279,37 @@ namespace internal {
             },                                                                                    \
             "Read an object from the JSON representation of the gate.")
 
-#define DEF_PARAM_GATE(PARAM_GATE_TYPE, PRECISION, SPACE, DESCRIPTION)                         \
-    ::scaluq::internal::param_gate_base_def<PRECISION, SPACE>.def(                             \
-        nb::init<PARAM_GATE_TYPE<PRECISION, SPACE>>(), "Upcast from `" #PARAM_GATE_TYPE "`."); \
-DEF_PARAM_GATE_BASE(
-    PARAM_GATE_TYPE,
-    PRECISION,
-    SPACE,
-    DESCRIPTION
-    "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).")
-    .def(nb::init<ParamGate<PRECISION, SPACE>>())
+#define DEF_PARAM_GATE(PARAM_GATE_TYPE, PRECISION, SPACE, DESCRIPTION)                          \
+    ::scaluq::internal::param_gate_base_def<PRECISION, SPACE>.def(                              \
+        nb::init<PARAM_GATE_TYPE<PRECISION, SPACE>>(), "Upcast from `" #PARAM_GATE_TYPE "`.");  \
+    DEF_PARAM_GATE_BASE(                                                                        \
+        PARAM_GATE_TYPE,                                                                        \
+        PRECISION,                                                                              \
+        SPACE,                                                                                  \
+        DESCRIPTION                                                                             \
+        "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
+        .def(nb::init<ParamGate<PRECISION, SPACE>>())
 
-        void bind_gate_param_gate_hpp_without_precision(nb::module_& m) {
-        nb::enum_<ParamGateType>(m, "ParamGateType", "Enum of ParamGate Type.")
-            .value("ParamRX", ParamGateType::ParamRX)
-            .value("ParamRY", ParamGateType::ParamRY)
-            .value("ParamRZ", ParamGateType::ParamRZ)
-            .value("ParamPauliRotation", ParamGateType::ParamPauliRotation);
-    }
+void bind_gate_param_gate_hpp_without_precision(nb::module_& m) {
+    nb::enum_<ParamGateType>(m, "ParamGateType", "Enum of ParamGate Type.")
+        .value("ParamRX", ParamGateType::ParamRX)
+        .value("ParamRY", ParamGateType::ParamRY)
+        .value("ParamRZ", ParamGateType::ParamRZ)
+        .value("ParamPauliRotation", ParamGateType::ParamPauliRotation);
+}
 
-    template <Precision Prec, ExecutionSpace Space>
-    void bind_gate_param_gate_hpp(nb::module_& m) {
-        param_gate_base_def<Prec, Space> =
-            DEF_PARAM_GATE_BASE(
-                ParamGate,
-                Prec,
-                Space,
-                "General class of parametric quantum gate.\n\n.. note:: Downcast to requred to use "
-                "gate-specific functions.")
-                .def(nb::init<ParamGate<Prec, Space>>(), "Just copy shallowly.");
-    }
+template <Precision Prec, ExecutionSpace Space>
+void bind_gate_param_gate_hpp(nb::module_& m) {
+    param_gate_base_def<Prec, Space> =
+        DEF_PARAM_GATE_BASE(
+            ParamGate,
+            Prec,
+            Space,
+            "General class of parametric quantum gate.\n\n.. note:: Downcast to requred to use "
+            "gate-specific functions.")
+            .def(nb::init<ParamGate<Prec, Space>>(), "Just copy shallowly.");
+}
 
-    }  // namespace internal
+}  // namespace internal
 #endif
-    }  // namespace scaluq
+}  // namespace scaluq

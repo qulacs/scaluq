@@ -254,6 +254,39 @@ inline Gate<Prec, Space> Probablistic(const std::vector<double>& distribution,
     return internal::GateFactory::create_gate<internal::ProbablisticGateImpl<Prec, Space>>(
         distribution, gate_list);
 }
+
+// bit-flip error
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> XNoise(std::int64_t target, double error_rate) {
+    return Probablistic({error_rate, 1 - error_rate}, {X<Prec, Space>(target), I<Prec, Space>()});
+}
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> YNoise(std::int64_t target, double error_rate) {
+    return Probablistic({error_rate, 1 - error_rate}, {Y<Prec, Space>(target), I<Prec, Space>()});
+}
+// phase-flip error
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> ZNoise(std::int64_t target, double error_rate) {
+    return Probablistic({error_rate, 1 - error_rate}, {Z<Prec, Space>(target), I<Prec, Space>()});
+}
+// Y: p*p, X: p(1-p), Z: p(1-p)
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> IndependentXZNoise(std::int64_t target, double error_rate) {
+    double p0 = error_rate * error_rate;
+    double p1 = error_rate * (1 - error_rate);
+    double p2 = (1 - error_rate) * (1 - error_rate);
+    return Probablistic(
+        {p0, p1, p1, p2},
+        {Y<Prec, Space>(target), X<Prec, Space>(target), Z<Prec, Space>(target), I<Prec, Space>()});
+}
+// X: error_rate/3, Y: error_rate/3, Z: error_rate/3
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> XYZNoise(std::int64_t target, double error_rate) {
+    return Probablistic(
+        {error_rate / 3, error_rate / 3, error_rate / 3, 1 - error_rate},
+        {X<Prec, Space>(target), Y<Prec, Space>(target), Z<Prec, Space>(target), I<Prec, Space>()});
+}
+
 }  // namespace gate
 
 #ifdef SCALUQ_USE_NANOBIND
