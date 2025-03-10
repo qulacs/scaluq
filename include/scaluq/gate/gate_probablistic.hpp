@@ -113,11 +113,13 @@ DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF1
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
-void bind_gate_gate_probablistic(nb::module_& m) {
+void bind_gate_gate_probablistic(nb::module_& m, nb::class_<Gate<Prec, Space>>& gate_base_def) {
     DEF_GATE(ProbablisticGate,
              Prec,
+             Space,
              "Specific class of probablistic gate. The gate to apply is picked from a cirtain "
-             "distribution.")
+             "distribution.",
+             gate_base_def)
         .def(
             "gate_list",
             [](const ProbablisticGate<Prec, Space>& gate) { return gate->gate_list(); },
