@@ -133,11 +133,11 @@ inline internal::ComplexMatrix get_expanded_matrix(const internal::ComplexMatrix
 
 // Host std::vector を Device Kokkos::View に変換する関数
 template <typename T, ExecutionSpace Sp>
-Kokkos::View<T*, Sp> convert_vector_to_view(const std::vector<T>& vec);
+Kokkos::View<T*, SpaceType<Sp>> convert_vector_to_view(const std::vector<T>& vec);
 
 // Device Kokkos::View を Host std::vector に変換する関数
 template <typename T, ExecutionSpace Sp>
-std::vector<T> convert_view_to_vector(const Kokkos::View<T*, Sp>& device_view);
+std::vector<T> convert_view_to_vector(const Kokkos::View<T*, SpaceType<Sp>>& device_view);
 
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Float<Prec> squared_norm(const Complex<Prec>& z) {

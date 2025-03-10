@@ -158,7 +158,7 @@ StdComplex PauliOperator<Prec, Space>::get_expectation_value(
     if (bit_flip_mask == 0) {
         FloatType res;
         Kokkos::parallel_reduce(
-            Kokkos::RangePolicy<Space>(0, state_vector.dim()),
+            Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector.dim()),
             KOKKOS_LAMBDA(std::uint64_t state_idx, FloatType & sum) {
                 FloatType tmp = (scaluq::internal::conj(state_vector._raw[state_idx]) *
                                  state_vector._raw[state_idx])
@@ -174,7 +174,7 @@ StdComplex PauliOperator<Prec, Space>::get_expectation_value(
     ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
     FloatType res;
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<Space>(0, state_vector.dim() >> 1),
+        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector.dim() >> 1),
         KOKKOS_LAMBDA(std::uint64_t state_idx, FloatType & sum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
@@ -206,7 +206,7 @@ StdComplex PauliOperator<Prec, Space>::get_transition_amplitude(
     if (bit_flip_mask == 0) {
         ComplexType res;
         Kokkos::parallel_reduce(
-            Kokkos::RangePolicy<Space>(0, state_vector_bra.dim()),
+            Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector_bra.dim()),
             KOKKOS_LAMBDA(std::uint64_t state_idx, ComplexType & sum) {
                 ComplexType tmp = scaluq::internal::conj(state_vector_bra._raw[state_idx]) *
                                   state_vector_ket._raw[state_idx];
@@ -222,7 +222,7 @@ StdComplex PauliOperator<Prec, Space>::get_transition_amplitude(
     ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
     ComplexType res;
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<Space>(0, state_vector_bra.dim() >> 1),
+        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector_bra.dim() >> 1),
         KOKKOS_LAMBDA(std::uint64_t state_idx, ComplexType & sum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
@@ -248,7 +248,8 @@ template <Precision Prec, ExecutionSpace Space>
 internal::ComplexMatrix PauliOperator<Prec, Space>::get_matrix_ignoring_coef() const {
     std::uint64_t flip_mask, phase_mask, rot90_count;
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<HostSpace>(0, _ptr->_pauli_id_list.size()),
+        Kokkos::RangePolicy<internal::SpaceType<ExecutionSpace::Host>>(0,
+                                                                       _ptr->_pauli_id_list.size()),
         [&](std::uint64_t i,
             std::uint64_t& f_mask,
             std::uint64_t& p_mask,
@@ -264,9 +265,9 @@ internal::ComplexMatrix PauliOperator<Prec, Space>::get_matrix_ignoring_coef() c
                 p_mask += 1ULL << i;
             }
         },
-        internal::Sum<std::uint64_t, HostSpace>(flip_mask),
-        internal::Sum<std::uint64_t, HostSpace>(phase_mask),
-        internal::Sum<std::uint64_t, HostSpace>(rot90_count));
+        internal::Sum<std::uint64_t, ExecutionSpace::Host>(flip_mask),
+        internal::Sum<std::uint64_t, ExecutionSpace::Host>(phase_mask),
+        internal::Sum<std::uint64_t, ExecutionSpace::Host>(rot90_count));
     std::vector<StdComplex> rot = {1., StdComplex(0, -1), -1., StdComplex(0, 1)};
     std::uint64_t matrix_dim = 1ULL << _ptr->_pauli_id_list.size();
     internal::ComplexMatrix mat = internal::ComplexMatrix::Zero(matrix_dim, matrix_dim);

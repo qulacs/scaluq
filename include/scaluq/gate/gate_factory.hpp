@@ -11,7 +11,7 @@ namespace internal {
 class GateFactory {
 public:
     template <GateImpl T, typename... Args>
-    static Gate<T::Prec, typename T::Space> create_gate(Args... args) {
+    static Gate<T::Prec, T::Space> create_gate(Args... args) {
         return {std::make_shared<const T>(args...)};
     }
 };

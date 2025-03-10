@@ -174,7 +174,7 @@ template <Precision _Prec, ExecutionSpace _Space>
 class GateBase : public std::enable_shared_from_this<GateBase<_Prec, _Space>> {
 public:
     constexpr static Precision Prec = _Prec;
-    using Space = _Space;
+    constexpr static ExecutionSpace Space = _Space;
     using FloatType = Float<Prec>;
     using ComplexType = Complex<Prec>;
 
@@ -217,7 +217,7 @@ public:
 };
 
 template <typename T>
-concept GateImpl = std::derived_from<T, GateBase<T::Prec, typename T::Space>>;
+concept GateImpl = std::derived_from<T, GateBase<T::Prec, T::Space>>;
 
 template <GateImpl T>
 inline std::shared_ptr<const T> get_from_json(const Json&);
@@ -234,7 +234,7 @@ private:
 
 public:
     constexpr static Precision Prec = T::Prec;
-    using Space = typename T::Space;
+    constexpr static ExecutionSpace Space = T::Space;
     using FloatType = Float<Prec>;
     using ComplexType = Complex<Prec>;
     GatePtr() : _gate_ptr(nullptr), _gate_type(get_gate_type<T, Prec, Space>()) {}
@@ -329,7 +329,7 @@ using Gate = internal::GatePtr<internal::GateBase<Prec, Space>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-#define DEF_GATE_BASE(GATE_TYPE, PRECISION, DESCRIPTION)                                        \
+#define DEF_GATE_BASE(GATE_TYPE, PRECISION, SPACE, DESCRIPTION)                                 \
     nb::class_<GATE_TYPE<PRECISION, SPACE>>(m, #GATE_TYPE, DESCRIPTION)                         \
         .def("gate_type",                                                                       \
              &GATE_TYPE<PRECISION, SPACE>::gate_type,                                           \
@@ -392,17 +392,17 @@ namespace internal {
             },                                                                                  \
             "Read an object from the JSON representation of the gate.")
 
-#define DEF_GATE(GATE_TYPE, PRECISION, DESCRIPTION)                                             \
-    ::scaluq::internal::gate_base_def<PRECISION, SPACE>.def(                                    \
-        nb::init<GATE_TYPE<PRECISION, SPACE>>(), "Upcast from `" #GATE_TYPE "`.");              \
-    DEF_GATE_BASE(                                                                              \
-        GATE_TYPE,                                                                              \
-        PRECISION,                                                                              \
-        DESCRIPTION                                                                             \
-        "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
+#define DEF_GATE(GATE_TYPE, PRECISION, SPACE, DESCRIPTION, GATE_BASE_DEF)                        \
+    GATE_BASE_DEF.def(nb::init<GATE_TYPE<PRECISION, SPACE>>(), "Upcast from `" #GATE_TYPE "`."); \
+    DEF_GATE_BASE(                                                                               \
+        GATE_TYPE,                                                                               \
+        PRECISION,                                                                               \
+        SPACE,                                                                                   \
+        DESCRIPTION                                                                              \
+        "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).")  \
         .def(nb::init<Gate<PRECISION, SPACE>>())
 
-void bind_gate_gate_hpp_without_precision(nb::module_& m) {
+void bind_gate_gate_hpp_without_precision_and_space(nb::module_& m) {
     nb::enum_<GateType>(m, "GateType", "Enum of Gate Type.")
         .value("I", GateType::I)
         .value("GlobalPhase", GateType::GlobalPhase)
@@ -434,14 +434,13 @@ void bind_gate_gate_hpp_without_precision(nb::module_& m) {
 }
 
 template <Precision Prec, ExecutionSpace Space>
-void bind_gate_gate_hpp(nb::module_& m) {
-    gate_base_def<Prec, Space> =
-        DEF_GATE_BASE(Gate,
-                      Prec,
-                      Space,
-                      "General class of QuantumGate.\n\n.. note:: Downcast to requred to use "
-                      "gate-specific functions.")
-            .def(nb::init<Gate<Prec, Space>>(), "Just copy shallowly.");
+nb::class_<Gate<Prec, Space>> bind_gate_gate_hpp(nb::module_& m) {
+    return DEF_GATE_BASE(Gate,
+                         Prec,
+                         Space,
+                         "General class of QuantumGate.\n\n.. note:: Downcast to requred to use "
+                         "gate-specific functions.")
+        .def(nb::init<Gate<Prec, Space>>(), "Just copy shallowly.");
 }
 }  // namespace internal
 #endif
