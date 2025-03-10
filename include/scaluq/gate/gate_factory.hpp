@@ -466,6 +466,31 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "Generate general Gate class instance of Probablistic.",
               "distribution"_a,
               "gate_list"_a);
+    mgate.def("XNoise",
+              &gate::XNoise<Prec, Space>,
+              "Generate general Gate class instance of XNoise.",
+              "target"_a,
+              "error_rate"_a);
+    mgate.def("YNoise",
+              &gate::YNoise<Prec, Space>,
+              "Generate general Gate class instance of YNoise.",
+              "target"_a,
+              "error_rate"_a);
+    mgate.def("ZNoise",
+              &gate::ZNoise<Prec, Space>,
+              "Generate general Gate class instance of ZNoise.",
+              "target"_a,
+              "error_rate"_a);
+    mgate.def("IndependentXZNoise",
+              &gate::IndependentXZNoise<Prec, Space>,
+              "Generate general Gate class instance of IndependentXZNoise.",
+              "target"_a,
+              "error_rate"_a);
+    mgate.def("XYZNoise",
+              &gate::XYZNoise<Prec, Space>,
+              "Generate general Gate class instance of XYZNoise.",
+              "target"_a,
+              "error_rate"_a);
 }
 }  // namespace internal
 #endif
