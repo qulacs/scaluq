@@ -70,7 +70,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
             .arg("target", "int", "Target qubit index")
             .arg("coef", "float", true, "Parameter coefficient")
             .arg("controls", "list[int]", true, "Control qubit indices")
-            .ret("Gate", "ParamRX gate instance")
+            .ret("ParamGate", "ParamRX gate instance")
             .ex(DocString::Code({">>> gate = ParamRX(0)  # ParamRX gate on qubit 0",
                                  ">>> gate = ParamRX(1, [0])  # Controlled-ParamRX"}))
             .build_as_google_style()
@@ -89,7 +89,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
             .arg("target", "int", "Target qubit index")
             .arg("coef", "float", true, "Parameter coefficient")
             .arg("controls", "list[int]", true, "Control qubit indices")
-            .ret("Gate", "ParamRY gate instance")
+            .ret("ParamGate", "ParamRY gate instance")
             .ex(DocString::Code({">>> gate = ParamRY(0)  # ParamRY gate on qubit 0",
                                  ">>> gate = ParamRY(1, [0])  # Controlled-ParamRY"}))
             .build_as_google_style()
@@ -108,7 +108,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
                   .arg("target", "int", "Target qubit index")
                   .arg("coef", "float", true, "Parameter coefficient")
                   .arg("controls", "list[int]", true, "Control qubit indices")
-                  .ret("Gate", "ParamRZ gate instance")
+                  .ret("ParamGate", "ParamRZ gate instance")
                   .ex(DocString::Code({">>> gate = ParamRZ(0)  # ParamRZ gate on qubit 0",
                                        ">>> gate = ParamRZ(1, [0])  # Controlled-ParamRZ"}))
                   .build_as_google_style()
@@ -128,7 +128,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
             .arg("pauli", "PauliOperator", "Pauli operator")
             .arg("coef", "float", true, "Parameter coefficient")
             .arg("controls", "list[int]", true, "Control qubit indices")
-            .ret("Gate", "ParamPauliRotation gate instance")
+            .ret("ParamGate", "ParamPauliRotation gate instance")
             .ex(DocString::Code({">>> gate = ParamPauliRotation(PauliOperator(), 0.5)  # Pauli "
                                  "rotation gate with PauliOperator and coefficient 0.5",
                                  ">>> gate = ParamPauliRotation(PauliOperator(), 0.5, [0])  # "
@@ -142,7 +142,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
                         ":class:`~scaluq.f64.ParamProbablisticGate`.")
                   .arg("distribution", "list[float]", "List of probability")
                   .arg("gate_list", "list[Union[Gate, ParamGate]]", "List of gates")
-                  .ret("Gate", "ParamProbablistic gate instance")
+                  .ret("ParamGate", "ParamProbablistic gate instance")
                   .ex(DocString::Code(
                       {">>> gate = ParamProbablistic([0.1, 0.9], [X(0), ParamRX(0, 0.5)])  # "
                        "Probablistic gate with X and ParamRX"}))
@@ -168,7 +168,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
             .arg("prob_gate_list",
                  "list[tuple[float, Union[Gate, ParamGate]]]",
                  "List of tuple of probability and gate")
-            .ret("Gate", "ParamProbablistic gate instance")
+            .ret("ParamGate", "ParamProbablistic gate instance")
             .ex(DocString::Code({">>> gate = ParamProbablistic([(0.1, X(0)), (0.9, I(0))])  # "
                                  "Probablistic gate with X and I"}))
             .build_as_google_style()
