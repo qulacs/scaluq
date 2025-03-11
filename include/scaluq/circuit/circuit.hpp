@@ -191,7 +191,9 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "Apply gate to the StateVectorBatched. StateVectorBatched in args is directly updated. "
             "If the circuit contains parametric gate, you have to give real value of parameter as "
             "\"name=[value1, value2, ...]\" format in kwargs.")
-        .def("copy", &Circuit<Fp>::copy, "Copy circuit. All the gates inside is copied.")
+        .def("copy",
+             &Circuit<Fp>::copy,
+             "Copy circuit. Returns a new circuit instance with all gates copied by reference.")
         .def("get_inverse",
              &Circuit<Fp>::get_inverse,
              "Get inverse of circuit. All the gates are newly created.")

@@ -6,6 +6,10 @@ stub_dir = Path('./stub/scaluq/')
 stub_dir.mkdir(parents=True, exist_ok=True)
 
 subprocess.run([sys.executable, '-m', 'nanobind.stubgen',
+    '-m', 'scaluq.scaluq_core',
+    '-o', './stub/scaluq/__init__.py'])
+
+subprocess.run([sys.executable, '-m', 'nanobind.stubgen',
     '-m', 'scaluq.scaluq_core.f64',
     '-o', './stub/scaluq/f64/__init__.py'])
 
@@ -21,13 +25,18 @@ subprocess.run([sys.executable, '-m', 'nanobind.stubgen',
     '-m', 'scaluq.scaluq_core.f32.gate',
     '-o', './stub/scaluq/f32/gate.py'])
 
-project = 'scaluq'
-copyright = '2024, Fuji Lab.'
-author = 'Fuji Lab.'
-release = '0.0.1'
+files = [
+    "./stub/scaluq/__init__.py",
+    "./stub/scaluq/f64/__init__.py",
+    "./stub/scaluq/f64/gate.py",
+    "./stub/scaluq/f32/__init__.py",
+    "./stub/scaluq/f32/gate.py"
+]
+
+subprocess.run(["sed", "-i", "/@overload/d"] + files, check=True)
 
 extensions = [
-    "sphinx.ext.napoleon",
+    'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
     'sphinx_math_dollar',
     'autoapi.extension',

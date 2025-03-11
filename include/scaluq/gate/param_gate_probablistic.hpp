@@ -111,8 +111,7 @@ void bind_gate_param_gate_probablistic_hpp(nb::module_& m) {
         ParamProbablisticGate,
         Fp,
         "Specific class of parametric probablistic gate. The gate to apply is picked from a "
-        "cirtain "
-        "distribution.")
+        "cirtain distribution.")
         .def(
             "gate_list",
             [](const ParamProbablisticGate<Fp>& gate) { return gate->gate_list(); },

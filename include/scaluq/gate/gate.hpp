@@ -325,11 +325,12 @@ using Gate = internal::GatePtr<internal::GateBase<Fp>>;
 namespace internal {
 #define DEF_GATE_BASE(GATE_TYPE, FLOAT, DESCRIPTION)                                         \
     nb::class_<GATE_TYPE<FLOAT>>(m, #GATE_TYPE, DESCRIPTION)                                 \
+        .def(nb::init<Gate<FLOAT>>(), "Downcast from Gate.")                                 \
         .def("gate_type", &GATE_TYPE<FLOAT>::gate_type, "Get gate type as `GateType` enum.") \
         .def(                                                                                \
             "target_qubit_list",                                                             \
             [](const GATE_TYPE<FLOAT>& gate) { return gate->target_qubit_list(); },          \
-            "Get target qubits as `list[int]`. **Control qubits is not included.**")         \
+            "Get target qubits as `list[int]`. **Control qubits are not included.**")        \
         .def(                                                                                \
             "control_qubit_list",                                                            \
             [](const GATE_TYPE<FLOAT>& gate) { return gate->control_qubit_list(); },         \
@@ -341,7 +342,7 @@ namespace internal {
         .def(                                                                                \
             "target_qubit_mask",                                                             \
             [](const GATE_TYPE<FLOAT>& gate) { return gate->target_qubit_mask(); },          \
-            "Get target qubits as mask. **Control qubits is not included.**")                \
+            "Get target qubits as mask. **Control qubits are not included.**")               \
         .def(                                                                                \
             "control_qubit_mask",                                                            \
             [](const GATE_TYPE<FLOAT>& gate) { return gate->control_qubit_mask(); },         \
@@ -363,8 +364,15 @@ namespace internal {
             [](const GATE_TYPE<FLOAT>& gate, StateVector<FLOAT>& state_vector) {             \
                 gate->update_quantum_state(state_vector);                                    \
             },                                                                               \
-            "state"_a,                                                                       \
+            "state_vector"_a,                                                                \
             "Apply gate to `state_vector`. `state_vector` in args is directly updated.")     \
+        .def(                                                                                \
+            "update_quantum_state",                                                          \
+            [](const GATE_TYPE<FLOAT>& gate, StateVectorBatched<FLOAT>& states) {            \
+                gate->update_quantum_state(states);                                          \
+            },                                                                               \
+            "states"_a,                                                                      \
+            "Apply gate to `states`. `states` in args is directly updated.")                 \
         .def(                                                                                \
             "get_matrix",                                                                    \
             [](const GATE_TYPE<FLOAT>& gate) { return gate->get_matrix(); },                 \

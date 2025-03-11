@@ -159,19 +159,19 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
         "PauliOperator",
         DocString()
             .desc("Pauli operator as coef and tensor product of single pauli for each qubit.")
-            .desc("Given `coef: Complex<Fp>`, Initialize operator which just multiplying coef.")
-            .desc("Given `target_qubit_list: std::vector<std::uint64_t>, pauli_id_list: "
-                  "std::vector<std::uint64_t>, coef: Complex<Fp>`, Initialize pauli operator. For "
+            .desc("Given `coef: complex`, Initialize operator which just multiplying coef.")
+            .desc("Given `target_qubit_list: list[int], pauli_id_list: "
+                  "list[int], coef: complex`, Initialize pauli operator. For "
                   "each `i`, single pauli correspond to `pauli_id_list[i]` is applied to "
                   "`target_qubit_list[i]`-th qubit.")
-            .desc("Given `pauli_string: std::string_view, coef: Complex<Fp>`, Initialize pauli "
+            .desc("Given `pauli_string: str, coef: complex`, Initialize pauli "
                   "operator. For each `i`, single pauli correspond to `pauli_id_list[i]` is "
                   "applied to `target_qubit_list[i]`-th qubit.")
-            .desc("Given `pauli_id_par_qubit: std::vector<std::uint64_t>, coef: Complex<Fp>`, "
+            .desc("Given `pauli_id_par_qubit: list[int], coef: complex`, "
                   "Initialize pauli operator. For each `i`, single pauli correspond to "
                   "`paul_id_per_qubit[i]` is applied to `i`-th qubit.")
-            .desc("Given `bit_flip_mask: std::uint64_t, phase_flip_mask: std::uint64_t, coef: "
-                  "Complex<Fp>`, Initialize pauli operator. For each `i`, single pauli applied to "
+            .desc("Given `bit_flip_mask: int, phase_flip_mask: int, coef: "
+                  "complex`, Initialize pauli operator. For each `i`, single pauli applied to "
                   "`i`-th qubit is "
                   "got "
                   "from `i-th` bit of `bit_flip_mask` and `phase_flip_mask` as follows.\n\n.. "

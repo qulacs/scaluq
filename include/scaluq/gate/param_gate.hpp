@@ -192,6 +192,7 @@ using ParamGate = internal::ParamGatePtr<internal::ParamGateBase<Fp>>;
 namespace internal {
 #define DEF_PARAM_GATE_BASE(PARAM_GATE_TYPE, FLOAT, DESCRIPTION)                                  \
     nb::class_<PARAM_GATE_TYPE<FLOAT>>(m, #PARAM_GATE_TYPE, DESCRIPTION)                          \
+        .def(nb::init<PARAM_GATE_TYPE<FLOAT>>(), "Downcast from ParamGate.")                      \
         .def("param_gate_type",                                                                   \
              &PARAM_GATE_TYPE<FLOAT>::param_gate_type,                                            \
              "Get parametric gate type as `ParamGateType` enum.")                                 \
