@@ -1,2 +1,2 @@
-from ..scaluq_core.f16 import *
+from ...scaluq_core.default.f16 import *
 from . import gate
