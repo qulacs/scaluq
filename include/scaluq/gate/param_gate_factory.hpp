@@ -137,6 +137,8 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
             .c_str());
     mgate.def("ParamProbablistic",
               &gate::ParamProbablistic<Fp>,
+              "distribution"_a,
+              "gate_list"_a,
               DocString()
                   .desc("Generate general :class:`~scaluq.f64.ParamGate` class instance of "
                         ":class:`~scaluq.f64.ParamProbablisticGate`.")
@@ -162,6 +164,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
             }
             return gate::ParamProbablistic<Fp>(distribution, gate_list);
         },
+        "prob_gate_list"_a,
         DocString()
             .desc("Generate general :class:`~scaluq.f64.ParamGate` class instance of "
                   ":class:`~scaluq.f64.ParamProbablisticGate`.")

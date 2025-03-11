@@ -226,7 +226,11 @@ namespace internal {
             "Get target and control qubits as mask.")                                             \
         .def(                                                                                     \
             "get_inverse",                                                                        \
-            [](const PARAM_GATE_TYPE<FLOAT>& param_gate) { return param_gate->get_inverse(); },   \
+            [](const PARAM_GATE_TYPE<FLOAT>& param_gate) {                                        \
+                auto inv = param_gate->get_inverse();                                             \
+                if (!inv) nb::none();                                                             \
+                return ParamGate<FLOAT>(inv);                                                     \
+            },                                                                                    \
             "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.")  \
         .def(                                                                                     \
             "update_quantum_state",                                                               \
