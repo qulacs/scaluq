@@ -53,6 +53,9 @@ public:
 private:
     std::shared_ptr<const Data> _ptr;
 
+    using Triplet = Eigen::Triplet<StdComplex>;
+    [[nodiscard]] std::vector<Triplet> get_matrix_triplets_ignoring_coef() const;
+
 public:
     enum PauliID : std::uint64_t { I, X, Y, Z };
 
@@ -92,7 +95,6 @@ public:
         const StateVector<Prec, Space>& state_vector_ket) const;
 
     [[nodiscard]] internal::ComplexMatrix get_matrix() const;
-
     [[nodiscard]] internal::ComplexMatrix get_matrix_ignoring_coef() const;
 
     [[nodiscard]] PauliOperator operator*(const PauliOperator& target) const;

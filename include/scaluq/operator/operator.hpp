@@ -37,8 +37,7 @@ public:
 
     [[nodiscard]] Operator get_dagger() const;
 
-    // not implemented yet
-    void get_matrix() const;
+    [[nodiscard]] internal::ComplexMatrix get_matrix() const;
 
     void apply_to_state(StateVector<Prec, Space>& state_vector) const;
 
