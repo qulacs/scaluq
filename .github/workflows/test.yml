@@ -90,7 +90,7 @@ jobs:
         if: ${{ matrix.device == 'cpu' }} # currently GPU runner is not supported
         run: |
           if [ "$(uname)" == 'Darwin' ]; then
-            NPROC=$(sysctl -n hw.logicalcpu)
+            NPROC=$(sysctl -n hw.physicalcpu)
           else
             NPROC=$(nproc)
           fi

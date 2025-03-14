@@ -21,36 +21,47 @@ nanobind_add_stub(
     MARKER_FILE scaluq/py.typed
     VERBOSE
 )
-set(FLOATS)
+set(PRECISIONS)
 if(SCALUQ_FLOAT16)
-    list(APPEND FLOATS f16)
+    list(APPEND PRECISIONS f16)
 endif()
 if(SCALUQ_FLOAT32)
-    list(APPEND FLOATS f32)
+    list(APPEND PRECISIONS f32)
 endif()
 if(SCALUQ_FLOAT64)
-    list(APPEND FLOATS f64)
+    list(APPEND PRECISIONS f64)
 endif()
 if(SCALUQ_BFLOAT16)
-    list(APPEND FLOATS bf16)
+    list(APPEND PRECISIONS bf16)
 endif()
-foreach(FLOAT IN LISTS FLOATS)
+foreach(SPACE default host)
     nanobind_add_stub(
         scaluq_stub
         INSTALL_TIME
-        MODULE scaluq.scaluq_core.${FLOAT}
-        OUTPUT scaluq/${FLOAT}/__init__.pyi
+        MODULE scaluq.scaluq_core.${SPACE}
+        OUTPUT scaluq/${SPACE}/__init__.pyi
         PYTHON_PATH $<TARGET_FILE_DIR:scaluq>
         MARKER_FILE scaluq/py.typed
         VERBOSE
     )
-    nanobind_add_stub(
-        scaluq_stub
-        INSTALL_TIME
-        MODULE scaluq.scaluq_core.${FLOAT}.gate
-        OUTPUT scaluq/${FLOAT}/gate/__init__.pyi
-        PYTHON_PATH $<TARGET_FILE_DIR:scaluq>
-        MARKER_FILE scaluq/py.typed
-        VERBOSE
-    )
+    foreach(PRECISION IN LISTS PRECISIONS)
+        nanobind_add_stub(
+            scaluq_stub
+            INSTALL_TIME
+            MODULE scaluq.scaluq_core.${SPACE}.${PRECISION}
+            OUTPUT scaluq/${SPACE}/${PRECISION}/__init__.pyi
+            PYTHON_PATH $<TARGET_FILE_DIR:scaluq>
+            MARKER_FILE scaluq/py.typed
+            VERBOSE
+        )
+        nanobind_add_stub(
+            scaluq_stub
+            INSTALL_TIME
+            MODULE scaluq.scaluq_core.${SPACE}.${PRECISION}.gate
+            OUTPUT scaluq/${SPACE}/${PRECISION}/gate/__init__.pyi
+            PYTHON_PATH $<TARGET_FILE_DIR:scaluq>
+            MARKER_FILE scaluq/py.typed
+            VERBOSE
+        )
+    endforeach()
 endforeach()

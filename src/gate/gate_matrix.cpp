@@ -14,7 +14,7 @@ DenseMatrixGateImpl<Prec, Space>::DenseMatrixGateImpl(std::uint64_t target_mask,
       _is_unitary(is_unitary) {}
 template <Precision Prec, ExecutionSpace Space>
 std::shared_ptr<const GateBase<Prec, Space>> DenseMatrixGateImpl<Prec, Space>::get_inverse() const {
-    ComplexMatrix mat_eigen = convert_internal_matrix_to_external_matrix(_matrix);
+    ComplexMatrix mat_eigen = convert_internal_matrix_to_external_matrix<Prec, Space>(_matrix);
     ComplexMatrix inv_eigen;
     if (_is_unitary) {
         inv_eigen = mat_eigen.adjoint();
@@ -33,7 +33,7 @@ Matrix<Prec, Space> DenseMatrixGateImpl<Prec, Space>::get_matrix_internal() cons
 }
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix DenseMatrixGateImpl<Prec, Space>::get_matrix() const {
-    return convert_internal_matrix_to_external_matrix(_matrix);
+    return convert_internal_matrix_to_external_matrix<Prec, Space>(_matrix);
 }
 template <Precision Prec, ExecutionSpace Space>
 void DenseMatrixGateImpl<Prec, Space>::update_quantum_state(
@@ -73,7 +73,7 @@ Matrix<Prec, Space> SparseMatrixGateImpl<Prec, Space>::get_matrix_internal() con
     Matrix<Prec, Space> ret("return matrix", _matrix._row, _matrix._col);
     auto vec = _matrix._values;
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<Space>(0, vec.size()),
+        Kokkos::RangePolicy<SpaceType<Space>>(0, vec.size()),
         KOKKOS_LAMBDA(int i) { ret(vec[i].r, vec[i].c) = vec[i].val; });
     return ret;
 }

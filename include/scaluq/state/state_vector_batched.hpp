@@ -12,12 +12,10 @@ class StateVectorBatched {
     std::uint64_t _dim;
     using FloatType = internal::Float<Prec>;
     using ComplexType = internal::Complex<Prec>;
-
-    // static_assert(std::is_same_v<Space, HostSpace> || std::is_same_v<Space, DefaultSpace>,
-    //               "Unsupported execution space tag");
+    using ExecutionSpaceType = internal::SpaceType<Space>;
 
 public:
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight, Space> _raw;
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight, ExecutionSpaceType> _raw;
     StateVectorBatched() = default;
     StateVectorBatched(std::uint64_t batch_size, std::uint64_t n_qubits);
     StateVectorBatched(const StateVectorBatched& other) = default;

@@ -94,13 +94,13 @@ void param_circuit_test() {
 
 TYPED_TEST(ParamCircuitTest, ApplyParamCircuit) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     param_circuit_test<Prec, Space>();
 }
 
 TYPED_TEST(ParamCircuitTest, InsufficientParameterGiven) {
     constexpr Precision Prec = TestFixture::Prec;
-    using Space = typename TestFixture::Space;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     {
         Circuit<Prec, Space> circuit(1);
         circuit.add_param_gate(gate::ParamRX<Prec, Space>(0), "0");

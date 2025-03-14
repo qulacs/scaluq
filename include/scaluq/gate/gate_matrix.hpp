@@ -81,12 +81,12 @@ using DenseMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl<Prec, Sp
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
-void bind_gate_gate_matrix_hpp(nb::module_& m) {
-    DEF_GATE(SparseMatrixGate, Prec, Space, "Specific class of sparse matrix gate.")
+void bind_gate_gate_matrix_hpp(nb::module_& m, nb::class_<Gate<Prec, Space>>& gate_base_def) {
+    DEF_GATE(SparseMatrixGate, Prec, Space, "Specific class of sparse matrix gate.", gate_base_def)
         .def("matrix", [](const SparseMatrixGate<Prec, Space>& gate) { return gate->get_matrix(); })
         .def("sparse_matrix",
              [](const SparseMatrixGate<Prec, Space>& gate) { return gate->get_sparse_matrix(); });
-    DEF_GATE(DenseMatrixGate, Prec, Space, "Specific class of dense matrix gate.")
+    DEF_GATE(DenseMatrixGate, Prec, Space, "Specific class of dense matrix gate.", gate_base_def)
         .def("matrix", [](const DenseMatrixGate<Prec, Space>& gate) { return gate->get_matrix(); });
 }
 }  // namespace internal
