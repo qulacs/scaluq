@@ -109,16 +109,17 @@ StdComplex Operator<Prec, Space>::get_expectation_value(
         terms_view,
         coefs_host,
         [](const PauliOperator<Prec, Space>& pauli) { return pauli._ptr->_coef; });
-    Kokkos::View<std::uint64_t*, Space> bmasks("bmasks", nterms);
-    Kokkos::View<std::uint64_t*, Space> pmasks("pmasks", nterms);
-    Kokkos::View<ComplexType*, Space> coefs("coefs", nterms);
+    Kokkos::View<std::uint64_t*, internal::SpaceType<Space>> bmasks("bmasks", nterms);
+    Kokkos::View<std::uint64_t*, internal::SpaceType<Space>> pmasks("pmasks", nterms);
+    Kokkos::View<ComplexType*, internal::SpaceType<Space>> coefs("coefs", nterms);
     Kokkos::deep_copy(bmasks, bmasks_host);
     Kokkos::deep_copy(pmasks, pmasks_host);
     Kokkos::deep_copy(coefs, coefs_host);
     std::uint64_t dim = state_vector.dim();
     ComplexType res;
     Kokkos::parallel_reduce(
-        Kokkos::MDRangePolicy<Space, Kokkos::Rank<2>>({0, 0}, {nterms, dim >> 1}),
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
+                                                                           {nterms, dim >> 1}),
         KOKKOS_LAMBDA(std::uint64_t term_id, std::uint64_t state_idx, ComplexType & res_lcl) {
             std::uint64_t bit_flip_mask = bmasks[term_id];
             std::uint64_t phase_flip_mask = pmasks[term_id];
@@ -187,16 +188,17 @@ StdComplex Operator<Prec, Space>::get_transition_amplitude(
         _terms, coefs_vector.begin(), [](const PauliOperator<Prec, Space>& pauli) {
             return pauli._ptr->_coef;
         });
-    Kokkos::View<std::uint64_t*, Space> bmasks =
+    Kokkos::View<std::uint64_t*, internal::SpaceType<Space>> bmasks =
         internal::convert_vector_to_view<std::uint64_t, Space>(bmasks_vector);
-    Kokkos::View<std::uint64_t*, Space> pmasks =
+    Kokkos::View<std::uint64_t*, internal::SpaceType<Space>> pmasks =
         internal::convert_vector_to_view<std::uint64_t, Space>(pmasks_vector);
-    Kokkos::View<ComplexType*, Space> coefs =
+    Kokkos::View<ComplexType*, internal::SpaceType<Space>> coefs =
         internal::convert_vector_to_view<ComplexType, Space>(coefs_vector);
     std::uint64_t dim = state_vector_bra.dim();
     ComplexType res;
     Kokkos::parallel_reduce(
-        Kokkos::MDRangePolicy<Space, Kokkos::Rank<2>>({0, 0}, {nterms, dim >> 1}),
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
+                                                                           {nterms, dim >> 1}),
         KOKKOS_LAMBDA(std::uint64_t term_id, std::uint64_t state_idx, ComplexType & res_lcl) {
             std::uint64_t bit_flip_mask = bmasks[term_id];
             std::uint64_t phase_flip_mask = pmasks[term_id];

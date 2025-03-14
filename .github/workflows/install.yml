@@ -162,6 +162,6 @@ jobs:
       - name: Run / Test stub
         if: ${{ matrix.device == 'cpu' }} # currently GPU runner is not supported
         run: |
-          echo -e "from scaluq.f64 import StateVector, gate\nstate = StateVector(2)\nx = gate.X(0)\nx.update_quantum_state(state)\nprint(state.get_amplitudes())" > /tmp/sample.py
+          echo -e "from scaluq.default.f64 import StateVector, gate\nstate = StateVector(2)\nx = gate.X(0)\nx.update_quantum_state(state)\nprint(state.get_amplitudes())" > /tmp/sample.py
           python /tmp/sample.py
           python -m mypy /tmp/sample.py

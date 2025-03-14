@@ -32,9 +32,9 @@ inline void check_near(const StdComplex& a, const StdComplex& b) {
     ASSERT_LE(std::abs(a - b), eps<Prec>);
 }
 
-template <Precision Prec>
-inline bool same_state(const StateVector<Prec>& s1,
-                       const StateVector<Prec>& s2,
+template <Precision Prec, ExecutionSpace Space>
+inline bool same_state(const StateVector<Prec, Space>& s1,
+                       const StateVector<Prec, Space>& s2,
                        const double e = eps<Prec>) {
     auto s1_cp = s1.get_amplitudes();
     auto s2_cp = s2.get_amplitudes();
@@ -45,9 +45,9 @@ inline bool same_state(const StateVector<Prec>& s1,
     return true;
 };
 
-template <Precision Prec>
-inline bool same_state_except_global_phase(const StateVector<Prec>& s1,
-                                           const StateVector<Prec>& s2,
+template <Precision Prec, ExecutionSpace Space>
+inline bool same_state_except_global_phase(const StateVector<Prec, Space>& s1,
+                                           const StateVector<Prec, Space>& s2,
                                            const double e = eps<Prec>) {
     auto s1_cp = s1.get_amplitudes();
     auto s2_cp = s2.get_amplitudes();

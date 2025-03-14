@@ -54,68 +54,68 @@
     SCALUQ_DECLARE_CLASS_BFLOAT16(Class)
 
 #ifdef SCALUQ_FLOAT16
-#define SCALUQ_CALL_MACRO_FLOAT16_AND_EXECUTION_SPACE(MACRO) \
-    MACRO(::scaluq::Precision::F16, ::scaluq::HostSpace)     \
-    MACRO(::scaluq::Precision::F16, ::scaluq::DefaultSpace)
-#define SCALUQ_CALL_MACRO_TYPES_FLOAT16_AND_EXECUTION_SPACE(MACRO)                    \
-    MACRO(::scaluq::internal::F16, ::scaluq::HostSpace)                               \
-    MACRO(::scaluq::internal::F16, ::scaluq::DefaultSpace)                            \
-    MACRO(::scaluq::internal::Complex<::scaluq::Precision::F16>, ::scaluq::HostSpace) \
-    MACRO(::scaluq::internal::Complex<::scaluq::Precision::F16>, ::scaluq::DefaultSpace)
-#define SCALUQ_DECLARE_CLASS_FLOAT16_AND_EXECUTION_SPACE(Class)          \
-    template class Class<::scaluq::Precision::F16, ::scaluq::HostSpace>; \
-    template class Class<::scaluq::Precision::F16, ::scaluq::DefaultSpace>;
+#define SCALUQ_CALL_MACRO_FLOAT16_AND_EXECUTION_SPACE(MACRO)        \
+    MACRO(::scaluq::Precision::F16, ::scaluq::ExecutionSpace::Host) \
+    MACRO(::scaluq::Precision::F16, ::scaluq::ExecutionSpace::Default)
+#define SCALUQ_CALL_MACRO_TYPES_FLOAT16_AND_EXECUTION_SPACE(MACRO)                               \
+    MACRO(::scaluq::internal::F16, ::scaluq::ExecutionSpace::Host)                               \
+    MACRO(::scaluq::internal::F16, ::scaluq::ExecutionSpace::Default)                            \
+    MACRO(::scaluq::internal::Complex<::scaluq::Precision::F16>, ::scaluq::ExecutionSpace::Host) \
+    MACRO(::scaluq::internal::Complex<::scaluq::Precision::F16>, ::scaluq::ExecutionSpace::Default)
+#define SCALUQ_DECLARE_CLASS_FLOAT16_AND_EXECUTION_SPACE(Class)                     \
+    template class Class<::scaluq::Precision::F16, ::scaluq::ExecutionSpace::Host>; \
+    template class Class<::scaluq::Precision::F16, ::scaluq::ExecutionSpace::Default>;
 #else
 #define SCALUQ_CALL_MACRO_FLOAT16_AND_EXECUTION_SPACE(MACRO)
 #define SCALUQ_CALL_MACRO_TYPES_FLOAT16_AND_EXECUTION_SPACE(MACRO)
 #define SCALUQ_DECLARE_CLASS_FLOAT16_AND_EXECUTION_SPACE(Class)
 #endif
 #ifdef SCALUQ_FLOAT32
-#define SCALUQ_CALL_MACRO_FLOAT32_AND_EXECUTION_SPACE(MACRO) \
-    MACRO(::scaluq::Precision::F32, ::scaluq::HostSpace)     \
-    MACRO(::scaluq::Precision::F32, ::scaluq::DefaultSpace)
-#define SCALUQ_CALL_MACRO_TYPES_FLOAT32_AND_EXECUTION_SPACE(MACRO)                    \
-    MACRO(::scaluq::internal::F32, ::scaluq::HostSpace)                               \
-    MACRO(::scaluq::internal::F32, ::scaluq::DefaultSpace)                            \
-    MACRO(::scaluq::internal::Complex<::scaluq::Precision::F32>, ::scaluq::HostSpace) \
-    MACRO(::scaluq::internal::Complex<::scaluq::Precision::F32>, ::scaluq::DefaultSpace)
-#define SCALUQ_DECLARE_CLASS_FLOAT32_AND_EXECUTION_SPACE(Class)          \
-    template class Class<::scaluq::Precision::F32, ::scaluq::HostSpace>; \
-    template class Class<::scaluq::Precision::F32, ::scaluq::DefaultSpace>;
+#define SCALUQ_CALL_MACRO_FLOAT32_AND_EXECUTION_SPACE(MACRO)        \
+    MACRO(::scaluq::Precision::F32, ::scaluq::ExecutionSpace::Host) \
+    MACRO(::scaluq::Precision::F32, ::scaluq::ExecutionSpace::Default)
+#define SCALUQ_CALL_MACRO_TYPES_FLOAT32_AND_EXECUTION_SPACE(MACRO)                               \
+    MACRO(::scaluq::internal::F32, ::scaluq::ExecutionSpace::Host)                               \
+    MACRO(::scaluq::internal::F32, ::scaluq::ExecutionSpace::Default)                            \
+    MACRO(::scaluq::internal::Complex<::scaluq::Precision::F32>, ::scaluq::ExecutionSpace::Host) \
+    MACRO(::scaluq::internal::Complex<::scaluq::Precision::F32>, ::scaluq::ExecutionSpace::Default)
+#define SCALUQ_DECLARE_CLASS_FLOAT32_AND_EXECUTION_SPACE(Class)                     \
+    template class Class<::scaluq::Precision::F32, ::scaluq::ExecutionSpace::Host>; \
+    template class Class<::scaluq::Precision::F32, ::scaluq::ExecutionSpace::Default>;
 #else
 #define SCALUQ_CALL_MACRO_FLOAT32_AND_EXECUTION_SPACE(MACRO)
 #define SCALUQ_CALL_MACRO_TYPES_FLOAT32_AND_EXECUTION_SPACE(MACRO)
 #define SCALUQ_DECLARE_CLASS_FLOAT32_AND_EXECUTION_SPACE(Class)
 #endif
 #ifdef SCALUQ_FLOAT64
-#define SCALUQ_CALL_MACRO_FLOAT64_AND_EXECUTION_SPACE(MACRO) \
-    MACRO(::scaluq::Precision::F64, ::scaluq::HostSpace)     \
-    MACRO(::scaluq::Precision::F64, ::scaluq::DefaultSpace)
-#define SCALUQ_CALL_MACRO_TYPES_FLOAT64_AND_EXECUTION_SPACE(MACRO)                    \
-    MACRO(::scaluq::internal::F64, ::scaluq::HostSpace)                               \
-    MACRO(::scaluq::internal::F64, ::scaluq::DefaultSpace)                            \
-    MACRO(::scaluq::internal::Complex<::scaluq::Precision::F64>, ::scaluq::HostSpace) \
-    MACRO(::scaluq::internal::Complex<::scaluq::Precision::F64>, ::scaluq::DefaultSpace)
-#define SCALUQ_DECLARE_CLASS_FLOAT64_AND_EXECUTION_SPACE(Class)          \
-    template class Class<::scaluq::Precision::F64, ::scaluq::HostSpace>; \
-    template class Class<::scaluq::Precision::F64, ::scaluq::DefaultSpace>;
+#define SCALUQ_CALL_MACRO_FLOAT64_AND_EXECUTION_SPACE(MACRO)        \
+    MACRO(::scaluq::Precision::F64, ::scaluq::ExecutionSpace::Host) \
+    MACRO(::scaluq::Precision::F64, ::scaluq::ExecutionSpace::Default)
+#define SCALUQ_CALL_MACRO_TYPES_FLOAT64_AND_EXECUTION_SPACE(MACRO)                               \
+    MACRO(::scaluq::internal::F64, ::scaluq::ExecutionSpace::Host)                               \
+    MACRO(::scaluq::internal::F64, ::scaluq::ExecutionSpace::Default)                            \
+    MACRO(::scaluq::internal::Complex<::scaluq::Precision::F64>, ::scaluq::ExecutionSpace::Host) \
+    MACRO(::scaluq::internal::Complex<::scaluq::Precision::F64>, ::scaluq::ExecutionSpace::Default)
+#define SCALUQ_DECLARE_CLASS_FLOAT64_AND_EXECUTION_SPACE(Class)                     \
+    template class Class<::scaluq::Precision::F64, ::scaluq::ExecutionSpace::Host>; \
+    template class Class<::scaluq::Precision::F64, ::scaluq::ExecutionSpace::Default>;
 #else
 #define SCALUQ_CALL_MACRO_FLOAT64_AND_EXECUTION_SPACE(MACRO)
 #define SCALUQ_CALL_MACRO_TYPES_FLOAT64_AND_EXECUTION_SPACE(MACRO)
 #define SCALUQ_DECLARE_CLASS_FLOAT64_AND_EXECUTION_SPACE(Class)
 #endif
 #ifdef SCALUQ_BFLOAT16
-#define SCALUQ_CALL_MACRO_BFLOAT16_AND_EXECUTION_SPACE(MACRO) \
-    MACRO(::scaluq::Precision::BF16, ::scaluq::HostSpace)     \
-    MACRO(::scaluq::Precision::BF16, ::scaluq::DefaultSpace)
-#define SCALUQ_CALL_MACRO_TYPES_BFLOAT16_AND_EXECUTION_SPACE(MACRO)                    \
-    MACRO(::scaluq::internal::BF16, ::scaluq::HostSpace)                               \
-    MACRO(::scaluq::internal::BF16, ::scaluq::DefaultSpace)                            \
-    MACRO(::scaluq::internal::Complex<::scaluq::Precision::BF16>, ::scaluq::HostSpace) \
-    MACRO(::scaluq::internal::Complex<::scaluq::Precision::BF16>, ::scaluq::DefaultSpace)
-#define SCALUQ_DECLARE_CLASS_BFLOAT16_AND_EXECUTION_SPACE(Class)          \
-    template class Class<::scaluq::Precision::BF16, ::scaluq::HostSpace>; \
-    template class Class<::scaluq::Precision::BF16, ::scaluq::DefaultSpace>;
+#define SCALUQ_CALL_MACRO_BFLOAT16_AND_EXECUTION_SPACE(MACRO)        \
+    MACRO(::scaluq::Precision::BF16, ::scaluq::ExecutionSpace::Host) \
+    MACRO(::scaluq::Precision::BF16, ::scaluq::ExecutionSpace::Default)
+#define SCALUQ_CALL_MACRO_TYPES_BFLOAT16_AND_EXECUTION_SPACE(MACRO)                               \
+    MACRO(::scaluq::internal::BF16, ::scaluq::ExecutionSpace::Host)                               \
+    MACRO(::scaluq::internal::BF16, ::scaluq::ExecutionSpace::Default)                            \
+    MACRO(::scaluq::internal::Complex<::scaluq::Precision::BF16>, ::scaluq::ExecutionSpace::Host) \
+    MACRO(::scaluq::internal::Complex<::scaluq::Precision::BF16>, ::scaluq::ExecutionSpace::Default)
+#define SCALUQ_DECLARE_CLASS_BFLOAT16_AND_EXECUTION_SPACE(Class)                     \
+    template class Class<::scaluq::Precision::BF16, ::scaluq::ExecutionSpace::Host>; \
+    template class Class<::scaluq::Precision::BF16, ::scaluq::ExecutionSpace::Default>;
 #else
 #define SCALUQ_CALL_MACRO_BFLOAT16_AND_EXECUTION_SPACE(MACRO)
 #define SCALUQ_CALL_MACRO_TYPES_BFLOAT16_AND_EXECUTION_SPACE(MACRO)
@@ -151,32 +151,32 @@
     SCALUQ_CALL_MACRO_TYPES_FLOAT32_AND_EXECUTION_SPACE(MACRO)  \
     SCALUQ_CALL_MACRO_TYPES_FLOAT64_AND_EXECUTION_SPACE(MACRO)  \
     SCALUQ_CALL_MACRO_TYPES_BFLOAT16_AND_EXECUTION_SPACE(MACRO) \
-    MACRO(std::uint8_t, DefaultSpace)                           \
-    MACRO(std::uint8_t, HostSpace)                              \
-    MACRO(std::uint16_t, DefaultSpace)                          \
-    MACRO(std::uint16_t, HostSpace)                             \
-    MACRO(std::uint32_t, DefaultSpace)                          \
-    MACRO(std::uint32_t, HostSpace)                             \
-    MACRO(std::uint64_t, DefaultSpace)                          \
-    MACRO(std::uint64_t, HostSpace)                             \
-    MACRO(::scaluq::StdComplex, DefaultSpace)                   \
-    MACRO(::scaluq::StdComplex, HostSpace)
+    MACRO(std::uint8_t, ExecutionSpace::Default)                \
+    MACRO(std::uint8_t, ExecutionSpace::Host)                   \
+    MACRO(std::uint16_t, ExecutionSpace::Default)               \
+    MACRO(std::uint16_t, ExecutionSpace::Host)                  \
+    MACRO(std::uint32_t, ExecutionSpace::Default)               \
+    MACRO(std::uint32_t, ExecutionSpace::Host)                  \
+    MACRO(std::uint64_t, ExecutionSpace::Default)               \
+    MACRO(std::uint64_t, ExecutionSpace::Host)                  \
+    MACRO(::scaluq::StdComplex, ExecutionSpace::Default)        \
+    MACRO(::scaluq::StdComplex, ExecutionSpace::Host)
 #else
 #define SCALUQ_CALL_MACRO_FOR_TYPES_AND_EXECUTION_SPACE(MACRO)  \
     SCALUQ_CALL_MACRO_TYPES_FLOAT16_AND_EXECUTION_SPACE(MACRO)  \
     SCALUQ_CALL_MACRO_TYPES_FLOAT32_AND_EXECUTION_SPACE(MACRO)  \
     SCALUQ_CALL_MACRO_TYPES_FLOAT64_AND_EXECUTION_SPACE(MACRO)  \
     SCALUQ_CALL_MACRO_TYPES_BFLOAT16_AND_EXECUTION_SPACE(MACRO) \
-    MACRO(std::uint8_t, DefaultSpace)                           \
-    MACRO(std::uint8_t, HostSpace)                              \
-    MACRO(std::uint16_t, DefaultSpace)                          \
-    MACRO(std::uint16_t, HostSpace)                             \
-    MACRO(std::uint32_t, DefaultSpace)                          \
-    MACRO(std::uint32_t, HostSpace)                             \
-    MACRO(std::uint64_t, DefaultSpace)                          \
-    MACRO(std::uint64_t, HostSpace)                             \
-    MACRO(double, DefaultSpace)                                 \
-    MACRO(double, HostSpace)                                    \
-    MACRO(::scaluq::StdComplex, DefaultSpace)                   \
-    MACRO(::scaluq::StdComplex, HostSpace)
+    MACRO(std::uint8_t, ExecutionSpace::Default)                \
+    MACRO(std::uint8_t, ExecutionSpace::Host)                   \
+    MACRO(std::uint16_t, ExecutionSpace::Default)               \
+    MACRO(std::uint16_t, ExecutionSpace::Host)                  \
+    MACRO(std::uint32_t, ExecutionSpace::Default)               \
+    MACRO(std::uint32_t, ExecutionSpace::Host)                  \
+    MACRO(std::uint64_t, ExecutionSpace::Default)               \
+    MACRO(std::uint64_t, ExecutionSpace::Host)                  \
+    MACRO(double, ExecutionSpace::Default)                      \
+    MACRO(double, ExecutionSpace::Host)                         \
+    MACRO(::scaluq::StdComplex, ExecutionSpace::Default)        \
+    MACRO(::scaluq::StdComplex, ExecutionSpace::Host)
 #endif

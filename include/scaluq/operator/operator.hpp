@@ -111,19 +111,25 @@ void bind_operator_operator_hpp(nb::module_& m) {
         .def(nb::init<std::uint64_t>(),
              "qubit_count"_a,
              "Initialize operator with specified number of qubits.")
-        .def("is_hermitian", &Operator<Prec>::is_hermitian, "Check if the operator is Hermitian.")
-        .def(
-            "n_qubits", &Operator<Prec>::n_qubits, "Get the number of qubits the operator acts on.")
+        .def("is_hermitian",
+             &Operator<Prec, Space>::is_hermitian,
+             "Check if the operator is Hermitian.")
+        .def("n_qubits",
+             &Operator<Prec, Space>::n_qubits,
+             "Get the number of qubits the operator acts on.")
         .def("terms",
-             &Operator<Prec>::terms,
+             &Operator<Prec, Space>::terms,
              "Get the list of Pauli terms that make up the operator.")
-        .def("to_string", &Operator<Prec>::to_string, "Get string representation of the operator.")
+        .def("to_string",
+             &Operator<Prec, Space>::to_string,
+             "Get string representation of the operator.")
         .def("add_operator",
-             nb::overload_cast<const PauliOperator<Prec>&>(&Operator<Prec>::add_operator),
+             nb::overload_cast<const PauliOperator<Prec, Space>&>(
+                 &Operator<Prec, Space>::add_operator),
              "Add a Pauli operator to this operator.")
         .def(
             "add_random_operator",
-            [](Operator<Prec>& op,
+            [](Operator<Prec, Space>& op,
                std::uint64_t operator_count,
                std::optional<std::uint64_t> seed) {
                 return op.add_random_operator(operator_count,

@@ -13,21 +13,38 @@ class TestEnvironment : public ::testing::Environment {
 inline auto kokkos_environment_this_variable_is_not_used =
     testing::AddGlobalTestEnvironment(new TestEnvironment());
 
-struct F16Test {
-    constexpr static Precision Prec = Precision::F16;
-    static std::string name() { return "F16"; }
+template <Precision _Prec, ExecutionSpace _Space>
+struct TestType {
+    constexpr static Precision Prec = _Prec;
+    constexpr static ExecutionSpace Space = _Space;
+    static std::string name() {
+        std::string ret;
+        if constexpr (Prec == Precision::F16)
+            ret += "F16";
+        else if constexpr (Prec == Precision::F32)
+            ret += "F32";
+        else if constexpr (Prec == Precision::F64)
+            ret += "F64";
+        else if constexpr (Prec == Precision::BF16)
+            ret += "BF16";
+
+        if constexpr (Space == ExecutionSpace::Host)
+            ret += "HostSpace";
+        else if constexpr (Space == ExecutionSpace::Default)
+            ret += "DefaultSpace";
+        return ret;
+    }
 };
-struct F32Test {
-    constexpr static Precision Prec = Precision::F32;
-    static std::string name() { return "F32"; }
-};
-struct F64Test {
-    constexpr static Precision Prec = Precision::F64;
-    static std::string name() { return "F64"; }
-};
-struct BF16Test {
-    constexpr static Precision Prec = Precision::BF16;
-    static std::string name() { return "BF16"; }
+
+template <Precision Prec, typename... Types>
+struct AddPrecision {
+    using Type =
+        std::conditional_t<std::is_same_v<internal::SpaceType<ExecutionSpace::Host>,
+                                          internal::SpaceType<ExecutionSpace::Default>>,
+                           ::testing::Types<TestType<Prec, ExecutionSpace::Host>, Types...>,
+                           ::testing::Types<TestType<Prec, ExecutionSpace::Host>,
+                                            TestType<Prec, ExecutionSpace::Default>,
+                                            Types...>>;
 };
 
 template <typename List>
@@ -37,7 +54,7 @@ struct AddF16 {
 #ifdef SCALUQ_FLOAT16
 template <typename... Types>
 struct AddF16<::testing::Types<Types...>> {
-    using Type = ::testing::Types<F16Test, Types...>;
+    using Type = typename AddPrecision<Precision::F16, Types...>::Type;
 };
 #endif
 template <typename List>
@@ -47,7 +64,7 @@ struct AddF32 {
 #ifdef SCALUQ_FLOAT32
 template <typename... Types>
 struct AddF32<::testing::Types<Types...>> {
-    using Type = ::testing::Types<F32Test, Types...>;
+    using Type = typename AddPrecision<Precision::F32, Types...>::Type;
 };
 #endif
 template <typename List>
@@ -57,7 +74,7 @@ struct AddF64 {
 #ifdef SCALUQ_FLOAT64
 template <typename... Types>
 struct AddF64<::testing::Types<Types...>> {
-    using Type = ::testing::Types<F64Test, Types...>;
+    using Type = typename AddPrecision<Precision::F64, Types...>::Type;
 };
 #endif
 template <typename List>
@@ -67,7 +84,7 @@ struct AddBF16 {
 #ifdef SCALUQ_BFLOAT16
 template <typename... Types>
 struct AddBF16<::testing::Types<Types...>> {
-    using Type = ::testing::Types<BF16Test, Types...>;
+    using Type = typename AddPrecision<Precision::BF16, Types...>::Type;
 };
 #endif
 using TestTypes = AddF16<AddF32<AddF64<AddBF16<::testing::Types<>>::Type>::Type>::Type>::Type;
@@ -82,5 +99,6 @@ template <typename T>
 class FixtureBase : public ::testing::Test {
 public:
     constexpr static Precision Prec = T::Prec;
+    constexpr static ExecutionSpace Space = T::Space;
 };
 }  // namespace scaluq
