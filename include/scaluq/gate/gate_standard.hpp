@@ -6,42 +6,43 @@
 namespace scaluq {
 namespace internal {
 
-template <Precision Prec>
-class IGateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class IGateImpl : public GateBase<Prec, Space> {
 public:
-    IGateImpl() : GateBase<Prec>(0, 0) {}
+    IGateImpl() : GateBase<Prec, Space>(0, 0) {}
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
         return this->shared_from_this();
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
     void get_as_json(Json& j) const override { j = Json{{"type", "I"}}; }
 };
 
-template <Precision Prec>
-class GlobalPhaseGateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class GlobalPhaseGateImpl : public GateBase<Prec, Space> {
 protected:
     Float<Prec> _phase;
 
 public:
     GlobalPhaseGateImpl(std::uint64_t control_mask, Float<Prec> phase)
-        : GateBase<Prec>(0, control_mask), _phase(phase){};
+        : GateBase<Prec, Space>(0, control_mask), _phase(phase){};
 
     [[nodiscard]] double phase() const { return _phase; }
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const GlobalPhaseGateImpl<Prec>>(this->_control_mask, -_phase);
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const GlobalPhaseGateImpl<Prec, Space>>(this->_control_mask,
+                                                                        -_phase);
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -53,30 +54,30 @@ public:
     }
 };
 
-template <Precision Prec>
-class RotationGateBase : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class RotationGateBase : public GateBase<Prec, Space> {
 protected:
     Float<Prec> _angle;
 
 public:
     RotationGateBase(std::uint64_t target_mask, std::uint64_t control_mask, Float<Prec> angle)
-        : GateBase<Prec>(target_mask, control_mask), _angle(angle) {}
+        : GateBase<Prec, Space>(target_mask, control_mask), _angle(angle) {}
 
     double angle() const { return _angle; }
 };
 
-template <Precision Prec>
-class XGateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class XGateImpl : public GateBase<Prec, Space> {
 public:
-    using GateBase<Prec>::GateBase;
+    using GateBase<Prec, Space>::GateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
         return this->shared_from_this();
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -87,18 +88,18 @@ public:
     }
 };
 
-template <Precision Prec>
-class YGateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class YGateImpl : public GateBase<Prec, Space> {
 public:
-    using GateBase<Prec>::GateBase;
+    using GateBase<Prec, Space>::GateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
         return this->shared_from_this();
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -109,18 +110,18 @@ public:
     }
 };
 
-template <Precision Prec>
-class ZGateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class ZGateImpl : public GateBase<Prec, Space> {
 public:
-    using GateBase<Prec>::GateBase;
+    using GateBase<Prec, Space>::GateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
         return this->shared_from_this();
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -131,18 +132,18 @@ public:
     }
 };
 
-template <Precision Prec>
-class HGateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class HGateImpl : public GateBase<Prec, Space> {
 public:
-    using GateBase<Prec>::GateBase;
+    using GateBase<Prec, Space>::GateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
         return this->shared_from_this();
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -153,35 +154,36 @@ public:
     }
 };
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 class SGateImpl;
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 class SdagGateImpl;
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 class TGateImpl;
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 class TdagGateImpl;
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 class SqrtXGateImpl;
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 class SqrtXdagGateImpl;
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 class SqrtYGateImpl;
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 class SqrtYdagGateImpl;
 
-template <Precision Prec>
-class SGateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class SGateImpl : public GateBase<Prec, Space> {
 public:
-    using GateBase<Prec>::GateBase;
+    using GateBase<Prec, Space>::GateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const SdagGateImpl<Prec>>(this->_target_mask, this->_control_mask);
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const SdagGateImpl<Prec, Space>>(this->_target_mask,
+                                                                 this->_control_mask);
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -192,18 +194,19 @@ public:
     }
 };
 
-template <Precision Prec>
-class SdagGateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class SdagGateImpl : public GateBase<Prec, Space> {
 public:
-    using GateBase<Prec>::GateBase;
+    using GateBase<Prec, Space>::GateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const SGateImpl<Prec>>(this->_target_mask, this->_control_mask);
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const SGateImpl<Prec, Space>>(this->_target_mask,
+                                                              this->_control_mask);
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -214,18 +217,19 @@ public:
     }
 };
 
-template <Precision Prec>
-class TGateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class TGateImpl : public GateBase<Prec, Space> {
 public:
-    using GateBase<Prec>::GateBase;
+    using GateBase<Prec, Space>::GateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const TdagGateImpl<Prec>>(this->_target_mask, this->_control_mask);
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const TdagGateImpl<Prec, Space>>(this->_target_mask,
+                                                                 this->_control_mask);
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -236,18 +240,19 @@ public:
     }
 };
 
-template <Precision Prec>
-class TdagGateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class TdagGateImpl : public GateBase<Prec, Space> {
 public:
-    using GateBase<Prec>::GateBase;
+    using GateBase<Prec, Space>::GateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const TGateImpl<Prec>>(this->_target_mask, this->_control_mask);
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const TGateImpl<Prec, Space>>(this->_target_mask,
+                                                              this->_control_mask);
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -258,20 +263,20 @@ public:
     }
 };
 
-template <Precision Prec>
-class SqrtXGateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class SqrtXGateImpl : public GateBase<Prec, Space> {
 public:
-    using GateBase<Prec>::GateBase;
+    using GateBase<Prec, Space>::GateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const SqrtXdagGateImpl<Prec>>(this->_target_mask,
-                                                              this->_control_mask);
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const SqrtXdagGateImpl<Prec, Space>>(this->_target_mask,
+                                                                     this->_control_mask);
     }
 
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -282,18 +287,19 @@ public:
     }
 };
 
-template <Precision Prec>
-class SqrtXdagGateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class SqrtXdagGateImpl : public GateBase<Prec, Space> {
 public:
-    using GateBase<Prec>::GateBase;
+    using GateBase<Prec, Space>::GateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const SqrtXGateImpl<Prec>>(this->_target_mask, this->_control_mask);
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const SqrtXGateImpl<Prec, Space>>(this->_target_mask,
+                                                                  this->_control_mask);
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -304,20 +310,20 @@ public:
     }
 };
 
-template <Precision Prec>
-class SqrtYGateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class SqrtYGateImpl : public GateBase<Prec, Space> {
 public:
-    using GateBase<Prec>::GateBase;
+    using GateBase<Prec, Space>::GateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const SqrtYdagGateImpl<Prec>>(this->_target_mask,
-                                                              this->_control_mask);
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const SqrtYdagGateImpl<Prec, Space>>(this->_target_mask,
+                                                                     this->_control_mask);
     }
 
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -328,18 +334,19 @@ public:
     }
 };
 
-template <Precision Prec>
-class SqrtYdagGateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class SqrtYdagGateImpl : public GateBase<Prec, Space> {
 public:
-    using GateBase<Prec>::GateBase;
+    using GateBase<Prec, Space>::GateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const SqrtYGateImpl<Prec>>(this->_target_mask, this->_control_mask);
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const SqrtYGateImpl<Prec, Space>>(this->_target_mask,
+                                                                  this->_control_mask);
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -350,18 +357,18 @@ public:
     }
 };
 
-template <Precision Prec>
-class P0GateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class P0GateImpl : public GateBase<Prec, Space> {
 public:
-    using GateBase<Prec>::GateBase;
+    using GateBase<Prec, Space>::GateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
         throw std::runtime_error("P0::get_inverse: Projection gate doesn't have inverse gate");
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -372,18 +379,18 @@ public:
     }
 };
 
-template <Precision Prec>
-class P1GateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class P1GateImpl : public GateBase<Prec, Space> {
 public:
-    using GateBase<Prec>::GateBase;
+    using GateBase<Prec, Space>::GateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
         throw std::runtime_error("P1::get_inverse: Projection gate doesn't have inverse gate");
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -394,19 +401,19 @@ public:
     }
 };
 
-template <Precision Prec>
-class RXGateImpl : public RotationGateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class RXGateImpl : public RotationGateBase<Prec, Space> {
 public:
-    using RotationGateBase<Prec>::RotationGateBase;
+    using RotationGateBase<Prec, Space>::RotationGateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const RXGateImpl<Prec>>(
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const RXGateImpl<Prec, Space>>(
             this->_target_mask, this->_control_mask, -this->_angle);
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -418,19 +425,19 @@ public:
     }
 };
 
-template <Precision Prec>
-class RYGateImpl : public RotationGateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class RYGateImpl : public RotationGateBase<Prec, Space> {
 public:
-    using RotationGateBase<Prec>::RotationGateBase;
+    using RotationGateBase<Prec, Space>::RotationGateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const RYGateImpl<Prec>>(
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const RYGateImpl<Prec, Space>>(
             this->_target_mask, this->_control_mask, -this->_angle);
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -442,19 +449,19 @@ public:
     }
 };
 
-template <Precision Prec>
-class RZGateImpl : public RotationGateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class RZGateImpl : public RotationGateBase<Prec, Space> {
 public:
-    using RotationGateBase<Prec>::RotationGateBase;
+    using RotationGateBase<Prec, Space>::RotationGateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const RZGateImpl<Prec>>(
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const RZGateImpl<Prec, Space>>(
             this->_target_mask, this->_control_mask, -this->_angle);
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -466,24 +473,24 @@ public:
     }
 };
 
-template <Precision Prec>
-class U1GateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class U1GateImpl : public GateBase<Prec, Space> {
     Float<Prec> _lambda;
 
 public:
     U1GateImpl(std::uint64_t target_mask, std::uint64_t control_mask, Float<Prec> lambda)
-        : GateBase<Prec>(target_mask, control_mask), _lambda(lambda) {}
+        : GateBase<Prec, Space>(target_mask, control_mask), _lambda(lambda) {}
 
     double lambda() const { return _lambda; }
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const U1GateImpl<Prec>>(
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const U1GateImpl<Prec, Space>>(
             this->_target_mask, this->_control_mask, -_lambda);
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -494,8 +501,8 @@ public:
                  {"lambda", this->lambda()}};
     }
 };
-template <Precision Prec>
-class U2GateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class U2GateImpl : public GateBase<Prec, Space> {
     Float<Prec> _phi, _lambda;
 
 public:
@@ -503,13 +510,13 @@ public:
                std::uint64_t control_mask,
                Float<Prec> phi,
                Float<Prec> lambda)
-        : GateBase<Prec>(target_mask, control_mask), _phi(phi), _lambda(lambda) {}
+        : GateBase<Prec, Space>(target_mask, control_mask), _phi(phi), _lambda(lambda) {}
 
     double phi() const { return _phi; }
     double lambda() const { return _lambda; }
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const U2GateImpl<Prec>>(
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const U2GateImpl<Prec, Space>>(
             this->_target_mask,
             this->_control_mask,
             -_lambda - static_cast<Float<Prec>>(Kokkos::numbers::pi),
@@ -517,8 +524,8 @@ public:
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -531,8 +538,8 @@ public:
     }
 };
 
-template <Precision Prec>
-class U3GateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class U3GateImpl : public GateBase<Prec, Space> {
     Float<Prec> _theta, _phi, _lambda;
 
 public:
@@ -541,20 +548,23 @@ public:
                Float<Prec> theta,
                Float<Prec> phi,
                Float<Prec> lambda)
-        : GateBase<Prec>(target_mask, control_mask), _theta(theta), _phi(phi), _lambda(lambda) {}
+        : GateBase<Prec, Space>(target_mask, control_mask),
+          _theta(theta),
+          _phi(phi),
+          _lambda(lambda) {}
 
     double theta() const { return _theta; }
     double phi() const { return _phi; }
     double lambda() const { return _lambda; }
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return std::make_shared<const U3GateImpl<Prec>>(
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
+        return std::make_shared<const U3GateImpl<Prec, Space>>(
             this->_target_mask, this->_control_mask, -_theta, -_lambda, -_phi);
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -568,18 +578,18 @@ public:
     }
 };
 
-template <Precision Prec>
-class SwapGateImpl : public GateBase<Prec> {
+template <Precision Prec, ExecutionSpace Space>
+class SwapGateImpl : public GateBase<Prec, Space> {
 public:
-    using GateBase<Prec>::GateBase;
+    using GateBase<Prec, Space>::GateBase;
 
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
         return this->shared_from_this();
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -592,340 +602,472 @@ public:
 
 }  // namespace internal
 
-template <Precision Prec>
-using IGate = internal::GatePtr<internal::IGateImpl<Prec>>;
-template <Precision Prec>
-using GlobalPhaseGate = internal::GatePtr<internal::GlobalPhaseGateImpl<Prec>>;
-template <Precision Prec>
-using XGate = internal::GatePtr<internal::XGateImpl<Prec>>;
-template <Precision Prec>
-using YGate = internal::GatePtr<internal::YGateImpl<Prec>>;
-template <Precision Prec>
-using ZGate = internal::GatePtr<internal::ZGateImpl<Prec>>;
-template <Precision Prec>
-using HGate = internal::GatePtr<internal::HGateImpl<Prec>>;
-template <Precision Prec>
-using SGate = internal::GatePtr<internal::SGateImpl<Prec>>;
-template <Precision Prec>
-using SdagGate = internal::GatePtr<internal::SdagGateImpl<Prec>>;
-template <Precision Prec>
-using TGate = internal::GatePtr<internal::TGateImpl<Prec>>;
-template <Precision Prec>
-using TdagGate = internal::GatePtr<internal::TdagGateImpl<Prec>>;
-template <Precision Prec>
-using SqrtXGate = internal::GatePtr<internal::SqrtXGateImpl<Prec>>;
-template <Precision Prec>
-using SqrtXdagGate = internal::GatePtr<internal::SqrtXdagGateImpl<Prec>>;
-template <Precision Prec>
-using SqrtYGate = internal::GatePtr<internal::SqrtYGateImpl<Prec>>;
-template <Precision Prec>
-using SqrtYdagGate = internal::GatePtr<internal::SqrtYdagGateImpl<Prec>>;
-template <Precision Prec>
-using P0Gate = internal::GatePtr<internal::P0GateImpl<Prec>>;
-template <Precision Prec>
-using P1Gate = internal::GatePtr<internal::P1GateImpl<Prec>>;
-template <Precision Prec>
-using RXGate = internal::GatePtr<internal::RXGateImpl<Prec>>;
-template <Precision Prec>
-using RYGate = internal::GatePtr<internal::RYGateImpl<Prec>>;
-template <Precision Prec>
-using RZGate = internal::GatePtr<internal::RZGateImpl<Prec>>;
-template <Precision Prec>
-using U1Gate = internal::GatePtr<internal::U1GateImpl<Prec>>;
-template <Precision Prec>
-using U2Gate = internal::GatePtr<internal::U2GateImpl<Prec>>;
-template <Precision Prec>
-using U3Gate = internal::GatePtr<internal::U3GateImpl<Prec>>;
-template <Precision Prec>
-using SwapGate = internal::GatePtr<internal::SwapGateImpl<Prec>>;
+template <Precision Prec, ExecutionSpace Space>
+using IGate = internal::GatePtr<internal::IGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using GlobalPhaseGate = internal::GatePtr<internal::GlobalPhaseGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using XGate = internal::GatePtr<internal::XGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using YGate = internal::GatePtr<internal::YGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using ZGate = internal::GatePtr<internal::ZGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using HGate = internal::GatePtr<internal::HGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using SGate = internal::GatePtr<internal::SGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using SdagGate = internal::GatePtr<internal::SdagGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using TGate = internal::GatePtr<internal::TGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using TdagGate = internal::GatePtr<internal::TdagGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using SqrtXGate = internal::GatePtr<internal::SqrtXGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using SqrtXdagGate = internal::GatePtr<internal::SqrtXdagGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using SqrtYGate = internal::GatePtr<internal::SqrtYGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using SqrtYdagGate = internal::GatePtr<internal::SqrtYdagGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using P0Gate = internal::GatePtr<internal::P0GateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using P1Gate = internal::GatePtr<internal::P1GateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using RXGate = internal::GatePtr<internal::RXGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using RYGate = internal::GatePtr<internal::RYGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using RZGate = internal::GatePtr<internal::RZGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using U1Gate = internal::GatePtr<internal::U1GateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using U2Gate = internal::GatePtr<internal::U2GateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using U3Gate = internal::GatePtr<internal::U3GateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using SwapGate = internal::GatePtr<internal::SwapGateImpl<Prec, Space>>;
 
 namespace internal {
 
-#define DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION(Prec)                       \
-    template <>                                                                \
-    inline std::shared_ptr<const IGateImpl<Prec>> get_from_json(const Json&) { \
-        return std::make_shared<const IGateImpl<Prec>>();                      \
+#define DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec, Space)   \
+    template <>                                                                       \
+    inline std::shared_ptr<const IGateImpl<Prec, Space>> get_from_json(const Json&) { \
+        return std::make_shared<const IGateImpl<Prec, Space>>();                      \
     }
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION(Precision::F16)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16, ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
+                                                               ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION(Precision::F32)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32, ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
+                                                               ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION(Precision::F64)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64, ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
+                                                               ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION(Precision::BF16)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
+                                                               ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
+                                                               ExecutionSpace::Default)
 #endif
-#undef DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION
+#undef DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 
-#define DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION(Prec)                                 \
-    template <>                                                                                    \
-    inline std::shared_ptr<const GlobalPhaseGateImpl<Prec>> get_from_json(const Json& j) {         \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                         \
-        double phase = j.at("phase").get<double>();                                                \
-        return std::make_shared<const GlobalPhaseGateImpl<Prec>>(vector_to_mask(controls),         \
-                                                                 static_cast<Float<Prec>>(phase)); \
+#define DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec, Space)     \
+    template <>                                                                                   \
+    inline std::shared_ptr<const GlobalPhaseGateImpl<Prec, Space>> get_from_json(const Json& j) { \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                        \
+        double phase = j.at("phase").get<double>();                                               \
+        return std::make_shared<const GlobalPhaseGateImpl<Prec, Space>>(                          \
+            vector_to_mask(controls), static_cast<Float<Prec>>(phase));                           \
     }
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION(Precision::F16)
+DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
+                                                                         ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
+                                                                         ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION(Precision::F32)
+DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
+                                                                         ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
+                                                                         ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION(Precision::F64)
+DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
+                                                                         ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
+                                                                         ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION(Precision::BF16)
+DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
+                                                                         ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
+                                                                         ExecutionSpace::Default)
 #endif
-#undef DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION
+#undef DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 
-#define DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(Impl, Prec)    \
-    template <>                                                              \
-    inline std::shared_ptr<const Impl<Prec>> get_from_json(const Json& j) {  \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();     \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();   \
-        return std::make_shared<const Impl<Prec>>(vector_to_mask(targets),   \
-                                                  vector_to_mask(controls)); \
+#define DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(  \
+    Impl, Prec, Space)                                                              \
+    template <>                                                                     \
+    inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {  \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();            \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();          \
+        return std::make_shared<const Impl<Prec, Space>>(vector_to_mask(targets),   \
+                                                         vector_to_mask(controls)); \
     }
-#define DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION(Prec)          \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(XGateImpl, Prec)        \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(YGateImpl, Prec)        \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(ZGateImpl, Prec)        \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(HGateImpl, Prec)        \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(SGateImpl, Prec)        \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(SdagGateImpl, Prec)     \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(TGateImpl, Prec)        \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(TdagGateImpl, Prec)     \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(SqrtXGateImpl, Prec)    \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(SqrtXdagGateImpl, Prec) \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(SqrtYGateImpl, Prec)    \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(SqrtYdagGateImpl, Prec) \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(P0GateImpl, Prec)       \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION(P1GateImpl, Prec)
+#define DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec,  \
+                                                                                       Space) \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
+        XGateImpl, Prec, Space)                                                               \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
+        YGateImpl, Prec, Space)                                                               \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
+        ZGateImpl, Prec, Space)                                                               \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
+        HGateImpl, Prec, Space)                                                               \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
+        SGateImpl, Prec, Space)                                                               \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
+        SdagGateImpl, Prec, Space)                                                            \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
+        TGateImpl, Prec, Space)                                                               \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
+        TdagGateImpl, Prec, Space)                                                            \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
+        SqrtXGateImpl, Prec, Space)                                                           \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
+        SqrtXdagGateImpl, Prec, Space)                                                        \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
+        SqrtYGateImpl, Prec, Space)                                                           \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
+        SqrtYdagGateImpl, Prec, Space)                                                        \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
+        P0GateImpl, Prec, Space)                                                              \
+    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
+        P1GateImpl, Prec, Space)
 #ifdef SCALUQ_FLOAT16
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION(Precision::F16)
+DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
+                                                                               ExecutionSpace::Host)
+DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
+    Precision::F16, ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION(Precision::F32)
+DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
+                                                                               ExecutionSpace::Host)
+DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
+    Precision::F32, ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION(Precision::F64)
+DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
+                                                                               ExecutionSpace::Host)
+DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
+    Precision::F64, ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION(Precision::BF16)
+DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
+                                                                               ExecutionSpace::Host)
+DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
+    Precision::BF16, ExecutionSpace::Default)
 #endif
-#undef DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION
-#undef DECLARE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION
+#undef DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE
+#undef DECLARE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 
-#define DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION(Impl, Prec)                                   \
+#define DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Impl, Prec, Space)        \
     template <>                                                                                  \
-    inline std::shared_ptr<const Impl<Prec>> get_from_json(const Json& j) {                      \
+    inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {               \
         auto targets = j.at("target").get<std::vector<std::uint64_t>>();                         \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();                       \
         double angle = j.at("angle").get<double>();                                              \
-        return std::make_shared<const Impl<Prec>>(                                               \
+        return std::make_shared<const Impl<Prec, Space>>(                                        \
             vector_to_mask(targets), vector_to_mask(controls), static_cast<Float<Prec>>(angle)); \
     }
-#define DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION(Prec)    \
-    DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION(RXGateImpl, Prec) \
-    DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION(RYGateImpl, Prec) \
-    DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION(RZGateImpl, Prec)
+#define DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec, Space)    \
+    DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(RXGateImpl, Prec, Space) \
+    DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(RYGateImpl, Prec, Space) \
+    DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(RZGateImpl, Prec, Space)
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION(Precision::F16)
+DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
+                                                                    ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
+                                                                    ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION(Precision::F32)
+DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
+                                                                    ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
+                                                                    ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION(Precision::F64)
+DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
+                                                                    ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
+                                                                    ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION(Precision::BF16)
+DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
+                                                                    ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
+                                                                    ExecutionSpace::Default)
 #endif
-#undef DECLARE_GET_FROM_JSON_RGATE
-#undef DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION
+#undef DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE
+#undef DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 
-#define DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION(Prec)                                         \
-    template <>                                                                                  \
-    inline std::shared_ptr<const U1GateImpl<Prec>> get_from_json(const Json& j) {                \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                         \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                       \
-        double theta = j.at("theta").get<double>();                                              \
-        return std::make_shared<const U1GateImpl<Prec>>(                                         \
-            vector_to_mask(targets), vector_to_mask(controls), static_cast<Float<Prec>>(theta)); \
-    }                                                                                            \
-    template <>                                                                                  \
-    inline std::shared_ptr<const U2GateImpl<Prec>> get_from_json(const Json& j) {                \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                         \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                       \
-        double theta = j.at("theta").get<double>();                                              \
-        double phi = j.at("phi").get<double>();                                                  \
-        return std::make_shared<const U2GateImpl<Prec>>(vector_to_mask(targets),                 \
-                                                        vector_to_mask(controls),                \
-                                                        static_cast<Float<Prec>>(theta),         \
-                                                        static_cast<Float<Prec>>(phi));          \
-    }                                                                                            \
-    template <>                                                                                  \
-    inline std::shared_ptr<const U3GateImpl<Prec>> get_from_json(const Json& j) {                \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                         \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                       \
-        double theta = j.at("theta").get<double>();                                              \
-        double phi = j.at("phi").get<double>();                                                  \
-        double lambda = j.at("lambda").get<double>();                                            \
-        return std::make_shared<const U3GateImpl<Prec>>(vector_to_mask(targets),                 \
-                                                        vector_to_mask(controls),                \
-                                                        static_cast<Float<Prec>>(theta),         \
-                                                        static_cast<Float<Prec>>(phi),           \
-                                                        static_cast<Float<Prec>>(lambda));       \
+#define DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Impl, Prec, Space)         \
+    template <>                                                                                   \
+    inline std::shared_ptr<const U1GateImpl<Prec, Space>> get_from_json(const Json& j) {          \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                          \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                        \
+        double theta = j.at("theta").get<double>();                                               \
+        return std::make_shared<const U1GateImpl<Prec, Space>>(                                   \
+            vector_to_mask(targets), vector_to_mask(controls), static_cast<Float<Prec>>(theta));  \
+    }                                                                                             \
+    template <>                                                                                   \
+    inline std::shared_ptr<const U2GateImpl<Prec, Space>> get_from_json(const Json& j) {          \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                          \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                        \
+        double theta = j.at("theta").get<double>();                                               \
+        double phi = j.at("phi").get<double>();                                                   \
+        return std::make_shared<const U2GateImpl<Prec, Space>>(vector_to_mask(targets),           \
+                                                               vector_to_mask(controls),          \
+                                                               static_cast<Float<Prec>>(theta),   \
+                                                               static_cast<Float<Prec>>(phi));    \
+    }                                                                                             \
+    template <>                                                                                   \
+    inline std::shared_ptr<const U3GateImpl<Prec, Space>> get_from_json(const Json& j) {          \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                          \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                        \
+        double theta = j.at("theta").get<double>();                                               \
+        double phi = j.at("phi").get<double>();                                                   \
+        double lambda = j.at("lambda").get<double>();                                             \
+        return std::make_shared<const U3GateImpl<Prec, Space>>(vector_to_mask(targets),           \
+                                                               vector_to_mask(controls),          \
+                                                               static_cast<Float<Prec>>(theta),   \
+                                                               static_cast<Float<Prec>>(phi),     \
+                                                               static_cast<Float<Prec>>(lambda)); \
     }
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION(Precision::F16)
+DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
+                                                               Precision::F16,
+                                                               ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
+                                                               Precision::F16,
+                                                               ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION(Precision::F32)
+DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
+                                                               Precision::F32,
+                                                               ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
+                                                               Precision::F32,
+                                                               ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION(Precision::F64)
+DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
+                                                               Precision::F64,
+                                                               ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
+                                                               Precision::F64,
+                                                               ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION(Precision::BF16)
+DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
+                                                               Precision::BF16,
+                                                               ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
+                                                               Precision::BF16,
+                                                               ExecutionSpace::Default)
 #endif
-#undef DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION
+#undef DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 
-#define DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION(Prec)                          \
-    template <>                                                                      \
-    inline std::shared_ptr<const SwapGateImpl<Prec>> get_from_json(const Json& j) {  \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();             \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();           \
-        return std::make_shared<const SwapGateImpl<Prec>>(vector_to_mask(targets),   \
-                                                          vector_to_mask(controls)); \
+#define DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Impl, Prec, Space) \
+    template <>                                                                              \
+    inline std::shared_ptr<const SwapGateImpl<Prec, Space>> get_from_json(const Json& j) {   \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                     \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                   \
+        return std::make_shared<const SwapGateImpl<Prec, Space>>(vector_to_mask(targets),    \
+                                                                 vector_to_mask(controls));  \
     }
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION(Precision::F16)
+DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
+                                                                  Precision::F16,
+                                                                  ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
+                                                                  Precision::F16,
+                                                                  ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION(Precision::F32)
+DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
+                                                                  Precision::F32,
+                                                                  ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
+                                                                  Precision::F32,
+                                                                  ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION(Precision::F64)
+DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
+                                                                  Precision::F64,
+                                                                  ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
+                                                                  Precision::F64,
+                                                                  ExecutionSpace::Default)
 #endif
 #ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION(Precision::BF16)
+DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
+                                                                  Precision::BF16,
+                                                                  ExecutionSpace::Host)
+DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
+                                                                  Precision::BF16,
+                                                                  ExecutionSpace::Default)
 #endif
-#undef DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION
-
+#undef DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 }  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <Precision Prec>
-void bind_gate_gate_standard_hpp(nb::module_& m) {
-    DEF_GATE(IGate, Prec, "Specific class of Pauli-I gate.");
+template <Precision Prec, ExecutionSpace Space>
+void bind_gate_gate_standard_hpp(nb::module_& m, nb::class_<Gate<Prec, Space>>& gate_base_def) {
+    DEF_GATE(IGate, Prec, Space, "Specific class of Pauli-I gate.", gate_base_def);
     DEF_GATE(GlobalPhaseGate,
              Prec,
+             Space,
              "Specific class of gate, which rotate global phase, represented as "
-             "$e^{i\\mathrm{phase}}I$.")
+             "$e^{i\\mathrm{phase}}I$.",
+             gate_base_def)
         .def(
             "phase",
-            [](const GlobalPhaseGate<Prec>& gate) { return gate->phase(); },
+            [](const GlobalPhaseGate<Prec, Space>& gate) { return gate->phase(); },
             "Get `phase` property");
-    DEF_GATE(XGate, Prec, "Specific class of Pauli-X gate.");
-    DEF_GATE(YGate, Prec, "Specific class of Pauli-Y gate.");
-    DEF_GATE(ZGate, Prec, "Specific class of Pauli-Z gate.");
-    DEF_GATE(HGate, Prec, "Specific class of Hadamard gate.");
+    DEF_GATE(XGate, Prec, Space, "Specific class of Pauli-X gate.", gate_base_def);
+    DEF_GATE(YGate, Prec, Space, "Specific class of Pauli-Y gate.", gate_base_def);
+    DEF_GATE(ZGate, Prec, Space, "Specific class of Pauli-Z gate.", gate_base_def);
+    DEF_GATE(HGate, Prec, Space, "Specific class of Hadamard gate.", gate_base_def);
     DEF_GATE(SGate,
              Prec,
+             Space,
              "Specific class of S gate, represented as $\\begin { bmatrix }\n1 & 0\\\\\n0 &"
-             "i\n\\end{bmatrix}$.");
-    DEF_GATE(SdagGate, Prec, "Specific class of inverse of S gate.");
+             "i\n\\end{bmatrix}$.",
+             gate_base_def);
+    DEF_GATE(SdagGate, Prec, Space, "Specific class of inverse of S gate.", gate_base_def);
     DEF_GATE(TGate,
              Prec,
+             Space,
              "Specific class of T gate, represented as $\\begin { bmatrix }\n1 & 0\\\\\n0 &"
-             "e^{i\\pi/4}\n\\end{bmatrix}$.");
-    DEF_GATE(TdagGate, Prec, "Specific class of inverse of T gate.");
+             "e^{i\\pi/4}\n\\end{bmatrix}$.",
+             gate_base_def);
+    DEF_GATE(TdagGate, Prec, Space, "Specific class of inverse of T gate.", gate_base_def);
     DEF_GATE(
         SqrtXGate,
         Prec,
+        Space,
         "Specific class of sqrt(X) gate, represented as $\\begin{ bmatrix }\n1+i & 1-i\\\\\n1-i "
-        "& 1+i\n\\end{bmatrix}$.");
-    DEF_GATE(SqrtXdagGate, Prec, "Specific class of inverse of sqrt(X) gate.");
+        "& 1+i\n\\end{bmatrix}$.",
+        gate_base_def);
+    DEF_GATE(
+        SqrtXdagGate, Prec, Space, "Specific class of inverse of sqrt(X) gate.", gate_base_def);
     DEF_GATE(SqrtYGate,
              Prec,
+             Space,
              "Specific class of sqrt(Y) gate, represented as $\\begin{ bmatrix }\n1+i & -1-i "
-             "\\\\\n1+i & 1+i\n\\end{bmatrix}$.");
-    DEF_GATE(SqrtYdagGate, Prec, "Specific class of inverse of sqrt(Y) gate.");
+             "\\\\\n1+i & 1+i\n\\end{bmatrix}$.",
+             gate_base_def);
+    DEF_GATE(
+        SqrtYdagGate, Prec, Space, "Specific class of inverse of sqrt(Y) gate.", gate_base_def);
     DEF_GATE(
         P0Gate,
         Prec,
-        "Specific class of projection gate to $\\ket{0}$.\n\n.. note:: This gate is not unitary.");
+        Space,
+        "Specific class of projection gate to $\\ket{0}$.\n\n.. note:: This gate is not unitary.",
+        gate_base_def);
     DEF_GATE(
         P1Gate,
         Prec,
-        "Specific class of projection gate to $\\ket{1}$.\n\n.. note:: This gate is not unitary.");
+        Space,
+        "Specific class of projection gate to $\\ket{1}$.\n\n.. note:: This gate is not unitary.",
+        gate_base_def);
 
-#define DEF_ROTATION_GATE(GATE_TYPE, PRECISION, DESCRIPTION)                \
-    DEF_GATE(GATE_TYPE, PRECISION, DESCRIPTION)                             \
-        .def(                                                               \
-            "angle",                                                        \
-            [](const GATE_TYPE<PRECISION>& gate) { return gate->angle(); }, \
+#define DEF_ROTATION_GATE(GATE_TYPE, PRECISION, SPACE, DESCRIPTION, GATE_BASE_DEF) \
+    DEF_GATE(GATE_TYPE, PRECISION, SPACE, DESCRIPTION, GATE_BASE_DEF)              \
+        .def(                                                                      \
+            "angle",                                                               \
+            [](const GATE_TYPE<PRECISION, SPACE>& gate) { return gate->angle(); }, \
             "Get `angle` property.")
 
     DEF_ROTATION_GATE(
         RXGate,
         Prec,
-        "Specific class of X rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}X}$.");
+        Space,
+        "Specific class of X rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}X}$.",
+        gate_base_def);
     DEF_ROTATION_GATE(
         RYGate,
         Prec,
-        "Specific class of Y rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Y}$.");
+        Space,
+        "Specific class of Y rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Y}$.",
+        gate_base_def);
     DEF_ROTATION_GATE(
         RZGate,
         Prec,
-        "Specific class of Z rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Z}$.");
+        Space,
+        "Specific class of Z rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Z}$.",
+        gate_base_def);
 
     DEF_GATE(U1Gate,
              Prec,
+             Space,
              "Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, "
              "represented as "
-             "$\\begin{bmatrix}\n1 & 0\\\\\n0 & e^{i\\lambda}\n\\end{bmatrix}$.")
+             "$\\begin{bmatrix}\n1 & 0\\\\\n0 & e^{i\\lambda}\n\\end{bmatrix}$.",
+             gate_base_def)
         .def(
             "lambda_",
-            [](const U1Gate<Prec>& gate) { return gate->lambda(); },
+            [](const U1Gate<Prec, Space>& gate) { return gate->lambda(); },
             "Get `lambda` property.");
     DEF_GATE(U2Gate,
              Prec,
+             Space,
              "Specific class of IBMQ's U2 Gate, which is a rotation about X+Z-axis, "
              "represented as "
              "$\\frac{1}{\\sqrt{2}} \\begin{bmatrix}1 & -e^{-i\\lambda}\\\\\n"
-             "e^{i\\phi} & e^{i(\\phi+\\lambda)}\n\\end{bmatrix}$.")
+             "e^{i\\phi} & e^{i(\\phi+\\lambda)}\n\\end{bmatrix}$.",
+             gate_base_def)
         .def(
-            "phi", [](const U2Gate<Prec>& gate) { return gate->phi(); }, "Get `phi` property.")
+            "phi",
+            [](const U2Gate<Prec, Space>& gate) { return gate->phi(); },
+            "Get `phi` property.")
         .def(
             "lambda_",
-            [](const U2Gate<Prec>& gate) { return gate->lambda(); },
+            [](const U2Gate<Prec, Space>& gate) { return gate->lambda(); },
             "Get `lambda` property.");
     DEF_GATE(U3Gate,
              Prec,
+             Space,
              "Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, "
              "represented as "
              "$\\begin{bmatrix}\n\\cos \\frac{\\theta}{2} & "
              "-e^{i\\lambda}\\sin\\frac{\\theta}{2}\\\\\n"
              "e^{i\\phi}\\sin\\frac{\\theta}{2} & "
-             "e^{i(\\phi+\\lambda)}\\cos\\frac{\\theta}{2}\n\\end{bmatrix}$.")
+             "e^{i(\\phi+\\lambda)}\\cos\\frac{\\theta}{2}\n\\end{bmatrix}$.",
+             gate_base_def)
         .def(
             "theta",
-            [](const U3Gate<Prec>& gate) { return gate->theta(); },
+            [](const U3Gate<Prec, Space>& gate) { return gate->theta(); },
             "Get `theta` property.")
         .def(
-            "phi", [](const U3Gate<Prec>& gate) { return gate->phi(); }, "Get `phi` property.")
+            "phi",
+            [](const U3Gate<Prec, Space>& gate) { return gate->phi(); },
+            "Get `phi` property.")
         .def(
             "lambda_",
-            [](const U3Gate<Prec>& gate) { return gate->lambda(); },
+            [](const U3Gate<Prec, Space>& gate) { return gate->lambda(); },
             "Get `lambda` property.");
-    DEF_GATE(SwapGate, Prec, "Specific class of two-qubit swap gate.");
+    DEF_GATE(SwapGate, Prec, Space, "Specific class of two-qubit swap gate.", gate_base_def);
 }
 }  // namespace internal
 #endif

@@ -4,14 +4,14 @@
 
 namespace scaluq {
 namespace internal {
-template <Precision Prec>
-SparseMatrix<Prec>::SparseMatrix(const SparseComplexMatrix& sp) {
+template <Precision Prec, ExecutionSpace Space>
+SparseMatrix<Prec, Space>::SparseMatrix(const SparseComplexMatrix& sp) {
     _row = sp.rows();
     _col = sp.cols();
     SparseComplexMatrix mat = sp;
     mat.makeCompressed();
 
-    _values = Kokkos::View<SparseValue<Prec>*>("_values", mat.nonZeros());
+    _values = Kokkos::View<SparseValue<Prec>*, SpaceType<Space>>("_values", mat.nonZeros());
     Kokkos::View<SparseValue<Prec>*, Kokkos::HostSpace> values_h("values_h", mat.nonZeros());
     int idx = 0;
     for (int k = 0; k < mat.outerSize(); ++k) {
@@ -24,6 +24,6 @@ SparseMatrix<Prec>::SparseMatrix(const SparseComplexMatrix& sp) {
     }
     Kokkos::deep_copy(_values, values_h);
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION(SparseMatrix)
+SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SparseMatrix)
 }  // namespace internal
 }  // namespace scaluq

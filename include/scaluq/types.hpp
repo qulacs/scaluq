@@ -15,15 +15,30 @@ namespace scaluq {
 using StdComplex = std::complex<double>;
 using Json = nlohmann::json;
 
+enum class ExecutionSpace { Host, Default };
+
 namespace internal {
+template <ExecutionSpace Space>
+struct SpaceTypeImpl {};
+template <>
+struct SpaceTypeImpl<ExecutionSpace::Host> {
+    using Type = Kokkos::DefaultHostExecutionSpace;
+};
+template <>
+struct SpaceTypeImpl<ExecutionSpace::Default> {
+    using Type = Kokkos::DefaultExecutionSpace;
+};
+template <ExecutionSpace Space>
+using SpaceType = typename SpaceTypeImpl<Space>::Type;
+
 template <typename DummyType>
 constexpr bool lazy_false_v = false;  // Used for lazy evaluation in static_assert.
 
 using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex, Eigen::RowMajor>;
 
-template <Precision Prec>
-using Matrix = Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight>;
+template <Precision Prec, ExecutionSpace Space>
+using Matrix = Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight, SpaceType<Space>>;
 
 template <Precision Prec>
 using Matrix2x2 = Kokkos::Array<Kokkos::Array<Complex<Prec>, 2>, 2>;
@@ -37,10 +52,10 @@ struct SparseValue {
     uint32_t r, c;
 };
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 class SparseMatrix {
 public:
-    Kokkos::View<SparseValue<Prec>*> _values;
+    Kokkos::View<SparseValue<Prec>*, SpaceType<Space>> _values;
     std::uint64_t _row, _col;
 
     SparseMatrix(const SparseComplexMatrix& sp);
@@ -61,3 +76,10 @@ struct adl_serializer<::scaluq::StdComplex> {
     }
 };
 }  // namespace nlohmann
+
+#ifdef SCALUQ_USE_NANOBIND
+#include <nanobind/nanobind.h>
+namespace scaluq::internal {
+namespace nb = nanobind;
+}
+#endif

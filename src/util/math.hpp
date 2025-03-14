@@ -113,7 +113,7 @@ KOKKOS_INLINE_FUNCTION Complex<Prec> polar(const Float<Prec>& r,
     return Complex<Prec>(r * cos(theta), r * sin(theta));
 }
 
-template <class Scalar, class Space>
+template <class Scalar, ExecutionSpace Space>
 struct Sum {
 public:
     // Required
@@ -121,7 +121,7 @@ public:
     using value_type = std::remove_cv_t<Scalar>;
     static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
-    using result_view_type = Kokkos::View<value_type, Space>;
+    using result_view_type = Kokkos::View<value_type, SpaceType<Space>>;
 
 private:
     result_view_type value;

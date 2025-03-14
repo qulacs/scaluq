@@ -132,31 +132,26 @@ inline internal::ComplexMatrix get_expanded_matrix(const internal::ComplexMatrix
 }
 
 // Host std::vector を Device Kokkos::View に変換する関数
-template <typename T>
-Kokkos::View<T*> convert_host_vector_to_device_view(const std::vector<T>& vec);
+template <typename T, ExecutionSpace Sp>
+Kokkos::View<T*, SpaceType<Sp>> convert_vector_to_view(const std::vector<T>& vec);
 
 // Device Kokkos::View を Host std::vector に変換する関数
-template <typename T>
-std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device_view);
-
-// Device Kokkos::View を Host std::vector に変換する関数
-template <typename T, typename Layout>
-std::vector<std::vector<T>> convert_2d_device_view_to_host_vector(
-    const Kokkos::View<T**, Layout>& view_d);
+template <typename T, ExecutionSpace Sp>
+std::vector<T> convert_view_to_vector(const Kokkos::View<T*, SpaceType<Sp>>& device_view);
 
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Float<Prec> squared_norm(const Complex<Prec>& z) {
     return z.real() * z.real() + z.imag() * z.imag();
 }
 
-template <Precision Prec>
-Matrix<Prec> convert_external_matrix_to_internal_matrix(const ComplexMatrix& eigen_matrix);
+template <Precision Prec, ExecutionSpace Space>
+Matrix<Prec, Space> convert_external_matrix_to_internal_matrix(const ComplexMatrix& eigen_matrix);
 
-template <Precision Prec>
-ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix<Prec>& matrix);
+template <Precision Prec, ExecutionSpace Space>
+ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix<Prec, Space>& matrix);
 
-template <Precision Prec>
-ComplexMatrix convert_coo_to_external_matrix(SparseMatrix<Prec> mat);
+template <Precision Prec, ExecutionSpace Space>
+ComplexMatrix convert_coo_to_external_matrix(SparseMatrix<Prec, Space> mat);
 
 inline ComplexMatrix transform_dense_matrix_by_order(const ComplexMatrix& mat,
                                                      const std::vector<std::uint64_t>& targets) {

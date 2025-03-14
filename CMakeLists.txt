@@ -144,9 +144,11 @@ target_compile_options(scaluq PUBLIC
 
 if(SCALUQ_USE_CUDA)
     target_compile_definitions(scaluq PUBLIC SCALUQ_USE_CUDA)
+    target_compile_definitions(scaluq PUBLIC JSON_HAS_RANGES=0) # cite: https://github.com/nlohmann/json/issues/3907
     # to remove tremendous warnings of Eigen
     target_compile_options(scaluq PUBLIC
         -Wno-unknown-pragmas
+        -Wno-deprecated-enum-enum-conversion
         --expt-relaxed-constexpr
         -Werror=cross-execution-space-call # prevent call of non __device__ function in device call
         -DEIGEN_NO_CUDA
