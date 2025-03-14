@@ -130,18 +130,20 @@ DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
-void bind_gate_gate_pauli_hpp(nb::module_& m) {
+void bind_gate_gate_pauli_hpp(nb::module_& m, nb::class_<Gate<Prec, Space>>& gate_base_def) {
     DEF_GATE(PauliGate,
              Prec,
              Space,
              "Specific class of multi-qubit pauli gate, which applies single-qubit Pauli "
              "gate to "
-             "each of qubit.");
+             "each of qubit.",
+             gate_base_def);
     DEF_GATE(PauliRotationGate,
              Prec,
              Space,
              "Specific class of multi-qubit pauli-rotation gate, represented as "
-             "$e^{-i\\frac{\\mathrm{angle}}{2}P}$.");
+             "$e^{-i\\frac{\\mathrm{angle}}{2}P}$.",
+             gate_base_def);
 }
 }  // namespace internal
 #endif
