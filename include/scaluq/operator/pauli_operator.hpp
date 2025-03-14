@@ -110,13 +110,6 @@ public:
 namespace internal {
 template <std::floating_point Fp>
 void bind_operator_pauli_operator_hpp(nb::module_& m) {
-    nb::enum_<typename PauliOperator<Fp>::PauliID>(m, "PauliID")
-        .value("I", PauliOperator<Fp>::I)
-        .value("X", PauliOperator<Fp>::X)
-        .value("Y", PauliOperator<Fp>::Y)
-        .value("Z", PauliOperator<Fp>::Z)
-        .export_values();
-
     nb::class_<typename PauliOperator<Fp>::Data>(
         m, "PauliOperatorData", "Internal data structure for PauliOperator.")
         .def(nb::init<Complex<Fp>>(), "coef"_a = 1., "Initialize data with coefficient.")
@@ -164,7 +157,33 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
     nb::class_<PauliOperator<Fp>>(
         m,
         "PauliOperator",
-        "Pauli operator as coef and tensor product of single pauli for each qubit.")
+        DocString()
+            .desc("Pauli operator as coef and tensor product of single pauli for each qubit.")
+            .desc("Given `coef: complex`, Initialize operator which just multiplying coef.")
+            .desc("Given `target_qubit_list: list[int], pauli_id_list: "
+                  "list[int], coef: complex`, Initialize pauli operator. For "
+                  "each `i`, single pauli correspond to `pauli_id_list[i]` is applied to "
+                  "`target_qubit_list[i]`-th qubit.")
+            .desc("Given `pauli_string: str, coef: complex`, Initialize pauli "
+                  "operator. For each `i`, single pauli correspond to `pauli_id_list[i]` is "
+                  "applied to `target_qubit_list[i]`-th qubit.")
+            .desc("Given `pauli_id_par_qubit: list[int], coef: complex`, "
+                  "Initialize pauli operator. For each `i`, single pauli correspond to "
+                  "`paul_id_per_qubit[i]` is applied to `i`-th qubit.")
+            .desc("Given `bit_flip_mask: int, phase_flip_mask: int, coef: "
+                  "complex`, Initialize pauli operator. For each `i`, single pauli applied to "
+                  "`i`-th qubit is "
+                  "got "
+                  "from `i-th` bit of `bit_flip_mask` and `phase_flip_mask` as follows.\n\n.. "
+                  "csv-table::\n\n    \"bit_flip\",\"phase_flip\",\"pauli\"\n    "
+                  "\"0\",\"0\",\"I\"\n    "
+                  "\"0\",\"1\",\"Z\"\n    \"1\",\"0\",\"X\"\n    \"1\",\"1\",\"Y\"")
+            .ex(DocString::Code(
+                {">>> pauli = PauliOperator(\"X 3 Y 2\")",
+                 ">>> print(pauli.to_json())",
+                 "{\"coef\":{\"imag\":0.0,\"real\":1.0},\"pauli_string\":\"X 3 Y 2\"}"}))
+            .build_as_google_style()
+            .c_str())
         .def(nb::init<Complex<Fp>>(),
              "coef"_a = 1.,
              "Initialize operator which just multiplying coef.")
@@ -175,7 +194,7 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "pauli_id_list"_a,
              "coef"_a = 1.,
              "Initialize pauli operator. For each `i`, single pauli correspond to "
-             "`pauli_id_list[i]` is applied to `target_qubit_list`-th qubit.")
+             "`pauli_id_list[i]` is applied to `target_qubit_list[i]`-th qubit.")
         .def(nb::init<std::string_view, Complex<Fp>>(),
              "pauli_string"_a,
              "coef"_a = 1.,
@@ -186,7 +205,7 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "pauli_id_par_qubit"_a,
              "coef"_a = 1.,
              "Initialize pauli operator. For each `i`, single pauli correspond to "
-             "`paul_id_per_qubit` is applied to `i`-th qubit.")
+             "`paul_id_per_qubit[i]` is applied to `i`-th qubit.")
         .def(nb::init<std::uint64_t, std::uint64_t, Complex<Fp>>(),
              "bit_flip_mask"_a,
              "phase_flip_mask"_a,
@@ -219,12 +238,18 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              &PauliOperator<Fp>::get_qubit_count,
              "Get num of qubits to applied with, when count from 0-th qubit. Subset of $[0, "
              "\\mathrm{qubit_count})$ is the target.")
-        .def("apply_to_state", &PauliOperator<Fp>::apply_to_state, "Apply pauli to state vector.")
+        .def("apply_to_state",
+             &PauliOperator<Fp>::apply_to_state,
+             "state"_a,
+             "Apply pauli to state vector.")
         .def("get_expectation_value",
              &PauliOperator<Fp>::get_expectation_value,
+             "state"_a,
              "Get expectation value of measuring state vector. $\\bra{\\psi}P\\ket{\\psi}$.")
         .def("get_transition_amplitude",
              &PauliOperator<Fp>::get_transition_amplitude,
+             "source"_a,
+             "target"_a,
              "Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.")
         .def(nb::self * nb::self)
         .def(nb::self * Complex<Fp>())
@@ -237,6 +262,7 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
             [](PauliOperator<Fp>& pauli, const std::string& str) {
                 pauli = nlohmann::json::parse(str);
             },
+            "json_str"_a,
             "Read an object from the JSON representation of the Pauli operator.");
 }
 }  // namespace internal

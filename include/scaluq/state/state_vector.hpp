@@ -519,6 +519,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
             [](StateVector<Fp>& state, const std::string& str) {
                 state = nlohmann::json::parse(str);
             },
+            "json_str"_a,
             DocString()
                 .desc("Read an object from the JSON representation of the state vector.")
                 .build_as_google_style()

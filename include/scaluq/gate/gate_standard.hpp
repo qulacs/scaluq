@@ -753,70 +753,77 @@ void bind_gate_gate_standard_hpp(nb::module_& m) {
     DEF_GATE(GlobalPhaseGate,
              Fp,
              "Specific class of gate, which rotate global phase, represented as "
-             "$e^{i\\mathrm{phase}}I$.")
+             "$e^{i\\gamma}I$.")
         .def(
             "phase",
             [](const GlobalPhaseGate<Fp>& gate) { return gate->phase(); },
-            "Get `phase` property");
+            "Get `phase` property. The phase is represented as $\\gamma$.");
     DEF_GATE(XGate, Fp, "Specific class of Pauli-X gate.");
     DEF_GATE(YGate, Fp, "Specific class of Pauli-Y gate.");
     DEF_GATE(ZGate, Fp, "Specific class of Pauli-Z gate.");
     DEF_GATE(HGate, Fp, "Specific class of Hadamard gate.");
     DEF_GATE(SGate,
              Fp,
-             "Specific class of S gate, represented as $\\begin { bmatrix }\n1 & 0\\\\\n0 &"
-             "i\n\\end{bmatrix}$.");
+             "Specific class of S gate, represented as $\\begin{bmatrix} 1 & 0 \\\\ 0 & i "
+             "\\end{bmatrix}$.");
     DEF_GATE(SdagGate, Fp, "Specific class of inverse of S gate.");
     DEF_GATE(TGate,
              Fp,
-             "Specific class of T gate, represented as $\\begin { bmatrix }\n1 & 0\\\\\n0 &"
-             "e^{i\\pi/4}\n\\end{bmatrix}$.");
+             "Specific class of T gate, represented as $\\begin{bmatrix} 1 & 0 \\\\ 0 &"
+             "e^{i \\pi/4} \\end{bmatrix}$.");
     DEF_GATE(TdagGate, Fp, "Specific class of inverse of T gate.");
-    DEF_GATE(
-        SqrtXGate,
-        Fp,
-        "Specific class of sqrt(X) gate, represented as $\\begin{ bmatrix }\n1+i & 1-i\\\\\n1-i "
-        "& 1+i\n\\end{bmatrix}$.");
-    DEF_GATE(SqrtXdagGate, Fp, "Specific class of inverse of sqrt(X) gate.");
+    DEF_GATE(SqrtXGate,
+             Fp,
+             "Specific class of sqrt(X) gate, represented as $\\frac{1}{\\sqrt{2}} "
+             "\\begin{bmatrix} 1+i & 1-i\\\\ 1-i "
+             "& 1+i \\end{bmatrix}$.");
+    DEF_GATE(SqrtXdagGate,
+             Fp,
+             "Specific class of inverse of sqrt(X) gate, represented as "
+             "$\\frac{1}{\\sqrt{2}} \\begin{bmatrix} 1-i & 1+i\\\\ 1+i & 1-i \\end{bmatrix}$.");
     DEF_GATE(SqrtYGate,
              Fp,
-             "Specific class of sqrt(Y) gate, represented as $\\begin{ bmatrix }\n1+i & -1-i "
-             "\\\\\n1+i & 1+i\n\\end{bmatrix}$.");
-    DEF_GATE(SqrtYdagGate, Fp, "Specific class of inverse of sqrt(Y) gate.");
-    DEF_GATE(
-        P0Gate,
-        Fp,
-        "Specific class of projection gate to $\\ket{0}$.\n\n.. note:: This gate is not unitary.");
-    DEF_GATE(
-        P1Gate,
-        Fp,
-        "Specific class of projection gate to $\\ket{1}$.\n\n.. note:: This gate is not unitary.");
+             "Specific class of sqrt(Y) gate, represented as $\\frac{1}{\\sqrt{2}} "
+             "\\begin{bmatrix} 1+i & -1-i "
+             "\\\\ 1+i & 1+i \\end{bmatrix}$.");
+    DEF_GATE(SqrtYdagGate,
+             Fp,
+             "Specific class of inverse of sqrt(Y) gate, represented as "
+             "$\\frac{1}{\\sqrt{2}} \\begin{bmatrix} 1-i & 1-i\\\\ -1+i & 1-i \\end{bmatrix}$.");
+    DEF_GATE(P0Gate,
+             Fp,
+             "Specific class of projection gate to $\\ket{0}$.\n\nNotes:\n\tThis gate is "
+             "not unitary.");
+    DEF_GATE(P1Gate,
+             Fp,
+             "Specific class of projection gate to $\\ket{1}$.\n\nNotes:\n\tThis gate is "
+             "not unitary.");
 
 #define DEF_ROTATION_GATE(GATE_TYPE, FLOAT, DESCRIPTION)                \
     DEF_GATE(GATE_TYPE, FLOAT, DESCRIPTION)                             \
         .def(                                                           \
             "angle",                                                    \
             [](const GATE_TYPE<FLOAT>& gate) { return gate->angle(); }, \
-            "Get `angle` property.")
+            "Get `angle` property. The angle is represented as $\\theta$.");
 
     DEF_ROTATION_GATE(
         RXGate,
         Fp,
-        "Specific class of X rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}X}$.");
+        "Specific class of X rotation gate, represented as $e^{-i\\frac{\\theta}{2}X}$.");
     DEF_ROTATION_GATE(
         RYGate,
         Fp,
-        "Specific class of Y rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Y}$.");
+        "Specific class of Y rotation gate, represented as $e^{-i\\frac{\\theta}{2}Y}$.");
     DEF_ROTATION_GATE(
         RZGate,
         Fp,
-        "Specific class of Z rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Z}$.");
+        "Specific class of Z rotation gate, represented as $e^{-i\\frac{\\theta}{2}Z}$.");
 
     DEF_GATE(U1Gate,
              Fp,
              "Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, "
              "represented as "
-             "$\\begin{bmatrix}\n1 & 0\\\\\n0 & e^{i\\lambda}\n\\end{bmatrix}$.")
+             "$\\begin{bmatrix} 1 & 0 \\\\ 0 & e^{i\\lambda} \\end{bmatrix}$.")
         .def(
             "lambda_",
             [](const U1Gate<Fp>& gate) { return gate->lambda(); },
@@ -825,8 +832,8 @@ void bind_gate_gate_standard_hpp(nb::module_& m) {
              Fp,
              "Specific class of IBMQ's U2 Gate, which is a rotation about X+Z-axis, "
              "represented as "
-             "$\\frac{1}{\\sqrt{2}} \\begin{bmatrix}1 & -e^{-i\\lambda}\\\\\n"
-             "e^{i\\phi} & e^{i(\\phi+\\lambda)}\n\\end{bmatrix}$.")
+             "$\\frac{1}{\\sqrt{2}} \\begin{bmatrix}1 & -e^{-i\\lambda}\\\\ "
+             "e^{i\\phi} & e^{i(\\phi+\\lambda)} \\end{bmatrix}$.")
         .def(
             "phi", [](const U2Gate<Fp>& gate) { return gate->phi(); }, "Get `phi` property.")
         .def(
@@ -837,10 +844,10 @@ void bind_gate_gate_standard_hpp(nb::module_& m) {
              Fp,
              "Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, "
              "represented as "
-             "$\\begin{bmatrix}\n\\cos \\frac{\\theta}{2} & "
-             "-e^{i\\lambda}\\sin\\frac{\\theta}{2}\\\\\n"
+             "$\\begin{bmatrix} \\cos \\frac{\\theta}{2} & "
+             "-e^{i\\lambda}\\sin\\frac{\\theta}{2}\\\\ "
              "e^{i\\phi}\\sin\\frac{\\theta}{2} & "
-             "e^{i(\\phi+\\lambda)}\\cos\\frac{\\theta}{2}\n\\end{bmatrix}$.")
+             "e^{i(\\phi+\\lambda)}\\cos\\frac{\\theta}{2} \\end{bmatrix}$.")
         .def(
             "theta", [](const U3Gate<Fp>& gate) { return gate->theta(); }, "Get `theta` property.")
         .def(

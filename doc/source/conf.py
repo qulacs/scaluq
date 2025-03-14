@@ -1,16 +1,42 @@
 import sys
 import subprocess
+from pathlib import Path
 
-subprocess.run([sys.executable, '-m', 'nanobind.stubgen', '-m', 'scaluq.scaluq_core', '-o', './stub/scaluq/__init__.py'])
-subprocess.run([sys.executable, '-m', 'nanobind.stubgen', '-m', 'scaluq.scaluq_core.gate', '-o', './stub/scaluq/gate.py'])
+stub_dir = Path('./stub/scaluq/')
+stub_dir.mkdir(parents=True, exist_ok=True)
 
-project = 'scaluq'
-copyright = '2024, Fuji Lab.'
-author = 'Fuji Lab.'
-release = '0.0.1'
+subprocess.run([sys.executable, '-m', 'nanobind.stubgen',
+    '-m', 'scaluq.scaluq_core',
+    '-o', './stub/scaluq/__init__.py'])
+
+subprocess.run([sys.executable, '-m', 'nanobind.stubgen',
+    '-m', 'scaluq.scaluq_core.f64',
+    '-o', './stub/scaluq/f64/__init__.py'])
+
+subprocess.run([sys.executable, '-m', 'nanobind.stubgen',
+    '-m', 'scaluq.scaluq_core.f64.gate',
+    '-o', './stub/scaluq/f64/gate.py'])
+
+subprocess.run([sys.executable, '-m', 'nanobind.stubgen',
+    '-m', 'scaluq.scaluq_core.f32',
+    '-o', './stub/scaluq/f32/__init__.py'])
+
+subprocess.run([sys.executable, '-m', 'nanobind.stubgen',
+    '-m', 'scaluq.scaluq_core.f32.gate',
+    '-o', './stub/scaluq/f32/gate.py'])
+
+files = [
+    "./stub/scaluq/__init__.py",
+    "./stub/scaluq/f64/__init__.py",
+    "./stub/scaluq/f64/gate.py",
+    "./stub/scaluq/f32/__init__.py",
+    "./stub/scaluq/f32/gate.py"
+]
+
+subprocess.run(["sed", "-i", "/@overload/d"] + files, check=True)
 
 extensions = [
-    "sphinx.ext.napoleon",
+    'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
     'sphinx_math_dollar',
     'autoapi.extension',
@@ -22,8 +48,8 @@ autoapi_keep_files = True
 autoapi_file_patterns = ["*.py"]
 autoapi_dirs = ["./stub/scaluq"]
 autoapi_add_toctree_entry = True
-
 autoapi_python_class_content = 'class'
+
 autoapi_options = [
     "members",
     "undoc-members",
@@ -31,6 +57,8 @@ autoapi_options = [
     "show-module-summary",
     "imported-members",
 ]
+
+autodoc_typehints = 'description'
 
 html_theme = "sphinx_rtd_theme"
 

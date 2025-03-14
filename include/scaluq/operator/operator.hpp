@@ -92,7 +92,20 @@ private:
 namespace internal {
 template <std::floating_point Fp>
 void bind_operator_operator_hpp(nb::module_& m) {
-    nb::class_<Operator<Fp>>(m, "Operator", "General quantum operator class.")
+    nb::class_<Operator<Fp>>(
+        m,
+        "Operator",
+        DocString()
+            .desc("General quantum operator class.")
+            .desc("Given `qubit_count: int`, Initialize operator with specified number of qubits.")
+            .ex(DocString::Code(
+                {">>> pauli = PauliOperator(\"X 3 Y 2\")",
+                 ">>> operator = Operator(4)",
+                 ">>> operator.add_operator(pauli)",
+                 ">>> print(operator.to_json())",
+                 "{\"coef\":{\"imag\":0.0,\"real\":1.0},\"pauli_string\":\"X 3 Y 2\"}"}))
+            .build_as_google_style()
+            .c_str())
         .def(nb::init<std::uint64_t>(),
              "qubit_count"_a,
              "Initialize operator with specified number of qubits.")
@@ -103,6 +116,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
         .def("to_string", &Operator<Fp>::to_string, "Get string representation of the operator.")
         .def("add_operator",
              nb::overload_cast<const PauliOperator<Fp>&>(&Operator<Fp>::add_operator),
+             "pauli"_a,
              "Add a Pauli operator to this operator.")
         .def(
             "add_random_operator",
@@ -121,12 +135,16 @@ void bind_operator_operator_hpp(nb::module_& m) {
              "Get the adjoint (Hermitian conjugate) of the operator.")
         .def("apply_to_state",
              &Operator<Fp>::apply_to_state,
+             "state"_a,
              "Apply the operator to a state vector.")
         .def("get_expectation_value",
              &Operator<Fp>::get_expectation_value,
+             "state"_a,
              "Get the expectation value of the operator with respect to a state vector.")
         .def("get_transition_amplitude",
              &Operator<Fp>::get_transition_amplitude,
+             "source"_a,
+             "target"_a,
              "Get the transition amplitude of the operator between two state vectors.")
         .def(nb::self *= Complex<Fp>())
         .def(nb::self * Complex<Fp>())
@@ -151,6 +169,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
         .def(
             "load_json",
             [](Operator<Fp>& op, const std::string& str) { op = nlohmann::json::parse(str); },
+            "json_str"_a,
             "Read an object from the JSON representation of the operator.");
 }
 }  // namespace internal
