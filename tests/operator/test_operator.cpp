@@ -62,7 +62,8 @@ TYPED_TEST(OperatorTest, GetMatrix) {
         auto matrix = rand_observable.get_matrix();
         for (std::uint64_t i = 0; i < dim; i++) {
             for (std::uint64_t j = 0; j < dim; j++) {
-                ASSERT_NEAR(matrix(i, j), test_rand_observable(i, j), eps<Prec>);
+                ASSERT_NEAR(matrix(i, j).real(), test_rand_observable(i, j).real(), eps<Prec>);
+                ASSERT_NEAR(matrix(i, j).imag(), test_rand_observable(i, j).imag(), eps<Prec>);
             }
         }
     }

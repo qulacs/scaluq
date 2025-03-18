@@ -68,28 +68,32 @@ Operator<Prec, Space> Operator<Prec, Space>::get_dagger() const {
 }
 
 template <Precision Prec, ExecutionSpace Space>
-internal::ComplexMatrix Operator<Prec, Space>::get_matrix() {
+internal::ComplexMatrix Operator<Prec, Space>::get_matrix() const {
     std::uint64_t dim = 1ULL << _n_qubits;
     using Pauli = PauliOperator<Prec, Space>;
     std::vector<typename Pauli::Triplet> triplets;
-    triplets.reserve(dim, _terms.size());
+    triplets.reserve(dim * _terms.size());
     for (const auto& term : _terms) {
-        std::vector<Pauli::PauliID> pauli_id_par_qubit(_n_qubits, Pauli::PauliID::I);
-        for (std::uint64_t i = 0; i < term._ptr->_pauli_id_list; i++) {
-            pauli_id_par_qubit[term._ptr->_target_qubit_list[i]] = term._ptr->_pauli_id_list[i];
+        std::vector<typename Pauli::PauliID> pauli_id_par_qubit(_n_qubits, Pauli::PauliID::I);
+        for (std::uint64_t i = 0; i < term._ptr->_pauli_id_list.size(); i++) {
+            pauli_id_par_qubit[term._ptr->_target_qubit_list[i]] =
+                static_cast<typename Pauli::PauliID>(term._ptr->_pauli_id_list[i]);
         }
-        Pauli::Data aligned_data;
+        typename Pauli::Data aligned_data;
         for (std::uint64_t i = 0; i < _n_qubits; i++) {
             aligned_data.add_single_pauli(i, pauli_id_par_qubit[i]);
         }
         auto basic_triplets = Pauli(aligned_data).get_matrix_triplets_ignoring_coef();
-        for (auto& triplet : basic_triplets) {
-            triplet.value() *= static_cast<StdComplex>(term._ptr->coef);
-        }
-        std::ranges::copy(basic_triplets, std::back_inserter(triplets));
+        std::ranges::transform(
+            basic_triplets, std::back_inserter(triplets), [&](const Pauli::Triplet& triplet) {
+                return typename Pauli::Triplet(
+                    triplet.row(),
+                    triplet.col(),
+                    triplet.value() * static_cast<StdComplex>(term._ptr->_coef));
+            });
     }
-    internal::SparseMatrix sparse(dim, dim);
-    sparse.setFromTriplets(triplets);
+    internal::SparseComplexMatrix sparse(dim, dim);
+    sparse.setFromTriplets(triplets.begin(), triplets.end());
     return internal::ComplexMatrix(sparse);
 }
 

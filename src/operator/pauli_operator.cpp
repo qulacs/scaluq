@@ -279,10 +279,15 @@ StdComplex PauliOperator<Prec, Space>::get_transition_amplitude(
 template <Precision Prec, ExecutionSpace Space>
 internal::ComplexMatrix PauliOperator<Prec, Space>::get_matrix() const {
     auto triplets = get_matrix_triplets_ignoring_coef();
-    for (auto& triplet : triplets) triplet.value() *= static_cast<StdComplex>(_ptr->_coef);
+    decltype(triplets) coeffed_triplets(triplets.size());
+    for (std::size_t i = 0; i < triplets.size(); i++) {
+        coeffed_triplets[i] = Triplet(triplets[i].row(),
+                                      triplets[i].col(),
+                                      triplets[i].value() * static_cast<StdComplex>(_ptr->_coef));
+    }
     std::uint64_t dim = 1ULL << _ptr->_pauli_id_list.size();
-    internal::SparseMatrix sparse(dim, dim);
-    sparse.setFromTriplets(triplets);
+    internal::SparseComplexMatrix sparse(dim, dim);
+    sparse.setFromTriplets(coeffed_triplets.begin(), coeffed_triplets.end());
     return internal::ComplexMatrix(sparse);
 }
 
@@ -290,8 +295,8 @@ template <Precision Prec, ExecutionSpace Space>
 internal::ComplexMatrix PauliOperator<Prec, Space>::get_matrix_ignoring_coef() const {
     auto triplets = get_matrix_triplets_ignoring_coef();
     std::uint64_t dim = 1ULL << _ptr->_pauli_id_list.size();
-    internal::SparseMatrix sparse(dim, dim);
-    sparse.setFromTriplets(triplets);
+    internal::SparseComplexMatrix sparse(dim, dim);
+    sparse.setFromTriplets(triplets.begin(), triplets.end());
     return internal::ComplexMatrix(sparse);
 }
 
