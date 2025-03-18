@@ -17,9 +17,32 @@ endif(NOT DEFINED SCALUQ_USE_TEST)
 if(NOT DEFINED SCALUQ_USE_EXE)
     set(SCALUQ_USE_EXE OFF)
 endif(NOT DEFINED SCALUQ_USE_EXE)
+if(NOT DEFINED SCALUQ_FLOAT16)
+    set(SCALUQ_FLOAT16 OFF)
+endif(NOT DEFINED SCALUQ_FLOAT16)
+if(NOT DEFINED SCALUQ_FLOAT32)
+    set(SCALUQ_FLOAT32 ON)
+endif(NOT DEFINED SCALUQ_FLOAT32)
+if(NOT DEFINED SCALUQ_FLOAT64)
+    set(SCALUQ_FLOAT64 ON)
+endif(NOT DEFINED SCALUQ_FLOAT64)
+if(NOT DEFINED SCALUQ_BFLOAT16)
+    set(SCALUQ_BFLOAT16 OFF)
+endif(NOT DEFINED SCALUQ_BFLOAT16)
 
-message(STATUS "SKBUILD = ${SKBUILD}")
+message(STATUS "CMAKE_C_COMPILER = ${CMAKE_C_COMPILER}")
+message(STATUS "CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER}")
+message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+message(STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "SCALUQ_USE_OMP = ${SCALUQ_USE_OMP}")
+message(STATUS "SCALUQ_USE_CUDA = ${SCALUQ_USE_CUDA}")
+message(STATUS "SCALUQ_CUDA_ARCH = ${SCALUQ_CUDA_ARCH}")
+message(STATUS "SCALUQ_FLOAT16 = ${SCALUQ_FLOAT16}")
+message(STATUS "SCALUQ_FLOAT32 = ${SCALUQ_FLOAT32}")
+message(STATUS "SCALUQ_FLOAT64 = ${SCALUQ_FLOAT64}")
+message(STATUS "SCALUQ_BFLOAT16 = ${SCALUQ_BFLOAT16}")
 message(STATUS "SCALUQ_USE_TEST = ${SCALUQ_USE_TEST}")
+message(STATUS "SCALUQ_USE_EXE = ${SCALUQ_USE_EXE}")
 
 ### Kokkos options ###
 set(Kokkos_ENABLE_SERIAL ON CACHE BOOL "Enable Kokkos Serial backend")
@@ -69,7 +92,7 @@ install(DIRECTORY ${json_SOURCE_DIR}/single_include/nlohmann DESTINATION include
 
 # nanobind
 if(SKBUILD)
-    find_package(Python 3.8
+    find_package(Python 3.9
         REQUIRED COMPONENTS Interpreter Development.Module
         OPTIONAL_COMPONENTS Development.SABIModule)
     if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -100,52 +123,66 @@ add_library(scaluq)
 set_property(TARGET scaluq PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 ### Compiler options ###
-if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang"))
-    # Standard
+# Standard
+if(SCALUQ_USE_CUDA)
     target_compile_features(scaluq PUBLIC cxx_std_20)
-    
-    # Warning
-    target_compile_options(scaluq PUBLIC
-        -Wall
-        -Wextra
-        -Wunused-parameter
-        # -Wshadow
-        # -pedantic
-        -Wsign-compare
-        -Wtype-limits
-        -Wuninitialized
-    )
-
-    if(SCALUQ_USE_CUDA)
-        # to remove tremendous warnings of Eigen
-        target_compile_options(scaluq PUBLIC
-            -Wno-unknown-pragmas
-            --expt-relaxed-constexpr
-            -DEIGEN_NO_CUDA
-        ) 
-    endif()
-
-    # Enable pthread
-    target_compile_options(scaluq PUBLIC -pthread)
-
-    # Enable openmp
-    if(SCALUQ_USE_OMP)
-        target_compile_options(scaluq PUBLIC -fopenmp)
-        target_compile_definitions(scaluq PUBLIC OPENMP)
-    endif()
-    
-    # Debug options
-    if (SCALUQ_USE_CUDA)
-        target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g,-O3>)
-    else()
-        if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-            target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g,-O3>)
-        else()
-            target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
-            target_link_options(scaluq PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
-        endif()
-    endif()
+else()
+    target_compile_features(scaluq PUBLIC cxx_std_23)
 endif()
+
+# Warning
+target_compile_options(scaluq PUBLIC
+    -Wall
+    -Wextra
+    -Wunused-parameter
+    # -Wshadow
+    # -pedantic
+    -Wsign-compare
+    -Wtype-limits
+    -Wuninitialized
+)
+
+if(SCALUQ_USE_CUDA)
+    target_compile_definitions(scaluq PUBLIC SCALUQ_USE_CUDA)
+    target_compile_definitions(scaluq PUBLIC JSON_HAS_RANGES=0) # cite: https://github.com/nlohmann/json/issues/3907
+    # to remove tremendous warnings of Eigen
+    target_compile_options(scaluq PUBLIC
+        -Wno-unknown-pragmas
+        -Wno-deprecated-enum-enum-conversion
+        --expt-relaxed-constexpr
+        -Werror=cross-execution-space-call # prevent call of non __device__ function in device call
+        -DEIGEN_NO_CUDA
+    ) 
+endif()
+
+# Enable pthread
+target_compile_options(scaluq PUBLIC -pthread)
+
+# Enable openmp
+if(SCALUQ_USE_OMP)
+    target_compile_options(scaluq PUBLIC -fopenmp)
+endif()
+
+# Debug options
+if ((${CMAKE_SYSTEM_NAME} MATCHES "Darwin") OR CMAKE_CUDA_COMPILER)
+target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g,-O3>)
+else()
+target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
+target_link_options(scaluq PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
+endif()
+
+# Float precision
+set(PRECISION_FLAGS
+    SCALUQ_FLOAT16
+    SCALUQ_FLOAT32
+    SCALUQ_FLOAT64
+    SCALUQ_BFLOAT16
+)
+foreach(flag IN LISTS PRECISION_FLAGS)
+    if(${flag})
+        target_compile_definitions(scaluq PUBLIC ${flag})
+    endif()
+endforeach()
 
 ### Add subdirectories ###
 add_subdirectory(src)

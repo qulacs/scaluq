@@ -5,27 +5,34 @@
 #include "../test_environment.hpp"
 #include "../util/util.hpp"
 
-using CComplex = std::complex<double>;
-
 using namespace scaluq;
 
-TEST(StateVectorBatchedTest, HaarRandomStateNorm) {
+template <typename T>
+class StateVectorBatchedTest : public FixtureBase<T> {};
+TYPED_TEST_SUITE(StateVectorBatchedTest, TestTypes, NameGenerator);
+
+TYPED_TEST(StateVectorBatchedTest, HaarRandomStateNorm) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t batch_size = 10, n_qubits = 3;
-    const auto states = StateVectorBatched<double>::Haar_random_state(batch_size, n_qubits, false);
+    const auto states =
+        StateVectorBatched<Prec, Space>::Haar_random_state(batch_size, n_qubits, false);
     auto norms = states.get_squared_norm();
-    for (auto x : norms) ASSERT_NEAR(x, 1., eps<double>);
+    for (auto x : norms) ASSERT_NEAR(x, 1., eps<Prec>);
 }
 
-TEST(StateVectorBatchedTest, LoadAndAmplitues) {
+TYPED_TEST(StateVectorBatchedTest, LoadAndAmplitues) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t batch_size = 4, n_qubits = 3;
     const std::uint64_t dim = 1 << n_qubits;
-    std::vector states_h(batch_size, std::vector<Complex<double>>(dim));
+    std::vector states_h(batch_size, std::vector<StdComplex>(dim));
     for (std::uint64_t b = 0; b < batch_size; ++b) {
         for (std::uint64_t i = 0; i < dim; ++i) {
             states_h[b][i] = b * dim + i;
         }
     }
-    StateVectorBatched<double> states(batch_size, n_qubits);
+    StateVectorBatched<Prec, Space> states(batch_size, n_qubits);
 
     states.load(states_h);
     auto amps = states.get_amplitudes();
@@ -36,11 +43,14 @@ TEST(StateVectorBatchedTest, LoadAndAmplitues) {
     }
 }
 
-TEST(StateVectorBatchedTest, OperateState) {
+TYPED_TEST(StateVectorBatchedTest, OperateState) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t batch_size = 4, n_qubits = 3;
-    auto states = StateVectorBatched<double>::Haar_random_state(batch_size, n_qubits, false);
-    auto states_add = StateVectorBatched<double>::Haar_random_state(batch_size, n_qubits, false);
-    const Complex<double> coef(2.1, 3.5);
+    auto states = StateVectorBatched<Prec, Space>::Haar_random_state(batch_size, n_qubits, false);
+    auto states_add =
+        StateVectorBatched<Prec, Space>::Haar_random_state(batch_size, n_qubits, false);
+    const StdComplex coef(2.1, 3.5);
 
     auto states_cp = states.copy();
     for (std::uint64_t b = 0; b < batch_size; ++b) {
@@ -71,22 +81,26 @@ TEST(StateVectorBatchedTest, OperateState) {
     }
 }
 
-TEST(StateVectorBatchedTest, ZeroProbs) {
+TYPED_TEST(StateVectorBatchedTest, ZeroProbs) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t batch_size = 4, n_qubits = 3;
-    auto states = StateVectorBatched<double>::Haar_random_state(batch_size, n_qubits, false);
+    auto states = StateVectorBatched<Prec, Space>::Haar_random_state(batch_size, n_qubits, false);
 
     for (std::uint64_t i = 0; i < n_qubits; ++i) {
         auto zero_probs = states.get_zero_probability(i);
         for (std::uint64_t b = 0; b < batch_size; ++b) {
             auto state = states.get_state_vector_at(b);
-            ASSERT_NEAR(zero_probs[b], state.get_zero_probability(i), eps<double>);
+            ASSERT_NEAR(zero_probs[b], state.get_zero_probability(i), eps<Prec>);
         }
     }
 }
 
-TEST(StateVectorBatchedTest, MarginalProbs) {
+TYPED_TEST(StateVectorBatchedTest, MarginalProbs) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t batch_size = 4, n_qubits = 5;
-    auto states = StateVectorBatched<double>::Haar_random_state(batch_size, n_qubits, false);
+    auto states = StateVectorBatched<Prec, Space>::Haar_random_state(batch_size, n_qubits, false);
 
     Random rd(0);
     for (std::uint64_t i = 0; i < 10; ++i) {
@@ -97,27 +111,31 @@ TEST(StateVectorBatchedTest, MarginalProbs) {
         auto mg_probs = states.get_marginal_probability(targets);
         for (std::uint64_t b = 0; b < batch_size; ++b) {
             auto state = states.get_state_vector_at(b);
-            ASSERT_NEAR(mg_probs[b], state.get_marginal_probability(targets), eps<double>);
+            ASSERT_NEAR(mg_probs[b], state.get_marginal_probability(targets), eps<Prec>);
         }
     }
 }
 
-TEST(StateVectorBatchedTest, Entropy) {
+TYPED_TEST(StateVectorBatchedTest, Entropy) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t batch_size = 4, n_qubits = 3;
-    auto states = StateVectorBatched<double>::Haar_random_state(batch_size, n_qubits, false);
+    auto states = StateVectorBatched<Prec, Space>::Haar_random_state(batch_size, n_qubits, false);
 
     auto entropies = states.get_entropy();
     for (std::uint64_t b = 0; b < batch_size; ++b) {
         auto state = states.get_state_vector_at(b);
-        ASSERT_NEAR(entropies[b], state.get_entropy(), eps<double>);
+        ASSERT_NEAR(entropies[b], state.get_entropy(), eps<Prec>);
     }
 }
 
-TEST(StateVectorBatchedTest, Sampling) {
+TYPED_TEST(StateVectorBatchedTest, Sampling) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t batch_size = 2, n_qubits = 3;
-    StateVectorBatched<double> states(batch_size, n_qubits);
-    states.load(std::vector<std::vector<Complex<double>>>{{1, 4, 5, 0, 0, 0, 0, 0},
-                                                          {0, 0, 0, 0, 0, 6, 4, 1}});
+    StateVectorBatched<Prec, Space> states(batch_size, n_qubits);
+    states.load(
+        std::vector<std::vector<StdComplex>>{{1, 4, 5, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 6, 4, 1}});
     states.normalize();
     auto result = states.sampling(4096);
     std::vector cnt(2, std::vector<std::uint64_t>(states.dim(), 0));

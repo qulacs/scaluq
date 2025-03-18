@@ -10,25 +10,25 @@
 
 namespace scaluq {
 namespace internal {
-template <std::floating_point Fp>
-class DenseMatrixGateImpl : public GateBase<Fp> {
-    Matrix<Fp> _matrix;
+template <Precision Prec, ExecutionSpace Space>
+class DenseMatrixGateImpl : public GateBase<Prec, Space> {
+    Matrix<Prec, Space> _matrix;
     bool _is_unitary;
 
 public:
     DenseMatrixGateImpl(std::uint64_t target_mask,
                         std::uint64_t control_mask,
-                        const ComplexMatrix<Fp>& mat,
+                        const ComplexMatrix& mat,
                         bool is_unitary = false);
 
-    std::shared_ptr<const GateBase<Fp>> get_inverse() const override;
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override;
 
-    Matrix<Fp> get_matrix_internal() const;
+    Matrix<Prec, Space> get_matrix_internal() const;
 
-    ComplexMatrix<Fp> get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Fp>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -40,26 +40,26 @@ public:
     }
 };
 
-template <std::floating_point Fp>
-class SparseMatrixGateImpl : public GateBase<Fp> {
-    SparseMatrix<Fp> _matrix;
+template <Precision Prec, ExecutionSpace Space>
+class SparseMatrixGateImpl : public GateBase<Prec, Space> {
+    SparseMatrix<Prec, Space> _matrix;
     std::uint64_t num_nnz;
 
 public:
     SparseMatrixGateImpl(std::uint64_t target_mask,
                          std::uint64_t control_mask,
-                         const SparseComplexMatrix<Fp>& mat);
+                         const SparseComplexMatrix& mat);
 
-    std::shared_ptr<const GateBase<Fp>> get_inverse() const override;
+    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override;
 
-    Matrix<Fp> get_matrix_internal() const;
+    Matrix<Prec, Space> get_matrix_internal() const;
 
-    ComplexMatrix<Fp> get_matrix() const override;
+    ComplexMatrix get_matrix() const override;
 
-    SparseComplexMatrix<Fp> get_sparse_matrix() const { return get_matrix().sparseView(); }
+    SparseComplexMatrix get_sparse_matrix() const { return get_matrix().sparseView(); }
 
-    void update_quantum_state(StateVector<Fp>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Fp>& states) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -73,21 +73,21 @@ public:
 
 }  // namespace internal
 
-template <std::floating_point Fp>
-using SparseMatrixGate = internal::GatePtr<internal::SparseMatrixGateImpl<Fp>>;
-template <std::floating_point Fp>
-using DenseMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl<Fp>>;
+template <Precision Prec, ExecutionSpace Space>
+using SparseMatrixGate = internal::GatePtr<internal::SparseMatrixGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+using DenseMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl<Prec, Space>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
-void bind_gate_gate_matrix_hpp(nb::module_& m) {
-    DEF_GATE(SparseMatrixGate, Fp, "Specific class of sparse matrix gate.")
-        .def("matrix", [](const SparseMatrixGate<Fp>& gate) { return gate->get_matrix(); })
+template <Precision Prec, ExecutionSpace Space>
+void bind_gate_gate_matrix_hpp(nb::module_& m, nb::class_<Gate<Prec, Space>>& gate_base_def) {
+    DEF_GATE(SparseMatrixGate, Prec, Space, "Specific class of sparse matrix gate.", gate_base_def)
+        .def("matrix", [](const SparseMatrixGate<Prec, Space>& gate) { return gate->get_matrix(); })
         .def("sparse_matrix",
-             [](const SparseMatrixGate<Fp>& gate) { return gate->get_sparse_matrix(); });
-    DEF_GATE(DenseMatrixGate, Fp, "Specific class of dense matrix gate.")
-        .def("matrix", [](const DenseMatrixGate<Fp>& gate) { return gate->get_matrix(); });
+             [](const SparseMatrixGate<Prec, Space>& gate) { return gate->get_sparse_matrix(); });
+    DEF_GATE(DenseMatrixGate, Prec, Space, "Specific class of dense matrix gate.", gate_base_def)
+        .def("matrix", [](const DenseMatrixGate<Prec, Space>& gate) { return gate->get_matrix(); });
 }
 }  // namespace internal
 #endif

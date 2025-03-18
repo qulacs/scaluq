@@ -67,19 +67,18 @@ inline std::vector<std::uint64_t> mask_to_vector(std::uint64_t mask) {
     return indices;
 }
 
-template <std::floating_point Fp>
-KOKKOS_INLINE_FUNCTION Matrix2x2<Fp> matrix_multiply(const Matrix2x2<Fp>& matrix1,
-                                                     const Matrix2x2<Fp>& matrix2) {
+template <Precision Prec>
+KOKKOS_INLINE_FUNCTION Matrix2x2<Prec> matrix_multiply(const Matrix2x2<Prec>& matrix1,
+                                                       const Matrix2x2<Prec>& matrix2) {
     return {matrix1[0][0] * matrix2[0][0] + matrix1[0][1] * matrix2[1][0],
             matrix1[0][0] * matrix2[0][1] + matrix1[0][1] * matrix2[1][1],
             matrix1[1][0] * matrix2[0][0] + matrix1[1][1] * matrix2[1][0],
             matrix1[1][0] * matrix2[0][1] + matrix1[1][1] * matrix2[1][1]};
 }
 
-template <std::floating_point Fp>
-inline internal::ComplexMatrix<Fp> kronecker_product(const internal::ComplexMatrix<Fp>& lhs,
-                                                     const internal::ComplexMatrix<Fp>& rhs) {
-    internal::ComplexMatrix<Fp> result(lhs.rows() * rhs.rows(), lhs.cols() * rhs.cols());
+inline internal::ComplexMatrix kronecker_product(const internal::ComplexMatrix& lhs,
+                                                 const internal::ComplexMatrix& rhs) {
+    internal::ComplexMatrix result(lhs.rows() * rhs.rows(), lhs.cols() * rhs.cols());
     for (int i = 0; i < lhs.rows(); i++) {
         for (int j = 0; j < lhs.cols(); j++) {
             result.block(i * rhs.rows(), j * rhs.cols(), rhs.rows(), rhs.cols()) = lhs(i, j) * rhs;
@@ -88,12 +87,10 @@ inline internal::ComplexMatrix<Fp> kronecker_product(const internal::ComplexMatr
     return result;
 }
 
-template <std::floating_point Fp>
-inline internal::ComplexMatrix<Fp> get_expanded_matrix(
-    const internal::ComplexMatrix<Fp>& from_matrix,
-    const std::vector<std::uint64_t>& from_targets,
-    std::uint64_t from_control_mask,
-    std::vector<std::uint64_t>& to_operands) {
+inline internal::ComplexMatrix get_expanded_matrix(const internal::ComplexMatrix& from_matrix,
+                                                   const std::vector<std::uint64_t>& from_targets,
+                                                   std::uint64_t from_control_mask,
+                                                   std::vector<std::uint64_t>& to_operands) {
     std::vector<std::uint64_t> targets_map(from_targets.size());
     std::ranges::transform(from_targets, targets_map.begin(), [&](std::uint64_t x) {
         return std::ranges::lower_bound(to_operands, x) - to_operands.begin();
@@ -118,8 +115,8 @@ inline internal::ComplexMatrix<Fp> get_expanded_matrix(
     for (std::uint64_t i : std::views::iota(0ULL, 1ULL << to_operands.size())) {
         if ((i & (targets_idx_mask | to_control_mask)) == 0) outer_indices.push_back(i);
     }
-    internal::ComplexMatrix<Fp> to_matrix =
-        internal::ComplexMatrix<Fp>::Zero(1ULL << to_operands.size(), 1ULL << to_operands.size());
+    internal::ComplexMatrix to_matrix =
+        internal::ComplexMatrix::Zero(1ULL << to_operands.size(), 1ULL << to_operands.size());
     for (std::uint64_t i : std::views::iota(0ULL, 1ULL << from_targets.size())) {
         for (std::uint64_t j : std::views::iota(0ULL, 1ULL << from_targets.size())) {
             for (std::uint64_t o : outer_indices) {
@@ -135,35 +132,29 @@ inline internal::ComplexMatrix<Fp> get_expanded_matrix(
 }
 
 // Host std::vector を Device Kokkos::View に変換する関数
-template <typename T>
-Kokkos::View<T*> convert_host_vector_to_device_view(const std::vector<T>& vec);
+template <typename T, ExecutionSpace Sp>
+Kokkos::View<T*, SpaceType<Sp>> convert_vector_to_view(const std::vector<T>& vec);
 
 // Device Kokkos::View を Host std::vector に変換する関数
-template <typename T>
-std::vector<T> convert_device_view_to_host_vector(const Kokkos::View<T*>& device_view);
+template <typename T, ExecutionSpace Sp>
+std::vector<T> convert_view_to_vector(const Kokkos::View<T*, SpaceType<Sp>>& device_view);
 
-// Device Kokkos::View を Host std::vector に変換する関数
-template <typename T, typename Layout>
-std::vector<std::vector<T>> convert_2d_device_view_to_host_vector(
-    const Kokkos::View<T**, Layout>& view_d);
-
-template <std::floating_point Fp>
-KOKKOS_INLINE_FUNCTION double squared_norm(const Complex<Fp>& z) {
+template <Precision Prec>
+KOKKOS_INLINE_FUNCTION Float<Prec> squared_norm(const Complex<Prec>& z) {
     return z.real() * z.real() + z.imag() * z.imag();
 }
 
-template <std::floating_point Fp>
-Matrix<Fp> convert_external_matrix_to_internal_matrix(const ComplexMatrix<Fp>& eigen_matrix);
+template <Precision Prec, ExecutionSpace Space>
+Matrix<Prec, Space> convert_external_matrix_to_internal_matrix(const ComplexMatrix& eigen_matrix);
 
-template <std::floating_point Fp>
-ComplexMatrix<Fp> convert_internal_matrix_to_external_matrix(const Matrix<Fp>& matrix);
+template <Precision Prec, ExecutionSpace Space>
+ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix<Prec, Space>& matrix);
 
-template <std::floating_point Fp>
-ComplexMatrix<Fp> convert_coo_to_external_matrix(SparseMatrix<Fp> mat);
+template <Precision Prec, ExecutionSpace Space>
+ComplexMatrix convert_coo_to_external_matrix(SparseMatrix<Prec, Space> mat);
 
-template <std::floating_point Fp>
-inline ComplexMatrix<Fp> transform_dense_matrix_by_order(
-    const ComplexMatrix<Fp>& mat, const std::vector<std::uint64_t>& targets) {
+inline ComplexMatrix transform_dense_matrix_by_order(const ComplexMatrix& mat,
+                                                     const std::vector<std::uint64_t>& targets) {
     std::vector<std::uint64_t> sorted(targets);
     std::sort(sorted.begin(), sorted.end());
 
@@ -184,7 +175,7 @@ inline ComplexMatrix<Fp> transform_dense_matrix_by_order(
         }
     }
 
-    ComplexMatrix<Fp> ret(matrix_size, matrix_size);
+    ComplexMatrix ret(matrix_size, matrix_size);
 
     for (std::size_t i = 0; i < matrix_size; i++) {
         std::size_t row_src = transformed[i];
@@ -196,13 +187,12 @@ inline ComplexMatrix<Fp> transform_dense_matrix_by_order(
     return ret;
 }
 
-template <std::floating_point Fp>
-inline SparseComplexMatrix<Fp> transform_sparse_matrix_by_order(
+inline SparseComplexMatrix transform_sparse_matrix_by_order(
     // This is temporary implementation.
     // SparseComplexMatrix will be replaced with std::vector<std::vector<std::Complex<double>>>.
-    const SparseComplexMatrix<Fp>& mat,
+    const SparseComplexMatrix& mat,
     const std::vector<std::uint64_t>& targets) {
-    return transform_dense_matrix_by_order<Fp>(mat.toDense(), targets).sparseView();
+    return transform_dense_matrix_by_order(mat.toDense(), targets).sparseView();
 }
 
 }  // namespace internal

@@ -11,235 +11,257 @@ namespace internal {
 class GateFactory {
 public:
     template <GateImpl T, typename... Args>
-    static Gate<typename T::Fp> create_gate(Args... args) {
+    static Gate<T::Prec, T::Space> create_gate(Args... args) {
         return {std::make_shared<const T>(args...)};
     }
 };
 }  // namespace internal
 namespace gate {
 
-template <std::floating_point Fp>
-inline Gate<Fp> I() {
-    return internal::GateFactory::create_gate<internal::IGateImpl<Fp>>();
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> I() {
+    return internal::GateFactory::create_gate<internal::IGateImpl<Prec, Space>>();
 }
-template <std::floating_point Fp>
-inline Gate<Fp> GlobalPhase(Fp phase, const std::vector<std::uint64_t>& control_qubits = {}) {
-    return internal::GateFactory::create_gate<internal::GlobalPhaseGateImpl<Fp>>(
-        internal::vector_to_mask(control_qubits), phase);
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> GlobalPhase(double phase,
+                                     const std::vector<std::uint64_t>& control_qubits = {}) {
+    return internal::GateFactory::create_gate<internal::GlobalPhaseGateImpl<Prec, Space>>(
+        internal::vector_to_mask(control_qubits), static_cast<internal::Float<Prec>>(phase));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> X(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::XGateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> X(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::XGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> Y(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::YGateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> Y(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::YGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> Z(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::ZGateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> Z(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::ZGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> H(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::HGateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> H(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::HGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> S(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::SGateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> S(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::SGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> Sdag(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::SdagGateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> Sdag(std::uint64_t target,
+                              const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::SdagGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> T(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::TGateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> T(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::TGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> Tdag(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::TdagGateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> Tdag(std::uint64_t target,
+                              const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::TdagGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> SqrtX(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::SqrtXGateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> SqrtX(std::uint64_t target,
+                               const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::SqrtXGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> SqrtXdag(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::SqrtXdagGateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> SqrtXdag(std::uint64_t target,
+                                  const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::SqrtXdagGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> SqrtY(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::SqrtYGateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> SqrtY(std::uint64_t target,
+                               const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::SqrtYGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> SqrtYdag(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::SqrtYdagGateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> SqrtYdag(std::uint64_t target,
+                                  const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::SqrtYdagGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> P0(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::P0GateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> P0(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::P0GateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> P1(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::P1GateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> P1(std::uint64_t target, const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::P1GateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask(controls));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> RX(std::uint64_t target,
-                   Fp angle,
-                   const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::RXGateImpl<Fp>>(
-        internal::vector_to_mask({target}), internal::vector_to_mask(controls), angle);
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> RX(std::uint64_t target,
+                            double angle,
+                            const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::RXGateImpl<Prec, Space>>(
+        internal::vector_to_mask({target}),
+        internal::vector_to_mask(controls),
+        static_cast<internal::Float<Prec>>(angle));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> RY(std::uint64_t target,
-                   Fp angle,
-                   const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::RYGateImpl<Fp>>(
-        internal::vector_to_mask({target}), internal::vector_to_mask(controls), angle);
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> RY(std::uint64_t target,
+                            double angle,
+                            const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::RYGateImpl<Prec, Space>>(
+        internal::vector_to_mask({target}),
+        internal::vector_to_mask(controls),
+        static_cast<internal::Float<Prec>>(angle));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> RZ(std::uint64_t target,
-                   Fp angle,
-                   const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::RZGateImpl<Fp>>(
-        internal::vector_to_mask({target}), internal::vector_to_mask(controls), angle);
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> RZ(std::uint64_t target,
+                            double angle,
+                            const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::RZGateImpl<Prec, Space>>(
+        internal::vector_to_mask({target}),
+        internal::vector_to_mask(controls),
+        static_cast<internal::Float<Prec>>(angle));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> U1(std::uint64_t target,
-                   Fp lambda,
-                   const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::U1GateImpl<Fp>>(
-        internal::vector_to_mask({target}), internal::vector_to_mask(controls), lambda);
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> U1(std::uint64_t target,
+                            double lambda,
+                            const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::U1GateImpl<Prec, Space>>(
+        internal::vector_to_mask({target}),
+        internal::vector_to_mask(controls),
+        static_cast<internal::Float<Prec>>(lambda));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> U2(std::uint64_t target,
-                   Fp phi,
-                   Fp lambda,
-                   const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::U2GateImpl<Fp>>(
-        internal::vector_to_mask({target}), internal::vector_to_mask(controls), phi, lambda);
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> U2(std::uint64_t target,
+                            double phi,
+                            double lambda,
+                            const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::U2GateImpl<Prec, Space>>(
+        internal::vector_to_mask({target}),
+        internal::vector_to_mask(controls),
+        static_cast<internal::Float<Prec>>(phi),
+        static_cast<internal::Float<Prec>>(lambda));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> U3(std::uint64_t target,
-                   Fp theta,
-                   Fp phi,
-                   Fp lambda,
-                   const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::U3GateImpl<Fp>>(
-        internal::vector_to_mask({target}), internal::vector_to_mask(controls), theta, phi, lambda);
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> U3(std::uint64_t target,
+                            double theta,
+                            double phi,
+                            double lambda,
+                            const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::U3GateImpl<Prec, Space>>(
+        internal::vector_to_mask({target}),
+        internal::vector_to_mask(controls),
+        static_cast<internal::Float<Prec>>(theta),
+        static_cast<internal::Float<Prec>>(phi),
+        static_cast<internal::Float<Prec>>(lambda));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> CX(std::uint64_t control, std::uint64_t target) {
-    return internal::GateFactory::create_gate<internal::XGateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> CX(std::uint64_t control, std::uint64_t target) {
+    return internal::GateFactory::create_gate<internal::XGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask({control}));
 }
-template <std::floating_point Fp>
-inline auto& CNot = CX<Fp>;
-template <std::floating_point Fp>
-inline Gate<Fp> CZ(std::uint64_t control, std::uint64_t target) {
-    return internal::GateFactory::create_gate<internal::ZGateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline auto& CNot = CX<Prec>;
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> CZ(std::uint64_t control, std::uint64_t target) {
+    return internal::GateFactory::create_gate<internal::ZGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask({control}));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> CCX(std::uint64_t control1, std::uint64_t control2, std::uint64_t target) {
-    return internal::GateFactory::create_gate<internal::XGateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> CCX(std::uint64_t control1, std::uint64_t control2, std::uint64_t target) {
+    return internal::GateFactory::create_gate<internal::XGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}), internal::vector_to_mask({control1, control2}));
 }
-template <std::floating_point Fp>
-inline auto& Toffoli = CCX<Fp>;
-template <std::floating_point Fp>
-inline auto& CCNot = CCX<Fp>;
-template <std::floating_point Fp>
-inline Gate<Fp> Swap(std::uint64_t target1,
-                     std::uint64_t target2,
-                     const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::SwapGateImpl<Fp>>(
+template <Precision Prec, ExecutionSpace Space>
+inline auto& Toffoli = CCX<Prec, Space>;
+template <Precision Prec, ExecutionSpace Space>
+inline auto& CCNot = CCX<Prec, Space>;
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> Swap(std::uint64_t target1,
+                              std::uint64_t target2,
+                              const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::SwapGateImpl<Prec, Space>>(
         internal::vector_to_mask({target1, target2}), internal::vector_to_mask(controls));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> Pauli(const PauliOperator<Fp>& pauli,
-                      const std::vector<std::uint64_t>& controls = {}) {
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> Pauli(const PauliOperator<Prec, Space>& pauli,
+                               const std::vector<std::uint64_t>& controls = {}) {
     auto tar = pauli.target_qubit_list();
-    return internal::GateFactory::create_gate<internal::PauliGateImpl<Fp>>(
+    return internal::GateFactory::create_gate<internal::PauliGateImpl<Prec, Space>>(
         internal::vector_to_mask(controls), pauli);
 }
-template <std::floating_point Fp>
-inline Gate<Fp> PauliRotation(const PauliOperator<Fp>& pauli,
-                              Fp angle,
-                              const std::vector<std::uint64_t>& controls = {}) {
-    return internal::GateFactory::create_gate<internal::PauliRotationGateImpl<Fp>>(
-        internal::vector_to_mask(controls), pauli, angle);
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> PauliRotation(const PauliOperator<Prec, Space>& pauli,
+                                       double angle,
+                                       const std::vector<std::uint64_t>& controls = {}) {
+    return internal::GateFactory::create_gate<internal::PauliRotationGateImpl<Prec, Space>>(
+        internal::vector_to_mask(controls), pauli, static_cast<internal::Float<Prec>>(angle));
 }
-template <std::floating_point Fp>
-inline Gate<Fp> DenseMatrix(const std::vector<std::uint64_t>& targets,
-                            const internal::ComplexMatrix<Fp>& matrix,
-                            const std::vector<std::uint64_t>& controls = {},
-                            bool is_unitary = false) {
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> DenseMatrix(const std::vector<std::uint64_t>& targets,
+                                     const internal::ComplexMatrix& matrix,
+                                     const std::vector<std::uint64_t>& controls = {},
+                                     bool is_unitary = false) {
     std::uint64_t nqubits = targets.size();
     std::uint64_t dim = 1ULL << nqubits;
     if (static_cast<std::uint64_t>(matrix.rows()) != dim ||
         static_cast<std::uint64_t>(matrix.cols()) != dim) {
         throw std::runtime_error(
             "gate::DenseMatrix(const std::vector<std::uint64_t>&, const "
-            "internal::ComplexMatrix<Fp>&): "
+            "internal::ComplexMatrix&): "
             "matrix size must be 2^{n_qubits} x 2^{n_qubits}.");
     }
     if (std::is_sorted(targets.begin(), targets.end())) {
-        return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl<Fp>>(
+        return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl<Prec, Space>>(
             internal::vector_to_mask(targets),
             internal::vector_to_mask(controls),
             matrix,
             is_unitary);
     }
-    internal::ComplexMatrix<Fp> matrix_transformed =
+    internal::ComplexMatrix matrix_transformed =
         internal::transform_dense_matrix_by_order(matrix, targets);
-    return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl<Fp>>(
+    return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl<Prec, Space>>(
         internal::vector_to_mask(targets),
         internal::vector_to_mask(controls),
         matrix_transformed,
         is_unitary);
 }
-template <std::floating_point Fp>
-inline Gate<Fp> SparseMatrix(const std::vector<std::uint64_t>& targets,
-                             const internal::SparseComplexMatrix<Fp>& matrix,
-                             const std::vector<std::uint64_t>& controls = {}) {
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> SparseMatrix(const std::vector<std::uint64_t>& targets,
+                                      const internal::SparseComplexMatrix& matrix,
+                                      const std::vector<std::uint64_t>& controls = {}) {
     if (std::is_sorted(targets.begin(), targets.end())) {
-        return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl<Fp>>(
+        return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl<Prec, Space>>(
             internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix);
     }
-    internal::SparseComplexMatrix<Fp> matrix_transformed =
+    internal::SparseComplexMatrix matrix_transformed =
         internal::transform_sparse_matrix_by_order(matrix, targets);
-    return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl<Fp>>(
+    return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl<Prec, Space>>(
         internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix_transformed);
 }
-template <std::floating_point Fp>
-inline Gate<Fp> Probablistic(const std::vector<Fp>& distribution,
-                             const std::vector<Gate<Fp>>& gate_list) {
-    return internal::GateFactory::create_gate<internal::ProbablisticGateImpl<Fp>>(distribution,
-                                                                                  gate_list);
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec, Space> Probablistic(const std::vector<double>& distribution,
+                                      const std::vector<Gate<Prec, Space>>& gate_list) {
+    return internal::GateFactory::create_gate<internal::ProbablisticGateImpl<Prec, Space>>(
+        distribution, gate_list);
 }
 }  // namespace gate
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <Precision Prec, ExecutionSpace Space>
 void bind_gate_gate_factory_hpp(nb::module_& mgate) {
     mgate.def("I",
-              &gate::I<Fp>,
+              &gate::I<Prec, Space>,
               DocString()
                   .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
                         ":class:`~scaluq.f64.IGate`.")
@@ -249,7 +271,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .c_str());
     mgate.def(
         "GlobalPhase",
-        &gate::GlobalPhase<Fp>,
+        &gate::GlobalPhase<Prec, Space>,
         "gamma"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
@@ -267,7 +289,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "X",
-        &gate::X<Fp>,
+        &gate::X<Prec, Space>,
         "target"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
@@ -286,7 +308,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "Y",
-        &gate::Y<Fp>,
+        &gate::Y<Prec, Space>,
         "target"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
@@ -305,7 +327,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "Z",
-        &gate::Z<Fp>,
+        &gate::Z<Prec, Space>,
         "target"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
@@ -324,7 +346,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "H",
-        &gate::H<Fp>,
+        &gate::H<Prec, Space>,
         "target"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
@@ -343,7 +365,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "S",
-        &gate::S<Fp>,
+        &gate::S<Prec, Space>,
         "target"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
@@ -360,7 +382,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .build_as_google_style()
             .c_str());
     mgate.def("Sdag",
-              &gate::Sdag<Fp>,
+              &gate::Sdag<Prec, Space>,
               "target"_a,
               "controls"_a = std::vector<std::uint64_t>{},
               DocString()
@@ -379,7 +401,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .c_str());
     mgate.def(
         "T",
-        &gate::T<Fp>,
+        &gate::T<Prec, Space>,
         "target"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
@@ -396,7 +418,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .build_as_google_style()
             .c_str());
     mgate.def("Tdag",
-              &gate::Tdag<Fp>,
+              &gate::Tdag<Prec, Space>,
               "target"_a,
               "controls"_a = std::vector<std::uint64_t>{},
               DocString()
@@ -415,7 +437,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .c_str());
     mgate.def(
         "SqrtX",
-        &gate::SqrtX<Fp>,
+        &gate::SqrtX<Prec, Space>,
         "target"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
@@ -433,7 +455,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "SqrtXdag",
-        &gate::SqrtXdag<Fp>,
+        &gate::SqrtXdag<Prec, Space>,
         "target"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
@@ -452,7 +474,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "SqrtY",
-        &gate::SqrtY<Fp>,
+        &gate::SqrtY<Prec, Space>,
         "target"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
@@ -471,7 +493,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "SqrtYdag",
-        &gate::SqrtYdag<Fp>,
+        &gate::SqrtYdag<Prec, Space>,
         "target"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
@@ -489,7 +511,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .build_as_google_style()
             .c_str());
     mgate.def("P0",
-              &gate::P0<Fp>,
+              &gate::P0<Prec, Space>,
               "target"_a,
               "controls"_a = std::vector<std::uint64_t>{},
               DocString()
@@ -506,7 +528,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .build_as_google_style()
                   .c_str());
     mgate.def("P1",
-              &gate::P1<Fp>,
+              &gate::P1<Prec, Space>,
               "target"_a,
               "controls"_a = std::vector<std::uint64_t>{},
               DocString()
@@ -524,7 +546,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .c_str());
     mgate.def(
         "RX",
-        &gate::RX<Fp>,
+        &gate::RX<Prec, Space>,
         "target"_a,
         "theta"_a,
         "controls"_a = std::vector<std::uint64_t>{},
@@ -543,7 +565,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "RY",
-        &gate::RY<Fp>,
+        &gate::RY<Prec, Space>,
         "target"_a,
         "theta"_a,
         "controls"_a = std::vector<std::uint64_t>{},
@@ -562,7 +584,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "RZ",
-        &gate::RZ<Fp>,
+        &gate::RZ<Prec, Space>,
         "target"_a,
         "theta"_a,
         "controls"_a = std::vector<std::uint64_t>{},
@@ -580,7 +602,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .build_as_google_style()
             .c_str());
     mgate.def("U1",
-              &gate::U1<Fp>,
+              &gate::U1<Prec, Space>,
               "target"_a,
               "lambda_"_a,
               "controls"_a = std::vector<std::uint64_t>{},
@@ -599,7 +621,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .build_as_google_style()
                   .c_str());
     mgate.def("U2",
-              &gate::U2<Fp>,
+              &gate::U2<Prec, Space>,
               "target"_a,
               "phi"_a,
               "lambda_"_a,
@@ -622,7 +644,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .c_str());
     mgate.def(
         "U3",
-        &gate::U3<Fp>,
+        &gate::U3<Prec, Space>,
         "target"_a,
         "theta"_a,
         "phi"_a,
@@ -647,7 +669,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "Swap",
-        &gate::Swap<Fp>,
+        &gate::Swap<Prec, Space>,
         "target1"_a,
         "target2"_a,
         "controls"_a = std::vector<std::uint64_t>{},
@@ -665,7 +687,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .build_as_google_style()
             .c_str());
     mgate.def("CX",
-              &gate::CX<Fp>,
+              &gate::CX<Prec, Space>,
               "control"_a,
               "target"_a,
               DocString()
@@ -683,7 +705,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .c_str());
     mgate.def(
         "CNot",
-        &gate::CX<Fp>,
+        &gate::CX<Prec, Space>,
         "control"_a,
         "target"_a,
         DocString()
@@ -700,7 +722,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .build_as_google_style()
             .c_str());
     mgate.def("CZ",
-              &gate::CZ<Fp>,
+              &gate::CZ<Prec, Space>,
               "control"_a,
               "target"_a,
               DocString()
@@ -717,7 +739,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .build_as_google_style()
                   .c_str());
     mgate.def("CCX",
-              &gate::CCX<Fp>,
+              &gate::CCX<Prec, Space>,
               "control1"_a,
               "control2"_a,
               "target"_a,
@@ -737,7 +759,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .build_as_google_style()
                   .c_str());
     mgate.def("CCNot",
-              &gate::CCX<Fp>,
+              &gate::CCX<Prec, Space>,
               "control1"_a,
               "control2"_a,
               "target"_a,
@@ -758,7 +780,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .c_str());
     mgate.def(
         "Toffoli",
-        &gate::CCX<Fp>,
+        &gate::CCX<Prec, Space>,
         "control1"_a,
         "control2"_a,
         "target"_a,
@@ -779,7 +801,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "DenseMatrix",
-        &gate::DenseMatrix<Fp>,
+        &gate::DenseMatrix<Prec, Space>,
         "targets"_a,
         "matrix"_a,
         "controls"_a = std::vector<std::uint64_t>{},
@@ -806,7 +828,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .build_as_google_style()
             .c_str());
     mgate.def("SparseMatrix",
-              &gate::SparseMatrix<Fp>,
+              &gate::SparseMatrix<Prec, Space>,
               "targets"_a,
               "matrix"_a,
               "controls"_a = std::vector<std::uint64_t>{},
@@ -828,7 +850,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .c_str());
     mgate.def(
         "Pauli",
-        &gate::Pauli<Fp>,
+        &gate::Pauli<Prec, Space>,
         "pauli"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         DocString()
@@ -846,7 +868,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "PauliRotation",
-        &gate::PauliRotation<Fp>,
+        &gate::PauliRotation<Prec, Space>,
         "pauli"_a,
         "theta"_a,
         "controls"_a = std::vector<std::uint64_t>{},
@@ -867,7 +889,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .build_as_google_style()
             .c_str());
     mgate.def("Probablistic",
-              &gate::Probablistic<Fp>,
+              &gate::Probablistic<Prec, Space>,
               "distribution"_a,
               "gate_list"_a,
               DocString()

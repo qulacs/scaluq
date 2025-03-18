@@ -5,17 +5,17 @@
 
 namespace scaluq {
 
-template <std::floating_point Fp>
+template <Precision Prec, ExecutionSpace Space>
 class StateVectorBatched {
     std::uint64_t _batch_size;
     std::uint64_t _n_qubits;
     std::uint64_t _dim;
-
-    // static_assert(std::is_same_v<Space, HostSpace> || std::is_same_v<Space, DefaultSpace>,
-    //               "Unsupported execution space tag");
+    using FloatType = internal::Float<Prec>;
+    using ComplexType = internal::Complex<Prec>;
+    using ExecutionSpaceType = internal::SpaceType<Space>;
 
 public:
-    Kokkos::View<Kokkos::complex<Fp>**, Kokkos::LayoutRight> _raw;
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight, ExecutionSpaceType> _raw;
     StateVectorBatched() = default;
     StateVectorBatched(std::uint64_t batch_size, std::uint64_t n_qubits);
     StateVectorBatched(const StateVectorBatched& other) = default;
@@ -28,11 +28,11 @@ public:
 
     [[nodiscard]] std::uint64_t batch_size() const { return this->_batch_size; }
 
-    void set_state_vector(const StateVector<Fp>& state);
+    void set_state_vector(const StateVector<Prec, Space>& state);
 
-    void set_state_vector_at(std::uint64_t batch_id, const StateVector<Fp>& state);
+    void set_state_vector_at(std::uint64_t batch_id, const StateVector<Prec, Space>& state);
 
-    [[nodiscard]] StateVector<Fp> get_state_vector_at(std::uint64_t batch_id) const;
+    [[nodiscard]] StateVector<Prec, Space> get_state_vector_at(std::uint64_t batch_id) const;
 
     void set_zero_state() { set_computational_basis(0); }
 
@@ -54,25 +54,24 @@ public:
         bool set_same_state,
         std::uint64_t seed = std::random_device()());
 
-    [[nodiscard]] std::vector<std::vector<Kokkos::complex<Fp>>> get_amplitudes() const;
+    [[nodiscard]] std::vector<std::vector<StdComplex>> get_amplitudes() const;
 
-    [[nodiscard]] std::vector<Fp> get_squared_norm() const;
+    [[nodiscard]] std::vector<double> get_squared_norm() const;
 
     void normalize();
 
-    [[nodiscard]] std::vector<Fp> get_zero_probability(std::uint64_t target_qubit_index) const;
+    [[nodiscard]] std::vector<double> get_zero_probability(std::uint64_t target_qubit_index) const;
 
-    [[nodiscard]] std::vector<Fp> get_marginal_probability(
+    [[nodiscard]] std::vector<double> get_marginal_probability(
         const std::vector<std::uint64_t>& measured_values) const;
 
-    [[nodiscard]] std::vector<Fp> get_entropy() const;
+    [[nodiscard]] std::vector<double> get_entropy() const;
 
-    void add_state_vector_with_coef(const Kokkos::complex<Fp>& coef,
-                                    const StateVectorBatched& states);
+    void add_state_vector_with_coef(const StdComplex& coef, const StateVectorBatched& states);
 
-    void multiply_coef(const Kokkos::complex<Fp>& coef);
+    void multiply_coef(const StdComplex& coef);
 
-    void load(const std::vector<std::vector<Kokkos::complex<Fp>>>& states);
+    void load(const std::vector<std::vector<StdComplex>>& states);
 
     [[nodiscard]] StateVectorBatched copy() const;
 
@@ -83,44 +82,36 @@ public:
         return os;
     }
 
-    friend void to_json(Json& j, const StateVectorBatched<Fp>& states) {
-        auto amplitudes = states.get_amplitudes();
-
+    friend void to_json(Json& j, const StateVectorBatched& states) {
         j = Json{{"n_qubits", states._n_qubits},
                  {"batch_size", states._batch_size},
-                 {"batched_amplitudes", Json::array()}};
-        for (std::uint32_t i = 0; i < amplitudes.size(); ++i) {
-            Json state = {{"amplitudes", Json::array()}};
-            for (const auto& amp : amplitudes[i]) {
-                state["amplitudes"].push_back({{"real", amp.real()}, {"imag", amp.imag()}});
-            }
-            j["batched_amplitudes"].push_back(state);
-        }
+                 {"amplitudes", states.get_amplitudes()}};
     }
-    friend void from_json(const Json& j, StateVectorBatched<Fp>& states) {
-        std::uint32_t b = j.at("batch_size").get<std::uint32_t>();
-        std::uint32_t n = j.at("n_qubits").get<std::uint32_t>();
+    friend void from_json(const Json& j, StateVectorBatched& states) {
+        std::uint64_t b = j.at("batch_size").get<std::uint64_t>();
+        std::uint64_t n = j.at("n_qubits").get<std::uint64_t>();
         states = StateVectorBatched(b, n);
+        states.load(j.at("amplitudes").get<std::vector<std::vector<StdComplex>>>());
 
-        const auto& batched_amplitudes = j.at("batched_amplitudes");
-        std::vector res(b, std::vector<Kokkos::complex<Fp>>(1ULL << n));
-        for (std::uint32_t i = 0; i < b; ++i) {
-            const auto& amplitudes = batched_amplitudes[i].at("amplitudes");
-            for (std::uint32_t j = 0; j < (1ULL << n); ++j) {
-                Fp real = amplitudes[j].at("real").get<Fp>();
-                Fp imag = amplitudes[j].at("imag").get<Fp>();
-                res[i][j] = Kokkos::complex<Fp>(real, imag);
-            }
-        }
-        states.load(res);
+        // const auto& batched_amplitudes = j.at("batched_amplitudes");
+        // std::vector res(b, std::vector<StdComplex>(1ULL << n));
+        // for (std::uint32_t i = 0; i < b; ++i) {
+        //     const auto& amplitudes = batched_amplitudes[i].at("amplitudes");
+        //     for (std::uint32_t j = 0; j < (1ULL << n); ++j) {
+        //         double real = amplitudes[j].at("real").get<double>();
+        //         double imag = amplitudes[j].at("imag").get<double>();
+        //         res[i][j] = ComplexType(real, imag);
+        //     }
+        // }
+        // states.load(res);
     }
 };
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
+template <Precision Prec, ExecutionSpace Space>
 void bind_state_state_vector_batched_hpp(nb::module_& m) {
-    nb::class_<StateVectorBatched<Fp>>(
+    nb::class_<StateVectorBatched<Prec, Space>>(
         m,
         "StateVectorBatched",
         DocString()
@@ -194,7 +185,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         // Constructor: Copy constructor
-        .def(nb::init<const StateVectorBatched<Fp>&>(),
+        .def(nb::init<const StateVectorBatched<Prec, Space>&>(),
              "other"_a,
              DocString()
                  .desc("Construct a batched state vector by copying another batched state.")
@@ -203,21 +194,21 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .c_str())
         // Basic getters
         .def("n_qubits",
-             &StateVectorBatched<Fp>::n_qubits,
+             &StateVectorBatched<Prec, Space>::n_qubits,
              DocString()
                  .desc("Get the number of qubits in each state vector.")
                  .ret("int", "The number of qubits.")
                  .build_as_google_style()
                  .c_str())
         .def("dim",
-             &StateVectorBatched<Fp>::dim,
+             &StateVectorBatched<Prec, Space>::dim,
              DocString()
                  .desc("Get the dimension of each state vector (=$2^{\\mathrm{n\\_qubits}}$).")
                  .ret("int", "The dimension of the vector.")
                  .build_as_google_style()
                  .c_str())
         .def("batch_size",
-             &StateVectorBatched<Fp>::batch_size,
+             &StateVectorBatched<Prec, Space>::batch_size,
              DocString()
                  .desc("Get the batch size (number of state vectors).")
                  .ret("int", "The batch size.")
@@ -225,7 +216,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .c_str())
         // State manipulation methods
         .def("set_state_vector",
-             &StateVectorBatched<Fp>::set_state_vector,
+             &StateVectorBatched<Prec, Space>::set_state_vector,
              "state"_a,
              DocString()
                  .desc("Set all state vectors in the batch to the given state.")
@@ -233,7 +224,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("set_state_vector_at",
-             &StateVectorBatched<Fp>::set_state_vector_at,
+             &StateVectorBatched<Prec, Space>::set_state_vector_at,
              "batch_id"_a,
              "state"_a,
              DocString()
@@ -243,7 +234,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("get_state_vector_at",
-             &StateVectorBatched<Fp>::get_state_vector_at,
+             &StateVectorBatched<Prec, Space>::get_state_vector_at,
              "batch_id"_a,
              DocString()
                  .desc("Get the state vector at a specific batch index.")
@@ -253,10 +244,10 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .c_str())
         // State initialization methods
         .def("set_zero_state",
-             &StateVectorBatched<Fp>::set_zero_state,
+             &StateVectorBatched<Prec, Space>::set_zero_state,
              DocString().desc("Initialize all states to |0...0⟩.").build_as_google_style().c_str())
         .def("set_computational_basis",
-             &StateVectorBatched<Fp>::set_computational_basis,
+             &StateVectorBatched<Prec, Space>::set_computational_basis,
              "basis"_a,
              DocString()
                  .desc("Set all states to the specified computational basis state.")
@@ -264,12 +255,12 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("set_zero_norm_state",
-             &StateVectorBatched<Fp>::set_zero_norm_state,
+             &StateVectorBatched<Prec, Space>::set_zero_norm_state,
              DocString().desc("Set all amplitudes to zero.").build_as_google_style().c_str())
         // Haar random state methods
         .def(
             "set_Haar_random_state",
-            [](StateVectorBatched<Fp>& states,
+            [](StateVectorBatched<Prec, Space>& states,
                std::uint64_t batch_size,
                std::uint64_t n_qubits,
                bool set_same_state,
@@ -296,7 +287,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                std::uint64_t n_qubits,
                bool set_same_state,
                std::optional<std::uint64_t> seed) {
-                return StateVectorBatched<Fp>::Haar_random_state(
+                return StateVectorBatched<Prec, Space>::Haar_random_state(
                     batch_size, n_qubits, set_same_state, seed.value_or(std::random_device()()));
             },
             "batch_size"_a,
@@ -315,17 +306,17 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                 .c_str())
         // Measurement and probability methods
         .def("get_squared_norm",
-             &StateVectorBatched<Fp>::get_squared_norm,
+             &StateVectorBatched<Prec, Space>::get_squared_norm,
              DocString()
                  .desc("Get squared norm for each state in the batch.")
                  .ret("list[float]", "List of squared norms.")
                  .build_as_google_style()
                  .c_str())
         .def("normalize",
-             &StateVectorBatched<Fp>::normalize,
+             &StateVectorBatched<Prec, Space>::normalize,
              DocString().desc("Normalize all states in the batch.").build_as_google_style().c_str())
         .def("get_zero_probability",
-             &StateVectorBatched<Fp>::get_zero_probability,
+             &StateVectorBatched<Prec, Space>::get_zero_probability,
              "target_qubit_index"_a,
              DocString()
                  .desc("Get probability of measuring |0⟩ on specified qubit for each state.")
@@ -334,7 +325,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("get_marginal_probability",
-             &StateVectorBatched<Fp>::get_marginal_probability,
+             &StateVectorBatched<Prec, Space>::get_marginal_probability,
              "measured_values"_a,
              DocString()
                  .desc("Get marginal probabilities for specified measurement outcomes.")
@@ -344,7 +335,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .c_str())
         // Entropy and sampling methods
         .def("get_entropy",
-             &StateVectorBatched<Fp>::get_entropy,
+             &StateVectorBatched<Prec, Space>::get_entropy,
              DocString()
                  .desc("Calculate von Neumann entropy for each state.")
                  .ret("list[float]", "Entropy values for each state.")
@@ -352,7 +343,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .c_str())
         .def(
             "sampling",
-            [](const StateVectorBatched<Fp>& states,
+            [](const StateVectorBatched<Prec, Space>& states,
                std::uint64_t sampling_count,
                std::optional<std::uint64_t> seed) {
                 return states.sampling(sampling_count, seed.value_or(std::random_device()()));
@@ -368,7 +359,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                 .c_str())
         // State manipulation methods
         .def("add_state_vector_with_coef",
-             &StateVectorBatched<Fp>::add_state_vector_with_coef,
+             &StateVectorBatched<Prec, Space>::add_state_vector_with_coef,
              "coef"_a,
              "states"_a,
              DocString()
@@ -378,7 +369,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("multiply_coef",
-             &StateVectorBatched<Fp>::multiply_coef,
+             &StateVectorBatched<Prec, Space>::multiply_coef,
              "coef"_a,
              DocString()
                  .desc("Multiply all states by a coefficient.")
@@ -387,7 +378,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .c_str())
         // Data access methods
         .def("load",
-             &StateVectorBatched<Fp>::load,
+             &StateVectorBatched<Prec, Space>::load,
              "states"_a,
              DocString()
                  .desc("Load amplitudes for all states in batch.")
@@ -395,7 +386,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("get_amplitudes",
-             &StateVectorBatched<Fp>::get_amplitudes,
+             &StateVectorBatched<Prec, Space>::get_amplitudes,
              DocString()
                  .desc("Get amplitudes of all states in batch.")
                  .ret("list[list[complex]]", "Amplitudes for each state.")
@@ -403,14 +394,14 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .c_str())
         // Copy and string representation
         .def("copy",
-             &StateVectorBatched<Fp>::copy,
+             &StateVectorBatched<Prec, Space>::copy,
              DocString()
                  .desc("Create a deep copy of this batched state vector.")
                  .ret("StateVectorBatched", "New copy of the states.")
                  .build_as_google_style()
                  .c_str())
         .def("to_string",
-             &StateVectorBatched<Fp>::to_string,
+             &StateVectorBatched<Prec, Space>::to_string,
              DocString()
                  .desc("Get string representation of the batched states.")
                  .ret("str", "String representation of states.")
@@ -444,7 +435,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("__str__",
-             &StateVectorBatched<Fp>::to_string,
+             &StateVectorBatched<Prec, Space>::to_string,
              DocString()
                  .desc("Get string representation of the batched states.")
                  .ret("str", "String representation of states.")
@@ -453,7 +444,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
         // JSON serialization
         .def(
             "to_json",
-            [](const StateVectorBatched<Fp>& states) { return Json(states).dump(); },
+            [](const StateVectorBatched<Prec, Space>& states) { return Json(states).dump(); },
             DocString()
                 .desc("Convert states to JSON string.")
                 .ret("str", "JSON representation of states.")
@@ -481,7 +472,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                 .c_str())
         .def(
             "load_json",
-            [](StateVectorBatched<Fp>& states, const std::string& str) {
+            [](StateVectorBatched<Prec, Space>& states, const std::string& str) {
                 states = nlohmann::json::parse(str);
             },
             "json_str"_a,
