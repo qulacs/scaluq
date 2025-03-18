@@ -10,7 +10,7 @@ authors = [
     { name = "Qulacs-Osaka", email = "qulacs.osaka@gmail.com" }
 ]
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = { file = "LICENSE" }
 dependencies = [
     "numpy >= 1.22.0",
