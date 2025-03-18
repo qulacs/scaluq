@@ -260,6 +260,13 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "source"_a,
              "target"_a,
              "Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.")
+        .def("get_matrix",
+             &PauliOperator<Prec, Space>::get_matrix,
+             "Get matrix representaton of the PauliOperator. Tensor product is applied from "
+             "target_qubit_list[-1] to target_qubit_list[0].")
+        .def("get_matrix_ignoring_coef",
+             &PauliOperator<Prec, Space>::get_matrix_ignoring_coef,
+             "Get matrix representaton of the PauliOperator, but with forcing `coef=1.`")
         .def(nb::self * nb::self)
         .def(nb::self * StdComplex())
         .def(

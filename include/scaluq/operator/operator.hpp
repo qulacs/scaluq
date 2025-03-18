@@ -172,6 +172,10 @@ void bind_operator_operator_hpp(nb::module_& m) {
              "source"_a,
              "target"_a,
              "Get the transition amplitude of the operator between two state vectors.")
+        .def("get_matrix",
+             &Operator<Prec, Space>::get_matrix,
+             "Get matrix representaton of the Operator. Tensor product is applied from "
+             "n_qubits-1 to 0.")
         .def(nb::self *= StdComplex())
         .def(nb::self * StdComplex())
         .def(+nb::self)
