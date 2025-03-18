@@ -68,6 +68,36 @@ Operator<Prec, Space> Operator<Prec, Space>::get_dagger() const {
 }
 
 template <Precision Prec, ExecutionSpace Space>
+internal::ComplexMatrix Operator<Prec, Space>::get_matrix() const {
+    std::uint64_t dim = 1ULL << _n_qubits;
+    using Pauli = PauliOperator<Prec, Space>;
+    std::vector<typename Pauli::Triplet> triplets;
+    triplets.reserve(dim * _terms.size());
+    for (const auto& term : _terms) {
+        std::vector<typename Pauli::PauliID> pauli_id_par_qubit(_n_qubits, Pauli::PauliID::I);
+        for (std::uint64_t i = 0; i < term._ptr->_pauli_id_list.size(); i++) {
+            pauli_id_par_qubit[term._ptr->_target_qubit_list[i]] =
+                static_cast<typename Pauli::PauliID>(term._ptr->_pauli_id_list[i]);
+        }
+        typename Pauli::Data aligned_data;
+        for (std::uint64_t i = 0; i < _n_qubits; i++) {
+            aligned_data.add_single_pauli(i, pauli_id_par_qubit[i]);
+        }
+        auto basic_triplets = Pauli(aligned_data).get_matrix_triplets_ignoring_coef();
+        std::ranges::transform(
+            basic_triplets, std::back_inserter(triplets), [&](const Pauli::Triplet& triplet) {
+                return typename Pauli::Triplet(
+                    triplet.row(),
+                    triplet.col(),
+                    triplet.value() * static_cast<StdComplex>(term._ptr->_coef));
+            });
+    }
+    internal::SparseComplexMatrix sparse(dim, dim);
+    sparse.setFromTriplets(triplets.begin(), triplets.end());
+    return internal::ComplexMatrix(sparse);
+}
+
+template <Precision Prec, ExecutionSpace Space>
 void Operator<Prec, Space>::apply_to_state(StateVector<Prec, Space>& state_vector) const {
     StateVector<Prec, Space> res(state_vector.n_qubits());
     res.set_zero_norm_state();
