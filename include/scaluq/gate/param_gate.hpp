@@ -204,6 +204,7 @@ using ParamGate = internal::ParamGatePtr<internal::ParamGateBase<Prec, Space>>;
 namespace internal {
 #define DEF_PARAM_GATE_BASE(PARAM_GATE_TYPE, PRECISION, SPACE, DESCRIPTION)                       \
     nb::class_<PARAM_GATE_TYPE<PRECISION, SPACE>>(m, #PARAM_GATE_TYPE, DESCRIPTION)               \
+        .def(nb::init<PARAM_GATE_TYPE<PRECISION, SPACE>>(), "Downcast from ParamGate.")           \
         .def("param_gate_type",                                                                   \
              &PARAM_GATE_TYPE<PRECISION, SPACE>::param_gate_type,                                 \
              "Get parametric gate type as `ParamGateType` enum.")                                 \
@@ -250,7 +251,9 @@ namespace internal {
         .def(                                                                                     \
             "get_inverse",                                                                        \
             [](const PARAM_GATE_TYPE<PRECISION, SPACE>& param_gate) {                             \
-                return param_gate->get_inverse();                                                 \
+                auto inv = param_gate->get_inverse();                                             \
+                if (!inv) nb::none();                                                             \
+                return ParamGate<PRECISION, SPACE>(inv);                                          \
             },                                                                                    \
             "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.")  \
         .def(                                                                                     \
@@ -258,6 +261,8 @@ namespace internal {
             [](const PARAM_GATE_TYPE<PRECISION, SPACE>& param_gate,                               \
                StateVector<PRECISION, SPACE>& state_vector,                                       \
                double param) { param_gate->update_quantum_state(state_vector, param); },          \
+            "state"_a,                                                                            \
+            "param"_a,                                                                            \
             "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is " \
             "directly updated.")                                                                  \
         .def(                                                                                     \
@@ -265,6 +270,8 @@ namespace internal {
             [](const PARAM_GATE_TYPE<PRECISION, SPACE>& param_gate,                               \
                StateVectorBatched<PRECISION, SPACE>& states,                                      \
                std::vector<double> params) { param_gate->update_quantum_state(states, params); }, \
+            "states"_a,                                                                           \
+            "params"_a,                                                                           \
             "Apply gate to `states` with holding the parameter. `states` in args is directly "    \
             "updated.")                                                                           \
         .def(                                                                                     \
@@ -272,6 +279,7 @@ namespace internal {
             [](const PARAM_GATE_TYPE<PRECISION, SPACE>& gate, double param) {                     \
                 return gate->get_matrix(param);                                                   \
             },                                                                                    \
+            "param"_a,                                                                            \
             "Get matrix representation of the gate with holding the parameter.")                  \
         .def(                                                                                     \
             "to_string",                                                                          \
@@ -290,17 +298,18 @@ namespace internal {
             [](PARAM_GATE_TYPE<PRECISION, SPACE>& gate, const std::string& str) {                 \
                 gate = nlohmann::json::parse(str);                                                \
             },                                                                                    \
+            "json_str"_a,                                                                         \
             "Read an object from the JSON representation of the gate.")
-
-#define DEF_PARAM_GATE(PARAM_GATE_TYPE, PRECISION, SPACE, DESCRIPTION, PARAM_GATE_BASE_DEF)     \
-    PARAM_GATE_BASE_DEF.def(nb::init<PARAM_GATE_TYPE<PRECISION, SPACE>>(),                      \
-                            "Upcast from `" #PARAM_GATE_TYPE "`.");                             \
-    DEF_PARAM_GATE_BASE(                                                                        \
-        PARAM_GATE_TYPE,                                                                        \
-        PRECISION,                                                                              \
-        SPACE,                                                                                  \
-        DESCRIPTION                                                                             \
-        "\n\n.. note:: Upcast is required to use gate-general functions (ex: add to Circuit).") \
+#define DEF_PARAM_GATE(PARAM_GATE_TYPE, PRECISION, SPACE, DESCRIPTION, PARAM_GATE_BASE_DEF) \
+    PARAM_GATE_BASE_DEF.def(nb::init<PARAM_GATE_TYPE<PRECISION, SPACE>>(),                  \
+                            "param_gate"_a,                                                 \
+                            "Upcast from `" #PARAM_GATE_TYPE "`.");                         \
+    DEF_PARAM_GATE_BASE(PARAM_GATE_TYPE,                                                    \
+                        PRECISION,                                                          \
+                        SPACE,                                                              \
+                        DESCRIPTION                                                         \
+                        "\n\nNotes:\n\tUpcast is required to use gate-general functions "   \
+                        "(ex: add to Circuit).")                                            \
         .def(nb::init<ParamGate<PRECISION, SPACE>>())
 
 void bind_gate_param_gate_hpp_without_precision_and_space(nb::module_& m) {
@@ -313,12 +322,12 @@ void bind_gate_param_gate_hpp_without_precision_and_space(nb::module_& m) {
 
 template <Precision Prec, ExecutionSpace Space>
 nb::class_<ParamGate<Prec, Space>> bind_gate_param_gate_hpp(nb::module_& m) {
-    return DEF_PARAM_GATE_BASE(
-               ParamGate,
-               Prec,
-               Space,
-               "General class of parametric quantum gate.\n\n.. note:: Downcast to requred to use "
-               "gate-specific functions.")
+    return DEF_PARAM_GATE_BASE(ParamGate,
+                               Prec,
+                               Space,
+                               "General class of parametric quantum gate.\n\nNotes:\n\t"
+                               "Downcast to requred to use "
+                               "gate-specific functions.")
         .def(nb::init<ParamGate<Prec, Space>>(), "Just copy shallowly.");
 }
 

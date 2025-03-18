@@ -138,8 +138,7 @@ void bind_gate_param_gate_probablistic_hpp(
         Prec,
         Space,
         "Specific class of parametric probablistic gate. The gate to apply is picked from a "
-        "cirtain "
-        "distribution.",
+        "cirtain distribution.",
         param_gate_base_def)
         .def(
             "gate_list",
