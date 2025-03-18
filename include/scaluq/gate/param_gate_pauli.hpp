@@ -95,7 +95,7 @@ void bind_gate_param_gate_pauli_hpp(nb::module_& m,
                    Prec,
                    Space,
                    "Specific class of parametric multi-qubit pauli-rotation gate, represented as "
-                   "$e^{-i\\frac{\\mathrm{angle}}{2}P}$. `angle` is given as `param * param_coef`.",
+                   "$e^{-i\\frac{\\theta}{2}P}$. `theta` is given as `param * param_coef`.",
                    param_gate_base_def);
 }
 }  // namespace internal
