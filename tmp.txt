@@ -1,0 +1,237 @@
+ninja: Entering directory `build'
+[1/5] cd /workspaces/scaluq/build/_deps/kokkos-build && /opt/cmake-3.28.0/bin/cmake -DRUN_CHECK_GIT_VERSION=1 -DKOKKOS_SOURCE_DIR=/workspaces/scaluq/build/_deps/kokkos-src -P /workspaces/scaluq/build/_deps/kokkos-src/cmake/build_env_info.cmake
+[2/3] Building CXX object CMakeFiles/scaluq.dir/src/circuit/circuit.cpp.o
+FAILED: CMakeFiles/scaluq.dir/src/circuit/circuit.cpp.o 
+/workspaces/scaluq/build/_deps/kokkos-src/bin/kokkos_launch_compiler /workspaces/scaluq/build/_deps/kokkos-src/bin/nvcc_wrapper /usr/bin/g++ /usr/bin/g++ -DJSON_HAS_RANGES=0 -DKOKKOS_DEPENDENCE -DSCALUQ_FLOAT32 -DSCALUQ_FLOAT64 -DSCALUQ_USE_CUDA -I/workspaces/scaluq/include -I/workspaces/scaluq/build/_deps/eigen-src -I/workspaces/scaluq/build/_deps/kokkos-build -I/workspaces/scaluq/build/_deps/kokkos-build/core/src -I/workspaces/scaluq/build/_deps/kokkos-src/core/src -I/workspaces/scaluq/build/_deps/kokkos-src/core/src/../../tpls/desul/include -I/workspaces/scaluq/build/_deps/kokkos-build/containers/src -I/workspaces/scaluq/build/_deps/kokkos-src/containers/src -I/workspaces/scaluq/build/_deps/kokkos-build/algorithms/src -I/workspaces/scaluq/build/_deps/kokkos-src/algorithms/src -I/workspaces/scaluq/build/_deps/kokkos-build/simd/src -I/workspaces/scaluq/build/_deps/kokkos-src/simd/src -I/workspaces/scaluq/build/_deps/json-src/include -isystem /usr/local/cuda/targets/x86_64-linux/include -std=c++20 -fPIC -Wall -Wextra -Wunused-parameter -Wsign-compare -Wtype-limits -Wuninitialized -Wno-unknown-pragmas -Wno-deprecated-enum-enum-conversion --expt-relaxed-constexpr -Werror=cross-execution-space-call -DEIGEN_NO_CUDA -pthread -fopenmp -O3 -extended-lambda -Wext-lambda-captures-this -arch=sm_86 -fopenmp -MD -MT CMakeFiles/scaluq.dir/src/circuit/circuit.cpp.o -MF CMakeFiles/scaluq.dir/src/circuit/circuit.cpp.o.d -o CMakeFiles/scaluq.dir/src/circuit/circuit.cpp.o -c /workspaces/scaluq/src/circuit/circuit.cpp
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(121): error: expected a ")"
+                  std::discrete_distribution<std::uint64_t> dist(probs.begin(), probs.end() seed);
+                                                                                            ^
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(122): error: expected a ":"
+                  for ([[maybe_unused]] std::uint64_t i = 0 : i < cnt; ++i) {
+                                                        ^
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(122): error: expected a ">"
+                  for ([[maybe_unused]] std::uint64_t i = 0 : i < cnt; ++i) {
+                                                                     ^
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(122): error: expected a ")"
+                  for ([[maybe_unused]] std::uint64_t i = 0 : i < cnt; ++i) {
+                                                                     ^
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(129): error: expected a ":"
+                  for (std::uint64_t i = 0 : i < probs.size(); ++i) {
+                                       ^
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(129): error: expected a ">"
+                  for (std::uint64_t i = 0 : i < probs.size(); ++i) {
+                                                             ^
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(129): error: expected a ")"
+                  for (std::uint64_t i = 0 : i < probs.size(); ++i) {
+                                                             ^
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(104): warning #2809-D: ignoring return value from routine declared with "nodiscard" attribute
+              (initial_state.copy(), sampling_count)};
+                                 ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(108): error: class "scaluq::internal::GatePtr<scaluq::internal::GateBase<scaluq::Precision::F32, scaluq::ExecutionSpace::Host>>" has no member "get_gate_type"
+                  if (std::get<0>(g).get_gate_type() == GateType::Probablistic) {
+                                     ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(109): error: identifier "ProbablisticGate" is undefined
+                      probs = ProbablisticGate(std::get<0>(g)).distribution();
+                              ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(112): error: class "scaluq::internal::ParamGatePtr<scaluq::internal::ParamGateBase<scaluq::Precision::F32, scaluq::ExecutionSpace::Host>>" has no member "get_gate_type"
+                  if (std::get<1>(g).first.get_gate_type() == ParamGateType::ParamProbablistic) {
+                                           ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(113): error: identifier "ParamProbablisticGate" is undefined
+                      probs = ParamProbablisticGate<Prec, Space>(std::get<1>(g).first).distribution();
+                              ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(133): error: class "scaluq::internal::GatePtr<scaluq::internal::GateBase<scaluq::Precision::F32, scaluq::ExecutionSpace::Host>>" has no member "update_quantum_state"
+                          std::get<0>(g).update_quantum_state(tmp);
+                                         ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(135): error: class "scaluq::internal::ParamGatePtr<scaluq::internal::ParamGateBase<scaluq::Precision::F32, scaluq::ExecutionSpace::Host>>" has no member "update_quantum_state"
+                          std::get<1>(g).first.update_quantum_state(
+                                               ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(136): error: no operator "[]" matches these operands
+            operand types are: const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> [ std::string ]
+                              tmp, parameters[std::get<1>(g).second]);
+                                             ^
+/usr/include/c++/13/bits/stl_map.h(524): note #3326-D: function "std::map<_Key, _Tp, _Compare, _Alloc>::operator[](std::map<_Key, _Tp, _Compare, _Alloc>::key_type &&) [with _Key=std::string, _Tp=double, _Compare=std::less<std::string>, _Alloc=std::allocator<std::pair<const std::string, double>>]" does not match because argument #1 does not match parameter
+        operator[](key_type&& __k)
+        ^
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(136): note #3328-D: built-in operator[](<pointer to object>, <ptrdiff_t>) does not match because argument #1 does not match parameter
+                              tmp, parameters[std::get<1>(g).second]);
+                                             ^
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(136): note #3328-D: built-in operator[](<ptrdiff_t>, <pointer to object>) does not match because argument #1 does not match parameter
+                              tmp, parameters[std::get<1>(g).second]);
+                                             ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(104): warning #2809-D: ignoring return value from routine declared with "nodiscard" attribute
+              (initial_state.copy(), sampling_count)};
+                                 ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(108): error: class "scaluq::internal::GatePtr<scaluq::internal::GateBase<scaluq::Precision::F32, scaluq::ExecutionSpace::Default>>" has no member "get_gate_type"
+                  if (std::get<0>(g).get_gate_type() == GateType::Probablistic) {
+                                     ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(109): error: identifier "ProbablisticGate" is undefined
+                      probs = ProbablisticGate(std::get<0>(g)).distribution();
+                              ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(112): error: class "scaluq::internal::ParamGatePtr<scaluq::internal::ParamGateBase<scaluq::Precision::F32, scaluq::ExecutionSpace::Default>>" has no member "get_gate_type"
+                  if (std::get<1>(g).first.get_gate_type() == ParamGateType::ParamProbablistic) {
+                                           ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(113): error: identifier "ParamProbablisticGate" is undefined
+                      probs = ParamProbablisticGate<Prec, Space>(std::get<1>(g).first).distribution();
+                              ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(133): error: class "scaluq::internal::GatePtr<scaluq::internal::GateBase<scaluq::Precision::F32, scaluq::ExecutionSpace::Default>>" has no member "update_quantum_state"
+                          std::get<0>(g).update_quantum_state(tmp);
+                                         ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(135): error: class "scaluq::internal::ParamGatePtr<scaluq::internal::ParamGateBase<scaluq::Precision::F32, scaluq::ExecutionSpace::Default>>" has no member "update_quantum_state"
+                          std::get<1>(g).first.update_quantum_state(
+                                               ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(136): error: no operator "[]" matches these operands
+            operand types are: const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> [ std::string ]
+                              tmp, parameters[std::get<1>(g).second]);
+                                             ^
+/usr/include/c++/13/bits/stl_map.h(524): note #3326-D: function "std::map<_Key, _Tp, _Compare, _Alloc>::operator[](std::map<_Key, _Tp, _Compare, _Alloc>::key_type &&) [with _Key=std::string, _Tp=double, _Compare=std::less<std::string>, _Alloc=std::allocator<std::pair<const std::string, double>>]" does not match because argument #1 does not match parameter
+        operator[](key_type&& __k)
+        ^
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(136): note #3328-D: built-in operator[](<pointer to object>, <ptrdiff_t>) does not match because argument #1 does not match parameter
+                              tmp, parameters[std::get<1>(g).second]);
+                                             ^
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(136): note #3328-D: built-in operator[](<ptrdiff_t>, <pointer to object>) does not match because argument #1 does not match parameter
+                              tmp, parameters[std::get<1>(g).second]);
+                                             ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(104): warning #2809-D: ignoring return value from routine declared with "nodiscard" attribute
+              (initial_state.copy(), sampling_count)};
+                                 ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(108): error: class "scaluq::internal::GatePtr<scaluq::internal::GateBase<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>>" has no member "get_gate_type"
+                  if (std::get<0>(g).get_gate_type() == GateType::Probablistic) {
+                                     ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(109): error: identifier "ProbablisticGate" is undefined
+                      probs = ProbablisticGate(std::get<0>(g)).distribution();
+                              ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(112): error: class "scaluq::internal::ParamGatePtr<scaluq::internal::ParamGateBase<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>>" has no member "get_gate_type"
+                  if (std::get<1>(g).first.get_gate_type() == ParamGateType::ParamProbablistic) {
+                                           ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(113): error: identifier "ParamProbablisticGate" is undefined
+                      probs = ParamProbablisticGate<Prec, Space>(std::get<1>(g).first).distribution();
+                              ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(133): error: class "scaluq::internal::GatePtr<scaluq::internal::GateBase<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>>" has no member "update_quantum_state"
+                          std::get<0>(g).update_quantum_state(tmp);
+                                         ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(135): error: class "scaluq::internal::ParamGatePtr<scaluq::internal::ParamGateBase<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>>" has no member "update_quantum_state"
+                          std::get<1>(g).first.update_quantum_state(
+                                               ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(136): error: no operator "[]" matches these operands
+            operand types are: const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> [ std::string ]
+                              tmp, parameters[std::get<1>(g).second]);
+                                             ^
+/usr/include/c++/13/bits/stl_map.h(524): note #3326-D: function "std::map<_Key, _Tp, _Compare, _Alloc>::operator[](std::map<_Key, _Tp, _Compare, _Alloc>::key_type &&) [with _Key=std::string, _Tp=double, _Compare=std::less<std::string>, _Alloc=std::allocator<std::pair<const std::string, double>>]" does not match because argument #1 does not match parameter
+        operator[](key_type&& __k)
+        ^
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(136): note #3328-D: built-in operator[](<pointer to object>, <ptrdiff_t>) does not match because argument #1 does not match parameter
+                              tmp, parameters[std::get<1>(g).second]);
+                                             ^
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(136): note #3328-D: built-in operator[](<ptrdiff_t>, <pointer to object>) does not match because argument #1 does not match parameter
+                              tmp, parameters[std::get<1>(g).second]);
+                                             ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(104): warning #2809-D: ignoring return value from routine declared with "nodiscard" attribute
+              (initial_state.copy(), sampling_count)};
+                                 ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(108): error: class "scaluq::internal::GatePtr<scaluq::internal::GateBase<scaluq::Precision::F64, scaluq::ExecutionSpace::Default>>" has no member "get_gate_type"
+                  if (std::get<0>(g).get_gate_type() == GateType::Probablistic) {
+                                     ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(109): error: identifier "ProbablisticGate" is undefined
+                      probs = ProbablisticGate(std::get<0>(g)).distribution();
+                              ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(112): error: class "scaluq::internal::ParamGatePtr<scaluq::internal::ParamGateBase<scaluq::Precision::F64, scaluq::ExecutionSpace::Default>>" has no member "get_gate_type"
+                  if (std::get<1>(g).first.get_gate_type() == ParamGateType::ParamProbablistic) {
+                                           ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(113): error: identifier "ParamProbablisticGate" is undefined
+                      probs = ParamProbablisticGate<Prec, Space>(std::get<1>(g).first).distribution();
+                              ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(133): error: class "scaluq::internal::GatePtr<scaluq::internal::GateBase<scaluq::Precision::F64, scaluq::ExecutionSpace::Default>>" has no member "update_quantum_state"
+                          std::get<0>(g).update_quantum_state(tmp);
+                                         ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(135): error: class "scaluq::internal::ParamGatePtr<scaluq::internal::ParamGateBase<scaluq::Precision::F64, scaluq::ExecutionSpace::Default>>" has no member "update_quantum_state"
+                          std::get<1>(g).first.update_quantum_state(
+                                               ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(136): error: no operator "[]" matches these operands
+            operand types are: const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> [ std::string ]
+                              tmp, parameters[std::get<1>(g).second]);
+                                             ^
+/usr/include/c++/13/bits/stl_map.h(524): note #3326-D: function "std::map<_Key, _Tp, _Compare, _Alloc>::operator[](std::map<_Key, _Tp, _Compare, _Alloc>::key_type &&) [with _Key=std::string, _Tp=double, _Compare=std::less<std::string>, _Alloc=std::allocator<std::pair<const std::string, double>>]" does not match because argument #1 does not match parameter
+        operator[](key_type&& __k)
+        ^
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(136): note #3328-D: built-in operator[](<pointer to object>, <ptrdiff_t>) does not match because argument #1 does not match parameter
+                              tmp, parameters[std::get<1>(g).second]);
+                                             ^
+/workspaces/scaluq/include/scaluq/circuit/circuit.hpp(136): note #3328-D: built-in operator[](<ptrdiff_t>, <pointer to object>) does not match because argument #1 does not match parameter
+                              tmp, parameters[std::get<1>(g).second]);
+                                             ^
+          detected during instantiation of "std::vector<std::pair<scaluq::StateVector<Prec, Space>, int64_t>, std::allocator<std::pair<scaluq::StateVector<Prec, Space>, int64_t>>> scaluq::Circuit<Prec, Space>::simulate_noise(const scaluq::StateVector<Prec, Space> &, uint64_t, const std::map<std::string, double, std::less<std::string>, std::allocator<std::pair<const std::string, double>>> &, uint64_t) [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 148 of /workspaces/scaluq/src/circuit/circuit.cpp
+
+35 errors detected in the compilation of "/workspaces/scaluq/src/circuit/circuit.cpp".
+ninja: build stopped: subcommand failed.

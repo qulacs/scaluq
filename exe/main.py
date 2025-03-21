@@ -1,34 +1,27 @@
-from scaluq.f16 import *
+import random
+from qulacs import QuantumState, QuantumCircuit, NoiseSimulator
+from qulacs.gate import sqrtX, sqrtY, T, CNOT, X, Z
 
-def main():
-    state = StateVector(1)
-    x_gate = gate.X(0, [1])
-    print(state.to_json())
-    print(x_gate.to_json())
-    print(gate.ParamRX(0, 0.5, [1]).to_json())
+n = 3
+depth = 10
+one_qubit_noise = ["BitFlip", "Dephasing"]
+circuit = QuantumCircuit(n)
 
-    circuit = Circuit(3)
-    circuit.add_gate(x_gate)
-    print(circuit.to_json())
 
-    pauli = PauliOperator("X 3 Y 2")
+circuit.add_noise_gate(Z(0), "BitFlip", 0.1)
 
-    operator = Operator(4)
-    operator.add_operator(pauli)
+state = QuantumState(n)
+state.set_zero_state()
+for i in range(1, 1 << n):
+    tmp = QuantumState(n);
+    tmp.set_computational_basis(i)
+    tmp.multiply_coef(i + 1)
+    state.add_state(tmp)
 
-    print(operator.to_json())
+sim = NoiseSimulator(circuit, state)
 
-    states = StateVectorBatched.Haar_random_state(2, 3)
-    prx = gate.ParamRX(0, 2.0, [1])
-    pry = gate.ParamRY(1, 2.0, [2])
-    params = {
-        "rx": [0.0, 0.1, 0.2],
-        "ry": [0.3, 0.4, 0.5]
-    }
-    circuit.add_param_gate(prx, "rx")
-    circuit.add_param_gate(pry, "ry")
-    circuit.update_quantum_state(states, params)
-    print(states.to_json())
+res = sim.execute_and_get_result(1000)
 
-if __name__ == "__main__":
-    main()
+for i in range(res.get_count()):
+    print(res.get_frequency(i))
+    print(res.get_state(i))

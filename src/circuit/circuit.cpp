@@ -1,4 +1,6 @@
 #include <scaluq/circuit/circuit.hpp>
+#include <scaluq/gate/gate_probablistic.hpp>
+#include <scaluq/gate/param_gate_probablistic.hpp>
 
 #include "../util/template.hpp"
 
@@ -119,6 +121,61 @@ Circuit<Prec, Space> Circuit<Prec, Space>::get_inverse() const {
         }
     }
     return icircuit;
+}
+
+template <Precision Prec, ExecutionSpace Space>
+std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Space>::simulate_noise(
+    const StateVector<Prec, Space>& initial_state,
+    std::uint64_t sampling_count,
+    const std::map<std::string, double>& parameters,
+    std::uint64_t seed) const {
+    std::mt19937 mt(seed);
+    std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> states;
+    states.emplace_back(initial_state, sampling_count);
+    for (auto&& g : _gate_list) {
+        std::vector<double> probs(1, 1.0);
+        if (g.index() == 0) {
+            if (std::get<0>(g).gate_type() == GateType::Probablistic) {
+                probs = ProbablisticGate<Prec, Space>(std::get<0>(g))->distribution();
+            }
+        } else {
+            if (std::get<1>(g).first.param_gate_type() == ParamGateType::ParamProbablistic) {
+                probs = ParamProbablisticGate<Prec, Space>(std::get<1>(g).first)->distribution();
+            }
+        }
+
+        std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> new_states;
+        for (auto& [state, cnt] : states) {
+            // 多項分布に基づいて，それぞれのゲートが何回選ばれるかを計算
+            std::vector<std::uint64_t> counts(probs.size(), 0);
+            std::discrete_distribution<std::uint64_t> dist(probs.begin(), probs.end());
+            for ([[maybe_unused]] std::uint64_t _ : std::views::iota(0, cnt)) {
+                ++counts[dist(mt)];
+            }
+
+            StateVectorBatched<Prec, Space> states_before_update(probs.size(), state.n_qubits());
+            states_before_update.set_state_vector(state);
+            for (std::uint64_t i = 0; i < probs.size(); ++i) {
+                if (counts[i] == 0) continue;
+                auto tmp = states_before_update.get_state_vector_at(i);
+                if (g.index() == 0) {  // NonProbablisticGate
+                    std::get<0>(g)->update_quantum_state(tmp);
+                } else {  // // ProbablisticGate
+                    const auto& key = std::get<1>(g).second;
+                    auto either_gate =
+                        ParamProbablisticGate<Prec, Space>(std::get<1>(g).first)->gate_list()[i];
+                    if (either_gate.index() == 0) {  // Gate
+                        std::get<0>(either_gate)->update_quantum_state(tmp);
+                    } else {  // ParamGate
+                        std::get<1>(either_gate)->update_quantum_state(tmp, parameters.at(key));
+                    }
+                }
+                new_states.emplace_back(tmp, counts[i]);
+            }
+            states = std::move(new_states);
+        }
+    }
+    return states;
 }
 
 template <Precision Prec, ExecutionSpace Space>

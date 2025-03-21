@@ -90,6 +90,15 @@ private:
     void check_gate_is_valid(const Gate<Prec, Space>& gate) const;
 
     void check_gate_is_valid(const ParamGate<Prec, Space>& gate) const;
+
+    /**
+     * @brief サンプリングされうるすべてのパターンに対して，それぞれが何回選ばれたかを返す
+     */
+    std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> simulate_noise(
+        const StateVector<Prec, Space>& initial_state,
+        std::uint64_t sampling_count,
+        const std::map<std::string, double>& parameters = {},
+        std::uint64_t seed = 0) const;
 };
 
 #ifdef SCALUQ_USE_NANOBIND
