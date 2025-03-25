@@ -165,7 +165,7 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
                 auto tmp = states_before_update.get_state_vector_at(i);
                 if (g.index() == 0) {  // NonProbablisticGate
                     std::get<0>(g)->update_quantum_state(tmp);
-                } else {  // // ProbablisticGate
+                } else {  // ProbablisticGate
                     const auto& key = std::get<1>(g).second;
                     auto either_gate =
                         ParamProbablisticGate<Prec, Space>(std::get<1>(g).first)->gate_list()[i];
