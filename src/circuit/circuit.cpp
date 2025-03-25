@@ -129,8 +129,14 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
     std::uint64_t seed) const {
+    // 下図のような木を構築する
+    //    1000
+    //    / ＼
+    //  100   900
+    //  /＼    /＼
+    // 10 90  90 810
     std::mt19937 mt(seed);
-    std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> states;
+    std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> states, new_states;
     states.emplace_back(initial_state, sampling_count);
     for (auto&& g : _gate_list) {
         std::vector<double> probs(1, 1.0);
@@ -144,7 +150,6 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
             }
         }
 
-        std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> new_states;
         for (auto& [state, cnt] : states) {
             // 多項分布に基づいて，それぞれのゲートが何回選ばれるかを計算
             std::vector<std::uint64_t> counts(probs.size(), 0);
@@ -155,7 +160,7 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
 
             StateVectorBatched<Prec, Space> states_before_update(probs.size(), state.n_qubits());
             states_before_update.set_state_vector(state);
-            for (std::uint64_t i = 0; i < probs.size(); ++i) {
+            for (std::uint64_t i = 0; i < counts.size(); ++i) {
                 if (counts[i] == 0) continue;
                 auto tmp = states_before_update.get_state_vector_at(i);
                 if (g.index() == 0) {  // NonProbablisticGate
@@ -172,33 +177,54 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
                 }
                 new_states.emplace_back(tmp, counts[i]);
             }
-            states = std::move(new_states);
         }
+        states.swap(new_states);
+        new_states.clear();
     }
     return states;
 }
 
 template <Precision Prec, ExecutionSpace Space>
 void Circuit<Prec, Space>::check_gate_is_valid(const Gate<Prec, Space>& gate) const {
-    auto targets = gate->target_qubit_list();
-    auto controls = gate->control_qubit_list();
-    bool valid = true;
-    if (!targets.empty()) valid &= *std::max_element(targets.begin(), targets.end()) < _n_qubits;
-    if (!controls.empty()) valid &= *std::max_element(controls.begin(), controls.end()) < _n_qubits;
-    if (!valid) {
-        throw std::runtime_error("Gate to be added to the circuit has invalid qubit range");
+    if (gate.gate_type() == GateType::Probablistic) {
+        for (auto g : ProbablisticGate<Prec, Space>(gate)->gate_list()) {
+            check_gate_is_valid(g);
+        }
+    } else {
+        auto targets = gate->target_qubit_list();
+        auto controls = gate->control_qubit_list();
+        bool valid = true;
+        if (!targets.empty())
+            valid &= *std::max_element(targets.begin(), targets.end()) < _n_qubits;
+        if (!controls.empty())
+            valid &= *std::max_element(controls.begin(), controls.end()) < _n_qubits;
+        if (!valid) {
+            throw std::runtime_error("Gate to be added to the circuit has invalid qubit range");
+        }
     }
 }
 
 template <Precision Prec, ExecutionSpace Space>
 void Circuit<Prec, Space>::check_gate_is_valid(const ParamGate<Prec, Space>& gate) const {
-    auto targets = gate->target_qubit_list();
-    auto controls = gate->control_qubit_list();
-    bool valid = true;
-    if (!targets.empty()) valid &= *std::max_element(targets.begin(), targets.end()) < _n_qubits;
-    if (!controls.empty()) valid &= *std::max_element(controls.begin(), controls.end()) < _n_qubits;
-    if (!valid) {
-        throw std::runtime_error("Gate to be added to the circuit has invalid qubit range");
+    if (gate.param_gate_type() == ParamGateType::ParamProbablistic) {
+        for (auto g : ParamProbablisticGate<Prec, Space>(gate)->gate_list()) {
+            if (g.index() == 0) {
+                check_gate_is_valid(std::get<0>(g));
+            } else {
+                check_gate_is_valid(std::get<1>(g));
+            }
+        }
+    } else {
+        auto targets = gate->target_qubit_list();
+        auto controls = gate->control_qubit_list();
+        bool valid = true;
+        if (!targets.empty())
+            valid &= *std::max_element(targets.begin(), targets.end()) < _n_qubits;
+        if (!controls.empty())
+            valid &= *std::max_element(controls.begin(), controls.end()) < _n_qubits;
+        if (!valid) {
+            throw std::runtime_error("Gate to be added to the circuit has invalid qubit range");
+        }
     }
 }
 

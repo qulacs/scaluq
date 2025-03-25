@@ -82,15 +82,6 @@ public:
         }
     }
 
-private:
-    std::uint64_t _n_qubits;
-
-    std::vector<GateWithKey> _gate_list;
-
-    void check_gate_is_valid(const Gate<Prec, Space>& gate) const;
-
-    void check_gate_is_valid(const ParamGate<Prec, Space>& gate) const;
-
     /**
      * @brief サンプリングされうるすべてのパターンに対して，それぞれが何回選ばれたかを返す
      */
@@ -99,6 +90,15 @@ private:
         std::uint64_t sampling_count,
         const std::map<std::string, double>& parameters = {},
         std::uint64_t seed = 0) const;
+
+private:
+    std::uint64_t _n_qubits;
+
+    std::vector<GateWithKey> _gate_list;
+
+    void check_gate_is_valid(const Gate<Prec, Space>& gate) const;
+
+    void check_gate_is_valid(const ParamGate<Prec, Space>& gate) const;
 };
 
 #ifdef SCALUQ_USE_NANOBIND
