@@ -255,23 +255,18 @@ inline Gate<Prec, Space> Probablistic(const std::vector<double>& distribution,
         distribution, gate_list);
 }
 
-// bit-flip error
+// corresponding to XGate
 template <Precision Prec, ExecutionSpace Space>
-inline Gate<Prec, Space> XNoise(std::int64_t target, double error_rate) {
+inline Gate<Prec, Space> BitFlipNoise(std::int64_t target, double error_rate) {
     return Probablistic({error_rate, 1 - error_rate}, {X<Prec, Space>(target), I<Prec, Space>()});
 }
 template <Precision Prec, ExecutionSpace Space>
-inline Gate<Prec, Space> YNoise(std::int64_t target, double error_rate) {
-    return Probablistic({error_rate, 1 - error_rate}, {Y<Prec, Space>(target), I<Prec, Space>()});
-}
-// phase-flip error
-template <Precision Prec, ExecutionSpace Space>
-inline Gate<Prec, Space> ZNoise(std::int64_t target, double error_rate) {
+inline Gate<Prec, Space> DephasingNoise(std::int64_t target, double error_rate) {
     return Probablistic({error_rate, 1 - error_rate}, {Z<Prec, Space>(target), I<Prec, Space>()});
 }
 // Y: p*p, X: p(1-p), Z: p(1-p)
 template <Precision Prec, ExecutionSpace Space>
-inline Gate<Prec, Space> IndependentXZNoise(std::int64_t target, double error_rate) {
+inline Gate<Prec, Space> BitFlipAndDephasingNoise(std::int64_t target, double error_rate) {
     double p0 = error_rate * error_rate;
     double p1 = error_rate * (1 - error_rate);
     double p2 = (1 - error_rate) * (1 - error_rate);
@@ -281,7 +276,7 @@ inline Gate<Prec, Space> IndependentXZNoise(std::int64_t target, double error_ra
 }
 // X: error_rate/3, Y: error_rate/3, Z: error_rate/3
 template <Precision Prec, ExecutionSpace Space>
-inline Gate<Prec, Space> XYZNoise(std::int64_t target, double error_rate) {
+inline Gate<Prec, Space> DepolarizingNoise(std::int64_t target, double error_rate) {
     return Probablistic(
         {error_rate / 3, error_rate / 3, error_rate / 3, 1 - error_rate},
         {X<Prec, Space>(target), Y<Prec, Space>(target), Z<Prec, Space>(target), I<Prec, Space>()});
@@ -466,29 +461,24 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "Generate general Gate class instance of Probablistic.",
               "distribution"_a,
               "gate_list"_a);
-    mgate.def("XNoise",
-              &gate::XNoise<Prec, Space>,
-              "Generate general Gate class instance of XNoise.",
+    mgate.def("BitFlipNoise",
+              &gate::BitFlipNoise<Prec, Space>,
+              "Generate general Gate class instance of BitFlipNoise.",
               "target"_a,
               "error_rate"_a);
-    mgate.def("YNoise",
-              &gate::YNoise<Prec, Space>,
-              "Generate general Gate class instance of YNoise.",
+    mgate.def("DephasingNoise",
+              &gate::DephasingNoise<Prec, Space>,
+              "Generate general Gate class instance of DephasingNoise.",
               "target"_a,
               "error_rate"_a);
-    mgate.def("ZNoise",
-              &gate::ZNoise<Prec, Space>,
-              "Generate general Gate class instance of ZNoise.",
+    mgate.def("BitFlipAndDephasingNoise",
+              &gate::BitFlipAndDephasingNoise<Prec, Space>,
+              "Generate general Gate class instance of BitFlipAndDephasingNoise.",
               "target"_a,
               "error_rate"_a);
-    mgate.def("IndependentXZNoise",
-              &gate::IndependentXZNoise<Prec, Space>,
-              "Generate general Gate class instance of IndependentXZNoise.",
-              "target"_a,
-              "error_rate"_a);
-    mgate.def("XYZNoise",
-              &gate::XYZNoise<Prec, Space>,
-              "Generate general Gate class instance of XYZNoise.",
+    mgate.def("DepolarizingNoise",
+              &gate::DepolarizingNoise<Prec, Space>,
+              "Generate general Gate class instance of DepolarizingNoise.",
               "target"_a,
               "error_rate"_a);
 }
