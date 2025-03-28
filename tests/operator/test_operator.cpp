@@ -49,6 +49,26 @@ std::pair<Operator<Prec, Space>, Eigen::MatrixXcd> generate_random_observable_wi
     return {std::move(rand_observable), std::move(test_rand_observable)};
 }
 
+TYPED_TEST(OperatorTest, GetMatrix) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    std::uint64_t n = 4;
+    std::uint64_t dim = 1ULL << n;
+    Random random;
+    for (std::uint64_t repeat = 0; repeat < 10; ++repeat) {
+        auto [rand_observable, test_rand_observable] =
+            generate_random_observable_with_eigen<Prec, Space>(n, random);
+
+        auto matrix = rand_observable.get_matrix();
+        for (std::uint64_t i = 0; i < dim; i++) {
+            for (std::uint64_t j = 0; j < dim; j++) {
+                ASSERT_NEAR(matrix(i, j).real(), test_rand_observable(i, j).real(), eps<Prec>);
+                ASSERT_NEAR(matrix(i, j).imag(), test_rand_observable(i, j).imag(), eps<Prec>);
+            }
+        }
+    }
+}
+
 TYPED_TEST(OperatorTest, CheckExpectationValue) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;

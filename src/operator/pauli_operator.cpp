@@ -106,6 +106,43 @@ void PauliOperator<Prec, Space>::Data::add_single_pauli(std::uint64_t target_qub
 }
 
 template <Precision Prec, ExecutionSpace Space>
+std::vector<typename PauliOperator<Prec, Space>::Triplet>
+PauliOperator<Prec, Space>::get_matrix_triplets_ignoring_coef() const {
+    std::uint64_t flip_mask, phase_mask, rot90_count;
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<internal::SpaceType<ExecutionSpace::Host>>(0,
+                                                                       _ptr->_pauli_id_list.size()),
+        [&](std::uint64_t i,
+            std::uint64_t& f_mask,
+            std::uint64_t& p_mask,
+            std::uint64_t& rot90_cnt) {
+            std::uint64_t pauli_id = _ptr->_pauli_id_list[i];
+            if (pauli_id == 1) {
+                f_mask += 1ULL << i;
+            } else if (pauli_id == 2) {
+                f_mask += 1ULL << i;
+                p_mask += 1ULL << i;
+                rot90_cnt++;
+            } else if (pauli_id == 3) {
+                p_mask += 1ULL << i;
+            }
+        },
+        internal::Sum<std::uint64_t, ExecutionSpace::Host>(flip_mask),
+        internal::Sum<std::uint64_t, ExecutionSpace::Host>(phase_mask),
+        internal::Sum<std::uint64_t, ExecutionSpace::Host>(rot90_count));
+    std::vector<StdComplex> rot = {1., StdComplex(0, -1), -1., StdComplex(0, 1)};
+    std::uint64_t matrix_dim = 1ULL << _ptr->_pauli_id_list.size();
+    internal::ComplexMatrix mat = internal::ComplexMatrix::Zero(matrix_dim, matrix_dim);
+    std::vector<Triplet> ret;
+    ret.reserve(matrix_dim * 2);
+    for (std::uint64_t index = 0; index < matrix_dim; index++) {
+        const StdComplex sign = 1 - 2 * (Kokkos::popcount(index & phase_mask) % 2);
+        ret.emplace_back(index, index ^ flip_mask, rot[rot90_count % 4] * sign);
+    }
+    return ret;
+}
+
+template <Precision Prec, ExecutionSpace Space>
 std::string PauliOperator<Prec, Space>::get_pauli_string() const {
     std::stringstream ss;
     std::uint64_t size = _ptr->_target_qubit_list.size();
@@ -241,41 +278,26 @@ StdComplex PauliOperator<Prec, Space>::get_transition_amplitude(
 
 template <Precision Prec, ExecutionSpace Space>
 internal::ComplexMatrix PauliOperator<Prec, Space>::get_matrix() const {
-    return get_matrix_ignoring_coef() * static_cast<StdComplex>(_ptr->_coef);
+    auto triplets = get_matrix_triplets_ignoring_coef();
+    decltype(triplets) coeffed_triplets(triplets.size());
+    for (std::size_t i = 0; i < triplets.size(); i++) {
+        coeffed_triplets[i] = Triplet(triplets[i].row(),
+                                      triplets[i].col(),
+                                      triplets[i].value() * static_cast<StdComplex>(_ptr->_coef));
+    }
+    std::uint64_t dim = 1ULL << _ptr->_pauli_id_list.size();
+    internal::SparseComplexMatrix sparse(dim, dim);
+    sparse.setFromTriplets(coeffed_triplets.begin(), coeffed_triplets.end());
+    return internal::ComplexMatrix(sparse);
 }
 
 template <Precision Prec, ExecutionSpace Space>
 internal::ComplexMatrix PauliOperator<Prec, Space>::get_matrix_ignoring_coef() const {
-    std::uint64_t flip_mask, phase_mask, rot90_count;
-    Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<internal::SpaceType<ExecutionSpace::Host>>(0,
-                                                                       _ptr->_pauli_id_list.size()),
-        [&](std::uint64_t i,
-            std::uint64_t& f_mask,
-            std::uint64_t& p_mask,
-            std::uint64_t& rot90_cnt) {
-            std::uint64_t pauli_id = _ptr->_pauli_id_list[i];
-            if (pauli_id == 1) {
-                f_mask += 1ULL << i;
-            } else if (pauli_id == 2) {
-                f_mask += 1ULL << i;
-                p_mask += 1ULL << i;
-                rot90_cnt++;
-            } else if (pauli_id == 3) {
-                p_mask += 1ULL << i;
-            }
-        },
-        internal::Sum<std::uint64_t, ExecutionSpace::Host>(flip_mask),
-        internal::Sum<std::uint64_t, ExecutionSpace::Host>(phase_mask),
-        internal::Sum<std::uint64_t, ExecutionSpace::Host>(rot90_count));
-    std::vector<StdComplex> rot = {1., StdComplex(0, -1), -1., StdComplex(0, 1)};
-    std::uint64_t matrix_dim = 1ULL << _ptr->_pauli_id_list.size();
-    internal::ComplexMatrix mat = internal::ComplexMatrix::Zero(matrix_dim, matrix_dim);
-    for (std::uint64_t index = 0; index < matrix_dim; index++) {
-        const StdComplex sign = 1 - 2 * (Kokkos::popcount(index & phase_mask) % 2);
-        mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
-    }
-    return mat;
+    auto triplets = get_matrix_triplets_ignoring_coef();
+    std::uint64_t dim = 1ULL << _ptr->_pauli_id_list.size();
+    internal::SparseComplexMatrix sparse(dim, dim);
+    sparse.setFromTriplets(triplets.begin(), triplets.end());
+    return internal::ComplexMatrix(sparse);
 }
 
 template <Precision Prec, ExecutionSpace Space>
