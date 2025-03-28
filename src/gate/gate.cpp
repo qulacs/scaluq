@@ -4,8 +4,9 @@
 
 namespace scaluq {
 namespace internal {
-FLOAT(Fp)
-void GateBase<Fp>::check_qubit_mask_within_bounds(const StateVector<Fp>& state_vector) const {
+template <Precision Prec, ExecutionSpace Space>
+void GateBase<Prec, Space>::check_qubit_mask_within_bounds(
+    const StateVector<Prec, Space>& state_vector) const {
     std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
     if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
         throw std::runtime_error(
@@ -13,8 +14,9 @@ void GateBase<Fp>::check_qubit_mask_within_bounds(const StateVector<Fp>& state_v
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
-FLOAT(Fp)
-void GateBase<Fp>::check_qubit_mask_within_bounds(const StateVectorBatched<Fp>& states) const {
+template <Precision Prec, ExecutionSpace Space>
+void GateBase<Prec, Space>::check_qubit_mask_within_bounds(
+    const StateVectorBatched<Prec, Space>& states) const {
     std::uint64_t full_mask = (1ULL << states.n_qubits()) - 1;
     if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
         throw std::runtime_error(
@@ -23,8 +25,8 @@ void GateBase<Fp>::check_qubit_mask_within_bounds(const StateVectorBatched<Fp>& 
     }
 }
 
-FLOAT(Fp)
-std::string GateBase<Fp>::get_qubit_info_as_string(const std::string& indent) const {
+template <Precision Prec, ExecutionSpace Space>
+std::string GateBase<Prec, Space>::get_qubit_info_as_string(const std::string& indent) const {
     std::ostringstream ss;
     auto targets = target_qubit_list();
     auto controls = control_qubit_list();
@@ -39,8 +41,8 @@ std::string GateBase<Fp>::get_qubit_info_as_string(const std::string& indent) co
     return ss.str();
 }
 
-FLOAT(Fp)
-GateBase<Fp>::GateBase(std::uint64_t target_mask, std::uint64_t control_mask)
+template <Precision Prec, ExecutionSpace Space>
+GateBase<Prec, Space>::GateBase(std::uint64_t target_mask, std::uint64_t control_mask)
     : _target_mask(target_mask), _control_mask(control_mask) {
     if (_target_mask & _control_mask) [[unlikely]] {
         throw std::runtime_error(
@@ -49,6 +51,6 @@ GateBase<Fp>::GateBase(std::uint64_t target_mask, std::uint64_t control_mask)
     }
 }
 
-FLOAT_DECLARE_CLASS(GateBase)
+SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(GateBase)
 }  // namespace internal
 }  // namespace scaluq

@@ -1,11 +1,12 @@
 #include <scaluq/operator/pauli_operator.hpp>
 
+#include "../util/math.hpp"
 #include "../util/template.hpp"
 #include "apply_pauli.hpp"
 
 namespace scaluq {
-FLOAT(Fp)
-PauliOperator<Fp>::Data::Data(std::string_view pauli_string, Complex<Fp> coef)
+template <Precision Prec, ExecutionSpace Space>
+PauliOperator<Prec, Space>::Data::Data(std::string_view pauli_string, StdComplex coef)
     : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
     auto ss = std::stringstream(std::string(pauli_string));
     while (1) {
@@ -28,10 +29,10 @@ PauliOperator<Fp>::Data::Data(std::string_view pauli_string, Complex<Fp> coef)
     }
 }
 
-FLOAT(Fp)
-PauliOperator<Fp>::Data::Data(const std::vector<std::uint64_t>& target_qubit_list,
-                              const std::vector<std::uint64_t>& pauli_id_list,
-                              Complex<Fp> coef)
+template <Precision Prec, ExecutionSpace Space>
+PauliOperator<Prec, Space>::Data::Data(const std::vector<std::uint64_t>& target_qubit_list,
+                                       const std::vector<std::uint64_t>& pauli_id_list,
+                                       StdComplex coef)
     : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
     if (target_qubit_list.size() != pauli_id_list.size()) {
         throw std::runtime_error(
@@ -45,21 +46,21 @@ PauliOperator<Fp>::Data::Data(const std::vector<std::uint64_t>& target_qubit_lis
     }
 }
 
-FLOAT(Fp)
-PauliOperator<Fp>::Data::Data(const std::vector<std::uint64_t>& pauli_id_par_qubit,
-                              Complex<Fp> coef)
+template <Precision Prec, ExecutionSpace Space>
+PauliOperator<Prec, Space>::Data::Data(const std::vector<std::uint64_t>& pauli_id_par_qubit,
+                                       StdComplex coef)
     : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
     for (std::uint64_t i = 0; i < pauli_id_par_qubit.size(); ++i) {
-        if (pauli_id_par_qubit[i] != PauliOperator<Fp>::I) {
+        if (pauli_id_par_qubit[i] != PauliOperator<Prec, Space>::I) {
             add_single_pauli(i, pauli_id_par_qubit[i]);
         }
     }
 }
 
-FLOAT(Fp)
-PauliOperator<Fp>::Data::Data(std::uint64_t bit_flip_mask,
-                              std::uint64_t phase_flip_mask,
-                              Complex<Fp> coef)
+template <Precision Prec, ExecutionSpace Space>
+PauliOperator<Prec, Space>::Data::Data(std::uint64_t bit_flip_mask,
+                                       std::uint64_t phase_flip_mask,
+                                       StdComplex coef)
     : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
     for (std::uint64_t target_idx = 0; target_idx < sizeof(std::uint64_t) * 8; target_idx++) {
         bool bit_flip = bit_flip_mask >> target_idx & 1;
@@ -72,15 +73,15 @@ PauliOperator<Fp>::Data::Data(std::uint64_t bit_flip_mask,
         } else {
             if (!phase_flip)
                 add_single_pauli(target_idx, 1);
-            else {
+            else
                 add_single_pauli(target_idx, 2);
-            }
         }
     }
 }
 
-FLOAT(Fp)
-void PauliOperator<Fp>::Data::add_single_pauli(std::uint64_t target_qubit, std::uint64_t pauli_id) {
+template <Precision Prec, ExecutionSpace Space>
+void PauliOperator<Prec, Space>::Data::add_single_pauli(std::uint64_t target_qubit,
+                                                        std::uint64_t pauli_id) {
     if (target_qubit >= sizeof(std::uint64_t) * 8) {
         throw std::runtime_error(
             "PauliOperator::Data::add_single_pauli: target_qubit is too large");
@@ -104,145 +105,13 @@ void PauliOperator<Fp>::Data::add_single_pauli(std::uint64_t target_qubit, std::
     }
 }
 
-FLOAT(Fp)
-std::string PauliOperator<Fp>::get_pauli_string() const {
-    std::stringstream ss;
-    std::uint64_t size = _ptr->_target_qubit_list.size();
-    if (size == 0) return "";
-    for (std::uint64_t term_index = 0; term_index < size; term_index++) {
-        if (_ptr->_pauli_id_list[term_index] != 0) {
-            ss << "IXYZ"[_ptr->_pauli_id_list[term_index]] << " "
-               << _ptr->_target_qubit_list[term_index] << " ";
-        }
-    }
-    std::string res = ss.str();
-    res.pop_back();
-    return res;
-}
-
-FLOAT(Fp)
-PauliOperator<Fp> PauliOperator<Fp>::get_dagger() const {
-    return PauliOperator(_ptr->_target_qubit_list, _ptr->_pauli_id_list, Kokkos::conj(_ptr->_coef));
-}
-
-FLOAT(Fp)
-std::uint64_t PauliOperator<Fp>::get_qubit_count() const {
-    if (_ptr->_target_qubit_list.empty()) return 0;
-    return std::ranges::max(_ptr->_target_qubit_list) + 1;
-}
-
-FLOAT(Fp)
-void PauliOperator<Fp>::apply_to_state(StateVector<Fp>& state_vector) const {
-    if (state_vector.n_qubits() < get_qubit_count()) {
-        throw std::runtime_error(
-            "PauliOperator::apply_to_state: n_qubits of state_vector is too small to apply the "
-            "operator");
-    }
-    internal::apply_pauli(
-        0ULL, _ptr->_bit_flip_mask, _ptr->_phase_flip_mask, _ptr->_coef, state_vector);
-}
-
-FLOAT(Fp)
-Complex<Fp> PauliOperator<Fp>::get_expectation_value(const StateVector<Fp>& state_vector) const {
-    if (state_vector.n_qubits() < get_qubit_count()) {
-        throw std::runtime_error(
-            "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to "
-            "apply "
-            "the operator");
-    }
-    std::uint64_t bit_flip_mask = _ptr->_bit_flip_mask;
-    std::uint64_t phase_flip_mask = _ptr->_phase_flip_mask;
-    if (bit_flip_mask == 0) {
-        Fp res;
-        Kokkos::parallel_reduce(
-            state_vector.dim(),
-            KOKKOS_LAMBDA(std::uint64_t state_idx, Fp & sum) {
-                Fp tmp = (Kokkos::conj(state_vector._raw[state_idx]) * state_vector._raw[state_idx])
-                             .real();
-                if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
-                sum += tmp;
-            },
-            res);
-        return _ptr->_coef * res;
-    }
-    std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
-    std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex<Fp> global_phase = internal::PHASE_90ROT<Fp>()[global_phase_90rot_count % 4];
-    Fp res;
-    Kokkos::parallel_reduce(
-        state_vector.dim() >> 1,
-        KOKKOS_LAMBDA(std::uint64_t state_idx, Fp & sum) {
-            std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
-            std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-            Fp tmp = Kokkos::real(state_vector._raw[basis_0] *
-                                  Kokkos::conj(state_vector._raw[basis_1]) * global_phase * 2.);
-            if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
-            sum += tmp;
-        },
-        res);
-    return _ptr->_coef * res;
-}
-
-FLOAT(Fp)
-Complex<Fp> PauliOperator<Fp>::get_transition_amplitude(
-    const StateVector<Fp>& state_vector_bra, const StateVector<Fp>& state_vector_ket) const {
-    if (state_vector_bra.n_qubits() != state_vector_ket.n_qubits()) {
-        throw std::runtime_error("state_vector_bra must have same n_qubits to state_vector_ket.");
-    }
-    if (state_vector_bra.n_qubits() < get_qubit_count()) {
-        throw std::runtime_error(
-            "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to "
-            "apply "
-            "the operator");
-    }
-    std::uint64_t bit_flip_mask = _ptr->_bit_flip_mask;
-    std::uint64_t phase_flip_mask = _ptr->_phase_flip_mask;
-    if (bit_flip_mask == 0) {
-        Complex<Fp> res;
-        Kokkos::parallel_reduce(
-            state_vector_bra.dim(),
-            KOKKOS_LAMBDA(std::uint64_t state_idx, Complex<Fp> & sum) {
-                Complex<Fp> tmp = Kokkos::conj(state_vector_bra._raw[state_idx]) *
-                                  state_vector_ket._raw[state_idx];
-                if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
-                sum += tmp;
-            },
-            res);
-        Kokkos::fence();
-        return _ptr->_coef * res;
-    }
-    std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
-    std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    Complex<Fp> global_phase = internal::PHASE_90ROT<Fp>()[global_phase_90rot_count % 4];
-    Complex<Fp> res;
-    Kokkos::parallel_reduce(
-        state_vector_bra.dim() >> 1,
-        KOKKOS_LAMBDA(std::uint64_t state_idx, Complex<Fp> & sum) {
-            std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
-            std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-            Complex<Fp> tmp1 = Kokkos::conj(state_vector_bra._raw[basis_1]) *
-                               state_vector_ket._raw[basis_0] * global_phase;
-            if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
-            Complex<Fp> tmp2 = Kokkos::conj(state_vector_bra._raw[basis_0]) *
-                               state_vector_ket._raw[basis_1] * global_phase;
-            if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
-            sum += tmp1 + tmp2;
-        },
-        res);
-    Kokkos::fence();
-    return _ptr->_coef * res;
-}
-
-FLOAT(Fp)
-internal::ComplexMatrix<Fp> PauliOperator<Fp>::get_matrix() const {
-    return get_matrix_ignoring_coef() * StdComplex<Fp>(_ptr->_coef);
-}
-
-FLOAT(Fp)
-internal::ComplexMatrix<Fp> PauliOperator<Fp>::get_matrix_ignoring_coef() const {
+template <Precision Prec, ExecutionSpace Space>
+std::vector<typename PauliOperator<Prec, Space>::Triplet>
+PauliOperator<Prec, Space>::get_matrix_triplets_ignoring_coef() const {
     std::uint64_t flip_mask, phase_mask, rot90_count;
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, _ptr->_pauli_id_list.size()),
+        Kokkos::RangePolicy<internal::SpaceType<ExecutionSpace::Host>>(0,
+                                                                       _ptr->_pauli_id_list.size()),
         [&](std::uint64_t i,
             std::uint64_t& f_mask,
             std::uint64_t& p_mask,
@@ -258,21 +127,182 @@ internal::ComplexMatrix<Fp> PauliOperator<Fp>::get_matrix_ignoring_coef() const 
                 p_mask += 1ULL << i;
             }
         },
-        flip_mask,
-        phase_mask,
-        rot90_count);
-    std::vector<StdComplex<Fp>> rot = {1, Complex<Fp>(0, -1), -1, Complex<Fp>(0, 1)};
+        internal::Sum<std::uint64_t, ExecutionSpace::Host>(flip_mask),
+        internal::Sum<std::uint64_t, ExecutionSpace::Host>(phase_mask),
+        internal::Sum<std::uint64_t, ExecutionSpace::Host>(rot90_count));
+    std::vector<StdComplex> rot = {1., StdComplex(0, -1), -1., StdComplex(0, 1)};
     std::uint64_t matrix_dim = 1ULL << _ptr->_pauli_id_list.size();
-    internal::ComplexMatrix<Fp> mat = internal::ComplexMatrix<Fp>::Zero(matrix_dim, matrix_dim);
+    internal::ComplexMatrix mat = internal::ComplexMatrix::Zero(matrix_dim, matrix_dim);
+    std::vector<Triplet> ret;
+    ret.reserve(matrix_dim * 2);
     for (std::uint64_t index = 0; index < matrix_dim; index++) {
-        const StdComplex<Fp> sign = 1. - 2. * (Kokkos::popcount(index & phase_mask) % 2);
-        mat(index, index ^ flip_mask) = rot[rot90_count % 4] * sign;
+        const StdComplex sign = 1 - 2 * (Kokkos::popcount(index & phase_mask) % 2);
+        ret.emplace_back(index, index ^ flip_mask, rot[rot90_count % 4] * sign);
     }
-    return mat;
+    return ret;
 }
 
-FLOAT(Fp)
-PauliOperator<Fp> PauliOperator<Fp>::operator*(const PauliOperator& target) const {
+template <Precision Prec, ExecutionSpace Space>
+std::string PauliOperator<Prec, Space>::get_pauli_string() const {
+    std::stringstream ss;
+    std::uint64_t size = _ptr->_target_qubit_list.size();
+    if (size == 0) return "";
+    for (std::uint64_t term_index = 0; term_index < size; term_index++) {
+        if (_ptr->_pauli_id_list[term_index] != 0) {
+            ss << "IXYZ"[_ptr->_pauli_id_list[term_index]] << " "
+               << _ptr->_target_qubit_list[term_index] << " ";
+        }
+    }
+    std::string res = ss.str();
+    res.pop_back();
+    return res;
+}
+
+template <Precision Prec, ExecutionSpace Space>
+PauliOperator<Prec, Space> PauliOperator<Prec, Space>::get_dagger() const {
+    return PauliOperator(
+        _ptr->_target_qubit_list, _ptr->_pauli_id_list, scaluq::internal::conj(_ptr->_coef));
+}
+
+template <Precision Prec, ExecutionSpace Space>
+std::uint64_t PauliOperator<Prec, Space>::get_qubit_count() const {
+    if (_ptr->_target_qubit_list.empty()) return 0;
+    return std::ranges::max(_ptr->_target_qubit_list) + 1;
+}
+
+template <Precision Prec, ExecutionSpace Space>
+void PauliOperator<Prec, Space>::apply_to_state(StateVector<Prec, Space>& state_vector) const {
+    if (state_vector.n_qubits() < get_qubit_count()) {
+        throw std::runtime_error(
+            "PauliOperator::apply_to_state: n_qubits of state_vector is too small to apply the "
+            "operator");
+    }
+    internal::apply_pauli(
+        0ULL, _ptr->_bit_flip_mask, _ptr->_phase_flip_mask, _ptr->_coef, state_vector);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+StdComplex PauliOperator<Prec, Space>::get_expectation_value(
+    const StateVector<Prec, Space>& state_vector) const {
+    if (state_vector.n_qubits() < get_qubit_count()) {
+        throw std::runtime_error(
+            "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to "
+            "apply "
+            "the operator");
+    }
+    std::uint64_t bit_flip_mask = _ptr->_bit_flip_mask;
+    std::uint64_t phase_flip_mask = _ptr->_phase_flip_mask;
+    if (bit_flip_mask == 0) {
+        FloatType res;
+        Kokkos::parallel_reduce(
+            Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector.dim()),
+            KOKKOS_LAMBDA(std::uint64_t state_idx, FloatType & sum) {
+                FloatType tmp = (scaluq::internal::conj(state_vector._raw[state_idx]) *
+                                 state_vector._raw[state_idx])
+                                    .real();
+                if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
+                sum += tmp;
+            },
+            internal::Sum<FloatType, Space>(res));
+        return _ptr->_coef * res;
+    }
+    std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
+    std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
+    ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
+    FloatType res;
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector.dim() >> 1),
+        KOKKOS_LAMBDA(std::uint64_t state_idx, FloatType & sum) {
+            std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
+            std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
+            FloatType tmp = scaluq::internal::real(
+                state_vector._raw[basis_0] * scaluq::internal::conj(state_vector._raw[basis_1]) *
+                global_phase * FloatType{2});
+            if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
+            sum += tmp;
+        },
+        internal::Sum<FloatType, Space>(res));
+    return static_cast<StdComplex>(_ptr->_coef * res);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+StdComplex PauliOperator<Prec, Space>::get_transition_amplitude(
+    const StateVector<Prec, Space>& state_vector_bra,
+    const StateVector<Prec, Space>& state_vector_ket) const {
+    if (state_vector_bra.n_qubits() != state_vector_ket.n_qubits()) {
+        throw std::runtime_error("state_vector_bra must have same n_qubits to state_vector_ket.");
+    }
+    if (state_vector_bra.n_qubits() < get_qubit_count()) {
+        throw std::runtime_error(
+            "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to "
+            "apply "
+            "the operator");
+    }
+    std::uint64_t bit_flip_mask = _ptr->_bit_flip_mask;
+    std::uint64_t phase_flip_mask = _ptr->_phase_flip_mask;
+    if (bit_flip_mask == 0) {
+        ComplexType res;
+        Kokkos::parallel_reduce(
+            Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector_bra.dim()),
+            KOKKOS_LAMBDA(std::uint64_t state_idx, ComplexType & sum) {
+                ComplexType tmp = scaluq::internal::conj(state_vector_bra._raw[state_idx]) *
+                                  state_vector_ket._raw[state_idx];
+                if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
+                sum += tmp;
+            },
+            internal::Sum<ComplexType, Space>(res));
+        Kokkos::fence();
+        return _ptr->_coef * res;
+    }
+    std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
+    std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
+    ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
+    ComplexType res;
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector_bra.dim() >> 1),
+        KOKKOS_LAMBDA(std::uint64_t state_idx, ComplexType & sum) {
+            std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
+            std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
+            ComplexType tmp1 = scaluq::internal::conj(state_vector_bra._raw[basis_1]) *
+                               state_vector_ket._raw[basis_0] * global_phase;
+            if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
+            ComplexType tmp2 = scaluq::internal::conj(state_vector_bra._raw[basis_0]) *
+                               state_vector_ket._raw[basis_1] * global_phase;
+            if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
+            sum += tmp1 + tmp2;
+        },
+        internal::Sum<ComplexType, Space>(res));
+    Kokkos::fence();
+    return static_cast<StdComplex>(_ptr->_coef * res);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+internal::ComplexMatrix PauliOperator<Prec, Space>::get_matrix() const {
+    auto triplets = get_matrix_triplets_ignoring_coef();
+    decltype(triplets) coeffed_triplets(triplets.size());
+    for (std::size_t i = 0; i < triplets.size(); i++) {
+        coeffed_triplets[i] = Triplet(triplets[i].row(),
+                                      triplets[i].col(),
+                                      triplets[i].value() * static_cast<StdComplex>(_ptr->_coef));
+    }
+    std::uint64_t dim = 1ULL << _ptr->_pauli_id_list.size();
+    internal::SparseComplexMatrix sparse(dim, dim);
+    sparse.setFromTriplets(coeffed_triplets.begin(), coeffed_triplets.end());
+    return internal::ComplexMatrix(sparse);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+internal::ComplexMatrix PauliOperator<Prec, Space>::get_matrix_ignoring_coef() const {
+    auto triplets = get_matrix_triplets_ignoring_coef();
+    std::uint64_t dim = 1ULL << _ptr->_pauli_id_list.size();
+    internal::SparseComplexMatrix sparse(dim, dim);
+    sparse.setFromTriplets(triplets.begin(), triplets.end());
+    return internal::ComplexMatrix(sparse);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+PauliOperator<Prec, Space> PauliOperator<Prec, Space>::operator*(
+    const PauliOperator& target) const {
     int extra_90rot_cnt = 0;
     auto x_left = _ptr->_bit_flip_mask & ~_ptr->_phase_flip_mask;
     auto y_left = _ptr->_bit_flip_mask & _ptr->_phase_flip_mask;
@@ -291,9 +321,9 @@ PauliOperator<Fp> PauliOperator<Fp>::operator*(const PauliOperator& target) cons
     return PauliOperator(
         _ptr->_bit_flip_mask ^ target._ptr->_bit_flip_mask,
         _ptr->_phase_flip_mask ^ target._ptr->_phase_flip_mask,
-        _ptr->_coef * target._ptr->_coef * internal::PHASE_90ROT<Fp>()[extra_90rot_cnt]);
+        _ptr->_coef * target._ptr->_coef * internal::PHASE_90ROT<Prec>()[extra_90rot_cnt]);
 }
 
-FLOAT_DECLARE_CLASS(PauliOperator)
+SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(PauliOperator)
 
 }  // namespace scaluq

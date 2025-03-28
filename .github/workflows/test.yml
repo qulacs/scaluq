@@ -31,7 +31,7 @@ jobs:
         include:
           - os: "linux"
             architecture: "x86_64"
-            runs-on: "ubuntu-22.04"
+            runs-on: "ubuntu-24.04"
           - os: "macos"
             architecture: "x86_64"
             runs-on: "macos-13"
@@ -46,6 +46,10 @@ jobs:
       SCALUQ_USE_TEST: "ON"
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
       SCALUQ_CUDA_ARCH: "PASCAL61"
+      SCALUQ_FLOAT16: "ON"
+      SCALUQ_FLOAT32: "ON"
+      SCALUQ_FLOAT64: "ON"
+      SCALUQ_BFLOAT16: "ON"
     steps:
       - uses: actions/checkout@v4
 
@@ -86,7 +90,7 @@ jobs:
         if: ${{ matrix.device == 'cpu' }} # currently GPU runner is not supported
         run: |
           if [ "$(uname)" == 'Darwin' ]; then
-            NPROC=$(sysctl -n hw.logicalcpu)
+            NPROC=$(sysctl -n hw.physicalcpu)
           else
             NPROC=$(nproc)
           fi

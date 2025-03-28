@@ -3,8 +3,8 @@
 #include "../util/template.hpp"
 
 namespace scaluq {
-FLOAT(Fp)
-std::set<std::string> Circuit<Fp>::key_set() const {
+template <Precision Prec, ExecutionSpace Space>
+std::set<std::string> Circuit<Prec, Space>::key_set() const {
     std::set<std::string> key_set;
     for (auto&& gate : _gate_list) {
         if (gate.index() == 1) key_set.insert(std::get<1>(gate).second);
@@ -12,8 +12,8 @@ std::set<std::string> Circuit<Fp>::key_set() const {
     return key_set;
 }
 
-FLOAT(Fp)
-std::uint64_t Circuit<Fp>::calculate_depth() const {
+template <Precision Prec, ExecutionSpace Space>
+std::uint64_t Circuit<Prec, Space>::calculate_depth() const {
     std::vector<std::uint64_t> filled_step(_n_qubits, 0ULL);
     for (const auto& gate : _gate_list) {
         std::vector<std::uint64_t> control_qubits =
@@ -43,8 +43,8 @@ std::uint64_t Circuit<Fp>::calculate_depth() const {
     return *std::ranges::max_element(filled_step);
 }
 
-FLOAT(Fp)
-void Circuit<Fp>::add_circuit(const Circuit<Fp>& circuit) {
+template <Precision Prec, ExecutionSpace Space>
+void Circuit<Prec, Space>::add_circuit(const Circuit<Prec, Space>& circuit) {
     if (circuit._n_qubits != _n_qubits) {
         throw std::runtime_error(
             "Circuit::add_circuit(const Circuit&): circuit with different qubit count cannot "
@@ -55,8 +55,8 @@ void Circuit<Fp>::add_circuit(const Circuit<Fp>& circuit) {
         _gate_list.push_back(gate);
     }
 }
-FLOAT(Fp)
-void Circuit<Fp>::add_circuit(Circuit<Fp>&& circuit) {
+template <Precision Prec, ExecutionSpace Space>
+void Circuit<Prec, Space>::add_circuit(Circuit<Prec, Space>&& circuit) {
     if (circuit._n_qubits != _n_qubits) {
         throw std::runtime_error(
             "Circuit::add_circuit(Circuit&&): circuit with different qubit count cannot be "
@@ -68,9 +68,9 @@ void Circuit<Fp>::add_circuit(Circuit<Fp>&& circuit) {
     }
 }
 
-FLOAT(Fp)
-void Circuit<Fp>::update_quantum_state(StateVector<Fp>& state,
-                                       const std::map<std::string, Fp>& parameters) const {
+template <Precision Prec, ExecutionSpace Space>
+void Circuit<Prec, Space>::update_quantum_state(
+    StateVector<Prec, Space>& state, const std::map<std::string, double>& parameters) const {
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0) continue;
         const auto& key = std::get<1>(gate).second;
@@ -91,10 +91,10 @@ void Circuit<Fp>::update_quantum_state(StateVector<Fp>& state,
     }
 }
 
-FLOAT(Fp)
-void Circuit<Fp>::update_quantum_state(
-    StateVectorBatched<Fp>& states,
-    const std::map<std::string, std::vector<Fp>>& parameters) const {
+template <Precision Prec, ExecutionSpace Space>
+void Circuit<Prec, Space>::update_quantum_state(
+    StateVectorBatched<Prec, Space>& states,
+    const std::map<std::string, std::vector<double>>& parameters) const {
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0) continue;
         const auto& key = std::get<1>(gate).second;
@@ -115,9 +115,9 @@ void Circuit<Fp>::update_quantum_state(
     }
 }
 
-FLOAT(Fp)
-Circuit<Fp> Circuit<Fp>::copy() const {
-    Circuit ccircuit(_n_qubits);
+template <Precision Prec, ExecutionSpace Space>
+Circuit<Prec, Space> Circuit<Prec, Space>::copy() const {
+    Circuit<Prec, Space> ccircuit(_n_qubits);
     ccircuit._gate_list.reserve(_gate_list.size());
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0)
@@ -130,9 +130,9 @@ Circuit<Fp> Circuit<Fp>::copy() const {
     return ccircuit;
 }
 
-FLOAT(Fp)
-Circuit<Fp> Circuit<Fp>::get_inverse() const {
-    Circuit icircuit(_n_qubits);
+template <Precision Prec, ExecutionSpace Space>
+Circuit<Prec, Space> Circuit<Prec, Space>::get_inverse() const {
+    Circuit<Prec, Space> icircuit(_n_qubits);
     icircuit._gate_list.reserve(_gate_list.size());
     for (auto&& gate : _gate_list | std::views::reverse) {
         if (gate.index() == 0)
@@ -145,8 +145,8 @@ Circuit<Fp> Circuit<Fp>::get_inverse() const {
     return icircuit;
 }
 
-FLOAT(Fp)
-void Circuit<Fp>::check_gate_is_valid(const Gate<Fp>& gate) const {
+template <Precision Prec, ExecutionSpace Space>
+void Circuit<Prec, Space>::check_gate_is_valid(const Gate<Prec, Space>& gate) const {
     auto targets = gate->target_qubit_list();
     auto controls = gate->control_qubit_list();
     bool valid = true;
@@ -157,8 +157,8 @@ void Circuit<Fp>::check_gate_is_valid(const Gate<Fp>& gate) const {
     }
 }
 
-FLOAT(Fp)
-void Circuit<Fp>::check_gate_is_valid(const ParamGate<Fp>& gate) const {
+template <Precision Prec, ExecutionSpace Space>
+void Circuit<Prec, Space>::check_gate_is_valid(const ParamGate<Prec, Space>& gate) const {
     auto targets = gate->target_qubit_list();
     auto controls = gate->control_qubit_list();
     bool valid = true;
@@ -169,5 +169,5 @@ void Circuit<Fp>::check_gate_is_valid(const ParamGate<Fp>& gate) const {
     }
 }
 
-FLOAT_DECLARE_CLASS(Circuit)
+SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(Circuit)
 }  // namespace scaluq

@@ -31,7 +31,7 @@ jobs:
         include:
           - os: "linux"
             architecture: "x86_64"
-            runs-on: "ubuntu-22.04"
+            runs-on: "ubuntu-24.04"
           - os: "macos"
             architecture: "x86_64"
             runs-on: "macos-13"
@@ -44,6 +44,10 @@ jobs:
       CMAKE_CXX_COMPILER: ${{ matrix.runs-on == 'macos-13' && '/usr/local/opt/ccache/libexec/g++-14'|| matrix.runs-on == 'macos-14' && '/opt/homebrew/opt/ccache/libexec/g++-14' || '/usr/lib/ccache/g++' }}
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
       SCALUQ_CUDA_ARCH: "PASCAL61"
+      SCALUQ_FLOAT16: "ON"
+      SCALUQ_FLOAT32: "ON"
+      SCALUQ_FLOAT64: "ON"
+      SCALUQ_BFLOAT16: "ON"
     steps:
       - uses: actions/checkout@v4
 
@@ -109,7 +113,7 @@ jobs:
         include:
           - os: "linux"
             architecture: "x86_64"
-            runs-on: "ubuntu-22.04"
+            runs-on: "ubuntu-24.04"
           - os: "macos"
             architecture: "x86_64"
             runs-on: "macos-13"
@@ -158,6 +162,6 @@ jobs:
       - name: Run / Test stub
         if: ${{ matrix.device == 'cpu' }} # currently GPU runner is not supported
         run: |
-          echo -e "from scaluq.f64 import StateVector, gate\nstate = StateVector(2)\nx = gate.X(0)\nx.update_quantum_state(state)\nprint(state.get_amplitudes())" > /tmp/sample.py
+          echo -e "from scaluq.default.f64 import StateVector, gate\nstate = StateVector(2)\nx = gate.X(0)\nx.update_quantum_state(state)\nprint(state.get_amplitudes())" > /tmp/sample.py
           python /tmp/sample.py
           python -m mypy /tmp/sample.py

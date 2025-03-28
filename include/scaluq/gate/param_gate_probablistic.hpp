@@ -9,18 +9,19 @@
 
 namespace scaluq {
 namespace internal {
-template <std::floating_point Fp>
-class ParamProbablisticGateImpl : public ParamGateBase<Fp> {
-    using EitherGate = std::variant<Gate<Fp>, ParamGate<Fp>>;
-    std::vector<Fp> _distribution;
-    std::vector<Fp> _cumulative_distribution;
+template <Precision Prec, ExecutionSpace Space>
+class ParamProbablisticGateImpl : public ParamGateBase<Prec, Space> {
+    using EitherGate = std::variant<Gate<Prec, Space>, ParamGate<Prec, Space>>;
+    std::vector<double> _distribution;
+    std::vector<double> _cumulative_distribution;
     std::vector<EitherGate> _gate_list;
 
 public:
-    ParamProbablisticGateImpl(const std::vector<Fp>& distribution,
-                              const std::vector<std::variant<Gate<Fp>, ParamGate<Fp>>>& gate_list);
+    ParamProbablisticGateImpl(
+        const std::vector<double>& distribution,
+        const std::vector<std::variant<Gate<Prec, Space>, ParamGate<Prec, Space>>>& gate_list);
     const std::vector<EitherGate>& gate_list() const { return _gate_list; }
-    const std::vector<Fp>& distribution() const { return _distribution; }
+    const std::vector<double>& distribution() const { return _distribution; }
 
     std::vector<std::uint64_t> target_qubit_list() const override {
         throw std::runtime_error(
@@ -53,16 +54,16 @@ public:
             "ParamProbablisticGateImpl.");
     }
 
-    std::shared_ptr<const ParamGateBase<Fp>> get_inverse() const override;
-    internal::ComplexMatrix<Fp> get_matrix(Fp) const override {
+    std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override;
+    ComplexMatrix get_matrix(double) const override {
         throw std::runtime_error(
             "ParamProbablisticGateImpl::get_matrix(): This function must not be used in "
             "ParamProbablisticGateImpl.");
     }
 
-    void update_quantum_state(StateVector<Fp>& state_vector, Fp param) const override;
-    void update_quantum_state(StateVectorBatched<Fp>& states,
-                              std::vector<Fp> params) const override;
+    void update_quantum_state(StateVector<Prec, Space>& state_vector, double param) const override;
+    void update_quantum_state(StateVectorBatched<Prec, Space>& states,
+                              std::vector<double> params) const override;
 
     std::string to_string(const std::string& indent) const override;
 
@@ -78,47 +79,74 @@ public:
 };
 }  // namespace internal
 
-template <std::floating_point Fp>
-using ParamProbablisticGate = internal::ParamGatePtr<internal::ParamProbablisticGateImpl<Fp>>;
+template <Precision Prec, ExecutionSpace Space>
+using ParamProbablisticGate =
+    internal::ParamGatePtr<internal::ParamProbablisticGateImpl<Prec, Space>>;
 
 namespace internal {
-
-#define DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE(Type)                                     \
-    template <>                                                                                  \
-    inline std::shared_ptr<const ParamProbablisticGateImpl<Type>> get_from_json(const Json& j) { \
-        auto distribution = j.at("distribution").get<std::vector<Type>>();                       \
-        std::vector<std::variant<Gate<Type>, ParamGate<Type>>> gate_list;                        \
-        const Json& tmp_list = j.at("gate_list");                                                \
-        for (const Json& tmp_j : tmp_list) {                                                     \
-            if (tmp_j.at("type").get<std::string>().starts_with("Param"))                        \
-                gate_list.emplace_back(tmp_j.get<ParamGate<Type>>());                            \
-            else                                                                                 \
-                gate_list.emplace_back(tmp_j.get<Gate<Type>>());                                 \
-        }                                                                                        \
-        return std::make_shared<const ParamProbablisticGateImpl<Type>>(distribution, gate_list); \
+#define DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec,  \
+                                                                                       Space) \
+    template <>                                                                               \
+    inline std::shared_ptr<const ParamProbablisticGateImpl<Prec, Space>> get_from_json(       \
+        const Json& j) {                                                                      \
+        auto distribution = j.at("distribution").get<std::vector<double>>();                  \
+        std::vector<std::variant<Gate<Prec, Space>, ParamGate<Prec, Space>>> gate_list;       \
+        const Json& tmp_list = j.at("gate_list");                                             \
+        for (const Json& tmp_j : tmp_list) {                                                  \
+            if (tmp_j.at("type").get<std::string>().starts_with("Param"))                     \
+                gate_list.emplace_back(tmp_j.get<ParamGate<Prec, Space>>());                  \
+            else                                                                              \
+                gate_list.emplace_back(tmp_j.get<Gate<Prec, Space>>());                       \
+        }                                                                                     \
+        return std::make_shared<const ParamProbablisticGateImpl<Prec, Space>>(distribution,   \
+                                                                              gate_list);     \
     }
-DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE(double)
-DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE(float)
-#undef DECLARE_GET_FROM_JSON_PARAM_PROBGATE_WITH_TYPE
-
+#ifdef SCALUQ_FLOAT16
+DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
+    Precision::F16, ExecutionSpace::Default)
+DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
+                                                                               ExecutionSpace::Host)
+#endif
+#ifdef SCALUQ_FLOAT32
+DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
+    Precision::F32, ExecutionSpace::Default)
+DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
+                                                                               ExecutionSpace::Host)
+#endif
+#ifdef SCALUQ_FLOAT64
+DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
+    Precision::F64, ExecutionSpace::Default)
+DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
+                                                                               ExecutionSpace::Host)
+#endif
+#ifdef SCALUQ_BFLOAT16
+DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
+    Precision::BF16, ExecutionSpace::Default)
+DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
+                                                                               ExecutionSpace::Host)
+#endif
+#undef DECLARE_GET_FROM_JSON_PARAMPROBABLISTICGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 }  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <std::floating_point Fp>
-void bind_gate_param_gate_probablistic_hpp(nb::module_& m) {
+template <Precision Prec, ExecutionSpace Space>
+void bind_gate_param_gate_probablistic_hpp(
+    nb::module_& m, nb::class_<ParamGate<Prec, Space>>& param_gate_base_def) {
     DEF_PARAM_GATE(
         ParamProbablisticGate,
-        Fp,
+        Prec,
+        Space,
         "Specific class of parametric probablistic gate. The gate to apply is picked from a "
-        "cirtain distribution.")
+        "cirtain distribution.",
+        param_gate_base_def)
         .def(
             "gate_list",
-            [](const ParamProbablisticGate<Fp>& gate) { return gate->gate_list(); },
+            [](const ParamProbablisticGate<Prec, Space>& gate) { return gate->gate_list(); },
             nb::rv_policy::reference)
         .def(
             "distribution",
-            [](const ParamProbablisticGate<Fp>& gate) { return gate->distribution(); },
+            [](const ParamProbablisticGate<Prec, Space>& gate) { return gate->distribution(); },
             nb::rv_policy::reference);
 }
 }  // namespace internal

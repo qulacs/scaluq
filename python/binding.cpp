@@ -14,6 +14,8 @@
 #include <nanobind/stl/variant.h>
 #include <nanobind/stl/vector.h>
 
+#include <stdfloat>
+
 #include "docstring.hpp"
 
 namespace nb = nanobind;
@@ -29,51 +31,6 @@ using namespace std::string_literals;
 NAMESPACE_BEGIN(NB_NAMESPACE)
 NAMESPACE_BEGIN(detail)
 
-template <typename T>
-struct type_caster<Kokkos::complex<T>> {
-    NB_TYPE_CASTER(Kokkos::complex<T>, const_name("complex"))
-
-    template <bool Recursive = true>
-    bool from_python(handle src, uint8_t flags, cleanup_list* cleanup) noexcept {
-        (void)flags;
-        (void)cleanup;
-
-        if (PyComplex_Check(src.ptr())) {
-            value = Kokkos::complex<T>((T)PyComplex_RealAsDouble(src.ptr()),
-                                       (T)PyComplex_ImagAsDouble(src.ptr()));
-            return true;
-        }
-
-        if constexpr (Recursive) {
-            if (!PyFloat_CheckExact(src.ptr()) && !PyLong_CheckExact(src.ptr()) &&
-                PyObject_HasAttrString(src.ptr(), "imag")) {
-                try {
-                    object tmp = handle(&PyComplex_Type)(src);
-                    return from_python<false>(tmp, flags, cleanup);
-                } catch (...) {
-                    return false;
-                }
-            }
-        }
-
-        make_caster<T> caster;
-        if (caster.from_python(src, flags, cleanup)) {
-            value = Kokkos::complex<T>(caster.operator cast_t<T>());
-            return true;
-        }
-
-        return false;
-    }
-
-    template <typename T2>
-    static handle from_cpp(T2&& value, rv_policy policy, cleanup_list* cleanup) noexcept {
-        (void)policy;
-        (void)cleanup;
-
-        return PyComplex_FromDoubles((double)value.real(), (double)value.imag());
-    }
-};
-
 NAMESPACE_END(detail)
 NAMESPACE_END(NB_NAMESPACE)
 
@@ -81,41 +38,114 @@ void cleanup() {
     if (!is_finalized()) finalize();
 }
 
-template <std::floating_point Fp>
-void bind_on_precision(nb::module_& m, const char* submodule_name) {
+template <Precision Prec, ExecutionSpace Space>
+void bind_on_precision_and_space(nb::module_& mspace, const char* submodule_name) {
     std::ostringstream oss;
     oss << "module for " << submodule_name << "precision";
-    auto mp = m.def_submodule(submodule_name, oss.str().c_str());
+    auto mp = mspace.def_submodule(submodule_name, oss.str().c_str());
 
-    internal::bind_state_state_vector_hpp<Fp>(mp);
-    internal::bind_state_state_vector_batched_hpp<Fp>(mp);
+    internal::bind_state_state_vector_hpp<Prec, Space>(mp);
+    internal::bind_state_state_vector_batched_hpp<Prec, Space>(mp);
 
     auto mgate = mp.def_submodule("gate", "Define gates.");
 
-    internal::bind_gate_gate_hpp<Fp>(mp);
-    internal::bind_gate_gate_standard_hpp<Fp>(mp);
-    internal::bind_gate_gate_matrix_hpp<Fp>(mp);
-    internal::bind_gate_gate_pauli_hpp<Fp>(mp);
-    internal::bind_gate_gate_factory_hpp<Fp>(mgate);
-    internal::bind_gate_param_gate_hpp<Fp>(mp);
-    internal::bind_gate_param_gate_standard_hpp<Fp>(mp);
-    internal::bind_gate_param_gate_pauli_hpp<Fp>(mp);
-    internal::bind_gate_param_gate_probablistic_hpp<Fp>(mp);
-    internal::bind_gate_param_gate_factory<Fp>(mgate);
-    // internal::bind_gate_merge_gate_hpp<Fp>(mp);
+    auto gate_base_def = internal::bind_gate_gate_hpp<Prec, Space>(mp);
+    internal::bind_gate_gate_standard_hpp<Prec, Space>(mp, gate_base_def);
+    internal::bind_gate_gate_matrix_hpp<Prec, Space>(mp, gate_base_def);
+    internal::bind_gate_gate_pauli_hpp<Prec, Space>(mp, gate_base_def);
+    internal::bind_gate_gate_factory_hpp<Prec, Space>(mgate);
+    auto param_gate_base_def = internal::bind_gate_param_gate_hpp<Prec, Space>(mp);
+    internal::bind_gate_param_gate_standard_hpp<Prec, Space>(mp, param_gate_base_def);
+    internal::bind_gate_param_gate_pauli_hpp<Prec, Space>(mp, param_gate_base_def);
+    internal::bind_gate_param_gate_probablistic_hpp<Prec, Space>(mp, param_gate_base_def);
+    internal::bind_gate_param_gate_factory<Prec, Space>(mgate);
+    internal::bind_gate_merge_gate_hpp<Prec, Space>(mp);
 
-    internal::bind_circuit_circuit_hpp<Fp>(mp);
+    internal::bind_circuit_circuit_hpp<Prec, Space>(mp);
 
-    internal::bind_operator_pauli_operator_hpp<Fp>(mp);
-    internal::bind_operator_operator_hpp<Fp>(mp);
+    internal::bind_operator_pauli_operator_hpp<Prec, Space>(mp);
+    internal::bind_operator_operator_hpp<Prec, Space>(mp);
 }
 
 NB_MODULE(scaluq_core, m) {
     internal::bind_kokkos_hpp(m);
-    internal::bind_gate_gate_hpp_without_precision(m);
+    internal::bind_gate_gate_hpp_without_precision_and_space(m);
+    internal::bind_gate_param_gate_hpp_without_precision_and_space(m);
 
-    bind_on_precision<double>(m, "f64");
-    bind_on_precision<float>(m, "f32");
+    auto mdefault = m.def_submodule("default", "module for default execution space");
+#ifdef SCALUQ_FLOAT16
+    bind_on_precision_and_space<Precision::F16, ExecutionSpace::Default>(mdefault, "f16");
+#endif
+#ifdef SCALUQ_FLOAT32
+    bind_on_precision_and_space<Precision::F32, ExecutionSpace::Default>(mdefault, "f32");
+#endif
+#ifdef SCALUQ_FLOAT64
+    bind_on_precision_and_space<Precision::F64, ExecutionSpace::Default>(mdefault, "f64");
+#endif
+#ifdef SCALUQ_BFLOAT16
+    bind_on_precision_and_space<Precision::BF16, ExecutionSpace::Default>(mdefault, "bf16");
+#endif
+
+    auto mhost = m.def_submodule("host", "module for host execution space");
+#ifdef SCALUQ_FLOAT16
+    bind_on_precision_and_space<Precision::F16, ExecutionSpace::Host>(mhost, "f16");
+#endif
+#ifdef SCALUQ_FLOAT32
+    bind_on_precision_and_space<Precision::F32, ExecutionSpace::Host>(mhost, "f32");
+#endif
+#ifdef SCALUQ_FLOAT64
+    bind_on_precision_and_space<Precision::F64, ExecutionSpace::Host>(mhost, "f64");
+#endif
+#ifdef SCALUQ_BFLOAT16
+    bind_on_precision_and_space<Precision::BF16, ExecutionSpace::Host>(mhost, "bf16");
+#endif
+
+    m.def(
+        "precision_available",
+        [](std::string_view precision) {
+            if (precision == "f16") {
+#ifdef SCALUQ_FLOAT16
+                return true;
+#else
+                return false;
+#endif
+            }
+            if (precision == "f32") {
+#ifdef SCALUQ_FLOAT32
+                return true;
+#else
+                return false;
+#endif
+            }
+            if (precision == "f64") {
+#ifdef SCALUQ_FLOAT64
+                return true;
+#else
+                return false;
+#endif
+            }
+            if (precision == "bf16") {
+#ifdef SCALUQ_BFLOAT16
+                return true;
+#else
+                return false;
+#endif
+            }
+            throw std::runtime_error("precision_available: Unknown precision name.");
+        },
+        DocString()
+            .desc("Return the precision is supported.")
+            .arg("precision",
+                 "str",
+                 "precision name",
+                 "This must be one of `f16` `f32` `f64` `bf16`.")
+            .ret("bool", "the precision is supported")
+            .ex(DocString::Code{">>> precision_available('f64')",
+                                "True",
+                                ">>> precision_available('bf16')",
+                                "False"})
+            .build_as_google_style()
+            .c_str());
 
     initialize();
     std::atexit(&cleanup);

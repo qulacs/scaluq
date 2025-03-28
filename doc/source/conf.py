@@ -5,33 +5,26 @@ from pathlib import Path
 stub_dir = Path('./stub/scaluq/')
 stub_dir.mkdir(parents=True, exist_ok=True)
 
+files = []
+
 subprocess.run([sys.executable, '-m', 'nanobind.stubgen',
     '-m', 'scaluq.scaluq_core',
     '-o', './stub/scaluq/__init__.py'])
-
-subprocess.run([sys.executable, '-m', 'nanobind.stubgen',
-    '-m', 'scaluq.scaluq_core.f64',
-    '-o', './stub/scaluq/f64/__init__.py'])
-
-subprocess.run([sys.executable, '-m', 'nanobind.stubgen',
-    '-m', 'scaluq.scaluq_core.f64.gate',
-    '-o', './stub/scaluq/f64/gate.py'])
-
-subprocess.run([sys.executable, '-m', 'nanobind.stubgen',
-    '-m', 'scaluq.scaluq_core.f32',
-    '-o', './stub/scaluq/f32/__init__.py'])
-
-subprocess.run([sys.executable, '-m', 'nanobind.stubgen',
-    '-m', 'scaluq.scaluq_core.f32.gate',
-    '-o', './stub/scaluq/f32/gate.py'])
-
-files = [
-    "./stub/scaluq/__init__.py",
-    "./stub/scaluq/f64/__init__.py",
-    "./stub/scaluq/f64/gate.py",
-    "./stub/scaluq/f32/__init__.py",
-    "./stub/scaluq/f32/gate.py"
-]
+files.append('./stub/scaluq/__init__.py')
+for space in ['default', 'host']:
+    subprocess.run([sys.executable, '-m', 'nanobind.stubgen',
+        '-m', f'scaluq.scaluq_core.{space}',
+        '-o', f'./stub/scaluq/{space}/__init__.py'])
+    files.append(f'./stub/scaluq/{space}/__init__.py')
+    for precision in ['f16', 'f32', 'f64', 'bf16']:
+        subprocess.run([sys.executable, '-m', 'nanobind.stubgen',
+            '-m', f'scaluq.scaluq_core.{space}.{precision}',
+            '-o', f'./stub/scaluq/{space}/{precision}/__init__.py'])
+        files.append(f'./stub/scaluq/{space}/{precision}/__init__.py')
+        subprocess.run([sys.executable, '-m', 'nanobind.stubgen',
+            '-m', f'scaluq.scaluq_core.{space}.{precision}.gate',
+            '-o', f'./stub/scaluq/{space}/{precision}/gate.py'])
+        files.append(f'./stub/scaluq/{space}/{precision}/gate.py')
 
 subprocess.run(["sed", "-i", "/@overload/d"] + files, check=True)
 

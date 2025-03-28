@@ -8,7 +8,6 @@ target_sources(scaluq PRIVATE
     gate/gate_probablistic.cpp
     gate/gate_standard.cpp
     gate/gate.cpp
-    gate/param_gate.cpp
     gate/param_gate_pauli.cpp
     gate/param_gate_probablistic.cpp
     gate/param_gate_standard.cpp
