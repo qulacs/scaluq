@@ -139,14 +139,36 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
     std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> states, new_states;
     states.emplace_back(initial_state, sampling_count);
     for (auto&& g : _gate_list) {
-        std::vector<double> probs(1, 1.0);
+        std::vector<double> probs;
+        std::vector<GateWithKey> gates;
         if (g.index() == 0) {
-            if (std::get<0>(g).gate_type() == GateType::Probablistic) {
-                probs = ProbablisticGate<Prec, Space>(std::get<0>(g))->distribution();
+            const auto& gate = std::get<0>(g);
+            if (gate.gate_type() == GateType::Probablistic) {
+                probs = ProbablisticGate<Prec, Space>(gate)->distribution();
+                auto gate_list = ProbablisticGate<Prec, Space>(gate)->gate_list();
+                for (auto tmp : gate_list) {
+                    gates.push_back(tmp);
+                }
+            } else {
+                probs = std::vector<double>{1.0};
+                gates.push_back(gate);
             }
         } else {
-            if (std::get<1>(g).first.param_gate_type() == ParamGateType::ParamProbablistic) {
-                probs = ParamProbablisticGate<Prec, Space>(std::get<1>(g).first)->distribution();
+            const auto& [gate, key] = std::get<1>(g);
+            if (gate.param_gate_type() == ParamGateType::ParamProbablistic) {
+                probs = ParamProbablisticGate<Prec, Space>(gate)->distribution();
+                auto gate_list = ParamProbablisticGate<Prec, Space>(gate)->gate_list();
+                for (auto tmp : gate_list) {
+                    if (tmp.index() == 0) {
+                        gates.push_back(std::get<0>(tmp));
+                    } else {
+                        gates.push_back(std::pair<scaluq::ParamGate<Prec, Space>, std::string>{
+                            std::get<1>(tmp), key});
+                    }
+                }
+            } else {
+                probs = std::vector<double>{1.0};
+                gates.push_back(g);
             }
         }
 
@@ -163,16 +185,12 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
             for (std::uint64_t i = 0; i < counts.size(); ++i) {
                 if (counts[i] == 0) continue;
                 auto tmp = states_before_update.get_state_vector_at(i);
-                if (g.index() == 0) {  // NonProbablisticGate
-                    std::get<0>(g)->update_quantum_state(tmp);
-                } else {  // ProbablisticGate
-                    const auto& key = std::get<1>(g).second;
-                    auto either_gate =
-                        ParamProbablisticGate<Prec, Space>(std::get<1>(g).first)->gate_list()[i];
-                    if (either_gate.index() == 0) {  // Gate
-                        std::get<0>(either_gate)->update_quantum_state(tmp);
-                    } else {  // ParamGate
-                        std::get<1>(either_gate)->update_quantum_state(tmp, parameters.at(key));
+                for (auto&& gate : gates) {
+                    if (gate.index() == 0) {
+                        std::get<0>(gate)->update_quantum_state(tmp);
+                    } else {
+                        const auto& [param_gate, key] = std::get<1>(gate);
+                        param_gate->update_quantum_state(tmp, parameters.at(key));
                     }
                 }
                 new_states.emplace_back(tmp, counts[i]);

@@ -84,6 +84,7 @@ public:
 
     /**
      * @brief サンプリングされうるすべてのパターンに対して，それぞれが何回選ばれたかを返す
+     * @attention ProbablisticGate に ProbablisticGate が含まれてはいけない
      */
     std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> simulate_noise(
         const StateVector<Prec, Space>& initial_state,
