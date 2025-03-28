@@ -6,10 +6,16 @@ using namespace nlohmann;
 int main() {
     scaluq::initialize();  // must be called before using any scaluq methods
     {
-        StateVector<Precision::F64, ExecutionSpace::Default> state(2);
-        state.set_amplitude_at(1, 2);
-        state.set_amplitude_at(2, 3);
-        state.set_amplitude_at(3, 4);
+        const std::uint64_t n_qubits = 18;
+        const std::uint64_t dim = 1 << n_qubits;
+        const std::uint64_t scount = 100000;
+        std::vector<std::complex<double>> initial_state(dim);
+        for (std::uint64_t i = 1; i < dim; i++) {
+            initial_state[i] = {static_cast<double>(i + 1), 0.0};
+        }
+        StateVector<Precision::F64, ExecutionSpace::Default> state(n_qubits);
+        state.load(initial_state);
+
         Circuit<Precision::F64, ExecutionSpace::Default> circuit(2);
         auto i = gate::I<Precision::F64, ExecutionSpace::Default>();
         auto z1 = gate::Z<Precision::F64, ExecutionSpace::Default>(1, {});
@@ -18,25 +24,24 @@ int main() {
         auto p2 = gate::Probablistic<Precision::F64, ExecutionSpace::Default>({0.3, 0.7}, {z2, i});
         circuit.add_gate(p1);
         circuit.add_gate(p2);
-        auto v = circuit.simulate_noise(state, 1000);
+        circuit.add_gate(p1);
+        circuit.add_gate(p2);
+        circuit.add_gate(p1);
+        circuit.add_gate(p2);
+        circuit.add_gate(p1);
+        circuit.add_gate(p2);
+        circuit.add_gate(p1);
+        circuit.add_gate(p2);
 
-        std::cout << v.size() << std::endl;
-
-        std::cout << "p1=z1, p2=z2:\n";
-        std::cout << "Count: " << v[0].second << std::endl;
-        std::cout << v[0].first << "\n";
-
-        std::cout << "p1=z1, p2=i:\n";
-        std::cout << "Count: " << v[1].second << std::endl;
-        std::cout << v[1].first << "\n";
-
-        std::cout << "p1=i, p2=z2:\n";
-        std::cout << "Count: " << v[2].second << std::endl;
-        std::cout << v[2].first << "\n";
-
-        std::cout << "p1=i, p2=i:\n";
-        std::cout << "Count: " << v[3].second << std::endl;
-        std::cout << v[3].first << "\n";
+        std::cout << "Start Simulate:" << std::endl;
+        auto sim = circuit.simulate_noise(state, scount);
+        std::cout << "Size:" << sim.size() << std::endl;
+        std::uint64_t sum = 0;
+        for (auto&& [s, c] : sim) {
+            std::cout << "Count:" << c << std::endl;
+            sum += c;
+        }
+        assert(sum == scount);
     }
     scaluq::finalize();
 }
