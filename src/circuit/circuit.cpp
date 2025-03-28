@@ -134,7 +134,7 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
     //   X/ ＼I
     //  100   900     {Z:p=0.2, I:p=0.8}
     // Z/＼I  Z/＼I
-    // 20 80  180 720 {Y:p=0.2, I:p=0.8}
+    // 20 80  180 720
     std::mt19937 mt(seed);
     StateVectorBatched<Prec, Space> states(1, initial_state.n_qubits()), new_states;
     states.set_state_vector_at(0, initial_state);
