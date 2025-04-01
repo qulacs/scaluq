@@ -153,6 +153,9 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def("get_inverse",
              &Circuit<Prec, Space>::get_inverse,
              "Get inverse of circuit. All the gates are newly created.")
+        .def("simulate_noise",
+             &Circuit<Prec, Space>::simulate_noise,
+             "Simulate noise circuit. Return all the possible states and their counts.")
         .def(
             "to_json",
             [](const Circuit<Prec, Space>& circuit) { return Json(circuit).dump(); },
