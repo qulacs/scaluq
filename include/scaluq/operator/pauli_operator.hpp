@@ -53,6 +53,9 @@ public:
 private:
     std::shared_ptr<const Data> _ptr;
 
+    using Triplet = Eigen::Triplet<StdComplex>;
+    [[nodiscard]] std::vector<Triplet> get_matrix_triplets_ignoring_coef() const;
+
 public:
     enum PauliID : std::uint64_t { I, X, Y, Z };
 
@@ -92,7 +95,6 @@ public:
         const StateVector<Prec, Space>& state_vector_ket) const;
 
     [[nodiscard]] internal::ComplexMatrix get_matrix() const;
-
     [[nodiscard]] internal::ComplexMatrix get_matrix_ignoring_coef() const;
 
     [[nodiscard]] PauliOperator operator*(const PauliOperator& target) const;
@@ -113,13 +115,6 @@ public:
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 void bind_operator_pauli_operator_hpp(nb::module_& m) {
-    nb::enum_<typename PauliOperator<Prec, Space>::PauliID>(m, "PauliID")
-        .value("I", PauliOperator<Prec, Space>::I)
-        .value("X", PauliOperator<Prec, Space>::X)
-        .value("Y", PauliOperator<Prec, Space>::Y)
-        .value("Z", PauliOperator<Prec, Space>::Z)
-        .export_values();
-
     nb::class_<typename PauliOperator<Prec, Space>::Data>(
         m, "PauliOperatorData", "Internal data structure for PauliOperator.")
         .def(nb::init<StdComplex>(), "coef"_a = 1., "Initialize data with coefficient.")
@@ -171,7 +166,33 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
     nb::class_<PauliOperator<Prec, Space>>(
         m,
         "PauliOperator",
-        "Pauli operator as coef and tensor product of single pauli for each qubit.")
+        DocString()
+            .desc("Pauli operator as coef and tensor product of single pauli for each qubit.")
+            .desc("Given `coef: complex`, Initialize operator which just multiplying coef.")
+            .desc("Given `target_qubit_list: list[int], pauli_id_list: "
+                  "list[int], coef: complex`, Initialize pauli operator. For "
+                  "each `i`, single pauli correspond to `pauli_id_list[i]` is applied to "
+                  "`target_qubit_list[i]`-th qubit.")
+            .desc("Given `pauli_string: str, coef: complex`, Initialize pauli "
+                  "operator. For each `i`, single pauli correspond to `pauli_id_list[i]` is "
+                  "applied to `target_qubit_list[i]`-th qubit.")
+            .desc("Given `pauli_id_par_qubit: list[int], coef: complex`, "
+                  "Initialize pauli operator. For each `i`, single pauli correspond to "
+                  "`paul_id_per_qubit[i]` is applied to `i`-th qubit.")
+            .desc("Given `bit_flip_mask: int, phase_flip_mask: int, coef: "
+                  "complex`, Initialize pauli operator. For each `i`, single pauli applied to "
+                  "`i`-th qubit is "
+                  "got "
+                  "from `i-th` bit of `bit_flip_mask` and `phase_flip_mask` as follows.\n\n.. "
+                  "csv-table::\n\n    \"bit_flip\",\"phase_flip\",\"pauli\"\n    "
+                  "\"0\",\"0\",\"I\"\n    "
+                  "\"0\",\"1\",\"Z\"\n    \"1\",\"0\",\"X\"\n    \"1\",\"1\",\"Y\"")
+            .ex(DocString::Code(
+                {">>> pauli = PauliOperator(\"X 3 Y 2\")",
+                 ">>> print(pauli.to_json())",
+                 "{\"coef\":{\"imag\":0.0,\"real\":1.0},\"pauli_string\":\"X 3 Y 2\"}"}))
+            .build_as_google_style()
+            .c_str())
         .def(nb::init<StdComplex>(),
              "coef"_a = 1.,
              "Initialize operator which just multiplying coef.")
@@ -182,7 +203,7 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "pauli_id_list"_a,
              "coef"_a = 1.,
              "Initialize pauli operator. For each `i`, single pauli correspond to "
-             "`pauli_id_list[i]` is applied to `target_qubit_list`-th qubit.")
+             "`pauli_id_list[i]` is applied to `target_qubit_list[i]`-th qubit.")
         .def(nb::init<std::string_view, StdComplex>(),
              "pauli_string"_a,
              "coef"_a = 1.,
@@ -193,7 +214,7 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "pauli_id_par_qubit"_a,
              "coef"_a = 1.,
              "Initialize pauli operator. For each `i`, single pauli correspond to "
-             "`paul_id_per_qubit` is applied to `i`-th qubit.")
+             "`paul_id_per_qubit[i]` is applied to `i`-th qubit.")
         .def(nb::init<std::uint64_t, std::uint64_t, StdComplex>(),
              "bit_flip_mask"_a,
              "phase_flip_mask"_a,
@@ -228,13 +249,24 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "\\mathrm{qubit_count})$ is the target.")
         .def("apply_to_state",
              &PauliOperator<Prec, Space>::apply_to_state,
+             "state"_a,
              "Apply pauli to state vector.")
         .def("get_expectation_value",
              &PauliOperator<Prec, Space>::get_expectation_value,
+             "state"_a,
              "Get expectation value of measuring state vector. $\\bra{\\psi}P\\ket{\\psi}$.")
         .def("get_transition_amplitude",
              &PauliOperator<Prec, Space>::get_transition_amplitude,
+             "source"_a,
+             "target"_a,
              "Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.")
+        .def("get_matrix",
+             &PauliOperator<Prec, Space>::get_matrix,
+             "Get matrix representaton of the PauliOperator. Tensor product is applied from "
+             "target_qubit_list[-1] to target_qubit_list[0].")
+        .def("get_matrix_ignoring_coef",
+             &PauliOperator<Prec, Space>::get_matrix_ignoring_coef,
+             "Get matrix representaton of the PauliOperator, but with forcing `coef=1.`")
         .def(nb::self * nb::self)
         .def(nb::self * StdComplex())
         .def(
@@ -246,6 +278,7 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
             [](PauliOperator<Prec, Space>& pauli, const std::string& str) {
                 pauli = nlohmann::json::parse(str);
             },
+            "json_str"_a,
             "Read an object from the JSON representation of the Pauli operator.");
 }
 }  // namespace internal

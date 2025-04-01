@@ -103,7 +103,7 @@ jobs:
         os: ["linux", "macos"]
         architecture: ["x86_64", "arm64"]
         device: ["cpu", "cuda"]
-        python-version: ["3.12"]
+        python-version: ["3.13"]
         exclude:
           - os: "macos"
             device: "cuda"

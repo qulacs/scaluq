@@ -37,8 +37,7 @@ public:
 
     [[nodiscard]] Operator get_dagger() const;
 
-    // not implemented yet
-    void get_matrix() const;
+    [[nodiscard]] internal::ComplexMatrix get_matrix() const;
 
     void apply_to_state(StateVector<Prec, Space>& state_vector) const;
 
@@ -107,7 +106,20 @@ private:
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 void bind_operator_operator_hpp(nb::module_& m) {
-    nb::class_<Operator<Prec, Space>>(m, "Operator", "General quantum operator class.")
+    nb::class_<Operator<Prec, Space>>(
+        m,
+        "Operator",
+        DocString()
+            .desc("General quantum operator class.")
+            .desc("Given `qubit_count: int`, Initialize operator with specified number of qubits.")
+            .ex(DocString::Code(
+                {">>> pauli = PauliOperator(\"X 3 Y 2\")",
+                 ">>> operator = Operator(4)",
+                 ">>> operator.add_operator(pauli)",
+                 ">>> print(operator.to_json())",
+                 "{\"coef\":{\"imag\":0.0,\"real\":1.0},\"pauli_string\":\"X 3 Y 2\"}"}))
+            .build_as_google_style()
+            .c_str())
         .def(nb::init<std::uint64_t>(),
              "qubit_count"_a,
              "Initialize operator with specified number of qubits.")
@@ -126,6 +138,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
         .def("add_operator",
              nb::overload_cast<const PauliOperator<Prec, Space>&>(
                  &Operator<Prec, Space>::add_operator),
+             "pauli"_a,
              "Add a Pauli operator to this operator.")
         .def(
             "add_random_operator",
@@ -148,13 +161,21 @@ void bind_operator_operator_hpp(nb::module_& m) {
              "Get the adjoint (Hermitian conjugate) of the operator.")
         .def("apply_to_state",
              &Operator<Prec, Space>::apply_to_state,
+             "state"_a,
              "Apply the operator to a state vector.")
         .def("get_expectation_value",
              &Operator<Prec, Space>::get_expectation_value,
+             "state"_a,
              "Get the expectation value of the operator with respect to a state vector.")
         .def("get_transition_amplitude",
              &Operator<Prec, Space>::get_transition_amplitude,
+             "source"_a,
+             "target"_a,
              "Get the transition amplitude of the operator between two state vectors.")
+        .def("get_matrix",
+             &Operator<Prec, Space>::get_matrix,
+             "Get matrix representaton of the Operator. Tensor product is applied from "
+             "n_qubits-1 to 0.")
         .def(nb::self *= StdComplex())
         .def(nb::self * StdComplex())
         .def(+nb::self)
@@ -180,6 +201,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
             [](Operator<Prec, Space>& op, const std::string& str) {
                 op = nlohmann::json::parse(str);
             },
+            "json_str"_a,
             "Read an object from the JSON representation of the operator.");
 }
 }  // namespace internal

@@ -938,12 +938,13 @@ void bind_gate_gate_standard_hpp(nb::module_& m, nb::class_<Gate<Prec, Space>>& 
              Prec,
              Space,
              "Specific class of gate, which rotate global phase, represented as "
-             "$e^{i\\mathrm{phase}}I$.",
+             "$e^{i\\gamma}I$.",
              gate_base_def)
         .def(
             "phase",
             [](const GlobalPhaseGate<Prec, Space>& gate) { return gate->phase(); },
-            "Get `phase` property");
+            "Get `phase` property. The phase is represented as $\\gamma$.",
+            gate_base_def);
     DEF_GATE(XGate, Prec, Space, "Specific class of Pauli-X gate.", gate_base_def);
     DEF_GATE(YGate, Prec, Space, "Specific class of Pauli-Y gate.", gate_base_def);
     DEF_GATE(ZGate, Prec, Space, "Specific class of Pauli-Z gate.", gate_base_def);
@@ -951,46 +952,55 @@ void bind_gate_gate_standard_hpp(nb::module_& m, nb::class_<Gate<Prec, Space>>& 
     DEF_GATE(SGate,
              Prec,
              Space,
-             "Specific class of S gate, represented as $\\begin { bmatrix }\n1 & 0\\\\\n0 &"
-             "i\n\\end{bmatrix}$.",
+             "Specific class of S gate, represented as $\\begin{bmatrix} 1 & 0 \\\\ 0 & i "
+             "\\end{bmatrix}$.",
              gate_base_def);
     DEF_GATE(SdagGate, Prec, Space, "Specific class of inverse of S gate.", gate_base_def);
     DEF_GATE(TGate,
              Prec,
              Space,
-             "Specific class of T gate, represented as $\\begin { bmatrix }\n1 & 0\\\\\n0 &"
-             "e^{i\\pi/4}\n\\end{bmatrix}$.",
+             "Specific class of T gate, represented as $\\begin{bmatrix} 1 & 0 \\\\ 0 &"
+             "e^{i \\pi/4} \\end{bmatrix}$.",
              gate_base_def);
     DEF_GATE(TdagGate, Prec, Space, "Specific class of inverse of T gate.", gate_base_def);
-    DEF_GATE(
-        SqrtXGate,
-        Prec,
-        Space,
-        "Specific class of sqrt(X) gate, represented as $\\begin{ bmatrix }\n1+i & 1-i\\\\\n1-i "
-        "& 1+i\n\\end{bmatrix}$.",
-        gate_base_def);
-    DEF_GATE(
-        SqrtXdagGate, Prec, Space, "Specific class of inverse of sqrt(X) gate.", gate_base_def);
+    DEF_GATE(SqrtXGate,
+             Prec,
+             Space,
+             "Specific class of sqrt(X) gate, represented as $\\frac{1}{\\sqrt{2}} "
+             "\\begin{bmatrix} 1+i & 1-i\\\\ 1-i "
+             "& 1+i \\end{bmatrix}$.",
+             gate_base_def);
+    DEF_GATE(SqrtXdagGate,
+             Prec,
+             Space,
+             "Specific class of inverse of sqrt(X) gate, represented as "
+             "$\\frac{1}{\\sqrt{2}} \\begin{bmatrix} 1-i & 1+i\\\\ 1+i & 1-i \\end{bmatrix}$.",
+             gate_base_def);
     DEF_GATE(SqrtYGate,
              Prec,
              Space,
-             "Specific class of sqrt(Y) gate, represented as $\\begin{ bmatrix }\n1+i & -1-i "
-             "\\\\\n1+i & 1+i\n\\end{bmatrix}$.",
+             "Specific class of sqrt(Y) gate, represented as $\\frac{1}{\\sqrt{2}} "
+             "\\begin{bmatrix} 1+i & -1-i "
+             "\\\\ 1+i & 1+i \\end{bmatrix}$.",
              gate_base_def);
-    DEF_GATE(
-        SqrtYdagGate, Prec, Space, "Specific class of inverse of sqrt(Y) gate.", gate_base_def);
-    DEF_GATE(
-        P0Gate,
-        Prec,
-        Space,
-        "Specific class of projection gate to $\\ket{0}$.\n\n.. note:: This gate is not unitary.",
-        gate_base_def);
-    DEF_GATE(
-        P1Gate,
-        Prec,
-        Space,
-        "Specific class of projection gate to $\\ket{1}$.\n\n.. note:: This gate is not unitary.",
-        gate_base_def);
+    DEF_GATE(SqrtYdagGate,
+             Prec,
+             Space,
+             "Specific class of inverse of sqrt(Y) gate, represented as "
+             "$\\frac{1}{\\sqrt{2}} \\begin{bmatrix} 1-i & 1-i\\\\ -1+i & 1-i \\end{bmatrix}$.",
+             gate_base_def);
+    DEF_GATE(P0Gate,
+             Prec,
+             Space,
+             "Specific class of projection gate to $\\ket{0}$.\n\nNotes:\n\tThis gate is "
+             "not unitary.",
+             gate_base_def);
+    DEF_GATE(P1Gate,
+             Prec,
+             Space,
+             "Specific class of projection gate to $\\ket{1}$.\n\nNotes:\n\tThis gate is "
+             "not unitary.",
+             gate_base_def);
 
 #define DEF_ROTATION_GATE(GATE_TYPE, PRECISION, SPACE, DESCRIPTION, GATE_BASE_DEF) \
     DEF_GATE(GATE_TYPE, PRECISION, SPACE, DESCRIPTION, GATE_BASE_DEF)              \
@@ -1003,19 +1013,19 @@ void bind_gate_gate_standard_hpp(nb::module_& m, nb::class_<Gate<Prec, Space>>& 
         RXGate,
         Prec,
         Space,
-        "Specific class of X rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}X}$.",
+        "Specific class of X rotation gate, represented as $e^{-i\\frac{\\theta}{2}X}$.",
         gate_base_def);
     DEF_ROTATION_GATE(
         RYGate,
         Prec,
         Space,
-        "Specific class of Y rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Y}$.",
+        "Specific class of Y rotation gate, represented as $e^{-i\\frac{\\theta}{2}Y}$.",
         gate_base_def);
     DEF_ROTATION_GATE(
         RZGate,
         Prec,
         Space,
-        "Specific class of Z rotation gate, represented as $e^{-i\\frac{\\mathrm{angle}}{2}Z}$.",
+        "Specific class of Z rotation gate, represented as $e^{-i\\frac{\\theta}{2}Z}$.",
         gate_base_def);
 
     DEF_GATE(U1Gate,
@@ -1023,7 +1033,7 @@ void bind_gate_gate_standard_hpp(nb::module_& m, nb::class_<Gate<Prec, Space>>& 
              Space,
              "Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, "
              "represented as "
-             "$\\begin{bmatrix}\n1 & 0\\\\\n0 & e^{i\\lambda}\n\\end{bmatrix}$.",
+             "$\\begin{bmatrix} 1 & 0 \\\\ 0 & e^{i\\lambda} \\end{bmatrix}$.",
              gate_base_def)
         .def(
             "lambda_",
@@ -1034,8 +1044,8 @@ void bind_gate_gate_standard_hpp(nb::module_& m, nb::class_<Gate<Prec, Space>>& 
              Space,
              "Specific class of IBMQ's U2 Gate, which is a rotation about X+Z-axis, "
              "represented as "
-             "$\\frac{1}{\\sqrt{2}} \\begin{bmatrix}1 & -e^{-i\\lambda}\\\\\n"
-             "e^{i\\phi} & e^{i(\\phi+\\lambda)}\n\\end{bmatrix}$.",
+             "$\\frac{1}{\\sqrt{2}} \\begin{bmatrix}1 & -e^{-i\\lambda}\\\\ "
+             "e^{i\\phi} & e^{i(\\phi+\\lambda)} \\end{bmatrix}$.",
              gate_base_def)
         .def(
             "phi",
@@ -1050,10 +1060,10 @@ void bind_gate_gate_standard_hpp(nb::module_& m, nb::class_<Gate<Prec, Space>>& 
              Space,
              "Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, "
              "represented as "
-             "$\\begin{bmatrix}\n\\cos \\frac{\\theta}{2} & "
-             "-e^{i\\lambda}\\sin\\frac{\\theta}{2}\\\\\n"
+             "$\\begin{bmatrix} \\cos \\frac{\\theta}{2} & "
+             "-e^{i\\lambda}\\sin\\frac{\\theta}{2}\\\\ "
              "e^{i\\phi}\\sin\\frac{\\theta}{2} & "
-             "e^{i(\\phi+\\lambda)}\\cos\\frac{\\theta}{2}\n\\end{bmatrix}$.",
+             "e^{i(\\phi+\\lambda)}\\cos\\frac{\\theta}{2} \\end{bmatrix}$.",
              gate_base_def)
         .def(
             "theta",

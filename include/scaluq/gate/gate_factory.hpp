@@ -290,179 +290,654 @@ inline Gate<Prec, Space> DepolarizingNoise(std::int64_t target, double error_rat
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 void bind_gate_gate_factory_hpp(nb::module_& mgate) {
-    mgate.def("I", &gate::I<Prec, Space>, "Generate general Gate class instance of I.");
-    mgate.def("GlobalPhase",
-              &gate::GlobalPhase<Prec, Space>,
-              "Generate general Gate class instance of GlobalPhase.",
-              "phase"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("X",
-              &gate::X<Prec, Space>,
-              "Generate general Gate class instance of X.",
-              "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("Y",
-              &gate::Y<Prec, Space>,
-              "Generate general Gate class instance of Y.",
-              "taget"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("Z",
-              &gate::Z<Prec, Space>,
-              "Generate general Gate class instance of Z.",
-              "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("H",
-              &gate::H<Prec, Space>,
-              "Generate general Gate class instance of H.",
-              "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("S",
-              &gate::S<Prec, Space>,
-              "Generate general Gate class instance of S.",
-              "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
+    mgate.def("I",
+              &gate::I<Prec, Space>,
+              DocString()
+                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                        ":class:`~scaluq.f64.IGate`.")
+                  .ret("Gate", "Identity gate instance")
+                  .ex(DocString::Code({">>> gate = I()", ">>> print(gate)", "Identity Gate"}))
+                  .build_as_google_style()
+                  .c_str());
+    mgate.def(
+        "GlobalPhase",
+        &gate::GlobalPhase<Prec, Space>,
+        "gamma"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.GlobalPhaseGate`.")
+            .note(
+                "If you need to use functions specific to the :class:`~scaluq.f64.GlobalPhaseGate` "
+                "class, please downcast it.")
+            .arg("gamma", "float", "Global phase angle in radians")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "Global phase gate instance")
+            .ex(DocString::Code(
+                {">>> gate = GlobalPhase(math.pi/2)", ">>> print(gate)", "Global Phase Gate"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "X",
+        &gate::X<Prec, Space>,
+        "target"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.XGate`. "
+                  "Performs bit flip operation.")
+            .note("XGate represents the Pauli-X (NOT) gate class.If you need to use functions "
+                  "specific to the :class:`~scaluq.f64.XGate` "
+                  "class, please downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "Pauli-X gate instance")
+            .ex(DocString::Code({">>> gate = X(0)  # X gate on qubit 0",
+                                 ">>> gate = X(1, [0])  # Controlled-X with control on qubit 0"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "Y",
+        &gate::Y<Prec, Space>,
+        "target"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.YGate`. "
+                  "Performs bit flip and phase flip operation.")
+            .note("YGate represents the Pauli-Y gate class. If you need to use functions specific "
+                  "to the :class:`~scaluq.f64.YGate` "
+                  "class, please downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "Pauli-Y gate instance")
+            .ex(DocString::Code({">>> gate = Y(0)  # Y gate on qubit 0",
+                                 ">>> gate = Y(1, [0])  # Controlled-Y with control on qubit 0"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "Z",
+        &gate::Z<Prec, Space>,
+        "target"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.ZGate`. "
+                  "Performs bit flip and phase flip operation.")
+            .note("ZGate represents the Pauli-Z gate class. If you need to use functions specific "
+                  "to the :class:`~scaluq.f64.ZGate` "
+                  "class, please downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "Pauli-Z gate instance")
+            .ex(DocString::Code({">>> gate = Z(0)  # Z gate on qubit 0",
+                                 ">>> gate = Z(1, [0])  # Controlled-Z with control on qubit 0"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "H",
+        &gate::H<Prec, Space>,
+        "target"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.HGate`. "
+                  "Performs superposition operation.")
+            .note("If you need to use functions specific to the :class:`~scaluq.f64.HGate` class, "
+                  "please "
+                  "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "Hadamard gate instance")
+            .ex(DocString::Code({">>> gate = H(0)  # H gate on qubit 0",
+                                 ">>> gate = H(1, [0])  # Controlled-H with control on qubit 0"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "S",
+        &gate::S<Prec, Space>,
+        "target"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.SGate`.")
+            .note("If you need to use functions specific to the :class:`~scaluq.f64.SGate` class, "
+                  "please "
+                  "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "S gate instance")
+            .ex(DocString::Code({">>> gate = S(0)  # S gate on qubit 0",
+                                 ">>> gate = S(1, [0])  # Controlled-S with control on qubit 0"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def("Sdag",
               &gate::Sdag<Prec, Space>,
-              "Generate general Gate class instance of Sdag.",
               "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("T",
-              &gate::T<Prec, Space>,
-              "Generate general Gate class instance of T.",
-              "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
+              "controls"_a = std::vector<std::uint64_t>{},
+              DocString()
+                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                        ":class:`~scaluq.f64.SdagGate`.")
+                  .note("If you need to use functions specific to the "
+                        ":class:`~scaluq.f64.SdagGate` class, please "
+                        "downcast it.")
+                  .arg("target", "int", "Target qubit index")
+                  .arg("controls", "list[int]", true, "Control qubit indices")
+                  .ret("Gate", "Sdag gate instance")
+                  .ex(DocString::Code(
+                      {">>> gate = Sdag(0)  # Sdag gate on qubit 0",
+                       ">>> gate = Sdag(1, [0])  # Controlled-Sdag with control on qubit 0"}))
+                  .build_as_google_style()
+                  .c_str());
+    mgate.def(
+        "T",
+        &gate::T<Prec, Space>,
+        "target"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.TGate`.")
+            .note("If you need to use functions specific to the :class:`~scaluq.f64.TGate` class, "
+                  "please "
+                  "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "T gate instance")
+            .ex(DocString::Code({">>> gate = T(0)  # T gate on qubit 0",
+                                 ">>> gate = T(1, [0])  # Controlled-T with control on qubit 0"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def("Tdag",
               &gate::Tdag<Prec, Space>,
-              "Generate general Gate class instance of Tdag.",
               "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("SqrtX",
-              &gate::SqrtX<Prec, Space>,
-              "Generate general Gate class instance of SqrtX.",
-              "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("SqrtXdag",
-              &gate::SqrtXdag<Prec, Space>,
-              "Generate general Gate class instance of SqrtXdag.",
-              "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("SqrtY",
-              &gate::SqrtY<Prec, Space>,
-              "Generate general Gate class instance of SqrtY.",
-              "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("SqrtYdag",
-              &gate::SqrtYdag<Prec, Space>,
-              "Generate general Gate class instance of SqrtYdag.",
-              "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
+              "controls"_a = std::vector<std::uint64_t>{},
+              DocString()
+                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                        ":class:`~scaluq.f64.TdagGate`.")
+                  .note("If you need to use functions specific to the "
+                        ":class:`~scaluq.f64.TdagGate` class, please "
+                        "downcast it.")
+                  .arg("target", "int", "Target qubit index")
+                  .arg("controls", "list[int]", true, "Control qubit indices")
+                  .ret("Gate", "Tdag gate instance")
+                  .ex(DocString::Code(
+                      {">>> gate = Tdag(0)  # Tdag gate on qubit 0",
+                       ">>> gate = Tdag(1, [0])  # Controlled-Tdag with control on qubit 0"}))
+                  .build_as_google_style()
+                  .c_str());
+    mgate.def(
+        "SqrtX",
+        &gate::SqrtX<Prec, Space>,
+        "target"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.SqrtXGate`, represented as "
+                  "$\\frac{1}{2}\\begin{bmatrix} 1+i & 1-i \\\\ 1-i & 1+i \\end{bmatrix}$.")
+            .note("If you need to use functions specific to the :class:`~scaluq.f64.SqrtXGate` "
+                  "class, please downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "SqrtX gate instance")
+            .ex(DocString::Code({">>> gate = SqrtX(0)  # SqrtX gate on qubit 0",
+                                 ">>> gate = SqrtX(1, [0])  # Controlled-SqrtX"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "SqrtXdag",
+        &gate::SqrtXdag<Prec, Space>,
+        "target"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.SqrtXdagGate`, represented as "
+                  "$\\begin{bmatrix} 1-i & 1+i\\\\ 1+i "
+                  "& 1-i \\end{bmatrix}$.")
+            .note("If you need to use functions specific to the :class:`~scaluq.f64.SqrtXdagGate` "
+                  "class, please downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "SqrtXdag gate instance")
+            .ex(DocString::Code({">>> gate = SqrtXdag(0)  # SqrtXdag gate on qubit 0",
+                                 ">>> gate = SqrtXdag(1, [0])  # Controlled-SqrtXdag"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "SqrtY",
+        &gate::SqrtY<Prec, Space>,
+        "target"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.SqrtYGate`, represented as "
+                  "$\\begin{bmatrix} 1+i & -1-i "
+                  "\\\\ 1+i & 1+i \\end{bmatrix}$.")
+            .note("If you need to use functions specific to the :class:`~scaluq.f64.SqrtYGate` "
+                  "class, please downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "SqrtY gate instance")
+            .ex(DocString::Code({">>> gate = SqrtY(0)  # SqrtY gate on qubit 0",
+                                 ">>> gate = SqrtY(1, [0])  # Controlled-SqrtY"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "SqrtYdag",
+        &gate::SqrtYdag<Prec, Space>,
+        "target"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.SqrtYdagGate`, represented as "
+                  "$\\begin{bmatrix} 1-i & 1-i "
+                  "\\\\ -1+i & 1-i \\end{bmatrix}$.")
+            .note("If you need to use functions specific to the :class:`~scaluq.f64.SqrtYdagGate` "
+                  "class, please downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "SqrtYdag gate instance")
+            .ex(DocString::Code({">>> gate = SqrtYdag(0)  # SqrtYdag gate on qubit 0",
+                                 ">>> gate = SqrtYdag(1, [0])  # Controlled-SqrtYdag"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def("P0",
               &gate::P0<Prec, Space>,
-              "Generate general Gate class instance of P0.",
               "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
+              "controls"_a = std::vector<std::uint64_t>{},
+              DocString()
+                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                        ":class:`~scaluq.f64.P0Gate`.")
+                  .note("If you need to use functions specific to the :class:`~scaluq.f64.P0Gate` "
+                        "class, please "
+                        "downcast it.")
+                  .arg("target", "int", "Target qubit index")
+                  .arg("controls", "list[int]", true, "Control qubit indices")
+                  .ret("Gate", "P0 gate instance")
+                  .ex(DocString::Code({">>> gate = P0(0)  # P0 gate on qubit 0",
+                                       ">>> gate = P0(1, [0])  # Controlled-P0"}))
+                  .build_as_google_style()
+                  .c_str());
     mgate.def("P1",
               &gate::P1<Prec, Space>,
-              "Generate general Gate class instance of P1.",
               "target"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("RX",
-              &gate::RX<Prec, Space>,
-              "Generate general Gate class instance of RX.",
-              "target"_a,
-              "angle"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("RY",
-              &gate::RY<Prec, Space>,
-              "Generate general Gate class instance of RY.",
-              "target"_a,
-              "angle"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("RZ",
-              &gate::RZ<Prec, Space>,
-              "Generate general Gate class instance of RZ.",
-              "target"_a,
-              "angle"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
+              "controls"_a = std::vector<std::uint64_t>{},
+              DocString()
+                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                        ":class:`~scaluq.f64.P1Gate`.")
+                  .note("If you need to use functions specific to the :class:`~scaluq.f64.P1Gate` "
+                        "class, please "
+                        "downcast it.")
+                  .arg("target", "int", "Target qubit index")
+                  .arg("controls", "list[int]", true, "Control qubit indices")
+                  .ret("Gate", "P1 gate instance")
+                  .ex(DocString::Code({">>> gate = P1(0)  # P1 gate on qubit 0",
+                                       ">>> gate = P1(1, [0])  # Controlled-P1"}))
+                  .build_as_google_style()
+                  .c_str());
+    mgate.def(
+        "RX",
+        &gate::RX<Prec, Space>,
+        "target"_a,
+        "theta"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate rotation gate around X-axis. Rotation angle is specified in radians.")
+            .note("If you need to use functions specific to the :class:`~scaluq.f64.RXGate` class, "
+                  "please "
+                  "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("theta", "float", "Rotation angle in radians")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "RX gate instance")
+            .ex(DocString::Code({">>> gate = RX(0, math.pi/2)  # π/2 rotation around X-axis",
+                                 ">>> gate = RX(1, math.pi, [0])  # Controlled-RX"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "RY",
+        &gate::RY<Prec, Space>,
+        "target"_a,
+        "theta"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate rotation gate around Y-axis. Rotation angle is specified in radians.")
+            .note("If you need to use functions specific to the :class:`~scaluq.f64.RYGate` class, "
+                  "please "
+                  "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("theta", "float", "Rotation angle in radians")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "RY gate instance")
+            .ex(DocString::Code({">>> gate = RY(0, math.pi/2)  # π/2 rotation around Y-axis",
+                                 ">>> gate = RY(1, math.pi, [0])  # Controlled-RY"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "RZ",
+        &gate::RZ<Prec, Space>,
+        "target"_a,
+        "theta"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate rotation gate around Z-axis. Rotation angle is specified in radians.")
+            .note("If you need to use functions specific to the :class:`~scaluq.f64.RZGate` class, "
+                  "please "
+                  "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("theta", "float", "Rotation angle in radians")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "RZ gate instance")
+            .ex(DocString::Code({">>> gate = RZ(0, math.pi/2)  # π/2 rotation around Z-axis",
+                                 ">>> gate = RZ(1, math.pi, [0])  # Controlled-RZ"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def("U1",
               &gate::U1<Prec, Space>,
-              "Generate general Gate class instance of U1.",
               "target"_a,
               "lambda_"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
+              "controls"_a = std::vector<std::uint64_t>{},
+              DocString()
+                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                        ":class:`~scaluq.f64.U1Gate`.")
+                  .note("If you need to use functions specific to the :class:`~scaluq.f64.U1Gate` "
+                        "class, please "
+                        "downcast it.")
+                  .arg("target", "int", "Target qubit index")
+                  .arg("lambda_", "float", "Rotation angle in radians")
+                  .arg("controls", "list[int]", true, "Control qubit indices")
+                  .ret("Gate", "U1 gate instance")
+                  .ex(DocString::Code({">>> gate = U1(0, math.pi/2)  # π/2 rotation around Z-axis",
+                                       ">>> gate = U1(1, math.pi, [0])  # Controlled-U1"}))
+                  .build_as_google_style()
+                  .c_str());
     mgate.def("U2",
               &gate::U2<Prec, Space>,
-              "Generate general Gate class instance of U2.",
               "target"_a,
               "phi"_a,
               "lambda_"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("U3",
-              &gate::U3<Prec, Space>,
-              "Generate general Gate class instance of U3.",
-              "target"_a,
-              "theta"_a,
-              "phi"_a,
-              "lambda_"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("Swap",
-              &gate::Swap<Prec, Space>,
-              "Generate general Gate class instance of Swap.",
-              "target1"_a,
-              "target2"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
+              "controls"_a = std::vector<std::uint64_t>{},
+              DocString()
+                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                        ":class:`~scaluq.f64.U2Gate`.")
+                  .note("If you need to use functions specific to the :class:`~scaluq.f64.U2Gate` "
+                        "class, please "
+                        "downcast it.")
+                  .arg("target", "int", "Target qubit index")
+                  .arg("phi", "float", "Rotation angle in radians")
+                  .arg("lambda_", "float", "Rotation angle in radians")
+                  .arg("controls", "list[int]", true, "Control qubit indices")
+                  .ret("Gate", "U2 gate instance")
+                  .ex(DocString::Code(
+                      {">>> gate = U2(0, math.pi/2, math.pi)  # π/2 rotation around Z-axis",
+                       ">>> gate = U2(1, math.pi, math.pi/2, [0])  # Controlled-U2"}))
+                  .build_as_google_style()
+                  .c_str());
     mgate.def(
-        "CX",
-        &gate::CX<Prec, Space>,
-        "Generate general Gate class instance of CX.\n\n.. note:: CX is a specialization of X.");
-    mgate.def("CNot",
+        "U3",
+        &gate::U3<Prec, Space>,
+        "target"_a,
+        "theta"_a,
+        "phi"_a,
+        "hoge_"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.U3Gate`.")
+            .note("If you need to use functions specific to the :class:`~scaluq.f64.U3Gate` class, "
+                  "please "
+                  "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("theta", "float", "Rotation angle in radians")
+            .arg("phi", "float", "Rotation angle in radians")
+            .arg("fuga_", "float", "Rotation angle in radians")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "U3 gate instance")
+            .ex(DocString::Code(
+                {">>> gate = U3(0, math.pi/2, math.pi, math.pi)  # π/2 rotation around Z-axis",
+                 ">>> gate = U3(1, math.pi, math.pi/2, math.pi, [0])  # Controlled-U3"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "Swap",
+        &gate::Swap<Prec, Space>,
+        "target1"_a,
+        "target2"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate SWAP gate. Swaps the states of two qubits.")
+            .note(
+                "If you need to use functions specific to the :class:`~scaluq.f64.SwapGate` class, "
+                "please downcast it.")
+            .arg("target1", "int", "First target qubit index")
+            .arg("target2", "int", "Second target qubit index")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "SWAP gate instance")
+            .ex(DocString::Code({">>> gate = Swap(0, 1)  # Swap qubits 0 and 1",
+                                 ">>> gate = Swap(1, 2, [0])  # Controlled-SWAP"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def("CX",
               &gate::CX<Prec, Space>,
-              "Generate general Gate class instance of CNot.\n\n.. note:: CNot is an alias of CX.");
+              "control"_a,
+              "target"_a,
+              DocString()
+                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                        ":class:`~scaluq.f64.XGate` with one control qubit. Performs "
+                        "controlled-X operation.")
+                  .note("CX is a specialization of X. If you need to use functions specific to the "
+                        ":class:`~scaluq.f64.XGate` class, please downcast it.")
+                  .arg("control", "int", "Control qubit index")
+                  .arg("target", "int", "Target qubit index")
+                  .ret("Gate", "CX gate instance")
+                  .ex(DocString::Code({">>> gate = CX(0, 1)  # CX gate with control on qubit 0",
+                                       ">>> gate = CX(1, 2)  # CX gate with control on qubit 1"}))
+                  .build_as_google_style()
+                  .c_str());
     mgate.def(
-        "CZ",
-        &gate::CZ<Prec, Space>,
-        "Generate general Gate class instance of CZ.\n\n.. note:: CZ is a specialization of Z.");
-    mgate.def(
-        "CCX",
-        &gate::CCX<Prec, Space>,
-        "Generate general Gate class instance of CXX.\n\n.. note:: CX is a specialization of X.");
-    mgate.def(
-        "CCNot",
-        &gate::CCX<Prec, Space>,
-        "Generate general Gate class instance of CCNot.\n\n.. note:: CCNot is an alias of CCX.");
-    mgate.def("Toffoli",
+        "CNot",
+        &gate::CX<Prec, Space>,
+        "control"_a,
+        "target"_a,
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.XGate` with "
+                  "one control qubit. Performs controlled-X operation.")
+            .note("CNot is an alias of CX. If you need to use functions specific to the "
+                  ":class:`~scaluq.f64.XGate` class, please downcast it.")
+            .arg("control", "int", "Control qubit index")
+            .arg("target", "int", "Target qubit index")
+            .ret("Gate", "CNot gate instance")
+            .ex(DocString::Code({">>> gate = CNot(0, 1)  # CNot gate with control on qubit 0",
+                                 ">>> gate = CNot(1, 2)  # CNot gate with control on qubit 1"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def("CZ",
+              &gate::CZ<Prec, Space>,
+              "control"_a,
+              "target"_a,
+              DocString()
+                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                        ":class:`~scaluq.f64.ZGate` with one control qubit. Performs "
+                        "controlled-Z operation.")
+                  .note("CZ is a specialization of Z. If you need to use functions specific to the "
+                        ":class:`~scaluq.f64.ZGate` class, please downcast it.")
+                  .arg("control", "int", "Control qubit index")
+                  .arg("target", "int", "Target qubit index")
+                  .ret("Gate", "CZ gate instance")
+                  .ex(DocString::Code({">>> gate = CZ(0, 1)  # CZ gate with control on qubit 0",
+                                       ">>> gate = CZ(1, 2)  # CZ gate with control on qubit 1"}))
+                  .build_as_google_style()
+                  .c_str());
+    mgate.def("CCX",
               &gate::CCX<Prec, Space>,
-              "Generate general Gate class instance of Toffoli.\n\n.. note:: Toffoli is an alias "
-              "of CCX.");
-    mgate.def("DenseMatrix",
-              &gate::DenseMatrix<Prec, Space>,
-              "Generate general Gate class instance of DenseMatrix.",
+              "control1"_a,
+              "control2"_a,
+              "target"_a,
+              DocString()
+                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                        ":class:`~scaluq.f64.XGate` with two control qubits. Performs "
+                        "controlled-controlled-X operation.")
+                  .note("If you need to use functions specific to the :class:`~scaluq.f64.XGate` "
+                        "class, please downcast it.")
+                  .arg("control1", "int", "First control qubit index")
+                  .arg("control2", "int", "Second control qubit index")
+                  .arg("target", "int", "Target qubit index")
+                  .ret("Gate", "CCX gate instance")
+                  .ex(DocString::Code(
+                      {">>> gate = CCX(0, 1, 2)  # CCX gate with controls on qubits 0 and 1",
+                       ">>> gate = CCX(1, 2, 3)  # CCX gate with controls on qubits 1 and 2"}))
+                  .build_as_google_style()
+                  .c_str());
+    mgate.def("CCNot",
+              &gate::CCX<Prec, Space>,
+              "control1"_a,
+              "control2"_a,
+              "target"_a,
+              DocString()
+                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                        ":class:`~scaluq.f64.XGate` with two control qubits. Performs "
+                        "controlled-controlled-X operation.")
+                  .note("CCNot is an alias of CCX. If you need to use functions specific to the "
+                        ":class:`~scaluq.f64.XGate` class, please downcast it.")
+                  .arg("control1", "int", "First control qubit index")
+                  .arg("control2", "int", "Second control qubit index")
+                  .arg("target", "int", "Target qubit index")
+                  .ret("Gate", "CCNot gate instance")
+                  .ex(DocString::Code(
+                      {">>> gate = CCNot(0, 1, 2)  # CCNot gate with controls on qubits 0 and 1",
+                       ">>> gate = CCNot(1, 2, 3)  # CCNot gate with controls on qubits 1 and 2"}))
+                  .build_as_google_style()
+                  .c_str());
+    mgate.def(
+        "Toffoli",
+        &gate::CCX<Prec, Space>,
+        "control1"_a,
+        "control2"_a,
+        "target"_a,
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.XGate` with two control qubits. "
+                  "Performs controlled-controlled-X operation.")
+            .note("Toffoli is an alias of CCX. If you need to use functions specific to the "
+                  ":class:`~scaluq.f64.XGate` class, please downcast it.")
+            .arg("control1", "int", "First control qubit index")
+            .arg("control2", "int", "Second control qubit index")
+            .arg("target", "int", "Target qubit index")
+            .ret("Gate", "Toffoli gate instance")
+            .ex(DocString::Code(
+                {">>> gate = Toffoli(0, 1, 2)  # Toffoli gate with controls on qubits 0 and 1",
+                 ">>> gate = Toffoli(1, 2, 3)  # Toffoli gate with controls on qubits 1 and 2"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "DenseMatrix",
+        &gate::DenseMatrix<Prec, Space>,
+        "targets"_a,
+        "matrix"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        "is_unitary"_a = false,
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.DenseMatrixGate`. Performs dense matrix operation.")
+            .note(
+                "If you need to use functions specific to the :class:`~scaluq.f64.DenseMatrixGate` "
+                "class, please downcast it.")
+            .arg("targets", "list[int]", "Target qubit indices")
+            .arg("matrix", "numpy.ndarray", "Matrix to be applied")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .arg("is_unitary",
+                 "bool",
+                 true,
+                 "Whether the matrix is unitary. When the flag indicating that the gate is "
+                 "unitary is set to True, a more efficient implementation is used.")
+            .ret("Gate", "DenseMatrix gate instance")
+            .ex(DocString::Code(
+                {">>> matrix = np.array([[1, 0], [0, 1]])",
+                 ">>> gate = DenseMatrix([0], matrix)",
+                 ">>> gate = DenseMatrix([0], matrix, [1])  # Controlled-DenseMatrix"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def("SparseMatrix",
+              &gate::SparseMatrix<Prec, Space>,
               "targets"_a,
               "matrix"_a,
               "controls"_a = std::vector<std::uint64_t>{},
-              "is_unitary"_a = false);
-    mgate.def("SparseMatrix",
-              &gate::SparseMatrix<Prec, Space>,
-              "Generate general Gate class instance of SparseMatrix.",
-              "targets"_a,
-              "matrix"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("Pauli",
-              &gate::Pauli<Prec, Space>,
-              "Generate general Gate class instance of Pauli.",
-              "pauli"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
-    mgate.def("PauliRotation",
-              &gate::PauliRotation<Prec, Space>,
-              "Generate general Gate class instance of PauliRotation.",
-              "pauli"_a,
-              "angle"_a,
-              "controls"_a = std::vector<std::uint64_t>{});
+              DocString()
+                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                        ":class:`~scaluq.f64.SparseMatrixGate`. Performs sparse matrix operation.")
+                  .note("If you need to use functions specific to the "
+                        ":class:`~scaluq.f64.SparseMatrixGate` "
+                        "class, please downcast it.")
+                  .arg("targets", "list[int]", "Target qubit indices")
+                  .arg("matrix", "scipy.sparse.csr_matrix", "Matrix to be applied")
+                  .arg("controls", "list[int]", true, "Control qubit indices")
+                  .ret("Gate", "SparseMatrix gate instance")
+                  .ex(DocString::Code(
+                      {">>> matrix = scipy.sparse.csr_matrix([[1, 0], [0, 1]])",
+                       ">>> gate = SparseMatrix([0], matrix)",
+                       ">>> gate = SparseMatrix([0], matrix, [1])  # Controlled-SparseMatrix"}))
+                  .build_as_google_style()
+                  .c_str());
+    mgate.def(
+        "Pauli",
+        &gate::Pauli<Prec, Space>,
+        "pauli"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.PauliGate`. Performs Pauli operation.")
+            .note("If you need to use functions specific to the :class:`~scaluq.f64.PauliGate` "
+                  "class, please downcast it.")
+            .arg("pauli", "PauliOperator", "Pauli operator")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "Pauli gate instance")
+            .ex(DocString::Code({">>> pauli = PauliOperator('X 0')",
+                                 ">>> gate = Pauli(pauli)",
+                                 ">>> gate = Pauli(pauli, [1])  # Controlled-Pauli"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "PauliRotation",
+        &gate::PauliRotation<Prec, Space>,
+        "pauli"_a,
+        "theta"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.PauliRotationGate`. Performs Pauli rotation operation.")
+            .note("If you need to use functions specific to the "
+                  ":class:`~scaluq.f64.PauliRotationGate` "
+                  "class, please downcast it.")
+            .arg("pauli", "PauliOperator", "Pauli operator")
+            .arg("theta", "float", "Rotation angle in radians")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .ret("Gate", "PauliRotation gate instance")
+            .ex(DocString::Code(
+                {">>> pauli = PauliOperator('X', 0)",
+                 ">>> gate = PauliRotation(pauli, math.pi/2)",
+                 ">>> gate = PauliRotation(pauli, math.pi/2, [1])  # Controlled-Pauli"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def("Probablistic",
               &gate::Probablistic<Prec, Space>,
-              "Generate general Gate class instance of Probablistic.",
               "distribution"_a,
-              "gate_list"_a);
+              "gate_list"_a,
+              DocString()
+                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                        ":class:`~scaluq.f64.ProbablisticGate`. Performs probablistic operation.")
+                  .note("If you need to use functions specific to the "
+                        ":class:`~scaluq.f64.ProbablisticGate` "
+                        "class, please downcast it.")
+                  .arg("distribution", "list[float]", "Probablistic distribution")
+                  .arg("gate_list", "list[Gate]", "List of gates")
+                  .ret("Gate", "Probablistic gate instance")
+                  .ex(DocString::Code(
+                      {">>> distribution = [0.3, 0.7]",
+                       ">>> gate_list = [X(0), Y(0)]",
+                       ">>> # X is applied with probability 0.3, Y is applied with probability 0.7",
+                       ">>> gate = Probablistic(distribution, gate_list)"}))
+                  .build_as_google_style()
+                  .c_str());
     mgate.def("BitFlipNoise",
               &gate::BitFlipNoise<Prec, Space>,
               "Generate general Gate class instance of BitFlipNoise.",

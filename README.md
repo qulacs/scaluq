@@ -101,18 +101,19 @@ int main() {
     scaluq::initialize();  // must be called before using any scaluq methods
     {
         constexpr Precision Prec = Precision::F64;
+        constexpr ExecutionSpace Space = ExecutionSpace::Default;
         const std::uint64_t n_qubits = 3;
-        scaluq::StateVector<Prec> state = scaluq::StateVector<Prec>::Haar_random_state(n_qubits, 0);
+        scaluq::StateVector<Prec, Default> state = scaluq::StateVector<Prec, Default>::Haar_random_state(n_qubits, 0);
         std::cout << state << std::endl;
 
-        scaluq::Circuit<Prec> circuit(n_qubits);
-        circuit.add_gate(scaluq::gate::X<Prec>(0));
-        circuit.add_gate(scaluq::gate::CNot<Prec>(0, 1));
-        circuit.add_gate(scaluq::gate::Y<Prec>(1));
-        circuit.add_gate(scaluq::gate::RX<Prec>(1, std::numbers::pi / 2));
+        scaluq::Circuit<Prec, Default> circuit(n_qubits);
+        circuit.add_gate(scaluq::gate::X<Prec, Default>(0));
+        circuit.add_gate(scaluq::gate::CNot<Prec, Default>(0, 1));
+        circuit.add_gate(scaluq::gate::Y<Prec, Default>(1));
+        circuit.add_gate(scaluq::gate::RX<Prec, Default>(1, std::numbers::pi / 2));
         circuit.update_quantum_state(state);
 
-        scaluq::Operator<Prec> observable(n_qubits);
+        scaluq::Operator<Prec, Default> observable(n_qubits);
         observable.add_random_operator(1, 0);
         auto value = observable.get_expectation_value(state);
         std::cout << value << std::endl;
@@ -124,7 +125,7 @@ int main() {
 ## サンプルコード(Python)
 
 ```Python
-from scaluq.f64 import *
+from scaluq.default.f64 import *
 import math
 
 n_qubits = 3
@@ -144,7 +145,7 @@ print(value)
 
 ```
 
-# 精度指定について
+# 精度と実行スペースの指定について
 scaluqでは、計算に使用する浮動小数点数のサイズとして`f16` `f32` `f64` `bf16`が選択できます。ただしデフォルトのビルドオプションでは`f16` `bf16`は無効になっています。
 通常は`f64`の使用が推奨されますが、量子機械学習での利用などあまり精度が必要でない場合は`f32`以下を使用すると最大2~4倍の高速化が見込めます。
 
@@ -156,18 +157,28 @@ scaluqでは、計算に使用する浮動小数点数のサイズとして`f16`
 |`f64`|`Precision::F64`|`f16`|IEEE754 binary64|
 |`bf16`|`Precision::BF16`|`bf16`|bfloat16|
 
-同じ精度のオブジェクト同士でしか演算を行うことができません。
-例えば32bit用に作成したゲートでは64bitの`StateVector`を更新できません。
+また、実行スペースとして `default` `host` が選択できます。CPUビルドではこの2つの振る舞いは等しく、`SCALUQ_USE_CUDA`を使用してCUDA環境でビルドした場合、`default`はGPU上での実行、`host`はCPU上での実行となります。
+規模が大きくなるとGPU上での実行のほうが高速ですが、ホスト・デバイス間のメモリ転送にはオーバーヘッドがかかります。
 
-C++の場合、状態、ゲート、演算子、回路のクラスやゲートを生成する関数が、テンプレート引数を取るようになっており、そこに`Precision`型の値を指定します。
+各実行スペースの指定方法と内容は以下のとおりです。
+|実行スペース|C++で指定するテンプレート引数|Pythonで指定するサブモジュールの名前|内容|
+|-|-|-|-|
+|`default`|`ExecutionSpace::Default`|`default`|CUDA環境の場合GPU、そうでない場合CPU|
+|`host`|`ExecutionSpace::Host`|`host`|CPU|
 
-Pythonの場合、精度に合わせて`scaluq.f32`と`scaluq.f64`のどちらかのサブモジュールからオブジェクトを`import`します。
+同じ精度、実行スペースのオブジェクト同士でしか演算を行うことができません。
+例えば32bit用に作成したゲートでは64bitの`StateVector`を更新できず、同じ精度でもhost用に作成したゲートではdefault用に作成した`StateVector`を更新できません。
+
+C++の場合、状態、ゲート、演算子、回路のクラスやゲートを生成する関数が、テンプレート引数を取るようになっており、そこに`Precision`型の値と`ExecutionSpace`型の値を指定します。
+
+Pythonの場合、精度と実行スペースに合わせて`scaluq.default.f32`や`scaluq.host.f64`のようなサブモジュールからオブジェクトを`import`します。
 Pythonでは以下のように`importlib`を用いることで文字列からダイナミックに選択できます。
 ```py
 import importlib
 
 prec = 'f64'
-scaluq_sub = importlib.import_module(f'scaluq.{prec}')
+space = 'default'
+scaluq_sub = importlib.import_module(f'scaluq.{space}.{prec}')
 StateVector = scaluq_sub.StateVector
 gate = scaluq_sub.gate
 

@@ -57,7 +57,7 @@ foreach(SPACE default host)
         nanobind_add_stub(
             scaluq_stub
             INSTALL_TIME
-            MODULE scaluq.scaluq_core.${PRECISION}.gate
+            MODULE scaluq.scaluq_core.${SPACE}.${PRECISION}.gate
             OUTPUT scaluq/${SPACE}/${PRECISION}/gate/__init__.pyi
             PYTHON_PATH $<TARGET_FILE_DIR:scaluq>
             MARKER_FILE scaluq/py.typed

@@ -94,6 +94,30 @@ void Circuit<Prec, Space>::update_quantum_state(
 }
 
 template <Precision Prec, ExecutionSpace Space>
+void Circuit<Prec, Space>::update_quantum_state(
+    StateVectorBatched<Prec, Space>& states,
+    const std::map<std::string, std::vector<double>>& parameters) const {
+    for (auto&& gate : _gate_list) {
+        if (gate.index() == 0) continue;
+        const auto& key = std::get<1>(gate).second;
+        if (!parameters.contains(key)) {
+            using namespace std::string_literals;
+            throw std::runtime_error(
+                "Circuit::update_quantum_state(StateVector&, const std::map<std::string_view, double>&) const: parameter named "s +
+                std::string(key) + "is not given.");
+        }
+    }
+    for (auto&& gate : _gate_list) {
+        if (gate.index() == 0) {
+            std::get<0>(gate)->update_quantum_state(states);
+        } else {
+            const auto& [param_gate, key] = std::get<1>(gate);
+            param_gate->update_quantum_state(states, parameters.at(key));
+        }
+    }
+}
+
+template <Precision Prec, ExecutionSpace Space>
 Circuit<Prec, Space> Circuit<Prec, Space>::copy() const {
     Circuit<Prec, Space> ccircuit(_n_qubits);
     ccircuit._gate_list.reserve(_gate_list.size());

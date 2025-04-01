@@ -142,7 +142,7 @@ void bind_gate_gate_pauli_hpp(nb::module_& m, nb::class_<Gate<Prec, Space>>& gat
              Prec,
              Space,
              "Specific class of multi-qubit pauli-rotation gate, represented as "
-             "$e^{-i\\frac{\\mathrm{angle}}{2}P}$.",
+             "$e^{-i\\frac{\\theta}{2}P}$.",
              gate_base_def);
 }
 }  // namespace internal
