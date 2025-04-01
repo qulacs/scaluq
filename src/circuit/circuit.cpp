@@ -202,19 +202,19 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
         }
 
         std::discrete_distribution<std::uint64_t> dist(probs.begin(), probs.end());
-        // counts[i][j] := states[i] が gates[j] によって変換される回数
-        std::vector<std::vector<std::uint64_t>> counts(states.batch_size(),
-                                                       std::vector<std::uint64_t>(probs.size(), 0));
+        // gate_used_count[i][j] := states[i] が gates[j] によって変換される回数
+        std::vector<std::vector<std::uint64_t>> gate_used_count(
+            states.batch_size(), std::vector<std::uint64_t>(probs.size(), 0));
         for (std::uint64_t i = 0; i < states.batch_size(); ++i) {
             for (std::uint64_t _ = 0; _ < scounts[i]; ++_) {
-                ++counts[i][dist(mt)];
+                ++gate_used_count[i][dist(mt)];
             }
         }
 
         std::uint64_t new_size = 0;
-        for (std::uint64_t i = 0; i < counts.size(); ++i) {
-            for (std::uint64_t j = 0; j < counts[i].size(); ++j) {
-                if (counts[i][j] == 0) continue;
+        for (std::uint64_t i = 0; i < gate_used_count.size(); ++i) {
+            for (std::uint64_t j = 0; j < gate_used_count[i].size(); ++j) {
+                if (gate_used_count[i][j] == 0) continue;
                 ++new_size;
             }
         }
@@ -233,9 +233,9 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
                     tmp_states, std::vector<double>(tmp_states.batch_size(), parameters.at(key)));
             }
             for (std::uint64_t j = 0; j < tmp_states.batch_size(); ++j) {
-                if (counts[j][i] == 0) continue;
+                if (gate_used_count[j][i] == 0) continue;
                 new_states.set_state_vector_at(insert_idx, tmp_states.get_state_vector_at(j));
-                new_scounts[insert_idx] = counts[j][i];
+                new_scounts[insert_idx] = gate_used_count[j][i];
                 ++insert_idx;
             }
         }
