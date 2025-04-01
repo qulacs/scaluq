@@ -174,8 +174,8 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
             const auto& gate = std::get<0>(g);
             if (gate.gate_type() == GateType::Probablistic) {
                 probs = ProbablisticGate<Prec, Space>(gate)->distribution();
-                auto gate_list = ProbablisticGate<Prec, Space>(gate)->gate_list();
-                for (auto& tmp : gate_list) {
+                const auto& gate_list = ProbablisticGate<Prec, Space>(gate)->gate_list();
+                for (const auto& tmp : gate_list) {
                     gates.push_back(tmp);
                 }
             } else {
