@@ -85,6 +85,16 @@ public:
         }
     }
 
+    /**
+     * @brief サンプリングされうるすべてのパターンに対して，それぞれが何回選ばれたかを返す
+     * @attention ProbablisticGate に ProbablisticGate が含まれてはいけない
+     */
+    std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> simulate_noise(
+        const StateVector<Prec, Space>& initial_state,
+        std::uint64_t sampling_count,
+        const std::map<std::string, double>& parameters = {},
+        std::uint64_t seed = 0) const;
+
 private:
     std::uint64_t _n_qubits;
 
@@ -198,6 +208,9 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def("get_inverse",
              &Circuit<Prec, Space>::get_inverse,
              "Get inverse of circuit. All the gates are newly created.")
+        .def("simulate_noise",
+             &Circuit<Prec, Space>::simulate_noise,
+             "Simulate noise circuit. Return all the possible states and their counts.")
         .def(
             "to_json",
             [](const Circuit<Prec, Space>& circuit) { return Json(circuit).dump(); },

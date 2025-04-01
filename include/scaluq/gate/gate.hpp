@@ -440,7 +440,8 @@ void bind_gate_gate_hpp_without_precision_and_space(nb::module_& m) {
         .value("Pauli", GateType::Pauli)
         .value("PauliRotation", GateType::PauliRotation)
         .value("SparseMatrix", GateType::SparseMatrix)
-        .value("DenseMatrix", GateType::DenseMatrix);
+        .value("DenseMatrix", GateType::DenseMatrix)
+        .value("Probablistic", GateType::Probablistic);
 }
 
 template <Precision Prec, ExecutionSpace Space>
