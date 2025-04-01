@@ -940,22 +940,29 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .c_str());
     mgate.def("BitFlipNoise",
               &gate::BitFlipNoise<Prec, Space>,
-              "Generate general Gate class instance of BitFlipNoise.",
+              "Generates a general Gate class instance of BitFlipNoise. `error_rate` is the "
+              "probability of a bit-flip noise, corresponding to the X gate.",
               "target"_a,
               "error_rate"_a);
     mgate.def("DephasingNoise",
               &gate::DephasingNoise<Prec, Space>,
-              "Generate general Gate class instance of DephasingNoise.",
+              "Generates a general Gate class instance of DephasingNoise. `error_rate` is the "
+              "probability of a dephasing noise, corresponding to the Z gate.",
               "target"_a,
               "error_rate"_a);
-    mgate.def("BitFlipAndDephasingNoise",
-              &gate::BitFlipAndDephasingNoise<Prec, Space>,
-              "Generate general Gate class instance of BitFlipAndDephasingNoise.",
-              "target"_a,
-              "error_rate"_a);
+    mgate.def(
+        "BitFlipAndDephasingNoise",
+        &gate::BitFlipAndDephasingNoise<Prec, Space>,
+        "Generates a general Gate class instance of BitFlipAndDephasingNoise. `error_rate` is the "
+        "probability of both bit-flip noise and dephasing noise, corresponding to the X gate and "
+        "Z gate.",
+        "target"_a,
+        "error_rate"_a);
     mgate.def("DepolarizingNoise",
               &gate::DepolarizingNoise<Prec, Space>,
-              "Generate general Gate class instance of DepolarizingNoise.",
+              "Generates a general Gate class instance of DepolarizingNoise. `error_rate` is the "
+              "total probability of depolarizing noise, where an X, Y, or Z gate is applied with a "
+              "probability of `error_rate / 3` each.",
               "target"_a,
               "error_rate"_a);
 }
