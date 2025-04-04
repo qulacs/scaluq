@@ -18,6 +18,7 @@ class DenseMatrixGateImpl : public GateBase<Prec, Space> {
 public:
     DenseMatrixGateImpl(std::uint64_t target_mask,
                         std::uint64_t control_mask,
+                        std::uint64_t control_value_mask,
                         const ComplexMatrix& mat,
                         bool is_unitary = false);
 
@@ -36,6 +37,7 @@ public:
         j = Json{{"type", "DensetMatrix"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
                  {"matrix", "Not inplemented yet"}};
     }
 };
@@ -48,6 +50,7 @@ class SparseMatrixGateImpl : public GateBase<Prec, Space> {
 public:
     SparseMatrixGateImpl(std::uint64_t target_mask,
                          std::uint64_t control_mask,
+                         std::uint64_t control_value_mask,
                          const SparseComplexMatrix& mat);
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override;
@@ -67,6 +70,7 @@ public:
         j = Json{{"type", "SparseMatrix"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
                  {"matrix", "Not inplemented yet"}};
     }
 };

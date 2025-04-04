@@ -14,8 +14,11 @@ class PauliGateImpl : public GateBase<Prec, Space> {
     const PauliOperator<Prec, Space> _pauli;
 
 public:
-    PauliGateImpl(std::uint64_t control_mask, const PauliOperator<Prec, Space>& pauli)
-        : GateBase<Prec, Space>(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
+    PauliGateImpl(std::uint64_t control_mask,
+                  std::uint64_t control_value_mask,
+                  const PauliOperator<Prec, Space>& pauli)
+        : GateBase<Prec, Space>(
+              vector_to_mask<false>(pauli.target_qubit_list()), control_mask, control_value_mask),
           _pauli(pauli) {}
 
     PauliOperator<Prec, Space> pauli() const { return _pauli; };
@@ -32,8 +35,10 @@ public:
     std::string to_string(const std::string& indent) const override;
 
     void get_as_json(Json& j) const override {
-        j = Json{
-            {"type", "Pauli"}, {"control", this->control_qubit_list()}, {"pauli", this->pauli()}};
+        j = Json{{"type", "Pauli"},
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
+                 {"pauli", this->pauli()}};
     }
 };
 
@@ -44,9 +49,11 @@ class PauliRotationGateImpl : public GateBase<Prec, Space> {
 
 public:
     PauliRotationGateImpl(std::uint64_t control_mask,
+                          std::uint64_t control_value_mask,
                           const PauliOperator<Prec, Space>& pauli,
                           Float<Prec> angle)
-        : GateBase<Prec, Space>(vector_to_mask<false>(pauli.target_qubit_list()), control_mask),
+        : GateBase<Prec, Space>(
+              vector_to_mask<false>(pauli.target_qubit_list()), control_mask, control_value_mask),
           _pauli(pauli),
           _angle(angle) {}
 
@@ -56,7 +63,7 @@ public:
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
         return std::make_shared<const PauliRotationGateImpl<Prec, Space>>(
-            this->_control_mask, _pauli, -_angle);
+            this->_control_mask, this->_control_value_mask, _pauli, -_angle);
     }
 
     ComplexMatrix get_matrix() const override;
@@ -69,6 +76,7 @@ public:
     void get_as_json(Json& j) const override {
         j = Json{{"type", "PauliRotation"},
                  {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
                  {"pauli", this->pauli()},
                  {"angle", this->angle()}};
     }
@@ -85,18 +93,23 @@ namespace internal {
     template <>                                                                             \
     inline std::shared_ptr<const PauliGateImpl<Prec, Space>> get_from_json(const Json& j) { \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();                  \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();      \
         auto pauli = j.at("pauli").get<PauliOperator<Prec, Space>>();                       \
-        return std::make_shared<const PauliGateImpl<Prec, Space>>(vector_to_mask(controls), \
-                                                                  pauli);                   \
+        return std::make_shared<const PauliGateImpl<Prec, Space>>(                          \
+            vector_to_mask(controls), vector_to_mask(control_values), pauli);               \
     }                                                                                       \
     template <>                                                                             \
     inline std::shared_ptr<const PauliRotationGateImpl<Prec, Space>> get_from_json(         \
         const Json& j) {                                                                    \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();                  \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();      \
         auto pauli = j.at("pauli").get<PauliOperator<Prec, Space>>();                       \
         auto angle = j.at("angle").get<double>();                                           \
         return std::make_shared<const PauliRotationGateImpl<Prec, Space>>(                  \
-            vector_to_mask(controls), pauli, static_cast<Float<Prec>>(angle));              \
+            vector_to_mask(controls),                                                       \
+            vector_to_mask(control_values),                                                 \
+            pauli,                                                                          \
+            static_cast<Float<Prec>>(angle));                                               \
     }
 
 #ifdef SCALUQ_FLOAT16

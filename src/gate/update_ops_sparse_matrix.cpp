@@ -5,6 +5,7 @@ namespace scaluq::internal {
 template <Precision Prec, ExecutionSpace Space>
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
+                        std::uint64_t control_value_mask,
                         const SparseMatrix<Prec, Space>& mat,
                         StateVector<Prec, Space>& state) {
     auto values = mat._values;
@@ -48,6 +49,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
 template <Precision Prec, ExecutionSpace Space>
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
+                        std::uint64_t control_value_mask,
                         const SparseMatrix<Prec, Space>& mat,
                         StateVectorBatched<Prec, Space>& states) {
     auto values = mat._values;
@@ -96,6 +98,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
 #define FUNC_MACRO(Prec, Space)                                        \
     template void sparse_matrix_gate(std::uint64_t,                    \
                                      std::uint64_t,                    \
+                                     std::uint64_t,                    \
                                      const SparseMatrix<Prec, Space>&, \
                                      StateVector<Prec, Space>&);
 SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
@@ -103,6 +106,7 @@ SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 
 #define FUNC_MACRO(Prec, Space)                                        \
     template void sparse_matrix_gate(std::uint64_t,                    \
+                                     std::uint64_t,                    \
                                      std::uint64_t,                    \
                                      const SparseMatrix<Prec, Space>&, \
                                      StateVectorBatched<Prec, Space>&);

@@ -9,7 +9,7 @@ namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 class IGateImpl : public GateBase<Prec, Space> {
 public:
-    IGateImpl() : GateBase<Prec, Space>(0, 0) {}
+    IGateImpl() : GateBase<Prec, Space>(0, 0, 0) {}
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
         return this->shared_from_this();
@@ -30,14 +30,16 @@ protected:
     Float<Prec> _phase;
 
 public:
-    GlobalPhaseGateImpl(std::uint64_t control_mask, Float<Prec> phase)
-        : GateBase<Prec, Space>(0, control_mask), _phase(phase){};
+    GlobalPhaseGateImpl(std::uint64_t control_mask,
+                        std::uint64_t control_value_mask,
+                        Float<Prec> phase)
+        : GateBase<Prec, Space>(0, control_mask, control_value_mask), _phase(phase){};
 
     [[nodiscard]] double phase() const { return _phase; }
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
-        return std::make_shared<const GlobalPhaseGateImpl<Prec, Space>>(this->_control_mask,
-                                                                        -_phase);
+        return std::make_shared<const GlobalPhaseGateImpl<Prec, Space>>(
+            this->_control_mask, this->_control_value_mask, -_phase);
     }
     ComplexMatrix get_matrix() const override;
 
@@ -50,6 +52,7 @@ public:
         j = Json{{"type", "GlobalPhase"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
                  {"phase", this->phase()}};
     }
 };
@@ -60,8 +63,11 @@ protected:
     Float<Prec> _angle;
 
 public:
-    RotationGateBase(std::uint64_t target_mask, std::uint64_t control_mask, Float<Prec> angle)
-        : GateBase<Prec, Space>(target_mask, control_mask), _angle(angle) {}
+    RotationGateBase(std::uint64_t target_mask,
+                     std::uint64_t control_mask,
+                     std::uint64_t control_value_mask,
+                     Float<Prec> angle)
+        : GateBase<Prec, Space>(target_mask, control_mask, control_value_mask), _angle(angle) {}
 
     double angle() const { return _angle; }
 };
@@ -84,7 +90,8 @@ public:
     void get_as_json(Json& j) const override {
         j = Json{{"type", "X"},
                  {"target", this->target_qubit_list()},
-                 {"control", this->control_qubit_list()}};
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()}};
     }
 };
 
@@ -106,7 +113,8 @@ public:
     void get_as_json(Json& j) const override {
         j = Json{{"type", "Y"},
                  {"target", this->target_qubit_list()},
-                 {"control", this->control_qubit_list()}};
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()}};
     }
 };
 
@@ -128,7 +136,8 @@ public:
     void get_as_json(Json& j) const override {
         j = Json{{"type", "Z"},
                  {"target", this->target_qubit_list()},
-                 {"control", this->control_qubit_list()}};
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()}};
     }
 };
 
@@ -150,7 +159,8 @@ public:
     void get_as_json(Json& j) const override {
         j = Json{{"type", "H"},
                  {"target", this->target_qubit_list()},
-                 {"control", this->control_qubit_list()}};
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()}};
     }
 };
 
@@ -177,8 +187,8 @@ public:
     using GateBase<Prec, Space>::GateBase;
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
-        return std::make_shared<const SdagGateImpl<Prec, Space>>(this->_target_mask,
-                                                                 this->_control_mask);
+        return std::make_shared<const SdagGateImpl<Prec, Space>>(
+            this->_target_mask, this->_control_mask, this->_control_value_mask);
     }
     ComplexMatrix get_matrix() const override;
 
@@ -190,7 +200,8 @@ public:
     void get_as_json(Json& j) const override {
         j = Json{{"type", "S"},
                  {"target", this->target_qubit_list()},
-                 {"control", this->control_qubit_list()}};
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()}};
     }
 };
 
@@ -200,8 +211,8 @@ public:
     using GateBase<Prec, Space>::GateBase;
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
-        return std::make_shared<const SGateImpl<Prec, Space>>(this->_target_mask,
-                                                              this->_control_mask);
+        return std::make_shared<const SGateImpl<Prec, Space>>(
+            this->_target_mask, this->_control_mask, this->_control_value_mask);
     }
     ComplexMatrix get_matrix() const override;
 
@@ -213,7 +224,8 @@ public:
     void get_as_json(Json& j) const override {
         j = Json{{"type", "Sdag"},
                  {"target", this->target_qubit_list()},
-                 {"control", this->control_qubit_list()}};
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()}};
     }
 };
 
@@ -223,8 +235,8 @@ public:
     using GateBase<Prec, Space>::GateBase;
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
-        return std::make_shared<const TdagGateImpl<Prec, Space>>(this->_target_mask,
-                                                                 this->_control_mask);
+        return std::make_shared<const TdagGateImpl<Prec, Space>>(
+            this->_target_mask, this->_control_mask, this->_control_value_mask);
     }
     ComplexMatrix get_matrix() const override;
 
@@ -236,7 +248,8 @@ public:
     void get_as_json(Json& j) const override {
         j = Json{{"type", "T"},
                  {"target", this->target_qubit_list()},
-                 {"control", this->control_qubit_list()}};
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()}};
     }
 };
 
@@ -246,8 +259,8 @@ public:
     using GateBase<Prec, Space>::GateBase;
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
-        return std::make_shared<const TGateImpl<Prec, Space>>(this->_target_mask,
-                                                              this->_control_mask);
+        return std::make_shared<const TGateImpl<Prec, Space>>(
+            this->_target_mask, this->_control_mask, this->_control_value_mask);
     }
     ComplexMatrix get_matrix() const override;
 
@@ -259,7 +272,8 @@ public:
     void get_as_json(Json& j) const override {
         j = Json{{"type", "Tdag"},
                  {"target", this->target_qubit_list()},
-                 {"control", this->control_qubit_list()}};
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()}};
     }
 };
 
@@ -269,8 +283,8 @@ public:
     using GateBase<Prec, Space>::GateBase;
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
-        return std::make_shared<const SqrtXdagGateImpl<Prec, Space>>(this->_target_mask,
-                                                                     this->_control_mask);
+        return std::make_shared<const SqrtXdagGateImpl<Prec, Space>>(
+            this->_target_mask, this->_control_mask, this->_control_value_mask);
     }
 
     ComplexMatrix get_matrix() const override;
@@ -283,7 +297,8 @@ public:
     void get_as_json(Json& j) const override {
         j = Json{{"type", "SqrtX"},
                  {"target", this->target_qubit_list()},
-                 {"control", this->control_qubit_list()}};
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()}};
     }
 };
 
@@ -293,8 +308,8 @@ public:
     using GateBase<Prec, Space>::GateBase;
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
-        return std::make_shared<const SqrtXGateImpl<Prec, Space>>(this->_target_mask,
-                                                                  this->_control_mask);
+        return std::make_shared<const SqrtXGateImpl<Prec, Space>>(
+            this->_target_mask, this->_control_mask, this->_control_value_mask);
     }
     ComplexMatrix get_matrix() const override;
 
@@ -306,7 +321,8 @@ public:
     void get_as_json(Json& j) const override {
         j = Json{{"type", "SqrtXdag"},
                  {"target", this->target_qubit_list()},
-                 {"control", this->control_qubit_list()}};
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()}};
     }
 };
 
@@ -316,8 +332,8 @@ public:
     using GateBase<Prec, Space>::GateBase;
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
-        return std::make_shared<const SqrtYdagGateImpl<Prec, Space>>(this->_target_mask,
-                                                                     this->_control_mask);
+        return std::make_shared<const SqrtYdagGateImpl<Prec, Space>>(
+            this->_target_mask, this->_control_mask, this->_control_value_mask);
     }
 
     ComplexMatrix get_matrix() const override;
@@ -330,7 +346,8 @@ public:
     void get_as_json(Json& j) const override {
         j = Json{{"type", "SqrtY"},
                  {"target", this->target_qubit_list()},
-                 {"control", this->control_qubit_list()}};
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()}};
     }
 };
 
@@ -340,8 +357,8 @@ public:
     using GateBase<Prec, Space>::GateBase;
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
-        return std::make_shared<const SqrtYGateImpl<Prec, Space>>(this->_target_mask,
-                                                                  this->_control_mask);
+        return std::make_shared<const SqrtYGateImpl<Prec, Space>>(
+            this->_target_mask, this->_control_mask, this->_control_value_mask);
     }
     ComplexMatrix get_matrix() const override;
 
@@ -353,7 +370,8 @@ public:
     void get_as_json(Json& j) const override {
         j = Json{{"type", "SqrtYdag"},
                  {"target", this->target_qubit_list()},
-                 {"control", this->control_qubit_list()}};
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()}};
     }
 };
 
@@ -375,7 +393,8 @@ public:
     void get_as_json(Json& j) const override {
         j = Json{{"type", "P0"},
                  {"target", this->target_qubit_list()},
-                 {"control", this->control_qubit_list()}};
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()}};
     }
 };
 
@@ -397,7 +416,8 @@ public:
     void get_as_json(Json& j) const override {
         j = Json{{"type", "P1"},
                  {"target", this->target_qubit_list()},
-                 {"control", this->control_qubit_list()}};
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()}};
     }
 };
 
@@ -408,7 +428,7 @@ public:
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
         return std::make_shared<const RXGateImpl<Prec, Space>>(
-            this->_target_mask, this->_control_mask, -this->_angle);
+            this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_angle);
     }
     ComplexMatrix get_matrix() const override;
 
@@ -421,6 +441,7 @@ public:
         j = Json{{"type", "RX"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
                  {"angle", this->angle()}};
     }
 };
@@ -432,7 +453,7 @@ public:
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
         return std::make_shared<const RYGateImpl<Prec, Space>>(
-            this->_target_mask, this->_control_mask, -this->_angle);
+            this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_angle);
     }
     ComplexMatrix get_matrix() const override;
 
@@ -445,6 +466,7 @@ public:
         j = Json{{"type", "RY"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
                  {"angle", this->angle()}};
     }
 };
@@ -456,7 +478,7 @@ public:
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
         return std::make_shared<const RZGateImpl<Prec, Space>>(
-            this->_target_mask, this->_control_mask, -this->_angle);
+            this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_angle);
     }
     ComplexMatrix get_matrix() const override;
 
@@ -469,6 +491,7 @@ public:
         j = Json{{"type", "RZ"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
                  {"angle", this->angle()}};
     }
 };
@@ -478,14 +501,17 @@ class U1GateImpl : public GateBase<Prec, Space> {
     Float<Prec> _lambda;
 
 public:
-    U1GateImpl(std::uint64_t target_mask, std::uint64_t control_mask, Float<Prec> lambda)
-        : GateBase<Prec, Space>(target_mask, control_mask), _lambda(lambda) {}
+    U1GateImpl(std::uint64_t target_mask,
+               std::uint64_t control_mask,
+               std::uint64_t control_value_mask,
+               Float<Prec> lambda)
+        : GateBase<Prec, Space>(target_mask, control_mask, control_value_mask), _lambda(lambda) {}
 
     double lambda() const { return _lambda; }
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
         return std::make_shared<const U1GateImpl<Prec, Space>>(
-            this->_target_mask, this->_control_mask, -_lambda);
+            this->_target_mask, this->_control_mask, this->_control_value_mask, -_lambda);
     }
     ComplexMatrix get_matrix() const override;
 
@@ -498,6 +524,7 @@ public:
         j = Json{{"type", "U1"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
                  {"lambda", this->lambda()}};
     }
 };
@@ -508,9 +535,12 @@ class U2GateImpl : public GateBase<Prec, Space> {
 public:
     U2GateImpl(std::uint64_t target_mask,
                std::uint64_t control_mask,
+               std::uint64_t control_value_mask,
                Float<Prec> phi,
                Float<Prec> lambda)
-        : GateBase<Prec, Space>(target_mask, control_mask), _phi(phi), _lambda(lambda) {}
+        : GateBase<Prec, Space>(target_mask, control_mask, control_value_mask),
+          _phi(phi),
+          _lambda(lambda) {}
 
     double phi() const { return _phi; }
     double lambda() const { return _lambda; }
@@ -519,6 +549,7 @@ public:
         return std::make_shared<const U2GateImpl<Prec, Space>>(
             this->_target_mask,
             this->_control_mask,
+            this->_control_value_mask,
             -_lambda - static_cast<Float<Prec>>(Kokkos::numbers::pi),
             -_phi + static_cast<Float<Prec>>(Kokkos::numbers::pi));
     }
@@ -533,6 +564,7 @@ public:
         j = Json{{"type", "U2"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
                  {"lambda", this->lambda()},
                  {"phi", this->phi()}};
     }
@@ -545,10 +577,11 @@ class U3GateImpl : public GateBase<Prec, Space> {
 public:
     U3GateImpl(std::uint64_t target_mask,
                std::uint64_t control_mask,
+               std::uint64_t control_value_mask,
                Float<Prec> theta,
                Float<Prec> phi,
                Float<Prec> lambda)
-        : GateBase<Prec, Space>(target_mask, control_mask),
+        : GateBase<Prec, Space>(target_mask, control_mask, control_value_mask),
           _theta(theta),
           _phi(phi),
           _lambda(lambda) {}
@@ -558,8 +591,12 @@ public:
     double lambda() const { return _lambda; }
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
-        return std::make_shared<const U3GateImpl<Prec, Space>>(
-            this->_target_mask, this->_control_mask, -_theta, -_lambda, -_phi);
+        return std::make_shared<const U3GateImpl<Prec, Space>>(this->_target_mask,
+                                                               this->_control_mask,
+                                                               this->_control_value_mask,
+                                                               -_theta,
+                                                               -_lambda,
+                                                               -_phi);
     }
     ComplexMatrix get_matrix() const override;
 
@@ -572,6 +609,7 @@ public:
         j = Json{{"type", "U3"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
                  {"lambda", this->lambda()},
                  {"phi", this->phi()},
                  {"theta", this->theta()}};
@@ -596,7 +634,8 @@ public:
     void get_as_json(Json& j) const override {
         j = Json{{"type", "Swap"},
                  {"target", this->target_qubit_list()},
-                 {"control", this->control_qubit_list()}};
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()}};
     }
 };
 
@@ -683,9 +722,12 @@ DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
     template <>                                                                                   \
     inline std::shared_ptr<const GlobalPhaseGateImpl<Prec, Space>> get_from_json(const Json& j) { \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();                        \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();            \
         double phase = j.at("phase").get<double>();                                               \
         return std::make_shared<const GlobalPhaseGateImpl<Prec, Space>>(                          \
-            vector_to_mask(controls), static_cast<Float<Prec>>(phase));                           \
+            vector_to_mask(controls),                                                             \
+            vector_to_mask(control_values),                                                       \
+            static_cast<Float<Prec>>(phase));                                                     \
     }
 #ifdef SCALUQ_FLOAT16
 DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
@@ -713,14 +755,15 @@ DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precisi
 #endif
 #undef DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 
-#define DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(  \
-    Impl, Prec, Space)                                                              \
-    template <>                                                                     \
-    inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {  \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();            \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();          \
-        return std::make_shared<const Impl<Prec, Space>>(vector_to_mask(targets),   \
-                                                         vector_to_mask(controls)); \
+#define DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(              \
+    Impl, Prec, Space)                                                                          \
+    template <>                                                                                 \
+    inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {              \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                        \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                      \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();          \
+        return std::make_shared<const Impl<Prec, Space>>(                                       \
+            vector_to_mask(targets), vector_to_mask(controls), vector_to_mask(control_values)); \
     }
 #define DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec,  \
                                                                                        Space) \
@@ -779,14 +822,17 @@ DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
 #undef DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 #undef DECLARE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 
-#define DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Impl, Prec, Space)        \
-    template <>                                                                                  \
-    inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {               \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                         \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                       \
-        double angle = j.at("angle").get<double>();                                              \
-        return std::make_shared<const Impl<Prec, Space>>(                                        \
-            vector_to_mask(targets), vector_to_mask(controls), static_cast<Float<Prec>>(angle)); \
+#define DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Impl, Prec, Space)  \
+    template <>                                                                            \
+    inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {         \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                   \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                 \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();     \
+        double angle = j.at("angle").get<double>();                                        \
+        return std::make_shared<const Impl<Prec, Space>>(vector_to_mask(targets),          \
+                                                         vector_to_mask(controls),         \
+                                                         vector_to_mask(control_values),   \
+                                                         static_cast<Float<Prec>>(angle)); \
     }
 #define DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec, Space)    \
     DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(RXGateImpl, Prec, Space) \
@@ -824,18 +870,23 @@ DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::B
     inline std::shared_ptr<const U1GateImpl<Prec, Space>> get_from_json(const Json& j) {          \
         auto targets = j.at("target").get<std::vector<std::uint64_t>>();                          \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();                        \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();            \
         double theta = j.at("theta").get<double>();                                               \
-        return std::make_shared<const U1GateImpl<Prec, Space>>(                                   \
-            vector_to_mask(targets), vector_to_mask(controls), static_cast<Float<Prec>>(theta));  \
+        return std::make_shared<const U1GateImpl<Prec, Space>>(vector_to_mask(targets),           \
+                                                               vector_to_mask(controls),          \
+                                                               vector_to_mask(control_values),    \
+                                                               static_cast<Float<Prec>>(theta));  \
     }                                                                                             \
     template <>                                                                                   \
     inline std::shared_ptr<const U2GateImpl<Prec, Space>> get_from_json(const Json& j) {          \
         auto targets = j.at("target").get<std::vector<std::uint64_t>>();                          \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();                        \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();            \
         double theta = j.at("theta").get<double>();                                               \
         double phi = j.at("phi").get<double>();                                                   \
         return std::make_shared<const U2GateImpl<Prec, Space>>(vector_to_mask(targets),           \
                                                                vector_to_mask(controls),          \
+                                                               vector_to_mask(control_values),    \
                                                                static_cast<Float<Prec>>(theta),   \
                                                                static_cast<Float<Prec>>(phi));    \
     }                                                                                             \
@@ -843,11 +894,13 @@ DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::B
     inline std::shared_ptr<const U3GateImpl<Prec, Space>> get_from_json(const Json& j) {          \
         auto targets = j.at("target").get<std::vector<std::uint64_t>>();                          \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();                        \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();            \
         double theta = j.at("theta").get<double>();                                               \
         double phi = j.at("phi").get<double>();                                                   \
         double lambda = j.at("lambda").get<double>();                                             \
         return std::make_shared<const U3GateImpl<Prec, Space>>(vector_to_mask(targets),           \
                                                                vector_to_mask(controls),          \
+                                                               vector_to_mask(control_values),    \
                                                                static_cast<Float<Prec>>(theta),   \
                                                                static_cast<Float<Prec>>(phi),     \
                                                                static_cast<Float<Prec>>(lambda)); \
@@ -886,13 +939,14 @@ DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
 #endif
 #undef DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 
-#define DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Impl, Prec, Space) \
-    template <>                                                                              \
-    inline std::shared_ptr<const SwapGateImpl<Prec, Space>> get_from_json(const Json& j) {   \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                     \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                   \
-        return std::make_shared<const SwapGateImpl<Prec, Space>>(vector_to_mask(targets),    \
-                                                                 vector_to_mask(controls));  \
+#define DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Impl, Prec, Space)    \
+    template <>                                                                                 \
+    inline std::shared_ptr<const SwapGateImpl<Prec, Space>> get_from_json(const Json& j) {      \
+        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                        \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                      \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();          \
+        return std::make_shared<const SwapGateImpl<Prec, Space>>(                               \
+            vector_to_mask(targets), vector_to_mask(controls), vector_to_mask(control_values)); \
     }
 #ifdef SCALUQ_FLOAT16
 DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,

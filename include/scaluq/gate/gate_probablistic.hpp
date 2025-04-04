@@ -28,6 +28,11 @@ public:
             "ProbablisticGateImpl::control_qubit_list(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
+    std::vector<std::uint64_t> control_value_list() const override {
+        throw std::runtime_error(
+            "ProbablisticGateImpl::control_value_list(): This function must not be used in "
+            "ProbablisticGateImpl.");
+    }
     std::vector<std::uint64_t> operand_qubit_list() const override {
         throw std::runtime_error(
             "ProbablisticGateImpl::operand_qubit_list(): This function must not be used in "

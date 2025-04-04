@@ -42,8 +42,12 @@ std::string GateBase<Prec, Space>::get_qubit_info_as_string(const std::string& i
 }
 
 template <Precision Prec, ExecutionSpace Space>
-GateBase<Prec, Space>::GateBase(std::uint64_t target_mask, std::uint64_t control_mask)
-    : _target_mask(target_mask), _control_mask(control_mask) {
+GateBase<Prec, Space>::GateBase(std::uint64_t target_mask,
+                                std::uint64_t control_mask,
+                                std::uint64_t control_value_mask)
+    : _target_mask(target_mask),
+      _control_mask(control_mask),
+      _control_value_mask(control_value_mask) {
     if (_target_mask & _control_mask) [[unlikely]] {
         throw std::runtime_error(
             "Error: Gate::Gate(std::uint64_t target_mask, std::uint64_t control_mask) : Target "

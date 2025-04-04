@@ -1,0 +1,747 @@
+ninja: Entering directory `build'
+[1/10] cd /workspaces/scaluq/build/_deps/kokkos-build && /opt/cmake-3.28.0/bin/cmake -DRUN_CHECK_GIT_VERSION=1 -DKOKKOS_SOURCE_DIR=/workspaces/scaluq/build/_deps/kokkos-src -P /workspaces/scaluq/build/_deps/kokkos-src/cmake/build_env_info.cmake
+[2/8] Building CXX object CMakeFiles/scaluq.dir/src/gate/param_gate_standard.cpp.o
+FAILED: CMakeFiles/scaluq.dir/src/gate/param_gate_standard.cpp.o 
+/workspaces/scaluq/build/_deps/kokkos-src/bin/kokkos_launch_compiler /workspaces/scaluq/build/_deps/kokkos-src/bin/nvcc_wrapper /usr/bin/g++ /usr/bin/g++ -DJSON_HAS_RANGES=0 -DKOKKOS_DEPENDENCE -DSCALUQ_FLOAT32 -DSCALUQ_FLOAT64 -DSCALUQ_USE_CUDA -I/workspaces/scaluq/include -I/workspaces/scaluq/build/_deps/eigen-src -I/workspaces/scaluq/build/_deps/kokkos-build -I/workspaces/scaluq/build/_deps/kokkos-build/core/src -I/workspaces/scaluq/build/_deps/kokkos-src/core/src -I/workspaces/scaluq/build/_deps/kokkos-src/core/src/../../tpls/desul/include -I/workspaces/scaluq/build/_deps/kokkos-build/containers/src -I/workspaces/scaluq/build/_deps/kokkos-src/containers/src -I/workspaces/scaluq/build/_deps/kokkos-build/algorithms/src -I/workspaces/scaluq/build/_deps/kokkos-src/algorithms/src -I/workspaces/scaluq/build/_deps/kokkos-build/simd/src -I/workspaces/scaluq/build/_deps/kokkos-src/simd/src -I/workspaces/scaluq/build/_deps/json-src/include -isystem /usr/local/cuda/targets/x86_64-linux/include -std=c++20 -fPIC -Wall -Wextra -Wunused-parameter -Wsign-compare -Wtype-limits -Wuninitialized -Wno-unknown-pragmas -Wno-deprecated-enum-enum-conversion --expt-relaxed-constexpr -Werror=cross-execution-space-call -DEIGEN_NO_CUDA -pthread -fopenmp -O3 -extended-lambda -Wext-lambda-captures-this -arch=sm_86 -fopenmp -MD -MT CMakeFiles/scaluq.dir/src/gate/param_gate_standard.cpp.o -MF CMakeFiles/scaluq.dir/src/gate/param_gate_standard.cpp.o.d -o CMakeFiles/scaluq.dir/src/gate/param_gate_standard.cpp.o -c /workspaces/scaluq/src/gate/param_gate_standard.cpp
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(21): error: no instance of overloaded function "scaluq::internal::rx_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, float, scaluq::StateVector<scaluq::Precision::F32, scaluq::ExecutionSpace::Default>)
+      rx_gate(this->_target_mask,
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(375): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(369): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(363): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRXGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &, double) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 42
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(33): error: no instance of overloaded function "scaluq::internal::rx_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, std::vector<scaluq::internal::F32, std::allocator<scaluq::internal::F32>>, scaluq::StateVectorBatched<scaluq::Precision::F32, scaluq::ExecutionSpace::Default>)
+      rx_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(375): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(369): note #3326-D: function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match because argument #4 does not match parameter
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(363): note #3327-D: candidate function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" failed deduction
+  void rx_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRXGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &, std::vector<double, std::allocator<double>>) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 42
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(56): error: no instance of overloaded function "scaluq::internal::ry_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, float, scaluq::StateVector<scaluq::Precision::F32, scaluq::ExecutionSpace::Default>)
+      ry_gate(this->_target_mask,
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(395): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(389): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(383): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRYGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &, double) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 77
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(68): error: no instance of overloaded function "scaluq::internal::ry_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, std::vector<scaluq::internal::F32, std::allocator<scaluq::internal::F32>>, scaluq::StateVectorBatched<scaluq::Precision::F32, scaluq::ExecutionSpace::Default>)
+      ry_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(395): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(389): note #3326-D: function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match because argument #4 does not match parameter
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(383): note #3327-D: candidate function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" failed deduction
+  void ry_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRYGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &, std::vector<double, std::allocator<double>>) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 77
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(91): error: no instance of overloaded function "scaluq::internal::rz_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, float, scaluq::StateVector<scaluq::Precision::F32, scaluq::ExecutionSpace::Default>)
+      rz_gate(this->_target_mask,
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(415): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(409): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(403): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRZGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &, double) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 112
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(103): error: no instance of overloaded function "scaluq::internal::rz_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, std::vector<scaluq::internal::F32, std::allocator<scaluq::internal::F32>>, scaluq::StateVectorBatched<scaluq::Precision::F32, scaluq::ExecutionSpace::Default>)
+      rz_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(415): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(409): note #3326-D: function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match because argument #4 does not match parameter
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(403): note #3327-D: candidate function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" failed deduction
+  void rz_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRZGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &, std::vector<double, std::allocator<double>>) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 112
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(21): error: no instance of overloaded function "scaluq::internal::rx_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, float, scaluq::StateVector<scaluq::Precision::F32, scaluq::ExecutionSpace::Host>)
+      rx_gate(this->_target_mask,
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(375): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(369): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(363): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRXGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &, double) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 42
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(33): error: no instance of overloaded function "scaluq::internal::rx_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, std::vector<scaluq::internal::F32, std::allocator<scaluq::internal::F32>>, scaluq::StateVectorBatched<scaluq::Precision::F32, scaluq::ExecutionSpace::Host>)
+      rx_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(375): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(369): note #3326-D: function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match because argument #4 does not match parameter
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(363): note #3327-D: candidate function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" failed deduction
+  void rx_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRXGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &, std::vector<double, std::allocator<double>>) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 42
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(56): error: no instance of overloaded function "scaluq::internal::ry_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, float, scaluq::StateVector<scaluq::Precision::F32, scaluq::ExecutionSpace::Host>)
+      ry_gate(this->_target_mask,
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(395): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(389): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(383): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRYGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &, double) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 77
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(68): error: no instance of overloaded function "scaluq::internal::ry_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, std::vector<scaluq::internal::F32, std::allocator<scaluq::internal::F32>>, scaluq::StateVectorBatched<scaluq::Precision::F32, scaluq::ExecutionSpace::Host>)
+      ry_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(395): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(389): note #3326-D: function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match because argument #4 does not match parameter
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(383): note #3327-D: candidate function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" failed deduction
+  void ry_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRYGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &, std::vector<double, std::allocator<double>>) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 77
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(91): error: no instance of overloaded function "scaluq::internal::rz_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, float, scaluq::StateVector<scaluq::Precision::F32, scaluq::ExecutionSpace::Host>)
+      rz_gate(this->_target_mask,
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(415): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(409): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(403): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRZGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &, double) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 112
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(103): error: no instance of overloaded function "scaluq::internal::rz_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, std::vector<scaluq::internal::F32, std::allocator<scaluq::internal::F32>>, scaluq::StateVectorBatched<scaluq::Precision::F32, scaluq::ExecutionSpace::Host>)
+      rz_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(415): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(409): note #3326-D: function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match because argument #4 does not match parameter
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(403): note #3327-D: candidate function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" failed deduction
+  void rz_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRZGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &, std::vector<double, std::allocator<double>>) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 112
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(21): error: no instance of overloaded function "scaluq::internal::rx_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, double, scaluq::StateVector<scaluq::Precision::F64, scaluq::ExecutionSpace::Default>)
+      rx_gate(this->_target_mask,
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(375): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(369): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(363): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRXGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &, double) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 42
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(33): error: no instance of overloaded function "scaluq::internal::rx_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, std::vector<double, std::allocator<double>>, scaluq::StateVectorBatched<scaluq::Precision::F64, scaluq::ExecutionSpace::Default>)
+      rx_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(375): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(369): note #3326-D: function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match because argument #4 does not match parameter
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(363): note #3327-D: candidate function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" failed deduction
+  void rx_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRXGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &, std::vector<double, std::allocator<double>>) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 42
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(56): error: no instance of overloaded function "scaluq::internal::ry_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, double, scaluq::StateVector<scaluq::Precision::F64, scaluq::ExecutionSpace::Default>)
+      ry_gate(this->_target_mask,
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(395): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(389): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(383): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRYGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &, double) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 77
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(68): error: no instance of overloaded function "scaluq::internal::ry_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, std::vector<double, std::allocator<double>>, scaluq::StateVectorBatched<scaluq::Precision::F64, scaluq::ExecutionSpace::Default>)
+      ry_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(395): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(389): note #3326-D: function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match because argument #4 does not match parameter
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(383): note #3327-D: candidate function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" failed deduction
+  void ry_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRYGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &, std::vector<double, std::allocator<double>>) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 77
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(91): error: no instance of overloaded function "scaluq::internal::rz_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, double, scaluq::StateVector<scaluq::Precision::F64, scaluq::ExecutionSpace::Default>)
+      rz_gate(this->_target_mask,
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(415): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(409): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(403): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRZGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &, double) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 112
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(103): error: no instance of overloaded function "scaluq::internal::rz_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, std::vector<double, std::allocator<double>>, scaluq::StateVectorBatched<scaluq::Precision::F64, scaluq::ExecutionSpace::Default>)
+      rz_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(415): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(409): note #3326-D: function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match because argument #4 does not match parameter
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(403): note #3327-D: candidate function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" failed deduction
+  void rz_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRZGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &, std::vector<double, std::allocator<double>>) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 112
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(21): error: no instance of overloaded function "scaluq::internal::rx_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, double, scaluq::StateVector<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>)
+      rx_gate(this->_target_mask,
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(375): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(369): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(363): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRXGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &, double) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 42
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(33): error: no instance of overloaded function "scaluq::internal::rx_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, std::vector<double, std::allocator<double>>, scaluq::StateVectorBatched<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>)
+      rx_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(375): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(369): note #3326-D: function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match because argument #4 does not match parameter
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(363): note #3327-D: candidate function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" failed deduction
+  void rx_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRXGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &, std::vector<double, std::allocator<double>>) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 42
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(56): error: no instance of overloaded function "scaluq::internal::ry_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, double, scaluq::StateVector<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>)
+      ry_gate(this->_target_mask,
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(395): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(389): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(383): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRYGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &, double) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 77
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(68): error: no instance of overloaded function "scaluq::internal::ry_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, std::vector<double, std::allocator<double>>, scaluq::StateVectorBatched<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>)
+      ry_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(395): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(389): note #3326-D: function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match because argument #4 does not match parameter
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(383): note #3327-D: candidate function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" failed deduction
+  void ry_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRYGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &, std::vector<double, std::allocator<double>>) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 77
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(91): error: no instance of overloaded function "scaluq::internal::rz_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, double, scaluq::StateVector<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>)
+      rz_gate(this->_target_mask,
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(415): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(409): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(403): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRZGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &, double) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 112
+
+/workspaces/scaluq/src/gate/param_gate_standard.cpp(103): error: no instance of overloaded function "scaluq::internal::rz_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, std::vector<double, std::allocator<double>>, scaluq::StateVectorBatched<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>)
+      rz_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(415): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(409): note #3326-D: function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match because argument #4 does not match parameter
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(403): note #3327-D: candidate function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" failed deduction
+  void rz_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::ParamRZGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &, std::vector<double, std::allocator<double>>) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 112
+
+24 errors detected in the compilation of "/workspaces/scaluq/src/gate/param_gate_standard.cpp".
+[3/8] Building CXX object CMakeFiles/scaluq.dir/src/gate/gate_standard.cpp.o
+FAILED: CMakeFiles/scaluq.dir/src/gate/gate_standard.cpp.o 
+/workspaces/scaluq/build/_deps/kokkos-src/bin/kokkos_launch_compiler /workspaces/scaluq/build/_deps/kokkos-src/bin/nvcc_wrapper /usr/bin/g++ /usr/bin/g++ -DJSON_HAS_RANGES=0 -DKOKKOS_DEPENDENCE -DSCALUQ_FLOAT32 -DSCALUQ_FLOAT64 -DSCALUQ_USE_CUDA -I/workspaces/scaluq/include -I/workspaces/scaluq/build/_deps/eigen-src -I/workspaces/scaluq/build/_deps/kokkos-build -I/workspaces/scaluq/build/_deps/kokkos-build/core/src -I/workspaces/scaluq/build/_deps/kokkos-src/core/src -I/workspaces/scaluq/build/_deps/kokkos-src/core/src/../../tpls/desul/include -I/workspaces/scaluq/build/_deps/kokkos-build/containers/src -I/workspaces/scaluq/build/_deps/kokkos-src/containers/src -I/workspaces/scaluq/build/_deps/kokkos-build/algorithms/src -I/workspaces/scaluq/build/_deps/kokkos-src/algorithms/src -I/workspaces/scaluq/build/_deps/kokkos-build/simd/src -I/workspaces/scaluq/build/_deps/kokkos-src/simd/src -I/workspaces/scaluq/build/_deps/json-src/include -isystem /usr/local/cuda/targets/x86_64-linux/include -std=c++20 -fPIC -Wall -Wextra -Wunused-parameter -Wsign-compare -Wtype-limits -Wuninitialized -Wno-unknown-pragmas -Wno-deprecated-enum-enum-conversion --expt-relaxed-constexpr -Werror=cross-execution-space-call -DEIGEN_NO_CUDA -pthread -fopenmp -O3 -extended-lambda -Wext-lambda-captures-this -arch=sm_86 -fopenmp -MD -MT CMakeFiles/scaluq.dir/src/gate/gate_standard.cpp.o -MF CMakeFiles/scaluq.dir/src/gate/gate_standard.cpp.o.d -o CMakeFiles/scaluq.dir/src/gate/gate_standard.cpp.o -c /workspaces/scaluq/src/gate/gate_standard.cpp
+/workspaces/scaluq/src/gate/gate_standard.cpp(429): error: no instance of overloaded function "scaluq::internal::rx_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, scaluq::StateVector<scaluq::Precision::F32, scaluq::ExecutionSpace::Host>)
+      rx_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(375): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(369): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(363): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RXGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 444
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(434): error: no instance of overloaded function "scaluq::internal::rx_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, scaluq::StateVectorBatched<scaluq::Precision::F32, scaluq::ExecutionSpace::Host>)
+      rx_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(375): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(369): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(363): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RXGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 444
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(456): error: no instance of overloaded function "scaluq::internal::ry_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, scaluq::StateVector<scaluq::Precision::F32, scaluq::ExecutionSpace::Host>)
+      ry_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(395): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(389): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(383): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RYGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 471
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(461): error: no instance of overloaded function "scaluq::internal::ry_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, scaluq::StateVectorBatched<scaluq::Precision::F32, scaluq::ExecutionSpace::Host>)
+      ry_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(395): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(389): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(383): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RYGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 471
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(483): error: no instance of overloaded function "scaluq::internal::rz_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, scaluq::StateVector<scaluq::Precision::F32, scaluq::ExecutionSpace::Host>)
+      rz_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(415): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(409): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(403): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RZGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 498
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(488): error: no instance of overloaded function "scaluq::internal::rz_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, scaluq::StateVectorBatched<scaluq::Precision::F32, scaluq::ExecutionSpace::Host>)
+      rz_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(415): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(409): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(403): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RZGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Host]" at line 498
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(429): error: no instance of overloaded function "scaluq::internal::rx_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, scaluq::StateVector<scaluq::Precision::F32, scaluq::ExecutionSpace::Default>)
+      rx_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(375): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(369): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(363): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RXGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 444
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(434): error: no instance of overloaded function "scaluq::internal::rx_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, scaluq::StateVectorBatched<scaluq::Precision::F32, scaluq::ExecutionSpace::Default>)
+      rx_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(375): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(369): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(363): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RXGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 444
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(456): error: no instance of overloaded function "scaluq::internal::ry_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, scaluq::StateVector<scaluq::Precision::F32, scaluq::ExecutionSpace::Default>)
+      ry_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(395): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(389): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(383): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RYGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 471
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(461): error: no instance of overloaded function "scaluq::internal::ry_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, scaluq::StateVectorBatched<scaluq::Precision::F32, scaluq::ExecutionSpace::Default>)
+      ry_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(395): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(389): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(383): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RYGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 471
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(483): error: no instance of overloaded function "scaluq::internal::rz_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, scaluq::StateVector<scaluq::Precision::F32, scaluq::ExecutionSpace::Default>)
+      rz_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(415): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(409): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(403): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RZGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 498
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(488): error: no instance of overloaded function "scaluq::internal::rz_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F32, scaluq::StateVectorBatched<scaluq::Precision::F32, scaluq::ExecutionSpace::Default>)
+      rz_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(415): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(409): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(403): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RZGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &) const [with Prec=scaluq::Precision::F32, Space=scaluq::ExecutionSpace::Default]" at line 498
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(429): error: no instance of overloaded function "scaluq::internal::rx_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, scaluq::StateVector<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>)
+      rx_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(375): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(369): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(363): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RXGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 444
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(434): error: no instance of overloaded function "scaluq::internal::rx_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, scaluq::StateVectorBatched<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>)
+      rx_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(375): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(369): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(363): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RXGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 444
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(456): error: no instance of overloaded function "scaluq::internal::ry_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, scaluq::StateVector<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>)
+      ry_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(395): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(389): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(383): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RYGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 471
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(461): error: no instance of overloaded function "scaluq::internal::ry_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, scaluq::StateVectorBatched<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>)
+      ry_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(395): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(389): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(383): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RYGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 471
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(483): error: no instance of overloaded function "scaluq::internal::rz_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, scaluq::StateVector<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>)
+      rz_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(415): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(409): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(403): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RZGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 498
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(488): error: no instance of overloaded function "scaluq::internal::rz_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, scaluq::StateVectorBatched<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>)
+      rz_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(415): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(409): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(403): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RZGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Host]" at line 498
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(429): error: no instance of overloaded function "scaluq::internal::rx_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, scaluq::StateVector<scaluq::Precision::F64, scaluq::ExecutionSpace::Default>)
+      rx_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(375): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(369): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(363): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RXGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 444
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(434): error: no instance of overloaded function "scaluq::internal::rx_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, scaluq::StateVectorBatched<scaluq::Precision::F64, scaluq::ExecutionSpace::Default>)
+      rx_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(375): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(369): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(363): note #3322-D: number of parameters of function template "scaluq::internal::rx_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rx_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RXGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 444
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(456): error: no instance of overloaded function "scaluq::internal::ry_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, scaluq::StateVector<scaluq::Precision::F64, scaluq::ExecutionSpace::Default>)
+      ry_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(395): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(389): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(383): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RYGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 471
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(461): error: no instance of overloaded function "scaluq::internal::ry_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, scaluq::StateVectorBatched<scaluq::Precision::F64, scaluq::ExecutionSpace::Default>)
+      ry_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(395): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(389): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(383): note #3322-D: number of parameters of function template "scaluq::internal::ry_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void ry_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RYGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 471
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(483): error: no instance of overloaded function "scaluq::internal::rz_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, scaluq::StateVector<scaluq::Precision::F64, scaluq::ExecutionSpace::Default>)
+      rz_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(415): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(409): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(403): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RZGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVector<Prec, Space> &) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 498
+
+/workspaces/scaluq/src/gate/gate_standard.cpp(488): error: no instance of overloaded function "scaluq::internal::rz_gate" matches the argument list
+            argument types are: (const uint64_t, const uint64_t, const scaluq::internal::F64, scaluq::StateVectorBatched<scaluq::Precision::F64, scaluq::ExecutionSpace::Default>)
+      rz_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+      ^
+/workspaces/scaluq/src/gate/update_ops.hpp(415): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, std::vector<scaluq::internal::Float<Prec>, std::allocator<scaluq::internal::Float<Prec>>>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(409): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVectorBatched<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+/workspaces/scaluq/src/gate/update_ops.hpp(403): note #3322-D: number of parameters of function template "scaluq::internal::rz_gate(uint64_t, uint64_t, uint64_t, scaluq::internal::Float<Prec>, scaluq::StateVector<Prec, Space> &)" does not match the call
+  void rz_gate(std::uint64_t target_mask,
+       ^
+          detected during instantiation of "void scaluq::internal::RZGateImpl<Prec, Space>::update_quantum_state(scaluq::StateVectorBatched<Prec, Space> &) const [with Prec=scaluq::Precision::F64, Space=scaluq::ExecutionSpace::Default]" at line 498
+
+24 errors detected in the compilation of "/workspaces/scaluq/src/gate/gate_standard.cpp".
+[4/8] Building CXX object CMakeFiles/scaluq.dir/src/gate/gate_probablistic.cpp.o
+[5/8] Building CXX object CMakeFiles/scaluq.dir/src/gate/param_gate_probablistic.cpp.o
+[6/8] Building CXX object CMakeFiles/scaluq.dir/src/circuit/circuit.cpp.o
+[7/8] Building CXX object CMakeFiles/scaluq.dir/src/gate/merge_gate.cpp.o
+/workspaces/scaluq/build/_deps/eigen-src/Eigen/src/LU/arch/InverseSize4.h(45): warning #1675-D: unrecognized GCC pragma
+  #pragma GCC optimize("no-fast-math")
+              ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+/workspaces/scaluq/build/_deps/eigen-src/Eigen/src/LU/arch/InverseSize4.h(45): warning #1675-D: unrecognized GCC pragma
+  #pragma GCC optimize("no-fast-math")
+              ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+ninja: build stopped: subcommand failed.

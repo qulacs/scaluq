@@ -11,11 +11,11 @@ ComplexMatrix IGateImpl<Prec, Space>::get_matrix() const {
 }
 template <Precision Prec, ExecutionSpace Space>
 void IGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
-    i_gate(this->_target_mask, this->_control_mask, state_vector);
+    i_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void IGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states) const {
-    i_gate(this->_target_mask, this->_control_mask, states);
+    i_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string IGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -34,13 +34,15 @@ template <Precision Prec, ExecutionSpace Space>
 void GlobalPhaseGateImpl<Prec, Space>::update_quantum_state(
     StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    global_phase_gate(this->_target_mask, this->_control_mask, _phase, state_vector);
+    global_phase_gate(
+        this->_target_mask, this->_control_mask, this->_control_value_mask, _phase, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void GlobalPhaseGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    global_phase_gate(this->_target_mask, this->_control_mask, _phase, states);
+    global_phase_gate(
+        this->_target_mask, this->_control_mask, this->_control_value_mask, _phase, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string GlobalPhaseGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -61,12 +63,12 @@ ComplexMatrix XGateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void XGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    x_gate(this->_target_mask, this->_control_mask, state_vector);
+    x_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void XGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    x_gate(this->_target_mask, this->_control_mask, states);
+    x_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string XGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -86,12 +88,12 @@ ComplexMatrix YGateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void YGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    y_gate(this->_target_mask, this->_control_mask, state_vector);
+    y_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void YGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    y_gate(this->_target_mask, this->_control_mask, states);
+    y_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string YGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -111,12 +113,12 @@ ComplexMatrix ZGateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void ZGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    z_gate(this->_target_mask, this->_control_mask, state_vector);
+    z_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void ZGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    z_gate(this->_target_mask, this->_control_mask, states);
+    z_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string ZGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -137,12 +139,12 @@ ComplexMatrix HGateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void HGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    h_gate(this->_target_mask, this->_control_mask, state_vector);
+    h_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void HGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    h_gate(this->_target_mask, this->_control_mask, states);
+    h_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string HGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -162,12 +164,12 @@ ComplexMatrix SGateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void SGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    s_gate(this->_target_mask, this->_control_mask, state_vector);
+    s_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void SGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    s_gate(this->_target_mask, this->_control_mask, states);
+    s_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string SGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -187,13 +189,13 @@ ComplexMatrix SdagGateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void SdagGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    sdag_gate(this->_target_mask, this->_control_mask, state_vector);
+    sdag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void SdagGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    sdag_gate(this->_target_mask, this->_control_mask, states);
+    sdag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string SdagGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -213,12 +215,12 @@ ComplexMatrix TGateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void TGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    t_gate(this->_target_mask, this->_control_mask, state_vector);
+    t_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void TGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    t_gate(this->_target_mask, this->_control_mask, states);
+    t_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string TGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -238,13 +240,13 @@ ComplexMatrix TdagGateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void TdagGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    tdag_gate(this->_target_mask, this->_control_mask, state_vector);
+    tdag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void TdagGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    tdag_gate(this->_target_mask, this->_control_mask, states);
+    tdag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string TdagGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -265,13 +267,13 @@ template <Precision Prec, ExecutionSpace Space>
 void SqrtXGateImpl<Prec, Space>::update_quantum_state(
     StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    sqrtx_gate(this->_target_mask, this->_control_mask, state_vector);
+    sqrtx_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void SqrtXGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    sqrtx_gate(this->_target_mask, this->_control_mask, states);
+    sqrtx_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string SqrtXGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -292,13 +294,13 @@ template <Precision Prec, ExecutionSpace Space>
 void SqrtXdagGateImpl<Prec, Space>::update_quantum_state(
     StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    sqrtxdag_gate(this->_target_mask, this->_control_mask, state_vector);
+    sqrtxdag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void SqrtXdagGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    sqrtxdag_gate(this->_target_mask, this->_control_mask, states);
+    sqrtxdag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string SqrtXdagGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -319,13 +321,13 @@ template <Precision Prec, ExecutionSpace Space>
 void SqrtYGateImpl<Prec, Space>::update_quantum_state(
     StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    sqrty_gate(this->_target_mask, this->_control_mask, state_vector);
+    sqrty_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void SqrtYGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    sqrty_gate(this->_target_mask, this->_control_mask, states);
+    sqrty_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string SqrtYGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -346,13 +348,13 @@ template <Precision Prec, ExecutionSpace Space>
 void SqrtYdagGateImpl<Prec, Space>::update_quantum_state(
     StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    sqrtydag_gate(this->_target_mask, this->_control_mask, state_vector);
+    sqrtydag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void SqrtYdagGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    sqrtydag_gate(this->_target_mask, this->_control_mask, states);
+    sqrtydag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string SqrtYdagGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -372,12 +374,12 @@ ComplexMatrix P0GateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void P0GateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    p0_gate(this->_target_mask, this->_control_mask, state_vector);
+    p0_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void P0GateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    p0_gate(this->_target_mask, this->_control_mask, states);
+    p0_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string P0GateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -397,12 +399,12 @@ ComplexMatrix P1GateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void P1GateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    p1_gate(this->_target_mask, this->_control_mask, state_vector);
+    p1_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void P1GateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    p1_gate(this->_target_mask, this->_control_mask, states);
+    p1_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string P1GateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -504,12 +506,13 @@ ComplexMatrix U1GateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void U1GateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    u1_gate(this->_target_mask, this->_control_mask, _lambda, state_vector);
+    u1_gate(
+        this->_target_mask, this->_control_mask, this->_control_value_mask, _lambda, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void U1GateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    u1_gate(this->_target_mask, this->_control_mask, _lambda, states);
+    u1_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, _lambda, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string U1GateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -535,12 +538,18 @@ ComplexMatrix U2GateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void U2GateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    u2_gate(this->_target_mask, this->_control_mask, _phi, _lambda, state_vector);
+    u2_gate(this->_target_mask,
+            this->_control_mask,
+            this->_control_value_mask,
+            _phi,
+            _lambda,
+            state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void U2GateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    u2_gate(this->_target_mask, this->_control_mask, _phi, _lambda, states);
+    u2_gate(
+        this->_target_mask, this->_control_mask, this->_control_value_mask, _phi, _lambda, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string U2GateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -569,12 +578,24 @@ ComplexMatrix U3GateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void U3GateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    u3_gate(this->_target_mask, this->_control_mask, _theta, _phi, _lambda, state_vector);
+    u3_gate(this->_target_mask,
+            this->_control_mask,
+            this->_control_value_mask,
+            _theta,
+            _phi,
+            _lambda,
+            state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void U3GateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    u3_gate(this->_target_mask, this->_control_mask, _theta, _phi, _lambda, states);
+    u3_gate(this->_target_mask,
+            this->_control_mask,
+            this->_control_value_mask,
+            _theta,
+            _phi,
+            _lambda,
+            states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string U3GateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -597,13 +618,13 @@ ComplexMatrix SwapGateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void SwapGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    swap_gate(this->_target_mask, this->_control_mask, state_vector);
+    swap_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void SwapGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    swap_gate(this->_target_mask, this->_control_mask, states);
+    swap_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string SwapGateImpl<Prec, Space>::to_string(const std::string& indent) const {

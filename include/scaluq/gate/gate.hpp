@@ -179,7 +179,7 @@ public:
     using ComplexType = Complex<Prec>;
 
 protected:
-    std::uint64_t _target_mask, _control_mask;
+    std::uint64_t _target_mask, _control_mask, _control_value_mask;
 
     void check_qubit_mask_within_bounds(const StateVector<Prec, Space>& state_vector) const;
     void check_qubit_mask_within_bounds(const StateVectorBatched<Prec, Space>& states) const;
@@ -187,7 +187,9 @@ protected:
     std::string get_qubit_info_as_string(const std::string& indent) const;
 
 public:
-    GateBase(std::uint64_t target_mask, std::uint64_t control_mask);
+    GateBase(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             std::uint64_t control_value_mask);
     virtual ~GateBase() = default;
 
     [[nodiscard]] virtual std::vector<std::uint64_t> target_qubit_list() const {
@@ -195,6 +197,9 @@ public:
     }
     [[nodiscard]] virtual std::vector<std::uint64_t> control_qubit_list() const {
         return mask_to_vector(_control_mask);
+    }
+    [[nodiscard]] virtual std::vector<std::uint64_t> control_value_list() const {
+        return mask_to_vector(_control_value_mask);
     }
     [[nodiscard]] virtual std::vector<std::uint64_t> operand_qubit_list() const {
         return mask_to_vector(_target_mask | _control_mask);

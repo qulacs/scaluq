@@ -7,9 +7,10 @@ namespace scaluq::internal {
 template <Precision Prec, ExecutionSpace Space>
 DenseMatrixGateImpl<Prec, Space>::DenseMatrixGateImpl(std::uint64_t target_mask,
                                                       std::uint64_t control_mask,
+                                                      std::uint64_t control_value_mask,
                                                       const ComplexMatrix& mat,
                                                       bool is_unitary)
-    : GateBase<Prec, Space>(target_mask, control_mask),
+    : GateBase<Prec, Space>(target_mask, control_mask, control_value_mask),
       _matrix(convert_external_matrix_to_internal_matrix<Prec, Space>(mat)),
       _is_unitary(is_unitary) {}
 template <Precision Prec, ExecutionSpace Space>
@@ -23,7 +24,7 @@ std::shared_ptr<const GateBase<Prec, Space>> DenseMatrixGateImpl<Prec, Space>::g
         throw std::runtime_error("inverse of non-unitary matrix gate is currently not available.");
     }
     return std::make_shared<const DenseMatrixGateImpl>(
-        this->_target_mask, this->_control_mask, inv_eigen, _is_unitary);
+        this->_target_mask, this->_control_mask, this->_control_value_mask, inv_eigen, _is_unitary);
 }
 template <Precision Prec, ExecutionSpace Space>
 Matrix<Prec, Space> DenseMatrixGateImpl<Prec, Space>::get_matrix_internal() const {
@@ -39,13 +40,15 @@ template <Precision Prec, ExecutionSpace Space>
 void DenseMatrixGateImpl<Prec, Space>::update_quantum_state(
     StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    dense_matrix_gate(this->_target_mask, this->_control_mask, _matrix, state_vector);
+    dense_matrix_gate(
+        this->_target_mask, this->_control_mask, this->_control_value_mask, _matrix, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void DenseMatrixGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    dense_matrix_gate(this->_target_mask, this->_control_mask, _matrix, states);
+    dense_matrix_gate(
+        this->_target_mask, this->_control_mask, this->_control_value_mask, _matrix, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string DenseMatrixGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -59,8 +62,9 @@ SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(DenseMatrixGateImpl)
 template <Precision Prec, ExecutionSpace Space>
 SparseMatrixGateImpl<Prec, Space>::SparseMatrixGateImpl(std::uint64_t target_mask,
                                                         std::uint64_t control_mask,
+                                                        std::uint64_t control_value_mask,
                                                         const SparseComplexMatrix& mat)
-    : GateBase<Prec, Space>(target_mask, control_mask),
+    : GateBase<Prec, Space>(target_mask, control_mask, control_value_mask),
       _matrix(SparseMatrix<Prec, Space>(mat)),
       num_nnz(mat.nonZeros()) {}
 template <Precision Prec, ExecutionSpace Space>
@@ -85,13 +89,15 @@ template <Precision Prec, ExecutionSpace Space>
 void SparseMatrixGateImpl<Prec, Space>::update_quantum_state(
     StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    sparse_matrix_gate(this->_target_mask, this->_control_mask, _matrix, state_vector);
+    sparse_matrix_gate(
+        this->_target_mask, this->_control_mask, this->_control_value_mask, _matrix, state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void SparseMatrixGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    sparse_matrix_gate(this->_target_mask, this->_control_mask, _matrix, states);
+    sparse_matrix_gate(
+        this->_target_mask, this->_control_mask, this->_control_value_mask, _matrix, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string SparseMatrixGateImpl<Prec, Space>::to_string(const std::string& indent) const {
