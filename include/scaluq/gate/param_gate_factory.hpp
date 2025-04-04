@@ -37,6 +37,7 @@ inline ParamGate<Prec, Space> ParamRY(std::uint64_t target,
     return internal::ParamGateFactory::create_gate<internal::ParamRYGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(controls),
+        internal::vector_to_mask(controls, control_values),
         static_cast<internal::Float<Prec>>(param_coef));
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -48,6 +49,7 @@ inline ParamGate<Prec, Space> ParamRZ(std::uint64_t target,
     return internal::ParamGateFactory::create_gate<internal::ParamRZGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(controls),
+        internal::vector_to_mask(controls, control_values),
         static_cast<internal::Float<Prec>>(param_coef));
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -58,7 +60,10 @@ inline ParamGate<Prec, Space> ParamPauliRotation(const PauliOperator<Prec, Space
     internal::resize_and_check_control_values(controls, control_values);
     return internal::ParamGateFactory::create_gate<
         internal::ParamPauliRotationGateImpl<Prec, Space>>(
-        internal::vector_to_mask(controls), pauli, static_cast<internal::Float<Prec>>(param_coef));
+        internal::vector_to_mask(controls),
+        internal::vector_to_mask(controls, control_values),
+        pauli,
+        static_cast<internal::Float<Prec>>(param_coef));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline ParamGate<Prec, Space> ParamProbablistic(

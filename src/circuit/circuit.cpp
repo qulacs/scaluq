@@ -261,7 +261,7 @@ void Circuit<Prec, Space>::check_gate_is_valid(const Gate<Prec, Space>& gate) co
         auto controls = gate->control_qubit_list();
         bool valid = true;
         if (!targets.empty() && *std::ranges::max_element(targets) >= _n_qubits) valid = false;
-        if (!targets.empty() && *std::ranges::max_element(controls) >= _n_qubits) valid = false;
+        if (!controls.empty() && *std::ranges::max_element(controls) >= _n_qubits) valid = false;
         if (!valid) {
             throw std::runtime_error("Gate to be added to the circuit has invalid qubit range");
         }
