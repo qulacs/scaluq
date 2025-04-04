@@ -27,7 +27,7 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
             0, state.dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis_0 =
-                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
+                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             std::uint64_t basis_1 = basis_0 | target_mask;
             Complex<Prec> val0 = state._raw[basis_0];
             Complex<Prec> val1 = state._raw[basis_1];
@@ -59,7 +59,7 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
             {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
             std::uint64_t basis_0 =
-                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
+                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             std::uint64_t basis_1 = basis_0 | target_mask;
             Complex<Prec> val0 = states._raw(batch_id, basis_0);
             Complex<Prec> val1 = states._raw(batch_id, basis_1);
@@ -92,7 +92,7 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
             0, state.dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(const std::uint64_t it) {
             std::uint64_t basis_0 =
-                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
+                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
             std::uint64_t basis_1 = basis_0 | lower_target_mask;
             std::uint64_t basis_2 = basis_0 | upper_target_mask;
             std::uint64_t basis_3 = basis_1 | target_mask;
@@ -138,7 +138,7 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
             {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
             std::uint64_t basis_0 =
-                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
+                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
             std::uint64_t basis_1 = basis_0 | lower_target_mask;
             std::uint64_t basis_2 = basis_0 | upper_target_mask;
             std::uint64_t basis_3 = basis_1 | target_mask;
@@ -181,7 +181,7 @@ void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
             0, state.dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis =
-                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
+                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
             state._raw[basis] *= diag[0];
             state._raw[basis | target_mask] *= diag[1];
         });
@@ -208,7 +208,7 @@ void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
             {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
             std::uint64_t basis =
-                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
+                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
             states._raw(batch_id, basis) *= diag[0];
             states._raw(batch_id, basis | target_mask) *= diag[1];
         });
@@ -233,7 +233,7 @@ void global_phase_gate(std::uint64_t,
     Kokkos::parallel_for(
         Kokkos::RangePolicy<SpaceType<Space>>(0, state.dim() >> std::popcount(control_mask)),
         KOKKOS_LAMBDA(std::uint64_t i) {
-            state._raw[insert_zero_at_mask_positions(i, control_mask) | control_mask] *= coef;
+            state._raw[insert_zero_at_mask_positions(i, control_mask) | control_value_mask] *= coef;
         });
     Kokkos::fence();
 }
@@ -254,7 +254,8 @@ void global_phase_gate(std::uint64_t,
         Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
             {0, 0}, {states.batch_size(), states.dim() >> std::popcount(control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
-            states._raw(batch_id, insert_zero_at_mask_positions(i, control_mask) | control_mask) *=
+            states._raw(batch_id,
+                        insert_zero_at_mask_positions(i, control_mask) | control_value_mask) *=
                 coef;
         });
     Kokkos::fence();
@@ -278,7 +279,7 @@ void x_gate(std::uint64_t target_mask,
             0, state.dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t i =
-                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
+                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             Kokkos::Experimental::swap(state._raw[i], state._raw[i | target_mask]);
         });
     Kokkos::fence();
@@ -299,7 +300,7 @@ void x_gate(std::uint64_t target_mask,
             {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
             std::uint64_t i =
-                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
+                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             Kokkos::Experimental::swap(states._raw(batch_id, i),
                                        states._raw(batch_id, i | target_mask));
         });
@@ -321,7 +322,7 @@ void y_gate(std::uint64_t target_mask,
             0, state.dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t i =
-                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
+                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             state._raw[i] *= Complex<Prec>(0, 1);
             state._raw[i | target_mask] *= Complex<Prec>(0, -1);
             Kokkos::Experimental::swap(state._raw[i], state._raw[i | target_mask]);
@@ -344,7 +345,7 @@ void y_gate(std::uint64_t target_mask,
             {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
             std::uint64_t i =
-                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
+                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             states._raw(batch_id, i) *= Complex<Prec>(0, 1);
             states._raw(batch_id, i | target_mask) *= Complex<Prec>(0, -1);
             Kokkos::Experimental::swap(states._raw(batch_id, i),
@@ -368,7 +369,7 @@ void z_gate(std::uint64_t target_mask,
             0, state.dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t i =
-                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
+                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             state._raw[i | target_mask] *= Complex<Prec>(-1, 0);
         });
     Kokkos::fence();
@@ -389,7 +390,7 @@ void z_gate(std::uint64_t target_mask,
             {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
             std::uint64_t i =
-                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
+                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             states._raw(batch_id, i | target_mask) *= Complex<Prec>(-1, 0);
         });
     Kokkos::fence();
@@ -411,7 +412,7 @@ void one_target_phase_gate(std::uint64_t target_mask,
             0, state.dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t i =
-                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
+                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             state._raw[i | target_mask] *= phase;
         });
     Kokkos::fence();
@@ -434,7 +435,7 @@ void one_target_phase_gate(std::uint64_t target_mask,
             {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
             std::uint64_t i =
-                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_mask;
+                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             states._raw(batch_id, i | target_mask) *= phase;
         });
     Kokkos::fence();
@@ -509,7 +510,7 @@ void rx_gate(std::uint64_t target_mask,
                 [&](std::uint64_t it) {
                     std::uint64_t basis_0 =
                         insert_zero_at_mask_positions(it, control_mask | target_mask) |
-                        control_mask;
+                        control_value_mask;
                     std::uint64_t basis_1 = basis_0 | target_mask;
                     Complex<Prec> val0 = states._raw(batch_id, basis_0);
                     Complex<Prec> val1 = states._raw(batch_id, basis_1);
@@ -591,7 +592,7 @@ void ry_gate(std::uint64_t target_mask,
                 [&](std::uint64_t it) {
                     std::uint64_t basis_0 =
                         insert_zero_at_mask_positions(it, control_mask | target_mask) |
-                        control_mask;
+                        control_value_mask;
                     std::uint64_t basis_1 = basis_0 | target_mask;
                     Complex<Prec> val0 = states._raw(batch_id, basis_0);
                     Complex<Prec> val1 = states._raw(batch_id, basis_1);
@@ -674,7 +675,7 @@ void rz_gate(std::uint64_t target_mask,
                 [&](std::uint64_t it) {
                     std::uint64_t basis_0 =
                         insert_zero_at_mask_positions(it, control_mask | target_mask) |
-                        control_mask;
+                        control_value_mask;
                     std::uint64_t basis_1 = basis_0 | target_mask;
                     states._raw(batch_id, basis_0) *= diag[0];
                     states._raw(batch_id, basis_1) *= diag[1];
@@ -705,7 +706,7 @@ void u1_gate(std::uint64_t target_mask,
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t i =
                 internal::insert_zero_at_mask_positions(it, target_mask | control_mask) |
-                control_mask;
+                control_value_mask;
             state._raw[i | target_mask] *= exp_val;
         });
     Kokkos::fence();
@@ -730,7 +731,7 @@ void u1_gate(std::uint64_t target_mask,
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
             std::uint64_t i =
                 internal::insert_zero_at_mask_positions(it, target_mask | control_mask) |
-                control_mask;
+                control_value_mask;
             states._raw(batch_id, i | target_mask) *= exp_val;
         });
     Kokkos::fence();
@@ -855,7 +856,7 @@ void swap_gate(std::uint64_t target_mask,
             0, state.dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis =
-                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
+                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
             Kokkos::Experimental::swap(state._raw[basis | lower_target_mask],
                                        state._raw[basis | upper_target_mask]);
         });
@@ -879,7 +880,7 @@ void swap_gate(std::uint64_t target_mask,
             {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
             std::uint64_t basis =
-                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_mask;
+                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
             Kokkos::Experimental::swap(states._raw(batch_id, basis | lower_target_mask),
                                        states._raw(batch_id, basis | upper_target_mask));
         });

@@ -39,7 +39,7 @@ inline Gate<Prec, Space> GlobalPhase(double phase,
     internal::resize_and_check_control_values(control_qubits, control_values);
     return internal::GateFactory::create_gate<internal::GlobalPhaseGateImpl<Prec, Space>>(
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values),
+        internal::vector_to_mask(control_qubits, control_values),
         static_cast<internal::Float<Prec>>(phase));
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -50,7 +50,7 @@ inline Gate<Prec, Space> X(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::XGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values));
+        internal::vector_to_mask(control_qubits, control_values));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> Y(std::uint64_t target,
@@ -60,7 +60,7 @@ inline Gate<Prec, Space> Y(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::YGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values));
+        internal::vector_to_mask(control_qubits, control_values));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> Z(std::uint64_t target,
@@ -70,7 +70,7 @@ inline Gate<Prec, Space> Z(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::ZGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values));
+        internal::vector_to_mask(control_qubits, control_values));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> H(std::uint64_t target,
@@ -80,7 +80,7 @@ inline Gate<Prec, Space> H(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::HGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values));
+        internal::vector_to_mask(control_qubits, control_values));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> S(std::uint64_t target,
@@ -90,7 +90,7 @@ inline Gate<Prec, Space> S(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::SGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values));
+        internal::vector_to_mask(control_qubits, control_values));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> Sdag(std::uint64_t target,
@@ -100,7 +100,7 @@ inline Gate<Prec, Space> Sdag(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::SdagGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values));
+        internal::vector_to_mask(control_qubits, control_values));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> T(std::uint64_t target,
@@ -110,7 +110,7 @@ inline Gate<Prec, Space> T(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::TGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values));
+        internal::vector_to_mask(control_qubits, control_values));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> Tdag(std::uint64_t target,
@@ -120,7 +120,7 @@ inline Gate<Prec, Space> Tdag(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::TdagGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values));
+        internal::vector_to_mask(control_qubits, control_values));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> SqrtX(std::uint64_t target,
@@ -130,7 +130,7 @@ inline Gate<Prec, Space> SqrtX(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::SqrtXGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values));
+        internal::vector_to_mask(control_qubits, control_values));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> SqrtXdag(std::uint64_t target,
@@ -140,7 +140,7 @@ inline Gate<Prec, Space> SqrtXdag(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::SqrtXdagGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values));
+        internal::vector_to_mask(control_qubits, control_values));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> SqrtY(std::uint64_t target,
@@ -150,7 +150,7 @@ inline Gate<Prec, Space> SqrtY(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::SqrtYGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values));
+        internal::vector_to_mask(control_qubits, control_values));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> SqrtYdag(std::uint64_t target,
@@ -160,7 +160,7 @@ inline Gate<Prec, Space> SqrtYdag(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::SqrtYdagGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values));
+        internal::vector_to_mask(control_qubits, control_values));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> P0(std::uint64_t target,
@@ -170,7 +170,7 @@ inline Gate<Prec, Space> P0(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::P0GateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values));
+        internal::vector_to_mask(control_qubits, control_values));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> P1(std::uint64_t target,
@@ -180,7 +180,7 @@ inline Gate<Prec, Space> P1(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::P1GateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values));
+        internal::vector_to_mask(control_qubits, control_values));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> RX(std::uint64_t target,
@@ -191,7 +191,7 @@ inline Gate<Prec, Space> RX(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::RXGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values),
+        internal::vector_to_mask(control_qubits, control_values),
         static_cast<internal::Float<Prec>>(angle));
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -203,7 +203,7 @@ inline Gate<Prec, Space> RY(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::RYGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values),
+        internal::vector_to_mask(control_qubits, control_values),
         static_cast<internal::Float<Prec>>(angle));
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -215,7 +215,7 @@ inline Gate<Prec, Space> RZ(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::RZGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values),
+        internal::vector_to_mask(control_qubits, control_values),
         static_cast<internal::Float<Prec>>(angle));
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -227,7 +227,7 @@ inline Gate<Prec, Space> U1(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::U1GateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values),
+        internal::vector_to_mask(control_qubits, control_values),
         static_cast<internal::Float<Prec>>(lambda));
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -240,7 +240,7 @@ inline Gate<Prec, Space> U2(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::U2GateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values),
+        internal::vector_to_mask(control_qubits, control_values),
         static_cast<internal::Float<Prec>>(phi),
         static_cast<internal::Float<Prec>>(lambda));
 }
@@ -255,7 +255,7 @@ inline Gate<Prec, Space> U3(std::uint64_t target,
     return internal::GateFactory::create_gate<internal::U3GateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values),
+        internal::vector_to_mask(control_qubits, control_values),
         static_cast<internal::Float<Prec>>(theta),
         static_cast<internal::Float<Prec>>(phi),
         static_cast<internal::Float<Prec>>(lambda));
@@ -296,7 +296,7 @@ inline Gate<Prec, Space> Swap(std::uint64_t target1,
     return internal::GateFactory::create_gate<internal::SwapGateImpl<Prec, Space>>(
         internal::vector_to_mask({target1, target2}),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values));
+        internal::vector_to_mask(control_qubits, control_values));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> Pauli(const PauliOperator<Prec, Space>& pauli,
@@ -305,7 +305,9 @@ inline Gate<Prec, Space> Pauli(const PauliOperator<Prec, Space>& pauli,
     internal::resize_and_check_control_values(control_qubits, control_values);
     auto tar = pauli.target_qubit_list();
     return internal::GateFactory::create_gate<internal::PauliGateImpl<Prec, Space>>(
-        internal::vector_to_mask(control_qubits), internal::vector_to_mask(control_values), pauli);
+        internal::vector_to_mask(control_qubits),
+        internal::vector_to_mask(control_qubits, control_values),
+        pauli);
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> PauliRotation(const PauliOperator<Prec, Space>& pauli,
@@ -315,7 +317,7 @@ inline Gate<Prec, Space> PauliRotation(const PauliOperator<Prec, Space>& pauli,
     internal::resize_and_check_control_values(control_qubits, control_values);
     return internal::GateFactory::create_gate<internal::PauliRotationGateImpl<Prec, Space>>(
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values),
+        internal::vector_to_mask(control_qubits, control_values),
         pauli,
         static_cast<internal::Float<Prec>>(angle));
 }
@@ -339,7 +341,7 @@ inline Gate<Prec, Space> DenseMatrix(const std::vector<std::uint64_t>& targets,
         return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl<Prec, Space>>(
             internal::vector_to_mask(targets),
             internal::vector_to_mask(control_qubits),
-            internal::vector_to_mask(control_values),
+            internal::vector_to_mask(control_qubits, control_values),
             matrix,
             is_unitary);
     }
@@ -348,7 +350,7 @@ inline Gate<Prec, Space> DenseMatrix(const std::vector<std::uint64_t>& targets,
     return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl<Prec, Space>>(
         internal::vector_to_mask(targets),
         internal::vector_to_mask(control_qubits),
-        internal::vector_to_mask(control_values),
+        internal::vector_to_mask(control_qubits, control_values),
         matrix_transformed,
         is_unitary);
 }

@@ -92,22 +92,24 @@ namespace internal {
 #define DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec, Space)     \
     template <>                                                                             \
     inline std::shared_ptr<const PauliGateImpl<Prec, Space>> get_from_json(const Json& j) { \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                  \
+        auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();            \
         auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();      \
         auto pauli = j.at("pauli").get<PauliOperator<Prec, Space>>();                       \
         return std::make_shared<const PauliGateImpl<Prec, Space>>(                          \
-            vector_to_mask(controls), vector_to_mask(control_values), pauli);               \
+            vector_to_mask(control_qubits),                                                 \
+            vector_to_mask(control_qubits, control_values),                                 \
+            pauli);                                                                         \
     }                                                                                       \
     template <>                                                                             \
     inline std::shared_ptr<const PauliRotationGateImpl<Prec, Space>> get_from_json(         \
         const Json& j) {                                                                    \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                  \
+        auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();            \
         auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();      \
         auto pauli = j.at("pauli").get<PauliOperator<Prec, Space>>();                       \
         auto angle = j.at("angle").get<double>();                                           \
         return std::make_shared<const PauliRotationGateImpl<Prec, Space>>(                  \
-            vector_to_mask(controls),                                                       \
-            vector_to_mask(control_values),                                                 \
+            vector_to_mask(control_qubits),                                                 \
+            vector_to_mask(control_qubits, control_values),                                 \
             pauli,                                                                          \
             static_cast<Float<Prec>>(angle));                                               \
     }

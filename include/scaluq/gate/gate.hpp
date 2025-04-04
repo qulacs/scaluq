@@ -199,13 +199,14 @@ public:
         return mask_to_vector(_control_mask);
     }
     [[nodiscard]] virtual std::vector<std::uint64_t> control_value_list() const {
-        return mask_to_vector(_control_value_mask);
+        return mask_to_vector(_control_mask, _control_value_mask);
     }
     [[nodiscard]] virtual std::vector<std::uint64_t> operand_qubit_list() const {
         return mask_to_vector(_target_mask | _control_mask);
     }
     [[nodiscard]] virtual std::uint64_t target_qubit_mask() const { return _target_mask; }
     [[nodiscard]] virtual std::uint64_t control_qubit_mask() const { return _control_mask; }
+    [[nodiscard]] virtual std::uint64_t control_value_mask() const { return _control_value_mask; }
     [[nodiscard]] virtual std::uint64_t operand_qubit_mask() const {
         return _target_mask | _control_mask;
     }

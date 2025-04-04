@@ -42,10 +42,11 @@ KOKKOS_INLINE_FUNCTION std::uint64_t insert_zero_at_mask_positions(std::uint64_t
     return basis_index;
 }
 
+// Converts a vector of indices to a bitmask.
 template <bool enable_validate = true>
-inline std::uint64_t vector_to_mask(const std::vector<std::uint64_t>& v) {
+inline std::uint64_t vector_to_mask(const std::vector<std::uint64_t>& indices) {
     std::uint64_t mask = 0;
-    for (auto x : v) {
+    for (auto x : indices) {
         if constexpr (enable_validate) {
             if (x >= sizeof(std::uint64_t) * 8) [[unlikely]] {
                 throw std::runtime_error("The size of the qubit system must be less than 64.");
@@ -59,12 +60,37 @@ inline std::uint64_t vector_to_mask(const std::vector<std::uint64_t>& v) {
     return mask;
 }
 
+// Converts a vector of indices and values to a bitmask.
+inline std::uint64_t vector_to_mask(const std::vector<std::uint64_t>& indices,
+                                    const std::vector<std::uint64_t>& values) {
+    std::uint64_t mask = 0;
+    for (std::size_t i = 0; i < indices.size(); ++i) {
+        if (values[i] == 1) {
+            mask |= 1ULL << indices[i];
+        } else if (values[i] != 0) {  // 必ず 0 または 1
+            throw std::runtime_error("Invalid value in vector_to_mask: " +
+                                     std::to_string(values[i]));
+        }
+    }
+    return mask;
+}
+
+// 1 が立っているビットの位置を vector に格納する
 inline std::vector<std::uint64_t> mask_to_vector(std::uint64_t mask) {
     std::vector<std::uint64_t> indices;
     for (std::uint64_t sub_mask = mask; sub_mask; sub_mask &= (sub_mask - 1)) {
         indices.push_back(std::countr_zero(sub_mask));
     }
     return indices;
+}
+
+// mask のビットうち，indices_mask が 1 であるビット位置のビットを vector に格納する
+inline std::vector<std::uint64_t> mask_to_vector(std::uint64_t indices_mask, std::uint64_t mask) {
+    std::vector<std::uint64_t> values;
+    for (std::uint64_t sub_mask = indices_mask; sub_mask; sub_mask &= (sub_mask - 1)) {
+        values.push_back((mask >> std::countr_zero(sub_mask)) & 1);
+    }
+    return values;
 }
 
 template <Precision Prec>
