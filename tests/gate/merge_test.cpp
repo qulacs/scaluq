@@ -85,7 +85,7 @@ void merge_gate_test() {
                 std::vector<uint64_t> targets(shuffled.begin(), shuffled.begin() + nt);
                 std::vector<std::uint64_t> controls(shuffled.begin() + nt,
                                                     shuffled.begin() + nt + nc);
-                internal::ComplexMatrix mat(1 << nt, 1 << nt);
+                ComplexMatrix mat(1 << nt, 1 << nt);
                 for (auto i : std::views::iota(0, 1 << nt)) {
                     for (auto j : std::views::iota(0, 1 << nt)) {
                         mat(i, j) = StdComplex(random.uniform() * 2 - 1, random.uniform() * 2 - 1);
@@ -103,7 +103,7 @@ void merge_gate_test() {
                 std::vector<uint64_t> targets(shuffled.begin(), shuffled.begin() + nt);
                 std::vector<std::uint64_t> controls(shuffled.begin() + nt,
                                                     shuffled.begin() + nt + nc);
-                internal::SparseComplexMatrix mat(1 << nt, 1 << nt);
+                SparseComplexMatrix mat(1 << nt, 1 << nt);
                 for (auto i : std::views::iota(0, 1 << nt)) {
                     for (auto j : std::views::iota(0, 1 << nt)) {
                         if (random.uniform() < .5) {

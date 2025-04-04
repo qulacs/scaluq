@@ -17,6 +17,9 @@ using Json = nlohmann::json;
 
 enum class ExecutionSpace { Host, Default };
 
+using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex, Eigen::RowMajor>;
+
 namespace internal {
 template <ExecutionSpace Space>
 struct SpaceTypeImpl {};
@@ -33,9 +36,6 @@ using SpaceType = typename SpaceTypeImpl<Space>::Type;
 
 template <typename DummyType>
 constexpr bool lazy_false_v = false;  // Used for lazy evaluation in static_assert.
-
-using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
-using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex, Eigen::RowMajor>;
 
 template <Precision Prec, ExecutionSpace Space>
 using Matrix = Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight, SpaceType<Space>>;

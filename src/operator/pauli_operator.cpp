@@ -132,7 +132,7 @@ PauliOperator<Prec, Space>::get_matrix_triplets_ignoring_coef() const {
         internal::Sum<std::uint64_t, ExecutionSpace::Host>(rot90_count));
     std::vector<StdComplex> rot = {1., StdComplex(0, -1), -1., StdComplex(0, 1)};
     std::uint64_t matrix_dim = 1ULL << _ptr->_pauli_id_list.size();
-    internal::ComplexMatrix mat = internal::ComplexMatrix::Zero(matrix_dim, matrix_dim);
+    ComplexMatrix mat = ComplexMatrix::Zero(matrix_dim, matrix_dim);
     std::vector<Triplet> ret;
     ret.reserve(matrix_dim * 2);
     for (std::uint64_t index = 0; index < matrix_dim; index++) {
@@ -277,7 +277,7 @@ StdComplex PauliOperator<Prec, Space>::get_transition_amplitude(
 }
 
 template <Precision Prec, ExecutionSpace Space>
-internal::ComplexMatrix PauliOperator<Prec, Space>::get_matrix() const {
+ComplexMatrix PauliOperator<Prec, Space>::get_matrix() const {
     auto triplets = get_matrix_triplets_ignoring_coef();
     decltype(triplets) coeffed_triplets(triplets.size());
     for (std::size_t i = 0; i < triplets.size(); i++) {
@@ -286,18 +286,18 @@ internal::ComplexMatrix PauliOperator<Prec, Space>::get_matrix() const {
                                       triplets[i].value() * static_cast<StdComplex>(_ptr->_coef));
     }
     std::uint64_t dim = 1ULL << _ptr->_pauli_id_list.size();
-    internal::SparseComplexMatrix sparse(dim, dim);
+    SparseComplexMatrix sparse(dim, dim);
     sparse.setFromTriplets(coeffed_triplets.begin(), coeffed_triplets.end());
-    return internal::ComplexMatrix(sparse);
+    return ComplexMatrix(sparse);
 }
 
 template <Precision Prec, ExecutionSpace Space>
-internal::ComplexMatrix PauliOperator<Prec, Space>::get_matrix_ignoring_coef() const {
+ComplexMatrix PauliOperator<Prec, Space>::get_matrix_ignoring_coef() const {
     auto triplets = get_matrix_triplets_ignoring_coef();
     std::uint64_t dim = 1ULL << _ptr->_pauli_id_list.size();
-    internal::SparseComplexMatrix sparse(dim, dim);
+    SparseComplexMatrix sparse(dim, dim);
     sparse.setFromTriplets(triplets.begin(), triplets.end());
-    return internal::ComplexMatrix(sparse);
+    return ComplexMatrix(sparse);
 }
 
 template <Precision Prec, ExecutionSpace Space>

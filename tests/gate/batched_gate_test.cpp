@@ -480,7 +480,7 @@ void run_random_batched_gate_apply_sparse(std::uint64_t n_qubits) {
     const std::uint64_t max_repeat = 10;
 
     ComplexVector test_state = ComplexVector::Zero(dim);
-    internal::SparseComplexMatrix mat;
+    SparseComplexMatrix mat;
     std::vector<std::uint64_t> targets(3);
     std::vector<std::uint64_t> index_list;
     std::random_device seed_gen;
