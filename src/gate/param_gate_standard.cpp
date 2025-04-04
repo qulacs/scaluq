@@ -20,6 +20,7 @@ void ParamRXGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>
     this->check_qubit_mask_within_bounds(state_vector);
     rx_gate(this->_target_mask,
             this->_control_mask,
+            this->_control_value_mask,
             this->_pcoef * static_cast<Float<Prec>>(param),
             state_vector);
 }
@@ -30,7 +31,12 @@ void ParamRXGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec,
     std::vector<Float<Prec>> params_prec(params.size());
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
-    rx_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
+    rx_gate(this->_target_mask,
+            this->_control_mask,
+            this->_control_value_mask,
+            this->_pcoef,
+            params_prec,
+            states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string ParamRXGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -55,6 +61,7 @@ void ParamRYGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>
     this->check_qubit_mask_within_bounds(state_vector);
     ry_gate(this->_target_mask,
             this->_control_mask,
+            this->_control_value_mask,
             this->_pcoef * static_cast<Float<Prec>>(param),
             state_vector);
 }
@@ -65,7 +72,12 @@ void ParamRYGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec,
     std::vector<Float<Prec>> params_prec(params.size());
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
-    ry_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
+    ry_gate(this->_target_mask,
+            this->_control_mask,
+            this->_control_value_mask,
+            this->_pcoef,
+            params_prec,
+            states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string ParamRYGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -90,6 +102,7 @@ void ParamRZGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>
     this->check_qubit_mask_within_bounds(state_vector);
     rz_gate(this->_target_mask,
             this->_control_mask,
+            this->_control_value_mask,
             this->_pcoef * static_cast<Float<Prec>>(param),
             state_vector);
 }
@@ -100,7 +113,12 @@ void ParamRZGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec,
     std::vector<Float<Prec>> params_prec(params.size());
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
-    rz_gate(this->_target_mask, this->_control_mask, this->_pcoef, params_prec, states);
+    rz_gate(this->_target_mask,
+            this->_control_mask,
+            this->_control_value_mask,
+            this->_pcoef,
+            params_prec,
+            states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string ParamRZGateImpl<Prec, Space>::to_string(const std::string& indent) const {

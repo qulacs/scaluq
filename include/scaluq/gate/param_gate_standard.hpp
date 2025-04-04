@@ -14,7 +14,7 @@ public:
 
     std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override {
         return std::make_shared<const ParamRXGateImpl<Prec, Space>>(
-            this->_target_mask, this->_control_mask, -this->_pcoef);
+            this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_pcoef);
     }
     ComplexMatrix get_matrix(double param) const override;
 
@@ -28,6 +28,7 @@ public:
         j = Json{{"type", "ParamRX"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
                  {"param_coef", this->param_coef()}};
     }
 };
@@ -39,7 +40,7 @@ public:
 
     std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override {
         return std::make_shared<const ParamRYGateImpl<Prec, Space>>(
-            this->_target_mask, this->_control_mask, -this->_pcoef);
+            this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_pcoef);
     }
     ComplexMatrix get_matrix(double param) const override;
 
@@ -53,6 +54,7 @@ public:
         j = Json{{"type", "ParamRY"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
                  {"param_coef", this->param_coef()}};
     }
 };
@@ -64,7 +66,7 @@ public:
 
     std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override {
         return std::make_shared<const ParamRZGateImpl<Prec, Space>>(
-            this->_target_mask, this->_control_mask, -this->_pcoef);
+            this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_pcoef);
     }
     ComplexMatrix get_matrix(double param) const override;
 
@@ -78,6 +80,7 @@ public:
         j = Json{{"type", "ParamRZ"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
                  {"param_coef", this->param_coef()}};
     }
 };
@@ -98,9 +101,11 @@ namespace internal {
     inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {              \
         auto targets = j.at("target").get<std::vector<std::uint64_t>>();                        \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();                      \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();          \
         auto param_coef = j.at("param_coef").get<double>();                                     \
         return std::make_shared<const Impl<Prec, Space>>(vector_to_mask(targets),               \
                                                          vector_to_mask(controls),              \
+                                                         vector_to_mask(control_values),        \
                                                          static_cast<Float<Prec>>(param_coef)); \
     }
 

@@ -34,7 +34,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         KOKKOS_LAMBDA(std::uint64_t outer, std::uint64_t inner) {
             std::uint64_t basis =
                 internal::insert_zero_at_mask_positions(outer, target_mask | control_mask) |
-                control_mask;
+                control_value_mask;
             auto [v, r, c] = values(inner);
             std::uint32_t src_index =
                 internal::insert_zero_at_mask_positions(c, outer_mask) | basis;
@@ -85,7 +85,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t outer, std::uint64_t inner) {
             std::uint64_t basis =
                 internal::insert_zero_at_mask_positions(outer, target_mask | control_mask) |
-                control_mask;
+                control_value_mask;
             auto [v, r, c] = values(inner);
             uint32_t src_index = internal::insert_zero_at_mask_positions(c, outer_mask) | basis;
             uint32_t dst_index = internal::insert_zero_at_mask_positions(r, outer_mask) | basis;

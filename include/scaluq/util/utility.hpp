@@ -88,9 +88,19 @@ inline std::vector<std::uint64_t> mask_to_vector(std::uint64_t mask) {
 inline std::vector<std::uint64_t> mask_to_vector(std::uint64_t indices_mask, std::uint64_t mask) {
     std::vector<std::uint64_t> values;
     for (std::uint64_t sub_mask = indices_mask; sub_mask; sub_mask &= (sub_mask - 1)) {
+        std::cout << "sub_mask: " << sub_mask << std::endl;
         values.push_back((mask >> std::countr_zero(sub_mask)) & 1);
     }
     return values;
+}
+
+inline void resize_and_check_control_values(const std::vector<std::uint64_t>& controls,
+                                            std::vector<std::uint64_t>& control_values) {
+    if (control_values.empty()) {
+        control_values.assign(controls.size(), 1);
+    } else if (controls.size() != control_values.size()) {
+        throw std::runtime_error("The size of controls and control_values must be the same.");
+    }
 }
 
 template <Precision Prec>

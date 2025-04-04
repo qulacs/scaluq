@@ -7,18 +7,21 @@ namespace scaluq::internal {
 
 template <Precision Prec, ExecutionSpace Space>
 void apply_pauli(std::uint64_t control_mask,
+                 std::uint64_t control_value_mask,
                  std::uint64_t bit_flip_mask,
                  std::uint64_t phase_flip_mask,
                  Complex<Prec> coef,
                  StateVector<Prec, Space>& state_vector);
 template <Precision Prec, ExecutionSpace Space>
 void apply_pauli(std::uint64_t control_mask,
+                 std::uint64_t control_value_mask,
                  std::uint64_t bit_flip_mask,
                  std::uint64_t phase_flip_mask,
                  Complex<Prec> coef,
                  StateVectorBatched<Prec, Space>& states);
 template <Precision Prec, ExecutionSpace Space>
 void apply_pauli_rotation(std::uint64_t control_mask,
+                          std::uint64_t control_value_mask,
                           std::uint64_t bit_flip_mask,
                           std::uint64_t phase_flip_mask,
                           Complex<Prec> coef,
@@ -26,6 +29,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                           StateVector<Prec, Space>& state_vector);
 template <Precision Prec, ExecutionSpace Space>
 void apply_pauli_rotation(std::uint64_t control_mask,
+                          std::uint64_t control_value_mask,
                           std::uint64_t bit_flip_mask,
                           std::uint64_t phase_flip_mask,
                           Complex<Prec> coef,
@@ -33,6 +37,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                           StateVectorBatched<Prec, Space>& states);
 template <Precision Prec, ExecutionSpace Space>
 void apply_pauli_rotation(std::uint64_t control_mask,
+                          std::uint64_t control_value_mask,
                           std::uint64_t bit_flip_mask,
                           std::uint64_t phase_flip_mask,
                           Complex<Prec> coef,

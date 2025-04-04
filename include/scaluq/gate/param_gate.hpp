@@ -65,7 +65,7 @@ public:
     using ComplexType = Complex<Prec>;
 
 protected:
-    std::uint64_t _target_mask, _control_mask;
+    std::uint64_t _target_mask, _control_mask, _control_value_mask;
     FloatType _pcoef;
     void check_qubit_mask_within_bounds(const StateVector<Prec, Space>& state_vector) const;
     void check_qubit_mask_within_bounds(const StateVectorBatched<Prec, Space>& states) const;
@@ -75,6 +75,7 @@ protected:
 public:
     ParamGateBase(std::uint64_t target_mask,
                   std::uint64_t control_mask,
+                  std::uint64_t control_value_mask,
                   Float<Prec> param_coef = 1);
     virtual ~ParamGateBase() = default;
 
@@ -86,11 +87,15 @@ public:
     [[nodiscard]] virtual std::vector<std::uint64_t> control_qubit_list() const {
         return mask_to_vector(_control_mask);
     }
+    [[nodiscard]] virtual std::vector<std::uint64_t> control_value_list() const {
+        return mask_to_vector(_control_mask, _control_value_mask);
+    }
     [[nodiscard]] virtual std::vector<std::uint64_t> operand_qubit_list() const {
         return mask_to_vector(_target_mask | _control_mask);
     }
     [[nodiscard]] virtual std::uint64_t target_qubit_mask() const { return _target_mask; }
     [[nodiscard]] virtual std::uint64_t control_qubit_mask() const { return _control_mask; }
+    [[nodiscard]] virtual std::uint64_t control_value_mask() const { return _control_value_mask; }
     [[nodiscard]] virtual std::uint64_t operand_qubit_mask() const {
         return _target_mask | _control_mask;
     }

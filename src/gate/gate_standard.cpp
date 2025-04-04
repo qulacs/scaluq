@@ -426,12 +426,17 @@ ComplexMatrix RXGateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void RXGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    rx_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
+    rx_gate(this->_target_mask,
+            this->_control_mask,
+            this->_control_value_mask,
+            this->_angle,
+            state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void RXGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    rx_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+    rx_gate(
+        this->_target_mask, this->_control_mask, this->_control_value_mask, this->_angle, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string RXGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -453,12 +458,17 @@ ComplexMatrix RYGateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void RYGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    ry_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
+    ry_gate(this->_target_mask,
+            this->_control_mask,
+            this->_control_value_mask,
+            this->_angle,
+            state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void RYGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    ry_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+    ry_gate(
+        this->_target_mask, this->_control_mask, this->_control_value_mask, this->_angle, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string RYGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -480,12 +490,17 @@ ComplexMatrix RZGateImpl<Prec, Space>::get_matrix() const {
 template <Precision Prec, ExecutionSpace Space>
 void RZGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector) const {
     this->check_qubit_mask_within_bounds(state_vector);
-    rz_gate(this->_target_mask, this->_control_mask, this->_angle, state_vector);
+    rz_gate(this->_target_mask,
+            this->_control_mask,
+            this->_control_value_mask,
+            this->_angle,
+            state_vector);
 }
 template <Precision Prec, ExecutionSpace Space>
 void RZGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states) const {
     this->check_qubit_mask_within_bounds(states);
-    rz_gate(this->_target_mask, this->_control_mask, this->_angle, states);
+    rz_gate(
+        this->_target_mask, this->_control_mask, this->_control_value_mask, this->_angle, states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string RZGateImpl<Prec, Space>::to_string(const std::string& indent) const {

@@ -33,6 +33,11 @@ public:
             "ParamProbablisticGateImpl::control_qubit_list(): This function must not be used in "
             "ParamProbablisticGateImpl.");
     }
+    std::vector<std::uint64_t> control_value_list() const override {
+        throw std::runtime_error(
+            "ParamProbablisticGateImpl::control_value_list(): This function must not be used in "
+            "ParamProbablisticGateImpl.");
+    }
     std::vector<std::uint64_t> operand_qubit_list() const override {
         throw std::runtime_error(
             "ParamProbablisticGateImpl::operand_qubit_list(): This function must not be used in "
@@ -46,6 +51,11 @@ public:
     std::uint64_t control_qubit_mask() const override {
         throw std::runtime_error(
             "ParamProbablisticGateImpl::control_qubit_mask(): This function must not be used in "
+            "ParamProbablisticGateImpl.");
+    }
+    std::uint64_t control_value_mask() const override {
+        throw std::runtime_error(
+            "ParamProbablisticGateImpl::control_value_mask(): This function must not be used in "
             "ParamProbablisticGateImpl.");
     }
     std::uint64_t operand_qubit_mask() const override {

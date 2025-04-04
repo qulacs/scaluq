@@ -11,6 +11,7 @@ void PauliGateImpl<Prec, Space>::update_quantum_state(
     StateVector<Prec, Space>& state_vector) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
     apply_pauli(this->_control_mask,
+                this->_control_value_mask,
                 bit_flip_mask,
                 phase_flip_mask,
                 Complex<Prec>(_pauli.coef()),
@@ -20,8 +21,12 @@ template <Precision Prec, ExecutionSpace Space>
 void PauliGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
-    apply_pauli(
-        this->_control_mask, bit_flip_mask, phase_flip_mask, Complex<Prec>(_pauli.coef()), states);
+    apply_pauli(this->_control_mask,
+                this->_control_value_mask,
+                bit_flip_mask,
+                phase_flip_mask,
+                Complex<Prec>(_pauli.coef()),
+                states);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string PauliGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -52,6 +57,7 @@ void PauliRotationGateImpl<Prec, Space>::update_quantum_state(
     StateVector<Prec, Space>& state_vector) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
     apply_pauli_rotation(this->_control_mask,
+                         this->_control_value_mask,
                          bit_flip_mask,
                          phase_flip_mask,
                          Complex<Prec>(_pauli.coef()),
@@ -63,6 +69,7 @@ void PauliRotationGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
     apply_pauli_rotation(this->_control_mask,
+                         this->_control_value_mask,
                          bit_flip_mask,
                          phase_flip_mask,
                          Complex<Prec>(_pauli.coef()),

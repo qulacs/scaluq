@@ -280,6 +280,8 @@ public:
         }
     }
 
+    ~GatePtr() { std::cout << "Deleted Gate" << std::endl; }
+
     GateType gate_type() const { return _gate_type; }
 
     const T* operator->() const {

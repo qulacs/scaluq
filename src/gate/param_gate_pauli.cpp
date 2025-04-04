@@ -21,6 +21,7 @@ void ParamPauliRotationGateImpl<Prec, Space>::update_quantum_state(
     StateVector<Prec, Space>& state_vector, double param) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
     apply_pauli_rotation(this->_control_mask,
+                         this->_control_value_mask,
                          bit_flip_mask,
                          phase_flip_mask,
                          Complex<Prec>(_pauli.coef()),
@@ -35,6 +36,7 @@ void ParamPauliRotationGateImpl<Prec, Space>::update_quantum_state(
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
     apply_pauli_rotation(this->_control_mask,
+                         this->_control_value_mask,
                          bit_flip_mask,
                          phase_flip_mask,
                          Complex<Prec>(_pauli.coef()),

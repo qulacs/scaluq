@@ -8,6 +8,7 @@
 namespace scaluq::internal {
 template <Precision Prec, ExecutionSpace Space>
 void apply_pauli(std::uint64_t control_mask,
+                 std::uint64_t control_value_mask,
                  std::uint64_t bit_flip_mask,
                  std::uint64_t phase_flip_mask,
                  Complex<Prec> coef,
@@ -18,7 +19,7 @@ void apply_pauli(std::uint64_t control_mask,
                 0, state_vector.dim() >> std::popcount(control_mask)),
             KOKKOS_LAMBDA(std::uint64_t i) {
                 std::uint64_t state_idx =
-                    insert_zero_at_mask_positions(i, control_mask) | control_mask;
+                    insert_zero_at_mask_positions(i, control_mask) | control_value_mask;
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
                     state_vector._raw[state_idx] *= -coef;
                 } else {
@@ -36,7 +37,7 @@ void apply_pauli(std::uint64_t control_mask,
             0, state_vector.dim() >> (std::popcount(control_mask) + 1)),
         KOKKOS_LAMBDA(std::uint64_t i) {
             std::uint64_t basis_0 =
-                insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) | control_mask;
+                insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) | control_value_mask;
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
             Complex<Prec> tmp1 = state_vector._raw[basis_0] * global_phase;
             Complex<Prec> tmp2 = state_vector._raw[basis_1] * global_phase;
@@ -50,6 +51,7 @@ void apply_pauli(std::uint64_t control_mask,
 
 template <Precision Prec, ExecutionSpace Space>
 void apply_pauli(std::uint64_t control_mask,
+                 std::uint64_t control_value_mask,
                  std::uint64_t bit_flip_mask,
                  std::uint64_t phase_flip_mask,
                  Complex<Prec> coef,
@@ -60,7 +62,7 @@ void apply_pauli(std::uint64_t control_mask,
                 {0, 0}, {states.batch_size(), states.dim() >> std::popcount(control_mask)}),
             KOKKOS_LAMBDA(const std::uint64_t batch_id, const std::uint64_t i) {
                 std::uint64_t state_idx =
-                    insert_zero_at_mask_positions(i, control_mask) | control_mask;
+                    insert_zero_at_mask_positions(i, control_mask) | control_value_mask;
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
                     states._raw(batch_id, state_idx) *= -coef;
                 } else {
@@ -78,7 +80,7 @@ void apply_pauli(std::uint64_t control_mask,
             {0, 0}, {states.batch_size(), states.dim() >> (std::popcount(control_mask) + 1)}),
         KOKKOS_LAMBDA(const std::uint64_t batch_id, const std::uint64_t i) {
             std::uint64_t basis_0 =
-                insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) | control_mask;
+                insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) | control_value_mask;
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
             Complex<Prec> tmp1 = states._raw(batch_id, basis_0) * global_phase;
             Complex<Prec> tmp2 = states._raw(batch_id, basis_1) * global_phase;
@@ -90,13 +92,18 @@ void apply_pauli(std::uint64_t control_mask,
     Kokkos::fence();
 }
 
-#define FUNC_MACRO(Prec, Space) \
-    template void apply_pauli(  \
-        std::uint64_t, std::uint64_t, std::uint64_t, Complex<Prec>, StateVector<Prec, Space>&);
+#define FUNC_MACRO(Prec, Space)              \
+    template void apply_pauli(std::uint64_t, \
+                              std::uint64_t, \
+                              std::uint64_t, \
+                              std::uint64_t, \
+                              Complex<Prec>, \
+                              StateVector<Prec, Space>&);
 SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 #define FUNC_MACRO(Prec, Space)              \
     template void apply_pauli(std::uint64_t, \
+                              std::uint64_t, \
                               std::uint64_t, \
                               std::uint64_t, \
                               Complex<Prec>, \
@@ -106,6 +113,7 @@ SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 
 template <Precision Prec, ExecutionSpace Space>
 void apply_pauli_rotation(std::uint64_t control_mask,
+                          std::uint64_t control_value_mask,
                           std::uint64_t bit_flip_mask,
                           std::uint64_t phase_flip_mask,
                           Complex<Prec> coef,
@@ -124,7 +132,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                 0, state_vector.dim() >> std::popcount(control_mask)),
             KOKKOS_LAMBDA(std::uint64_t i) {
                 std::uint64_t state_idx =
-                    insert_zero_at_mask_positions(i, control_mask) | control_mask;
+                    insert_zero_at_mask_positions(i, control_mask) | control_value_mask;
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
                     state_vector._raw[state_idx] *= cval_min;
                 } else {
@@ -141,7 +149,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
             KOKKOS_LAMBDA(std::uint64_t i) {
                 std::uint64_t basis_0 =
                     internal::insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
-                    control_mask;
+                    control_value_mask;
                 std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
 
                 int bit_parity_0 = Kokkos::popcount(basis_0 & phase_flip_mask) & 1;
@@ -166,6 +174,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
 }
 template <Precision Prec, ExecutionSpace Space>
 void apply_pauli_rotation(std::uint64_t control_mask,
+                          std::uint64_t control_value_mask,
                           std::uint64_t bit_flip_mask,
                           std::uint64_t phase_flip_mask,
                           Complex<Prec> coef,
@@ -183,7 +192,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                 {0, 0}, {states.batch_size(), states.dim() >> std::popcount(control_mask)}),
             KOKKOS_LAMBDA(const std::uint64_t batch_id, const std::uint64_t i) {
                 std::uint64_t state_idx =
-                    insert_zero_at_mask_positions(i, control_mask) | control_mask;
+                    insert_zero_at_mask_positions(i, control_mask) | control_value_mask;
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
                     states._raw(batch_id, state_idx) *= cval_min;
                 } else {
@@ -200,7 +209,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
             KOKKOS_LAMBDA(const std::uint64_t batch_id, const std::uint64_t i) {
                 std::uint64_t basis_0 =
                     internal::insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
-                    control_mask;
+                    control_value_mask;
                 std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
 
                 int bit_parity_0 = Kokkos::popcount(basis_0 & phase_flip_mask) & 1;
@@ -225,6 +234,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
 }
 template <Precision Prec, ExecutionSpace Space>
 void apply_pauli_rotation(std::uint64_t control_mask,
+                          std::uint64_t control_value_mask,
                           std::uint64_t bit_flip_mask,
                           std::uint64_t phase_flip_mask,
                           Complex<Prec> coef,
@@ -248,7 +258,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                     Kokkos::TeamThreadRange(team, states.dim() >> std::popcount(control_mask)),
                     [&](const std::uint64_t i) {
                         std::uint64_t state_idx =
-                            insert_zero_at_mask_positions(i, control_mask) | control_mask;
+                            insert_zero_at_mask_positions(i, control_mask) | control_value_mask;
                         if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
                             states._raw(batch_id, state_idx) *= cval_min;
                         } else {
@@ -264,7 +274,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                     [&](const std::uint64_t i) {
                         std::uint64_t basis_0 = internal::insert_zero_at_mask_positions(
                                                     i, control_mask | 1ULL << pivot) |
-                                                control_mask;
+                                                control_value_mask;
                         std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
                         int bit_parity_0 = Kokkos::popcount(basis_0 & phase_flip_mask) & 1;
                         int bit_parity_1 = Kokkos::popcount(basis_1 & phase_flip_mask) & 1;
@@ -289,6 +299,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
     template void apply_pauli_rotation(std::uint64_t, \
                                        std::uint64_t, \
                                        std::uint64_t, \
+                                       std::uint64_t, \
                                        Complex<Prec>, \
                                        Float<Prec>,   \
                                        StateVector<Prec, Space>&);
@@ -298,6 +309,7 @@ SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
     template void apply_pauli_rotation(std::uint64_t, \
                                        std::uint64_t, \
                                        std::uint64_t, \
+                                       std::uint64_t, \
                                        Complex<Prec>, \
                                        Float<Prec>,   \
                                        StateVectorBatched<Prec, Space>&);
@@ -305,6 +317,7 @@ SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 #undef FUNC_MACRO
 #define FUNC_MACRO(Prec, Space)                                  \
     template void apply_pauli_rotation(std::uint64_t,            \
+                                       std::uint64_t,            \
                                        std::uint64_t,            \
                                        std::uint64_t,            \
                                        Complex<Prec>,            \

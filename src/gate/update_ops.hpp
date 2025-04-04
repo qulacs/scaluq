@@ -182,14 +182,16 @@ inline void h_gate(std::uint64_t target_mask,
                    std::uint64_t control_mask,
                    std::uint64_t control_value_mask,
                    StateVector<Prec, Space>& state) {
-    one_target_dense_matrix_gate(target_mask, control_mask, HADAMARD_MATRIX<Prec>(), state);
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, HADAMARD_MATRIX<Prec>(), state);
 }
 template <Precision Prec, ExecutionSpace Space>
 inline void h_gate(std::uint64_t target_mask,
                    std::uint64_t control_mask,
                    std::uint64_t control_value_mask,
                    StateVectorBatched<Prec, Space>& states) {
-    one_target_dense_matrix_gate(target_mask, control_mask, HADAMARD_MATRIX<Prec>(), states);
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, HADAMARD_MATRIX<Prec>(), states);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -210,14 +212,16 @@ inline void s_gate(std::uint64_t target_mask,
                    std::uint64_t control_mask,
                    std::uint64_t control_value_mask,
                    StateVector<Prec, Space>& state) {
-    one_target_phase_gate(target_mask, control_mask, Complex<Prec>(0, 1), state);
+    one_target_phase_gate(
+        target_mask, control_mask, control_value_mask, Complex<Prec>(0, 1), state);
 }
 template <Precision Prec, ExecutionSpace Space>
 inline void s_gate(std::uint64_t target_mask,
                    std::uint64_t control_mask,
                    std::uint64_t control_value_mask,
                    StateVectorBatched<Prec, Space>& states) {
-    one_target_phase_gate(target_mask, control_mask, Complex<Prec>(0, 1), states);
+    one_target_phase_gate(
+        target_mask, control_mask, control_value_mask, Complex<Prec>(0, 1), states);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -225,14 +229,16 @@ inline void sdag_gate(std::uint64_t target_mask,
                       std::uint64_t control_mask,
                       std::uint64_t control_value_mask,
                       StateVector<Prec, Space>& state) {
-    one_target_phase_gate(target_mask, control_mask, Complex<Prec>(0, -1), state);
+    one_target_phase_gate(
+        target_mask, control_mask, control_value_mask, Complex<Prec>(0, -1), state);
 }
 template <Precision Prec, ExecutionSpace Space>
 inline void sdag_gate(std::uint64_t target_mask,
                       std::uint64_t control_mask,
                       std::uint64_t control_value_mask,
                       StateVectorBatched<Prec, Space>& states) {
-    one_target_phase_gate(target_mask, control_mask, Complex<Prec>(0, -1), states);
+    one_target_phase_gate(
+        target_mask, control_mask, control_value_mask, Complex<Prec>(0, -1), states);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -240,16 +246,22 @@ inline void t_gate(std::uint64_t target_mask,
                    std::uint64_t control_mask,
                    std::uint64_t control_value_mask,
                    StateVector<Prec, Space>& state) {
-    one_target_phase_gate(
-        target_mask, control_mask, Complex<Prec>(INVERSE_SQRT2(), INVERSE_SQRT2()), state);
+    one_target_phase_gate(target_mask,
+                          control_mask,
+                          control_value_mask,
+                          Complex<Prec>(INVERSE_SQRT2(), INVERSE_SQRT2()),
+                          state);
 }
 template <Precision Prec, ExecutionSpace Space>
 inline void t_gate(std::uint64_t target_mask,
                    std::uint64_t control_mask,
                    std::uint64_t control_value_mask,
                    StateVectorBatched<Prec, Space>& states) {
-    one_target_phase_gate(
-        target_mask, control_mask, Complex<Prec>(INVERSE_SQRT2(), INVERSE_SQRT2()), states);
+    one_target_phase_gate(target_mask,
+                          control_mask,
+                          control_value_mask,
+                          Complex<Prec>(INVERSE_SQRT2(), INVERSE_SQRT2()),
+                          states);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -257,16 +269,22 @@ inline void tdag_gate(std::uint64_t target_mask,
                       std::uint64_t control_mask,
                       std::uint64_t control_value_mask,
                       StateVector<Prec, Space>& state) {
-    one_target_phase_gate(
-        target_mask, control_mask, Complex<Prec>(INVERSE_SQRT2(), -INVERSE_SQRT2()), state);
+    one_target_phase_gate(target_mask,
+                          control_mask,
+                          control_value_mask,
+                          Complex<Prec>(INVERSE_SQRT2(), -INVERSE_SQRT2()),
+                          state);
 }
 template <Precision Prec, ExecutionSpace Space>
 inline void tdag_gate(std::uint64_t target_mask,
                       std::uint64_t control_mask,
                       std::uint64_t control_value_mask,
                       StateVectorBatched<Prec, Space>& states) {
-    one_target_phase_gate(
-        target_mask, control_mask, Complex<Prec>(INVERSE_SQRT2(), -INVERSE_SQRT2()), states);
+    one_target_phase_gate(target_mask,
+                          control_mask,
+                          control_value_mask,
+                          Complex<Prec>(INVERSE_SQRT2(), -INVERSE_SQRT2()),
+                          states);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -274,14 +292,16 @@ inline void sqrtx_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
                        std::uint64_t control_value_mask,
                        StateVector<Prec, Space>& state) {
-    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_X_GATE_MATRIX<Prec>(), state);
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, SQRT_X_GATE_MATRIX<Prec>(), state);
 }
 template <Precision Prec, ExecutionSpace Space>
 inline void sqrtx_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
                        std::uint64_t control_value_mask,
                        StateVectorBatched<Prec, Space>& states) {
-    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_X_GATE_MATRIX<Prec>(), states);
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, SQRT_X_GATE_MATRIX<Prec>(), states);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -289,14 +309,16 @@ inline void sqrtxdag_gate(std::uint64_t target_mask,
                           std::uint64_t control_mask,
                           std::uint64_t control_value_mask,
                           StateVector<Prec, Space>& state) {
-    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_X_DAG_GATE_MATRIX<Prec>(), state);
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, SQRT_X_DAG_GATE_MATRIX<Prec>(), state);
 }
 template <Precision Prec, ExecutionSpace Space>
 inline void sqrtxdag_gate(std::uint64_t target_mask,
                           std::uint64_t control_mask,
                           std::uint64_t control_value_mask,
                           StateVectorBatched<Prec, Space>& states) {
-    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_X_DAG_GATE_MATRIX<Prec>(), states);
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, SQRT_X_DAG_GATE_MATRIX<Prec>(), states);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -304,14 +326,16 @@ inline void sqrty_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
                        std::uint64_t control_value_mask,
                        StateVector<Prec, Space>& state) {
-    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_Y_GATE_MATRIX<Prec>(), state);
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, SQRT_Y_GATE_MATRIX<Prec>(), state);
 }
 template <Precision Prec, ExecutionSpace Space>
 inline void sqrty_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
                        std::uint64_t control_value_mask,
                        StateVectorBatched<Prec, Space>& states) {
-    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_Y_GATE_MATRIX<Prec>(), states);
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, SQRT_Y_GATE_MATRIX<Prec>(), states);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -319,14 +343,16 @@ inline void sqrtydag_gate(std::uint64_t target_mask,
                           std::uint64_t control_mask,
                           std::uint64_t control_value_mask,
                           StateVector<Prec, Space>& state) {
-    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_Y_DAG_GATE_MATRIX<Prec>(), state);
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, SQRT_Y_DAG_GATE_MATRIX<Prec>(), state);
 }
 template <Precision Prec, ExecutionSpace Space>
 inline void sqrtydag_gate(std::uint64_t target_mask,
                           std::uint64_t control_mask,
                           std::uint64_t control_value_mask,
                           StateVectorBatched<Prec, Space>& states) {
-    one_target_dense_matrix_gate(target_mask, control_mask, SQRT_Y_DAG_GATE_MATRIX<Prec>(), states);
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, SQRT_Y_DAG_GATE_MATRIX<Prec>(), states);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -334,14 +360,16 @@ inline void p0_gate(std::uint64_t target_mask,
                     std::uint64_t control_mask,
                     std::uint64_t control_value_mask,
                     StateVector<Prec, Space>& state) {
-    one_target_dense_matrix_gate(target_mask, control_mask, PROJ_0_MATRIX<Prec>(), state);
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, PROJ_0_MATRIX<Prec>(), state);
 }
 template <Precision Prec, ExecutionSpace Space>
 inline void p0_gate(std::uint64_t target_mask,
                     std::uint64_t control_mask,
                     std::uint64_t control_value_mask,
                     StateVectorBatched<Prec, Space>& states) {
-    one_target_dense_matrix_gate(target_mask, control_mask, PROJ_0_MATRIX<Prec>(), states);
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, PROJ_0_MATRIX<Prec>(), states);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -349,14 +377,16 @@ inline void p1_gate(std::uint64_t target_mask,
                     std::uint64_t control_mask,
                     std::uint64_t control_value_mask,
                     StateVector<Prec, Space>& state) {
-    one_target_dense_matrix_gate(target_mask, control_mask, PROJ_1_MATRIX<Prec>(), state);
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, PROJ_1_MATRIX<Prec>(), state);
 }
 template <Precision Prec, ExecutionSpace Space>
 inline void p1_gate(std::uint64_t target_mask,
                     std::uint64_t control_mask,
                     std::uint64_t control_value_mask,
                     StateVectorBatched<Prec, Space>& states) {
-    one_target_dense_matrix_gate(target_mask, control_mask, PROJ_1_MATRIX<Prec>(), states);
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, PROJ_1_MATRIX<Prec>(), states);
 }
 
 template <Precision Prec, ExecutionSpace Space>

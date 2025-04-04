@@ -178,7 +178,7 @@ void PauliOperator<Prec, Space>::apply_to_state(StateVector<Prec, Space>& state_
             "operator");
     }
     internal::apply_pauli(
-        0ULL, _ptr->_bit_flip_mask, _ptr->_phase_flip_mask, _ptr->_coef, state_vector);
+        0ULL, 0LL, _ptr->_bit_flip_mask, _ptr->_phase_flip_mask, _ptr->_coef, state_vector);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -187,8 +187,7 @@ StdComplex PauliOperator<Prec, Space>::get_expectation_value(
     if (state_vector.n_qubits() < get_qubit_count()) {
         throw std::runtime_error(
             "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to "
-            "apply "
-            "the operator");
+            "apply the operator");
     }
     std::uint64_t bit_flip_mask = _ptr->_bit_flip_mask;
     std::uint64_t phase_flip_mask = _ptr->_phase_flip_mask;

@@ -48,6 +48,11 @@ public:
             "ProbablisticGateImpl::control_qubit_mask(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
+    std::uint64_t control_value_mask() const override {
+        throw std::runtime_error(
+            "ProbablisticGateImpl::control_value_mask(): This function must not be used in "
+            "ProbablisticGateImpl.");
+    }
     std::uint64_t operand_qubit_mask() const override {
         throw std::runtime_error(
             "ProbablisticGateImpl::operand_qubit_mask(): This function must not be used in "
