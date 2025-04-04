@@ -94,8 +94,8 @@ public:
         const StateVector<Prec, Space>& state_vector_bra,
         const StateVector<Prec, Space>& state_vector_ket) const;
 
-    [[nodiscard]] internal::ComplexMatrix get_matrix() const;
-    [[nodiscard]] internal::ComplexMatrix get_matrix_ignoring_coef() const;
+    [[nodiscard]] ComplexMatrix get_matrix() const;
+    [[nodiscard]] ComplexMatrix get_matrix_ignoring_coef() const;
 
     [[nodiscard]] PauliOperator operator*(const PauliOperator& target) const;
     [[nodiscard]] inline PauliOperator operator*(StdComplex target) const {

@@ -414,7 +414,7 @@ void run_random_gate_apply_sparse(std::uint64_t n_qubits) {
     const std::uint64_t max_repeat = 10;
 
     ComplexVector test_state = ComplexVector::Zero(dim);
-    internal::SparseComplexMatrix mat;
+    SparseComplexMatrix mat;
     std::vector<std::uint64_t> targets(3);
     std::vector<std::uint64_t> index_list;
     std::random_device seed_gen;
@@ -926,7 +926,7 @@ void test_matrix_control(std::uint64_t n_qubits) {
         Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> U3 =
             get_eigen_matrix_random_one_target_unitary();
         auto U = internal::kronecker_product(U3, internal::kronecker_product(U2, U1));
-        internal::ComplexMatrix mat = ComplexMatrix::Zero(U.rows(), U.cols());
+        ComplexMatrix mat = ComplexMatrix::Zero(U.rows(), U.cols());
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 mat(i, j) = U(i, j);

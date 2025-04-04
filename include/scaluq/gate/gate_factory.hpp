@@ -208,7 +208,7 @@ inline Gate<Prec, Space> PauliRotation(const PauliOperator<Prec, Space>& pauli,
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> DenseMatrix(const std::vector<std::uint64_t>& targets,
-                                     const internal::ComplexMatrix& matrix,
+                                     const ComplexMatrix& matrix,
                                      const std::vector<std::uint64_t>& controls = {},
                                      bool is_unitary = false) {
     std::uint64_t nqubits = targets.size();
@@ -217,7 +217,7 @@ inline Gate<Prec, Space> DenseMatrix(const std::vector<std::uint64_t>& targets,
         static_cast<std::uint64_t>(matrix.cols()) != dim) {
         throw std::runtime_error(
             "gate::DenseMatrix(const std::vector<std::uint64_t>&, const "
-            "internal::ComplexMatrix&): "
+            "ComplexMatrix&): "
             "matrix size must be 2^{n_qubits} x 2^{n_qubits}.");
     }
     if (std::is_sorted(targets.begin(), targets.end())) {
@@ -227,8 +227,7 @@ inline Gate<Prec, Space> DenseMatrix(const std::vector<std::uint64_t>& targets,
             matrix,
             is_unitary);
     }
-    internal::ComplexMatrix matrix_transformed =
-        internal::transform_dense_matrix_by_order(matrix, targets);
+    ComplexMatrix matrix_transformed = internal::transform_dense_matrix_by_order(matrix, targets);
     return internal::GateFactory::create_gate<internal::DenseMatrixGateImpl<Prec, Space>>(
         internal::vector_to_mask(targets),
         internal::vector_to_mask(controls),
@@ -237,13 +236,13 @@ inline Gate<Prec, Space> DenseMatrix(const std::vector<std::uint64_t>& targets,
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> SparseMatrix(const std::vector<std::uint64_t>& targets,
-                                      const internal::SparseComplexMatrix& matrix,
+                                      const SparseComplexMatrix& matrix,
                                       const std::vector<std::uint64_t>& controls = {}) {
     if (std::is_sorted(targets.begin(), targets.end())) {
         return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl<Prec, Space>>(
             internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix);
     }
-    internal::SparseComplexMatrix matrix_transformed =
+    SparseComplexMatrix matrix_transformed =
         internal::transform_sparse_matrix_by_order(matrix, targets);
     return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl<Prec, Space>>(
         internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix_transformed);
