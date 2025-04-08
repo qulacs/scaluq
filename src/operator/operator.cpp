@@ -68,7 +68,7 @@ Operator<Prec, Space> Operator<Prec, Space>::get_dagger() const {
 }
 
 template <Precision Prec, ExecutionSpace Space>
-internal::ComplexMatrix Operator<Prec, Space>::get_matrix() const {
+ComplexMatrix Operator<Prec, Space>::get_matrix() const {
     std::uint64_t dim = 1ULL << _n_qubits;
     using Pauli = PauliOperator<Prec, Space>;
     std::vector<typename Pauli::Triplet> triplets;
@@ -92,9 +92,9 @@ internal::ComplexMatrix Operator<Prec, Space>::get_matrix() const {
                     triplet.value() * static_cast<StdComplex>(term._ptr->_coef));
             });
     }
-    internal::SparseComplexMatrix sparse(dim, dim);
+    SparseComplexMatrix sparse(dim, dim);
     sparse.setFromTriplets(triplets.begin(), triplets.end());
-    return internal::ComplexMatrix(sparse);
+    return ComplexMatrix(sparse);
 }
 
 template <Precision Prec, ExecutionSpace Space>

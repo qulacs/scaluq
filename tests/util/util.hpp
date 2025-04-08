@@ -7,8 +7,6 @@
 using namespace scaluq;
 using namespace std::complex_literals;
 
-using scaluq::internal::ComplexMatrix;
-
 using ComplexVector = Eigen::Matrix<StdComplex, -1, 1>;
 
 template <Precision Prec>
