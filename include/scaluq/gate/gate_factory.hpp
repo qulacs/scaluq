@@ -256,23 +256,23 @@ inline Gate<Prec, Space> CX(std::uint64_t control, std::uint64_t target) {
     return internal::GateFactory::create_gate<internal::XGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask({control}),
-        internal::vector_to_mask({1}));
+        internal::vector_to_mask({control}, {1}));
 }
 template <Precision Prec, ExecutionSpace Space>
-inline auto& CNot = CX<Prec>;
+inline auto& CNot = CX<Prec, Space>;
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> CZ(std::uint64_t control, std::uint64_t target) {
     return internal::GateFactory::create_gate<internal::ZGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask({control}),
-        internal::vector_to_mask({1}));
+        internal::vector_to_mask({control}, {1}));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> CCX(std::uint64_t control1, std::uint64_t control2, std::uint64_t target) {
     return internal::GateFactory::create_gate<internal::XGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask({control1, control2}),
-        internal::vector_to_mask({1, 1}));
+        internal::vector_to_mask({control1, control2}, {1, 1}));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline auto& Toffoli = CCX<Prec, Space>;
