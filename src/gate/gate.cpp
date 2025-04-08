@@ -30,6 +30,7 @@ std::string GateBase<Prec, Space>::get_qubit_info_as_string(const std::string& i
     std::ostringstream ss;
     auto targets = target_qubit_list();
     auto controls = control_qubit_list();
+    auto control_values = control_value_list();
     ss << indent << "  Target Qubits: {";
     for (std::uint32_t i = 0; i < targets.size(); ++i)
         ss << targets[i] << (i == targets.size() - 1 ? "" : ", ");
@@ -37,6 +38,10 @@ std::string GateBase<Prec, Space>::get_qubit_info_as_string(const std::string& i
     ss << indent << "  Control Qubits: {";
     for (std::uint32_t i = 0; i < controls.size(); ++i)
         ss << controls[i] << (i == controls.size() - 1 ? "" : ", ");
+    ss << "}\n";
+    ss << indent << "  Control Value: {";
+    for (std::uint32_t i = 0; i < control_values.size(); ++i)
+        ss << control_values[i] << (i == control_values.size() - 1 ? "" : ", ");
     ss << "}";
     return ss.str();
 }

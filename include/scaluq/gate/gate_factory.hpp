@@ -352,12 +352,18 @@ inline Gate<Prec, Space> SparseMatrix(const std::vector<std::uint64_t>& targets,
     internal::resize_and_check_control_values(controls, control_values);
     if (std::is_sorted(targets.begin(), targets.end())) {
         return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl<Prec, Space>>(
-            internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix);
+            internal::vector_to_mask(targets),
+            internal::vector_to_mask(controls),
+            internal::vector_to_mask(controls, control_values),
+            matrix);
     }
     SparseComplexMatrix matrix_transformed =
         internal::transform_sparse_matrix_by_order(matrix, targets);
     return internal::GateFactory::create_gate<internal::SparseMatrixGateImpl<Prec, Space>>(
-        internal::vector_to_mask(targets), internal::vector_to_mask(controls), matrix_transformed);
+        internal::vector_to_mask(targets),
+        internal::vector_to_mask(controls),
+        internal::vector_to_mask(controls, control_values),
+        matrix_transformed);
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> Probablistic(const std::vector<double>& distribution,
@@ -746,8 +752,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         DocString()
             .desc("Generate rotation gate around Y-axis. Rotation angle is specified in radians.")
             .note("If you need to use functions specific to the :class:`~scaluq.f64.RYGate` class, "
-                  "please "
-                  "downcast it.")
+                  "please downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("theta", "float", "Rotation angle in radians")
             .arg("controls", "list[int]", true, "Control qubit indices")
