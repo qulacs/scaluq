@@ -51,12 +51,6 @@ SCALUQ_BFLOAT16 = {env="SCALUQ_BFLOAT16"}
 [tool.setuptools_scm]
 write_to = "python/scaluq/_version.py"
 
-[tool.poetry]
-package-mode = false
-
-[tool.poetry.group.dev.dependencies]
-nanobind = "2.0.0"
-
 [project.urls]
 homepage = "http://www.scaluq.org"
 

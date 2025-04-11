@@ -1,0 +1,11 @@
+{
+    "recommendations": [
+        "ms-vscode.cpptools-extension-pack",
+        "ms-vscode.cmake-tools",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "xaver.clang-format",
+        "jnoortheen.nix-ide",
+        "arrterian.nix-env-selector"
+    ]
+}

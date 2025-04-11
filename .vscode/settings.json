@@ -1,11 +1,25 @@
 {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+    "editor.defaultFormatter": "xaver.clang-format",
+    "files.insertFinalNewline": true,
+    "python.analysis.exclude": ["."],
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.mypyEnabled": true,
+    "python.formatting.provider": "black",
+    "python.terminal.activateEnvironment": false,
     "C_Cpp.default.includePath": [
         "build/_deps/eigen-src",
         "build/_deps/googletest-src/googletest/include",
         "build/_deps/json-src/include",
         "${workspaceFolder}/include",
         "${workspaceFolder}/.venv/lib/python3.12/site-packages/nanobind/include/",
-        "${env:INCLUDEPY}",
+        "${env:PYTHON}/include/python3.12",
+        "${env:NANOBIND}/lib/python3.12/site-packages/nanobind/include"
     ],
     "C_Cpp.default.cppStandard": "c++23",
     "C_Cpp.default.defines": [
@@ -15,7 +29,8 @@
         "SCALUQ_BFLOAT16",
         "SCALUQ_USE_NANOBIND"
     ],
+    "nixEnvSelector.nixFile": "${workspaceFolder}/default.nix",
     "files.associations": {
-        "core": "cpp"
-    }
+        "sparse": "cpp"
+    },
 }
