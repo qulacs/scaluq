@@ -50,9 +50,11 @@ jobs:
             python-version: "3.13"
     runs-on: ${{ matrix.runs-on }}
     env:
-      CMAKE_C_COMPILER: ${{ matrix.os == 'macos' && 'gcc-14' || 'gcc' }}
-      CMAKE_CXX_COMPILER: ${{ matrix.os == 'macos' && 'g++-14' || 'g++' }}
+      CMAKE_C_COMPILER: 'gcc-14' # only passed to macOS
+      CMAKE_CXX_COMPILER: 'g++-14' # only passed to macOS
       CIBW_BUILD: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}
+      CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+      CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
       PYTHON: ${{ matrix.python-version }}
       MACOSX_DEPLOYMENT_TARGET: ${{ matrix.runs-on == 'macos-14' && '14.0' || '13.0' }}
     steps:
