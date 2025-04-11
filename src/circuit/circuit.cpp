@@ -148,6 +148,88 @@ Circuit<Prec, Space> Circuit<Prec, Space>::get_inverse() const {
 }
 
 template <Precision Prec, ExecutionSpace Space>
+void Circuit<Prec, Space>::optimize(std::uint64_t block_size) {
+    std::vector<GateWithKey> new_gate_list;
+    double global_phase = 0.;
+    std::vector<Gate> gate_pool;  // waitlist for merge or push
+    constexpr std::uint64_t NO_GATES = std::numeric_limits<std::uint64_t>::max();
+    std::vector<std::uint64_t> latest_gate_idx(
+        _n_qubits,
+        NO_GATES);  // which gate is waiting in the qubit (by index of gate_pool)
+    for (const GateWithKey& gate_with_key : _gate_list) {
+        if (gate_with_key.index() == 1) {
+            // ParamGate is not optimized
+            const ParamGate& pgate = std::get<1>(gate_with_key).first;
+            for (std::uint64_t target : pgate->get_target_qubit_list()) {
+                latest_gate_idx[target] = NO_GATES;
+            }
+            for (std::uint64_t control : pgate->get_control_qubit_list()) {
+                latest_gate_idx[control] = NO_GATES;
+            }
+            new_gate_list.emplace_back(std::move(gate_with_key));
+            continue;
+        }
+        const Gate& gate = std::get<0>(gate_with_key);
+        auto operand_list = gate->operand_qubit_list();
+        if (gate.gate_type() == GateType::I) continue;  // IGate is ignored
+        if (gate.gate_type() == GateType::GlobalPhase && gate->control_qubit_mask() == 0ULL) {
+            // non-controlled GlobalPhase is ignored
+            global_phase += gate.global_phase();
+            continue;
+        }
+        std::vector<std::uint64_t>
+            previous_gate_indices;  // indices of gates in gate_pool which is waiting
+        std::vector<std::uint64_t>
+            newly_applied_qubits;  // qubits which is newly applied by this gate
+        for (std::uint64_t operand : operand_list) {
+            if (latest_gate_idx[operand] == NO_GATES) {
+                newly_applied_qubits.push_back(operand);
+            } else {
+                previous_gate_indices.push_back(latest_gate_idx[operand]);
+            }
+        }
+        std::ranges::sort(previous_gate_indices);
+        previous_gate_indices.erase(std::ranges::unique(previous_gate_indices).begin(),
+                                    previous_gate_indices.end());
+        std::uint64_t new_idx = gate_pool.size();
+        if (previous_gate_indices.empty()) {
+            // not merge, just wait
+            for (std::uint64_t operand : operand_list) {
+                latest_gate_idx[operand] = new_idx;
+            }
+            gate_pool.emplace_back(std::move(gate));
+            continue;
+        }
+        std::uint64_t new_gate_size =
+            newly_applied_qubits.size() +
+            std::accumulate(previous_gate_indices.begin(),
+                            previous_gate_indices.end(),
+                            0ULL,
+                            [&](std::uint64_t acc, std::uint64_t idx) {
+                                return acc + gate_pool[idx]->get_target_qubit_list().size();
+                            });
+        if (previous_gate_indices.size() == 1) {
+            // common control qubits are not counted as size
+            std::uint64_t control_qubit_mask1 = gate->control_qubit_mask();
+            std::uint64_t control_value_mask1 = gate->control_value_mask();
+            std::uint64_t control_qubit_mask2 = previous_gate_indices[0]->control_qubit_mask();
+            std::uint64_t control_value_mask2 = previous_gate_indices[0]->control_value_mask();
+            new_gate_size -= std::popcount(control_qubit_mask1 & control_qubit_mask2 &
+                                           ~(control_value_mask1 ^ control_value_mask2));
+        }
+        auto is_pauli = [&](Gate& gate) {
+            if (gate->control_qubit_mask() != 0ULL) return false;
+            return gate.gate_type() == GateType::X || gate.gate_type() == GateType::Y ||
+                   gate.gate_type() == GateType::Z || gate.gate_type() == GateType::Pauli;
+        };
+        bool all_pauli =
+            is_pauli(gate) && std::ranges::all_of(previous_gate_indices, [&](std::uint64_t idx) {
+                return is_pauli(gate_pool[idx]);
+            });
+    }
+}
+
+template <Precision Prec, ExecutionSpace Space>
 std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Space>::simulate_noise(
     const StateVector<Prec, Space>& initial_state,
     std::uint64_t sampling_count,

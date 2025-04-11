@@ -61,6 +61,8 @@ public:
 
     Circuit get_inverse() const;
 
+    void optimize(std::uint64_t block_size=3);
+
     friend void to_json(Json& j, const Circuit& circuit) {
         j = Json{{"n_qubits", circuit.n_qubits()}, {"gate_list", Json::array()}};
         for (auto&& gate : circuit.gate_list()) {
