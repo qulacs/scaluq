@@ -33,7 +33,6 @@
 
 *.egg-info
 /.mypy_cache
-/.vscode
 /bin
 /build
 /typings
