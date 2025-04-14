@@ -9,17 +9,24 @@ namespace scaluq {
 template <Precision Prec, ExecutionSpace Space>
 std::pair<Gate<Prec, Space>, double> merge_gate_dense_matrix(const Gate<Prec, Space>& gate1,
                                                              const Gate<Prec, Space>& gate2) {
+    // 1. 制御ビットが一致する箇所のビットを立てる
     auto common_control_mask = gate1->control_qubit_mask() & gate2->control_qubit_mask();
+    // 2. かつ，制御ビットの値も一致する箇所のみビットを立てる
+    common_control_mask &= ~(gate1->control_value_mask() ^ gate2->control_value_mask());
+    // 3. 制御ビットが共通しない操作ビットが合成後の操作ビット
     auto merged_operand_mask =
         (gate1->operand_qubit_mask() | gate2->operand_qubit_mask()) & ~common_control_mask;
     auto merged_operand_vector = internal::mask_to_vector(merged_operand_mask);
+
     auto matrix1 = internal::get_expanded_matrix(gate1->get_matrix(),
                                                  gate1->target_qubit_list(),
                                                  gate1->control_qubit_mask() & ~common_control_mask,
+                                                 gate1->control_value_mask() & ~common_control_mask,
                                                  merged_operand_vector);
     auto matrix2 = internal::get_expanded_matrix(gate2->get_matrix(),
                                                  gate2->target_qubit_list(),
                                                  gate2->control_qubit_mask() & ~common_control_mask,
+                                                 gate1->control_value_mask() & ~common_control_mask,
                                                  merged_operand_vector);
     auto matrix = matrix2 * matrix1;
     return {gate::DenseMatrix<Prec, Space>(
@@ -47,19 +54,27 @@ std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
     auto gate1_control_mask = gate1->control_qubit_mask();
     auto gate2_control_mask = gate2->control_qubit_mask();
 
+    auto gate1_control_value_mask = gate1->control_value_mask();
+    auto gate2_control_value_mask = gate2->control_value_mask();
+
     if (gate_type1 == GateType::GlobalPhase && gate1_control_mask == 0)
         return {gate2, GlobalPhaseGate<Prec, Space>(gate1)->phase()};
     if (gate_type2 == GateType::GlobalPhase && gate2_control_mask == 0)
         return {gate1, GlobalPhaseGate<Prec, Space>(gate2)->phase()};
 
-    if (gate1_control_mask != gate2_control_mask) return merge_gate_dense_matrix(gate1, gate2);
-    auto control_list = internal::mask_to_vector(gate1_control_mask);
+    // 制御ビットとその値がすべて一致しないとき，密行列に直してから合成
+    if (!(gate1_control_mask == gate2_control_mask &&
+          gate1_control_value_mask == gate2_control_value_mask))
+        return merge_gate_dense_matrix(gate1, gate2);
+    auto control_list = gate1->control_qubit_list();
+    auto control_value_list = gate1->control_value_list();
 
     // Special case: Zero qubit
     if (gate_type1 == GateType::GlobalPhase && gate_type2 == GateType::GlobalPhase) {
         return {gate::GlobalPhase<Prec, Space>(GlobalPhaseGate<Prec, Space>(gate1)->phase() +
                                                    GlobalPhaseGate<Prec, Space>(gate2)->phase(),
-                                               control_list),
+                                               control_list,
+                                               control_value_list),
                 0.};
     }
 
@@ -83,13 +98,13 @@ std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
             if (pauli_id1 == 1) {
                 if (pauli_id2 == 2) {
                     if (gate1_control_mask == 0) {
-                        return {gate::Z<Prec, Space>(target1, control_list),
+                        return {gate::Z<Prec, Space>(target1, control_list, control_value_list),
                                 -Kokkos::numbers::pi / 2};
                     }
                 }
                 if (pauli_id2 == 3) {
                     if (gate1_control_mask == 0) {
-                        return {gate::Y<Prec, Space>(target1, control_list),
+                        return {gate::Y<Prec, Space>(target1, control_list, control_value_list),
                                 Kokkos::numbers::pi / 2};
                     }
                 }
@@ -97,13 +112,13 @@ std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
             if (pauli_id1 == 2) {
                 if (pauli_id2 == 3) {
                     if (gate1_control_mask == 0) {
-                        return {gate::X<Prec, Space>(target1, control_list),
+                        return {gate::X<Prec, Space>(target1, control_list, control_value_list),
                                 -Kokkos::numbers::pi / 2};
                     }
                 }
                 if (pauli_id2 == 1) {
                     if (gate1_control_mask == 0) {
-                        return {gate::Z<Prec, Space>(target1, control_list),
+                        return {gate::Z<Prec, Space>(target1, control_list, control_value_list),
                                 Kokkos::numbers::pi / 2};
                     }
                 }
@@ -111,13 +126,13 @@ std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
             if (pauli_id1 == 3) {
                 if (pauli_id2 == 1) {
                     if (gate1_control_mask == 0) {
-                        return {gate::Y<Prec, Space>(target1, control_list),
+                        return {gate::Y<Prec, Space>(target1, control_list, control_value_list),
                                 -Kokkos::numbers::pi / 2};
                     }
                 }
                 if (pauli_id2 == 2) {
                     if (gate1_control_mask == 0) {
-                        return {gate::X<Prec, Space>(target1, control_list),
+                        return {gate::X<Prec, Space>(target1, control_list, control_value_list),
                                 Kokkos::numbers::pi / 2};
                     }
                 }

@@ -125,6 +125,7 @@ inline ComplexMatrix kronecker_product(const ComplexMatrix& lhs, const ComplexMa
 inline ComplexMatrix get_expanded_matrix(const ComplexMatrix& from_matrix,
                                          const std::vector<std::uint64_t>& from_targets,
                                          std::uint64_t from_control_mask,
+                                         std::uint64_t from_control_value_mask,
                                          std::vector<std::uint64_t>& to_operands) {
     std::vector<std::uint64_t> targets_map(from_targets.size());
     std::ranges::transform(from_targets, targets_map.begin(), [&](std::uint64_t x) {
@@ -137,10 +138,14 @@ inline ComplexMatrix get_expanded_matrix(const ComplexMatrix& from_matrix,
         }
     }
     std::uint64_t to_control_mask = 0;
+    std::uint64_t to_control_value_mask = 0;
     for (std::uint64_t sub_mask = from_control_mask; sub_mask; sub_mask &= (sub_mask - 1)) {
+        std::uint32_t ctrz = std::countr_zero(sub_mask);
         to_control_mask |=
-            1ULL << (std::ranges::lower_bound(to_operands, std::countr_zero(sub_mask)) -
-                     to_operands.begin());
+            1ULL << (std::ranges::lower_bound(to_operands, ctrz) - to_operands.begin());
+        to_control_value_mask |=
+            (from_control_value_mask >> ctrz & 1)  // 今見ている制御ビットの値
+            << (std::ranges::lower_bound(to_operands, ctrz) - to_operands.begin());
     }
 
     std::uint64_t targets_idx_mask = idx_map.back();
@@ -155,13 +160,15 @@ inline ComplexMatrix get_expanded_matrix(const ComplexMatrix& from_matrix,
     for (std::uint64_t i : std::views::iota(0ULL, 1ULL << from_targets.size())) {
         for (std::uint64_t j : std::views::iota(0ULL, 1ULL << from_targets.size())) {
             for (std::uint64_t o : outer_indices) {
-                to_matrix(idx_map[i] | to_control_mask | o, idx_map[j] | to_control_mask | o) =
-                    from_matrix(i, j);
+                to_matrix(idx_map[i] | to_control_value_mask | o,
+                          idx_map[j] | to_control_value_mask | o) = from_matrix(i, j);
             }
         }
     }
+
+    // 制御条件を満たさないインデクスは，変換しない
     for (std::uint64_t i : std::views::iota(0ULL, 1ULL << to_operands.size())) {
-        if ((i & to_control_mask) != to_control_mask) to_matrix(i, i) = 1;
+        if ((i & to_control_mask) != to_control_value_mask) to_matrix(i, i) = 1;
     }
     return to_matrix;
 }
