@@ -4,6 +4,7 @@ enable_testing()
 
 add_executable(scaluq_test EXCLUDE_FROM_ALL
     circuit/circuit_test.cpp
+    circuit/circuit_optimize_test.cpp
     circuit/param_circuit_test.cpp
     gate/gate_test.cpp
     gate/batched_gate_test.cpp
