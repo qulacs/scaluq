@@ -39,7 +39,8 @@ void run_random_gate_apply(std::uint64_t n_qubits) {
 
 template <Precision Prec,
           ExecutionSpace Space,
-          Gate<Prec, Space> (*QuantumGateConstructor)(double, const std::vector<std::uint64_t>&)>
+          Gate<Prec, Space> (*QuantumGateConstructor)(
+              double, const std::vector<std::uint64_t>&, std::vector<std::uint64_t>)>
 void run_random_gate_apply(std::uint64_t n_qubits) {
     const int dim = 1ULL << n_qubits;
     Random random;
@@ -53,7 +54,7 @@ void run_random_gate_apply(std::uint64_t n_qubits) {
         }
 
         const double angle = std::numbers::pi * random.uniform();
-        const Gate<Prec, Space> gate = QuantumGateConstructor(angle, {});
+        const Gate<Prec, Space> gate = QuantumGateConstructor(angle, {}, {});
         gate->update_quantum_state(state);
         state_cp = state.get_amplitudes();
 
@@ -67,8 +68,8 @@ void run_random_gate_apply(std::uint64_t n_qubits) {
 
 template <Precision Prec,
           ExecutionSpace Space,
-          Gate<Prec, Space> (*QuantumGateConstructor)(std::uint64_t,
-                                                      const std::vector<std::uint64_t>&)>
+          Gate<Prec, Space> (*QuantumGateConstructor)(
+              std::uint64_t, const std::vector<std::uint64_t>&, std::vector<std::uint64_t>)>
 void run_random_gate_apply(std::uint64_t n_qubits, std::function<ComplexMatrix()> matrix_factory) {
     const auto matrix = matrix_factory();
     const int dim = 1ULL << n_qubits;
@@ -83,7 +84,7 @@ void run_random_gate_apply(std::uint64_t n_qubits, std::function<ComplexMatrix()
         }
 
         const std::uint64_t target = random.int64() % n_qubits;
-        const Gate<Prec, Space> gate = QuantumGateConstructor(target, {});
+        const Gate<Prec, Space> gate = QuantumGateConstructor(target, {}, {});
         gate->update_quantum_state(state);
         state_cp = state.get_amplitudes();
 
@@ -98,7 +99,7 @@ void run_random_gate_apply(std::uint64_t n_qubits, std::function<ComplexMatrix()
 template <Precision Prec,
           ExecutionSpace Space,
           Gate<Prec, Space> (*QuantumGateConstructor)(
-              std::uint64_t, double, const std::vector<std::uint64_t>&)>
+              std::uint64_t, double, const std::vector<std::uint64_t>&, std::vector<std::uint64_t>)>
 void run_random_gate_apply(std::uint64_t n_qubits,
                            std::function<ComplexMatrix(double)> matrix_factory) {
     const int dim = 1ULL << n_qubits;
@@ -115,7 +116,7 @@ void run_random_gate_apply(std::uint64_t n_qubits,
         const double angle = std::numbers::pi * random.uniform();
         const auto matrix = matrix_factory(angle);
         const std::uint64_t target = random.int64() % n_qubits;
-        const Gate<Prec, Space> gate = QuantumGateConstructor(target, angle, {});
+        const Gate<Prec, Space> gate = QuantumGateConstructor(target, angle, {}, {});
         gate->update_quantum_state(state);
         state_cp = state.get_amplitudes();
 
@@ -155,11 +156,11 @@ void run_random_gate_apply_IBMQ(
             const std::uint64_t target = random.int64() % n_qubits;
             Gate<Prec, Space> gate;
             if (gate_type == 0) {
-                gate = gate::U1<Prec, Space>(target, lambda, {});
+                gate = gate::U1<Prec, Space>(target, lambda, {}, {});
             } else if (gate_type == 1) {
-                gate = gate::U2<Prec, Space>(target, phi, lambda, {});
+                gate = gate::U2<Prec, Space>(target, phi, lambda, {}, {});
             } else {
-                gate = gate::U3<Prec, Space>(target, theta, phi, lambda, {});
+                gate = gate::U3<Prec, Space>(target, theta, phi, lambda, {}, {});
             }
             gate->update_quantum_state(state);
             state_cp = state.get_amplitudes();
@@ -776,41 +777,47 @@ void test_standard_gate_control(Factory factory, std::uint64_t n) {
     std::vector<double> angles(num_rotation);
     for (double& angle : angles) angle = random.uniform() * std::numbers::pi * 2;
     if constexpr (num_target == 0 && num_rotation == 1) {
-        Gate<Prec, Space> g1 = factory(angles[0], controls);
-        Gate<Prec, Space> g2 = factory(angles[0], {});
+        Gate<Prec, Space> g1 = factory(angles[0], controls, {});
+        Gate<Prec, Space> g2 = factory(angles[0], {}, {});
         test_gate(g1, g2, n, control_mask);
     } else if constexpr (num_target == 1 && num_rotation == 0) {
-        Gate<Prec, Space> g1 = factory(targets[0], controls);
+        Gate<Prec, Space> g1 = factory(targets[0], controls, {});
         Gate<Prec, Space> g2 =
-            factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)), {});
+            factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)), {}, {});
         test_gate(g1, g2, n, control_mask);
     } else if constexpr (num_target == 1 && num_rotation == 1) {
-        Gate<Prec, Space> g1 = factory(targets[0], angles[0], controls);
-        Gate<Prec, Space> g2 = factory(
-            targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)), angles[0], {});
+        Gate<Prec, Space> g1 = factory(targets[0], angles[0], controls, {});
+        Gate<Prec, Space> g2 =
+            factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
+                    angles[0],
+                    {},
+                    {});
         test_gate(g1, g2, n, control_mask);
     } else if constexpr (num_target == 1 && num_rotation == 2) {
-        Gate<Prec, Space> g1 = factory(targets[0], angles[0], angles[1], controls);
+        Gate<Prec, Space> g1 = factory(targets[0], angles[0], angles[1], controls, {});
         Gate<Prec, Space> g2 =
             factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
                     angles[0],
                     angles[1],
+                    {},
                     {});
         test_gate(g1, g2, n, control_mask);
     } else if constexpr (num_target == 1 && num_rotation == 3) {
-        Gate<Prec, Space> g1 = factory(targets[0], angles[0], angles[1], angles[2], controls);
+        Gate<Prec, Space> g1 = factory(targets[0], angles[0], angles[1], angles[2], controls, {});
         Gate<Prec, Space> g2 =
             factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
                     angles[0],
                     angles[1],
                     angles[2],
+                    {},
                     {});
         test_gate(g1, g2, n, control_mask);
     } else if constexpr (num_target == 2 && num_rotation == 0) {
-        Gate<Prec, Space> g1 = factory(targets[0], targets[1], controls);
+        Gate<Prec, Space> g1 = factory(targets[0], targets[1], controls, {});
         Gate<Prec, Space> g2 =
             factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
                     targets[1] - std::popcount(control_mask & ((1ULL << targets[1]) - 1)),
+                    {},
                     {});
         test_gate(g1, g2, n, control_mask);
     } else {

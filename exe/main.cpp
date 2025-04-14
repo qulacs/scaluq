@@ -50,5 +50,15 @@ int main() {
 
         std::cout << "Time: " << timer.seconds() << std::endl;
     }
+    {
+        std::cout << gate::X<F64, GPU>(3, {1, 2}, {0, 1}) << std::endl;
+        std::cout << Json(gate::X<F64, GPU>(3, {1, 2}, {0, 1})) << std::endl;
+
+        StateVector<F64, GPU> state(2);
+        state.load({1, 2, 3, 4});
+        auto cx = gate::CX<F64, GPU>(1, 0);
+        cx->update_quantum_state(state);
+        std::cout << state << std::endl;
+    }
     scaluq::finalize();
 }

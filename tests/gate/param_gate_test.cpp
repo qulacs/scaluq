@@ -27,8 +27,8 @@ void test_apply_parametric_single_pauli_rotation(std::uint64_t n_qubits,
         const std::uint64_t target = random.int32() % n_qubits;
         const double param = std::numbers::pi * random.uniform();
         const double param_coef = random.uniform() * 2 - 1;
-        const Gate<Prec, Space> gate = factory_fixed(target, param_coef * param, {});
-        const ParamGate<Prec, Space> pgate = factory_parametric(target, param_coef, {});
+        const Gate<Prec, Space> gate = factory_fixed(target, param_coef * param, {}, {});
+        const ParamGate<Prec, Space> pgate = factory_parametric(target, param_coef, {}, {});
         gate->update_quantum_state(state);
         pgate->update_quantum_state(state_cp, param);
         auto state_amp = state.get_amplitudes();
@@ -173,9 +173,9 @@ void test_param_rotation_control(Factory factory, std::uint64_t n) {
     std::uint64_t control_mask = 0ULL;
     for (std::uint64_t c : controls) control_mask |= 1ULL << c;
     double param = random.uniform() * std::numbers::pi * 2;
-    ParamGate<Prec, Space> g1 = factory(target, 1., controls);
+    ParamGate<Prec, Space> g1 = factory(target, 1., controls, {});
     ParamGate<Prec, Space> g2 =
-        factory(target - std::popcount(control_mask & ((1ULL << target) - 1)), 1., {});
+        factory(target - std::popcount(control_mask & ((1ULL << target) - 1)), 1., {}, {});
     test_gate(g1, g2, n, control_mask, param);
 }
 
@@ -198,8 +198,8 @@ void test_ppauli_control(std::uint64_t n) {
         }
     }
     double param = random.uniform() * std::numbers::pi * 2;
-    ParamGate g1 = gate::ParamPauliRotation(PauliOperator<Prec, Space>(data1), 1., controls);
-    ParamGate g2 = gate::ParamPauliRotation(PauliOperator<Prec, Space>(data2), 1., {});
+    ParamGate g1 = gate::ParamPauliRotation(PauliOperator<Prec, Space>(data1), 1., controls, {});
+    ParamGate g2 = gate::ParamPauliRotation(PauliOperator<Prec, Space>(data2), 1., {}, {});
     test_gate(g1, g2, n, control_mask, param);
 }
 
