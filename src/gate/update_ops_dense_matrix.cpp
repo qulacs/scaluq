@@ -367,7 +367,7 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
         Kokkos::ViewAllocateWithoutInitializing("update"), state.dim());
     Kokkos::parallel_for(
         Kokkos::RangePolicy<SpaceType<Space>>(0, state.dim()), KOKKOS_LAMBDA(std::uint64_t i) {
-            if ((i | control_mask) == i) {
+            if ((i | control_mask) == i) {  // !!!!!TODO!!!!!
                 update(i) = 0;
             } else {
                 update(i) = state._raw(i);

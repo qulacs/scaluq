@@ -6,6 +6,7 @@ using namespace nlohmann;
 
 constexpr auto F64 = Precision::F64;
 constexpr auto GPU = ExecutionSpace::Default;
+constexpr auto CPU = ExecutionSpace::Host;
 
 Gate<F64, GPU> get_Uw(std::uint64_t n_qubits, std::uint64_t omega) {
     std::vector<std::uint64_t> U_omega_control, U_omega_cvalue;
@@ -51,14 +52,25 @@ int main() {
         std::cout << "Time: " << timer.seconds() << std::endl;
     }
     {
-        std::cout << gate::X<F64, GPU>(3, {1, 2}, {0, 1}) << std::endl;
-        std::cout << Json(gate::X<F64, GPU>(3, {1, 2}, {0, 1})) << std::endl;
-
-        StateVector<F64, GPU> state(2);
-        state.load({1, 2, 3, 4});
-        auto cx = gate::CX<F64, GPU>(1, 0);
-        cx->update_quantum_state(state);
-        std::cout << state << std::endl;
+        auto gate1 = gate::X<F64, GPU>(0, {1, 3}, {0, 0});
+        auto gate2 = gate::X<F64, GPU>(0, {2, 3}, {0, 0});
+        DenseMatrixGate<F64, GPU> dense = merge_gate<F64, GPU>(gate1, gate2).first;
+        auto matrix = dense->get_matrix();
+        std::cout << "Densematrix:\n" << dense << std::endl;
+        std::cout << matrix << std::endl;
+        {
+            StateVector<F64, GPU> state(4);
+            state.load({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+            dense->update_quantum_state(state);
+            std::cout << state << std::endl;
+        }
+        {
+            StateVector<F64, GPU> state(4);
+            state.load({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+            gate2->update_quantum_state(state);
+            gate1->update_quantum_state(state);
+            std::cout << state << std::endl;
+        }
     }
     scaluq::finalize();
 }

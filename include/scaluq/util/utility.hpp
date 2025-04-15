@@ -3,6 +3,7 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
 #include <algorithm>  // For std::copy
+#include <bitset>
 #include <iostream>
 #include <ranges>
 #include <vector>
@@ -148,25 +149,35 @@ inline ComplexMatrix get_expanded_matrix(const ComplexMatrix& from_matrix,
             << (std::ranges::lower_bound(to_operands, ctrz) - to_operands.begin());
     }
 
-    std::uint64_t targets_idx_mask = idx_map.back();
+    // std::cout << "from_matrix:\n";
+    // std::cout << from_matrix << std::endl;
+
+    // std::cout << "omask :" << std::bitset<4>(vector_to_mask(to_operands)) << std::endl;
+    // std::cout << "cmask :" << std::bitset<4>(to_control_mask) << std::endl;
+    // std::cout << "vmask :" << std::bitset<4>(to_control_value_mask) << std::endl;
+
     std::vector<std::uint64_t> outer_indices;
     outer_indices.reserve(
         1ULL << (to_operands.size() - from_targets.size() - std::popcount(from_control_mask)));
     for (std::uint64_t i : std::views::iota(0ULL, 1ULL << to_operands.size())) {
-        if ((i & (targets_idx_mask | to_control_mask)) == 0) outer_indices.push_back(i);
+        if ((i & to_control_mask) == to_control_value_mask) outer_indices.push_back(i);
     }
     ComplexMatrix to_matrix =
         ComplexMatrix::Zero(1ULL << to_operands.size(), 1ULL << to_operands.size());
+
+    // 制御条件を満たすインデクス
     for (std::uint64_t i : std::views::iota(0ULL, 1ULL << from_targets.size())) {
         for (std::uint64_t j : std::views::iota(0ULL, 1ULL << from_targets.size())) {
             for (std::uint64_t o : outer_indices) {
+                // std::cout << "(" << i << ", " << j << ") to ("
+                //           << (idx_map[i] | to_control_value_mask | o) << ", "
+                //           << (idx_map[j] | to_control_value_mask | o) << ") " << std::endl;
                 to_matrix(idx_map[i] | to_control_value_mask | o,
                           idx_map[j] | to_control_value_mask | o) = from_matrix(i, j);
             }
         }
     }
-
-    // 制御条件を満たさないインデクスは，変換しない
+    // 制御条件を満たさないインデクス
     for (std::uint64_t i : std::views::iota(0ULL, 1ULL << to_operands.size())) {
         if ((i & to_control_mask) != to_control_value_mask) to_matrix(i, i) = 1;
     }
