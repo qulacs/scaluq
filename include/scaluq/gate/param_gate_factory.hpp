@@ -84,6 +84,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
         "target"_a,
         "coef"_a = 1.,
         "controls"_a = std::vector<std::uint64_t>{},
+        "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
             .desc("Generate general :class:`~scaluq.f64.ParamGate` class instance of "
                   ":class:`~scaluq.f64.ParamRXGate`.")
@@ -104,6 +105,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
         "target"_a,
         "coef"_a = 1.,
         "controls"_a = std::vector<std::uint64_t>{},
+        "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
             .desc("Generate general :class:`~scaluq.f64.ParamGate` class instance of "
                   ":class:`~scaluq.f64.ParamRYGate`.")
@@ -123,6 +125,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
               "target"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{},
+              "control_values"_a = std::vector<std::uint64_t>{},
               DocString()
                   .desc("Generate general :class:`~scaluq.f64.ParamGate` class instance of "
                         ":class:`~scaluq.f64.ParamRZGate`.")
@@ -144,6 +147,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
         "pauli"_a,
         "coef"_a = 1.,
         "controls"_a = std::vector<std::uint64_t>{},
+        "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
             .desc("Generate general :class:`~scaluq.f64.ParamGate` class instance of "
                   ":class:`~scaluq.f64.ParamPauliRotationGate`.")
