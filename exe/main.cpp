@@ -51,26 +51,5 @@ int main() {
 
         std::cout << "Time: " << timer.seconds() << std::endl;
     }
-    {
-        auto gate1 = gate::X<F64, GPU>(0, {1, 3}, {0, 0});
-        auto gate2 = gate::X<F64, GPU>(0, {2, 3}, {0, 0});
-        DenseMatrixGate<F64, GPU> dense = merge_gate<F64, GPU>(gate1, gate2).first;
-        auto matrix = dense->get_matrix();
-        std::cout << "Densematrix:\n" << dense << std::endl;
-        std::cout << matrix << std::endl;
-        {
-            StateVector<F64, GPU> state(4);
-            state.load({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
-            dense->update_quantum_state(state);
-            std::cout << state << std::endl;
-        }
-        {
-            StateVector<F64, GPU> state(4);
-            state.load({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
-            gate2->update_quantum_state(state);
-            gate1->update_quantum_state(state);
-            std::cout << state << std::endl;
-        }
-    }
     scaluq::finalize();
 }

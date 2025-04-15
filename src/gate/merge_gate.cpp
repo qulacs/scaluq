@@ -28,7 +28,7 @@ std::pair<Gate<Prec, Space>, double> merge_gate_dense_matrix(const Gate<Prec, Sp
     auto matrix2 = internal::get_expanded_matrix(gate2->get_matrix(),
                                                  gate2->target_qubit_list(),
                                                  gate2->control_qubit_mask() & ~common_control_mask,
-                                                 gate1->control_value_mask() & ~common_control_mask,
+                                                 gate2->control_value_mask() & ~common_control_mask,
                                                  merged_operand_vector);
     auto matrix = matrix2 * matrix1;
     return {gate::DenseMatrix<Prec, Space>(

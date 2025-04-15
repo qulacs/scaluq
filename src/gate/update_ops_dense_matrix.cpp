@@ -362,13 +362,12 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
                                     const Matrix<Prec, Space>& matrix,
                                     StateVector<Prec, Space>& state) {
     const std::uint64_t matrix_dim = 1ULL << std::popcount(target_mask);
-
     Kokkos::View<Complex<Prec>*, SpaceType<Space>> update(
         Kokkos::ViewAllocateWithoutInitializing("update"), state.dim());
     Kokkos::parallel_for(
         Kokkos::RangePolicy<SpaceType<Space>>(0, state.dim()), KOKKOS_LAMBDA(std::uint64_t i) {
-            if ((i | control_mask) == i) {  // !!!!!TODO!!!!!
-                update(i) = 0;
+            if ((i & control_mask) == control_value_mask) {
+                update(i) = -1;
             } else {
                 update(i) = state._raw(i);
             }
@@ -430,10 +429,10 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
         Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
             {0, 0}, {states.batch_size(), states.dim()}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
-            if ((i | control_mask) == i) {
+            if ((i & control_mask) == control_value_mask) {
                 update(batch_id, i) = 0;
             } else {
-                update(batch_id, i) = states._raw(batch_id, i);
+                update(batch_id, i) = states._raw(batch_id, i);  // 制御条件を満たさないインデクス
             }
         });
     Kokkos::fence();

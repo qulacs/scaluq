@@ -34,8 +34,7 @@ void merge_gate_test() {
         for (auto nc : {0, 1, 2}) {
             std::vector<std::uint64_t> shuffled = random.permutation(n);
             std::vector<std::uint64_t> controls(shuffled.begin(), shuffled.begin() + nc);
-            // std::vector<std::uint64_t> control_values = make_control_values(nc);
-            std::vector<std::uint64_t> control_values(nc, 0);
+            std::vector<std::uint64_t> control_values = make_control_values(nc);
             gates.push_back(fac(random.uniform() * std::numbers::pi * 2, controls, control_values));
         }
     };
@@ -44,8 +43,7 @@ void merge_gate_test() {
             std::vector<std::uint64_t> shuffled = random.permutation(n);
             std::uint64_t target = shuffled[0];
             std::vector<std::uint64_t> controls(shuffled.begin() + 1, shuffled.begin() + 1 + nc);
-            // std::vector<std::uint64_t> control_values = make_control_values(nc);
-            std::vector<std::uint64_t> control_values(nc, 0);
+            std::vector<std::uint64_t> control_values = make_control_values(nc);
             gates.push_back(fac(target, controls, control_values));
         }
     };
@@ -54,8 +52,7 @@ void merge_gate_test() {
             std::vector<std::uint64_t> shuffled = random.permutation(n);
             std::uint64_t target = shuffled[0];
             std::vector<std::uint64_t> controls(shuffled.begin() + 1, shuffled.begin() + 1 + nc);
-            // std::vector<std::uint64_t> control_values = make_control_values(nc);
-            std::vector<std::uint64_t> control_values(nc, 0);
+            std::vector<std::uint64_t> control_values = make_control_values(nc);
             gates.push_back(
                 fac(target, random.uniform() * std::numbers::pi * 2, controls, control_values));
         }
@@ -65,8 +62,7 @@ void merge_gate_test() {
             std::vector<std::uint64_t> shuffled = random.permutation(n);
             std::uint64_t target = shuffled[0];
             std::vector<std::uint64_t> controls(shuffled.begin() + 1, shuffled.begin() + 1 + nc);
-            // std::vector<std::uint64_t> control_values = make_control_values(nc);
-            std::vector<std::uint64_t> control_values(nc, 0);
+            std::vector<std::uint64_t> control_values = make_control_values(nc);
             gates.push_back(fac(target,
                                 random.uniform() * std::numbers::pi * 2,
                                 random.uniform() * std::numbers::pi * 2,
@@ -79,8 +75,7 @@ void merge_gate_test() {
             std::vector<std::uint64_t> shuffled = random.permutation(n);
             std::uint64_t target = shuffled[0];
             std::vector<std::uint64_t> controls(shuffled.begin() + 1, shuffled.begin() + 1 + nc);
-            // std::vector<std::uint64_t> control_values = make_control_values(nc);
-            std::vector<std::uint64_t> control_values(nc, 0);
+            std::vector<std::uint64_t> control_values = make_control_values(nc);
             gates.push_back(fac(target,
                                 random.uniform() * std::numbers::pi * 2,
                                 random.uniform() * std::numbers::pi * 2,
@@ -95,8 +90,7 @@ void merge_gate_test() {
             std::uint64_t target0 = shuffled[0];
             std::uint64_t target1 = shuffled[1];
             std::vector<std::uint64_t> controls(shuffled.begin() + 2, shuffled.begin() + 2 + nc);
-            // std::vector<std::uint64_t> control_values = make_control_values(nc);
-            std::vector<std::uint64_t> control_values(nc, 0);
+            std::vector<std::uint64_t> control_values = make_control_values(nc);
             gates.push_back(fac(target0, target1, controls, control_values));
         }
     };
@@ -114,8 +108,7 @@ void merge_gate_test() {
                         mat(i, j) = StdComplex(random.uniform() * 2 - 1, random.uniform() * 2 - 1);
                     }
                 }
-                // std::vector<std::uint64_t> control_values = make_control_values(nc);
-                std::vector<std::uint64_t> control_values(nc, 0);
+                std::vector<std::uint64_t> control_values = make_control_values(nc);
                 gates.push_back(fac(targets, mat, controls, control_values, false));
             }
         }
@@ -137,8 +130,7 @@ void merge_gate_test() {
                         }
                     }
                 }
-                // std::vector<std::uint64_t> control_values = make_control_values(nc);
-                std::vector<std::uint64_t> control_values(nc, 0);
+                std::vector<std::uint64_t> control_values = make_control_values(nc);
                 gates.push_back(fac(targets, mat, controls, control_values));
             }
         }
