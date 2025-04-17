@@ -89,7 +89,8 @@ template <Precision Prec, ExecutionSpace Space>
 using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl<Prec, Space>>;
 
 namespace internal {
-#define DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec, Space)     \
+
+#define DECLARE_GET_FROM_JSON(Prec, Space)                                                  \
     template <>                                                                             \
     inline std::shared_ptr<const PauliGateImpl<Prec, Space>> get_from_json(const Json& j) { \
         auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();            \
@@ -114,31 +115,25 @@ namespace internal {
             static_cast<Float<Prec>>(angle));                                               \
     }
 
+#define INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Prec)       \
+    DECLARE_GET_FROM_JSON(Prec, ExecutionSpace::Default) \
+    DECLARE_GET_FROM_JSON(Prec, ExecutionSpace::Host)
+
+#ifdef SCALUQ_BFLOAT16
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::BF16)
+#endif
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                   ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                   ExecutionSpace::Default)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F16)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                   ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                   ExecutionSpace::Default)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F32)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                   ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                   ExecutionSpace::Default)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F64)
 #endif
-#ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                   ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                   ExecutionSpace::Default)
-#endif
-#undef DECLARE_GET_FROM_JSON_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE
+
+#undef DECLARE_GET_FROM_JSON
+#undef INSTANTIATE_GET_FROM_JSON_EACH_SPACE
 
 }  // namespace internal
 

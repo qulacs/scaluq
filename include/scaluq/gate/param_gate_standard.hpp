@@ -96,7 +96,7 @@ using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl<Prec, Space
 
 namespace internal {
 
-#define DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Impl, Prec, Space) \
+#define DECLARE_GET_FROM_JSON(Impl, Prec, Space)                                                \
     template <>                                                                                 \
     inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {              \
         auto targets = j.at("target").get<std::vector<std::uint64_t>>();                        \
@@ -109,40 +109,31 @@ namespace internal {
                                                          static_cast<Float<Prec>>(param_coef)); \
     }
 
-#define DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec, Space) \
-    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                      \
-        ParamRXGateImpl, Prec, Space)                                                          \
-    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                      \
-        ParamRYGateImpl, Prec, Space)                                                          \
-    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                      \
-        ParamRZGateImpl, Prec, Space)
+#define INSTANTIATE_GET_FROM_JSON_EACH_GATE(Prec, Space) \
+    DECLARE_GET_FROM_JSON(ParamRXGateImpl, Prec, Space)  \
+    DECLARE_GET_FROM_JSON(ParamRYGateImpl, Prec, Space)  \
+    DECLARE_GET_FROM_JSON(ParamRZGateImpl, Prec, Space)
 
+#define INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Prec)                     \
+    INSTANTIATE_GET_FROM_JSON_EACH_GATE(Prec, ExecutionSpace::Default) \
+    INSTANTIATE_GET_FROM_JSON_EACH_GATE(Prec, ExecutionSpace::Host)
+
+#ifdef SCALUQ_BFLOAT16
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::BF16)
+#endif
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                          ExecutionSpace::Default)
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                          ExecutionSpace::Host)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F16)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                          ExecutionSpace::Default)
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                          ExecutionSpace::Host)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F32)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                          ExecutionSpace::Default)
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                          ExecutionSpace::Host)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F64)
 #endif
-#ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                          ExecutionSpace::Default)
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                          ExecutionSpace::Host)
-#endif
-#undef DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE
-#undef DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE
+
+#undef DECLARE_GET_FROM_JSON
+#undef INSTANTIATE_GET_FROM_JSON_EACH_GATE
+#undef INSTANTIATE_GET_FROM_JSON_EACH_SPACE
 
 }  // namespace internal
 
