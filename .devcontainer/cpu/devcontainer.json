@@ -29,7 +29,7 @@
 				"python.terminal.activateEnvironment": false,
 				// CAVEAT: you need to restart after building scaluq to take effect.
 				"C_Cpp.default.includePath": [
-					"scaluq",
+					"include",
 					"/usr/local/include/kokkos",
 					"build/_deps/eigen-src",
 					"build/_deps/googletest-src/googletest/include",
