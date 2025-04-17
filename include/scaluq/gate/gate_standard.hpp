@@ -706,7 +706,7 @@ namespace internal {
         return std::make_shared<const GlobalPhaseGateImpl<Prec, Space>>(                          \
             vector_to_mask(control_qubits),                                                       \
             vector_to_mask(control_qubits, control_values),                                       \
-            j.at("phase").get<Float<Prec>>());                                                    \
+            static_cast<Float<Prec>>(j.at("phase").get<double>()));                               \
     }
 
 // X, Y, Z, H, S, Sdag, T, Tdag, SqrtX, SqrtY, P0, P1
@@ -746,7 +746,7 @@ namespace internal {
             vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),          \
             vector_to_mask(control_qubits),                                            \
             vector_to_mask(control_qubits, control_values),                            \
-            j.at("anlge").get<Float<Prec>>());                                         \
+            static_cast<Float<Prec>>(j.at("angle").get<double>()));                    \
     }
 #define DECLARE_GET_FROM_JSON_R_SINGLE(Prec, Space)              \
     DECLARE_GET_FROM_JSON_R_SINGLE_IMPL(RXGateImpl, Prec, Space) \
@@ -763,7 +763,7 @@ namespace internal {
             vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),            \
             vector_to_mask(control_qubits),                                              \
             vector_to_mask(control_qubits, control_values),                              \
-            j.at("theta").get<Float<Prec>>());                                           \
+            static_cast<Float<Prec>>(j.at("theta").get<double>()));                      \
     }                                                                                    \
     template <>                                                                          \
     inline std::shared_ptr<const U2GateImpl<Prec, Space>> get_from_json(const Json& j) { \
@@ -773,8 +773,8 @@ namespace internal {
             vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),            \
             vector_to_mask(control_qubits),                                              \
             vector_to_mask(control_qubits, control_values),                              \
-            j.at("theta").get<Float<Prec>>(),                                            \
-            j.at("phi").get<Float<Prec>>());                                             \
+            static_cast<Float<Prec>>(j.at("theta").get<double>()),                       \
+            static_cast<Float<Prec>>(j.at("phi").get<double>()));                        \
     }                                                                                    \
     template <>                                                                          \
     inline std::shared_ptr<const U3GateImpl<Prec, Space>> get_from_json(const Json& j) { \
@@ -784,9 +784,9 @@ namespace internal {
             vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),            \
             vector_to_mask(control_qubits),                                              \
             vector_to_mask(control_qubits, control_values),                              \
-            j.at("theta").get<Float<Prec>>(),                                            \
-            j.at("phi").get<Float<Prec>>(),                                              \
-            j.at("lambda").get<Float<Prec>>());                                          \
+            static_cast<Float<Prec>>(j.at("theta").get<double>()),                       \
+            static_cast<Float<Prec>>(j.at("phi").get<double>()),                         \
+            static_cast<Float<Prec>>(j.at("labmda").get<double>()));                     \
     }
 
 // Swap

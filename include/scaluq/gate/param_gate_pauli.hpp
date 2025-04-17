@@ -61,7 +61,7 @@ namespace internal {
             vector_to_mask(controls),                                                    \
             vector_to_mask(controls, control_values),                                    \
             j.at("pauli").get<PauliOperator<Prec, Space>>(),                             \
-            j.at("param_coef").get<Float<Prec>>());                                      \
+            static_cast<Float<Prec>>(j.at("param_coef").get<double>()));                 \
     }
 
 #define INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Prec)       \

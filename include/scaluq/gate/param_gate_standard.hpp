@@ -105,7 +105,7 @@ namespace internal {
             vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),          \
             vector_to_mask(controls),                                                  \
             vector_to_mask(control_values),                                            \
-            j.at("param_coef").get<Float<Prec>>());                                    \
+            static_cast<Float<Prec>>(j.at("param_coef").get<double>()));               \
     }
 
 #define INSTANTIATE_GET_FROM_JSON_EACH_GATE(Prec, Space) \

@@ -1,4 +1,3 @@
-#include <bitset>
 #include <scaluq/constant.hpp>
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/gate/merge_gate.hpp>

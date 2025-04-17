@@ -3,7 +3,6 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
 #include <algorithm>  // For std::copy
-#include <bitset>
 #include <iostream>
 #include <ranges>
 #include <vector>

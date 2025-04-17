@@ -109,7 +109,7 @@ namespace internal {
             vector_to_mask(control_qubits),                                                 \
             vector_to_mask(control_qubits, control_values),                                 \
             j.at("pauli").get<PauliOperator<Prec, Space>>(),                                \
-            j.at("angle").get<Float<Prec>>());                                              \
+            static_cast<Float<Prec>>(j.at("angle").get<double>()));                         \
     }
 
 #define INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Prec)       \
