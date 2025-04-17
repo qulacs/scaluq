@@ -57,13 +57,11 @@ namespace internal {
         const Json& j) {                                                                 \
         auto controls = j.at("control").get<std::vector<std::uint64_t>>();               \
         auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();   \
-        auto pauli = j.at("pauli").get<PauliOperator<Prec, Space>>();                    \
-        auto param_coef = j.at("param_coef").get<double>();                              \
         return std::make_shared<const ParamPauliRotationGateImpl<Prec, Space>>(          \
             vector_to_mask(controls),                                                    \
             vector_to_mask(controls, control_values),                                    \
-            pauli,                                                                       \
-            static_cast<Float<Prec>>(param_coef));                                       \
+            j.at("pauli").get<PauliOperator<Prec, Space>>(),                             \
+            j.at("param_coef").get<Float<Prec>>());                                      \
     }
 
 #define INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Prec)       \

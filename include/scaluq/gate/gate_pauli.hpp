@@ -95,24 +95,21 @@ namespace internal {
     inline std::shared_ptr<const PauliGateImpl<Prec, Space>> get_from_json(const Json& j) { \
         auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();            \
         auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();      \
-        auto pauli = j.at("pauli").get<PauliOperator<Prec, Space>>();                       \
         return std::make_shared<const PauliGateImpl<Prec, Space>>(                          \
             vector_to_mask(control_qubits),                                                 \
             vector_to_mask(control_qubits, control_values),                                 \
-            pauli);                                                                         \
+            j.at("pauli").get<PauliOperator<Prec, Space>>());                               \
     }                                                                                       \
     template <>                                                                             \
     inline std::shared_ptr<const PauliRotationGateImpl<Prec, Space>> get_from_json(         \
         const Json& j) {                                                                    \
         auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();            \
         auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();      \
-        auto pauli = j.at("pauli").get<PauliOperator<Prec, Space>>();                       \
-        auto angle = j.at("angle").get<double>();                                           \
         return std::make_shared<const PauliRotationGateImpl<Prec, Space>>(                  \
             vector_to_mask(control_qubits),                                                 \
             vector_to_mask(control_qubits, control_values),                                 \
-            pauli,                                                                          \
-            static_cast<Float<Prec>>(angle));                                               \
+            j.at("pauli").get<PauliOperator<Prec, Space>>(),                                \
+            j.at("angle").get<Float<Prec>>());                                              \
     }
 
 #define INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Prec)       \

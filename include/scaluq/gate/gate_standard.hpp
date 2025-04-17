@@ -703,22 +703,20 @@ namespace internal {
     inline std::shared_ptr<const GlobalPhaseGateImpl<Prec, Space>> get_from_json(const Json& j) { \
         auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();                  \
         auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();            \
-        double phase = j.at("phase").get<double>();                                               \
         return std::make_shared<const GlobalPhaseGateImpl<Prec, Space>>(                          \
             vector_to_mask(control_qubits),                                                       \
             vector_to_mask(control_qubits, control_values),                                       \
-            static_cast<Float<Prec>>(phase));                                                     \
+            j.at("phase").get<Float<Prec>>());                                                    \
     }
 
 // X, Y, Z, H, S, Sdag, T, Tdag, SqrtX, SqrtY, P0, P1
 #define DECLARE_GET_FROM_JSON_SINGLE_IMPL(Impl, Prec, Space)                           \
     template <>                                                                        \
     inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {     \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();               \
         auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();       \
         auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>(); \
         return std::make_shared<const Impl<Prec, Space>>(                              \
-            vector_to_mask(targets),                                                   \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),          \
             vector_to_mask(control_qubits),                                            \
             vector_to_mask(control_qubits, control_values));                           \
     }
@@ -742,15 +740,13 @@ namespace internal {
 #define DECLARE_GET_FROM_JSON_R_SINGLE_IMPL(Impl, Prec, Space)                         \
     template <>                                                                        \
     inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {     \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();               \
         auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();       \
         auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>(); \
-        double angle = j.at("angle").get<double>();                                    \
         return std::make_shared<const Impl<Prec, Space>>(                              \
-            vector_to_mask(targets),                                                   \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),          \
             vector_to_mask(control_qubits),                                            \
             vector_to_mask(control_qubits, control_values),                            \
-            static_cast<Float<Prec>>(angle));                                          \
+            j.at("anlge").get<Float<Prec>>());                                         \
     }
 #define DECLARE_GET_FROM_JSON_R_SINGLE(Prec, Space)              \
     DECLARE_GET_FROM_JSON_R_SINGLE_IMPL(RXGateImpl, Prec, Space) \
@@ -761,56 +757,46 @@ namespace internal {
 #define DECLARE_GET_FROM_JSON_U(Prec, Space)                                             \
     template <>                                                                          \
     inline std::shared_ptr<const U1GateImpl<Prec, Space>> get_from_json(const Json& j) { \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                 \
         auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();         \
         auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();   \
-        double theta = j.at("theta").get<double>();                                      \
         return std::make_shared<const U1GateImpl<Prec, Space>>(                          \
-            vector_to_mask(targets),                                                     \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),            \
             vector_to_mask(control_qubits),                                              \
             vector_to_mask(control_qubits, control_values),                              \
-            static_cast<Float<Prec>>(theta));                                            \
+            j.at("theta").get<Float<Prec>>());                                           \
     }                                                                                    \
     template <>                                                                          \
     inline std::shared_ptr<const U2GateImpl<Prec, Space>> get_from_json(const Json& j) { \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                 \
         auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();         \
         auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();   \
-        double theta = j.at("theta").get<double>();                                      \
-        double phi = j.at("phi").get<double>();                                          \
         return std::make_shared<const U2GateImpl<Prec, Space>>(                          \
-            vector_to_mask(targets),                                                     \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),            \
             vector_to_mask(control_qubits),                                              \
             vector_to_mask(control_qubits, control_values),                              \
-            static_cast<Float<Prec>>(theta),                                             \
-            static_cast<Float<Prec>>(phi));                                              \
+            j.at("theta").get<Float<Prec>>(),                                            \
+            j.at("phi").get<Float<Prec>>());                                             \
     }                                                                                    \
     template <>                                                                          \
     inline std::shared_ptr<const U3GateImpl<Prec, Space>> get_from_json(const Json& j) { \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                 \
         auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();         \
         auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();   \
-        double theta = j.at("theta").get<double>();                                      \
-        double phi = j.at("phi").get<double>();                                          \
-        double lambda = j.at("lambda").get<double>();                                    \
         return std::make_shared<const U3GateImpl<Prec, Space>>(                          \
-            vector_to_mask(targets),                                                     \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),            \
             vector_to_mask(control_qubits),                                              \
             vector_to_mask(control_qubits, control_values),                              \
-            static_cast<Float<Prec>>(theta),                                             \
-            static_cast<Float<Prec>>(phi),                                               \
-            static_cast<Float<Prec>>(lambda));                                           \
+            j.at("theta").get<Float<Prec>>(),                                            \
+            j.at("phi").get<Float<Prec>>(),                                              \
+            j.at("lambda").get<Float<Prec>>());                                          \
     }
 
 // Swap
 #define DECLARE_GET_FROM_JSON_SWAP(Prec, Space)                                            \
     template <>                                                                            \
     inline std::shared_ptr<const SwapGateImpl<Prec, Space>> get_from_json(const Json& j) { \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                   \
         auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();           \
         auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();     \
         return std::make_shared<const SwapGateImpl<Prec, Space>>(                          \
-            vector_to_mask(targets),                                                       \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),              \
             vector_to_mask(control_qubits),                                                \
             vector_to_mask(control_qubits, control_values));                               \
     }

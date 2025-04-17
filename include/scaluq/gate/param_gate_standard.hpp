@@ -96,17 +96,16 @@ using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl<Prec, Space
 
 namespace internal {
 
-#define DECLARE_GET_FROM_JSON(Impl, Prec, Space)                                                \
-    template <>                                                                                 \
-    inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {              \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                        \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                      \
-        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();          \
-        auto param_coef = j.at("param_coef").get<double>();                                     \
-        return std::make_shared<const Impl<Prec, Space>>(vector_to_mask(targets),               \
-                                                         vector_to_mask(controls),              \
-                                                         vector_to_mask(control_values),        \
-                                                         static_cast<Float<Prec>>(param_coef)); \
+#define DECLARE_GET_FROM_JSON(Impl, Prec, Space)                                       \
+    template <>                                                                        \
+    inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {     \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();             \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>(); \
+        return std::make_shared<const Impl<Prec, Space>>(                              \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),          \
+            vector_to_mask(controls),                                                  \
+            vector_to_mask(control_values),                                            \
+            j.at("param_coef").get<Float<Prec>>());                                    \
     }
 
 #define INSTANTIATE_GET_FROM_JSON_EACH_GATE(Prec, Space) \

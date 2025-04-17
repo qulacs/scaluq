@@ -22,7 +22,7 @@ int main() {
     {
         Kokkos::Timer timer;
 
-        constexpr std::uint64_t n_qubits = 15;
+        constexpr std::uint64_t n_qubits = 20;
         std::uint64_t w = rand() % (1 << n_qubits);  // 解のインデックス
 
         Circuit<F64, GPU> Loop(n_qubits);
