@@ -5,6 +5,7 @@ namespace scaluq::internal {
 template <Precision Prec, ExecutionSpace Space>
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
+                        std::uint64_t control_value_mask,
                         const SparseMatrix<Prec, Space>& mat,
                         StateVector<Prec, Space>& state) {
     auto values = mat._values;
@@ -13,7 +14,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         Kokkos::ViewAllocateWithoutInitializing("update"), state.dim());
     Kokkos::parallel_for(
         Kokkos::RangePolicy<SpaceType<Space>>(0, state.dim()), KOKKOS_LAMBDA(std::uint64_t i) {
-            if ((i | control_mask) == i) {
+            if ((i & control_mask) == control_value_mask) {
                 update(i) = 0;
             } else {
                 update(i) = state._raw(i);
@@ -33,7 +34,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         KOKKOS_LAMBDA(std::uint64_t outer, std::uint64_t inner) {
             std::uint64_t basis =
                 internal::insert_zero_at_mask_positions(outer, target_mask | control_mask) |
-                control_mask;
+                control_value_mask;
             auto [v, r, c] = values(inner);
             std::uint32_t src_index =
                 internal::insert_zero_at_mask_positions(c, outer_mask) | basis;
@@ -48,6 +49,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
 template <Precision Prec, ExecutionSpace Space>
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
+                        std::uint64_t control_value_mask,
                         const SparseMatrix<Prec, Space>& mat,
                         StateVectorBatched<Prec, Space>& states) {
     auto values = mat._values;
@@ -60,7 +62,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
             {0, 0}, {states.batch_size(), states.dim()}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
-            if ((i | control_mask) == i) {
+            if ((i & control_mask) == control_value_mask) {
                 update(batch_id, i) = 0;
             } else {
                 update(batch_id, i) = states._raw(batch_id, i);
@@ -83,7 +85,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t outer, std::uint64_t inner) {
             std::uint64_t basis =
                 internal::insert_zero_at_mask_positions(outer, target_mask | control_mask) |
-                control_mask;
+                control_value_mask;
             auto [v, r, c] = values(inner);
             uint32_t src_index = internal::insert_zero_at_mask_positions(c, outer_mask) | basis;
             uint32_t dst_index = internal::insert_zero_at_mask_positions(r, outer_mask) | basis;
@@ -96,6 +98,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
 #define FUNC_MACRO(Prec, Space)                                        \
     template void sparse_matrix_gate(std::uint64_t,                    \
                                      std::uint64_t,                    \
+                                     std::uint64_t,                    \
                                      const SparseMatrix<Prec, Space>&, \
                                      StateVector<Prec, Space>&);
 SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
@@ -103,6 +106,7 @@ SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
 
 #define FUNC_MACRO(Prec, Space)                                        \
     template void sparse_matrix_gate(std::uint64_t,                    \
+                                     std::uint64_t,                    \
                                      std::uint64_t,                    \
                                      const SparseMatrix<Prec, Space>&, \
                                      StateVectorBatched<Prec, Space>&);

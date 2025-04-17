@@ -7,7 +7,7 @@ namespace scaluq::internal {
 template <Precision Prec, ExecutionSpace Space>
 ProbablisticGateImpl<Prec, Space>::ProbablisticGateImpl(
     const std::vector<double>& distribution, const std::vector<Gate<Prec, Space>>& gate_list)
-    : GateBase<Prec, Space>(0, 0), _distribution(distribution), _gate_list(gate_list) {
+    : GateBase<Prec, Space>(0, 0, 0), _distribution(distribution), _gate_list(gate_list) {
     std::uint64_t n = distribution.size();
     if (n == 0) {
         throw std::runtime_error("At least one gate is required.");

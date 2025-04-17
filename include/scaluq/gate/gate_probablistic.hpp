@@ -28,6 +28,11 @@ public:
             "ProbablisticGateImpl::control_qubit_list(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
+    std::vector<std::uint64_t> control_value_list() const override {
+        throw std::runtime_error(
+            "ProbablisticGateImpl::control_value_list(): This function must not be used in "
+            "ProbablisticGateImpl.");
+    }
     std::vector<std::uint64_t> operand_qubit_list() const override {
         throw std::runtime_error(
             "ProbablisticGateImpl::operand_qubit_list(): This function must not be used in "
@@ -41,6 +46,11 @@ public:
     std::uint64_t control_qubit_mask() const override {
         throw std::runtime_error(
             "ProbablisticGateImpl::control_qubit_mask(): This function must not be used in "
+            "ProbablisticGateImpl.");
+    }
+    std::uint64_t control_value_mask() const override {
+        throw std::runtime_error(
+            "ProbablisticGateImpl::control_value_mask(): This function must not be used in "
             "ProbablisticGateImpl.");
     }
     std::uint64_t operand_qubit_mask() const override {
@@ -74,39 +84,33 @@ using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl<Prec, 
 
 namespace internal {
 
-#define DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec, Space)             \
+#define DECLARE_GET_FROM_JSON(Prec, Space)                                                         \
     template <>                                                                                    \
     inline std::shared_ptr<const ProbablisticGateImpl<Prec, Space>> get_from_json(const Json& j) { \
-        auto distribution = j.at("distribution").get<std::vector<double>>();                       \
-        auto gate_list = j.at("gate_list").get<std::vector<Gate<Prec, Space>>>();                  \
-        return std::make_shared<const ProbablisticGateImpl<Prec, Space>>(distribution, gate_list); \
+        return std::make_shared<const ProbablisticGateImpl<Prec, Space>>(                          \
+            j.at("distribution").get<std::vector<double>>(),                                       \
+            j.at("gate_list").get<std::vector<Gate<Prec, Space>>>());                              \
     }
 
+#define INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Prec)       \
+    DECLARE_GET_FROM_JSON(Prec, ExecutionSpace::Default) \
+    DECLARE_GET_FROM_JSON(Prec, ExecutionSpace::Host)
+
+#ifdef SCALUQ_BFLOAT16
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::BF16)
+#endif
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                  ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                  ExecutionSpace::Default)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F16)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                  ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                  ExecutionSpace::Default)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F32)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                  ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                  ExecutionSpace::Default)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F64)
 #endif
-#ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                  ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                  ExecutionSpace::Default)
-#endif
-#undef DECLARE_GET_FROM_JSON_PROBGATE_WITH_PRECISION_AND_EXECUTION_SPACE
+
+#undef DECLARE_GET_FROM_JSON
+#undef INSTANTIATE_GET_FROM_JSON_EACH_SPACE
 
 }  // namespace internal
 

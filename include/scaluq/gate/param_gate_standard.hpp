@@ -14,7 +14,7 @@ public:
 
     std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override {
         return std::make_shared<const ParamRXGateImpl<Prec, Space>>(
-            this->_target_mask, this->_control_mask, -this->_pcoef);
+            this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_pcoef);
     }
     ComplexMatrix get_matrix(double param) const override;
 
@@ -28,6 +28,7 @@ public:
         j = Json{{"type", "ParamRX"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
                  {"param_coef", this->param_coef()}};
     }
 };
@@ -39,7 +40,7 @@ public:
 
     std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override {
         return std::make_shared<const ParamRYGateImpl<Prec, Space>>(
-            this->_target_mask, this->_control_mask, -this->_pcoef);
+            this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_pcoef);
     }
     ComplexMatrix get_matrix(double param) const override;
 
@@ -53,6 +54,7 @@ public:
         j = Json{{"type", "ParamRY"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
                  {"param_coef", this->param_coef()}};
     }
 };
@@ -64,7 +66,7 @@ public:
 
     std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override {
         return std::make_shared<const ParamRZGateImpl<Prec, Space>>(
-            this->_target_mask, this->_control_mask, -this->_pcoef);
+            this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_pcoef);
     }
     ComplexMatrix get_matrix(double param) const override;
 
@@ -78,6 +80,7 @@ public:
         j = Json{{"type", "ParamRZ"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
                  {"param_coef", this->param_coef()}};
     }
 };
@@ -93,51 +96,43 @@ using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl<Prec, Space
 
 namespace internal {
 
-#define DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Impl, Prec, Space) \
-    template <>                                                                                 \
-    inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {              \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                        \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                      \
-        auto param_coef = j.at("param_coef").get<double>();                                     \
-        return std::make_shared<const Impl<Prec, Space>>(vector_to_mask(targets),               \
-                                                         vector_to_mask(controls),              \
-                                                         static_cast<Float<Prec>>(param_coef)); \
+#define DECLARE_GET_FROM_JSON(Impl, Prec, Space)                                       \
+    template <>                                                                        \
+    inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {     \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();             \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>(); \
+        return std::make_shared<const Impl<Prec, Space>>(                              \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),          \
+            vector_to_mask(controls),                                                  \
+            vector_to_mask(control_values),                                            \
+            static_cast<Float<Prec>>(j.at("param_coef").get<double>()));               \
     }
 
-#define DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec, Space) \
-    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                      \
-        ParamRXGateImpl, Prec, Space)                                                          \
-    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                      \
-        ParamRYGateImpl, Prec, Space)                                                          \
-    DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                      \
-        ParamRZGateImpl, Prec, Space)
+#define INSTANTIATE_GET_FROM_JSON_EACH_GATE(Prec, Space) \
+    DECLARE_GET_FROM_JSON(ParamRXGateImpl, Prec, Space)  \
+    DECLARE_GET_FROM_JSON(ParamRYGateImpl, Prec, Space)  \
+    DECLARE_GET_FROM_JSON(ParamRZGateImpl, Prec, Space)
 
+#define INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Prec)                     \
+    INSTANTIATE_GET_FROM_JSON_EACH_GATE(Prec, ExecutionSpace::Default) \
+    INSTANTIATE_GET_FROM_JSON_EACH_GATE(Prec, ExecutionSpace::Host)
+
+#ifdef SCALUQ_BFLOAT16
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::BF16)
+#endif
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                          ExecutionSpace::Default)
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                          ExecutionSpace::Host)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F16)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                          ExecutionSpace::Default)
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                          ExecutionSpace::Host)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F32)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                          ExecutionSpace::Default)
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                          ExecutionSpace::Host)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F64)
 #endif
-#ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                          ExecutionSpace::Default)
-DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                          ExecutionSpace::Host)
-#endif
-#undef DECLARE_GET_FROM_JSON_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE
-#undef DECLARE_GET_FROM_JSON_EACH_PARAM_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE
+
+#undef DECLARE_GET_FROM_JSON
+#undef INSTANTIATE_GET_FROM_JSON_EACH_GATE
+#undef INSTANTIATE_GET_FROM_JSON_EACH_SPACE
 
 }  // namespace internal
 

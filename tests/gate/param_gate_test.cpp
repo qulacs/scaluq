@@ -27,8 +27,8 @@ void test_apply_parametric_single_pauli_rotation(std::uint64_t n_qubits,
         const std::uint64_t target = random.int32() % n_qubits;
         const double param = std::numbers::pi * random.uniform();
         const double param_coef = random.uniform() * 2 - 1;
-        const Gate<Prec, Space> gate = factory_fixed(target, param_coef * param, {});
-        const ParamGate<Prec, Space> pgate = factory_parametric(target, param_coef, {});
+        const Gate<Prec, Space> gate = factory_fixed(target, param_coef * param, {}, {});
+        const ParamGate<Prec, Space> pgate = factory_parametric(target, param_coef, {}, {});
         gate->update_quantum_state(state);
         pgate->update_quantum_state(state_cp, param);
         auto state_amp = state.get_amplitudes();
@@ -139,6 +139,7 @@ void test_gate(ParamGate<Prec, Space> gate_control,
                ParamGate<Prec, Space> gate_simple,
                std::uint64_t n_qubits,
                std::uint64_t control_mask,
+               std::uint64_t control_value_mask,
                double param) {
     StateVector state = StateVector<Prec, Space>::Haar_random_state(n_qubits);
     auto amplitudes = state.get_amplitudes();
@@ -146,7 +147,8 @@ void test_gate(ParamGate<Prec, Space> gate_control,
     std::vector<StdComplex> amplitudes_controlled(state_controlled.dim());
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
         amplitudes_controlled[i] =
-            amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) | control_mask];
+            amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) |
+                       control_value_mask];
     }
     state_controlled.load(amplitudes_controlled);
     gate_control->update_quantum_state(state, param);
@@ -154,9 +156,9 @@ void test_gate(ParamGate<Prec, Space> gate_control,
     amplitudes = state.get_amplitudes();
     amplitudes_controlled = state_controlled.get_amplitudes();
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
-        check_near<Prec>(
-            amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) | control_mask],
-            amplitudes_controlled[i]);
+        check_near<Prec>(amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) |
+                                    control_value_mask],
+                         amplitudes_controlled[i]);
     }
 }
 
@@ -165,25 +167,29 @@ void test_param_rotation_control(Factory factory, std::uint64_t n) {
     Random random;
     std::vector<std::uint64_t> shuffled = random.permutation(n);
     std::uint64_t target = shuffled[0];
-    std::uint64_t num_control = random.int32() % n;
-    std::vector<std::uint64_t> controls(num_control);
+    std::uint64_t num_control = random.int32() % (n);
+    std::vector<std::uint64_t> controls(num_control), control_values(num_control);
     for (std::uint64_t i : std::views::iota(0ULL, num_control)) {
         controls[i] = shuffled[1 + i];
+        control_values[i] = random.int32() & 1;
     }
-    std::uint64_t control_mask = 0ULL;
-    for (std::uint64_t c : controls) control_mask |= 1ULL << c;
+    std::uint64_t control_mask = 0ULL, control_value_mask = 0ULL;
+    for (std::uint64_t i = 0; i < num_control; ++i) {
+        control_mask |= 1ULL << controls[i];
+        control_value_mask |= control_values[i] << controls[i];
+    }
     double param = random.uniform() * std::numbers::pi * 2;
-    ParamGate<Prec, Space> g1 = factory(target, 1., controls);
+    ParamGate<Prec, Space> g1 = factory(target, 1., controls, control_values);
     ParamGate<Prec, Space> g2 =
-        factory(target - std::popcount(control_mask & ((1ULL << target) - 1)), 1., {});
-    test_gate(g1, g2, n, control_mask, param);
+        factory(target - std::popcount(control_mask & ((1ULL << target) - 1)), 1., {}, {});
+    test_gate(g1, g2, n, control_mask, control_value_mask, param);
 }
 
 template <Precision Prec, ExecutionSpace Space>
 void test_ppauli_control(std::uint64_t n) {
     typename PauliOperator<Prec, Space>::Data data1, data2;
-    std::vector<std::uint64_t> controls;
-    std::uint64_t control_mask = 0;
+    std::vector<std::uint64_t> controls, control_values;
+    std::uint64_t control_mask = 0, control_value_mask = 0;
     std::uint64_t num_control = 0;
     Random random;
     for (std::uint64_t i : std::views::iota(0ULL, n)) {
@@ -194,13 +200,17 @@ void test_ppauli_control(std::uint64_t n) {
         } else if (dat < 8) {
             controls.push_back(i);
             control_mask |= 1ULL << i;
+            bool v = random.int64() & 1;
+            control_values.push_back(v);
+            control_value_mask |= v << i;
             num_control++;
         }
     }
     double param = random.uniform() * std::numbers::pi * 2;
-    ParamGate g1 = gate::ParamPauliRotation(PauliOperator<Prec, Space>(data1), 1., controls);
-    ParamGate g2 = gate::ParamPauliRotation(PauliOperator<Prec, Space>(data2), 1., {});
-    test_gate(g1, g2, n, control_mask, param);
+    ParamGate g1 =
+        gate::ParamPauliRotation(PauliOperator<Prec, Space>(data1), 1., controls, control_values);
+    ParamGate g2 = gate::ParamPauliRotation(PauliOperator<Prec, Space>(data2), 1., {}, {});
+    test_gate(g1, g2, n, control_mask, control_value_mask, param);
 }
 
 TYPED_TEST(ParamGateTest, Control) {

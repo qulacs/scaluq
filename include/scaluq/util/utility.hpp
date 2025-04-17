@@ -42,10 +42,11 @@ KOKKOS_INLINE_FUNCTION std::uint64_t insert_zero_at_mask_positions(std::uint64_t
     return basis_index;
 }
 
+// Converts a vector of indices to a bitmask.
 template <bool enable_validate = true>
-inline std::uint64_t vector_to_mask(const std::vector<std::uint64_t>& v) {
+inline std::uint64_t vector_to_mask(const std::vector<std::uint64_t>& indices) {
     std::uint64_t mask = 0;
-    for (auto x : v) {
+    for (auto x : indices) {
         if constexpr (enable_validate) {
             if (x >= sizeof(std::uint64_t) * 8) [[unlikely]] {
                 throw std::runtime_error("The size of the qubit system must be less than 64.");
@@ -59,12 +60,47 @@ inline std::uint64_t vector_to_mask(const std::vector<std::uint64_t>& v) {
     return mask;
 }
 
+// Converts a vector of indices and values to a bitmask.
+inline std::uint64_t vector_to_mask(const std::vector<std::uint64_t>& indices,
+                                    const std::vector<std::uint64_t>& values) {
+    std::uint64_t mask = 0;
+    for (std::size_t i = 0; i < indices.size(); ++i) {
+        if (values[i] == 1) {
+            mask |= 1ULL << indices[i];
+        } else if (values[i] != 0) {  // 必ず 0 または 1
+            throw std::runtime_error("Invalid value in vector_to_mask: " +
+                                     std::to_string(values[i]));
+        }
+    }
+    return mask;
+}
+
+// 1 が立っているビットの位置を vector に格納する
 inline std::vector<std::uint64_t> mask_to_vector(std::uint64_t mask) {
     std::vector<std::uint64_t> indices;
     for (std::uint64_t sub_mask = mask; sub_mask; sub_mask &= (sub_mask - 1)) {
         indices.push_back(std::countr_zero(sub_mask));
     }
     return indices;
+}
+
+// mask のビットうち，indices_mask が 1 であるビット位置のビットを vector に格納する
+inline std::vector<std::uint64_t> mask_to_vector(std::uint64_t indices_mask, std::uint64_t mask) {
+    std::vector<std::uint64_t> values;
+    for (std::uint64_t sub_mask = indices_mask; sub_mask; sub_mask &= (sub_mask - 1)) {
+        values.push_back((mask >> std::countr_zero(sub_mask)) & 1);
+    }
+    return values;
+}
+
+inline void resize_and_check_control_values(const std::vector<std::uint64_t>& controls,
+                                            std::vector<std::uint64_t>& control_values) {
+    if (control_values.empty()) {
+        control_values.assign(controls.size(), 1);
+    }
+    if (controls.size() != control_values.size()) {
+        throw std::runtime_error("The size of controls and control_values must be the same.");
+    }
 }
 
 template <Precision Prec>
@@ -86,49 +122,11 @@ inline ComplexMatrix kronecker_product(const ComplexMatrix& lhs, const ComplexMa
     return result;
 }
 
-inline ComplexMatrix get_expanded_matrix(const ComplexMatrix& from_matrix,
-                                         const std::vector<std::uint64_t>& from_targets,
-                                         std::uint64_t from_control_mask,
-                                         std::vector<std::uint64_t>& to_operands) {
-    std::vector<std::uint64_t> targets_map(from_targets.size());
-    std::ranges::transform(from_targets, targets_map.begin(), [&](std::uint64_t x) {
-        return std::ranges::lower_bound(to_operands, x) - to_operands.begin();
-    });
-    std::vector<std::uint64_t> idx_map(1ULL << from_targets.size());
-    for (std::uint64_t i : std::views::iota(0ULL, 1ULL << from_targets.size())) {
-        for (std::uint64_t j : std::views::iota(0ULL, from_targets.size())) {
-            idx_map[i] |= (i >> j & 1) << targets_map[j];
-        }
-    }
-    std::uint64_t to_control_mask = 0;
-    for (std::uint64_t sub_mask = from_control_mask; sub_mask; sub_mask &= (sub_mask - 1)) {
-        to_control_mask |=
-            1ULL << (std::ranges::lower_bound(to_operands, std::countr_zero(sub_mask)) -
-                     to_operands.begin());
-    }
-
-    std::uint64_t targets_idx_mask = idx_map.back();
-    std::vector<std::uint64_t> outer_indices;
-    outer_indices.reserve(
-        1ULL << (to_operands.size() - from_targets.size() - std::popcount(from_control_mask)));
-    for (std::uint64_t i : std::views::iota(0ULL, 1ULL << to_operands.size())) {
-        if ((i & (targets_idx_mask | to_control_mask)) == 0) outer_indices.push_back(i);
-    }
-    ComplexMatrix to_matrix =
-        ComplexMatrix::Zero(1ULL << to_operands.size(), 1ULL << to_operands.size());
-    for (std::uint64_t i : std::views::iota(0ULL, 1ULL << from_targets.size())) {
-        for (std::uint64_t j : std::views::iota(0ULL, 1ULL << from_targets.size())) {
-            for (std::uint64_t o : outer_indices) {
-                to_matrix(idx_map[i] | to_control_mask | o, idx_map[j] | to_control_mask | o) =
-                    from_matrix(i, j);
-            }
-        }
-    }
-    for (std::uint64_t i : std::views::iota(0ULL, 1ULL << to_operands.size())) {
-        if ((i & to_control_mask) != to_control_mask) to_matrix(i, i) = 1;
-    }
-    return to_matrix;
-}
+ComplexMatrix get_expanded_matrix(const ComplexMatrix& from_matrix,
+                                  const std::vector<std::uint64_t>& from_targets,
+                                  std::uint64_t from_control_mask,
+                                  std::uint64_t from_control_value_mask,
+                                  std::vector<std::uint64_t>& to_operands);
 
 // Host std::vector を Device Kokkos::View に変換する関数
 template <typename T, ExecutionSpace Sp>

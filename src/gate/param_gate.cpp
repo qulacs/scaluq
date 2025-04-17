@@ -42,8 +42,12 @@ std::string ParamGateBase<Prec, Space>::get_qubit_info_as_string(const std::stri
 template <Precision Prec, ExecutionSpace Space>
 ParamGateBase<Prec, Space>::ParamGateBase(std::uint64_t target_mask,
                                           std::uint64_t control_mask,
+                                          std::uint64_t control_value_mask,
                                           Float<Prec> param_coef)
-    : _target_mask(target_mask), _control_mask(control_mask), _pcoef(param_coef) {
+    : _target_mask(target_mask),
+      _control_mask(control_mask),
+      _control_value_mask(control_value_mask),
+      _pcoef(param_coef) {
     if (_target_mask & _control_mask) [[unlikely]] {
         throw std::runtime_error(
             "Error: ParamGate::ParamGate(std::uint64_t target_mask, std::uint64_t "

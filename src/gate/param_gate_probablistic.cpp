@@ -7,7 +7,7 @@ template <Precision Prec, ExecutionSpace Space>
 ParamProbablisticGateImpl<Prec, Space>::ParamProbablisticGateImpl(
     const std::vector<double>& distribution,
     const std::vector<std::variant<Gate<Prec, Space>, ParamGate<Prec, Space>>>& gate_list)
-    : ParamGateBase<Prec, Space>(0, 0), _distribution(distribution), _gate_list(gate_list) {
+    : ParamGateBase<Prec, Space>(0, 0, 0), _distribution(distribution), _gate_list(gate_list) {
     std::uint64_t n = distribution.size();
     if (n == 0) {
         throw std::runtime_error("At least one gate is required.");

@@ -39,7 +39,8 @@ void run_random_gate_apply(std::uint64_t n_qubits) {
 
 template <Precision Prec,
           ExecutionSpace Space,
-          Gate<Prec, Space> (*QuantumGateConstructor)(double, const std::vector<std::uint64_t>&)>
+          Gate<Prec, Space> (*QuantumGateConstructor)(
+              double, const std::vector<std::uint64_t>&, std::vector<std::uint64_t>)>
 void run_random_gate_apply(std::uint64_t n_qubits) {
     const int dim = 1ULL << n_qubits;
     Random random;
@@ -53,7 +54,7 @@ void run_random_gate_apply(std::uint64_t n_qubits) {
         }
 
         const double angle = std::numbers::pi * random.uniform();
-        const Gate<Prec, Space> gate = QuantumGateConstructor(angle, {});
+        const Gate<Prec, Space> gate = QuantumGateConstructor(angle, {}, {});
         gate->update_quantum_state(state);
         state_cp = state.get_amplitudes();
 
@@ -67,8 +68,8 @@ void run_random_gate_apply(std::uint64_t n_qubits) {
 
 template <Precision Prec,
           ExecutionSpace Space,
-          Gate<Prec, Space> (*QuantumGateConstructor)(std::uint64_t,
-                                                      const std::vector<std::uint64_t>&)>
+          Gate<Prec, Space> (*QuantumGateConstructor)(
+              std::uint64_t, const std::vector<std::uint64_t>&, std::vector<std::uint64_t>)>
 void run_random_gate_apply(std::uint64_t n_qubits, std::function<ComplexMatrix()> matrix_factory) {
     const auto matrix = matrix_factory();
     const int dim = 1ULL << n_qubits;
@@ -83,7 +84,7 @@ void run_random_gate_apply(std::uint64_t n_qubits, std::function<ComplexMatrix()
         }
 
         const std::uint64_t target = random.int64() % n_qubits;
-        const Gate<Prec, Space> gate = QuantumGateConstructor(target, {});
+        const Gate<Prec, Space> gate = QuantumGateConstructor(target, {}, {});
         gate->update_quantum_state(state);
         state_cp = state.get_amplitudes();
 
@@ -98,7 +99,7 @@ void run_random_gate_apply(std::uint64_t n_qubits, std::function<ComplexMatrix()
 template <Precision Prec,
           ExecutionSpace Space,
           Gate<Prec, Space> (*QuantumGateConstructor)(
-              std::uint64_t, double, const std::vector<std::uint64_t>&)>
+              std::uint64_t, double, const std::vector<std::uint64_t>&, std::vector<std::uint64_t>)>
 void run_random_gate_apply(std::uint64_t n_qubits,
                            std::function<ComplexMatrix(double)> matrix_factory) {
     const int dim = 1ULL << n_qubits;
@@ -115,7 +116,7 @@ void run_random_gate_apply(std::uint64_t n_qubits,
         const double angle = std::numbers::pi * random.uniform();
         const auto matrix = matrix_factory(angle);
         const std::uint64_t target = random.int64() % n_qubits;
-        const Gate<Prec, Space> gate = QuantumGateConstructor(target, angle, {});
+        const Gate<Prec, Space> gate = QuantumGateConstructor(target, angle, {}, {});
         gate->update_quantum_state(state);
         state_cp = state.get_amplitudes();
 
@@ -155,11 +156,11 @@ void run_random_gate_apply_IBMQ(
             const std::uint64_t target = random.int64() % n_qubits;
             Gate<Prec, Space> gate;
             if (gate_type == 0) {
-                gate = gate::U1<Prec, Space>(target, lambda, {});
+                gate = gate::U1<Prec, Space>(target, lambda, {}, {});
             } else if (gate_type == 1) {
-                gate = gate::U2<Prec, Space>(target, phi, lambda, {});
+                gate = gate::U2<Prec, Space>(target, phi, lambda, {}, {});
             } else {
-                gate = gate::U3<Prec, Space>(target, theta, phi, lambda, {});
+                gate = gate::U3<Prec, Space>(target, theta, phi, lambda, {}, {});
             }
             gate->update_quantum_state(state);
             state_cp = state.get_amplitudes();
@@ -733,14 +734,16 @@ template <Precision Prec, ExecutionSpace Space>
 void test_gate(Gate<Prec, Space> gate_control,
                Gate<Prec, Space> gate_simple,
                std::uint64_t n_qubits,
-               std::uint64_t control_mask) {
+               std::uint64_t control_mask,
+               std::uint64_t control_value_mask) {
     StateVector<Prec, Space> state = StateVector<Prec, Space>::Haar_random_state(n_qubits);
     auto amplitudes = state.get_amplitudes();
     StateVector<Prec, Space> state_controlled(n_qubits - std::popcount(control_mask));
     std::vector<StdComplex> amplitudes_controlled(state_controlled.dim());
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
         amplitudes_controlled[i] =
-            amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) | control_mask];
+            amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) |
+                       control_value_mask];
     }
     state_controlled.load(amplitudes_controlled);
     gate_control->update_quantum_state(state);
@@ -748,9 +751,9 @@ void test_gate(Gate<Prec, Space> gate_control,
     amplitudes = state.get_amplitudes();
     amplitudes_controlled = state_controlled.get_amplitudes();
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
-        check_near<Prec>(
-            amplitudes_controlled[i],
-            amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) | control_mask]);
+        check_near<Prec>(amplitudes_controlled[i],
+                         amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) |
+                                    control_value_mask]);
     }
 }
 
@@ -767,52 +770,63 @@ void test_standard_gate_control(Factory factory, std::uint64_t n) {
         targets[i] = shuffled[i];
     }
     std::uint64_t num_control = random.int32() % (n - num_target + 1);
-    std::vector<std::uint64_t> controls(num_control);
+    std::vector<std::uint64_t> controls(num_control), control_values(num_control);
     for (std::uint64_t i : std::views::iota(0ULL, num_control)) {
         controls[i] = shuffled[num_target + i];
+        control_values[i] = random.int32() & 1;
     }
-    std::uint64_t control_mask = 0ULL;
-    for (std::uint64_t c : controls) control_mask |= 1ULL << c;
+    std::uint64_t control_mask = 0ULL, control_value_mask = 0ULL;
+    for (std::uint64_t i = 0; i < num_control; ++i) {
+        control_mask |= 1ULL << controls[i];
+        control_value_mask |= control_values[i] << controls[i];
+    }
     std::vector<double> angles(num_rotation);
     for (double& angle : angles) angle = random.uniform() * std::numbers::pi * 2;
     if constexpr (num_target == 0 && num_rotation == 1) {
-        Gate<Prec, Space> g1 = factory(angles[0], controls);
-        Gate<Prec, Space> g2 = factory(angles[0], {});
-        test_gate(g1, g2, n, control_mask);
+        Gate<Prec, Space> g1 = factory(angles[0], controls, control_values);
+        Gate<Prec, Space> g2 = factory(angles[0], {}, {});
+        test_gate(g1, g2, n, control_mask, control_value_mask);
     } else if constexpr (num_target == 1 && num_rotation == 0) {
-        Gate<Prec, Space> g1 = factory(targets[0], controls);
+        Gate<Prec, Space> g1 = factory(targets[0], controls, control_values);
         Gate<Prec, Space> g2 =
-            factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)), {});
-        test_gate(g1, g2, n, control_mask);
+            factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)), {}, {});
+        test_gate(g1, g2, n, control_mask, control_value_mask);
     } else if constexpr (num_target == 1 && num_rotation == 1) {
-        Gate<Prec, Space> g1 = factory(targets[0], angles[0], controls);
-        Gate<Prec, Space> g2 = factory(
-            targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)), angles[0], {});
-        test_gate(g1, g2, n, control_mask);
+        Gate<Prec, Space> g1 = factory(targets[0], angles[0], controls, control_values);
+        Gate<Prec, Space> g2 =
+            factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
+                    angles[0],
+                    {},
+                    {});
+        test_gate(g1, g2, n, control_mask, control_value_mask);
     } else if constexpr (num_target == 1 && num_rotation == 2) {
-        Gate<Prec, Space> g1 = factory(targets[0], angles[0], angles[1], controls);
+        Gate<Prec, Space> g1 = factory(targets[0], angles[0], angles[1], controls, control_values);
         Gate<Prec, Space> g2 =
             factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
                     angles[0],
                     angles[1],
+                    {},
                     {});
-        test_gate(g1, g2, n, control_mask);
+        test_gate(g1, g2, n, control_mask, control_value_mask);
     } else if constexpr (num_target == 1 && num_rotation == 3) {
-        Gate<Prec, Space> g1 = factory(targets[0], angles[0], angles[1], angles[2], controls);
+        Gate<Prec, Space> g1 =
+            factory(targets[0], angles[0], angles[1], angles[2], controls, control_values);
         Gate<Prec, Space> g2 =
             factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
                     angles[0],
                     angles[1],
                     angles[2],
+                    {},
                     {});
-        test_gate(g1, g2, n, control_mask);
+        test_gate(g1, g2, n, control_mask, control_value_mask);
     } else if constexpr (num_target == 2 && num_rotation == 0) {
-        Gate<Prec, Space> g1 = factory(targets[0], targets[1], controls);
+        Gate<Prec, Space> g1 = factory(targets[0], targets[1], controls, control_values);
         Gate<Prec, Space> g2 =
             factory(targets[0] - std::popcount(control_mask & ((1ULL << targets[0]) - 1)),
                     targets[1] - std::popcount(control_mask & ((1ULL << targets[1]) - 1)),
+                    {},
                     {});
-        test_gate(g1, g2, n, control_mask);
+        test_gate(g1, g2, n, control_mask, control_value_mask);
     } else {
         FAIL();
     }
@@ -821,8 +835,8 @@ void test_standard_gate_control(Factory factory, std::uint64_t n) {
 template <Precision Prec, ExecutionSpace Space, bool rotation>
 void test_pauli_control(std::uint64_t n) {
     typename PauliOperator<Prec, Space>::Data data1, data2;
-    std::vector<std::uint64_t> controls;
-    std::uint64_t control_mask = 0;
+    std::vector<std::uint64_t> controls, control_values;
+    std::uint64_t control_mask = 0, control_value_mask = 0;
     std::uint64_t num_control = 0;
     Random random;
     for (std::uint64_t i : std::views::iota(0ULL, n)) {
@@ -833,19 +847,23 @@ void test_pauli_control(std::uint64_t n) {
         } else if (dat < 8) {
             controls.push_back(i);
             control_mask |= 1ULL << i;
+            bool v = random.int64() & 1;
+            control_values.push_back(v);
+            control_value_mask |= v << i;
             num_control++;
         }
     }
     if constexpr (!rotation) {
-        Gate<Prec, Space> g1 = gate::Pauli(PauliOperator<Prec, Space>(data1), controls);
+        Gate<Prec, Space> g1 =
+            gate::Pauli(PauliOperator<Prec, Space>(data1), controls, control_values);
         Gate<Prec, Space> g2 = gate::Pauli(PauliOperator<Prec, Space>(data2), {});
-        test_gate(g1, g2, n, control_mask);
+        test_gate(g1, g2, n, control_mask, control_value_mask);
     } else {
         double angle = random.uniform() * std::numbers::pi * 2;
         Gate<Prec, Space> g1 =
-            gate::PauliRotation(PauliOperator<Prec, Space>(data1), angle, controls);
+            gate::PauliRotation(PauliOperator<Prec, Space>(data1), angle, controls, control_values);
         Gate<Prec, Space> g2 = gate::PauliRotation(PauliOperator<Prec, Space>(data2), angle, {});
-        test_gate(g1, g2, n, control_mask);
+        test_gate(g1, g2, n, control_mask, control_value_mask);
     }
 }
 
@@ -858,12 +876,16 @@ void test_matrix_control(std::uint64_t n_qubits) {
         targets[i] = shuffled[i];
     }
     std::uint64_t num_control = random.int32() % (n_qubits - num_target + 1);
-    std::vector<std::uint64_t> controls(num_control);
+    std::vector<std::uint64_t> controls(num_control), control_values(num_control);
     for (std::uint64_t i : std::views::iota(0ULL, num_control)) {
         controls[i] = shuffled[num_target + i];
+        control_values[i] = random.int32() & 1;
     }
-    std::uint64_t control_mask = 0ULL;
-    for (std::uint64_t c : controls) control_mask |= 1ULL << c;
+    std::uint64_t control_mask = 0ULL, control_value_mask = 0ULL;
+    for (std::uint64_t i = 0; i < num_control; ++i) {
+        control_mask |= 1ULL << controls[i];
+        control_value_mask |= control_values[i] << controls[i];
+    }
     auto adjust = [](std::vector<std::uint64_t> targets, std::uint64_t control_mask) {
         std::vector<std::uint64_t> new_targets;
         for (auto i : targets) {
@@ -879,12 +901,14 @@ void test_matrix_control(std::uint64_t n_qubits) {
         auto norm = std::sqrt(std::norm(val));
         ComplexMatrix mat(1, 1);
         mat(0, 0) = val / norm;
-        Gate<Prec, Space> d1 = gate::DenseMatrix<Prec, Space>(targets, mat, controls);
+        Gate<Prec, Space> d1 =
+            gate::DenseMatrix<Prec, Space>(targets, mat, controls, control_values);
         Gate<Prec, Space> d2 = gate::DenseMatrix<Prec, Space>(new_targets, mat, {});
-        Gate<Prec, Space> s1 = gate::SparseMatrix<Prec, Space>(targets, mat.sparseView(), controls);
+        Gate<Prec, Space> s1 =
+            gate::SparseMatrix<Prec, Space>(targets, mat.sparseView(), controls, control_values);
         Gate<Prec, Space> s2 = gate::SparseMatrix<Prec, Space>(new_targets, mat.sparseView(), {});
-        test_gate<Prec, Space>(d1, d2, n_qubits, control_mask);
-        test_gate<Prec, Space>(s1, s2, n_qubits, control_mask);
+        test_gate<Prec, Space>(d1, d2, n_qubits, control_mask, control_value_mask);
+        test_gate<Prec, Space>(s1, s2, n_qubits, control_mask, control_value_mask);
     } else if constexpr (num_target == 1) {
         Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> U =
             get_eigen_matrix_random_one_target_unitary();
@@ -894,12 +918,14 @@ void test_matrix_control(std::uint64_t n_qubits) {
                 mat(i, j) = U(i, j);
             }
         }
-        Gate<Prec, Space> d1 = gate::DenseMatrix<Prec, Space>(targets, mat, controls);
+        Gate<Prec, Space> d1 =
+            gate::DenseMatrix<Prec, Space>(targets, mat, controls, control_values);
         Gate<Prec, Space> d2 = gate::DenseMatrix<Prec, Space>(new_targets, mat, {});
-        Gate<Prec, Space> s1 = gate::SparseMatrix<Prec, Space>(targets, mat.sparseView(), controls);
+        Gate<Prec, Space> s1 =
+            gate::SparseMatrix<Prec, Space>(targets, mat.sparseView(), controls, control_values);
         Gate<Prec, Space> s2 = gate::SparseMatrix<Prec, Space>(new_targets, mat.sparseView(), {});
-        test_gate(d1, d2, n_qubits, control_mask);
-        test_gate(s1, s2, n_qubits, control_mask);
+        test_gate(d1, d2, n_qubits, control_mask, control_value_mask);
+        test_gate(s1, s2, n_qubits, control_mask, control_value_mask);
     } else if constexpr (num_target == 2) {
         Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> U1 =
             get_eigen_matrix_random_one_target_unitary();
@@ -912,12 +938,14 @@ void test_matrix_control(std::uint64_t n_qubits) {
                 mat(i, j) = U(i, j);
             }
         }
-        Gate<Prec, Space> d1 = gate::DenseMatrix<Prec, Space>(targets, mat, controls);
+        Gate<Prec, Space> d1 =
+            gate::DenseMatrix<Prec, Space>(targets, mat, controls, control_values);
         Gate<Prec, Space> d2 = gate::DenseMatrix<Prec, Space>(new_targets, mat, {});
-        Gate<Prec, Space> s1 = gate::SparseMatrix<Prec, Space>(targets, mat.sparseView(), controls);
+        Gate<Prec, Space> s1 =
+            gate::SparseMatrix<Prec, Space>(targets, mat.sparseView(), controls, control_values);
         Gate<Prec, Space> s2 = gate::SparseMatrix<Prec, Space>(new_targets, mat.sparseView(), {});
-        test_gate<Prec, Space>(d1, d2, n_qubits, control_mask);
-        test_gate<Prec, Space>(s1, s2, n_qubits, control_mask);
+        test_gate<Prec, Space>(d1, d2, n_qubits, control_mask, control_value_mask);
+        test_gate<Prec, Space>(s1, s2, n_qubits, control_mask, control_value_mask);
     } else {
         Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> U1 =
             get_eigen_matrix_random_one_target_unitary();
@@ -932,12 +960,14 @@ void test_matrix_control(std::uint64_t n_qubits) {
                 mat(i, j) = U(i, j);
             }
         }
-        Gate<Prec, Space> d1 = gate::DenseMatrix<Prec, Space>(targets, mat, controls);
+        Gate<Prec, Space> d1 =
+            gate::DenseMatrix<Prec, Space>(targets, mat, controls, control_values);
         Gate<Prec, Space> d2 = gate::DenseMatrix<Prec, Space>(new_targets, mat, {});
-        Gate<Prec, Space> s1 = gate::SparseMatrix<Prec, Space>(targets, mat.sparseView(), controls);
+        Gate<Prec, Space> s1 =
+            gate::SparseMatrix<Prec, Space>(targets, mat.sparseView(), controls, control_values);
         Gate<Prec, Space> s2 = gate::SparseMatrix<Prec, Space>(new_targets, mat.sparseView(), {});
-        test_gate<Prec, Space>(d1, d2, n_qubits, control_mask);
-        test_gate<Prec, Space>(s1, s2, n_qubits, control_mask);
+        test_gate<Prec, Space>(d1, d2, n_qubits, control_mask, control_value_mask);
+        test_gate<Prec, Space>(s1, s2, n_qubits, control_mask, control_value_mask);
     }
 }
 

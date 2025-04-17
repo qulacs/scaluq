@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../util/utility.hpp"
 #include "param_gate_pauli.hpp"
 #include "param_gate_probablistic.hpp"
 #include "param_gate_standard.hpp"
@@ -18,37 +19,51 @@ namespace gate {
 template <Precision Prec, ExecutionSpace Space>
 inline ParamGate<Prec, Space> ParamRX(std::uint64_t target,
                                       double param_coef = 1.,
-                                      const std::vector<std::uint64_t>& controls = {}) {
+                                      const std::vector<std::uint64_t>& controls = {},
+                                      std::vector<std::uint64_t> control_values = {}) {
+    internal::resize_and_check_control_values(controls, control_values);
     return internal::ParamGateFactory::create_gate<internal::ParamRXGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(controls),
+        internal::vector_to_mask(controls, control_values),
         static_cast<internal::Float<Prec>>(param_coef));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline ParamGate<Prec, Space> ParamRY(std::uint64_t target,
                                       double param_coef = 1.,
-                                      const std::vector<std::uint64_t>& controls = {}) {
+                                      const std::vector<std::uint64_t>& controls = {},
+                                      std::vector<std::uint64_t> control_values = {}) {
+    internal::resize_and_check_control_values(controls, control_values);
     return internal::ParamGateFactory::create_gate<internal::ParamRYGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(controls),
+        internal::vector_to_mask(controls, control_values),
         static_cast<internal::Float<Prec>>(param_coef));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline ParamGate<Prec, Space> ParamRZ(std::uint64_t target,
                                       double param_coef = 1.,
-                                      const std::vector<std::uint64_t>& controls = {}) {
+                                      const std::vector<std::uint64_t>& controls = {},
+                                      std::vector<std::uint64_t> control_values = {}) {
+    internal::resize_and_check_control_values(controls, control_values);
     return internal::ParamGateFactory::create_gate<internal::ParamRZGateImpl<Prec, Space>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(controls),
+        internal::vector_to_mask(controls, control_values),
         static_cast<internal::Float<Prec>>(param_coef));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline ParamGate<Prec, Space> ParamPauliRotation(const PauliOperator<Prec, Space>& pauli,
                                                  double param_coef = 1.,
-                                                 const std::vector<std::uint64_t>& controls = {}) {
+                                                 const std::vector<std::uint64_t>& controls = {},
+                                                 std::vector<std::uint64_t> control_values = {}) {
+    internal::resize_and_check_control_values(controls, control_values);
     return internal::ParamGateFactory::create_gate<
         internal::ParamPauliRotationGateImpl<Prec, Space>>(
-        internal::vector_to_mask(controls), pauli, static_cast<internal::Float<Prec>>(param_coef));
+        internal::vector_to_mask(controls),
+        internal::vector_to_mask(controls, control_values),
+        pauli,
+        static_cast<internal::Float<Prec>>(param_coef));
 }
 template <Precision Prec, ExecutionSpace Space>
 inline ParamGate<Prec, Space> ParamProbablistic(
@@ -69,6 +84,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
         "target"_a,
         "coef"_a = 1.,
         "controls"_a = std::vector<std::uint64_t>{},
+        "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
             .desc("Generate general :class:`~scaluq.f64.ParamGate` class instance of "
                   ":class:`~scaluq.f64.ParamRXGate`.")
@@ -77,6 +93,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
             .arg("target", "int", "Target qubit index")
             .arg("coef", "float", true, "Parameter coefficient")
             .arg("controls", "list[int]", true, "Control qubit indices")
+            .arg("control_values", "list[int]", true, "Control qubit values")
             .ret("ParamGate", "ParamRX gate instance")
             .ex(DocString::Code({">>> gate = ParamRX(0)  # ParamRX gate on qubit 0",
                                  ">>> gate = ParamRX(1, [0])  # Controlled-ParamRX"}))
@@ -88,6 +105,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
         "target"_a,
         "coef"_a = 1.,
         "controls"_a = std::vector<std::uint64_t>{},
+        "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
             .desc("Generate general :class:`~scaluq.f64.ParamGate` class instance of "
                   ":class:`~scaluq.f64.ParamRYGate`.")
@@ -96,6 +114,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
             .arg("target", "int", "Target qubit index")
             .arg("coef", "float", true, "Parameter coefficient")
             .arg("controls", "list[int]", true, "Control qubit indices")
+            .arg("control_values", "list[int]", true, "Control qubit values")
             .ret("ParamGate", "ParamRY gate instance")
             .ex(DocString::Code({">>> gate = ParamRY(0)  # ParamRY gate on qubit 0",
                                  ">>> gate = ParamRY(1, [0])  # Controlled-ParamRY"}))
@@ -106,6 +125,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
               "target"_a,
               "coef"_a = 1.,
               "controls"_a = std::vector<std::uint64_t>{},
+              "control_values"_a = std::vector<std::uint64_t>{},
               DocString()
                   .desc("Generate general :class:`~scaluq.f64.ParamGate` class instance of "
                         ":class:`~scaluq.f64.ParamRZGate`.")
@@ -115,6 +135,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
                   .arg("target", "int", "Target qubit index")
                   .arg("coef", "float", true, "Parameter coefficient")
                   .arg("controls", "list[int]", true, "Control qubit indices")
+                  .arg("control_values", "list[int]", true, "Control qubit values")
                   .ret("ParamGate", "ParamRZ gate instance")
                   .ex(DocString::Code({">>> gate = ParamRZ(0)  # ParamRZ gate on qubit 0",
                                        ">>> gate = ParamRZ(1, [0])  # Controlled-ParamRZ"}))
@@ -126,6 +147,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
         "pauli"_a,
         "coef"_a = 1.,
         "controls"_a = std::vector<std::uint64_t>{},
+        "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
             .desc("Generate general :class:`~scaluq.f64.ParamGate` class instance of "
                   ":class:`~scaluq.f64.ParamPauliRotationGate`.")
@@ -135,6 +157,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
             .arg("pauli", "PauliOperator", "Pauli operator")
             .arg("coef", "float", true, "Parameter coefficient")
             .arg("controls", "list[int]", true, "Control qubit indices")
+            .arg("control_values", "list[int]", true, "Control qubit values")
             .ret("ParamGate", "ParamPauliRotation gate instance")
             .ex(DocString::Code({">>> gate = ParamPauliRotation(PauliOperator(), 0.5)  # Pauli "
                                  "rotation gate with PauliOperator and coefficient 0.5",
