@@ -1,10 +1,10 @@
 #include <scaluq/types.hpp>
 
-#include "util/template.hpp"
+#include "prec_space.hpp"
 
 namespace scaluq {
 namespace internal {
-template <Precision Prec, ExecutionSpace Space>
+template <>
 SparseMatrix<Prec, Space>::SparseMatrix(const SparseComplexMatrix& sp) {
     _row = sp.rows();
     _col = sp.cols();
@@ -24,6 +24,5 @@ SparseMatrix<Prec, Space>::SparseMatrix(const SparseComplexMatrix& sp) {
     }
     Kokkos::deep_copy(_values, values_h);
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SparseMatrix)
 }  // namespace internal
 }  // namespace scaluq

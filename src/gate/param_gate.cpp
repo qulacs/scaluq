@@ -1,9 +1,9 @@
 #include <scaluq/gate/param_gate.hpp>
 
-#include "../util/template.hpp"
+#include "../prec_space.hpp"
 
 namespace scaluq::internal {
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void ParamGateBase<Prec, Space>::check_qubit_mask_within_bounds(
     const StateVector<Prec, Space>& state_vector) const {
     std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
@@ -13,7 +13,7 @@ void ParamGateBase<Prec, Space>::check_qubit_mask_within_bounds(
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void ParamGateBase<Prec, Space>::check_qubit_mask_within_bounds(
     const StateVectorBatched<Prec, Space>& states) const {
     std::uint64_t full_mask = (1ULL << states.n_qubits()) - 1;
@@ -23,7 +23,7 @@ void ParamGateBase<Prec, Space>::check_qubit_mask_within_bounds(
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 std::string ParamGateBase<Prec, Space>::get_qubit_info_as_string(const std::string& indent) const {
     std::ostringstream ss;
     auto targets = target_qubit_list();
@@ -39,7 +39,7 @@ std::string ParamGateBase<Prec, Space>::get_qubit_info_as_string(const std::stri
     ss << "}";
     return ss.str();
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 ParamGateBase<Prec, Space>::ParamGateBase(std::uint64_t target_mask,
                                           std::uint64_t control_mask,
                                           std::uint64_t control_value_mask,
@@ -54,5 +54,5 @@ ParamGateBase<Prec, Space>::ParamGateBase(std::uint64_t target_mask,
             "control_mask) : Target and control qubits must not overlap.");
     }
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ParamGateBase)
+template class ParamGateBase<Prec, Space>;
 }  // namespace scaluq::internal

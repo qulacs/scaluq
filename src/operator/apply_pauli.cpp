@@ -3,10 +3,10 @@
 #include <scaluq/constant.hpp>
 
 #include "../util/math.hpp"
-#include "../util/template.hpp"
+#include "../prec_space.hpp"
 
 namespace scaluq::internal {
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t control_value_mask,
                  std::uint64_t bit_flip_mask,
@@ -49,7 +49,7 @@ void apply_pauli(std::uint64_t control_mask,
     Kokkos::fence();
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t control_value_mask,
                  std::uint64_t bit_flip_mask,
@@ -92,26 +92,8 @@ void apply_pauli(std::uint64_t control_mask,
     Kokkos::fence();
 }
 
-#define FUNC_MACRO(Prec, Space)              \
-    template void apply_pauli(std::uint64_t, \
-                              std::uint64_t, \
-                              std::uint64_t, \
-                              std::uint64_t, \
-                              Complex<Prec>, \
-                              StateVector<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-#define FUNC_MACRO(Prec, Space)              \
-    template void apply_pauli(std::uint64_t, \
-                              std::uint64_t, \
-                              std::uint64_t, \
-                              std::uint64_t, \
-                              Complex<Prec>, \
-                              StateVectorBatched<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t control_value_mask,
                           std::uint64_t bit_flip_mask,
@@ -172,7 +154,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         Kokkos::fence();
     }
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t control_value_mask,
                           std::uint64_t bit_flip_mask,
@@ -232,7 +214,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         Kokkos::fence();
     }
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t control_value_mask,
                           std::uint64_t bit_flip_mask,
@@ -295,35 +277,4 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         });
     Kokkos::fence();
 }
-#define FUNC_MACRO(Prec, Space)                       \
-    template void apply_pauli_rotation(std::uint64_t, \
-                                       std::uint64_t, \
-                                       std::uint64_t, \
-                                       std::uint64_t, \
-                                       Complex<Prec>, \
-                                       Float<Prec>,   \
-                                       StateVector<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-#define FUNC_MACRO(Prec, Space)                       \
-    template void apply_pauli_rotation(std::uint64_t, \
-                                       std::uint64_t, \
-                                       std::uint64_t, \
-                                       std::uint64_t, \
-                                       Complex<Prec>, \
-                                       Float<Prec>,   \
-                                       StateVectorBatched<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-#define FUNC_MACRO(Prec, Space)                                  \
-    template void apply_pauli_rotation(std::uint64_t,            \
-                                       std::uint64_t,            \
-                                       std::uint64_t,            \
-                                       std::uint64_t,            \
-                                       Complex<Prec>,            \
-                                       Float<Prec>,              \
-                                       std::vector<Float<Prec>>, \
-                                       StateVectorBatched<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 }  // namespace scaluq::internal

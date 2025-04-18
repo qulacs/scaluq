@@ -5,7 +5,7 @@
 #include "../util/template.hpp"
 
 namespace scaluq {
-template <Precision Prec, ExecutionSpace Space>
+template <>
 std::set<std::string> Circuit<Prec, Space>::key_set() const {
     std::set<std::string> key_set;
     for (auto&& gate : _gate_list) {
@@ -14,7 +14,7 @@ std::set<std::string> Circuit<Prec, Space>::key_set() const {
     return key_set;
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 std::uint64_t Circuit<Prec, Space>::calculate_depth() const {
     std::vector<std::uint64_t> filled_step(_n_qubits, 0ULL);
     for (const auto& gate : _gate_list) {
@@ -45,7 +45,7 @@ std::uint64_t Circuit<Prec, Space>::calculate_depth() const {
     return *std::ranges::max_element(filled_step);
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void Circuit<Prec, Space>::add_circuit(const Circuit<Prec, Space>& circuit) {
     if (circuit._n_qubits != _n_qubits) {
         throw std::runtime_error(
@@ -57,7 +57,7 @@ void Circuit<Prec, Space>::add_circuit(const Circuit<Prec, Space>& circuit) {
         _gate_list.push_back(gate);
     }
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void Circuit<Prec, Space>::add_circuit(Circuit<Prec, Space>&& circuit) {
     if (circuit._n_qubits != _n_qubits) {
         throw std::runtime_error(
@@ -70,7 +70,7 @@ void Circuit<Prec, Space>::add_circuit(Circuit<Prec, Space>&& circuit) {
     }
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void Circuit<Prec, Space>::update_quantum_state(
     StateVector<Prec, Space>& state, const std::map<std::string, double>& parameters) const {
     for (auto&& gate : _gate_list) {
@@ -93,7 +93,7 @@ void Circuit<Prec, Space>::update_quantum_state(
     }
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void Circuit<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states,
     const std::map<std::string, std::vector<double>>& parameters) const {
@@ -117,7 +117,7 @@ void Circuit<Prec, Space>::update_quantum_state(
     }
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 Circuit<Prec, Space> Circuit<Prec, Space>::copy() const {
     Circuit<Prec, Space> ccircuit(_n_qubits);
     ccircuit._gate_list.reserve(_gate_list.size());
@@ -132,7 +132,7 @@ Circuit<Prec, Space> Circuit<Prec, Space>::copy() const {
     return ccircuit;
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 Circuit<Prec, Space> Circuit<Prec, Space>::get_inverse() const {
     Circuit<Prec, Space> icircuit(_n_qubits);
     icircuit._gate_list.reserve(_gate_list.size());
@@ -147,7 +147,7 @@ Circuit<Prec, Space> Circuit<Prec, Space>::get_inverse() const {
     return icircuit;
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Space>::simulate_noise(
     const StateVector<Prec, Space>& initial_state,
     std::uint64_t sampling_count,
@@ -250,7 +250,7 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
     return result;
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void Circuit<Prec, Space>::check_gate_is_valid(const Gate<Prec, Space>& gate) const {
     if (gate.gate_type() == GateType::Probablistic) {
         for (auto g : ProbablisticGate<Prec, Space>(gate)->gate_list()) {
@@ -268,7 +268,7 @@ void Circuit<Prec, Space>::check_gate_is_valid(const Gate<Prec, Space>& gate) co
     }
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void Circuit<Prec, Space>::check_gate_is_valid(const ParamGate<Prec, Space>& gate) const {
     if (gate.param_gate_type() == ParamGateType::ParamProbablistic) {
         for (auto g : ParamProbablisticGate<Prec, Space>(gate)->gate_list()) {

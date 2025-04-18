@@ -1,8 +1,8 @@
-#include "../util/template.hpp"
+#include "../prec_space.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void none_target_dense_matrix_gate(std::uint64_t control_mask,
                                    std::uint64_t control_value_mask,
                                    const Matrix<Prec, Space>& matrix,
@@ -16,13 +16,8 @@ void none_target_dense_matrix_gate(std::uint64_t control_mask,
         });
     Kokkos::fence();
 }
-#define FUNC_MACRO(Prec, Space)                  \
-    template void none_target_dense_matrix_gate( \
-        std::uint64_t, std::uint64_t, const Matrix<Prec, Space>&, StateVector<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void none_target_dense_matrix_gate(std::uint64_t control_mask,
                                    std::uint64_t control_value_mask,
                                    const Matrix<Prec, Space>& matrix,
@@ -37,15 +32,8 @@ void none_target_dense_matrix_gate(std::uint64_t control_mask,
         });
     Kokkos::fence();
 }
-#define FUNC_MACRO(Prec, Space)                                             \
-    template void none_target_dense_matrix_gate(std::uint64_t,              \
-                                                std::uint64_t,              \
-                                                const Matrix<Prec, Space>&, \
-                                                StateVectorBatched<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   std::uint64_t control_value_mask,
@@ -67,16 +55,8 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
-#define FUNC_MACRO(Prec, Space)                                        \
-    template void one_target_dense_matrix_gate(std::uint64_t,          \
-                                               std::uint64_t,          \
-                                               std::uint64_t,          \
-                                               const Matrix2x2<Prec>&, \
-                                               StateVector<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   std::uint64_t control_value_mask,
@@ -99,16 +79,8 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
-#define FUNC_MACRO(Prec, Space)                                        \
-    template void one_target_dense_matrix_gate(std::uint64_t,          \
-                                               std::uint64_t,          \
-                                               std::uint64_t,          \
-                                               const Matrix2x2<Prec>&, \
-                                               StateVectorBatched<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void two_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   std::uint64_t control_value_mask,
@@ -144,16 +116,8 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
-#define FUNC_MACRO(Prec, Space)                                        \
-    template void two_target_dense_matrix_gate(std::uint64_t,          \
-                                               std::uint64_t,          \
-                                               std::uint64_t,          \
-                                               const Matrix4x4<Prec>&, \
-                                               StateVector<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void two_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   std::uint64_t control_value_mask,
@@ -190,16 +154,8 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
-#define FUNC_MACRO(Prec, Space)                                        \
-    template void two_target_dense_matrix_gate(std::uint64_t,          \
-                                               std::uint64_t,          \
-                                               std::uint64_t,          \
-                                               const Matrix4x4<Prec>&, \
-                                               StateVectorBatched<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void single_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
                                      std::uint64_t control_value_mask,
@@ -221,16 +177,8 @@ void single_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
-#define FUNC_MACRO(Prec, Space)                                               \
-    template void single_target_dense_matrix_gate(std::uint64_t,              \
-                                                  std::uint64_t,              \
-                                                  std::uint64_t,              \
-                                                  const Matrix<Prec, Space>&, \
-                                                  StateVector<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void single_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
                                      std::uint64_t control_value_mask,
@@ -253,16 +201,8 @@ void single_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
-#define FUNC_MACRO(Prec, Space)                                               \
-    template void single_target_dense_matrix_gate(std::uint64_t,              \
-                                                  std::uint64_t,              \
-                                                  std::uint64_t,              \
-                                                  const Matrix<Prec, Space>&, \
-                                                  StateVectorBatched<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void double_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
                                      std::uint64_t control_value_mask,
@@ -299,16 +239,8 @@ void double_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
-#define FUNC_MACRO(Prec, Space)                                               \
-    template void double_target_dense_matrix_gate(std::uint64_t,              \
-                                                  std::uint64_t,              \
-                                                  std::uint64_t,              \
-                                                  const Matrix<Prec, Space>&, \
-                                                  StateVector<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void double_target_dense_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
                                      std::uint64_t control_value_mask,
@@ -346,16 +278,8 @@ void double_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 }
-#define FUNC_MACRO(Prec, Space)                                               \
-    template void double_target_dense_matrix_gate(std::uint64_t,              \
-                                                  std::uint64_t,              \
-                                                  std::uint64_t,              \
-                                                  const Matrix<Prec, Space>&, \
-                                                  StateVectorBatched<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void multi_target_dense_matrix_gate(std::uint64_t target_mask,
                                     std::uint64_t control_mask,
                                     std::uint64_t control_value_mask,
@@ -404,16 +328,8 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
 
     state._raw = update;
 }
-#define FUNC_MACRO(Prec, Space)                                              \
-    template void multi_target_dense_matrix_gate(std::uint64_t,              \
-                                                 std::uint64_t,              \
-                                                 std::uint64_t,              \
-                                                 const Matrix<Prec, Space>&, \
-                                                 StateVector<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void multi_target_dense_matrix_gate(std::uint64_t target_mask,
                                     std::uint64_t control_mask,
                                     std::uint64_t control_value_mask,
@@ -466,16 +382,8 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
 
     states._raw = update;
 }
-#define FUNC_MACRO(Prec, Space)                                              \
-    template void multi_target_dense_matrix_gate(std::uint64_t,              \
-                                                 std::uint64_t,              \
-                                                 std::uint64_t,              \
-                                                 const Matrix<Prec, Space>&, \
-                                                 StateVectorBatched<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void dense_matrix_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
                        std::uint64_t control_value_mask,
@@ -495,16 +403,8 @@ void dense_matrix_gate(std::uint64_t target_mask,
             target_mask, control_mask, control_value_mask, matrix, state);
     }
 }
-#define FUNC_MACRO(Prec, Space)                                 \
-    template void dense_matrix_gate(std::uint64_t,              \
-                                    std::uint64_t,              \
-                                    std::uint64_t,              \
-                                    const Matrix<Prec, Space>&, \
-                                    StateVector<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void dense_matrix_gate(std::uint64_t target_mask,
                        std::uint64_t control_mask,
                        std::uint64_t control_value_mask,
@@ -524,12 +424,4 @@ void dense_matrix_gate(std::uint64_t target_mask,
             target_mask, control_mask, control_value_mask, matrix, states);
     }
 }
-#define FUNC_MACRO(Prec, Space)                                 \
-    template void dense_matrix_gate(std::uint64_t,              \
-                                    std::uint64_t,              \
-                                    std::uint64_t,              \
-                                    const Matrix<Prec, Space>&, \
-                                    StateVectorBatched<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 }  // namespace scaluq::internal

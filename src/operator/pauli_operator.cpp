@@ -1,11 +1,11 @@
 #include <scaluq/operator/pauli_operator.hpp>
 
 #include "../util/math.hpp"
-#include "../util/template.hpp"
+#include "../prec_space.hpp"
 #include "apply_pauli.hpp"
 
 namespace scaluq {
-template <Precision Prec, ExecutionSpace Space>
+template <>
 PauliOperator<Prec, Space>::Data::Data(std::string_view pauli_string, StdComplex coef)
     : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
     auto ss = std::stringstream(std::string(pauli_string));
@@ -29,7 +29,7 @@ PauliOperator<Prec, Space>::Data::Data(std::string_view pauli_string, StdComplex
     }
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 PauliOperator<Prec, Space>::Data::Data(const std::vector<std::uint64_t>& target_qubit_list,
                                        const std::vector<std::uint64_t>& pauli_id_list,
                                        StdComplex coef)
@@ -46,7 +46,7 @@ PauliOperator<Prec, Space>::Data::Data(const std::vector<std::uint64_t>& target_
     }
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 PauliOperator<Prec, Space>::Data::Data(const std::vector<std::uint64_t>& pauli_id_par_qubit,
                                        StdComplex coef)
     : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {
@@ -57,7 +57,7 @@ PauliOperator<Prec, Space>::Data::Data(const std::vector<std::uint64_t>& pauli_i
     }
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 PauliOperator<Prec, Space>::Data::Data(std::uint64_t bit_flip_mask,
                                        std::uint64_t phase_flip_mask,
                                        StdComplex coef)
@@ -79,7 +79,7 @@ PauliOperator<Prec, Space>::Data::Data(std::uint64_t bit_flip_mask,
     }
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void PauliOperator<Prec, Space>::Data::add_single_pauli(std::uint64_t target_qubit,
                                                         std::uint64_t pauli_id) {
     if (target_qubit >= sizeof(std::uint64_t) * 8) {
@@ -105,7 +105,7 @@ void PauliOperator<Prec, Space>::Data::add_single_pauli(std::uint64_t target_qub
     }
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 std::vector<typename PauliOperator<Prec, Space>::Triplet>
 PauliOperator<Prec, Space>::get_matrix_triplets_ignoring_coef() const {
     std::uint64_t flip_mask, phase_mask, rot90_count;
@@ -142,7 +142,7 @@ PauliOperator<Prec, Space>::get_matrix_triplets_ignoring_coef() const {
     return ret;
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 std::string PauliOperator<Prec, Space>::get_pauli_string() const {
     std::stringstream ss;
     std::uint64_t size = _ptr->_target_qubit_list.size();
@@ -158,19 +158,19 @@ std::string PauliOperator<Prec, Space>::get_pauli_string() const {
     return res;
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 PauliOperator<Prec, Space> PauliOperator<Prec, Space>::get_dagger() const {
     return PauliOperator(
         _ptr->_target_qubit_list, _ptr->_pauli_id_list, scaluq::internal::conj(_ptr->_coef));
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 std::uint64_t PauliOperator<Prec, Space>::get_qubit_count() const {
     if (_ptr->_target_qubit_list.empty()) return 0;
     return std::ranges::max(_ptr->_target_qubit_list) + 1;
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void PauliOperator<Prec, Space>::apply_to_state(StateVector<Prec, Space>& state_vector) const {
     if (state_vector.n_qubits() < get_qubit_count()) {
         throw std::runtime_error(
@@ -181,7 +181,7 @@ void PauliOperator<Prec, Space>::apply_to_state(StateVector<Prec, Space>& state_
         0ULL, 0LL, _ptr->_bit_flip_mask, _ptr->_phase_flip_mask, _ptr->_coef, state_vector);
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 StdComplex PauliOperator<Prec, Space>::get_expectation_value(
     const StateVector<Prec, Space>& state_vector) const {
     if (state_vector.n_qubits() < get_qubit_count()) {
@@ -224,7 +224,7 @@ StdComplex PauliOperator<Prec, Space>::get_expectation_value(
     return static_cast<StdComplex>(_ptr->_coef * res);
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 StdComplex PauliOperator<Prec, Space>::get_transition_amplitude(
     const StateVector<Prec, Space>& state_vector_bra,
     const StateVector<Prec, Space>& state_vector_ket) const {
@@ -275,7 +275,7 @@ StdComplex PauliOperator<Prec, Space>::get_transition_amplitude(
     return static_cast<StdComplex>(_ptr->_coef * res);
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 ComplexMatrix PauliOperator<Prec, Space>::get_matrix() const {
     auto triplets = get_matrix_triplets_ignoring_coef();
     decltype(triplets) coeffed_triplets(triplets.size());
@@ -290,7 +290,7 @@ ComplexMatrix PauliOperator<Prec, Space>::get_matrix() const {
     return ComplexMatrix(sparse);
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 ComplexMatrix PauliOperator<Prec, Space>::get_matrix_ignoring_coef() const {
     auto triplets = get_matrix_triplets_ignoring_coef();
     std::uint64_t dim = 1ULL << _ptr->_pauli_id_list.size();
@@ -299,7 +299,7 @@ ComplexMatrix PauliOperator<Prec, Space>::get_matrix_ignoring_coef() const {
     return ComplexMatrix(sparse);
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 PauliOperator<Prec, Space> PauliOperator<Prec, Space>::operator*(
     const PauliOperator& target) const {
     int extra_90rot_cnt = 0;
@@ -323,6 +323,6 @@ PauliOperator<Prec, Space> PauliOperator<Prec, Space>::operator*(
         _ptr->_coef * target._ptr->_coef * internal::PHASE_90ROT<Prec>()[extra_90rot_cnt]);
 }
 
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(PauliOperator)
+template class PauliOperator<Prec, Space>;
 
 }  // namespace scaluq

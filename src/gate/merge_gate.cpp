@@ -3,10 +3,10 @@
 #include <scaluq/gate/merge_gate.hpp>
 #include <scaluq/util/utility.hpp>
 
-#include "../util/template.hpp"
+#include "../prec_space.hpp"
 
 namespace scaluq {
-template <Precision Prec, ExecutionSpace Space>
+template <>
 std::pair<Gate<Prec, Space>, double> merge_gate_dense_matrix(const Gate<Prec, Space>& gate1,
                                                              const Gate<Prec, Space>& gate2) {
     // 1. 制御ビットが一致する箇所のビットを立てる
@@ -38,7 +38,7 @@ std::pair<Gate<Prec, Space>, double> merge_gate_dense_matrix(const Gate<Prec, Sp
             0.};
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
                                                 const Gate<Prec, Space>& gate2) {
     constexpr double eps = 1e-12;
@@ -288,9 +288,4 @@ std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
     // General case
     return merge_gate_dense_matrix(gate1, gate2);
 }
-#define FUNC_MACRO(Prec, Space)                                                        \
-    template std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>&, \
-                                                             const Gate<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 }  // namespace scaluq

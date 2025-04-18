@@ -2,11 +2,11 @@
 
 #include "../operator/apply_pauli.hpp"
 #include "../util/math.hpp"
-#include "../util/template.hpp"
+#include "../prec_space.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void PauliGateImpl<Prec, Space>::update_quantum_state(
     StateVector<Prec, Space>& state_vector) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
@@ -17,7 +17,7 @@ void PauliGateImpl<Prec, Space>::update_quantum_state(
                 Complex<Prec>(_pauli.coef()),
                 state_vector);
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void PauliGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
@@ -28,7 +28,7 @@ void PauliGateImpl<Prec, Space>::update_quantum_state(
                 Complex<Prec>(_pauli.coef()),
                 states);
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 std::string PauliGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     auto controls = this->control_qubit_list();
@@ -40,9 +40,9 @@ std::string PauliGateImpl<Prec, Space>::to_string(const std::string& indent) con
     ss << indent << "  Pauli Operator: \"" << _pauli.get_pauli_string() << "\"";
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(PauliGateImpl)
+template class PauliGateImpl<Prec, Space>;
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 ComplexMatrix PauliRotationGateImpl<Prec, Space>::get_matrix() const {
     ComplexMatrix mat = this->_pauli.get_matrix_ignoring_coef();
     StdComplex true_angle = static_cast<double>(_angle) * _pauli.coef();
@@ -52,7 +52,7 @@ ComplexMatrix PauliRotationGateImpl<Prec, Space>::get_matrix() const {
           imag_unit * std::sin(-half_angle) * mat;
     return mat;
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void PauliRotationGateImpl<Prec, Space>::update_quantum_state(
     StateVector<Prec, Space>& state_vector) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
@@ -64,7 +64,7 @@ void PauliRotationGateImpl<Prec, Space>::update_quantum_state(
                          _angle,
                          state_vector);
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void PauliRotationGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
@@ -76,7 +76,7 @@ void PauliRotationGateImpl<Prec, Space>::update_quantum_state(
                          _angle,
                          states);
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 std::string PauliRotationGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     auto controls = this->control_qubit_list();
@@ -89,5 +89,5 @@ std::string PauliRotationGateImpl<Prec, Space>::to_string(const std::string& ind
     ss << indent << "  Pauli Operator: \"" << _pauli.get_pauli_string() << "\"";
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(PauliRotationGateImpl)
+template class PauliRotationGateImpl<Prec, Space>;
 }  // namespace scaluq::internal

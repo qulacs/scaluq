@@ -1,9 +1,9 @@
 #include <scaluq/operator/operator.hpp>
 
-#include "../util/template.hpp"
+#include "../prec_space.hpp"
 
 namespace scaluq {
-template <Precision Prec, ExecutionSpace Space>
+template <>
 std::string Operator<Prec, Space>::to_string() const {
     std::stringstream ss;
     for (auto itr = _terms.begin(); itr != _terms.end(); ++itr) {
@@ -15,7 +15,7 @@ std::string Operator<Prec, Space>::to_string() const {
     return ss.str();
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void Operator<Prec, Space>::add_operator(PauliOperator<Prec, Space>&& mpt) {
     _is_hermitian &= mpt.coef().imag() == 0.;
     if (![&] {
@@ -30,7 +30,7 @@ void Operator<Prec, Space>::add_operator(PauliOperator<Prec, Space>&& mpt) {
     this->_terms.emplace_back(std::move(mpt));
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void Operator<Prec, Space>::add_random_operator(const std::uint64_t operator_count,
                                                 std::uint64_t seed) {
     Random random(seed);
@@ -45,7 +45,7 @@ void Operator<Prec, Space>::add_random_operator(const std::uint64_t operator_cou
     }
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void Operator<Prec, Space>::optimize() {
     std::map<std::tuple<std::uint64_t, std::uint64_t>, ComplexType> pauli_and_coef;
     for (const auto& pauli : _terms) {
@@ -58,7 +58,7 @@ void Operator<Prec, Space>::optimize() {
     }
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 Operator<Prec, Space> Operator<Prec, Space>::get_dagger() const {
     Operator<Prec, Space> quantum_operator(_n_qubits);
     for (const auto& pauli : _terms) {
@@ -67,7 +67,7 @@ Operator<Prec, Space> Operator<Prec, Space>::get_dagger() const {
     return quantum_operator;
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 ComplexMatrix Operator<Prec, Space>::get_matrix() const {
     std::uint64_t dim = 1ULL << _n_qubits;
     using Pauli = PauliOperator<Prec, Space>;
@@ -97,7 +97,7 @@ ComplexMatrix Operator<Prec, Space>::get_matrix() const {
     return ComplexMatrix(sparse);
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void Operator<Prec, Space>::apply_to_state(StateVector<Prec, Space>& state_vector) const {
     StateVector<Prec, Space> res(state_vector.n_qubits());
     res.set_zero_norm_state();
@@ -109,7 +109,7 @@ void Operator<Prec, Space>::apply_to_state(StateVector<Prec, Space>& state_vecto
     state_vector = res;
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 StdComplex Operator<Prec, Space>::get_expectation_value(
     const StateVector<Prec, Space>& state_vector) const {
     if (_n_qubits > state_vector.n_qubits()) {
@@ -188,7 +188,7 @@ StdComplex Operator<Prec, Space>::get_expectation_value(
     return static_cast<StdComplex>(res);
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 StdComplex Operator<Prec, Space>::get_transition_amplitude(
     const StateVector<Prec, Space>& state_vector_bra,
     const StateVector<Prec, Space>& state_vector_ket) const {
@@ -266,7 +266,7 @@ StdComplex Operator<Prec, Space>::get_transition_amplitude(
     return static_cast<StdComplex>(res);
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 Operator<Prec, Space>& Operator<Prec, Space>::operator*=(StdComplex coef) {
     for (auto& pauli : _terms) {
         pauli = pauli * ComplexType(coef);
@@ -274,7 +274,7 @@ Operator<Prec, Space>& Operator<Prec, Space>::operator*=(StdComplex coef) {
     return *this;
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 Operator<Prec, Space>& Operator<Prec, Space>::operator+=(const Operator<Prec, Space>& target) {
     if (_n_qubits != target._n_qubits) {
         throw std::runtime_error("Operator::oeprator+=: n_qubits must be equal");
@@ -285,7 +285,7 @@ Operator<Prec, Space>& Operator<Prec, Space>::operator+=(const Operator<Prec, Sp
     return *this;
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 Operator<Prec, Space> Operator<Prec, Space>::operator*(const Operator<Prec, Space>& target) const {
     if (_n_qubits != target._n_qubits) {
         throw std::runtime_error("Operator::oeprator+=: n_qubits must be equal");
@@ -299,13 +299,13 @@ Operator<Prec, Space> Operator<Prec, Space>::operator*(const Operator<Prec, Spac
     return ret;
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 Operator<Prec, Space>& Operator<Prec, Space>::operator+=(const PauliOperator<Prec, Space>& pauli) {
     add_operator(pauli);
     return *this;
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 Operator<Prec, Space>& Operator<Prec, Space>::operator*=(const PauliOperator<Prec, Space>& pauli) {
     for (auto& pauli1 : _terms) {
         pauli1 = pauli1 * pauli;
@@ -313,6 +313,6 @@ Operator<Prec, Space>& Operator<Prec, Space>::operator*=(const PauliOperator<Pre
     return *this;
 }
 
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(Operator)
+template class Operator<Prec, Space>;
 
 }  // namespace scaluq

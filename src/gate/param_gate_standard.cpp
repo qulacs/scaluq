@@ -1,11 +1,11 @@
 #include <scaluq/gate/param_gate_standard.hpp>
 
 #include "../util/math.hpp"
-#include "../util/template.hpp"
+#include "../prec_space.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
-template <Precision Prec, ExecutionSpace Space>
+template <>
 ComplexMatrix ParamRXGateImpl<Prec, Space>::get_matrix(double param) const {
     double angle = static_cast<double>(this->_pcoef) * param;
     double half_angle = angle / 2;
@@ -14,7 +14,7 @@ ComplexMatrix ParamRXGateImpl<Prec, Space>::get_matrix(double param) const {
         StdComplex(0, -std::sin(half_angle)), std::cos(half_angle);
     return mat;
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void ParamRXGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector,
                                                         double param) const {
     this->check_qubit_mask_within_bounds(state_vector);
@@ -24,7 +24,7 @@ void ParamRXGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>
             this->_pcoef * static_cast<Float<Prec>>(param),
             state_vector);
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void ParamRXGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states,
                                                         std::vector<double> params) const {
     this->check_qubit_mask_within_bounds(states);
@@ -38,16 +38,16 @@ void ParamRXGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec,
             params_prec,
             states);
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 std::string ParamRXGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: ParamRX\n";
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ParamRXGateImpl)
+template class ParamRXGateImpl<Prec, Space>;
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 ComplexMatrix ParamRYGateImpl<Prec, Space>::get_matrix(double param) const {
     double angle = static_cast<double>(this->_pcoef) * param;
     double half_angle = angle / 2;
@@ -55,7 +55,7 @@ ComplexMatrix ParamRYGateImpl<Prec, Space>::get_matrix(double param) const {
     mat << std::cos(half_angle), -std::sin(half_angle), std::sin(half_angle), std::cos(half_angle);
     return mat;
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void ParamRYGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector,
                                                         double param) const {
     this->check_qubit_mask_within_bounds(state_vector);
@@ -65,7 +65,7 @@ void ParamRYGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>
             this->_pcoef * static_cast<Float<Prec>>(param),
             state_vector);
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void ParamRYGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states,
                                                         std::vector<double> params) const {
     this->check_qubit_mask_within_bounds(states);
@@ -79,16 +79,16 @@ void ParamRYGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec,
             params_prec,
             states);
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 std::string ParamRYGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: ParamRY\n";
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ParamRYGateImpl)
+template class ParamRYGateImpl<Prec, Space>;
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 ComplexMatrix ParamRZGateImpl<Prec, Space>::get_matrix(double param) const {
     double angle = static_cast<double>(this->_pcoef) * param;
     double half_angle = angle / 2;
@@ -96,7 +96,7 @@ ComplexMatrix ParamRZGateImpl<Prec, Space>::get_matrix(double param) const {
     mat << std::exp(StdComplex(0, -half_angle)), 0, 0, std::exp(StdComplex(0, half_angle));
     return mat;
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void ParamRZGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>& state_vector,
                                                         double param) const {
     this->check_qubit_mask_within_bounds(state_vector);
@@ -106,7 +106,7 @@ void ParamRZGateImpl<Prec, Space>::update_quantum_state(StateVector<Prec, Space>
             this->_pcoef * static_cast<Float<Prec>>(param),
             state_vector);
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void ParamRZGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec, Space>& states,
                                                         std::vector<double> params) const {
     this->check_qubit_mask_within_bounds(states);
@@ -120,12 +120,12 @@ void ParamRZGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec,
             params_prec,
             states);
 }
-template <Precision Prec, ExecutionSpace Space>
+template <>
 std::string ParamRZGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     ss << indent << "Gate Type: ParamRZ\n";
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ParamRZGateImpl)
+template class ParamRZGateImpl<Prec, Space>;
 }  // namespace scaluq::internal
