@@ -1,3 +1,4 @@
+#include <ranges>
 #include <scaluq/types.hpp>
 
 namespace scaluq::internal {
