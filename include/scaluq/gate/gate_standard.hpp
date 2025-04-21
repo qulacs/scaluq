@@ -690,305 +690,154 @@ using SwapGate = internal::GatePtr<internal::SwapGateImpl<Prec, Space>>;
 
 namespace internal {
 
-#define DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec, Space)   \
+// I
+#define DECLARE_GET_FROM_JSON_I(Prec, Space)                                          \
     template <>                                                                       \
     inline std::shared_ptr<const IGateImpl<Prec, Space>> get_from_json(const Json&) { \
         return std::make_shared<const IGateImpl<Prec, Space>>();                      \
     }
-#ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16, ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                               ExecutionSpace::Default)
-#endif
-#ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32, ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                               ExecutionSpace::Default)
-#endif
-#ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64, ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                               ExecutionSpace::Default)
-#endif
-#ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                               ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                               ExecutionSpace::Default)
-#endif
-#undef DECLARE_GET_FROM_JSON_IGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 
-#define DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec, Space)     \
+// GlobalPhase
+#define DECLARE_GET_FROM_JSON_GLOBAL_PHASE(Prec, Space)                                           \
     template <>                                                                                   \
     inline std::shared_ptr<const GlobalPhaseGateImpl<Prec, Space>> get_from_json(const Json& j) { \
         auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();                  \
         auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();            \
-        double phase = j.at("phase").get<double>();                                               \
         return std::make_shared<const GlobalPhaseGateImpl<Prec, Space>>(                          \
             vector_to_mask(control_qubits),                                                       \
             vector_to_mask(control_qubits, control_values),                                       \
-            static_cast<Float<Prec>>(phase));                                                     \
+            static_cast<Float<Prec>>(j.at("phase").get<double>()));                               \
     }
-#ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                         ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                         ExecutionSpace::Default)
-#endif
-#ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                         ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                         ExecutionSpace::Default)
-#endif
-#ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                         ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                         ExecutionSpace::Default)
-#endif
-#ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                         ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                         ExecutionSpace::Default)
-#endif
-#undef DECLARE_GET_FROM_JSON_GLOBALPHASEGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 
-#define DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(     \
-    Impl, Prec, Space)                                                                 \
+// X, Y, Z, H, S, Sdag, T, Tdag, SqrtX, SqrtY, P0, P1
+#define DECLARE_GET_FROM_JSON_SINGLE_IMPL(Impl, Prec, Space)                           \
     template <>                                                                        \
     inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {     \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();               \
         auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();       \
         auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>(); \
         return std::make_shared<const Impl<Prec, Space>>(                              \
-            vector_to_mask(targets),                                                   \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),          \
             vector_to_mask(control_qubits),                                            \
             vector_to_mask(control_qubits, control_values));                           \
     }
-#define DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec,  \
-                                                                                       Space) \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
-        XGateImpl, Prec, Space)                                                               \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
-        YGateImpl, Prec, Space)                                                               \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
-        ZGateImpl, Prec, Space)                                                               \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
-        HGateImpl, Prec, Space)                                                               \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
-        SGateImpl, Prec, Space)                                                               \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
-        SdagGateImpl, Prec, Space)                                                            \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
-        TGateImpl, Prec, Space)                                                               \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
-        TdagGateImpl, Prec, Space)                                                            \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
-        SqrtXGateImpl, Prec, Space)                                                           \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
-        SqrtXdagGateImpl, Prec, Space)                                                        \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
-        SqrtYGateImpl, Prec, Space)                                                           \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
-        SqrtYdagGateImpl, Prec, Space)                                                        \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
-        P0GateImpl, Prec, Space)                                                              \
-    DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(                \
-        P1GateImpl, Prec, Space)
-#ifdef SCALUQ_FLOAT16
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                               ExecutionSpace::Host)
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
-    Precision::F16, ExecutionSpace::Default)
-#endif
-#ifdef SCALUQ_FLOAT32
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                               ExecutionSpace::Host)
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
-    Precision::F32, ExecutionSpace::Default)
-#endif
-#ifdef SCALUQ_FLOAT64
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                               ExecutionSpace::Host)
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
-    Precision::F64, ExecutionSpace::Default)
-#endif
-#ifdef SCALUQ_BFLOAT16
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                               ExecutionSpace::Host)
-DECALRE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE(
-    Precision::BF16, ExecutionSpace::Default)
-#endif
-#undef DECLARE_GET_FROM_JSON_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE
-#undef DECLARE_GET_FROM_JSON_EACH_SINGLETARGETGATE_WITH_PRECISION_AND_EXECUTION_SPACE
+#define DECLARE_GET_FROM_JSON_SINGLE(Prec, Space)                    \
+    DECLARE_GET_FROM_JSON_SINGLE_IMPL(XGateImpl, Prec, Space)        \
+    DECLARE_GET_FROM_JSON_SINGLE_IMPL(YGateImpl, Prec, Space)        \
+    DECLARE_GET_FROM_JSON_SINGLE_IMPL(ZGateImpl, Prec, Space)        \
+    DECLARE_GET_FROM_JSON_SINGLE_IMPL(HGateImpl, Prec, Space)        \
+    DECLARE_GET_FROM_JSON_SINGLE_IMPL(SGateImpl, Prec, Space)        \
+    DECLARE_GET_FROM_JSON_SINGLE_IMPL(SdagGateImpl, Prec, Space)     \
+    DECLARE_GET_FROM_JSON_SINGLE_IMPL(TGateImpl, Prec, Space)        \
+    DECLARE_GET_FROM_JSON_SINGLE_IMPL(TdagGateImpl, Prec, Space)     \
+    DECLARE_GET_FROM_JSON_SINGLE_IMPL(SqrtXGateImpl, Prec, Space)    \
+    DECLARE_GET_FROM_JSON_SINGLE_IMPL(SqrtXdagGateImpl, Prec, Space) \
+    DECLARE_GET_FROM_JSON_SINGLE_IMPL(SqrtYGateImpl, Prec, Space)    \
+    DECLARE_GET_FROM_JSON_SINGLE_IMPL(SqrtYdagGateImpl, Prec, Space) \
+    DECLARE_GET_FROM_JSON_SINGLE_IMPL(P0GateImpl, Prec, Space)       \
+    DECLARE_GET_FROM_JSON_SINGLE_IMPL(P1GateImpl, Prec, Space)
 
-#define DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Impl, Prec, Space) \
-    template <>                                                                           \
-    inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {        \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                  \
-        auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();          \
-        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();    \
-        double angle = j.at("angle").get<double>();                                       \
-        return std::make_shared<const Impl<Prec, Space>>(                                 \
-            vector_to_mask(targets),                                                      \
-            vector_to_mask(control_qubits),                                               \
-            vector_to_mask(control_qubits, control_values),                               \
-            static_cast<Float<Prec>>(angle));                                             \
+// RX, RY, RZ
+#define DECLARE_GET_FROM_JSON_R_SINGLE_IMPL(Impl, Prec, Space)                         \
+    template <>                                                                        \
+    inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {     \
+        auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();       \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>(); \
+        return std::make_shared<const Impl<Prec, Space>>(                              \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),          \
+            vector_to_mask(control_qubits),                                            \
+            vector_to_mask(control_qubits, control_values),                            \
+            static_cast<Float<Prec>>(j.at("angle").get<double>()));                    \
     }
-#define DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec, Space)    \
-    DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(RXGateImpl, Prec, Space) \
-    DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(RYGateImpl, Prec, Space) \
-    DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(RZGateImpl, Prec, Space)
-#ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                    ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                    ExecutionSpace::Default)
-#endif
-#ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                    ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                    ExecutionSpace::Default)
-#endif
-#ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                    ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                    ExecutionSpace::Default)
-#endif
-#ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                    ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                    ExecutionSpace::Default)
-#endif
-#undef DECLARE_GET_FROM_JSON_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE
-#undef DECLARE_GET_FROM_JSON_EACH_RGATE_WITH_PRECISION_AND_EXECUTION_SPACE
+#define DECLARE_GET_FROM_JSON_R_SINGLE(Prec, Space)              \
+    DECLARE_GET_FROM_JSON_R_SINGLE_IMPL(RXGateImpl, Prec, Space) \
+    DECLARE_GET_FROM_JSON_R_SINGLE_IMPL(RYGateImpl, Prec, Space) \
+    DECLARE_GET_FROM_JSON_R_SINGLE_IMPL(RZGateImpl, Prec, Space)
 
-#define DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Impl, Prec, Space) \
-    template <>                                                                           \
-    inline std::shared_ptr<const U1GateImpl<Prec, Space>> get_from_json(const Json& j) {  \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                  \
-        auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();          \
-        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();    \
-        double theta = j.at("theta").get<double>();                                       \
-        return std::make_shared<const U1GateImpl<Prec, Space>>(                           \
-            vector_to_mask(targets),                                                      \
-            vector_to_mask(control_qubits),                                               \
-            vector_to_mask(control_qubits, control_values),                               \
-            static_cast<Float<Prec>>(theta));                                             \
-    }                                                                                     \
-    template <>                                                                           \
-    inline std::shared_ptr<const U2GateImpl<Prec, Space>> get_from_json(const Json& j) {  \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                  \
-        auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();          \
-        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();    \
-        double theta = j.at("theta").get<double>();                                       \
-        double phi = j.at("phi").get<double>();                                           \
-        return std::make_shared<const U2GateImpl<Prec, Space>>(                           \
-            vector_to_mask(targets),                                                      \
-            vector_to_mask(control_qubits),                                               \
-            vector_to_mask(control_qubits, control_values),                               \
-            static_cast<Float<Prec>>(theta),                                              \
-            static_cast<Float<Prec>>(phi));                                               \
-    }                                                                                     \
-    template <>                                                                           \
-    inline std::shared_ptr<const U3GateImpl<Prec, Space>> get_from_json(const Json& j) {  \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                  \
-        auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();          \
-        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();    \
-        double theta = j.at("theta").get<double>();                                       \
-        double phi = j.at("phi").get<double>();                                           \
-        double lambda = j.at("lambda").get<double>();                                     \
-        return std::make_shared<const U3GateImpl<Prec, Space>>(                           \
-            vector_to_mask(targets),                                                      \
-            vector_to_mask(control_qubits),                                               \
-            vector_to_mask(control_qubits, control_values),                               \
-            static_cast<Float<Prec>>(theta),                                              \
-            static_cast<Float<Prec>>(phi),                                                \
-            static_cast<Float<Prec>>(lambda));                                            \
+// U1, U2, U3
+#define DECLARE_GET_FROM_JSON_U(Prec, Space)                                             \
+    template <>                                                                          \
+    inline std::shared_ptr<const U1GateImpl<Prec, Space>> get_from_json(const Json& j) { \
+        auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();         \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();   \
+        return std::make_shared<const U1GateImpl<Prec, Space>>(                          \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),            \
+            vector_to_mask(control_qubits),                                              \
+            vector_to_mask(control_qubits, control_values),                              \
+            static_cast<Float<Prec>>(j.at("theta").get<double>()));                      \
+    }                                                                                    \
+    template <>                                                                          \
+    inline std::shared_ptr<const U2GateImpl<Prec, Space>> get_from_json(const Json& j) { \
+        auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();         \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();   \
+        return std::make_shared<const U2GateImpl<Prec, Space>>(                          \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),            \
+            vector_to_mask(control_qubits),                                              \
+            vector_to_mask(control_qubits, control_values),                              \
+            static_cast<Float<Prec>>(j.at("theta").get<double>()),                       \
+            static_cast<Float<Prec>>(j.at("phi").get<double>()));                        \
+    }                                                                                    \
+    template <>                                                                          \
+    inline std::shared_ptr<const U3GateImpl<Prec, Space>> get_from_json(const Json& j) { \
+        auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();         \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();   \
+        return std::make_shared<const U3GateImpl<Prec, Space>>(                          \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),            \
+            vector_to_mask(control_qubits),                                              \
+            vector_to_mask(control_qubits, control_values),                              \
+            static_cast<Float<Prec>>(j.at("theta").get<double>()),                       \
+            static_cast<Float<Prec>>(j.at("phi").get<double>()),                         \
+            static_cast<Float<Prec>>(j.at("labmda").get<double>()));                     \
     }
-#ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
-                                                               Precision::F16,
-                                                               ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
-                                                               Precision::F16,
-                                                               ExecutionSpace::Default)
-#endif
-#ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
-                                                               Precision::F32,
-                                                               ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
-                                                               Precision::F32,
-                                                               ExecutionSpace::Default)
-#endif
-#ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
-                                                               Precision::F64,
-                                                               ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
-                                                               Precision::F64,
-                                                               ExecutionSpace::Default)
-#endif
-#ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
-                                                               Precision::BF16,
-                                                               ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE(U1GateImpl,
-                                                               Precision::BF16,
-                                                               ExecutionSpace::Default)
-#endif
-#undef DECLARE_GET_FROM_JSON_UGATE_WITH_PRECISION_AND_EXECUTION_SPACE
 
-#define DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Impl, Prec, Space) \
-    template <>                                                                              \
-    inline std::shared_ptr<const SwapGateImpl<Prec, Space>> get_from_json(const Json& j) {   \
-        auto targets = j.at("target").get<std::vector<std::uint64_t>>();                     \
-        auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();             \
-        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();       \
-        return std::make_shared<const SwapGateImpl<Prec, Space>>(                            \
-            vector_to_mask(targets),                                                         \
-            vector_to_mask(control_qubits),                                                  \
-            vector_to_mask(control_qubits, control_values));                                 \
+// Swap
+#define DECLARE_GET_FROM_JSON_SWAP(Prec, Space)                                            \
+    template <>                                                                            \
+    inline std::shared_ptr<const SwapGateImpl<Prec, Space>> get_from_json(const Json& j) { \
+        auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();           \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();     \
+        return std::make_shared<const SwapGateImpl<Prec, Space>>(                          \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),              \
+            vector_to_mask(control_qubits),                                                \
+            vector_to_mask(control_qubits, control_values));                               \
     }
+
+// Instantiate get_from_json in each gate classes
+#define INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Prec)                    \
+    DECLARE_GET_FROM_JSON_I(Prec, ExecutionSpace::Default)            \
+    DECLARE_GET_FROM_JSON_I(Prec, ExecutionSpace::Host)               \
+    DECLARE_GET_FROM_JSON_GLOBAL_PHASE(Prec, ExecutionSpace::Default) \
+    DECLARE_GET_FROM_JSON_GLOBAL_PHASE(Prec, ExecutionSpace::Host)    \
+    DECLARE_GET_FROM_JSON_SINGLE(Prec, ExecutionSpace::Default)       \
+    DECLARE_GET_FROM_JSON_SINGLE(Prec, ExecutionSpace::Host)          \
+    DECLARE_GET_FROM_JSON_R_SINGLE(Prec, ExecutionSpace::Default)     \
+    DECLARE_GET_FROM_JSON_R_SINGLE(Prec, ExecutionSpace::Host)        \
+    DECLARE_GET_FROM_JSON_U(Prec, ExecutionSpace::Default)            \
+    DECLARE_GET_FROM_JSON_U(Prec, ExecutionSpace::Host)               \
+    DECLARE_GET_FROM_JSON_SWAP(Prec, ExecutionSpace::Default)         \
+    DECLARE_GET_FROM_JSON_SWAP(Prec, ExecutionSpace::Host)
+#ifdef SCALUQ_BFLOAT16
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::BF16)
+#endif
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
-                                                                  Precision::F16,
-                                                                  ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
-                                                                  Precision::F16,
-                                                                  ExecutionSpace::Default)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F16)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
-                                                                  Precision::F32,
-                                                                  ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
-                                                                  Precision::F32,
-                                                                  ExecutionSpace::Default)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F32)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
-                                                                  Precision::F64,
-                                                                  ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
-                                                                  Precision::F64,
-                                                                  ExecutionSpace::Default)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F64)
 #endif
-#ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
-                                                                  Precision::BF16,
-                                                                  ExecutionSpace::Host)
-DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl,
-                                                                  Precision::BF16,
-                                                                  ExecutionSpace::Default)
-#endif
-#undef DECLARE_GET_FROM_JSON_SWAPGATE_WITH_PRECISION_AND_EXECUTION_SPACE
+
+#undef DECLARE_GET_FROM_JSON_I
+#undef DECLARE_GET_FROM_JSON_GLOBAL_PHASE
+#undef DECLARE_GET_FROM_JSON_SINGLE_IMPL
+#undef DECLARE_GET_FROM_JSON_SINGLE
+#undef DECLARE_GET_FROM_JSON_R_SINGLE_IMPL
+#undef DECLARE_GET_FROM_JSON_R_SINGLE
+#undef DECLARE_GET_FROM_JSON_U
+#undef DECLARE_GET_FROM_JSON_SWAP
+#undef INSTANTIATE_GET_FROM_JSON_EACH_SPACE
+
 }  // namespace internal
 
 #ifdef SCALUQ_USE_NANOBIND

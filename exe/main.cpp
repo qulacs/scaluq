@@ -6,6 +6,7 @@ using namespace nlohmann;
 
 constexpr auto F64 = Precision::F64;
 constexpr auto GPU = ExecutionSpace::Default;
+constexpr auto CPU = ExecutionSpace::Host;
 
 Gate<F64, GPU> get_Uw(std::uint64_t n_qubits, std::uint64_t omega) {
     std::vector<std::uint64_t> U_omega_control, U_omega_cvalue;
@@ -21,7 +22,7 @@ int main() {
     {
         Kokkos::Timer timer;
 
-        constexpr std::uint64_t n_qubits = 15;
+        constexpr std::uint64_t n_qubits = 20;
         std::uint64_t w = rand() % (1 << n_qubits);  // 解のインデックス
 
         Circuit<F64, GPU> Loop(n_qubits);
@@ -49,16 +50,6 @@ int main() {
         std::cout << "Amplitude of |" << std::bitset<n_qubits>(w) << "> : " << vec[w] << std::endl;
 
         std::cout << "Time: " << timer.seconds() << std::endl;
-    }
-    {
-        std::cout << gate::X<F64, GPU>(3, {1, 2}, {0, 1}) << std::endl;
-        std::cout << Json(gate::X<F64, GPU>(3, {1, 2}, {0, 1})) << std::endl;
-
-        StateVector<F64, GPU> state(2);
-        state.load({1, 2, 3, 4});
-        auto cx = gate::CX<F64, GPU>(1, 0);
-        cx->update_quantum_state(state);
-        std::cout << state << std::endl;
     }
     scaluq::finalize();
 }

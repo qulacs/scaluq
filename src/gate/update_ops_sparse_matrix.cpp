@@ -14,7 +14,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         Kokkos::ViewAllocateWithoutInitializing("update"), state.dim());
     Kokkos::parallel_for(
         Kokkos::RangePolicy<SpaceType<Space>>(0, state.dim()), KOKKOS_LAMBDA(std::uint64_t i) {
-            if ((i | control_mask) == i) {
+            if ((i & control_mask) == control_value_mask) {
                 update(i) = 0;
             } else {
                 update(i) = state._raw(i);
@@ -62,7 +62,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
             {0, 0}, {states.batch_size(), states.dim()}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
-            if ((i | control_mask) == i) {
+            if ((i & control_mask) == control_value_mask) {
                 update(batch_id, i) = 0;
             } else {
                 update(batch_id, i) = states._raw(batch_id, i);

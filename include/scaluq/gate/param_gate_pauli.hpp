@@ -51,46 +51,38 @@ using ParamPauliRotationGate =
     internal::ParamGatePtr<internal::ParamPauliRotationGateImpl<Prec, Space>>;
 
 namespace internal {
-#define DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Prec, Space) \
-    template <>                                                                               \
-    inline std::shared_ptr<const ParamPauliRotationGateImpl<Prec, Space>> get_from_json(      \
-        const Json& j) {                                                                      \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                    \
-        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();        \
-        auto pauli = j.at("pauli").get<PauliOperator<Prec, Space>>();                         \
-        auto param_coef = j.at("param_coef").get<double>();                                   \
-        return std::make_shared<const ParamPauliRotationGateImpl<Prec, Space>>(               \
-            vector_to_mask(controls),                                                         \
-            vector_to_mask(control_values),                                                   \
-            pauli,                                                                            \
-            static_cast<Float<Prec>>(param_coef));                                            \
+#define DECLARE_GET_FROM_JSON(Prec, Space)                                               \
+    template <>                                                                          \
+    inline std::shared_ptr<const ParamPauliRotationGateImpl<Prec, Space>> get_from_json( \
+        const Json& j) {                                                                 \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();               \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();   \
+        return std::make_shared<const ParamPauliRotationGateImpl<Prec, Space>>(          \
+            vector_to_mask(controls),                                                    \
+            vector_to_mask(controls, control_values),                                    \
+            j.at("pauli").get<PauliOperator<Prec, Space>>(),                             \
+            static_cast<Float<Prec>>(j.at("param_coef").get<double>()));                 \
     }
 
+#define INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Prec)       \
+    DECLARE_GET_FROM_JSON(Prec, ExecutionSpace::Default) \
+    DECLARE_GET_FROM_JSON(Prec, ExecutionSpace::Host)
+
+#ifdef SCALUQ_BFLOAT16
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::BF16)
+#endif
 #ifdef SCALUQ_FLOAT16
-DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                         ExecutionSpace::Default)
-DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F16,
-                                                                         ExecutionSpace::Host)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F16)
 #endif
 #ifdef SCALUQ_FLOAT32
-DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                         ExecutionSpace::Default)
-DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F32,
-                                                                         ExecutionSpace::Host)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F32)
 #endif
 #ifdef SCALUQ_FLOAT64
-DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                         ExecutionSpace::Default)
-DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::F64,
-                                                                         ExecutionSpace::Host)
+INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F64)
 #endif
-#ifdef SCALUQ_BFLOAT16
-DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                         ExecutionSpace::Default)
-DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE(Precision::BF16,
-                                                                         ExecutionSpace::Host)
-#endif
-#undef DECLARE_GET_FROM_JSON_PARAM_PAULIGATE_WITH_PRECISION_AND_EXECUTION_SPACE
+
+#undef DECLARE_GET_FROM_JSON
+#undef INSTANTIATE_GET_FROM_JSON_EACH_SPACE
 
 }  // namespace internal
 

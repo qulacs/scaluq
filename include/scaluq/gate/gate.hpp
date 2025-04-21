@@ -290,7 +290,7 @@ public:
     }
 
     friend std::ostream& operator<<(std::ostream& os, GatePtr gate) {
-        os << gate->to_string();
+        os << gate->to_string("");
         return os;
     }
 
