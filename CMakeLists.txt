@@ -169,7 +169,6 @@ endforeach()
 
 add_library(scaluq INTERFACE)
 target_link_libraries(scaluq INTERFACE ${SCALUQ_LIBRARIES})
-add_library(scaluq::scaluq ALIAS scaluq)
 
 ### Compiler options ###
 # Standard

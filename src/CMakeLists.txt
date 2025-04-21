@@ -41,5 +41,5 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
 endforeach()
 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/scaluq DESTINATION include/scaluq)
-install(TARGETS ${SCALUQ_LIBRARIES} kokkos kokkoscore kokkoscontainers kokkosalgorithms kokkossimd nlohmann_json LIBDL EXPORT scaluqTargets LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include)
+install(TARGETS scaluq ${SCALUQ_LIBRARIES} kokkos kokkoscore kokkoscontainers kokkosalgorithms kokkossimd nlohmann_json LIBDL EXPORT scaluqTargets LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include)
 install(EXPORT scaluqTargets FILE scaluq-config.cmake DESTINATION share/cmake/scaluq/ NAMESPACE scaluq::)
