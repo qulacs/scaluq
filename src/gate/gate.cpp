@@ -4,7 +4,7 @@
 
 namespace scaluq {
 namespace internal {
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void GateBase<Prec, Space>::check_qubit_mask_within_bounds(
     const StateVector<Prec, Space>& state_vector) const {
     std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
@@ -14,7 +14,7 @@ void GateBase<Prec, Space>::check_qubit_mask_within_bounds(
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void GateBase<Prec, Space>::check_qubit_mask_within_bounds(
     const StateVectorBatched<Prec, Space>& states) const {
     std::uint64_t full_mask = (1ULL << states.n_qubits()) - 1;
@@ -25,7 +25,7 @@ void GateBase<Prec, Space>::check_qubit_mask_within_bounds(
     }
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 std::string GateBase<Prec, Space>::get_qubit_info_as_string(const std::string& indent) const {
     std::ostringstream ss;
     auto targets = target_qubit_list();
@@ -46,7 +46,7 @@ std::string GateBase<Prec, Space>::get_qubit_info_as_string(const std::string& i
     return ss.str();
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 GateBase<Prec, Space>::GateBase(std::uint64_t target_mask,
                                 std::uint64_t control_mask,
                                 std::uint64_t control_value_mask)

@@ -165,56 +165,56 @@ endif()
 
 foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
     set_property(TARGET ${LIBRARY} PROPERTY POSITION_INDEPENDENT_CODE ON)
-
-    ### Compiler options ###
-    # Standard
-    if(SCALUQ_USE_CUDA)
-        target_compile_features(${LIBRARY} PUBLIC cxx_std_20)
-    else()
-        target_compile_features(${LIBRARY} PUBLIC cxx_std_23)
-    endif()
-
-    # Warning
-    target_compile_options(${LIBRARY} PUBLIC
-        -Wall
-        -Wextra
-        -Wunused-parameter
-        # -Wshadow
-        # -pedantic
-        -Wsign-compare
-        -Wtype-limits
-        -Wuninitialized
-    )
-
-    if(SCALUQ_USE_CUDA)
-        target_compile_definitions(${LIBRARY} PUBLIC SCALUQ_USE_CUDA)
-        target_compile_definitions(${LIBRARY} PUBLIC JSON_HAS_RANGES=0) # cite: https://github.com/nlohmann/json/issues/3907
-        # to remove tremendous warnings of Eigen
-        target_compile_options(${LIBRARY} PUBLIC
-            -Wno-unknown-pragmas
-            -Wno-deprecated-enum-enum-conversion
-            --expt-relaxed-constexpr
-            -Werror=cross-execution-space-call # prevent call of non __device__ function in device call
-            -DEIGEN_NO_CUDA
-        ) 
-    endif()
-
-    # Enable pthread
-    target_compile_options(${LIBRARY} PUBLIC -pthread)
-
-    # Enable openmp
-    if(SCALUQ_USE_OMP)
-        target_compile_options(${LIBRARY} PUBLIC -fopenmp)
-    endif()
-
-    # Debug options
-    if ((${CMAKE_SYSTEM_NAME} MATCHES "Darwin") OR CMAKE_CUDA_COMPILER)
-    target_compile_options(${LIBRARY} PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g,-O3>)
-    else()
-    target_compile_options(${LIBRARY} PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
-    target_link_options(${LIBRARY} PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
-    endif()
 endforeach()
+
+### Compiler options ###
+# Standard
+if(SCALUQ_USE_CUDA)
+    target_compile_features(scaluq_base PUBLIC cxx_std_20)
+else()
+    target_compile_features(scaluq_base PUBLIC cxx_std_23)
+endif()
+
+# Warning
+target_compile_options(scaluq_base PUBLIC
+    -Wall
+    -Wextra
+    -Wunused-parameter
+    # -Wshadow
+    # -pedantic
+    -Wsign-compare
+    -Wtype-limits
+    -Wuninitialized
+)
+
+if(SCALUQ_USE_CUDA)
+    target_compile_definitions(scaluq_base PUBLIC SCALUQ_USE_CUDA)
+    target_compile_definitions(scaluq_base PUBLIC JSON_HAS_RANGES=0) # cite: https://github.com/nlohmann/json/issues/3907
+    # to remove tremendous warnings of Eigen
+    target_compile_options(scaluq_base PUBLIC
+        -Wno-unknown-pragmas
+        -Wno-deprecated-enum-enum-conversion
+        --expt-relaxed-constexpr
+        -Werror=cross-execution-space-call # prevent call of non __device__ function in device call
+        -DEIGEN_NO_CUDA
+    ) 
+endif()
+
+# Enable pthread
+target_compile_options(scaluq_base PUBLIC -pthread)
+
+# Enable openmp
+if(SCALUQ_USE_OMP)
+    target_compile_options(scaluq_base PUBLIC -fopenmp)
+endif()
+
+# Debug options
+if ((${CMAKE_SYSTEM_NAME} MATCHES "Darwin") OR CMAKE_CUDA_COMPILER)
+target_compile_options(scaluq_base PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g,-O3>)
+else()
+target_compile_options(scaluq_base PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
+target_link_options(scaluq_base PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
+endif()
 
 ### Add subdirectories ###
 add_subdirectory(src)

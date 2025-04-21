@@ -2,8 +2,8 @@
 
 #include <scaluq/constant.hpp>
 
-#include "../util/math.hpp"
 #include "../prec_space.hpp"
+#include "../util/math.hpp"
 
 namespace scaluq::internal {
 template <>
@@ -91,7 +91,6 @@ void apply_pauli(std::uint64_t control_mask,
         });
     Kokkos::fence();
 }
-
 
 template <>
 void apply_pauli_rotation(std::uint64_t control_mask,

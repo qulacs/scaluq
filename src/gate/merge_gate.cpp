@@ -6,9 +6,9 @@
 #include "../prec_space.hpp"
 
 namespace scaluq {
-template <>
-std::pair<Gate<Prec, Space>, double> merge_gate_dense_matrix(const Gate<Prec, Space>& gate1,
-                                                             const Gate<Prec, Space>& gate2) {
+std::pair<Gate<internal::Prec, internal::Space>, double> merge_gate_dense_matrix(
+    const Gate<internal::Prec, internal::Space>& gate1,
+    const Gate<internal::Prec, internal::Space>& gate2) {
     // 1. 制御ビットが一致する箇所のビットを立てる
     auto common_control_mask = gate1->control_qubit_mask() & gate2->control_qubit_mask();
     // 2. かつ，制御ビットの値も一致する箇所のみビットを立てる
@@ -30,7 +30,7 @@ std::pair<Gate<Prec, Space>, double> merge_gate_dense_matrix(const Gate<Prec, Sp
                                                  gate2->control_value_mask() & ~common_control_mask,
                                                  merged_operand_vector);
     auto matrix = matrix2 * matrix1;
-    return {gate::DenseMatrix<Prec, Space>(
+    return {gate::DenseMatrix<internal::Prec, internal::Space>(
                 merged_operand_vector,
                 matrix,
                 internal::mask_to_vector(common_control_mask),
@@ -39,8 +39,9 @@ std::pair<Gate<Prec, Space>, double> merge_gate_dense_matrix(const Gate<Prec, Sp
 }
 
 template <>
-std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
-                                                const Gate<Prec, Space>& gate2) {
+std::pair<Gate<internal::Prec, internal::Space>, double> merge_gate(
+    const Gate<internal::Prec, internal::Space>& gate1,
+    const Gate<internal::Prec, internal::Space>& gate2) {
     constexpr double eps = 1e-12;
 
     GateType gate_type1 = gate1.gate_type();
@@ -62,9 +63,9 @@ std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
     auto gate2_control_value_mask = gate2->control_value_mask();
 
     if (gate_type1 == GateType::GlobalPhase && gate1_control_mask == 0)
-        return {gate2, GlobalPhaseGate<Prec, Space>(gate1)->phase()};
+        return {gate2, GlobalPhaseGate<internal::Prec, internal::Space>(gate1)->phase()};
     if (gate_type2 == GateType::GlobalPhase && gate2_control_mask == 0)
-        return {gate1, GlobalPhaseGate<Prec, Space>(gate2)->phase()};
+        return {gate1, GlobalPhaseGate<internal::Prec, internal::Space>(gate2)->phase()};
 
     // 制御ビットとその値がすべて一致しないとき，密行列に直してから合成
     if (!(gate1_control_mask == gate2_control_mask &&
@@ -75,10 +76,11 @@ std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
 
     // Special case: Zero qubit
     if (gate_type1 == GateType::GlobalPhase && gate_type2 == GateType::GlobalPhase) {
-        return {gate::GlobalPhase<Prec, Space>(GlobalPhaseGate<Prec, Space>(gate1)->phase() +
-                                                   GlobalPhaseGate<Prec, Space>(gate2)->phase(),
-                                               control_qubit_list,
-                                               control_value_list),
+        return {gate::GlobalPhase<internal::Prec, internal::Space>(
+                    GlobalPhaseGate<internal::Prec, internal::Space>(gate1)->phase() +
+                        GlobalPhaseGate<internal::Prec, internal::Space>(gate2)->phase(),
+                    control_qubit_list,
+                    control_value_list),
                 0.};
     }
 
@@ -98,52 +100,52 @@ std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
         std::uint64_t target1 = gate1->target_qubit_list()[0];
         std::uint64_t target2 = gate2->target_qubit_list()[0];
         if (target1 == target2) {
-            if (pauli_id1 == pauli_id2) return {gate::I<Prec, Space>(), 0.};
+            if (pauli_id1 == pauli_id2) return {gate::I<internal::Prec, internal::Space>(), 0.};
             if (pauli_id1 == 1) {
                 if (pauli_id2 == 2) {
                     if (gate1_control_mask == 0) {
-                        return {
-                            gate::Z<Prec, Space>(target1, control_qubit_list, control_value_list),
-                            -Kokkos::numbers::pi / 2};
+                        return {gate::Z<internal::Prec, internal::Space>(
+                                    target1, control_qubit_list, control_value_list),
+                                -Kokkos::numbers::pi / 2};
                     }
                 }
                 if (pauli_id2 == 3) {
                     if (gate1_control_mask == 0) {
-                        return {
-                            gate::Y<Prec, Space>(target1, control_qubit_list, control_value_list),
-                            Kokkos::numbers::pi / 2};
+                        return {gate::Y<internal::Prec, internal::Space>(
+                                    target1, control_qubit_list, control_value_list),
+                                Kokkos::numbers::pi / 2};
                     }
                 }
             }
             if (pauli_id1 == 2) {
                 if (pauli_id2 == 3) {
                     if (gate1_control_mask == 0) {
-                        return {
-                            gate::X<Prec, Space>(target1, control_qubit_list, control_value_list),
-                            -Kokkos::numbers::pi / 2};
+                        return {gate::X<internal::Prec, internal::Space>(
+                                    target1, control_qubit_list, control_value_list),
+                                -Kokkos::numbers::pi / 2};
                     }
                 }
                 if (pauli_id2 == 1) {
                     if (gate1_control_mask == 0) {
-                        return {
-                            gate::Z<Prec, Space>(target1, control_qubit_list, control_value_list),
-                            Kokkos::numbers::pi / 2};
+                        return {gate::Z<internal::Prec, internal::Space>(
+                                    target1, control_qubit_list, control_value_list),
+                                Kokkos::numbers::pi / 2};
                     }
                 }
             }
             if (pauli_id1 == 3) {
                 if (pauli_id2 == 1) {
                     if (gate1_control_mask == 0) {
-                        return {
-                            gate::Y<Prec, Space>(target1, control_qubit_list, control_value_list),
-                            -Kokkos::numbers::pi / 2};
+                        return {gate::Y<internal::Prec, internal::Space>(
+                                    target1, control_qubit_list, control_value_list),
+                                -Kokkos::numbers::pi / 2};
                     }
                 }
                 if (pauli_id2 == 2) {
                     if (gate1_control_mask == 0) {
-                        return {
-                            gate::X<Prec, Space>(target1, control_qubit_list, control_value_list),
-                            Kokkos::numbers::pi / 2};
+                        return {gate::X<internal::Prec, internal::Space>(
+                                    target1, control_qubit_list, control_value_list),
+                                Kokkos::numbers::pi / 2};
                     }
                 }
             }
@@ -151,15 +153,18 @@ std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
     }
     if ((pauli_id1 || gate1.gate_type() == GateType::Pauli) &&
         (pauli_id2 || gate2.gate_type() == GateType::Pauli)) {
-        auto pauli1 = gate_type1 == GateType::Pauli
-                          ? PauliGate<Prec, Space>(gate1)->pauli()
-                          : PauliOperator<Prec, Space>(std::vector{gate1->target_qubit_list()[0]},
-                                                       std::vector{pauli_id1.value()});
-        auto pauli2 = gate_type2 == GateType::Pauli
-                          ? PauliGate<Prec, Space>(gate2)->pauli()
-                          : PauliOperator<Prec, Space>(std::vector{gate2->target_qubit_list()[0]},
-                                                       std::vector{pauli_id2.value()});
-        return {gate::Pauli<Prec, Space>(pauli2 * pauli1, control_qubit_list, control_value_list),
+        auto pauli1 =
+            gate_type1 == GateType::Pauli
+                ? PauliGate<internal::Prec, internal::Space>(gate1)->pauli()
+                : PauliOperator<internal::Prec, internal::Space>(
+                      std::vector{gate1->target_qubit_list()[0]}, std::vector{pauli_id1.value()});
+        auto pauli2 =
+            gate_type2 == GateType::Pauli
+                ? PauliGate<internal::Prec, internal::Space>(gate2)->pauli()
+                : PauliOperator<internal::Prec, internal::Space>(
+                      std::vector{gate2->target_qubit_list()[0]}, std::vector{pauli_id2.value()});
+        return {gate::Pauli<internal::Prec, internal::Space>(
+                    pauli2 * pauli1, control_qubit_list, control_value_list),
                 0.};
     }
 
@@ -173,20 +178,26 @@ std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
         if (gate_type == GateType::Tdag) return 7;
         return std::nullopt;
     };
-    auto oct_phase_gate = [&](std::uint64_t oct_phase,
-                              std::uint64_t target) -> std::optional<Gate<Prec, Space>> {
+    auto oct_phase_gate =
+        [&](std::uint64_t oct_phase,
+            std::uint64_t target) -> std::optional<Gate<internal::Prec, internal::Space>> {
         oct_phase &= 7;
-        if (oct_phase == 0) return gate::I<Prec, Space>();
+        if (oct_phase == 0) return gate::I<internal::Prec, internal::Space>();
         if (oct_phase == 4)
-            return gate::Z<Prec, Space>(target, control_qubit_list, control_value_list);
+            return gate::Z<internal::Prec, internal::Space>(
+                target, control_qubit_list, control_value_list);
         if (oct_phase == 2)
-            return gate::S<Prec, Space>(target, control_qubit_list, control_value_list);
+            return gate::S<internal::Prec, internal::Space>(
+                target, control_qubit_list, control_value_list);
         if (oct_phase == 6)
-            return gate::Sdag<Prec, Space>(target, control_qubit_list, control_value_list);
+            return gate::Sdag<internal::Prec, internal::Space>(
+                target, control_qubit_list, control_value_list);
         if (oct_phase == 1)
-            return gate::T<Prec, Space>(target, control_qubit_list, control_value_list);
+            return gate::T<internal::Prec, internal::Space>(
+                target, control_qubit_list, control_value_list);
         if (oct_phase == 7)
-            return gate::Tdag<Prec, Space>(target, control_qubit_list, control_value_list);
+            return gate::Tdag<internal::Prec, internal::Space>(
+                target, control_qubit_list, control_value_list);
         return std::nullopt;
     };
     auto oct_phase1 = get_oct_phase(gate_type1);
@@ -205,18 +216,24 @@ std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
         std::uint64_t target2 = gate2->target_qubit_list()[0];
         if (target1 == target2) {
             double phase1 = oct_phase1 ? oct_phase1.value() * Kokkos::numbers::pi / 4
-                            : gate_type1 == GateType::RZ ? RZGate<Prec, Space>(gate1)->angle()
-                                                         : U1Gate<Prec, Space>(gate1)->lambda();
+                            : gate_type1 == GateType::RZ
+                                ? RZGate<internal::Prec, internal::Space>(gate1)->angle()
+                                : U1Gate<internal::Prec, internal::Space>(gate1)->lambda();
             double global_phase1 =
-                gate_type1 == GateType::RZ ? -RZGate<Prec, Space>(gate1)->angle() / 2. : 0.;
+                gate_type1 == GateType::RZ
+                    ? -RZGate<internal::Prec, internal::Space>(gate1)->angle() / 2.
+                    : 0.;
             double phase2 = oct_phase2 ? oct_phase2.value() * Kokkos::numbers::pi / 4
-                            : gate_type2 == GateType::RZ ? RZGate<Prec, Space>(gate2)->angle()
-                                                         : U1Gate<Prec, Space>(gate2)->lambda();
+                            : gate_type2 == GateType::RZ
+                                ? RZGate<internal::Prec, internal::Space>(gate2)->angle()
+                                : U1Gate<internal::Prec, internal::Space>(gate2)->lambda();
             double global_phase2 =
-                gate_type2 == GateType::RZ ? -RZGate<Prec, Space>(gate2)->angle() / 2. : 0.;
+                gate_type2 == GateType::RZ
+                    ? -RZGate<internal::Prec, internal::Space>(gate2)->angle() / 2.
+                    : 0.;
             double global_phase = global_phase1 + global_phase2;
             if (std::abs(global_phase) < eps) {
-                return {gate::U1<Prec, Space>(
+                return {gate::U1<internal::Prec, internal::Space>(
                             target1, phase1 + phase2, control_qubit_list, control_value_list),
                         global_phase1 + global_phase2};
             }
@@ -224,12 +241,14 @@ std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
     }
 
     // Special case: RX
-    auto get_rx_angle = [&](Gate<Prec, Space> gate, GateType gate_type) -> std::optional<double> {
+    auto get_rx_angle = [&](Gate<internal::Prec, internal::Space> gate,
+                            GateType gate_type) -> std::optional<double> {
         if (gate_type == GateType::I) return 0;
         if (gate_type == GateType::X) return Kokkos::numbers::pi;
         if (gate_type == GateType::SqrtX) return Kokkos::numbers::pi / 2;
         if (gate_type == GateType::SqrtXdag) return -Kokkos::numbers::pi / 2;
-        if (gate_type == GateType::RX) return RXGate<Prec, Space>(gate)->angle();
+        if (gate_type == GateType::RX)
+            return RXGate<internal::Prec, internal::Space>(gate)->angle();
         return std::nullopt;
     };
     auto rx_param1 = get_rx_angle(gate1, gate_type1);
@@ -242,22 +261,25 @@ std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
         double global_phase = global_phase1 + global_phase2;
         if (target1 == target2) {
             if (std::abs(global_phase) < eps) {
-                return {gate::RX<Prec, Space>(target1,
-                                              rx_param1.value() + rx_param2.value(),
-                                              control_qubit_list,
-                                              control_value_list),
-                        global_phase1 + global_phase2};
+                return {
+                    gate::RX<internal::Prec, internal::Space>(target1,
+                                                              rx_param1.value() + rx_param2.value(),
+                                                              control_qubit_list,
+                                                              control_value_list),
+                    global_phase1 + global_phase2};
             }
         }
     }
 
     // Special case: RY
-    auto get_ry_angle = [&](Gate<Prec, Space> gate, GateType gate_type) -> std::optional<double> {
+    auto get_ry_angle = [&](Gate<internal::Prec, internal::Space> gate,
+                            GateType gate_type) -> std::optional<double> {
         if (gate_type == GateType::I) return 0.;
         if (gate_type == GateType::Y) return Kokkos::numbers::pi;
         if (gate_type == GateType::SqrtY) return Kokkos::numbers::pi / 2;
         if (gate_type == GateType::SqrtYdag) return -Kokkos::numbers::pi / 2;
-        if (gate_type == GateType::RY) return RYGate<Prec, Space>(gate)->angle();
+        if (gate_type == GateType::RY)
+            return RYGate<internal::Prec, internal::Space>(gate)->angle();
         return std::nullopt;
     };
     auto ry_param1 = get_ry_angle(gate1, gate_type1);
@@ -270,11 +292,12 @@ std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
         double global_phase = global_phase1 + global_phase2;
         if (target1 == target2) {
             if (std::abs(global_phase) < eps) {
-                return {gate::RY<Prec, Space>(target1,
-                                              ry_param1.value() + ry_param2.value(),
-                                              control_qubit_list,
-                                              control_value_list),
-                        global_phase1 + global_phase2};
+                return {
+                    gate::RY<internal::Prec, internal::Space>(target1,
+                                                              ry_param1.value() + ry_param2.value(),
+                                                              control_qubit_list,
+                                                              control_value_list),
+                    global_phase1 + global_phase2};
             }
         }
     }
@@ -282,7 +305,7 @@ std::pair<Gate<Prec, Space>, double> merge_gate(const Gate<Prec, Space>& gate1,
     // Special case: Swap duplication
     if (gate_type1 == gate_type2 && gate_type1 == GateType::Swap) {
         if (gate1->target_qubit_mask() == gate2->target_qubit_mask())
-            return {gate::I<Prec, Space>(), 0.};
+            return {gate::I<internal::Prec, internal::Space>(), 0.};
     }
 
     // General case

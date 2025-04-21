@@ -13,6 +13,7 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
             base/util/utility.cpp
         )
     else()
+        target_link_libraries(${LIBRARY} PRIVATE scaluq_base)
         target_sources(${LIBRARY} PRIVATE
             circuit/circuit.cpp
             gate/merge_gate.cpp

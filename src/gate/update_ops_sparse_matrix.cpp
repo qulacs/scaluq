@@ -95,5 +95,4 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     states._raw = update;
 }
 
-
 }  // namespace scaluq::internal

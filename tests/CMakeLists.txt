@@ -16,7 +16,7 @@ add_executable(scaluq_test EXCLUDE_FROM_ALL
 )
 
 target_link_libraries(scaluq_test PUBLIC 
-    ${SCALUQ_LIBRARY}
+    ${SCALUQ_LIBRARIES}
     Kokkos::kokkos
     GTest::gtest_main
     Eigen3::Eigen

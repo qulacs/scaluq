@@ -1,11 +1,11 @@
 #include <scaluq/gate/param_gate_pauli.hpp>
 
 #include "../operator/apply_pauli.hpp"
-#include "../util/math.hpp"
 #include "../prec_space.hpp"
+#include "../util/math.hpp"
 
 namespace scaluq::internal {
-template <>
+template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix ParamPauliRotationGateImpl<Prec, Space>::get_matrix(double param) const {
     double angle = static_cast<double>(this->_pcoef) * param;
     StdComplex true_angle = angle * this->_pauli.coef();
@@ -16,7 +16,7 @@ ComplexMatrix ParamPauliRotationGateImpl<Prec, Space>::get_matrix(double param) 
           imag_unit * std::sin(-half_angle) * mat;
     return mat;
 }
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void ParamPauliRotationGateImpl<Prec, Space>::update_quantum_state(
     StateVector<Prec, Space>& state_vector, double param) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
@@ -28,7 +28,7 @@ void ParamPauliRotationGateImpl<Prec, Space>::update_quantum_state(
                          this->_pcoef * static_cast<Float<Prec>>(param),
                          state_vector);
 }
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void ParamPauliRotationGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states, std::vector<double> params) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
@@ -44,7 +44,7 @@ void ParamPauliRotationGateImpl<Prec, Space>::update_quantum_state(
                          params_prec,
                          states);
 }
-template <>
+template <Precision Prec, ExecutionSpace Space>
 std::string ParamPauliRotationGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     auto controls = this->control_qubit_list();

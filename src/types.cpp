@@ -4,7 +4,7 @@
 
 namespace scaluq {
 namespace internal {
-template <>
+template <Precision Prec, ExecutionSpace Space>
 SparseMatrix<Prec, Space>::SparseMatrix(const SparseComplexMatrix& sp) {
     _row = sp.rows();
     _col = sp.cols();
@@ -24,5 +24,6 @@ SparseMatrix<Prec, Space>::SparseMatrix(const SparseComplexMatrix& sp) {
     }
     Kokkos::deep_copy(_values, values_h);
 }
+template class SparseMatrix<Prec, Space>;
 }  // namespace internal
 }  // namespace scaluq

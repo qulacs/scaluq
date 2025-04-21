@@ -3,27 +3,24 @@
 #include <cmath>
 #include <scaluq/types.hpp>
 
-#include "template.hpp"
+#include "../prec_space.hpp"
 
 #ifndef SCALUQ_USE_CUDA
-#define IMPL_MATH_UNARY_FUNCTION(FUNC, PREC) \
-    KOKKOS_INLINE_FUNCTION Float<PREC> FUNC(Float<PREC> x) { return std::FUNC(x); }
-
-#define IMPL_ALL_MATH_UNARY_FUNCTION(PREC) \
-    IMPL_MATH_UNARY_FUNCTION(sqrt, PREC)   \
-    IMPL_MATH_UNARY_FUNCTION(sin, PREC)    \
-    IMPL_MATH_UNARY_FUNCTION(cos, PREC)    \
-    IMPL_MATH_UNARY_FUNCTION(exp, PREC)    \
-    IMPL_MATH_UNARY_FUNCTION(log2, PREC)   \
-    IMPL_MATH_UNARY_FUNCTION(sinh, PREC)   \
-    IMPL_MATH_UNARY_FUNCTION(cosh, PREC)
+#define IMPL_MATH_UNARY_FUNCTION(FUNC) \
+    KOKKOS_INLINE_FUNCTION Float<Prec> FUNC(Float<Prec> x) { return std::FUNC(x); }
 
 namespace scaluq::internal {
-SCALUQ_CALL_MACRO_FOR_PRECISION(IMPL_ALL_MATH_UNARY_FUNCTION)
+IMPL_MATH_UNARY_FUNCTION(sqrt)
+IMPL_MATH_UNARY_FUNCTION(sin)
+IMPL_MATH_UNARY_FUNCTION(cos)
+IMPL_MATH_UNARY_FUNCTION(exp)
+IMPL_MATH_UNARY_FUNCTION(log2)
+IMPL_MATH_UNARY_FUNCTION(sinh)
+IMPL_MATH_UNARY_FUNCTION(cosh)
+}  // namespace scaluq::internal
 
 #undef IMPL_ALL_MATH_UNARY_FUNCTION
 #undef IMPL_MATH_UNARY_FUNCTION
-}  // namespace scaluq::internal
 #else
 #define DEFINE_NORMAL(FUNC, FLOAT) \
     KOKKOS_INLINE_FUNCTION FLOAT FUNC(FLOAT x) { return std::FUNC(x); }

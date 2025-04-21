@@ -1,3 +1,5 @@
+#pragma once
+
 #include <scaluq/types.hpp>
 
 namespace scaluq::internal {

@@ -4,7 +4,7 @@
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
-template <>
+template <Precision Prec, ExecutionSpace Space>
 ProbablisticGateImpl<Prec, Space>::ProbablisticGateImpl(
     const std::vector<double>& distribution, const std::vector<Gate<Prec, Space>>& gate_list)
     : GateBase<Prec, Space>(0, 0, 0), _distribution(distribution), _gate_list(gate_list) {
@@ -22,7 +22,7 @@ ProbablisticGateImpl<Prec, Space>::ProbablisticGateImpl(
         throw std::runtime_error("Sum of distribution must be equal to 1.");
     }
 }
-template <>
+template <Precision Prec, ExecutionSpace Space>
 std::shared_ptr<const GateBase<Prec, Space>> ProbablisticGateImpl<Prec, Space>::get_inverse()
     const {
     std::vector<Gate<Prec, Space>> inv_gate_list;
@@ -32,7 +32,7 @@ std::shared_ptr<const GateBase<Prec, Space>> ProbablisticGateImpl<Prec, Space>::
                            [](const Gate<Prec, Space>& gate) { return gate->get_inverse(); });
     return std::make_shared<const ProbablisticGateImpl<Prec, Space>>(_distribution, inv_gate_list);
 }
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void ProbablisticGateImpl<Prec, Space>::update_quantum_state(
     StateVector<Prec, Space>& state_vector) const {
     Random random;
@@ -43,7 +43,7 @@ void ProbablisticGateImpl<Prec, Space>::update_quantum_state(
     if (i >= _gate_list.size()) i = _gate_list.size() - 1;
     _gate_list[i]->update_quantum_state(state_vector);
 }
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void ProbablisticGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states) const {
     std::vector<std::uint64_t> indices(states.batch_size());
@@ -63,7 +63,7 @@ void ProbablisticGateImpl<Prec, Space>::update_quantum_state(
             KOKKOS_CLASS_LAMBDA(const int j) { states._raw(i, j) = state_vector._raw(j); });
     }
 }
-template <>
+template <Precision Prec, ExecutionSpace Space>
 std::string ProbablisticGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     const auto dist = distribution();

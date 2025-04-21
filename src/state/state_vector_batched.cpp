@@ -1,10 +1,10 @@
 #include <scaluq/state/state_vector_batched.hpp>
 
-#include "../util/math.hpp"
 #include "../prec_space.hpp"
+#include "../util/math.hpp"
 
 namespace scaluq {
-template <>
+template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, Space>::StateVectorBatched(std::uint64_t batch_size,
                                                     std::uint64_t n_qubits)
     : _batch_size(batch_size),
@@ -14,7 +14,7 @@ StateVectorBatched<Prec, Space>::StateVectorBatched(std::uint64_t batch_size,
     set_zero_state();
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::set_state_vector(const StateVector<Prec, Space>& state) {
     if (_raw.extent(1) != state._raw.extent(0)) [[unlikely]] {
         throw std::runtime_error(
@@ -30,7 +30,7 @@ void StateVectorBatched<Prec, Space>::set_state_vector(const StateVector<Prec, S
     Kokkos::fence();
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::set_state_vector_at(std::uint64_t batch_id,
                                                           const StateVector<Prec, Space>& state) {
     if (_raw.extent(1) != state._raw.extent(0)) [[unlikely]] {
@@ -44,7 +44,7 @@ void StateVectorBatched<Prec, Space>::set_state_vector_at(std::uint64_t batch_id
     Kokkos::fence();
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_state_vector_at(
     std::uint64_t batch_id) const {
     StateVector<Prec, Space> ret(_n_qubits);
@@ -55,7 +55,7 @@ StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_state_vector_at(
     return ret;
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::set_computational_basis(std::uint64_t basis) {
     if (basis >= _dim) [[unlikely]] {
         throw std::runtime_error(
@@ -69,12 +69,12 @@ void StateVectorBatched<Prec, Space>::set_computational_basis(std::uint64_t basi
     Kokkos::fence();
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::set_zero_norm_state() {
     Kokkos::deep_copy(_raw, 0.);
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::set_Haar_random_state(std::uint64_t batch_size,
                                                             std::uint64_t n_qubits,
                                                             bool set_same_state,
@@ -82,7 +82,7 @@ void StateVectorBatched<Prec, Space>::set_Haar_random_state(std::uint64_t batch_
     *this = Haar_random_state(batch_size, n_qubits, set_same_state, seed);
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::sampling(
     std::uint64_t sampling_count, std::uint64_t seed) const {
     Kokkos::View<FloatType**, internal::SpaceType<Space>> stacked_prob(
@@ -159,7 +159,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
     return result;
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::Haar_random_state(
     std::uint64_t batch_size, std::uint64_t n_qubits, bool set_same_state, std::uint64_t seed) {
     Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(seed);
@@ -182,7 +182,7 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::Haar_random_sta
     return states;
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 std::vector<std::vector<StdComplex>> StateVectorBatched<Prec, Space>::get_amplitudes() const {
     auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), _raw);
     std::vector vv(_raw.extent(0), std::vector(_raw.extent(1), StdComplex(0.)));
@@ -194,7 +194,7 @@ std::vector<std::vector<StdComplex>> StateVectorBatched<Prec, Space>::get_amplit
     return vv;
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 std::vector<double> StateVectorBatched<Prec, Space>::get_squared_norm() const {
     Kokkos::View<FloatType*, internal::SpaceType<Space>> norms(
         Kokkos::ViewAllocateWithoutInitializing("norms"), _batch_size);
@@ -222,7 +222,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_squared_norm() const {
     return norms_double;
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::normalize() {
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
@@ -245,7 +245,7 @@ void StateVectorBatched<Prec, Space>::normalize() {
     Kokkos::fence();
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 std::vector<double> StateVectorBatched<Prec, Space>::get_zero_probability(
     std::uint64_t target_qubit_index) const {
     if (target_qubit_index >= _n_qubits) {
@@ -280,7 +280,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_zero_probability(
     return probs_double;
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 std::vector<double> StateVectorBatched<Prec, Space>::get_marginal_probability(
     const std::vector<std::uint64_t>& measured_values) const {
     if (measured_values.size() != _n_qubits) {
@@ -338,7 +338,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_marginal_probability(
     return probs_double;
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 std::vector<double> StateVectorBatched<Prec, Space>::get_entropy() const {
     Kokkos::View<FloatType*, internal::SpaceType<Space>> ents("ents", _batch_size);
     const FloatType eps = static_cast<FloatType>(1e-15);
@@ -368,7 +368,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_entropy() const {
     return ents_double;
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::add_state_vector_with_coef(const StdComplex& coef,
                                                                  const StateVectorBatched& states) {
     if (n_qubits() != states.n_qubits() || batch_size() != states.batch_size()) [[unlikely]] {
@@ -385,7 +385,7 @@ void StateVectorBatched<Prec, Space>::add_state_vector_with_coef(const StdComple
     Kokkos::fence();
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::multiply_coef(const StdComplex& coef) {
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
@@ -396,7 +396,7 @@ void StateVectorBatched<Prec, Space>::multiply_coef(const StdComplex& coef) {
     Kokkos::fence();
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComplex>>& states) {
     if (states.size() != _batch_size) {
         throw std::runtime_error(
@@ -406,7 +406,8 @@ void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComp
     for (std::uint64_t b = 0; b < states.size(); ++b) {
         if (states[b].size() != _dim) {
             throw std::runtime_error(
-                "Error: StateVectorBatched::load(std::vector<std::vector<Complex<Prec>>>&): "
+                "Error: "
+                "StateVectorBatched::load(std::vector<std::vector<Complex<Prec>>>&): "
                 "invalid length of state");
         }
     }
@@ -420,14 +421,14 @@ void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComp
     Kokkos::deep_copy(_raw, view_h);
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::copy() const {
     StateVectorBatched<Prec, Space> cp(_batch_size, _n_qubits);
     Kokkos::deep_copy(cp._raw, _raw);
     return cp;
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 std::string StateVectorBatched<Prec, Space>::to_string() const {
     std::stringstream os;
     auto amp = this->get_amplitudes();
@@ -454,6 +455,6 @@ std::string StateVectorBatched<Prec, Space>::to_string() const {
     return os.str();
 }
 
-template class StateVectorBatched<Prec, Space>;
+template class StateVectorBatched<internal::Prec, internal::Space>;
 
 }  // namespace scaluq

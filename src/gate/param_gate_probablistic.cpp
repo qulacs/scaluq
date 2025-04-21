@@ -3,7 +3,7 @@
 #include "../prec_space.hpp"
 
 namespace scaluq::internal {
-template <>
+template <Precision Prec, ExecutionSpace Space>
 ParamProbablisticGateImpl<Prec, Space>::ParamProbablisticGateImpl(
     const std::vector<double>& distribution,
     const std::vector<std::variant<Gate<Prec, Space>, ParamGate<Prec, Space>>>& gate_list)
@@ -22,7 +22,7 @@ ParamProbablisticGateImpl<Prec, Space>::ParamProbablisticGateImpl(
         throw std::runtime_error("Sum of distribution must be equal to 1.");
     }
 }
-template <>
+template <Precision Prec, ExecutionSpace Space>
 std::shared_ptr<const ParamGateBase<Prec, Space>>
 ParamProbablisticGateImpl<Prec, Space>::get_inverse() const {
     std::vector<EitherGate> inv_gate_list;
@@ -33,7 +33,7 @@ ParamProbablisticGateImpl<Prec, Space>::get_inverse() const {
         });
     return std::make_shared<const ParamProbablisticGateImpl>(_distribution, inv_gate_list);
 }
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void ParamProbablisticGateImpl<Prec, Space>::update_quantum_state(
     StateVector<Prec, Space>& state_vector, double param) const {
     Random random;
@@ -49,7 +49,7 @@ void ParamProbablisticGateImpl<Prec, Space>::update_quantum_state(
         std::get<1>(gate)->update_quantum_state(state_vector, param);
     }
 }
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void ParamProbablisticGateImpl<Prec, Space>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states, std::vector<double> params) const {
     Random random;
@@ -75,7 +75,7 @@ void ParamProbablisticGateImpl<Prec, Space>::update_quantum_state(
         }
     }
 }
-template <>
+template <Precision Prec, ExecutionSpace Space>
 std::string ParamProbablisticGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     const auto dist = distribution();
