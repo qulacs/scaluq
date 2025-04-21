@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.21)
 function(exe name)
     add_executable(${name} ${name}.cpp)
     target_link_libraries(${name} PRIVATE
-        ${SCALUQ_LIBRARIES}
+        scaluq
         Eigen3::Eigen
         Kokkos::kokkos
         nlohmann_json::nlohmann_json

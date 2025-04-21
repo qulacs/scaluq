@@ -167,6 +167,9 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
     set_property(TARGET ${LIBRARY} PROPERTY POSITION_INDEPENDENT_CODE ON)
 endforeach()
 
+add_library(scaluq INTERFACE)
+target_link_libraries(scaluq INTERFACE ${SCALUQ_LIBRARIES})
+
 ### Compiler options ###
 # Standard
 if(SCALUQ_USE_CUDA)
