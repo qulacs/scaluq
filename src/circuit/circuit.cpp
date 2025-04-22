@@ -1,5 +1,7 @@
 #include <scaluq/circuit/circuit.hpp>
+#include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/gate/gate_probablistic.hpp>
+#include <scaluq/gate/merge_gate.hpp>
 #include <scaluq/gate/param_gate_probablistic.hpp>
 
 #include "../util/template.hpp"
@@ -145,6 +147,155 @@ Circuit<Prec, Space> Circuit<Prec, Space>::get_inverse() const {
         }
     }
     return icircuit;
+}
+
+template <Precision Prec, ExecutionSpace Space>
+void Circuit<Prec, Space>::optimize(std::uint64_t max_block_size) {
+    std::vector<GateWithKey> new_gate_list;  // result
+    double global_phase = 0.;
+    std::vector<Gate<Prec, Space>> gate_pool;  // waitlist for merge or push
+    constexpr std::uint64_t NO_GATES = std::numeric_limits<std::uint64_t>::max();
+    std::vector<std::uint64_t> waiting_gate_idx_at_qubit(
+        _n_qubits,
+        NO_GATES);  // which gate is waiting in the qubit (by index of gate_pool)
+    auto get_operand_list = [&](const GateWithKey& gate_with_key) {
+        if (gate_with_key.index() == 0)
+            return std::get<0>(gate_with_key)->operand_qubit_list();
+        else
+            return std::get<1>(gate_with_key).first->operand_qubit_list();
+    };
+    auto push = [&](const GateWithKey& gate_with_key) {
+        // clear waitlist and push gate to result
+        for (std::uint64_t operand : get_operand_list(gate_with_key)) {
+            waiting_gate_idx_at_qubit[operand] = NO_GATES;
+        }
+        new_gate_list.push_back(gate_with_key);
+    };
+    auto wait = [&](const Gate<Prec, Space>& gate) {
+        // wait for merge or push
+        std::uint64_t new_idx = gate_pool.size();
+        for (std::uint64_t operand : gate->operand_qubit_list()) {
+            waiting_gate_idx_at_qubit[operand] = new_idx;
+        }
+        gate_pool.push_back(gate);
+    };
+    auto get_waiting_gate_indices = [&](const GateWithKey& gate_with_key) {
+        std::vector<std::uint64_t> waiting_gate_indices;
+        for (std::uint64_t operand : get_operand_list(gate_with_key)) {
+            if (waiting_gate_idx_at_qubit[operand] != NO_GATES)
+                waiting_gate_indices.push_back(waiting_gate_idx_at_qubit[operand]);
+        }
+        std::ranges::sort(waiting_gate_indices);
+        waiting_gate_indices.erase(std::ranges::unique(waiting_gate_indices).begin(),
+                                   waiting_gate_indices.end());
+        return waiting_gate_indices;
+    };
+    auto push_waiting_gates = [&](const GateWithKey& gate_with_key) {
+        for (std::uint64_t idx : get_waiting_gate_indices(gate_with_key)) {
+            push(gate_pool[idx]);
+        }
+    };
+    auto get_newly_applied_qubits = [&](const GateWithKey& gate_with_key) {
+        std::vector<std::uint64_t> newly_applied_qubits;
+        for (std::uint64_t operand : get_operand_list(gate_with_key)) {
+            if (waiting_gate_idx_at_qubit[operand] == NO_GATES)
+                newly_applied_qubits.push_back(operand);
+        }
+        return newly_applied_qubits;
+    };
+
+    for (const GateWithKey& gate_with_key : _gate_list) {
+        if (gate_with_key.index() == 1 ||
+            std::get<0>(gate_with_key).gate_type() == GateType::Probablistic) {
+            // ParamGate and Probablistic cannot be merged with others
+            push_waiting_gates(gate_with_key);
+            push(gate_with_key);
+            continue;
+        }
+        const Gate<Prec, Space>& gate = std::get<0>(gate_with_key);
+        if (gate.gate_type() == GateType::I) continue;  // IGate is ignored
+        if (gate.gate_type() == GateType::GlobalPhase && gate->control_qubit_mask() == 0ULL) {
+            // non-controlled GlobalPhase is ignored
+            global_phase += GlobalPhaseGate<Prec, Space>(gate)->phase();
+            continue;
+        }
+        std::vector<std::uint64_t> waiting_gate_indices = get_waiting_gate_indices(gate_with_key);
+        if (waiting_gate_indices.empty()) {
+            // just wait
+            wait(gate);
+            continue;
+        }
+        std::vector<std::uint64_t> newly_applied_qubits = get_newly_applied_qubits(gate_with_key);
+        std::uint64_t new_gate_size =
+            std::accumulate(waiting_gate_indices.begin(),
+                            waiting_gate_indices.end(),
+                            newly_applied_qubits.size(),
+                            [&](std::uint64_t acc, std::uint64_t idx) {
+                                return acc + gate_pool[idx]->operand_qubit_list().size();
+                            });
+        auto is_pauli = [&](const Gate<Prec, Space>& gate) {
+            return gate.gate_type() == GateType::X || gate.gate_type() == GateType::Y ||
+                   gate.gate_type() == GateType::Z || gate.gate_type() == GateType::Pauli;
+        };
+        auto is_pure_pauli = [&](const Gate<Prec, Space>& gate) {
+            return gate->control_qubit_mask() == 0ULL && is_pauli(gate);
+        };
+        bool all_pauli = is_pure_pauli(gate) &&
+                         std::ranges::all_of(waiting_gate_indices, [&](std::uint64_t idx) {
+                             return is_pure_pauli(gate_pool[idx]);
+                         });
+        if (waiting_gate_indices.size() == 1) {
+            const Gate<Prec, Space>& previous_gate = gate_pool[waiting_gate_indices[0]];
+            // common control qubits are not counted as size
+            std::uint64_t control_qubit_mask1 = gate->control_qubit_mask();
+            std::uint64_t control_value_mask1 = gate->control_value_mask();
+            std::uint64_t control_qubit_mask2 = previous_gate->control_qubit_mask();
+            std::uint64_t control_value_mask2 = previous_gate->control_value_mask();
+            new_gate_size -= std::popcount(control_qubit_mask1 & control_qubit_mask2 &
+                                           ~(control_value_mask1 ^ control_value_mask2));
+
+            // check whether both gates are pauli with same control qubits
+            if (control_qubit_mask1 == control_qubit_mask2 &&
+                control_value_mask1 == control_value_mask2 && is_pauli(gate) &&
+                is_pauli(previous_gate)) {
+                all_pauli = true;
+            }
+        }
+        if (all_pauli || new_gate_size <= max_block_size) {
+            // merge with waiting gates
+            Gate<Prec, Space> merged_gate = gate;
+            for (std::uint64_t idx : waiting_gate_indices) {
+                const auto& [new_merged_gate, phase] = merge_gate(gate_pool[idx], merged_gate);
+                merged_gate = new_merged_gate;
+                global_phase += phase;
+            }
+
+            // wait
+            wait(merged_gate);
+        } else {
+            // not merge
+            // push waiting gates
+            for (std::uint64_t idx : waiting_gate_indices) {
+                push(gate_pool[idx]);
+            }
+
+            // wait
+            wait(gate);
+        }
+    }
+    std::vector<std::uint64_t> finally_waiting_gate_indices;
+    for (std::uint64_t idx : waiting_gate_idx_at_qubit) {
+        if (idx != NO_GATES) finally_waiting_gate_indices.push_back(idx);
+    }
+    std::ranges::sort(finally_waiting_gate_indices);
+    finally_waiting_gate_indices.erase(std::ranges::unique(finally_waiting_gate_indices).begin(),
+                                       finally_waiting_gate_indices.end());
+    for (std::uint64_t idx : finally_waiting_gate_indices) {
+        new_gate_list.push_back(gate_pool[idx]);
+    }
+    if (std::abs(global_phase) > 1e-12)
+        new_gate_list.push_back(gate::GlobalPhase<Prec, Space>(global_phase));
+    _gate_list.swap(new_gate_list);
 }
 
 template <Precision Prec, ExecutionSpace Space>
