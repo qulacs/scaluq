@@ -300,30 +300,34 @@ public:
         std::string type = j.at("type");
 
         // clang-format off
-        if (type == "I") gate = get_from_json<IGateImpl<Prec, Space>>(j);
-        else if (type == "GlobalPhase") gate = get_from_json<GlobalPhaseGateImpl<Prec, Space>>(j);
-        else if (type == "X") gate = get_from_json<XGateImpl<Prec, Space>>(j);
-        else if (type == "Y") gate = get_from_json<YGateImpl<Prec, Space>>(j);
-        else if (type == "Z") gate = get_from_json<ZGateImpl<Prec, Space>>(j);
-        else if (type == "H") gate = get_from_json<HGateImpl<Prec, Space>>(j);
-        else if (type == "S") gate = get_from_json<SGateImpl<Prec, Space>>(j);
-        else if (type == "Sdag") gate = get_from_json<SdagGateImpl<Prec, Space>>(j);
-        else if (type == "T") gate = get_from_json<TGateImpl<Prec, Space>>(j);
-        else if (type == "Tdag") gate = get_from_json<TdagGateImpl<Prec, Space>>(j);
-        else if (type == "SqrtX") gate = get_from_json<SqrtXGateImpl<Prec, Space>>(j);
-        else if (type == "SqrtXdag") gate = get_from_json<SqrtXdagGateImpl<Prec, Space>>(j);
-        else if (type == "SqrtY") gate = get_from_json<SqrtYGateImpl<Prec, Space>>(j);
-        else if (type == "SqrtYdag") gate = get_from_json<SqrtYdagGateImpl<Prec, Space>>(j);
-        else if (type == "RX") gate = get_from_json<RXGateImpl<Prec, Space>>(j);
-        else if (type == "RY") gate = get_from_json<RYGateImpl<Prec, Space>>(j);
-        else if (type == "RZ") gate = get_from_json<RZGateImpl<Prec, Space>>(j);
-        else if (type == "U1") gate = get_from_json<U1GateImpl<Prec, Space>>(j);
-        else if (type == "U2") gate = get_from_json<U2GateImpl<Prec, Space>>(j);
-        else if (type == "U3") gate = get_from_json<U3GateImpl<Prec, Space>>(j);
-        else if (type == "Swap") gate = get_from_json<SwapGateImpl<Prec, Space>>(j);
-        // else if (type == "Pauli") gate = get_from_json<PauliGateImpl<Prec, Space>>(j);
-        // else if (type == "PauliRotation") gate = get_from_json<PauliRotationGateImpl<Prec, Space>>(j);
-        else if (type == "Probablistic") gate = get_from_json<ProbablisticGateImpl<Prec, Space>>(j);
+        if (type == "I") gate = IGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "GlobalPhase") gate = GlobalPhaseGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "X") gate = XGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "Y") gate = XGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "Z") gate = XGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "H") gate = HGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "S") gate = SGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "Sdag") gate = SdagGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "T") gate = TGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "Tdag") gate = TdagGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "SqrtX") gate = SqrtXGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "SqrtXdag") gate = SqrtXdagGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "SqrtY") gate = SqrtYGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "SqrtYdag") gate = SqrtYdagGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "P0") gate = P0GateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "P1") gate = P1GateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "RX") gate = RXGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "RY") gate = RYGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "RZ") gate = RZGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "U1") gate = U1GateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "U2") gate = U2GateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "U3") gate = U3GateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "Swap") gate = SwapGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "Pauli") gate = PauliGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "PauliRotation") gate = PauliRotationGateImpl<Prec, Space>::get_from_json(j);
+        // else if (type == "SparseMatrix") gate = SparseMatrixGateImpl<Prec, Space>::get_from_json(j);
+        // else if (type == "DenseMatrix") gate = DenseMatrixGateImpl<Prec, Space>::get_from_json(j);
+        else if (type == "Probablistic") gate = ProbablisticGateImpl<Prec, Space>::get_from_json(j);
         // clang-format on
     }
 };

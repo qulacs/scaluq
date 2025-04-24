@@ -51,5 +51,6 @@ int main() {
 
         std::cout << "Time: " << timer.seconds() << std::endl;
     }
+    { std::cout << Json(get_Uw(3, 0)).dump(4) << std::endl; }
     scaluq::finalize();
 }
