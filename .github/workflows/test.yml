@@ -88,4 +88,4 @@ jobs:
           else
             NPROC=$(nproc)
           fi
-          OMP_PROC_BIND=false ctest --test-dir -j ${NPROC}
+          OMP_PROC_BIND=false ctest --test-dir build/ -j ${NPROC}
