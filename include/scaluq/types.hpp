@@ -15,7 +15,11 @@ namespace scaluq {
 using StdComplex = std::complex<double>;
 using Json = nlohmann::json;
 
+#ifdef SCALUQ_USE_CUDA
 enum class ExecutionSpace { Host, Default };
+#else
+enum class ExecutionSpace { Host, Default = Host };
+#endif
 
 using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex, Eigen::RowMajor>;

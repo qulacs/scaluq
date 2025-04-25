@@ -117,7 +117,7 @@ template <typename T>
 concept ParamGateImpl = std::derived_from<T, ParamGateBase<T::Prec, T::Space>>;
 
 template <ParamGateImpl T>
-inline std::shared_ptr<const T> get_from_json(const Json&);
+std::shared_ptr<const T> get_from_json(const Json&);
 
 template <ParamGateImpl T>
 class ParamGatePtr {

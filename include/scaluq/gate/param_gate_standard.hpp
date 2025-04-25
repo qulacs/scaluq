@@ -94,48 +94,6 @@ using ParamRYGate = internal::ParamGatePtr<internal::ParamRYGateImpl<Prec, Space
 template <Precision Prec, ExecutionSpace Space>
 using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl<Prec, Space>>;
 
-namespace internal {
-
-#define DECLARE_GET_FROM_JSON(Impl, Prec, Space)                                       \
-    template <>                                                                        \
-    inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {     \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();             \
-        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>(); \
-        return std::make_shared<const Impl<Prec, Space>>(                              \
-            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),          \
-            vector_to_mask(controls),                                                  \
-            vector_to_mask(control_values),                                            \
-            static_cast<Float<Prec>>(j.at("param_coef").get<double>()));               \
-    }
-
-#define INSTANTIATE_GET_FROM_JSON_EACH_GATE(Prec, Space) \
-    DECLARE_GET_FROM_JSON(ParamRXGateImpl, Prec, Space)  \
-    DECLARE_GET_FROM_JSON(ParamRYGateImpl, Prec, Space)  \
-    DECLARE_GET_FROM_JSON(ParamRZGateImpl, Prec, Space)
-
-#define INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Prec)                     \
-    INSTANTIATE_GET_FROM_JSON_EACH_GATE(Prec, ExecutionSpace::Default) \
-    INSTANTIATE_GET_FROM_JSON_EACH_GATE(Prec, ExecutionSpace::Host)
-
-#ifdef SCALUQ_BFLOAT16
-INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::BF16)
-#endif
-#ifdef SCALUQ_FLOAT16
-INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F16)
-#endif
-#ifdef SCALUQ_FLOAT32
-INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F32)
-#endif
-#ifdef SCALUQ_FLOAT64
-INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F64)
-#endif
-
-#undef DECLARE_GET_FROM_JSON
-#undef INSTANTIATE_GET_FROM_JSON_EACH_GATE
-#undef INSTANTIATE_GET_FROM_JSON_EACH_SPACE
-
-}  // namespace internal
-
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>

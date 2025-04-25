@@ -90,4 +90,24 @@ std::string PauliRotationGateImpl<Prec, Space>::to_string(const std::string& ind
     return ss.str();
 }
 template class PauliRotationGateImpl<Prec, Space>;
+
+template <>
+inline std::shared_ptr<const PauliGateImpl<Prec, Space>> get_from_json(const Json& j) {
+    auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();
+    auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
+    return std::make_shared<const PauliGateImpl<Prec, Space>>(
+        vector_to_mask(control_qubits),
+        vector_to_mask(control_qubits, control_values),
+        j.at("pauli").get<PauliOperator<Prec, Space>>());
+}
+template <>
+inline std::shared_ptr<const PauliRotationGateImpl<Prec, Space>> get_from_json(const Json& j) {
+    auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();
+    auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
+    return std::make_shared<const PauliRotationGateImpl<Prec, Space>>(
+        vector_to_mask(control_qubits),
+        vector_to_mask(control_qubits, control_values),
+        j.at("pauli").get<PauliOperator<Prec, Space>>(),
+        static_cast<Float<Prec>>(j.at("angle").get<double>()));
+}
 }  // namespace scaluq::internal

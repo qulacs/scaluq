@@ -128,4 +128,20 @@ std::string ParamRZGateImpl<Prec, Space>::to_string(const std::string& indent) c
     return ss.str();
 }
 template class ParamRZGateImpl<Prec, Space>;
+
+#define DECLARE_GET_FROM_JSON(Impl)                                                    \
+    template <>                                                                        \
+    inline std::shared_ptr<const Impl<Prec, Space>> get_from_json(const Json& j) {     \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();             \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>(); \
+        return std::make_shared<const Impl<Prec, Space>>(                              \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),          \
+            vector_to_mask(controls),                                                  \
+            vector_to_mask(control_values),                                            \
+            static_cast<Float<Prec>>(j.at("param_coef").get<double>()));               \
+    }
+
+DECLARE_GET_FROM_JSON(ParamRXGateImpl)
+DECLARE_GET_FROM_JSON(ParamRYGateImpl)
+DECLARE_GET_FROM_JSON(ParamRZGateImpl)
 }  // namespace scaluq::internal

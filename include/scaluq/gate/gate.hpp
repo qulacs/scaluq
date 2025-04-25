@@ -226,7 +226,9 @@ template <typename T>
 concept GateImpl = std::derived_from<T, GateBase<T::Prec, T::Space>>;
 
 template <GateImpl T>
-inline std::shared_ptr<const T> get_from_json(const Json&);
+std::shared_ptr<const T> get_from_json(const Json&) {
+    throw std::runtime_error("get_from_json<T>: not implemented");
+}
 
 template <GateImpl T>
 class GatePtr {

@@ -76,4 +76,11 @@ std::string ProbablisticGateImpl<Prec, Space>::to_string(const std::string& inde
     return ss.str();
 }
 template class ProbablisticGateImpl<Prec, Space>;
+
+template <>
+inline std::shared_ptr<const ProbablisticGateImpl<Prec, Space>> get_from_json(const Json& j) {
+    return std::make_shared<const ProbablisticGateImpl<Prec, Space>>(
+        j.at("distribution").get<std::vector<double>>(),
+        j.at("gate_list").get<std::vector<Gate<Prec, Space>>>());
+}
 }  // namespace scaluq::internal

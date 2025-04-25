@@ -82,38 +82,6 @@ public:
 template <Precision Prec, ExecutionSpace Space>
 using ProbablisticGate = internal::GatePtr<internal::ProbablisticGateImpl<Prec, Space>>;
 
-namespace internal {
-
-#define DECLARE_GET_FROM_JSON(Prec, Space)                                                         \
-    template <>                                                                                    \
-    inline std::shared_ptr<const ProbablisticGateImpl<Prec, Space>> get_from_json(const Json& j) { \
-        return std::make_shared<const ProbablisticGateImpl<Prec, Space>>(                          \
-            j.at("distribution").get<std::vector<double>>(),                                       \
-            j.at("gate_list").get<std::vector<Gate<Prec, Space>>>());                              \
-    }
-
-#define INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Prec)       \
-    DECLARE_GET_FROM_JSON(Prec, ExecutionSpace::Default) \
-    DECLARE_GET_FROM_JSON(Prec, ExecutionSpace::Host)
-
-#ifdef SCALUQ_BFLOAT16
-INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::BF16)
-#endif
-#ifdef SCALUQ_FLOAT16
-INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F16)
-#endif
-#ifdef SCALUQ_FLOAT32
-INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F32)
-#endif
-#ifdef SCALUQ_FLOAT64
-INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F64)
-#endif
-
-#undef DECLARE_GET_FROM_JSON
-#undef INSTANTIATE_GET_FROM_JSON_EACH_SPACE
-
-}  // namespace internal
-
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
