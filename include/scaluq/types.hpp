@@ -31,10 +31,12 @@ template <>
 struct SpaceTypeImpl<ExecutionSpace::Host> {
     using Type = Kokkos::DefaultHostExecutionSpace;
 };
+#ifdef SCALUQ_USE_CUDA
 template <>
 struct SpaceTypeImpl<ExecutionSpace::Default> {
     using Type = Kokkos::DefaultExecutionSpace;
 };
+#endif
 template <ExecutionSpace Space>
 using SpaceType = typename SpaceTypeImpl<Space>::Type;
 
