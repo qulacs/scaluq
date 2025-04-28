@@ -361,7 +361,7 @@ public:
         else if (type == "Swap") gate = GetGateFromJson<SwapGateImpl<Prec, Space>>::get(j);
         else if (type == "Pauli") gate = GetGateFromJson<PauliGateImpl<Prec, Space>>::get(j);
         else if (type == "PauliRotation") gate = GetGateFromJson<PauliRotationGateImpl<Prec, Space>>::get(j);
-        else if (type == "Probablistic") gate = GetGateFromJson<ProbablisticGateImpl<Prec, Space>>{}.get(j);
+        else if (type == "Probablistic") gate = GetGateFromJson<ProbablisticGateImpl<Prec, Space>>::get(j);
         // clang-format on
     }
 };

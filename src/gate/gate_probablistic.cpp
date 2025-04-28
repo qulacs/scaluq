@@ -77,9 +77,9 @@ std::string ProbablisticGateImpl<Prec, Space>::to_string(const std::string& inde
 }
 template class ProbablisticGateImpl<Prec, Space>;
 
-template <Precision prec, ExecutionSpace Space>
+template <Precision Prec, ExecutionSpace Space>
 std::shared_ptr<const ProbablisticGateImpl<Prec, Space>>
-GetGateFromJson<probablisticgateimpl<Prec, Space>>::get(const json& j) {
+GetGateFromJson<ProbablisticGateImpl<Prec, Space>>::get(const Json& j) {
     return std::make_shared<const ProbablisticGateImpl<Prec, Space>>(
         j.at("distribution").get<std::vector<double>>(),
         j.at("gate_list").get<std::vector<Gate<Prec, Space>>>());
