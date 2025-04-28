@@ -37,7 +37,7 @@ scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 |`SCALUQ_USE_OMP`|`ON`|CPUでの並列処理にOpenMPを利用するか|
 |`SCALUQ_USE_CUDA`|`OFF`|GPU (CUDA)での並列処理を行うか|
 |`SCALUQ_CUDA_ARCH`|(自動識別)|`CMAKE_USE_CUDA=ON`の場合、ターゲットとなるNvidia GPU アーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CUDA_ARCH=AMPERE80`)|
-|`SCALUQ_USE_TEST`|ON|`test/`をビルドターゲットに含める。`ninja -C build test`でテストのビルド/実行ができる|
+|`SCALUQ_USE_TEST`|ON|`test/`をビルドターゲットに含める。`ctest --test-dir build/`でテストのビルド/実行ができる|
 |`SCALUQ_USE_EXE`|ON|`exe/`をビルドターゲットに含める。インストールせずに実行を試すことができ、`ninja -C build`でのビルド後、`exe/main.cpp`の内容を`build/exe/main`で実行できる。|
 |`SCALUQ_FLOAT16`|OFF|`f16`精度を有効にする|
 |`SCALUQ_FLOAT32`|ON|`f32`精度を有効にする|
