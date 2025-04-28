@@ -1,6 +1,6 @@
 #include <scaluq/gate/param_gate_probablistic.hpp>
 
-#include "../util/template.hpp"
+#include "../prec_space.hpp"
 
 namespace scaluq::internal {
 template <Precision Prec, ExecutionSpace Space>
@@ -91,5 +91,5 @@ std::string ParamProbablisticGateImpl<Prec, Space>::to_string(const std::string&
     }
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ParamProbablisticGateImpl)
+template class ParamProbablisticGateImpl<Prec, Space>;
 }  // namespace scaluq::internal

@@ -1,7 +1,7 @@
 #include <scaluq/state/state_vector_batched.hpp>
 
+#include "../prec_space.hpp"
 #include "../util/math.hpp"
-#include "../util/template.hpp"
 
 namespace scaluq {
 template <Precision Prec, ExecutionSpace Space>
@@ -406,7 +406,8 @@ void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComp
     for (std::uint64_t b = 0; b < states.size(); ++b) {
         if (states[b].size() != _dim) {
             throw std::runtime_error(
-                "Error: StateVectorBatched::load(std::vector<std::vector<Complex<Prec>>>&): "
+                "Error: "
+                "StateVectorBatched::load(std::vector<std::vector<Complex<Prec>>>&): "
                 "invalid length of state");
         }
     }
@@ -454,6 +455,6 @@ std::string StateVectorBatched<Prec, Space>::to_string() const {
     return os.str();
 }
 
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(StateVectorBatched)
+template class StateVectorBatched<internal::Prec, internal::Space>;
 
 }  // namespace scaluq

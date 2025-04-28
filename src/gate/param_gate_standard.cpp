@@ -1,7 +1,7 @@
 #include <scaluq/gate/param_gate_standard.hpp>
 
+#include "../prec_space.hpp"
 #include "../util/math.hpp"
-#include "../util/template.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
@@ -45,7 +45,7 @@ std::string ParamRXGateImpl<Prec, Space>::to_string(const std::string& indent) c
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ParamRXGateImpl)
+template class ParamRXGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix ParamRYGateImpl<Prec, Space>::get_matrix(double param) const {
@@ -86,7 +86,7 @@ std::string ParamRYGateImpl<Prec, Space>::to_string(const std::string& indent) c
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ParamRYGateImpl)
+template class ParamRYGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix ParamRZGateImpl<Prec, Space>::get_matrix(double param) const {
@@ -127,5 +127,5 @@ std::string ParamRZGateImpl<Prec, Space>::to_string(const std::string& indent) c
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ParamRZGateImpl)
+template class ParamRZGateImpl<Prec, Space>;
 }  // namespace scaluq::internal

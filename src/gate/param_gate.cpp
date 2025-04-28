@@ -1,6 +1,6 @@
 #include <scaluq/gate/param_gate.hpp>
 
-#include "../util/template.hpp"
+#include "../prec_space.hpp"
 
 namespace scaluq::internal {
 template <Precision Prec, ExecutionSpace Space>
@@ -54,5 +54,5 @@ ParamGateBase<Prec, Space>::ParamGateBase(std::uint64_t target_mask,
             "control_mask) : Target and control qubits must not overlap.");
     }
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ParamGateBase)
+template class ParamGateBase<Prec, Space>;
 }  // namespace scaluq::internal

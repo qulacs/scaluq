@@ -1,6 +1,6 @@
 #include <scaluq/gate/gate_matrix.hpp>
 
-#include "../util/template.hpp"
+#include "../prec_space.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
@@ -57,7 +57,7 @@ std::string DenseMatrixGateImpl<Prec, Space>::to_string(const std::string& inden
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(DenseMatrixGateImpl)
+template class DenseMatrixGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 SparseMatrixGateImpl<Prec, Space>::SparseMatrixGateImpl(std::uint64_t target_mask,
@@ -106,5 +106,5 @@ std::string SparseMatrixGateImpl<Prec, Space>::to_string(const std::string& inde
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SparseMatrixGateImpl)
+template class SparseMatrixGateImpl<Prec, Space>;
 }  // namespace scaluq::internal

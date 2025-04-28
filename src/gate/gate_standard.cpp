@@ -1,7 +1,7 @@
 #include <scaluq/gate/gate_standard.hpp>
 
+#include "../prec_space.hpp"
 #include "../util/math.hpp"
-#include "../util/template.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
@@ -24,7 +24,7 @@ std::string IGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(IGateImpl)
+template class IGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix GlobalPhaseGateImpl<Prec, Space>::get_matrix() const {
@@ -52,7 +52,7 @@ std::string GlobalPhaseGateImpl<Prec, Space>::to_string(const std::string& inden
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(GlobalPhaseGateImpl)
+template class GlobalPhaseGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix XGateImpl<Prec, Space>::get_matrix() const {
@@ -77,7 +77,7 @@ std::string XGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(XGateImpl)
+template class XGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix YGateImpl<Prec, Space>::get_matrix() const {
@@ -102,7 +102,7 @@ std::string YGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(YGateImpl)
+template class YGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix ZGateImpl<Prec, Space>::get_matrix() const {
@@ -127,7 +127,7 @@ std::string ZGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ZGateImpl)
+template class ZGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix HGateImpl<Prec, Space>::get_matrix() const {
@@ -153,7 +153,7 @@ std::string HGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(HGateImpl)
+template class HGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix SGateImpl<Prec, Space>::get_matrix() const {
@@ -178,7 +178,7 @@ std::string SGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SGateImpl)
+template class SGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix SdagGateImpl<Prec, Space>::get_matrix() const {
@@ -204,7 +204,7 @@ std::string SdagGateImpl<Prec, Space>::to_string(const std::string& indent) cons
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SdagGateImpl)
+template class SdagGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix TGateImpl<Prec, Space>::get_matrix() const {
@@ -229,7 +229,7 @@ std::string TGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(TGateImpl)
+template class TGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix TdagGateImpl<Prec, Space>::get_matrix() const {
@@ -255,7 +255,7 @@ std::string TdagGateImpl<Prec, Space>::to_string(const std::string& indent) cons
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(TdagGateImpl)
+template class TdagGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix SqrtXGateImpl<Prec, Space>::get_matrix() const {
@@ -282,7 +282,7 @@ std::string SqrtXGateImpl<Prec, Space>::to_string(const std::string& indent) con
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SqrtXGateImpl)
+template class SqrtXGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix SqrtXdagGateImpl<Prec, Space>::get_matrix() const {
@@ -309,7 +309,7 @@ std::string SqrtXdagGateImpl<Prec, Space>::to_string(const std::string& indent) 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SqrtXdagGateImpl)
+template class SqrtXdagGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix SqrtYGateImpl<Prec, Space>::get_matrix() const {
@@ -336,7 +336,7 @@ std::string SqrtYGateImpl<Prec, Space>::to_string(const std::string& indent) con
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SqrtYGateImpl)
+template class SqrtYGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix SqrtYdagGateImpl<Prec, Space>::get_matrix() const {
@@ -363,7 +363,7 @@ std::string SqrtYdagGateImpl<Prec, Space>::to_string(const std::string& indent) 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SqrtYdagGateImpl)
+template class SqrtYdagGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix P0GateImpl<Prec, Space>::get_matrix() const {
@@ -388,7 +388,7 @@ std::string P0GateImpl<Prec, Space>::to_string(const std::string& indent) const 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(P0GateImpl)
+template class P0GateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix P1GateImpl<Prec, Space>::get_matrix() const {
@@ -413,7 +413,7 @@ std::string P1GateImpl<Prec, Space>::to_string(const std::string& indent) const 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(P1GateImpl)
+template class P1GateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix RXGateImpl<Prec, Space>::get_matrix() const {
@@ -446,7 +446,7 @@ std::string RXGateImpl<Prec, Space>::to_string(const std::string& indent) const 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(RXGateImpl)
+template class RXGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix RYGateImpl<Prec, Space>::get_matrix() const {
@@ -478,7 +478,7 @@ std::string RYGateImpl<Prec, Space>::to_string(const std::string& indent) const 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(RYGateImpl)
+template class RYGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix RZGateImpl<Prec, Space>::get_matrix() const {
@@ -510,7 +510,7 @@ std::string RZGateImpl<Prec, Space>::to_string(const std::string& indent) const 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(RZGateImpl)
+template class RZGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix U1GateImpl<Prec, Space>::get_matrix() const {
@@ -537,7 +537,7 @@ std::string U1GateImpl<Prec, Space>::to_string(const std::string& indent) const 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(U1GateImpl)
+template class U1GateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix U2GateImpl<Prec, Space>::get_matrix() const {
@@ -575,7 +575,7 @@ std::string U2GateImpl<Prec, Space>::to_string(const std::string& indent) const 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(U2GateImpl)
+template class U2GateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix U3GateImpl<Prec, Space>::get_matrix() const {
@@ -622,7 +622,7 @@ std::string U3GateImpl<Prec, Space>::to_string(const std::string& indent) const 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(U3GateImpl)
+template class U3GateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix SwapGateImpl<Prec, Space>::get_matrix() const {
@@ -648,5 +648,5 @@ std::string SwapGateImpl<Prec, Space>::to_string(const std::string& indent) cons
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl)
+template class SwapGateImpl<Prec, Space>;
 }  // namespace scaluq::internal

@@ -1,6 +1,6 @@
 #include <scaluq/gate/gate.hpp>
 
-#include "../util/template.hpp"
+#include "../prec_space.hpp"
 
 namespace scaluq {
 namespace internal {
@@ -60,6 +60,6 @@ GateBase<Prec, Space>::GateBase(std::uint64_t target_mask,
     }
 }
 
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(GateBase)
+template class GateBase<Prec, Space>;
 }  // namespace internal
 }  // namespace scaluq

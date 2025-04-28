@@ -129,12 +129,23 @@ ComplexMatrix get_expanded_matrix(const ComplexMatrix& from_matrix,
                                   std::vector<std::uint64_t>& to_operands);
 
 // Host std::vector を Device Kokkos::View に変換する関数
-template <typename T, ExecutionSpace Sp>
-Kokkos::View<T*, SpaceType<Sp>> convert_vector_to_view(const std::vector<T>& vec);
+template <typename T, ExecutionSpace Space>
+Kokkos::View<T*, SpaceType<Space>> convert_vector_to_view(const std::vector<T>& vec) {
+    Kokkos::View<const T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
+        vec.data(), vec.size());
+    Kokkos::View<T*, SpaceType<Space>> device_view("device_view", vec.size());
+    Kokkos::deep_copy(device_view, host_view);
+    return device_view;
+}
 
 // Device Kokkos::View を Host std::vector に変換する関数
-template <typename T, ExecutionSpace Sp>
-std::vector<T> convert_view_to_vector(const Kokkos::View<T*, SpaceType<Sp>>& device_view);
+template <typename T, ExecutionSpace Space>
+std::vector<T> convert_view_to_vector(const Kokkos::View<T*, SpaceType<Space>>& device_view) {
+    std::vector<T> host_vector(device_view.extent(0));
+    auto host_view = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), device_view);
+    std::copy(host_view.data(), host_view.data() + host_view.size(), host_vector.begin());
+    return host_vector;
+}
 
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Float<Prec> squared_norm(const Complex<Prec>& z) {

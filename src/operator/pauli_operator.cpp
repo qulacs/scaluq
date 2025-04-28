@@ -1,7 +1,7 @@
 #include <scaluq/operator/pauli_operator.hpp>
 
+#include "../prec_space.hpp"
 #include "../util/math.hpp"
-#include "../util/template.hpp"
 #include "apply_pauli.hpp"
 
 namespace scaluq {
@@ -323,6 +323,6 @@ PauliOperator<Prec, Space> PauliOperator<Prec, Space>::operator*(
         _ptr->_coef * target._ptr->_coef * internal::PHASE_90ROT<Prec>()[extra_90rot_cnt]);
 }
 
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(PauliOperator)
+template class PauliOperator<internal::Prec, internal::Space>;
 
 }  // namespace scaluq

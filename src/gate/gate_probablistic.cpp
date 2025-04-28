@@ -1,6 +1,6 @@
 #include <scaluq/gate/gate_probablistic.hpp>
 
-#include "../util/template.hpp"
+#include "../prec_space.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
@@ -75,5 +75,5 @@ std::string ProbablisticGateImpl<Prec, Space>::to_string(const std::string& inde
     }
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ProbablisticGateImpl)
+template class ProbablisticGateImpl<Prec, Space>;
 }  // namespace scaluq::internal

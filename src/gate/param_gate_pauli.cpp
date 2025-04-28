@@ -1,8 +1,8 @@
 #include <scaluq/gate/param_gate_pauli.hpp>
 
 #include "../operator/apply_pauli.hpp"
+#include "../prec_space.hpp"
 #include "../util/math.hpp"
-#include "../util/template.hpp"
 
 namespace scaluq::internal {
 template <Precision Prec, ExecutionSpace Space>
@@ -56,5 +56,5 @@ std::string ParamPauliRotationGateImpl<Prec, Space>::to_string(const std::string
     ss << indent << "  Pauli Operator: \"" << _pauli.get_pauli_string() << "\"";
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ParamPauliRotationGateImpl)
+template class ParamPauliRotationGateImpl<Prec, Space>;
 }  // namespace scaluq::internal

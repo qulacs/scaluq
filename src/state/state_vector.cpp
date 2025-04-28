@@ -2,8 +2,8 @@
 #include <scaluq/util/utility.hpp>
 #include <type_traits>
 
+#include "../prec_space.hpp"
 #include "../util/math.hpp"
-#include "../util/template.hpp"
 
 namespace scaluq {
 template <Precision Prec, ExecutionSpace Space>
@@ -284,6 +284,6 @@ std::string StateVector<Prec, Space>::to_string() const {
     return os.str();
 }
 
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(StateVector)
+template class StateVector<internal::Prec, internal::Space>;
 
 }  // namespace scaluq

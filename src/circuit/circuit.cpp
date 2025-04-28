@@ -2,7 +2,7 @@
 #include <scaluq/gate/gate_probablistic.hpp>
 #include <scaluq/gate/param_gate_probablistic.hpp>
 
-#include "../util/template.hpp"
+#include "../prec_space.hpp"
 
 namespace scaluq {
 template <Precision Prec, ExecutionSpace Space>
@@ -292,5 +292,5 @@ void Circuit<Prec, Space>::check_gate_is_valid(const ParamGate<Prec, Space>& gat
     }
 }
 
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(Circuit)
+template class Circuit<internal::Prec, internal::Space>;
 }  // namespace scaluq

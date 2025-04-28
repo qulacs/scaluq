@@ -1,8 +1,8 @@
-#include "../util/template.hpp"
+#include "../prec_space.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
                         std::uint64_t control_value_mask,
@@ -46,7 +46,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     state._raw = update;
 }
 
-template <Precision Prec, ExecutionSpace Space>
+template <>
 void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_mask,
                         std::uint64_t control_value_mask,
@@ -95,21 +95,4 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     states._raw = update;
 }
 
-#define FUNC_MACRO(Prec, Space)                                        \
-    template void sparse_matrix_gate(std::uint64_t,                    \
-                                     std::uint64_t,                    \
-                                     std::uint64_t,                    \
-                                     const SparseMatrix<Prec, Space>&, \
-                                     StateVector<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
-
-#define FUNC_MACRO(Prec, Space)                                        \
-    template void sparse_matrix_gate(std::uint64_t,                    \
-                                     std::uint64_t,                    \
-                                     std::uint64_t,                    \
-                                     const SparseMatrix<Prec, Space>&, \
-                                     StateVectorBatched<Prec, Space>&);
-SCALUQ_CALL_MACRO_FOR_PRECISION_AND_EXECUTION_SPACE(FUNC_MACRO)
-#undef FUNC_MACRO
 }  // namespace scaluq::internal

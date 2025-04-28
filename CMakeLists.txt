@@ -119,19 +119,67 @@ else()
     message(STATUS "Skip downloding googletest")
 endif(SCALUQ_USE_TEST)
 
-add_library(scaluq)
-set_property(TARGET scaluq PROPERTY POSITION_INDEPENDENT_CODE ON)
+set(SCALUQ_LIBRARIES)
+list(APPEND SCALUQ_LIBRARIES scaluq_base)
+add_library(scaluq_base)
+if(SCALUQ_FLOAT16)
+    list(APPEND SCALUQ_LIBRARIES scaluq_host_f16)
+    list(APPEND SCALUQ_LIBRARIES scaluq_default_f16)
+    add_library(scaluq_host_f16)
+    add_library(scaluq_default_f16)
+    target_compile_definitions(scaluq_host_f16 PUBLIC SCALUQ_FLOAT16)
+    target_compile_definitions(scaluq_host_f16 PRIVATE SCALUQ_INTERNAL_PREC=F16 SCALUQ_INTERNAL_SPACE=Host)
+    target_compile_definitions(scaluq_default_f16 PUBLIC SCALUQ_FLOAT16)
+    target_compile_definitions(scaluq_default_f16 PRIVATE SCALUQ_INTERNAL_PREC=F16 SCALUQ_INTERNAL_SPACE=Default)
+endif()
+if(SCALUQ_FLOAT32)
+    list(APPEND SCALUQ_LIBRARIES scaluq_host_f32)
+    list(APPEND SCALUQ_LIBRARIES scaluq_default_f32)
+    add_library(scaluq_host_f32)
+    add_library(scaluq_default_f32)
+    target_compile_definitions(scaluq_host_f32 PUBLIC SCALUQ_FLOAT32)
+    target_compile_definitions(scaluq_host_f32 PRIVATE SCALUQ_INTERNAL_PREC=F32 SCALUQ_INTERNAL_SPACE=Host)
+    target_compile_definitions(scaluq_default_f32 PUBLIC SCALUQ_FLOAT32)
+    target_compile_definitions(scaluq_default_f32 PRIVATE SCALUQ_INTERNAL_PREC=F32 SCALUQ_INTERNAL_SPACE=Default)
+endif()
+if(SCALUQ_FLOAT64)
+    list(APPEND SCALUQ_LIBRARIES scaluq_host_f64)
+    list(APPEND SCALUQ_LIBRARIES scaluq_default_f64)
+    add_library(scaluq_host_f64)
+    add_library(scaluq_default_f64)
+    target_compile_definitions(scaluq_host_f64 PUBLIC SCALUQ_FLOAT64)
+    target_compile_definitions(scaluq_host_f64 PRIVATE SCALUQ_INTERNAL_PREC=F64 SCALUQ_INTERNAL_SPACE=Host)
+    target_compile_definitions(scaluq_default_f64 PUBLIC SCALUQ_FLOAT64)
+    target_compile_definitions(scaluq_default_f64 PRIVATE SCALUQ_INTERNAL_PREC=F64 SCALUQ_INTERNAL_SPACE=Default)
+endif()
+if(SCALUQ_BFLOAT16)
+    list(APPEND SCALUQ_LIBRARIES scaluq_host_bf16)
+    list(APPEND SCALUQ_LIBRARIES scaluq_default_bf16)
+    add_library(scaluq_host_bf16)
+    add_library(scaluq_default_bf16)
+    target_compile_definitions(scaluq_host_bf16 PUBLIC SCALUQ_BFLOAT16)
+    target_compile_definitions(scaluq_host_bf16 PRIVATE SCALUQ_INTERNAL_PREC=BF16 SCALUQ_INTERNAL_SPACE=Host)
+    target_compile_definitions(scaluq_default_bf16 PUBLIC SCALUQ_BFLOAT16)
+    target_compile_definitions(scaluq_default_bf16 PRIVATE SCALUQ_INTERNAL_PREC=BF16 SCALUQ_INTERNAL_SPACE=Default)
+endif()
+
+foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
+    set_property(TARGET ${LIBRARY} PROPERTY POSITION_INDEPENDENT_CODE ON)
+endforeach()
+
+add_library(scaluq INTERFACE)
+target_link_libraries(scaluq INTERFACE ${SCALUQ_LIBRARIES})
 
 ### Compiler options ###
 # Standard
 if(SCALUQ_USE_CUDA)
-    target_compile_features(scaluq PUBLIC cxx_std_20)
+    target_compile_features(scaluq_base PUBLIC cxx_std_20)
 else()
-    target_compile_features(scaluq PUBLIC cxx_std_23)
+    target_compile_features(scaluq_base PUBLIC cxx_std_23)
 endif()
 
 # Warning
-target_compile_options(scaluq PUBLIC
+target_compile_options(scaluq_base PUBLIC
     -Wall
     -Wextra
     -Wunused-parameter
@@ -143,10 +191,10 @@ target_compile_options(scaluq PUBLIC
 )
 
 if(SCALUQ_USE_CUDA)
-    target_compile_definitions(scaluq PUBLIC SCALUQ_USE_CUDA)
-    target_compile_definitions(scaluq PUBLIC JSON_HAS_RANGES=0) # cite: https://github.com/nlohmann/json/issues/3907
+    target_compile_definitions(scaluq_base PUBLIC SCALUQ_USE_CUDA)
+    target_compile_definitions(scaluq_base PUBLIC JSON_HAS_RANGES=0) # cite: https://github.com/nlohmann/json/issues/3907
     # to remove tremendous warnings of Eigen
-    target_compile_options(scaluq PUBLIC
+    target_compile_options(scaluq_base PUBLIC
         -Wno-unknown-pragmas
         -Wno-deprecated-enum-enum-conversion
         --expt-relaxed-constexpr
@@ -156,33 +204,20 @@ if(SCALUQ_USE_CUDA)
 endif()
 
 # Enable pthread
-target_compile_options(scaluq PUBLIC -pthread)
+target_compile_options(scaluq_base PUBLIC -pthread)
 
 # Enable openmp
 if(SCALUQ_USE_OMP)
-    target_compile_options(scaluq PUBLIC -fopenmp)
+    target_compile_options(scaluq_base PUBLIC -fopenmp)
 endif()
 
 # Debug options
 if ((${CMAKE_SYSTEM_NAME} MATCHES "Darwin") OR CMAKE_CUDA_COMPILER)
-target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g,-O3>)
+target_compile_options(scaluq_base PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g,-O3>)
 else()
-target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
-target_link_options(scaluq PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
+target_compile_options(scaluq_base PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
+target_link_options(scaluq_base PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
 endif()
-
-# Float precision
-set(PRECISION_FLAGS
-    SCALUQ_FLOAT16
-    SCALUQ_FLOAT32
-    SCALUQ_FLOAT64
-    SCALUQ_BFLOAT16
-)
-foreach(flag IN LISTS PRECISION_FLAGS)
-    if(${flag})
-        target_compile_definitions(scaluq PUBLIC ${flag})
-    endif()
-endforeach()
 
 ### Add subdirectories ###
 add_subdirectory(src)
