@@ -58,8 +58,9 @@ std::string ParamPauliRotationGateImpl<Prec, Space>::to_string(const std::string
 }
 template class ParamPauliRotationGateImpl<Prec, Space>;
 
-template <>
-inline std::shared_ptr<const ParamPauliRotationGateImpl<Prec, Space>> get_from_json(const Json& j) {
+template <Precision Prec, ExecutionSpace Space>
+std::shared_ptr<const ParamPauliRotationGateImpl<Prec, Space>>
+GetParamGateFromJson<ParamPauliRotationGateImpl<Prec, Space>>::get(const Json& j) {
     auto controls = j.at("control").get<std::vector<std::uint64_t>>();
     auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
     return std::make_shared<const ParamPauliRotationGateImpl<Prec, Space>>(
@@ -68,4 +69,5 @@ inline std::shared_ptr<const ParamPauliRotationGateImpl<Prec, Space>> get_from_j
         j.at("pauli").get<PauliOperator<Prec, Space>>(),
         static_cast<Float<Prec>>(j.at("param_coef").get<double>()));
 }
+template class GetParamGateFromJson<ParamPauliRotationGateImpl<Prec, Space>>;
 }  // namespace scaluq::internal

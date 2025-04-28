@@ -91,8 +91,9 @@ std::string PauliRotationGateImpl<Prec, Space>::to_string(const std::string& ind
 }
 template class PauliRotationGateImpl<Prec, Space>;
 
-template <>
-inline std::shared_ptr<const PauliGateImpl<Prec, Space>> get_from_json(const Json& j) {
+template <Precision Prec, ExecutionSpace Space>
+std::shared_ptr<const PauliGateImpl<Prec, Space>> GetGateFromJson<PauliGateImpl<Prec, Space>>::get(
+    const Json& j) {
     auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();
     auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
     return std::make_shared<const PauliGateImpl<Prec, Space>>(
@@ -100,8 +101,10 @@ inline std::shared_ptr<const PauliGateImpl<Prec, Space>> get_from_json(const Jso
         vector_to_mask(control_qubits, control_values),
         j.at("pauli").get<PauliOperator<Prec, Space>>());
 }
+template class GetGateFromJson<PauliGateImpl<Prec, Space>>;
 template <>
-inline std::shared_ptr<const PauliRotationGateImpl<Prec, Space>> get_from_json(const Json& j) {
+std::shared_ptr<const PauliRotationGateImpl<Prec, Space>>
+GetGateFromJson<PauliRotationGateImpl<Prec, Space>>::get(const Json& j) {
     auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();
     auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
     return std::make_shared<const PauliRotationGateImpl<Prec, Space>>(
@@ -110,4 +113,5 @@ inline std::shared_ptr<const PauliRotationGateImpl<Prec, Space>> get_from_json(c
         j.at("pauli").get<PauliOperator<Prec, Space>>(),
         static_cast<Float<Prec>>(j.at("angle").get<double>()));
 }
+template class GetGateFromJson<PauliRotationGateImpl<Prec, Space>>;
 }  // namespace scaluq::internal

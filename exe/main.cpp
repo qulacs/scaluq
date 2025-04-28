@@ -7,7 +7,7 @@ int main() {
     {
         scaluq::Gate<scaluq::Precision::F64, scaluq::ExecutionSpace::Host> g =
             scaluq::gate::H<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>(0);
-        scaluq::Json j;
+        scaluq::Json j = g;
         scaluq::Gate g2 =
             j.template get<scaluq::Gate<scaluq::Precision::F64, scaluq::ExecutionSpace::Host>>();
         std::cout << g2->to_string() << std::endl;

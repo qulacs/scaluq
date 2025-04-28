@@ -81,6 +81,61 @@ struct adl_serializer<::scaluq::StdComplex> {
         value.imag(j["imag"].get<double>());
     }
 };
+
+template <>
+struct adl_serializer<::scaluq::ComplexMatrix> {
+    static void to_json(json& j, const ::scaluq::ComplexMatrix& value) {
+        j = json::array();
+        for (int i = 0; i < value.rows(); ++i) {
+            json row = json::array();
+            for (int j = 0; j < value.cols(); ++j) {
+                row.push_back(value(i, j));
+            }
+            j.push_back(row);
+        }
+    }
+    static void from_json(const json& j, ::scaluq::ComplexMatrix& value) {
+        int rows = j.size();
+        int cols = j[0].size();
+        value.resize(rows, cols);
+        int i = 0;
+        for (const auto& row : j) {
+            int j = 0;
+            for (const auto& val : row) {
+                value(i, j) = val.get<::scaluq::StdComplex>();
+                ++j;
+            }
+            ++i;
+        }
+    }
+};
+
+template <>
+struct adl_serializer<::scaluq::SparseComplexMatrix> {
+    static void to_json(json& j, const ::scaluq::SparseComplexMatrix& value) {
+        j["rows"] = value.rows();
+        j["cols"] = value.cols();
+        json triplets = json::array();
+        for (std::uint64_t i = 0; i < static_cast<std::uint64_t>(value.outerSize()); ++i) {
+            for (typename ::scaluq::SparseComplexMatrix::InnerIterator it(value, i); it; ++it) {
+                triplets.push_back({{"row", it.row()}, {"col", it.col()}, {"val", it.value()}});
+            }
+        }
+        j["triplets"] = triplets;
+    }
+    static void from_json(const json& j, ::scaluq::SparseComplexMatrix& value) {
+        std::uint64_t rows = j["rows"].get<std::uint64_t>();
+        std::uint64_t cols = j["cols"].get<std::uint64_t>();
+        value.resize(rows, cols);
+        std::vector<Eigen::Triplet<::scaluq::StdComplex>> triplets;
+        for (const auto& triplet : j["triplets"]) {
+            triplets.emplace_back(triplet["row"].get<std::uint64_t>(),
+                                  triplet["col"].get<std::uint64_t>(),
+                                  triplet["val"].get<::scaluq::StdComplex>());
+        }
+        value.setFromTriplets(triplets.begin(), triplets.end());
+    }
+};
 }  // namespace nlohmann
 
 #ifdef SCALUQ_USE_NANOBIND
