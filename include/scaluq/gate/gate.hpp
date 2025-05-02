@@ -501,3 +501,9 @@ nb::class_<Gate<Prec, Space>> bind_gate_gate_hpp(nb::module_& m) {
 #endif
 
 }  // namespace scaluq
+
+// Include all gate header files for the correct definition of concept GateImpl
+#include "./gate_matrix.hpp"
+#include "./gate_pauli.hpp"
+#include "./gate_probablistic.hpp"
+#include "./gate_standard.hpp"
