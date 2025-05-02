@@ -292,7 +292,7 @@ template <>
 Operator<internal::Prec, internal::Space>& Operator<internal::Prec, internal::Space>::operator+=(
     const Operator<internal::Prec, internal::Space>& target) {
     if (_n_qubits != target._n_qubits) {
-        throw std::runtime_error("Operator::oeprator+=: n_qubits must be equal");
+        throw std::runtime_error("Operator::operator+=: n_qubits must be equal");
     }
     for (const auto& pauli : target._terms) {
         add_operator(pauli);
@@ -304,7 +304,7 @@ template <>
 Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Space>::operator*(
     const Operator<internal::Prec, internal::Space>& target) const {
     if (_n_qubits != target._n_qubits) {
-        throw std::runtime_error("Operator::oeprator+=: n_qubits must be equal");
+        throw std::runtime_error("Operator::operator+=: n_qubits must be equal");
     }
     Operator ret(_n_qubits);
     for (const auto& pauli1 : _terms) {

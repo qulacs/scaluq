@@ -119,7 +119,7 @@ if(SCALUQ_USE_TEST)
     )
     FetchContent_MakeAvailable(googletest)
 else()
-    message(STATUS "Skip downloding googletest")
+    message(STATUS "Skip downloading googletest")
 endif(SCALUQ_USE_TEST)
 
 set(SCALUQ_LIBRARIES)

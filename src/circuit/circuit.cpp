@@ -1,6 +1,6 @@
 #include <scaluq/circuit/circuit.hpp>
-#include <scaluq/gate/gate_probablistic.hpp>
-#include <scaluq/gate/param_gate_probablistic.hpp>
+#include <scaluq/gate/gate_probabilistic.hpp>
+#include <scaluq/gate/param_gate_probabilistic.hpp>
 
 #include "../prec_space.hpp"
 
@@ -172,9 +172,9 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
         std::vector<GateWithKey> gates;
         if (g.index() == 0) {
             const auto& gate = std::get<0>(g);
-            if (gate.gate_type() == GateType::Probablistic) {
-                probs = ProbablisticGate<Prec, Space>(gate)->distribution();
-                const auto& gate_list = ProbablisticGate<Prec, Space>(gate)->gate_list();
+            if (gate.gate_type() == GateType::Probabilistic) {
+                probs = ProbabilisticGate<Prec, Space>(gate)->distribution();
+                const auto& gate_list = ProbabilisticGate<Prec, Space>(gate)->gate_list();
                 for (const auto& tmp : gate_list) {
                     gates.push_back(tmp);
                 }
@@ -184,9 +184,9 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
             }
         } else {
             const auto& [gate, key] = std::get<1>(g);
-            if (gate.param_gate_type() == ParamGateType::ParamProbablistic) {
-                probs = ParamProbablisticGate<Prec, Space>(gate)->distribution();
-                auto prob_gate_list = ParamProbablisticGate<Prec, Space>(gate)->gate_list();
+            if (gate.param_gate_type() == ParamGateType::ParamProbabilistic) {
+                probs = ParamProbabilisticGate<Prec, Space>(gate)->distribution();
+                auto prob_gate_list = ParamProbabilisticGate<Prec, Space>(gate)->gate_list();
                 for (const auto& tmp : prob_gate_list) {
                     if (tmp.index() == 0) {
                         gates.push_back(std::get<0>(tmp));
@@ -252,8 +252,8 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
 
 template <Precision Prec, ExecutionSpace Space>
 void Circuit<Prec, Space>::check_gate_is_valid(const Gate<Prec, Space>& gate) const {
-    if (gate.gate_type() == GateType::Probablistic) {
-        for (auto g : ProbablisticGate<Prec, Space>(gate)->gate_list()) {
+    if (gate.gate_type() == GateType::Probabilistic) {
+        for (auto g : ProbabilisticGate<Prec, Space>(gate)->gate_list()) {
             check_gate_is_valid(g);
         }
     } else {
@@ -270,8 +270,8 @@ void Circuit<Prec, Space>::check_gate_is_valid(const Gate<Prec, Space>& gate) co
 
 template <Precision Prec, ExecutionSpace Space>
 void Circuit<Prec, Space>::check_gate_is_valid(const ParamGate<Prec, Space>& gate) const {
-    if (gate.param_gate_type() == ParamGateType::ParamProbablistic) {
-        for (auto g : ParamProbablisticGate<Prec, Space>(gate)->gate_list()) {
+    if (gate.param_gate_type() == ParamGateType::ParamProbabilistic) {
+        for (auto g : ParamProbabilisticGate<Prec, Space>(gate)->gate_list()) {
             if (g.index() == 0) {
                 check_gate_is_valid(std::get<0>(g));
             } else {

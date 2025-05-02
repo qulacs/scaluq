@@ -111,10 +111,10 @@ TYPED_TEST(ParamGateTest, ApplyParamPauliRotationGate) {
     test_apply_parametric_multi_pauli_rotation<Prec, Space>(5);
 }
 
-TYPED_TEST(ParamGateTest, ApplyParamProbablisticGate) {
+TYPED_TEST(ParamGateTest, ApplyParamProbabilisticGate) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
-    auto probgate = gate::ParamProbablistic<Prec, Space>(
+    auto probgate = gate::ParamProbabilistic<Prec, Space>(
         {.1, .9}, {gate::ParamRX<Prec, Space>(0), gate::I<Prec, Space>()});
     std::uint64_t x_cnt = 0, i_cnt = 0;
     StateVector<Prec, Space> state(1);
@@ -128,7 +128,7 @@ TYPED_TEST(ParamGateTest, ApplyParamProbablisticGate) {
             i_cnt++;
         }
     }
-    // These test is probablistic, but pass at least 99.99% cases.
+    // These test is probabilistic, but pass at least 99.99% cases.
     ASSERT_GT(x_cnt, 0);
     ASSERT_GT(i_cnt, 0);
     ASSERT_LT(x_cnt, i_cnt);
