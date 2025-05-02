@@ -1,0 +1,5 @@
+function(list_max_idx ls out_var)
+    list(LENGTH ${ls} len)
+    math(EXPR max "${len} - 1")
+    set(${out_var} ${max} PARENT_SCOPE)
+endfunction()

@@ -117,7 +117,21 @@ template <typename T>
 concept ParamGateImpl = std::derived_from<T, ParamGateBase<T::Prec, T::Space>>;
 
 template <ParamGateImpl T>
-inline std::shared_ptr<const T> get_from_json(const Json&);
+struct GetParamGateFromJson {
+    static std::shared_ptr<const T> get(const Json&) {
+        throw std::runtime_error("GetParamGateFromJson<T>::get() is not implemented");
+    }
+};
+#define DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(Impl)                  \
+    template <Precision Prec, ExecutionSpace Space>                         \
+    struct GetParamGateFromJson<Impl<Prec, Space>> {                        \
+        static std::shared_ptr<const Impl<Prec, Space>> get(const Json& j); \
+    };
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamRXGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamRYGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamRZGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamPauliRotationGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamProbablisticGateImpl)
 
 template <ParamGateImpl T>
 class ParamGatePtr {
@@ -192,11 +206,11 @@ public:
         std::string type = j.at("type");
 
         // clang-format off
-        if (type == "ParamRX") gate = get_from_json<ParamRXGateImpl<Prec, Space>>(j);
-        else if (type == "ParamRY") gate = get_from_json<ParamRYGateImpl<Prec, Space>>(j);
-        else if (type == "ParamRZ") gate = get_from_json<ParamRZGateImpl<Prec, Space>>(j);
-        else if (type == "ParamPauliRotation") gate = get_from_json<ParamPauliRotationGateImpl<Prec, Space>>(j);
-        else if (type == "ParamProbablistic") gate = get_from_json<ParamProbablisticGateImpl<Prec, Space>>(j);
+        if (type == "ParamRX") gate = GetParamGateFromJson<ParamRXGateImpl<Prec, Space>>::get(j);
+        else if (type == "ParamRY") gate = GetParamGateFromJson<ParamRYGateImpl<Prec, Space>>::get(j);
+        else if (type == "ParamRZ") gate = GetParamGateFromJson<ParamRZGateImpl<Prec, Space>>::get(j);
+        else if (type == "ParamPauliRotation") gate = GetParamGateFromJson<ParamPauliRotationGateImpl<Prec, Space>>::get(j);
+        else if (type == "ParamProbablistic") gate = GetParamGateFromJson<ParamProbablisticGateImpl<Prec, Space>>::get(j);
         // clang-format on
     }
 };

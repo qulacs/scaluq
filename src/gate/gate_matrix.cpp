@@ -107,4 +107,29 @@ std::string SparseMatrixGateImpl<Prec, Space>::to_string(const std::string& inde
     return ss.str();
 }
 template class SparseMatrixGateImpl<Prec, Space>;
+
+template <Precision Prec, ExecutionSpace Space>
+std::shared_ptr<const DenseMatrixGateImpl<Prec, Space>>
+GetGateFromJson<DenseMatrixGateImpl<Prec, Space>>::get(const Json& j) {
+    auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();
+    auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
+    return std::make_shared<const DenseMatrixGateImpl<Prec, Space>>(
+        vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),
+        vector_to_mask(control_qubits),
+        vector_to_mask(control_qubits, control_values),
+        j.at("matrix").get<ComplexMatrix>());
+}
+template class GetGateFromJson<DenseMatrixGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+std::shared_ptr<const SparseMatrixGateImpl<Prec, Space>>
+GetGateFromJson<SparseMatrixGateImpl<Prec, Space>>::get(const Json& j) {
+    auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();
+    auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
+    return std::make_shared<const SparseMatrixGateImpl<Prec, Space>>(
+        vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),
+        vector_to_mask(control_qubits),
+        vector_to_mask(control_qubits, control_values),
+        j.at("matrix").get<SparseComplexMatrix>());
+}
+template class GetGateFromJson<SparseMatrixGateImpl<Prec, Space>>;
 }  // namespace scaluq::internal
