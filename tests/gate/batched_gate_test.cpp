@@ -759,11 +759,11 @@ TYPED_TEST(BatchedGateTest, ApplyPauliGate) {
     run_random_batched_gate_apply_pauli<Prec, Space>(5);
 }
 
-TYPED_TEST(BatchedGateTest, ApplyProbablisticGate) {
+TYPED_TEST(BatchedGateTest, ApplyProbabilisticGate) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     {
-        auto probgate = gate::Probablistic<Prec, Space>(
+        auto probgate = gate::Probabilistic<Prec, Space>(
             {.1, .9}, {gate::X<Prec, Space>(0), gate::I<Prec, Space>()});
         StateVectorBatched<Prec, Space> states(BATCH_SIZE, 1);
         std::vector<std::vector<std::uint64_t>> befores, afters;
@@ -780,7 +780,7 @@ TYPED_TEST(BatchedGateTest, ApplyProbablisticGate) {
                 }
             }
         }
-        // These test is probablistic, but pass at least 99.9% cases.
+        // These test is probabilistic, but pass at least 99.9% cases.
         for (std::size_t i = 0; i < BATCH_SIZE; i++) {
             ASSERT_GT(x_counts[i], 0);
             ASSERT_GT(i_counts[i], 0);

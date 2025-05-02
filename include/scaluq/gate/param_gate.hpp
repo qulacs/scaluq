@@ -20,7 +20,7 @@ class ParamRZGateImpl;
 template <Precision Prec, ExecutionSpace Space>
 class ParamPauliRotationGateImpl;
 template <Precision Prec, ExecutionSpace Space>
-class ParamProbablisticGateImpl;
+class ParamProbabilisticGateImpl;
 
 }  // namespace internal
 
@@ -30,7 +30,7 @@ enum class ParamGateType {
     ParamRY,
     ParamRZ,
     ParamPauliRotation,
-    ParamProbablistic,
+    ParamProbabilistic,
     Error
 };
 
@@ -49,8 +49,8 @@ constexpr ParamGateType get_param_gate_type() {
                                       internal::ParamPauliRotationGateImpl<Prec, Space>>)
         return ParamGateType::ParamPauliRotation;
     else if constexpr (std::is_same_v<TWithoutConst,
-                                      internal::ParamProbablisticGateImpl<Prec, Space>>)
-        return ParamGateType::ParamProbablistic;
+                                      internal::ParamProbabilisticGateImpl<Prec, Space>>)
+        return ParamGateType::ParamProbabilistic;
     else
         static_assert(internal::lazy_false_v<T>, "unknown GateImpl");
 }
@@ -131,7 +131,7 @@ DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamRXGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamRYGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamRZGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamPauliRotationGateImpl)
-DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamProbablisticGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamProbabilisticGateImpl)
 
 template <ParamGateImpl T>
 class ParamGatePtr {
@@ -210,7 +210,7 @@ public:
         else if (type == "ParamRY") gate = GetParamGateFromJson<ParamRYGateImpl<Prec, Space>>::get(j);
         else if (type == "ParamRZ") gate = GetParamGateFromJson<ParamRZGateImpl<Prec, Space>>::get(j);
         else if (type == "ParamPauliRotation") gate = GetParamGateFromJson<ParamPauliRotationGateImpl<Prec, Space>>::get(j);
-        else if (type == "ParamProbablistic") gate = GetParamGateFromJson<ParamProbablisticGateImpl<Prec, Space>>::get(j);
+        else if (type == "ParamProbabilistic") gate = GetParamGateFromJson<ParamProbabilisticGateImpl<Prec, Space>>::get(j);
         // clang-format on
     }
 };
@@ -345,7 +345,7 @@ nb::class_<ParamGate<Prec, Space>> bind_gate_param_gate_hpp(nb::module_& m) {
                                Prec,
                                Space,
                                "General class of parametric quantum gate.\n\nNotes:\n\t"
-                               "Downcast to requred to use "
+                               "Downcast to required to use "
                                "gate-specific functions.")
         .def(nb::init<ParamGate<Prec, Space>>(), "Just copy shallowly.");
 }

@@ -3,21 +3,21 @@
 #include <variant>
 
 #include "../util/random.hpp"
-#include "gate_probablistic.hpp"
+#include "gate_probabilistic.hpp"
 #include "param_gate_pauli.hpp"
 #include "param_gate_standard.hpp"
 
 namespace scaluq {
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
-class ParamProbablisticGateImpl : public ParamGateBase<Prec, Space> {
+class ParamProbabilisticGateImpl : public ParamGateBase<Prec, Space> {
     using EitherGate = std::variant<Gate<Prec, Space>, ParamGate<Prec, Space>>;
     std::vector<double> _distribution;
     std::vector<double> _cumulative_distribution;
     std::vector<EitherGate> _gate_list;
 
 public:
-    ParamProbablisticGateImpl(
+    ParamProbabilisticGateImpl(
         const std::vector<double>& distribution,
         const std::vector<std::variant<Gate<Prec, Space>, ParamGate<Prec, Space>>>& gate_list);
     const std::vector<EitherGate>& gate_list() const { return _gate_list; }
@@ -25,50 +25,50 @@ public:
 
     std::vector<std::uint64_t> target_qubit_list() const override {
         throw std::runtime_error(
-            "ParamProbablisticGateImpl::target_qubit_list(): This function must not be used in "
-            "ParamProbablisticGateImpl.");
+            "ParamProbabilisticGateImpl::target_qubit_list(): This function must not be used in "
+            "ParamProbabilisticGateImpl.");
     }
     std::vector<std::uint64_t> control_qubit_list() const override {
         throw std::runtime_error(
-            "ParamProbablisticGateImpl::control_qubit_list(): This function must not be used in "
-            "ParamProbablisticGateImpl.");
+            "ParamProbabilisticGateImpl::control_qubit_list(): This function must not be used in "
+            "ParamProbabilisticGateImpl.");
     }
     std::vector<std::uint64_t> control_value_list() const override {
         throw std::runtime_error(
-            "ParamProbablisticGateImpl::control_value_list(): This function must not be used in "
-            "ParamProbablisticGateImpl.");
+            "ParamProbabilisticGateImpl::control_value_list(): This function must not be used in "
+            "ParamProbabilisticGateImpl.");
     }
     std::vector<std::uint64_t> operand_qubit_list() const override {
         throw std::runtime_error(
-            "ParamProbablisticGateImpl::operand_qubit_list(): This function must not be used in "
-            "ParamProbablisticGateImpl.");
+            "ParamProbabilisticGateImpl::operand_qubit_list(): This function must not be used in "
+            "ParamProbabilisticGateImpl.");
     }
     std::uint64_t target_qubit_mask() const override {
         throw std::runtime_error(
-            "ParamProbablisticGateImpl::target_qubit_mask(): This function must not be used in "
-            "ParamProbablisticGateImpl.");
+            "ParamProbabilisticGateImpl::target_qubit_mask(): This function must not be used in "
+            "ParamProbabilisticGateImpl.");
     }
     std::uint64_t control_qubit_mask() const override {
         throw std::runtime_error(
-            "ParamProbablisticGateImpl::control_qubit_mask(): This function must not be used in "
-            "ParamProbablisticGateImpl.");
+            "ParamProbabilisticGateImpl::control_qubit_mask(): This function must not be used in "
+            "ParamProbabilisticGateImpl.");
     }
     std::uint64_t control_value_mask() const override {
         throw std::runtime_error(
-            "ParamProbablisticGateImpl::control_value_mask(): This function must not be used in "
-            "ParamProbablisticGateImpl.");
+            "ParamProbabilisticGateImpl::control_value_mask(): This function must not be used in "
+            "ParamProbabilisticGateImpl.");
     }
     std::uint64_t operand_qubit_mask() const override {
         throw std::runtime_error(
-            "ParamProbablisticGateImpl::operand_qubit_mask(): This function must not be used in "
-            "ParamProbablisticGateImpl.");
+            "ParamProbabilisticGateImpl::operand_qubit_mask(): This function must not be used in "
+            "ParamProbabilisticGateImpl.");
     }
 
     std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override;
     ComplexMatrix get_matrix(double) const override {
         throw std::runtime_error(
-            "ParamProbablisticGateImpl::get_matrix(): This function must not be used in "
-            "ParamProbablisticGateImpl.");
+            "ParamProbabilisticGateImpl::get_matrix(): This function must not be used in "
+            "ParamProbabilisticGateImpl.");
     }
 
     void update_quantum_state(StateVector<Prec, Space>& state_vector, double param) const override;
@@ -78,7 +78,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 
     void get_as_json(Json& j) const override {
-        j = Json{{"type", "ParamProbablistic"},
+        j = Json{{"type", "ParamProbabilistic"},
                  {"gate_list", Json::array()},
                  {"distribution", this->distribution()}};
 
@@ -90,28 +90,28 @@ public:
 }  // namespace internal
 
 template <Precision Prec, ExecutionSpace Space>
-using ParamProbablisticGate =
-    internal::ParamGatePtr<internal::ParamProbablisticGateImpl<Prec, Space>>;
+using ParamProbabilisticGate =
+    internal::ParamGatePtr<internal::ParamProbabilisticGateImpl<Prec, Space>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
-void bind_gate_param_gate_probablistic_hpp(
+void bind_gate_param_gate_probabilistic_hpp(
     nb::module_& m, nb::class_<ParamGate<Prec, Space>>& param_gate_base_def) {
     DEF_PARAM_GATE(
-        ParamProbablisticGate,
+        ParamProbabilisticGate,
         Prec,
         Space,
-        "Specific class of parametric probablistic gate. The gate to apply is picked from a "
-        "cirtain distribution.",
+        "Specific class of parametric probabilistic gate. The gate to apply is picked from a "
+        "certain distribution.",
         param_gate_base_def)
         .def(
             "gate_list",
-            [](const ParamProbablisticGate<Prec, Space>& gate) { return gate->gate_list(); },
+            [](const ParamProbabilisticGate<Prec, Space>& gate) { return gate->gate_list(); },
             nb::rv_policy::reference)
         .def(
             "distribution",
-            [](const ParamProbablisticGate<Prec, Space>& gate) { return gate->distribution(); },
+            [](const ParamProbabilisticGate<Prec, Space>& gate) { return gate->distribution(); },
             nb::rv_policy::reference);
 }
 }  // namespace internal

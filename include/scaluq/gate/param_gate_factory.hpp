@@ -2,7 +2,7 @@
 
 #include "../util/utility.hpp"
 #include "param_gate_pauli.hpp"
-#include "param_gate_probablistic.hpp"
+#include "param_gate_probabilistic.hpp"
 #include "param_gate_standard.hpp"
 
 namespace scaluq {
@@ -66,11 +66,11 @@ inline ParamGate<Prec, Space> ParamPauliRotation(const PauliOperator<Prec, Space
         static_cast<internal::Float<Prec>>(param_coef));
 }
 template <Precision Prec, ExecutionSpace Space>
-inline ParamGate<Prec, Space> ParamProbablistic(
+inline ParamGate<Prec, Space> ParamProbabilistic(
     const std::vector<double>& distribution,
     const std::vector<std::variant<Gate<Prec, Space>, ParamGate<Prec, Space>>>& gate_list) {
     return internal::ParamGateFactory::create_gate<
-        internal::ParamProbablisticGateImpl<Prec, Space>>(distribution, gate_list);
+        internal::ParamProbabilisticGateImpl<Prec, Space>>(distribution, gate_list);
 }
 }  // namespace gate
 
@@ -165,23 +165,23 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
                                  "Controlled-ParamPauliRotation"}))
             .build_as_google_style()
             .c_str());
-    mgate.def("ParamProbablistic",
-              &gate::ParamProbablistic<Prec, Space>,
+    mgate.def("ParamProbabilistic",
+              &gate::ParamProbabilistic<Prec, Space>,
               "distribution"_a,
               "gate_list"_a,
               DocString()
                   .desc("Generate general :class:`~scaluq.f64.ParamGate` class instance of "
-                        ":class:`~scaluq.f64.ParamProbablisticGate`.")
+                        ":class:`~scaluq.f64.ParamProbabilisticGate`.")
                   .arg("distribution", "list[float]", "List of probability")
                   .arg("gate_list", "list[Union[Gate, ParamGate]]", "List of gates")
-                  .ret("ParamGate", "ParamProbablistic gate instance")
+                  .ret("ParamGate", "ParamProbabilistic gate instance")
                   .ex(DocString::Code(
-                      {">>> gate = ParamProbablistic([0.1, 0.9], [X(0), ParamRX(0, 0.5)])  # "
-                       "Probablistic gate with X and ParamRX"}))
+                      {">>> gate = ParamProbabilistic([0.1, 0.9], [X(0), ParamRX(0, 0.5)])  # "
+                       "probabilistic gate with X and ParamRX"}))
                   .build_as_google_style()
                   .c_str());
     mgate.def(
-        "ParamProbablistic",
+        "ParamProbabilistic",
         [](const std::vector<
             std::pair<double, std::variant<Gate<Prec, Space>, ParamGate<Prec, Space>>>>&
                prob_gate_list) {
@@ -193,18 +193,18 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
                 distribution.push_back(prob);
                 gate_list.push_back(gate);
             }
-            return gate::ParamProbablistic<Prec, Space>(distribution, gate_list);
+            return gate::ParamProbabilistic<Prec, Space>(distribution, gate_list);
         },
         "prob_gate_list"_a,
         DocString()
             .desc("Generate general :class:`~scaluq.f64.ParamGate` class instance of "
-                  ":class:`~scaluq.f64.ParamProbablisticGate`.")
+                  ":class:`~scaluq.f64.ParamProbabilisticGate`.")
             .arg("prob_gate_list",
                  "list[tuple[float, Union[Gate, ParamGate]]]",
                  "List of tuple of probability and gate")
-            .ret("ParamGate", "ParamProbablistic gate instance")
-            .ex(DocString::Code({">>> gate = ParamProbablistic([(0.1, X(0)), (0.9, I(0))])  # "
-                                 "Probablistic gate with X and I"}))
+            .ret("ParamGate", "ParamProbabilistic gate instance")
+            .ex(DocString::Code({">>> gate = ParamProbabilistic([(0.1, X(0)), (0.9, I(0))])  # "
+                                 "probabilistic gate with X and I"}))
             .build_as_google_style()
             .c_str());
 }

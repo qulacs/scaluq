@@ -754,7 +754,7 @@ std::shared_ptr<const U3GateImpl<Prec, Space>> GetGateFromJson<U3GateImpl<Prec, 
         vector_to_mask(control_qubits, control_values),
         static_cast<Float<Prec>>(j.at("theta").get<double>()),
         static_cast<Float<Prec>>(j.at("phi").get<double>()),
-        static_cast<Float<Prec>>(j.at("labmda").get<double>()));
+        static_cast<Float<Prec>>(j.at("lambda").get<double>()));
 }
 template class GetGateFromJson<U1GateImpl<Prec, Space>>;
 template class GetGateFromJson<U2GateImpl<Prec, Space>>;

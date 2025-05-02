@@ -790,7 +790,7 @@ void bind_gate_gate_standard_hpp(nb::module_& m, nb::class_<Gate<Prec, Space>>& 
     DEF_GATE(U1Gate,
              Prec,
              Space,
-             "Specific class of IBMQ's U1 Gate, which is a rotation abount Z-axis, "
+             "Specific class of IBMQ's U1 Gate, which is a rotation about Z-axis, "
              "represented as "
              "$\\begin{bmatrix} 1 & 0 \\\\ 0 & e^{i\\lambda} \\end{bmatrix}$.",
              gate_base_def)
@@ -817,7 +817,7 @@ void bind_gate_gate_standard_hpp(nb::module_& m, nb::class_<Gate<Prec, Space>>& 
     DEF_GATE(U3Gate,
              Prec,
              Space,
-             "Specific class of IBMQ's U3 Gate, which is a rotation abount 3 axis, "
+             "Specific class of IBMQ's U3 Gate, which is a rotation about 3 axis, "
              "represented as "
              "$\\begin{bmatrix} \\cos \\frac{\\theta}{2} & "
              "-e^{i\\lambda}\\sin\\frac{\\theta}{2}\\\\ "
