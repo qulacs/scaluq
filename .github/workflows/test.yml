@@ -77,7 +77,7 @@ jobs:
           cmake --version
           ninja --version
 
-      - name: Install scaluq for Ubuntu
+      - name: Install Scaluq for Ubuntu
         run: ./script/build_gcc.sh
 
       - name: Test
