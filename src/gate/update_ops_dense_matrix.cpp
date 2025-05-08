@@ -167,6 +167,7 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
     Kokkos::View<Complex<Prec>*, SpaceType<Space>> update(
         Kokkos::ViewAllocateWithoutInitializing("update"), state.dim());
     Kokkos::parallel_for(
+        "dense_matrix_gate_update",
         Kokkos::RangePolicy<SpaceType<Space>>(0, state.dim()), KOKKOS_LAMBDA(std::uint64_t i) {
             if ((i & control_mask) == control_value_mask) {
                 update(i) = -1;
@@ -178,6 +179,7 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
 
     std::uint64_t outer_mask = ~target_mask & ((1ULL << state.n_qubits()) - 1);
     Kokkos::parallel_for(
+        "dense_matrix_gate_update",
         Kokkos::TeamPolicy<SpaceType<Space>>(
             SpaceType<Space>(),
             state.dim() >> std::popcount(target_mask | control_mask),
@@ -214,12 +216,12 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
                                     const Matrix<Prec, Space>& matrix,
                                     StateVectorBatched<Prec, Space>& states) {
     const std::uint64_t matrix_dim = 1ULL << std::popcount(target_mask);
-    const std::uint64_t outer_mask = ~target_mask & ((1ULL << states.n_qubits()) - 1);
 
     Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight, SpaceType<Space>> update(
         Kokkos::ViewAllocateWithoutInitializing("update"), states.batch_size(), states.dim());
 
     Kokkos::parallel_for(
+        "dense_matrix_gate_update (batched)",
         Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
             {0, 0}, {states.batch_size(), states.dim()}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
@@ -231,30 +233,34 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 
-    Kokkos::View<Complex<Prec>**,
-                 Kokkos::LayoutRight,
-                 SpaceType<Space>,
-                 Kokkos::MemoryTraits<Kokkos::Atomic>>
-        update_atomic(update);
-
-    const std::uint64_t outer_dim = states.dim() >> std::popcount(target_mask | control_mask);
+    std::uint64_t outer_size = states.dim() >> std::popcount(target_mask | control_mask);
+    std::uint64_t outer_mask = ~target_mask & ((1ULL << states.n_qubits()) - 1);
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<4>>(
-            {0, 0, 0, 0}, {states.batch_size(), outer_dim, matrix_dim, matrix_dim}),
-        KOKKOS_LAMBDA(const std::uint64_t batch_id,
-                      const std::uint64_t outer_idx,
-                      const std::uint64_t r,
-                      const std::uint64_t c) {
-            std::uint64_t basis =
-                insert_zero_at_mask_positions(outer_idx, target_mask | control_mask) |
-                control_value_mask;
-
-            std::uint64_t dst_index =
-                internal::insert_zero_at_mask_positions(r, outer_mask) | basis;
-
-            std::uint64_t src_index =
-                internal::insert_zero_at_mask_positions(c, outer_mask) | basis;
-            update_atomic(batch_id, dst_index) += matrix(r, c) * states._raw(batch_id, src_index);
+        "dense_matrix_gate_update (batched)",
+        Kokkos::TeamPolicy<SpaceType<Space>>(
+            SpaceType<Space>(),
+            outer_size * states.batch_size(),
+            Kokkos::AUTO),
+        KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team) {
+            std::uint64_t basis = team.league_rank() % outer_size;
+            std::uint64_t batch_id = team.league_rank() / outer_size;
+            basis = insert_zero_at_mask_positions(basis, target_mask | control_mask) |
+                    control_value_mask;
+            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, matrix_dim), [&](std::uint64_t r) {
+                std::uint64_t dst_index =
+                    internal::insert_zero_at_mask_positions(r, outer_mask) | basis;
+                Complex<Prec> sum = Float<Prec>{0};
+                Kokkos::parallel_reduce(
+                    Kokkos::ThreadVectorRange(team, matrix_dim),
+                    [&](std::uint64_t c, Complex<Prec>& inner_sum) {
+                        std::uint64_t src_index =
+                            internal::insert_zero_at_mask_positions(c, outer_mask) | basis;
+                        inner_sum += matrix(r, c) * states._raw(batch_id, src_index);
+                    },
+                    sum);
+                update(batch_id, dst_index) = sum;
+            });
+            team.team_barrier();
         });
     Kokkos::fence();
 

@@ -1,11 +1,46 @@
 #include <iostream>
 #include <scaluq/all.hpp>
 
+using namespace scaluq;
+
 int main() {
-    scaluq::initialize();  // must be called before using any scaluq methods
+    initialize();  // must be called before using any scaluq methods
     {
-        scaluq::internal::SparseMatrix<scaluq::Precision::F64, scaluq::ExecutionSpace::Default> mat(
-            scaluq::SparseComplexMatrix(2, 2));
+        {       
+            std::int64_t n = 10;
+            std::int64_t d = 1 << n;
+            std::int64_t m = n / 2;
+            std::int64_t md = 1 << m;
+            std::int32_t b = 100;
+            std::int32_t r = 500;
+            Random rd;
+
+            ComplexMatrix matrix(md, md);
+            for (int i = 0; i < md; ++i) {
+                for (int j = 0; j < md; ++j) {
+                    matrix(i, j) = StdComplex(rd.normal(), rd.normal());
+                }
+            }
+            std::vector<std::uint64_t> targets = [&] {
+                auto tmp = rd.permutation(n);
+                std::vector<std::uint64_t> prefix;
+                for (int i = 0; i < m; ++i) prefix.push_back(tmp[i]);
+                return prefix;
+            }();
+
+            auto mgate = gate::DenseMatrix<Precision::F64,ExecutionSpace::Default>(targets, matrix);
+
+            StateVector<Precision::F64,ExecutionSpace::Default> state(n);
+            StateVectorBatched<Precision::F64,ExecutionSpace::Default> batched_state(b, n);
+            for (int i = 0; i < r; ++i) {
+                for (int j = 0; j < b; ++j) {
+                    mgate->update_quantum_state(state);
+                }
+            }
+            for (int i = 0; i < r; ++i) {
+                mgate->update_quantum_state(batched_state);
+            }
+        }
     }
-    scaluq::finalize();
+    finalize();
 }
