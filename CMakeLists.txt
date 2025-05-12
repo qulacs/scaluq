@@ -119,7 +119,7 @@ if(SCALUQ_USE_TEST)
     )
     FetchContent_MakeAvailable(googletest)
 else()
-    message(STATUS "Skip downloding googletest")
+    message(STATUS "Skip downloading googletest")
 endif(SCALUQ_USE_TEST)
 
 set(SCALUQ_LIBRARIES)
@@ -240,6 +240,7 @@ if(SKBUILD)
     add_subdirectory(python)
 endif(SKBUILD)
 if(SCALUQ_USE_TEST)
+    enable_testing()
     add_subdirectory(tests)
 endif(SCALUQ_USE_TEST)
 if(SCALUQ_USE_EXE)
@@ -253,15 +254,6 @@ if(SKBUILD)
         DEPENDS scaluq_core
     )
 endif(SKBUILD)
-
-# test
-if(SCALUQ_USE_TEST)
-    add_custom_target(
-        test
-        DEPENDS scaluq_test
-        COMMAND scaluq_test
-    )
-endif(SCALUQ_USE_TEST)
 
 # format
 find_program(CLANG_FORMAT "clang-format")

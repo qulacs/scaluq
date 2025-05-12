@@ -57,7 +57,7 @@ void bind_on_precision_and_space(nb::module_& mspace, const char* submodule_name
     auto param_gate_base_def = internal::bind_gate_param_gate_hpp<Prec, Space>(mp);
     internal::bind_gate_param_gate_standard_hpp<Prec, Space>(mp, param_gate_base_def);
     internal::bind_gate_param_gate_pauli_hpp<Prec, Space>(mp, param_gate_base_def);
-    internal::bind_gate_param_gate_probablistic_hpp<Prec, Space>(mp, param_gate_base_def);
+    internal::bind_gate_param_gate_probabilistic_hpp<Prec, Space>(mp, param_gate_base_def);
     internal::bind_gate_param_gate_factory<Prec, Space>(mgate);
     internal::bind_gate_merge_gate_hpp<Prec, Space>(mp);
 

@@ -49,10 +49,10 @@ public:
         const StateVector<Prec, Space>& state_vector_ket) const;
 
     // not implemented yet
-    [[nodiscard]] StdComplex solve_gound_state_eigenvalue_by_arnoldi_method(
+    [[nodiscard]] StdComplex solve_ground_state_eigenvalue_by_arnoldi_method(
         const StateVector<Prec, Space>& state, std::uint64_t iter_count, StdComplex mu = 0.) const;
     // not implemented yet
-    [[nodiscard]] StdComplex solve_gound_state_eigenvalue_by_power_method(
+    [[nodiscard]] StdComplex solve_ground_state_eigenvalue_by_power_method(
         const StateVector<Prec, Space>& state, std::uint64_t iter_count, StdComplex mu = 0.) const;
 
     Operator& operator*=(StdComplex coef);
@@ -174,7 +174,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
              "Get the transition amplitude of the operator between two state vectors.")
         .def("get_matrix",
              &Operator<Prec, Space>::get_matrix,
-             "Get matrix representaton of the Operator. Tensor product is applied from "
+             "Get matrix representation of the Operator. Tensor product is applied from "
              "n_qubits-1 to 0.")
         .def(nb::self *= StdComplex())
         .def(nb::self * StdComplex())

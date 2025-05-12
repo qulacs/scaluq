@@ -7,12 +7,6 @@ on:
       - ".vscode/**"
       - "doc/**"
       - "*.md"
-  pull_request:
-    paths-ignore:
-      - ".devcontainer/**"
-      - ".vscode/**"
-      - "doc/**"
-      - "*.md"
 
 jobs:
   check-format:

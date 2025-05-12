@@ -400,7 +400,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                      ">>> sum(-abs(a)**2 * math.log2(abs(a)**2) for a in v if a != 0)",
                      "2.5"})
                  .note("The result of this function differs from qulacs. This is because scaluq "
-                       "adopted 2 for the base of log in the difinition of entropy $\\sum_i -p_i "
+                       "adopted 2 for the base of log in the definition of entropy $\\sum_i -p_i "
                        "\\log p_i$ "
                        "however qulacs adopted e.")
                  .build_as_google_style()

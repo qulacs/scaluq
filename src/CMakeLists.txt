@@ -19,11 +19,11 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
             gate/merge_gate.cpp
             gate/gate_matrix.cpp
             gate/gate_pauli.cpp
-            gate/gate_probablistic.cpp
+            gate/gate_probabilistic.cpp
             gate/gate_standard.cpp
             gate/gate.cpp
             gate/param_gate_pauli.cpp
-            gate/param_gate_probablistic.cpp
+            gate/param_gate_probabilistic.cpp
             gate/param_gate_standard.cpp
             gate/param_gate.cpp
             gate/update_ops_dense_matrix.cpp
