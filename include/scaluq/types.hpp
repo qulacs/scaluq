@@ -86,10 +86,10 @@ template <>
 struct adl_serializer<::scaluq::ComplexMatrix> {
     static void to_json(json& j, const ::scaluq::ComplexMatrix& value) {
         j = json::array();
-        for (int i = 0; i < value.rows(); ++i) {
+        for (int row_idx = 0; row_idx < value.rows(); ++row_idx) {
             json row = json::array();
-            for (int j = 0; j < value.cols(); ++j) {
-                row.push_back(value(i, j));
+            for (int col_idx = 0; col_idx < value.cols(); ++col_idx) {
+                row.push_back(value(row_idx, col_idx));
             }
             j.push_back(row);
         }
@@ -98,14 +98,14 @@ struct adl_serializer<::scaluq::ComplexMatrix> {
         int rows = j.size();
         int cols = j[0].size();
         value.resize(rows, cols);
-        int i = 0;
+        int row_idx = 0;
         for (const auto& row : j) {
-            int j = 0;
+            int col_idx = 0;
             for (const auto& val : row) {
-                value(i, j) = val.get<::scaluq::StdComplex>();
-                ++j;
+                value(row_idx, col_idx) = val.get<::scaluq::StdComplex>();
+                ++col_idx;
             }
-            ++i;
+            ++row_idx;
         }
     }
 };
@@ -116,8 +116,10 @@ struct adl_serializer<::scaluq::SparseComplexMatrix> {
         j["rows"] = value.rows();
         j["cols"] = value.cols();
         json triplets = json::array();
-        for (std::uint64_t i = 0; i < static_cast<std::uint64_t>(value.outerSize()); ++i) {
-            for (typename ::scaluq::SparseComplexMatrix::InnerIterator it(value, i); it; ++it) {
+        for (std::uint64_t row_idx = 0; row_idx < static_cast<std::uint64_t>(value.outerSize());
+             ++row_idx) {
+            for (typename ::scaluq::SparseComplexMatrix::InnerIterator it(value, row_idx); it;
+                 ++it) {
                 triplets.push_back({{"row", it.row()}, {"col", it.col()}, {"val", it.value()}});
             }
         }
