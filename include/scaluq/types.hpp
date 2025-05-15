@@ -46,17 +46,17 @@ template <Precision Prec>
 using Matrix4x4 = Kokkos::Array<Kokkos::Array<Complex<Prec>, 4>, 4>;
 template <Precision Prec>
 using DiagonalMatrix2x2 = Kokkos::Array<Complex<Prec>, 2>;
-template <Precision Prec>
-struct SparseValue {
-    Complex<Prec> val;
-    uint32_t r, c;
-};
 
 template <Precision Prec, ExecutionSpace Space>
 class SparseMatrix {
+    using FloatType = internal::Float<Prec>;
+    using ComplexType = internal::Complex<Prec>;
+
 public:
-    Kokkos::View<SparseValue<Prec>*, SpaceType<Space>> _values;
-    std::uint64_t _row, _col;
+    Kokkos::View<ComplexType*, SpaceType<Space>> _vals;
+    Kokkos::View<std::uint32_t*, SpaceType<Space>> _row_ptr;
+    Kokkos::View<std::uint32_t*, SpaceType<Space>> _col_idx;
+    std::uint64_t _rows, _cols;
 
     SparseMatrix(const SparseComplexMatrix& sp);
 };

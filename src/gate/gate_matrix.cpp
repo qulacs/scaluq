@@ -74,16 +74,22 @@ std::shared_ptr<const GateBase<Prec, Space>> SparseMatrixGateImpl<Prec, Space>::
 }
 template <Precision Prec, ExecutionSpace Space>
 Matrix<Prec, Space> SparseMatrixGateImpl<Prec, Space>::get_matrix_internal() const {
-    Matrix<Prec, Space> ret("return matrix", _matrix._row, _matrix._col);
-    auto vec = _matrix._values;
+    Matrix<Prec, Space> ret("return matrix", _matrix._rows, _matrix._cols);
+    auto _row_ptr = _matrix._row_ptr;
+    auto _col_idx = _matrix._col_idx;
+    auto _vals = _matrix._vals;
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<SpaceType<Space>>(0, vec.size()),
-        KOKKOS_LAMBDA(int i) { ret(vec[i].r, vec[i].c) = vec[i].val; });
+        Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), _matrix._rows, Kokkos::AUTO),
+        KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team) {
+            std::uint64_t r = team.league_rank();
+            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, _row_ptr[r], _row_ptr[r + 1]),
+                                 [&](std::uint64_t idx) { ret(r, _col_idx[idx]) = _vals[idx]; });
+        });
     return ret;
 }
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix SparseMatrixGateImpl<Prec, Space>::get_matrix() const {
-    return convert_coo_to_external_matrix(_matrix);
+    return convert_csr_to_external_matrix(_matrix);
 }
 template <Precision Prec, ExecutionSpace Space>
 void SparseMatrixGateImpl<Prec, Space>::update_quantum_state(

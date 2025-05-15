@@ -6,8 +6,9 @@ using namespace scaluq;
 int main() {
     initialize();  // must be called before using any scaluq methods
     {
+        Kokkos::Timer timer;
         {       
-            std::int64_t n = 10;
+            std::int64_t n = 16;
             std::int64_t d = 1 << n;
             std::int64_t m = n / 2;
             std::int64_t md = 1 << m;
@@ -15,12 +16,18 @@ int main() {
             std::int32_t r = 500;
             Random rd;
 
-            ComplexMatrix matrix(md, md);
+            SparseComplexMatrix sp(md, md);
+            std::vector<Eigen::Triplet<StdComplex>> trp;
             for (int i = 0; i < md; ++i) {
                 for (int j = 0; j < md; ++j) {
-                    matrix(i, j) = StdComplex(rd.normal(), rd.normal());
+                    if (rand() % 10 == 0) {
+                        trp.emplace_back(i, j, StdComplex(rd.normal(), rd.normal()));
+                    }
                 }
             }
+            sp.setFromTriplets(trp.begin(), trp.end());
+            std::cout << sp.nonZeros() << std::endl;
+
             std::vector<std::uint64_t> targets = [&] {
                 auto tmp = rd.permutation(n);
                 std::vector<std::uint64_t> prefix;
@@ -28,19 +35,15 @@ int main() {
                 return prefix;
             }();
 
-            auto mgate = gate::DenseMatrix<Precision::F64,ExecutionSpace::Default>(targets, matrix);
+            auto mgate = gate::SparseMatrix<Precision::F64,ExecutionSpace::Default>(targets, sp);
 
             StateVector<Precision::F64,ExecutionSpace::Default> state(n);
-            StateVectorBatched<Precision::F64,ExecutionSpace::Default> batched_state(b, n);
             for (int i = 0; i < r; ++i) {
-                for (int j = 0; j < b; ++j) {
                     mgate->update_quantum_state(state);
-                }
-            }
-            for (int i = 0; i < r; ++i) {
-                mgate->update_quantum_state(batched_state);
             }
         }
+        auto d = timer.seconds();
+        std::cout << d << std::endl;
     }
     finalize();
 }
