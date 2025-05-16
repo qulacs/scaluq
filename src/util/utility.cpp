@@ -46,7 +46,8 @@ ComplexMatrix convert_internal_matrix_to_external_matrix<Prec, Space>(
     } else {
         Kokkos::View<StdComplex**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
             host_view(reinterpret_cast<StdComplex*>(eigen_matrix.data()), rows, cols);
-        Matrix<Prec, Space> matrix_f64("internal_matrix", rows, cols);
+        Kokkos::View<StdComplex**, Kokkos::LayoutRight, SpaceType<Space>> matrix_f64(
+            "internal_matrix", rows, cols);
         Kokkos::parallel_for(
             Kokkos::MDRangePolicy<Kokkos::Rank<2>, SpaceType<Space>>({0, 0}, {rows, cols}),
             KOKKOS_LAMBDA(std::uint64_t r, std::uint64_t c) {
