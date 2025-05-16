@@ -15,6 +15,10 @@
 #include "types.hpp"
 #include "util/random.hpp"
 
+/*
+ * Calling this macro from your original namespace will create aliases for all the types and
+ * functions without template arguments.
+ */
 #define SCALUQ_OMIT_TEMPLATE(Prec, Space)                                                          \
     using StateVector = ::scaluq::StateVector<Prec, Space>;                                        \
     using StateVectorBatched = ::scaluq::StateVectorBatched<Prec, Space>;                          \
