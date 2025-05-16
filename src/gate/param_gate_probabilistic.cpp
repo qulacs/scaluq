@@ -79,7 +79,7 @@ template <Precision Prec, ExecutionSpace Space>
 std::string ParamProbabilisticGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     std::ostringstream ss;
     const auto dist = distribution();
-    ss << indent << "Gate Type: probabilistic\n";
+    ss << indent << "Gate Type: ParamProbabilistic\n";
     for (std::size_t i = 0; i < dist.size(); ++i) {
         ss << indent << "  --------------------\n";
         ss << indent << "  Probability: " << dist[i] << "\n";
