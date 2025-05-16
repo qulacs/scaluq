@@ -1,6 +1,6 @@
-# scaluq
+# Scaluq
 
-scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/qulacs) をもとに再開発された、新しい Python/C++ ライブラリです。
+Scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/qulacs) をもとに再開発された、新しい Python/C++ ライブラリです。
 大規模な量子回路、ノイズを伴う量子回路(未実装)、パラメトリック量子回路の高速シミュレーションを実行することができます。
 本ライブラリは、MITライセンスの下で公開されています。
 
@@ -37,7 +37,7 @@ scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 |`SCALUQ_USE_OMP`|`ON`|CPUでの並列処理にOpenMPを利用するか|
 |`SCALUQ_USE_CUDA`|`OFF`|GPU (CUDA)での並列処理を行うか|
 |`SCALUQ_CUDA_ARCH`|(自動識別)|`CMAKE_USE_CUDA=ON`の場合、ターゲットとなるNvidia GPU アーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CUDA_ARCH=AMPERE80`)|
-|`SCALUQ_USE_TEST`|ON|`test/`をビルドターゲットに含める。`ninja -C build test`でテストのビルド/実行ができる|
+|`SCALUQ_USE_TEST`|ON|`test/`をビルドターゲットに含める。`ctest --test-dir build/`でテストのビルド/実行ができる|
 |`SCALUQ_USE_EXE`|ON|`exe/`をビルドターゲットに含める。インストールせずに実行を試すことができ、`ninja -C build`でのビルド後、`exe/main.cpp`の内容を`build/exe/main`で実行できる。|
 |`SCALUQ_FLOAT16`|OFF|`f16`精度を有効にする|
 |`SCALUQ_FLOAT32`|ON|`f32`精度を有効にする|
@@ -46,7 +46,7 @@ scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 
 ## C++ ライブラリとしてインストール
 
-scaluq を静的ライブラリとしてインストールするには、以下の一連のコマンドを実行します。
+Scaluq を静的ライブラリとしてインストールするには、以下の一連のコマンドを実行します。
 
 ```txt
 git clone https://github.com/qulacs/scaluq
@@ -66,7 +66,7 @@ sudo -E env "PATH=$PATH" ninja -C build install
 rm build/CMakeCache.txt
 ```
 
-インストール済みのscaluqを利用したプロジェクトでのCMake設定例を[example_project/](example_project/CMakeLists.txt)に提示しています。
+インストール済みのScaluqを利用したプロジェクトでのCMake設定例を[example_project/](example_project/CMakeLists.txt)に提示しています。
 
 ## Python ライブラリとしてインストール
 Python のライブラリとしても使用することができます。
@@ -146,7 +146,7 @@ print(value)
 ```
 
 # 精度と実行スペースの指定について
-scaluqでは、計算に使用する浮動小数点数のサイズとして`f16` `f32` `f64` `bf16`が選択できます。ただしデフォルトのビルドオプションでは`f16` `bf16`は無効になっています。
+Scaluqでは、計算に使用する浮動小数点数のサイズとして`f16` `f32` `f64` `bf16`が選択できます。ただしデフォルトのビルドオプションでは`f16` `bf16`は無効になっています。
 通常は`f64`の使用が推奨されますが、量子機械学習での利用などあまり精度が必要でない場合は`f32`以下を使用すると最大2~4倍の高速化が見込めます。
 
 各精度の指定方法と内容は以下のとおりです。
