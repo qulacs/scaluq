@@ -38,7 +38,7 @@ public:
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
                  {"control_value", this->control_value_list()},
-                 {"matrix", "Not inplemented yet"}};
+                 {"matrix", this->get_matrix()}};
     }
 };
 
@@ -71,7 +71,7 @@ public:
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
                  {"control_value", this->control_value_list()},
-                 {"matrix", "Not inplemented yet"}};
+                 {"matrix", this->get_sparse_matrix()}};
     }
 };
 

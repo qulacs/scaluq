@@ -1,5 +1,6 @@
 #include <iostream>
 #include <scaluq/all.hpp>
+using namespace scaluq;
 
 using namespace scaluq;
 

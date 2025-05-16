@@ -226,7 +226,45 @@ template <typename T>
 concept GateImpl = std::derived_from<T, GateBase<T::Prec, T::Space>>;
 
 template <GateImpl T>
-inline std::shared_ptr<const T> get_from_json(const Json&);
+struct GetGateFromJson {
+    static std::shared_ptr<const T> get(const Json& j) {
+        throw std::runtime_error("GetGateFromJson<T>::get() is not implemented");
+    }
+};
+#define DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(Impl)                  \
+    template <Precision Prec, ExecutionSpace Space>                         \
+    struct GetGateFromJson<Impl<Prec, Space>> {                             \
+        static std::shared_ptr<const Impl<Prec, Space>> get(const Json& j); \
+    };
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(IGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(GlobalPhaseGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(XGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(YGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ZGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(HGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SdagGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(TGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(TdagGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SqrtXGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SqrtXdagGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SqrtYGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SqrtYdagGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(P0GateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(P1GateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(RXGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(RYGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(RZGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(U1GateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(U2GateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(U3GateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SwapGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(PauliGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(PauliRotationGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ProbablisticGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SparseMatrixGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(DenseMatrixGateImpl)
+#undef DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION
 
 template <GateImpl T>
 class GatePtr {
@@ -300,30 +338,30 @@ public:
         std::string type = j.at("type");
 
         // clang-format off
-        if (type == "I") gate = get_from_json<IGateImpl<Prec, Space>>(j);
-        else if (type == "GlobalPhase") gate = get_from_json<GlobalPhaseGateImpl<Prec, Space>>(j);
-        else if (type == "X") gate = get_from_json<XGateImpl<Prec, Space>>(j);
-        else if (type == "Y") gate = get_from_json<YGateImpl<Prec, Space>>(j);
-        else if (type == "Z") gate = get_from_json<ZGateImpl<Prec, Space>>(j);
-        else if (type == "H") gate = get_from_json<HGateImpl<Prec, Space>>(j);
-        else if (type == "S") gate = get_from_json<SGateImpl<Prec, Space>>(j);
-        else if (type == "Sdag") gate = get_from_json<SdagGateImpl<Prec, Space>>(j);
-        else if (type == "T") gate = get_from_json<TGateImpl<Prec, Space>>(j);
-        else if (type == "Tdag") gate = get_from_json<TdagGateImpl<Prec, Space>>(j);
-        else if (type == "SqrtX") gate = get_from_json<SqrtXGateImpl<Prec, Space>>(j);
-        else if (type == "SqrtXdag") gate = get_from_json<SqrtXdagGateImpl<Prec, Space>>(j);
-        else if (type == "SqrtY") gate = get_from_json<SqrtYGateImpl<Prec, Space>>(j);
-        else if (type == "SqrtYdag") gate = get_from_json<SqrtYdagGateImpl<Prec, Space>>(j);
-        else if (type == "RX") gate = get_from_json<RXGateImpl<Prec, Space>>(j);
-        else if (type == "RY") gate = get_from_json<RYGateImpl<Prec, Space>>(j);
-        else if (type == "RZ") gate = get_from_json<RZGateImpl<Prec, Space>>(j);
-        else if (type == "U1") gate = get_from_json<U1GateImpl<Prec, Space>>(j);
-        else if (type == "U2") gate = get_from_json<U2GateImpl<Prec, Space>>(j);
-        else if (type == "U3") gate = get_from_json<U3GateImpl<Prec, Space>>(j);
-        else if (type == "Swap") gate = get_from_json<SwapGateImpl<Prec, Space>>(j);
-        // else if (type == "Pauli") gate = get_from_json<PauliGateImpl<Prec, Space>>(j);
-        // else if (type == "PauliRotation") gate = get_from_json<PauliRotationGateImpl<Prec, Space>>(j);
-        else if (type == "Probablistic") gate = get_from_json<ProbablisticGateImpl<Prec, Space>>(j);
+        if (type == "I") gate = GetGateFromJson<IGateImpl<Prec, Space>>::get(j);
+        else if (type == "GlobalPhase") gate = GetGateFromJson<GlobalPhaseGateImpl<Prec, Space>>::get(j);
+        else if (type == "X") gate = GetGateFromJson<XGateImpl<Prec, Space>>::get(j);
+        else if (type == "Y") gate = GetGateFromJson<YGateImpl<Prec, Space>>::get(j);
+        else if (type == "Z") gate = GetGateFromJson<ZGateImpl<Prec, Space>>::get(j);
+        else if (type == "H") gate = GetGateFromJson<HGateImpl<Prec, Space>>::get(j);
+        else if (type == "S") gate = GetGateFromJson<SGateImpl<Prec, Space>>::get(j);
+        else if (type == "Sdag") gate = GetGateFromJson<SdagGateImpl<Prec, Space>>::get(j);
+        else if (type == "T") gate = GetGateFromJson<TGateImpl<Prec, Space>>::get(j);
+        else if (type == "Tdag") gate = GetGateFromJson<TdagGateImpl<Prec, Space>>::get(j);
+        else if (type == "SqrtX") gate = GetGateFromJson<SqrtXGateImpl<Prec, Space>>::get(j);
+        else if (type == "SqrtXdag") gate = GetGateFromJson<SqrtXdagGateImpl<Prec, Space>>::get(j);
+        else if (type == "SqrtY") gate = GetGateFromJson<SqrtYGateImpl<Prec, Space>>::get(j);
+        else if (type == "SqrtYdag") gate = GetGateFromJson<SqrtYdagGateImpl<Prec, Space>>::get(j);
+        else if (type == "RX") gate = GetGateFromJson<RXGateImpl<Prec, Space>>::get(j);
+        else if (type == "RY") gate = GetGateFromJson<RYGateImpl<Prec, Space>>::get(j);
+        else if (type == "RZ") gate = GetGateFromJson<RZGateImpl<Prec, Space>>::get(j);
+        else if (type == "U1") gate = GetGateFromJson<U1GateImpl<Prec, Space>>::get(j);
+        else if (type == "U2") gate = GetGateFromJson<U2GateImpl<Prec, Space>>::get(j);
+        else if (type == "U3") gate = GetGateFromJson<U3GateImpl<Prec, Space>>::get(j);
+        else if (type == "Swap") gate = GetGateFromJson<SwapGateImpl<Prec, Space>>::get(j);
+        else if (type == "Pauli") gate = GetGateFromJson<PauliGateImpl<Prec, Space>>::get(j);
+        else if (type == "PauliRotation") gate = GetGateFromJson<PauliRotationGateImpl<Prec, Space>>::get(j);
+        else if (type == "Probablistic") gate = GetGateFromJson<ProbablisticGateImpl<Prec, Space>>::get(j);
         // clang-format on
     }
 };
@@ -463,3 +501,9 @@ nb::class_<Gate<Prec, Space>> bind_gate_gate_hpp(nb::module_& m) {
 #endif
 
 }  // namespace scaluq
+
+// Include all gate header files for the correct definition of concept GateImpl
+#include "./gate_matrix.hpp"
+#include "./gate_pauli.hpp"
+#include "./gate_probablistic.hpp"
+#include "./gate_standard.hpp"

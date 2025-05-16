@@ -92,4 +92,20 @@ std::string ParamProbablisticGateImpl<Prec, Space>::to_string(const std::string&
     return ss.str();
 }
 template class ParamProbablisticGateImpl<Prec, Space>;
+
+template <Precision Prec, ExecutionSpace Space>
+std::shared_ptr<const ParamProbablisticGateImpl<Prec, Space>>
+GetParamGateFromJson<ParamProbablisticGateImpl<Prec, Space>>::get(const Json& j) {
+    auto distribution = j.at("distribution").get<std::vector<double>>();
+    std::vector<std::variant<Gate<Prec, Space>, ParamGate<Prec, Space>>> gate_list;
+    const Json& tmp_list = j.at("gate_list");
+    for (const Json& tmp_j : tmp_list) {
+        if (tmp_j.at("type").get<std::string>().starts_with("Param"))
+            gate_list.emplace_back(tmp_j.get<ParamGate<Prec, Space>>());
+        else
+            gate_list.emplace_back(tmp_j.get<Gate<Prec, Space>>());
+    }
+    return std::make_shared<const ParamProbablisticGateImpl<Prec, Space>>(distribution, gate_list);
+}
+template class GetParamGateFromJson<ParamProbablisticGateImpl<Prec, Space>>;
 }  // namespace scaluq::internal

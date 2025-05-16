@@ -50,42 +50,6 @@ template <Precision Prec, ExecutionSpace Space>
 using ParamPauliRotationGate =
     internal::ParamGatePtr<internal::ParamPauliRotationGateImpl<Prec, Space>>;
 
-namespace internal {
-#define DECLARE_GET_FROM_JSON(Prec, Space)                                               \
-    template <>                                                                          \
-    inline std::shared_ptr<const ParamPauliRotationGateImpl<Prec, Space>> get_from_json( \
-        const Json& j) {                                                                 \
-        auto controls = j.at("control").get<std::vector<std::uint64_t>>();               \
-        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();   \
-        return std::make_shared<const ParamPauliRotationGateImpl<Prec, Space>>(          \
-            vector_to_mask(controls),                                                    \
-            vector_to_mask(controls, control_values),                                    \
-            j.at("pauli").get<PauliOperator<Prec, Space>>(),                             \
-            static_cast<Float<Prec>>(j.at("param_coef").get<double>()));                 \
-    }
-
-#define INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Prec)       \
-    DECLARE_GET_FROM_JSON(Prec, ExecutionSpace::Default) \
-    DECLARE_GET_FROM_JSON(Prec, ExecutionSpace::Host)
-
-#ifdef SCALUQ_BFLOAT16
-INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::BF16)
-#endif
-#ifdef SCALUQ_FLOAT16
-INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F16)
-#endif
-#ifdef SCALUQ_FLOAT32
-INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F32)
-#endif
-#ifdef SCALUQ_FLOAT64
-INSTANTIATE_GET_FROM_JSON_EACH_SPACE(Precision::F64)
-#endif
-
-#undef DECLARE_GET_FROM_JSON
-#undef INSTANTIATE_GET_FROM_JSON_EACH_SPACE
-
-}  // namespace internal
-
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
