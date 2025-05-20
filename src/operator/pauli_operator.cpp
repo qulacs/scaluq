@@ -278,15 +278,16 @@ StdComplex PauliOperator<Prec, Space>::get_transition_amplitude(
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix PauliOperator<Prec, Space>::get_matrix() const {
     auto triplets = get_matrix_triplets_ignoring_coef();
-    decltype(triplets) coeffed_triplets(triplets.size());
+    decltype(triplets) triplets_with_coefs(triplets.size());
     for (std::size_t i = 0; i < triplets.size(); i++) {
-        coeffed_triplets[i] = Triplet(triplets[i].row(),
-                                      triplets[i].col(),
-                                      triplets[i].value() * static_cast<StdComplex>(_ptr->_coef));
+        triplets_with_coefs[i] =
+            Triplet(triplets[i].row(),
+                    triplets[i].col(),
+                    triplets[i].value() * static_cast<StdComplex>(_ptr->_coef));
     }
     std::uint64_t dim = 1ULL << _ptr->_pauli_id_list.size();
     SparseComplexMatrix sparse(dim, dim);
-    sparse.setFromTriplets(coeffed_triplets.begin(), coeffed_triplets.end());
+    sparse.setFromTriplets(triplets_with_coefs.begin(), triplets_with_coefs.end());
     return ComplexMatrix(sparse);
 }
 

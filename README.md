@@ -100,8 +100,8 @@ https://scaluq.readthedocs.io/en/latest/index.html
 int main() {
     scaluq::initialize();  // must be called before using any scaluq methods
     {
-        constexpr Precision Prec = Precision::F64;
-        constexpr ExecutionSpace Space = ExecutionSpace::Default;
+        constexpr Precision Prec = scaluq::Precision::F64;
+        constexpr ExecutionSpace Space = scaluq::ExecutionSpace::Default;
         const std::uint64_t n_qubits = 3;
         scaluq::StateVector<Prec, Default> state = scaluq::StateVector<Prec, Default>::Haar_random_state(n_qubits, 0);
         std::cout << state << std::endl;
@@ -114,6 +114,45 @@ int main() {
         circuit.update_quantum_state(state);
 
         scaluq::Operator<Prec, Default> observable(n_qubits);
+        observable.add_random_operator(1, 0);
+        auto value = observable.get_expectation_value(state);
+        std::cout << value << std::endl;
+    }
+    scaluq::finalize();  // must be called last
+}
+```
+
+`scaluq/all.hpp` をincludeすれば、`SCALUQ_OMIT_TEMPLATE` を使うことでテンプレート引数を省略することもできます。
+
+```cpp
+#include <iostream>
+#include <cstdint>
+
+#include <scaluq/all.hpp>
+
+namespace my_scaluq {
+    SCALUQ_OMIT_TEMPLATE(scaluq::Precision::F64, scaluq::ExecutionSpace::Default)
+}
+
+using namespace my_scaluq;
+
+int main() {
+    scaluq::initialize();  // must be called before using any scaluq methods
+    {
+        constexpr Precision Prec = Precision::F64;
+        constexpr ExecutionSpace Space = ExecutionSpace::Default;
+        const std::uint64_t n_qubits = 3;
+        StateVector state = StateVector::Haar_random_state(n_qubits, 0);
+        std::cout << state << std::endl;
+
+        Circuit circuit(n_qubits);
+        circuit.add_gate(gate::X(0));
+        circuit.add_gate(gate::CNot(0, 1));
+        circuit.add_gate(gate::Y(1));
+        circuit.add_gate(gate::RX(1, std::numbers::pi / 2));
+        circuit.update_quantum_state(state);
+
+        Operator observable(n_qubits);
         observable.add_random_operator(1, 0);
         auto value = observable.get_expectation_value(state);
         std::cout << value << std::endl;

@@ -63,7 +63,7 @@ class PauliGateImpl;
 template <Precision Prec, ExecutionSpace Space>
 class PauliRotationGateImpl;
 template <Precision Prec, ExecutionSpace Space>
-class ProbablisticGateImpl;
+class ProbabilisticGateImpl;
 template <Precision Prec, ExecutionSpace Space>
 class SparseMatrixGateImpl;
 template <Precision Prec, ExecutionSpace Space>
@@ -100,7 +100,7 @@ enum class GateType {
     PauliRotation,
     SparseMatrix,
     DenseMatrix,
-    Probablistic
+    Probabilistic
 };
 
 template <typename T, Precision Prec, ExecutionSpace Space>
@@ -162,8 +162,8 @@ constexpr GateType get_gate_type() {
         return GateType::SparseMatrix;
     else if constexpr (std::is_same_v<TWithoutConst, internal::DenseMatrixGateImpl<Prec, Space>>)
         return GateType::DenseMatrix;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::ProbablisticGateImpl<Prec, Space>>)
-        return GateType::Probablistic;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ProbabilisticGateImpl<Prec, Space>>)
+        return GateType::Probabilistic;
     else
         static_assert(internal::lazy_false_v<T>, "unknown GateImpl");
 }
@@ -261,7 +261,7 @@ DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(U3GateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SwapGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(PauliGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(PauliRotationGateImpl)
-DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ProbablisticGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ProbabilisticGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SparseMatrixGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(DenseMatrixGateImpl)
 #undef DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION
@@ -361,7 +361,7 @@ public:
         else if (type == "Swap") gate = GetGateFromJson<SwapGateImpl<Prec, Space>>::get(j);
         else if (type == "Pauli") gate = GetGateFromJson<PauliGateImpl<Prec, Space>>::get(j);
         else if (type == "PauliRotation") gate = GetGateFromJson<PauliRotationGateImpl<Prec, Space>>::get(j);
-        else if (type == "Probablistic") gate = GetGateFromJson<ProbablisticGateImpl<Prec, Space>>::get(j);
+        else if (type == "Probabilistic") gate = GetGateFromJson<ProbabilisticGateImpl<Prec, Space>>::get(j);
         // clang-format on
     }
 };
@@ -485,7 +485,7 @@ void bind_gate_gate_hpp_without_precision_and_space(nb::module_& m) {
         .value("PauliRotation", GateType::PauliRotation)
         .value("SparseMatrix", GateType::SparseMatrix)
         .value("DenseMatrix", GateType::DenseMatrix)
-        .value("Probablistic", GateType::Probablistic);
+        .value("Probabilistic", GateType::Probabilistic);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -493,7 +493,7 @@ nb::class_<Gate<Prec, Space>> bind_gate_gate_hpp(nb::module_& m) {
     return DEF_GATE_BASE(Gate,
                          Prec,
                          Space,
-                         "General class of QuantumGate.\n\nNotes\n\tDowncast to requred to use "
+                         "General class of QuantumGate.\n\nNotes\n\tDowncast to required to use "
                          "gate-specific functions.")
         .def(nb::init<Gate<Prec, Space>>(), "Just copy shallowly.");
 }
@@ -505,5 +505,5 @@ nb::class_<Gate<Prec, Space>> bind_gate_gate_hpp(nb::module_& m) {
 // Include all gate header files for the correct definition of concept GateImpl
 #include "./gate_matrix.hpp"
 #include "./gate_pauli.hpp"
-#include "./gate_probablistic.hpp"
+#include "./gate_probabilistic.hpp"
 #include "./gate_standard.hpp"

@@ -34,7 +34,7 @@ public:
     std::string to_string(const std::string& indent) const override;
 
     void get_as_json(Json& j) const override {
-        j = Json{{"type", "DensetMatrix"},
+        j = Json{{"type", "DenseMatrix"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
                  {"control_value", this->control_value_list()},
