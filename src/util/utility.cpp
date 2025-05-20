@@ -10,26 +10,32 @@ Matrix<Prec, Space> convert_external_matrix_to_internal_matrix<Prec, Space>(
     std::uint64_t rows = eigen_matrix.rows();
     std::uint64_t cols = eigen_matrix.cols();
     if constexpr (Prec == Precision::F64) {
-        Matrix<Prec, Space> mat_f64("internal_matrix", rows, cols);
-        Kokkos::
-            View<const Complex<Prec>**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-                host_view(reinterpret_cast<const Complex<Prec>*>(eigen_matrix.data()), rows, cols);
+        Matrix<Prec, Space> mat_f64(
+            Kokkos::ViewAllocateWithoutInitializing("internal_matrix"), rows, cols);
+        Kokkos::View<const Complex<Prec>**,
+                     Kokkos::LayoutRight,
+                     Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+            host_view(reinterpret_cast<const Complex<Prec>*>(eigen_matrix.data()), rows, cols);
         Kokkos::deep_copy(mat_f64, host_view);
         return mat_f64;
     } else {
-        Kokkos::View<StdComplex**, Kokkos::LayoutRight, SpaceType<Space>> mat_f64(
-            "internal_matrix", rows, cols);
-        Kokkos::View<const StdComplex**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-            host_view(reinterpret_cast<const StdComplex*>(eigen_matrix.data()), rows, cols);
-        Kokkos::deep_copy(mat_f64, host_view);
-        Matrix<Prec, Space> mat("internal_matrix", rows, cols);
+        Eigen::Matrix<std::complex<Float<Prec>>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
+            mat_cast(rows, cols);
+        Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight, Kokkos::HostSpace> mat_h(
+            "matrix_cast", rows, cols);
         Kokkos::parallel_for(
-            Kokkos::MDRangePolicy<Kokkos::Rank<2>, SpaceType<Space>>({0, 0}, {rows, cols}),
-            KOKKOS_LAMBDA(std::uint64_t r, std::uint64_t c) {
-                mat(r, c) = Complex<Prec>(static_cast<Float<Prec>>(mat_f64(r, c).real()),
-                                          static_cast<Float<Prec>>(mat_f64(r, c).imag()));
+            Kokkos::MDRangePolicy<Kokkos::DefaultHostExecutionSpace, Kokkos::Rank<2>>({0, 0},
+                                                                                      {rows, cols}),
+            [&](std::uint32_t r, std::uint32_t c) {
+                mat_h(r, c) = Complex<Prec>(static_cast<Float<Prec>>(eigen_matrix(r, c).real()),
+                                            static_cast<Float<Prec>>(eigen_matrix(r, c).imag()));
             });
-        return mat;
+
+        Matrix<Prec, Space> ret(
+            Kokkos::ViewAllocateWithoutInitializing("internal_matrix"), rows, cols);
+        Kokkos::deep_copy(ret, mat_h);
+        return ret;
     }
 }
 
