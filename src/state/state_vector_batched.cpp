@@ -22,6 +22,7 @@ void StateVectorBatched<Prec, Space>::set_state_vector(const StateVector<Prec, S
             "source and destination views do not match.");
     }
     Kokkos::parallel_for(
+        "set_state_vector",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
                                                                            {_batch_size, _dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
@@ -39,6 +40,7 @@ void StateVectorBatched<Prec, Space>::set_state_vector_at(std::uint64_t batch_id
             "Dimensions of source and destination views do not match.");
     }
     Kokkos::parallel_for(
+        "set_state_vector_at",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw(batch_id, i) = state._raw(i); });
     Kokkos::fence();
@@ -49,6 +51,7 @@ StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_state_vector_at(
     std::uint64_t batch_id) const {
     StateVector<Prec, Space> ret(_n_qubits);
     Kokkos::parallel_for(
+        "get_state_vector_at",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { ret._raw(i) = _raw(batch_id, i); });
     Kokkos::fence();
@@ -64,6 +67,7 @@ void StateVectorBatched<Prec, Space>::set_computational_basis(std::uint64_t basi
     }
     Kokkos::deep_copy(_raw, 0.);
     Kokkos::parallel_for(
+        "set_computational_basis",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _batch_size),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw(i, basis) = 1; });
     Kokkos::fence();
@@ -89,6 +93,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
         "prob", _batch_size, _dim + 1);
 
     Kokkos::parallel_for(
+        "sampling (compute stacked prob)",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
@@ -122,6 +127,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
         Kokkos::View<std::uint64_t*, internal::SpaceType<Space>> result_buf(
             Kokkos::ViewAllocateWithoutInitializing("result_buf"), todo_count);
         Kokkos::parallel_for(
+            "sampling (choose)",
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, todo_count),
             KOKKOS_CLASS_LAMBDA(std::uint64_t idx) {
                 std::uint64_t batch_id = batch_ids[idx];
@@ -163,11 +169,12 @@ template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::Haar_random_state(
     std::uint64_t batch_size, std::uint64_t n_qubits, bool set_same_state, std::uint64_t seed) {
     Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(seed);
-    StateVectorBatched states(batch_size, n_qubits);
+    auto states(StateVectorBatched<Prec, Space>::uninitialized_state(batch_size, n_qubits));
     if (set_same_state) {
         states.set_state_vector(StateVector<Prec, Space>::Haar_random_state(n_qubits, seed));
     } else {
         Kokkos::parallel_for(
+            "Haar_random_state",
             Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
                 {0, 0}, {states.batch_size(), states.dim()}),
             KOKKOS_LAMBDA(std::uint64_t b, std::uint64_t i) {
@@ -179,6 +186,18 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::Haar_random_sta
         Kokkos::fence();
         states.normalize();
     }
+    return states;
+}
+
+template <Precision Prec, ExecutionSpace Space>
+StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::uninitialized_state(
+    std::uint64_t batch_size, std::uint64_t n_qubits) {
+    StateVectorBatched states;
+    states._n_qubits = n_qubits;
+    states._dim = 1ULL << n_qubits;
+    states._batch_size = batch_size;
+    states._raw = Kokkos::View<ComplexType**, Kokkos::LayoutRight, ExecutionSpaceType>(
+        Kokkos::ViewAllocateWithoutInitializing("states"), states._batch_size, states._dim);
     return states;
 }
 
@@ -199,6 +218,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_squared_norm() const {
     Kokkos::View<FloatType*, internal::SpaceType<Space>> norms(
         Kokkos::ViewAllocateWithoutInitializing("norms"), _batch_size);
     Kokkos::parallel_for(
+        "get_squared_norm",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
@@ -225,6 +245,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_squared_norm() const {
 template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::normalize() {
     Kokkos::parallel_for(
+        "normalize",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
@@ -255,6 +276,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_zero_probability(
     }
     Kokkos::View<FloatType*, internal::SpaceType<Space>> probs("probs", _batch_size);
     Kokkos::parallel_for(
+        "get_zero_probability",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
@@ -309,6 +331,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_marginal_probability(
     auto target_value_d = internal::convert_vector_to_view<std::uint64_t, Space>(target_value);
     Kokkos::View<FloatType*, internal::SpaceType<Space>> probs("probs", _batch_size);
     Kokkos::parallel_for(
+        "get_marginal_probability",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
@@ -343,6 +366,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_entropy() const {
     Kokkos::View<FloatType*, internal::SpaceType<Space>> ents("ents", _batch_size);
     const FloatType eps = static_cast<FloatType>(1e-15);
     Kokkos::parallel_for(
+        "get_entropy",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
@@ -377,6 +401,7 @@ void StateVectorBatched<Prec, Space>::add_state_vector_with_coef(const StdComple
             "states");
     }
     Kokkos::parallel_for(
+        "add_state_vector_with_coef",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
                                                                            {_batch_size, _dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
@@ -388,6 +413,7 @@ void StateVectorBatched<Prec, Space>::add_state_vector_with_coef(const StdComple
 template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::multiply_coef(const StdComplex& coef) {
     Kokkos::parallel_for(
+        "multiply_coef",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
                                                                            {_batch_size, _dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {

@@ -108,28 +108,20 @@ void PauliOperator<Prec, Space>::Data::add_single_pauli(std::uint64_t target_qub
 template <Precision Prec, ExecutionSpace Space>
 std::vector<typename PauliOperator<Prec, Space>::Triplet>
 PauliOperator<Prec, Space>::get_matrix_triplets_ignoring_coef() const {
-    std::uint64_t flip_mask, phase_mask, rot90_count;
-    Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<internal::SpaceType<ExecutionSpace::Host>>(0,
-                                                                       _ptr->_pauli_id_list.size()),
-        [&](std::uint64_t i,
-            std::uint64_t& f_mask,
-            std::uint64_t& p_mask,
-            std::uint64_t& rot90_cnt) {
-            std::uint64_t pauli_id = _ptr->_pauli_id_list[i];
-            if (pauli_id == 1) {
-                f_mask += 1ULL << i;
-            } else if (pauli_id == 2) {
-                f_mask += 1ULL << i;
-                p_mask += 1ULL << i;
-                rot90_cnt++;
-            } else if (pauli_id == 3) {
-                p_mask += 1ULL << i;
-            }
-        },
-        internal::Sum<std::uint64_t, ExecutionSpace::Host>(flip_mask),
-        internal::Sum<std::uint64_t, ExecutionSpace::Host>(phase_mask),
-        internal::Sum<std::uint64_t, ExecutionSpace::Host>(rot90_count));
+    std::uint64_t flip_mask = 0, phase_mask = 0, rot90_count = 0;
+    for (std::uint32_t i = 0; i < _ptr->_pauli_id_list.size(); ++i) {
+        std::uint64_t pauli_id = _ptr->_pauli_id_list[i];
+        if (pauli_id == 1) {
+            flip_mask += 1ULL << i;
+        } else if (pauli_id == 2) {
+            flip_mask += 1ULL << i;
+            phase_mask += 1ULL << i;
+            rot90_count++;
+        } else if (pauli_id == 3) {
+            phase_mask += 1ULL << i;
+        }
+    }
+
     std::vector<StdComplex> rot = {1., StdComplex(0, -1), -1., StdComplex(0, 1)};
     std::uint64_t matrix_dim = 1ULL << _ptr->_pauli_id_list.size();
     ComplexMatrix mat = ComplexMatrix::Zero(matrix_dim, matrix_dim);
@@ -194,6 +186,7 @@ StdComplex PauliOperator<Prec, Space>::get_expectation_value(
     if (bit_flip_mask == 0) {
         FloatType res;
         Kokkos::parallel_reduce(
+            "get_expectation_value",
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector.dim()),
             KOKKOS_LAMBDA(std::uint64_t state_idx, FloatType & sum) {
                 FloatType tmp = (scaluq::internal::conj(state_vector._raw[state_idx]) *
@@ -210,6 +203,7 @@ StdComplex PauliOperator<Prec, Space>::get_expectation_value(
     ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
     FloatType res;
     Kokkos::parallel_reduce(
+        "get_expectation_value",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector.dim() >> 1),
         KOKKOS_LAMBDA(std::uint64_t state_idx, FloatType & sum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
@@ -242,6 +236,7 @@ StdComplex PauliOperator<Prec, Space>::get_transition_amplitude(
     if (bit_flip_mask == 0) {
         ComplexType res;
         Kokkos::parallel_reduce(
+            "get_transition_amplitude",
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector_bra.dim()),
             KOKKOS_LAMBDA(std::uint64_t state_idx, ComplexType & sum) {
                 ComplexType tmp = scaluq::internal::conj(state_vector_bra._raw[state_idx]) *
@@ -258,6 +253,7 @@ StdComplex PauliOperator<Prec, Space>::get_transition_amplitude(
     ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
     ComplexType res;
     Kokkos::parallel_reduce(
+        "get_transition_amplitude",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector_bra.dim() >> 1),
         KOKKOS_LAMBDA(std::uint64_t state_idx, ComplexType & sum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);

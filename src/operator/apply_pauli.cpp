@@ -15,6 +15,7 @@ void apply_pauli(std::uint64_t control_mask,
                  StateVector<Prec, Space>& state_vector) {
     if (bit_flip_mask == 0) {
         Kokkos::parallel_for(
+            "apply_pauli",
             Kokkos::RangePolicy<SpaceType<Space>>(
                 0, state_vector.dim() >> std::popcount(control_mask)),
             KOKKOS_LAMBDA(std::uint64_t i) {
@@ -33,6 +34,7 @@ void apply_pauli(std::uint64_t control_mask,
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     Complex<Prec> global_phase = PHASE_M90ROT<Prec>()[global_phase_90rot_count % 4];
     Kokkos::parallel_for(
+        "apply_pauli",
         Kokkos::RangePolicy<SpaceType<Space>>(
             0, state_vector.dim() >> (std::popcount(control_mask) + 1)),
         KOKKOS_LAMBDA(std::uint64_t i) {
@@ -58,6 +60,7 @@ void apply_pauli(std::uint64_t control_mask,
                  StateVectorBatched<Prec, Space>& states) {
     if (bit_flip_mask == 0) {
         Kokkos::parallel_for(
+            "apply_pauli",
             Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
                 {0, 0}, {states.batch_size(), states.dim() >> std::popcount(control_mask)}),
             KOKKOS_LAMBDA(const std::uint64_t batch_id, const std::uint64_t i) {
@@ -76,6 +79,7 @@ void apply_pauli(std::uint64_t control_mask,
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     Complex<Prec> global_phase = PHASE_M90ROT<Prec>()[global_phase_90rot_count % 4];
     Kokkos::parallel_for(
+        "apply_pauli",
         Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
             {0, 0}, {states.batch_size(), states.dim() >> (std::popcount(control_mask) + 1)}),
         KOKKOS_LAMBDA(const std::uint64_t batch_id, const std::uint64_t i) {
@@ -109,6 +113,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         const Complex<Prec> cval_min = cosval - Complex<Prec>(0, 1) * sinval;
         const Complex<Prec> cval_pls = cosval + Complex<Prec>(0, 1) * sinval;
         Kokkos::parallel_for(
+            "apply_pauli_rotation",
             Kokkos::RangePolicy<SpaceType<Space>>(
                 0, state_vector.dim() >> std::popcount(control_mask)),
             KOKKOS_LAMBDA(std::uint64_t i) {
@@ -125,6 +130,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
     } else {
         std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
         Kokkos::parallel_for(
+            "apply_pauli_rotation",
             Kokkos::RangePolicy<SpaceType<Space>>(
                 0, state_vector.dim() >> (std::popcount(control_mask) + 1)),
             KOKKOS_LAMBDA(std::uint64_t i) {
@@ -169,6 +175,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         const Complex<Prec> cval_min = cosval - Complex<Prec>(0, 1) * sinval;
         const Complex<Prec> cval_pls = cosval + Complex<Prec>(0, 1) * sinval;
         Kokkos::parallel_for(
+            "apply_pauli_rotation",
             Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
                 {0, 0}, {states.batch_size(), states.dim() >> std::popcount(control_mask)}),
             KOKKOS_LAMBDA(const std::uint64_t batch_id, const std::uint64_t i) {
@@ -185,6 +192,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
     } else {
         std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
         Kokkos::parallel_for(
+            "apply_pauli_rotation",
             Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
                 {0, 0}, {states.batch_size(), states.dim() >> (std::popcount(control_mask) + 1)}),
             KOKKOS_LAMBDA(const std::uint64_t batch_id, const std::uint64_t i) {
@@ -226,7 +234,9 @@ void apply_pauli_rotation(std::uint64_t control_mask,
     auto team_policy =
         Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), states.batch_size(), Kokkos::AUTO);
     Kokkos::parallel_for(
-        team_policy, KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team) {
+        "apply_pauli_rotation",
+        team_policy,
+        KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team) {
             const std::uint64_t batch_id = team.league_rank();
             const Float<Prec> angle = pcoef * params[batch_id];
             const Complex<Prec> true_angle = angle * coef;
