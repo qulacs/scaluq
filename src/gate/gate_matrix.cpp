@@ -77,6 +77,7 @@ Matrix<Prec, Space> SparseMatrixGateImpl<Prec, Space>::get_matrix_internal() con
     Matrix<Prec, Space> ret("return matrix", _matrix._row, _matrix._col);
     auto vec = _matrix._values;
     Kokkos::parallel_for(
+        "get_matrix_internal",
         Kokkos::RangePolicy<SpaceType<Space>>(0, vec.size()),
         KOKKOS_LAMBDA(int i) { ret(vec[i].r, vec[i].c) = vec[i].val; });
     return ret;
