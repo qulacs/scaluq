@@ -66,11 +66,15 @@ ComplexMatrix convert_internal_matrix_to_external_matrix<Prec, Space>(
 }
 
 template <>
-ComplexMatrix convert_coo_to_external_matrix<Prec, Space>(SparseMatrix<Prec, Space> mat) {
-    ComplexMatrix eigen_matrix = ComplexMatrix::Zero(mat._row, mat._col);
-    auto vec_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), mat._values);
-    for (std::size_t i = 0; i < mat._values.extent(0); i++) {
-        eigen_matrix(vec_h(i).r, vec_h(i).c) = static_cast<StdComplex>(vec_h(i).val);
+ComplexMatrix convert_csr_to_external_matrix<Prec, Space>(SparseMatrix<Prec, Space> mat) {
+    ComplexMatrix eigen_matrix = ComplexMatrix::Zero(mat._rows, mat._cols);
+    auto vals = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), mat._vals);
+    auto col_idx = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), mat._col_idx);
+    auto row_ptr = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), mat._row_ptr);
+    for (std::uint32_t i = 0; i < mat._rows; ++i) {
+        for (std::uint32_t idx = row_ptr[i]; idx < row_ptr[i + 1]; ++idx) {
+            eigen_matrix(i, col_idx[idx]) = vals[idx];
+        }
     }
     return eigen_matrix;
 }
