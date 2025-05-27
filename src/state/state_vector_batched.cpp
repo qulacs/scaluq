@@ -65,11 +65,11 @@ void StateVectorBatched<Prec, Space>::set_computational_basis(std::uint64_t basi
             "Error: StateVectorBatched::set_computational_basis(std::uint64_t): "
             "index of computational basis must be smaller than 2^qubit_count");
     }
-    Kokkos::deep_copy(_raw, 0.);
     Kokkos::parallel_for(
         "set_computational_basis",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _batch_size),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw(i, basis) = 1; });
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
+                                                                           {_batch_size, _dim}),
+        KOKKOS_CLASS_LAMBDA(std::uint64_t b, std::uint64_t i) { _raw(b, i) = (i == 0); });
     Kokkos::fence();
 }
 
