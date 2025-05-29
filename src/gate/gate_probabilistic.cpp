@@ -58,9 +58,7 @@ void ProbabilisticGateImpl<Prec, Space>::update_quantum_state(
         if (indices[i] >= _gate_list.size()) indices[i] = _gate_list.size() - 1;
         auto state_vector = StateVector<Prec, Space>(Kokkos::subview(states._raw, i, Kokkos::ALL));
         _gate_list[indices[i]]->update_quantum_state(state_vector);
-        Kokkos::parallel_for(
-            Kokkos::RangePolicy<SpaceType<Space>>(0, states.dim()),
-            KOKKOS_CLASS_LAMBDA(const int j) { states._raw(i, j) = state_vector._raw(j); });
+        states.set_state_vector_at(i, state_vector);
     }
 }
 template <Precision Prec, ExecutionSpace Space>
