@@ -50,6 +50,8 @@ public:
         std::uint64_t n_qubits,
         bool set_same_state,
         std::uint64_t seed = std::random_device()());
+    [[nodiscard]] static StateVectorBatched uninitialized_state(std::uint64_t batch_size,
+                                                                std::uint64_t n_qubits);
 
     [[nodiscard]] std::vector<std::vector<StdComplex>> get_amplitudes() const;
 
@@ -296,6 +298,16 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                 .ret("StateVectorBatched", "New batched state vector with random states.")
                 .build_as_google_style()
                 .c_str())
+        .def_static("uninitialized_state",
+                    &StateVectorBatched<Prec, Space>::uninitialized_state,
+                    "batch_size"_a,
+                    "n_qubits"_a,
+                    DocString()
+                        .desc("Construct :class:`StateVectorBatched` without initializing.")
+                        .arg("batch_size", "int", "Number of states in batch.")
+                        .arg("n_qubits", "int", "number of qubits")
+                        .build_as_google_style()
+                        .c_str())
         // Measurement and probability methods
         .def("get_squared_norm",
              &StateVectorBatched<Prec, Space>::get_squared_norm,

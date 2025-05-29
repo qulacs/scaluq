@@ -159,6 +159,7 @@ StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
     std::uint64_t dim = state_vector.dim();
     ComplexType res;
     Kokkos::parallel_reduce(
+        "get_expectation_value",
         Kokkos::MDRangePolicy<internal::SpaceType<internal::Space>, Kokkos::Rank<2>>(
             {0, 0}, {nterms, dim >> 1}),
         KOKKOS_LAMBDA(std::uint64_t term_id, std::uint64_t state_idx, ComplexType & res_lcl) {
@@ -344,6 +345,7 @@ StdComplex Operator<internal::Prec, internal::Space>::get_transition_amplitude(
     std::uint64_t dim = state_vector_bra.dim();
     ComplexType res;
     Kokkos::parallel_reduce(
+        "get_transition_amplitude",
         Kokkos::MDRangePolicy<internal::SpaceType<internal::Space>, Kokkos::Rank<2>>(
             {0, 0}, {nterms, dim >> 1}),
         KOKKOS_LAMBDA(std::uint64_t term_id, std::uint64_t state_idx, ComplexType & res_lcl) {

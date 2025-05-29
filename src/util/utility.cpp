@@ -25,6 +25,7 @@ Matrix<Prec, Space> convert_external_matrix_to_internal_matrix<Prec, Space>(
         Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight, Kokkos::HostSpace> mat_h(
             "matrix_cast", rows, cols);
         Kokkos::parallel_for(
+            "convert_external_matrix_to_internal_matrix",
             Kokkos::MDRangePolicy<Kokkos::DefaultHostExecutionSpace, Kokkos::Rank<2>>({0, 0},
                                                                                       {rows, cols}),
             [&](std::uint32_t r, std::uint32_t c) {
@@ -55,6 +56,7 @@ ComplexMatrix convert_internal_matrix_to_external_matrix<Prec, Space>(
         Kokkos::View<StdComplex**, Kokkos::LayoutRight, SpaceType<Space>> matrix_f64(
             "internal_matrix", rows, cols);
         Kokkos::parallel_for(
+            "convert_internal_matrix_to_external_matrix",
             Kokkos::MDRangePolicy<Kokkos::Rank<2>, SpaceType<Space>>({0, 0}, {rows, cols}),
             KOKKOS_LAMBDA(std::uint64_t r, std::uint64_t c) {
                 matrix_f64(r, c) = StdComplex(static_cast<double>(matrix(r, c).real()),

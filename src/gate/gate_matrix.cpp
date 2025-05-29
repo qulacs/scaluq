@@ -79,6 +79,7 @@ Matrix<Prec, Space> SparseMatrixGateImpl<Prec, Space>::get_matrix_internal() con
     auto _col_idx = _matrix._col_idx;
     auto _vals = _matrix._vals;
     Kokkos::parallel_for(
+        "get_matrix_internal",
         Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), _matrix._rows, Kokkos::AUTO),
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team) {
             std::uint64_t r = team.league_rank();
