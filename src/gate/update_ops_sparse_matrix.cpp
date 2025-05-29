@@ -8,8 +8,6 @@ void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_value_mask,
                         const SparseMatrix<Prec, Space>& mat,
                         StateVector<Prec, Space>& state) {
-    auto values = mat._values;
-
     Kokkos::View<Complex<Prec>*, SpaceType<Space>> update(
         Kokkos::ViewAllocateWithoutInitializing("update"), state.dim());
     Kokkos::parallel_for(
@@ -25,10 +23,8 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     Kokkos::fence();
 
     std::uint64_t outer_mask = ~target_mask & ((1ULL << state.n_qubits()) - 1);
-    Kokkos::View<Complex<Prec>*, SpaceType<Space>, Kokkos::MemoryTraits<Kokkos::Atomic>>
-        update_atomic(update);
     Kokkos::parallel_for(
-        "sparse_matrix_gate (update)",
+        "COO_Update",
         Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
             {0, 0},
             {static_cast<std::int64_t>(state.dim() >> std::popcount(target_mask | control_mask)),
@@ -45,6 +41,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
             update_atomic(dst_index) += v * state._raw(src_index);
         });
     Kokkos::fence();
+
     state._raw = update;
 }
 
@@ -54,9 +51,6 @@ void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_value_mask,
                         const SparseMatrix<Prec, Space>& mat,
                         StateVectorBatched<Prec, Space>& states) {
-    auto values = mat._values;
-    const std::uint64_t outer_mask = ~target_mask & ((1ULL << states.n_qubits()) - 1);
-
     Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight, SpaceType<Space>> update(
         Kokkos::ViewAllocateWithoutInitializing("update"), states.batch_size(), states.dim());
 
@@ -73,13 +67,10 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         });
     Kokkos::fence();
 
-    Kokkos::View<Complex<Prec>**,
-                 Kokkos::LayoutRight,
-                 SpaceType<Space>,
-                 Kokkos::MemoryTraits<Kokkos::Atomic>>
-        update_atomic(update);
+    std::uint64_t outer_mask = ~target_mask & ((1ULL << states.n_qubits()) - 1);
+    std::uint64_t outer_size = states.dim() >> std::popcount(target_mask | control_mask);
     Kokkos::parallel_for(
-        "sparse_matrix_gate (update)",
+        "COO_Update",
         Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<3>>(
             {0, 0, 0},
             {static_cast<std::int64_t>(states.batch_size()),
@@ -95,6 +86,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
             update_atomic(batch_id, dst_index) += v * states._raw(batch_id, src_index);
         });
     Kokkos::fence();
+
     states._raw = update;
 }
 

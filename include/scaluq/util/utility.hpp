@@ -159,7 +159,7 @@ template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix convert_internal_matrix_to_external_matrix(const Matrix<Prec, Space>& matrix);
 
 template <Precision Prec, ExecutionSpace Space>
-ComplexMatrix convert_coo_to_external_matrix(SparseMatrix<Prec, Space> mat);
+ComplexMatrix convert_csr_to_external_matrix(SparseMatrix<Prec, Space> mat);
 
 inline ComplexMatrix transform_dense_matrix_by_order(const ComplexMatrix& mat,
                                                      const std::vector<std::uint64_t>& targets) {
