@@ -43,10 +43,17 @@ public:
 
     [[nodiscard]] StdComplex get_expectation_value(
         const StateVector<Prec, Space>& state_vector) const;
+    [[nodiscard]] std::vector<StdComplex> get_expectation_value(
+        const StateVectorBatched<Prec, Space>& states) const;
+
+    [[nodiscard]] ComplexMatrix get_matrix_ignoring_coef() const;
 
     [[nodiscard]] StdComplex get_transition_amplitude(
         const StateVector<Prec, Space>& state_vector_bra,
         const StateVector<Prec, Space>& state_vector_ket) const;
+    [[nodiscard]] std::vector<StdComplex> get_transition_amplitude(
+        const StateVectorBatched<Prec, Space>& states_bra,
+        const StateVectorBatched<Prec, Space>& states_ket) const;
 
     // not implemented yet
     [[nodiscard]] StdComplex solve_ground_state_eigenvalue_by_arnoldi_method(

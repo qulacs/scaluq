@@ -225,6 +225,79 @@ StdComplex PauliOperator<Prec, Space>::get_expectation_value(
 }
 
 template <Precision Prec, ExecutionSpace Space>
+std::vector<StdComplex> PauliOperator<Prec, Space>::get_expectation_value(
+    const StateVectorBatched<Prec, Space>& states) const {
+    if (states.n_qubits() < get_qubit_count()) {
+        throw std::runtime_error(
+            "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to "
+            "apply the operator");
+    }
+    std::uint64_t bit_flip_mask = _ptr->_bit_flip_mask;
+    std::uint64_t phase_flip_mask = _ptr->_phase_flip_mask;
+    if (bit_flip_mask == 0) {
+        Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<Space>> results(
+            "results", states.batch_size());
+        Kokkos::parallel_for(
+            "get_expectation_value",
+            Kokkos::TeamPolicy<internal::SpaceType<Space>>(
+                internal::SpaceType<Space>(), states.batch_size(), Kokkos::AUTO),
+            KOKKOS_CLASS_LAMBDA(
+                const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
+                FloatType res = 0;
+                std::uint64_t batch_id = team.league_rank();
+                Kokkos::parallel_reduce(
+                    Kokkos::TeamThreadRange(team, states.dim()),
+                    [&](std::uint64_t state_idx, FloatType& sum) {
+                        FloatType tmp = (scaluq::internal::conj(states._raw(batch_id, state_idx)) *
+                                         states._raw(batch_id, state_idx))
+                                            .real();
+                        if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
+                        sum += tmp;
+                    },
+                    internal::Sum<FloatType, Space>(res));
+                ComplexType cres = _ptr->_coef * res;
+                results(batch_id) = Kokkos::complex<FloatType>(cres.real(), cres.imag());
+            });
+        Kokkos::fence();
+        auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
+        return std::vector<StdComplex>(results_h.data(), results_h.data() + results_h.size());
+    }
+
+    Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<Space>> results("results",
+                                                                               states.batch_size());
+    std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
+    std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
+    ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
+    Kokkos::parallel_for(
+        "get_expectation_value",
+        Kokkos::TeamPolicy<internal::SpaceType<Space>>(
+            internal::SpaceType<Space>(), states.batch_size(), Kokkos::AUTO),
+        KOKKOS_CLASS_LAMBDA(
+            const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
+            FloatType res = 0;
+            std::uint64_t batch_id = team.league_rank();
+            Kokkos::parallel_reduce(
+                Kokkos::TeamThreadRange(team, states.dim()),
+                [&](std::uint64_t state_idx, FloatType& sum) {
+                    std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
+                    std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
+                    FloatType tmp = scaluq::internal::real(
+                        states._raw(batch_id, basis_0) *
+                        scaluq::internal::conj(states._raw(batch_id, basis_1)) * global_phase *
+                        FloatType{2});
+                    if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
+                    sum += tmp;
+                },
+                internal::Sum<FloatType, Space>(res));
+            ComplexType cres = _ptr->_coef * res;
+            results(batch_id) = Kokkos::complex<FloatType>(cres.real(), cres.imag());
+        });
+    Kokkos::fence();
+    auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
+    return std::vector<StdComplex>(results_h.data(), results_h.data() + results_h.size());
+}
+
+template <Precision Prec, ExecutionSpace Space>
 StdComplex PauliOperator<Prec, Space>::get_transition_amplitude(
     const StateVector<Prec, Space>& state_vector_bra,
     const StateVector<Prec, Space>& state_vector_ket) const {
@@ -273,6 +346,92 @@ StdComplex PauliOperator<Prec, Space>::get_transition_amplitude(
         internal::Sum<ComplexType, Space>(res));
     Kokkos::fence();
     return static_cast<StdComplex>(_ptr->_coef * res);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+std::vector<StdComplex> PauliOperator<Prec, Space>::get_transition_amplitude(
+    const StateVectorBatched<Prec, Space>& states_bra,
+    const StateVectorBatched<Prec, Space>& states_ket) const {
+    if (states_bra.n_qubits() != states_ket.n_qubits()) {
+        throw std::runtime_error("state_vector_bra must have same n_qubits to state_vector_ket.");
+    }
+    if (states_bra.batch_size() != states_ket.batch_size()) {
+        throw std::runtime_error("state_vector_bra must have same batch_size to state_vector_ket.");
+    }
+    if (states_bra.n_qubits() < get_qubit_count()) {
+        throw std::runtime_error(
+            "PauliOperator::get_expectation_value: n_qubits of state_vector is too small to "
+            "apply "
+            "the operator");
+    }
+    std::uint64_t bit_flip_mask = _ptr->_bit_flip_mask;
+    std::uint64_t phase_flip_mask = _ptr->_phase_flip_mask;
+    if (bit_flip_mask == 0) {
+        Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<Space>> results(
+            "results", states_bra.batch_size());
+        Kokkos::parallel_for(
+            "get_transition_amplitude",
+            Kokkos::TeamPolicy<internal::SpaceType<Space>>(
+                internal::SpaceType<Space>(), states_bra.batch_size(), Kokkos::AUTO),
+            KOKKOS_CLASS_LAMBDA(
+                const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
+                FloatType res = 0;
+                std::uint64_t batch_id = team.league_rank();
+                Kokkos::parallel_reduce(
+                    Kokkos::TeamThreadRange(team, states_bra.dim()),
+                    [&](std::uint64_t state_idx, FloatType& sum) {
+                        FloatType tmp =
+                            (scaluq::internal::conj(states_bra._raw(batch_id, state_idx)) *
+                             states_ket._raw(batch_id, state_idx))
+                                .real();
+                        if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
+                        sum += tmp;
+                    },
+                    internal::Sum<FloatType, Space>(res));
+                ComplexType cres = _ptr->_coef * res;
+                results(batch_id) = Kokkos::complex<FloatType>(cres.real(), cres.imag());
+            });
+        Kokkos::fence();
+        auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
+        return std::vector<StdComplex>(results_h.data(), results_h.data() + results_h.size());
+    }
+    std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
+    std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
+    ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
+    Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<Space>> results(
+        "results", states_bra.batch_size());
+    Kokkos::parallel_for(
+        "get_transition_amplitude",
+        Kokkos::TeamPolicy<internal::SpaceType<Space>>(
+            internal::SpaceType<Space>(), states_bra.batch_size(), Kokkos::AUTO),
+        KOKKOS_CLASS_LAMBDA(
+            const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
+            FloatType res = 0;
+            std::uint64_t batch_id = team.league_rank();
+            Kokkos::parallel_reduce(
+                Kokkos::TeamThreadRange(team, states_bra.dim() >> 1),
+                [&](std::uint64_t state_idx, FloatType& sum) {
+                    std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
+                    std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
+                    FloatType tmp1 = scaluq::internal::real(
+                        states_bra._raw(batch_id, basis_0) *
+                        scaluq::internal::conj(states_ket._raw(batch_id, basis_1)) * global_phase *
+                        FloatType{2});
+                    if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
+                    FloatType tmp2 = scaluq::internal::real(
+                        states_bra._raw(batch_id, basis_1) *
+                        scaluq::internal::conj(states_ket._raw(batch_id, basis_0)) * global_phase *
+                        FloatType{2});
+                    if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
+                    sum += tmp1 + tmp2;
+                },
+                internal::Sum<FloatType, Space>(res));
+            ComplexType cres = _ptr->_coef * res;
+            results(batch_id) = Kokkos::complex<FloatType>(cres.real(), cres.imag());
+        });
+    Kokkos::fence();
+    auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
+    return std::vector<StdComplex>(results_h.data(), results_h.data() + results_h.size());
 }
 
 template <Precision Prec, ExecutionSpace Space>
