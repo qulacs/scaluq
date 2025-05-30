@@ -69,7 +69,7 @@ void StateVectorBatched<Prec, Space>::set_computational_basis(std::uint64_t basi
         "set_computational_basis",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
                                                                            {_batch_size, _dim}),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t b, std::uint64_t i) { _raw(b, i) = (i == 0); });
+        KOKKOS_CLASS_LAMBDA(std::uint64_t b, std::uint64_t i) { _raw(b, i) = (i == basis); });
     Kokkos::fence();
 }
 
