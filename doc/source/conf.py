@@ -33,6 +33,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx_math_dollar',
     'autoapi.extension',
+    'myst_parser'
 ]
 
 autoapi_type = "python"
@@ -52,6 +53,11 @@ autoapi_options = [
 ]
 
 autodoc_typehints = 'description'
+
+myst_enable_extensions = [
+    "amsmath",
+    "dollarmath",
+]
 
 html_theme = "sphinx_rtd_theme"
 
