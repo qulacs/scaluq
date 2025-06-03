@@ -172,34 +172,34 @@ void bind_operator_operator_hpp(nb::module_& m) {
              "Apply the operator to a state vector.")
         .def(
             "get_expectation_value",
-            [](const Operator<Prec, Space>& operator, const StateVector<Prec, Space>& state) {
-                return operator.get_expectation_value(state);
+            [](const Operator<Prec, Space>& op, const StateVector<Prec, Space>& state) {
+                return op.get_expectation_value(state);
             },
             "state"_a,
             "Get the expectation value of the operator with respect to a state vector.")
         .def(
             "get_expectation_value",
-            [](const Operator<Prec, Space>& operator,
-               const StateVectorBatched<Prec, Space>&
-               states) { return operator.get_expectation_value(states); },
+            [](const Operator<Prec, Space>& op, const StateVectorBatched<Prec, Space>& states) {
+                return op.get_expectation_value(states);
+            },
             "states"_a,
             "Get the expectation values of the operator for a batch of state vectors.")
         .def(
             "get_transition_amplitude",
-            [](const Operator<Prec, Space>& operator,
+            [](const Operator<Prec, Space>& op,
                const StateVector<Prec, Space>& state_source,
                const StateVector<Prec, Space>& state_target) {
-                return operator.get_transition_amplitude(state_source, state_target);
+                return op.get_transition_amplitude(state_source, state_target);
             },
             "source"_a,
             "target"_a,
             "Get the transition amplitude of the operator between two state vectors.")
         .def(
             "get_transition_amplitude",
-            [](const Operator<Prec, Space>& operator,
+            [](const Operator<Prec, Space>& op,
                const StateVectorBatched<Prec, Space>& states_source,
                const StateVectorBatched<Prec, Space>& states_target) {
-                return operator.get_transition_amplitude(states_source, states_target);
+                return op.get_transition_amplitude(states_source, states_target);
             },
             "states_source"_a,
             "states_target"_a,

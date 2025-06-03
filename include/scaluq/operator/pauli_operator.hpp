@@ -260,34 +260,35 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "Apply pauli to state vector.")
         .def(
             "get_expectation_value",
-            [](const PauliOperator<Prec, Space>& operator, const StateVector<Prec, Space>& state) {
-                return operator.get_expectation_value(state);
+            [](const PauliOperator<Prec, Space>& op, const StateVector<Prec, Space>& state) {
+                return op.get_expectation_value(state);
             },
             "state"_a,
             "Get expectation value of measuring state vector. $\\bra{\\psi}P\\ket{\\psi}$.")
         .def(
             "get_expectation_value",
-            [](const PauliOperator<Prec, Space>& operator,
-               const StateVectorBatched<Prec, Space>&
-               states) { return operator.get_expectation_value(states); },
+            [](const PauliOperator<Prec, Space>& op,
+               const StateVectorBatched<Prec, Space>& states) {
+                return op.get_expectation_value(states);
+            },
             "states"_a,
             "Get expectation values of measuring state vectors. $\\bra{\\psi_i}P\\ket{\\psi_i}$.")
         .def(
             "get_transition_amplitude",
-            [](const Operator<Prec, Space>& operator,
+            [](const Operator<Prec, Space>& op,
                const StateVector<Prec, Space>& state_source,
                const StateVector<Prec, Space>& state_target) {
-                return operator.get_transition_amplitude(state_source, state_target);
+                return op.get_transition_amplitude(state_source, state_target);
             },
             "source"_a,
             "target"_a,
             "Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.")
         .def(
             "get_transition_amplitude",
-            [](const Operator<Prec, Space>& operator,
+            [](const Operator<Prec, Space>& op,
                const StateVectorBatched<Prec, Space>& state_source,
                const StateVectorBatched<Prec, Space>& state_target) {
-                return operator.get_transition_amplitude(state_source, state_target);
+                return op.get_transition_amplitude(state_source, state_target);
             },
             "states_source"_a,
             "states_target"_a,
