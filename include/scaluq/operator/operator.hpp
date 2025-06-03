@@ -174,11 +174,20 @@ void bind_operator_operator_hpp(nb::module_& m) {
              &Operator<Prec, Space>::get_expectation_value,
              "state"_a,
              "Get the expectation value of the operator with respect to a state vector.")
+        .def("get_expectation_value",
+             &Operator<Prec, Space>::get_expectation_value,
+             "states"_a,
+             "Get the expectation values of the operator for a batch of state vectors.")
         .def("get_transition_amplitude",
              &Operator<Prec, Space>::get_transition_amplitude,
              "source"_a,
              "target"_a,
              "Get the transition amplitude of the operator between two state vectors.")
+        .def("get_transition_amplitude",
+             &Operator<Prec, Space>::get_transition_amplitude,
+             "states_source"_a,
+             "states_target"_a,
+             "Get the transition amplitudes of the operator for a batch of state vectors.")
         .def("get_matrix",
              &Operator<Prec, Space>::get_matrix,
              "Get matrix representation of the Operator. Tensor product is applied from "
