@@ -297,7 +297,6 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
                 },
                 internal::Sum<ComplexType, internal::Space>(res_lcl));
             Kokkos::single(Kokkos::PerTeam(team), [&]() {
-                // Store the result for this batch
                 res(batch_id) = Kokkos::complex<FloatType>(res_lcl.real(), res_lcl.imag());
             });
         });
@@ -445,11 +444,12 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transitio
             ComplexType res = 0;
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
-                Kokkos::TeamThreadMDRange<
-                    Kokkos::Rank<2>,
-                    Kokkos::TeamPolicy<internal::SpaceType<internal::Space>>::member_type>(
-                    team, nterms, dim >> 1),
-                [&](std::uint64_t term_id, std::uint64_t state_idx, ComplexType& res_lcl) {
+                Kokkos::TeamThreadRange(team, nterms * (dim >> 1)),
+                [&](std::uint64_t idx, ComplexType& res_lcl) {
+                    // Avoiding the use of TeamThreadMDRange due to incomplete support for reduction
+                    // at this time
+                    std::uint64_t state_idx = idx % (dim >> 1);
+                    std::uint64_t term_id = idx / (dim >> 1);
                     std::uint64_t bit_flip_mask = bmasks[term_id];
                     std::uint64_t phase_flip_mask = pmasks[term_id];
                     ComplexType coef = coefs[term_id];
@@ -486,7 +486,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transitio
                         res_lcl += coef * (tmp1 + tmp2);
                     }
                 },
-                res);
+                internal::Sum<ComplexType, internal::Space>(res));
             Kokkos::single(Kokkos::PerTeam(team), [res, batch_id, results]() {
                 results(batch_id) = Kokkos::complex<double>(res.real(), res.imag());
             });
