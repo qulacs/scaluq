@@ -43,10 +43,17 @@ public:
 
     [[nodiscard]] StdComplex get_expectation_value(
         const StateVector<Prec, Space>& state_vector) const;
+    [[nodiscard]] std::vector<StdComplex> get_expectation_value(
+        const StateVectorBatched<Prec, Space>& states) const;
+
+    [[nodiscard]] ComplexMatrix get_matrix_ignoring_coef() const;
 
     [[nodiscard]] StdComplex get_transition_amplitude(
         const StateVector<Prec, Space>& state_vector_bra,
         const StateVector<Prec, Space>& state_vector_ket) const;
+    [[nodiscard]] std::vector<StdComplex> get_transition_amplitude(
+        const StateVectorBatched<Prec, Space>& states_bra,
+        const StateVectorBatched<Prec, Space>& states_ket) const;
 
     // not implemented yet
     [[nodiscard]] StdComplex solve_ground_state_eigenvalue_by_arnoldi_method(
@@ -163,15 +170,40 @@ void bind_operator_operator_hpp(nb::module_& m) {
              &Operator<Prec, Space>::apply_to_state,
              "state"_a,
              "Apply the operator to a state vector.")
-        .def("get_expectation_value",
-             &Operator<Prec, Space>::get_expectation_value,
-             "state"_a,
-             "Get the expectation value of the operator with respect to a state vector.")
-        .def("get_transition_amplitude",
-             &Operator<Prec, Space>::get_transition_amplitude,
-             "source"_a,
-             "target"_a,
-             "Get the transition amplitude of the operator between two state vectors.")
+        .def(
+            "get_expectation_value",
+            [](const Operator<Prec, Space>& op, const StateVector<Prec, Space>& state) {
+                return op.get_expectation_value(state);
+            },
+            "state"_a,
+            "Get the expectation value of the operator with respect to a state vector.")
+        .def(
+            "get_expectation_value",
+            [](const Operator<Prec, Space>& op, const StateVectorBatched<Prec, Space>& states) {
+                return op.get_expectation_value(states);
+            },
+            "states"_a,
+            "Get the expectation values of the operator for a batch of state vectors.")
+        .def(
+            "get_transition_amplitude",
+            [](const Operator<Prec, Space>& op,
+               const StateVector<Prec, Space>& state_source,
+               const StateVector<Prec, Space>& state_target) {
+                return op.get_transition_amplitude(state_source, state_target);
+            },
+            "source"_a,
+            "target"_a,
+            "Get the transition amplitude of the operator between two state vectors.")
+        .def(
+            "get_transition_amplitude",
+            [](const Operator<Prec, Space>& op,
+               const StateVectorBatched<Prec, Space>& states_source,
+               const StateVectorBatched<Prec, Space>& states_target) {
+                return op.get_transition_amplitude(states_source, states_target);
+            },
+            "states_source"_a,
+            "states_target"_a,
+            "Get the transition amplitudes of the operator for a batch of state vectors.")
         .def("get_matrix",
              &Operator<Prec, Space>::get_matrix,
              "Get matrix representation of the Operator. Tensor product is applied from "

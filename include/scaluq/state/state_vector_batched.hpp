@@ -40,10 +40,7 @@ public:
 
     void set_zero_norm_state();
 
-    void set_Haar_random_state(std::uint64_t batch_size,
-                               std::uint64_t n_qubits,
-                               bool set_same_state,
-                               std::uint64_t seed = std::random_device()());
+    void set_Haar_random_state(bool set_same_state, std::uint64_t seed = std::random_device()());
 
     [[nodiscard]] std::vector<std::vector<std::uint64_t>> sampling(
         std::uint64_t sampling_count, std::uint64_t seed = std::random_device()()) const;
@@ -263,15 +260,10 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
         .def(
             "set_Haar_random_state",
             [](StateVectorBatched<Prec, Space>& states,
-               std::uint64_t batch_size,
-               std::uint64_t n_qubits,
                bool set_same_state,
                std::optional<std::uint64_t> seed) {
-                states.set_Haar_random_state(
-                    batch_size, n_qubits, set_same_state, seed.value_or(std::random_device()()));
+                states.set_Haar_random_state(set_same_state, seed.value_or(std::random_device()()));
             },
-            "batch_size"_a,
-            "n_qubits"_a,
             "set_same_state"_a,
             "seed"_a = std::nullopt,
             DocString()

@@ -41,7 +41,7 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.28.0/cmake-3.28.0
     rm /tmp/cmake-install.sh && \
     ln -s /opt/cmake-3.28.0/bin/* /usr/local/bin
 
-RUN git clone --recursive https://github.com/kokkos/kokkos.git /tmp/kokkos --depth 1 && \
+RUN git clone --recursive --branch develop https://github.com/kokkos/kokkos.git /tmp/kokkos --depth 1 && \
     mkdir /tmp/kokkos/build && \
     cd /tmp/kokkos/build && \
     cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/kokkos-build && \

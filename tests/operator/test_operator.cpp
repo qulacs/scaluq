@@ -93,6 +93,26 @@ TYPED_TEST(OperatorTest, CheckExpectationValue) {
     }
 }
 
+TYPED_TEST(OperatorTest, CheckBatchedExpectationValue) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    std::uint64_t n = 4;
+    std::uint64_t dim = 1ULL << n;
+    Random random;
+
+    StateVectorBatched<Prec, Space> states(10, n);
+    states.set_Haar_random_state(false);
+    auto [rand_observable, _] = generate_random_observable_with_eigen<Prec, Space>(n, random);
+    std::vector<StdComplex> results = rand_observable.get_expectation_value(states);
+
+    for (int b = 0; b < 10; ++b) {
+        auto state = states.get_state_vector_at(b);
+        StdComplex res = rand_observable.get_expectation_value(state);
+        ASSERT_NEAR(res.real(), results[b].real(), eps<Prec>);
+        ASSERT_NEAR(res.imag(), results[b].imag(), eps<Prec>);
+    }
+}
+
 TYPED_TEST(OperatorTest, CheckTransitionAmplitude) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
@@ -118,6 +138,30 @@ TYPED_TEST(OperatorTest, CheckTransitionAmplitude) {
             (test_state_bra.adjoint() * test_rand_observable * test_state_ket)(0, 0);
         ASSERT_NEAR(test_res.real(), res.real(), eps<Prec>);
         ASSERT_NEAR(test_res.imag(), res.imag(), eps<Prec>);
+    }
+}
+
+TYPED_TEST(OperatorTest, CheckBatchedTransitionAmplitude) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    std::uint64_t n = 4;
+    std::uint64_t dim = 1ULL << n;
+    Random random;
+
+    StateVectorBatched<Prec, Space> states_bra(10, n);
+    StateVectorBatched<Prec, Space> states_ket(10, n);
+    states_bra.set_Haar_random_state(false);
+    states_ket.set_Haar_random_state(false);
+    auto [rand_observable, _] = generate_random_observable_with_eigen<Prec, Space>(n, random);
+    std::vector<StdComplex> results =
+        rand_observable.get_transition_amplitude(states_bra, states_ket);
+
+    for (int b = 0; b < 10; ++b) {
+        auto state_bra = states_bra.get_state_vector_at(b);
+        auto state_ket = states_ket.get_state_vector_at(b);
+        StdComplex res = rand_observable.get_transition_amplitude(state_bra, state_ket);
+        ASSERT_NEAR(res.real(), results[b].real(), eps<Prec>);
+        ASSERT_NEAR(res.imag(), results[b].imag(), eps<Prec>);
     }
 }
 

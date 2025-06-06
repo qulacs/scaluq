@@ -7,42 +7,53 @@ using namespace scaluq;
 int main() {
     initialize();  // must be called before using any scaluq methods
     {
-        {
-            std::int64_t n = 10;
-            std::int64_t d = 1 << n;
-            std::int64_t m = n / 2;
-            std::int64_t md = 1 << m;
-            std::int32_t b = 100;
-            std::int32_t r = 500;
-            Random rd;
+        // correct
+        double sum = 0.0;
+        Kokkos::parallel_reduce(
+            Kokkos::MDRangePolicy<Kokkos::DefaultExecutionSpace, Kokkos::Rank<2>>({0, 0}, {10, 10}),
+            KOKKOS_LAMBDA(const int i, const int j, double& sum) {
+                sum += static_cast<int>(i * 10 + j);
+            },
+            sum);
+        std::cout << "Sum of products: " << sum << std::endl;  // 4950
 
-            ComplexMatrix matrix(md, md);
-            for (int i = 0; i < md; ++i) {
-                for (int j = 0; j < md; ++j) {
-                    matrix(i, j) = StdComplex(rd.normal(), rd.normal());
-                }
-            }
-            std::vector<std::uint64_t> targets = [&] {
-                auto tmp = rd.permutation(n);
-                std::vector<std::uint64_t> prefix;
-                for (int i = 0; i < m; ++i) prefix.push_back(tmp[i]);
-                return prefix;
-            }();
+        // correct
+        Kokkos::parallel_for(
+            Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>(
+                Kokkos::DefaultExecutionSpace(), 5, Kokkos::AUTO),
+            KOKKOS_LAMBDA(
+                const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::member_type& team) {
+                int team_sum = 0;
+                Kokkos::parallel_reduce(
+                    Kokkos::TeamThreadMDRange(team, 10, 10),
+                    [&](const int i, const int j, int& sum) { sum += i * 10 + j; },
+                    team_sum);
+                team.team_barrier();
+                Kokkos::single(Kokkos::PerTeam(team), [&]() {
+                    // each value of team_sum is 4950
+                    Kokkos::printf("Team %d sum: %d\n", team.league_rank(), team_sum);
+                });
+            });
+        Kokkos::fence();
 
-            auto mgate =
-                gate::DenseMatrix<Precision::F64, ExecutionSpace::Default>(targets, matrix);
-
-            StateVector<Precision::F64, ExecutionSpace::Default> state(n);
-            StateVectorBatched<Precision::F64, ExecutionSpace::Default> batched_state(b, n);
-            for (int i = 0; i < r; ++i) {
-                for (int j = 0; j < b; ++j) {
-                    mgate->update_quantum_state(state);
-                }
-            }
-            for (int i = 0; i < r; ++i) {
-                mgate->update_quantum_state(batched_state);
-            }
-        }
+        // wrong
+        Kokkos::parallel_for(
+            Kokkos::TeamPolicy<Kokkos::DefaultHostExecutionSpace>(
+                Kokkos::DefaultHostExecutionSpace(), 5, Kokkos::AUTO),
+            KOKKOS_LAMBDA(
+                const Kokkos::TeamPolicy<Kokkos::DefaultHostExecutionSpace>::member_type& team) {
+                int team_sum = 0;
+                Kokkos::parallel_reduce(
+                    Kokkos::TeamThreadMDRange(team, 10, 10),
+                    [&](const int i, const int j, int& sum) { sum += i * 10 + j; },
+                    team_sum);
+                team.team_barrier();
+                Kokkos::single(Kokkos::PerTeam(team), [&]() {
+                    // each value of team_sum is 450 ?
+                    Kokkos::printf("Team %d sum: %d\n", team.league_rank(), team_sum);
+                });
+            });
+        Kokkos::fence();
     }
     finalize();
 }
