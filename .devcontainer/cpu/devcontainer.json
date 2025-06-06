@@ -57,6 +57,7 @@
                     "cpptools",
                     "cstdint",
                     "ctrz",
+                    "ctest",
                     "cuda",
                     "DCMAKE",
                     "DEIGEN_NO_CUDA",
