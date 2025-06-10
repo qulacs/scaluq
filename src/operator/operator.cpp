@@ -104,7 +104,8 @@ ComplexMatrix Operator<internal::Prec, internal::Space>::get_matrix() const {
 template <>
 void Operator<internal::Prec, internal::Space>::apply_to_state(
     StateVector<internal::Prec, internal::Space>& state_vector) const {
-    StateVector<internal::Prec, internal::Space> res(state_vector.n_qubits());
+    auto res =
+        StateVector<internal::Prec, internal::Space>::uninitialized_state(state_vector.n_qubits());
     res.set_zero_norm_state();
     for (const auto& term : _terms) {
         StateVector<internal::Prec, internal::Space> tmp = state_vector.copy();

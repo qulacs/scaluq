@@ -1,59 +1,47 @@
+#include <chrono>
 #include <iostream>
 #include <scaluq/all.hpp>
-using namespace scaluq;
 
 using namespace scaluq;
+using namespace std::chrono;
 
 int main() {
-    initialize();  // must be called before using any scaluq methods
-    {
-        // correct
-        double sum = 0.0;
-        Kokkos::parallel_reduce(
-            Kokkos::MDRangePolicy<Kokkos::DefaultExecutionSpace, Kokkos::Rank<2>>({0, 0}, {10, 10}),
-            KOKKOS_LAMBDA(const int i, const int j, double& sum) {
-                sum += static_cast<int>(i * 10 + j);
-            },
-            sum);
-        std::cout << "Sum of products: " << sum << std::endl;  // 4950
+    scaluq::initialize();
 
-        // correct
-        Kokkos::parallel_for(
-            Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>(
-                Kokkos::DefaultExecutionSpace(), 5, Kokkos::AUTO),
-            KOKKOS_LAMBDA(
-                const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::member_type& team) {
-                int team_sum = 0;
-                Kokkos::parallel_reduce(
-                    Kokkos::TeamThreadMDRange(team, 10, 10),
-                    [&](const int i, const int j, int& sum) { sum += i * 10 + j; },
-                    team_sum);
-                team.team_barrier();
-                Kokkos::single(Kokkos::PerTeam(team), [&]() {
-                    // each value of team_sum is 4950
-                    Kokkos::printf("Team %d sum: %d\n", team.league_rank(), team_sum);
-                });
-            });
-        Kokkos::fence();
+    constexpr std::size_t n_qubits = 10;
+    constexpr std::size_t n_terms = 5;
+    constexpr std::size_t n_iterations = 100;
 
-        // wrong
-        Kokkos::parallel_for(
-            Kokkos::TeamPolicy<Kokkos::DefaultHostExecutionSpace>(
-                Kokkos::DefaultHostExecutionSpace(), 5, Kokkos::AUTO),
-            KOKKOS_LAMBDA(
-                const Kokkos::TeamPolicy<Kokkos::DefaultHostExecutionSpace>::member_type& team) {
-                int team_sum = 0;
-                Kokkos::parallel_reduce(
-                    Kokkos::TeamThreadMDRange(team, 10, 10),
-                    [&](const int i, const int j, int& sum) { sum += i * 10 + j; },
-                    team_sum);
-                team.team_barrier();
-                Kokkos::single(Kokkos::PerTeam(team), [&]() {
-                    // each value of team_sum is 450 ?
-                    Kokkos::printf("Team %d sum: %d\n", team.league_rank(), team_sum);
-                });
-            });
-        Kokkos::fence();
+    constexpr Precision Prec = Precision::F64;
+    constexpr ExecutionSpace Space = ExecutionSpace::Default;
+
+    // 初期状態
+    StateVector<Prec, Space> state(n_qubits);
+    state.set_zero_norm_state();  // 正規化状態に初期化
+
+    // 適当な Operator を作る（パウリZの和）
+    Operator<Prec, Space> op(n_qubits);
+    for (std::size_t i = 0; i < n_terms; ++i) {
+        op.add_operator(PauliOperator<Prec, Space>(n_qubits, i));  // i番目にZ
+        op.add_term(pw, 1.0);                                      // 係数1.0で追加
     }
-    finalize();
+
+    // ベンチマーク
+    double total_time_ms = 0.0;
+    for (std::size_t i = 0; i < n_iterations; ++i) {
+        StateVector<Prec, Space> s = state.copy();
+
+        auto start = high_resolution_clock::now();
+        op.apply_to_state(s);  // 計測対象
+        auto end = high_resolution_clock::now();
+
+        double elapsed_ms = duration<double, std::milli>(end - start).count();
+        total_time_ms += elapsed_ms;
+    }
+
+    std::cout << "Average time over " << n_iterations << " runs: " << (total_time_ms / n_iterations)
+              << " ms\n";
+
+    scaluq::finalize();
+    return 0;
 }
