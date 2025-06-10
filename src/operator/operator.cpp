@@ -256,7 +256,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
                 },
                 internal::Sum<ComplexType, internal::Space>(sum));
             Kokkos::single(Kokkos::PerTeam(team), [&]() {
-                res(batch_id) = Kokkos::complex<FloatType>(sum.real(), sum.imag());
+                res(batch_id) = Kokkos::complex<double>(sum.real(), sum.imag());
             });
         });
     Kokkos::fence();
