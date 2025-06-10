@@ -250,7 +250,7 @@ std::vector<StdComplex> PauliOperator<Prec, Space>::get_expectation_value(
                     },
                     internal::Sum<FloatType, Space>(res));
                 ComplexType cres = _ptr->_coef * res;
-                results(batch_id) = Kokkos::complex<FloatType>(cres.real(), cres.imag());
+                results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
             });
         Kokkos::fence();
         auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
@@ -284,7 +284,7 @@ std::vector<StdComplex> PauliOperator<Prec, Space>::get_expectation_value(
                 },
                 internal::Sum<FloatType, Space>(res));
             ComplexType cres = _ptr->_coef * res;
-            results(batch_id) = Kokkos::complex<FloatType>(cres.real(), cres.imag());
+            results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
         });
     Kokkos::fence();
     auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
@@ -385,7 +385,7 @@ std::vector<StdComplex> PauliOperator<Prec, Space>::get_transition_amplitude(
                     },
                     internal::Sum<FloatType, Space>(res));
                 ComplexType cres = _ptr->_coef * res;
-                results(batch_id) = Kokkos::complex<FloatType>(cres.real(), cres.imag());
+                results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
             });
         Kokkos::fence();
         auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
@@ -423,7 +423,7 @@ std::vector<StdComplex> PauliOperator<Prec, Space>::get_transition_amplitude(
                 },
                 internal::Sum<FloatType, Space>(res));
             ComplexType cres = _ptr->_coef * res;
-            results(batch_id) = Kokkos::complex<FloatType>(cres.real(), cres.imag());
+            results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
         });
     Kokkos::fence();
     auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
