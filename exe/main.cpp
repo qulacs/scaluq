@@ -3,45 +3,60 @@
 #include <scaluq/all.hpp>
 
 using namespace scaluq;
-using namespace std::chrono;
+using namespace nlohmann;
 
 int main() {
-    scaluq::initialize();
+    scaluq::initialize();  // 初期化
 
-    constexpr std::size_t n_qubits = 10;
-    constexpr std::size_t n_terms = 5;
-    constexpr std::size_t n_iterations = 100;
+    constexpr Precision Real = Precision::F64;
+    constexpr ExecutionSpace Exec = ExecutionSpace::Default;
 
-    constexpr Precision Prec = Precision::F64;
-    constexpr ExecutionSpace Space = ExecutionSpace::Default;
+    const std::uint64_t nqubits = 10;
+    const std::uint64_t shots = 1000;
 
-    // 初期状態
-    StateVector<Prec, Space> state(n_qubits);
-    state.set_zero_norm_state();  // 正規化状態に初期化
+    // タイマー開始
+    auto start_time = std::chrono::high_resolution_clock::now();
 
-    // 適当な Operator を作る（パウリZの和）
-    Operator<Prec, Space> op(n_qubits);
-    for (std::size_t i = 0; i < n_terms; ++i) {
-        op.add_operator(PauliOperator<Prec, Space>(n_qubits, i));  // i番目にZ
-        op.add_term(pw, 1.0);                                      // 係数1.0で追加
+    {
+        StateVector<Real, Exec> state(nqubits);
+
+        Circuit<Real, Exec> circuit(nqubits);
+
+        for (std::int64_t i = 0; i < 50; ++i) {
+            if (rand() % 2 == 0) {
+                std::uint64_t target = rand() % nqubits;
+                std::uint64_t control = rand() % nqubits;
+                if (target == control) ++control;
+                circuit.add_gate(gate::Z<Real, Exec>(target, std::vector<std::uint64_t>{control}));
+            } else {
+                std::uint64_t target = rand() % nqubits;
+                std::uint64_t control = rand() % nqubits;
+                if (target == control) ++control;
+                auto z = gate::Z<Real, Exec>(target, std::vector<std::uint64_t>{control});
+                auto x = gate::X<Real, Exec>(target, std::vector<std::uint64_t>{control});
+                auto pgate = gate::Probabilistic<Real, Exec>({0.7, 0.3}, {x, z});
+                circuit.add_gate(pgate);
+            }
+        }
+
+        // ノイズありシミュレーションを実行
+        auto result = circuit.simulate_noise(state, shots);
+
+        // 結果の表示
+        std::cout << "=== Benchmark: Probabilistic Gate Simulation ===\n";
+        std::cout << "Shots: " << shots << ", Qubits: " << nqubits << "\n";
+        std::cout << "Number of distinct outputs: " << result.size() << "\n\n";
+
+        // for (std::size_t i = 0; i < result.size(); ++i) {
+        //     const auto& [state_vec, count] = result[i];
+        //     std::cout << "[Outcome " << i << "] Count: " << count << "\n";
+        //     std::cout << state_vec << "\n";
+        // }
     }
 
-    // ベンチマーク
-    double total_time_ms = 0.0;
-    for (std::size_t i = 0; i < n_iterations; ++i) {
-        StateVector<Prec, Space> s = state.copy();
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end_time - start_time;
+    std::cout << "\nTotal simulation time: " << duration.count() << " seconds\n";
 
-        auto start = high_resolution_clock::now();
-        op.apply_to_state(s);  // 計測対象
-        auto end = high_resolution_clock::now();
-
-        double elapsed_ms = duration<double, std::milli>(end - start).count();
-        total_time_ms += elapsed_ms;
-    }
-
-    std::cout << "Average time over " << n_iterations << " runs: " << (total_time_ms / n_iterations)
-              << " ms\n";
-
-    scaluq::finalize();
-    return 0;
+    scaluq::finalize();  // 終了処理
 }
