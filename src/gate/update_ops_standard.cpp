@@ -224,7 +224,7 @@ void x_gate(std::uint64_t target_mask,
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t i =
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
-            Kokkos::Experimental::swap(state._raw[i], state._raw[i | target_mask]);
+            Kokkos::kokkos_swap(state._raw[i], state._raw[i | target_mask]);
         });
     Kokkos::fence();
 }
@@ -242,8 +242,7 @@ void x_gate(std::uint64_t target_mask,
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
             std::uint64_t i =
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
-            Kokkos::Experimental::swap(states._raw(batch_id, i),
-                                       states._raw(batch_id, i | target_mask));
+            Kokkos::kokkos_swap(states._raw(batch_id, i), states._raw(batch_id, i | target_mask));
         });
     Kokkos::fence();
 }
@@ -262,7 +261,7 @@ void y_gate(std::uint64_t target_mask,
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             state._raw[i] *= Complex<Prec>(0, 1);
             state._raw[i | target_mask] *= Complex<Prec>(0, -1);
-            Kokkos::Experimental::swap(state._raw[i], state._raw[i | target_mask]);
+            Kokkos::kokkos_swap(state._raw[i], state._raw[i | target_mask]);
         });
     Kokkos::fence();
 }
@@ -282,8 +281,7 @@ void y_gate(std::uint64_t target_mask,
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             states._raw(batch_id, i) *= Complex<Prec>(0, 1);
             states._raw(batch_id, i | target_mask) *= Complex<Prec>(0, -1);
-            Kokkos::Experimental::swap(states._raw(batch_id, i),
-                                       states._raw(batch_id, i | target_mask));
+            Kokkos::kokkos_swap(states._raw(batch_id, i), states._raw(batch_id, i | target_mask));
         });
     Kokkos::fence();
 }
@@ -657,8 +655,8 @@ void swap_gate(std::uint64_t target_mask,
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis =
                 insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
-            Kokkos::Experimental::swap(state._raw[basis | lower_target_mask],
-                                       state._raw[basis | upper_target_mask]);
+            Kokkos::kokkos_swap(state._raw[basis | lower_target_mask],
+                                state._raw[basis | upper_target_mask]);
         });
     Kokkos::fence();
 }
@@ -678,8 +676,8 @@ void swap_gate(std::uint64_t target_mask,
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
             std::uint64_t basis =
                 insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
-            Kokkos::Experimental::swap(states._raw(batch_id, basis | lower_target_mask),
-                                       states._raw(batch_id, basis | upper_target_mask));
+            Kokkos::kokkos_swap(states._raw(batch_id, basis | lower_target_mask),
+                                states._raw(batch_id, basis | upper_target_mask));
         });
     Kokkos::fence();
 }
