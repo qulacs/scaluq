@@ -4,6 +4,33 @@
 #include "../util/math.hpp"
 
 namespace scaluq {
+
+template <Precision Prec, ExecutionSpace Space>
+static std::tuple<Kokkos::View<std::uint64_t*, internal::SpaceType<Space>>,
+                  Kokkos::View<std::uint64_t*, internal::SpaceType<Space>>,
+                  Kokkos::View<internal::Complex<Prec>*, internal::SpaceType<Space>>>
+prepare_mask_and_coef(const std::vector<PauliOperator<Prec, Space>>& paulis) {
+    Kokkos::View<std::uint64_t*, Kokkos::HostSpace> bit_flip_mask_h("bit_flip_mask", paulis.size()),
+        phase_flip_mask_h("phase_flip_mask", paulis.size());
+    Kokkos::View<internal::Complex<Prec>*, Kokkos::HostSpace> coef_h("coef", paulis.size());
+
+    Kokkos::parallel_for("prepare_mask_and_coef",
+                         Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, paulis.size()),
+                         [&](const std::uint64_t i) {
+                             std::tie(bit_flip_mask_h(i), phase_flip_mask_h(i)) =
+                                 paulis[i].get_XZ_mask_representation();
+                             coef_h(i) = paulis[i].coef();
+                         });
+    Kokkos::fence();
+
+    auto bit_flip_mask =
+        Kokkos::create_mirror_view_and_copy(internal::SpaceType<Space>(), bit_flip_mask_h);
+    auto phase_flip_mask =
+        Kokkos::create_mirror_view_and_copy(internal::SpaceType<Space>(), phase_flip_mask_h);
+    auto coef = Kokkos::create_mirror_view_and_copy(internal::SpaceType<Space>(), coef_h);
+    return std::make_tuple(bit_flip_mask, phase_flip_mask, coef);
+}
+
 template <>
 std::string Operator<internal::Prec, internal::Space>::to_string() const {
     std::stringstream ss;
@@ -122,40 +149,7 @@ StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
             "Operator::get_expectation_value: n_qubits of state_vector is too small");
     }
     std::uint64_t nterms = _terms.size();
-    Kokkos::View<const PauliOperator<internal::Prec, internal::Space>*,
-                 Kokkos::HostSpace,
-                 Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-        terms_view(_terms.data(), nterms);
-    Kokkos::View<std::uint64_t*, Kokkos::HostSpace> bmasks_host("bmasks_host", nterms);
-    Kokkos::View<std::uint64_t*, Kokkos::HostSpace> pmasks_host("pmasks_host", nterms);
-    Kokkos::View<ComplexType*, Kokkos::HostSpace> coefs_host("coefs_host", nterms);
-    Kokkos::Experimental::transform(
-        Kokkos::DefaultHostExecutionSpace(),
-        terms_view,
-        bmasks_host,
-        [](const PauliOperator<internal::Prec, internal::Space>& pauli) {
-            return pauli._ptr->_bit_flip_mask;
-        });
-    Kokkos::Experimental::transform(
-        Kokkos::DefaultHostExecutionSpace(),
-        terms_view,
-        pmasks_host,
-        [](const PauliOperator<internal::Prec, internal::Space>& pauli) {
-            return pauli._ptr->_phase_flip_mask;
-        });
-    Kokkos::Experimental::transform(
-        Kokkos::DefaultHostExecutionSpace(),
-        terms_view,
-        coefs_host,
-        [](const PauliOperator<internal::Prec, internal::Space>& pauli) {
-            return pauli._ptr->_coef;
-        });
-    Kokkos::View<std::uint64_t*, internal::SpaceType<internal::Space>> bmasks("bmasks", nterms);
-    Kokkos::View<std::uint64_t*, internal::SpaceType<internal::Space>> pmasks("pmasks", nterms);
-    Kokkos::View<ComplexType*, internal::SpaceType<internal::Space>> coefs("coefs", nterms);
-    Kokkos::deep_copy(bmasks, bmasks_host);
-    Kokkos::deep_copy(pmasks, pmasks_host);
-    Kokkos::deep_copy(coefs, coefs_host);
+    auto [bmasks, pmasks, coefs] = prepare_mask_and_coef(_terms);
     std::uint64_t dim = state_vector.dim();
     ComplexType res;
     Kokkos::parallel_reduce(
@@ -179,8 +173,7 @@ StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
                 if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
                 res_lcl += coef * (tmp1 + tmp2);
             } else {
-                std::uint64_t pivot =
-                    sizeof(std::uint64_t) * 8 - Kokkos::countl_zero(bit_flip_mask) - 1;
+                std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
                 std::uint64_t global_phase_90rot_count =
                     Kokkos::popcount(bit_flip_mask & phase_flip_mask);
                 ComplexType global_phase =
@@ -208,40 +201,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
             "Operator::get_expectation_value: n_qubits of state_vector is too small");
     }
     std::uint64_t nterms = _terms.size();
-    Kokkos::View<const PauliOperator<internal::Prec, internal::Space>*,
-                 Kokkos::HostSpace,
-                 Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-        terms_view(_terms.data(), nterms);
-    Kokkos::View<std::uint64_t*, Kokkos::HostSpace> bmasks_host("bmasks_host", nterms);
-    Kokkos::View<std::uint64_t*, Kokkos::HostSpace> pmasks_host("pmasks_host", nterms);
-    Kokkos::View<ComplexType*, Kokkos::HostSpace> coefs_host("coefs_host", nterms);
-    Kokkos::Experimental::transform(
-        Kokkos::DefaultHostExecutionSpace(),
-        terms_view,
-        bmasks_host,
-        [](const PauliOperator<internal::Prec, internal::Space>& pauli) {
-            return pauli._ptr->_bit_flip_mask;
-        });
-    Kokkos::Experimental::transform(
-        Kokkos::DefaultHostExecutionSpace(),
-        terms_view,
-        pmasks_host,
-        [](const PauliOperator<internal::Prec, internal::Space>& pauli) {
-            return pauli._ptr->_phase_flip_mask;
-        });
-    Kokkos::Experimental::transform(
-        Kokkos::DefaultHostExecutionSpace(),
-        terms_view,
-        coefs_host,
-        [](const PauliOperator<internal::Prec, internal::Space>& pauli) {
-            return pauli._ptr->_coef;
-        });
-    Kokkos::View<std::uint64_t*, internal::SpaceType<internal::Space>> bmasks("bmasks", nterms);
-    Kokkos::View<std::uint64_t*, internal::SpaceType<internal::Space>> pmasks("pmasks", nterms);
-    Kokkos::View<ComplexType*, internal::SpaceType<internal::Space>> coefs("coefs", nterms);
-    Kokkos::deep_copy(bmasks, bmasks_host);
-    Kokkos::deep_copy(pmasks, pmasks_host);
-    Kokkos::deep_copy(coefs, coefs_host);
+    auto [bmasks, pmasks, coefs] = prepare_mask_and_coef(_terms);
     std::uint64_t dim = states.dim();
     Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<internal::Space>> res(
         "expectation_value_res", states.batch_size());
@@ -251,54 +211,48 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
         KOKKOS_CLASS_LAMBDA(
             const typename Kokkos::TeamPolicy<internal::SpaceType<internal::Space>>::member_type&
                 team) {
-            ComplexType res_lcl = 0;
+            ComplexType sum = 0;
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
-                Kokkos::TeamThreadRange(team, nterms),
-                [&](std::uint64_t term_id, ComplexType& sum) {
+                Kokkos::TeamThreadMDRange(team, nterms, dim >> 1),
+                [&](std::uint64_t term_id, std::uint64_t state_idx, ComplexType& res_lcl) {
                     std::uint64_t bit_flip_mask = bmasks[term_id];
                     std::uint64_t phase_flip_mask = pmasks[term_id];
                     ComplexType coef = coefs[term_id];
                     if (bit_flip_mask == 0) {
-                        for (std::uint64_t state_idx = 0; state_idx < dim >> 1; state_idx++) {
-                            std::uint64_t state_idx1 = state_idx << 1;
-                            FloatType tmp1 =
-                                (scaluq::internal::conj(states._raw(batch_id, state_idx1)) *
-                                 states._raw(batch_id, state_idx1))
-                                    .real();
-                            if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
-                            std::uint64_t state_idx2 = state_idx1 | 1;
-                            FloatType tmp2 =
-                                (scaluq::internal::conj(states._raw(batch_id, state_idx2)) *
-                                 states._raw(batch_id, state_idx2))
-                                    .real();
-                            if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
-                            sum += coef * (tmp1 + tmp2);
-                        }
+                        std::uint64_t state_idx1 = state_idx << 1;
+                        FloatType tmp1 =
+                            (scaluq::internal::conj(states._raw(batch_id, state_idx1)) *
+                             states._raw(batch_id, state_idx1))
+                                .real();
+                        if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
+                        std::uint64_t state_idx2 = state_idx1 | 1;
+                        FloatType tmp2 =
+                            (scaluq::internal::conj(states._raw(batch_id, state_idx2)) *
+                             states._raw(batch_id, state_idx2))
+                                .real();
+                        if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
+                        res_lcl += coef * (tmp1 + tmp2);
                     } else {
-                        std::uint64_t pivot =
-                            sizeof(std::uint64_t) * 8 - Kokkos::countl_zero(bit_flip_mask) - 1;
+                        std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
                         std::uint64_t global_phase_90rot_count =
                             Kokkos::popcount(bit_flip_mask & phase_flip_mask);
                         ComplexType global_phase =
                             internal::PHASE_90ROT<internal::Prec>()[global_phase_90rot_count % 4];
-                        for (std::uint64_t state_idx = 0; state_idx < dim >> 1; state_idx++) {
-                            std::uint64_t basis_0 =
-                                internal::insert_zero_to_basis_index(state_idx, pivot);
-                            std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-                            FloatType tmp = scaluq::internal::real(
-                                states._raw(batch_id, basis_0) *
-                                scaluq::internal::conj(states._raw(batch_id, basis_1)) *
-                                global_phase * FloatType(2));
-                            if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
-                            sum += coef * tmp;
-                        }
+                        std::uint64_t basis_0 =
+                            internal::insert_zero_to_basis_index(state_idx, pivot);
+                        std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
+                        FloatType tmp = scaluq::internal::real(
+                            states._raw(batch_id, basis_0) *
+                            scaluq::internal::conj(states._raw(batch_id, basis_1)) * global_phase *
+                            FloatType(2));
+                        if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
+                        res_lcl += coef * tmp;
                     }
                 },
-                internal::Sum<ComplexType, internal::Space>(res_lcl));
+                sum);
             Kokkos::single(Kokkos::PerTeam(team), [&]() {
-                // Store the result for this batch
-                res(batch_id) = Kokkos::complex<FloatType>(res_lcl.real(), res_lcl.imag());
+                res(batch_id) = Kokkos::complex<double>(sum.real(), sum.imag());
             });
         });
     Kokkos::fence();
@@ -321,30 +275,7 @@ StdComplex Operator<internal::Prec, internal::Space>::get_transition_amplitude(
             "small");
     }
     std::uint64_t nterms = _terms.size();
-    std::vector<std::uint64_t> bmasks_vector(nterms);
-    std::vector<std::uint64_t> pmasks_vector(nterms);
-    std::vector<ComplexType> coefs_vector(nterms);
-    std::ranges::transform(_terms,
-                           bmasks_vector.begin(),
-                           [](const PauliOperator<internal::Prec, internal::Space>& pauli) {
-                               return pauli._ptr->_bit_flip_mask;
-                           });
-    std::ranges::transform(_terms,
-                           pmasks_vector.begin(),
-                           [](const PauliOperator<internal::Prec, internal::Space>& pauli) {
-                               return pauli._ptr->_phase_flip_mask;
-                           });
-    std::ranges::transform(_terms,
-                           coefs_vector.begin(),
-                           [](const PauliOperator<internal::Prec, internal::Space>& pauli) {
-                               return pauli._ptr->_coef;
-                           });
-    Kokkos::View<std::uint64_t*, internal::SpaceType<internal::Space>> bmasks =
-        internal::convert_vector_to_view<std::uint64_t, internal::Space>(bmasks_vector);
-    Kokkos::View<std::uint64_t*, internal::SpaceType<internal::Space>> pmasks =
-        internal::convert_vector_to_view<std::uint64_t, internal::Space>(pmasks_vector);
-    Kokkos::View<ComplexType*, internal::SpaceType<internal::Space>> coefs =
-        internal::convert_vector_to_view<ComplexType, internal::Space>(coefs_vector);
+    auto [bmasks, pmasks, coefs] = prepare_mask_and_coef(_terms);
     std::uint64_t dim = state_vector_bra.dim();
     ComplexType res;
     Kokkos::parallel_reduce(
@@ -366,8 +297,7 @@ StdComplex Operator<internal::Prec, internal::Space>::get_transition_amplitude(
                 if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
                 res_lcl += coef * (tmp1 + tmp2);
             } else {
-                std::uint64_t pivot =
-                    sizeof(std::uint64_t) * 8 - Kokkos::countl_zero(bit_flip_mask) - 1;
+                std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
                 std::uint64_t global_phase_90rot_count =
                     Kokkos::popcount(bit_flip_mask & phase_flip_mask);
                 ComplexType global_phase =
@@ -408,30 +338,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transitio
             "small");
     }
     std::uint64_t nterms = _terms.size();
-    std::vector<std::uint64_t> bmasks_vector(nterms);
-    std::vector<std::uint64_t> pmasks_vector(nterms);
-    std::vector<ComplexType> coefs_vector(nterms);
-    std::ranges::transform(_terms,
-                           bmasks_vector.begin(),
-                           [](const PauliOperator<internal::Prec, internal::Space>& pauli) {
-                               return pauli._ptr->_bit_flip_mask;
-                           });
-    std::ranges::transform(_terms,
-                           pmasks_vector.begin(),
-                           [](const PauliOperator<internal::Prec, internal::Space>& pauli) {
-                               return pauli._ptr->_phase_flip_mask;
-                           });
-    std::ranges::transform(_terms,
-                           coefs_vector.begin(),
-                           [](const PauliOperator<internal::Prec, internal::Space>& pauli) {
-                               return pauli._ptr->_coef;
-                           });
-    Kokkos::View<std::uint64_t*, internal::SpaceType<internal::Space>> bmasks =
-        internal::convert_vector_to_view<std::uint64_t, internal::Space>(bmasks_vector);
-    Kokkos::View<std::uint64_t*, internal::SpaceType<internal::Space>> pmasks =
-        internal::convert_vector_to_view<std::uint64_t, internal::Space>(pmasks_vector);
-    Kokkos::View<ComplexType*, internal::SpaceType<internal::Space>> coefs =
-        internal::convert_vector_to_view<ComplexType, internal::Space>(coefs_vector);
+    auto [bmasks, pmasks, coefs] = prepare_mask_and_coef(_terms);
     std::uint64_t dim = states_bra.dim();
     Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<internal::Space>> results(
         "transition_amplitude_res", states_bra.batch_size());
@@ -445,10 +352,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transitio
             ComplexType res = 0;
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
-                Kokkos::TeamThreadMDRange<
-                    Kokkos::Rank<2>,
-                    Kokkos::TeamPolicy<internal::SpaceType<internal::Space>>::member_type>(
-                    team, nterms, dim >> 1),
+                Kokkos::TeamThreadMDRange(team, nterms, (dim >> 1)),
                 [&](std::uint64_t term_id, std::uint64_t state_idx, ComplexType& res_lcl) {
                     std::uint64_t bit_flip_mask = bmasks[term_id];
                     std::uint64_t phase_flip_mask = pmasks[term_id];
@@ -466,8 +370,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transitio
                         if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
                         res_lcl += coef * (tmp1 + tmp2);
                     } else {
-                        std::uint64_t pivot =
-                            sizeof(std::uint64_t) * 8 - Kokkos::countl_zero(bit_flip_mask) - 1;
+                        std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
                         std::uint64_t global_phase_90rot_count =
                             Kokkos::popcount(bit_flip_mask & phase_flip_mask);
                         ComplexType global_phase =
