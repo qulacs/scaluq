@@ -5,6 +5,7 @@
 
 #include "../constant.hpp"
 #include "../state/state_vector.hpp"
+#include "../state/state_vector_batched.hpp"
 #include "../types.hpp"
 
 namespace scaluq {
@@ -90,9 +91,15 @@ public:
 
     [[nodiscard]] StdComplex get_expectation_value(
         const StateVector<Prec, Space>& state_vector) const;
+    [[nodiscard]] std::vector<StdComplex> get_expectation_value(
+        const StateVectorBatched<Prec, Space>& states) const;
+
     [[nodiscard]] StdComplex get_transition_amplitude(
         const StateVector<Prec, Space>& state_vector_bra,
         const StateVector<Prec, Space>& state_vector_ket) const;
+    [[nodiscard]] std::vector<StdComplex> get_transition_amplitude(
+        const StateVectorBatched<Prec, Space>& states_bra,
+        const StateVectorBatched<Prec, Space>& states_ket) const;
 
     [[nodiscard]] ComplexMatrix get_matrix() const;
     [[nodiscard]] ComplexMatrix get_matrix_ignoring_coef() const;
@@ -251,15 +258,42 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              &PauliOperator<Prec, Space>::apply_to_state,
              "state"_a,
              "Apply pauli to state vector.")
-        .def("get_expectation_value",
-             &PauliOperator<Prec, Space>::get_expectation_value,
-             "state"_a,
-             "Get expectation value of measuring state vector. $\\bra{\\psi}P\\ket{\\psi}$.")
-        .def("get_transition_amplitude",
-             &PauliOperator<Prec, Space>::get_transition_amplitude,
-             "source"_a,
-             "target"_a,
-             "Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.")
+        .def(
+            "get_expectation_value",
+            [](const PauliOperator<Prec, Space>& op, const StateVector<Prec, Space>& state) {
+                return op.get_expectation_value(state);
+            },
+            "state"_a,
+            "Get expectation value of measuring state vector. $\\bra{\\psi}P\\ket{\\psi}$.")
+        .def(
+            "get_expectation_value",
+            [](const PauliOperator<Prec, Space>& op,
+               const StateVectorBatched<Prec, Space>& states) {
+                return op.get_expectation_value(states);
+            },
+            "states"_a,
+            "Get expectation values of measuring state vectors. $\\bra{\\psi_i}P\\ket{\\psi_i}$.")
+        .def(
+            "get_transition_amplitude",
+            [](const Operator<Prec, Space>& op,
+               const StateVector<Prec, Space>& state_source,
+               const StateVector<Prec, Space>& state_target) {
+                return op.get_transition_amplitude(state_source, state_target);
+            },
+            "source"_a,
+            "target"_a,
+            "Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.")
+        .def(
+            "get_transition_amplitude",
+            [](const Operator<Prec, Space>& op,
+               const StateVectorBatched<Prec, Space>& state_source,
+               const StateVectorBatched<Prec, Space>& state_target) {
+                return op.get_transition_amplitude(state_source, state_target);
+            },
+            "states_source"_a,
+            "states_target"_a,
+            "Get transition amplitudes of measuring state vectors. "
+            "$\\bra{\\chi_i}P\\ket{\\psi_i}$.")
         .def("get_matrix",
              &PauliOperator<Prec, Space>::get_matrix,
              "Get matrix representation of the PauliOperator. Tensor product is applied from "
