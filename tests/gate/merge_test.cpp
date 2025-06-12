@@ -24,9 +24,9 @@ void merge_gate_test() {
     std::uint64_t n = 4;
 
     auto make_control_values = [&](std::uint64_t length) {
-        std::uint64_t conrol_value_mask = random.int64();
+        std::uint64_t control_value_mask = random.int64();
         std::vector<std::uint64_t> control_values(length);
-        for (std::uint64_t i = 0; i < length; ++i) control_values[i] = conrol_value_mask >> i & 1;
+        for (std::uint64_t i = 0; i < length; ++i) control_values[i] = control_value_mask >> i & 1;
         return control_values;
     };
 

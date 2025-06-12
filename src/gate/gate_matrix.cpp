@@ -1,6 +1,6 @@
 #include <scaluq/gate/gate_matrix.hpp>
 
-#include "../util/template.hpp"
+#include "../prec_space.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
@@ -57,7 +57,7 @@ std::string DenseMatrixGateImpl<Prec, Space>::to_string(const std::string& inden
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(DenseMatrixGateImpl)
+template class DenseMatrixGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 SparseMatrixGateImpl<Prec, Space>::SparseMatrixGateImpl(std::uint64_t target_mask,
@@ -74,16 +74,23 @@ std::shared_ptr<const GateBase<Prec, Space>> SparseMatrixGateImpl<Prec, Space>::
 }
 template <Precision Prec, ExecutionSpace Space>
 Matrix<Prec, Space> SparseMatrixGateImpl<Prec, Space>::get_matrix_internal() const {
-    Matrix<Prec, Space> ret("return matrix", _matrix._row, _matrix._col);
-    auto vec = _matrix._values;
+    Matrix<Prec, Space> ret("return matrix", _matrix._rows, _matrix._cols);
+    auto _row_ptr = _matrix._row_ptr;
+    auto _col_idx = _matrix._col_idx;
+    auto _vals = _matrix._vals;
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<SpaceType<Space>>(0, vec.size()),
-        KOKKOS_LAMBDA(int i) { ret(vec[i].r, vec[i].c) = vec[i].val; });
+        "get_matrix_internal",
+        Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), _matrix._rows, Kokkos::AUTO),
+        KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team) {
+            std::uint64_t r = team.league_rank();
+            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, _row_ptr[r], _row_ptr[r + 1]),
+                                 [&](std::uint64_t idx) { ret(r, _col_idx[idx]) = _vals[idx]; });
+        });
     return ret;
 }
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix SparseMatrixGateImpl<Prec, Space>::get_matrix() const {
-    return convert_coo_to_external_matrix(_matrix);
+    return convert_csr_to_external_matrix(_matrix);
 }
 template <Precision Prec, ExecutionSpace Space>
 void SparseMatrixGateImpl<Prec, Space>::update_quantum_state(
@@ -106,5 +113,30 @@ std::string SparseMatrixGateImpl<Prec, Space>::to_string(const std::string& inde
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SparseMatrixGateImpl)
+template class SparseMatrixGateImpl<Prec, Space>;
+
+template <Precision Prec, ExecutionSpace Space>
+std::shared_ptr<const DenseMatrixGateImpl<Prec, Space>>
+GetGateFromJson<DenseMatrixGateImpl<Prec, Space>>::get(const Json& j) {
+    auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();
+    auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
+    return std::make_shared<const DenseMatrixGateImpl<Prec, Space>>(
+        vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),
+        vector_to_mask(control_qubits),
+        vector_to_mask(control_qubits, control_values),
+        j.at("matrix").get<ComplexMatrix>());
+}
+template class GetGateFromJson<DenseMatrixGateImpl<Prec, Space>>;
+template <Precision Prec, ExecutionSpace Space>
+std::shared_ptr<const SparseMatrixGateImpl<Prec, Space>>
+GetGateFromJson<SparseMatrixGateImpl<Prec, Space>>::get(const Json& j) {
+    auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();
+    auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
+    return std::make_shared<const SparseMatrixGateImpl<Prec, Space>>(
+        vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),
+        vector_to_mask(control_qubits),
+        vector_to_mask(control_qubits, control_values),
+        j.at("matrix").get<SparseComplexMatrix>());
+}
+template class GetGateFromJson<SparseMatrixGateImpl<Prec, Space>>;
 }  // namespace scaluq::internal

@@ -1,7 +1,7 @@
 #include <scaluq/gate/param_gate_standard.hpp>
 
+#include "../prec_space.hpp"
 #include "../util/math.hpp"
-#include "../util/template.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
@@ -45,7 +45,7 @@ std::string ParamRXGateImpl<Prec, Space>::to_string(const std::string& indent) c
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ParamRXGateImpl)
+template class ParamRXGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix ParamRYGateImpl<Prec, Space>::get_matrix(double param) const {
@@ -86,7 +86,7 @@ std::string ParamRYGateImpl<Prec, Space>::to_string(const std::string& indent) c
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ParamRYGateImpl)
+template class ParamRYGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix ParamRZGateImpl<Prec, Space>::get_matrix(double param) const {
@@ -127,5 +127,23 @@ std::string ParamRZGateImpl<Prec, Space>::to_string(const std::string& indent) c
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ParamRZGateImpl)
+template class ParamRZGateImpl<Prec, Space>;
+
+#define DECLARE_GET_FROM_JSON(Impl)                                                        \
+    template <Precision Prec, ExecutionSpace Space>                                        \
+    std::shared_ptr<const Impl<Prec, Space>> GetParamGateFromJson<Impl<Prec, Space>>::get( \
+        const Json& j) {                                                                   \
+        auto controls = j.at("control").get<std::vector<std::uint64_t>>();                 \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();     \
+        return std::make_shared<const Impl<Prec, Space>>(                                  \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),              \
+            vector_to_mask(controls),                                                      \
+            vector_to_mask(control_values),                                                \
+            static_cast<Float<Prec>>(j.at("param_coef").get<double>()));                   \
+    }                                                                                      \
+    template class GetParamGateFromJson<Impl<Prec, Space>>;
+
+DECLARE_GET_FROM_JSON(ParamRXGateImpl)
+DECLARE_GET_FROM_JSON(ParamRYGateImpl)
+DECLARE_GET_FROM_JSON(ParamRZGateImpl)
 }  // namespace scaluq::internal

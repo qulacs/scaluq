@@ -43,6 +43,7 @@ public:
 
     [[nodiscard]] static StateVector Haar_random_state(std::uint64_t n_qubits,
                                                        std::uint64_t seed = std::random_device()());
+    [[nodiscard]] static StateVector uninitialized_state(std::uint64_t n_qubits);
 
     /**
      * @brief zero-fill
@@ -182,6 +183,14 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                      "(0.15213024630399696-0.2871374092016799j)]"}))
                 .build_as_google_style()
                 .c_str())
+        .def_static("uninitialized_state",
+                    &StateVector<Prec, Space>::uninitialized_state,
+                    "n_qubits"_a,
+                    DocString()
+                        .desc("Construct :class:`StateVector` without initializing.")
+                        .arg("n_qubits", "int", "number of qubits")
+                        .build_as_google_style()
+                        .c_str())
         .def("set_amplitude_at",
              &StateVector<Prec, Space>::set_amplitude_at,
              "index"_a,
@@ -400,7 +409,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                      ">>> sum(-abs(a)**2 * math.log2(abs(a)**2) for a in v if a != 0)",
                      "2.5"})
                  .note("The result of this function differs from qulacs. This is because scaluq "
-                       "adopted 2 for the base of log in the difinition of entropy $\\sum_i -p_i "
+                       "adopted 2 for the base of log in the definition of entropy $\\sum_i -p_i "
                        "\\log p_i$ "
                        "however qulacs adopted e.")
                  .build_as_google_style()

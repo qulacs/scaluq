@@ -89,7 +89,7 @@ public:
 
     /**
      * @brief サンプリングされうるすべてのパターンに対して，それぞれが何回選ばれたかを返す
-     * @attention ProbablisticGate に ProbablisticGate が含まれてはいけない
+     * @attention ProbabilisticGate に ProbabilisticGate が含まれてはいけない
      */
     std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> simulate_noise(
         const StateVector<Prec, Space>& initial_state,
@@ -149,7 +149,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
                  &Circuit<Prec, Space>::add_param_gate),
              "param_gate"_a,
              "param_key"_a,
-             "Add parametric gate with specifing key. Given param_gate is copied.")
+             "Add parametric gate with specifying key. Given param_gate is copied.")
         .def("add_circuit",
              nb::overload_cast<const Circuit<Prec, Space>&>(&Circuit<Prec, Space>::add_circuit),
              "other"_a,

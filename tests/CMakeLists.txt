@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.21)
 
-enable_testing()
+include(GoogleTest)
 
-add_executable(scaluq_test EXCLUDE_FROM_ALL
+add_executable(scaluq_test
     circuit/circuit_test.cpp
     circuit/circuit_optimize_test.cpp
     circuit/param_circuit_test.cpp
@@ -25,3 +25,5 @@ target_link_libraries(scaluq_test PUBLIC
 )
 target_include_directories(scaluq_test PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
 target_include_directories(scaluq_test PRIVATE ${eigen_SOURCE_DIR})
+
+gtest_discover_tests(scaluq_test)

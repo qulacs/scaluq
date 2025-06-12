@@ -4,6 +4,9 @@ project(scaluq)
 
 include(FetchContent)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(ScaluqUtility)
+
 ### Define variables ###
 if(NOT DEFINED SCALUQ_USE_OMP)
     set(SCALUQ_USE_OMP ON)
@@ -68,7 +71,8 @@ endif(SCALUQ_USE_CUDA)
 FetchContent_Declare(
     kokkos
     GIT_REPOSITORY https://github.com/kokkos/kokkos
-    GIT_TAG 4.2.00
+    GIT_HASH b9d70e4653b87a06dbb48d63291bf248058c7c7db4bd91979676ad5609bb1a3a
+    # GIT_TAG 4.6.01
 )
 FetchContent_MakeAvailable(kokkos)
 set_property(TARGET kokkoscore PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -116,22 +120,82 @@ if(SCALUQ_USE_TEST)
     )
     FetchContent_MakeAvailable(googletest)
 else()
-    message(STATUS "Skip downloding googletest")
+    message(STATUS "Skip downloading googletest")
 endif(SCALUQ_USE_TEST)
 
-add_library(scaluq)
-set_property(TARGET scaluq PROPERTY POSITION_INDEPENDENT_CODE ON)
+set(SCALUQ_LIBRARIES)
+list(APPEND SCALUQ_LIBRARIES scaluq_base)
+add_library(scaluq_base)
+
+set(SCALUQ_PRECISION_DEFINITIONS)
+set(SCALUQ_PRECISION_VALUES)
+set(SCALUQ_PRECISION_NAMES)
+if(SCALUQ_FLOAT16)
+    list(APPEND SCALUQ_PRECISION_DEFINITIONS SCALUQ_FLOAT16)
+    list(APPEND SCALUQ_PRECISION_VALUES F16)
+    list(APPEND SCALUQ_PRECISION_NAMES f16)
+endif()
+if(SCALUQ_FLOAT32)
+    list(APPEND SCALUQ_PRECISION_DEFINITIONS SCALUQ_FLOAT32)
+    list(APPEND SCALUQ_PRECISION_VALUES F32)
+    list(APPEND SCALUQ_PRECISION_NAMES f32)
+endif()
+if(SCALUQ_FLOAT64)
+    list(APPEND SCALUQ_PRECISION_DEFINITIONS SCALUQ_FLOAT64)
+    list(APPEND SCALUQ_PRECISION_VALUES F64)
+    list(APPEND SCALUQ_PRECISION_NAMES f64)
+endif()
+if(SCALUQ_BFLOAT16)
+    list(APPEND SCALUQ_PRECISION_DEFINITIONS SCALUQ_BFLOAT16)
+    list(APPEND SCALUQ_PRECISION_VALUES BF16)
+    list(APPEND SCALUQ_PRECISION_NAMES bf16)
+endif()
+list_max_idx(SCALUQ_PRECISION_VALUES precision_max_idx)
+
+set(SCALUQ_SPACE_NAMES)
+set(SCALUQ_SPACE_VALUES)
+list(APPEND SCALUQ_SPACE_NAMES default)
+list(APPEND SCALUQ_SPACE_VALUES Default)
+if(SCALUQ_USE_CUDA)
+    list(APPEND SCALUQ_SPACE_NAMES host)
+    list(APPEND SCALUQ_SPACE_VALUES Host)
+endif()
+list_max_idx(SCALUQ_SPACE_VALUES space_max_idx)
+
+foreach(space_idx RANGE 0 ${space_max_idx})
+    list(GET SCALUQ_SPACE_NAMES ${space_idx} SPACE)
+    list(GET SCALUQ_SPACE_VALUES ${space_idx} SPACE_VALUE)
+
+    foreach(precision_idx RANGE 0 ${precision_max_idx})
+        list(GET SCALUQ_PRECISION_DEFINITIONS ${precision_idx} DEF)
+        list(GET SCALUQ_PRECISION_NAMES ${precision_idx} PRECISION)
+        list(GET SCALUQ_PRECISION_VALUES ${precision_idx} PRECISION_VALUE)
+
+        set(LIBRARY scaluq_${SPACE}_${PRECISION})
+        list(APPEND SCALUQ_LIBRARIES ${LIBRARY})
+        add_library(${LIBRARY})
+        target_compile_definitions(${LIBRARY} PUBLIC ${DEF})
+        target_compile_definitions(${LIBRARY} PRIVATE SCALUQ_INTERNAL_PREC=${PRECISION_VALUE} SCALUQ_INTERNAL_SPACE=${SPACE_VALUE})
+    endforeach()
+endforeach()
+
+foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
+    set_property(TARGET ${LIBRARY} PROPERTY POSITION_INDEPENDENT_CODE ON)
+endforeach()
+
+add_library(scaluq INTERFACE)
+target_link_libraries(scaluq INTERFACE ${SCALUQ_LIBRARIES})
 
 ### Compiler options ###
 # Standard
 if(SCALUQ_USE_CUDA)
-    target_compile_features(scaluq PUBLIC cxx_std_20)
+    target_compile_features(scaluq_base PUBLIC cxx_std_20)
 else()
-    target_compile_features(scaluq PUBLIC cxx_std_23)
+    target_compile_features(scaluq_base PUBLIC cxx_std_23)
 endif()
 
 # Warning
-target_compile_options(scaluq PUBLIC
+target_compile_options(scaluq_base PUBLIC
     -Wall
     -Wextra
     -Wunused-parameter
@@ -143,10 +207,10 @@ target_compile_options(scaluq PUBLIC
 )
 
 if(SCALUQ_USE_CUDA)
-    target_compile_definitions(scaluq PUBLIC SCALUQ_USE_CUDA)
-    target_compile_definitions(scaluq PUBLIC JSON_HAS_RANGES=0) # cite: https://github.com/nlohmann/json/issues/3907
+    target_compile_definitions(scaluq_base PUBLIC SCALUQ_USE_CUDA)
+    target_compile_definitions(scaluq_base PUBLIC JSON_HAS_RANGES=0) # cite: https://github.com/nlohmann/json/issues/3907
     # to remove tremendous warnings of Eigen
-    target_compile_options(scaluq PUBLIC
+    target_compile_options(scaluq_base PUBLIC
         -Wno-unknown-pragmas
         -Wno-deprecated-enum-enum-conversion
         --expt-relaxed-constexpr
@@ -156,33 +220,20 @@ if(SCALUQ_USE_CUDA)
 endif()
 
 # Enable pthread
-target_compile_options(scaluq PUBLIC -pthread)
+target_compile_options(scaluq_base PUBLIC -pthread)
 
 # Enable openmp
 if(SCALUQ_USE_OMP)
-    target_compile_options(scaluq PUBLIC -fopenmp)
+    target_compile_options(scaluq_base PUBLIC -fopenmp)
 endif()
 
 # Debug options
 if ((${CMAKE_SYSTEM_NAME} MATCHES "Darwin") OR CMAKE_CUDA_COMPILER)
-target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g,-O3>)
+target_compile_options(scaluq_base PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g,-O3>)
 else()
-target_compile_options(scaluq PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
-target_link_options(scaluq PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
+target_compile_options(scaluq_base PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
+target_link_options(scaluq_base PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
 endif()
-
-# Float precision
-set(PRECISION_FLAGS
-    SCALUQ_FLOAT16
-    SCALUQ_FLOAT32
-    SCALUQ_FLOAT64
-    SCALUQ_BFLOAT16
-)
-foreach(flag IN LISTS PRECISION_FLAGS)
-    if(${flag})
-        target_compile_definitions(scaluq PUBLIC ${flag})
-    endif()
-endforeach()
 
 ### Add subdirectories ###
 add_subdirectory(src)
@@ -190,6 +241,7 @@ if(SKBUILD)
     add_subdirectory(python)
 endif(SKBUILD)
 if(SCALUQ_USE_TEST)
+    enable_testing()
     add_subdirectory(tests)
 endif(SCALUQ_USE_TEST)
 if(SCALUQ_USE_EXE)
@@ -203,15 +255,6 @@ if(SKBUILD)
         DEPENDS scaluq_core
     )
 endif(SKBUILD)
-
-# test
-if(SCALUQ_USE_TEST)
-    add_custom_target(
-        test
-        DEPENDS scaluq_test
-        COMMAND scaluq_test
-    )
-endif(SCALUQ_USE_TEST)
 
 # format
 find_program(CLANG_FORMAT "clang-format")

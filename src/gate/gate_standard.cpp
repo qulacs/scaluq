@@ -1,7 +1,7 @@
 #include <scaluq/gate/gate_standard.hpp>
 
+#include "../prec_space.hpp"
 #include "../util/math.hpp"
-#include "../util/template.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
@@ -24,7 +24,7 @@ std::string IGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(IGateImpl)
+template class IGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix GlobalPhaseGateImpl<Prec, Space>::get_matrix() const {
@@ -52,7 +52,7 @@ std::string GlobalPhaseGateImpl<Prec, Space>::to_string(const std::string& inden
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(GlobalPhaseGateImpl)
+template class GlobalPhaseGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix XGateImpl<Prec, Space>::get_matrix() const {
@@ -77,7 +77,7 @@ std::string XGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(XGateImpl)
+template class XGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix YGateImpl<Prec, Space>::get_matrix() const {
@@ -102,7 +102,7 @@ std::string YGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(YGateImpl)
+template class YGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix ZGateImpl<Prec, Space>::get_matrix() const {
@@ -127,7 +127,7 @@ std::string ZGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(ZGateImpl)
+template class ZGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix HGateImpl<Prec, Space>::get_matrix() const {
@@ -153,7 +153,7 @@ std::string HGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(HGateImpl)
+template class HGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix SGateImpl<Prec, Space>::get_matrix() const {
@@ -178,7 +178,7 @@ std::string SGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SGateImpl)
+template class SGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix SdagGateImpl<Prec, Space>::get_matrix() const {
@@ -204,7 +204,7 @@ std::string SdagGateImpl<Prec, Space>::to_string(const std::string& indent) cons
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SdagGateImpl)
+template class SdagGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix TGateImpl<Prec, Space>::get_matrix() const {
@@ -229,7 +229,7 @@ std::string TGateImpl<Prec, Space>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(TGateImpl)
+template class TGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix TdagGateImpl<Prec, Space>::get_matrix() const {
@@ -255,7 +255,7 @@ std::string TdagGateImpl<Prec, Space>::to_string(const std::string& indent) cons
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(TdagGateImpl)
+template class TdagGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix SqrtXGateImpl<Prec, Space>::get_matrix() const {
@@ -282,7 +282,7 @@ std::string SqrtXGateImpl<Prec, Space>::to_string(const std::string& indent) con
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SqrtXGateImpl)
+template class SqrtXGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix SqrtXdagGateImpl<Prec, Space>::get_matrix() const {
@@ -309,7 +309,7 @@ std::string SqrtXdagGateImpl<Prec, Space>::to_string(const std::string& indent) 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SqrtXdagGateImpl)
+template class SqrtXdagGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix SqrtYGateImpl<Prec, Space>::get_matrix() const {
@@ -336,7 +336,7 @@ std::string SqrtYGateImpl<Prec, Space>::to_string(const std::string& indent) con
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SqrtYGateImpl)
+template class SqrtYGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix SqrtYdagGateImpl<Prec, Space>::get_matrix() const {
@@ -363,7 +363,7 @@ std::string SqrtYdagGateImpl<Prec, Space>::to_string(const std::string& indent) 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SqrtYdagGateImpl)
+template class SqrtYdagGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix P0GateImpl<Prec, Space>::get_matrix() const {
@@ -388,7 +388,7 @@ std::string P0GateImpl<Prec, Space>::to_string(const std::string& indent) const 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(P0GateImpl)
+template class P0GateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix P1GateImpl<Prec, Space>::get_matrix() const {
@@ -413,7 +413,7 @@ std::string P1GateImpl<Prec, Space>::to_string(const std::string& indent) const 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(P1GateImpl)
+template class P1GateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix RXGateImpl<Prec, Space>::get_matrix() const {
@@ -446,7 +446,7 @@ std::string RXGateImpl<Prec, Space>::to_string(const std::string& indent) const 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(RXGateImpl)
+template class RXGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix RYGateImpl<Prec, Space>::get_matrix() const {
@@ -478,7 +478,7 @@ std::string RYGateImpl<Prec, Space>::to_string(const std::string& indent) const 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(RYGateImpl)
+template class RYGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix RZGateImpl<Prec, Space>::get_matrix() const {
@@ -510,7 +510,7 @@ std::string RZGateImpl<Prec, Space>::to_string(const std::string& indent) const 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(RZGateImpl)
+template class RZGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix U1GateImpl<Prec, Space>::get_matrix() const {
@@ -537,7 +537,7 @@ std::string U1GateImpl<Prec, Space>::to_string(const std::string& indent) const 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(U1GateImpl)
+template class U1GateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix U2GateImpl<Prec, Space>::get_matrix() const {
@@ -575,7 +575,7 @@ std::string U2GateImpl<Prec, Space>::to_string(const std::string& indent) const 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(U2GateImpl)
+template class U2GateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix U3GateImpl<Prec, Space>::get_matrix() const {
@@ -622,7 +622,7 @@ std::string U3GateImpl<Prec, Space>::to_string(const std::string& indent) const 
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(U3GateImpl)
+template class U3GateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix SwapGateImpl<Prec, Space>::get_matrix() const {
@@ -648,5 +648,128 @@ std::string SwapGateImpl<Prec, Space>::to_string(const std::string& indent) cons
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(SwapGateImpl)
+template class SwapGateImpl<Prec, Space>;
+
+// I
+template <Precision Prec, ExecutionSpace Space>
+std::shared_ptr<const IGateImpl<Prec, Space>> GetGateFromJson<IGateImpl<Prec, Space>>::get(
+    const Json&) {
+    return std::make_shared<const IGateImpl<Prec, Space>>();
+}
+template class GetGateFromJson<IGateImpl<Prec, Space>>;
+
+// GlobalPhase
+template <Precision Prec, ExecutionSpace Space>
+std::shared_ptr<const GlobalPhaseGateImpl<Prec, Space>>
+GetGateFromJson<GlobalPhaseGateImpl<Prec, Space>>::get(const Json& j) {
+    auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();
+    auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
+    return std::make_shared<const GlobalPhaseGateImpl<Prec, Space>>(
+        vector_to_mask(control_qubits),
+        vector_to_mask(control_qubits, control_values),
+        static_cast<Float<Prec>>(j.at("phase").get<double>()));
+}
+template class GetGateFromJson<GlobalPhaseGateImpl<Prec, Space>>;
+
+// X, Y, Z, H, S, Sdag, T, Tdag, SqrtX, SqrtY, P0, P1
+#define DECLARE_GET_FROM_JSON_SINGLE_IMPL(Impl)                                        \
+    template <Precision Prec, ExecutionSpace Space>                                    \
+    std::shared_ptr<const Impl<Prec, Space>> GetGateFromJson<Impl<Prec, Space>>::get(  \
+        const Json& j) {                                                               \
+        auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();       \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>(); \
+        return std::make_shared<const Impl<Prec, Space>>(                              \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),          \
+            vector_to_mask(control_qubits),                                            \
+            vector_to_mask(control_qubits, control_values));                           \
+    }                                                                                  \
+    template class GetGateFromJson<Impl<Prec, Space>>;
+DECLARE_GET_FROM_JSON_SINGLE_IMPL(XGateImpl)
+DECLARE_GET_FROM_JSON_SINGLE_IMPL(YGateImpl)
+DECLARE_GET_FROM_JSON_SINGLE_IMPL(ZGateImpl)
+DECLARE_GET_FROM_JSON_SINGLE_IMPL(HGateImpl)
+DECLARE_GET_FROM_JSON_SINGLE_IMPL(SGateImpl)
+DECLARE_GET_FROM_JSON_SINGLE_IMPL(SdagGateImpl)
+DECLARE_GET_FROM_JSON_SINGLE_IMPL(TGateImpl)
+DECLARE_GET_FROM_JSON_SINGLE_IMPL(TdagGateImpl)
+DECLARE_GET_FROM_JSON_SINGLE_IMPL(SqrtXGateImpl)
+DECLARE_GET_FROM_JSON_SINGLE_IMPL(SqrtXdagGateImpl)
+DECLARE_GET_FROM_JSON_SINGLE_IMPL(SqrtYGateImpl)
+DECLARE_GET_FROM_JSON_SINGLE_IMPL(SqrtYdagGateImpl)
+DECLARE_GET_FROM_JSON_SINGLE_IMPL(P0GateImpl)
+DECLARE_GET_FROM_JSON_SINGLE_IMPL(P1GateImpl)
+#undef DECLARE_GET_FROM_JSON_SINGLE_IMPL
+
+// RX, RY, RZ
+#define DECLARE_GET_FROM_JSON_R_SINGLE_IMPL(Impl)                                      \
+    template <Precision Prec, ExecutionSpace Space>                                    \
+    std::shared_ptr<const Impl<Prec, Space>> GetGateFromJson<Impl<Prec, Space>>::get(  \
+        const Json& j) {                                                               \
+        auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();       \
+        auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>(); \
+        return std::make_shared<const Impl<Prec, Space>>(                              \
+            vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),          \
+            vector_to_mask(control_qubits),                                            \
+            vector_to_mask(control_qubits, control_values),                            \
+            static_cast<Float<Prec>>(j.at("angle").get<double>()));                    \
+    }                                                                                  \
+    template class GetGateFromJson<Impl<Prec, Space>>;
+DECLARE_GET_FROM_JSON_R_SINGLE_IMPL(RXGateImpl)
+DECLARE_GET_FROM_JSON_R_SINGLE_IMPL(RYGateImpl)
+DECLARE_GET_FROM_JSON_R_SINGLE_IMPL(RZGateImpl)
+#undef DECLARE_GET_FROM_JSON_R_SINGLE_IMPL
+
+// U1, U2, U3
+template <Precision Prec, ExecutionSpace Space>
+std::shared_ptr<const U1GateImpl<Prec, Space>> GetGateFromJson<U1GateImpl<Prec, Space>>::get(
+    const Json& j) {
+    auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();
+    auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
+    return std::make_shared<const U1GateImpl<Prec, Space>>(
+        vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),
+        vector_to_mask(control_qubits),
+        vector_to_mask(control_qubits, control_values),
+        static_cast<Float<Prec>>(j.at("theta").get<double>()));
+}
+template <Precision Prec, ExecutionSpace Space>
+std::shared_ptr<const U2GateImpl<Prec, Space>> GetGateFromJson<U2GateImpl<Prec, Space>>::get(
+    const Json& j) {
+    auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();
+    auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
+    return std::make_shared<const U2GateImpl<Prec, Space>>(
+        vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),
+        vector_to_mask(control_qubits),
+        vector_to_mask(control_qubits, control_values),
+        static_cast<Float<Prec>>(j.at("theta").get<double>()),
+        static_cast<Float<Prec>>(j.at("phi").get<double>()));
+}
+template <Precision Prec, ExecutionSpace Space>
+std::shared_ptr<const U3GateImpl<Prec, Space>> GetGateFromJson<U3GateImpl<Prec, Space>>::get(
+    const Json& j) {
+    auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();
+    auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
+    return std::make_shared<const U3GateImpl<Prec, Space>>(
+        vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),
+        vector_to_mask(control_qubits),
+        vector_to_mask(control_qubits, control_values),
+        static_cast<Float<Prec>>(j.at("theta").get<double>()),
+        static_cast<Float<Prec>>(j.at("phi").get<double>()),
+        static_cast<Float<Prec>>(j.at("lambda").get<double>()));
+}
+template class GetGateFromJson<U1GateImpl<Prec, Space>>;
+template class GetGateFromJson<U2GateImpl<Prec, Space>>;
+template class GetGateFromJson<U3GateImpl<Prec, Space>>;
+
+// Swap
+template <Precision Prec, ExecutionSpace Space>
+std::shared_ptr<const SwapGateImpl<Prec, Space>> GetGateFromJson<SwapGateImpl<Prec, Space>>::get(
+    const Json& j) {
+    auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();
+    auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
+    return std::make_shared<const SwapGateImpl<Prec, Space>>(
+        vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),
+        vector_to_mask(control_qubits),
+        vector_to_mask(control_qubits, control_values));
+}
+template class GetGateFromJson<SwapGateImpl<Prec, Space>>;
 }  // namespace scaluq::internal

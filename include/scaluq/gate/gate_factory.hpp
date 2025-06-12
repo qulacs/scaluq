@@ -3,7 +3,7 @@
 #include "../util/utility.hpp"
 #include "gate_matrix.hpp"
 #include "gate_pauli.hpp"
-#include "gate_probablistic.hpp"
+#include "gate_probabilistic.hpp"
 #include "gate_standard.hpp"
 
 namespace scaluq {
@@ -366,22 +366,22 @@ inline Gate<Prec, Space> SparseMatrix(const std::vector<std::uint64_t>& targets,
         matrix_transformed);
 }
 template <Precision Prec, ExecutionSpace Space>
-inline Gate<Prec, Space> Probablistic(const std::vector<double>& distribution,
-                                      const std::vector<Gate<Prec, Space>>& gate_list) {
-    return internal::GateFactory::create_gate<internal::ProbablisticGateImpl<Prec, Space>>(
+inline Gate<Prec, Space> Probabilistic(const std::vector<double>& distribution,
+                                       const std::vector<Gate<Prec, Space>>& gate_list) {
+    return internal::GateFactory::create_gate<internal::ProbabilisticGateImpl<Prec, Space>>(
         distribution, gate_list);
 }
 
 // corresponding to XGate
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> BitFlipNoise(std::int64_t target, double error_rate) {
-    return Probablistic<Prec, Space>({error_rate, 1 - error_rate},
-                                     {X<Prec, Space>(target), I<Prec, Space>()});
+    return Probabilistic<Prec, Space>({error_rate, 1 - error_rate},
+                                      {X<Prec, Space>(target), I<Prec, Space>()});
 }
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> DephasingNoise(std::int64_t target, double error_rate) {
-    return Probablistic<Prec, Space>({error_rate, 1 - error_rate},
-                                     {Z<Prec, Space>(target), I<Prec, Space>()});
+    return Probabilistic<Prec, Space>({error_rate, 1 - error_rate},
+                                      {Z<Prec, Space>(target), I<Prec, Space>()});
 }
 // Y: p*p, X: p(1-p), Z: p(1-p)
 template <Precision Prec, ExecutionSpace Space>
@@ -389,14 +389,14 @@ inline Gate<Prec, Space> BitFlipAndDephasingNoise(std::int64_t target, double er
     double p0 = error_rate * error_rate;
     double p1 = error_rate * (1 - error_rate);
     double p2 = (1 - error_rate) * (1 - error_rate);
-    return Probablistic<Prec, Space>(
+    return Probabilistic<Prec, Space>(
         {p0, p1, p1, p2},
         {Y<Prec, Space>(target), X<Prec, Space>(target), Z<Prec, Space>(target), I<Prec, Space>()});
 }
 // X: error_rate/3, Y: error_rate/3, Z: error_rate/3
 template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec, Space> DepolarizingNoise(std::int64_t target, double error_rate) {
-    return Probablistic<Prec, Space>(
+    return Probabilistic<Prec, Space>(
         {error_rate / 3, error_rate / 3, error_rate / 3, 1 - error_rate},
         {X<Prec, Space>(target), Y<Prec, Space>(target), Z<Prec, Space>(target), I<Prec, Space>()});
 }
@@ -834,7 +834,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "target"_a,
         "theta"_a,
         "phi"_a,
-        "hoge_"_a,
+        "lambda_"_a,
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
@@ -846,7 +846,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .arg("target", "int", "Target qubit index")
             .arg("theta", "float", "Rotation angle in radians")
             .arg("phi", "float", "Rotation angle in radians")
-            .arg("fuga_", "float", "Rotation angle in radians")
+            .arg("lambda_", "float", "Rotation angle in radians")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
             .ret("Gate", "U3 gate instance")
@@ -1086,24 +1086,24 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                  ">>> gate = PauliRotation(pauli, math.pi/2, [1])  # Controlled-Pauli"}))
             .build_as_google_style()
             .c_str());
-    mgate.def("Probablistic",
-              &gate::Probablistic<Prec, Space>,
+    mgate.def("Probabilistic",
+              &gate::Probabilistic<Prec, Space>,
               "distribution"_a,
               "gate_list"_a,
               DocString()
                   .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                        ":class:`~scaluq.f64.ProbablisticGate`. Performs probablistic operation.")
+                        ":class:`~scaluq.f64.ProbabilisticGate`. Performs probabilistic operation.")
                   .note("If you need to use functions specific to the "
-                        ":class:`~scaluq.f64.ProbablisticGate` "
+                        ":class:`~scaluq.f64.ProbabilisticGate` "
                         "class, please downcast it.")
-                  .arg("distribution", "list[float]", "Probablistic distribution")
+                  .arg("distribution", "list[float]", "Probabilistic distribution")
                   .arg("gate_list", "list[Gate]", "List of gates")
-                  .ret("Gate", "Probablistic gate instance")
+                  .ret("Gate", "Probabilistic gate instance")
                   .ex(DocString::Code(
                       {">>> distribution = [0.3, 0.7]",
                        ">>> gate_list = [X(0), Y(0)]",
                        ">>> # X is applied with probability 0.3, Y is applied with probability 0.7",
-                       ">>> gate = Probablistic(distribution, gate_list)"}))
+                       ">>> gate = Probabilistic(distribution, gate_list)"}))
                   .build_as_google_style()
                   .c_str());
     mgate.def("BitFlipNoise",

@@ -1,8 +1,8 @@
 #include <scaluq/gate/gate_pauli.hpp>
 
 #include "../operator/apply_pauli.hpp"
+#include "../prec_space.hpp"
 #include "../util/math.hpp"
-#include "../util/template.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
@@ -40,7 +40,7 @@ std::string PauliGateImpl<Prec, Space>::to_string(const std::string& indent) con
     ss << indent << "  Pauli Operator: \"" << _pauli.get_pauli_string() << "\"";
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(PauliGateImpl)
+template class PauliGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix PauliRotationGateImpl<Prec, Space>::get_matrix() const {
@@ -89,5 +89,29 @@ std::string PauliRotationGateImpl<Prec, Space>::to_string(const std::string& ind
     ss << indent << "  Pauli Operator: \"" << _pauli.get_pauli_string() << "\"";
     return ss.str();
 }
-SCALUQ_DECLARE_CLASS_FOR_PRECISION_AND_EXECUTION_SPACE(PauliRotationGateImpl)
+template class PauliRotationGateImpl<Prec, Space>;
+
+template <Precision Prec, ExecutionSpace Space>
+std::shared_ptr<const PauliGateImpl<Prec, Space>> GetGateFromJson<PauliGateImpl<Prec, Space>>::get(
+    const Json& j) {
+    auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();
+    auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
+    return std::make_shared<const PauliGateImpl<Prec, Space>>(
+        vector_to_mask(control_qubits),
+        vector_to_mask(control_qubits, control_values),
+        j.at("pauli").get<PauliOperator<Prec, Space>>());
+}
+template class GetGateFromJson<PauliGateImpl<Prec, Space>>;
+template <>
+std::shared_ptr<const PauliRotationGateImpl<Prec, Space>>
+GetGateFromJson<PauliRotationGateImpl<Prec, Space>>::get(const Json& j) {
+    auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();
+    auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
+    return std::make_shared<const PauliRotationGateImpl<Prec, Space>>(
+        vector_to_mask(control_qubits),
+        vector_to_mask(control_qubits, control_values),
+        j.at("pauli").get<PauliOperator<Prec, Space>>(),
+        static_cast<Float<Prec>>(j.at("angle").get<double>()));
+}
+template class GetGateFromJson<PauliRotationGateImpl<Prec, Space>>;
 }  // namespace scaluq::internal

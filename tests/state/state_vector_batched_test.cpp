@@ -21,7 +21,7 @@ TYPED_TEST(StateVectorBatchedTest, HaarRandomStateNorm) {
     for (auto x : norms) ASSERT_NEAR(x, 1., eps<Prec>);
 }
 
-TYPED_TEST(StateVectorBatchedTest, LoadAndAmplitues) {
+TYPED_TEST(StateVectorBatchedTest, LoadAndAmplitudes) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t batch_size = 4, n_qubits = 3;
