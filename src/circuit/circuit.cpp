@@ -1,6 +1,7 @@
 #include <scaluq/circuit/circuit.hpp>
-#include <scaluq/gate/gate_probabilistic.hpp>
-#include <scaluq/gate/param_gate_probabilistic.hpp>
+#include <scaluq/gate/gate_factory.hpp>
+#include <scaluq/gate/merge_gate.hpp>
+#include <scaluq/gate/param_gate_factory.hpp>
 
 #include "../prec_space.hpp"
 
@@ -263,7 +264,8 @@ void Circuit<Prec, Space>::optimize(std::uint64_t max_block_size) {
             // merge with waiting gates
             Gate<Prec, Space> merged_gate = gate;
             for (std::uint64_t idx : waiting_gate_indices) {
-                const auto& [new_merged_gate, phase] = merge_gate(gate_pool[idx], merged_gate);
+                const auto& [new_merged_gate, phase] =
+                    merge_gate<Prec, Space>(gate_pool[idx], merged_gate);
                 merged_gate = new_merged_gate;
                 global_phase += phase;
             }

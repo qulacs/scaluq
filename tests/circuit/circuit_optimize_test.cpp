@@ -54,8 +54,9 @@ TYPED_TEST(CircuitOptimizeTest, Basic) {
     adders.push_back([&] { circuit.add_gate(gen_dense(2, 0)); });
     adders.push_back([&] { circuit.add_gate(gen_dense(2, 1)); });
     adders.push_back([&] { circuit.add_gate(gen_dense(2, 2)); });
-    adders.push_back(
-        [&] { circuit.add_gate(gate::Probablistic<Prec, Space>({1.}, {gate::I<Prec, Space>()})); });
+    adders.push_back([&] {
+        circuit.add_gate(gate::Probabilistic<Prec, Space>({1.}, {gate::I<Prec, Space>()}));
+    });
     adders.push_back([&] {
         std::string new_key = std::to_string(keys.size());
         circuit.add_param_gate(gate::ParamRX<Prec, Space>(0), new_key);
