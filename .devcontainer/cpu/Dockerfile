@@ -64,3 +64,5 @@ RUN groupadd --gid $USER_GID $GROUPNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
 USER vscode
+
+ENV PATH="/home/vscode/.local/bin:${PATH}"
