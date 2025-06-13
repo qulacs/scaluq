@@ -49,7 +49,7 @@ void StateVectorBatched<Prec, Space>::set_state_vector_at(std::uint64_t batch_id
 template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_state_vector_at(
     std::uint64_t batch_id) const {
-    StateVector<Prec, Space> ret(_n_qubits);
+    auto ret = StateVector<Prec, Space>::uninitialized_state(_n_qubits);
     Kokkos::parallel_for(
         "get_state_vector_at",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
@@ -447,7 +447,7 @@ void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComp
 
 template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::copy() const {
-    StateVectorBatched<Prec, Space> cp(_batch_size, _n_qubits);
+    auto cp = StateVectorBatched<Prec, Space>::uninitialized_state(_batch_size, _n_qubits);
     Kokkos::deep_copy(cp._raw, _raw);
     return cp;
 }

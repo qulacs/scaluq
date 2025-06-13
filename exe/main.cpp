@@ -1,59 +1,62 @@
+#include <chrono>
 #include <iostream>
 #include <scaluq/all.hpp>
-using namespace scaluq;
 
 using namespace scaluq;
+using namespace nlohmann;
 
 int main() {
-    initialize();  // must be called before using any scaluq methods
+    scaluq::initialize();  // 初期化
+
+    constexpr Precision Real = Precision::F64;
+    constexpr ExecutionSpace Exec = ExecutionSpace::Default;
+
+    const std::uint64_t nqubits = 10;
+    const std::uint64_t shots = 1000;
+
+    // タイマー開始
+    auto start_time = std::chrono::high_resolution_clock::now();
+
     {
-        // correct
-        double sum = 0.0;
-        Kokkos::parallel_reduce(
-            Kokkos::MDRangePolicy<Kokkos::DefaultExecutionSpace, Kokkos::Rank<2>>({0, 0}, {10, 10}),
-            KOKKOS_LAMBDA(const int i, const int j, double& sum) {
-                sum += static_cast<int>(i * 10 + j);
-            },
-            sum);
-        std::cout << "Sum of products: " << sum << std::endl;  // 4950
+        StateVector<Real, Exec> state(nqubits);
 
-        // correct
-        Kokkos::parallel_for(
-            Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>(
-                Kokkos::DefaultExecutionSpace(), 5, Kokkos::AUTO),
-            KOKKOS_LAMBDA(
-                const Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>::member_type& team) {
-                int team_sum = 0;
-                Kokkos::parallel_reduce(
-                    Kokkos::TeamThreadMDRange(team, 10, 10),
-                    [&](const int i, const int j, int& sum) { sum += i * 10 + j; },
-                    team_sum);
-                team.team_barrier();
-                Kokkos::single(Kokkos::PerTeam(team), [&]() {
-                    // each value of team_sum is 4950
-                    Kokkos::printf("Team %d sum: %d\n", team.league_rank(), team_sum);
-                });
-            });
-        Kokkos::fence();
+        Circuit<Real, Exec> circuit(nqubits);
 
-        // wrong
-        Kokkos::parallel_for(
-            Kokkos::TeamPolicy<Kokkos::DefaultHostExecutionSpace>(
-                Kokkos::DefaultHostExecutionSpace(), 5, Kokkos::AUTO),
-            KOKKOS_LAMBDA(
-                const Kokkos::TeamPolicy<Kokkos::DefaultHostExecutionSpace>::member_type& team) {
-                int team_sum = 0;
-                Kokkos::parallel_reduce(
-                    Kokkos::TeamThreadMDRange(team, 10, 10),
-                    [&](const int i, const int j, int& sum) { sum += i * 10 + j; },
-                    team_sum);
-                team.team_barrier();
-                Kokkos::single(Kokkos::PerTeam(team), [&]() {
-                    // each value of team_sum is 450 ?
-                    Kokkos::printf("Team %d sum: %d\n", team.league_rank(), team_sum);
-                });
-            });
-        Kokkos::fence();
+        for (std::int64_t i = 0; i < 50; ++i) {
+            if (rand() % 2 == 0) {
+                std::uint64_t target = rand() % nqubits;
+                std::uint64_t control = rand() % nqubits;
+                if (target == control) ++control;
+                circuit.add_gate(gate::Z<Real, Exec>(target, std::vector<std::uint64_t>{control}));
+            } else {
+                std::uint64_t target = rand() % nqubits;
+                std::uint64_t control = rand() % nqubits;
+                if (target == control) ++control;
+                auto z = gate::Z<Real, Exec>(target, std::vector<std::uint64_t>{control});
+                auto x = gate::X<Real, Exec>(target, std::vector<std::uint64_t>{control});
+                auto pgate = gate::Probabilistic<Real, Exec>({0.7, 0.3}, {x, z});
+                circuit.add_gate(pgate);
+            }
+        }
+
+        // ノイズありシミュレーションを実行
+        auto result = circuit.simulate_noise(state, shots);
+
+        // 結果の表示
+        std::cout << "=== Benchmark: Probabilistic Gate Simulation ===\n";
+        std::cout << "Shots: " << shots << ", Qubits: " << nqubits << "\n";
+        std::cout << "Number of distinct outputs: " << result.size() << "\n\n";
+
+        // for (std::size_t i = 0; i < result.size(); ++i) {
+        //     const auto& [state_vec, count] = result[i];
+        //     std::cout << "[Outcome " << i << "] Count: " << count << "\n";
+        //     std::cout << state_vec << "\n";
+        // }
     }
-    finalize();
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end_time - start_time;
+    std::cout << "\nTotal simulation time: " << duration.count() << " seconds\n";
+
+    scaluq::finalize();  // 終了処理
 }
