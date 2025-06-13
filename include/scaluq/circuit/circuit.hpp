@@ -61,6 +61,8 @@ public:
 
     Circuit get_inverse() const;
 
+    void optimize(std::uint64_t max_block_size = 3);
+
     friend void to_json(Json& j, const Circuit& circuit) {
         j = Json{{"n_qubits", circuit.n_qubits()}, {"gate_list", Json::array()}};
         for (auto&& gate : circuit.gate_list()) {
@@ -208,6 +210,11 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def("get_inverse",
              &Circuit<Prec, Space>::get_inverse,
              "Get inverse of circuit. All the gates are newly created.")
+        .def("optimize",
+             &Circuit<Prec, Space>::optimize,
+             "max_block_size"_a = 3,
+             "Optimize circuit. Create qubit dependency tree and merge neighboring gates if the "
+             "new gate has less than or equal to `max_block_size` or the new gate is Pauli.")
         .def("simulate_noise",
              &Circuit<Prec, Space>::simulate_noise,
              "Simulate noise circuit. Return all the possible states and their counts.")

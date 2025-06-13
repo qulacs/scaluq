@@ -39,9 +39,7 @@ public:
             "ParamProbabilisticGateImpl.");
     }
     std::vector<std::uint64_t> operand_qubit_list() const override {
-        throw std::runtime_error(
-            "ParamProbabilisticGateImpl::operand_qubit_list(): This function must not be used in "
-            "ParamProbabilisticGateImpl.");
+        return mask_to_vector(operand_qubit_mask());
     }
     std::uint64_t target_qubit_mask() const override {
         throw std::runtime_error(
@@ -59,9 +57,10 @@ public:
             "ParamProbabilisticGateImpl.");
     }
     std::uint64_t operand_qubit_mask() const override {
-        throw std::runtime_error(
-            "ParamProbabilisticGateImpl::operand_qubit_mask(): This function must not be used in "
-            "ParamProbabilisticGateImpl.");
+        std::uint64_t ret = 0ULL;
+        for (const EitherGate& gate : _gate_list)
+            ret |= std::visit([&](const auto& gate) { return gate->operand_qubit_mask(); }, gate);
+        return ret;
     }
 
     std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override;
