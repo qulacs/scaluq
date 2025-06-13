@@ -254,7 +254,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
         .def("set_zero_norm_state",
              &StateVector<Prec, Space>::set_zero_norm_state,
              DocString()
-                 .desc("Initialize with 0 (null vector).")
+                 .desc("Initialize with $0$ (null vector).")
                  .ex(DocString::Code{">>> state = StateVector(2)",
                                      ">>> state.get_amplitudes()",
                                      "[(1+0j), 0j, 0j, 0j]",
@@ -267,7 +267,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
              &StateVector<Prec, Space>::set_computational_basis,
              "basis"_a,
              DocString()
-                 .desc("Initialize with computational basis \\ket{\\mathrm{basis}}.")
+                 .desc("Initialize with computational basis $\\ket{\\mathrm{basis}}$.")
                  .arg("basis",
                       "int",
                       "basis as integer format ($0 \\leq \\mathrm{basis} \\leq "
@@ -493,7 +493,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .desc("Load amplitudes of `Sequence`")
                  .arg("other",
                       "collections.abc.Sequence[complex]",
-                      "list of complex amplitudes with len $2^{\\mathrm{n_qubits}}$")
+                      "list of complex amplitudes with len $2^{\\mathrm{n\\_qubits}}$")
                  .build_as_google_style()
                  .c_str())
         .def("__str__",
