@@ -18,7 +18,7 @@ Compared to [Qulacs](https://github.com/qulacs/qulacs), the following improvemen
 
 - Ninja ≥ 1.10
 - GCC ≥ 11 (≥ 13 if not using CUDA)
-- CMake ≥ 3.21
+- CMake ≥ 3.24
 - CUDA ≥ 12.6 (only when using CUDA)
 - Python ≥ 3.9 (only when using Python)
 
