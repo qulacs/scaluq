@@ -16,7 +16,7 @@ Scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 
 - Ninja 1.10 以上
 - GCC 11 以上 (CUDAを利用しない場合13以上)
-- CMake 3.21 以上
+- CMake 3.24 以上
 - CUDA 12.6 以上（CUDA利用時のみ）
 - Python 3.9 以上 (Python利用時のみ)
 
