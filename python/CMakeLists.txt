@@ -34,10 +34,14 @@ if(SCALUQ_BFLOAT16)
     list(APPEND PRECISIONS bf16)
 endif()
 foreach(SPACE default host)
+    set(PYTHON_MODULE_NAME scaluq.scaluq_core.${SPACE})
+    if(NOT(SCALUQ_USE_CUDA) AND SPACE STREQUAL host)
+        set(PYTHON_MODULE_NAME scaluq.scaluq_core.default)
+    endif()
     nanobind_add_stub(
         scaluq_stub
         INSTALL_TIME
-        MODULE scaluq.scaluq_core.${SPACE}
+        MODULE ${PYTHON_MODULE_NAME}
         OUTPUT scaluq/${SPACE}/__init__.pyi
         MARKER_FILE scaluq/py.typed
         VERBOSE
@@ -46,7 +50,7 @@ foreach(SPACE default host)
         nanobind_add_stub(
             scaluq_stub
             INSTALL_TIME
-            MODULE scaluq.scaluq_core.${SPACE}.${PRECISION}
+            MODULE ${PYTHON_MODULE_NAME}.${PRECISION}
             OUTPUT scaluq/${SPACE}/${PRECISION}/__init__.pyi
             MARKER_FILE scaluq/py.typed
             VERBOSE
@@ -54,7 +58,7 @@ foreach(SPACE default host)
         nanobind_add_stub(
             scaluq_stub
             INSTALL_TIME
-            MODULE scaluq.scaluq_core.${SPACE}.${PRECISION}.gate
+            MODULE ${PYTHON_MODULE_NAME}.${PRECISION}.gate
             OUTPUT scaluq/${SPACE}/${PRECISION}/gate/__init__.pyi
             MARKER_FILE scaluq/py.typed
             VERBOSE

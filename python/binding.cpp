@@ -86,6 +86,7 @@ NB_MODULE(scaluq_core, m) {
     bind_on_precision_and_space<Precision::BF16, ExecutionSpace::Default>(mdefault, "bf16");
 #endif
 
+#ifdef SCALUQ_USE_CUDA
     auto mhost = m.def_submodule("host", "module for host execution space");
 #ifdef SCALUQ_FLOAT16
     bind_on_precision_and_space<Precision::F16, ExecutionSpace::Host>(mhost, "f16");
@@ -99,6 +100,23 @@ NB_MODULE(scaluq_core, m) {
 #ifdef SCALUQ_BFLOAT16
     bind_on_precision_and_space<Precision::BF16, ExecutionSpace::Host>(mhost, "bf16");
 #endif
+#endif
+
+    m.def(
+        "get_default_execution_space",
+        []() -> std::string {
+#ifdef SCALUQ_USE_CUDA
+            return "cuda";
+#else
+            return "host";
+#endif
+        },
+        DocString()
+            .desc("Get the default execution space.")
+            .ret("str", "the default execution space, `cuda` or `host`")
+            .ex(DocString::Code{">>> get_default_execution_space()", "'cuda'"})
+            .build_as_google_style()
+            .c_str());
 
     m.def(
         "precision_available",

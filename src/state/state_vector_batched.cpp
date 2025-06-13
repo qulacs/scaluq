@@ -69,7 +69,7 @@ void StateVectorBatched<Prec, Space>::set_computational_basis(std::uint64_t basi
         "set_computational_basis",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
                                                                            {_batch_size, _dim}),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t b, std::uint64_t i) { _raw(b, i) = (i == 0); });
+        KOKKOS_CLASS_LAMBDA(std::uint64_t b, std::uint64_t i) { _raw(b, i) = (i == basis); });
     Kokkos::fence();
 }
 
@@ -79,11 +79,9 @@ void StateVectorBatched<Prec, Space>::set_zero_norm_state() {
 }
 
 template <Precision Prec, ExecutionSpace Space>
-void StateVectorBatched<Prec, Space>::set_Haar_random_state(std::uint64_t batch_size,
-                                                            std::uint64_t n_qubits,
-                                                            bool set_same_state,
+void StateVectorBatched<Prec, Space>::set_Haar_random_state(bool set_same_state,
                                                             std::uint64_t seed) {
-    *this = Haar_random_state(batch_size, n_qubits, set_same_state, seed);
+    *this = Haar_random_state(_batch_size, _n_qubits, set_same_state, seed);
 }
 
 template <Precision Prec, ExecutionSpace Space>
