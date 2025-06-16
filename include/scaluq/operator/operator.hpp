@@ -124,7 +124,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
                  ">>> operator = Operator(4)",
                  ">>> operator.add_operator(pauli)",
                  ">>> print(operator.to_json())",
-                 "{\"coef\":{\"imag\":0.0,\"real\":1.0},\"pauli_string\":\"X 3 Y 2\"}"}))
+                 R"({"n_qubits":4,"terms":[{"coef":{"imag":0.0,"real":1.0},"pauli_string":"X 3 Y 2"}]})"}))
             .build_as_google_style()
             .c_str())
         .def(nb::init<std::uint64_t>(),
