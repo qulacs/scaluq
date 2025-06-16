@@ -114,7 +114,7 @@ NB_MODULE(scaluq_core, m) {
         DocString()
             .desc("Get the default execution space.")
             .ret("str", "the default execution space, `cuda` or `host`")
-            .ex(DocString::Code{">>> get_default_execution_space()", "'cuda'"})
+            .ex(DocString::Code{">>> get_default_execution_space() # doctest: +SKIP", "'cuda'"})
             .build_as_google_style()
             .c_str());
 
@@ -158,9 +158,9 @@ NB_MODULE(scaluq_core, m) {
                  "precision name",
                  "This must be one of `f16` `f32` `f64` `bf16`.")
             .ret("bool", "the precision is supported")
-            .ex(DocString::Code{">>> precision_available('f64')",
+            .ex(DocString::Code{">>> precision_available('f64') # doctest: +SKIP",
                                 "True",
-                                ">>> precision_available('bf16')",
+                                ">>> precision_available('bf16') # doctest: +SKIP",
                                 "False"})
             .build_as_google_style()
             .c_str());
