@@ -14,8 +14,8 @@ constexpr
 cout
 cpptools
 cstdint
-ctrz
 ctest
+ctrz
 cuda
 DCMAKE
 DEIGEN_NO_CUDA
@@ -78,6 +78,7 @@ pcircuit
 pcoef
 pgate
 physicalcpu
+pipefail
 popd
 ppauli
 PREC
