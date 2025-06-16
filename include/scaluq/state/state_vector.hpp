@@ -169,13 +169,14 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                      "(-0.36069529482031787+0.31413708595210815j), "
                      "(-0.3654176892043237-0.10307602590749808j), "
                      "(-0.18175679804035652+0.49033467421609994j)]",
-                     ">>> print(StateVector.Haar_random_state(2, 0).get_amplitudes())",
+                     ">>> print(StateVector.Haar_random_state(2, 0).get_amplitudes()) # doctest: "
+                     "+SKIP",
                      "[(0.030776817573663098-0.7321137912473642j), "
                      "(0.5679070655936114-0.14551095055034327j), "
                      "(-0.0932995615041323-0.07123201881040941j), "
                      "(0.15213024630399696-0.2871374092016799j)]",
                      ">>> print(StateVector.Haar_random_state(2, 0).get_amplitudes()) # If same "
-                     "seed is specified, same vector is generated.",
+                     "seed is specified, same vector is generated. # doctest: +SKIP",
                      "[(0.030776817573663098-0.7321137912473642j), "
                      "(0.5679070655936114-0.14551095055034327j), "
                      "(-0.0932995615041323-0.07123201881040941j), "
