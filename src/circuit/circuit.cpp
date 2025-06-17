@@ -316,9 +316,7 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
     // 今／次の深さにおける各状態のサンプリング回数
     std::vector<std::uint64_t> scounts{sampling_count}, new_scounts;
 
-    int a = 0;
     for (auto& g : _gate_list) {
-        std::cout << "Depth: " << ++a << std::endl;
         std::vector<double> probs;
         std::vector<GateWithKey> gates;
         if (g.index() == 0) {
@@ -356,26 +354,29 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec, Spa
         // gate_used_count[i][j] := states[i] が gates[j] によって変換される回数
         std::vector<std::vector<std::uint64_t>> gate_used_count(
             states.batch_size(), std::vector<std::uint64_t>(probs.size(), 0));
+        std::uint64_t new_size = 0;
         for (std::uint64_t i = 0; i < states.batch_size(); ++i) {
             for (std::uint64_t _ = 0; _ < scounts[i]; ++_) {
-                ++gate_used_count[i][dist(mt)];
+                std::uint64_t j = dist(mt);
+                if (j >= probs.size()) {
+                    throw std::runtime_error(
+                        "Circuit::simulate_noise: discrete_distribution returned out of range "
+                        "index.");
+                }
+                if (gate_used_count[i][j] == 0) {
+                    ++new_size;
+                }
+                ++gate_used_count[i][j];
             }
         }
 
-        std::uint64_t new_size = 0;
-        for (std::uint64_t i = 0; i < gate_used_count.size(); ++i) {
-            for (std::uint64_t j = 0; j < gate_used_count[i].size(); ++j) {
-                if (gate_used_count[i][j] == 0) continue;
-                ++new_size;
-            }
-        }
-
-        new_states = StateVectorBatched<Prec, Space>(new_size, initial_state.n_qubits());
+        new_states = StateVectorBatched<Prec, Space>::uninitialized_state(new_size,
+                                                                          initial_state.n_qubits());
         new_scounts.assign(new_size, 0);
 
         std::int64_t insert_idx = 0;
         for (std::uint64_t i = 0; i < probs.size(); ++i) {
-            StateVectorBatched<Prec, Space> tmp_states = states.copy();
+            StateVectorBatched<Prec, Space> tmp_states(states.copy());
             if (gates[i].index() == 0) {
                 std::get<0>(gates[i])->update_quantum_state(tmp_states);
             } else {
