@@ -52,6 +52,8 @@ RUN git clone --recursive https://github.com/kokkos/kokkos.git /tmp/kokkos --dep
 
 RUN pip install nanobind==2.0.0
 
+RUN locale-gen en_US.UTF-8
+
 ARG USERNAME=vscode
 ARG GROUPNAME=vscode
 ARG USER_UID=1000
