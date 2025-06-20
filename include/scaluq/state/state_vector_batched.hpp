@@ -145,7 +145,8 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                                  "  00 : (1,0)",
                                  "  01 : (0,0)",
                                  "  10 : (0,0)",
-                                 "  11 : (0,0)"}))
+                                 "  11 : (0,0)",
+                                 "<BLANKLINE>"}))
             .build_as_google_style()
             .c_str())
         // Constructor: batch size and number of qubits
@@ -180,7 +181,8 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                                       "  00 : (1,0)",
                                       "  01 : (0,0)",
                                       "  10 : (0,0)",
-                                      "  11 : (0,0)"}))
+                                      "  11 : (0,0)",
+                                      "<BLANKLINE>"}))
                  .build_as_google_style()
                  .c_str())
         // Constructor: Copy constructor
@@ -409,33 +411,33 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
              DocString()
                  .desc("Get string representation of the batched states.")
                  .ret("str", "String representation of states.")
-                 .ex(DocString::Code(
-                     {">>> states = StateVectorBatched.Haar_random_state(2, 3, False)",
-                      ">>> print(states.to_string())",
-                      " Qubit Count : 3 ",
-                      "Dimension : 8",
-                      "--------------------",
-                      "Batch_id : 0",
-                      "State vector : ",
-                      "  000 : (-0.135887,-0.331815)",
-                      "  001 : (-0.194471,0.108649)",
-                      "  010 : (-0.147649,-0.329848)",
-                      "  011 : (-0.131489,0.131093)",
-                      "  100 : (-0.262069,0.198882)",
-                      "  101 : (-0.0797319,-0.313087)",
-                      "  110 : (-0.140573,-0.0577208)",
-                      "  111 : (0.181703,0.622905)",
-                      "--------------------",
-                      "Batch_id : 1",
-                      "State vector : ",
-                      "  000 : (-0.310841,0.342973)",
-                      "  001 : (0.16157,-0.216366)",
-                      "  010 : (-0.301031,0.2286)",
-                      "  011 : (-0.430187,-0.341108)",
-                      "  100 : (0.0126325,0.169034)",
-                      "  101 : (0.356303,0.033349)",
-                      "  110 : (-0.184462,-0.0361127)",
-                      "  111 : (0.224724,-0.160959)"}))
+                 .ex(DocString::Code({">>> states = StateVectorBatched(2, 3)",
+                                      ">>> print(states.to_string())",
+                                      "Qubit Count : 3 ",
+                                      "Dimension : 8",
+                                      "--------------------",
+                                      "Batch_id : 0",
+                                      "State vector : ",
+                                      "  000 : (1,0)",
+                                      "  001 : (0,0)",
+                                      "  010 : (0,0)",
+                                      "  011 : (0,0)",
+                                      "  100 : (0,0)",
+                                      "  101 : (0,0)",
+                                      "  110 : (0,0)",
+                                      "  111 : (0,0)",
+                                      "--------------------",
+                                      "Batch_id : 1",
+                                      "State vector : ",
+                                      "  000 : (1,0)",
+                                      "  001 : (0,0)",
+                                      "  010 : (0,0)",
+                                      "  011 : (0,0)",
+                                      "  100 : (0,0)",
+                                      "  101 : (0,0)",
+                                      "  110 : (0,0)",
+                                      "  111 : (0,0)",
+                                      "<BLANKLINE>"}))
                  .build_as_google_style()
                  .c_str())
         .def("__str__",
@@ -453,25 +455,9 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                 .desc("Convert states to JSON string.")
                 .ret("str", "JSON representation of states.")
                 .ex(DocString::Code(
-                    {">>> states = StateVectorBatched.Haar_random_state(2, 3, False)",
+                    {">>> states = StateVectorBatched(2, 3)",
                      ">>> print(states.to_json())",
-                     "{\"batch_size\":2,\"batched_amplitudes\":[{\"amplitudes\":[{\"imag\":-0."
-                     "06388485770655017,\"real\":-0.18444457531249306},{\"imag\":-0."
-                     "19976277833680336,\"real\":0.02688995276721736},{\"imag\":-0."
-                     "10325202586347756,\"real\":0.34750392103639344},{\"imag\":-0."
-                     "08316405642178114,\"real\":-0.13786630724295332},{\"imag\":-0."
-                     "12472230847944885,\"real\":0.14554495925352498},{\"imag\":-0."
-                     "26280362129148116,\"real\":0.11742521097266628},{\"imag\":-0."
-                     "2624948420923217,\"real\":0.020338934511145986},{\"imag\":0."
-                     "03692345644121347,\"real\":0.7573990906654825}]},{\"amplitudes\":[{\"imag\":-"
-                     "0.042863543360962014,\"real\":0.2002535190582227},{\"imag\":-0."
-                     "26105089098208206,\"real\":0.033791318581512894},{\"imag\":-0."
-                     "5467139724228703,\"real\":0.23960667554139148},{\"imag\":-0.1008220536735562,"
-                     "\"real\":0.3431287916056916},{\"imag\":0.26552531402802715,\"real\":-0."
-                     "06501035752577479},{\"imag\":0.11913162732583721,\"real\":0."
-                     "47146654843051494},{\"imag\":-0.1877230034941065,\"real\":0."
-                     "04062968177663162},{\"imag\":-0.16209817213481867,\"real\":-0."
-                     "1737591400014162}]}],\"n_qubits\":3}"}))
+                     R"({"amplitudes":[[{"imag":0.0,"real":1.0},{"imag":0.0,"real":0.0},{"imag":0.0,"real":0.0},{"imag":0.0,"real":0.0},{"imag":0.0,"real":0.0},{"imag":0.0,"real":0.0},{"imag":0.0,"real":0.0},{"imag":0.0,"real":0.0}],[{"imag":0.0,"real":1.0},{"imag":0.0,"real":0.0},{"imag":0.0,"real":0.0},{"imag":0.0,"real":0.0},{"imag":0.0,"real":0.0},{"imag":0.0,"real":0.0},{"imag":0.0,"real":0.0},{"imag":0.0,"real":0.0}]],"batch_size":2,"n_qubits":3})"}))
                 .build_as_google_style()
                 .c_str())
         .def(

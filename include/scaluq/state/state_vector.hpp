@@ -111,15 +111,14 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                   "$\\ket{0\\dots 0}$ holding `n_qubits` number of qubits.")
             .ex(DocString::Code({">>> state1 = StateVector(2)",
                                  ">>> print(state1)",
-                                 " *** Quantum State ***",
-                                 " * Qubit Count : 2",
-                                 " * Dimension   : 4",
-                                 " * State vector : ",
-                                 "00: (1,0)",
-                                 "01: (0,0)",
-                                 "10: (0,0)",
-                                 "11: (0,0)",
-                                 ""}))
+                                 "Qubit Count : 2",
+                                 "Dimension : 4",
+                                 "State vector : ",
+                                 "  00 : (1,0)",
+                                 "  01 : (0,0)",
+                                 "  10 : (0,0)",
+                                 "  11 : (0,0)",
+                                 "<BLANKLINE>"}))
             .build_as_google_style()
             .c_str())
         .def(nb::init<std::uint64_t>(),
@@ -131,14 +130,14 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .arg("n_qubits", "int", "number of qubits")
                  .ex(DocString::Code({">>> state1 = StateVector(2)",
                                       ">>> print(state1)",
-                                      " *** Quantum State ***",
-                                      " * Qubit Count : 2",
-                                      " * Dimension   : 4",
-                                      " * State vector : ",
-                                      "00: (1,0)",
-                                      "01: (0,0)",
-                                      "10: (0,0)",
-                                      "11: (0,0)"}))
+                                      "Qubit Count : 2",
+                                      "Dimension : 4",
+                                      "State vector : ",
+                                      "  00 : (1,0)",
+                                      "  01 : (0,0)",
+                                      "  10 : (0,0)",
+                                      "  11 : (0,0)",
+                                      "<BLANKLINE>"}))
                  .build_as_google_style()
                  .c_str())
         .def_static(
@@ -159,24 +158,25 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                      "If not specified, the value from random device is used.")
                 .ex(DocString::Code(
                     {">>> state = StateVector.Haar_random_state(2)",
-                     ">>> print(state.get_amplitudes())",
+                     ">>> print(state.get_amplitudes()) # doctest: +SKIP",
                      "[(-0.3188299516496241+0.6723250989136779j), "
                      "(-0.253461343768224-0.22430415678425403j), "
                      "(0.24998142919420457+0.33096908710840045j), "
                      "(0.2991187916479724+0.2650813322096342j)]",
                      ">>> print(StateVector.Haar_random_state(2).get_amplitudes()) # If seed is "
-                     "not specified, generated vector differs.",
+                     "not specified, generated vector differs. # doctest: +SKIP",
                      "[(-0.49336775961196616-0.3319437726884906j), "
                      "(-0.36069529482031787+0.31413708595210815j), "
                      "(-0.3654176892043237-0.10307602590749808j), "
                      "(-0.18175679804035652+0.49033467421609994j)]",
-                     ">>> print(StateVector.Haar_random_state(2, 0).get_amplitudes())",
+                     ">>> print(StateVector.Haar_random_state(2, 0).get_amplitudes()) # doctest: "
+                     "+SKIP",
                      "[(0.030776817573663098-0.7321137912473642j), "
                      "(0.5679070655936114-0.14551095055034327j), "
                      "(-0.0932995615041323-0.07123201881040941j), "
                      "(0.15213024630399696-0.2871374092016799j)]",
                      ">>> print(StateVector.Haar_random_state(2, 0).get_amplitudes()) # If same "
-                     "seed is specified, same vector is generated.",
+                     "seed is specified, same vector is generated. # doctest: +SKIP",
                      "[(0.030776817573663098-0.7321137912473642j), "
                      "(0.5679070655936114-0.14551095055034327j), "
                      "(-0.0932995615041323-0.07123201881040941j), "
@@ -241,7 +241,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
              DocString()
                  .desc("Initialize with computational basis $\\ket{00\\dots0}$.")
                  .ex(DocString::Code{">>> state = StateVector.Haar_random_state(2)",
-                                     ">>> state.get_amplitudes()",
+                                     ">>> state.get_amplitudes() # doctest: +SKIP",
                                      "[(-0.05726462181150916+0.3525270165415515j), "
                                      "(0.1133709060491142+0.3074930854078303j), "
                                      "(0.03542174692996924+0.18488950377672345j), "
@@ -322,7 +322,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                                      ">>> state = StateVector(2)",
                                      ">>> state.load(v)",
                                      ">>> state.get_squared_norm()",
-                                     "204.0"
+                                     "204.0",
                                      ">>> sum([abs(a)**2 for a in v])",
                                      "204.0"})
                  .build_as_google_style()
@@ -335,14 +335,14 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .ex(DocString::Code{">>> v = [1+2j, 3+4j, 5+6j, 7+8j]",
                                      ">>> state = StateVector(2)",
                                      ">>> state.load(v)",
+                                     ">>> norm = state.get_squared_norm()**.5",
                                      ">>> state.normalize()",
                                      ">>> state.get_amplitudes()",
                                      "[(0.07001400420140048+0.14002800840280097j), "
                                      "(0.21004201260420147+0.28005601680560194j), "
                                      "(0.3500700210070024+0.42008402520840293j), "
                                      "(0.4900980294098034+0.5601120336112039j)]",
-                                     ">>> norm = state.get_squared_norm()**.5",
-                                     ">>> [a / norm for a in v]"
+                                     ">>> [a / norm for a in v]",
                                      "[(0.07001400420140048+0.14002800840280097j), "
                                      "(0.21004201260420147+0.28005601680560194j), "
                                      "(0.3500700210070024+0.42008402520840293j), "
@@ -386,7 +386,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .ret("float", "probability to observe as given")
                  .ex(DocString::Code{
                      ">>> v = [1/4, 1/2, 0, 1/4, 1/4, 1/2, 1/4, 1/2]",
-                     "state = StateVector(3)",
+                     ">>> state = StateVector(3)",
                      ">>> state.load(v)",
                      ">>> state.get_marginal_probability([0, 1, StateVector.UNMEASURED])",
                      "0.0625",
@@ -405,7 +405,8 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                      ">>> state = StateVector(3)",
                      ">>> state.load(v)",
                      ">>> state.get_entropy()",
-                     "2.5000000000000497",
+                     "2.5",
+                     ">>> import math",
                      ">>> sum(-abs(a)**2 * math.log2(abs(a)**2) for a in v if a != 0)",
                      "2.5"})
                  .note("The result of this function differs from qulacs. This is because scaluq "
@@ -470,7 +471,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                      "$[0,2^{\\mathrm{n\\_qubits}})$")
                 .ex(DocString::Code{" >>> state = StateVector(2)",
                                     ">>> state.load([1/2, 0, -3**.5/2, 0])",
-                                    ">>> state.sampling(8) ",
+                                    ">>> state.sampling(8) # doctest: +SKIP",
                                     "[0, 2, 2, 2, 2, 0, 0, 2]"})
                 .build_as_google_style()
                 .c_str())
@@ -483,7 +484,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                 .ex(DocString::Code{
                     ">>> state = StateVector(1)",
                     ">>> state.to_string()",
-                    R"(' *** Quantum State ***\n * Qubit Count : 1\n * Dimension   : 2\n * State vector : \n0: (1,0)\n1: (0,0)\n')"})
+                    R"('Qubit Count : 1\nDimension : 2\nState vector : \n  0 : (1,0)\n  1 : (0,0)\n')"})
                 .build_as_google_style()
                 .c_str())
         .def("load",
