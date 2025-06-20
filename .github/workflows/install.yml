@@ -167,6 +167,7 @@ jobs:
           ! grep -q "Failed" /tmp/doctest.log
 
       - name: Run doctest host f64
+        if: ${{ matrix.device == 'cpu' }} # currently GPU runner is not supported
         run: |
           ( set -o pipefail; python python_test/run_doctest.py host f64 | tee /tmp/doctest.log )
           ! grep -q "Failed" /tmp/doctest.log
