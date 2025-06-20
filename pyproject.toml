@@ -58,6 +58,7 @@ homepage = "http://www.scaluq.org"
 doc = [
     "black == 24.4.2",
     "isort == 5.13.2",
+    "myst_parser == 4.0.1",
     "nanobind == 2.0.0",
     "sphinx == 7.3.7",
     "sphinx-autoapi == 3.1.1",
