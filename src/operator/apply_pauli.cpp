@@ -30,7 +30,7 @@ void apply_pauli(std::uint64_t control_mask,
         Kokkos::fence();
         return;
     }
-    std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
+    std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     Complex<Prec> global_phase = PHASE_M90ROT<Prec>()[global_phase_90rot_count % 4];
     Kokkos::parallel_for(
@@ -75,7 +75,7 @@ void apply_pauli(std::uint64_t control_mask,
         Kokkos::fence();
         return;
     }
-    std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
+    std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     Complex<Prec> global_phase = PHASE_M90ROT<Prec>()[global_phase_90rot_count % 4];
     Kokkos::parallel_for(
@@ -128,7 +128,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         Kokkos::fence();
         return;
     } else {
-        std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
+        std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
         Kokkos::parallel_for(
             "apply_pauli_rotation",
             Kokkos::RangePolicy<SpaceType<Space>>(
@@ -190,7 +190,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         Kokkos::fence();
         return;
     } else {
-        std::uint64_t pivot = sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
+        std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
         Kokkos::parallel_for(
             "apply_pauli_rotation",
             Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
@@ -257,8 +257,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                         }
                     });
             } else {
-                std::uint64_t pivot =
-                    sizeof(std::uint64_t) * 8 - std::countl_zero(bit_flip_mask) - 1;
+                std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
                 Kokkos::parallel_for(
                     Kokkos::TeamThreadRange(team,
                                             states.dim() >> (std::popcount(control_mask) + 1)),

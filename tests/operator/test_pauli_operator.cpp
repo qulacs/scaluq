@@ -15,7 +15,6 @@ TYPED_TEST(PauliOperatorTest, ContainsExtraWhitespace) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     PauliOperator<Prec, Space> expected = PauliOperator<Prec, Space>("X 0", 1.0);
     PauliOperator<Prec, Space> pauli_whitespace = PauliOperator<Prec, Space>("X 0 ", 1.0);
-
     EXPECT_EQ(1, pauli_whitespace.target_qubit_list().size());
     EXPECT_EQ(1, pauli_whitespace.pauli_id_list().size());
     EXPECT_EQ(expected.get_pauli_string(), pauli_whitespace.get_pauli_string());

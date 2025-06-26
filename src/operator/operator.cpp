@@ -79,7 +79,7 @@ template <>
 void Operator<internal::Prec, internal::Space>::optimize() {
     std::map<std::tuple<std::uint64_t, std::uint64_t>, ComplexType> pauli_and_coef;
     for (const auto& pauli : _terms) {
-        pauli_and_coef[pauli.get_XZ_mask_representation()] += pauli._ptr->_coef;
+        pauli_and_coef[pauli.get_XZ_mask_representation()] += pauli.coef();
     }
     _terms.clear();
     for (const auto& [mask, coef] : pauli_and_coef) {
@@ -101,31 +101,15 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
 template <>
 ComplexMatrix Operator<internal::Prec, internal::Space>::get_matrix() const {
     std::uint64_t dim = 1ULL << _n_qubits;
-    using Pauli = PauliOperator<internal::Prec, internal::Space>;
-    std::vector<typename Pauli::Triplet> triplets;
-    triplets.reserve(dim * _terms.size());
+    ComplexMatrix mat(dim, dim);
+    mat.setZero();
     for (const auto& term : _terms) {
-        std::vector<typename Pauli::PauliID> pauli_id_par_qubit(_n_qubits, Pauli::PauliID::I);
-        for (std::uint64_t i = 0; i < term._ptr->_pauli_id_list.size(); i++) {
-            pauli_id_par_qubit[term._ptr->_target_qubit_list[i]] =
-                static_cast<typename Pauli::PauliID>(term._ptr->_pauli_id_list[i]);
+        auto basic_triplets = term.get_matrix_triplets_ignoring_coef();
+        for (const auto& triplet : basic_triplets) {
+            mat(triplet.row(), triplet.col()) += triplet.value() * term.coef();
         }
-        typename Pauli::Data aligned_data;
-        for (std::uint64_t i = 0; i < _n_qubits; i++) {
-            aligned_data.add_single_pauli(i, pauli_id_par_qubit[i]);
-        }
-        auto basic_triplets = Pauli(aligned_data).get_matrix_triplets_ignoring_coef();
-        std::ranges::transform(
-            basic_triplets, std::back_inserter(triplets), [&](const Pauli::Triplet& triplet) {
-                return typename Pauli::Triplet(
-                    triplet.row(),
-                    triplet.col(),
-                    triplet.value() * static_cast<StdComplex>(term._ptr->_coef));
-            });
     }
-    SparseComplexMatrix sparse(dim, dim);
-    sparse.setFromTriplets(triplets.begin(), triplets.end());
-    return ComplexMatrix(sparse);
+    return mat;
 }
 
 template <>
