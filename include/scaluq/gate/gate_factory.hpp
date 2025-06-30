@@ -413,7 +413,12 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
                         ":class:`~scaluq.f64.IGate`.")
                   .ret("Gate", "Identity gate instance")
-                  .ex(DocString::Code({">>> gate = I()", ">>> print(gate)", "Identity Gate"}))
+                  .ex(DocString::Code({">>> gate = I()",
+                                       ">>> print(gate)",
+                                       "Gate Type: I",
+                                       "  Target Qubits: {}",
+                                       "  Control Qubits: {}",
+                                       "  Control Value: {}"}))
                   .build_as_google_style()
                   .c_str());
     mgate.def(
@@ -432,8 +437,14 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
             .ret("Gate", "Global phase gate instance")
-            .ex(DocString::Code(
-                {">>> gate = GlobalPhase(math.pi/2)", ">>> print(gate)", "Global Phase Gate"}))
+            .ex(DocString::Code({">>> import math",
+                                 ">>> gate = GlobalPhase(math.pi/2)",
+                                 ">>> print(gate)",
+                                 "Gate Type: GlobalPhase",
+                                 "  Phase: 1.5708",
+                                 "  Target Qubits: {}",
+                                 "  Control Qubits: {}",
+                                 "  Control Value: {}"}))
             .build_as_google_style()
             .c_str());
     mgate.def(
@@ -738,7 +749,8 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
             .ret("Gate", "RX gate instance")
-            .ex(DocString::Code({">>> gate = RX(0, math.pi/2)  # π/2 rotation around X-axis",
+            .ex(DocString::Code({">>> import math",
+                                 ">>> gate = RX(0, math.pi/2)  # π/2 rotation around X-axis",
                                  ">>> gate = RX(1, math.pi, [0])  # Controlled-RX"}))
             .build_as_google_style()
             .c_str());
@@ -758,7 +770,8 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
             .ret("Gate", "RY gate instance")
-            .ex(DocString::Code({">>> gate = RY(0, math.pi/2)  # π/2 rotation around Y-axis",
+            .ex(DocString::Code({">>> import math",
+                                 ">>> gate = RY(0, math.pi/2)  # π/2 rotation around Y-axis",
                                  ">>> gate = RY(1, math.pi, [0])  # Controlled-RY"}))
             .build_as_google_style()
             .c_str());
@@ -779,7 +792,8 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
             .ret("Gate", "RZ gate instance")
-            .ex(DocString::Code({">>> gate = RZ(0, math.pi/2)  # π/2 rotation around Z-axis",
+            .ex(DocString::Code({">>> import math",
+                                 ">>> gate = RZ(0, math.pi/2)  # π/2 rotation around Z-axis",
                                  ">>> gate = RZ(1, math.pi, [0])  # Controlled-RZ"}))
             .build_as_google_style()
             .c_str());
@@ -800,7 +814,8 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .arg("controls", "list[int]", true, "Control qubit indices")
                   .arg("control_values", "list[int]", true, "Control qubit values")
                   .ret("Gate", "U1 gate instance")
-                  .ex(DocString::Code({">>> gate = U1(0, math.pi/2)  # π/2 rotation around Z-axis",
+                  .ex(DocString::Code({">>> import math",
+                                       ">>> gate = U1(0, math.pi/2)  # π/2 rotation around Z-axis",
                                        ">>> gate = U1(1, math.pi, [0])  # Controlled-U1"}))
                   .build_as_google_style()
                   .c_str());
@@ -824,7 +839,8 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .arg("control_values", "list[int]", true, "Control qubit values")
                   .ret("Gate", "U2 gate instance")
                   .ex(DocString::Code(
-                      {">>> gate = U2(0, math.pi/2, math.pi)  # π/2 rotation around Z-axis",
+                      {">>> import math",
+                       ">>> gate = U2(0, math.pi/2, math.pi)  # π/2 rotation around Z-axis",
                        ">>> gate = U2(1, math.pi, math.pi/2, [0])  # Controlled-U2"}))
                   .build_as_google_style()
                   .c_str());
@@ -851,7 +867,8 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .arg("control_values", "list[int]", true, "Control qubit values")
             .ret("Gate", "U3 gate instance")
             .ex(DocString::Code(
-                {">>> gate = U3(0, math.pi/2, math.pi, math.pi)  # π/2 rotation around Z-axis",
+                {">>> import math",
+                 ">>> gate = U3(0, math.pi/2, math.pi, math.pi)  # π/2 rotation around Z-axis",
                  ">>> gate = U3(1, math.pi, math.pi/2, math.pi, [0])  # Controlled-U3"}))
             .build_as_google_style()
             .c_str());
@@ -1014,7 +1031,8 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                  "unitary is set to True, a more efficient implementation is used.")
             .ret("Gate", "DenseMatrix gate instance")
             .ex(DocString::Code(
-                {">>> matrix = np.array([[1, 0], [0, 1]])",
+                {">>> import numpy as np",
+                 ">>> matrix = np.array([[1, 0], [0, 1]])",
                  ">>> gate = DenseMatrix([0], matrix)",
                  ">>> gate = DenseMatrix([0], matrix, [1])  # Controlled-DenseMatrix"}))
             .build_as_google_style()
@@ -1037,7 +1055,8 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .arg("control_values", "list[int]", true, "Control qubit values")
                   .ret("Gate", "SparseMatrix gate instance")
                   .ex(DocString::Code(
-                      {">>> matrix = scipy.sparse.csr_matrix([[1, 0], [0, 1]])",
+                      {">>> import scipy",
+                       ">>> matrix = scipy.sparse.csr_matrix([[1, 0], [0, 1]])",
                        ">>> gate = SparseMatrix([0], matrix)",
                        ">>> gate = SparseMatrix([0], matrix, [1])  # Controlled-SparseMatrix"}))
                   .build_as_google_style()
@@ -1081,7 +1100,8 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .arg("control_values", "list[int]", true, "Control qubit values")
             .ret("Gate", "PauliRotation gate instance")
             .ex(DocString::Code(
-                {">>> pauli = PauliOperator('X', 0)",
+                {">>> pauli = PauliOperator('X 0')",
+                 ">>> import math",
                  ">>> gate = PauliRotation(pauli, math.pi/2)",
                  ">>> gate = PauliRotation(pauli, math.pi/2, [1])  # Controlled-Pauli"}))
             .build_as_google_style()

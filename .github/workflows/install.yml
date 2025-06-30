@@ -159,3 +159,15 @@ jobs:
           echo -e "from scaluq.default.f64 import StateVector, gate\nstate = StateVector(2)\nx = gate.X(0)\nx.update_quantum_state(state)\nprint(state.get_amplitudes())" > /tmp/sample.py
           python /tmp/sample.py
           python -m mypy /tmp/sample.py
+
+      - name: Run doctest default f64
+        if: ${{ matrix.device == 'cpu' }} # currently GPU runner is not supported
+        run: |
+          ( set -o pipefail; python python_test/run_doctest.py default f64 | tee /tmp/doctest.log )
+          ! grep -q "Failed" /tmp/doctest.log
+
+      - name: Run doctest host f64
+        if: ${{ matrix.device == 'cpu' }} # currently GPU runner is not supported
+        run: |
+          ( set -o pipefail; python python_test/run_doctest.py host f64 | tee /tmp/doctest.log )
+          ! grep -q "Failed" /tmp/doctest.log

@@ -96,7 +96,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
             .arg("control_values", "list[int]", true, "Control qubit values")
             .ret("ParamGate", "ParamRX gate instance")
             .ex(DocString::Code({">>> gate = ParamRX(0)  # ParamRX gate on qubit 0",
-                                 ">>> gate = ParamRX(1, [0])  # Controlled-ParamRX"}))
+                                 ">>> gate = ParamRX(1, controls=[0])  # Controlled-ParamRX"}))
             .build_as_google_style()
             .c_str());
     mgate.def(
@@ -117,30 +117,31 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
             .arg("control_values", "list[int]", true, "Control qubit values")
             .ret("ParamGate", "ParamRY gate instance")
             .ex(DocString::Code({">>> gate = ParamRY(0)  # ParamRY gate on qubit 0",
-                                 ">>> gate = ParamRY(1, [0])  # Controlled-ParamRY"}))
+                                 ">>> gate = ParamRY(1, controls=[0])  # Controlled-ParamRY"}))
             .build_as_google_style()
             .c_str());
-    mgate.def("ParamRZ",
-              &gate::ParamRZ<Prec, Space>,
-              "target"_a,
-              "coef"_a = 1.,
-              "controls"_a = std::vector<std::uint64_t>{},
-              "control_values"_a = std::vector<std::uint64_t>{},
-              DocString()
-                  .desc("Generate general :class:`~scaluq.f64.ParamGate` class instance of "
-                        ":class:`~scaluq.f64.ParamRZGate`.")
-                  .note("If you need to use functions specific to the "
-                        ":class:`~scaluq.f64.ParamRZGate` class, please "
-                        "downcast it.")
-                  .arg("target", "int", "Target qubit index")
-                  .arg("coef", "float", true, "Parameter coefficient")
-                  .arg("controls", "list[int]", true, "Control qubit indices")
-                  .arg("control_values", "list[int]", true, "Control qubit values")
-                  .ret("ParamGate", "ParamRZ gate instance")
-                  .ex(DocString::Code({">>> gate = ParamRZ(0)  # ParamRZ gate on qubit 0",
-                                       ">>> gate = ParamRZ(1, [0])  # Controlled-ParamRZ"}))
-                  .build_as_google_style()
-                  .c_str());
+    mgate.def(
+        "ParamRZ",
+        &gate::ParamRZ<Prec, Space>,
+        "target"_a,
+        "coef"_a = 1.,
+        "controls"_a = std::vector<std::uint64_t>{},
+        "control_values"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.ParamGate` class instance of "
+                  ":class:`~scaluq.f64.ParamRZGate`.")
+            .note("If you need to use functions specific to the "
+                  ":class:`~scaluq.f64.ParamRZGate` class, please "
+                  "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("coef", "float", true, "Parameter coefficient")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .arg("control_values", "list[int]", true, "Control qubit values")
+            .ret("ParamGate", "ParamRZ gate instance")
+            .ex(DocString::Code({">>> gate = ParamRZ(0)  # ParamRZ gate on qubit 0",
+                                 ">>> gate = ParamRZ(1, controls=[0])  # Controlled-ParamRZ"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def(
         "ParamPauliRotation",
         &gate::ParamPauliRotation<Prec, Space>,
@@ -203,7 +204,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
                  "list[tuple[float, Union[Gate, ParamGate]]]",
                  "List of tuple of probability and gate")
             .ret("ParamGate", "ParamProbabilistic gate instance")
-            .ex(DocString::Code({">>> gate = ParamProbabilistic([(0.1, X(0)), (0.9, I(0))])  # "
+            .ex(DocString::Code({">>> gate = ParamProbabilistic([(0.1, X(0)), (0.9, I())])  # "
                                  "probabilistic gate with X and I"}))
             .build_as_google_style()
             .c_str());
