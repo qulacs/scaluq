@@ -70,8 +70,8 @@ void Operator<internal::Prec, internal::Space>::add_random_operator(
             pauli_id_list[qubit_idx] = random.int32() & 0b11;
         }
         StdComplex coef = random.uniform() * 2. - 1.;
-        this->add_operator(
-            PauliOperator<internal::Prec, internal::Space>(target_qubit_list, pauli_id_list, coef));
+        this->add_operator(PauliOperator<internal::Prec, internal::Space>(
+            _n_qubits, target_qubit_list, pauli_id_list, coef));
     }
 }
 
@@ -84,7 +84,7 @@ void Operator<internal::Prec, internal::Space>::optimize() {
     _terms.clear();
     for (const auto& [mask, coef] : pauli_and_coef) {
         const auto& [x_mask, z_mask] = mask;
-        _terms.emplace_back(x_mask, z_mask, StdComplex(coef));
+        _terms.emplace_back(_n_qubits, x_mask, z_mask, StdComplex(coef));
     }
 }
 
@@ -104,7 +104,7 @@ ComplexMatrix Operator<internal::Prec, internal::Space>::get_matrix() const {
     ComplexMatrix mat(dim, dim);
     mat.setZero();
     for (const auto& term : _terms) {
-        auto basic_triplets = term.get_matrix_triplets_ignoring_coef();
+        auto basic_triplets = term.get_full_matrix_triplets_ignoring_coef();
         for (const auto& triplet : basic_triplets) {
             mat(triplet.row(), triplet.col()) += triplet.value() * term.coef();
         }
