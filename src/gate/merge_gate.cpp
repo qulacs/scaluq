@@ -153,22 +153,16 @@ std::pair<Gate<internal::Prec, internal::Space>, double> merge_gate(
     }
     if ((pauli_id1 || gate1.gate_type() == GateType::Pauli) &&
         (pauli_id2 || gate2.gate_type() == GateType::Pauli)) {
-        std::uint64_t n_qubits;
-        if (gate1.gate_type() == GateType::Pauli) {
-            n_qubits = PauliGate<internal::Prec, internal::Space>(gate1)->pauli().n_qubits();
-        } else {
-            n_qubits = PauliGate<internal::Prec, internal::Space>(gate2)->pauli().n_qubits();
-        }
         auto pauli1 = gate_type1 == GateType::Pauli
                           ? PauliGate<internal::Prec, internal::Space>(gate1)->pauli()
                           : PauliOperator<internal::Prec, internal::Space>(
-                                n_qubits,
+                                4,
                                 std::vector{gate1->target_qubit_list()[0]},
                                 std::vector{pauli_id1.value()});
         auto pauli2 = gate_type2 == GateType::Pauli
                           ? PauliGate<internal::Prec, internal::Space>(gate2)->pauli()
                           : PauliOperator<internal::Prec, internal::Space>(
-                                n_qubits,
+                                4,
                                 std::vector{gate2->target_qubit_list()[0]},
                                 std::vector{pauli_id2.value()});
         return {gate::Pauli<internal::Prec, internal::Space>(

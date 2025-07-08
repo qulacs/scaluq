@@ -79,12 +79,6 @@ PauliOperator<Prec, Space>::PauliOperator(std::uint64_t n_qubits,
       _bit_flip_mask(bit_flip_mask),
       _phase_flip_mask(phase_flip_mask) {
     if (n_qubits != 64 && (bit_flip_mask | phase_flip_mask) >> n_qubits) {
-        std::cerr << n_qubits << std::endl;
-        std::cerr << std::bitset<64>(bit_flip_mask) << std::endl;
-        std::cerr << std::bitset<64>(phase_flip_mask) << std::endl;
-        std::cerr << std::bitset<64>((std::uint64_t)(bit_flip_mask | phase_flip_mask) >>
-                                     (std::uint64_t)n_qubits)
-                  << std::endl;
         throw std::runtime_error(
             "PauliOperator::PauliOperator: operand mask is larger than n_qubits");
     }
@@ -440,23 +434,23 @@ std::vector<StdComplex> PauliOperator<Prec, Space>::get_transition_amplitude(
 template <Precision Prec, ExecutionSpace Space>
 std::vector<typename PauliOperator<Prec, Space>::Triplet>
 PauliOperator<Prec, Space>::get_matrix_triplets_ignoring_coef() const {
-    std::vector<std::int64_t> compressed_idx(std::bit_width(_bit_flip_mask | _phase_flip_mask), -1);
-    for (std::uint64_t bit_mask = _bit_flip_mask | _phase_flip_mask, idx = 0; bit_mask;
-         bit_mask &= (bit_mask - 1), ++idx) {
-        std::uint64_t q = std::countr_zero(bit_mask);
-        compressed_idx[q] = idx;
-        ++idx;
+    std::uint64_t bit_mask = 0, phase_mask = 0;
+    for (std::uint64_t sub_mask = _bit_flip_mask | _phase_flip_mask, idx = 0; sub_mask;
+         sub_mask &= (sub_mask - 1), ++idx) {
+        std::uint64_t q = std::countr_zero(sub_mask);
+        if (_bit_flip_mask >> q & 1) bit_mask |= (1ULL << idx);
+        if (_phase_flip_mask >> q & 1) phase_mask |= (1ULL << idx);
     }
     // count PauliID::Y
     std::uint64_t rot90_count = std::popcount(_bit_flip_mask & _phase_flip_mask);
     StdComplex rot =
         std::vector<StdComplex>{1., StdComplex(0, -1), -1., StdComplex(0, 1)}[rot90_count % 4];
     std::vector<Triplet> ret;
-    std::uint64_t matrix_dim = 1ULL << std::bit_width(_bit_flip_mask | _phase_flip_mask);
+    std::uint64_t matrix_dim = 1ULL << std::bit_width(bit_mask | phase_mask);
     ret.reserve(matrix_dim * 2);
     for (std::uint64_t index = 0; index < matrix_dim; index++) {
-        const StdComplex sign = 1 - 2 * (Kokkos::popcount(index & _phase_flip_mask) % 2);
-        ret.emplace_back(compressed_idx[index], compressed_idx[index] ^ _bit_flip_mask, rot * sign);
+        const StdComplex sign = 1 - 2 * (Kokkos::popcount(index & phase_mask) % 2);
+        ret.emplace_back(index, index ^ bit_mask, rot * sign);
     }
     return ret;
 }
