@@ -4,7 +4,9 @@ import importlib.util
 import os
 import shutil
 
-stub_dir = Path('./stub/scaluq/')
+current_dir = Path(__file__).parent.resolve()
+
+stub_dir = Path(current_dir/"stub"/"scaluq/")
 stub_dir.mkdir(parents=True, exist_ok=True)
 
 files = []
@@ -16,8 +18,8 @@ def copy_stub_file(target):
         print(f'No stub file found for {target}')
         return
     os.makedirs(f'stub/scaluq/{target}', exist_ok=True)
-    shutil.copyfile(f'{scaluq_path}/{target}/__init__.pyi', f'stub/scaluq/{target}/__init__.pyi')
-    files.append(f'./stub/scaluq/{target}/__init__.pyi')
+    shutil.copyfile(f'{scaluq_path}/{target}/__init__.pyi', f'{current_dir}/stub/scaluq/{target}/__init__.pyi')
+    files.append(f'{current_dir}/stub/scaluq/{target}/__init__.pyi')
 
 copy_stub_file('')
 for space in ['default', 'host']:
@@ -40,7 +42,7 @@ autoapi_type = "python"
 autoapi_keep_files = True
 
 autoapi_file_patterns = ["*.py", "*.pyi"]
-autoapi_dirs = ["./stub/scaluq"]
+autoapi_dirs = [current_dir/"stub"/"scaluq"]
 autoapi_add_toctree_entry = True
 autoapi_python_class_content = 'class'
 
