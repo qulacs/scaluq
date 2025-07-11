@@ -24,6 +24,7 @@ RUN apt-get update && \
     gdb \
     libboost-dev \
     libpython3-dev \
+    locales \
     ninja-build \
     python3 \
     python3-pip \
