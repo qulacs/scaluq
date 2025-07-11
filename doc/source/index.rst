@@ -10,6 +10,7 @@ Welcome to Scaluq's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   tutorials/index
 
 
 Indices and tables

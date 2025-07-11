@@ -24,6 +24,7 @@ RUN apt-get update && \
     gdb \
     libboost-dev \
     libpython3-dev \
+    locales \
     ninja-build \
     python3 \
     python3-pip \
@@ -52,6 +53,8 @@ RUN git clone --recursive https://github.com/kokkos/kokkos.git /tmp/kokkos --dep
 
 RUN pip install nanobind==2.0.0
 
+RUN locale-gen en_US.UTF-8
+
 ARG USERNAME=vscode
 ARG GROUPNAME=vscode
 ARG USER_UID=1000
@@ -64,3 +67,5 @@ RUN groupadd --gid $USER_GID $GROUPNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
 USER vscode
+
+ENV PATH="/home/vscode/.local/bin:${PATH}"
