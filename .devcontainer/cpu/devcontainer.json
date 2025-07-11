@@ -45,6 +45,12 @@
                         "path": "${workspaceFolder}/code-spell-checker-dictionary.txt"
                     }
                 },
+				"terminal.integrated.defaultProfile.linux": "bash",
+				"terminal.integrated.profiles.linux": {
+					"bash": {
+						"path": "/bin/bash"
+					}
+				}
 			},
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
