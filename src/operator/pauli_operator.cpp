@@ -7,10 +7,8 @@
 
 namespace scaluq {
 template <Precision Prec, ExecutionSpace Space>
-PauliOperator<Prec, Space>::PauliOperator(std::uint64_t n_qubits,
-                                          std::string_view pauli_string,
-                                          StdComplex coef)
-    : _n_qubits(n_qubits), _coef(coef) {
+PauliOperator<Prec, Space>::PauliOperator(std::string_view pauli_string, StdComplex coef)
+    : _coef(coef) {
     auto ss = std::stringstream(std::string(pauli_string));
     while (1) {
         char pauli;
@@ -20,10 +18,6 @@ PauliOperator<Prec, Space>::PauliOperator(std::uint64_t n_qubits,
         ss >> target;
         if (ss.fail()) {
             throw std::runtime_error("PauliOperator::PauliOperator: invalid pauli_string format");
-        }
-        if (target >= n_qubits) {
-            throw std::runtime_error(
-                "PauliOperator::PauliOperator: target qubit index is larger than n_qubits");
         }
         std::uint64_t pauli_id = [&] {
             if (pauli == 'I' || pauli == 'i') return PauliOperator::I;
@@ -37,21 +31,16 @@ PauliOperator<Prec, Space>::PauliOperator(std::uint64_t n_qubits,
 }
 
 template <Precision Prec, ExecutionSpace Space>
-PauliOperator<Prec, Space>::PauliOperator(std::uint64_t n_qubits,
-                                          const std::vector<std::uint64_t>& target_qubit_list,
+PauliOperator<Prec, Space>::PauliOperator(const std::vector<std::uint64_t>& target_qubit_list,
                                           const std::vector<std::uint64_t>& pauli_id_list,
                                           StdComplex coef)
-    : _n_qubits(n_qubits), _coef(coef) {
+    : _coef(coef) {
     if (target_qubit_list.size() != pauli_id_list.size()) {
         throw std::runtime_error(
             "PauliOperator::PauliOperator: target_qubit_list must have same size to "
             "pauli_id_list");
     }
     for (std::uint64_t term_index = 0; term_index < target_qubit_list.size(); ++term_index) {
-        if (target_qubit_list[term_index] >= n_qubits) {
-            throw std::runtime_error(
-                "PauliOperator::PauliOperator: target qubit index is larger than n_qubits");
-        }
         if (pauli_id_list[term_index] != 0) {
             add_single_pauli(target_qubit_list[term_index], pauli_id_list[term_index]);
         }
@@ -61,7 +50,7 @@ PauliOperator<Prec, Space>::PauliOperator(std::uint64_t n_qubits,
 template <Precision Prec, ExecutionSpace Space>
 PauliOperator<Prec, Space>::PauliOperator(const std::vector<std::uint64_t>& pauli_id_par_qubit,
                                           StdComplex coef)
-    : _n_qubits(pauli_id_par_qubit.size()), _coef(coef) {
+    : _coef(coef) {
     for (std::uint64_t i = 0; i < pauli_id_par_qubit.size(); ++i) {
         if (pauli_id_par_qubit[i] != PauliOperator<Prec, Space>::I) {
             add_single_pauli(i, pauli_id_par_qubit[i]);
@@ -70,29 +59,16 @@ PauliOperator<Prec, Space>::PauliOperator(const std::vector<std::uint64_t>& paul
 }
 
 template <Precision Prec, ExecutionSpace Space>
-PauliOperator<Prec, Space>::PauliOperator(std::uint64_t n_qubits,
-                                          std::uint64_t bit_flip_mask,
+PauliOperator<Prec, Space>::PauliOperator(std::uint64_t bit_flip_mask,
                                           std::uint64_t phase_flip_mask,
                                           StdComplex coef)
-    : _n_qubits(n_qubits),
-      _coef(coef),
-      _bit_flip_mask(bit_flip_mask),
-      _phase_flip_mask(phase_flip_mask) {
-    if (n_qubits != 64 && (bit_flip_mask | phase_flip_mask) >> n_qubits) {
-        throw std::runtime_error(
-            "PauliOperator::PauliOperator: operand mask is larger than n_qubits");
-    }
-}
+    : _coef(coef), _bit_flip_mask(bit_flip_mask), _phase_flip_mask(phase_flip_mask) {}
 
 template <Precision Prec, ExecutionSpace Space>
 void PauliOperator<Prec, Space>::add_single_pauli(std::uint64_t target_qubit,
                                                   std::uint64_t pauli_id) {
     if (target_qubit >= sizeof(std::uint64_t) * 8) {
         throw std::runtime_error("PauliOperator::add_single_pauli: target_qubit is too large");
-    }
-    if (target_qubit >= _n_qubits) {
-        throw std::runtime_error(
-            "PauliOperator::add_single_pauli: target_qubit is larger than n_qubits");
     }
     if (pauli_id >= 4) {
         throw std::runtime_error("PauliOperator::add_single_pauli: pauli_id is invalid");
@@ -162,28 +138,17 @@ std::string PauliOperator<Prec, Space>::get_pauli_string() const {
 
 template <Precision Prec, ExecutionSpace Space>
 PauliOperator<Prec, Space> PauliOperator<Prec, Space>::get_dagger() const {
-    return PauliOperator(
-        _n_qubits, _bit_flip_mask, _phase_flip_mask, scaluq::internal::conj(_coef));
+    return PauliOperator(_bit_flip_mask, _phase_flip_mask, scaluq::internal::conj(_coef));
 }
 
 template <Precision Prec, ExecutionSpace Space>
 void PauliOperator<Prec, Space>::apply_to_state(StateVector<Prec, Space>& state_vector) const {
-    if (state_vector.n_qubits() != _n_qubits) {
-        throw std::runtime_error(
-            "PauliOperator::apply_to_state: n_qubits of state_vector is  not equal to n_qubits "
-            "of the operator");
-    }
     internal::apply_pauli(0ULL, 0LL, _bit_flip_mask, _phase_flip_mask, _coef, state_vector);
 }
 
 template <Precision Prec, ExecutionSpace Space>
 StdComplex PauliOperator<Prec, Space>::get_expectation_value(
     const StateVector<Prec, Space>& state_vector) const {
-    if (state_vector.n_qubits() != _n_qubits) {
-        throw std::runtime_error(
-            "PauliOperator::get_expectation_value: n_qubits of state_vector is not equal to "
-            "n_qubits of the operator");
-    }
     std::uint64_t bit_flip_mask = _bit_flip_mask;
     std::uint64_t phase_flip_mask = _phase_flip_mask;
     if (bit_flip_mask == 0) {
@@ -224,11 +189,6 @@ StdComplex PauliOperator<Prec, Space>::get_expectation_value(
 template <Precision Prec, ExecutionSpace Space>
 std::vector<StdComplex> PauliOperator<Prec, Space>::get_expectation_value(
     const StateVectorBatched<Prec, Space>& states) const {
-    if (states.n_qubits() != _n_qubits) {
-        throw std::runtime_error(
-            "PauliOperator::get_expectation_value: n_qubits of states is not equal to n_qubits "
-            "of the operator");
-    }
     std::uint64_t bit_flip_mask = _bit_flip_mask;
     std::uint64_t phase_flip_mask = _phase_flip_mask;
     if (bit_flip_mask == 0) {
@@ -298,14 +258,6 @@ template <Precision Prec, ExecutionSpace Space>
 StdComplex PauliOperator<Prec, Space>::get_transition_amplitude(
     const StateVector<Prec, Space>& state_vector_bra,
     const StateVector<Prec, Space>& state_vector_ket) const {
-    if (state_vector_bra.n_qubits() != state_vector_ket.n_qubits()) {
-        throw std::runtime_error("state_vector_bra must have same n_qubits to state_vector_ket.");
-    }
-    if (state_vector_bra.n_qubits() != _n_qubits) {
-        throw std::runtime_error(
-            "PauliOperator::get_transition_amplitude: n_qubits of state_vector is too small to "
-            "apply the operator");
-    }
     std::uint64_t bit_flip_mask = _bit_flip_mask;
     std::uint64_t phase_flip_mask = _phase_flip_mask;
     if (bit_flip_mask == 0) {
@@ -355,11 +307,6 @@ std::vector<StdComplex> PauliOperator<Prec, Space>::get_transition_amplitude(
     }
     if (states_bra.batch_size() != states_ket.batch_size()) {
         throw std::runtime_error("state_vector_bra must have same batch_size to state_vector_ket.");
-    }
-    if (states_bra.n_qubits() != _n_qubits) {
-        throw std::runtime_error(
-            "PauliOperator::get_transition_amplitude: n_qubits of state_vector is too small to "
-            "apply the operator");
     }
     std::uint64_t bit_flip_mask = _bit_flip_mask;
     std::uint64_t phase_flip_mask = _phase_flip_mask;
@@ -457,12 +404,12 @@ PauliOperator<Prec, Space>::get_matrix_triplets_ignoring_coef() const {
 
 template <Precision Prec, ExecutionSpace Space>
 std::vector<typename PauliOperator<Prec, Space>::Triplet>
-PauliOperator<Prec, Space>::get_full_matrix_triplets_ignoring_coef() const {
+PauliOperator<Prec, Space>::get_full_matrix_triplets_ignoring_coef(std::uint64_t n_qubits) const {
     std::uint64_t rot90_count = std::popcount(_bit_flip_mask & _phase_flip_mask);
     StdComplex rot =
         std::vector<StdComplex>{1., StdComplex(0, -1), -1., StdComplex(0, 1)}[rot90_count % 4];
     std::vector<Triplet> ret;
-    std::uint64_t matrix_dim = 1ULL << _n_qubits;
+    std::uint64_t matrix_dim = 1ULL << n_qubits;
     ret.reserve(matrix_dim * 2);
     for (std::uint64_t index = 0; index < matrix_dim; index++) {
         const StdComplex sign = 1 - 2 * (Kokkos::popcount(index & _phase_flip_mask) % 2);
@@ -485,9 +432,9 @@ ComplexMatrix PauliOperator<Prec, Space>::get_matrix() const {
 }
 
 template <Precision Prec, ExecutionSpace Space>
-ComplexMatrix PauliOperator<Prec, Space>::get_full_matrix() const {
-    auto triplets = get_full_matrix_triplets_ignoring_coef();
-    std::uint64_t dim = 1ULL << _n_qubits;
+ComplexMatrix PauliOperator<Prec, Space>::get_full_matrix(std::uint64_t n_qubits) const {
+    auto triplets = get_full_matrix_triplets_ignoring_coef(n_qubits);
+    std::uint64_t dim = 1ULL << n_qubits;
     ComplexMatrix mat(dim, dim);
     mat.setZero();
     for (std::size_t i = 0; i < triplets.size(); i++) {
@@ -509,9 +456,10 @@ ComplexMatrix PauliOperator<Prec, Space>::get_matrix_ignoring_coef() const {
 }
 
 template <Precision Prec, ExecutionSpace Space>
-ComplexMatrix PauliOperator<Prec, Space>::get_full_matrix_ignoring_coef() const {
-    auto triplets = get_full_matrix_triplets_ignoring_coef();
-    std::uint64_t dim = 1ULL << _n_qubits;
+ComplexMatrix PauliOperator<Prec, Space>::get_full_matrix_ignoring_coef(
+    std::uint64_t n_qubits) const {
+    auto triplets = get_full_matrix_triplets_ignoring_coef(n_qubits);
+    std::uint64_t dim = 1ULL << n_qubits;
     ComplexMatrix mat(dim, dim);
     mat.setZero();
     for (std::size_t i = 0; i < triplets.size(); i++) {
@@ -538,8 +486,7 @@ PauliOperator<Prec, Space> PauliOperator<Prec, Space>::operator*(
     extra_90rot_cnt -= std::popcount(z_left & y_right);  // ZY = -iX
     extra_90rot_cnt %= 4;
     if (extra_90rot_cnt < 0) extra_90rot_cnt += 4;
-    return PauliOperator(_n_qubits,
-                         _bit_flip_mask ^ target._bit_flip_mask,
+    return PauliOperator(_bit_flip_mask ^ target._bit_flip_mask,
                          _phase_flip_mask ^ target._phase_flip_mask,
                          _coef * target._coef * internal::PHASE_90ROT<Prec>()[extra_90rot_cnt]);
 }

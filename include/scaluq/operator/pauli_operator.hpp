@@ -18,35 +18,29 @@ class PauliOperator {
     friend class Operator<Prec, Space>;
     using ComplexType = internal::Complex<Prec>;
     using FloatType = internal::Float<Prec>;
-    std::uint64_t _n_qubits;
     ComplexType _coef;
     std::uint64_t _bit_flip_mask = 0, _phase_flip_mask = 0;
 
 private:
     using Triplet = Eigen::Triplet<StdComplex>;
     [[nodiscard]] std::vector<Triplet> get_matrix_triplets_ignoring_coef() const;
-    [[nodiscard]] std::vector<Triplet> get_full_matrix_triplets_ignoring_coef() const;
+    [[nodiscard]] std::vector<Triplet> get_full_matrix_triplets_ignoring_coef(
+        std::uint64_t n_qubits) const;
 
 public:
     enum PauliID : std::uint64_t { I, X, Y, Z };
 
-    PauliOperator() = default;  // for enable operator= from json
-    explicit PauliOperator(std::uint64_t n_qubits, StdComplex coef = 1.)
-        : _n_qubits(n_qubits), _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {}
-    PauliOperator(std::uint64_t n_qubits, std::string_view pauli_string, StdComplex coef = 1.);
-    PauliOperator(std::uint64_t n_qubits,
-                  const std::vector<std::uint64_t>& target_qubit_list,
+    explicit PauliOperator(StdComplex coef = 1.)
+        : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {}
+    PauliOperator(std::string_view pauli_string, StdComplex coef = 1.);
+    PauliOperator(const std::vector<std::uint64_t>& target_qubit_list,
                   const std::vector<std::uint64_t>& pauli_id_list,
                   StdComplex coef = 1.);
     PauliOperator(const std::vector<std::uint64_t>& pauli_id_par_qubit, StdComplex coef = 1.);
-    PauliOperator(std::uint64_t n_qubits,
-                  std::uint64_t bit_flip_mask,
-                  std::uint64_t phase_flip_mask,
-                  StdComplex coef = 1.);
+    PauliOperator(std::uint64_t bit_flip_mask, std::uint64_t phase_flip_mask, StdComplex coef = 1.);
 
     void set_coef(StdComplex c) { _coef = c; }
     [[nodiscard]] StdComplex coef() const { return _coef; }
-    [[nodiscard]] std::uint64_t n_qubits() const { return _n_qubits; }
     [[nodiscard]] const std::vector<std::uint64_t> target_qubit_list() const;
     [[nodiscard]] const std::vector<std::uint64_t> pauli_id_list() const;
     [[nodiscard]] std::tuple<std::uint64_t, std::uint64_t> get_XZ_mask_representation() const {
@@ -74,30 +68,26 @@ public:
 
     [[nodiscard]] ComplexMatrix get_matrix() const;
     [[nodiscard]] ComplexMatrix get_matrix_ignoring_coef() const;
-    [[nodiscard]] ComplexMatrix get_full_matrix() const;
-    [[nodiscard]] ComplexMatrix get_full_matrix_ignoring_coef() const;
+    [[nodiscard]] ComplexMatrix get_full_matrix(std::uint64_t n_qubits) const;
+    [[nodiscard]] ComplexMatrix get_full_matrix_ignoring_coef(std::uint64_t n_qubits) const;
 
     [[nodiscard]] PauliOperator operator*(const PauliOperator& target) const;
     [[nodiscard]] inline PauliOperator operator*(StdComplex target) const {
-        return PauliOperator(_n_qubits, _bit_flip_mask, _phase_flip_mask, _coef * target);
+        return PauliOperator(_bit_flip_mask, _phase_flip_mask, _coef * target);
     }
 
     friend std::ostream& operator<<(std::ostream& os, const PauliOperator& pauli) {
-        os << "n_qubits: " << pauli.n_qubits() << "\n";
         os << "coef:" << pauli.coef() << "\n";
         os << "pauli_string: \"" << pauli.get_pauli_string() << "\"\n";
         return os;
     }
 
     friend void to_json(Json& j, const PauliOperator& pauli) {
-        j = Json{{"n_qubits", pauli.n_qubits()},
-                 {"pauli_string", pauli.get_pauli_string()},
-                 {"coef", pauli.coef()}};
+        j = Json{{"pauli_string", pauli.get_pauli_string()}, {"coef", pauli.coef()}};
     }
     friend void from_json(const Json& j, PauliOperator& pauli) {
-        pauli = PauliOperator(j.at("n_qubits").get<std::uint64_t>(),
-                              j.at("pauli_string").get<std::string>(),
-                              j.at("coef").get<StdComplex>());
+        pauli =
+            PauliOperator(j.at("pauli_string").get<std::string>(), j.at("coef").get<StdComplex>());
     }
 };
 

@@ -153,18 +153,16 @@ std::pair<Gate<internal::Prec, internal::Space>, double> merge_gate(
     }
     if ((pauli_id1 || gate1.gate_type() == GateType::Pauli) &&
         (pauli_id2 || gate2.gate_type() == GateType::Pauli)) {
-        auto pauli1 = gate_type1 == GateType::Pauli
-                          ? PauliGate<internal::Prec, internal::Space>(gate1)->pauli()
-                          : PauliOperator<internal::Prec, internal::Space>(
-                                4,
-                                std::vector{gate1->target_qubit_list()[0]},
-                                std::vector{pauli_id1.value()});
-        auto pauli2 = gate_type2 == GateType::Pauli
-                          ? PauliGate<internal::Prec, internal::Space>(gate2)->pauli()
-                          : PauliOperator<internal::Prec, internal::Space>(
-                                4,
-                                std::vector{gate2->target_qubit_list()[0]},
-                                std::vector{pauli_id2.value()});
+        auto pauli1 =
+            gate_type1 == GateType::Pauli
+                ? PauliGate<internal::Prec, internal::Space>(gate1)->pauli()
+                : PauliOperator<internal::Prec, internal::Space>(
+                      std::vector{gate1->target_qubit_list()[0]}, std::vector{pauli_id1.value()});
+        auto pauli2 =
+            gate_type2 == GateType::Pauli
+                ? PauliGate<internal::Prec, internal::Space>(gate2)->pauli()
+                : PauliOperator<internal::Prec, internal::Space>(
+                      std::vector{gate2->target_qubit_list()[0]}, std::vector{pauli_id2.value()});
         return {gate::Pauli<internal::Prec, internal::Space>(
                     pauli2 * pauli1, control_qubit_list, control_value_list),
                 0.};

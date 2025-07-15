@@ -161,25 +161,24 @@ void merge_gate_test() {
     dense_matrix(gate::DenseMatrix<Prec, Space>);
     sparse_matrix(gate::SparseMatrix<Prec, Space>);
     gates.push_back(
-        gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>(n, "X 0 Y 2", random.uniform())));
+        gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>("X 0 Y 2", random.uniform())));
+    gates.push_back(gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>("Z 0", random.uniform())));
     gates.push_back(
-        gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>(n, "Z 0", random.uniform())));
+        gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>("Z 3", random.uniform()), {1}));
     gates.push_back(
-        gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>(n, "Z 3", random.uniform()), {1}));
+        gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>("Z 1", random.uniform()), {0, 3}));
     gates.push_back(
-        gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>(n, "Z 1", random.uniform()), {0, 3}));
-    gates.push_back(
-        gate::PauliRotation<Prec, Space>(PauliOperator<Prec, Space>(n, "X 0 Y 2", random.uniform()),
+        gate::PauliRotation<Prec, Space>(PauliOperator<Prec, Space>("X 0 Y 2", random.uniform()),
                                          random.uniform() * std::numbers::pi * 2));
     gates.push_back(
-        gate::PauliRotation<Prec, Space>(PauliOperator<Prec, Space>(n, "Z 0", random.uniform()),
+        gate::PauliRotation<Prec, Space>(PauliOperator<Prec, Space>("Z 0", random.uniform()),
                                          random.uniform() * std::numbers::pi * 2));
     gates.push_back(
-        gate::PauliRotation<Prec, Space>(PauliOperator<Prec, Space>(n, "Z 3", random.uniform()),
+        gate::PauliRotation<Prec, Space>(PauliOperator<Prec, Space>("Z 3", random.uniform()),
                                          random.uniform() * std::numbers::pi * 2,
                                          {1}));
     gates.push_back(
-        gate::PauliRotation<Prec, Space>(PauliOperator<Prec, Space>(n, "Z 1", random.uniform()),
+        gate::PauliRotation<Prec, Space>(PauliOperator<Prec, Space>("Z 1", random.uniform()),
                                          random.uniform() * std::numbers::pi * 2,
                                          {0, 3}));
     for (auto&& g1 : gates) {

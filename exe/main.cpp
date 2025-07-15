@@ -217,9 +217,9 @@ void merge_gate_test() {
     // double_target(gate::Swap<Prec, Space>);
     // dense_matrix(gate::DenseMatrix<Prec, Space>);
     // sparse_matrix(gate::SparseMatrix<Prec, Space>);
-    gates.push_back(gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>(n, "X 0", 1)));
-    gates.push_back(gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>(n, "Z 0", 1)));
-    gates.push_back(gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>(n, "Z 3", 1), {1}));
+    gates.push_back(gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>("X 0", 1)));
+    gates.push_back(gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>("Z 0", 1)));
+    gates.push_back(gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>("Z 3", 1), {1}));
     // gates.push_back(gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>(n, "Z 1", 1), {0, 3}));
     // gates.push_back(
     //     gate::PauliRotation<Prec, Space>(PauliOperator<Prec, Space>(n, "X 0 Y 2",

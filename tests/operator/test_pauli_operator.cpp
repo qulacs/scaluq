@@ -13,8 +13,8 @@ TYPED_TEST_SUITE(PauliOperatorTest, TestTypes, NameGenerator);
 TYPED_TEST(PauliOperatorTest, ContainsExtraWhitespace) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
-    PauliOperator<Prec, Space> expected = PauliOperator<Prec, Space>(1, "X 0", 1.0);
-    PauliOperator<Prec, Space> pauli_whitespace = PauliOperator<Prec, Space>(1, "X 0 ", 1.0);
+    PauliOperator<Prec, Space> expected = PauliOperator<Prec, Space>("X 0", 1.0);
+    PauliOperator<Prec, Space> pauli_whitespace = PauliOperator<Prec, Space>("X 0 ", 1.0);
     EXPECT_EQ(1, pauli_whitespace.target_qubit_list().size());
     EXPECT_EQ(1, pauli_whitespace.pauli_id_list().size());
     EXPECT_EQ(expected.get_pauli_string(), pauli_whitespace.get_pauli_string());
@@ -23,19 +23,10 @@ TYPED_TEST(PauliOperatorTest, ContainsExtraWhitespace) {
 TYPED_TEST(PauliOperatorTest, EmptyStringConstructsIdentity) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
-    const auto identity = PauliOperator<Prec, Space>(1, "", 1.0);
+    const auto identity = PauliOperator<Prec, Space>("", 1.0);
     ASSERT_EQ(0, identity.target_qubit_list().size());
     ASSERT_EQ(0, identity.pauli_id_list().size());
     ASSERT_EQ("", identity.get_pauli_string());
-}
-
-TYPED_TEST(PauliOperatorTest, PauliQubitOverflow) {
-    constexpr Precision Prec = TestFixture::Prec;
-    constexpr ExecutionSpace Space = TestFixture::Space;
-    int n = 2;
-    double coef = 2.0;
-    std::string Pauli_string = "X 0 X 1 X 3";
-    EXPECT_THROW((PauliOperator<Prec, Space>(n, Pauli_string, coef)), std::runtime_error);
 }
 
 TYPED_TEST(PauliOperatorTest, BrokenPauliStringA) {
@@ -43,7 +34,7 @@ TYPED_TEST(PauliOperatorTest, BrokenPauliStringA) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "X 0 X Z 1 Y 2";
-    EXPECT_THROW((PauliOperator<Prec, Space>(10, Pauli_string, coef)), std::runtime_error);
+    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
 }
 
 TYPED_TEST(PauliOperatorTest, BrokenPauliStringB) {
@@ -51,7 +42,7 @@ TYPED_TEST(PauliOperatorTest, BrokenPauliStringB) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "X {i}";
-    EXPECT_THROW((PauliOperator<Prec, Space>(10, Pauli_string, coef)), std::runtime_error);
+    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
 }
 
 TYPED_TEST(PauliOperatorTest, BrokenPauliStringC) {
@@ -59,7 +50,7 @@ TYPED_TEST(PauliOperatorTest, BrokenPauliStringC) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "X 4x";
-    EXPECT_THROW((PauliOperator<Prec, Space>(10, Pauli_string, coef)), std::runtime_error);
+    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
 }
 
 TYPED_TEST(PauliOperatorTest, BrokenPauliStringD) {
@@ -67,7 +58,7 @@ TYPED_TEST(PauliOperatorTest, BrokenPauliStringD) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "4 X";
-    EXPECT_THROW((PauliOperator<Prec, Space>(10, Pauli_string, coef)), std::runtime_error);
+    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
 }
 
 TYPED_TEST(PauliOperatorTest, BrokenPauliStringE) {
@@ -75,7 +66,7 @@ TYPED_TEST(PauliOperatorTest, BrokenPauliStringE) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "X 0 Y ";
-    EXPECT_THROW((PauliOperator<Prec, Space>(10, Pauli_string, coef)), std::runtime_error);
+    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
 }
 
 TYPED_TEST(PauliOperatorTest, SpacedPauliString) {
@@ -83,7 +74,7 @@ TYPED_TEST(PauliOperatorTest, SpacedPauliString) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "X 0 Y 1 ";
-    PauliOperator<Prec, Space> pauli = PauliOperator<Prec, Space>(2, Pauli_string, coef);
+    PauliOperator<Prec, Space> pauli = PauliOperator<Prec, Space>(Pauli_string, coef);
     size_t PauliSize = pauli.target_qubit_list().size();
     ASSERT_EQ(PauliSize, 2);
 }
@@ -136,63 +127,62 @@ std::ostream& operator<<(std::ostream& stream, const PauliTestParam<Prec, Space>
         PauliOperatorMultiplyTest_##PREC##SPACE,                                                   \
         testing::Values(                                                                           \
             PauliTestParam("XX",                                                                   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "X 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "X 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "I 0", 4.0)),  \
-            PauliTestParam("XY",                                                                   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "X 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "Y 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(                  \
-                               1, "Z 0", StdComplex(0, 4))),                                       \
-            PauliTestParam("XZ",                                                                   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "X 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "Z 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(                  \
-                               1, "Y 0", StdComplex(0, -4))),                                      \
-            PauliTestParam("YX",                                                                   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "Y 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "X 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(                  \
-                               1, "Z 0", StdComplex(0, -4))),                                      \
+                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("X 0", 2.0),      \
+                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("X 0", 2.0),      \
+                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("I 0", 4.0)),     \
+            PauliTestParam(                                                                        \
+                "XY",                                                                              \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("X 0", 2.0),                 \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Y 0", 2.0),                 \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Z 0", StdComplex(0, 4))),   \
+            PauliTestParam(                                                                        \
+                "XZ",                                                                              \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("X 0", 2.0),                 \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Z 0", 2.0),                 \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Y 0", StdComplex(0, -4))),  \
+            PauliTestParam(                                                                        \
+                "YX",                                                                              \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Y 0", 2.0),                 \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("X 0", 2.0),                 \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Z 0", StdComplex(0, -4))),  \
             PauliTestParam("YY",                                                                   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "Y 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "Y 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "I 0", 4.0)),  \
-            PauliTestParam("YZ",                                                                   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "Y 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "Z 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(                  \
-                               1, "X 0", StdComplex(0, 4))),                                       \
-            PauliTestParam("ZX",                                                                   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "Z 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "X 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(                  \
-                               1, "Y 0", StdComplex(0, 4))),                                       \
-            PauliTestParam("ZY",                                                                   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "Z 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "Y 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(                  \
-                               1, "X 0", StdComplex(0, -4))),                                      \
+                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Y 0", 2.0),      \
+                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Y 0", 2.0),      \
+                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("I 0", 4.0)),     \
+            PauliTestParam(                                                                        \
+                "YZ",                                                                              \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Y 0", 2.0),                 \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Z 0", 2.0),                 \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("X 0", StdComplex(0, 4))),   \
+            PauliTestParam(                                                                        \
+                "ZX",                                                                              \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Z 0", 2.0),                 \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("X 0", 2.0),                 \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Y 0", StdComplex(0, 4))),   \
+            PauliTestParam(                                                                        \
+                "ZY",                                                                              \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Z 0", 2.0),                 \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Y 0", 2.0),                 \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("X 0", StdComplex(0, -4))),  \
             PauliTestParam("ZZ",                                                                   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "Z 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "Z 0", 2.0),   \
-                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(1, "I 0", 4.0))), \
+                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Z 0", 2.0),      \
+                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Z 0", 2.0),      \
+                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("I 0", 4.0))),    \
         testing::PrintToStringParamName());                                                        \
                                                                                                    \
     INSTANTIATE_TEST_CASE_P(                                                                       \
         MultiPauli,                                                                                \
         PauliOperatorMultiplyTest_##PREC##SPACE,                                                   \
         testing::Values(                                                                           \
-            PauliTestParam(                                                                        \
-                "X_Y",                                                                             \
-                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(2, "X 0", 2.0),              \
-                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(2, "Y 1", 2.0),              \
-                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(2, "X 0 Y 1", 4.0)),         \
+            PauliTestParam("X_Y",                                                                  \
+                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("X 0", 2.0),      \
+                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Y 1", 2.0),      \
+                           PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("X 0 Y 1", 4.0)), \
             PauliTestParam(                                                                        \
                 "XY_YX",                                                                           \
-                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(2, "X 0 Y 1", 2.0),          \
-                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(2, "Y 0 X 1", 2.0),          \
-                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(2, "Z 0 Z 1", 4.0))),        \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("X 0 Y 1", 2.0),             \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Y 0 X 1", 2.0),             \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>("Z 0 Z 1", 4.0))),           \
         testing::PrintToStringParamName());                                                        \
                                                                                                    \
     INSTANTIATE_TEST_CASE_P(                                                                       \
@@ -217,14 +207,12 @@ std::ostream& operator<<(std::ostream& stream, const PauliTestParam<Prec, Space>
             }                                                                                      \
                                                                                                    \
             PauliOperator<Precision::PREC, ExecutionSpace::SPACE> expected =                       \
-                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(                             \
-                    MAX_TERM, pauli_string_x, coef * coef);                                        \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(pauli_string_x,              \
+                                                                      coef * coef);                \
             PauliOperator<Precision::PREC, ExecutionSpace::SPACE> pauli_y =                        \
-                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(                             \
-                    MAX_TERM, pauli_string_y, coef);                                               \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(pauli_string_y, coef);       \
             PauliOperator<Precision::PREC, ExecutionSpace::SPACE> pauli_z =                        \
-                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(                             \
-                    MAX_TERM, pauli_string_z, coef);                                               \
+                PauliOperator<Precision::PREC, ExecutionSpace::SPACE>(pauli_string_z, coef);       \
                                                                                                    \
             return testing::Values(PauliTestParam("Z_Y", pauli_z, pauli_y, expected));             \
         }()),                                                                                      \
@@ -267,7 +255,7 @@ TYPED_TEST(PauliOperatorTest, ApplyToStateTest) {
         return tmp;
     }());
 
-    PauliOperator<Prec, Space> op(n_qubits, 0b001, 0b010, StdComplex(2));
+    PauliOperator<Prec, Space> op(0b001, 0b010, StdComplex(2));
     op.apply_to_state(state_vector);
     std::vector<StdComplex> expected = {2, 0, -6, -4, 10, 8, -14, -12};
     ASSERT_EQ(state_vector.get_amplitudes(), expected);

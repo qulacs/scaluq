@@ -44,7 +44,7 @@ std::pair<Operator<Prec, Space>, Eigen::MatrixXcd> generate_random_observable_wi
                 str += " " + std::to_string(ind);
             }
         }
-        rand_observable.add_operator(PauliOperator<Prec, Space>(n, str.c_str(), coef));
+        rand_observable.add_operator(PauliOperator<Prec, Space>(str.c_str(), coef));
     }
     return {std::move(rand_observable), std::move(test_rand_observable)};
 }
@@ -230,8 +230,8 @@ TYPED_TEST(OperatorTest, ApplyToStateTest) {
     }());
 
     Operator<Prec, Space> op(n_qubits);
-    op.add_operator({n_qubits, 0b001, 0b010, StdComplex(2)});
-    op.add_operator({n_qubits, "X 2 Y 1", 1});
+    op.add_operator({0b001, 0b010, StdComplex(2)});
+    op.add_operator({"X 2 Y 1", 1});
     op.apply_to_state(state_vector);
 
     std::vector<StdComplex> expected = {
@@ -252,12 +252,12 @@ TYPED_TEST(OperatorTest, Optimize) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     std::uint64_t n = 2;
     Operator<Prec, Space> op(n);
-    op.add_operator(PauliOperator<Prec, Space>(n, "X 0 Y 1", 1.));
-    op.add_operator(PauliOperator<Prec, Space>(n, "Y 0 Z 1", 2.));
-    op.add_operator(PauliOperator<Prec, Space>(n, "Z 1", 3.));
-    op.add_operator(PauliOperator<Prec, Space>(n, "X 0 Y 1", 4.));
-    op.add_operator(PauliOperator<Prec, Space>(n, "Z 1", 4.));
-    op.add_operator(PauliOperator<Prec, Space>(n, "X 0 Y 1", 5.));
+    op.add_operator(PauliOperator<Prec, Space>("X 0 Y 1", 1.));
+    op.add_operator(PauliOperator<Prec, Space>("Y 0 Z 1", 2.));
+    op.add_operator(PauliOperator<Prec, Space>("Z 1", 3.));
+    op.add_operator(PauliOperator<Prec, Space>("X 0 Y 1", 4.));
+    op.add_operator(PauliOperator<Prec, Space>("Z 1", 4.));
+    op.add_operator(PauliOperator<Prec, Space>("X 0 Y 1", 5.));
     op.optimize();
     std::vector<std::pair<std::string, StdComplex>> expected = {
         {"X 0 Y 1", 10.}, {"Y 0 Z 1", 2.}, {"Z 1", 7.}};
