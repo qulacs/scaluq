@@ -104,7 +104,7 @@ ComplexMatrix Operator<internal::Prec, internal::Space>::get_matrix() const {
     ComplexMatrix mat(dim, dim);
     mat.setZero();
     for (const auto& term : _terms) {
-        auto basic_triplets = term.get_matrix_triplets_ignoring_coef();
+        auto basic_triplets = term.get_full_matrix_triplets_ignoring_coef(_n_qubits);
         for (const auto& triplet : basic_triplets) {
             mat(triplet.row(), triplet.col()) += triplet.value() * term.coef();
         }
