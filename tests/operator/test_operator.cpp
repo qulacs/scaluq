@@ -250,7 +250,8 @@ TYPED_TEST(OperatorTest, ApplyToStateTest) {
 TYPED_TEST(OperatorTest, Optimize) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
-    Operator<Prec, Space> op(2);
+    std::uint64_t n = 2;
+    Operator<Prec, Space> op(n);
     op.add_operator(PauliOperator<Prec, Space>("X 0 Y 1", 1.));
     op.add_operator(PauliOperator<Prec, Space>("Y 0 Z 1", 2.));
     op.add_operator(PauliOperator<Prec, Space>("Z 1", 3.));

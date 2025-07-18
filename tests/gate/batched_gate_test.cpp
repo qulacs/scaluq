@@ -901,7 +901,7 @@ void test_batched_standard_gate_control(Factory factory, std::uint64_t n) {
 
 template <Precision Prec, ExecutionSpace Space, bool rotation>
 void test_batched_pauli_control(std::uint64_t n) {
-    typename PauliOperator<Prec, Space>::Data data1, data2;
+    PauliOperator<Prec, Space> pauli1, pauli2;
     std::vector<std::uint64_t> controls, control_values;
     std::uint64_t control_mask = 0, control_value_mask = 0;
     std::uint64_t num_control = 0;
@@ -909,8 +909,8 @@ void test_batched_pauli_control(std::uint64_t n) {
     for (std::uint64_t i : std::views::iota(0ULL, n)) {
         std::uint64_t dat = random.int32() % 12;
         if (dat < 4) {
-            data1.add_single_pauli(i, dat);
-            data2.add_single_pauli(i - num_control, dat);
+            pauli1.add_single_pauli(i, dat);
+            pauli2.add_single_pauli(i - num_control, dat);
         } else if (dat < 8) {
             controls.push_back(i);
             control_mask |= 1ULL << i;
@@ -921,16 +921,14 @@ void test_batched_pauli_control(std::uint64_t n) {
         }
     }
     if constexpr (!rotation) {
-        Gate<Prec, Space> g1 =
-            gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>(data1), controls, control_values);
-        Gate<Prec, Space> g2 = gate::Pauli<Prec, Space>(PauliOperator<Prec, Space>(data2), {});
+        Gate<Prec, Space> g1 = gate::Pauli<Prec, Space>(pauli1, controls, control_values);
+        Gate<Prec, Space> g2 = gate::Pauli<Prec, Space>(pauli2, {});
         test_batched_gate(g1, g2, n, control_mask, control_value_mask);
     } else {
         double angle = random.uniform() * std::numbers::pi * 2;
-        Gate<Prec, Space> g1 = gate::PauliRotation<Prec, Space>(
-            PauliOperator<Prec, Space>(data1), angle, controls, control_values);
-        Gate<Prec, Space> g2 =
-            gate::PauliRotation<Prec, Space>(PauliOperator<Prec, Space>(data2), angle, {});
+        Gate<Prec, Space> g1 =
+            gate::PauliRotation<Prec, Space>(pauli1, angle, controls, control_values);
+        Gate<Prec, Space> g2 = gate::PauliRotation<Prec, Space>(pauli2, angle, {});
         test_batched_gate(g1, g2, n, control_mask, control_value_mask);
     }
 }
