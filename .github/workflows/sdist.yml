@@ -6,10 +6,6 @@ on:
       - ".devcontainer/**"
       - ".vscode/**"
       - "*.md"
-    branches:
-      - "main"
-    tags:
-      - "v*"
   workflow_dispatch:
   
 jobs:
@@ -41,3 +37,16 @@ jobs:
         env:
           TWINE_USERNAME: "__token__"
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN_SCALUQ }}
+      - name: Upload sdist data to PyPI if the Git tag is set
+        run: python -m twine upload dist/*.tar.gz
+        if: ${{ contains(github.ref, 'tags/') }}
+        env:
+          TWINE_USERNAME: "__token__"
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN_SCALUQ }}
+
+      - name: Upload sdist data to TestPyPI when workflow_dispatch
+        run: python -m twine upload --repository testpypi dist/*.tar.gz
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          TWINE_USERNAME: "__token__"
+          TWINE_PASSWORD: ${{ secrets.TESTPYPI_TOKEN_SCALUQ }}
