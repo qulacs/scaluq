@@ -15,14 +15,10 @@ scaluq_path = os.path.dirname(importlib.util.find_spec("scaluq").origin)
 
 
 def copy_stub_file(target):
-    # print(f'scaluq path: {scaluq_path}, target: {target}')
     if not os.path.isfile(f"{scaluq_path}/{target}/__init__.pyi"):
         print(f"No stub file found for {target}")
         return
-    os.makedirs(f"{current_dir}/stub/scaluq/{target}", exist_ok=True)
-    # print(f'maybe made stub/scaluq/{target}')
-    # print(f'src: {scaluq_path}/{target}/__init__.pyi')
-    # print(f'dst: {current_dir}/stub/scaluq/{target}/__init__.pyi')
+    os.makedirs(f"{stub_dir}/{target}", exist_ok=True)
     shutil.copyfile(
         f"{scaluq_path}/{target}/__init__.pyi",
         f"{current_dir}/stub/scaluq/{target}/__init__.pyi",
