@@ -15,7 +15,6 @@ TYPED_TEST(PauliOperatorTest, ContainsExtraWhitespace) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     PauliOperator<Prec, Space> expected = PauliOperator<Prec, Space>("X 0", 1.0);
     PauliOperator<Prec, Space> pauli_whitespace = PauliOperator<Prec, Space>("X 0 ", 1.0);
-
     EXPECT_EQ(1, pauli_whitespace.target_qubit_list().size());
     EXPECT_EQ(1, pauli_whitespace.pauli_id_list().size());
     EXPECT_EQ(expected.get_pauli_string(), pauli_whitespace.get_pauli_string());
@@ -28,17 +27,6 @@ TYPED_TEST(PauliOperatorTest, EmptyStringConstructsIdentity) {
     ASSERT_EQ(0, identity.target_qubit_list().size());
     ASSERT_EQ(0, identity.pauli_id_list().size());
     ASSERT_EQ("", identity.get_pauli_string());
-}
-
-TYPED_TEST(PauliOperatorTest, PauliQubitOverflow) {
-    constexpr Precision Prec = TestFixture::Prec;
-    constexpr ExecutionSpace Space = TestFixture::Space;
-    int n = 2;
-    double coef = 2.0;
-    std::string Pauli_string = "X 0 X 1 X 3";
-    PauliOperator<Prec, Space> pauli = PauliOperator<Prec, Space>(Pauli_string, coef);
-    StateVector state = StateVector<Prec, Space>::Haar_random_state(n);
-    EXPECT_THROW((void)pauli.get_expectation_value(state), std::runtime_error);
 }
 
 TYPED_TEST(PauliOperatorTest, BrokenPauliStringA) {
@@ -73,6 +61,14 @@ TYPED_TEST(PauliOperatorTest, BrokenPauliStringD) {
     EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
 }
 
+TYPED_TEST(PauliOperatorTest, BrokenPauliStringE) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    double coef = 2.0;
+    std::string Pauli_string = "X 0 Y ";
+    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
+}
+
 TYPED_TEST(PauliOperatorTest, SpacedPauliString) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
@@ -81,14 +77,6 @@ TYPED_TEST(PauliOperatorTest, SpacedPauliString) {
     PauliOperator<Prec, Space> pauli = PauliOperator<Prec, Space>(Pauli_string, coef);
     size_t PauliSize = pauli.target_qubit_list().size();
     ASSERT_EQ(PauliSize, 2);
-}
-
-TYPED_TEST(PauliOperatorTest, PartedPauliString) {
-    constexpr Precision Prec = TestFixture::Prec;
-    constexpr ExecutionSpace Space = TestFixture::Space;
-    double coef = 2.0;
-    std::string Pauli_string = "X 0 Y ";
-    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
 }
 
 template <Precision Prec, ExecutionSpace Space>

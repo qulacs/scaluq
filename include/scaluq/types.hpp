@@ -60,8 +60,7 @@ class SparseMatrix {
 
 public:
     Kokkos::View<ComplexType*, SpaceType<Space>> _vals;
-    Kokkos::View<std::uint32_t*, SpaceType<Space>> _row_ptr;
-    Kokkos::View<std::uint32_t*, SpaceType<Space>> _col_idx;
+    Kokkos::View<std::uint32_t*, SpaceType<Space>> _col_idx, _row_ptr;
     std::uint64_t _rows, _cols;
 
     SparseMatrix(const SparseComplexMatrix& sp);

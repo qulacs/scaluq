@@ -18,74 +18,39 @@ class PauliOperator {
     friend class Operator<Prec, Space>;
     using ComplexType = internal::Complex<Prec>;
     using FloatType = internal::Float<Prec>;
-
-public:
-    class Data {
-        friend class PauliOperator<Prec, Space>;
-        friend class Operator<Prec, Space>;
-        std::vector<std::uint64_t> _target_qubit_list, _pauli_id_list;
-        ComplexType _coef;
-        std::uint64_t _bit_flip_mask, _phase_flip_mask;
-
-    public:
-        explicit Data(StdComplex coef = 1.) : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {}
-
-        Data(std::string_view pauli_string, StdComplex coef = 1.);
-
-        Data(const std::vector<std::uint64_t>& target_qubit_list,
-             const std::vector<std::uint64_t>& pauli_id_list,
-             StdComplex coef = 1.);
-
-        Data(const std::vector<std::uint64_t>& pauli_id_par_qubit, StdComplex coef = 1.);
-
-        Data(std::uint64_t bit_flip_mask, std::uint64_t phase_flip_mask, StdComplex coef = 1.);
-
-        void add_single_pauli(std::uint64_t target_qubit, std::uint64_t pauli_id);
-
-        StdComplex coef() const { return _coef; }
-        void set_coef(StdComplex c) { _coef = c; }
-        const std::vector<std::uint64_t>& target_qubit_list() const { return _target_qubit_list; }
-        const std::vector<std::uint64_t>& pauli_id_list() const { return _pauli_id_list; }
-        std::tuple<std::uint64_t, std::uint64_t> get_XZ_mask_representation() const {
-            return {_bit_flip_mask, _phase_flip_mask};
-        }
-    };
+    ComplexType _coef;
+    std::uint64_t _bit_flip_mask = 0, _phase_flip_mask = 0;
 
 private:
-    std::shared_ptr<const Data> _ptr;
-
     using Triplet = Eigen::Triplet<StdComplex>;
     [[nodiscard]] std::vector<Triplet> get_matrix_triplets_ignoring_coef() const;
+    [[nodiscard]] std::vector<Triplet> get_full_matrix_triplets_ignoring_coef(
+        std::uint64_t n_qubits) const;
 
 public:
     enum PauliID : std::uint64_t { I, X, Y, Z };
 
-    explicit PauliOperator(StdComplex coef = 1.) : _ptr(std::make_shared<const Data>(coef)) {}
-    explicit PauliOperator(Data data) : _ptr(std::make_shared<const Data>(data)) {}
-    PauliOperator(std::string_view pauli_string, StdComplex coef = 1.)
-        : _ptr(std::make_shared<const Data>(pauli_string, coef)) {}
+    explicit PauliOperator(StdComplex coef = 1.)
+        : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {}
+    PauliOperator(std::string_view pauli_string, StdComplex coef = 1.);
     PauliOperator(const std::vector<std::uint64_t>& target_qubit_list,
                   const std::vector<std::uint64_t>& pauli_id_list,
-                  StdComplex coef = 1.)
-        : _ptr(std::make_shared<const Data>(target_qubit_list, pauli_id_list, coef)) {}
-    PauliOperator(const std::vector<std::uint64_t>& pauli_id_par_qubit, StdComplex coef = 1.)
-        : _ptr(std::make_shared<const Data>(pauli_id_par_qubit, coef)) {}
-    PauliOperator(std::uint64_t bit_flip_mask, std::uint64_t phase_flip_mask, StdComplex coef = 1.)
-        : _ptr(std::make_shared<const Data>(bit_flip_mask, phase_flip_mask, coef)) {}
+                  StdComplex coef = 1.);
+    PauliOperator(const std::vector<std::uint64_t>& pauli_id_par_qubit, StdComplex coef = 1.);
+    PauliOperator(std::uint64_t bit_flip_mask, std::uint64_t phase_flip_mask, StdComplex coef = 1.);
 
-    [[nodiscard]] StdComplex coef() const { return _ptr->coef(); }
-    [[nodiscard]] const std::vector<std::uint64_t>& target_qubit_list() const {
-        return _ptr->target_qubit_list();
-    }
-    [[nodiscard]] const std::vector<std::uint64_t>& pauli_id_list() const {
-        return _ptr->pauli_id_list();
-    }
+    void set_coef(StdComplex c) { _coef = c; }
+    [[nodiscard]] StdComplex coef() const { return _coef; }
+    [[nodiscard]] std::vector<std::uint64_t> target_qubit_list() const;
+    [[nodiscard]] std::vector<std::uint64_t> pauli_id_list() const;
     [[nodiscard]] std::tuple<std::uint64_t, std::uint64_t> get_XZ_mask_representation() const {
-        return _ptr->get_XZ_mask_representation();
+        return {_bit_flip_mask, _phase_flip_mask};
     }
     [[nodiscard]] std::string get_pauli_string() const;
     [[nodiscard]] PauliOperator get_dagger() const;
     [[nodiscard]] std::uint64_t get_qubit_count() const;
+
+    void add_single_pauli(std::uint64_t target_qubit, std::uint64_t pauli_id);
 
     void apply_to_state(StateVector<Prec, Space>& state_vector) const;
 
@@ -103,10 +68,18 @@ public:
 
     [[nodiscard]] ComplexMatrix get_matrix() const;
     [[nodiscard]] ComplexMatrix get_matrix_ignoring_coef() const;
+    [[nodiscard]] ComplexMatrix get_full_matrix(std::uint64_t n_qubits) const;
+    [[nodiscard]] ComplexMatrix get_full_matrix_ignoring_coef(std::uint64_t n_qubits) const;
 
     [[nodiscard]] PauliOperator operator*(const PauliOperator& target) const;
     [[nodiscard]] inline PauliOperator operator*(StdComplex target) const {
-        return PauliOperator(_ptr->_target_qubit_list, _ptr->_pauli_id_list, _ptr->_coef * target);
+        return PauliOperator(_bit_flip_mask, _phase_flip_mask, _coef * target);
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const PauliOperator& pauli) {
+        os << "coef:" << pauli.coef() << "\n";
+        os << "pauli_string: \"" << pauli.get_pauli_string() << "\"\n";
+        return os;
     }
 
     friend void to_json(Json& j, const PauliOperator& pauli) {
@@ -122,54 +95,6 @@ public:
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 void bind_operator_pauli_operator_hpp(nb::module_& m) {
-    nb::class_<typename PauliOperator<Prec, Space>::Data>(
-        m, "PauliOperatorData", "Internal data structure for PauliOperator.")
-        .def(nb::init<StdComplex>(), "coef"_a = 1., "Initialize data with coefficient.")
-        .def(nb::init<std::string_view, StdComplex>(),
-             "pauli_string"_a,
-             "coef"_a = 1.,
-             "Initialize data with pauli string.")
-        .def(nb::init<const std::vector<std::uint64_t>&,
-                      const std::vector<std::uint64_t>&,
-                      StdComplex>(),
-             "target_qubit_list"_a,
-             "pauli_id_list"_a,
-             "coef"_a = 1.,
-             "Initialize data with target qubits and pauli ids.")
-        .def(nb::init<const std::vector<std::uint64_t>&, StdComplex>(),
-             "pauli_id_par_qubit"_a,
-             "coef"_a = 1.,
-             "Initialize data with pauli ids per qubit.")
-        .def(nb::init<std::uint64_t, std::uint64_t, StdComplex>(),
-             "bit_flip_mask"_a,
-             "phase_flip_mask"_a,
-             "coef"_a = 1.,
-             "Initialize data with bit flip and phase flip masks.")
-        .def(nb::init<const typename PauliOperator<Prec, Space>::Data&>(),
-             "data"_a,
-             "Initialize pauli operator from Data object.")
-        .def("add_single_pauli",
-             &PauliOperator<Prec, Space>::Data::add_single_pauli,
-             "target_qubit"_a,
-             "pauli_id"_a,
-             "Add a single pauli operation to the data.")
-        .def("coef",
-             &PauliOperator<Prec, Space>::Data::coef,
-             "Get the coefficient of the Pauli operator.")
-        .def("set_coef",
-             &PauliOperator<Prec, Space>::Data::set_coef,
-             "c"_a,
-             "Set the coefficient of the Pauli operator.")
-        .def("target_qubit_list",
-             &PauliOperator<Prec, Space>::Data::target_qubit_list,
-             "Get the list of target qubits.")
-        .def("pauli_id_list",
-             &PauliOperator<Prec, Space>::Data::pauli_id_list,
-             "Get the list of Pauli IDs.")
-        .def("get_XZ_mask_representation",
-             &PauliOperator<Prec, Space>::Data::get_XZ_mask_representation,
-             "Get the X and Z mask representation as a tuple of vectors.");
-
     nb::class_<PauliOperator<Prec, Space>>(
         m,
         "PauliOperator",
@@ -250,10 +175,6 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "Get single-pauli property as string representation. See description of "
              "`__init__(pauli_string: str, coef: float=1.)` for details.")
         .def("get_dagger", &PauliOperator<Prec, Space>::get_dagger, "Get adjoint operator.")
-        .def("get_qubit_count",
-             &PauliOperator<Prec, Space>::get_qubit_count,
-             "Get num of qubits to applied with, when count from 0-th qubit. Subset of $[0, "
-             "\\mathrm{qubit_count})$ is the target.")
         .def("apply_to_state",
              &PauliOperator<Prec, Space>::apply_to_state,
              "state"_a,
@@ -297,9 +218,20 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
         .def("get_matrix",
              &PauliOperator<Prec, Space>::get_matrix,
              "Get matrix representation of the PauliOperator. Tensor product is applied from "
-             "target_qubit_list[-1] to target_qubit_list[0].")
+             "target_qubit_list[n-1] to target_qubit_list[0]. Only the X, Y, and Z components "
+             "are taken into account in the result.")
+        .def("get_full_matrix",
+             &PauliOperator<Prec, Space>::get_full_matrix,
+             "n_qubits"_a,
+             "Get matrix representation of the PauliOperator. Tensor product is applied from "
+             "target_qubit_list[n-1] to target_qubit_list[0].")
         .def("get_matrix_ignoring_coef",
              &PauliOperator<Prec, Space>::get_matrix_ignoring_coef,
+             "Get matrix representation of the PauliOperator, but with forcing `coef=1.`Only the "
+             "X, Y, and Z components are taken into account in the result.")
+        .def("get_full_matrix_ignoring_coef",
+             &PauliOperator<Prec, Space>::get_full_matrix_ignoring_coef,
+             "n_qubits"_a,
              "Get matrix representation of the PauliOperator, but with forcing `coef=1.`")
         .def(nb::self * nb::self)
         .def(nb::self * StdComplex())
