@@ -41,8 +41,8 @@ public:
 
     void set_coef(StdComplex c) { _coef = c; }
     [[nodiscard]] StdComplex coef() const { return _coef; }
-    [[nodiscard]] const std::vector<std::uint64_t> target_qubit_list() const;
-    [[nodiscard]] const std::vector<std::uint64_t> pauli_id_list() const;
+    [[nodiscard]] std::vector<std::uint64_t> target_qubit_list() const;
+    [[nodiscard]] std::vector<std::uint64_t> pauli_id_list() const;
     [[nodiscard]] std::tuple<std::uint64_t, std::uint64_t> get_XZ_mask_representation() const {
         return {_bit_flip_mask, _phase_flip_mask};
     }
@@ -218,13 +218,13 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
         .def("get_matrix",
              &PauliOperator<Prec, Space>::get_matrix,
              "Get matrix representation of the PauliOperator. Tensor product is applied from "
-             "target_qubit_list[-1] to target_qubit_list[0]. Only the X, Y, and Z components "
+             "target_qubit_list[n-1] to target_qubit_list[0]. Only the X, Y, and Z components "
              "are taken into account in the result.")
         .def("get_full_matrix",
              &PauliOperator<Prec, Space>::get_full_matrix,
              "n_qubits"_a,
              "Get matrix representation of the PauliOperator. Tensor product is applied from "
-             "target_qubit_list[-1] to target_qubit_list[0].")
+             "target_qubit_list[n-1] to target_qubit_list[0].")
         .def("get_matrix_ignoring_coef",
              &PauliOperator<Prec, Space>::get_matrix_ignoring_coef,
              "Get matrix representation of the PauliOperator, but with forcing `coef=1.`Only the "

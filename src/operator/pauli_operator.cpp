@@ -87,11 +87,11 @@ void PauliOperator<Prec, Space>::add_single_pauli(std::uint64_t target_qubit,
 }
 
 template <Precision Prec, ExecutionSpace Space>
-const std::vector<std::uint64_t> PauliOperator<Prec, Space>::target_qubit_list() const {
+std::vector<std::uint64_t> PauliOperator<Prec, Space>::target_qubit_list() const {
     return internal::mask_to_vector(_bit_flip_mask | _phase_flip_mask);
 }
 template <Precision Prec, ExecutionSpace Space>
-const std::vector<std::uint64_t> PauliOperator<Prec, Space>::pauli_id_list() const {
+std::vector<std::uint64_t> PauliOperator<Prec, Space>::pauli_id_list() const {
     std::vector<std::uint64_t> id_list;
     for (std::uint64_t sub_mask = _bit_flip_mask | _phase_flip_mask; sub_mask;
          sub_mask &= (sub_mask - 1)) {
