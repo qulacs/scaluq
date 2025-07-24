@@ -21,16 +21,8 @@ public:
     explicit Operator(std::vector<PauliOperator<Prec, Space>> terms);
 
     [[nodiscard]] Operator copy() const;
-    void load(const std::vector<PauliOperator<Prec, Space>>& terms) {
-        _terms =
-            internal::convert_vector_to_view<PauliOperator<Prec, Space>, Space>(terms, "terms");
-    }
-    static Operator uninitialized_operator(std::uint64_t n_terms) {
-        Operator<Prec, Space> tmp;
-        tmp._terms = Kokkos::View<PauliOperator<Prec, Space>*, ExecutionSpaceType>(
-            Kokkos::ViewAllocateWithoutInitializing("terms"), n_terms);
-        return tmp;
-    }
+    void load(const std::vector<PauliOperator<Prec, Space>>& terms);
+    static Operator uninitialized_operator(std::uint64_t n_terms);
 
     [[nodiscard]] inline bool is_hermitian() const { return _is_hermitian; }
     [[nodiscard]] inline std::vector<PauliOperator<Prec, Space>> get_terms() const {

@@ -97,7 +97,6 @@ TYPED_TEST(OperatorTest, CheckBatchedExpectationValue) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     std::uint64_t n = 4;
-    std::uint64_t dim = 1ULL << n;
     Random random;
 
     StateVectorBatched<Prec, Space> states(10, n);
@@ -145,7 +144,6 @@ TYPED_TEST(OperatorTest, CheckBatchedTransitionAmplitude) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     std::uint64_t n = 4;
-    std::uint64_t dim = 1ULL << n;
     Random random;
 
     StateVectorBatched<Prec, Space> states_bra(10, n);
@@ -249,7 +247,6 @@ TYPED_TEST(OperatorTest, ApplyToStateTest) {
 TYPED_TEST(OperatorTest, Optimize) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
-    std::uint64_t n = 2;
     std::vector<PauliOperator<Prec, Space>> terms = {{"X 0 Y 1", 1.},
                                                      {"Y 0 Z 1", 2.},
                                                      {"Z 1", 3.},

@@ -42,6 +42,21 @@ std::string Operator<internal::Prec, internal::Space>::to_string() const {
 }
 
 template <>
+void Operator<internal::Prec, internal::Space>::load(
+    const std::vector<PauliOperator<internal::Prec, internal::Space>>& terms) {
+    *this = Operator<internal::Prec, internal::Space>(terms);
+}
+
+template <>
+Operator<internal::Prec, internal::Space>
+Operator<internal::Prec, internal::Space>::uninitialized_operator(std::uint64_t n_terms) {
+    Operator<internal::Prec, internal::Space> tmp;
+    tmp._terms = Kokkos::View<PauliOperator<internal::Prec, internal::Space>*, ExecutionSpaceType>(
+        Kokkos::ViewAllocateWithoutInitializing("terms"), n_terms);
+    return tmp;
+}
+
+template <>
 void Operator<internal::Prec, internal::Space>::optimize() {
     // TODO: use Kokkos::UnorderedMap
     std::map<std::tuple<std::uint64_t, std::uint64_t>, ComplexType> pauli_and_coef;
