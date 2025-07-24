@@ -59,12 +59,6 @@ PauliOperator<Prec, Space>::PauliOperator(const std::vector<std::uint64_t>& paul
 }
 
 template <Precision Prec, ExecutionSpace Space>
-PauliOperator<Prec, Space>::PauliOperator(std::uint64_t bit_flip_mask,
-                                          std::uint64_t phase_flip_mask,
-                                          StdComplex coef)
-    : _coef(coef), _bit_flip_mask(bit_flip_mask), _phase_flip_mask(phase_flip_mask) {}
-
-template <Precision Prec, ExecutionSpace Space>
 void PauliOperator<Prec, Space>::add_single_pauli(std::uint64_t target_qubit,
                                                   std::uint64_t pauli_id) {
     if (target_qubit >= sizeof(std::uint64_t) * 8) {
@@ -469,26 +463,10 @@ ComplexMatrix PauliOperator<Prec, Space>::get_full_matrix_ignoring_coef(
 }
 
 template <Precision Prec, ExecutionSpace Space>
-PauliOperator<Prec, Space> PauliOperator<Prec, Space>::operator*(
-    const PauliOperator& target) const {
-    int extra_90rot_cnt = 0;
-    auto x_left = _bit_flip_mask & ~_phase_flip_mask;
-    auto y_left = _bit_flip_mask & _phase_flip_mask;
-    auto z_left = _phase_flip_mask & ~_bit_flip_mask;
-    auto x_right = target._bit_flip_mask & ~target._phase_flip_mask;
-    auto y_right = target._bit_flip_mask & target._phase_flip_mask;
-    auto z_right = target._phase_flip_mask & ~target._bit_flip_mask;
-    extra_90rot_cnt += std::popcount(x_left & y_right);  // XY = iZ
-    extra_90rot_cnt += std::popcount(y_left & z_right);  // YZ = iX
-    extra_90rot_cnt += std::popcount(z_left & x_right);  // ZX = iY
-    extra_90rot_cnt -= std::popcount(x_left & z_right);  // XZ = -iY
-    extra_90rot_cnt -= std::popcount(y_left & x_right);  // YX = -iZ
-    extra_90rot_cnt -= std::popcount(z_left & y_right);  // ZY = -iX
-    extra_90rot_cnt %= 4;
-    if (extra_90rot_cnt < 0) extra_90rot_cnt += 4;
-    return PauliOperator(_bit_flip_mask ^ target._bit_flip_mask,
-                         _phase_flip_mask ^ target._phase_flip_mask,
-                         _coef * target._coef * internal::PHASE_90ROT<Prec>()[extra_90rot_cnt]);
+std::string PauliOperator<Prec, Space>::to_string() const {
+    std::stringstream ss;
+    ss << coef() << " \"" << get_pauli_string() << "\"";
+    return ss.str();
 }
 
 template class PauliOperator<internal::Prec, internal::Space>;

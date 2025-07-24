@@ -13,31 +13,28 @@ template <Precision Prec, ExecutionSpace Space>
 class Operator {
     using ComplexType = internal::Complex<Prec>;
     using FloatType = internal::Float<Prec>;
+    using ExecutionSpaceType = internal::SpaceType<Space>;
 
 public:
-    Operator() = default;  // for enable operator= from json
-    explicit Operator(std::uint64_t n_qubits) : _n_qubits(n_qubits) {}
+    Operator() = default;
+    explicit Operator(std::uint64_t n_terms) : _terms("terms", n_terms) {}
+    explicit Operator(std::vector<PauliOperator<Prec, Space>> terms);
+
+    [[nodiscard]] Operator copy() const;
+    void load(const std::vector<PauliOperator<Prec, Space>>& terms);
+    static Operator uninitialized_operator(std::uint64_t n_terms);
 
     [[nodiscard]] inline bool is_hermitian() const { return _is_hermitian; }
-    [[nodiscard]] inline std::uint64_t n_qubits() const { return _n_qubits; }
-    [[nodiscard]] inline const std::vector<PauliOperator<Prec, Space>>& terms() const {
-        return _terms;
+    [[nodiscard]] inline std::vector<PauliOperator<Prec, Space>> get_terms() const {
+        return internal::convert_view_to_vector<PauliOperator<Prec, Space>, Space>(_terms);
     }
     [[nodiscard]] std::string to_string() const;
-
-    void add_operator(const PauliOperator<Prec, Space>& mpt) {
-        add_operator(PauliOperator<Prec, Space>{mpt});
-    }
-    void add_operator(PauliOperator<Prec, Space>&& mpt);
-
-    void add_random_operator(const std::uint64_t operator_count = 1,
-                             std::uint64_t seed = std::random_device()());
 
     void optimize();
 
     [[nodiscard]] Operator get_dagger() const;
 
-    [[nodiscard]] ComplexMatrix get_matrix() const;
+    [[nodiscard]] ComplexMatrix get_full_matrix(std::uint64_t n_qubits) const;
 
     void apply_to_state(StateVector<Prec, Space>& state_vector) const;
 
@@ -62,50 +59,44 @@ public:
     [[nodiscard]] StdComplex solve_ground_state_eigenvalue_by_power_method(
         const StateVector<Prec, Space>& state, std::uint64_t iter_count, StdComplex mu = 0.) const;
 
+    Operator operator*(StdComplex coef) const;
     Operator& operator*=(StdComplex coef);
-    Operator operator*(StdComplex coef) const { return Operator(*this) *= coef; }
     Operator operator+() const { return *this; }
     Operator operator-() const { return *this * -1.; }
-    Operator& operator+=(const Operator& target);
-    Operator operator+(const Operator& target) const { return Operator(*this) += target; }
-    Operator& operator-=(const Operator& target) { return *this += -target; }
-    Operator operator-(const Operator& target) const { return Operator(*this) -= target; }
+    Operator operator+(const Operator& target) const;
+    Operator operator-(const Operator& target) const { return *this + target * -1.; }
     Operator operator*(const Operator& target) const;
-    Operator& operator*=(const Operator& target) { return *this = *this * target; }
-    Operator& operator+=(const PauliOperator<Prec, Space>& pauli);
-    Operator operator+(const PauliOperator<Prec, Space>& pauli) const {
-        return Operator(*this) += pauli;
-    }
-    Operator& operator-=(const PauliOperator<Prec, Space>& pauli) { return *this += pauli * -1.; }
+    Operator operator+(const PauliOperator<Prec, Space>& pauli) const;
     Operator operator-(const PauliOperator<Prec, Space>& pauli) const {
-        return Operator(*this) -= pauli;
+        return *this + pauli * -1.;
     }
+    Operator operator*(const PauliOperator<Prec, Space>& pauli) const;
     Operator& operator*=(const PauliOperator<Prec, Space>& pauli);
-    Operator operator*(const PauliOperator<Prec, Space>& pauli) const {
-        return Operator(*this) *= pauli;
-    }
 
     friend void to_json(Json& j, const Operator& op) {
-        j = Json{{"n_qubits", op.n_qubits()}, {"terms", Json::array()}};
-        for (const auto& pauli : op.terms()) {
+        j.clear();
+        j["terms"] = Json::array();
+        for (const auto& pauli : op.get_terms()) {
             Json tmp = pauli;
             j["terms"].push_back(tmp);
         }
     }
     friend void from_json(const Json& j, Operator& op) {
-        std::uint32_t n = j.at("n_qubits").get<std::uint32_t>();
-        Operator<Prec, Space> res(n);
+        std::vector<PauliOperator<Prec, Space>> res;
         for (const auto& term : j.at("terms")) {
             std::string pauli_string = term.at("pauli_string").get<std::string>();
             StdComplex coef = term.at("coef").get<StdComplex>();
-            res.add_operator({pauli_string, coef});
+            res.emplace_back(pauli_string, coef);
         }
-        op = res;
+        op = Operator<Prec, Space>(res);
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Operator& op) {
+        return os << op.to_string();
     }
 
 private:
-    std::vector<PauliOperator<Prec, Space>> _terms;
-    std::uint64_t _n_qubits;
+    Kokkos::View<PauliOperator<Prec, Space>*, ExecutionSpaceType> _terms;
     bool _is_hermitian = true;
 };
 
@@ -128,38 +119,28 @@ void bind_operator_operator_hpp(nb::module_& m) {
             .build_as_google_style()
             .c_str())
         .def(nb::init<std::uint64_t>(),
-             "qubit_count"_a,
-             "Initialize operator with specified number of qubits.")
+             "n_terms"_a,
+             "Initialize operator with specified number of terms.")
+        .def(nb::init<std::vector<PauliOperator<Prec, Space>>>(),
+             "terms"_a,
+             "Initialize operator with given list of terms.")
         .def("is_hermitian",
              &Operator<Prec, Space>::is_hermitian,
              "Check if the operator is Hermitian.")
-        .def("n_qubits",
-             &Operator<Prec, Space>::n_qubits,
-             "Get the number of qubits the operator acts on.")
-        .def("terms",
-             &Operator<Prec, Space>::terms,
+        .def("load",
+             &Operator<Prec, Space>::load,
+             "terms"_a,
+             "Load the operator with a list of Pauli operators.")
+        .def_static("uninitialized_operator",
+                    &Operator<Prec, Space>::uninitialized_operator,
+                    "n_terms"_a,
+                    "Create an uninitialized operator with a specified number of terms.")
+        .def("get_terms",
+             &Operator<Prec, Space>::get_terms,
              "Get the list of Pauli terms that make up the operator.")
         .def("to_string",
              &Operator<Prec, Space>::to_string,
              "Get string representation of the operator.")
-        .def("add_operator",
-             nb::overload_cast<const PauliOperator<Prec, Space>&>(
-                 &Operator<Prec, Space>::add_operator),
-             "pauli"_a,
-             "Add a Pauli operator to this operator.")
-        .def(
-            "add_random_operator",
-            [](Operator<Prec, Space>& op,
-               std::uint64_t operator_count,
-               std::optional<std::uint64_t> seed) {
-                return op.add_random_operator(operator_count,
-                                              seed.value_or(std::random_device{}()));
-            },
-            "operator_count"_a,
-            "seed"_a = std::nullopt,
-            "Add a specified number of random Pauli operators to this operator. An optional "
-            "seed "
-            "can be provided for reproducibility.")
         .def("optimize",
              &Operator<Prec, Space>::optimize,
              "Optimize the operator by combining like terms.")
@@ -205,22 +186,17 @@ void bind_operator_operator_hpp(nb::module_& m) {
             "states_target"_a,
             "Get the transition amplitudes of the operator for a batch of state vectors.")
         .def("get_matrix",
-             &Operator<Prec, Space>::get_matrix,
+             &Operator<Prec, Space>::get_full_matrix,
              "Get matrix representation of the Operator. Tensor product is applied from "
              "n_qubits-1 to 0.")
         .def(nb::self *= StdComplex())
         .def(nb::self * StdComplex())
         .def(+nb::self)
         .def(-nb::self)
-        .def(nb::self += nb::self)
         .def(nb::self + nb::self)
-        .def(nb::self -= nb::self)
         .def(nb::self - nb::self)
         .def(nb::self * nb::self)
-        .def(nb::self *= nb::self)
-        .def(nb::self += PauliOperator<Prec, Space>())
         .def(nb::self + PauliOperator<Prec, Space>())
-        .def(nb::self -= PauliOperator<Prec, Space>())
         .def(nb::self - PauliOperator<Prec, Space>())
         .def(nb::self *= PauliOperator<Prec, Space>())
         .def(nb::self * PauliOperator<Prec, Space>())
@@ -234,7 +210,13 @@ void bind_operator_operator_hpp(nb::module_& m) {
                 op = nlohmann::json::parse(str);
             },
             "json_str"_a,
-            "Read an object from the JSON representation of the operator.");
+            "Read an object from the JSON representation of the operator.")
+        .def("to_string",
+             &Operator<Prec, Space>::to_string,
+             "Get string representation of the operator.")
+        .def("__str__",
+             &Operator<Prec, Space>::to_string,
+             "Get string representation of the operator.");
 }
 }  // namespace internal
 #endif
