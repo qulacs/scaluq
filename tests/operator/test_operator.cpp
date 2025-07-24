@@ -216,6 +216,27 @@ TYPED_TEST(OperatorTest, MultiCoefTest) {
     }
 }
 
+TYPED_TEST(OperatorTest, MultiOperatorTest) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    std::uint64_t n = 4;
+    Random random;
+
+    for (std::uint64_t repeat = 0; repeat < 10; ++repeat) {
+        auto [op1, eigen1] = generate_random_observable_with_eigen<Prec, Space>(n, random);
+        auto [op2, eigen2] = generate_random_observable_with_eigen<Prec, Space>(n, random);
+        auto op = op1 * op2;
+        auto mat = op.get_full_matrix(n);
+        auto expected_eigen = eigen1 * eigen2;
+        for (std::uint64_t i = 0; i < mat.rows(); ++i) {
+            for (std::uint64_t j = 0; j < mat.cols(); ++j) {
+                ASSERT_NEAR(mat(i, j).real(), expected_eigen(i, j).real(), eps<Prec>);
+                ASSERT_NEAR(mat(i, j).imag(), expected_eigen(i, j).imag(), eps<Prec>);
+            }
+        }
+    }
+}
+
 TYPED_TEST(OperatorTest, ApplyToStateTest) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;

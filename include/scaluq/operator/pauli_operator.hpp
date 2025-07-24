@@ -14,7 +14,7 @@ template <Precision Prec, ExecutionSpace Space>
 class Operator;
 
 template <Precision Prec, ExecutionSpace Space>
-class PauliOperator {
+struct PauliOperator {
     friend class Operator<Prec, Space>;
     using ComplexType = internal::Complex<Prec>;
     using FloatType = internal::Float<Prec>;
@@ -30,14 +30,17 @@ private:
 public:
     enum PauliID : std::uint64_t { I, X, Y, Z };
 
-    explicit PauliOperator(StdComplex coef = 1.)
+    KOKKOS_FUNCTION explicit PauliOperator(StdComplex coef = 1.)
         : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {}
     PauliOperator(std::string_view pauli_string, StdComplex coef = 1.);
     PauliOperator(const std::vector<std::uint64_t>& target_qubit_list,
                   const std::vector<std::uint64_t>& pauli_id_list,
                   StdComplex coef = 1.);
     PauliOperator(const std::vector<std::uint64_t>& pauli_id_par_qubit, StdComplex coef = 1.);
-    PauliOperator(std::uint64_t bit_flip_mask, std::uint64_t phase_flip_mask, StdComplex coef = 1.);
+    KOKKOS_FUNCTION PauliOperator(std::uint64_t bit_flip_mask,
+                                  std::uint64_t phase_flip_mask,
+                                  StdComplex coef = 1.)
+        : _coef(coef), _bit_flip_mask(bit_flip_mask), _phase_flip_mask(phase_flip_mask) {}
 
     void set_coef(StdComplex c) { _coef = c; }
     [[nodiscard]] StdComplex coef() const { return _coef; }
@@ -71,21 +74,43 @@ public:
     [[nodiscard]] ComplexMatrix get_full_matrix(std::uint64_t n_qubits) const;
     [[nodiscard]] ComplexMatrix get_full_matrix_ignoring_coef(std::uint64_t n_qubits) const;
 
-    [[nodiscard]] PauliOperator operator*(const PauliOperator& target) const;
-    [[nodiscard]] PauliOperator operator*(StdComplex target) const {
-        return PauliOperator(_bit_flip_mask, _phase_flip_mask, _coef * target);
+    [[nodiscard]] KOKKOS_INLINE_FUNCTION PauliOperator
+    operator*(const PauliOperator& target) const {
+        int extra_90rot_cnt = 0;
+        auto x_left = _bit_flip_mask & ~_phase_flip_mask;
+        auto y_left = _bit_flip_mask & _phase_flip_mask;
+        auto z_left = _phase_flip_mask & ~_bit_flip_mask;
+        auto x_right = target._bit_flip_mask & ~target._phase_flip_mask;
+        auto y_right = target._bit_flip_mask & target._phase_flip_mask;
+        auto z_right = target._phase_flip_mask & ~target._bit_flip_mask;
+        extra_90rot_cnt += Kokkos::popcount(x_left & y_right);  // XY = iZ
+        extra_90rot_cnt += Kokkos::popcount(y_left & z_right);  // YZ = iX
+        extra_90rot_cnt += Kokkos::popcount(z_left & x_right);  // ZX = iY
+        extra_90rot_cnt -= Kokkos::popcount(x_left & z_right);  // XZ = -iY
+        extra_90rot_cnt -= Kokkos::popcount(y_left & x_right);  // YX = -iZ
+        extra_90rot_cnt -= Kokkos::popcount(z_left & y_right);  // ZY = -iX
+        extra_90rot_cnt %= 4;
+        if (extra_90rot_cnt < 0) extra_90rot_cnt += 4;
+        return PauliOperator(_bit_flip_mask ^ target._bit_flip_mask,
+                             _phase_flip_mask ^ target._phase_flip_mask,
+                             _coef * target._coef * internal::PHASE_90ROT<Prec>()[extra_90rot_cnt]);
     }
-    PauliOperator& operator*=(const PauliOperator& target) { return (*this = *this * target); }
-    PauliOperator& operator*=(StdComplex coef) { return (*this = *this * coef); }
-
-    [[nodiscard]] PauliOperator copy() const { return PauliOperator(*this); }
+    [[nodiscard]] KOKKOS_INLINE_FUNCTION PauliOperator operator*(StdComplex coef) const {
+        return PauliOperator(_bit_flip_mask, _phase_flip_mask, _coef * coef);
+    }
+    KOKKOS_INLINE_FUNCTION PauliOperator& operator*=(const PauliOperator& target) {
+        *this = *this * target;
+        return *this;
+    }
+    KOKKOS_INLINE_FUNCTION PauliOperator& operator*=(StdComplex coef) {
+        *this = *this * coef;
+        return *this;
+    }
 
     [[nodiscard]] std::string to_string() const;
 
     friend std::ostream& operator<<(std::ostream& os, const PauliOperator& pauli) {
-        os << "coef:" << pauli.coef() << "\n";
-        os << "pauli_string: \"" << pauli.get_pauli_string() << "\"\n";
-        return os;
+        return os << pauli.to_string();
     }
 
     friend void to_json(Json& j, const PauliOperator& pauli) {
@@ -250,7 +275,13 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
                 pauli = nlohmann::json::parse(str);
             },
             "json_str"_a,
-            "Read an object from the JSON representation of the Pauli operator.");
+            "Read an object from the JSON representation of the Pauli operator.")
+        .def("to_string",
+             &PauliOperator<Prec, Space>::to_string,
+             "Get string representation of the Pauli operator.")
+        .def("__str__",
+             &PauliOperator<Prec, Space>::to_string,
+             "Get string representation of the Pauli operator.");
 }
 }  // namespace internal
 #endif

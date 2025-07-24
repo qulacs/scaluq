@@ -64,7 +64,7 @@ public:
     Operator operator+() const { return *this; }
     Operator operator-() const { return *this * -1.; }
     Operator operator+(const Operator& target) const;
-    Operator operator-(const Operator& target) const;
+    Operator operator-(const Operator& target) const { return *this + target * -1.; }
     Operator operator*(const Operator& target) const;
     Operator operator+(const PauliOperator<Prec, Space>& pauli) const;
     Operator operator-(const PauliOperator<Prec, Space>& pauli) const {
@@ -89,6 +89,10 @@ public:
             res.emplace_back(pauli_string, coef);
         }
         op = Operator<Prec, Space>(res);
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Operator& op) {
+        return os << op.to_string();
     }
 
 private:
@@ -206,7 +210,13 @@ void bind_operator_operator_hpp(nb::module_& m) {
                 op = nlohmann::json::parse(str);
             },
             "json_str"_a,
-            "Read an object from the JSON representation of the operator.");
+            "Read an object from the JSON representation of the operator.")
+        .def("to_string",
+             &Operator<Prec, Space>::to_string,
+             "Get string representation of the operator.")
+        .def("__str__",
+             &Operator<Prec, Space>::to_string,
+             "Get string representation of the operator.");
 }
 }  // namespace internal
 #endif
