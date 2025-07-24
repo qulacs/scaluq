@@ -72,9 +72,15 @@ public:
     [[nodiscard]] ComplexMatrix get_full_matrix_ignoring_coef(std::uint64_t n_qubits) const;
 
     [[nodiscard]] PauliOperator operator*(const PauliOperator& target) const;
-    [[nodiscard]] inline PauliOperator operator*(StdComplex target) const {
+    [[nodiscard]] PauliOperator operator*(StdComplex target) const {
         return PauliOperator(_bit_flip_mask, _phase_flip_mask, _coef * target);
     }
+    PauliOperator& operator*=(const PauliOperator& target) { return (*this = *this * target); }
+    PauliOperator& operator*=(StdComplex coef) { return (*this = *this * coef); }
+
+    [[nodiscard]] PauliOperator copy() const { return PauliOperator(*this); }
+
+    [[nodiscard]] std::string to_string() const;
 
     friend std::ostream& operator<<(std::ostream& os, const PauliOperator& pauli) {
         os << "coef:" << pauli.coef() << "\n";

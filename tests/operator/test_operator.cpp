@@ -15,7 +15,7 @@ template <Precision Prec, ExecutionSpace Space>
 std::pair<Operator<Prec, Space>, Eigen::MatrixXcd> generate_random_observable_with_eigen(
     std::uint64_t n, Random& random) {
     std::uint64_t dim = 1ULL << n;
-    Operator<Prec, Space> rand_observable(n);
+    std::vector<PauliOperator<Prec, Space>> rand_observable;
     Eigen::MatrixXcd test_rand_observable = Eigen::MatrixXcd::Zero(dim, dim);
 
     std::uint64_t term_count = random.int32() % 10 + 1;
@@ -44,9 +44,9 @@ std::pair<Operator<Prec, Space>, Eigen::MatrixXcd> generate_random_observable_wi
                 str += " " + std::to_string(ind);
             }
         }
-        rand_observable.add_operator(PauliOperator<Prec, Space>(str.c_str(), coef));
+        rand_observable.push_back(PauliOperator<Prec, Space>(str.c_str(), coef));
     }
-    return {std::move(rand_observable), std::move(test_rand_observable)};
+    return {Operator<Prec, Space>(rand_observable), std::move(test_rand_observable)};
 }
 
 TYPED_TEST(OperatorTest, GetMatrix) {
@@ -59,7 +59,7 @@ TYPED_TEST(OperatorTest, GetMatrix) {
         auto [rand_observable, test_rand_observable] =
             generate_random_observable_with_eigen<Prec, Space>(n, random);
 
-        auto matrix = rand_observable.get_matrix();
+        auto matrix = rand_observable.get_full_matrix(n);
         for (std::uint64_t i = 0; i < dim; i++) {
             for (std::uint64_t j = 0; j < dim; j++) {
                 ASSERT_NEAR(matrix(i, j).real(), test_rand_observable(i, j).real(), eps<Prec>);
@@ -229,9 +229,8 @@ TYPED_TEST(OperatorTest, ApplyToStateTest) {
         return tmp;
     }());
 
-    Operator<Prec, Space> op(n_qubits);
-    op.add_operator({0b001, 0b010, StdComplex(2)});
-    op.add_operator({"X 2 Y 1", 1});
+    std::vector<PauliOperator<Prec, Space>> terms = {{0b001, 0b010, StdComplex(2)}, {"X 2 Y 1", 1}};
+    Operator<Prec, Space> op(terms);
     op.apply_to_state(state_vector);
 
     std::vector<StdComplex> expected = {
@@ -251,13 +250,13 @@ TYPED_TEST(OperatorTest, Optimize) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     std::uint64_t n = 2;
-    Operator<Prec, Space> op(n);
-    op.add_operator(PauliOperator<Prec, Space>("X 0 Y 1", 1.));
-    op.add_operator(PauliOperator<Prec, Space>("Y 0 Z 1", 2.));
-    op.add_operator(PauliOperator<Prec, Space>("Z 1", 3.));
-    op.add_operator(PauliOperator<Prec, Space>("X 0 Y 1", 4.));
-    op.add_operator(PauliOperator<Prec, Space>("Z 1", 4.));
-    op.add_operator(PauliOperator<Prec, Space>("X 0 Y 1", 5.));
+    std::vector<PauliOperator<Prec, Space>> terms = {{"X 0 Y 1", 1.},
+                                                     {"Y 0 Z 1", 2.},
+                                                     {"Z 1", 3.},
+                                                     {"X 0 Y 1", 4.},
+                                                     {"Z 1", 4.},
+                                                     {"X 0 Y 1", 5.}};
+    Operator<Prec, Space> op(terms);
     op.optimize();
     std::vector<std::pair<std::string, StdComplex>> expected = {
         {"X 0 Y 1", 10.}, {"Y 0 Z 1", 2.}, {"Z 1", 7.}};

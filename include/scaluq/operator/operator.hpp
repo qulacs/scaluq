@@ -13,31 +13,38 @@ template <Precision Prec, ExecutionSpace Space>
 class Operator {
     using ComplexType = internal::Complex<Prec>;
     using FloatType = internal::Float<Prec>;
+    using ExecutionSpaceType = internal::SpaceType<Space>;
 
 public:
-    Operator() = default;  // for enable operator= from json
-    explicit Operator(std::uint64_t n_qubits) : _n_qubits(n_qubits) {}
+    Operator() = default;
+    explicit Operator(std::uint64_t n_terms) : _terms("terms", n_terms) {}
+    explicit Operator(std::vector<PauliOperator<Prec, Space>> terms)
+        : _terms(internal::convert_vector_to_view<PauliOperator<Prec, Space>, Space>(terms,
+                                                                                     "terms")) {}
+
+    [[nodiscard]] Operator copy() const;
+    void load(const std::vector<PauliOperator<Prec, Space>>& terms) {
+        _terms =
+            internal::convert_vector_to_view<PauliOperator<Prec, Space>, Space>(terms, "terms");
+    }
+    static Operator uninitialized_operator(std::uint64_t n_terms) {
+        Operator<Prec, Space> tmp;
+        tmp._terms = Kokkos::View<PauliOperator<Prec, Space>*, ExecutionSpaceType>(
+            Kokkos::ViewAllocateWithoutInitializing("terms"), n_terms);
+        return tmp;
+    }
 
     [[nodiscard]] inline bool is_hermitian() const { return _is_hermitian; }
-    [[nodiscard]] inline std::uint64_t n_qubits() const { return _n_qubits; }
-    [[nodiscard]] inline const std::vector<PauliOperator<Prec, Space>>& terms() const {
-        return _terms;
+    [[nodiscard]] inline std::vector<PauliOperator<Prec, Space>> terms() const {
+        return internal::convert_view_to_vector<PauliOperator<Prec, Space>, Space>(_terms);
     }
     [[nodiscard]] std::string to_string() const;
-
-    void add_operator(const PauliOperator<Prec, Space>& mpt) {
-        add_operator(PauliOperator<Prec, Space>{mpt});
-    }
-    void add_operator(PauliOperator<Prec, Space>&& mpt);
-
-    void add_random_operator(const std::uint64_t operator_count = 1,
-                             std::uint64_t seed = std::random_device()());
 
     void optimize();
 
     [[nodiscard]] Operator get_dagger() const;
 
-    [[nodiscard]] ComplexMatrix get_matrix() const;
+    [[nodiscard]] ComplexMatrix get_full_matrix(std::uint64_t n_qubits) const;
 
     void apply_to_state(StateVector<Prec, Space>& state_vector) const;
 
@@ -62,28 +69,19 @@ public:
     [[nodiscard]] StdComplex solve_ground_state_eigenvalue_by_power_method(
         const StateVector<Prec, Space>& state, std::uint64_t iter_count, StdComplex mu = 0.) const;
 
+    Operator operator*(StdComplex coef) const;
     Operator& operator*=(StdComplex coef);
-    Operator operator*(StdComplex coef) const { return Operator(*this) *= coef; }
     Operator operator+() const { return *this; }
     Operator operator-() const { return *this * -1.; }
-    Operator& operator+=(const Operator& target);
-    Operator operator+(const Operator& target) const { return Operator(*this) += target; }
-    Operator& operator-=(const Operator& target) { return *this += -target; }
-    Operator operator-(const Operator& target) const { return Operator(*this) -= target; }
+    Operator operator+(const Operator& target) const;
+    Operator operator-(const Operator& target) const;
     Operator operator*(const Operator& target) const;
-    Operator& operator*=(const Operator& target) { return *this = *this * target; }
-    Operator& operator+=(const PauliOperator<Prec, Space>& pauli);
-    Operator operator+(const PauliOperator<Prec, Space>& pauli) const {
-        return Operator(*this) += pauli;
-    }
-    Operator& operator-=(const PauliOperator<Prec, Space>& pauli) { return *this += pauli * -1.; }
+    Operator operator+(const PauliOperator<Prec, Space>& pauli) const;
     Operator operator-(const PauliOperator<Prec, Space>& pauli) const {
-        return Operator(*this) -= pauli;
+        return *this + pauli * -1.;
     }
+    Operator operator*(const PauliOperator<Prec, Space>& pauli) const;
     Operator& operator*=(const PauliOperator<Prec, Space>& pauli);
-    Operator operator*(const PauliOperator<Prec, Space>& pauli) const {
-        return Operator(*this) *= pauli;
-    }
 
     friend void to_json(Json& j, const Operator& op) {
         j = Json{{"n_qubits", op.n_qubits()}, {"terms", Json::array()}};
@@ -104,8 +102,7 @@ public:
     }
 
 private:
-    std::vector<PauliOperator<Prec, Space>> _terms;
-    std::uint64_t _n_qubits;
+    Kokkos::View<PauliOperator<Prec, Space>*, ExecutionSpaceType> _terms;
     bool _is_hermitian = true;
 };
 
