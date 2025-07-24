@@ -119,9 +119,8 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
                   "`paul_id_per_qubit[i]` is applied to `i`-th qubit.")
             .desc("Given `bit_flip_mask: int, phase_flip_mask: int, coef: "
                   "complex`, Initialize pauli operator. For each `i`, single pauli applied to "
-                  "`i`-th qubit is "
-                  "got "
-                  "from `i-th` bit of `bit_flip_mask` and `phase_flip_mask` as follows.\n\n.. "
+                  "`i`-th qubit is got from `i-th` bit of `bit_flip_mask` and `phase_flip_mask` as "
+                  "follows.\n\n.. "
                   "csv-table::\n\n    \"bit_flip\",\"phase_flip\",\"pauli\"\n    "
                   "\"0\",\"0\",\"I\"\n    "
                   "\"0\",\"1\",\"Z\"\n    \"1\",\"0\",\"X\"\n    \"1\",\"1\",\"Y\"")
@@ -224,13 +223,13 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
         .def("get_matrix",
              &PauliOperator<Prec, Space>::get_matrix,
              "Get matrix representation of the PauliOperator. Tensor product is applied from "
-             "target_qubit_list[n-1] to target_qubit_list[0]. Only the X, Y, and Z components "
+             "$(n-1)$ -th qubit to $0$ -th qubit. Only the X, Y, and Z components "
              "are taken into account in the result.")
         .def("get_full_matrix",
              &PauliOperator<Prec, Space>::get_full_matrix,
              "n_qubits"_a,
              "Get matrix representation of the PauliOperator. Tensor product is applied from "
-             "target_qubit_list[n-1] to target_qubit_list[0].")
+             "$(n-1)$ -th qubit to $0$ -th qubit.")
         .def("get_matrix_ignoring_coef",
              &PauliOperator<Prec, Space>::get_matrix_ignoring_coef,
              "Get matrix representation of the PauliOperator, but with forcing `coef=1.`Only the "

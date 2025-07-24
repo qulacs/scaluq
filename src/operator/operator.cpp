@@ -4,6 +4,21 @@
 #include "../util/math.hpp"
 
 namespace scaluq {
+template <>
+Operator<internal::Prec, internal::Space>::Operator(
+    std::vector<PauliOperator<internal::Prec, internal::Space>> terms)
+    : _terms(internal::convert_vector_to_view<PauliOperator<internal::Prec, internal::Space>,
+                                              internal::Space>(terms, "terms")) {
+    std::uint64_t non_hermitian_count = 0;
+    Kokkos::parallel_reduce(
+        "check_hermitian",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, _terms.size()),
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t & count) {
+            count += (_terms(i).coef().imag() != 0);
+        },
+        non_hermitian_count);
+    _is_hermitian = (non_hermitian_count == 0);
+}
 
 template <>
 Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Space>::copy() const {
@@ -16,7 +31,7 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
 template <>
 std::string Operator<internal::Prec, internal::Space>::to_string() const {
     std::stringstream ss;
-    auto vec = terms();
+    auto vec = get_terms();
     for (auto itr = vec.begin(); itr != vec.end(); ++itr) {
         ss << itr->coef() << " " << itr->get_pauli_string();
         if (itr != std::prev(vec.end())) {
@@ -26,27 +41,11 @@ std::string Operator<internal::Prec, internal::Space>::to_string() const {
     return ss.str();
 }
 
-// template <>
-// void Operator<internal::Prec, internal::Space>::add_random_operator(
-//     const std::uint64_t operator_count, std::uint64_t seed) {
-//     Random random(seed);
-//     for (std::uint64_t operator_idx = 0; operator_idx < operator_count; operator_idx++) {
-//         std::vector<std::uint64_t> target_qubit_list(_n_qubits), pauli_id_list(_n_qubits);
-//         for (std::uint64_t qubit_idx = 0; qubit_idx < _n_qubits; qubit_idx++) {
-//             target_qubit_list[qubit_idx] = qubit_idx;
-//             pauli_id_list[qubit_idx] = random.int32() & 0b11;
-//         }
-//         StdComplex coef = random.uniform() * 2. - 1.;
-//         this->add_operator(
-//             PauliOperator<internal::Prec, internal::Space>(target_qubit_list, pauli_id_list,
-//             coef));
-//     }
-// }
-
 template <>
 void Operator<internal::Prec, internal::Space>::optimize() {
+    // TODO: use Kokkos::UnorderedMap
     std::map<std::tuple<std::uint64_t, std::uint64_t>, ComplexType> pauli_and_coef;
-    auto terms_h = terms();
+    auto terms_h = get_terms();
     for (const auto& pauli : terms_h) {
         pauli_and_coef[pauli.get_XZ_mask_representation()] += pauli.coef();
     }
@@ -75,7 +74,7 @@ ComplexMatrix Operator<internal::Prec, internal::Space>::get_full_matrix(
     std::uint64_t dim = 1ULL << n_qubits;
     ComplexMatrix mat(dim, dim);
     mat.setZero();
-    for (const auto& term : this->terms()) {
+    for (const auto& term : this->get_terms()) {
         auto basic_triplets = term.get_full_matrix_triplets_ignoring_coef(n_qubits);
         for (const auto& triplet : basic_triplets) {
             mat(triplet.row(), triplet.col()) += triplet.value() * term.coef();
@@ -91,7 +90,7 @@ void Operator<internal::Prec, internal::Space>::apply_to_state(
         StateVector<internal::Prec, internal::Space>::uninitialized_state(state_vector.n_qubits());
     res.set_zero_norm_state();
     // TODO: batch でできそう
-    auto terms_h = terms();
+    auto terms_h = get_terms();
     for (const auto& term : terms_h) {
         StateVector<internal::Prec, internal::Space> tmp = state_vector.copy();
         term.apply_to_state(tmp);

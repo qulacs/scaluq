@@ -261,7 +261,7 @@ TYPED_TEST(OperatorTest, Optimize) {
     std::vector<std::pair<std::string, StdComplex>> expected = {
         {"X 0 Y 1", 10.}, {"Y 0 Z 1", 2.}, {"Z 1", 7.}};
     std::vector<std::pair<std::string, StdComplex>> test;
-    for (const auto& pauli : op.terms()) {
+    for (const auto& pauli : op.get_terms()) {
         test.emplace_back(pauli.get_pauli_string(), pauli.coef());
     }
     std::ranges::sort(expected, [](const auto& l, const auto& r) { return l.first < r.first; });

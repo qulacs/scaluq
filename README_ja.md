@@ -111,18 +111,20 @@ int main() {
         constexpr Precision Prec = scaluq::Precision::F64;
         constexpr ExecutionSpace Space = scaluq::ExecutionSpace::Default;
         const std::uint64_t n_qubits = 3;
-        scaluq::StateVector<Prec, Default> state = scaluq::StateVector<Prec, Default>::Haar_random_state(n_qubits, 0);
+        scaluq::StateVector<Prec, Space> state =
+            scaluq::StateVector<Prec, Space>::Haar_random_state(n_qubits, 0);
         std::cout << state << std::endl;
 
-        scaluq::Circuit<Prec, Default> circuit(n_qubits);
-        circuit.add_gate(scaluq::gate::X<Prec, Default>(0));
-        circuit.add_gate(scaluq::gate::CNot<Prec, Default>(0, 1));
-        circuit.add_gate(scaluq::gate::Y<Prec, Default>(1));
-        circuit.add_gate(scaluq::gate::RX<Prec, Default>(1, std::numbers::pi / 2));
+        scaluq::Circuit<Prec, Space> circuit(n_qubits);
+        circuit.add_gate(scaluq::gate::X<Prec, Space>(0));
+        circuit.add_gate(scaluq::gate::CNot<Prec, Space>(0, 1));
+        circuit.add_gate(scaluq::gate::Y<Prec, Space>(1));
+        circuit.add_gate(scaluq::gate::RX<Prec, Space>(1, std::numbers::pi / 2));
         circuit.update_quantum_state(state);
 
-        scaluq::Operator<Prec, Default> observable(n_qubits);
-        observable.add_random_operator(1, 0);
+        std::vector<scaluq::PauliOperator<Prec, Space>> terms;
+        terms.emplace_back(1, 0);
+        scaluq::Operator<Prec, Space> observable(terms);
         auto value = observable.get_expectation_value(state);
         std::cout << value << std::endl;
     }
@@ -160,8 +162,9 @@ int main() {
         circuit.add_gate(gate::RX(1, std::numbers::pi / 2));
         circuit.update_quantum_state(state);
 
-        Operator observable(n_qubits);
-        observable.add_random_operator(1, 0);
+        std::vector<scaluq::PauliOperator> terms;
+        terms.emplace_back(1, 0);
+        scaluq::Operator observable(terms);
         auto value = observable.get_expectation_value(state);
         std::cout << value << std::endl;
     }
@@ -185,8 +188,9 @@ circuit.add_gate(gate.Y(1))
 circuit.add_gate(gate.RX(1, math.pi / 2))
 circuit.update_quantum_state(state)
 
-observable = Operator(n_qubits)
-observable.add_random_operator(1, 0)
+terms = []
+terms.append(PauliOperator(1, 0))
+observable = Operator(terms)
 value = observable.get_expectation_value(state)
 print(value)
 ```
