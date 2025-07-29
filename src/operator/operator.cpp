@@ -42,7 +42,15 @@ void Operator<internal::Prec, internal::Space>::load(
         throw std::runtime_error(
             "Operator::load: size of terms does not match the current operator size.");
     }
-    *this = Operator<internal::Prec, internal::Space>(terms);
+    auto host_view = internal::wrapped_host_view(terms);
+    Kokkos::deep_copy(_terms, host_view);
+    _is_hermitian = true;
+    for (auto& term : terms) {
+        if (term.coef().imag() != 0) {
+            _is_hermitian = false;
+            break;
+        }
+    }
 }
 
 template <>
@@ -379,7 +387,8 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
             {0, 0}, {_terms.size(), target._terms.size()}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j, std::uint64_t & nnz_lcl) {
             ret._terms(i * target._terms.size() + j) = _terms(i) * target._terms(j);
-            if (ret._terms(i * target._terms.size() + j)._coef.imag() == 0) ++nnz_lcl;
+            if (static_cast<double>(ret._terms(i * target._terms.size() + j)._coef.imag()) == 0.)
+                ++nnz_lcl;
         },
         nnz_count);
     ret._is_hermitian = (nnz_count == 0);
@@ -437,7 +446,7 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
                 ret._terms(i) = target;
             }
         });
-    ret._is_hermitian = _is_hermitian && (target.coef().imag() == 0);
+    ret._is_hermitian = _is_hermitian && (target.coef().imag() == 0.);
     return ret;
 }
 
