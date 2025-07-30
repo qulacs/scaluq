@@ -276,7 +276,8 @@ void StateVector<Prec, Space>::load(const std::vector<StdComplex>& other) {
     }
     std::vector<ComplexType> other_complex(_dim);
     std::ranges::copy(other, other_complex.begin());
-    _raw = internal::convert_vector_to_view<ComplexType, Space>(other_complex);
+    auto host_view = internal::wrapped_host_view(other);
+    Kokkos::deep_copy(_raw, host_view);
 }
 template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space> StateVector<Prec, Space>::copy() const {

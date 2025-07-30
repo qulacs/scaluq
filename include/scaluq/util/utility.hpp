@@ -128,12 +128,20 @@ ComplexMatrix get_expanded_matrix(const ComplexMatrix& from_matrix,
                                   std::uint64_t from_control_value_mask,
                                   std::vector<std::uint64_t>& to_operands);
 
+template <typename T>
+Kokkos::View<const T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+wrapped_host_view(const std::vector<T>& vec) {
+    return Kokkos::View<const T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
+        vec.data(), vec.size());
+}
+
 // Host std::vector を Device Kokkos::View に変換する関数
 template <typename T, ExecutionSpace Space>
-Kokkos::View<T*, SpaceType<Space>> convert_vector_to_view(const std::vector<T>& vec) {
-    Kokkos::View<const T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
-        vec.data(), vec.size());
-    Kokkos::View<T*, SpaceType<Space>> device_view("device_view", vec.size());
+Kokkos::View<T*, SpaceType<Space>> convert_vector_to_view(
+    const std::vector<T>& vec, const std::string& label = "vector_view") {
+    auto host_view = wrapped_host_view(vec);
+    Kokkos::View<T*, SpaceType<Space>> device_view(Kokkos::ViewAllocateWithoutInitializing(label),
+                                                   vec.size());
     Kokkos::deep_copy(device_view, host_view);
     return device_view;
 }
