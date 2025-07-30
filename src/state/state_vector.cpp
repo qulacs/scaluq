@@ -32,7 +32,6 @@ StdComplex StateVector<Prec, Space>::get_amplitude_at(std::uint64_t index) {
 template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space> StateVector<Prec, Space>::Haar_random_state(std::uint64_t n_qubits,
                                                                      std::uint64_t seed) {
-    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(seed);
     auto state(StateVector<Prec, Space>::uninitialized_state(n_qubits));
     state.set_Haar_random_state(seed);
     return state;
@@ -275,7 +274,11 @@ void StateVector<Prec, Space>::load(const std::vector<StdComplex>& other) {
             "Error: StateVector::load(const vector<ComplexType>&): invalid "
             "length of state");
     }
-    auto host_view = internal::wrapped_host_view(other);
+    std::vector<ComplexType> tmp(other.size());
+    std::ranges::transform(other, tmp.begin(), [](const StdComplex& c) {
+        return ComplexType(static_cast<FloatType>(c.real()), static_cast<FloatType>(c.imag()));
+    });
+    auto host_view = internal::wrapped_host_view(tmp);
     Kokkos::deep_copy(_raw, host_view);
 }
 template <Precision Prec, ExecutionSpace Space>
