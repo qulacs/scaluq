@@ -152,7 +152,7 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
             .ex(DocString::Code(
                 {">>> pauli = PauliOperator(\"X 3 Y 2\")",
                  ">>> print(pauli.to_json())",
-                 "{\"coef\":{\"imag\":0.0,\"real\":1.0},\"pauli_string\":\"X 3 Y 2\"}"}))
+                 "{\"coef\":{\"imag\":0.0,\"real\":1.0},\"pauli_string\":\"Y 2 X 3\"}"}))
             .build_as_google_style()
             .c_str())
         .def(nb::init<StdComplex>(),

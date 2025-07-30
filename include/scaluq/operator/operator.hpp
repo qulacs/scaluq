@@ -110,12 +110,9 @@ void bind_operator_operator_hpp(nb::module_& m) {
         DocString()
             .desc("General quantum operator class.")
             .desc("Given `qubit_count: int`, Initialize operator with specified number of qubits.")
-            .ex(DocString::Code(
-                {">>> pauli = PauliOperator(\"X 3 Y 2\")",
-                 ">>> operator = Operator(4)",
-                 ">>> operator.add_operator(pauli)",
-                 ">>> print(operator.to_json())",
-                 R"({"n_qubits":4,"terms":[{"coef":{"imag":0.0,"real":1.0},"pauli_string":"X 3 Y 2"}]})"}))
+            .ex(DocString::Code({">>> pauli = PauliOperator(\"X 3 Y 2\")",
+                                 ">>> print(pauli.to_json())",
+                                 R"({"coef":{"imag":0.0,"real":1.0},"pauli_string":"Y 2 X 3"})"}))
             .build_as_google_style()
             .c_str())
         .def(nb::init<std::uint64_t>(),
