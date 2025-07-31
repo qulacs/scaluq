@@ -32,19 +32,8 @@ StdComplex StateVector<Prec, Space>::get_amplitude_at(std::uint64_t index) {
 template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space> StateVector<Prec, Space>::Haar_random_state(std::uint64_t n_qubits,
                                                                      std::uint64_t seed) {
-    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(seed);
     auto state(StateVector<Prec, Space>::uninitialized_state(n_qubits));
-    Kokkos::parallel_for(
-        "Haar_random_state",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state._dim),
-        KOKKOS_LAMBDA(std::uint64_t i) {
-            auto rand_gen = rand_pool.get_state();
-            state._raw(i) = ComplexType(static_cast<FloatType>(rand_gen.normal(0.0, 1.0)),
-                                        static_cast<FloatType>(rand_gen.normal(0.0, 1.0)));
-            rand_pool.free_state(rand_gen);
-        });
-    Kokkos::fence();
-    state.normalize();
+    state.set_Haar_random_state(seed);
     return state;
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -82,8 +71,19 @@ void StateVector<Prec, Space>::set_computational_basis(std::uint64_t basis) {
     Kokkos::fence();
 }
 template <Precision Prec, ExecutionSpace Space>
-void StateVector<Prec, Space>::set_Haar_random_state(std::uint64_t n_qubits, std::uint64_t seed) {
-    *this = Haar_random_state(n_qubits, seed);
+void StateVector<Prec, Space>::set_Haar_random_state(std::uint64_t seed) {
+    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(seed);
+    Kokkos::parallel_for(
+        "Haar_random_state",
+        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i) {
+            auto rand_gen = rand_pool.get_state();
+            _raw(i) = ComplexType(static_cast<FloatType>(rand_gen.normal(0.0, 1.0)),
+                                  static_cast<FloatType>(rand_gen.normal(0.0, 1.0)));
+            rand_pool.free_state(rand_gen);
+        });
+    Kokkos::fence();
+    this->normalize();
 }
 template <Precision Prec, ExecutionSpace Space>
 [[nodiscard]] std::vector<StdComplex> StateVector<Prec, Space>::get_amplitudes() const {
@@ -274,14 +274,16 @@ void StateVector<Prec, Space>::load(const std::vector<StdComplex>& other) {
             "Error: StateVector::load(const vector<ComplexType>&): invalid "
             "length of state");
     }
-    std::vector<ComplexType> other_complex(_dim);
-    std::ranges::copy(other, other_complex.begin());
-    auto host_view = internal::wrapped_host_view(other);
+    std::vector<ComplexType> tmp(other.size());
+    std::ranges::transform(other, tmp.begin(), [](const StdComplex& c) {
+        return ComplexType(static_cast<FloatType>(c.real()), static_cast<FloatType>(c.imag()));
+    });
+    auto host_view = internal::wrapped_host_view(tmp);
     Kokkos::deep_copy(_raw, host_view);
 }
 template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space> StateVector<Prec, Space>::copy() const {
-    StateVector<Prec, Space> new_vec(_n_qubits);
+    auto new_vec = StateVector<Prec, Space>::uninitialized_state(_n_qubits);
     Kokkos::deep_copy(new_vec._raw, _raw);
     return new_vec;
 }
