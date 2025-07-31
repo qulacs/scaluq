@@ -199,7 +199,6 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .arg("seed",
                       "int | None",
                       true,
-                      true,
                       "random seed",
                       "If not specified, the value from random device is used.")
                  .ex(DocString::Code({">>> state = StateVector(2)",
