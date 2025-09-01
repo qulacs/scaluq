@@ -16,6 +16,11 @@ class Operator {
     using ExecutionSpaceType = internal::SpaceType<Space>;
 
 public:
+    struct GroundState {
+        StdComplex eigenvalue;
+        StateVector<Prec, Space> state;
+    };
+
     Operator() = default;
     explicit Operator(std::uint64_t n_terms) : _terms("terms", n_terms) {}
     explicit Operator(std::vector<PauliOperator<Prec, Space>> terms);
@@ -53,11 +58,15 @@ public:
         const StateVectorBatched<Prec, Space>& states_ket) const;
 
     // not implemented yet
-    [[nodiscard]] StdComplex solve_ground_state_eigenvalue_by_arnoldi_method(
-        const StateVector<Prec, Space>& state, std::uint64_t iter_count, StdComplex mu = 0.) const;
+    [[nodiscard]] GroundState solve_ground_state_by_power_method(
+        const StateVector<Prec, Space>& initial_state,
+        std::uint64_t iter_count,
+        std::optional<StdComplex> mu = std::nullopt) const;
     // not implemented yet
-    [[nodiscard]] StdComplex solve_ground_state_eigenvalue_by_power_method(
-        const StateVector<Prec, Space>& state, std::uint64_t iter_count, StdComplex mu = 0.) const;
+    [[nodiscard]] GroundState solve_ground_state_by_arnoldi_method(
+        const StateVector<Prec, Space>& initial_state,
+        std::uint64_t iter_count,
+        std::optional<StdComplex> mu = std::nullopt) const;
 
     Operator operator*(StdComplex coef) const;
     Operator& operator*=(StdComplex coef);
@@ -94,6 +103,8 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const Operator& op) {
         return os << op.to_string();
     }
+
+    StdComplex calculate_default_mu() const;
 
 private:
     Kokkos::View<PauliOperator<Prec, Space>*, ExecutionSpaceType> _terms;

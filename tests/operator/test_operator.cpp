@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <Eigen/Eigenvalues>
 #include <scaluq/operator/operator.hpp>
 
 #include "../test_environment.hpp"
@@ -228,8 +229,8 @@ TYPED_TEST(OperatorTest, MultiOperatorTest) {
         auto op = op1 * op2;
         auto mat = op.get_full_matrix(n);
         auto expected_eigen = eigen1 * eigen2;
-        for (std::uint64_t i = 0; i < mat.rows(); ++i) {
-            for (std::uint64_t j = 0; j < mat.cols(); ++j) {
+        for (std::uint64_t i = 0; i < static_cast<std::uint64_t>(mat.rows()); ++i) {
+            for (std::uint64_t j = 0; j < static_cast<std::uint64_t>(mat.cols()); ++j) {
                 ASSERT_NEAR(mat(i, j).real(), expected_eigen(i, j).real(), eps<Prec>);
                 ASSERT_NEAR(mat(i, j).imag(), expected_eigen(i, j).imag(), eps<Prec>);
             }
@@ -288,5 +289,45 @@ TYPED_TEST(OperatorTest, Optimize) {
     for (std::uint64_t i = 0; i < expected.size(); i++) {
         ASSERT_EQ(expected[i].first, test[i].first);
         ASSERT_NEAR(std::abs(expected[i].second - test[i].second), 0, eps<Prec>);
+    }
+}
+
+TYPED_TEST(OperatorTest, GroundState) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    Random random;
+
+    for (std::uint64_t repeat = 0; repeat < 10; ++repeat) {
+        std::uint64_t n = random.int32() % 4 + 3;
+        auto [op, eigen] = generate_random_observable_with_eigen<Prec, Space>(n, random);
+        Eigen::ComplexEigenSolver<ComplexMatrix> solver(eigen);
+        ASSERT_EQ(solver.info(), Eigen::ComputationInfo::Success);
+        auto eigenvalues = solver.eigenvalues();
+        StdComplex minimum_eigenvalue = *std::ranges::min_element(
+            eigenvalues, [](const auto& l, const auto& r) { return l.real() < r.real(); });
+        StateVector<Prec, Space> initial_state = StateVector<Prec, Space>::Haar_random_state(n);
+        std::uint64_t iter_count_arnoldi;
+        if constexpr (Prec == Precision::F64) {
+            iter_count_arnoldi = 60;
+        } else if constexpr (Prec == Precision::F32) {
+            iter_count_arnoldi = 20;
+        } else {
+            iter_count_arnoldi = 8;
+        }
+        for (typename Operator<Prec, Space>::GroundState ground_state :
+             {op.solve_ground_state_by_power_method(initial_state, 1000),
+              op.solve_ground_state_by_arnoldi_method(initial_state, iter_count_arnoldi)}) {
+            ASSERT_NEAR(
+                std::pow(std::abs(ground_state.eigenvalue - minimum_eigenvalue), 5), 0, eps<Prec>);
+            StateVector<Prec, Space> eigenvector1 = ground_state.state.copy();
+            StateVector<Prec, Space> eigenvector2 = ground_state.state.copy();
+            op.apply_to_state(eigenvector1);
+            eigenvector2.multiply_coef(ground_state.eigenvalue);
+            auto amp1 = eigenvector1.get_amplitudes();
+            auto amp2 = eigenvector2.get_amplitudes();
+            for (std::uint64_t i : std::views::iota(0ULL, eigenvector1.dim())) {
+                ASSERT_NEAR(std::pow(std::abs(amp1[i] - amp2[i]), 5), 0, eps<Prec>);
+            }
+        }
     }
 }

@@ -36,7 +36,9 @@ genindex
 googletest
 GROUPNAME
 gtest
+habs
 Hadamard
+hassenberg
 hendrikmuhs
 IBMQ
 IBMQ's
@@ -50,6 +52,7 @@ kokkosalgorithms
 kokkoscontainers
 kokkoscore
 kokkossimd
+krylov
 kwargs
 libboost-dev
 LIBDL

@@ -77,12 +77,16 @@ public:
 
     void load(const std::vector<StdComplex>& other);
 
+    void load(const StateVector& other);
+
     [[nodiscard]] StateVector copy() const;
 
     friend std::ostream& operator<<(std::ostream& os, const StateVector& state) {
         os << state.to_string();
         return os;
     }
+
+    static ComplexType inner_product(const StateVector& a, const StateVector& b);
 
     [[nodiscard]] std::string to_string() const;
 
