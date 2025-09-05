@@ -525,10 +525,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
              "other"_a,
              DocString()
                  .desc("Load amplitudes of :class:`StateVector`")
-                 .arg("other",
-                      ":class:`StateVector`",
-                      "copy amplitudes from other state vector. Using this may be faster than "
-                      "calling :meth:`.copy`.")
+                 .arg("other", ":class:`StateVector`", "State vector to load from.")
                  .build_as_google_style()
                  .c_str())
         .def_static(
