@@ -235,7 +235,8 @@ void bind_operator_operator_hpp(nb::module_& m) {
                      ">>> op = Operator(terms)",
                      ">>> op *= .5",
                      ">>> ground_state = "
-                     "op.solve_ground_state_by_power_method(StateVector.Haar_random_state(2), 200)",
+                     "op.solve_ground_state_by_power_method(StateVector.Haar_random_state(2, "
+                     "seed=0), 200)",
                      ">>> ground_state.eigenvalue",
                      "(-2.8626207640766808+0j)",
                      ">>> print(ground_state.state.get_amplitudes())",
@@ -275,15 +276,16 @@ void bind_operator_operator_hpp(nb::module_& m) {
                      ">>> op = Operator(terms)",
                      ">>> op *= .5",
                      ">>> ground_state = "
-                     "op.solve_ground_state_by_arnoldi_method(StateVector.Haar_random_state(2), "
+                     "op.solve_ground_state_by_arnoldi_method(StateVector.Haar_random_state(2, "
+                     "seed=0), "
                      "40)",
                      ">>> ground_state.eigenvalue",
-                     "(-2.8626207640766808-8.998201995900344e-17j)",
+                     "(-2.8626207640766825+5.719057674958528e-16j)",
                      ">>> ground_state.state.get_amplitudes()",
-                     "[(-0.04511876938174943+0.9965865497827757j), "
-                     "(0.0007126870642041874-0.015741881973365717j), "
-                     "(0.0007126870642048721-0.015741881973368472j), "
-                     "(0.002959834120177502-0.0653770241116168j)]"}))
+                     "[(0.5933784201094293-0.8019491911005947j), "
+                     "(-0.009372886937859657+0.012667429153739196j), "
+                     "(-0.009372886937859903+0.012667429153739583j), "
+                     "(-0.03892618788329329+0.05260862853738404j)]"}))
                 .build_as_google_style()
                 .c_str())
         .def(nb::self *= StdComplex())
