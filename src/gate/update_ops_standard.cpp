@@ -387,7 +387,7 @@ void rx_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              std::uint64_t control_value_mask,
              Float<Prec> pcoef,
-             Kokkos::View<Float<Prec>*, SpaceType<Space>> params,
+             const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
              StateVectorBatched<Prec, Space>& states) {
     auto team_policy =
         Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), states.batch_size(), Kokkos::AUTO);
@@ -449,7 +449,7 @@ void ry_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              std::uint64_t control_value_mask,
              Float<Prec> pcoef,
-             Kokkos::View<Float<Prec>*, SpaceType<Space>> params,
+             const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
              StateVectorBatched<Prec, Space>& states) {
     auto team_policy =
         Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), states.batch_size(), Kokkos::AUTO);
@@ -510,7 +510,7 @@ void rz_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              std::uint64_t control_value_mask,
              Float<Prec> pcoef,
-             Kokkos::View<Float<Prec>*, SpaceType<Space>> params,
+             const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
              StateVectorBatched<Prec, Space>& states) {
     auto team_policy =
         Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), states.batch_size(), Kokkos::AUTO);

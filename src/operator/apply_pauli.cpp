@@ -228,7 +228,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t phase_flip_mask,
                           Complex<Prec> coef,
                           Float<Prec> pcoef,
-                          Kokkos::View<Float<Prec>*, SpaceType<Space>> params,
+                          const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
                           StateVectorBatched<Prec, Space>& states) {
     std::uint64_t global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     auto team_policy =
