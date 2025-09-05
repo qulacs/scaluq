@@ -38,7 +38,7 @@ GROUPNAME
 gtest
 habs
 Hadamard
-hassenberg
+hessenberg
 hendrikmuhs
 IBMQ
 IBMQ's

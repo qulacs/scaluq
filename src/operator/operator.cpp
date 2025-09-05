@@ -415,7 +415,7 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
     std::vector<StateVector<internal::Prec, internal::Space>> krylov_space_basis;
     krylov_space_basis.reserve(iter_count + 1);
     krylov_space_basis.push_back(initial_state.copy());
-    ComplexMatrix hassenberg_matrix = ComplexMatrix::Zero(iter_count, iter_count);
+    ComplexMatrix hessenberg_matrix = ComplexMatrix::Zero(iter_count, iter_count);
     for (std::uint64_t i = 0; i < iter_count; i++) {
         // |state> <- (A-muI)|state>
         auto state = krylov_space_basis.back().copy();
@@ -425,18 +425,18 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
         for (std::uint64_t j = 0; j <= i; j++) {
             auto coef = internal::inner_product<internal::Prec, internal::Space>(
                 krylov_space_basis[j]._raw, state._raw);
-            hassenberg_matrix(j, i) = static_cast<StdComplex>(coef);
+            hessenberg_matrix(j, i) = static_cast<StdComplex>(coef);
             state.add_state_vector_with_coef(-coef, krylov_space_basis[j]);
         }
         // normalize |state>
         double norm = std::sqrt(state.get_squared_norm());
         if (i + 1 < iter_count) {
-            hassenberg_matrix(i + 1, i) = norm;
+            hessenberg_matrix(i + 1, i) = norm;
         }
         state.multiply_coef(1. / norm);
         krylov_space_basis.push_back(state);
     }
-    Eigen::ComplexEigenSolver<ComplexMatrix> solver(hassenberg_matrix);
+    Eigen::ComplexEigenSolver<ComplexMatrix> solver(hessenberg_matrix);
     if (solver.info() == Eigen::ComputationInfo::NoConvergence) {
         throw std::runtime_error(
             "Operator::solve_ground_state_eigenvalue_by_arnoldi_method: "
