@@ -276,7 +276,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
                      ">>> op *= .5",
                      ">>> ground_state = "
                      "op.solve_ground_state_by_arnoldi_method(StateVector.Haar_random_state(2), "
-                     "200)",
+                     "40)",
                      ">>> ground_state.eigenvalue",
                      "(-2.8626207640766808-8.998201995900344e-17j)",
                      ">>> ground_state.state.get_amplitudes()",
