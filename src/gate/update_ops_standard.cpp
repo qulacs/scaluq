@@ -33,7 +33,6 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
             state._raw[basis_0] = res0;
             state._raw[basis_1] = res1;
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -58,7 +57,6 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
             states._raw(batch_id, basis_0) = res0;
             states._raw(batch_id, basis_1) = res1;
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -96,7 +94,6 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
             state._raw[basis_2] = res2;
             state._raw[basis_3] = res3;
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -135,7 +132,6 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
             states._raw(batch_id, basis_2) = res2;
             states._raw(batch_id, basis_3) = res3;
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -154,7 +150,6 @@ void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
             state._raw[basis] *= diag[0];
             state._raw[basis | target_mask] *= diag[1];
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -174,7 +169,6 @@ void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
             states._raw(batch_id, basis) *= diag[0];
             states._raw(batch_id, basis | target_mask) *= diag[1];
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -190,7 +184,6 @@ void global_phase_gate(std::uint64_t,
         KOKKOS_LAMBDA(std::uint64_t i) {
             state._raw[insert_zero_at_mask_positions(i, control_mask) | control_value_mask] *= coef;
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -209,7 +202,6 @@ void global_phase_gate(std::uint64_t,
                         insert_zero_at_mask_positions(i, control_mask) | control_value_mask) *=
                 coef;
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -226,7 +218,6 @@ void x_gate(std::uint64_t target_mask,
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             Kokkos::kokkos_swap(state._raw[i], state._raw[i | target_mask]);
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -244,7 +235,6 @@ void x_gate(std::uint64_t target_mask,
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             Kokkos::kokkos_swap(states._raw(batch_id, i), states._raw(batch_id, i | target_mask));
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -263,7 +253,6 @@ void y_gate(std::uint64_t target_mask,
             state._raw[i | target_mask] *= Complex<Prec>(0, -1);
             Kokkos::kokkos_swap(state._raw[i], state._raw[i | target_mask]);
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -283,7 +272,6 @@ void y_gate(std::uint64_t target_mask,
             states._raw(batch_id, i | target_mask) *= Complex<Prec>(0, -1);
             Kokkos::kokkos_swap(states._raw(batch_id, i), states._raw(batch_id, i | target_mask));
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -300,7 +288,6 @@ void z_gate(std::uint64_t target_mask,
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             state._raw[i | target_mask] *= Complex<Prec>(-1, 0);
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -318,7 +305,6 @@ void z_gate(std::uint64_t target_mask,
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             states._raw(batch_id, i | target_mask) *= Complex<Prec>(-1, 0);
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -336,7 +322,6 @@ void one_target_phase_gate(std::uint64_t target_mask,
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             state._raw[i | target_mask] *= phase;
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -355,7 +340,6 @@ void one_target_phase_gate(std::uint64_t target_mask,
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             states._raw(batch_id, i | target_mask) *= phase;
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -417,7 +401,6 @@ void rx_gate(std::uint64_t target_mask,
                     states._raw(batch_id, basis_1) = res1;
                 });
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -478,7 +461,6 @@ void ry_gate(std::uint64_t target_mask,
                     states._raw(batch_id, basis_1) = res1;
                 });
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -536,7 +518,6 @@ void rz_gate(std::uint64_t target_mask,
                     states._raw(batch_id, basis_1) *= diag[1];
                 });
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -556,7 +537,6 @@ void u1_gate(std::uint64_t target_mask,
                 control_value_mask;
             state._raw[i | target_mask] *= exp_val;
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -577,7 +557,6 @@ void u1_gate(std::uint64_t target_mask,
                 control_value_mask;
             states._raw(batch_id, i | target_mask) *= exp_val;
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -658,7 +637,6 @@ void swap_gate(std::uint64_t target_mask,
             Kokkos::kokkos_swap(state._raw[basis | lower_target_mask],
                                 state._raw[basis | upper_target_mask]);
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -679,6 +657,5 @@ void swap_gate(std::uint64_t target_mask,
             Kokkos::kokkos_swap(states._raw(batch_id, basis | lower_target_mask),
                                 states._raw(batch_id, basis | upper_target_mask));
         });
-    Kokkos::fence();
 }
 }  // namespace scaluq::internal

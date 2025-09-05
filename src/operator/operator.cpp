@@ -164,7 +164,6 @@ StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
             }
         },
         res);
-    Kokkos::fence();
     return static_cast<StdComplex>(res);
 }
 
@@ -226,7 +225,6 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
                 res(batch_id) = Kokkos::complex<double>(sum.real(), sum.imag());
             });
         });
-    Kokkos::fence();
     auto res_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), res);
     return std::vector<StdComplex>(res_h.data(), res_h.data() + res_h.size());
 }
@@ -279,7 +277,6 @@ StdComplex Operator<internal::Prec, internal::Space>::get_transition_amplitude(
             }
         },
         res);
-    Kokkos::fence();
     return static_cast<StdComplex>(res);
 }
 
@@ -353,7 +350,6 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transitio
                 results(batch_id) = Kokkos::complex<double>(res.real(), res.imag());
             });
         });
-    Kokkos::fence();
     auto res_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
     return std::vector<StdComplex>(res_h.data(), res_h.data() + res_h.size());
 }
