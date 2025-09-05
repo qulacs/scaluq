@@ -86,7 +86,7 @@ public:
         return os;
     }
 
-    static ComplexType inner_product(const StateVector& a, const StateVector& b);
+    static StdComplex inner_product(const StateVector& a, const StateVector& b);
 
     [[nodiscard]] std::string to_string() const;
 

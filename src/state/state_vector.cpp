@@ -318,12 +318,12 @@ std::string StateVector<Prec, Space>::to_string() const {
 }
 
 template <Precision Prec, ExecutionSpace Space>
-StateVector<Prec, Space>::ComplexType StateVector<Prec, Space>::inner_product(
-    const StateVector& a, const StateVector& b) {
+StdComplex StateVector<Prec, Space>::inner_product(const StateVector& a, const StateVector& b) {
     if (a._dim != b._dim) {
         throw std::runtime_error("Error: StateVector::inner_product: dimension mismatch");
     }
-    return internal::inner_product<Prec, Space>(a._raw, b._raw);
+    auto ret = internal::inner_product<Prec, Space>(a._raw, b._raw);
+    return static_cast<StdComplex>(ret);
 }
 
 template class StateVector<internal::Prec, internal::Space>;
