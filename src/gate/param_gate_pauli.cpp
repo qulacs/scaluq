@@ -35,13 +35,17 @@ void ParamPauliRotationGateImpl<Prec, Space>::update_quantum_state(
     std::vector<Float<Prec>> params_prec(params.size());
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
+    Kokkos::View<Float<Prec>*, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> params_view_host(
+        params_prec.data(), params_prec.size());
+    Kokkos::View<Float<Prec>*, SpaceType<Space>> params_view("params_view", params.size());
+    Kokkos::deep_copy(params_view, params_view_host);
     apply_pauli_rotation(this->_control_mask,
                          this->_control_value_mask,
                          bit_flip_mask,
                          phase_flip_mask,
                          Complex<Prec>(_pauli.coef()),
                          this->_pcoef,
-                         params_prec,
+                         params_view,
                          states);
 }
 template <Precision Prec, ExecutionSpace Space>

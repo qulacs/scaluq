@@ -387,7 +387,7 @@ void rx_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              std::uint64_t control_value_mask,
              Float<Prec> pcoef,
-             std::vector<Float<Prec>> params,
+             Kokkos::View<Float<Prec>*, SpaceType<Space>> params,
              StateVectorBatched<Prec, Space>& states) {
     auto team_policy =
         Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), states.batch_size(), Kokkos::AUTO);
@@ -396,7 +396,7 @@ void rx_gate(std::uint64_t target_mask,
         team_policy,
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team_member) {
             const std::uint64_t batch_id = team_member.league_rank();
-            const Float<Prec> angle = params[batch_id] * pcoef;
+            const Float<Prec> angle = params(batch_id) * pcoef;
             const Float<Prec> cosval = internal::cos(angle / Float<Prec>{2});
             const Float<Prec> sinval = internal::sin(angle / Float<Prec>{2});
             Matrix2x2<Prec> matrix = {
@@ -449,7 +449,7 @@ void ry_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              std::uint64_t control_value_mask,
              Float<Prec> pcoef,
-             std::vector<Float<Prec>> params,
+             Kokkos::View<Float<Prec>*, SpaceType<Space>> params,
              StateVectorBatched<Prec, Space>& states) {
     auto team_policy =
         Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), states.batch_size(), Kokkos::AUTO);
@@ -458,7 +458,7 @@ void ry_gate(std::uint64_t target_mask,
         team_policy,
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team_member) {
             const std::uint64_t batch_id = team_member.league_rank();
-            const Float<Prec> angle = params[batch_id] * pcoef;
+            const Float<Prec> angle = params(batch_id) * pcoef;
             const Float<Prec> cosval = internal::cos(angle / Float<Prec>{2});
             const Float<Prec> sinval = internal::sin(angle / Float<Prec>{2});
             Matrix2x2<Prec> matrix = {cosval, -sinval, sinval, cosval};
@@ -510,7 +510,7 @@ void rz_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              std::uint64_t control_value_mask,
              Float<Prec> pcoef,
-             std::vector<Float<Prec>> params,
+             Kokkos::View<Float<Prec>*, SpaceType<Space>> params,
              StateVectorBatched<Prec, Space>& states) {
     auto team_policy =
         Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), states.batch_size(), Kokkos::AUTO);
@@ -519,7 +519,7 @@ void rz_gate(std::uint64_t target_mask,
         team_policy,
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team_member) {
             const std::uint64_t batch_id = team_member.league_rank();
-            const Float<Prec> angle = params[batch_id] * pcoef;
+            const Float<Prec> angle = params(batch_id) * pcoef;
             const Float<Prec> cosval = internal::cos(angle / Float<Prec>{2});
             const Float<Prec> sinval = internal::sin(angle / Float<Prec>{2});
             DiagonalMatrix2x2<Prec> diag = {Complex<Prec>(cosval, -sinval),

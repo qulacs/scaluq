@@ -31,11 +31,15 @@ void ParamRXGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec,
     std::vector<Float<Prec>> params_prec(params.size());
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
+    Kokkos::View<Float<Prec>*, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> params_view_host(
+        params_prec.data(), params_prec.size());
+    Kokkos::View<Float<Prec>*, SpaceType<Space>> params_view("params_view", params.size());
+    Kokkos::deep_copy(params_view, params_view_host);
     rx_gate(this->_target_mask,
             this->_control_mask,
             this->_control_value_mask,
             this->_pcoef,
-            params_prec,
+            params_view,
             states);
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -72,11 +76,15 @@ void ParamRYGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec,
     std::vector<Float<Prec>> params_prec(params.size());
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
+    Kokkos::View<Float<Prec>*, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> params_view_host(
+        params_prec.data(), params_prec.size());
+    Kokkos::View<Float<Prec>*, SpaceType<Space>> params_view("params_view", params.size());
+    Kokkos::deep_copy(params_view, params_view_host);
     ry_gate(this->_target_mask,
             this->_control_mask,
             this->_control_value_mask,
             this->_pcoef,
-            params_prec,
+            params_view,
             states);
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -113,11 +121,15 @@ void ParamRZGateImpl<Prec, Space>::update_quantum_state(StateVectorBatched<Prec,
     std::vector<Float<Prec>> params_prec(params.size());
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
+    Kokkos::View<Float<Prec>*, Kokkos::HostSpace, Kokkos::MemoryUnmanaged> params_view_host(
+        params_prec.data(), params_prec.size());
+    Kokkos::View<Float<Prec>*, SpaceType<Space>> params_view("params_view", params.size());
+    Kokkos::deep_copy(params_view, params_view_host);
     rz_gate(this->_target_mask,
             this->_control_mask,
             this->_control_value_mask,
             this->_pcoef,
-            params_prec,
+            params_view,
             states);
 }
 template <Precision Prec, ExecutionSpace Space>
