@@ -447,7 +447,7 @@ void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComp
 
 template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::load(const StateVectorBatched<Prec, Space>& other) {
-    if (other._batch_size.!= _batch_size) {
+    if (other._batch_size != _batch_size) {
         throw std::runtime_error(
             "Error: StateVectorBatched::load(const StateVectorBatched<Prec, Space>&): "
             "invalid batch_size");
