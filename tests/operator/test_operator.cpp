@@ -309,14 +309,18 @@ TYPED_TEST(OperatorTest, GroundState) {
         std::uint64_t iter_count_arnoldi;
         if constexpr (Prec == Precision::F64) {
             iter_count_arnoldi = 60;
-        } else if constexpr (Prec == Precision::F32) {
-            iter_count_arnoldi = 20;
         } else {
-            iter_count_arnoldi = 8;
+            iter_count_arnoldi = 20;
         }
-        for (typename Operator<Prec, Space>::GroundState ground_state :
-             {op.solve_ground_state_by_power_method(initial_state, 1000),
-              op.solve_ground_state_by_arnoldi_method(initial_state, iter_count_arnoldi)}) {
+        for (auto type : {0, 1}) {
+            if (Prec == Precision::F16 && type == 1) {
+                // skip arnoldi method for f16
+                continue;
+            }
+            auto ground_state =
+                type == 0
+                    ? op.solve_ground_state_by_power_method(initial_state, 1000)
+                    : op.solve_ground_state_by_arnoldi_method(initial_state, iter_count_arnoldi);
             ASSERT_NEAR(
                 std::pow(std::abs(ground_state.eigenvalue - minimum_eigenvalue), 5), 0, eps<Prec>);
             StateVector<Prec, Space> eigenvector1 = ground_state.state.copy();
