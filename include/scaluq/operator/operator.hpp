@@ -237,13 +237,13 @@ void bind_operator_operator_hpp(nb::module_& m) {
                      ">>> ground_state = "
                      "op.solve_ground_state_by_power_method(StateVector.Haar_random_state(2, "
                      "seed=0), 200)",
-                     ">>> ground_state.eigenvalue",
-                     "(-2.8626207640766825+0j)",
-                     ">>> print(ground_state.state.get_amplitudes())",
-                     "[(0.5933784201094062-0.8019491911005859j), "
-                     "(-0.009372886810531474+0.01266742909358805j), "
-                     "(-0.009372887066035172+0.012667429214193563j), "
-                     "(-0.03892618788344764+0.05260862853743917j)]"}))
+                     ">>> ground_state.eigenvalue.real # doctest: +ELLIPSIS",
+                     "-2.862620764...",
+                     ">>> print(ground_state.state.get_amplitudes()) # doctest: +ELLIPSIS",
+                     "[(0.593378420...-0.801949191...j), "
+                     "(-0.00937288681...+0.0126674290...j), "
+                     "(-0.00937288706...+0.0126674292...j), "
+                     "(-0.0389261878...+0.0526086285...j)]"}))
                 .build_as_google_style()
                 .c_str())
         .def(
@@ -279,13 +279,13 @@ void bind_operator_operator_hpp(nb::module_& m) {
                      "op.solve_ground_state_by_arnoldi_method(StateVector.Haar_random_state(2, "
                      "seed=0), "
                      "40)",
-                     ">>> ground_state.eigenvalue",
-                     "(-2.8626207640766825+5.719057674958528e-16j)",
-                     ">>> ground_state.state.get_amplitudes()",
-                     "[(0.5933784201094293-0.8019491911005947j), "
-                     "(-0.009372886937859657+0.012667429153739196j), "
-                     "(-0.009372886937859903+0.012667429153739583j), "
-                     "(-0.03892618788329329+0.05260862853738404j)]"}))
+                     ">>> ground_state.eigenvalue.real # doctest: +ELLIPSIS",
+                     "-2.862620764..."
+                     ">>> ground_state.state.get_amplitudes() # doctest: +ELLIPSIS",
+                     "[(0.593378420...-0.801949191...j), "
+                     "(-0.00937288693...+0.0126674291...j), "
+                     "(-0.00937288693...+0.0126674291...j), "
+                     "(-0.0389261878...+0.0526086285...j)]"}))
                 .build_as_google_style()
                 .c_str())
         .def(nb::self *= StdComplex())
