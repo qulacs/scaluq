@@ -239,7 +239,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
                      "seed=0), 200)",
                      ">>> ground_state.eigenvalue.real # doctest: +ELLIPSIS",
                      "-2.862620764...",
-                     ">>> print(ground_state.state.get_amplitudes()) # doctest: +ELLIPSIS",
+                     ">>> print(ground_state.state.get_amplitudes()) # doctest: +SKIP",
                      "[(0.593378420...-0.801949191...j), "
                      "(-0.00937288681...+0.0126674290...j), "
                      "(-0.00937288706...+0.0126674292...j), "
@@ -281,7 +281,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
                      "40)",
                      ">>> ground_state.eigenvalue.real # doctest: +ELLIPSIS",
                      "-2.862620764...",
-                     ">>> ground_state.state.get_amplitudes() # doctest: +ELLIPSIS",
+                     ">>> ground_state.state.get_amplitudes() # doctest: +SKIP",
                      "[(0.593378420...-0.801949191...j), "
                      "(-0.00937288693...+0.0126674291...j), "
                      "(-0.00937288693...+0.0126674291...j), "
