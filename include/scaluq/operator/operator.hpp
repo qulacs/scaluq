@@ -280,7 +280,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
                      "seed=0), "
                      "40)",
                      ">>> ground_state.eigenvalue.real # doctest: +ELLIPSIS",
-                     "-2.862620764..."
+                     "-2.862620764...",
                      ">>> ground_state.state.get_amplitudes() # doctest: +ELLIPSIS",
                      "[(0.593378420...-0.801949191...j), "
                      "(-0.00937288693...+0.0126674291...j), "
