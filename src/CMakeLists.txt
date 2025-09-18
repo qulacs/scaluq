@@ -34,6 +34,7 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
             operator/apply_pauli.cpp
             operator/pauli_operator.cpp
             operator/operator.cpp
+            operator/operator_batched.cpp
             util/utility.cpp
             types.cpp
         )

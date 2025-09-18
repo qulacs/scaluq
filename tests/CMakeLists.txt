@@ -12,6 +12,7 @@ add_executable(scaluq_test
     gate/param_gate_test.cpp
     operator/test_pauli_operator.cpp
     operator/test_operator.cpp
+    operator/test_operator_batched.cpp
     state/state_vector_test.cpp
     state/state_vector_batched_test.cpp
 )
