@@ -42,6 +42,6 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t phase_flip_mask,
                           Complex<Prec> coef,
                           Float<Prec> pcoef,
-                          std::vector<Float<Prec>> params,
+                          const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
                           StateVectorBatched<Prec, Space>& states);
 }  // namespace scaluq::internal
