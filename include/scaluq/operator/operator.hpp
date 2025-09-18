@@ -29,6 +29,7 @@ public:
         return internal::convert_view_to_vector<PauliOperator<Prec, Space>, Space>(_terms);
     }
     [[nodiscard]] std::string to_string() const;
+    [[nodiscard]] std::uint64_t n_terms() const { return _terms.extent(0); }
 
     void optimize();
 

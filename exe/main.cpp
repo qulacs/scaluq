@@ -9,6 +9,8 @@ template <Precision Prec, ExecutionSpace Space>
 void merge_gate_test() {
     StateVector<Prec, Space> state_vector(6);
     state_vector.set_Haar_random_state();
+    StateVector<Prec, Space> state_vector_trans(6);
+    state_vector.set_Haar_random_state();
     {
         std::vector<std::vector<PauliOperator<Prec, Space>>> ops(3);
         ops[0].push_back({PauliOperator<Prec, Space>("X 0 Y 1")});
@@ -25,7 +27,13 @@ void merge_gate_test() {
         for (const auto& val : res) {
             std::cout << val << " ";
         }
+        auto res_trans = op_batched.get_transition_amplitude(state_vector, state_vector_trans);
+        std::cout << "Transition values: ";
+        for (const auto& val : res) {
+            std::cout << val << " ";
+        }
         std::cout << std::endl;
+        std::cout << "Batched operator: " << op_batched << std::endl;
     }
     {
         Operator<Prec, Space> op1({PauliOperator<Prec, Space>("X 0 Y 1"),
@@ -42,6 +50,15 @@ void merge_gate_test() {
                   << std::endl;
         std::cout << "Expectation value of op3: " << op3.get_expectation_value(state_vector)
                   << std::endl;
+        std::cout << "Transition value of op1: "
+                  << op1.get_transition_amplitude(state_vector, state_vector) << std::endl;
+        std::cout << "Transition value of op2: "
+                  << op2.get_transition_amplitude(state_vector, state_vector) << std::endl;
+        std::cout << "Transition value of op3: "
+                  << op3.get_transition_amplitude(state_vector, state_vector) << std::endl;
+        std::cout << "operator: " << op1 << std::endl;
+        std::cout << "operator: " << op2 << std::endl;
+        std::cout << "operator: " << op3 << std::endl;
     }
 }
 
