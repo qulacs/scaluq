@@ -123,6 +123,7 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_tr
                 Kokkos::TeamThreadMDRange(
                     team, _row_ptr[batch_id + 1] - _row_ptr[batch_id], dim >> 1),
                 [&](std::uint64_t term_id, std::uint64_t state_idx, ComplexType& res_lcl) {
+                    term_id += _row_ptr[batch_id];
                     auto bit_flip_mask = _ops[term_id]._bit_flip_mask;
                     auto phase_flip_mask = _ops[term_id]._phase_flip_mask;
                     ComplexType coef = _ops[term_id]._coef;
