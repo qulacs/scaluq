@@ -275,6 +275,15 @@ void StateVector<Prec, Space>::load(const std::vector<StdComplex>& other) {
     Kokkos::deep_copy(_raw, host_view);
 }
 template <Precision Prec, ExecutionSpace Space>
+void StateVector<Prec, Space>::load(const StateVector<Prec, Space>& other) {
+    if (other.dim() != _dim) {
+        throw std::runtime_error(
+            "Error: StateVector::load(const StateVector<Prec, Space>&): invalid "
+            "length of state");
+    }
+    Kokkos::deep_copy(_raw, other._raw);
+}
+template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space> StateVector<Prec, Space>::copy() const {
     auto new_vec = StateVector<Prec, Space>::uninitialized_state(_n_qubits);
     Kokkos::deep_copy(new_vec._raw, _raw);
@@ -299,6 +308,15 @@ std::string StateVector<Prec, Space>::to_string() const {
            << " : " << amp[i] << std::endl;
     }
     return os.str();
+}
+
+template <Precision Prec, ExecutionSpace Space>
+StdComplex StateVector<Prec, Space>::inner_product(const StateVector& a, const StateVector& b) {
+    if (a._dim != b._dim) {
+        throw std::runtime_error("Error: StateVector::inner_product: dimension mismatch");
+    }
+    auto ret = internal::inner_product<Prec, Space>(a._raw, b._raw);
+    return static_cast<StdComplex>(ret);
 }
 
 template class StateVector<internal::Prec, internal::Space>;

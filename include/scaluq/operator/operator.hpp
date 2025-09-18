@@ -16,6 +16,11 @@ class Operator {
     using ExecutionSpaceType = internal::SpaceType<Space>;
 
 public:
+    struct GroundState {
+        StdComplex eigenvalue;
+        StateVector<Prec, Space> state;
+    };
+
     Operator() = default;
     explicit Operator(std::uint64_t n_terms) : _terms("terms", n_terms) {}
     explicit Operator(std::vector<PauliOperator<Prec, Space>> terms);
@@ -53,11 +58,15 @@ public:
         const StateVectorBatched<Prec, Space>& states_ket) const;
 
     // not implemented yet
-    [[nodiscard]] StdComplex solve_ground_state_eigenvalue_by_arnoldi_method(
-        const StateVector<Prec, Space>& state, std::uint64_t iter_count, StdComplex mu = 0.) const;
+    [[nodiscard]] GroundState solve_ground_state_by_power_method(
+        const StateVector<Prec, Space>& initial_state,
+        std::uint64_t iter_count,
+        std::optional<StdComplex> mu = std::nullopt) const;
     // not implemented yet
-    [[nodiscard]] StdComplex solve_ground_state_eigenvalue_by_power_method(
-        const StateVector<Prec, Space>& state, std::uint64_t iter_count, StdComplex mu = 0.) const;
+    [[nodiscard]] GroundState solve_ground_state_by_arnoldi_method(
+        const StateVector<Prec, Space>& initial_state,
+        std::uint64_t iter_count,
+        std::optional<StdComplex> mu = std::nullopt) const;
 
     Operator operator*(StdComplex coef) const;
     Operator& operator*=(StdComplex coef);
@@ -95,6 +104,8 @@ public:
         return os << op.to_string();
     }
 
+    StdComplex calculate_default_mu() const;
+
 private:
     Kokkos::View<PauliOperator<Prec, Space>*, ExecutionSpaceType> _terms;
     bool _is_hermitian = true;
@@ -104,7 +115,7 @@ private:
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 void bind_operator_operator_hpp(nb::module_& m) {
-    nb::class_<Operator<Prec, Space>>(
+    nb::class_<Operator<Prec, Space>> op(
         m,
         "Operator",
         DocString()
@@ -118,10 +129,17 @@ void bind_operator_operator_hpp(nb::module_& m) {
                  ">>> print(op.to_json())",
                  R"({"terms":[{"coef":{"imag":-1.0,"real":0.0},"pauli_string":"X 0 X 1 Y 2"},{"coef":{"imag":2.0,"real":0.0},"pauli_string":"Y 1 X 3"}]})"}))
             .build_as_google_style()
-            .c_str())
-        .def(nb::init<std::uint64_t>(),
-             "n_terms"_a,
-             "Initialize operator with specified number of terms.")
+            .c_str());
+    nb::class_<typename Operator<Prec, Space>::GroundState> ground_state(
+        op,
+        "GroundState",
+        DocString()
+            .desc("Structure to hold the ground state information.")
+            .build_as_google_style()
+            .c_str());
+    op.def(nb::init<std::uint64_t>(),
+           "n_terms"_a,
+           "Initialize operator with specified number of terms.")
         .def(nb::init<std::vector<PauliOperator<Prec, Space>>>(),
              "terms"_a,
              "Initialize operator with given list of terms.")
@@ -190,6 +208,86 @@ void bind_operator_operator_hpp(nb::module_& m) {
              &Operator<Prec, Space>::get_full_matrix,
              "Get matrix representation of the Operator. Tensor product is applied from "
              "n_qubits-1 to 0.")
+        .def(
+            "solve_ground_state_by_power_method",
+            &Operator<Prec, Space>::solve_ground_state_by_power_method,
+            "initial_state"_a,
+            "iter_count"_a,
+            "mu"_a = std::nullopt,
+            DocString()
+                .desc("Solve for the ground state using the power method.")
+                .arg("initial_state",
+                     ":class:`StateVector`",
+                     "Initial state vector for the iteration. Passing Haar_random_state is often "
+                     "nice.")
+                .arg("iter_count", "int", "Number of iterations to perform.")
+                .arg("mu",
+                     "complex",
+                     true,
+                     "Shift value to accelerate convergence. The value must be larger than largest "
+                     "eigenvalue. If not provided, a default value is calculated internally.")
+                .ex(DocString::Code(
+                    {">>> terms = [PauliOperator(\"\", -3.8505), PauliOperator(\"X 1\", -0.2288), "
+                     "PauliOperator(\"Z 1\", -1.0466), PauliOperator(\"X 0\", -0.2288), "
+                     "PauliOperator(\"X 0 X 1\", 0.2613), PauliOperator(\"X 0 Z 1\", 0.2288), "
+                     "PauliOperator(\"Z 0\", -1.0466), PauliOperator(\"Z 0 X 1\", 0.2288), "
+                     "PauliOperator(\"Z 0 Z 1\", 0.2356)]",
+                     ">>> op = Operator(terms)",
+                     ">>> op *= .5",
+                     ">>> ground_state = "
+                     "op.solve_ground_state_by_power_method(StateVector.Haar_random_state(2, "
+                     "seed=0), 200)",
+                     ">>> ground_state.eigenvalue.real # doctest: +ELLIPSIS",
+                     "-2.862620764...",
+                     ">>> print(ground_state.state.get_amplitudes()) # doctest: +SKIP",
+                     "[(0.593378420...-0.801949191...j), "
+                     "(-0.00937288681...+0.0126674290...j), "
+                     "(-0.00937288706...+0.0126674292...j), "
+                     "(-0.0389261878...+0.0526086285...j)]"}))
+                .build_as_google_style()
+                .c_str())
+        .def(
+            "solve_ground_state_by_arnoldi_method",
+            &Operator<Prec, Space>::solve_ground_state_by_arnoldi_method,
+            "initial_state"_a,
+            "iter_count"_a,
+            "mu"_a = std::nullopt,
+            DocString()
+                .desc("Solve for the ground state using the Arnoldi method.")
+                .arg("initial_state",
+                     ":class:`StateVector`",
+                     "Initial state vector for the iteration. Passing Haar_random_state is often "
+                     "nice.")
+                .arg("iter_count",
+                     "int",
+                     "Number of iterations to perform. Too large value causes error on calculating "
+                     "eigenvalue of Hessenberg matrix.")
+                .arg("mu",
+                     "complex",
+                     true,
+                     "Shift value to accelerate convergence. The value must be larger than largest "
+                     "eigenvalue. If not provided, a default value is calculated internally.")
+                .ex(DocString::Code(
+                    {">>> terms = [PauliOperator(\"\", -3.8505), PauliOperator(\"X 1\", -0.2288), "
+                     "PauliOperator(\"Z 1\", -1.0466), PauliOperator(\"X 0\", -0.2288), "
+                     "PauliOperator(\"X 0 X 1\", 0.2613), PauliOperator(\"X 0 Z 1\", 0.2288), "
+                     "PauliOperator(\"Z 0\", -1.0466), PauliOperator(\"Z 0 X 1\", 0.2288), "
+                     "PauliOperator(\"Z 0 Z 1\", 0.2356)]",
+                     ">>> op = Operator(terms)",
+                     ">>> op *= .5",
+                     ">>> ground_state = "
+                     "op.solve_ground_state_by_arnoldi_method(StateVector.Haar_random_state(2, "
+                     "seed=0), "
+                     "40)",
+                     ">>> ground_state.eigenvalue.real # doctest: +ELLIPSIS",
+                     "-2.862620764...",
+                     ">>> ground_state.state.get_amplitudes() # doctest: +SKIP",
+                     "[(0.593378420...-0.801949191...j), "
+                     "(-0.00937288693...+0.0126674291...j), "
+                     "(-0.00937288693...+0.0126674291...j), "
+                     "(-0.0389261878...+0.0526086285...j)]"}))
+                .build_as_google_style()
+                .c_str())
         .def(nb::self *= StdComplex())
         .def(nb::self * StdComplex())
         .def(+nb::self)
@@ -218,6 +316,8 @@ void bind_operator_operator_hpp(nb::module_& m) {
         .def("__str__",
              &Operator<Prec, Space>::to_string,
              "Get string representation of the operator.");
+    ground_state.def_ro("eigenvalue", &Operator<Prec, Space>::GroundState::eigenvalue)
+        .def_ro("state", &Operator<Prec, Space>::GroundState::state);
 }
 }  // namespace internal
 #endif

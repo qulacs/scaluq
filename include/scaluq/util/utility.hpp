@@ -103,6 +103,23 @@ inline void resize_and_check_control_values(const std::vector<std::uint64_t>& co
     }
 }
 
+template <Precision Prec, ExecutionSpace Space>
+Complex<Prec> inner_product(const Kokkos::View<Complex<Prec>*, SpaceType<Space>>& a,
+                            const Kokkos::View<Complex<Prec>*, SpaceType<Space>>& b) {
+    if (a.extent(0) != b.extent(0)) {
+        throw std::runtime_error("Error: inner_product: dimension mismatch");
+    }
+    Complex<Prec> result;
+    Kokkos::parallel_reduce(
+        "inner_product",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, a.extent(0)),
+        KOKKOS_LAMBDA(std::uint64_t i, Complex<Prec> & lsum) {
+            lsum += internal::conj(a(i)) * b(i);
+        },
+        result);
+    return result;
+}
+
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Matrix2x2<Prec> matrix_multiply(const Matrix2x2<Prec>& matrix1,
                                                        const Matrix2x2<Prec>& matrix2) {

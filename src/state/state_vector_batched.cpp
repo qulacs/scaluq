@@ -410,14 +410,14 @@ template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComplex>>& states) {
     if (states.size() != _batch_size) {
         throw std::runtime_error(
-            "Error: StateVectorBatched::load(std::vector<std::vector<Complex<Prec>>>&): "
+            "Error: StateVectorBatched::load(const std::vector<std::vector<Complex<Prec>>>&): "
             "invalid batch_size");
     }
     for (std::uint64_t b = 0; b < states.size(); ++b) {
         if (states[b].size() != _dim) {
             throw std::runtime_error(
                 "Error: "
-                "StateVectorBatched::load(std::vector<std::vector<Complex<Prec>>>&): "
+                "StateVectorBatched::load(const std::vector<std::vector<Complex<Prec>>>&): "
                 "invalid length of state");
         }
     }
@@ -429,6 +429,23 @@ void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComp
         }
     }
     Kokkos::deep_copy(_raw, view_h);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+void StateVectorBatched<Prec, Space>::load(const StateVectorBatched<Prec, Space>& other) {
+    if (other._batch_size != _batch_size) {
+        throw std::runtime_error(
+            "Error: StateVectorBatched::load(const StateVectorBatched<Prec, Space>&): "
+            "invalid batch_size");
+    }
+    if (other._dim != _dim) {
+        throw std::runtime_error(
+            "Error: "
+            "StateVectorBatched::load(const StateVectorBatched<Prec, Space>&): "
+            "invalid length of state");
+    }
+
+    Kokkos::deep_copy(_raw, other._raw);
 }
 
 template <Precision Prec, ExecutionSpace Space>
