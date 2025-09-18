@@ -51,7 +51,6 @@ void StateVector<Prec, Space>::set_zero_state() {
         "set_zero_state",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw[i] = (i == 0); });
-    Kokkos::fence();
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::set_zero_norm_state() {
@@ -68,7 +67,6 @@ void StateVector<Prec, Space>::set_computational_basis(std::uint64_t basis) {
         "set_computational_basis",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw[i] = (i == basis); });
-    Kokkos::fence();
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::set_Haar_random_state(std::uint64_t seed) {
@@ -82,7 +80,6 @@ void StateVector<Prec, Space>::set_Haar_random_state(std::uint64_t seed) {
                                   static_cast<FloatType>(rand_gen.normal(0.0, 1.0)));
             rand_pool.free_state(rand_gen);
         });
-    Kokkos::fence();
     this->normalize();
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -113,7 +110,6 @@ void StateVector<Prec, Space>::normalize() {
         "normalize",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t it) { this->_raw[it] /= norm; });
-    Kokkos::fence();
 }
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_zero_probability(std::uint64_t target_qubit_index) const {
@@ -201,7 +197,6 @@ void StateVector<Prec, Space>::add_state_vector_with_coef(StdComplex coef,
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) {
             this->_raw[i] += ComplexType(coef) * state._raw[i];
         });
-    Kokkos::fence();
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::multiply_coef(StdComplex coef) {
@@ -209,7 +204,6 @@ void StateVector<Prec, Space>::multiply_coef(StdComplex coef) {
         "multiply_coef",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { this->_raw[i] *= coef; });
-    Kokkos::fence();
 }
 template <Precision Prec, ExecutionSpace Space>
 std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(std::uint64_t sampling_count,
@@ -251,7 +245,6 @@ std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(std::uint64_t samp
                 result_buf[i] = lo;
                 rand_pool.free_state(rand_gen);
             });
-        Kokkos::fence();
         auto result_buf_host = internal::convert_view_to_vector<std::uint64_t, Space>(result_buf);
         // Especially for F16 and BF16, sampling sometimes fails with result == _dim.
         // In this case, re-sampling is performed.
