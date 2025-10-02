@@ -39,7 +39,7 @@ public:
         std::vector<std::uint64_t> row_ptr_h;
         row_ptr_h.push_back(0);
         for (const auto& op : ops) {
-            row_ptr_h.push_back(row_ptr_h.back() + op.size());
+            row_ptr_h.push_back(row_ptr_h.back() + op.n_terms());
         }
         auto row_ptr_h_view = internal::wrapped_host_view(row_ptr_h);
         Kokkos::deep_copy(_row_ptr, row_ptr_h_view);
@@ -126,5 +126,82 @@ private:
     Kokkos::View<PauliOperator<Prec, Space>*, ExecutionSpaceType> _ops;
     Kokkos::View<std::uint64_t*, ExecutionSpaceType> _row_ptr;
 };
+
+#ifdef SCALUQ_USE_NANOBIND
+namespace internal {
+template <Precision Prec, ExecutionSpace Space>
+void bind_operator_operator_batched_hpp(nb::module_& m) {
+    nb::class_<OperatorBatched<Prec, Space>>(
+        m, "Operator", DocString().desc("General quantum operator class for batched operators."))
+        .def(nb::init<>(), DocString().desc("Default constructor."))
+        .def(nb::init<const std::vector<std::vector<PauliOperator<Prec, Space>>>&>(),
+             DocString().desc("Constructor from a vector of Pauli operators."))
+        .def(nb::init<const std::vector<Operator<Prec, Space>>&>(),
+             DocString().desc("Constructor from a vector of Operators."))
+        .def("copy", &OperatorBatched<Prec, Space>::copy, DocString().desc("Return a copy."))
+        .def("load",
+             &OperatorBatched<Prec, Space>::load,
+             DocString()
+                 .desc("Load a vector of Pauli operators.")
+                 .arg("terms", "A vector of Pauli operators."))
+        .def("to_string",
+             &OperatorBatched<Prec, Space>::to_string,
+             DocString().desc("Return a string representation of the operator."))
+        .def("batch_size",
+             &OperatorBatched<Prec, Space>::batch_size,
+             DocString().desc("Return the batch size of the operator."))
+        .def("get_dagger",
+             &OperatorBatched<Prec, Space>::get_dagger,
+             DocString().desc("Return the Hermitian conjugate of the operator."))
+        .def("get_applied_to_states",
+             &OperatorBatched<Prec, Space>::get_applied_to_states,
+             DocString()
+                 .desc("Apply the batched operator to a state vector.")
+                 .arg("state_vector", "A state vector to be applied."))
+        .def("get_expectation_value",
+             &OperatorBatched<Prec, Space>::get_expectation_value,
+             DocString()
+                 .desc("Return a vector of expectation values for each operator.")
+                 .arg("state_vector", "A state vector to compute expectation values."))
+        .def("get_transition_amplitude",
+             &OperatorBatched<Prec, Space>::get_transition_amplitude,
+             DocString()
+                 .desc("Return a vector of transition amplitudes for each operator.")
+                 .arg("state_vector_bra", "A bra state vector.")
+                 .arg("state_vector_ket", "A ket state vector."))
+        .def("solve_ground_state_eigenvalue_by_arnoldi_method",
+             &OperatorBatched<Prec, Space>::solve_ground_state_eigenvalue_by_arnoldi_method,
+             DocString()
+                 .desc("Solve the ground state eigenvalue using the Arnoldi method.")
+                 .arg("state", "An initial state vector.")
+                 .arg("iter_count", "Number of iterations.")
+                 .arg("mu", "A shift parameter (default is 0)."))
+        .def("solve_ground_state_eigenvalue_by_power_method",
+             &OperatorBatched<Prec, Space>::solve_ground_state_eigenvalue_by_power_method,
+             DocString()
+                 .desc("Solve the ground state eigenvalue using the Power method.")
+                 .arg("state", "An initial state vector.")
+                 .arg("iter_count", "Number of iterations.")
+                 .arg("mu", "A shift parameter (default is 0)."))
+        .def("get_operator_at",
+             &OperatorBatched<Prec, Space>::get_operator_at,
+             DocString()
+                 .desc("Return the operator at the specified index.")
+                 .arg("index", "Index of the operator."))
+        .def("get_operators",
+             &OperatorBatched<Prec, Space>::get_operators,
+             DocString().desc("Return a vector of all operators."))
+        .def(nb::self * std::vector<StdComplex>())
+        .def(nb::self *= std::vector<StdComplex>())
+        .def(nb::self + nb::self)
+        .def(nb::self - nb::self)
+        .def(nb::self * nb::self)
+        .def(nb::self + std::vector<PauliOperator<Prec, Space>>())
+        .def(nb::self - std::vector<PauliOperator<Prec, Space>>())
+        .def(nb::self * std::vector<PauliOperator<Prec, Space>>())
+        .def(nb::self *= std::vector<PauliOperator<Prec, Space>>());
+}
+}  // namespace internal
+#endif
 
 }  // namespace scaluq

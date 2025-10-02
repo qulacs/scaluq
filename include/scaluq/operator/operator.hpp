@@ -137,6 +137,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
                     &Operator<Prec, Space>::uninitialized_operator,
                     "n_terms"_a,
                     "Create an uninitialized operator with a specified number of terms.")
+        .def("n_terms", &Operator<Prec, Space>::n_terms, "Get the number of terms in the operator.")
         .def("get_terms",
              &Operator<Prec, Space>::get_terms,
              "Get the list of Pauli terms that make up the operator.")

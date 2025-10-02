@@ -72,6 +72,8 @@ public:
 
     void load(const std::vector<std::vector<StdComplex>>& states);
 
+    StateVector<Prec, Space> get_reduced_state() const;
+
     [[nodiscard]] StateVectorBatched copy() const;
 
     std::string to_string() const;

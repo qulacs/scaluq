@@ -2,6 +2,7 @@
 
 #include "../prec_space.hpp"
 #include "../util/math.hpp"
+#include "apply_pauli.hpp"
 
 namespace scaluq {
 template <>
@@ -108,17 +109,11 @@ ComplexMatrix Operator<internal::Prec, internal::Space>::get_full_matrix(
 template <>
 void Operator<internal::Prec, internal::Space>::apply_to_state(
     StateVector<internal::Prec, internal::Space>& state_vector) const {
-    auto res =
-        StateVector<internal::Prec, internal::Space>::uninitialized_state(state_vector.n_qubits());
-    res.set_zero_norm_state();
-    // TODO: batch でできそう
-    auto terms_h = get_terms();
-    for (const auto& term : terms_h) {
-        StateVector<internal::Prec, internal::Space> tmp = state_vector.copy();
-        term.apply_to_state(tmp);
-        res.add_state_vector_with_coef(1., tmp);
-    }
-    state_vector = res;
+    auto states = StateVectorBatched<internal::Prec, internal::Space>::uninitialized_state(
+        _terms.size(), state_vector.n_qubits());
+    states.set_state_vector(state_vector);
+    internal::apply_pauli<internal::Prec, internal::Space>(0, 0, _terms, states);
+    state_vector = states.get_reduced_state();
 }
 
 template <>

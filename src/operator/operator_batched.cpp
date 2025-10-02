@@ -1,6 +1,7 @@
 #include <scaluq/operator/operator_batched.hpp>
 
 #include "../prec_space.hpp"
+#include "apply_pauli.hpp"
 
 namespace scaluq {
 
@@ -23,22 +24,8 @@ OperatorBatched<internal::Prec, internal::Space>::get_applied_to_states(
     const StateVector<internal::Prec, internal::Space>& state_vector) const {
     auto res = StateVectorBatched<internal::Prec, internal::Space>::uninitialized_state(
         _row_ptr.extent(0) - 1, state_vector.n_qubits());
-    res.set_zero_norm_state();
-    // TODO: batch でできそう
-    auto row_ptr_h = internal::convert_view_to_vector<std::uint64_t, internal::Space>(_row_ptr);
-    auto terms_h = internal::convert_view_to_vector<Pauli, internal::Space>(_ops);
-    // std::uint64_t max_iter = *std::max_element(row_ptr_h.begin(), row_ptr_h.end());
-    for (int i = 0; i < (int)(_row_ptr.extent(0) - 1); ++i) {
-        auto each_res = StateVector<internal::Prec, internal::Space>::uninitialized_state(
-            state_vector.n_qubits());
-        each_res.set_zero_norm_state();
-        for (std::uint64_t j = row_ptr_h[i]; j < row_ptr_h[i + 1]; ++j) {
-            StateVector<internal::Prec, internal::Space> tmp = state_vector.copy();
-            terms_h[j].apply_to_state(tmp);
-            each_res.add_state_vector_with_coef(1., tmp);
-        }
-        res.set_state_vector_at(i, each_res);
-    }
+    res.set_state_vector(state_vector);
+    internal::apply_pauli<internal::Prec, internal::Space>(0, 0, _ops, _row_ptr, res);
     return res;
 }
 

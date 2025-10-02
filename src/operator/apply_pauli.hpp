@@ -1,5 +1,6 @@
 #pragma once
 
+#include <scaluq/operator/pauli_operator.hpp>
 #include <scaluq/state/state_vector.hpp>
 #include <scaluq/state/state_vector_batched.hpp>
 
@@ -18,6 +19,17 @@ void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t bit_flip_mask,
                  std::uint64_t phase_flip_mask,
                  Complex<Prec> coef,
+                 StateVectorBatched<Prec, Space>& states);
+template <Precision Prec, ExecutionSpace Space>
+void apply_pauli(std::uint64_t control_mask,
+                 std::uint64_t control_value_mask,
+                 const Kokkos::View<PauliOperator<Prec, Space>*, SpaceType<Space>>& ops,
+                 StateVectorBatched<Prec, Space>& states);
+template <Precision Prec, ExecutionSpace Space>
+void apply_pauli(std::uint64_t control_mask,
+                 std::uint64_t control_value_mask,
+                 const Kokkos::View<PauliOperator<Prec, Space>*, SpaceType<Space>>& ops,
+                 const Kokkos::View<std::uint64_t*, SpaceType<Space>>& row_ptr,
                  StateVectorBatched<Prec, Space>& states);
 template <Precision Prec, ExecutionSpace Space>
 void apply_pauli_rotation(std::uint64_t control_mask,

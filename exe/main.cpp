@@ -6,6 +6,45 @@ using namespace scaluq;
 using namespace nlohmann;
 
 template <Precision Prec, ExecutionSpace Space>
+std::pair<OperatorBatched<Prec, Space>, std::vector<Operator<Prec, Space>>>
+generate_random_observable(int n) {
+    Random random;
+    std::uint64_t batch_size = random.int32() % 5 + 1;
+    std::vector<std::vector<PauliOperator<Prec, Space>>> rand_observable;
+    std::vector<Operator<Prec, Space>> test_rand_observable;
+
+    for (std::uint64_t b = 0; b < batch_size; ++b) {
+        std::vector<PauliOperator<Prec, Space>> ops;
+        std::uint64_t term_count = random.int32() % 10 + 1;
+        for (std::uint64_t term = 0; term < term_count; ++term) {
+            std::vector<std::uint64_t> paulis(n, 0);
+            double coef = random.uniform();
+            for (std::uint64_t i = 0; i < paulis.size(); ++i) {
+                paulis[i] = random.int32() % 4;
+            }
+
+            std::string str = "";
+            for (std::uint64_t ind = 0; ind < paulis.size(); ind++) {
+                std::uint64_t val = paulis[ind];
+                if (val != 0) {
+                    if (val == 1)
+                        str += " X";
+                    else if (val == 2)
+                        str += " Y";
+                    else if (val == 3)
+                        str += " Z";
+                    str += " " + std::to_string(ind);
+                }
+            }
+            ops.push_back(PauliOperator<Prec, Space>(str.c_str(), coef));
+        }
+        rand_observable.push_back(ops);
+        test_rand_observable.push_back(Operator<Prec, Space>(ops));
+    }
+    return {OperatorBatched<Prec, Space>(rand_observable), std::move(test_rand_observable)};
+}
+
+template <Precision Prec, ExecutionSpace Space>
 void merge_gate_test() {
     StateVector<Prec, Space> state_vector(6);
     state_vector.set_Haar_random_state();
