@@ -9,7 +9,7 @@ template <>
 OperatorBatched<internal::Prec, internal::Space>
 OperatorBatched<internal::Prec, internal::Space>::copy() const {
     OperatorBatched<internal::Prec, internal::Space> copy_operator;
-    copy_operator._row_ptr = Kokkos::View<std::uint64_t*, ExecutionSpaceType>(
+    copy_operator._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
         Kokkos::ViewAllocateWithoutInitializing("row_ptr"), _row_ptr.extent(0));
     copy_operator._ops = Kokkos::View<Pauli*, ExecutionSpaceType>(
         Kokkos::ViewAllocateWithoutInitializing("ops"), _ops.extent(0));
@@ -170,15 +170,12 @@ OperatorBatched<internal::Prec, internal::Space>::get_operator_at(std::uint64_t 
     if (index >= _row_ptr.extent(0) - 1) {
         throw std::out_of_range("OperatorBatched::get_operator_at: index out of range");
     }
-    auto raw_ptr_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), _row_ptr);
-    std::uint64_t begin = raw_ptr_h(index);
-    std::uint64_t end = raw_ptr_h(index + 1);
-    std::vector<Pauli> ops_h(end - begin);
-    assert(end > begin);
-    auto ops_h_view = Kokkos::subview(_ops, Kokkos::make_pair(begin, end));
-    auto ops_h_mirror = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), ops_h_view);
-    std::copy(ops_h_mirror.data(), ops_h_mirror.data() + (end - begin), ops_h.data());
-    return Operator<internal::Prec, internal::Space>(ops_h);
+    std::uint64_t begin = _row_ptr(index);
+    std::uint64_t end = _row_ptr(index + 1);
+    auto ops_subview = Kokkos::subview(_ops, std::make_pair(begin, end));
+    Operator<internal::Prec, internal::Space> res(end - begin);
+    Kokkos::deep_copy(res._terms, ops_subview);
+    return res;
 }
 
 template <>
@@ -243,18 +240,16 @@ OperatorBatched<internal::Prec, internal::Space>::operator+(const OperatorBatche
         throw std::runtime_error(
             "OperatorBatched::operator+: batch size of both operators must be same");
     }
-    auto row_ptr_h1 = internal::convert_view_to_vector<std::uint64_t, internal::Space>(_row_ptr);
-    auto row_ptr_h2 =
-        internal::convert_view_to_vector<std::uint64_t, internal::Space>(target._row_ptr);
     std::vector<std::uint64_t> row_ptr_h;
     row_ptr_h.push_back(0);
     for (std::uint64_t i = 0; i < _row_ptr.extent(0) - 1; ++i) {
-        row_ptr_h.push_back(row_ptr_h.back() + (row_ptr_h1[i + 1] - row_ptr_h1[i]) +
-                            (row_ptr_h2[i + 1] - row_ptr_h2[i]));
+        row_ptr_h.push_back(row_ptr_h.back() + (_row_ptr[i + 1] - _row_ptr[i]) +
+                            (target._row_ptr[i + 1] - target._row_ptr[i]));
     }
-    auto row_ptr_view = internal::convert_vector_to_view<std::uint64_t, internal::Space>(row_ptr_h);
     OperatorBatched<internal::Prec, internal::Space> res;
-    res._row_ptr = row_ptr_view;
+    res._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
+        Kokkos::ViewAllocateWithoutInitializing("row_ptr"), row_ptr_h.size());
+    Kokkos::deep_copy(res._row_ptr, internal::wrapped_host_view(row_ptr_h));
     res._ops = Kokkos::View<Pauli*, ExecutionSpaceType>(
         Kokkos::ViewAllocateWithoutInitializing("operator_ops"), row_ptr_h.back());
     Kokkos::parallel_for(
@@ -285,18 +280,16 @@ OperatorBatched<internal::Prec, internal::Space>::operator*(const OperatorBatche
         throw std::runtime_error(
             "OperatorBatched::operator*: batch size of both operators must be same");
     }
-    auto row_ptr_h1 = internal::convert_view_to_vector<std::uint64_t, internal::Space>(_row_ptr);
-    auto row_ptr_h2 =
-        internal::convert_view_to_vector<std::uint64_t, internal::Space>(target._row_ptr);
     std::vector<std::uint64_t> row_ptr_h;
     row_ptr_h.push_back(0);
     for (std::uint64_t i = 0; i < _row_ptr.extent(0) - 1; ++i) {
-        row_ptr_h.push_back(row_ptr_h.back() + (row_ptr_h1[i + 1] - row_ptr_h1[i]) *
-                                                   (row_ptr_h2[i + 1] - row_ptr_h2[i]));
+        row_ptr_h.push_back(row_ptr_h.back() + (_row_ptr[i + 1] - _row_ptr[i]) *
+                                                   (target._row_ptr[i + 1] - target._row_ptr[i]));
     }
-    auto row_ptr_view = internal::convert_vector_to_view<std::uint64_t, internal::Space>(row_ptr_h);
     OperatorBatched<internal::Prec, internal::Space> res;
-    res._row_ptr = row_ptr_view;
+    res._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
+        Kokkos::ViewAllocateWithoutInitializing("row_ptr"), row_ptr_h.size());
+    Kokkos::deep_copy(res._row_ptr, internal::wrapped_host_view(row_ptr_h));
     res._ops = Kokkos::View<Pauli*, ExecutionSpaceType>(
         Kokkos::ViewAllocateWithoutInitializing("operator_ops"), row_ptr_h.back());
     Kokkos::parallel_for(
@@ -328,15 +321,15 @@ OperatorBatched<internal::Prec, internal::Space>::operator+(
         throw std::runtime_error(
             "OperatorBatched::operator+: batch size of both operators must be same");
     }
-    auto row_ptr_h1 = internal::convert_view_to_vector<std::uint64_t, internal::Space>(_row_ptr);
     std::vector<std::uint64_t> row_ptr_h;
     row_ptr_h.push_back(0);
     for (std::uint64_t i = 0; i < _row_ptr.extent(0) - 1; ++i) {
-        row_ptr_h.push_back(row_ptr_h.back() + (row_ptr_h1[i + 1] - row_ptr_h1[i]) + 1);
+        row_ptr_h.push_back(row_ptr_h.back() + (_row_ptr[i + 1] - _row_ptr[i]) + 1);
     }
-    auto row_ptr_view = internal::convert_vector_to_view<std::uint64_t, internal::Space>(row_ptr_h);
     OperatorBatched<internal::Prec, internal::Space> res;
-    res._row_ptr = row_ptr_view;
+    res._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
+        Kokkos::ViewAllocateWithoutInitializing("row_ptr"), row_ptr_h.size());
+    Kokkos::deep_copy(res._row_ptr, internal::wrapped_host_view(row_ptr_h));
     res._ops = Kokkos::View<Pauli*, ExecutionSpaceType>(
         Kokkos::ViewAllocateWithoutInitializing("operator_ops"), row_ptr_h.back());
     Kokkos::parallel_for(

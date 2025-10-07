@@ -146,7 +146,7 @@ template <>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t control_value_mask,
                  const Kokkos::View<PauliOperator<Prec, Space>*, SpaceType<Space>>& ops,
-                 const Kokkos::View<std::uint64_t*, SpaceType<Space>>& row_ptr,
+                 const Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>& row_ptr,
                  StateVectorBatched<Prec, Space>& states) {
     using Sp = SpaceType<Space>;
     if (states.batch_size() + 1 != row_ptr.extent(0)) {
