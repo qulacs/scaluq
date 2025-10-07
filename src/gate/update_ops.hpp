@@ -406,7 +406,7 @@ void rx_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              std::uint64_t control_value_mask,
              Float<Prec> pcoef,
-             std::vector<Float<Prec>> params,
+             const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
              StateVectorBatched<Prec, Space>& states);
 
 template <Precision Prec, ExecutionSpace Space>
@@ -426,7 +426,7 @@ void ry_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              std::uint64_t control_value_mask,
              Float<Prec> pcoef,
-             std::vector<Float<Prec>> params,
+             const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
              StateVectorBatched<Prec, Space>& states);
 
 template <Precision Prec, ExecutionSpace Space>
@@ -446,7 +446,7 @@ void rz_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              std::uint64_t control_value_mask,
              Float<Prec> pcoef,
-             std::vector<Float<Prec>> params,
+             const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
              StateVectorBatched<Prec, Space>& states);
 
 template <Precision Prec, ExecutionSpace Space>

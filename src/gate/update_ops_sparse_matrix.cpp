@@ -20,7 +20,6 @@ void sparse_matrix_gate(std::uint64_t target_mask,
                 update(i) = state._raw(i);
             }
         });
-    Kokkos::fence();
 
     std::uint64_t outer_mask = ~target_mask & ((1ULL << state.n_qubits()) - 1);
     Kokkos::parallel_for(
@@ -50,7 +49,6 @@ void sparse_matrix_gate(std::uint64_t target_mask,
             });
             team.team_barrier();
         });
-    Kokkos::fence();
 
     state._raw = update;
 }
@@ -75,7 +73,6 @@ void sparse_matrix_gate(std::uint64_t target_mask,
                 update(batch_id, i) = states._raw(batch_id, i);
             }
         });
-    Kokkos::fence();
 
     std::uint64_t outer_mask = ~target_mask & ((1ULL << states.n_qubits()) - 1);
     std::uint64_t outer_size = states.dim() >> std::popcount(target_mask | control_mask);
@@ -105,7 +102,6 @@ void sparse_matrix_gate(std::uint64_t target_mask,
             });
             team.team_barrier();
         });
-    Kokkos::fence();
 
     states._raw = update;
 }

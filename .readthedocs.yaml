@@ -3,8 +3,9 @@ build:
   os: ubuntu-24.04
   tools:
     python: "3.12"
-  commands:
-    - python doc/source/copy_stub.py
+  jobs:
+    pre_build:
+      - python doc/source/copy_stub.py
 
 sphinx:
   configuration: doc/source/conf.py

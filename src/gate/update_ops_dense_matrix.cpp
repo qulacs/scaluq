@@ -15,7 +15,6 @@ void none_target_dense_matrix_gate(std::uint64_t control_mask,
                 insert_zero_at_mask_positions(it, control_mask) | control_value_mask;
             state._raw[basis] *= matrix(0, 0);
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -32,7 +31,6 @@ void none_target_dense_matrix_gate(std::uint64_t control_mask,
                 insert_zero_at_mask_positions(it, control_mask) | control_value_mask;
             states._raw(batch_id, basis) *= matrix(0, 0);
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -56,7 +54,6 @@ void single_target_dense_matrix_gate(std::uint64_t target_mask,
             state._raw[basis_0] = res0;
             state._raw[basis_1] = res1;
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -81,7 +78,6 @@ void single_target_dense_matrix_gate(std::uint64_t target_mask,
             states._raw(batch_id, basis_0) = res0;
             states._raw(batch_id, basis_1) = res1;
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -120,7 +116,6 @@ void double_target_dense_matrix_gate(std::uint64_t target_mask,
             state._raw[basis_2] = res2;
             state._raw[basis_3] = res3;
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -160,7 +155,6 @@ void double_target_dense_matrix_gate(std::uint64_t target_mask,
             states._raw(batch_id, basis_2) = res2;
             states._raw(batch_id, basis_3) = res3;
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -182,7 +176,6 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
                 update(i) = state._raw(i);
             }
         });
-    Kokkos::fence();
 
     std::uint64_t outer_mask = ~target_mask & ((1ULL << state.n_qubits()) - 1);
     Kokkos::parallel_for(
@@ -211,7 +204,6 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
             });
             team.team_barrier();
         });
-    Kokkos::fence();
 
     state._raw = update;
 }
@@ -238,7 +230,6 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
                 update(batch_id, i) = states._raw(batch_id, i);  // 制御条件を満たさないインデクス
             }
         });
-    Kokkos::fence();
 
     std::uint64_t outer_size = states.dim() >> std::popcount(target_mask | control_mask);
     std::uint64_t outer_mask = ~target_mask & ((1ULL << states.n_qubits()) - 1);
@@ -267,7 +258,6 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
             });
             team.team_barrier();
         });
-    Kokkos::fence();
 
     states._raw = update;
 }

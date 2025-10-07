@@ -5,6 +5,7 @@ void initialize();
 void finalize();
 bool is_initialized();
 bool is_finalized();
+void synchronize();
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
@@ -24,6 +25,14 @@ void bind_kokkos_hpp(nb::module_& m) {
     m.def("is_finalized",
           &is_initialized,
           "Return true if :func:`~scaluq.finalize()` is already called.");
+    m.def("synchronize",
+          &synchronize,
+          DocString()
+              .desc("Synchronize the device if the execution space is not host.")
+              .note("This function is required to ensure that all operations on device are "
+                    "finished when you measure the elapsed time of some operations on device.")
+              .build_as_google_style()
+              .c_str());
 }
 }  // namespace internal
 #endif

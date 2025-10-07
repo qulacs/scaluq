@@ -28,7 +28,6 @@ void StateVectorBatched<Prec, Space>::set_state_vector(const StateVector<Prec, S
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
             _raw(batch_id, i) = state._raw(i);
         });
-    Kokkos::fence();
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -43,7 +42,6 @@ void StateVectorBatched<Prec, Space>::set_state_vector_at(std::uint64_t batch_id
         "set_state_vector_at",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw(batch_id, i) = state._raw(i); });
-    Kokkos::fence();
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -54,7 +52,6 @@ StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_state_vector_at(
         "get_state_vector_at",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { ret._raw(i) = _raw(batch_id, i); });
-    Kokkos::fence();
     return ret;
 }
 
@@ -70,7 +67,6 @@ void StateVectorBatched<Prec, Space>::set_computational_basis(std::uint64_t basi
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
                                                                            {_batch_size, _dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t b, std::uint64_t i) { _raw(b, i) = (i == basis); });
-    Kokkos::fence();
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -105,7 +101,6 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
                                       }
                                   });
         });
-    Kokkos::fence();
 
     std::vector result(_batch_size, std::vector<std::uint64_t>(sampling_count));
     Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(seed);
@@ -143,7 +138,6 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
                 result_buf(idx) = lo;
                 rand_pool.free_state(rand_gen);
             });
-        Kokkos::fence();
         auto result_buf_host = internal::convert_view_to_vector<std::uint64_t, Space>(result_buf);
         // Especially for F16 and BF16, sampling sometimes fails with result == _dim.
         // In this case, re-sampling is performed.
@@ -181,7 +175,6 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::Haar_random_sta
                     ComplexType(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
                 rand_pool.free_state(rand_gen);
             });
-        Kokkos::fence();
         states.normalize();
     }
     return states;
@@ -232,7 +225,6 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_squared_norm() const {
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { norms[batch_id] = nrm; });
         });
-    Kokkos::fence();
     std::vector<FloatType> norms_host_prec =
         internal::convert_view_to_vector<FloatType, Space>(norms);
     std::vector<double> norms_double(_batch_size);
@@ -261,7 +253,6 @@ void StateVectorBatched<Prec, Space>::normalize() {
             Kokkos::parallel_for(Kokkos::TeamThreadRange(team, _dim),
                                  [&](const std::uint64_t& i) { _raw(batch_id, i) /= nrm; });
         });
-    Kokkos::fence();
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -292,7 +283,6 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_zero_probability(
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { probs[batch_id] = sum; });
         });
-    Kokkos::fence();
     std::vector<FloatType> probs_host_prec =
         internal::convert_view_to_vector<FloatType, Space>(probs);
     std::vector<double> probs_double(_batch_size);
@@ -351,7 +341,6 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_marginal_probability(
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { probs[batch_id] = sum; });
         });
-    Kokkos::fence();
     std::vector<FloatType> probs_host_prec =
         internal::convert_view_to_vector<FloatType, Space>(probs);
     std::vector<double> probs_double(_batch_size);
@@ -382,7 +371,6 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_entropy() const {
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { ents[batch_id] = sum; });
         });
-    Kokkos::fence();
     std::vector<FloatType> ents_host_prec =
         internal::convert_view_to_vector<FloatType, Space>(ents);
     std::vector<double> ents_double(_batch_size);
@@ -405,7 +393,6 @@ void StateVectorBatched<Prec, Space>::add_state_vector_with_coef(const StdComple
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
             _raw(batch_id, i) += ComplexType(coef) * states._raw(batch_id, i);
         });
-    Kokkos::fence();
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -417,21 +404,20 @@ void StateVectorBatched<Prec, Space>::multiply_coef(const StdComplex& coef) {
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
             _raw(batch_id, i) *= ComplexType(coef);
         });
-    Kokkos::fence();
 }
 
 template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComplex>>& states) {
     if (states.size() != _batch_size) {
         throw std::runtime_error(
-            "Error: StateVectorBatched::load(std::vector<std::vector<Complex<Prec>>>&): "
+            "Error: StateVectorBatched::load(const std::vector<std::vector<Complex<Prec>>>&): "
             "invalid batch_size");
     }
     for (std::uint64_t b = 0; b < states.size(); ++b) {
         if (states[b].size() != _dim) {
             throw std::runtime_error(
                 "Error: "
-                "StateVectorBatched::load(std::vector<std::vector<Complex<Prec>>>&): "
+                "StateVectorBatched::load(const std::vector<std::vector<Complex<Prec>>>&): "
                 "invalid length of state");
         }
     }
@@ -443,6 +429,23 @@ void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComp
         }
     }
     Kokkos::deep_copy(_raw, view_h);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+void StateVectorBatched<Prec, Space>::load(const StateVectorBatched<Prec, Space>& other) {
+    if (other._batch_size != _batch_size) {
+        throw std::runtime_error(
+            "Error: StateVectorBatched::load(const StateVectorBatched<Prec, Space>&): "
+            "invalid batch_size");
+    }
+    if (other._dim != _dim) {
+        throw std::runtime_error(
+            "Error: "
+            "StateVectorBatched::load(const StateVectorBatched<Prec, Space>&): "
+            "invalid length of state");
+    }
+
+    Kokkos::deep_copy(_raw, other._raw);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -477,7 +480,6 @@ template <Precision Prec, ExecutionSpace Space>
 std::string StateVectorBatched<Prec, Space>::to_string() const {
     std::stringstream os;
     auto amp = this->get_amplitudes();
-    Kokkos::fence();
 
     os << "Qubit Count : " << _n_qubits << '\n';
     os << "Dimension : " << _dim << '\n';

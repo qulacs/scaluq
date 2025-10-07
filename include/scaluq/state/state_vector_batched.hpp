@@ -386,11 +386,21 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .c_str())
         // Data access methods
         .def("load",
-             &StateVectorBatched<Prec, Space>::load,
+             nb::overload_cast<const std::vector<std::vector<StdComplex>>&>(
+                 &StateVectorBatched<Prec, Space>::load),
              "states"_a,
              DocString()
                  .desc("Load amplitudes for all states in batch.")
                  .arg("states", "list[list[complex]]", "Amplitudes for each state.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("load",
+             nb::overload_cast<const StateVectorBatched<Prec, Space>&>(
+                 &StateVectorBatched<Prec, Space>::load),
+             "other"_a,
+             DocString()
+                 .desc("Load states from another :class:`StateVectorBatched`.")
+                 .arg("other", ":class:`StateVectorBatched`", "Batched state vector to load from.")
                  .build_as_google_style()
                  .c_str())
         .def("get_amplitudes",

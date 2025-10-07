@@ -209,7 +209,6 @@ std::vector<StdComplex> PauliOperator<Prec, Space>::get_expectation_value(
                 ComplexType cres = _coef * res;
                 results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
             });
-        Kokkos::fence();
         auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
         return std::vector<StdComplex>(results_h.data(), results_h.data() + results_h.size());
     }
@@ -243,7 +242,6 @@ std::vector<StdComplex> PauliOperator<Prec, Space>::get_expectation_value(
             ComplexType cres = _coef * res;
             results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
         });
-    Kokkos::fence();
     auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
     return std::vector<StdComplex>(results_h.data(), results_h.data() + results_h.size());
 }
@@ -266,7 +264,6 @@ StdComplex PauliOperator<Prec, Space>::get_transition_amplitude(
                 sum += tmp;
             },
             internal::Sum<ComplexType, Space>(res));
-        Kokkos::fence();
         return _coef * res;
     }
     std::uint64_t pivot = std::bit_width(bit_flip_mask) - 1;
@@ -288,7 +285,6 @@ StdComplex PauliOperator<Prec, Space>::get_transition_amplitude(
             sum += tmp1 + tmp2;
         },
         internal::Sum<ComplexType, Space>(res));
-    Kokkos::fence();
     return static_cast<StdComplex>(_coef * res);
 }
 
@@ -329,7 +325,6 @@ std::vector<StdComplex> PauliOperator<Prec, Space>::get_transition_amplitude(
                 ComplexType cres = _coef * res;
                 results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
             });
-        Kokkos::fence();
         auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
         return std::vector<StdComplex>(results_h.data(), results_h.data() + results_h.size());
     }
@@ -367,7 +362,6 @@ std::vector<StdComplex> PauliOperator<Prec, Space>::get_transition_amplitude(
             ComplexType cres = _coef * res;
             results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
         });
-    Kokkos::fence();
     auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
     return std::vector<StdComplex>(results_h.data(), results_h.data() + results_h.size());
 }
