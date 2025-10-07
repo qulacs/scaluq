@@ -77,12 +77,16 @@ public:
 
     void load(const std::vector<StdComplex>& other);
 
+    void load(const StateVector& other);
+
     [[nodiscard]] StateVector copy() const;
 
     friend std::ostream& operator<<(std::ostream& os, const StateVector& state) {
         os << state.to_string();
         return os;
     }
+
+    static StdComplex inner_product(const StateVector& a, const StateVector& b);
 
     [[nodiscard]] std::string to_string() const;
 
@@ -227,7 +231,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                                       ">>> state.set_amplitude_at(2, 3+1j)",
                                       ">>> state.get_amplitudes()",
                                       "[(1+0j), 0j, (3+1j), 0j]"}))
-                 .note("If you want to get amplitudes at all indices, you should use "
+                 .note("If you want to set amplitudes at all indices, you should use "
                        ":meth:`.load`.")
                  .build_as_google_style()
                  .c_str())
@@ -507,7 +511,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                 .build_as_google_style()
                 .c_str())
         .def("load",
-             &StateVector<Prec, Space>::load,
+             nb::overload_cast<const std::vector<StdComplex>&>(&StateVector<Prec, Space>::load),
              "other"_a,
              DocString()
                  .desc("Load amplitudes of `Sequence`")
@@ -516,6 +520,32 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                       "list of complex amplitudes with len $2^{\\mathrm{n\\_qubits}}$")
                  .build_as_google_style()
                  .c_str())
+        .def("load",
+             nb::overload_cast<const StateVector<Prec, Space>&>(&StateVector<Prec, Space>::load),
+             "other"_a,
+             DocString()
+                 .desc("Load amplitudes of :class:`StateVector`")
+                 .arg("other", ":class:`StateVector`", "State vector to load from.")
+                 .build_as_google_style()
+                 .c_str())
+        .def_static(
+            "inner_product",
+            &StateVector<Prec, Space>::inner_product,
+            "a"_a,
+            "b"_a,
+            DocString()
+                .desc("Calculate inner product $\\braket{a | b}$.")
+                .arg("a", ":class:`StateVector`", "left hand side of inner product")
+                .arg("b", ":class:`StateVector`", "right hand side of inner product")
+                .ret("complex", "inner product $\\braket{a | b}$")
+                .ex(DocString::Code{">>> state1 = StateVector(2)",
+                                    ">>> state1.load([1/2, 0, 0, 1/2]) # (|00> + |11>)/sqrt(2)",
+                                    ">>> state2 = StateVector(2)",
+                                    ">>> state2.load([1/2, 0, 0, -1/2]) # (|00> - |11>)/sqrt(2)",
+                                    ">>> StateVector.inner_product(state1, state2)",
+                                    "0j"})
+                .build_as_google_style()
+                .c_str())
         .def("__str__",
              &StateVector<Prec, Space>::to_string,
              DocString()

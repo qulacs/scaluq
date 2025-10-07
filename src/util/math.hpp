@@ -10,6 +10,7 @@
     KOKKOS_INLINE_FUNCTION Float<Prec> FUNC(Float<Prec> x) { return std::FUNC(x); }
 
 namespace scaluq::internal {
+IMPL_MATH_UNARY_FUNCTION(abs)
 IMPL_MATH_UNARY_FUNCTION(sqrt)
 IMPL_MATH_UNARY_FUNCTION(sin)
 IMPL_MATH_UNARY_FUNCTION(cos)
@@ -45,6 +46,11 @@ IMPL_MATH_UNARY_FUNCTION(cosh)
     KOKKOS_INLINE_FUNCTION FLOAT cosh(FLOAT x) { return (exp(x) + exp(-x)) / FLOAT{2}; }
 namespace scaluq::internal {
 #ifdef SCALUQ_FLOAT16
+#ifdef __CUDA_ARCH__
+KOKKOS_INLINE_FUNCTION F16 abs(F16 x) { return __habs(x); }
+#else
+KOKKOS_INLINE_FUNCTION F16 abs(F16 x) { return __float2half(std::abs(__half2float(x))); }
+#endif
 DEFINE_F16(sqrt)
 DEFINE_F16(sin)
 DEFINE_F16(cos)
@@ -53,6 +59,7 @@ DEFINE_F16(log2)
 DEFINE_HYPERBOLIC(F16)
 #endif
 #ifdef SCALUQ_FLOAT32
+DEFINE_NORMAL(abs, F32)
 DEFINE_NORMAL(sqrt, F32)
 DEFINE_NORMAL(sin, F32)
 DEFINE_NORMAL(cos, F32)
@@ -62,6 +69,7 @@ DEFINE_NORMAL(sinh, F32)
 DEFINE_NORMAL(cosh, F32)
 #endif
 #ifdef SCALUQ_FLOAT64
+DEFINE_NORMAL(abs, F64)
 DEFINE_NORMAL(sqrt, F64)
 DEFINE_NORMAL(sin, F64)
 DEFINE_NORMAL(cos, F64)
@@ -71,6 +79,11 @@ DEFINE_NORMAL(sinh, F64)
 DEFINE_NORMAL(cosh, F64)
 #endif
 #ifdef SCALUQ_BFLOAT16
+#ifdef __CUDA_ARCH__
+KOKKOS_INLINE_FUNCTION BF16 abs(BF16 x) { return __habs(x); }
+#else
+KOKKOS_INLINE_FUNCTION BF16 abs(BF16 x) { return __float2bfloat16(std::abs(__bfloat162float(x))); }
+#endif
 DEFINE_BF16(sqrt)
 DEFINE_BF16(sin)
 DEFINE_BF16(cos)

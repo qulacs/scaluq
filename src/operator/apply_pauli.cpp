@@ -27,7 +27,6 @@ void apply_pauli(std::uint64_t control_mask,
                     state_vector._raw[state_idx] *= coef;
                 }
             });
-        Kokkos::fence();
         return;
     }
     std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
@@ -48,7 +47,6 @@ void apply_pauli(std::uint64_t control_mask,
             state_vector._raw[basis_0] = tmp2 * coef;
             state_vector._raw[basis_1] = tmp1 * coef;
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -72,7 +70,6 @@ void apply_pauli(std::uint64_t control_mask,
                     states._raw(batch_id, state_idx) *= coef;
                 }
             });
-        Kokkos::fence();
         return;
     }
     std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
@@ -93,7 +90,6 @@ void apply_pauli(std::uint64_t control_mask,
             states._raw(batch_id, basis_0) = tmp2 * coef;
             states._raw(batch_id, basis_1) = tmp1 * coef;
         });
-    Kokkos::fence();
 }
 
 template <>
@@ -125,7 +121,6 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                     state_vector._raw[state_idx] *= cval_pls;
                 }
             });
-        Kokkos::fence();
         return;
     } else {
         std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
@@ -156,7 +151,6 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                     Complex<Prec>(0, 1) * sinval * cval_0 *
                         PHASE_M90ROT<Prec>()[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
             });
-        Kokkos::fence();
     }
 }
 template <>
@@ -187,7 +181,6 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                     states._raw(batch_id, state_idx) *= cval_pls;
                 }
             });
-        Kokkos::fence();
         return;
     } else {
         std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
@@ -218,7 +211,6 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                     Complex<Prec>(0, 1) * sinval * cval_0 *
                         PHASE_M90ROT<Prec>()[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
             });
-        Kokkos::fence();
     }
 }
 template <>
@@ -228,7 +220,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t phase_flip_mask,
                           Complex<Prec> coef,
                           Float<Prec> pcoef,
-                          std::vector<Float<Prec>> params,
+                          const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
                           StateVectorBatched<Prec, Space>& states) {
     std::uint64_t global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     auto team_policy =
@@ -238,7 +230,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         team_policy,
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team) {
             const std::uint64_t batch_id = team.league_rank();
-            const Float<Prec> angle = pcoef * params[batch_id];
+            const Float<Prec> angle = pcoef * params(batch_id);
             const Complex<Prec> true_angle = angle * coef;
             const Complex<Prec> cosval = internal::cos(-true_angle / Float<Prec>{2});
             const Complex<Prec> sinval = internal::sin(-true_angle / Float<Prec>{2});
@@ -283,6 +275,5 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                     });
             }
         });
-    Kokkos::fence();
 }
 }  // namespace scaluq::internal

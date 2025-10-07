@@ -1,3 +1,4 @@
+#include <Eigen/Eigenvalues>
 #include <scaluq/operator/operator.hpp>
 
 #include "../prec_space.hpp"
@@ -164,7 +165,6 @@ StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
             }
         },
         res);
-    Kokkos::fence();
     return static_cast<StdComplex>(res);
 }
 
@@ -226,7 +226,6 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
                 res(batch_id) = Kokkos::complex<double>(sum.real(), sum.imag());
             });
         });
-    Kokkos::fence();
     auto res_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), res);
     return std::vector<StdComplex>(res_h.data(), res_h.data() + res_h.size());
 }
@@ -279,7 +278,6 @@ StdComplex Operator<internal::Prec, internal::Space>::get_transition_amplitude(
             }
         },
         res);
-    Kokkos::fence();
     return static_cast<StdComplex>(res);
 }
 
@@ -353,9 +351,113 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transitio
                 results(batch_id) = Kokkos::complex<double>(res.real(), res.imag());
             });
         });
-    Kokkos::fence();
     auto res_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
     return std::vector<StdComplex>(res_h.data(), res_h.data() + res_h.size());
+}
+
+template <>
+StdComplex Operator<internal::Prec, internal::Space>::calculate_default_mu() const {
+    FloatType mu;
+    std::uint64_t nterms = _terms.size();
+    Kokkos::parallel_reduce(
+        "calculate_default_mu",
+        Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(0, nterms),
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & res_lcl) {
+            res_lcl += internal::abs(_terms(i)._coef.real());
+        },
+        mu);
+    Kokkos::fence();
+    return StdComplex(static_cast<double>(mu));
+}
+
+template <>
+Operator<internal::Prec, internal::Space>::GroundState
+Operator<internal::Prec, internal::Space>::solve_ground_state_by_power_method(
+    const StateVector<internal::Prec, internal::Space>& initial_state,
+    std::uint64_t iter_count,
+    std::optional<StdComplex> mu) const {
+    if (_terms.size() == 0) {
+        throw std::runtime_error(
+            "Operator::solve_ground_state_eigenvalue_by_power_method: At least one PauliOperator "
+            "is required.");
+    }
+    std::uint64_t nqubits = initial_state.n_qubits();
+    StdComplex mu_realized = mu.value_or(calculate_default_mu());
+    auto state = initial_state.copy();
+    auto tmp_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(nqubits);
+    for (std::uint64_t i = 0; i < iter_count; i++) {
+        // |state> <- (A-mu I)|state>
+        tmp_state.load(state);
+        apply_to_state(state);
+        state.add_state_vector_with_coef(-mu_realized, tmp_state);
+        state.normalize();
+    }
+    return {get_expectation_value(state), state};
+}
+
+template <>
+Operator<internal::Prec, internal::Space>::GroundState
+Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
+    const StateVector<internal::Prec, internal::Space>& initial_state,
+    std::uint64_t iter_count,
+    std::optional<StdComplex> mu) const {
+    if (_terms.size() == 0) {
+        throw std::runtime_error(
+            "Operator::solve_ground_state_eigenvalue_by_power_method: At least one PauliOperator "
+            "is required.");
+    }
+    std::uint64_t nqubits = initial_state.n_qubits();
+    StdComplex mu_realized = mu.value_or(calculate_default_mu());
+    std::vector<StateVector<internal::Prec, internal::Space>> krylov_space_basis;
+    krylov_space_basis.reserve(iter_count + 1);
+    krylov_space_basis.push_back(initial_state.copy());
+    ComplexMatrix hessenberg_matrix = ComplexMatrix::Zero(iter_count, iter_count);
+    for (std::uint64_t i = 0; i < iter_count; i++) {
+        // |state> <- (A-muI)|state>
+        auto state = krylov_space_basis.back().copy();
+        apply_to_state(state);
+        state.add_state_vector_with_coef(-mu_realized, krylov_space_basis.back());
+        // make |state> orthogonal to others
+        for (std::uint64_t j = 0; j <= i; j++) {
+            auto coef = internal::inner_product<internal::Prec, internal::Space>(
+                krylov_space_basis[j]._raw, state._raw);
+            hessenberg_matrix(j, i) = static_cast<StdComplex>(coef);
+            state.add_state_vector_with_coef(-coef, krylov_space_basis[j]);
+        }
+        // normalize |state>
+        double norm = std::sqrt(state.get_squared_norm());
+        if (i + 1 < iter_count) {
+            hessenberg_matrix(i + 1, i) = norm;
+        }
+        state.multiply_coef(1. / norm);
+        krylov_space_basis.push_back(state);
+    }
+    Eigen::ComplexEigenSolver<ComplexMatrix> solver(hessenberg_matrix);
+    if (solver.info() == Eigen::ComputationInfo::NoConvergence) {
+        throw std::runtime_error(
+            "Operator::solve_ground_state_eigenvalue_by_arnoldi_method: "
+            "Eigenvalue solver did not converge. Please specify smaller iter_count.");
+    }
+    if (solver.info() != Eigen::ComputationInfo::Success) {
+        throw std::runtime_error(
+            "Operator::solve_ground_state_eigenvalue_by_arnoldi_method: "
+            "Eigenvalue solver failed.");
+    }
+    auto eigenvalues = solver.eigenvalues();
+    auto eigenvectors = solver.eigenvectors();
+    auto minimum_eigenvalue_index =
+        std::ranges::min_element(
+            eigenvalues,
+            [](const StdComplex& a, const StdComplex& b) { return a.real() < b.real(); }) -
+        eigenvalues.begin();
+    auto ground_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(nqubits);
+    ground_state.set_zero_norm_state();
+    for (std::uint64_t i = 0; i < iter_count; i++) {
+        ground_state.add_state_vector_with_coef(eigenvectors(i, minimum_eigenvalue_index),
+                                                krylov_space_basis[i]);
+    }
+    ground_state.normalize();
+    return {eigenvalues[minimum_eigenvalue_index] + mu_realized, ground_state};
 }
 
 template <>
