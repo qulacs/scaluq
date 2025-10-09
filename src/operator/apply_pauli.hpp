@@ -30,7 +30,8 @@ void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t control_value_mask,
                  const Kokkos::View<PauliOperator<Prec, Space>*, SpaceType<Space>>& ops,
                  const Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>& row_ptr,
-                 StateVectorBatched<Prec, Space>& states);
+                 StateVectorBatched<Prec, Space>& states,
+                 std::uint64_t batch_size);
 template <Precision Prec, ExecutionSpace Space>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t control_value_mask,

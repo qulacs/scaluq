@@ -291,13 +291,13 @@ void bind_operator_operator_hpp(nb::module_& m) {
                      "(-0.0389261878...+0.0526086285...j)]"}))
                 .build_as_google_style()
                 .c_str())
-        .define("calculate_default_mu",
-                &Operator<Prec, Space>::calculate_default_mu,
-                DocString()
-                    .desc("Calculate a default shift value `mu` for ground state solvers.")
-                    .ret("complex", "Calculated shift value `mu`.")
-                    .build_as_google_style()
-                    .c_str())
+        .def("calculate_default_mu",
+             &Operator<Prec, Space>::calculate_default_mu,
+             DocString()
+                 .desc("Calculate a default shift value `mu` for ground state solvers.")
+                 .ret("complex", "Calculated shift value `mu`.")
+                 .build_as_google_style()
+                 .c_str())
         .def(nb::self *= StdComplex())
         .def(nb::self * StdComplex())
         .def(+nb::self)

@@ -71,8 +71,7 @@ void merge_gate_test() {
         for (const auto& val : res) {
             std::cout << val << " ";
         }
-        std::cout << std::endl;
-        std::cout << "Batched operator: " << op_batched << std::endl;
+        auto op_b_cpy = op_batched.copy();
     }
     {
         Operator<Prec, Space> op1({PauliOperator<Prec, Space>("X 0 Y 1"),

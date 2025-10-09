@@ -104,7 +104,7 @@ TYPED_TEST(OperatorBatchedTest, Apply) {
     auto [op_batched, ops] = generate_random_observable<Prec, Space>(n);
     StateVector<Prec, Space> state_vector(n);
     state_vector.set_Haar_random_state();
-    auto states_batched = op_batched.get_applied_to_states(state_vector);
+    auto states_batched = op_batched.get_applied_states(state_vector);
     for (std::uint64_t b = 0; b < op_batched.batch_size(); ++b) {
         StateVector<Prec, Space> state_vector_single = state_vector.copy();
         ops[b].apply_to_state(state_vector_single);

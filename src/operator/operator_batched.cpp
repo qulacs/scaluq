@@ -19,13 +19,51 @@ OperatorBatched<internal::Prec, internal::Space>::copy() const {
 }
 
 template <>
+void OperatorBatched<internal::Prec, internal::Space>::load(
+    const std::vector<std::vector<PauliOperator<internal::Prec, internal::Space>>>& terms) {
+    std::vector<std::uint64_t> row_ptr_h;
+    row_ptr_h.push_back(0);
+    for (const auto& op : terms) {
+        row_ptr_h.push_back(row_ptr_h.back() + op.size());
+    }
+    auto row_ptr_h_view = internal::wrapped_host_view(row_ptr_h);
+    Kokkos::deep_copy(_row_ptr, row_ptr_h_view);
+    _ops = Kokkos::View<Pauli*, ExecutionSpaceType>("operator_ops", row_ptr_h.back());
+    std::vector<PauliOperator<internal::Prec, internal::Space>> ops_h;
+    for (const auto& op : terms) {
+        ops_h.insert(ops_h.end(), op.begin(), op.end());
+    }
+    auto ops_h_view = internal::wrapped_host_view(ops_h);
+    Kokkos::deep_copy(_ops, ops_h_view);
+}
+
+template <>
+void OperatorBatched<internal::Prec, internal::Space>::load(
+    const std::vector<Operator<internal::Prec, internal::Space>>& terms) {
+    std::vector<std::uint64_t> row_ptr_h;
+    row_ptr_h.push_back(0);
+    for (const auto& op : terms) {
+        row_ptr_h.push_back(row_ptr_h.back() + op.n_terms());
+    }
+    auto row_ptr_h_view = internal::wrapped_host_view(row_ptr_h);
+    Kokkos::deep_copy(_row_ptr, row_ptr_h_view);
+    _ops = Kokkos::View<Pauli*, ExecutionSpaceType>("operator_ops", row_ptr_h.back());
+    for (std::uint64_t i = 0; i < terms.size(); ++i) {
+        auto term_ops = terms[i]._terms;
+        Kokkos::deep_copy(Kokkos::subview(_ops, Kokkos::make_pair(row_ptr_h[i], row_ptr_h[i + 1])),
+                          term_ops);
+    }
+}
+
+template <>
 StateVectorBatched<internal::Prec, internal::Space>
-OperatorBatched<internal::Prec, internal::Space>::get_applied_to_states(
-    const StateVector<internal::Prec, internal::Space>& state_vector) const {
+OperatorBatched<internal::Prec, internal::Space>::get_applied_states(
+    const StateVector<internal::Prec, internal::Space>& state_vector,
+    std::uint64_t batch_size) const {
     auto res = StateVectorBatched<internal::Prec, internal::Space>::uninitialized_state(
         _row_ptr.extent(0) - 1, state_vector.n_qubits());
     res.set_state_vector(state_vector);
-    internal::apply_pauli<internal::Prec, internal::Space>(0, 0, _ops, _row_ptr, res);
+    internal::apply_pauli<internal::Prec, internal::Space>(0, 0, _ops, _row_ptr, res, batch_size);
     return res;
 }
 
