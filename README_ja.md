@@ -12,6 +12,10 @@ Scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 - [nanobind](https://github.com/wjakob/nanobind) の導入により、よりコンパクトかつ高速な Python へのバインディングを実現します。
 - 複数の量子状態に対して同じ回路を適用させるようなケースに対して、より高速なインターフェースを提供します。
 
+# ドキュメント
+
+https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
+
 ## ビルド時要件
 
 - Ninja 1.10 以上

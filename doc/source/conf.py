@@ -4,6 +4,10 @@ import importlib.util
 import os
 import shutil
 
+project = "Scaluq"
+copyright = "2023-2025 Qulacs"
+author = "Scaluq developers"
+
 extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.mathjax",
