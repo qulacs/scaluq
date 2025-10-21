@@ -1,5 +1,12 @@
 # Scaluq
 
+![](https://app.readthedocs.org/projects/scaluq/badge/)
+[![Build and Test](https://github.com/qulacs/scaluq/actions/workflows/test.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/test.yml)
+[![Format](https://github.com/qulacs/scaluq/actions/workflows/format.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/format.yml)
+[![Install to System](https://github.com/qulacs/scaluq/actions/workflows/install.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/install.yml)
+[![Sdist build](https://github.com/qulacs/scaluq/actions/workflows/sdist.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/sdist.yml)
+[![Wheel build](https://github.com/qulacs/scaluq/actions/workflows/wheel.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/wheel.yml)
+
 **For the Japanese version of this README, see [README_ja.md](README_ja.md).**
 
 Scaluq is a newly redeveloped Python/C++ library based on the quantum circuit simulator [Qulacs](https://github.com/qulacs/qulacs).  
@@ -13,6 +20,10 @@ Compared to [Qulacs](https://github.com/qulacs/qulacs), the following improvemen
 - Pointers are hidden from users, making the code simpler and safer to write.
 - Integration of [nanobind](https://github.com/wjakob/nanobind) enables more compact and faster Python bindings.
 - Provides a faster interface for the case where the same circuit is applied to multiple quantum states.
+
+# Documentation
+
+See https://scaluq.readthedocs.io/en/latest/index.html
 
 ## Build Requirements
 
