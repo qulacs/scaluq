@@ -1,9 +1,11 @@
-import random
-from scaluq.default.f64 import *
+from scaluq.default.f64 import StateVector
+from scaluq.default.f64.gate import H, CX
 
-paulis1 = [PauliOperator("X 0 Y 2"), PauliOperator("Z 1 X 3", 2j)]
-op1 = Operator(paulis1)
-paulis2 = [PauliOperator("X 1", -1j)]
-op2 = Operator(paulis2)
-op = op1 * op2
-print(op.to_json())
+h0 = H(0)
+cx01 = CX(0, 1)
+state = StateVector(2)
+print(state.get_amplitudes()) # [(1+0j), 0j, 0j, 0j]
+h0.update_quantum_state(state)
+print(state.get_amplitudes()) # [(0.7071067811865476+0j), (0.7071067811865476+0j), 0j, 0j]
+cx01.update_quantum_state(state)
+print(state.get_amplitudes()) # [(0.7071067811865476+0j), 0j, 0j, (0.7071067811865476+0j)]

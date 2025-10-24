@@ -5,4 +5,5 @@
 
 install.md
 state_vector.md
+gate.md
 ```
