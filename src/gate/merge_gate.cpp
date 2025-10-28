@@ -206,7 +206,7 @@ std::pair<Gate<internal::Prec, internal::Space>, double> merge_gate(
         std::uint64_t target1 = gate1->target_qubit_list()[0];
         std::uint64_t target2 = gate2->target_qubit_list()[0];
         if (target1 == target2) {
-            auto g = oct_phase_gate(oct_phase1.value() + oct_phase2.value(), target1);
+            auto g = oct_phase_gate((oct_phase1.value() + oct_phase2.value()) % 8, target1);
             if (g) return {g.value(), 0.};
         }
     }
@@ -232,72 +232,119 @@ std::pair<Gate<internal::Prec, internal::Space>, double> merge_gate(
                     ? -RZGate<internal::Prec, internal::Space>(gate2)->angle() / 2.
                     : 0.;
             double global_phase = global_phase1 + global_phase2;
-            if (std::abs(global_phase) < eps) {
+            if (std::abs(global_phase) < eps) global_phase = 0.;
+            if (gate1_control_mask == 0 || global_phase == 0.) {
                 return {gate::U1<internal::Prec, internal::Space>(
                             target1, phase1 + phase2, control_qubit_list, control_value_list),
-                        global_phase1 + global_phase2};
+                        global_phase};
             }
         }
     }
 
     // Special case: RX
-    auto get_rx_angle = [&](Gate<internal::Prec, internal::Space> gate,
-                            GateType gate_type) -> std::optional<double> {
+    auto get_quad_rx = [&](GateType gate_type) -> std::optional<std::uint64_t> {
         if (gate_type == GateType::I) return 0;
-        if (gate_type == GateType::X) return Kokkos::numbers::pi;
-        if (gate_type == GateType::SqrtX) return Kokkos::numbers::pi / 2;
-        if (gate_type == GateType::SqrtXdag) return -Kokkos::numbers::pi / 2;
-        if (gate_type == GateType::RX)
-            return RXGate<internal::Prec, internal::Space>(gate)->angle();
+        if (gate_type == GateType::X) return 2;
+        if (gate_type == GateType::SqrtX) return 1;
+        if (gate_type == GateType::SqrtXdag) return 3;
         return std::nullopt;
     };
-    auto rx_param1 = get_rx_angle(gate1, gate_type1);
-    auto rx_param2 = get_rx_angle(gate2, gate_type2);
-    if (rx_param1 && rx_param2) {
+    auto quad_rx_gate =
+        [&](std::uint64_t quad_rx,
+            std::uint64_t target) -> std::optional<Gate<internal::Prec, internal::Space>> {
+        quad_rx &= 3;
+        if (quad_rx == 0) return gate::I<internal::Prec, internal::Space>();
+        if (quad_rx == 2)
+            return gate::X<internal::Prec, internal::Space>(
+                target, control_qubit_list, control_value_list);
+        if (quad_rx == 1)
+            return gate::SqrtX<internal::Prec, internal::Space>(
+                target, control_qubit_list, control_value_list);
+        if (quad_rx == 3)
+            return gate::SqrtXdag<internal::Prec, internal::Space>(
+                target, control_qubit_list, control_value_list);
+        return std::nullopt;
+    };
+    auto quad_rx1 = get_quad_rx(gate_type1);
+    auto quad_rx2 = get_quad_rx(gate_type2);
+    if (quad_rx1 && quad_rx2) {
         std::uint64_t target1 = gate1->target_qubit_list()[0];
         std::uint64_t target2 = gate2->target_qubit_list()[0];
-        double global_phase1 = gate_type1 == GateType::RX ? 0. : rx_param1.value() / 2.;
-        double global_phase2 = gate_type2 == GateType::RX ? 0. : rx_param2.value() / 2.;
-        double global_phase = global_phase1 + global_phase2;
         if (target1 == target2) {
-            if (std::abs(global_phase) < eps) {
-                return {
-                    gate::RX<internal::Prec, internal::Space>(target1,
-                                                              rx_param1.value() + rx_param2.value(),
-                                                              control_qubit_list,
-                                                              control_value_list),
-                    global_phase1 + global_phase2};
+            auto g = quad_rx_gate((quad_rx1.value() + quad_rx2.value()) % 4, target1);
+            if (g) return {g.value(), 0.};
+        }
+    }
+    if ((quad_rx1 || gate_type1 == GateType::RX) && (quad_rx2 || gate_type2 == GateType::RX)) {
+        std::uint64_t target1 = gate1->target_qubit_list()[0];
+        std::uint64_t target2 = gate2->target_qubit_list()[0];
+        if (target1 == target2) {
+            double angle1 = quad_rx1 ? quad_rx1.value() * Kokkos::numbers::pi / 2
+                                     : RXGate<internal::Prec, internal::Space>(gate1)->angle();
+            double global_phase1 = gate_type1 == GateType::RX ? 0. : angle1 / 2.;
+            double angle2 = quad_rx2 ? quad_rx2.value() * Kokkos::numbers::pi / 2
+                                     : RXGate<internal::Prec, internal::Space>(gate2)->angle();
+            double global_phase2 = gate_type2 == GateType::RX ? 0. : angle2 / 2.;
+            double global_phase = global_phase1 + global_phase2;
+            if (std::abs(global_phase) < eps) global_phase = 0.;
+            if (gate1_control_mask == 0 || global_phase == 0.) {
+                return {gate::RX<internal::Prec, internal::Space>(
+                            target1, angle1 + angle2, control_qubit_list, control_value_list),
+                        global_phase};
             }
         }
     }
 
     // Special case: RY
-    auto get_ry_angle = [&](Gate<internal::Prec, internal::Space> gate,
-                            GateType gate_type) -> std::optional<double> {
-        if (gate_type == GateType::I) return 0.;
-        if (gate_type == GateType::Y) return Kokkos::numbers::pi;
-        if (gate_type == GateType::SqrtY) return Kokkos::numbers::pi / 2;
-        if (gate_type == GateType::SqrtYdag) return -Kokkos::numbers::pi / 2;
-        if (gate_type == GateType::RY)
-            return RYGate<internal::Prec, internal::Space>(gate)->angle();
+    auto get_quad_ry = [&](GateType gate_type) -> std::optional<std::uint64_t> {
+        if (gate_type == GateType::I) return 0;
+        if (gate_type == GateType::Y) return 2;
+        if (gate_type == GateType::SqrtY) return 1;
+        if (gate_type == GateType::SqrtYdag) return 3;
         return std::nullopt;
     };
-    auto ry_param1 = get_ry_angle(gate1, gate_type1);
-    auto ry_param2 = get_ry_angle(gate2, gate_type2);
-    if (ry_param1 && ry_param2) {
+    auto quad_ry_gate =
+        [&](std::uint64_t quad_ry,
+            std::uint64_t target) -> std::optional<Gate<internal::Prec, internal::Space>> {
+        quad_ry &= 3;
+        if (quad_ry == 0) return gate::I<internal::Prec, internal::Space>();
+        if (quad_ry == 2)
+            return gate::Y<internal::Prec, internal::Space>(
+                target, control_qubit_list, control_value_list);
+        if (quad_ry == 1)
+            return gate::SqrtY<internal::Prec, internal::Space>(
+                target, control_qubit_list, control_value_list);
+        if (quad_ry == 3)
+            return gate::SqrtYdag<internal::Prec, internal::Space>(
+                target, control_qubit_list, control_value_list);
+        return std::nullopt;
+    };
+    auto quad_ry1 = get_quad_ry(gate_type1);
+    auto quad_ry2 = get_quad_ry(gate_type2);
+    if (quad_ry1 && quad_ry2) {
         std::uint64_t target1 = gate1->target_qubit_list()[0];
         std::uint64_t target2 = gate2->target_qubit_list()[0];
-        double global_phase1 = gate_type1 == GateType::RY ? 0. : ry_param1.value() / 2.;
-        double global_phase2 = gate_type2 == GateType::RY ? 0. : ry_param2.value() / 2.;
-        double global_phase = global_phase1 + global_phase2;
         if (target1 == target2) {
-            if (std::abs(global_phase) < eps) {
-                return {
-                    gate::RY<internal::Prec, internal::Space>(target1,
-                                                              ry_param1.value() + ry_param2.value(),
-                                                              control_qubit_list,
-                                                              control_value_list),
-                    global_phase1 + global_phase2};
+            auto g = quad_ry_gate((quad_ry1.value() + quad_ry2.value()) % 4, target1);
+            if (g) return {g.value(), 0.};
+        }
+    }
+    if ((quad_ry1 || gate_type1 == GateType::RY) && (quad_ry2 || gate_type2 == GateType::RY)) {
+        std::uint64_t target1 = gate1->target_qubit_list()[0];
+        std::uint64_t target2 = gate2->target_qubit_list()[0];
+        if (target1 == target2) {
+            double angle1 = quad_ry1 ? quad_ry1.value() * Kokkos::numbers::pi / 2
+                                     : RYGate<internal::Prec, internal::Space>(gate1)->angle();
+            double global_phase1 = gate_type1 == GateType::RY ? 0. : angle1 / 2.;
+            double angle2 = quad_ry2 ? quad_ry2.value() * Kokkos::numbers::pi / 2
+                                     : RYGate<internal::Prec, internal::Space>(gate2)->angle();
+            double global_phase2 = gate_type2 == GateType::RY ? 0. : angle2 / 2.;
+            double global_phase = global_phase1 + global_phase2;
+            if (std::abs(global_phase) < eps) global_phase = 0.;
+            if (gate1_control_mask == 0 || global_phase == 0.) {
+                return {gate::RY<internal::Prec, internal::Space>(
+                            target1, angle1 + angle2, control_qubit_list, control_value_list),
+                        global_phase};
             }
         }
     }
