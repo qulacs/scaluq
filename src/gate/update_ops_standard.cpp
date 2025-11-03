@@ -41,21 +41,24 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_value_mask,
                                   const Matrix2x2<Prec>& matrix,
                                   StateVectorBatched<Prec, Space>& states) {
+    const std::uint64_t span = states.dim() >> std::popcount(target_mask | control_mask);
     Kokkos::parallel_for(
-        "one_target_dense_matrix_gate",
-        Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0},
-            {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
-        KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
-            std::uint64_t basis_0 =
+        "one_target_dense_matrix_gate_flat",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t batch_id = g / span;
+            const std::uint64_t it = g % span;
+
+            std::uint64_t basis0 =
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
-            std::uint64_t basis_1 = basis_0 | target_mask;
-            Complex<Prec> val0 = states._raw(batch_id, basis_0);
-            Complex<Prec> val1 = states._raw(batch_id, basis_1);
-            Complex<Prec> res0 = matrix[0][0] * val0 + matrix[0][1] * val1;
-            Complex<Prec> res1 = matrix[1][0] * val0 + matrix[1][1] * val1;
-            states._raw(batch_id, basis_0) = res0;
-            states._raw(batch_id, basis_1) = res1;
+            std::uint64_t basis1 = basis0 | target_mask;
+
+            Complex<Prec> v0 = states._raw(batch_id, basis0);
+            Complex<Prec> v1 = states._raw(batch_id, basis1);
+            Complex<Prec> r0 = matrix[0][0] * v0 + matrix[0][1] * v1;
+            Complex<Prec> r1 = matrix[1][0] * v0 + matrix[1][1] * v1;
+            states._raw(batch_id, basis0) = r0;
+            states._raw(batch_id, basis1) = r1;
         });
 }
 
