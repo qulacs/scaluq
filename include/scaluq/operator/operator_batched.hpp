@@ -86,10 +86,10 @@ public:
     OperatorBatched operator*(const std::vector<StdComplex>& coef) const;
     OperatorBatched& operator*=(const std::vector<StdComplex>& coef);
     OperatorBatched operator+() const { return *this; }
-    OperatorBatched operator-() const { return *this * StdComplex(-1.); }
+    OperatorBatched operator-() const { return *this * std::vector<StdComplex>(StdComplex(-1.)); }
     OperatorBatched operator+(const OperatorBatched& target) const;
     OperatorBatched operator-(const OperatorBatched& target) const {
-        return *this + target * StdComplex(-1.);
+        return *this + target * std::vector<StdComplex>(StdComplex(-1.));
     }
     OperatorBatched operator*(const OperatorBatched& target) const;
     OperatorBatched operator+(const std::vector<PauliOperator<Prec, Space>>& pauli) const;
