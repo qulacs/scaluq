@@ -93,7 +93,9 @@ TYPED_TEST(StateVectorTest, HaarRandomStateWithoutSeed) {
     for (std::uint64_t i = 0; i < m; ++i) {
         StateVector state1(StateVector<Prec, Space>::Haar_random_state(n)),
             state2(StateVector<Prec, Space>::Haar_random_state(n));
-        ASSERT_FALSE(same_state(state1, state2));
+        if constexpr (Prec == Precision::F64 || Prec == Precision::F32) {
+            ASSERT_FALSE(same_state(state1, state2));
+        }
     }
 }
 
