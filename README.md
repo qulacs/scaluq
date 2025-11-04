@@ -216,6 +216,8 @@ While `f64` is generally recommended, lower precisions like `f32` can be up to 2
 | `f64`     | `Precision::F64`              | `f64`                  | IEEE754 binary64          |
 | `bf16`    | `Precision::BF16`             | `bf16`                 | bfloat16                  |
 
+Note: With `f16` / `bf16` precision, the calculation error may be very large (sometimes larger than $0.1$). We do not test the accuracy with these options.
+
 Execution spaces determine whether computation is performed on CPU or GPU:
 
 | Execution Space | C++ Template Argument      | Python Submodule      | Description                                |

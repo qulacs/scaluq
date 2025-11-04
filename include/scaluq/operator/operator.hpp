@@ -300,6 +300,43 @@ void bind_operator_operator_hpp(nb::module_& m) {
         .def(nb::self *= PauliOperator<Prec, Space>())
         .def(nb::self * PauliOperator<Prec, Space>())
         .def(
+            "__iadd__",
+            [](Operator<Prec, Space>& self,
+               const Operator<Prec, Space>& other) -> Operator<Prec, Space>& {
+                throw nb::type_error("In-place addition (+=) is not supported for Operator.");
+            },
+            nb::is_operator())
+        .def(
+            "__isub__",
+            [](Operator<Prec, Space>& self,
+               const Operator<Prec, Space>& other) -> Operator<Prec, Space>& {
+                throw nb::type_error("In-place subtraction (-=) is not supported for Operator.");
+            },
+            nb::is_operator())
+        .def(
+            "__imul__",
+            [](Operator<Prec, Space>& self,
+               const Operator<Prec, Space>& other) -> Operator<Prec, Space>& {
+                throw nb::type_error("In-place multiplication (*=) is not supported for Operator.");
+            },
+            nb::is_operator())
+        .def(
+            "__iadd__",
+            [](Operator<Prec, Space>& self,
+               const PauliOperator<Prec, Space>& other) -> Operator<Prec, Space>& {
+                throw nb::type_error(
+                    "In-place addition (+=) is not supported for Operator with PauliOperator.");
+            },
+            nb::is_operator())
+        .def(
+            "__isub__",
+            [](Operator<Prec, Space>& self,
+               const PauliOperator<Prec, Space>& other) -> Operator<Prec, Space>& {
+                throw nb::type_error(
+                    "In-place subtraction (-=) is not supported for Operator with PauliOperator.");
+            },
+            nb::is_operator())
+        .def(
             "to_json",
             [](const Operator<Prec, Space>& op) { return Json(op).dump(); },
             "Information as json style.")
