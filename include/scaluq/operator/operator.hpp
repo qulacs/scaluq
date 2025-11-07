@@ -226,6 +226,8 @@ void bind_operator_operator_hpp(nb::module_& m) {
                      true,
                      "Shift value to accelerate convergence. The value must be larger than largest "
                      "eigenvalue. If not provided, a default value is calculated internally.")
+                .ret(":class:`Operator.GroundState`",
+                     "The ground state information including eigenvalue and ground state vector.")
                 .ex(DocString::Code(
                     {">>> terms = [PauliOperator(\"\", -3.8505), PauliOperator(\"X 1\", -0.2288), "
                      "PauliOperator(\"Z 1\", -1.0466), PauliOperator(\"X 0\", -0.2288), "
@@ -267,6 +269,8 @@ void bind_operator_operator_hpp(nb::module_& m) {
                      true,
                      "Shift value to accelerate convergence. The value must be larger than largest "
                      "eigenvalue. If not provided, a default value is calculated internally.")
+                .ret(":class:`Operator.GroundState`",
+                     "The ground state information including eigenvalue and ground state vector.")
                 .ex(DocString::Code(
                     {">>> terms = [PauliOperator(\"\", -3.8505), PauliOperator(\"X 1\", -0.2288), "
                      "PauliOperator(\"Z 1\", -1.0466), PauliOperator(\"X 0\", -0.2288), "
