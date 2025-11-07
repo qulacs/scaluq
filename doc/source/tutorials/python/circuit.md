@@ -24,7 +24,7 @@ print(circuit.to_json())
 ```
 
 ## Add Gate to Circuit
-You can add `Gate` to `Circuit` by {func}`add_gate <scaluq.default.f64.Circuit.add_gate>`. `Gate` to be added is shallow-copied. Since all the `Gate`s in Scaluq is immutable, this is always safe!
+You can add `Gate` to `Circuit` by {func}`add_gate <scaluq.default.f64.Circuit.add_gate>`. `Gate` to be added is shallow-copied. Since all the `Gate`s in Scaluq are immutable, this is always safe!
 
 ```py
 from scaluq.default.f64 import Circuit
