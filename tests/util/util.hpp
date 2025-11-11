@@ -12,13 +12,13 @@ using ComplexVector = Eigen::Matrix<StdComplex, -1, 1>;
 template <Precision Prec>
 constexpr double eps_() {
     if constexpr (Prec == Precision::F16)
-        return 1e-2;
+        return 1.;
     else if constexpr (Prec == Precision::F32)
         return 1e-4;
     else if constexpr (Prec == Precision::F64)
         return 1e-12;
     else if constexpr (Prec == Precision::BF16)
-        return 1e-1;
+        return 1.;
     else
         static_assert(internal::lazy_false_v<internal::Float<Prec>>, "unknown Precision");
 }

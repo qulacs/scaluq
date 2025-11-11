@@ -41,21 +41,24 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_value_mask,
                                   const Matrix2x2<Prec>& matrix,
                                   StateVectorBatched<Prec, Space>& states) {
+    const std::uint64_t span = states.dim() >> std::popcount(target_mask | control_mask);
     Kokkos::parallel_for(
-        "one_target_dense_matrix_gate",
-        Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0},
-            {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
-        KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
-            std::uint64_t basis_0 =
+        "one_target_dense_matrix_gate_flat",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t batch_id = g / span;
+            const std::uint64_t it = g % span;
+
+            std::uint64_t basis0 =
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
-            std::uint64_t basis_1 = basis_0 | target_mask;
-            Complex<Prec> val0 = states._raw(batch_id, basis_0);
-            Complex<Prec> val1 = states._raw(batch_id, basis_1);
-            Complex<Prec> res0 = matrix[0][0] * val0 + matrix[0][1] * val1;
-            Complex<Prec> res1 = matrix[1][0] * val0 + matrix[1][1] * val1;
-            states._raw(batch_id, basis_0) = res0;
-            states._raw(batch_id, basis_1) = res1;
+            std::uint64_t basis1 = basis0 | target_mask;
+
+            Complex<Prec> v0 = states._raw(batch_id, basis0);
+            Complex<Prec> v1 = states._raw(batch_id, basis1);
+            Complex<Prec> r0 = matrix[0][0] * v0 + matrix[0][1] * v1;
+            Complex<Prec> r1 = matrix[1][0] * v0 + matrix[1][1] * v1;
+            states._raw(batch_id, basis0) = r0;
+            states._raw(batch_id, basis1) = r1;
         });
 }
 
@@ -158,16 +161,18 @@ void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_value_mask,
                                      const DiagonalMatrix2x2<Prec>& diag,
                                      StateVectorBatched<Prec, Space>& states) {
+    const std::uint64_t span = states.dim() >> std::popcount(target_mask | control_mask);
     Kokkos::parallel_for(
-        "one_target_diagonal_matrix_gate",
-        Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0},
-            {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
-        KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
-            std::uint64_t basis =
-                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
-            states._raw(batch_id, basis) *= diag[0];
-            states._raw(batch_id, basis | target_mask) *= diag[1];
+        "one_target_diagonal_matrix_gate_flat",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t batch_id = g / span;
+            const std::uint64_t it = g % span;
+
+            std::uint64_t i =
+                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
+            states._raw(batch_id, i) *= diag[0];
+            states._raw(batch_id, i | target_mask) *= diag[1];
         });
 }
 
@@ -193,13 +198,16 @@ void global_phase_gate(std::uint64_t,
                        Float<Prec> angle,
                        StateVectorBatched<Prec, Space>& states) {
     Complex<Prec> coef = internal::polar<Prec>(Float<Prec>{1}, angle);
+    const std::uint64_t span = states.dim() >> std::popcount(control_mask);
     Kokkos::parallel_for(
-        "global_phase_gate",
-        Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0}, {states.batch_size(), states.dim() >> std::popcount(control_mask)}),
-        KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
+        "global_phase_gate_flat",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t batch_id = g / span;
+            const std::uint64_t it = g % span;
+
             states._raw(batch_id,
-                        insert_zero_at_mask_positions(i, control_mask) | control_value_mask) *=
+                        insert_zero_at_mask_positions(it, control_mask) | control_value_mask) *=
                 coef;
         });
 }
@@ -225,12 +233,14 @@ void x_gate(std::uint64_t target_mask,
             std::uint64_t control_mask,
             std::uint64_t control_value_mask,
             StateVectorBatched<Prec, Space>& states) {
+    const std::uint64_t span = states.dim() >> std::popcount(target_mask | control_mask);
     Kokkos::parallel_for(
-        "x_gate",
-        Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0},
-            {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
-        KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
+        "x_gate_flat",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t batch_id = g / span;
+            const std::uint64_t it = g % span;
+
             std::uint64_t i =
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             Kokkos::kokkos_swap(states._raw(batch_id, i), states._raw(batch_id, i | target_mask));
@@ -260,12 +270,14 @@ void y_gate(std::uint64_t target_mask,
             std::uint64_t control_mask,
             std::uint64_t control_value_mask,
             StateVectorBatched<Prec, Space>& states) {
+    const std::uint64_t span = states.dim() >> std::popcount(target_mask | control_mask);
     Kokkos::parallel_for(
-        "y_gate",
-        Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0},
-            {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
-        KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
+        "y_gate_flat",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t batch_id = g / span;
+            const std::uint64_t it = g % span;
+
             std::uint64_t i =
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             states._raw(batch_id, i) *= Complex<Prec>(0, 1);
@@ -295,12 +307,14 @@ void z_gate(std::uint64_t target_mask,
             std::uint64_t control_mask,
             std::uint64_t control_value_mask,
             StateVectorBatched<Prec, Space>& states) {
+    const std::uint64_t span = states.dim() >> std::popcount(target_mask | control_mask);
     Kokkos::parallel_for(
-        "z_gate",
-        Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0},
-            {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
-        KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
+        "z_gate_flat",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t batch_id = g / span;
+            const std::uint64_t it = g % span;
+
             std::uint64_t i =
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             states._raw(batch_id, i | target_mask) *= Complex<Prec>(-1, 0);
@@ -330,12 +344,14 @@ void one_target_phase_gate(std::uint64_t target_mask,
                            std::uint64_t control_value_mask,
                            Complex<Prec> phase,
                            StateVectorBatched<Prec, Space>& states) {
+    const std::uint64_t span = states.dim() >> std::popcount(target_mask | control_mask);
     Kokkos::parallel_for(
-        "one_target_phase_gate",
-        Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0},
-            {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
-        KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
+        "one_target_phase_gate_flat",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t batch_id = g / span;
+            const std::uint64_t it = g % span;
+
             std::uint64_t i =
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             states._raw(batch_id, i | target_mask) *= phase;
@@ -546,15 +562,16 @@ void u1_gate(std::uint64_t target_mask,
              Float<Prec> lambda,
              StateVectorBatched<Prec, Space>& states) {
     Complex<Prec> exp_val = internal::exp(Complex<Prec>(0, lambda));
+    const std::uint64_t span = states.dim() >> std::popcount(target_mask | control_mask);
     Kokkos::parallel_for(
-        "u1_gate",
-        Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0},
-            {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
-        KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
+        "u1_gate_flat",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t batch_id = g / span;
+            const std::uint64_t it = g % span;
+
             std::uint64_t i =
-                internal::insert_zero_at_mask_positions(it, target_mask | control_mask) |
-                control_value_mask;
+                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
             states._raw(batch_id, i | target_mask) *= exp_val;
         });
 }

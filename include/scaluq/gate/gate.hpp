@@ -386,6 +386,10 @@ namespace internal {
             [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->control_qubit_list(); },         \
             "Get control qubits as `list[int]`.")                                                  \
         .def(                                                                                      \
+            "control_value_list",                                                                  \
+            [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->control_value_list(); },         \
+            "Get control values as `list[int]`.")                                                  \
+        .def(                                                                                      \
             "operand_qubit_list",                                                                  \
             [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->operand_qubit_list(); },         \
             "Get target and control qubits as `list[int]`.")                                       \
@@ -397,6 +401,10 @@ namespace internal {
             "control_qubit_mask",                                                                  \
             [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->control_qubit_mask(); },         \
             "Get control qubits as mask.")                                                         \
+        .def(                                                                                      \
+            "control_value_mask",                                                                  \
+            [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->control_value_mask(); },         \
+            "Get control values as mask.")                                                         \
         .def(                                                                                      \
             "operand_qubit_mask",                                                                  \
             [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->operand_qubit_mask(); },         \
