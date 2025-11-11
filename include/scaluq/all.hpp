@@ -9,6 +9,7 @@
 #include "gate/param_gate_factory.hpp"
 #include "kokkos.hpp"
 #include "operator/operator.hpp"
+#include "operator/operator_batched.hpp"
 #include "operator/pauli_operator.hpp"
 #include "state/state_vector.hpp"
 #include "state/state_vector_batched.hpp"

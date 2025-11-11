@@ -74,9 +74,11 @@ public:
 
     void load(const StateVectorBatched& other);
 
+    [[nodiscard]] StateVector<Prec, Space> get_reduced_state() const;
+
     [[nodiscard]] StateVectorBatched copy() const;
 
-    std::string to_string() const;
+    [[nodiscard]] std::string to_string() const;
 
     friend std::ostream& operator<<(std::ostream& os, const StateVectorBatched& states) {
         os << states.to_string();
@@ -401,6 +403,13 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
              DocString()
                  .desc("Load states from another :class:`StateVectorBatched`.")
                  .arg("other", ":class:`StateVectorBatched`", "Batched state vector to load from.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("get_reduced_state",
+             &StateVectorBatched<Prec, Space>::get_reduced_state,
+             DocString()
+                 .desc("Get the sum of all states in the batch as a single state vector.")
+                 .ret("StateVector", "Reduced state vector.")
                  .build_as_google_style()
                  .c_str())
         .def("get_amplitudes",

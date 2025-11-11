@@ -65,6 +65,7 @@ void bind_on_precision_and_space(nb::module_& mspace, const char* submodule_name
 
     internal::bind_operator_pauli_operator_hpp<Prec, Space>(mp);
     internal::bind_operator_operator_hpp<Prec, Space>(mp);
+    internal::bind_operator_operator_batched_hpp<Prec, Space>(mp);
 }
 
 NB_MODULE(scaluq_core, m) {

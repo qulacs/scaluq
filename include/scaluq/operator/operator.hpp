@@ -34,6 +34,7 @@ public:
         return internal::convert_view_to_vector<PauliOperator<Prec, Space>, Space>(_terms);
     }
     [[nodiscard]] std::string to_string() const;
+    [[nodiscard]] std::uint64_t n_terms() const { return _terms.extent(0); }
 
     void optimize();
 
@@ -106,8 +107,9 @@ public:
 
     StdComplex calculate_default_mu() const;
 
-private:
     Kokkos::View<PauliOperator<Prec, Space>*, ExecutionSpaceType> _terms;
+
+private:
     bool _is_hermitian = true;
 };
 
@@ -154,6 +156,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
                     &Operator<Prec, Space>::uninitialized_operator,
                     "n_terms"_a,
                     "Create an uninitialized operator with a specified number of terms.")
+        .def("n_terms", &Operator<Prec, Space>::n_terms, "Get the number of terms in the operator.")
         .def("get_terms",
              &Operator<Prec, Space>::get_terms,
              "Get the list of Pauli terms that make up the operator.")
@@ -288,6 +291,13 @@ void bind_operator_operator_hpp(nb::module_& m) {
                      "(-0.0389261878...+0.0526086285...j)]"}))
                 .build_as_google_style()
                 .c_str())
+        .def("calculate_default_mu",
+             &Operator<Prec, Space>::calculate_default_mu,
+             DocString()
+                 .desc("Calculate a default shift value `mu` for ground state solvers.")
+                 .ret("complex", "Calculated shift value `mu`.")
+                 .build_as_google_style()
+                 .c_str())
         .def(nb::self *= StdComplex())
         .def(nb::self * StdComplex())
         .def(+nb::self)

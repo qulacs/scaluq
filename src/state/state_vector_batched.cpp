@@ -456,6 +456,27 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::copy() const {
 }
 
 template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_reduced_state() const {
+    StateVector<Prec, Space> reduced_state =
+        StateVector<Prec, Space>::uninitialized_state(_n_qubits);
+    Kokkos::parallel_for(
+        "get_reduced_state",
+        Kokkos::TeamPolicy<internal::SpaceType<Space>>(
+            internal::SpaceType<Space>(), _dim, Kokkos::AUTO),
+        KOKKOS_CLASS_LAMBDA(
+            const Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
+            std::uint64_t i = team.league_rank();
+            ComplexType sum = 0;
+            Kokkos::parallel_reduce(
+                Kokkos::TeamThreadRange(team, _batch_size),
+                [&](std::uint64_t b, ComplexType& lsum) { lsum += _raw(b, i); },
+                internal::Sum<ComplexType, Space>(sum));
+            Kokkos::single(Kokkos::PerTeam(team), [&] { reduced_state._raw(i) = sum; });
+        });
+    return reduced_state;
+}
+
+template <Precision Prec, ExecutionSpace Space>
 std::string StateVectorBatched<Prec, Space>::to_string() const {
     std::stringstream os;
     auto amp = this->get_amplitudes();
