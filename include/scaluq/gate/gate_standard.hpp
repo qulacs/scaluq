@@ -702,8 +702,7 @@ void bind_gate_gate_standard_hpp(nb::module_& m, nb::class_<Gate<Prec, Space>>& 
         .def(
             "phase",
             [](const GlobalPhaseGate<Prec, Space>& gate) { return gate->phase(); },
-            "Get `phase` property. The phase is represented as $\\gamma$.",
-            gate_base_def);
+            "Get `phase` property. The phase is represented as $\\gamma$.");
     DEF_GATE(XGate, Prec, Space, "Specific class of Pauli-X gate.", gate_base_def);
     DEF_GATE(YGate, Prec, Space, "Specific class of Pauli-Y gate.", gate_base_def);
     DEF_GATE(ZGate, Prec, Space, "Specific class of Pauli-Z gate.", gate_base_def);
