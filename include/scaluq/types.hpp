@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <nlohmann/json.hpp>
 
-#include "kokkos.hpp"
 #include "type/complex.hpp"
 #include "type/floating_point.hpp"
 

@@ -15,7 +15,7 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
     else()
         target_link_libraries(${LIBRARY} PRIVATE scaluq_base)
         target_sources(${LIBRARY} PRIVATE
-            circuit/circuit.cpp
+            # circuit/circuit.cpp
             gate/merge_gate.cpp
             gate/gate_matrix.cpp
             gate/gate_pauli.cpp
@@ -31,7 +31,6 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
             gate/update_ops_standard.cpp
             state/state_vector.cpp
             state/state_vector_batched.cpp
-            operator/apply_pauli.cpp
             operator/pauli_operator.cpp
             operator/operator.cpp
             operator/operator_batched.cpp

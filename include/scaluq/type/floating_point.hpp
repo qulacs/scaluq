@@ -8,9 +8,8 @@
 
 namespace scaluq {
 enum class Precision { F16, F32, F64, BF16 };
-}  // namespace scaluq
 
-namespace scaluq::internal {
+namespace internal {
 template <Precision precision>
 struct FloatTypeImpl {};
 
@@ -22,9 +21,11 @@ struct IsFloatingPoint : public std::false_type {};
 using F16 = __half;
 #else
 #ifndef __STDCPP_FLOAT16_T__
-static_assert(false && "float16 is not supported")
+static_assert(false && "float16 is not supported");
+using F16 = void;  // dummy for code completion
+#else
+using F16 = std::float16_t;
 #endif
-    using F16 = std::float16_t;
 #endif
 template <>
 struct IsFloatingPoint<F16> : public std::true_type {};
@@ -87,4 +88,5 @@ template <typename T>
 concept FloatingPoint = IsFloatingPointV<T>;
 template <Precision Prec>
 using Float = FloatTypeImpl<Prec>::Type;
-};  // namespace scaluq::internal
+}  // namespace internal
+}  // namespace scaluq

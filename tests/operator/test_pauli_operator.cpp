@@ -13,8 +13,8 @@ TYPED_TEST_SUITE(PauliOperatorTest, TestTypes, NameGenerator);
 TYPED_TEST(PauliOperatorTest, ContainsExtraWhitespace) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
-    PauliOperator<Prec, Space> expected = PauliOperator<Prec, Space>("X 0", 1.0);
-    PauliOperator<Prec, Space> pauli_whitespace = PauliOperator<Prec, Space>("X 0 ", 1.0);
+    PauliOperator<Prec> expected = PauliOperator<Prec>("X 0", 1.0);
+    PauliOperator<Prec> pauli_whitespace = PauliOperator<Prec>("X 0 ", 1.0);
     EXPECT_EQ(1, pauli_whitespace.target_qubit_list().size());
     EXPECT_EQ(1, pauli_whitespace.pauli_id_list().size());
     EXPECT_EQ(expected.get_pauli_string(), pauli_whitespace.get_pauli_string());
@@ -23,7 +23,7 @@ TYPED_TEST(PauliOperatorTest, ContainsExtraWhitespace) {
 TYPED_TEST(PauliOperatorTest, EmptyStringConstructsIdentity) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
-    const auto identity = PauliOperator<Prec, Space>("", 1.0);
+    const auto identity = PauliOperator<Prec>("", 1.0);
     ASSERT_EQ(0, identity.target_qubit_list().size());
     ASSERT_EQ(0, identity.pauli_id_list().size());
     ASSERT_EQ("", identity.get_pauli_string());
@@ -34,7 +34,7 @@ TYPED_TEST(PauliOperatorTest, BrokenPauliStringA) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "X 0 X Z 1 Y 2";
-    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
+    EXPECT_THROW((PauliOperator<Prec>(Pauli_string, coef)), std::runtime_error);
 }
 
 TYPED_TEST(PauliOperatorTest, BrokenPauliStringB) {
@@ -42,7 +42,7 @@ TYPED_TEST(PauliOperatorTest, BrokenPauliStringB) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "X {i}";
-    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
+    EXPECT_THROW((PauliOperator<Prec>(Pauli_string, coef)), std::runtime_error);
 }
 
 TYPED_TEST(PauliOperatorTest, BrokenPauliStringC) {
@@ -50,7 +50,7 @@ TYPED_TEST(PauliOperatorTest, BrokenPauliStringC) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "X 4x";
-    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
+    EXPECT_THROW((PauliOperator<Prec>(Pauli_string, coef)), std::runtime_error);
 }
 
 TYPED_TEST(PauliOperatorTest, BrokenPauliStringD) {
@@ -58,7 +58,7 @@ TYPED_TEST(PauliOperatorTest, BrokenPauliStringD) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "4 X";
-    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
+    EXPECT_THROW((PauliOperator<Prec>(Pauli_string, coef)), std::runtime_error);
 }
 
 TYPED_TEST(PauliOperatorTest, BrokenPauliStringE) {
@@ -66,7 +66,7 @@ TYPED_TEST(PauliOperatorTest, BrokenPauliStringE) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "X 0 Y ";
-    EXPECT_THROW((PauliOperator<Prec, Space>(Pauli_string, coef)), std::runtime_error);
+    EXPECT_THROW((PauliOperator<Prec>(Pauli_string, coef)), std::runtime_error);
 }
 
 TYPED_TEST(PauliOperatorTest, SpacedPauliString) {
@@ -74,7 +74,7 @@ TYPED_TEST(PauliOperatorTest, SpacedPauliString) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     double coef = 2.0;
     std::string Pauli_string = "X 0 Y 1 ";
-    PauliOperator<Prec, Space> pauli = PauliOperator<Prec, Space>(Pauli_string, coef);
+    PauliOperator<Prec> pauli = PauliOperator<Prec>(Pauli_string, coef);
     size_t PauliSize = pauli.target_qubit_list().size();
     ASSERT_EQ(PauliSize, 2);
 }
@@ -82,14 +82,14 @@ TYPED_TEST(PauliOperatorTest, SpacedPauliString) {
 template <Precision Prec, ExecutionSpace Space>
 struct PauliTestParam {
     std::string test_name;
-    PauliOperator<Prec, Space> op1;
-    PauliOperator<Prec, Space> op2;
-    PauliOperator<Prec, Space> expected;
+    PauliOperator<Prec> op1;
+    PauliOperator<Prec> op2;
+    PauliOperator<Prec> expected;
 
     PauliTestParam(const std::string& test_name_,
-                   const PauliOperator<Prec, Space>& op1_,
-                   const PauliOperator<Prec, Space>& op2_,
-                   const PauliOperator<Prec, Space>& expected_)
+                   const PauliOperator<Prec>& op1_,
+                   const PauliOperator<Prec>& op2_,
+                   const PauliOperator<Prec>& expected_)
         : test_name(test_name_), op1(op1_), op2(op2_), expected(expected_) {}
 };
 
@@ -107,7 +107,7 @@ std::ostream& operator<<(std::ostream& stream, const PauliTestParam<Prec, Space>
         constexpr Precision Prec = Precision::PREC;                                                \
         constexpr ExecutionSpace Space = ExecutionSpace::SPACE;                                    \
         const auto p = GetParam();                                                                 \
-        PauliOperator<Prec, Space> res = p.op1 * p.op2;                                            \
+        PauliOperator<Prec> res = p.op1 * p.op2;                                                   \
         EXPECT_EQ(p.expected.get_pauli_string(), res.get_pauli_string());                          \
         EXPECT_EQ(p.expected.coef(), res.coef());                                                  \
     }                                                                                              \
@@ -116,7 +116,7 @@ std::ostream& operator<<(std::ostream& stream, const PauliTestParam<Prec, Space>
         constexpr Precision Prec = Precision::PREC;                                                \
         constexpr ExecutionSpace Space = ExecutionSpace::SPACE;                                    \
         const auto p = GetParam();                                                                 \
-        PauliOperator<Prec, Space> res = p.op1;                                                    \
+        PauliOperator<Prec> res = p.op1;                                                           \
         res = res * p.op2;                                                                         \
         EXPECT_EQ(p.expected.get_pauli_string(), res.get_pauli_string());                          \
         EXPECT_EQ(p.expected.coef(), res.coef());                                                  \
@@ -255,7 +255,7 @@ TYPED_TEST(PauliOperatorTest, ApplyToStateTest) {
         return tmp;
     }());
 
-    PauliOperator<Prec, Space> op(0b001, 0b010, StdComplex(2));
+    PauliOperator<Prec> op(0b001, 0b010, StdComplex(2));
     op.apply_to_state(state_vector);
     std::vector<StdComplex> expected = {2, 0, -6, -4, 10, 8, -14, -12};
     ASSERT_EQ(state_vector.get_amplitudes(), expected);

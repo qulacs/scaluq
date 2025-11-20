@@ -1,6 +1,5 @@
 #include <scaluq/gate/gate_matrix.hpp>
 
-#include "../prec_space.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {

@@ -1,9 +1,8 @@
+#include <scaluq/prec_space.hpp>
 #include <scaluq/state/state_vector.hpp>
+#include <scaluq/util/math.hpp>
 #include <scaluq/util/utility.hpp>
 #include <type_traits>
-
-#include "../prec_space.hpp"
-#include "../util/math.hpp"
 
 namespace scaluq {
 template <Precision Prec, ExecutionSpace Space>
@@ -308,6 +307,19 @@ std::string StateVector<Prec, Space>::to_string() const {
            << " : " << amp[i] << std::endl;
     }
     return os.str();
+}
+
+template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, ExecutionSpace::Default> StateVector<Prec, Space>::to_default_space() const {
+    auto tmp = StateVector<Prec, ExecutionSpace::Default>::uninitialized_state(_n_qubits);
+    Kokkos::deep_copy(tmp._raw, this->_raw);
+    return tmp;
+}
+template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, ExecutionSpace::Host> StateVector<Prec, Space>::to_host_space() const {
+    auto tmp = StateVector<Prec, ExecutionSpace::Host>::uninitialized_state(_n_qubits);
+    Kokkos::deep_copy(tmp._raw, this->_raw);
+    return tmp;
 }
 
 template <Precision Prec, ExecutionSpace Space>

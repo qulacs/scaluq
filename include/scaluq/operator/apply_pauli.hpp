@@ -1,12 +1,18 @@
-#include "apply_pauli.hpp"
+#pragma once
 
-#include <scaluq/constant.hpp>
-
-#include "../prec_space.hpp"
+#include "../constant.hpp"
+#include "../state/state_vector.hpp"
+#include "../state/state_vector_batched.hpp"
 #include "../util/math.hpp"
 
+namespace scaluq {
+template <Precision Prec>
+struct PauliOperator;
+}
+
 namespace scaluq::internal {
-template <>
+
+template <Precision Prec, ExecutionSpace Space>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t control_value_mask,
                  std::uint64_t bit_flip_mask,
@@ -48,8 +54,7 @@ void apply_pauli(std::uint64_t control_mask,
             state_vector._raw[basis_1] = tmp1 * coef;
         });
 }
-
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t control_value_mask,
                  std::uint64_t bit_flip_mask,
@@ -92,10 +97,10 @@ void apply_pauli(std::uint64_t control_mask,
         });
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t control_value_mask,
-                 const Kokkos::View<PauliOperator<Prec, Space>*, SpaceType<Space>>& ops,
+                 const Kokkos::View<PauliOperator<Prec>*, SpaceType<Space>>& ops,
                  StateVectorBatched<Prec, Space>& states) {
     std::uint64_t dim = states.dim();
     Kokkos::parallel_for(
@@ -141,11 +146,10 @@ void apply_pauli(std::uint64_t control_mask,
             }
         });
 }
-
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t control_value_mask,
-                 const Kokkos::View<PauliOperator<Prec, Space>*, SpaceType<Space>>& ops,
+                 const Kokkos::View<PauliOperator<Prec>*, SpaceType<Space>>& ops,
                  const Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>& row_ptr,
                  StateVectorBatched<Prec, Space>& states,
                  std::uint64_t batch_size) {
@@ -208,8 +212,7 @@ void apply_pauli(std::uint64_t control_mask,
             });
     states = results;
 }
-
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t control_value_mask,
                           std::uint64_t bit_flip_mask,
@@ -270,7 +273,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
             });
     }
 }
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t control_value_mask,
                           std::uint64_t bit_flip_mask,
@@ -330,7 +333,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
             });
     }
 }
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t control_value_mask,
                           std::uint64_t bit_flip_mask,

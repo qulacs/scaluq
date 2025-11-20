@@ -3,8 +3,6 @@
 #include <scaluq/gate/merge_gate.hpp>
 #include <scaluq/util/utility.hpp>
 
-#include "../prec_space.hpp"
-
 namespace scaluq {
 std::pair<Gate<internal::Prec, internal::Space>, double> merge_gate_dense_matrix(
     const Gate<internal::Prec, internal::Space>& gate1,
@@ -156,13 +154,13 @@ std::pair<Gate<internal::Prec, internal::Space>, double> merge_gate(
         auto pauli1 =
             gate_type1 == GateType::Pauli
                 ? PauliGate<internal::Prec, internal::Space>(gate1)->pauli()
-                : PauliOperator<internal::Prec, internal::Space>(
-                      std::vector{gate1->target_qubit_list()[0]}, std::vector{pauli_id1.value()});
+                : PauliOperator<internal::Prec>(std::vector{gate1->target_qubit_list()[0]},
+                                                std::vector{pauli_id1.value()});
         auto pauli2 =
             gate_type2 == GateType::Pauli
                 ? PauliGate<internal::Prec, internal::Space>(gate2)->pauli()
-                : PauliOperator<internal::Prec, internal::Space>(
-                      std::vector{gate2->target_qubit_list()[0]}, std::vector{pauli_id2.value()});
+                : PauliOperator<internal::Prec>(std::vector{gate2->target_qubit_list()[0]},
+                                                std::vector{pauli_id2.value()});
         return {gate::Pauli<internal::Prec, internal::Space>(
                     pauli2 * pauli1, control_qubit_list, control_value_list),
                 0.};

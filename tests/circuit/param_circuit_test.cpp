@@ -53,7 +53,7 @@ void param_circuit_test() {
                         target_vec.emplace_back(target);
                         pauli_id_vec.emplace_back(random.int64() % 4);
                     }
-                    PauliOperator<Prec, Space> pauli(target_vec, pauli_id_vec, 1.0);
+                    PauliOperator<Prec> pauli(target_vec, pauli_id_vec, 1.0);
                     circuit.add_gate(gate::PauliRotation<Prec, Space>(pauli, coef * params[pidx]));
                     pcircuit.add_param_gate(gate::ParamPauliRotation<Prec, Space>(pauli, coef),
                                             pkeys[pidx]);

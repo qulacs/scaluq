@@ -282,3 +282,24 @@ TYPED_TEST(StateVectorTest, SamplingComputationalBasis) {
         ASSERT_EQ(res[i], 100);
     }
 }
+
+TYPED_TEST(StateVectorTest, DeviceHostTransfer) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    if constexpr (Space != ExecutionSpace::Host) {
+        const std::uint64_t n = 10;
+        std::vector<StdComplex> amplitudes(1ULL << n, StdComplex(0, 0));
+        for (std::uint64_t i = 0; i < (1ULL << n); ++i) {
+            amplitudes[i] = StdComplex(static_cast<double>(i), static_cast<double>(-i));
+        }
+        StateVector<Prec, ExecutionSpace::Host> state_h1(n);
+        state_h1.load(amplitudes);
+        auto state_device = state_h1.to_default_space();
+        auto state_h2 = state_device.to_host_space();
+        auto state_cp = state_h2.get_amplitudes();
+        for (std::uint64_t i = 0; i < (1ULL << n); ++i) {
+            ASSERT_EQ(state_cp[i].real(), static_cast<double>(i));
+            ASSERT_EQ(state_cp[i].imag(), static_cast<double>(-i));
+        }
+    }
+}

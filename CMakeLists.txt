@@ -174,7 +174,7 @@ foreach(space_idx RANGE 0 ${space_max_idx})
         list(APPEND SCALUQ_LIBRARIES ${LIBRARY})
         add_library(${LIBRARY})
         target_compile_definitions(${LIBRARY} PUBLIC ${DEF})
-        target_compile_definitions(${LIBRARY} PRIVATE SCALUQ_INTERNAL_PREC=${PRECISION_VALUE} SCALUQ_INTERNAL_SPACE=${SPACE_VALUE})
+        target_compile_definitions(${LIBRARY} PUBLIC SCALUQ_INTERNAL_PREC=${PRECISION_VALUE} SCALUQ_INTERNAL_SPACE=${SPACE_VALUE})
     endforeach()
 endforeach()
 

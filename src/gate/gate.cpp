@@ -1,9 +1,6 @@
 #include <scaluq/gate/gate.hpp>
 
-#include "../prec_space.hpp"
-
-namespace scaluq {
-namespace internal {
+namespace scaluq::internal {
 template <Precision Prec, ExecutionSpace Space>
 void GateBase<Prec, Space>::check_qubit_mask_within_bounds(
     const StateVector<Prec, Space>& state_vector) const {
@@ -61,5 +58,4 @@ GateBase<Prec, Space>::GateBase(std::uint64_t target_mask,
 }
 
 template class GateBase<Prec, Space>;
-}  // namespace internal
-}  // namespace scaluq
+}  // namespace scaluq::internal

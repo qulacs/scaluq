@@ -10,12 +10,12 @@ namespace scaluq {
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 class ParamPauliRotationGateImpl : public ParamGateBase<Prec, Space> {
-    const PauliOperator<Prec, Space> _pauli;
+    const PauliOperator<Prec> _pauli;
 
 public:
     ParamPauliRotationGateImpl(std::uint64_t control_mask,
                                std::uint64_t control_value_mask,
-                               const PauliOperator<Prec, Space>& pauli,
+                               const PauliOperator<Prec>& pauli,
                                Float<Prec> param_coef = 1)
         : ParamGateBase<Prec, Space>(vector_to_mask<false>(pauli.target_qubit_list()),
                                      control_mask,
@@ -23,7 +23,7 @@ public:
                                      param_coef),
           _pauli(pauli) {}
 
-    PauliOperator<Prec, Space> pauli() const { return _pauli; }
+    PauliOperator<Prec> pauli() const { return _pauli; }
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
 
     std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override {

@@ -1,16 +1,14 @@
 #include <Eigen/Eigenvalues>
 #include <scaluq/operator/operator.hpp>
-
-#include "../prec_space.hpp"
-#include "../util/math.hpp"
-#include "apply_pauli.hpp"
+#include <scaluq/prec_space.hpp>
+#include <scaluq/util/math.hpp>
 
 namespace scaluq {
 template <>
 Operator<internal::Prec, internal::Space>::Operator(
-    std::vector<PauliOperator<internal::Prec, internal::Space>> terms)
-    : _terms(internal::convert_vector_to_view<PauliOperator<internal::Prec, internal::Space>,
-                                              internal::Space>(terms, "terms")) {
+    std::vector<PauliOperator<internal::Prec>> terms)
+    : _terms(internal::convert_vector_to_view<PauliOperator<internal::Prec>, internal::Space>(
+          terms, "terms")) {
     for (auto& term : terms) {
         if (term.coef().imag() != 0) {
             _is_hermitian = false;
@@ -39,7 +37,7 @@ std::string Operator<internal::Prec, internal::Space>::to_string() const {
 
 template <>
 void Operator<internal::Prec, internal::Space>::load(
-    const std::vector<PauliOperator<internal::Prec, internal::Space>>& terms) {
+    const std::vector<PauliOperator<internal::Prec>>& terms) {
     if (terms.size() != _terms.size()) {
         throw std::runtime_error(
             "Operator::load: size of terms does not match the current operator size.");
@@ -59,7 +57,7 @@ template <>
 Operator<internal::Prec, internal::Space>
 Operator<internal::Prec, internal::Space>::uninitialized_operator(std::uint64_t n_terms) {
     Operator<internal::Prec, internal::Space> tmp;
-    tmp._terms = Kokkos::View<PauliOperator<internal::Prec, internal::Space>*, ExecutionSpaceType>(
+    tmp._terms = Kokkos::View<PauliOperator<internal::Prec>*, ExecutionSpaceType>(
         Kokkos::ViewAllocateWithoutInitializing("terms"), n_terms);
     return tmp;
 }
@@ -351,6 +349,26 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transitio
 }
 
 template <>
+Operator<internal::Prec, ExecutionSpace::Default>
+Operator<internal::Prec, internal::Space>::to_default_space() const {
+    auto op =
+        Operator<internal::Prec, ExecutionSpace::Default>::uninitialized_operator(_terms.extent(0));
+    // Kokkos::deep_copy(op._terms, _terms);
+    op._is_hermitian = _is_hermitian;
+    return op;
+}
+
+template <>
+Operator<internal::Prec, ExecutionSpace::Host>
+Operator<internal::Prec, internal::Space>::to_host_space() const {
+    auto op =
+        Operator<internal::Prec, ExecutionSpace::Host>::uninitialized_operator(_terms.extent(0));
+    Kokkos::deep_copy(op._terms, this->_terms);
+    op._is_hermitian = _is_hermitian;
+    return op;
+}
+
+template <>
 StdComplex Operator<internal::Prec, internal::Space>::calculate_default_mu() const {
     FloatType mu;
     std::uint64_t nterms = _terms.size();
@@ -494,7 +512,7 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
 
 template <>
 Operator<internal::Prec, internal::Space>& Operator<internal::Prec, internal::Space>::operator*=(
-    const PauliOperator<internal::Prec, internal::Space>& target) {
+    const PauliOperator<internal::Prec>& target) {
     Kokkos::parallel_for(
         "operator*=",
         Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(0, _terms.size()),
@@ -505,7 +523,7 @@ Operator<internal::Prec, internal::Space>& Operator<internal::Prec, internal::Sp
 
 template <>
 Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Space>::operator*(
-    const PauliOperator<internal::Prec, internal::Space>& target) const {
+    const PauliOperator<internal::Prec>& target) const {
     return this->copy() *= target;
 }
 
@@ -531,7 +549,7 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
 
 template <>
 Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Space>::operator+(
-    const PauliOperator<internal::Prec, internal::Space>& target) const {
+    const PauliOperator<internal::Prec>& target) const {
     auto ret = Operator<internal::Prec, internal::Space>::uninitialized_operator(_terms.size() + 1);
     Kokkos::parallel_for(
         "operator+",

@@ -1,6 +1,5 @@
 #include <scaluq/gate/param_gate.hpp>
-
-#include "../prec_space.hpp"
+#include <scaluq/prec_space.hpp>
 
 namespace scaluq::internal {
 template <Precision Prec, ExecutionSpace Space>

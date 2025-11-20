@@ -1,14 +1,18 @@
 #pragma once
 
+#include "types.hpp"
+
 namespace scaluq {
 void initialize();
 void finalize();
 bool is_initialized();
 bool is_finalized();
 void synchronize();
+}  // namespace scaluq
 
 #ifdef SCALUQ_USE_NANOBIND
-namespace internal {
+#include "../python/docstring.hpp"
+namespace scaluq::internal {
 void bind_kokkos_hpp(nb::module_& m) {
     m.def(
         "finalize",
@@ -34,6 +38,5 @@ void bind_kokkos_hpp(nb::module_& m) {
               .build_as_google_style()
               .c_str());
 }
-}  // namespace internal
+}  // namespace scaluq::internal
 #endif
-}  // namespace scaluq

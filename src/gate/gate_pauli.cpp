@@ -1,8 +1,5 @@
 #include <scaluq/gate/gate_pauli.hpp>
 
-#include "../operator/apply_pauli.hpp"
-#include "../prec_space.hpp"
-#include "../util/math.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
@@ -99,7 +96,7 @@ std::shared_ptr<const PauliGateImpl<Prec, Space>> GetGateFromJson<PauliGateImpl<
     return std::make_shared<const PauliGateImpl<Prec, Space>>(
         vector_to_mask(control_qubits),
         vector_to_mask(control_qubits, control_values),
-        j.at("pauli").get<PauliOperator<Prec, Space>>());
+        j.at("pauli").get<PauliOperator<Prec>>());
 }
 template class GetGateFromJson<PauliGateImpl<Prec, Space>>;
 template <>
@@ -110,7 +107,7 @@ GetGateFromJson<PauliRotationGateImpl<Prec, Space>>::get(const Json& j) {
     return std::make_shared<const PauliRotationGateImpl<Prec, Space>>(
         vector_to_mask(control_qubits),
         vector_to_mask(control_qubits, control_values),
-        j.at("pauli").get<PauliOperator<Prec, Space>>(),
+        j.at("pauli").get<PauliOperator<Prec>>(),
         static_cast<Float<Prec>>(j.at("angle").get<double>()));
 }
 template class GetGateFromJson<PauliRotationGateImpl<Prec, Space>>;

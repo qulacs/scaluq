@@ -53,7 +53,7 @@ inline ParamGate<Prec, Space> ParamRZ(std::uint64_t target,
         static_cast<internal::Float<Prec>>(param_coef));
 }
 template <Precision Prec, ExecutionSpace Space>
-inline ParamGate<Prec, Space> ParamPauliRotation(const PauliOperator<Prec, Space>& pauli,
+inline ParamGate<Prec, Space> ParamPauliRotation(const PauliOperator<Prec>& pauli,
                                                  double param_coef = 1.,
                                                  const std::vector<std::uint64_t>& controls = {},
                                                  std::vector<std::uint64_t> control_values = {}) {

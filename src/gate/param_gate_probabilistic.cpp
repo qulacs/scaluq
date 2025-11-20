@@ -1,7 +1,5 @@
 #include <scaluq/gate/param_gate_probabilistic.hpp>
 
-#include "../prec_space.hpp"
-
 namespace scaluq::internal {
 template <Precision Prec, ExecutionSpace Space>
 ParamProbabilisticGateImpl<Prec, Space>::ParamProbabilisticGateImpl(

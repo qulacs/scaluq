@@ -290,7 +290,7 @@ inline Gate<Prec, Space> Swap(std::uint64_t target1,
         internal::vector_to_mask(controls, control_values));
 }
 template <Precision Prec, ExecutionSpace Space>
-inline Gate<Prec, Space> Pauli(const PauliOperator<Prec, Space>& pauli,
+inline Gate<Prec, Space> Pauli(const PauliOperator<Prec>& pauli,
                                const std::vector<std::uint64_t>& controls = {},
                                std::vector<std::uint64_t> control_values = {}) {
     internal::resize_and_check_control_values(controls, control_values);
@@ -301,7 +301,7 @@ inline Gate<Prec, Space> Pauli(const PauliOperator<Prec, Space>& pauli,
         pauli);
 }
 template <Precision Prec, ExecutionSpace Space>
-inline Gate<Prec, Space> PauliRotation(const PauliOperator<Prec, Space>& pauli,
+inline Gate<Prec, Space> PauliRotation(const PauliOperator<Prec>& pauli,
                                        double angle,
                                        const std::vector<std::uint64_t>& controls = {},
                                        std::vector<std::uint64_t> control_values = {}) {

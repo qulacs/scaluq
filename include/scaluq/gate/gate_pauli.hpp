@@ -11,17 +11,17 @@ namespace internal {
 
 template <Precision Prec, ExecutionSpace Space>
 class PauliGateImpl : public GateBase<Prec, Space> {
-    const PauliOperator<Prec, Space> _pauli;
+    const PauliOperator<Prec> _pauli;
 
 public:
     PauliGateImpl(std::uint64_t control_mask,
                   std::uint64_t control_value_mask,
-                  const PauliOperator<Prec, Space>& pauli)
+                  const PauliOperator<Prec>& pauli)
         : GateBase<Prec, Space>(
               vector_to_mask<false>(pauli.target_qubit_list()), control_mask, control_value_mask),
           _pauli(pauli) {}
 
-    PauliOperator<Prec, Space> pauli() const { return _pauli; };
+    PauliOperator<Prec> pauli() const { return _pauli; };
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
 
     std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
@@ -44,20 +44,20 @@ public:
 
 template <Precision Prec, ExecutionSpace Space>
 class PauliRotationGateImpl : public GateBase<Prec, Space> {
-    const PauliOperator<Prec, Space> _pauli;
+    const PauliOperator<Prec> _pauli;
     const Float<Prec> _angle;
 
 public:
     PauliRotationGateImpl(std::uint64_t control_mask,
                           std::uint64_t control_value_mask,
-                          const PauliOperator<Prec, Space>& pauli,
+                          const PauliOperator<Prec>& pauli,
                           Float<Prec> angle)
         : GateBase<Prec, Space>(
               vector_to_mask<false>(pauli.target_qubit_list()), control_mask, control_value_mask),
           _pauli(pauli),
           _angle(angle) {}
 
-    PauliOperator<Prec, Space> pauli() const { return _pauli; }
+    PauliOperator<Prec> pauli() const { return _pauli; }
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
     double angle() const { return static_cast<double>(_angle); }
 

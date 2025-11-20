@@ -1,0 +1,2 @@
+ninja: Entering directory `build/'
+ninja: build stopped: interrupted by user.

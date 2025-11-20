@@ -310,7 +310,7 @@ void run_random_batched_gate_apply_pauli(std::uint64_t n_qubits) {
             }
         }
 
-        PauliOperator<Prec, Space> pauli(target_vec, pauli_id_vec, 1.0);
+        PauliOperator<Prec> pauli(target_vec, pauli_id_vec, 1.0);
         Gate<Prec, Space> pauli_gate = gate::Pauli<Prec, Space>(pauli);
         pauli_gate->update_quantum_state(states);
 
@@ -375,7 +375,7 @@ void run_random_batched_gate_apply_pauli(std::uint64_t n_qubits) {
         matrix = std::cos(angle / 2) * ComplexMatrix::Identity(dim, dim) -
                  StdComplex(0, 1) * std::sin(angle / 2) * matrix;
 
-        PauliOperator<Prec, Space> pauli(target_vec, pauli_id_vec, 1.0);
+        PauliOperator<Prec> pauli(target_vec, pauli_id_vec, 1.0);
         Gate<Prec, Space> pauli_gate = gate::PauliRotation(pauli, angle);
         pauli_gate->update_quantum_state(states);
 
@@ -901,7 +901,7 @@ void test_batched_standard_gate_control(Factory factory, std::uint64_t n) {
 
 template <Precision Prec, ExecutionSpace Space, bool rotation>
 void test_batched_pauli_control(std::uint64_t n) {
-    PauliOperator<Prec, Space> pauli1, pauli2;
+    PauliOperator<Prec> pauli1, pauli2;
     std::vector<std::uint64_t> controls, control_values;
     std::uint64_t control_mask = 0, control_value_mask = 0;
     std::uint64_t num_control = 0;

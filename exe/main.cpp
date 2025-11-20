@@ -10,11 +10,11 @@ std::pair<OperatorBatched<Prec, Space>, std::vector<Operator<Prec, Space>>>
 generate_random_observable(int n) {
     Random random;
     std::uint64_t batch_size = random.int32() % 5 + 1;
-    std::vector<std::vector<PauliOperator<Prec, Space>>> rand_observable;
+    std::vector<std::vector<PauliOperator<Prec>>> rand_observable;
     std::vector<Operator<Prec, Space>> test_rand_observable;
 
     for (std::uint64_t b = 0; b < batch_size; ++b) {
-        std::vector<PauliOperator<Prec, Space>> ops;
+        std::vector<PauliOperator<Prec>> ops;
         std::uint64_t term_count = random.int32() % 10 + 1;
         for (std::uint64_t term = 0; term < term_count; ++term) {
             std::vector<std::uint64_t> paulis(n, 0);
@@ -36,7 +36,7 @@ generate_random_observable(int n) {
                     str += " " + std::to_string(ind);
                 }
             }
-            ops.push_back(PauliOperator<Prec, Space>(str.c_str(), coef));
+            ops.push_back(PauliOperator<Prec>(str.c_str(), coef));
         }
         rand_observable.push_back(ops);
         test_rand_observable.push_back(Operator<Prec, Space>(ops));
@@ -51,15 +51,15 @@ void merge_gate_test() {
     StateVector<Prec, Space> state_vector_trans(6);
     state_vector.set_Haar_random_state();
     {
-        std::vector<std::vector<PauliOperator<Prec, Space>>> ops(3);
-        ops[0].push_back({PauliOperator<Prec, Space>("X 0 Y 1")});
-        ops[0].push_back({PauliOperator<Prec, Space>("Z 2 X 3", 2.0)});
-        ops[0].push_back({PauliOperator<Prec, Space>("Y 4 Z 5")});
-        ops[1].push_back({PauliOperator<Prec, Space>("X 2 Y 1")});
-        ops[1].push_back({PauliOperator<Prec, Space>("Z 2 X 3", 2.0)});
-        ops[1].push_back({PauliOperator<Prec, Space>("Y 4 Z 5")});
-        ops[2].push_back({PauliOperator<Prec, Space>("X 0 Y 1")});
-        ops[2].push_back({PauliOperator<Prec, Space>("Z 2 X 3", 2.0)});
+        std::vector<std::vector<PauliOperator<Prec>>> ops(3);
+        ops[0].push_back({PauliOperator<Prec>("X 0 Y 1")});
+        ops[0].push_back({PauliOperator<Prec>("Z 2 X 3", 2.0)});
+        ops[0].push_back({PauliOperator<Prec>("Y 4 Z 5")});
+        ops[1].push_back({PauliOperator<Prec>("X 2 Y 1")});
+        ops[1].push_back({PauliOperator<Prec>("Z 2 X 3", 2.0)});
+        ops[1].push_back({PauliOperator<Prec>("Y 4 Z 5")});
+        ops[2].push_back({PauliOperator<Prec>("X 0 Y 1")});
+        ops[2].push_back({PauliOperator<Prec>("Z 2 X 3", 2.0)});
         OperatorBatched<Prec, Space> op_batched(ops);
         auto res = op_batched.get_expectation_value(state_vector);
         std::cout << "Expectation values: ";
@@ -74,14 +74,14 @@ void merge_gate_test() {
         auto op_b_cpy = op_batched.copy();
     }
     {
-        Operator<Prec, Space> op1({PauliOperator<Prec, Space>("X 0 Y 1"),
-                                   PauliOperator<Prec, Space>("Z 2 X 3", 2.0),
-                                   PauliOperator<Prec, Space>("Y 4 Z 5")});
-        Operator<Prec, Space> op2({PauliOperator<Prec, Space>("X 2 Y 1"),
-                                   PauliOperator<Prec, Space>("Z 2 X 3", 2.0),
-                                   PauliOperator<Prec, Space>("Y 4 Z 5")});
+        Operator<Prec, Space> op1({PauliOperator<Prec>("X 0 Y 1"),
+                                   PauliOperator<Prec>("Z 2 X 3", 2.0),
+                                   PauliOperator<Prec>("Y 4 Z 5")});
+        Operator<Prec, Space> op2({PauliOperator<Prec>("X 2 Y 1"),
+                                   PauliOperator<Prec>("Z 2 X 3", 2.0),
+                                   PauliOperator<Prec>("Y 4 Z 5")});
         Operator<Prec, Space> op3(
-            {PauliOperator<Prec, Space>("X 0 Y 1"), PauliOperator<Prec, Space>("Z 2 X 3", 2.0)});
+            {PauliOperator<Prec>("X 0 Y 1"), PauliOperator<Prec>("Z 2 X 3", 2.0)});
         std::cout << "Expectation value of op1: " << op1.get_expectation_value(state_vector)
                   << std::endl;
         std::cout << "Expectation value of op2: " << op2.get_expectation_value(state_vector)

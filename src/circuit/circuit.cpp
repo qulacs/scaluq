@@ -3,8 +3,6 @@
 #include <scaluq/gate/merge_gate.hpp>
 #include <scaluq/gate/param_gate_factory.hpp>
 
-#include "../prec_space.hpp"
-
 namespace scaluq {
 template <Precision Prec, ExecutionSpace Space>
 std::set<std::string> Circuit<Prec, Space>::key_set() const {

@@ -1,8 +1,5 @@
 #include <scaluq/gate/param_gate_pauli.hpp>
-
-#include "../operator/apply_pauli.hpp"
-#include "../prec_space.hpp"
-#include "../util/math.hpp"
+#include <scaluq/operator/apply_pauli.hpp>
 
 namespace scaluq::internal {
 template <Precision Prec, ExecutionSpace Space>
@@ -70,7 +67,7 @@ GetParamGateFromJson<ParamPauliRotationGateImpl<Prec, Space>>::get(const Json& j
     return std::make_shared<const ParamPauliRotationGateImpl<Prec, Space>>(
         vector_to_mask(controls),
         vector_to_mask(controls, control_values),
-        j.at("pauli").get<PauliOperator<Prec, Space>>(),
+        j.at("pauli").get<PauliOperator<Prec>>(),
         static_cast<Float<Prec>>(j.at("param_coef").get<double>()));
 }
 template class GetParamGateFromJson<ParamPauliRotationGateImpl<Prec, Space>>;
