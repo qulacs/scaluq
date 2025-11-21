@@ -6,7 +6,7 @@ add_executable(scaluq_test
     # circuit/circuit_test.cpp
     # circuit/circuit_optimize_test.cpp
     # circuit/param_circuit_test.cpp
-    # gate/gate_test.cpp
+    gate/gate_test.cpp
     # gate/batched_gate_test.cpp
     # gate/merge_test.cpp
     # gate/param_gate_test.cpp

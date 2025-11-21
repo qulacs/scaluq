@@ -1,9 +1,10 @@
 #include <scaluq/gate/gate.hpp>
+#include <scaluq/prec_space.hpp>
 
 namespace scaluq::internal {
-template <Precision Prec, ExecutionSpace Space>
-void GateBase<Prec, Space>::check_qubit_mask_within_bounds(
-    const StateVector<Prec, Space>& state_vector) const {
+template <Precision Prec>
+void GateBase<Prec>::check_qubit_mask_within_bounds(
+    const StateVector<Prec, ExecutionSpace::Host>& state_vector) const {
     std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
     if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
         throw std::runtime_error(
@@ -11,9 +12,9 @@ void GateBase<Prec, Space>::check_qubit_mask_within_bounds(
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
-template <Precision Prec, ExecutionSpace Space>
-void GateBase<Prec, Space>::check_qubit_mask_within_bounds(
-    const StateVectorBatched<Prec, Space>& states) const {
+template <Precision Prec>
+void GateBase<Prec>::check_qubit_mask_within_bounds(
+    const StateVectorBatched<Prec, ExecutionSpace::Host>& states) const {
     std::uint64_t full_mask = (1ULL << states.n_qubits()) - 1;
     if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
         throw std::runtime_error(
@@ -21,9 +22,31 @@ void GateBase<Prec, Space>::check_qubit_mask_within_bounds(
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void GateBase<Prec>::check_qubit_mask_within_bounds(
+    const StateVector<Prec, ExecutionSpace::Default>& state_vector) const {
+    std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
+    if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
+        throw std::runtime_error(
+            "Error: Gate::update_quantum_state(StateVector& state): "
+            "Target/Control qubit exceeds the number of qubits in the system.");
+    }
+}
+template <Precision Prec>
+void GateBase<Prec>::check_qubit_mask_within_bounds(
+    const StateVectorBatched<Prec, ExecutionSpace::Default>& states) const {
+    std::uint64_t full_mask = (1ULL << states.n_qubits()) - 1;
+    if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
+        throw std::runtime_error(
+            "Error: Gate::update_quantum_state(StateVectorBatched& states): "
+            "Target/Control qubit exceeds the number of qubits in the system.");
+    }
+}
+#endif  // SCALUQ_USE_CUDA
 
-template <Precision Prec, ExecutionSpace Space>
-std::string GateBase<Prec, Space>::get_qubit_info_as_string(const std::string& indent) const {
+template <Precision Prec>
+std::string GateBase<Prec>::get_qubit_info_as_string(const std::string& indent) const {
     std::ostringstream ss;
     auto targets = target_qubit_list();
     auto controls = control_qubit_list();
@@ -43,10 +66,10 @@ std::string GateBase<Prec, Space>::get_qubit_info_as_string(const std::string& i
     return ss.str();
 }
 
-template <Precision Prec, ExecutionSpace Space>
-GateBase<Prec, Space>::GateBase(std::uint64_t target_mask,
-                                std::uint64_t control_mask,
-                                std::uint64_t control_value_mask)
+template <Precision Prec>
+GateBase<Prec>::GateBase(std::uint64_t target_mask,
+                         std::uint64_t control_mask,
+                         std::uint64_t control_value_mask)
     : _target_mask(target_mask),
       _control_mask(control_mask),
       _control_value_mask(control_value_mask) {
@@ -57,5 +80,5 @@ GateBase<Prec, Space>::GateBase(std::uint64_t target_mask,
     }
 }
 
-template class GateBase<Prec, Space>;
+template class GateBase<Prec>;
 }  // namespace scaluq::internal

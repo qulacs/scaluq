@@ -11,7 +11,7 @@
 namespace scaluq {
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
-class DenseMatrixGateImpl : public GateBase<Prec, Space> {
+class DenseMatrixGateImpl : public GateBase<Prec> {
     Matrix<Prec, Space> _matrix;
     bool _is_unitary;
 
@@ -22,14 +22,21 @@ public:
                         const ComplexMatrix& mat,
                         bool is_unitary = false);
 
-    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override;
+    std::shared_ptr<const GateBase<Prec>> get_inverse() const override;
 
     Matrix<Prec, Space> get_matrix_internal() const;
 
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+#ifdef SCALUQ_USE_CUDA
+    void update_quantum_state(
+        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+    void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+#endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
 
@@ -43,7 +50,7 @@ public:
 };
 
 template <Precision Prec, ExecutionSpace Space>
-class SparseMatrixGateImpl : public GateBase<Prec, Space> {
+class SparseMatrixGateImpl : public GateBase<Prec> {
     SparseMatrix<Prec, Space> _matrix;
     std::uint64_t num_nnz;
 
@@ -53,7 +60,7 @@ public:
                          std::uint64_t control_value_mask,
                          const SparseComplexMatrix& mat);
 
-    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override;
+    std::shared_ptr<const GateBase<Prec>> get_inverse() const override;
 
     Matrix<Prec, Space> get_matrix_internal() const;
 
@@ -61,8 +68,15 @@ public:
 
     SparseComplexMatrix get_sparse_matrix() const { return get_matrix().sparseView(); }
 
-    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+#ifdef SCALUQ_USE_CUDA
+    void update_quantum_state(
+        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+    void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+#endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
 
@@ -85,12 +99,14 @@ using DenseMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl<Prec, Sp
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
-void bind_gate_gate_matrix_hpp(nb::module_& m, nb::class_<Gate<Prec, Space>>& gate_base_def) {
-    DEF_GATE(SparseMatrixGate, Prec, Space, "Specific class of sparse matrix gate.", gate_base_def)
+void bind_gate_gate_matrix_hpp(nb::module_& m, nb::class_<Gate<Prec>>& gate_base_def) {
+    DEF_GATE_WITH_SPACE(
+        SparseMatrixGate, Prec, Space, "Specific class of sparse matrix gate.", gate_base_def)
         .def("matrix", [](const SparseMatrixGate<Prec, Space>& gate) { return gate->get_matrix(); })
         .def("sparse_matrix",
              [](const SparseMatrixGate<Prec, Space>& gate) { return gate->get_sparse_matrix(); });
-    DEF_GATE(DenseMatrixGate, Prec, Space, "Specific class of dense matrix gate.", gate_base_def)
+    DEF_GATE_WITH_SPACE(
+        DenseMatrixGate, Prec, Space, "Specific class of dense matrix gate.", gate_base_def)
         .def("matrix", [](const DenseMatrixGate<Prec, Space>& gate) { return gate->get_matrix(); });
 }
 }  // namespace internal
