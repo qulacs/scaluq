@@ -269,15 +269,15 @@ void dense_matrix_gate(std::uint64_t target_mask,
                        StateVector<Prec, Space>& state) {
     const std::uint64_t target_qubit_index_count = std::popcount(target_mask);
     if (target_qubit_index_count == 0) {
-        none_target_dense_matrix_gate<Prec>(control_mask, control_value_mask, matrix, state);
+        none_target_dense_matrix_gate(control_mask, control_value_mask, matrix, state);
     } else if (target_qubit_index_count == 1) {
-        single_target_dense_matrix_gate<Prec>(
+        single_target_dense_matrix_gate(
             target_mask, control_mask, control_value_mask, matrix, state);
     } else if (target_qubit_index_count == 2) {
-        double_target_dense_matrix_gate<Prec>(
+        double_target_dense_matrix_gate(
             target_mask, control_mask, control_value_mask, matrix, state);
     } else {
-        multi_target_dense_matrix_gate<Prec>(
+        multi_target_dense_matrix_gate(
             target_mask, control_mask, control_value_mask, matrix, state);
     }
 }
@@ -290,15 +290,15 @@ void dense_matrix_gate(std::uint64_t target_mask,
                        StateVectorBatched<Prec, Space>& states) {
     const std::uint64_t target_qubit_index_count = std::popcount(target_mask);
     if (target_qubit_index_count == 0) {
-        none_target_dense_matrix_gate<Prec>(control_mask, control_value_mask, matrix, states);
+        none_target_dense_matrix_gate(control_mask, control_value_mask, matrix, states);
     } else if (target_qubit_index_count == 1) {
-        single_target_dense_matrix_gate<Prec>(
+        single_target_dense_matrix_gate(
             target_mask, control_mask, control_value_mask, matrix, states);
     } else if (target_qubit_index_count == 2) {
-        double_target_dense_matrix_gate<Prec>(
+        double_target_dense_matrix_gate(
             target_mask, control_mask, control_value_mask, matrix, states);
     } else {
-        multi_target_dense_matrix_gate<Prec>(
+        multi_target_dense_matrix_gate(
             target_mask, control_mask, control_value_mask, matrix, states);
     }
 }

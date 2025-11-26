@@ -9,9 +9,9 @@
 
 namespace scaluq {
 namespace internal {
-template <Precision Prec, ExecutionSpace Space>
-class ParamProbabilisticGateImpl : public ParamGateBase<Prec, Space> {
-    using EitherGate = std::variant<Gate<Prec, Space>, ParamGate<Prec, Space>>;
+template <Precision Prec>
+class ParamProbabilisticGateImpl : public ParamGateBase<Prec> {
+    using EitherGate = std::variant<Gate<Prec>, ParamGate<Prec>>;
     std::vector<double> _distribution;
     std::vector<double> _cumulative_distribution;
     std::vector<EitherGate> _gate_list;
@@ -19,7 +19,7 @@ class ParamProbabilisticGateImpl : public ParamGateBase<Prec, Space> {
 public:
     ParamProbabilisticGateImpl(
         const std::vector<double>& distribution,
-        const std::vector<std::variant<Gate<Prec, Space>, ParamGate<Prec, Space>>>& gate_list);
+        const std::vector<std::variant<Gate<Prec>, ParamGate<Prec>>>& gate_list);
     const std::vector<EitherGate>& gate_list() const { return _gate_list; }
     const std::vector<double>& distribution() const { return _distribution; }
 
@@ -63,16 +63,23 @@ public:
         return ret;
     }
 
-    std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override;
+    std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const override;
     ComplexMatrix get_matrix(double) const override {
         throw std::runtime_error(
             "ParamProbabilisticGateImpl::get_matrix(): This function must not be used in "
             "ParamProbabilisticGateImpl.");
     }
 
-    void update_quantum_state(StateVector<Prec, Space>& state_vector, double param) const override;
-    void update_quantum_state(StateVectorBatched<Prec, Space>& states,
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector,
+                              double param) const override;
+    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Host>& states,
                               std::vector<double> params) const override;
+#ifdef SCALUQ_USE_CUDA
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
+                              double param) const override;
+    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Default>& states,
+                              std::vector<double> params) const override;
+#endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
 
@@ -88,29 +95,27 @@ public:
 };
 }  // namespace internal
 
-template <Precision Prec, ExecutionSpace Space>
-using ParamProbabilisticGate =
-    internal::ParamGatePtr<internal::ParamProbabilisticGateImpl<Prec, Space>>;
+template <Precision Prec>
+using ParamProbabilisticGate = internal::ParamGatePtr<internal::ParamProbabilisticGateImpl<Prec>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <Precision Prec, ExecutionSpace Space>
-void bind_gate_param_gate_probabilistic_hpp(
-    nb::module_& m, nb::class_<ParamGate<Prec, Space>>& param_gate_base_def) {
+template <Precision Prec>
+void bind_gate_param_gate_probabilistic_hpp(nb::module_& m,
+                                            nb::class_<ParamGate<Prec>>& param_gate_base_def) {
     DEF_PARAM_GATE(
         ParamProbabilisticGate,
         Prec,
-        Space,
         "Specific class of parametric probabilistic gate. The gate to apply is picked from a "
         "certain distribution.",
         param_gate_base_def)
         .def(
             "gate_list",
-            [](const ParamProbabilisticGate<Prec, Space>& gate) { return gate->gate_list(); },
+            [](const ParamProbabilisticGate<Prec>& gate) { return gate->gate_list(); },
             nb::rv_policy::reference)
         .def(
             "distribution",
-            [](const ParamProbabilisticGate<Prec, Space>& gate) { return gate->distribution(); },
+            [](const ParamProbabilisticGate<Prec>& gate) { return gate->distribution(); },
             nb::rv_policy::reference);
 }
 }  // namespace internal

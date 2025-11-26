@@ -10,77 +10,76 @@ namespace internal {
 class ParamGateFactory {
 public:
     template <ParamGateImpl T, typename... Args>
-    static ParamGate<T::Prec, T::Space> create_gate(Args... args) {
+    static ParamGate<T::Prec> create_gate(Args... args) {
         return {std::make_shared<const T>(args...)};
     }
 };
 }  // namespace internal
 namespace gate {
-template <Precision Prec, ExecutionSpace Space>
-inline ParamGate<Prec, Space> ParamRX(std::uint64_t target,
-                                      double param_coef = 1.,
-                                      const std::vector<std::uint64_t>& controls = {},
-                                      std::vector<std::uint64_t> control_values = {}) {
+template <Precision Prec>
+inline ParamGate<Prec> ParamRX(std::uint64_t target,
+                               double param_coef = 1.,
+                               const std::vector<std::uint64_t>& controls = {},
+                               std::vector<std::uint64_t> control_values = {}) {
     internal::resize_and_check_control_values(controls, control_values);
-    return internal::ParamGateFactory::create_gate<internal::ParamRXGateImpl<Prec, Space>>(
+    return internal::ParamGateFactory::create_gate<internal::ParamRXGateImpl<Prec>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(controls),
         internal::vector_to_mask(controls, control_values),
         static_cast<internal::Float<Prec>>(param_coef));
 }
-template <Precision Prec, ExecutionSpace Space>
-inline ParamGate<Prec, Space> ParamRY(std::uint64_t target,
-                                      double param_coef = 1.,
-                                      const std::vector<std::uint64_t>& controls = {},
-                                      std::vector<std::uint64_t> control_values = {}) {
+template <Precision Prec>
+inline ParamGate<Prec> ParamRY(std::uint64_t target,
+                               double param_coef = 1.,
+                               const std::vector<std::uint64_t>& controls = {},
+                               std::vector<std::uint64_t> control_values = {}) {
     internal::resize_and_check_control_values(controls, control_values);
-    return internal::ParamGateFactory::create_gate<internal::ParamRYGateImpl<Prec, Space>>(
+    return internal::ParamGateFactory::create_gate<internal::ParamRYGateImpl<Prec>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(controls),
         internal::vector_to_mask(controls, control_values),
         static_cast<internal::Float<Prec>>(param_coef));
 }
-template <Precision Prec, ExecutionSpace Space>
-inline ParamGate<Prec, Space> ParamRZ(std::uint64_t target,
-                                      double param_coef = 1.,
-                                      const std::vector<std::uint64_t>& controls = {},
-                                      std::vector<std::uint64_t> control_values = {}) {
+template <Precision Prec>
+inline ParamGate<Prec> ParamRZ(std::uint64_t target,
+                               double param_coef = 1.,
+                               const std::vector<std::uint64_t>& controls = {},
+                               std::vector<std::uint64_t> control_values = {}) {
     internal::resize_and_check_control_values(controls, control_values);
-    return internal::ParamGateFactory::create_gate<internal::ParamRZGateImpl<Prec, Space>>(
+    return internal::ParamGateFactory::create_gate<internal::ParamRZGateImpl<Prec>>(
         internal::vector_to_mask({target}),
         internal::vector_to_mask(controls),
         internal::vector_to_mask(controls, control_values),
         static_cast<internal::Float<Prec>>(param_coef));
 }
-template <Precision Prec, ExecutionSpace Space>
-inline ParamGate<Prec, Space> ParamPauliRotation(const PauliOperator<Prec>& pauli,
-                                                 double param_coef = 1.,
-                                                 const std::vector<std::uint64_t>& controls = {},
-                                                 std::vector<std::uint64_t> control_values = {}) {
+template <Precision Prec>
+inline ParamGate<Prec> ParamPauliRotation(const PauliOperator<Prec>& pauli,
+                                          double param_coef = 1.,
+                                          const std::vector<std::uint64_t>& controls = {},
+                                          std::vector<std::uint64_t> control_values = {}) {
     internal::resize_and_check_control_values(controls, control_values);
-    return internal::ParamGateFactory::create_gate<
-        internal::ParamPauliRotationGateImpl<Prec, Space>>(
+    return internal::ParamGateFactory::create_gate<internal::ParamPauliRotationGateImpl<Prec>>(
         internal::vector_to_mask(controls),
         internal::vector_to_mask(controls, control_values),
         pauli,
         static_cast<internal::Float<Prec>>(param_coef));
 }
-template <Precision Prec, ExecutionSpace Space>
-inline ParamGate<Prec, Space> ParamProbabilistic(
+template <Precision Prec>
+inline ParamGate<Prec> ParamProbabilistic(
     const std::vector<double>& distribution,
-    const std::vector<std::variant<Gate<Prec, Space>, ParamGate<Prec, Space>>>& gate_list) {
-    return internal::ParamGateFactory::create_gate<
-        internal::ParamProbabilisticGateImpl<Prec, Space>>(distribution, gate_list);
+    const std::vector<std::variant<Gate<Prec>, ParamGate<Prec>>>& gate_list) {
+    return internal::ParamGateFactory::create_gate<internal::ParamProbabilisticGateImpl<Prec>>(
+        distribution, gate_list);
 }
 }  // namespace gate
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 void bind_gate_param_gate_factory(nb::module_& mgate) {
     mgate.def(
         "ParamRX",
-        &gate::ParamRX<Prec, Space>,
+        &gate::ParamRX<Prec>,
         "target"_a,
         "coef"_a = 1.,
         "controls"_a = std::vector<std::uint64_t>{},
@@ -101,7 +100,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "ParamRY",
-        &gate::ParamRY<Prec, Space>,
+        &gate::ParamRY<Prec>,
         "target"_a,
         "coef"_a = 1.,
         "controls"_a = std::vector<std::uint64_t>{},
@@ -122,7 +121,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "ParamRZ",
-        &gate::ParamRZ<Prec, Space>,
+        &gate::ParamRZ<Prec>,
         "target"_a,
         "coef"_a = 1.,
         "controls"_a = std::vector<std::uint64_t>{},
@@ -144,7 +143,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "ParamPauliRotation",
-        &gate::ParamPauliRotation<Prec, Space>,
+        &gate::ParamPauliRotation<Prec>,
         "pauli"_a,
         "coef"_a = 1.,
         "controls"_a = std::vector<std::uint64_t>{},
@@ -167,7 +166,7 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
             .build_as_google_style()
             .c_str());
     mgate.def("ParamProbabilistic",
-              &gate::ParamProbabilistic<Prec, Space>,
+              &gate::ParamProbabilistic<Prec>,
               "distribution"_a,
               "gate_list"_a,
               DocString()
@@ -183,18 +182,17 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
                   .c_str());
     mgate.def(
         "ParamProbabilistic",
-        [](const std::vector<
-            std::pair<double, std::variant<Gate<Prec, Space>, ParamGate<Prec, Space>>>>&
+        [](const std::vector<std::pair<double, std::variant<Gate<Prec>, ParamGate<Prec>>>>&
                prob_gate_list) {
             std::vector<double> distribution;
-            std::vector<std::variant<Gate<Prec, Space>, ParamGate<Prec, Space>>> gate_list;
+            std::vector<std::variant<Gate<Prec>, ParamGate<Prec>>> gate_list;
             distribution.reserve(prob_gate_list.size());
             gate_list.reserve(prob_gate_list.size());
             for (const auto& [prob, gate] : prob_gate_list) {
                 distribution.push_back(prob);
                 gate_list.push_back(gate);
             }
-            return gate::ParamProbabilistic<Prec, Space>(distribution, gate_list);
+            return gate::ParamProbabilistic<Prec>(distribution, gate_list);
         },
         "prob_gate_list"_a,
         DocString()

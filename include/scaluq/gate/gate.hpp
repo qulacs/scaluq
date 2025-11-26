@@ -190,12 +190,12 @@ protected:
     void check_qubit_mask_within_bounds(
         const StateVector<Prec, ExecutionSpace::Host>& state_vector) const;
     void check_qubit_mask_within_bounds(
-        const StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const;
+        const StateVectorBatched<Prec, ExecutionSpace::Host>& states) const;
 #ifdef SCALUQ_USE_CUDA
     void check_qubit_mask_within_bounds(
         const StateVector<Prec, ExecutionSpace::Default>& state_vector) const;
     void check_qubit_mask_within_bounds(
-        const StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const;
+        const StateVectorBatched<Prec, ExecutionSpace::Default>& states) const;
 #endif  // SCALUQ_USE_CUDA
 
     std::string get_qubit_info_as_string(const std::string& indent) const;

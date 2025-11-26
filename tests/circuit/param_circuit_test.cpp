@@ -18,8 +18,8 @@ void param_circuit_test() {
     std::uint64_t n_qubits = 5;
     Random random;
     for ([[maybe_unused]] std::uint64_t repeat : std::views::iota(0, 10)) {
-        Circuit<Prec, Space> circuit(n_qubits);
-        Circuit<Prec, Space> pcircuit(n_qubits);
+        Circuit<Prec> circuit(n_qubits);
+        Circuit<Prec> pcircuit(n_qubits);
         constexpr std::uint64_t nparams = 5;
         std::array<std::string, nparams> pkeys = {};
         for (std::uint64_t pidx : std::views::iota(std::uint64_t{0}, nparams))
@@ -37,16 +37,16 @@ void param_circuit_test() {
                 std::uint64_t pidx = random.int32() % nparams;
                 if (param_gate_kind == 0) {
                     std::uint64_t target = random.int32() % n_qubits;
-                    circuit.add_gate(gate::RX<Prec, Space>(target, coef * params[pidx]));
-                    pcircuit.add_param_gate(gate::ParamRX<Prec, Space>(target, coef), pkeys[pidx]);
+                    circuit.add_gate(gate::RX<Prec>(target, coef * params[pidx]));
+                    pcircuit.add_param_gate(gate::ParamRX<Prec>(target, coef), pkeys[pidx]);
                 } else if (param_gate_kind == 1) {
                     std::uint64_t target = random.int32() % n_qubits;
-                    circuit.add_gate(gate::RY<Prec, Space>(target, coef * params[pidx]));
-                    pcircuit.add_param_gate(gate::ParamRY<Prec, Space>(target, coef), pkeys[pidx]);
+                    circuit.add_gate(gate::RY<Prec>(target, coef * params[pidx]));
+                    pcircuit.add_param_gate(gate::ParamRY<Prec>(target, coef), pkeys[pidx]);
                 } else if (param_gate_kind == 2) {
                     std::uint64_t target = random.int32() % n_qubits;
-                    circuit.add_gate(gate::RZ<Prec, Space>(target, coef * params[pidx]));
-                    pcircuit.add_param_gate(gate::ParamRZ<Prec, Space>(target, coef), pkeys[pidx]);
+                    circuit.add_gate(gate::RZ<Prec>(target, coef * params[pidx]));
+                    pcircuit.add_param_gate(gate::ParamRZ<Prec>(target, coef), pkeys[pidx]);
                 } else {
                     std::vector<std::uint64_t> target_vec, pauli_id_vec;
                     for (std::uint64_t target = 0; target < n_qubits; target++) {
@@ -54,16 +54,16 @@ void param_circuit_test() {
                         pauli_id_vec.emplace_back(random.int64() % 4);
                     }
                     PauliOperator<Prec> pauli(target_vec, pauli_id_vec, 1.0);
-                    circuit.add_gate(gate::PauliRotation<Prec, Space>(pauli, coef * params[pidx]));
-                    pcircuit.add_param_gate(gate::ParamPauliRotation<Prec, Space>(pauli, coef),
+                    circuit.add_gate(gate::PauliRotation<Prec>(pauli, coef * params[pidx]));
+                    pcircuit.add_param_gate(gate::ParamPauliRotation<Prec>(pauli, coef),
                                             pkeys[pidx]);
                 }
             } else {
                 std::uint64_t control = random.int32() % n_qubits;
                 std::uint64_t target = random.int32() % (n_qubits - 1);
                 if (target == control) target = n_qubits - 1;
-                circuit.add_gate(gate::CX<Prec, Space>(control, target));
-                pcircuit.add_gate(gate::CX<Prec, Space>(control, target));
+                circuit.add_gate(gate::CX<Prec>(control, target));
+                pcircuit.add_gate(gate::CX<Prec>(control, target));
             }
         };
         for ([[maybe_unused]] std::uint64_t _ : std::views::iota(0ULL, 20ULL)) {
@@ -102,10 +102,10 @@ TYPED_TEST(ParamCircuitTest, InsufficientParameterGiven) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     {
-        Circuit<Prec, Space> circuit(1);
-        circuit.add_param_gate(gate::ParamRX<Prec, Space>(0), "0");
-        circuit.add_param_gate(gate::ParamRX<Prec, Space>(0), "1");
-        circuit.add_param_gate(gate::ParamRX<Prec, Space>(0), "0");
+        Circuit<Prec> circuit(1);
+        circuit.add_param_gate(gate::ParamRX<Prec>(0), "0");
+        circuit.add_param_gate(gate::ParamRX<Prec>(0), "1");
+        circuit.add_param_gate(gate::ParamRX<Prec>(0), "0");
         StateVector<Prec, Space> state(1);
         ASSERT_NO_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"1", 0}}));
         ASSERT_NO_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"1", 0}, {"2", 0}}));

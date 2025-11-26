@@ -19,7 +19,7 @@ TYPED_TEST_SUITE(MergeGateTest, TestTypes, NameGenerator);
 
 template <Precision Prec, ExecutionSpace Space>
 void merge_gate_test() {
-    std::vector<Gate<Prec, Space>> gates;
+    std::vector<Gate<Prec>> gates;
     Random random;
     std::uint64_t n = 4;
 
@@ -135,50 +135,50 @@ void merge_gate_test() {
             }
         }
     };
-    gates.push_back(gate::I<Prec, Space>());
-    none_target_rotation(gate::GlobalPhase<Prec, Space>);
-    single_target(gate::X<Prec, Space>);
-    single_target(gate::Y<Prec, Space>);
-    single_target(gate::Z<Prec, Space>);
-    single_target(gate::H<Prec, Space>);
-    single_target(gate::S<Prec, Space>);
-    single_target(gate::Sdag<Prec, Space>);
-    single_target(gate::T<Prec, Space>);
-    single_target(gate::Tdag<Prec, Space>);
-    single_target(gate::SqrtX<Prec, Space>);
-    single_target(gate::SqrtXdag<Prec, Space>);
-    single_target(gate::SqrtY<Prec, Space>);
-    single_target(gate::SqrtYdag<Prec, Space>);
-    single_target(gate::P0<Prec, Space>);
-    single_target(gate::P1<Prec, Space>);
-    single_target_rotation(gate::RX<Prec, Space>);
-    single_target_rotation(gate::RY<Prec, Space>);
-    single_target_rotation(gate::RZ<Prec, Space>);
-    single_target_rotation(gate::U1<Prec, Space>);
-    single_target_rotation2(gate::U2<Prec, Space>);
-    single_target_rotation3(gate::U3<Prec, Space>);
-    double_target(gate::Swap<Prec, Space>);
+    gates.push_back(gate::I<Prec>());
+    none_target_rotation(gate::GlobalPhase<Prec>);
+    single_target(gate::X<Prec>);
+    single_target(gate::Y<Prec>);
+    single_target(gate::Z<Prec>);
+    single_target(gate::H<Prec>);
+    single_target(gate::S<Prec>);
+    single_target(gate::Sdag<Prec>);
+    single_target(gate::T<Prec>);
+    single_target(gate::Tdag<Prec>);
+    single_target(gate::SqrtX<Prec>);
+    single_target(gate::SqrtXdag<Prec>);
+    single_target(gate::SqrtY<Prec>);
+    single_target(gate::SqrtYdag<Prec>);
+    single_target(gate::P0<Prec>);
+    single_target(gate::P1<Prec>);
+    single_target_rotation(gate::RX<Prec>);
+    single_target_rotation(gate::RY<Prec>);
+    single_target_rotation(gate::RZ<Prec>);
+    single_target_rotation(gate::U1<Prec>);
+    single_target_rotation2(gate::U2<Prec>);
+    single_target_rotation3(gate::U3<Prec>);
+    double_target(gate::Swap<Prec>);
     dense_matrix(gate::DenseMatrix<Prec, Space>);
     sparse_matrix(gate::SparseMatrix<Prec, Space>);
-    gates.push_back(gate::Pauli<Prec, Space>(PauliOperator<Prec>("X 0 Y 2", random.uniform())));
-    gates.push_back(gate::Pauli<Prec, Space>(PauliOperator<Prec>("Z 0", random.uniform())));
-    gates.push_back(gate::Pauli<Prec, Space>(PauliOperator<Prec>("Z 3", random.uniform()), {1}));
-    gates.push_back(gate::Pauli<Prec, Space>(PauliOperator<Prec>("Z 1", random.uniform()), {0, 3}));
-    gates.push_back(gate::PauliRotation<Prec, Space>(
-        PauliOperator<Prec>("X 0 Y 2", random.uniform()), random.uniform() * std::numbers::pi * 2));
-    gates.push_back(gate::PauliRotation<Prec, Space>(PauliOperator<Prec>("Z 0", random.uniform()),
-                                                     random.uniform() * std::numbers::pi * 2));
-    gates.push_back(gate::PauliRotation<Prec, Space>(PauliOperator<Prec>("Z 3", random.uniform()),
-                                                     random.uniform() * std::numbers::pi * 2,
-                                                     {1}));
-    gates.push_back(gate::PauliRotation<Prec, Space>(PauliOperator<Prec>("Z 1", random.uniform()),
-                                                     random.uniform() * std::numbers::pi * 2,
-                                                     {0, 3}));
+    gates.push_back(gate::Pauli<Prec>(PauliOperator<Prec>("X 0 Y 2", random.uniform())));
+    gates.push_back(gate::Pauli<Prec>(PauliOperator<Prec>("Z 0", random.uniform())));
+    gates.push_back(gate::Pauli<Prec>(PauliOperator<Prec>("Z 3", random.uniform()), {1}));
+    gates.push_back(gate::Pauli<Prec>(PauliOperator<Prec>("Z 1", random.uniform()), {0, 3}));
+    gates.push_back(gate::PauliRotation<Prec>(PauliOperator<Prec>("X 0 Y 2", random.uniform()),
+                                              random.uniform() * std::numbers::pi * 2));
+    gates.push_back(gate::PauliRotation<Prec>(PauliOperator<Prec>("Z 0", random.uniform()),
+                                              random.uniform() * std::numbers::pi * 2));
+    gates.push_back(gate::PauliRotation<Prec>(PauliOperator<Prec>("Z 3", random.uniform()),
+                                              random.uniform() * std::numbers::pi * 2,
+                                              {1}));
+    gates.push_back(gate::PauliRotation<Prec>(PauliOperator<Prec>("Z 1", random.uniform()),
+                                              random.uniform() * std::numbers::pi * 2,
+                                              {0, 3}));
     for (auto&& g1 : gates) {
         for (auto&& g2 : gates) {
             auto state1 = StateVector<Prec, Space>::Haar_random_state(n);
             auto state2 = state1.copy();
-            auto [mg, phase] = merge_gate(g1, g2);
+            auto [mg, phase] = merge_gate<Prec, Space>(g1, g2);
             g1->update_quantum_state(state1);
             g2->update_quantum_state(state1);
             mg->update_quantum_state(state2);

@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
 
+#include <bitset>
+#include <csignal>
+#include <cstdlib>
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/gate/param_gate_factory.hpp>
 
@@ -27,8 +30,8 @@ void test_apply_parametric_single_pauli_rotation(std::uint64_t n_qubits,
         const std::uint64_t target = random.int32() % n_qubits;
         const double param = std::numbers::pi * random.uniform();
         const double param_coef = random.uniform() * 2 - 1;
-        const Gate<Prec, Space> gate = factory_fixed(target, param_coef * param, {}, {});
-        const ParamGate<Prec, Space> pgate = factory_parametric(target, param_coef, {}, {});
+        const Gate<Prec> gate = factory_fixed(target, param_coef * param, {}, {});
+        const ParamGate<Prec> pgate = factory_parametric(target, param_coef, {}, {});
         gate->update_quantum_state(state);
         pgate->update_quantum_state(state_cp, param);
         auto state_amp = state.get_amplitudes();
@@ -38,7 +41,7 @@ void test_apply_parametric_single_pauli_rotation(std::uint64_t n_qubits,
             check_near<Prec>(state_amp[i], state_cp_amp[i]);
         }
 
-        ParamGate<Prec, Space> pgate_inv = pgate->get_inverse();
+        ParamGate<Prec> pgate_inv = pgate->get_inverse();
         pgate_inv->update_quantum_state(state, param);
         state_amp = state.get_amplitudes();
         auto state_bef_amp = state_bef.get_amplitudes();
@@ -66,8 +69,8 @@ void test_apply_parametric_multi_pauli_rotation(std::uint64_t n_qubits) {
         }
 
         PauliOperator<Prec> pauli(target_vec, pauli_id_vec, 1.0);
-        Gate gate = gate::PauliRotation<Prec, Space>(pauli, param_coef * param);
-        ParamGate pgate = gate::ParamPauliRotation<Prec, Space>(pauli, param_coef);
+        Gate gate = gate::PauliRotation<Prec>(pauli, param_coef * param);
+        ParamGate pgate = gate::ParamPauliRotation<Prec>(pauli, param_coef);
         gate->update_quantum_state(state);
         pgate->update_quantum_state(state_cp, param);
         auto state_amp = state.get_amplitudes();
@@ -76,7 +79,7 @@ void test_apply_parametric_multi_pauli_rotation(std::uint64_t n_qubits) {
         for (std::uint64_t i = 0; i < dim; i++) {
             check_near<Prec>(state_amp[i], state_cp_amp[i]);
         }
-        ParamGate<Prec, Space> pgate_inv = pgate->get_inverse();
+        ParamGate<Prec> pgate_inv = pgate->get_inverse();
         pgate_inv->update_quantum_state(state, param);
         state_amp = state.get_amplitudes();
         auto state_bef_amp = state_bef.get_amplitudes();
@@ -91,19 +94,19 @@ TYPED_TEST(ParamGateTest, ApplyParamRXGate) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     test_apply_parametric_single_pauli_rotation<Prec, Space>(
-        5, &gate::RX<Prec, Space>, &gate::ParamRX<Prec, Space>);
+        5, &gate::RX<Prec>, &gate::ParamRX<Prec>);
 }
 TYPED_TEST(ParamGateTest, ApplyParamRYGate) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     test_apply_parametric_single_pauli_rotation<Prec, Space>(
-        5, &gate::RX<Prec, Space>, &gate::ParamRX<Prec, Space>);
+        5, &gate::RY<Prec>, &gate::ParamRY<Prec>);
 }
 TYPED_TEST(ParamGateTest, ApplyParamRZGate) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     test_apply_parametric_single_pauli_rotation<Prec, Space>(
-        5, &gate::RX<Prec, Space>, &gate::ParamRX<Prec, Space>);
+        5, &gate::RZ<Prec>, &gate::ParamRZ<Prec>);
 }
 TYPED_TEST(ParamGateTest, ApplyParamPauliRotationGate) {
     constexpr Precision Prec = TestFixture::Prec;
@@ -114,8 +117,8 @@ TYPED_TEST(ParamGateTest, ApplyParamPauliRotationGate) {
 TYPED_TEST(ParamGateTest, ApplyParamProbabilisticGate) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
-    auto probgate = gate::ParamProbabilistic<Prec, Space>(
-        {.1, .9}, {gate::ParamRX<Prec, Space>(0), gate::I<Prec, Space>()});
+    auto probgate =
+        gate::ParamProbabilistic<Prec>({.1, .9}, {gate::ParamRX<Prec>(0), gate::I<Prec>()});
     std::uint64_t x_cnt = 0, i_cnt = 0;
     StateVector<Prec, Space> state(1);
     for ([[maybe_unused]] auto _ : std::views::iota(0, 100)) {
@@ -135,8 +138,8 @@ TYPED_TEST(ParamGateTest, ApplyParamProbabilisticGate) {
 }
 
 template <Precision Prec, ExecutionSpace Space>
-void test_gate(ParamGate<Prec, Space> gate_control,
-               ParamGate<Prec, Space> gate_simple,
+void test_gate(ParamGate<Prec> gate_control,
+               ParamGate<Prec> gate_simple,
                std::uint64_t n_qubits,
                std::uint64_t control_mask,
                std::uint64_t control_value_mask,
@@ -156,9 +159,9 @@ void test_gate(ParamGate<Prec, Space> gate_control,
     amplitudes = state.get_amplitudes();
     amplitudes_controlled = state_controlled.get_amplitudes();
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
-        check_near<Prec>(amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) |
-                                    control_value_mask],
-                         amplitudes_controlled[i]);
+        check_near<Prec>(amplitudes.at(internal::insert_zero_at_mask_positions(i, control_mask) |
+                                       control_value_mask),
+                         amplitudes_controlled.at(i));
     }
 }
 
@@ -179,10 +182,10 @@ void test_param_rotation_control(Factory factory, std::uint64_t n) {
         control_value_mask |= control_values[i] << controls[i];
     }
     double param = random.uniform() * std::numbers::pi * 2;
-    ParamGate<Prec, Space> g1 = factory(target, 1., controls, control_values);
-    ParamGate<Prec, Space> g2 =
+    ParamGate<Prec> g1 = factory(target, 1., controls, control_values);
+    ParamGate<Prec> g2 =
         factory(target - std::popcount(control_mask & ((1ULL << target) - 1)), 1., {}, {});
-    test_gate(g1, g2, n, control_mask, control_value_mask, param);
+    test_gate<Prec, Space>(g1, g2, n, control_mask, control_value_mask, param);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -209,7 +212,7 @@ void test_ppauli_control(std::uint64_t n) {
     double param = random.uniform() * std::numbers::pi * 2;
     ParamGate g1 = gate::ParamPauliRotation(pauli1, 1., controls, control_values);
     ParamGate g2 = gate::ParamPauliRotation(pauli2, 1., {}, {});
-    test_gate(g1, g2, n, control_mask, control_value_mask, param);
+    test_gate<Prec, Space>(g1, g2, n, control_mask, control_value_mask, param);
 }
 
 TYPED_TEST(ParamGateTest, Control) {
@@ -217,9 +220,17 @@ TYPED_TEST(ParamGateTest, Control) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     std::uint64_t n = 10;
     for ([[maybe_unused]] std::uint64_t _ : std::views::iota(0, 10)) {
-        test_param_rotation_control<Prec, Space>(gate::ParamRX<Prec, Space>, n);
-        test_param_rotation_control<Prec, Space>(gate::ParamRY<Prec, Space>, n);
-        test_param_rotation_control<Prec, Space>(gate::ParamRZ<Prec, Space>, n);
+        test_param_rotation_control<Prec, Space>(gate::ParamRX<Prec>, n);
+        test_param_rotation_control<Prec, Space>(gate::ParamRY<Prec>, n);
+        test_param_rotation_control<Prec, Space>(gate::ParamRZ<Prec>, n);
+    }
+}
+
+TYPED_TEST(ParamGateTest, ControlPPauli) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    std::uint64_t n = 10;
+    for ([[maybe_unused]] std::uint64_t _ : std::views::iota(0, 10)) {
         test_ppauli_control<Prec, Space>(n);
     }
 }
