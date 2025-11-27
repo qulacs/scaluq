@@ -126,13 +126,14 @@ void double_target_dense_matrix_gate(std::uint64_t target_mask,
                                      StateVectorBatched<Prec, Space>& states) {
     std::uint64_t target_bit_right = -target_mask & target_mask;
     std::uint64_t target_bit_left = target_mask ^ target_bit_right;
+    const std::uint64_t span = states.dim() >> std::popcount(target_mask | control_mask);
 
     Kokkos::parallel_for(
-        "double_target_dense_matrix_gate",
-        Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0},
-            {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
-        KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
+        "double_target_dense_matrix_gate_flat",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t batch_id = g / span;
+            const std::uint64_t it = g % span;
             std::uint64_t basis_0 =
                 insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
             std::uint64_t basis_1 = basis_0 | target_bit_right;
