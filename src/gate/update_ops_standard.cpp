@@ -663,12 +663,13 @@ void swap_gate(std::uint64_t target_mask,
                StateVectorBatched<Prec, Space>& states) {
     std::uint64_t lower_target_mask = target_mask & -target_mask;
     std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;
+    const std::uint64_t span = states.dim() >> std::popcount(target_mask | control_mask);
     Kokkos::parallel_for(
-        "swap_gate",
-        Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0},
-            {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
-        KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
+        "swap_gate_flat",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t batch_id = g / span;
+            const std::uint64_t it = g % span;
             std::uint64_t basis =
                 insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
             Kokkos::kokkos_swap(states._raw(batch_id, basis | lower_target_mask),
