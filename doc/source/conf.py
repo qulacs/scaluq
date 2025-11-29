@@ -5,8 +5,7 @@ import os
 import shutil
 
 project = "Scaluq"
-copyright = "2023-2025 Qulacs"
-author = "Scaluq developers"
+copyright = "2023-2025 Qulacs, Scaluq developers"
 
 extensions = [
     "sphinx.ext.napoleon",
