@@ -100,14 +100,10 @@ using DenseMatrixGate = internal::GatePtr<internal::DenseMatrixGateImpl<Prec, Sp
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 void bind_gate_gate_matrix_hpp(nb::module_& m, nb::class_<Gate<Prec>>& gate_base_def) {
-    DEF_GATE_WITH_SPACE(
-        SparseMatrixGate, Prec, Space, "Specific class of sparse matrix gate.", gate_base_def)
-        .def("matrix", [](const SparseMatrixGate<Prec, Space>& gate) { return gate->get_matrix(); })
-        .def("sparse_matrix",
-             [](const SparseMatrixGate<Prec, Space>& gate) { return gate->get_sparse_matrix(); });
-    DEF_GATE_WITH_SPACE(
-        DenseMatrixGate, Prec, Space, "Specific class of dense matrix gate.", gate_base_def)
-        .def("matrix", [](const DenseMatrixGate<Prec, Space>& gate) { return gate->get_matrix(); });
+    bind_specific_gate<SparseMatrixGate<Prec, Space>, Prec>(
+        m, gate_base_def, "SparseMatrixGate", "Specific class of sparse matrix gate.");
+    bind_specific_gate<DenseMatrixGate<Prec, Space>, Prec>(
+        m, gate_base_def, "DenseMatrixGate", "Specific class of dense matrix gate.");
 }
 }  // namespace internal
 #endif

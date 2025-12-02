@@ -61,11 +61,12 @@ namespace internal {
 template <Precision Prec>
 void bind_gate_param_gate_pauli_hpp(nb::module_& m,
                                     nb::class_<ParamGate<Prec>>& param_gate_base_def) {
-    DEF_PARAM_GATE(ParamPauliRotationGate,
-                   Prec,
-                   "Specific class of parametric multi-qubit pauli-rotation gate, represented as "
-                   "$e^{-i\\frac{\\theta}{2}P}$. `theta` is given as `param * param_coef`.",
-                   param_gate_base_def);
+    bind_specific_param_gate<ParamPauliRotationGate<Prec>, Prec>(
+        m,
+        param_gate_base_def,
+        "ParamPauliRotationGate",
+        "Parametric multi-qubit pauli-rotation gate, represented as $e^{-i\\frac{\\theta}{2}P}$. "
+        "`theta` is given as `param * param_coef`.");
 }
 }  // namespace internal
 #endif

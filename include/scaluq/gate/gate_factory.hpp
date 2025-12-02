@@ -401,7 +401,7 @@ inline Gate<Prec> DepolarizingNoise(std::int64_t target, double error_rate) {
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 void bind_gate_gate_factory_hpp(nb::module_& mgate) {
     mgate.def("I",
               &gate::I<Prec>,
@@ -1003,61 +1003,6 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .build_as_google_style()
                   .c_str());
     mgate.def(
-        "DenseMatrix",
-        &gate::DenseMatrix<Prec, Space>,
-        "targets"_a,
-        "matrix"_a,
-        "controls"_a = std::vector<std::uint64_t>{},
-        "control_values"_a = std::vector<std::uint64_t>{},
-        "is_unitary"_a = false,
-        DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.DenseMatrixGate`. Performs dense matrix operation.")
-            .note(
-                "If you need to use functions specific to the :class:`~scaluq.f64.DenseMatrixGate` "
-                "class, please downcast it.")
-            .arg("targets", "list[int]", "Target qubit indices")
-            .arg("matrix", "numpy.ndarray", "Matrix to be applied")
-            .arg("controls", "list[int]", true, "Control qubit indices")
-            .arg("control_values", "list[int]", true, "Control qubit values")
-            .arg("is_unitary",
-                 "bool",
-                 true,
-                 "Whether the matrix is unitary. When the flag indicating that the gate is "
-                 "unitary is set to True, a more efficient implementation is used.")
-            .ret("Gate", "DenseMatrix gate instance")
-            .ex(DocString::Code(
-                {">>> import numpy as np",
-                 ">>> matrix = np.array([[1, 0], [0, 1]])",
-                 ">>> gate = DenseMatrix([0], matrix)",
-                 ">>> gate = DenseMatrix([0], matrix, [1])  # Controlled-DenseMatrix"}))
-            .build_as_google_style()
-            .c_str());
-    mgate.def("SparseMatrix",
-              &gate::SparseMatrix<Prec, Space>,
-              "targets"_a,
-              "matrix"_a,
-              "controls"_a = std::vector<std::uint64_t>{},
-              "control_values"_a = std::vector<std::uint64_t>{},
-              DocString()
-                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                        ":class:`~scaluq.f64.SparseMatrixGate`. Performs sparse matrix operation.")
-                  .note("If you need to use functions specific to the "
-                        ":class:`~scaluq.f64.SparseMatrixGate` "
-                        "class, please downcast it.")
-                  .arg("targets", "list[int]", "Target qubit indices")
-                  .arg("matrix", "scipy.sparse.csr_matrix", "Matrix to be applied")
-                  .arg("controls", "list[int]", true, "Control qubit indices")
-                  .arg("control_values", "list[int]", true, "Control qubit values")
-                  .ret("Gate", "SparseMatrix gate instance")
-                  .ex(DocString::Code(
-                      {">>> import scipy",
-                       ">>> matrix = scipy.sparse.csr_matrix([[1, 0], [0, 1]])",
-                       ">>> gate = SparseMatrix([0], matrix)",
-                       ">>> gate = SparseMatrix([0], matrix, [1])  # Controlled-SparseMatrix"}))
-                  .build_as_google_style()
-                  .c_str());
-    mgate.def(
         "Pauli",
         &gate::Pauli<Prec>,
         "pauli"_a,
@@ -1149,6 +1094,65 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "probability of `error_rate / 3` each.",
               "target"_a,
               "error_rate"_a);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+void bind_gate_gate_factory_hpp(nb::module_& mgate) {
+    mgate.def(
+        "DenseMatrix",
+        &gate::DenseMatrix<Prec, Space>,
+        "targets"_a,
+        "matrix"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        "control_values"_a = std::vector<std::uint64_t>{},
+        "is_unitary"_a = false,
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.DenseMatrixGate`. Performs dense matrix operation.")
+            .note(
+                "If you need to use functions specific to the :class:`~scaluq.f64.DenseMatrixGate` "
+                "class, please downcast it.")
+            .arg("targets", "list[int]", "Target qubit indices")
+            .arg("matrix", "numpy.ndarray", "Matrix to be applied")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("is_unitary",
+                 "bool",
+                 true,
+                 "Whether the matrix is unitary. When the flag indicating that the gate is "
+                 "unitary is set to True, a more efficient implementation is used.")
+            .ret("Gate", "DenseMatrix gate instance")
+            .ex(DocString::Code(
+                {">>> import numpy as np",
+                 ">>> matrix = np.array([[1, 0], [0, 1]])",
+                 ">>> gate = DenseMatrix([0], matrix)",
+                 ">>> gate = DenseMatrix([0], matrix, [1])  # Controlled-DenseMatrix"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def("SparseMatrix",
+              &gate::SparseMatrix<Prec, Space>,
+              "targets"_a,
+              "matrix"_a,
+              "controls"_a = std::vector<std::uint64_t>{},
+              "control_values"_a = std::vector<std::uint64_t>{},
+              DocString()
+                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                        ":class:`~scaluq.f64.SparseMatrixGate`. Performs sparse matrix operation.")
+                  .note("If you need to use functions specific to the "
+                        ":class:`~scaluq.f64.SparseMatrixGate` "
+                        "class, please downcast it.")
+                  .arg("targets", "list[int]", "Target qubit indices")
+                  .arg("matrix", "scipy.sparse.csr_matrix", "Matrix to be applied")
+                  .arg("controls", "list[int]", true, "Control qubit indices")
+                  .arg("control_values", "list[int]", true, "Control qubit values")
+                  .ret("Gate", "SparseMatrix gate instance")
+                  .ex(DocString::Code(
+                      {">>> import scipy",
+                       ">>> matrix = scipy.sparse.csr_matrix([[1, 0], [0, 1]])",
+                       ">>> gate = SparseMatrix([0], matrix)",
+                       ">>> gate = SparseMatrix([0], matrix, [1])  # Controlled-SparseMatrix"}))
+                  .build_as_google_style()
+                  .c_str());
 }
 }  // namespace internal
 #endif

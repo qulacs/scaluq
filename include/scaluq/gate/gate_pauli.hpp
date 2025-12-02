@@ -106,17 +106,19 @@ using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl<Prec
 namespace internal {
 template <Precision Prec>
 void bind_gate_gate_pauli_hpp(nb::module_& m, nb::class_<Gate<Prec>>& gate_base_def) {
-    DEF_GATE(PauliGate,
-             Prec,
-             "Specific class of multi-qubit pauli gate, which applies single-qubit Pauli "
-             "gate to "
-             "each of qubit.",
-             gate_base_def);
-    DEF_GATE(PauliRotationGate,
-             Prec,
-             "Specific class of multi-qubit pauli-rotation gate, represented as "
-             "$e^{-i\\frac{\\theta}{2}P}$.",
-             gate_base_def);
+    bind_specific_gate<PauliGate<Prec>, Prec>(
+        m,
+        gate_base_def,
+        "PauliGate",
+        "Specific class of multi-qubit pauli gate, which applies single-qubit Pauli "
+        "gate to "
+        "each of qubit.");
+    bind_specific_gate<PauliRotationGate<Prec>, Prec>(
+        m,
+        gate_base_def,
+        "PauliRotationGate",
+        "Specific class of multi-qubit pauli-rotation gate, represented as "
+        "$e^{-i\\frac{\\theta}{2}P}$.");
 }
 }  // namespace internal
 #endif

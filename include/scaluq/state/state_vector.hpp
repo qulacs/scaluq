@@ -197,25 +197,28 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                         .arg("n_qubits", "int", "number of qubits")
                         .build_as_google_style()
                         .c_str())
-        .def("set_Haar_random_state",
-             &StateVector<Prec, Space>::set_Haar_random_state,
-             "seed"_a = std::random_device()(),
-             DocString()
-                 .desc("Set Haar random state.")
-                 .arg("seed",
-                      "int | None",
-                      true,
-                      "random seed",
-                      "If not specified, the value from random device is used.")
-                 .ex(DocString::Code({">>> state = StateVector(2)",
-                                      ">>> state.set_Haar_random_state()",
-                                      ">>> print(state.get_amplitudes()) # doctest: +SKIP",
-                                      "[(-0.3188299516496241+0.6723250989136779j), "
-                                      "(-0.253461343768224-0.22430415678425403j), "
-                                      "(0.24998142919420457+0.33096908710840045j), "
-                                      "(0.2991187916479724+0.2650813322096342j)]"}))
-                 .build_as_google_style()
-                 .c_str())
+        .def(
+            "set_Haar_random_state",
+            [](StateVector<Prec, Space>& self, std::optional<std::uint64_t> seed) {
+                self.set_Haar_random_state(seed.value_or(std::random_device{}()));
+            },
+            "seed"_a = std::nullopt,
+            DocString()
+                .desc("Set Haar random state.")
+                .arg("seed",
+                     "int | None",
+                     true,
+                     "random seed",
+                     "If not specified, the value from random device is used.")
+                .ex(DocString::Code({">>> state = StateVector(2)",
+                                     ">>> state.set_Haar_random_state()",
+                                     ">>> print(state.get_amplitudes()) # doctest: +SKIP",
+                                     "[(-0.3188299516496241+0.6723250989136779j), "
+                                     "(-0.253461343768224-0.22430415678425403j), "
+                                     "(0.24998142919420457+0.33096908710840045j), "
+                                     "(0.2991187916479724+0.2650813322096342j)]"}))
+                .build_as_google_style()
+                .c_str())
         .def("set_amplitude_at",
              &StateVector<Prec, Space>::set_amplitude_at,
              "index"_a,

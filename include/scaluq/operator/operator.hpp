@@ -314,37 +314,32 @@ void bind_operator_operator_hpp(nb::module_& m) {
         .def(nb::self * PauliOperator<Prec>())
         .def(
             "__iadd__",
-            [](Operator<Prec, Space>& self,
-               const Operator<Prec, Space>& other) -> Operator<Prec, Space>& {
+            [](Operator<Prec, Space>&, const Operator<Prec, Space>&) -> Operator<Prec, Space>& {
                 throw nb::type_error("In-place addition (+=) is not supported for Operator.");
             },
             nb::is_operator())
         .def(
             "__isub__",
-            [](Operator<Prec, Space>& self,
-               const Operator<Prec, Space>& other) -> Operator<Prec, Space>& {
+            [](Operator<Prec, Space>&, const Operator<Prec, Space>&) -> Operator<Prec, Space>& {
                 throw nb::type_error("In-place subtraction (-=) is not supported for Operator.");
             },
             nb::is_operator())
         .def(
             "__imul__",
-            [](Operator<Prec, Space>& self,
-               const Operator<Prec, Space>& other) -> Operator<Prec, Space>& {
+            [](Operator<Prec, Space>&, const Operator<Prec, Space>&) -> Operator<Prec, Space>& {
                 throw nb::type_error("In-place multiplication (*=) is not supported for Operator.");
             },
             nb::is_operator())
         .def(
             "__iadd__",
-            [](Operator<Prec, Space>& self,
-               const PauliOperator<Prec>& other) -> Operator<Prec, Space>& {
+            [](Operator<Prec, Space>&, const PauliOperator<Prec>&) -> Operator<Prec, Space>& {
                 throw nb::type_error(
                     "In-place addition (+=) is not supported for Operator with PauliOperator.");
             },
             nb::is_operator())
         .def(
             "__isub__",
-            [](Operator<Prec, Space>& self,
-               const PauliOperator<Prec>& other) -> Operator<Prec, Space>& {
+            [](Operator<Prec, Space>&, const PauliOperator<Prec>&) -> Operator<Prec, Space>& {
                 throw nb::type_error(
                     "In-place subtraction (-=) is not supported for Operator with PauliOperator.");
             },

@@ -426,33 +426,47 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "`__init__(pauli_string: str, coef: float=1.)` for details.")
         .def("get_dagger", &PauliOperator<Prec>::get_dagger, "Get adjoint operator.")
         .def("apply_to_state",
-             &PauliOperator<Prec>::apply_to_state,
+             nb::overload_cast<StateVector<Prec, ExecutionSpace::Host>&>(
+                 &PauliOperator<Prec>::template apply_to_state<ExecutionSpace::Host>, nb::const_),
              "state"_a,
              "Apply pauli to state vector.")
         .def("get_expectation_value",
-             nb::overload_cast<const StateVector<Prec, Space>&>(
-                 &PauliOperator<Prec>::get_expectation_value),
+             nb::overload_cast<const StateVector<Prec, ExecutionSpace::Host>&>(
+                 &PauliOperator<Prec>::template get_expectation_value<ExecutionSpace::Host>,
+                 nb::const_),
              "state"_a,
              "Get expectation value of measuring state vector. $\\bra{\\psi}P\\ket{\\psi}$.")
-        .def("get_expectation_value",
-             nb::overload_cast<const StateVectorBatched<Prec, Space>&>(
-                 &PauliOperator<Prec>::get_expectation_value),
-             "states"_a,
-             "Get expectation values of measuring state vectors. $\\bra{\\psi_i}P\\ket{\\psi_i}$.")
         .def("get_transition_amplitude",
-             nb::overload_cast<const StateVector<Prec, Space>&, const StateVector<Prec, Space>&>(
-                 &PauliOperator<Prec>::get_transition_amplitude),
+             nb::overload_cast<const StateVector<Prec, ExecutionSpace::Host>&,
+                               const StateVector<Prec, ExecutionSpace::Host>&>(
+                 &PauliOperator<Prec>::template get_transition_amplitude<ExecutionSpace::Host>,
+                 nb::const_),
              "source"_a,
              "target"_a,
              "Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.")
+#ifdef SCALUQ_ENABLE_CUDA
+        .def("get_expectation_value",
+             nb::overload_cast<const StateVectorBatched<Prec, ExecutionSpace::Default>&>(
+                 &PauliOperator<Prec>::template get_expectation_value<ExecutionSpace::Default>,
+                 nb::const_),
+             "states"_a,
+             "Get expectation values of measuring state vectors. $\\bra{\\psi_i}P\\ket{\\psi_i}$.")
         .def("get_transition_amplitude",
-             nb::overload_cast<const StateVectorBatched<Prec, Space>&,
-                               const StateVectorBatched<Prec, Space>&>(
-                 &PauliOperator<Prec>::get_transition_amplitude),
+             nb::overload_cast<const StateVectorBatched<Prec, ExecutionSpace::Default>&,
+                               const StateVectorBatched<Prec, ExecutionSpace::Default>&>(
+                 &PauliOperator<Prec>::template get_transition_amplitude<ExecutionSpace::Default>,
+                 nb::const_),
              "states_source"_a,
              "states_target"_a,
              "Get transition amplitudes of measuring state vectors. "
              "$\\bra{\\chi_i}P\\ket{\\psi_i}$.")
+        .def(
+            "apply_to_state",
+            nb::overload_cast<StateVector<Prec, ExecutionSpace::Default>&>(
+                &PauliOperator<Prec>::template apply_to_state<ExecutionSpace::Default>, nb::const_),
+            "state"_a,
+            "Apply pauli to state vector.")
+#endif
         .def("get_matrix",
              &PauliOperator<Prec>::get_matrix,
              "Get matrix representation of the PauliOperator. Tensor product is applied from "

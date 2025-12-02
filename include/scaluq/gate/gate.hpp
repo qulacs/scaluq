@@ -400,121 +400,104 @@ using Gate = internal::GatePtr<internal::GateBase<Prec>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-#define DEF_GATE_BASE(GATE_TYPE, PREC, DESCRIPTION)                                         \
-    nb::class_<GATE_TYPE<PREC>>(m, #GATE_TYPE, DESCRIPTION)                                 \
-        .def(nb::init<Gate<PREC>>(), "Downcast from Gate.")                                 \
-        .def("gate_type", &GATE_TYPE<PREC>::gate_type, "Get gate type as `GateType` enum.") \
-        .def(                                                                               \
-            "target_qubit_list",                                                            \
-            [](const GATE_TYPE<PREC>& gate) { return gate->target_qubit_list(); },          \
-            "Get target qubits as `list[int]`. **Control qubits are not included.**")       \
-        .def(                                                                               \
-            "control_qubit_list",                                                           \
-            [](const GATE_TYPE<PREC>& gate) { return gate->control_qubit_list(); },         \
-            "Get control qubits as `list[int]`.")                                           \
-        .def(                                                                               \
-            "control_value_list",                                                           \
-            [](const GATE_TYPE<PREC>& gate) { return gate->control_value_list(); },         \
-            "Get control values as `list[int]`.")                                           \
-        .def(                                                                               \
-            "operand_qubit_list",                                                           \
-            [](const GATE_TYPE<PREC>& gate) { return gate->operand_qubit_list(); },         \
-            "Get target and control qubits as `list[int]`.")                                \
-        .def(                                                                               \
-            "target_qubit_mask",                                                            \
-            [](const GATE_TYPE<PREC>& gate) { return gate->target_qubit_mask(); },          \
-            "Get target qubits as mask. **Control qubits are not included.**")              \
-        .def(                                                                               \
-            "control_qubit_mask",                                                           \
-            [](const GATE_TYPE<PREC>& gate) { return gate->control_qubit_mask(); },         \
-            "Get control qubits as mask.")                                                  \
-        .def(                                                                               \
-            "control_value_mask",                                                           \
-            [](const GATE_TYPE<PREC>& gate) { return gate->control_value_mask(); },         \
-            "Get control values as mask.")                                                  \
-        .def(                                                                               \
-            "operand_qubit_mask",                                                           \
-            [](const GATE_TYPE<PREC>& gate) { return gate->operand_qubit_mask(); },         \
-            "Get target and control qubits as mask.")                                       \
-        .def(                                                                               \
-            "get_inverse",                                                                  \
-            [](const GATE_TYPE<PREC>& gate) {                                               \
-                auto inv = gate->get_inverse();                                             \
-                if (!inv) nb::none();                                                       \
-                return Gate<PREC>(inv);                                                     \
-            },                                                                              \
-            "Generate inverse gate as `Gate` type. If not exists, return None.")            \
-        .def(                                                                               \
-            "update_quantum_state",                                                         \
-            [](const GATE_TYPE<PREC>& gate,                                                 \
-               StateVector<PREC, ExecutionSpace::Host>& state_vector) {                     \
-                gate->update_quantum_state(state_vector);                                   \
-            },                                                                              \
-            "state_vector"_a,                                                               \
-            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")    \
-        .def(                                                                               \
-            "update_quantum_state",                                                         \
-            [](const GATE_TYPE<PREC>& gate,                                                 \
-               StateVector<PREC, ExecutionSpace::Default>& state_vector) {                  \
-                gate->update_quantum_state(state_vector);                                   \
-            },                                                                              \
-            "state_vector"_a,                                                               \
-            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")    \
-        .def(                                                                               \
-            "update_quantum_state",                                                         \
-            [](const GATE_TYPE<PREC>& gate,                                                 \
-               StateVectorBatched<PREC, ExecutionSpace::Host>& states) {                    \
-                gate->update_quantum_state(states);                                         \
-            },                                                                              \
-            "states"_a,                                                                     \
-            "Apply gate to `states`. `states` in args is directly updated.")                \
-        .def(                                                                               \
-            "update_quantum_state",                                                         \
-            [](const GATE_TYPE<PREC>& gate,                                                 \
-               StateVectorBatched<PREC, ExecutionSpace::Default>& states) {                 \
-                gate->update_quantum_state(states);                                         \
-            },                                                                              \
-            "states"_a,                                                                     \
-            "Apply gate to `states`. `states` in args is directly updated.")                \
-        .def(                                                                               \
-            "get_matrix",                                                                   \
-            [](const GATE_TYPE<PREC>& gate) { return gate->get_matrix(); },                 \
-            "Get matrix representation of the gate.")                                       \
-        .def(                                                                               \
-            "to_string",                                                                    \
-            [](const GATE_TYPE<PREC>& gate) { return gate->to_string(""); },                \
-            "Get string representation of the gate.")                                       \
-        .def(                                                                               \
-            "__str__",                                                                      \
-            [](const GATE_TYPE<PREC>& gate) { return gate->to_string(""); },                \
-            "Get string representation of the gate.")                                       \
-        .def(                                                                               \
-            "to_json",                                                                      \
-            [](const GATE_TYPE<PREC>& gate) { return Json(gate).dump(); },                  \
-            "Get JSON representation of the gate.")                                         \
-        .def(                                                                               \
-            "load_json",                                                                    \
-            [](GATE_TYPE<PREC>& gate, const std::string& str) {                             \
-                gate = nlohmann::json::parse(str);                                          \
-            },                                                                              \
-            "json_str"_a,                                                                   \
-            "Read an object from the JSON representation of the gate.")
-#define DEF_GATE(GATE_TYPE, PRECISION, DESCRIPTION, GATE_BASE_DEF)                             \
-    GATE_BASE_DEF.def(nb::init<GATE_TYPE<PRECISION>>(), "Upcast from `" #GATE_TYPE "`.");      \
-    DEF_GATE_BASE(                                                                             \
-        GATE_TYPE,                                                                             \
-        PRECISION,                                                                             \
-        DESCRIPTION                                                                            \
-        "\n\nNotes\n\tUpcast is required to use gate-general functions (ex: add to Circuit).") \
-        .def(nb::init<Gate<PRECISION>>())
-#define DEF_GATE_WITH_SPACE(GATE_TYPE, PRECISION, SPACE, DESCRIPTION, GATE_BASE_DEF)             \
-    GATE_BASE_DEF.def(nb::init<GATE_TYPE<PRECISION, SPACE>>(), "Upcast from `" #GATE_TYPE "`."); \
-    DEF_GATE_BASE(                                                                               \
-        GATE_TYPE,                                                                               \
-        PRECISION,                                                                               \
-        DESCRIPTION                                                                              \
-        "\n\nNotes\n\tUpcast is required to use gate-general functions (ex: add to Circuit).")   \
-        .def(nb::init<Gate<PRECISION>>())
+template <typename GateT, Precision Prec>
+void register_gate_common_methods(nb::class_<GateT>& c) {
+    using namespace nb::literals;
+
+    c.def(nb::init<GateT>(), "Downcast from Gate.")
+        .def("gate_type", &GateT::gate_type, "Get gate type as `GateType` enum.")
+        .def(
+            "target_qubit_list",
+            [](const GateT& gate) { return gate->target_qubit_list(); },
+            "Get target qubits as `list[int]`. **Control qubits are not included.**")
+        .def(
+            "control_qubit_list",
+            [](const GateT& gate) { return gate->control_qubit_list(); },
+            "Get control qubits as `list[int]`.")
+        .def(
+            "control_value_list",
+            [](const GateT& gate) { return gate->control_value_list(); },
+            "Get control values as `list[int]`.")
+        .def(
+            "operand_qubit_list",
+            [](const GateT& gate) { return gate->operand_qubit_list(); },
+            "Get target and control qubits as `list[int]`.")
+        .def(
+            "target_qubit_mask",
+            [](const GateT& gate) { return gate->target_qubit_mask(); },
+            "Get target qubits as mask. **Control qubits are not included.**")
+        .def(
+            "control_qubit_mask",
+            [](const GateT& gate) { return gate->control_qubit_mask(); },
+            "Get control qubits as mask.")
+        .def(
+            "control_value_mask",
+            [](const GateT& gate) { return gate->control_value_mask(); },
+            "Get control values as mask.")
+        .def(
+            "operand_qubit_mask",
+            [](const GateT& gate) { return gate->operand_qubit_mask(); },
+            "Get target and control qubits as mask.")
+        .def(
+            "get_inverse",
+            [](const GateT& gate) -> nb::object {
+                auto inv = gate->get_inverse();
+                if (!inv) return nb::none();
+                return nb::cast(Gate<Prec>(inv));
+            },
+            "Generate inverse gate as `Gate` type. If not exists, return None.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate, StateVector<Prec, ExecutionSpace::Host>& state_vector) {
+                gate->update_quantum_state(state_vector);
+            },
+            "state_vector"_a,
+            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::Host>& states) {
+                gate->update_quantum_state(states);
+            },
+            "states"_a,
+            "Apply gate to `states`. `states` in args is directly updated.")
+#ifdef SCALUQ_USE_CUDA
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate, StateVector<Prec, ExecutionSpace::Default>& state_vector) {
+                gate->update_quantum_state(state_vector);
+            },
+            "state_vector"_a,
+            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::Default>& states) {
+                gate->update_quantum_state(states);
+            },
+            "states"_a,
+            "Apply gate to `states`. `states` in args is directly updated.")
+#endif  // SCALUQ_USE_CUDA
+        .def(
+            "get_matrix",
+            [](const GateT& gate) { return gate->get_matrix(); },
+            "Get matrix representation of the gate.")
+        .def(
+            "to_string",
+            [](const GateT& gate) { return gate->to_string(""); },
+            "Get string representation of the gate.")
+        .def(
+            "__str__",
+            [](const GateT& gate) { return gate->to_string(""); },
+            "Get string representation of the gate.")
+        .def(
+            "to_json",
+            [](const GateT& gate) { return Json(gate).dump(); },
+            "Get JSON representation of the gate.")
+        .def(
+            "load_json",
+            [](GateT& gate, const std::string& str) { gate = nlohmann::json::parse(str); },
+            "json_str"_a,
+            "Read an object from the JSON representation of the gate.");
+}
 
 void bind_gate_gate_hpp_without_precision_and_space(nb::module_& m) {
     nb::enum_<GateType>(m, "GateType", "Enum of Gate Type.")
@@ -550,11 +533,30 @@ void bind_gate_gate_hpp_without_precision_and_space(nb::module_& m) {
 
 template <Precision Prec>
 nb::class_<Gate<Prec>> bind_gate_gate_hpp(nb::module_& m) {
-    return DEF_GATE_BASE(Gate,
-                         Prec,
-                         "General class of QuantumGate.\n\nNotes\n\tDowncast to required to use "
-                         "gate-specific functions.")
-        .def(nb::init<Gate<Prec>>(), "Just copy shallowly.");
+    using BaseGateT = Gate<Prec>;
+    const char* description =
+        "General class of QuantumGate.\n\nNotes\n\t"
+        "Downcast to required to use gate-specific functions.";
+    auto c = nb::class_<BaseGateT>(m, "Gate", description);
+    register_gate_common_methods<BaseGateT, Prec>(c);
+    c.def(nb::init<BaseGateT>(), "Just copy shallowly.");
+    return c;
+}
+
+template <typename SpecificGateT, Precision Prec>
+nb::class_<SpecificGateT> bind_specific_gate(nb::module_& m,
+                                             nb::class_<Gate<Prec>>& base_class,
+                                             const char* name,
+                                             const char* description) {
+    using BaseGateT = Gate<Prec>;
+    base_class.def(nb::init<SpecificGateT>(), ("Upcast from `" + std::string(name) + "`.").c_str());
+    std::string full_description = std::string(description) +
+                                   "\n\nNotes\n\tUpcast is required to use gate-general functions "
+                                   "(ex: add to Circuit).";
+    auto c = nb::class_<SpecificGateT>(m, name, full_description.c_str());
+    register_gate_common_methods<SpecificGateT, Prec>(c);
+    c.def(nb::init<BaseGateT>());
+    return c;
 }
 }  // namespace internal
 #endif

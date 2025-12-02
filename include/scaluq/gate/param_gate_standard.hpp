@@ -120,24 +120,24 @@ namespace internal {
 template <Precision Prec>
 void bind_gate_param_gate_standard_hpp(nb::module_& m,
                                        nb::class_<ParamGate<Prec>>& param_gate_base_def) {
-    DEF_PARAM_GATE(
-        ParamRXGate,
-        Prec,
+    bind_specific_param_gate<ParamRXGate<Prec>, Prec>(
+        m,
+        param_gate_base_def,
+        "ParamRXGate",
         "Specific class of parametric X rotation gate, represented as "
-        "$e^{-i\\frac{\\mathrm{\\theta}}{2}X}$. `theta` is given as `param * param_coef`.",
-        param_gate_base_def);
-    DEF_PARAM_GATE(
-        ParamRYGate,
-        Prec,
+        "$e^{-i\\frac{\\mathrm{\\theta}}{2}X}$. `theta` is given as `param * param_coef`.");
+    bind_specific_param_gate<ParamRYGate<Prec>, Prec>(
+        m,
+        param_gate_base_def,
+        "ParamRYGate",
         "Specific class of parametric Y rotation gate, represented as "
-        "$e^{-i\\frac{\\mathrm{\\theta}}{2}Y}$. `theta` is given as `param * param_coef`.",
-        param_gate_base_def);
-    DEF_PARAM_GATE(
-        ParamRZGate,
-        Prec,
+        "$e^{-i\\frac{\\mathrm{\\theta}}{2}Y}$. `theta` is given as `param * param_coef`.");
+    bind_specific_param_gate<ParamRZGate<Prec>, Prec>(
+        m,
+        param_gate_base_def,
+        "ParamRZGate",
         "Specific class of parametric Z rotation gate, represented as "
-        "$e^{-i\\frac{\\mathrm{\\theta}}{2}Z}$. `theta` is given as `param * param_coef`.",
-        param_gate_base_def);
+        "$e^{-i\\frac{\\mathrm{\\theta}}{2}Z}$. `theta` is given as `param * param_coef`.");
 }
 }  // namespace internal
 #endif

@@ -8,6 +8,8 @@ circuit.add_gate(X(1))
 circuit.add_gate(X(1, controls=[0]))
 
 print(circuit.n_qubits()) # 2
-print(circuit.gate_list()) # [H, X, CX]
+print(circuit.gate_list()[0]) # [H, X, CX]
+print(circuit.gate_list()[1]) # [H, X, CX]
+print(circuit.gate_list()[2]) # [H, X, CX]
 print(circuit.n_gates()) # 3
 print(circuit.calculate_depth()) # 2

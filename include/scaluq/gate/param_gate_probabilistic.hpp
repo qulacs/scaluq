@@ -103,12 +103,12 @@ namespace internal {
 template <Precision Prec>
 void bind_gate_param_gate_probabilistic_hpp(nb::module_& m,
                                             nb::class_<ParamGate<Prec>>& param_gate_base_def) {
-    DEF_PARAM_GATE(
-        ParamProbabilisticGate,
-        Prec,
+    bind_specific_param_gate<ParamProbabilisticGate<Prec>, Prec>(
+        m,
+        param_gate_base_def,
+        "ParamProbabilisticGate",
         "Specific class of parametric probabilistic gate. The gate to apply is picked from a "
-        "certain distribution.",
-        param_gate_base_def)
+        "certain distribution.")
         .def(
             "gate_list",
             [](const ParamProbabilisticGate<Prec>& gate) { return gate->gate_list(); },

@@ -61,7 +61,6 @@ void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
 template <Precision Prec>
 void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
     StateVector<Prec, ExecutionSpace::Default>& state_vector, double param) const {
-    std::cout << "apply start" << std::endl;
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
     apply_pauli_rotation(this->_control_mask,
                          this->_control_value_mask,

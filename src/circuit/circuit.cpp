@@ -354,111 +354,118 @@ template void Circuit<internal::Prec>::optimize<ExecutionSpace::Default>(
 //  100   900     {Z:p=0.2, I:p=0.8}
 // Z/＼I  Z/＼I
 // 20 80  180 720
-#define DEFINE_SIMULATE_NOISE(SPACE)                                                               \
-    template <Precision Prec>                                                                      \
-    std::vector<std::pair<StateVector<Prec, ExecutionSpace::SPACE>, std::int64_t>>                 \
-    Circuit<Prec>::simulate_noise(const StateVector<Prec, ExecutionSpace::SPACE>& initial_state,   \
-                                  std::uint64_t sampling_count,                                    \
-                                  const std::map<std::string, double>& parameters,                 \
-                                  std::uint64_t seed) const {                                      \
-        std::mt19937 mt(seed);                                                                     \
-        StateVectorBatched<Prec, ExecutionSpace::SPACE> states(1, initial_state.n_qubits()),       \
-            new_states;                                                                            \
-        states.set_state_vector_at(0, initial_state);                                              \
-        std::vector<std::uint64_t> scounts{sampling_count}, new_scounts;                           \
-                                                                                                   \
-        for (auto& g : _gate_list) {                                                               \
-            std::vector<double> probs;                                                             \
-            std::vector<GateWithKey> gates;                                                        \
-            if (g.index() == 0) {                                                                  \
-                const auto& gate = std::get<0>(g);                                                 \
-                if (gate.gate_type() == GateType::Probabilistic) {                                 \
-                    probs = ProbabilisticGate<Prec>(gate)->distribution();                         \
-                    const auto& gate_list = ProbabilisticGate<Prec>(gate)->gate_list();            \
-                    for (const auto& tmp : gate_list) {                                            \
-                        gates.push_back(tmp);                                                      \
-                    }                                                                              \
-                } else {                                                                           \
-                    probs = std::vector<double>{1.0};                                              \
-                    gates.push_back(gate);                                                         \
-                }                                                                                  \
-            } else {                                                                               \
-                const auto& [gate, key] = std::get<1>(g);                                          \
-                if (gate.param_gate_type() == ParamGateType::ParamProbabilistic) {                 \
-                    probs = ParamProbabilisticGate<Prec>(gate)->distribution();                    \
-                    auto prob_gate_list = ParamProbabilisticGate<Prec>(gate)->gate_list();         \
-                    for (const auto& tmp : prob_gate_list) {                                       \
-                        if (tmp.index() == 0) {                                                    \
-                            gates.push_back(std::get<0>(tmp));                                     \
-                        } else {                                                                   \
-                            gates.push_back(std::pair<scaluq::ParamGate<Prec>, std::string>{       \
-                                std::get<1>(tmp), key});                                           \
-                        }                                                                          \
-                    }                                                                              \
-                } else {                                                                           \
-                    probs = std::vector<double>{1.0};                                              \
-                    gates.push_back(g);                                                            \
-                }                                                                                  \
-            }                                                                                      \
-                                                                                                   \
-            std::discrete_distribution<std::uint64_t> dist(probs.begin(), probs.end());            \
-                                                                                                   \
-            std::vector<std::vector<std::uint64_t>> gate_used_count(                               \
-                states.batch_size(), std::vector<std::uint64_t>(probs.size(), 0));                 \
-            std::uint64_t new_size = 0;                                                            \
-            for (std::uint64_t i = 0; i < states.batch_size(); ++i) {                              \
-                for (std::uint64_t _ = 0; _ < scounts[i]; ++_) {                                   \
-                    std::uint64_t j = dist(mt);                                                    \
-                    if (j >= probs.size()) {                                                       \
-                        throw std::runtime_error(                                                  \
-                            "Circuit::simulate_noise: discrete_distribution returned out of "      \
-                            "range "                                                               \
-                            "index.");                                                             \
-                    }                                                                              \
-                    if (gate_used_count[i][j] == 0) {                                              \
-                        ++new_size;                                                                \
-                    }                                                                              \
-                    ++gate_used_count[i][j];                                                       \
-                }                                                                                  \
-            }                                                                                      \
-                                                                                                   \
-            new_states = StateVectorBatched<Prec, ExecutionSpace::SPACE>::uninitialized_state(     \
-                new_size, initial_state.n_qubits());                                               \
-            new_scounts.assign(new_size, 0);                                                       \
-                                                                                                   \
-            std::int64_t insert_idx = 0;                                                           \
-            for (std::uint64_t i = 0; i < probs.size(); ++i) {                                     \
-                StateVectorBatched<Prec, ExecutionSpace::SPACE> tmp_states(states.copy());         \
-                if (gates[i].index() == 0) {                                                       \
-                    std::get<0>(gates[i])->update_quantum_state(tmp_states);                       \
-                } else {                                                                           \
-                    const auto& [param_gate, key] = std::get<1>(gates[i]);                         \
-                    param_gate->update_quantum_state(                                              \
-                        tmp_states,                                                                \
-                        std::vector<double>(tmp_states.batch_size(), parameters.at(key)));         \
-                }                                                                                  \
-                for (std::uint64_t j = 0; j < tmp_states.batch_size(); ++j) {                      \
-                    if (gate_used_count[j][i] == 0) continue;                                      \
-                    new_states.set_state_vector_at(insert_idx, tmp_states.get_state_vector_at(j)); \
-                    new_scounts[insert_idx] = gate_used_count[j][i];                               \
-                    ++insert_idx;                                                                  \
-                }                                                                                  \
-            }                                                                                      \
-            states = new_states;                                                                   \
-            scounts.swap(new_scounts);                                                             \
-        }                                                                                          \
-        std::vector<std::pair<StateVector<Prec, ExecutionSpace::SPACE>, std::int64_t>> result;     \
-        result.reserve(states.batch_size());                                                       \
-        for (std::uint64_t i = 0; i < states.batch_size(); ++i) {                                  \
-            result.emplace_back(states.get_state_vector_at(i), scounts[i]);                        \
-        }                                                                                          \
-        return result;                                                                             \
+template <Precision Prec>
+template <ExecutionSpace Space>
+std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::simulate_noise(
+    const StateVector<Prec, Space>& initial_state,
+    std::uint64_t sampling_count,
+    const std::map<std::string, double>& parameters,
+    std::uint64_t seed) const {
+    std::mt19937 mt(seed);
+    StateVectorBatched<Prec, Space> states(1, initial_state.n_qubits()), new_states;
+    states.set_state_vector_at(0, initial_state);
+    std::vector<std::uint64_t> scounts{sampling_count}, new_scounts;
+
+    for (auto& g : _gate_list) {
+        std::vector<double> probs;
+        std::vector<GateWithKey> gates;
+        if (g.index() == 0) {
+            const auto& gate = std::get<0>(g);
+            if (gate.gate_type() == GateType::Probabilistic) {
+                probs = ProbabilisticGate<Prec>(gate)->distribution();
+                const auto& gate_list = ProbabilisticGate<Prec>(gate)->gate_list();
+                for (const auto& tmp : gate_list) {
+                    gates.push_back(tmp);
+                }
+            } else {
+                probs = std::vector<double>{1.0};
+                gates.push_back(gate);
+            }
+        } else {
+            const auto& [gate, key] = std::get<1>(g);
+            if (gate.param_gate_type() == ParamGateType::ParamProbabilistic) {
+                probs = ParamProbabilisticGate<Prec>(gate)->distribution();
+                auto prob_gate_list = ParamProbabilisticGate<Prec>(gate)->gate_list();
+                for (const auto& tmp : prob_gate_list) {
+                    if (tmp.index() == 0) {
+                        gates.push_back(std::get<0>(tmp));
+                    } else {
+                        gates.push_back(
+                            std::pair<scaluq::ParamGate<Prec>, std::string>{std::get<1>(tmp), key});
+                    }
+                }
+            } else {
+                probs = std::vector<double>{1.0};
+                gates.push_back(g);
+            }
+        }
+
+        std::discrete_distribution<std::uint64_t> dist(probs.begin(), probs.end());
+
+        std::vector<std::vector<std::uint64_t>> gate_used_count(
+            states.batch_size(), std::vector<std::uint64_t>(probs.size(), 0));
+        std::uint64_t new_size = 0;
+        for (std::uint64_t i = 0; i < states.batch_size(); ++i) {
+            for (std::uint64_t _ = 0; _ < scounts[i]; ++_) {
+                std::uint64_t j = dist(mt);
+                if (j >= probs.size()) {
+                    throw std::runtime_error(
+                        "Circuit::simulate_noise: discrete_distribution returned out of "
+                        "range "
+                        "index.");
+                }
+                if (gate_used_count[i][j] == 0) {
+                    ++new_size;
+                }
+                ++gate_used_count[i][j];
+            }
+        }
+
+        new_states = StateVectorBatched<Prec, Space>::uninitialized_state(new_size,
+                                                                          initial_state.n_qubits());
+        new_scounts.assign(new_size, 0);
+
+        std::int64_t insert_idx = 0;
+        for (std::uint64_t i = 0; i < probs.size(); ++i) {
+            StateVectorBatched<Prec, Space> tmp_states(states.copy());
+            if (gates[i].index() == 0) {
+                std::get<0>(gates[i])->update_quantum_state(tmp_states);
+            } else {
+                const auto& [param_gate, key] = std::get<1>(gates[i]);
+                param_gate->update_quantum_state(
+                    tmp_states, std::vector<double>(tmp_states.batch_size(), parameters.at(key)));
+            }
+            for (std::uint64_t j = 0; j < tmp_states.batch_size(); ++j) {
+                if (gate_used_count[j][i] == 0) continue;
+                new_states.set_state_vector_at(insert_idx, tmp_states.get_state_vector_at(j));
+                new_scounts[insert_idx] = gate_used_count[j][i];
+                ++insert_idx;
+            }
+        }
+        states = new_states;
+        scounts.swap(new_scounts);
     }
-DEFINE_SIMULATE_NOISE(Host)
+    std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> result;
+    result.reserve(states.batch_size());
+    for (std::uint64_t i = 0; i < states.batch_size(); ++i) {
+        result.emplace_back(states.get_state_vector_at(i), scounts[i]);
+    }
+    return result;
+}
+template std::vector<std::pair<StateVector<internal::Prec, ExecutionSpace::Host>, std::int64_t>>
+Circuit<internal::Prec>::simulate_noise<ExecutionSpace::Host>(
+    const StateVector<internal::Prec, ExecutionSpace::Host>& initial_state,
+    std::uint64_t sampling_count,
+    const std::map<std::string, double>& parameters,
+    std::uint64_t seed) const;
 #ifdef SCALUQ_USE_CUDA
-DEFINE_SIMULATE_NOISE(Default)
+template std::vector<std::pair<StateVector<internal::Prec, ExecutionSpace::Default>, std::int64_t>>
+Circuit<internal::Prec>::simulate_noise<ExecutionSpace::Default>(
+    const StateVector<internal::Prec, ExecutionSpace::Default>& initial_state,
+    std::uint64_t sampling_count,
+    const std::map<std::string, double>& parameters,
+    std::uint64_t seed) const;
 #endif  // SCALUQ_USE_CUDA
-#undef DEFINE_SIMULATE_NOISE
 
 template <Precision Prec>
 void Circuit<Prec>::check_gate_is_valid(const Gate<Prec>& gate) const {

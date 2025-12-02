@@ -91,11 +91,12 @@ using ProbabilisticGate = internal::GatePtr<internal::ProbabilisticGateImpl<Prec
 namespace internal {
 template <Precision Prec>
 void bind_gate_gate_probabilistic(nb::module_& m, nb::class_<Gate<Prec>>& gate_base_def) {
-    DEF_GATE(ProbabilisticGate,
-             Prec,
-             "Specific class of probabilistic gate. The gate to apply is picked from a certain "
-             "distribution.",
-             gate_base_def)
+    bind_specific_gate<ProbabilisticGate<Prec>, Prec>(
+        m,
+        gate_base_def,
+        "ProbabilisticGate",
+        "Specific class of probabilistic gate. The gate to apply is picked from a certain "
+        "distribution.")
         .def(
             "gate_list",
             [](const ProbabilisticGate<Prec>& gate) { return gate->gate_list(); },

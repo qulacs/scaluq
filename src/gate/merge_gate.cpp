@@ -47,7 +47,7 @@ std::pair<Gate<internal::Prec>, double> merge_gate<internal::Prec, internal::Spa
 
     if (gate_type1 == GateType::Probabilistic || gate_type2 == GateType::Probabilistic) {
         throw std::runtime_error(
-            "merge_gate(const Gate<Prec, Space>&, const Gate<Prec, Space>&): "
+            "merge_gate(const Gate<Prec>&, const Gate<Prec>&): "
             "ProbabilisticGate is not supported.");
     }
 
