@@ -1,7 +1,5 @@
 #pragma once
 
-#include "types.hpp"
-
 namespace scaluq {
 void initialize();
 void finalize();
