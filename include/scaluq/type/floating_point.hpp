@@ -68,6 +68,7 @@ struct FloatTypeImpl<Precision::F64> {
 #endif
 #ifdef SCALUQ_BFLOAT16
 #ifdef SCALUQ_USE_CUDA
+#include <cuda_bf16.h>
 using BF16 = __nv_bfloat16;
 #else
 #ifndef __STDCPP_BFLOAT16_T__
