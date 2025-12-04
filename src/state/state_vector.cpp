@@ -310,19 +310,6 @@ std::string StateVector<Prec, Space>::to_string() const {
 }
 
 template <Precision Prec, ExecutionSpace Space>
-StateVector<Prec, ExecutionSpace::Default> StateVector<Prec, Space>::to_default_space() const {
-    auto tmp = StateVector<Prec, ExecutionSpace::Default>::uninitialized_state(_n_qubits);
-    Kokkos::deep_copy(tmp._raw, this->_raw);
-    return tmp;
-}
-template <Precision Prec, ExecutionSpace Space>
-StateVector<Prec, ExecutionSpace::Host> StateVector<Prec, Space>::to_host_space() const {
-    auto tmp = StateVector<Prec, ExecutionSpace::Host>::uninitialized_state(_n_qubits);
-    Kokkos::deep_copy(tmp._raw, this->_raw);
-    return tmp;
-}
-
-template <Precision Prec, ExecutionSpace Space>
 StdComplex StateVector<Prec, Space>::inner_product(const StateVector& a, const StateVector& b) {
     if (a._dim != b._dim) {
         throw std::runtime_error("Error: StateVector::inner_product: dimension mismatch");

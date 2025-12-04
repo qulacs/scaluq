@@ -97,8 +97,6 @@ public:
         state = StateVector(j.at("n_qubits").get<std::uint64_t>());
         state.load(j.at("amplitudes").get<std::vector<StdComplex>>());
     }
-    StateVector<Prec, ExecutionSpace::Default> to_default_space() const;
-    StateVector<Prec, ExecutionSpace::Host> to_host_space() const;
 };
 
 #ifdef SCALUQ_USE_NANOBIND
