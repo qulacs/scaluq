@@ -1,7 +1,6 @@
+#include <scaluq/prec_space.hpp>
 #include <scaluq/state/state_vector_batched.hpp>
-
-#include "../prec_space.hpp"
-#include "../util/math.hpp"
+#include <scaluq/util/math.hpp>
 
 namespace scaluq {
 template <Precision Prec, ExecutionSpace Space>

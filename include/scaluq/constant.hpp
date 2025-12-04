@@ -3,6 +3,7 @@
 #include <array>
 #include <numbers>
 
+#include "type/floating_point.hpp"
 #include "types.hpp"
 
 namespace scaluq {

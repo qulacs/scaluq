@@ -1,7 +1,7 @@
+#include <scaluq/operator/apply_pauli.hpp>
 #include <scaluq/operator/operator_batched.hpp>
-
-#include "../prec_space.hpp"
-#include "apply_pauli.hpp"
+#include <scaluq/prec_space.hpp>
+#include <scaluq/util/math.hpp>
 
 namespace scaluq {
 
@@ -20,7 +20,7 @@ OperatorBatched<internal::Prec, internal::Space>::copy() const {
 
 template <>
 void OperatorBatched<internal::Prec, internal::Space>::load(
-    const std::vector<std::vector<PauliOperator<internal::Prec, internal::Space>>>& terms) {
+    const std::vector<std::vector<PauliOperator<internal::Prec>>>& terms) {
     std::vector<std::uint64_t> row_ptr_h;
     row_ptr_h.push_back(0);
     for (const auto& op : terms) {
@@ -29,7 +29,7 @@ void OperatorBatched<internal::Prec, internal::Space>::load(
     auto row_ptr_h_view = internal::wrapped_host_view(row_ptr_h);
     Kokkos::deep_copy(_row_ptr, row_ptr_h_view);
     _ops = Kokkos::View<Pauli*, ExecutionSpaceType>("operator_ops", row_ptr_h.back());
-    std::vector<PauliOperator<internal::Prec, internal::Space>> ops_h;
+    std::vector<PauliOperator<internal::Prec>> ops_h;
     for (const auto& op : terms) {
         ops_h.insert(ops_h.end(), op.begin(), op.end());
     }
@@ -354,7 +354,7 @@ OperatorBatched<internal::Prec, internal::Space>::operator*(const OperatorBatche
 template <>
 OperatorBatched<internal::Prec, internal::Space>
 OperatorBatched<internal::Prec, internal::Space>::operator+(
-    const std::vector<PauliOperator<internal::Prec, internal::Space>>& pauli) const {
+    const std::vector<PauliOperator<internal::Prec>>& pauli) const {
     if (_row_ptr.extent(0) != pauli.size()) {
         throw std::runtime_error(
             "OperatorBatched::operator+: batch size of both operators must be same");
@@ -389,7 +389,7 @@ OperatorBatched<internal::Prec, internal::Space>::operator+(
 template <>
 OperatorBatched<internal::Prec, internal::Space>
 OperatorBatched<internal::Prec, internal::Space>::operator*(
-    const std::vector<PauliOperator<internal::Prec, internal::Space>>& pauli) const {
+    const std::vector<PauliOperator<internal::Prec>>& pauli) const {
     if (_row_ptr.extent(0) != pauli.size()) {
         throw std::runtime_error(
             "OperatorBatched::operator+: batch size of both operators must be same");
@@ -412,7 +412,7 @@ OperatorBatched<internal::Prec, internal::Space>::operator*(
 template <>
 OperatorBatched<internal::Prec, internal::Space>&
 OperatorBatched<internal::Prec, internal::Space>::operator*=(
-    const std::vector<PauliOperator<internal::Prec, internal::Space>>& pauli) {
+    const std::vector<PauliOperator<internal::Prec>>& pauli) {
     if (_row_ptr.extent(0) != pauli.size()) {
         throw std::runtime_error(
             "OperatorBatched::operator*: batch size of both operators must be same");

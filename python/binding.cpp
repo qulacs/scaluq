@@ -48,24 +48,37 @@ void bind_on_precision_and_space(nb::module_& mspace, const char* submodule_name
     internal::bind_state_state_vector_batched_hpp<Prec, Space>(mp);
 
     auto mgate = mp.def_submodule("gate", "Define gates.");
-
-    auto gate_base_def = internal::bind_gate_gate_hpp<Prec, Space>(mp);
-    internal::bind_gate_gate_standard_hpp<Prec, Space>(mp, gate_base_def);
+    auto gate_base_def = internal::bind_gate_gate_hpp<Prec>(mp);
     internal::bind_gate_gate_matrix_hpp<Prec, Space>(mp, gate_base_def);
-    internal::bind_gate_gate_pauli_hpp<Prec, Space>(mp, gate_base_def);
     internal::bind_gate_gate_factory_hpp<Prec, Space>(mgate);
-    auto param_gate_base_def = internal::bind_gate_param_gate_hpp<Prec, Space>(mp);
-    internal::bind_gate_param_gate_standard_hpp<Prec, Space>(mp, param_gate_base_def);
-    internal::bind_gate_param_gate_pauli_hpp<Prec, Space>(mp, param_gate_base_def);
-    internal::bind_gate_param_gate_probabilistic_hpp<Prec, Space>(mp, param_gate_base_def);
-    internal::bind_gate_param_gate_factory<Prec, Space>(mgate);
+
     internal::bind_gate_merge_gate_hpp<Prec, Space>(mp);
 
-    internal::bind_circuit_circuit_hpp<Prec, Space>(mp);
-
-    internal::bind_operator_pauli_operator_hpp<Prec, Space>(mp);
     internal::bind_operator_operator_hpp<Prec, Space>(mp);
     internal::bind_operator_operator_batched_hpp<Prec, Space>(mp);
+}
+
+template <Precision Prec>
+void bind_on_precision(nb::module_& mspace, const char* submodule_name) {
+    std::ostringstream oss;
+    oss << "module for " << submodule_name << "precision";
+    auto mp = mspace.def_submodule(submodule_name, oss.str().c_str());
+
+    auto mgate = mp.def_submodule("gate", "Define gates.");
+    auto gate_base_def = internal::bind_gate_gate_hpp<Prec>(mp);
+    internal::bind_gate_gate_standard_hpp<Prec>(mp, gate_base_def);
+    internal::bind_gate_gate_pauli_hpp<Prec>(mp, gate_base_def);
+    internal::bind_gate_gate_factory_hpp<Prec>(mgate);
+
+    auto param_gate_base_def = internal::bind_gate_param_gate_hpp<Prec>(mp);
+    internal::bind_gate_param_gate_standard_hpp<Prec>(mp, param_gate_base_def);
+    internal::bind_gate_param_gate_pauli_hpp<Prec>(mp, param_gate_base_def);
+    internal::bind_gate_param_gate_probabilistic_hpp<Prec>(mp, param_gate_base_def);
+    internal::bind_gate_param_gate_factory<Prec>(mgate);
+
+    internal::bind_circuit_circuit_hpp<Prec>(mp);
+
+    internal::bind_operator_pauli_operator_hpp<Prec>(mp);
 }
 
 NB_MODULE(scaluq_core, m) {
@@ -76,15 +89,19 @@ NB_MODULE(scaluq_core, m) {
     auto mdefault = m.def_submodule("default", "module for default execution space");
 #ifdef SCALUQ_FLOAT16
     bind_on_precision_and_space<Precision::F16, ExecutionSpace::Default>(mdefault, "f16");
+    bind_on_precision<Precision::F16>(mdefault, "f16");
 #endif
 #ifdef SCALUQ_FLOAT32
     bind_on_precision_and_space<Precision::F32, ExecutionSpace::Default>(mdefault, "f32");
+    bind_on_precision<Precision::F32>(mdefault, "f32");
 #endif
 #ifdef SCALUQ_FLOAT64
     bind_on_precision_and_space<Precision::F64, ExecutionSpace::Default>(mdefault, "f64");
+    bind_on_precision<Precision::F64>(mdefault, "f64");
 #endif
 #ifdef SCALUQ_BFLOAT16
     bind_on_precision_and_space<Precision::BF16, ExecutionSpace::Default>(mdefault, "bf16");
+    bind_on_precision<Precision::BF16>(mdefault, "bf16");
 #endif
 
 #ifdef SCALUQ_USE_CUDA

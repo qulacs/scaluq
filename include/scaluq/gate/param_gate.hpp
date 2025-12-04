@@ -8,18 +8,18 @@ namespace scaluq {
 namespace internal {
 // forward declarations
 
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class ParamGateBase;
 
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class ParamRXGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class ParamRYGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class ParamRZGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class ParamPauliRotationGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class ParamProbabilisticGateImpl;
 
 }  // namespace internal
@@ -34,41 +34,46 @@ enum class ParamGateType {
     Error
 };
 
-template <typename T, Precision Prec, ExecutionSpace Space>
+template <typename T, Precision Prec>
 constexpr ParamGateType get_param_gate_type() {
     using TWithoutConst = std::remove_cv_t<T>;
-    if constexpr (std::is_same_v<TWithoutConst, internal::ParamGateBase<Prec, Space>>)
+    if constexpr (std::is_same_v<TWithoutConst, internal::ParamGateBase<Prec>>)
         return ParamGateType::Unknown;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRXGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRXGateImpl<Prec>>)
         return ParamGateType::ParamRX;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRYGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRYGateImpl<Prec>>)
         return ParamGateType::ParamRY;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRZGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamRZGateImpl<Prec>>)
         return ParamGateType::ParamRZ;
-    else if constexpr (std::is_same_v<TWithoutConst,
-                                      internal::ParamPauliRotationGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamPauliRotationGateImpl<Prec>>)
         return ParamGateType::ParamPauliRotation;
-    else if constexpr (std::is_same_v<TWithoutConst,
-                                      internal::ParamProbabilisticGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ParamProbabilisticGateImpl<Prec>>)
         return ParamGateType::ParamProbabilistic;
     else
         static_assert(internal::lazy_false_v<T>, "unknown GateImpl");
 }
 
 namespace internal {
-template <Precision _Prec, ExecutionSpace _Space>
-class ParamGateBase : public std::enable_shared_from_this<ParamGateBase<_Prec, _Space>> {
+template <Precision _Prec>
+class ParamGateBase : public std::enable_shared_from_this<ParamGateBase<_Prec>> {
 public:
     constexpr static Precision Prec = _Prec;
-    constexpr static ExecutionSpace Space = _Space;
     using FloatType = Float<Prec>;
     using ComplexType = Complex<Prec>;
 
 protected:
     std::uint64_t _target_mask, _control_mask, _control_value_mask;
     FloatType _pcoef;
-    void check_qubit_mask_within_bounds(const StateVector<Prec, Space>& state_vector) const;
-    void check_qubit_mask_within_bounds(const StateVectorBatched<Prec, Space>& states) const;
+    void check_qubit_mask_within_bounds(
+        const StateVector<Prec, ExecutionSpace::Host>& state_vector) const;
+    void check_qubit_mask_within_bounds(
+        const StateVectorBatched<Prec, ExecutionSpace::Host>& states) const;
+#ifdef SCALUQ_USE_CUDA
+    void check_qubit_mask_within_bounds(
+        const StateVector<Prec, ExecutionSpace::Default>& state_vector) const;
+    void check_qubit_mask_within_bounds(
+        const StateVectorBatched<Prec, ExecutionSpace::Default>& states) const;
+#endif  // SCALUQ_USE_CUDA
 
     std::string get_qubit_info_as_string(const std::string& indent) const;
 
@@ -100,13 +105,19 @@ public:
         return _target_mask | _control_mask;
     }
 
-    [[nodiscard]] virtual std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const = 0;
+    [[nodiscard]] virtual std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const = 0;
     [[nodiscard]] virtual ComplexMatrix get_matrix(double param) const = 0;
 
-    virtual void update_quantum_state(StateVector<Prec, Space>& state_vector,
+    virtual void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector,
                                       double param) const = 0;
-    virtual void update_quantum_state(StateVectorBatched<Prec, Space>& states,
+    virtual void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Host>& states,
                                       std::vector<double> params) const = 0;
+#ifdef SCALUQ_USE_CUDA
+    virtual void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
+                                      double param) const = 0;
+    virtual void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Default>& states,
+                                      std::vector<double> params) const = 0;
+#endif  // SCALUQ_USE_CUDA
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 
@@ -114,7 +125,7 @@ public:
 };
 
 template <typename T>
-concept ParamGateImpl = std::derived_from<T, ParamGateBase<T::Prec, T::Space>>;
+concept ParamGateImpl = std::derived_from<T, ParamGateBase<T::Prec>>;
 
 template <ParamGateImpl T>
 struct GetParamGateFromJson {
@@ -122,10 +133,10 @@ struct GetParamGateFromJson {
         throw std::runtime_error("GetParamGateFromJson<T>::get() is not implemented");
     }
 };
-#define DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(Impl)                  \
-    template <Precision Prec, ExecutionSpace Space>                         \
-    struct GetParamGateFromJson<Impl<Prec, Space>> {                        \
-        static std::shared_ptr<const Impl<Prec, Space>> get(const Json& j); \
+#define DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(Impl)           \
+    template <Precision Prec>                                        \
+    struct GetParamGateFromJson<Impl<Prec>> {                        \
+        static std::shared_ptr<const Impl<Prec>> get(const Json& j); \
     };
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamRXGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamRYGateImpl)
@@ -139,7 +150,6 @@ class ParamGatePtr {
     template <ParamGateImpl U>
     friend class ParamGatePtr;
     constexpr static Precision Prec = T::Prec;
-    constexpr static ExecutionSpace Space = T::Space;
     using FloatType = Float<Prec>;
     using ComplexType = Complex<Prec>;
 
@@ -148,20 +158,19 @@ private:
     ParamGateType _param_gate_type;
 
 public:
-    ParamGatePtr()
-        : _param_gate_ptr(nullptr), _param_gate_type(get_param_gate_type<T, Prec, Space>()) {}
+    ParamGatePtr() : _param_gate_ptr(nullptr), _param_gate_type(get_param_gate_type<T, Prec>()) {}
     template <ParamGateImpl U>
     ParamGatePtr(const std::shared_ptr<const U>& param_gate_ptr) {
         if constexpr (std::is_same_v<T, U>) {
-            _param_gate_type = get_param_gate_type<T, Prec, Space>();
+            _param_gate_type = get_param_gate_type<T, Prec>();
             _param_gate_ptr = param_gate_ptr;
-        } else if constexpr (std::is_same_v<T, ParamGateBase<Prec, Space>>) {
+        } else if constexpr (std::is_same_v<T, ParamGateBase<Prec>>) {
             // upcast
-            _param_gate_type = get_param_gate_type<U, Prec, Space>();
+            _param_gate_type = get_param_gate_type<U, Prec>();
             _param_gate_ptr = std::static_pointer_cast<const T>(param_gate_ptr);
         } else {
             // downcast
-            _param_gate_type = get_param_gate_type<T, Prec, Space>();
+            _param_gate_type = get_param_gate_type<T, Prec>();
             if (!(_param_gate_ptr = std::dynamic_pointer_cast<const T>(param_gate_ptr))) {
                 throw std::runtime_error("invalid gate cast");
             }
@@ -172,13 +181,13 @@ public:
         if constexpr (std::is_same_v<T, U>) {
             _param_gate_type = param_gate._param_gate_type;
             _param_gate_ptr = param_gate._param_gate_ptr;
-        } else if constexpr (std::is_same_v<T, ParamGateBase<Prec, Space>>) {
+        } else if constexpr (std::is_same_v<T, ParamGateBase<Prec>>) {
             // upcast
             _param_gate_type = param_gate._param_gate_type;
             _param_gate_ptr = std::static_pointer_cast<const T>(param_gate._param_gate_ptr);
         } else {
             // downcast
-            if (param_gate._param_gate_type != get_param_gate_type<T, Prec, Space>()) {
+            if (param_gate._param_gate_type != get_param_gate_type<T, Prec>()) {
                 throw std::runtime_error("invalid gate cast");
             }
             _param_gate_type = param_gate._param_gate_type;
@@ -206,130 +215,124 @@ public:
         std::string type = j.at("type");
 
         // clang-format off
-        if (type == "ParamRX") gate = GetParamGateFromJson<ParamRXGateImpl<Prec, Space>>::get(j);
-        else if (type == "ParamRY") gate = GetParamGateFromJson<ParamRYGateImpl<Prec, Space>>::get(j);
-        else if (type == "ParamRZ") gate = GetParamGateFromJson<ParamRZGateImpl<Prec, Space>>::get(j);
-        else if (type == "ParamPauliRotation") gate = GetParamGateFromJson<ParamPauliRotationGateImpl<Prec, Space>>::get(j);
-        else if (type == "ParamProbabilistic") gate = GetParamGateFromJson<ParamProbabilisticGateImpl<Prec, Space>>::get(j);
+        if (type == "ParamRX") gate = GetParamGateFromJson<ParamRXGateImpl<Prec>>::get(j);
+        else if (type == "ParamRY") gate = GetParamGateFromJson<ParamRYGateImpl<Prec>>::get(j);
+        else if (type == "ParamRZ") gate = GetParamGateFromJson<ParamRZGateImpl<Prec>>::get(j);
+        else if (type == "ParamPauliRotation") gate = GetParamGateFromJson<ParamPauliRotationGateImpl<Prec>>::get(j);
+        else if (type == "ParamProbabilistic") gate = GetParamGateFromJson<ParamProbabilisticGateImpl<Prec>>::get(j);
         // clang-format on
     }
 };
 }  // namespace internal
 
-template <Precision Prec, ExecutionSpace Space>
-using ParamGate = internal::ParamGatePtr<internal::ParamGateBase<Prec, Space>>;
+template <Precision Prec>
+using ParamGate = internal::ParamGatePtr<internal::ParamGateBase<Prec>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-#define DEF_PARAM_GATE_BASE(PARAM_GATE_TYPE, PRECISION, SPACE, DESCRIPTION)                       \
-    nb::class_<PARAM_GATE_TYPE<PRECISION, SPACE>>(m, #PARAM_GATE_TYPE, DESCRIPTION)               \
-        .def(nb::init<PARAM_GATE_TYPE<PRECISION, SPACE>>(), "Downcast from ParamGate.")           \
-        .def("param_gate_type",                                                                   \
-             &PARAM_GATE_TYPE<PRECISION, SPACE>::param_gate_type,                                 \
-             "Get parametric gate type as `ParamGateType` enum.")                                 \
-        .def(                                                                                     \
-            "param_coef",                                                                         \
-            [](const PARAM_GATE_TYPE<PRECISION, SPACE>& gate) { return gate->param_coef(); },     \
-            "Get coefficient of parameter.")                                                      \
-        .def(                                                                                     \
-            "target_qubit_list",                                                                  \
-            [](const PARAM_GATE_TYPE<PRECISION, SPACE>& gate) {                                   \
-                return gate->target_qubit_list();                                                 \
-            },                                                                                    \
-            "Get target qubits as `list[int]`. **Control qubits is not included.**")              \
-        .def(                                                                                     \
-            "control_qubit_list",                                                                 \
-            [](const PARAM_GATE_TYPE<PRECISION, SPACE>& gate) {                                   \
-                return gate->control_qubit_list();                                                \
-            },                                                                                    \
-            "Get control qubits as `list[int]`.")                                                 \
-        .def(                                                                                     \
-            "operand_qubit_list",                                                                 \
-            [](const PARAM_GATE_TYPE<PRECISION, SPACE>& gate) {                                   \
-                return gate->operand_qubit_list();                                                \
-            },                                                                                    \
-            "Get target and control qubits as `list[int]`.")                                      \
-        .def(                                                                                     \
-            "target_qubit_mask",                                                                  \
-            [](const PARAM_GATE_TYPE<PRECISION, SPACE>& gate) {                                   \
-                return gate->target_qubit_mask();                                                 \
-            },                                                                                    \
-            "Get target qubits as mask. **Control qubits is not included.**")                     \
-        .def(                                                                                     \
-            "control_qubit_mask",                                                                 \
-            [](const PARAM_GATE_TYPE<PRECISION, SPACE>& gate) {                                   \
-                return gate->control_qubit_mask();                                                \
-            },                                                                                    \
-            "Get control qubits as mask.")                                                        \
-        .def(                                                                                     \
-            "operand_qubit_mask",                                                                 \
-            [](const PARAM_GATE_TYPE<PRECISION, SPACE>& gate) {                                   \
-                return gate->operand_qubit_mask();                                                \
-            },                                                                                    \
-            "Get target and control qubits as mask.")                                             \
-        .def(                                                                                     \
-            "get_inverse",                                                                        \
-            [](const PARAM_GATE_TYPE<PRECISION, SPACE>& param_gate) {                             \
-                auto inv = param_gate->get_inverse();                                             \
-                if (!inv) nb::none();                                                             \
-                return ParamGate<PRECISION, SPACE>(inv);                                          \
-            },                                                                                    \
-            "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.")  \
-        .def(                                                                                     \
-            "update_quantum_state",                                                               \
-            [](const PARAM_GATE_TYPE<PRECISION, SPACE>& param_gate,                               \
-               StateVector<PRECISION, SPACE>& state_vector,                                       \
-               double param) { param_gate->update_quantum_state(state_vector, param); },          \
-            "state"_a,                                                                            \
-            "param"_a,                                                                            \
-            "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is " \
-            "directly updated.")                                                                  \
-        .def(                                                                                     \
-            "update_quantum_state",                                                               \
-            [](const PARAM_GATE_TYPE<PRECISION, SPACE>& param_gate,                               \
-               StateVectorBatched<PRECISION, SPACE>& states,                                      \
-               std::vector<double> params) { param_gate->update_quantum_state(states, params); }, \
-            "states"_a,                                                                           \
-            "params"_a,                                                                           \
-            "Apply gate to `states` with holding the parameter. `states` in args is directly "    \
-            "updated.")                                                                           \
-        .def(                                                                                     \
-            "get_matrix",                                                                         \
-            [](const PARAM_GATE_TYPE<PRECISION, SPACE>& gate, double param) {                     \
-                return gate->get_matrix(param);                                                   \
-            },                                                                                    \
-            "param"_a,                                                                            \
-            "Get matrix representation of the gate with holding the parameter.")                  \
-        .def(                                                                                     \
-            "to_string",                                                                          \
-            [](const PARAM_GATE_TYPE<PRECISION, SPACE>& gate) { return gate->to_string(""); },    \
-            "Get string representation of the gate.")                                             \
-        .def(                                                                                     \
-            "__str__",                                                                            \
-            [](const PARAM_GATE_TYPE<PRECISION, SPACE>& gate) { return gate->to_string(""); },    \
-            "Get string representation of the gate.")                                             \
-        .def(                                                                                     \
-            "to_json",                                                                            \
-            [](const PARAM_GATE_TYPE<PRECISION, SPACE>& gate) { return Json(gate).dump(); },      \
-            "Get JSON representation of the gate.")                                               \
-        .def(                                                                                     \
-            "load_json",                                                                          \
-            [](PARAM_GATE_TYPE<PRECISION, SPACE>& gate, const std::string& str) {                 \
-                gate = nlohmann::json::parse(str);                                                \
-            },                                                                                    \
-            "json_str"_a,                                                                         \
-            "Read an object from the JSON representation of the gate.")
-#define DEF_PARAM_GATE(PARAM_GATE_TYPE, PRECISION, SPACE, DESCRIPTION, PARAM_GATE_BASE_DEF) \
-    PARAM_GATE_BASE_DEF.def(nb::init<PARAM_GATE_TYPE<PRECISION, SPACE>>(),                  \
-                            "param_gate"_a,                                                 \
-                            "Upcast from `" #PARAM_GATE_TYPE "`.");                         \
-    DEF_PARAM_GATE_BASE(PARAM_GATE_TYPE,                                                    \
-                        PRECISION,                                                          \
-                        SPACE,                                                              \
-                        DESCRIPTION                                                         \
-                        "\n\nNotes:\n\tUpcast is required to use gate-general functions "   \
-                        "(ex: add to Circuit).")                                            \
-        .def(nb::init<ParamGate<PRECISION, SPACE>>())
+template <typename GateT, Precision Prec>
+void register_param_gate_common_methods(nb::class_<GateT>& c) {
+    c.def(nb::init<GateT>(), "Downcast from ParamGate.")
+        .def("param_gate_type",
+             &GateT::param_gate_type,
+             "Get parametric gate type as `ParamGateType` enum.")
+        .def(
+            "param_coef",
+            [](const GateT& gate) { return gate->param_coef(); },
+            "Get coefficient of parameter.")
+        .def(
+            "target_qubit_list",
+            [](const GateT& gate) { return gate->target_qubit_list(); },
+            "Get target qubits as `list[int]`. **Control qubits is not included.**")
+        .def(
+            "control_qubit_list",
+            [](const GateT& gate) { return gate->control_qubit_list(); },
+            "Get control qubits as `list[int]`.")
+        .def(
+            "operand_qubit_list",
+            [](const GateT& gate) { return gate->operand_qubit_list(); },
+            "Get target and control qubits as `list[int]`.")
+        .def(
+            "target_qubit_mask",
+            [](const GateT& gate) { return gate->target_qubit_mask(); },
+            "Get target qubits as mask. **Control qubits is not included.**")
+        .def(
+            "control_qubit_mask",
+            [](const GateT& gate) { return gate->control_qubit_mask(); },
+            "Get control qubits as mask.")
+        .def(
+            "operand_qubit_mask",
+            [](const GateT& gate) { return gate->operand_qubit_mask(); },
+            "Get target and control qubits as mask.")
+        .def(
+            "get_inverse",
+            [](const GateT& param_gate) -> nb::object {
+                auto inv = param_gate->get_inverse();
+                if (!inv) return nb::none();
+                return nb::cast(ParamGate<Prec>(inv));
+            },
+            "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate,
+               StateVector<Prec, ExecutionSpace::Host>& state_vector,
+               double param) { gate->update_quantum_state(state_vector, param); },
+            "state"_a,
+            "param"_a,
+            "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is "
+            "directly updated.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate,
+               StateVectorBatched<Prec, ExecutionSpace::Host>& states,
+               std::vector<double> params) { gate->update_quantum_state(states, params); },
+            "states"_a,
+            "params"_a,
+            "Apply gate to `states` with holding the parameters. `states` in args is directly "
+            "updated.")
+#ifdef SCALUQ_USE_CUDA
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate,
+               StateVector<Prec, ExecutionSpace::Default>& state_vector,
+               double param) { gate->update_quantum_state(state_vector, param); },
+            "state"_a,
+            "param"_a,
+            "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is "
+            "directly updated.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate,
+               StateVectorBatched<Prec, ExecutionSpace::Default>& states,
+               std::vector<double> params) { gate->update_quantum_state(states, params); },
+            "states"_a,
+            "params"_a,
+            "Apply gate to `states` with holding the parameters. `states` in args is directly "
+            "updated.")
+#endif  // SCALUQ_USE_CUDA
+        .def(
+            "get_matrix",
+            [](const GateT& gate, double param) { return gate->get_matrix(param); },
+            "param"_a,
+            "Get matrix representation of the gate with holding the parameter.")
+        .def(
+            "to_string",
+            [](const GateT& gate) { return gate->to_string(""); },
+            "Get string representation of the gate.")
+        .def(
+            "__str__",
+            [](const GateT& gate) { return gate->to_string(""); },
+            "Get string representation of the gate.")
+        .def(
+            "to_json",
+            [](const GateT& gate) { return Json(gate).dump(); },
+            "Get JSON representation of the gate.")
+        .def(
+            "load_json",
+            [](GateT& gate, const std::string& str) { gate = nlohmann::json::parse(str); },
+            "json_str"_a,
+            "Read an object from the JSON representation of the gate.");
+}
 
 void bind_gate_param_gate_hpp_without_precision_and_space(nb::module_& m) {
     nb::enum_<ParamGateType>(m, "ParamGateType", "Enum of ParamGate Type.")
@@ -339,15 +342,34 @@ void bind_gate_param_gate_hpp_without_precision_and_space(nb::module_& m) {
         .value("ParamPauliRotation", ParamGateType::ParamPauliRotation);
 }
 
-template <Precision Prec, ExecutionSpace Space>
-nb::class_<ParamGate<Prec, Space>> bind_gate_param_gate_hpp(nb::module_& m) {
-    return DEF_PARAM_GATE_BASE(ParamGate,
-                               Prec,
-                               Space,
-                               "General class of parametric quantum gate.\n\nNotes:\n\t"
-                               "Downcast to required to use "
-                               "gate-specific functions.")
-        .def(nb::init<ParamGate<Prec, Space>>(), "Just copy shallowly.");
+template <Precision Prec>
+nb::class_<ParamGate<Prec>> bind_gate_param_gate_hpp(nb::module_& m) {
+    using GateT = ParamGate<Prec>;
+    const char* description =
+        "General class of parametric quantum gate.\n\nNotes:\n\t"
+        "Downcast to required to use gate-specific functions.";
+    auto c = nb::class_<GateT>(m, "ParamGate", description);
+    register_param_gate_common_methods<GateT, Prec>(c);
+    c.def(nb::init<GateT>(), "Just copy shallowly.");
+    return c;
+}
+
+template <class SpecificGateType, Precision Prec>
+nb::class_<SpecificGateType> bind_specific_param_gate(nb::module_& m,
+                                                      nb::class_<ParamGate<Prec>>& base_class,
+                                                      const char* name,
+                                                      const char* description) {
+    using BaseGateT = ParamGate<Prec>;
+    base_class.def(nb::init<SpecificGateType>(),
+                   "param_gate"_a,
+                   ("Upcast from `" + std::string(name) + "`.").c_str());
+    std::string full_description = std::string(description) +
+                                   "\n\nNotes:\n\tUpcast is required to use gate-general functions "
+                                   "(ex: add to Circuit).";
+    auto c = nb::class_<SpecificGateType>(m, name, full_description.c_str());
+    register_param_gate_common_methods<SpecificGateType, Prec>(c);
+    c.def(nb::init<BaseGateT>());
+    return c;
 }
 
 }  // namespace internal

@@ -16,7 +16,7 @@ template <Precision Prec, ExecutionSpace Space>
 std::pair<Operator<Prec, Space>, Eigen::MatrixXcd> generate_random_observable_with_eigen(
     std::uint64_t n, Random& random) {
     std::uint64_t dim = 1ULL << n;
-    std::vector<PauliOperator<Prec, Space>> rand_observable;
+    std::vector<PauliOperator<Prec>> rand_observable;
     Eigen::MatrixXcd test_rand_observable = Eigen::MatrixXcd::Zero(dim, dim);
 
     std::uint64_t term_count = random.int32() % 10 + 1;
@@ -45,7 +45,7 @@ std::pair<Operator<Prec, Space>, Eigen::MatrixXcd> generate_random_observable_wi
                 str += " " + std::to_string(ind);
             }
         }
-        rand_observable.push_back(PauliOperator<Prec, Space>(str.c_str(), coef));
+        rand_observable.push_back(PauliOperator<Prec>(str.c_str(), coef));
     }
     return {Operator<Prec, Space>(rand_observable), std::move(test_rand_observable)};
 }
@@ -249,7 +249,7 @@ TYPED_TEST(OperatorTest, ApplyToStateTest) {
         return tmp;
     }());
 
-    std::vector<PauliOperator<Prec, Space>> terms = {{0b001, 0b010, StdComplex(2)}, {"X 2 Y 1", 1}};
+    std::vector<PauliOperator<Prec>> terms = {{0b001, 0b010, StdComplex(2)}, {"X 2 Y 1", 1}};
     Operator<Prec, Space> op(terms);
     op.apply_to_state(state_vector);
 
@@ -269,12 +269,12 @@ TYPED_TEST(OperatorTest, ApplyToStateTest) {
 TYPED_TEST(OperatorTest, Optimize) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
-    std::vector<PauliOperator<Prec, Space>> terms = {{"X 0 Y 1", 1.},
-                                                     {"Y 0 Z 1", 2.},
-                                                     {"Z 1", 3.},
-                                                     {"X 0 Y 1", 4.},
-                                                     {"Z 1", 4.},
-                                                     {"X 0 Y 1", 5.}};
+    std::vector<PauliOperator<Prec>> terms = {{"X 0 Y 1", 1.},
+                                              {"Y 0 Z 1", 2.},
+                                              {"Z 1", 3.},
+                                              {"X 0 Y 1", 4.},
+                                              {"Z 1", 4.},
+                                              {"X 0 Y 1", 5.}};
     Operator<Prec, Space> op(terms);
     op.optimize();
     std::vector<std::pair<std::string, StdComplex>> expected = {

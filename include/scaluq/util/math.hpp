@@ -4,6 +4,8 @@
 #include <scaluq/types.hpp>
 
 #include "../prec_space.hpp"
+#include "../type/complex.hpp"
+#include "../type/floating_point.hpp"
 
 #ifndef SCALUQ_USE_CUDA
 #define IMPL_MATH_UNARY_FUNCTION(FUNC) \

@@ -12,7 +12,7 @@ class OperatorBatched {
     using ComplexType = internal::Complex<Prec>;
     using FloatType = internal::Float<Prec>;
     using ExecutionSpaceType = internal::SpaceType<Space>;
-    using Pauli = PauliOperator<Prec, Space>;
+    using Pauli = PauliOperator<Prec>;
 
 public:
     OperatorBatched() = default;
@@ -55,7 +55,7 @@ public:
     }
 
     [[nodiscard]] OperatorBatched copy() const;
-    void load(const std::vector<std::vector<PauliOperator<Prec, Space>>>& terms);
+    void load(const std::vector<std::vector<PauliOperator<Prec>>>& terms);
     void load(const std::vector<Operator<Prec, Space>>& terms);
 
     [[nodiscard]] std::string to_string() const;
@@ -97,14 +97,14 @@ public:
     OperatorBatched operator+(const OperatorBatched& target) const;
     OperatorBatched operator-(const OperatorBatched& target) const { return *this + (-target); }
     OperatorBatched operator*(const OperatorBatched& target) const;
-    OperatorBatched operator+(const std::vector<PauliOperator<Prec, Space>>& pauli) const;
-    OperatorBatched operator-(const std::vector<PauliOperator<Prec, Space>>& pauli) const {
+    OperatorBatched operator+(const std::vector<PauliOperator<Prec>>& pauli) const;
+    OperatorBatched operator-(const std::vector<PauliOperator<Prec>>& pauli) const {
         auto m_pauli = pauli;
         for (auto& p : m_pauli) p *= -1.;
         return *this + m_pauli;
     }
-    OperatorBatched operator*(const std::vector<PauliOperator<Prec, Space>>& pauli) const;
-    OperatorBatched& operator*=(const std::vector<PauliOperator<Prec, Space>>& pauli);
+    OperatorBatched operator*(const std::vector<PauliOperator<Prec>>& pauli) const;
+    OperatorBatched& operator*=(const std::vector<PauliOperator<Prec>>& pauli);
 
     friend void to_json(Json& j, const OperatorBatched& op) {
         j.clear();
@@ -125,7 +125,7 @@ public:
     }
 
 private:
-    Kokkos::View<PauliOperator<Prec, Space>*, ExecutionSpaceType> _ops;
+    Kokkos::View<PauliOperator<Prec>*, ExecutionSpaceType> _ops;
     Kokkos::View<std::uint64_t*, Kokkos::SharedSpace> _row_ptr;
 };
 
@@ -141,7 +141,7 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
             .build_as_google_style()
             .c_str())
         .def(nb::init<>(), DocString().desc("Default constructor.").build_as_google_style().c_str())
-        .def(nb::init<const std::vector<std::vector<PauliOperator<Prec, Space>>>&>(),
+        .def(nb::init<const std::vector<std::vector<PauliOperator<Prec>>>&>(),
              DocString()
                  .desc("Constructor from a vector of Pauli operators.")
                  .build_as_google_style()
@@ -155,7 +155,7 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
              &OperatorBatched<Prec, Space>::copy,
              DocString().desc("Return a copy.").build_as_google_style().c_str())
         .def("load",
-             nb::overload_cast<const std::vector<std::vector<PauliOperator<Prec, Space>>>&>(
+             nb::overload_cast<const std::vector<std::vector<PauliOperator<Prec>>>&>(
                  &OperatorBatched<Prec, Space>::load),
              "terms"_a,
              DocString()
@@ -259,10 +259,10 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
         .def(nb::self + nb::self)
         .def(nb::self - nb::self)
         .def(nb::self * nb::self)
-        .def(nb::self + std::vector<PauliOperator<Prec, Space>>())
-        .def(nb::self - std::vector<PauliOperator<Prec, Space>>())
-        .def(nb::self * std::vector<PauliOperator<Prec, Space>>())
-        .def(nb::self *= std::vector<PauliOperator<Prec, Space>>())
+        .def(nb::self + std::vector<PauliOperator<Prec>>())
+        .def(nb::self - std::vector<PauliOperator<Prec>>())
+        .def(nb::self * std::vector<PauliOperator<Prec>>())
+        .def(nb::self *= std::vector<PauliOperator<Prec>>())
         .def(
             "to_json",
             [](const OperatorBatched<Prec, Space>& op) { return Json(op).dump(); },

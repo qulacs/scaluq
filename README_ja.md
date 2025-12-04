@@ -126,7 +126,7 @@ int main() {
         circuit.add_gate(scaluq::gate::RX<Prec, Space>(1, std::numbers::pi / 2));
         circuit.update_quantum_state(state);
 
-        std::vector<scaluq::PauliOperator<Prec, Space>> terms;
+        std::vector<scaluq::PauliOperator<Prec>> terms;
         terms.emplace_back(1, 0);
         scaluq::Operator<Prec, Space> observable(terms);
         auto value = observable.get_expectation_value(state);

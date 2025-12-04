@@ -23,15 +23,15 @@ public:
 
     Operator() = default;
     explicit Operator(std::uint64_t n_terms) : _terms("terms", n_terms) {}
-    explicit Operator(std::vector<PauliOperator<Prec, Space>> terms);
+    explicit Operator(std::vector<PauliOperator<Prec>> terms);
 
     [[nodiscard]] Operator copy() const;
-    void load(const std::vector<PauliOperator<Prec, Space>>& terms);
+    void load(const std::vector<PauliOperator<Prec>>& terms);
     static Operator uninitialized_operator(std::uint64_t n_terms);
 
     [[nodiscard]] inline bool is_hermitian() const { return _is_hermitian; }
-    [[nodiscard]] inline std::vector<PauliOperator<Prec, Space>> get_terms() const {
-        return internal::convert_view_to_vector<PauliOperator<Prec, Space>, Space>(_terms);
+    [[nodiscard]] inline std::vector<PauliOperator<Prec>> get_terms() const {
+        return internal::convert_view_to_vector<PauliOperator<Prec>, Space>(_terms);
     }
     [[nodiscard]] std::string to_string() const;
     [[nodiscard]] std::uint64_t n_terms() const { return _terms.extent(0); }
@@ -76,12 +76,10 @@ public:
     Operator operator+(const Operator& target) const;
     Operator operator-(const Operator& target) const { return *this + target * -1.; }
     Operator operator*(const Operator& target) const;
-    Operator operator+(const PauliOperator<Prec, Space>& pauli) const;
-    Operator operator-(const PauliOperator<Prec, Space>& pauli) const {
-        return *this + pauli * -1.;
-    }
-    Operator operator*(const PauliOperator<Prec, Space>& pauli) const;
-    Operator& operator*=(const PauliOperator<Prec, Space>& pauli);
+    Operator operator+(const PauliOperator<Prec>& pauli) const;
+    Operator operator-(const PauliOperator<Prec>& pauli) const { return *this + pauli * -1.; }
+    Operator operator*(const PauliOperator<Prec>& pauli) const;
+    Operator& operator*=(const PauliOperator<Prec>& pauli);
 
     friend void to_json(Json& j, const Operator& op) {
         j.clear();
@@ -92,7 +90,7 @@ public:
         }
     }
     friend void from_json(const Json& j, Operator& op) {
-        std::vector<PauliOperator<Prec, Space>> res;
+        std::vector<PauliOperator<Prec>> res;
         for (const auto& term : j.at("terms")) {
             std::string pauli_string = term.at("pauli_string").get<std::string>();
             StdComplex coef = term.at("coef").get<StdComplex>();
@@ -101,15 +99,16 @@ public:
         op = Operator<Prec, Space>(res);
     }
 
+    Operator<Prec, ExecutionSpace::Default> to_default_space() const;
+    Operator<Prec, ExecutionSpace::Host> to_host_space() const;
+
     friend std::ostream& operator<<(std::ostream& os, const Operator& op) {
         return os << op.to_string();
     }
 
     StdComplex calculate_default_mu() const;
 
-    Kokkos::View<PauliOperator<Prec, Space>*, ExecutionSpaceType> _terms;
-
-private:
+    Kokkos::View<PauliOperator<Prec>*, ExecutionSpaceType> _terms;
     bool _is_hermitian = true;
 };
 
@@ -142,7 +141,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
     op.def(nb::init<std::uint64_t>(),
            "n_terms"_a,
            "Initialize operator with specified number of terms.")
-        .def(nb::init<std::vector<PauliOperator<Prec, Space>>>(),
+        .def(nb::init<std::vector<PauliOperator<Prec>>>(),
              "terms"_a,
              "Initialize operator with given list of terms.")
         .def("is_hermitian",
@@ -309,43 +308,38 @@ void bind_operator_operator_hpp(nb::module_& m) {
         .def(nb::self + nb::self)
         .def(nb::self - nb::self)
         .def(nb::self * nb::self)
-        .def(nb::self + PauliOperator<Prec, Space>())
-        .def(nb::self - PauliOperator<Prec, Space>())
-        .def(nb::self *= PauliOperator<Prec, Space>())
-        .def(nb::self * PauliOperator<Prec, Space>())
+        .def(nb::self + PauliOperator<Prec>())
+        .def(nb::self - PauliOperator<Prec>())
+        .def(nb::self *= PauliOperator<Prec>())
+        .def(nb::self * PauliOperator<Prec>())
         .def(
             "__iadd__",
-            [](Operator<Prec, Space>& self,
-               const Operator<Prec, Space>& other) -> Operator<Prec, Space>& {
+            [](Operator<Prec, Space>&, const Operator<Prec, Space>&) -> Operator<Prec, Space>& {
                 throw nb::type_error("In-place addition (+=) is not supported for Operator.");
             },
             nb::is_operator())
         .def(
             "__isub__",
-            [](Operator<Prec, Space>& self,
-               const Operator<Prec, Space>& other) -> Operator<Prec, Space>& {
+            [](Operator<Prec, Space>&, const Operator<Prec, Space>&) -> Operator<Prec, Space>& {
                 throw nb::type_error("In-place subtraction (-=) is not supported for Operator.");
             },
             nb::is_operator())
         .def(
             "__imul__",
-            [](Operator<Prec, Space>& self,
-               const Operator<Prec, Space>& other) -> Operator<Prec, Space>& {
+            [](Operator<Prec, Space>&, const Operator<Prec, Space>&) -> Operator<Prec, Space>& {
                 throw nb::type_error("In-place multiplication (*=) is not supported for Operator.");
             },
             nb::is_operator())
         .def(
             "__iadd__",
-            [](Operator<Prec, Space>& self,
-               const PauliOperator<Prec, Space>& other) -> Operator<Prec, Space>& {
+            [](Operator<Prec, Space>&, const PauliOperator<Prec>&) -> Operator<Prec, Space>& {
                 throw nb::type_error(
                     "In-place addition (+=) is not supported for Operator with PauliOperator.");
             },
             nb::is_operator())
         .def(
             "__isub__",
-            [](Operator<Prec, Space>& self,
-               const PauliOperator<Prec, Space>& other) -> Operator<Prec, Space>& {
+            [](Operator<Prec, Space>&, const PauliOperator<Prec>&) -> Operator<Prec, Space>& {
                 throw nb::type_error(
                     "In-place subtraction (-=) is not supported for Operator with PauliOperator.");
             },

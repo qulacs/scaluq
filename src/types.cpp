@@ -1,6 +1,5 @@
+#include <scaluq/prec_space.hpp>
 #include <scaluq/types.hpp>
-
-#include "prec_space.hpp"
 
 namespace scaluq {
 namespace internal {
