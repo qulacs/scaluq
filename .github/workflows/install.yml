@@ -28,14 +28,14 @@ jobs:
             runs-on: "ubuntu-24.04"
           - os: "macos"
             architecture: "x86_64"
-            runs-on: "macos-13"
+            runs-on: "macos-15"
           - os: "macos"
             architecture: "arm64"
             runs-on: "macos-14"
     runs-on: ${{ matrix.runs-on }}
     env:
-      CMAKE_C_COMPILER: ${{ matrix.runs-on == 'macos-13' && '/usr/local/opt/ccache/libexec/gcc-14'|| matrix.runs-on == 'macos-14' && '/opt/homebrew/opt/ccache/libexec/gcc-14' || '/usr/lib/ccache/gcc' }}
-      CMAKE_CXX_COMPILER: ${{ matrix.runs-on == 'macos-13' && '/usr/local/opt/ccache/libexec/g++-14'|| matrix.runs-on == 'macos-14' && '/opt/homebrew/opt/ccache/libexec/g++-14' || '/usr/lib/ccache/g++' }}
+      CMAKE_C_COMPILER: ${{ matrix.runs-on == 'macos-15' && '/usr/local/opt/ccache/libexec/gcc-14'|| matrix.runs-on == 'macos-14' && '/opt/homebrew/opt/ccache/libexec/gcc-14' || '/usr/lib/ccache/gcc' }}
+      CMAKE_CXX_COMPILER: ${{ matrix.runs-on == 'macos-15' && '/usr/local/opt/ccache/libexec/g++-14'|| matrix.runs-on == 'macos-14' && '/opt/homebrew/opt/ccache/libexec/g++-14' || '/usr/lib/ccache/g++' }}
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
       SCALUQ_CUDA_ARCH: "PASCAL61"
       SCALUQ_FLOAT16: "ON"
@@ -110,14 +110,14 @@ jobs:
             runs-on: "ubuntu-24.04"
           - os: "macos"
             architecture: "x86_64"
-            runs-on: "macos-13"
+            runs-on: "macos-15"
           - os: "macos"
             architecture: "arm64"
             runs-on: "macos-14"
     runs-on: ${{ matrix.runs-on }}
     env:
-      CMAKE_C_COMPILER: ${{ matrix.runs-on == 'macos-13' && '/usr/local/opt/ccache/libexec/gcc-14'|| matrix.runs-on == 'macos-14' && '/opt/homebrew/opt/ccache/libexec/gcc-14' || '/usr/lib/ccache/gcc' }}
-      CMAKE_CXX_COMPILER: ${{ matrix.runs-on == 'macos-13' && '/usr/local/opt/ccache/libexec/g++-14'|| matrix.runs-on == 'macos-14' && '/opt/homebrew/opt/ccache/libexec/g++-14' || '/usr/lib/ccache/g++' }}
+      CMAKE_C_COMPILER: ${{ matrix.runs-on == 'macos-15' && '/usr/local/opt/ccache/libexec/gcc-14'|| matrix.runs-on == 'macos-14' && '/opt/homebrew/opt/ccache/libexec/gcc-14' || '/usr/lib/ccache/gcc' }}
+      CMAKE_CXX_COMPILER: ${{ matrix.runs-on == 'macos-15' && '/usr/local/opt/ccache/libexec/g++-14'|| matrix.runs-on == 'macos-14' && '/opt/homebrew/opt/ccache/libexec/g++-14' || '/usr/lib/ccache/g++' }}
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
       SCALUQ_CUDA_ARCH: "PASCAL61"
     steps:
