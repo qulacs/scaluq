@@ -48,6 +48,7 @@ jobs:
     env:
       CMAKE_C_COMPILER: 'gcc-14' # only passed to macOS
       CMAKE_CXX_COMPILER: 'g++-14' # only passed to macOS
+      CIBW_ARCHS: ${{ matrix.arch }}
       CIBW_BUILD: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}
       CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
       CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
