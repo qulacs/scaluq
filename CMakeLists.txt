@@ -215,6 +215,7 @@ if(SCALUQ_USE_CUDA)
         --expt-relaxed-constexpr
         -Werror=cross-execution-space-call # prevent call of non __device__ function in device call
         -DEIGEN_NO_CUDA
+        -Xcudafe --diag_suppress=1675 # for suppressing warning of Eigen
     ) 
 endif()
 
