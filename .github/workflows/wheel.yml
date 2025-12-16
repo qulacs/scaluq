@@ -53,7 +53,8 @@ jobs:
       CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
       CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
       PYTHON: ${{ matrix.python-version }}
-      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.os == 'macos' && '14.0' || '' }}
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.os == 'macos' && (matrix.arch == 'arm64' && '14.0' || '15.0') || '' }}
+
     steps:
       - uses: actions/checkout@v4
 
