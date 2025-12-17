@@ -22,7 +22,7 @@ https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
 - GCC 11 以上 (CUDAを利用しない場合13以上)
 - CMake 3.24 以上
 - CUDA 12.6 以上（CUDA利用時のみ）
-- Python 3.9 以上 (Python利用時のみ)
+- Python 3.10 以上 (Python利用時のみ)
 
 ※これより低いバージョンでも動作する可能性はありますが確認していません
 
