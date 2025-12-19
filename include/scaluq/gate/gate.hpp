@@ -158,14 +158,18 @@ constexpr GateType get_gate_type() {
         return GateType::Pauli;
     else if constexpr (std::is_same_v<TWithoutConst, internal::PauliRotationGateImpl<Prec>>)
         return GateType::PauliRotation;
-    else if constexpr (std::is_same_v<TWithoutConst,
-                                      internal::SparseMatrixGateImpl<Prec, ExecutionSpace::Host>> ||
-                       std::is_same_v<
-                           TWithoutConst,
-                           internal::SparseMatrixGateImpl<Prec, ExecutionSpace::Default>>)
+    else if constexpr (
+        std::is_same_v<TWithoutConst, internal::SparseMatrixGateImpl<Prec, ExecutionSpace::Host>> ||
+        std::is_same_v<TWithoutConst,
+                       internal::SparseMatrixGateImpl<Prec, ExecutionSpace::HostSerialSpace>> ||
+        std::is_same_v<TWithoutConst,
+                       internal::SparseMatrixGateImpl<Prec, ExecutionSpace::Default>>)
         return GateType::SparseMatrix;
     else if constexpr (std::is_same_v<TWithoutConst,
                                       internal::DenseMatrixGateImpl<Prec, ExecutionSpace::Host>> ||
+                       std::is_same_v<
+                           TWithoutConst,
+                           internal::DenseMatrixGateImpl<Prec, ExecutionSpace::HostSerialSpace>> ||
                        std::is_same_v<TWithoutConst,
                                       internal::DenseMatrixGateImpl<Prec, ExecutionSpace::Default>>)
         return GateType::DenseMatrix;
@@ -191,6 +195,10 @@ protected:
         const StateVector<Prec, ExecutionSpace::Host>& state_vector) const;
     void check_qubit_mask_within_bounds(
         const StateVectorBatched<Prec, ExecutionSpace::Host>& states) const;
+    void check_qubit_mask_within_bounds(
+        const StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector) const;
+    void check_qubit_mask_within_bounds(
+        const StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states) const;
 #ifdef SCALUQ_USE_CUDA
     void check_qubit_mask_within_bounds(
         const StateVector<Prec, ExecutionSpace::Default>& state_vector) const;
@@ -232,6 +240,10 @@ public:
         StateVector<Prec, ExecutionSpace::Host>& state_vector) const = 0;
     virtual void update_quantum_state(
         StateVectorBatched<Prec, ExecutionSpace::Host>& states) const = 0;
+    virtual void update_quantum_state(
+        StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector) const = 0;
+    virtual void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states) const = 0;
 #ifdef SCALUQ_USE_CUDA
     virtual void update_quantum_state(
         StateVector<Prec, ExecutionSpace::Default>& state_vector) const = 0;

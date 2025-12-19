@@ -68,6 +68,10 @@ protected:
         const StateVector<Prec, ExecutionSpace::Host>& state_vector) const;
     void check_qubit_mask_within_bounds(
         const StateVectorBatched<Prec, ExecutionSpace::Host>& states) const;
+    void check_qubit_mask_within_bounds(
+        const StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector) const;
+    void check_qubit_mask_within_bounds(
+        const StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states) const;
 #ifdef SCALUQ_USE_CUDA
     void check_qubit_mask_within_bounds(
         const StateVector<Prec, ExecutionSpace::Default>& state_vector) const;
@@ -112,6 +116,11 @@ public:
                                       double param) const = 0;
     virtual void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Host>& states,
                                       std::vector<double> params) const = 0;
+    virtual void update_quantum_state(
+        StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector, double param) const = 0;
+    virtual void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states,
+        std::vector<double> params) const = 0;
 #ifdef SCALUQ_USE_CUDA
     virtual void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
                                       double param) const = 0;

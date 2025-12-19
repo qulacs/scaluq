@@ -63,6 +63,12 @@ public:
         const std::map<std::string, std::vector<double>>& parameters = {}) const;
 #endif  // SCALUQ_USE_CUDA
 
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::HostSerialSpace>& state,
+                              const std::map<std::string, double>& parameters = {}) const;
+    void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states,
+        const std::map<std::string, std::vector<double>>& parameters = {}) const;
+
     Circuit copy() const;
 
     Circuit get_inverse() const;

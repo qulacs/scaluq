@@ -91,6 +91,50 @@ void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
         }
     }
 }
+template <Precision Prec>
+void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
+    StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector, double param) const {
+    Random random;
+    double r = random.uniform();
+    std::uint64_t i = std::distance(_cumulative_distribution.begin(),
+                                    std::ranges::upper_bound(_cumulative_distribution, r)) -
+                      1;
+    if (i >= _gate_list.size()) i = _gate_list.size() - 1;
+    const auto& gate = _gate_list[i];
+    if (gate.index() == 0) {
+        std::get<0>(gate)->update_quantum_state(state_vector);
+    } else {
+        std::get<1>(gate)->update_quantum_state(state_vector, param);
+    }
+}
+template <Precision Prec>
+void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
+    StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states,
+    std::vector<double> params) const {
+    Random random;
+    std::vector<double> r(states.batch_size());
+    std::ranges::generate(r, [&random]() { return random.uniform(); });
+    std::vector<std::uint64_t> indicies(states.batch_size());
+    std::ranges::transform(r, indicies.begin(), [this](double r) {
+        return std::distance(_cumulative_distribution.begin(),
+                             std::ranges::upper_bound(_cumulative_distribution, r)) -
+               1;
+    });
+    std::ranges::transform(indicies, indicies.begin(), [this](std::uint64_t i) {
+        if (i >= _gate_list.size()) i = _gate_list.size() - 1;
+        return i;
+    });
+    for (std::size_t i = 0; i < states.batch_size(); ++i) {
+        const auto& gate = _gate_list[indicies[i]];
+        auto state_vector = StateVector<Prec, ExecutionSpace::HostSerialSpace>(
+            Kokkos::subview(states._raw, i, Kokkos::ALL));
+        if (gate.index() == 0) {
+            std::get<0>(gate)->update_quantum_state(state_vector);
+        } else {
+            std::get<1>(gate)->update_quantum_state(state_vector, params[i]);
+        }
+    }
+}
 #ifdef SCALUQ_USE_CUDA
 template <Precision Prec>
 void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
