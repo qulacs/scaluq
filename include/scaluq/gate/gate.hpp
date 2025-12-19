@@ -9,60 +9,60 @@ namespace scaluq {
 namespace internal {
 // forward declarations
 
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class GateBase;
 
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class IGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class GlobalPhaseGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class XGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class YGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class ZGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class HGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class SGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class SdagGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class TGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class TdagGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class SqrtXGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class SqrtXdagGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class SqrtYGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class SqrtYdagGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class P0GateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class P1GateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class RXGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class RYGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class RZGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class U1GateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class U2GateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class U3GateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class SwapGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class PauliGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class PauliRotationGateImpl;
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 class ProbabilisticGateImpl;
 template <Precision Prec, ExecutionSpace Space>
 class SparseMatrixGateImpl;
@@ -103,66 +103,73 @@ enum class GateType {
     Probabilistic
 };
 
-template <typename T, Precision Prec, ExecutionSpace Space>
+template <typename T, Precision Prec>
 constexpr GateType get_gate_type() {
     using TWithoutConst = std::remove_cv_t<T>;
-    if constexpr (std::is_same_v<TWithoutConst, internal::GateBase<Prec, Space>>)
+    if constexpr (std::is_same_v<TWithoutConst, internal::GateBase<Prec>>)
         return GateType::Unknown;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::IGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::IGateImpl<Prec>>)
         return GateType::I;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::GlobalPhaseGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::GlobalPhaseGateImpl<Prec>>)
         return GateType::GlobalPhase;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::XGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::XGateImpl<Prec>>)
         return GateType::X;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::YGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::YGateImpl<Prec>>)
         return GateType::Y;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::ZGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ZGateImpl<Prec>>)
         return GateType::Z;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::HGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::HGateImpl<Prec>>)
         return GateType::H;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::SGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SGateImpl<Prec>>)
         return GateType::S;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::SdagGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SdagGateImpl<Prec>>)
         return GateType::Sdag;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::TGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::TGateImpl<Prec>>)
         return GateType::T;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::TdagGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::TdagGateImpl<Prec>>)
         return GateType::Tdag;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::SqrtXGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SqrtXGateImpl<Prec>>)
         return GateType::SqrtX;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::SqrtXdagGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SqrtXdagGateImpl<Prec>>)
         return GateType::SqrtXdag;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::SqrtYGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SqrtYGateImpl<Prec>>)
         return GateType::SqrtY;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::SqrtYdagGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SqrtYdagGateImpl<Prec>>)
         return GateType::SqrtYdag;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::P0GateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::P0GateImpl<Prec>>)
         return GateType::P0;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::P1GateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::P1GateImpl<Prec>>)
         return GateType::P1;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::RXGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::RXGateImpl<Prec>>)
         return GateType::RX;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::RYGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::RYGateImpl<Prec>>)
         return GateType::RY;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::RZGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::RZGateImpl<Prec>>)
         return GateType::RZ;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::U1GateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::U1GateImpl<Prec>>)
         return GateType::U1;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::U2GateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::U2GateImpl<Prec>>)
         return GateType::U2;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::U3GateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::U3GateImpl<Prec>>)
         return GateType::U3;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::SwapGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::SwapGateImpl<Prec>>)
         return GateType::Swap;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::PauliGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::PauliGateImpl<Prec>>)
         return GateType::Pauli;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::PauliRotationGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::PauliRotationGateImpl<Prec>>)
         return GateType::PauliRotation;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::SparseMatrixGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst,
+                                      internal::SparseMatrixGateImpl<Prec, ExecutionSpace::Host>> ||
+                       std::is_same_v<
+                           TWithoutConst,
+                           internal::SparseMatrixGateImpl<Prec, ExecutionSpace::Default>>)
         return GateType::SparseMatrix;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::DenseMatrixGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst,
+                                      internal::DenseMatrixGateImpl<Prec, ExecutionSpace::Host>> ||
+                       std::is_same_v<TWithoutConst,
+                                      internal::DenseMatrixGateImpl<Prec, ExecutionSpace::Default>>)
         return GateType::DenseMatrix;
-    else if constexpr (std::is_same_v<TWithoutConst, internal::ProbabilisticGateImpl<Prec, Space>>)
+    else if constexpr (std::is_same_v<TWithoutConst, internal::ProbabilisticGateImpl<Prec>>)
         return GateType::Probabilistic;
     else
         static_assert(internal::lazy_false_v<T>, "unknown GateImpl");
@@ -170,19 +177,26 @@ constexpr GateType get_gate_type() {
 
 namespace internal {
 // GateBase テンプレートクラス
-template <Precision _Prec, ExecutionSpace _Space>
-class GateBase : public std::enable_shared_from_this<GateBase<_Prec, _Space>> {
+template <Precision _Prec>
+class GateBase : public std::enable_shared_from_this<GateBase<_Prec>> {
 public:
     constexpr static Precision Prec = _Prec;
-    constexpr static ExecutionSpace Space = _Space;
     using FloatType = Float<Prec>;
     using ComplexType = Complex<Prec>;
 
 protected:
     std::uint64_t _target_mask, _control_mask, _control_value_mask;
 
-    void check_qubit_mask_within_bounds(const StateVector<Prec, Space>& state_vector) const;
-    void check_qubit_mask_within_bounds(const StateVectorBatched<Prec, Space>& states) const;
+    void check_qubit_mask_within_bounds(
+        const StateVector<Prec, ExecutionSpace::Host>& state_vector) const;
+    void check_qubit_mask_within_bounds(
+        const StateVectorBatched<Prec, ExecutionSpace::Host>& states) const;
+#ifdef SCALUQ_USE_CUDA
+    void check_qubit_mask_within_bounds(
+        const StateVector<Prec, ExecutionSpace::Default>& state_vector) const;
+    void check_qubit_mask_within_bounds(
+        const StateVectorBatched<Prec, ExecutionSpace::Default>& states) const;
+#endif  // SCALUQ_USE_CUDA
 
     std::string get_qubit_info_as_string(const std::string& indent) const;
 
@@ -211,11 +225,19 @@ public:
         return _target_mask | _control_mask;
     }
 
-    [[nodiscard]] virtual std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const = 0;
+    [[nodiscard]] virtual std::shared_ptr<const GateBase<Prec>> get_inverse() const = 0;
     [[nodiscard]] virtual ComplexMatrix get_matrix() const = 0;
 
-    virtual void update_quantum_state(StateVector<Prec, Space>& state_vector) const = 0;
-    virtual void update_quantum_state(StateVectorBatched<Prec, Space>& states) const = 0;
+    virtual void update_quantum_state(
+        StateVector<Prec, ExecutionSpace::Host>& state_vector) const = 0;
+    virtual void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::Host>& states) const = 0;
+#ifdef SCALUQ_USE_CUDA
+    virtual void update_quantum_state(
+        StateVector<Prec, ExecutionSpace::Default>& state_vector) const = 0;
+    virtual void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::Default>& states) const = 0;
+#endif  // SCALUQ_USE_CUDA
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 
@@ -223,7 +245,7 @@ public:
 };
 
 template <typename T>
-concept GateImpl = std::derived_from<T, GateBase<T::Prec, T::Space>>;
+concept GateImpl = std::derived_from<T, GateBase<T::Prec>>;
 
 template <GateImpl T>
 struct GetGateFromJson {
@@ -231,7 +253,12 @@ struct GetGateFromJson {
         throw std::runtime_error("GetGateFromJson<T>::get() is not implemented");
     }
 };
-#define DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(Impl)                  \
+#define DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(Impl)           \
+    template <Precision Prec>                                        \
+    struct GetGateFromJson<Impl<Prec>> {                             \
+        static std::shared_ptr<const Impl<Prec>> get(const Json& j); \
+    };
+#define DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION_WITH_SPACE(Impl)       \
     template <Precision Prec, ExecutionSpace Space>                         \
     struct GetGateFromJson<Impl<Prec, Space>> {                             \
         static std::shared_ptr<const Impl<Prec, Space>> get(const Json& j); \
@@ -262,9 +289,10 @@ DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SwapGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(PauliGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(PauliRotationGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ProbabilisticGateImpl)
-DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SparseMatrixGateImpl)
-DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(DenseMatrixGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION_WITH_SPACE(SparseMatrixGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION_WITH_SPACE(DenseMatrixGateImpl)
 #undef DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION
+#undef DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION_WITH_SPACE
 
 template <GateImpl T>
 class GatePtr {
@@ -278,22 +306,21 @@ private:
 
 public:
     constexpr static Precision Prec = T::Prec;
-    constexpr static ExecutionSpace Space = T::Space;
     using FloatType = Float<Prec>;
     using ComplexType = Complex<Prec>;
-    GatePtr() : _gate_ptr(nullptr), _gate_type(get_gate_type<T, Prec, Space>()) {}
+    GatePtr() : _gate_ptr(nullptr), _gate_type(get_gate_type<T, Prec>()) {}
     template <GateImpl U>
     GatePtr(const std::shared_ptr<const U>& gate_ptr) {
         if constexpr (std::is_same_v<T, U>) {
-            _gate_type = get_gate_type<T, Prec, Space>();
+            _gate_type = get_gate_type<T, Prec>();
             _gate_ptr = gate_ptr;
-        } else if constexpr (std::is_same_v<T, GateBase<Prec, Space>>) {
+        } else if constexpr (std::is_same_v<T, GateBase<Prec>>) {
             // upcast
-            _gate_type = get_gate_type<U, Prec, Space>();
+            _gate_type = get_gate_type<U, Prec>();
             _gate_ptr = std::static_pointer_cast<const T>(gate_ptr);
         } else {
             // downcast
-            _gate_type = get_gate_type<T, Prec, Space>();
+            _gate_type = get_gate_type<T, Prec>();
             if (!(_gate_ptr = std::dynamic_pointer_cast<const T>(gate_ptr))) {
                 throw std::runtime_error("invalid gate cast");
             }
@@ -304,13 +331,13 @@ public:
         if constexpr (std::is_same_v<T, U>) {
             _gate_type = gate._gate_type;
             _gate_ptr = gate._gate_ptr;
-        } else if constexpr (std::is_same_v<T, GateBase<Prec, Space>>) {
+        } else if constexpr (std::is_same_v<T, GateBase<Prec>>) {
             // upcast
             _gate_type = gate._gate_type;
             _gate_ptr = std::static_pointer_cast<const T>(gate._gate_ptr);
         } else {
             // downcast
-            if (gate._gate_type != get_gate_type<T, Prec, Space>()) {
+            if (gate._gate_type != get_gate_type<T, Prec>()) {
                 throw std::runtime_error("invalid gate cast");
             }
             _gate_type = gate._gate_type;
@@ -338,131 +365,139 @@ public:
         std::string type = j.at("type");
 
         // clang-format off
-        if (type == "I") gate = GetGateFromJson<IGateImpl<Prec, Space>>::get(j);
-        else if (type == "GlobalPhase") gate = GetGateFromJson<GlobalPhaseGateImpl<Prec, Space>>::get(j);
-        else if (type == "X") gate = GetGateFromJson<XGateImpl<Prec, Space>>::get(j);
-        else if (type == "Y") gate = GetGateFromJson<YGateImpl<Prec, Space>>::get(j);
-        else if (type == "Z") gate = GetGateFromJson<ZGateImpl<Prec, Space>>::get(j);
-        else if (type == "H") gate = GetGateFromJson<HGateImpl<Prec, Space>>::get(j);
-        else if (type == "S") gate = GetGateFromJson<SGateImpl<Prec, Space>>::get(j);
-        else if (type == "Sdag") gate = GetGateFromJson<SdagGateImpl<Prec, Space>>::get(j);
-        else if (type == "T") gate = GetGateFromJson<TGateImpl<Prec, Space>>::get(j);
-        else if (type == "Tdag") gate = GetGateFromJson<TdagGateImpl<Prec, Space>>::get(j);
-        else if (type == "SqrtX") gate = GetGateFromJson<SqrtXGateImpl<Prec, Space>>::get(j);
-        else if (type == "SqrtXdag") gate = GetGateFromJson<SqrtXdagGateImpl<Prec, Space>>::get(j);
-        else if (type == "SqrtY") gate = GetGateFromJson<SqrtYGateImpl<Prec, Space>>::get(j);
-        else if (type == "SqrtYdag") gate = GetGateFromJson<SqrtYdagGateImpl<Prec, Space>>::get(j);
-        else if (type == "RX") gate = GetGateFromJson<RXGateImpl<Prec, Space>>::get(j);
-        else if (type == "RY") gate = GetGateFromJson<RYGateImpl<Prec, Space>>::get(j);
-        else if (type == "RZ") gate = GetGateFromJson<RZGateImpl<Prec, Space>>::get(j);
-        else if (type == "U1") gate = GetGateFromJson<U1GateImpl<Prec, Space>>::get(j);
-        else if (type == "U2") gate = GetGateFromJson<U2GateImpl<Prec, Space>>::get(j);
-        else if (type == "U3") gate = GetGateFromJson<U3GateImpl<Prec, Space>>::get(j);
-        else if (type == "Swap") gate = GetGateFromJson<SwapGateImpl<Prec, Space>>::get(j);
-        else if (type == "Pauli") gate = GetGateFromJson<PauliGateImpl<Prec, Space>>::get(j);
-        else if (type == "PauliRotation") gate = GetGateFromJson<PauliRotationGateImpl<Prec, Space>>::get(j);
-        else if (type == "Probabilistic") gate = GetGateFromJson<ProbabilisticGateImpl<Prec, Space>>::get(j);
+        if (type == "I") gate = GetGateFromJson<IGateImpl<Prec>>::get(j);
+        else if (type == "GlobalPhase") gate = GetGateFromJson<GlobalPhaseGateImpl<Prec>>::get(j);
+        else if (type == "X") gate = GetGateFromJson<XGateImpl<Prec>>::get(j);
+        else if (type == "Y") gate = GetGateFromJson<YGateImpl<Prec>>::get(j);
+        else if (type == "Z") gate = GetGateFromJson<ZGateImpl<Prec>>::get(j);
+        else if (type == "H") gate = GetGateFromJson<HGateImpl<Prec>>::get(j);
+        else if (type == "S") gate = GetGateFromJson<SGateImpl<Prec>>::get(j);
+        else if (type == "Sdag") gate = GetGateFromJson<SdagGateImpl<Prec>>::get(j);
+        else if (type == "T") gate = GetGateFromJson<TGateImpl<Prec>>::get(j);
+        else if (type == "Tdag") gate = GetGateFromJson<TdagGateImpl<Prec>>::get(j);
+        else if (type == "SqrtX") gate = GetGateFromJson<SqrtXGateImpl<Prec>>::get(j);
+        else if (type == "SqrtXdag") gate = GetGateFromJson<SqrtXdagGateImpl<Prec>>::get(j);
+        else if (type == "SqrtY") gate = GetGateFromJson<SqrtYGateImpl<Prec>>::get(j);
+        else if (type == "SqrtYdag") gate = GetGateFromJson<SqrtYdagGateImpl<Prec>>::get(j);
+        else if (type == "RX") gate = GetGateFromJson<RXGateImpl<Prec>>::get(j);
+        else if (type == "RY") gate = GetGateFromJson<RYGateImpl<Prec>>::get(j);
+        else if (type == "RZ") gate = GetGateFromJson<RZGateImpl<Prec>>::get(j);
+        else if (type == "U1") gate = GetGateFromJson<U1GateImpl<Prec>>::get(j);
+        else if (type == "U2") gate = GetGateFromJson<U2GateImpl<Prec>>::get(j);
+        else if (type == "U3") gate = GetGateFromJson<U3GateImpl<Prec>>::get(j);
+        else if (type == "Swap") gate = GetGateFromJson<SwapGateImpl<Prec>>::get(j);
+        else if (type == "Pauli") gate = GetGateFromJson<PauliGateImpl<Prec>>::get(j);
+        else if (type == "PauliRotation") gate = GetGateFromJson<PauliRotationGateImpl<Prec>>::get(j);
+        else if (type == "Probabilistic") gate = GetGateFromJson<ProbabilisticGateImpl<Prec>>::get(j);
         // clang-format on
     }
 };
 
 }  // namespace internal
 
-template <Precision Prec, ExecutionSpace Space>
-using Gate = internal::GatePtr<internal::GateBase<Prec, Space>>;
+template <Precision Prec>
+using Gate = internal::GatePtr<internal::GateBase<Prec>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-#define DEF_GATE_BASE(GATE_TYPE, PREC, SPACE, DESCRIPTION)                                         \
-    nb::class_<GATE_TYPE<PREC, SPACE>>(m, #GATE_TYPE, DESCRIPTION)                                 \
-        .def(nb::init<Gate<PREC, SPACE>>(), "Downcast from Gate.")                                 \
-        .def("gate_type", &GATE_TYPE<PREC, SPACE>::gate_type, "Get gate type as `GateType` enum.") \
-        .def(                                                                                      \
-            "target_qubit_list",                                                                   \
-            [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->target_qubit_list(); },          \
-            "Get target qubits as `list[int]`. **Control qubits are not included.**")              \
-        .def(                                                                                      \
-            "control_qubit_list",                                                                  \
-            [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->control_qubit_list(); },         \
-            "Get control qubits as `list[int]`.")                                                  \
-        .def(                                                                                      \
-            "control_value_list",                                                                  \
-            [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->control_value_list(); },         \
-            "Get control values as `list[int]`.")                                                  \
-        .def(                                                                                      \
-            "operand_qubit_list",                                                                  \
-            [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->operand_qubit_list(); },         \
-            "Get target and control qubits as `list[int]`.")                                       \
-        .def(                                                                                      \
-            "target_qubit_mask",                                                                   \
-            [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->target_qubit_mask(); },          \
-            "Get target qubits as mask. **Control qubits are not included.**")                     \
-        .def(                                                                                      \
-            "control_qubit_mask",                                                                  \
-            [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->control_qubit_mask(); },         \
-            "Get control qubits as mask.")                                                         \
-        .def(                                                                                      \
-            "control_value_mask",                                                                  \
-            [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->control_value_mask(); },         \
-            "Get control values as mask.")                                                         \
-        .def(                                                                                      \
-            "operand_qubit_mask",                                                                  \
-            [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->operand_qubit_mask(); },         \
-            "Get target and control qubits as mask.")                                              \
-        .def(                                                                                      \
-            "get_inverse",                                                                         \
-            [](const GATE_TYPE<PREC, SPACE>& gate) {                                               \
-                auto inv = gate->get_inverse();                                                    \
-                if (!inv) nb::none();                                                              \
-                return Gate<PREC, SPACE>(inv);                                                     \
-            },                                                                                     \
-            "Generate inverse gate as `Gate` type. If not exists, return None.")                   \
-        .def(                                                                                      \
-            "update_quantum_state",                                                                \
-            [](const GATE_TYPE<PREC, SPACE>& gate, StateVector<PREC, SPACE>& state_vector) {       \
-                gate->update_quantum_state(state_vector);                                          \
-            },                                                                                     \
-            "state_vector"_a,                                                                      \
-            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")           \
-        .def(                                                                                      \
-            "update_quantum_state",                                                                \
-            [](const GATE_TYPE<PREC, SPACE>& gate, StateVectorBatched<PREC, SPACE>& states) {      \
-                gate->update_quantum_state(states);                                                \
-            },                                                                                     \
-            "states"_a,                                                                            \
-            "Apply gate to `states`. `states` in args is directly updated.")                       \
-        .def(                                                                                      \
-            "get_matrix",                                                                          \
-            [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->get_matrix(); },                 \
-            "Get matrix representation of the gate.")                                              \
-        .def(                                                                                      \
-            "to_string",                                                                           \
-            [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->to_string(""); },                \
-            "Get string representation of the gate.")                                              \
-        .def(                                                                                      \
-            "__str__",                                                                             \
-            [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->to_string(""); },                \
-            "Get string representation of the gate.")                                              \
-        .def(                                                                                      \
-            "to_json",                                                                             \
-            [](const GATE_TYPE<PREC, SPACE>& gate) { return Json(gate).dump(); },                  \
-            "Get JSON representation of the gate.")                                                \
-        .def(                                                                                      \
-            "load_json",                                                                           \
-            [](GATE_TYPE<PREC, SPACE>& gate, const std::string& str) {                             \
-                gate = nlohmann::json::parse(str);                                                 \
-            },                                                                                     \
-            "json_str"_a,                                                                          \
-            "Read an object from the JSON representation of the gate.")
-#define DEF_GATE(GATE_TYPE, PRECISION, SPACE, DESCRIPTION, GATE_BASE_DEF)                        \
-    GATE_BASE_DEF.def(nb::init<GATE_TYPE<PRECISION, SPACE>>(), "Upcast from `" #GATE_TYPE "`."); \
-    DEF_GATE_BASE(                                                                               \
-        GATE_TYPE,                                                                               \
-        PRECISION,                                                                               \
-        SPACE,                                                                                   \
-        DESCRIPTION                                                                              \
-        "\n\nNotes\n\tUpcast is required to use gate-general functions (ex: add to Circuit).")   \
-        .def(nb::init<Gate<PRECISION, SPACE>>())
+template <typename GateT, Precision Prec>
+void register_gate_common_methods(nb::class_<GateT>& c) {
+    using namespace nb::literals;
+
+    c.def(nb::init<GateT>(), "Downcast from Gate.")
+        .def("gate_type", &GateT::gate_type, "Get gate type as `GateType` enum.")
+        .def(
+            "target_qubit_list",
+            [](const GateT& gate) { return gate->target_qubit_list(); },
+            "Get target qubits as `list[int]`. **Control qubits are not included.**")
+        .def(
+            "control_qubit_list",
+            [](const GateT& gate) { return gate->control_qubit_list(); },
+            "Get control qubits as `list[int]`.")
+        .def(
+            "control_value_list",
+            [](const GateT& gate) { return gate->control_value_list(); },
+            "Get control values as `list[int]`.")
+        .def(
+            "operand_qubit_list",
+            [](const GateT& gate) { return gate->operand_qubit_list(); },
+            "Get target and control qubits as `list[int]`.")
+        .def(
+            "target_qubit_mask",
+            [](const GateT& gate) { return gate->target_qubit_mask(); },
+            "Get target qubits as mask. **Control qubits are not included.**")
+        .def(
+            "control_qubit_mask",
+            [](const GateT& gate) { return gate->control_qubit_mask(); },
+            "Get control qubits as mask.")
+        .def(
+            "control_value_mask",
+            [](const GateT& gate) { return gate->control_value_mask(); },
+            "Get control values as mask.")
+        .def(
+            "operand_qubit_mask",
+            [](const GateT& gate) { return gate->operand_qubit_mask(); },
+            "Get target and control qubits as mask.")
+        .def(
+            "get_inverse",
+            [](const GateT& gate) -> nb::object {
+                auto inv = gate->get_inverse();
+                if (!inv) return nb::none();
+                return nb::cast(Gate<Prec>(inv));
+            },
+            "Generate inverse gate as `Gate` type. If not exists, return None.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate, StateVector<Prec, ExecutionSpace::Host>& state_vector) {
+                gate->update_quantum_state(state_vector);
+            },
+            "state_vector"_a,
+            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::Host>& states) {
+                gate->update_quantum_state(states);
+            },
+            "states"_a,
+            "Apply gate to `states`. `states` in args is directly updated.")
+#ifdef SCALUQ_USE_CUDA
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate, StateVector<Prec, ExecutionSpace::Default>& state_vector) {
+                gate->update_quantum_state(state_vector);
+            },
+            "state_vector"_a,
+            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::Default>& states) {
+                gate->update_quantum_state(states);
+            },
+            "states"_a,
+            "Apply gate to `states`. `states` in args is directly updated.")
+#endif  // SCALUQ_USE_CUDA
+        .def(
+            "get_matrix",
+            [](const GateT& gate) { return gate->get_matrix(); },
+            "Get matrix representation of the gate.")
+        .def(
+            "to_string",
+            [](const GateT& gate) { return gate->to_string(""); },
+            "Get string representation of the gate.")
+        .def(
+            "__str__",
+            [](const GateT& gate) { return gate->to_string(""); },
+            "Get string representation of the gate.")
+        .def(
+            "to_json",
+            [](const GateT& gate) { return Json(gate).dump(); },
+            "Get JSON representation of the gate.")
+        .def(
+            "load_json",
+            [](GateT& gate, const std::string& str) { gate = nlohmann::json::parse(str); },
+            "json_str"_a,
+            "Read an object from the JSON representation of the gate.");
+}
 
 void bind_gate_gate_hpp_without_precision_and_space(nb::module_& m) {
     nb::enum_<GateType>(m, "GateType", "Enum of Gate Type.")
@@ -496,14 +531,32 @@ void bind_gate_gate_hpp_without_precision_and_space(nb::module_& m) {
         .value("Probabilistic", GateType::Probabilistic);
 }
 
-template <Precision Prec, ExecutionSpace Space>
-nb::class_<Gate<Prec, Space>> bind_gate_gate_hpp(nb::module_& m) {
-    return DEF_GATE_BASE(Gate,
-                         Prec,
-                         Space,
-                         "General class of QuantumGate.\n\nNotes\n\tDowncast to required to use "
-                         "gate-specific functions.")
-        .def(nb::init<Gate<Prec, Space>>(), "Just copy shallowly.");
+template <Precision Prec>
+nb::class_<Gate<Prec>> bind_gate_gate_hpp(nb::module_& m) {
+    using BaseGateT = Gate<Prec>;
+    const char* description =
+        "General class of QuantumGate.\n\nNotes\n\t"
+        "Downcast to required to use gate-specific functions.";
+    auto c = nb::class_<BaseGateT>(m, "Gate", description);
+    register_gate_common_methods<BaseGateT, Prec>(c);
+    c.def(nb::init<BaseGateT>(), "Just copy shallowly.");
+    return c;
+}
+
+template <typename SpecificGateT, Precision Prec>
+nb::class_<SpecificGateT> bind_specific_gate(nb::module_& m,
+                                             nb::class_<Gate<Prec>>& base_class,
+                                             const char* name,
+                                             const char* description) {
+    using BaseGateT = Gate<Prec>;
+    base_class.def(nb::init<SpecificGateT>(), ("Upcast from `" + std::string(name) + "`.").c_str());
+    std::string full_description = std::string(description) +
+                                   "\n\nNotes\n\tUpcast is required to use gate-general functions "
+                                   "(ex: add to Circuit).";
+    auto c = nb::class_<SpecificGateT>(m, name, full_description.c_str());
+    register_gate_common_methods<SpecificGateT, Prec>(c);
+    c.def(nb::init<BaseGateT>());
+    return c;
 }
 }  // namespace internal
 #endif

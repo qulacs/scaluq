@@ -9,28 +9,35 @@
 namespace scaluq {
 namespace internal {
 
-template <Precision Prec, ExecutionSpace Space>
-class PauliGateImpl : public GateBase<Prec, Space> {
-    const PauliOperator<Prec, Space> _pauli;
+template <Precision Prec>
+class PauliGateImpl : public GateBase<Prec> {
+    const PauliOperator<Prec> _pauli;
 
 public:
     PauliGateImpl(std::uint64_t control_mask,
                   std::uint64_t control_value_mask,
-                  const PauliOperator<Prec, Space>& pauli)
-        : GateBase<Prec, Space>(
+                  const PauliOperator<Prec>& pauli)
+        : GateBase<Prec>(
               vector_to_mask<false>(pauli.target_qubit_list()), control_mask, control_value_mask),
           _pauli(pauli) {}
 
-    PauliOperator<Prec, Space> pauli() const { return _pauli; };
+    PauliOperator<Prec> pauli() const { return _pauli; };
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
 
-    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
+    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
     ComplexMatrix get_matrix() const override { return this->_pauli.get_matrix(); }
 
-    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::Host>& states) const override;
+#ifdef SCALUQ_USE_CUDA
+    void update_quantum_state(
+        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+    void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::Default>& states) const override;
+#endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
 
@@ -42,34 +49,41 @@ public:
     }
 };
 
-template <Precision Prec, ExecutionSpace Space>
-class PauliRotationGateImpl : public GateBase<Prec, Space> {
-    const PauliOperator<Prec, Space> _pauli;
+template <Precision Prec>
+class PauliRotationGateImpl : public GateBase<Prec> {
+    const PauliOperator<Prec> _pauli;
     const Float<Prec> _angle;
 
 public:
     PauliRotationGateImpl(std::uint64_t control_mask,
                           std::uint64_t control_value_mask,
-                          const PauliOperator<Prec, Space>& pauli,
+                          const PauliOperator<Prec>& pauli,
                           Float<Prec> angle)
-        : GateBase<Prec, Space>(
+        : GateBase<Prec>(
               vector_to_mask<false>(pauli.target_qubit_list()), control_mask, control_value_mask),
           _pauli(pauli),
           _angle(angle) {}
 
-    PauliOperator<Prec, Space> pauli() const { return _pauli; }
+    PauliOperator<Prec> pauli() const { return _pauli; }
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
     double angle() const { return static_cast<double>(_angle); }
 
-    std::shared_ptr<const GateBase<Prec, Space>> get_inverse() const override {
-        return std::make_shared<const PauliRotationGateImpl<Prec, Space>>(
+    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
+        return std::make_shared<const PauliRotationGateImpl<Prec>>(
             this->_control_mask, this->_control_value_mask, _pauli, -_angle);
     }
 
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, Space>& state_vector) const override;
-    void update_quantum_state(StateVectorBatched<Prec, Space>& states) const override;
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::Host>& states) const override;
+#ifdef SCALUQ_USE_CUDA
+    void update_quantum_state(
+        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+    void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::Default>& states) const override;
+#endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
 
@@ -83,28 +97,28 @@ public:
 };
 }  // namespace internal
 
-template <Precision Prec, ExecutionSpace Space>
-using PauliGate = internal::GatePtr<internal::PauliGateImpl<Prec, Space>>;
-template <Precision Prec, ExecutionSpace Space>
-using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl<Prec, Space>>;
+template <Precision Prec>
+using PauliGate = internal::GatePtr<internal::PauliGateImpl<Prec>>;
+template <Precision Prec>
+using PauliRotationGate = internal::GatePtr<internal::PauliRotationGateImpl<Prec>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <Precision Prec, ExecutionSpace Space>
-void bind_gate_gate_pauli_hpp(nb::module_& m, nb::class_<Gate<Prec, Space>>& gate_base_def) {
-    DEF_GATE(PauliGate,
-             Prec,
-             Space,
-             "Specific class of multi-qubit pauli gate, which applies single-qubit Pauli "
-             "gate to "
-             "each of qubit.",
-             gate_base_def);
-    DEF_GATE(PauliRotationGate,
-             Prec,
-             Space,
-             "Specific class of multi-qubit pauli-rotation gate, represented as "
-             "$e^{-i\\frac{\\theta}{2}P}$.",
-             gate_base_def);
+template <Precision Prec>
+void bind_gate_gate_pauli_hpp(nb::module_& m, nb::class_<Gate<Prec>>& gate_base_def) {
+    bind_specific_gate<PauliGate<Prec>, Prec>(
+        m,
+        gate_base_def,
+        "PauliGate",
+        "Specific class of multi-qubit pauli gate, which applies single-qubit Pauli "
+        "gate to "
+        "each of qubit.");
+    bind_specific_gate<PauliRotationGate<Prec>, Prec>(
+        m,
+        gate_base_def,
+        "PauliRotationGate",
+        "Specific class of multi-qubit pauli-rotation gate, represented as "
+        "$e^{-i\\frac{\\theta}{2}P}$.");
 }
 }  // namespace internal
 #endif

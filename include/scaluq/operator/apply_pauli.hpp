@@ -1,12 +1,18 @@
-#include "apply_pauli.hpp"
+#pragma once
 
-#include <scaluq/constant.hpp>
-
-#include "../prec_space.hpp"
+#include "../constant.hpp"
+#include "../state/state_vector.hpp"
+#include "../state/state_vector_batched.hpp"
 #include "../util/math.hpp"
 
+namespace scaluq {
+template <Precision Prec>
+struct PauliOperator;
+}
+
 namespace scaluq::internal {
-template <>
+
+template <Precision Prec, ExecutionSpace Space>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t control_value_mask,
                  std::uint64_t bit_flip_mask,
@@ -48,8 +54,7 @@ void apply_pauli(std::uint64_t control_mask,
             state_vector._raw[basis_1] = tmp1 * coef;
         });
 }
-
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t control_value_mask,
                  std::uint64_t bit_flip_mask,
@@ -92,10 +97,10 @@ void apply_pauli(std::uint64_t control_mask,
         });
 }
 
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t control_value_mask,
-                 const Kokkos::View<PauliOperator<Prec, Space>*, SpaceType<Space>>& ops,
+                 const Kokkos::View<PauliOperator<Prec>*, SpaceType<Space>>& ops,
                  StateVectorBatched<Prec, Space>& states) {
     std::uint64_t dim = states.dim();
     Kokkos::parallel_for(
@@ -141,11 +146,10 @@ void apply_pauli(std::uint64_t control_mask,
             }
         });
 }
-
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t control_value_mask,
-                 const Kokkos::View<PauliOperator<Prec, Space>*, SpaceType<Space>>& ops,
+                 const Kokkos::View<PauliOperator<Prec>*, SpaceType<Space>>& ops,
                  const Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>& row_ptr,
                  StateVectorBatched<Prec, Space>& states,
                  std::uint64_t batch_size) {
@@ -208,8 +212,7 @@ void apply_pauli(std::uint64_t control_mask,
             });
     states = results;
 }
-
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t control_value_mask,
                           std::uint64_t bit_flip_mask,
@@ -239,38 +242,37 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                 }
             });
         return;
-    } else {
-        std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
-        Kokkos::parallel_for(
-            "apply_pauli_rotation",
-            Kokkos::RangePolicy<SpaceType<Space>>(
-                0, state_vector.dim() >> (std::popcount(control_mask) + 1)),
-            KOKKOS_LAMBDA(std::uint64_t i) {
-                std::uint64_t basis_0 =
-                    internal::insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
-                    control_value_mask;
-                std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-
-                int bit_parity_0 = Kokkos::popcount(basis_0 & phase_flip_mask) & 1;
-                int bit_parity_1 = Kokkos::popcount(basis_1 & phase_flip_mask) & 1;
-
-                // fetch values
-                Complex<Prec> cval_0 = state_vector._raw[basis_0];
-                Complex<Prec> cval_1 = state_vector._raw[basis_1];
-
-                // set values
-                state_vector._raw[basis_0] =
-                    cosval * cval_0 +
-                    Complex<Prec>(0, 1) * sinval * cval_1 *
-                        PHASE_M90ROT<Prec>()[(global_phase_90_rot_count + bit_parity_0 * 2) % 4];
-                state_vector._raw[basis_1] =
-                    cosval * cval_1 +
-                    Complex<Prec>(0, 1) * sinval * cval_0 *
-                        PHASE_M90ROT<Prec>()[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
-            });
     }
+    std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
+    Kokkos::parallel_for(
+        "apply_pauli_rotation",
+        Kokkos::RangePolicy<SpaceType<Space>>(
+            0, state_vector.dim() >> (std::popcount(control_mask) + 1)),
+        KOKKOS_LAMBDA(std::uint64_t i) {
+            std::uint64_t basis_0 =
+                internal::insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
+                control_value_mask;
+            std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
+
+            int bit_parity_0 = Kokkos::popcount(basis_0 & phase_flip_mask) & 1;
+            int bit_parity_1 = Kokkos::popcount(basis_1 & phase_flip_mask) & 1;
+
+            // fetch values
+            Complex<Prec> cval_0 = state_vector._raw[basis_0];
+            Complex<Prec> cval_1 = state_vector._raw[basis_1];
+
+            // set values
+            state_vector._raw[basis_0] =
+                cosval * cval_0 +
+                Complex<Prec>(0, 1) * sinval * cval_1 *
+                    PHASE_M90ROT<Prec>()[(global_phase_90_rot_count + bit_parity_0 * 2) % 4];
+            state_vector._raw[basis_1] =
+                cosval * cval_1 +
+                Complex<Prec>(0, 1) * sinval * cval_0 *
+                    PHASE_M90ROT<Prec>()[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
+        });
 }
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t control_value_mask,
                           std::uint64_t bit_flip_mask,
@@ -299,38 +301,37 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                 }
             });
         return;
-    } else {
-        std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
-        Kokkos::parallel_for(
-            "apply_pauli_rotation",
-            Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-                {0, 0}, {states.batch_size(), states.dim() >> (std::popcount(control_mask) + 1)}),
-            KOKKOS_LAMBDA(const std::uint64_t batch_id, const std::uint64_t i) {
-                std::uint64_t basis_0 =
-                    internal::insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
-                    control_value_mask;
-                std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-
-                int bit_parity_0 = Kokkos::popcount(basis_0 & phase_flip_mask) & 1;
-                int bit_parity_1 = Kokkos::popcount(basis_1 & phase_flip_mask) & 1;
-
-                // fetch values
-                Complex<Prec> cval_0 = states._raw(batch_id, basis_0);
-                Complex<Prec> cval_1 = states._raw(batch_id, basis_1);
-
-                // set values
-                states._raw(batch_id, basis_0) =
-                    cosval * cval_0 +
-                    Complex<Prec>(0, 1) * sinval * cval_1 *
-                        PHASE_M90ROT<Prec>()[(global_phase_90_rot_count + bit_parity_0 * 2) % 4];
-                states._raw(batch_id, basis_1) =
-                    cosval * cval_1 +
-                    Complex<Prec>(0, 1) * sinval * cval_0 *
-                        PHASE_M90ROT<Prec>()[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
-            });
     }
+    std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
+    Kokkos::parallel_for(
+        "apply_pauli_rotation",
+        Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
+            {0, 0}, {states.batch_size(), states.dim() >> (std::popcount(control_mask) + 1)}),
+        KOKKOS_LAMBDA(const std::uint64_t batch_id, const std::uint64_t i) {
+            std::uint64_t basis_0 =
+                internal::insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
+                control_value_mask;
+            std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
+
+            int bit_parity_0 = Kokkos::popcount(basis_0 & phase_flip_mask) & 1;
+            int bit_parity_1 = Kokkos::popcount(basis_1 & phase_flip_mask) & 1;
+
+            // fetch values
+            Complex<Prec> cval_0 = states._raw(batch_id, basis_0);
+            Complex<Prec> cval_1 = states._raw(batch_id, basis_1);
+
+            // set values
+            states._raw(batch_id, basis_0) =
+                cosval * cval_0 +
+                Complex<Prec>(0, 1) * sinval * cval_1 *
+                    PHASE_M90ROT<Prec>()[(global_phase_90_rot_count + bit_parity_0 * 2) % 4];
+            states._raw(batch_id, basis_1) =
+                cosval * cval_1 +
+                Complex<Prec>(0, 1) * sinval * cval_0 *
+                    PHASE_M90ROT<Prec>()[(global_phase_90_rot_count + bit_parity_1 * 2) % 4];
+        });
 }
-template <>
+template <Precision Prec, ExecutionSpace Space>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t control_value_mask,
                           std::uint64_t bit_flip_mask,

@@ -16,11 +16,11 @@ std::pair<OperatorBatched<Prec, Space>, std::vector<Operator<Prec, Space>>>
 generate_random_observable(int n) {
     Random random;
     std::uint64_t batch_size = random.int32() % 5 + 1;
-    std::vector<std::vector<PauliOperator<Prec, Space>>> rand_observable;
+    std::vector<std::vector<PauliOperator<Prec>>> rand_observable;
     std::vector<Operator<Prec, Space>> test_rand_observable;
 
     for (std::uint64_t b = 0; b < batch_size; ++b) {
-        std::vector<PauliOperator<Prec, Space>> ops;
+        std::vector<PauliOperator<Prec>> ops;
         std::uint64_t term_count = random.int32() % 10 + 1;
         for (std::uint64_t term = 0; term < term_count; ++term) {
             std::vector<std::uint64_t> paulis(n, 0);
@@ -42,7 +42,7 @@ generate_random_observable(int n) {
                     str += " " + std::to_string(ind);
                 }
             }
-            ops.push_back(PauliOperator<Prec, Space>(str.c_str(), coef));
+            ops.push_back(PauliOperator<Prec>(str.c_str(), coef));
         }
         rand_observable.push_back(ops);
         test_rand_observable.push_back(Operator<Prec, Space>(ops));

@@ -1,7 +1,11 @@
 #pragma once
 
 #include <type_traits>
-#ifndef SCALUQ_USE_CUDA
+
+#ifdef SCALUQ_USE_CUDA
+#include <cuda_bf16.h>
+#include <cuda_fp16.h>
+#else
 #include <iostream>
 #include <stdfloat>
 #endif
@@ -18,7 +22,6 @@ template <typename T>
 struct IsFloatingPoint : public std::false_type {};
 #ifdef SCALUQ_FLOAT16
 #ifdef SCALUQ_USE_CUDA
-#include <cuda_fp16.h>
 using F16 = __half;
 #else
 #ifndef __STDCPP_FLOAT16_T__

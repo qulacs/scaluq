@@ -7,20 +7,27 @@ namespace scaluq {
 
 namespace internal {
 
-template <Precision Prec, ExecutionSpace Space>
-class ParamRXGateImpl : public ParamGateBase<Prec, Space> {
+template <Precision Prec>
+class ParamRXGateImpl : public ParamGateBase<Prec> {
 public:
-    using ParamGateBase<Prec, Space>::ParamGateBase;
+    using ParamGateBase<Prec>::ParamGateBase;
 
-    std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override {
-        return std::make_shared<const ParamRXGateImpl<Prec, Space>>(
+    std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const override {
+        return std::make_shared<const ParamRXGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_pcoef);
     }
     ComplexMatrix get_matrix(double param) const override;
 
-    void update_quantum_state(StateVector<Prec, Space>& state_vector, double param) const override;
-    void update_quantum_state(StateVectorBatched<Prec, Space>& states,
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector,
+                              double param) const override;
+    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Host>& states,
                               std::vector<double> params) const override;
+#ifdef SCALUQ_USE_CUDA
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
+                              double param) const override;
+    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Default>& states,
+                              std::vector<double> params) const override;
+#endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
 
@@ -33,20 +40,27 @@ public:
     }
 };
 
-template <Precision Prec, ExecutionSpace Space>
-class ParamRYGateImpl : public ParamGateBase<Prec, Space> {
+template <Precision Prec>
+class ParamRYGateImpl : public ParamGateBase<Prec> {
 public:
-    using ParamGateBase<Prec, Space>::ParamGateBase;
+    using ParamGateBase<Prec>::ParamGateBase;
 
-    std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override {
-        return std::make_shared<const ParamRYGateImpl<Prec, Space>>(
+    std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const override {
+        return std::make_shared<const ParamRYGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_pcoef);
     }
     ComplexMatrix get_matrix(double param) const override;
 
-    void update_quantum_state(StateVector<Prec, Space>& state_vector, double param) const override;
-    void update_quantum_state(StateVectorBatched<Prec, Space>& states,
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector,
+                              double param) const override;
+    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Host>& states,
                               std::vector<double> params) const override;
+#ifdef SCALUQ_USE_CUDA
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
+                              double param) const override;
+    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Default>& states,
+                              std::vector<double> params) const override;
+#endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
 
@@ -59,20 +73,27 @@ public:
     }
 };
 
-template <Precision Prec, ExecutionSpace Space>
-class ParamRZGateImpl : public ParamGateBase<Prec, Space> {
+template <Precision Prec>
+class ParamRZGateImpl : public ParamGateBase<Prec> {
 public:
-    using ParamGateBase<Prec, Space>::ParamGateBase;
+    using ParamGateBase<Prec>::ParamGateBase;
 
-    std::shared_ptr<const ParamGateBase<Prec, Space>> get_inverse() const override {
-        return std::make_shared<const ParamRZGateImpl<Prec, Space>>(
+    std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const override {
+        return std::make_shared<const ParamRZGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_pcoef);
     }
     ComplexMatrix get_matrix(double param) const override;
 
-    void update_quantum_state(StateVector<Prec, Space>& state_vector, double param) const override;
-    void update_quantum_state(StateVectorBatched<Prec, Space>& states,
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector,
+                              double param) const override;
+    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Host>& states,
                               std::vector<double> params) const override;
+#ifdef SCALUQ_USE_CUDA
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
+                              double param) const override;
+    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Default>& states,
+                              std::vector<double> params) const override;
+#endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
 
@@ -87,39 +108,36 @@ public:
 
 }  // namespace internal
 
-template <Precision Prec, ExecutionSpace Space>
-using ParamRXGate = internal::ParamGatePtr<internal::ParamRXGateImpl<Prec, Space>>;
-template <Precision Prec, ExecutionSpace Space>
-using ParamRYGate = internal::ParamGatePtr<internal::ParamRYGateImpl<Prec, Space>>;
-template <Precision Prec, ExecutionSpace Space>
-using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl<Prec, Space>>;
+template <Precision Prec>
+using ParamRXGate = internal::ParamGatePtr<internal::ParamRXGateImpl<Prec>>;
+template <Precision Prec>
+using ParamRYGate = internal::ParamGatePtr<internal::ParamRYGateImpl<Prec>>;
+template <Precision Prec>
+using ParamRZGate = internal::ParamGatePtr<internal::ParamRZGateImpl<Prec>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
-template <Precision Prec, ExecutionSpace Space>
+template <Precision Prec>
 void bind_gate_param_gate_standard_hpp(nb::module_& m,
-                                       nb::class_<ParamGate<Prec, Space>>& param_gate_base_def) {
-    DEF_PARAM_GATE(
-        ParamRXGate,
-        Prec,
-        Space,
+                                       nb::class_<ParamGate<Prec>>& param_gate_base_def) {
+    bind_specific_param_gate<ParamRXGate<Prec>, Prec>(
+        m,
+        param_gate_base_def,
+        "ParamRXGate",
         "Specific class of parametric X rotation gate, represented as "
-        "$e^{-i\\frac{\\mathrm{\\theta}}{2}X}$. `theta` is given as `param * param_coef`.",
-        param_gate_base_def);
-    DEF_PARAM_GATE(
-        ParamRYGate,
-        Prec,
-        Space,
+        "$e^{-i\\frac{\\mathrm{\\theta}}{2}X}$. `theta` is given as `param * param_coef`.");
+    bind_specific_param_gate<ParamRYGate<Prec>, Prec>(
+        m,
+        param_gate_base_def,
+        "ParamRYGate",
         "Specific class of parametric Y rotation gate, represented as "
-        "$e^{-i\\frac{\\mathrm{\\theta}}{2}Y}$. `theta` is given as `param * param_coef`.",
-        param_gate_base_def);
-    DEF_PARAM_GATE(
-        ParamRZGate,
-        Prec,
-        Space,
+        "$e^{-i\\frac{\\mathrm{\\theta}}{2}Y}$. `theta` is given as `param * param_coef`.");
+    bind_specific_param_gate<ParamRZGate<Prec>, Prec>(
+        m,
+        param_gate_base_def,
+        "ParamRZGate",
         "Specific class of parametric Z rotation gate, represented as "
-        "$e^{-i\\frac{\\mathrm{\\theta}}{2}Z}$. `theta` is given as `param * param_coef`.",
-        param_gate_base_def);
+        "$e^{-i\\frac{\\mathrm{\\theta}}{2}Z}$. `theta` is given as `param * param_coef`.");
 }
 }  // namespace internal
 #endif
