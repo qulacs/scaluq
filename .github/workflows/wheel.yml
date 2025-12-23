@@ -119,10 +119,6 @@ jobs:
       
       - uses: actions/download-artifact@v4
         with:
-          name: cp39-${{ matrix.cibw-os-arch }}
-          path: ./cp39
-      - uses: actions/download-artifact@v4
-        with:
           name: cp310-${{ matrix.cibw-os-arch }}
           path: ./cp310
       - uses: actions/download-artifact@v4
@@ -137,6 +133,10 @@ jobs:
         with:
           name: cp313-${{ matrix.cibw-os-arch }}
           path: ./cp313
+      - uses: actions/download-artifact@v4
+        with:
+          name: cp314-${{ matrix.cibw-os-arch }}
+          path: ./cp314
 
       - name: Upload wheel data to PyPI if the Git tag is set
         run: for path in cp39 cp310 cp311 cp312 cp313; do python -m twine upload --skip-existing $path/*.whl
