@@ -198,6 +198,52 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "parameters"_a = std::map<std::string, double>{},
             "seed"_a = std::nullopt,
             "Simulate noise circuit. Return all the possible states and their counts.")
+        .def(
+            "update_quantum_state",
+            nb::overload_cast<StateVector<Prec, ExecutionSpace::HostSerialSpace>&,
+                              const std::map<std::string, double>&>(
+                &Circuit<Prec>::template update_quantum_state<ExecutionSpace::HostSerialSpace>,
+                nb::const_),
+            "state"_a,
+            "kwargs"_a,
+            "Apply gate to the StateVector. StateVector in args is directly updated. If the "
+            "circuit contains parametric gate, you have to give real value of parameter as "
+            "\"name=value\" format in kwargs.")
+        .def(
+            "update_quantum_state",
+            nb::overload_cast<StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>&,
+                              const std::map<std::string, std::vector<double>>&>(
+                &Circuit<Prec>::template update_quantum_state<ExecutionSpace::HostSerialSpace>,
+                nb::const_),
+            "state"_a,
+            "params"_a,
+            "Apply gate to the StateVectorBatched. StateVectorBatched in args is directly updated. "
+            "If the circuit contains parametric gate, you have to give real value of parameter as "
+            "dict[str, list[float]] in 2nd arg.")
+        .def("optimize",
+             nb::overload_cast<std::uint64_t>(
+                 &Circuit<Prec>::template optimize<ExecutionSpace::HostSerialSpace>),
+             "max_block_size"_a = 3,
+             "Optimize circuit. Create qubit dependency tree and merge neighboring gates if the "
+             "new gate has less than or equal to `max_block_size` or the new gate is Pauli.")
+        .def(
+            "simulate_noise",
+            [](const Circuit<Prec>& circuit,
+               const StateVector<Prec, ExecutionSpace::HostSerialSpace>& initial_state,
+               std::uint64_t sampling_count,
+               const std::map<std::string, double>& parameters,
+               std::optional<std::uint64_t> seed) {
+                return circuit.template simulate_noise<ExecutionSpace::HostSerialSpace>(
+                    initial_state,
+                    sampling_count,
+                    parameters,
+                    seed.value_or(std::random_device{}()));
+            },
+            "initial_state"_a,
+            "sampling_count"_a,
+            "parameters"_a = std::map<std::string, double>{},
+            "seed"_a = std::nullopt,
+            "Simulate noise circuit. Return all the possible states and their counts.")
 #ifdef SCALUQ_USE_CUDA
         .def("update_quantum_state",
              nb::overload_cast<StateVector<Prec, ExecutionSpace::Default>&,

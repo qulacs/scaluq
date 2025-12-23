@@ -297,6 +297,23 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
                std::vector<double> params) { gate->update_quantum_state(states, params); },
             "states"_a,
             "params"_a,
+            "updated.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate,
+               StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector,
+               double param) { gate->update_quantum_state(state_vector, param); },
+            "state"_a,
+            "param"_a,
+            "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is "
+            "directly updated.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate,
+               StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states,
+               std::vector<double> params) { gate->update_quantum_state(states, params); },
+            "states"_a,
+            "params"_a,
             "Apply gate to `states` with holding the parameters. `states` in args is directly "
             "updated.")
 #ifdef SCALUQ_USE_CUDA

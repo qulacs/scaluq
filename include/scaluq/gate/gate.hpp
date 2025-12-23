@@ -472,6 +472,21 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
             },
             "states"_a,
             "Apply gate to `states`. `states` in args is directly updated.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate, StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector) {
+                gate->update_quantum_state(state_vector);
+            },
+            "state_vector"_a,
+            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate,
+               StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states) {
+                gate->update_quantum_state(states);
+            },
+            "states"_a,
+            "Apply gate to `states`. `states` in args is directly updated.")
 #ifdef SCALUQ_USE_CUDA
         .def(
             "update_quantum_state",

@@ -18,3 +18,15 @@ print(circuit.calculate_depth()) # 2
 state = StateVector(nqubits)
 circuit.update_quantum_state(state, {})
 print(state) # (|00> + |11>)/sqrt(2)
+
+try:
+    from scaluq.host_serial.f64 import StateVector
+    print("Successfully imported StateVector from scaluq.host_serial.f64")
+    v = StateVector(2)
+    print(f"StateVector created: {v}")
+except ImportError as e:
+    print(f"ImportError: {e}")
+    exit(1)
+except Exception as e:
+    print(f"An error occurred: {e}")
+    exit(1)
