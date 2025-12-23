@@ -2,6 +2,10 @@
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/gate/merge_gate.hpp>
 #include <scaluq/gate/param_gate_factory.hpp>
+#include <scaluq/operator/operator.hpp>
+#include <scaluq/operator/operator_batched.hpp>
+#include <scaluq/state/state_vector.hpp>
+#include <scaluq/state/state_vector_batched.hpp>
 
 #include "../prec_space.hpp"
 
@@ -442,6 +446,21 @@ void Circuit<Prec, Space>::check_gate_is_valid(const ParamGate<Prec, Space>& gat
             throw std::runtime_error("Gate to be added to the circuit has invalid qubit range");
         }
     }
+}
+
+template <Precision Prec, ExecutionSpace Space>
+std::vector<double> Circuit<Prec, Space>::backprop_inner_product(
+    StateVector<Prec, Space>& bistate) {
+    std::vector<double> nablas(this->n_gates());
+    return nablas;
+}
+
+template <Precision Prec, ExecutionSpace Space>
+std::vector<double> Circuit<Prec, Space>::backprop(const Operator<Prec, Space>& obs) {
+    std::uint64_t n_qubits = this->n_qubits();
+    StateVector<Prec, Space> state(n_qubits);
+    obs->apply_to_state(state);
+    return backprop_inner_product(state);
 }
 
 template class Circuit<internal::Prec, internal::Space>;

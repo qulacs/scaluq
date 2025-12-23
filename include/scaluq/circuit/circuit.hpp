@@ -97,6 +97,11 @@ public:
         const std::map<std::string, double>& parameters = {},
         std::uint64_t seed = 0) const;
 
+    std::vector<double> Circuit<Prec, Space>::backprop_inner_product(
+        StateVector<Prec, Space>& bistate);
+
+    std::vector<double> Circuit<Prec, Space>::backprop(const Operator<Prec, Space>&);
+
 private:
     std::uint64_t _n_qubits;
 
