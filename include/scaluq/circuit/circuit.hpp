@@ -1,6 +1,8 @@
 #pragma once
 
+#include <map>
 #include <set>
+#include <string_view>
 #include <variant>
 
 #include "../gate/gate.hpp"
@@ -50,23 +52,12 @@ public:
     void add_circuit(const Circuit<Prec>& circuit);
     void add_circuit(Circuit<Prec>&& circuit);
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state,
+    template <ExecutionSpace Space>
+    void update_quantum_state(StateVector<Prec, Space>& state,
                               const std::map<std::string, double>& parameters = {}) const;
+    template <ExecutionSpace Space>
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& states,
-        const std::map<std::string, std::vector<double>>& parameters = {}) const;
-#ifdef SCALUQ_USE_CUDA
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state,
-                              const std::map<std::string, double>& parameters = {}) const;
-    void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& states,
-        const std::map<std::string, std::vector<double>>& parameters = {}) const;
-#endif  // SCALUQ_USE_CUDA
-
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::HostSerialSpace>& state,
-                              const std::map<std::string, double>& parameters = {}) const;
-    void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states,
+        StateVectorBatched<Prec, Space>& states,
         const std::map<std::string, std::vector<double>>& parameters = {}) const;
 
     Circuit copy() const;
@@ -167,7 +158,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def("update_quantum_state",
              nb::overload_cast<StateVector<Prec, ExecutionSpace::Host>&,
                                const std::map<std::string, double>&>(
-                 &Circuit<Prec>::update_quantum_state, nb::const_),
+                 &Circuit<Prec>::template update_quantum_state<ExecutionSpace::Host>, nb::const_),
              "state"_a,
              "kwargs"_a,
              "Apply gate to the StateVector. StateVector in args is directly updated. If the "
@@ -177,7 +168,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "update_quantum_state",
             nb::overload_cast<StateVectorBatched<Prec, ExecutionSpace::Host>&,
                               const std::map<std::string, std::vector<double>>&>(
-                &Circuit<Prec>::update_quantum_state, nb::const_),
+                &Circuit<Prec>::template update_quantum_state<ExecutionSpace::Host>, nb::const_),
             "state"_a,
             "params"_a,
             "Apply gate to the StateVectorBatched. StateVectorBatched in args is directly updated. "
@@ -211,7 +202,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def("update_quantum_state",
              nb::overload_cast<StateVector<Prec, ExecutionSpace::Default>&,
                                const std::map<std::string, double>&>(
-                 &Circuit<Prec>::update_quantum_state, nb::const_),
+                 &Circuit<Prec>::template update_quantum_state<ExecutionSpace::Default>, nb::const_),
              "state"_a,
              "kwargs"_a,
              "Apply gate to the StateVector. StateVector in args is directly updated. If the "
@@ -221,7 +212,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "update_quantum_state",
             nb::overload_cast<StateVectorBatched<Prec, ExecutionSpace::Default>&,
                               const std::map<std::string, std::vector<double>>&>(
-                &Circuit<Prec>::update_quantum_state, nb::const_),
+                &Circuit<Prec>::template update_quantum_state<ExecutionSpace::Default>, nb::const_),
             "state"_a,
             "params"_a,
             "Apply gate to the StateVectorBatched. StateVectorBatched in args is directly updated. "
