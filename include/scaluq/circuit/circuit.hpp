@@ -105,10 +105,13 @@ public:
         const std::map<std::string, double>& parameters = {},
         std::uint64_t seed = 0) const;
 
-    std::vector<double> Circuit<Prec, Space>::backprop_inner_product(
-        StateVector<Prec, Space>& bistate);
+    std::unordered_map<std::string, double> backprop_inner_product(
+        StateVector<Prec, Space>& state,
+        StateVector<Prec, Space>& bistate,
+        const std::map<std::string, double>& parameters);
 
-    std::vector<double> Circuit<Prec, Space>::backprop(const Operator<Prec, Space>&);
+    std::unordered_map<std::string, double> backprop(
+        const Operator<Prec, Space>& observable, const std::map<std::string, double>& parameters);
 
 private:
     std::uint64_t _n_qubits;
