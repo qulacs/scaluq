@@ -553,9 +553,9 @@ std::unordered_map<std::string, double> Circuit<Prec>::backprop_inner_product(
         if (cur_gate.index() == 0) {
             const auto& g = std::get<0>(cur_gate);
 
-            auto inv = g.get_inverse();
-            inv.update_quantum_state(bistate);
-            inv.update_quantum_state(state);
+            auto inv = g->get_inverse();
+            inv->update_quantum_state(bistate);
+            inv->update_quantum_state(state);
         } else {
             const auto& [pgate, key] = std::get<1>(cur_gate);
 
