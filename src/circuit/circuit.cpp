@@ -449,18 +449,75 @@ void Circuit<Prec, Space>::check_gate_is_valid(const ParamGate<Prec, Space>& gat
 }
 
 template <Precision Prec, ExecutionSpace Space>
-std::vector<double> Circuit<Prec, Space>::backprop_inner_product(
-    StateVector<Prec, Space>& bistate) {
-    std::vector<double> nablas(this->n_gates());
-    return nablas;
+std::unordered_map<std::string, double> Circuit<Prec, Space>::backprop_inner_product(
+    StateVector<Prec, Space>& state,
+    StateVector<Prec, Space>& bistate,
+    const std::map<std::string, double>& parameters) {
+    const std::uint64_t n_qubits = this->n_qubits();
+
+    const std::uint64_t n_gates = this->n_gates();
+
+    std::unordered_map<std::string, double> gradients;
+    const auto& key_set = this->key_set();
+    gradients.reserve(key_set.size());
+    for (const auto& key : key_set) {
+        gradients.emplace(key, 0.0);
+    }
+
+    StateVector<Prec, Space> Astate(n_qubits);
+
+    for (std::int64_t i = static_cast<std::int64_t>(n_gates) - 1; i >= 0; i--) {
+        const auto& cur_gate = this->get_gate_at(static_cast<std::uint64_t>(i));
+
+        if (cur_gate.index() == 1) {
+            const auto& [pgate, key] = std::get<1>(cur_gate);
+
+            Astate = state;
+            const double pcoef = pgate->param_coef();
+            if (pcoef == 0.0) {
+                throw std::runtime_error("backprop_inner_product: param_coef is zero");
+            }
+            pgate->update_quantum_state(Astate, M_PI / pcoef);
+            const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
+            const double contrib = static_cast<double>(ip.real()) / 2.0;
+
+            gradients[key] += contrib;
+        }
+
+        if (cur_gate.index() == 0) {
+            const auto& g = std::get<0>(cur_gate);
+
+            auto inv = g.get_inverse();
+            inv.update_quantum_state(bistate);
+            inv.update_quantum_state(state);
+        } else {
+            const auto& [pgate, key] = std::get<1>(cur_gate);
+
+            auto inv = pgate->get_inverse();
+            const auto it = parameters.find(key);
+            if (it == parameters.end()) {
+                throw std::runtime_error("backprop_inner_product: missing parameter for key=" +
+                                         key);
+            }
+            const auto param = it->second;
+
+            inv->update_quantum_state(bistate, param);
+            inv->update_quantum_state(state, param);
+        }
+    }
+    return gradients;
 }
 
 template <Precision Prec, ExecutionSpace Space>
-std::vector<double> Circuit<Prec, Space>::backprop(const Operator<Prec, Space>& obs) {
-    std::uint64_t n_qubits = this->n_qubits();
+std::unordered_map<std::string, double> Circuit<Prec, Space>::backprop(
+    const Operator<Prec, Space>& obs, const std::map<std::string, double>& parameters) {
+    const std::uint64_t n_qubits = this->n_qubits();
     StateVector<Prec, Space> state(n_qubits);
-    obs->apply_to_state(state);
-    return backprop_inner_product(state);
+    this->update_quantum_state(state, parameters);
+
+    StateVector<Prec, Space> bistate = state;
+    obs.apply_to_state(bistate);
+    return backprop_inner_product(state, bistate, parameters);
 }
 
 template class Circuit<internal::Prec, internal::Space>;

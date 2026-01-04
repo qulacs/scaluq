@@ -97,10 +97,13 @@ public:
         const std::map<std::string, double>& parameters = {},
         std::uint64_t seed = 0) const;
 
-    std::vector<double> Circuit<Prec, Space>::backprop_inner_product(
-        StateVector<Prec, Space>& bistate);
+    std::unordered_map<std::string, double> backprop_inner_product(
+        StateVector<Prec, Space>& state,
+        StateVector<Prec, Space>& bistate,
+        const std::map<std::string, double>& parameters);
 
-    std::vector<double> Circuit<Prec, Space>::backprop(const Operator<Prec, Space>&);
+    std::unordered_map<std::string, double> backprop(
+        const Operator<Prec, Space>& observable, const std::map<std::string, double>& parameters);
 
 private:
     std::uint64_t _n_qubits;
@@ -223,6 +226,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def("simulate_noise",
              &Circuit<Prec, Space>::simulate_noise,
              "Simulate noise circuit. Return all the possible states and their counts.")
+        .def("backprop", &Circuit<Prec, Space>::backprop, "Back propagation.")
         .def(
             "to_json",
             [](const Circuit<Prec, Space>& circuit) { return Json(circuit).dump(); },
