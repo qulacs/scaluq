@@ -46,6 +46,8 @@ public:
 
     [[nodiscard]] StdComplex get_expectation_value(
         const StateVector<Prec, Space>& state_vector) const;
+    [[nodiscard]] std::vector<StdComplex> get_expectation_values(
+        const StateVector<Prec, Space>& state_vector) const;
     [[nodiscard]] std::vector<StdComplex> get_expectation_value(
         const StateVectorBatched<Prec, Space>& states) const;
 
@@ -180,6 +182,13 @@ void bind_operator_operator_hpp(nb::module_& m) {
             },
             "state"_a,
             "Get the expectation value of the operator with respect to a state vector.")
+        .def(
+            "get_expectation_values",
+            [](const Operator<Prec, Space>& op, const StateVector<Prec, Space>& state) {
+                return op.get_expectation_values(state);
+            },
+            "state"_a,
+            "Get the expectation values of the pauli operators with respect to a state vector.")
         .def(
             "get_expectation_value",
             [](const Operator<Prec, Space>& op, const StateVectorBatched<Prec, Space>& states) {
