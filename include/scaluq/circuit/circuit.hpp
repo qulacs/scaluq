@@ -212,6 +212,17 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "parameters"_a = std::map<std::string, double>{},
             "seed"_a = std::nullopt,
             "Simulate noise circuit. Return all the possible states and their counts.")
+        .def("backprop_inner_product",
+             &Circuit<Prec>::template backprop_inner_product<ExecutionSpace::Host>,
+             "state"_a,
+             "bistate"_a,
+             "parameters"_a,
+             "Compute gradients of inner product between state and bistate using back propagation.")
+        .def("backprop",
+             &Circuit<Prec>::template backprop<ExecutionSpace::Host>,
+             "observable"_a,
+             "parameters"_a,
+             "Compute gradients of expectation value of observable using back propagation.")
 #ifdef SCALUQ_USE_CUDA
         .def("update_quantum_state",
              nb::overload_cast<StateVector<Prec, ExecutionSpace::Default>&,
@@ -256,6 +267,17 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "parameters"_a = std::map<std::string, double>{},
             "seed"_a = std::nullopt,
             "Simulate noise circuit. Return all the possible states and their counts.")
+        .def("backprop_inner_product",
+             &Circuit<Prec>::template backprop_inner_product<ExecutionSpace::Default>,
+             "state"_a,
+             "bistate"_a,
+             "parameters"_a,
+             "Compute gradients of inner product between state and bistate using back propagation.")
+        .def("backprop",
+             &Circuit<Prec>::template backprop<ExecutionSpace::Default>,
+             "observable"_a,
+             "parameters"_a,
+             "Compute gradients of expectation value of observable using back propagation.")
 #endif  // SCALUQ_USE_CUDA
         .def("copy",
              &Circuit<Prec>::copy,
@@ -263,14 +285,6 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def("get_inverse",
              &Circuit<Prec>::get_inverse,
              "Get inverse of circuit. All the gates are newly created.")
-        .def("optimize",
-             &Circuit<Prec, Space>::optimize,
-             "max_block_size"_a = 3,
-             "Optimize circuit. Create qubit dependency tree and merge neighboring gates if the "
-             "new gate has less than or equal to `max_block_size` or the new gate is Pauli.")
-        .def("simulate_noise",
-             &Circuit<Prec, Space>::simulate_noise,
-             "Simulate noise circuit. Return all the possible states and their counts.")
         .def(
             "to_json",
             [](const Circuit<Prec>& circuit) { return Json(circuit).dump(); },
