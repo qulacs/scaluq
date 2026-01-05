@@ -7,6 +7,8 @@
 #include <scaluq/state/state_vector.hpp>
 #include <scaluq/state/state_vector_batched.hpp>
 
+#include "../prec_space.hpp"
+
 namespace scaluq {
 template <Precision Prec>
 std::set<std::string> Circuit<Prec>::key_set() const {

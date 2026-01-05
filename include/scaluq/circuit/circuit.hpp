@@ -260,6 +260,14 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def("get_inverse",
              &Circuit<Prec>::get_inverse,
              "Get inverse of circuit. All the gates are newly created.")
+        .def("optimize",
+             &Circuit<Prec, Space>::optimize,
+             "max_block_size"_a = 3,
+             "Optimize circuit. Create qubit dependency tree and merge neighboring gates if the "
+             "new gate has less than or equal to `max_block_size` or the new gate is Pauli.")
+        .def("simulate_noise",
+             &Circuit<Prec, Space>::simulate_noise,
+             "Simulate noise circuit. Return all the possible states and their counts.")
         .def(
             "to_json",
             [](const Circuit<Prec>& circuit) { return Json(circuit).dump(); },
