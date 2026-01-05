@@ -7,8 +7,6 @@
 #include <scaluq/state/state_vector.hpp>
 #include <scaluq/state/state_vector_batched.hpp>
 
-#include "../prec_space.hpp"
-
 namespace scaluq {
 template <Precision Prec>
 std::set<std::string> Circuit<Prec>::key_set() const {
@@ -575,6 +573,16 @@ std::unordered_map<std::string, double> Circuit<Prec>::backprop_inner_product(
     }
     return gradients;
 }
+template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop_inner_product(
+    StateVector<internal::Prec, ExecutionSpace::Host>& state,
+    StateVector<internal::Prec, ExecutionSpace::Host>& bistate,
+    const std::map<std::string, double>& parameters);
+#ifdef SCALUQ_USE_CUDA
+template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop_inner_product(
+    StateVector<internal::Prec, ExecutionSpace::Default>& state,
+    StateVector<internal::Prec, ExecutionSpace::Default>& bistate,
+    const std::map<std::string, double>& parameters);
+#endif  // SCALUQ_USE_CUDA
 
 template <Precision Prec>
 template <ExecutionSpace Space>
@@ -588,6 +596,14 @@ std::unordered_map<std::string, double> Circuit<Prec>::backprop(
     obs.apply_to_state(bistate);
     return backprop_inner_product(state, bistate, parameters);
 }
+template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop<
+    ExecutionSpace::Host>(const Operator<internal::Prec, ExecutionSpace::Host>& obs,
+                          const std::map<std::string, double>& parameters);
+#ifdef SCALUQ_USE_CUDA
+template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop<
+    ExecutionSpace::Default>(const Operator<internal::Prec, ExecutionSpace::Default>& obs,
+                             const std::map<std::string, double>& parameters);
+#endif  // SCALUQ_USE_CUDA
 
 template class Circuit<internal::Prec>;
 }  // namespace scaluq

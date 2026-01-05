@@ -5,6 +5,7 @@
 
 #include "../gate/gate.hpp"
 #include "../gate/param_gate.hpp"
+#include "../operator/operator.hpp"
 #include "../types.hpp"
 
 namespace scaluq {
@@ -105,11 +106,13 @@ public:
         const std::map<std::string, double>& parameters = {},
         std::uint64_t seed = 0) const;
 
+    template <ExecutionSpace Space>
     std::unordered_map<std::string, double> backprop_inner_product(
         StateVector<Prec, Space>& state,
         StateVector<Prec, Space>& bistate,
         const std::map<std::string, double>& parameters);
 
+    template <ExecutionSpace Space>
     std::unordered_map<std::string, double> backprop(
         const Operator<Prec, Space>& observable, const std::map<std::string, double>& parameters);
 
