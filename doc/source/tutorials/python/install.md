@@ -24,7 +24,7 @@ The build requirements are below.
 - GCC ≥ 11 (≥ 13 if not using CUDA)
 - CMake ≥ 3.21
 - CUDA ≥ 12.6 (only when using CUDA)
-- Python ≥ 3.9 (only when using Python)
+- Python ≥ 3.10 (only when using Python)
 
 The build options are below.
 
