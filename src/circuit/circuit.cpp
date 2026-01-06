@@ -534,14 +534,14 @@ std::unordered_map<std::string, double> Circuit<Prec>::backprop_inner_product(
         if (cur_gate.index() == 1) {
             const auto& [pgate, key] = std::get<1>(cur_gate);
 
-            Astate = state;
+            Astate = state.copy();
             const double pcoef = pgate->param_coef();
             if (pcoef == 0.0) {
                 throw std::runtime_error("backprop_inner_product: param_coef is zero");
             }
-            pgate->update_quantum_state(Astate, M_PI / pcoef);
+            pgate->update_quantum_state(Astate, -M_PI / pcoef);
             const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
-            const double contrib = static_cast<double>(ip.real()) / 2.0;
+            const double contrib = pcoef * static_cast<double>(ip.real()) * pcoef;
 
             gradients[key] += contrib;
         }
@@ -588,7 +588,7 @@ std::unordered_map<std::string, double> Circuit<Prec>::backprop(
     StateVector<Prec, Space> state(n_qubits);
     this->update_quantum_state(state, parameters);
 
-    StateVector<Prec, Space> bistate = state;
+    StateVector<Prec, Space> bistate = state.copy();
     obs.apply_to_state(bistate);
     return backprop_inner_product(state, bistate, parameters);
 }
