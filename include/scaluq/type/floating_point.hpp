@@ -16,7 +16,7 @@ enum class Precision { F16, F32, F64, BF16 };
 namespace scaluq::internal {
 template <Precision precision>
 struct FloatTypeImpl {
-    using Type = double; // dummy for IntelliSense
+    using Type = double;  // dummy for IntelliSense
 };
 
 template <typename T>
@@ -28,7 +28,7 @@ using F16 = __half;
 #ifndef __STDCPP_FLOAT16_T__
 static_assert(false && "float16 is not supported");
 #endif
-    using F16 = std::float16_t;
+using F16 = std::float16_t;
 #endif
 template <>
 struct IsFloatingPoint<F16> : public std::true_type {};
@@ -44,7 +44,7 @@ using F32 = float;
 #ifndef __STDCPP_FLOAT32_T__
 static_assert(false && "float32 is not supported");
 #else
-    using F32 = std::float32_t;
+using F32 = std::float32_t;
 #endif
 #endif
 template <>
@@ -59,10 +59,9 @@ struct FloatTypeImpl<Precision::F32> {
 using F64 = double;
 #else
 #ifndef __STDCPP_FLOAT64_T__
-// static_assert(false && "float64 is not supported");
-using F64 = double;
+static_assert(false && "float64 is not supported");
 #else
-    using F64 = std::float64_t;
+using F64 = std::float64_t;
 #endif
 #endif
 template <>
@@ -79,7 +78,7 @@ using BF16 = __nv_bfloat16;
 #ifndef __STDCPP_BFLOAT16_T__
 static_assert(false && "bfloat16 is not supported");
 #endif
-    using BF16 = std::bfloat16_t;
+using BF16 = std::bfloat16_t;
 #endif
 template <>
 struct IsFloatingPoint<BF16> : public std::true_type {};
