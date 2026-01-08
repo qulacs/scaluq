@@ -1,6 +1,7 @@
 #include <scaluq/gate/param_gate_probabilistic.hpp>
 
 #include "update_ops.hpp"
+#include <scaluq/util/random.hpp>
 
 namespace scaluq::internal {
 template <Precision Prec>

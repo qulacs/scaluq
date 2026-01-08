@@ -1,8 +1,8 @@
-#include <bitset>
 #include <scaluq/operator/apply_pauli.hpp>
 #include <scaluq/operator/pauli_operator.hpp>
 #include <scaluq/prec_space.hpp>
 #include <scaluq/util/math.hpp>
+#include <scaluq/constant.hpp>
 
 namespace scaluq {
 template <Precision Prec>

@@ -2,7 +2,6 @@
 #include <scaluq/state/state_vector.hpp>
 #include <scaluq/util/math.hpp>
 #include <scaluq/util/utility.hpp>
-#include <type_traits>
 
 namespace scaluq {
 template <Precision Prec, ExecutionSpace Space>

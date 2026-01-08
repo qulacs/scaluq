@@ -45,3 +45,4 @@
 /kokkos-tools
 /example_project/build/
 /Testing/
+/.cache/

@@ -7,7 +7,6 @@
 #include "../state/state_vector.hpp"
 #include "../state/state_vector_batched.hpp"
 #include "../types.hpp"
-#include "../util/math.hpp"
 #include "apply_pauli.hpp"
 
 namespace scaluq {

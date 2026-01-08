@@ -1,10 +1,8 @@
 #pragma once
 
-#include <random>
 #include <vector>
 
 #include "../types.hpp"
-#include "../util/random.hpp"
 #include "pauli_operator.hpp"
 
 namespace scaluq {

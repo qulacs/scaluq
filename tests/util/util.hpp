@@ -3,6 +3,9 @@
 #include <Eigen/Core>
 #include <complex>
 #include <scaluq/types.hpp>
+#include <scaluq/util/random.hpp>
+#include <scaluq/state/state_vector.hpp>
+#include <scaluq/util/utility.hpp>
 
 using namespace scaluq;
 using namespace std::complex_literals;

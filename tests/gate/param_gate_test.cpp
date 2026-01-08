@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <bitset>
 #include <csignal>
 #include <cstdlib>
 #include <scaluq/gate/gate_factory.hpp>

@@ -2,10 +2,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/LU>
-#include <ranges>
-#include <vector>
 
-#include "../constant.hpp"
 #include "gate.hpp"
 
 namespace scaluq {

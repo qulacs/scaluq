@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../constant.hpp"
 #include "gate.hpp"
 
 namespace scaluq {

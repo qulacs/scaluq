@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../util/random.hpp"
 #include "gate.hpp"
 
 namespace scaluq {

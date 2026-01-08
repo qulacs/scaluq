@@ -249,7 +249,7 @@ concept GateImpl = std::derived_from<T, GateBase<T::Prec>>;
 
 template <GateImpl T>
 struct GetGateFromJson {
-    static std::shared_ptr<const T> get(const Json& j) {
+    static std::shared_ptr<const T> get(const Json&) {
         throw std::runtime_error("GetGateFromJson<T>::get() is not implemented");
     }
 };

@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <Kokkos_Core.hpp>
+#include <scaluq/types.hpp>
 
 namespace scaluq {
 class TestEnvironment : public ::testing::Environment {

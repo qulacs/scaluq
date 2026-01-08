@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../constant.hpp"
 #include "../state/state_vector.hpp"
 #include "../state/state_vector_batched.hpp"
+#include "../util/utility.hpp"
 #include "../util/math.hpp"
+#include "../constant.hpp"
 
 namespace scaluq {
 template <Precision Prec>

@@ -1,4 +1,5 @@
 #include <scaluq/gate/gate_probabilistic.hpp>
+#include <scaluq/util/random.hpp>
 
 #include "update_ops.hpp"
 

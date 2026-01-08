@@ -3,8 +3,6 @@
 #include <random>
 #include <ranges>
 
-#include "../types.hpp"
-
 namespace scaluq {
 class Random {
     std::mt19937_64 mt;

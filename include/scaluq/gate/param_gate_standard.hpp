@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../operator/pauli_operator.hpp"
 #include "param_gate.hpp"
 
 namespace scaluq {

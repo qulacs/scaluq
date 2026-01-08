@@ -3,6 +3,7 @@
 #include "../state/state_vector.hpp"
 #include "../state/state_vector_batched.hpp"
 #include "../types.hpp"
+#include "../util/utility.hpp"
 
 namespace scaluq {
 namespace internal {
@@ -143,6 +144,7 @@ DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamRYGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamRZGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamPauliRotationGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamProbabilisticGateImpl)
+#undef DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION
 
 template <ParamGateImpl T>
 class ParamGatePtr {
@@ -375,3 +377,8 @@ nb::class_<SpecificGateType> bind_specific_param_gate(nb::module_& m,
 }  // namespace internal
 #endif
 }  // namespace scaluq
+
+// Include all gate header files for the correct definition of concept GateImpl
+#include "./param_gate_pauli.hpp"
+#include "./param_gate_probabilistic.hpp"
+#include "./param_gate_standard.hpp"

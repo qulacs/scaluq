@@ -2,10 +2,8 @@
 
 #include <variant>
 
-#include "../util/random.hpp"
-#include "gate_probabilistic.hpp"
-#include "param_gate_pauli.hpp"
-#include "param_gate_standard.hpp"
+#include "gate.hpp"
+#include "param_gate.hpp"
 
 namespace scaluq {
 namespace internal {
