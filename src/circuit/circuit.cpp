@@ -181,7 +181,8 @@ template <Precision Prec>
 Circuit<Prec> Circuit<Prec>::get_inverse() const {
     Circuit<Prec> icircuit(_n_qubits);
     icircuit._gate_list.reserve(_gate_list.size());
-    for (auto&& gate : _gate_list | std::views::reverse) {
+    for (auto it = _gate_list.rbegin(); it != _gate_list.rend(); ++it) {
+        auto&& gate = *it;
         if (gate.index() == 0)
             icircuit._gate_list.push_back(std::get<0>(gate)->get_inverse());
         else {
