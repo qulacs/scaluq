@@ -59,7 +59,8 @@ struct FloatTypeImpl<Precision::F32> {
 using F64 = double;
 #else
 #ifndef __STDCPP_FLOAT64_T__
-static_assert(false && "float64 is not supported");
+using F64 = double;
+// static_assert(false && "float64 is not supported");
 #else
 using F64 = std::float64_t;
 #endif

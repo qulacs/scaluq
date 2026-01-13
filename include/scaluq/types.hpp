@@ -8,7 +8,6 @@
 #include <nlohmann/json.hpp>
 
 #include "type/complex.hpp"
-#include "type/floating_point.hpp"
 
 namespace scaluq {
 using StdComplex = std::complex<double>;

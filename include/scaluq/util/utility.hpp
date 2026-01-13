@@ -1,11 +1,9 @@
 #pragma once
 
-#include <Kokkos_Core.hpp>
-#include <Kokkos_StdAlgorithms.hpp>
+
 #include <algorithm>  // For std::copy
 #include <vector>
 
-// #include "../operator/pauli_operator.hpp"
 #include "../types.hpp"
 
 namespace scaluq {
