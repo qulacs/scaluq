@@ -31,7 +31,7 @@ See https://scaluq.readthedocs.io/en/latest/index.html
 - GCC ≥ 11 (≥ 13 if not using CUDA)
 - CMake ≥ 3.24
 - CUDA ≥ 12.6 (only when using CUDA)
-- Python ≥ 3.9 (only when using Python)
+- Python ≥ 3.10 (only when using Python)
 
 Note: It may work with lower versions, but this has not been verified.
 
