@@ -69,16 +69,31 @@ void StateVector<Prec, Space>::set_computational_basis(std::uint64_t basis) {
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::set_Haar_random_state(std::uint64_t seed) {
-    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(seed);
-    Kokkos::parallel_for(
-        "Haar_random_state",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i) {
-            auto rand_gen = rand_pool.get_state();
-            _raw(i) = ComplexType(static_cast<FloatType>(rand_gen.normal(0.0, 1.0)),
-                                  static_cast<FloatType>(rand_gen.normal(0.0, 1.0)));
-            rand_pool.free_state(rand_gen);
-        });
+    if constexpr (Space == ExecutionSpace::HostSerialSpace) {
+        Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> rand_pool(seed);
+        Kokkos::View<ComplexType*, Kokkos::HostSpace> host_raw("host_raw", _dim);
+        Kokkos::parallel_for(
+            "Haar_random_state_host",
+            Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, _dim),
+            KOKKOS_LAMBDA(std::uint64_t i) {
+                auto rand_gen = rand_pool.get_state();
+                host_raw(i) = ComplexType(static_cast<FloatType>(rand_gen.normal(0.0, 1.0)),
+                                          static_cast<FloatType>(rand_gen.normal(0.0, 1.0)));
+                rand_pool.free_state(rand_gen);
+            });
+        Kokkos::deep_copy(_raw, host_raw);
+    } else {
+        Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(seed);
+        Kokkos::parallel_for(
+            "Haar_random_state",
+            Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
+            KOKKOS_CLASS_LAMBDA(std::uint64_t i) {
+                auto rand_gen = rand_pool.get_state();
+                _raw(i) = ComplexType(static_cast<FloatType>(rand_gen.normal(0.0, 1.0)),
+                                      static_cast<FloatType>(rand_gen.normal(0.0, 1.0)));
+                rand_pool.free_state(rand_gen);
+            });
+    }
     this->normalize();
 }
 template <Precision Prec, ExecutionSpace Space>

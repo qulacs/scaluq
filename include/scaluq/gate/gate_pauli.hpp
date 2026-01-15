@@ -32,6 +32,10 @@ public:
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
     void update_quantum_state(
         StateVectorBatched<Prec, ExecutionSpace::Host>& states) const override;
+    void update_quantum_state(
+        StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector) const override;
+    void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
         StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
@@ -78,6 +82,10 @@ public:
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
     void update_quantum_state(
         StateVectorBatched<Prec, ExecutionSpace::Host>& states) const override;
+    void update_quantum_state(
+        StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector) const override;
+    void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
         StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
