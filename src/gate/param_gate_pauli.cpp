@@ -69,7 +69,6 @@ void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
                          Complex<Prec>(_pauli.coef()),
                          this->_pcoef * static_cast<Float<Prec>>(param),
                          state_vector);
-    std::cout << "apply end" << std::endl;
 }
 template <Precision Prec>
 void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
