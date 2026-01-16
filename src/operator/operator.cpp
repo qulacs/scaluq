@@ -169,7 +169,8 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
     const std::uint64_t nterms = _terms.size();
     const std::uint64_t dim = state_vector.dim();
 
-    Kokkos::View<ComplexType*, internal::SpaceType<internal::Space>> res("expvals", nterms);
+    Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<internal::Space>> res("expvals",
+                                                                                     nterms);
 
     using ExecSpace = internal::SpaceType<internal::Space>;
     using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
