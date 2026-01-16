@@ -230,7 +230,8 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
                 },
                 sum);
 
-            Kokkos::single(Kokkos::PerTeam(team), [&] { res(term_id) = sum; });
+            Kokkos::single(Kokkos::PerTeam(team),
+                           [&] { res(term_id) = Kokkos::complex<double>(sum.real(), sum.imag()); });
         });
 
     auto res_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), res);
