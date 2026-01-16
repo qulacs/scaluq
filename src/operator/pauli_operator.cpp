@@ -372,7 +372,7 @@ template StdComplex PauliOperator<internal::Prec>::get_transition_amplitude(
 template std::vector<StdComplex> PauliOperator<internal::Prec>::get_transition_amplitude(
     const StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states_bra,
     const StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states_ket) const;
-#ifdef SCALUQ_ENABLE_CUDA
+#ifdef SCALUQ_USE_CUDA
 template StdComplex PauliOperator<internal::Prec>::get_expectation_value(
     const StateVector<internal::Prec, ExecutionSpace::Default>& state_vector) const;
 template std::vector<StdComplex> PauliOperator<internal::Prec>::get_expectation_value(
