@@ -1,12 +1,15 @@
-name: Build and Test
+name: Test All
 
 on:
   push:
+    branches:
+      - main
     paths-ignore:
       - ".devcontainer/**"
       - ".vscode/**"
       - "doc/**"
       - "*.md"
+  workflow_dispatch:
 
 jobs:
   test:
@@ -77,8 +80,10 @@ jobs:
           cmake --version
           ninja --version
 
-      - name: Install Scaluq for Ubuntu
-        run: ./script/build_gcc.sh
+      - name: Configure & Build
+        run: |
+          ./script/configure
+          ninja -C build/
 
       - name: Test
         if: ${{ matrix.device == 'cpu' }} # currently GPU runner is not supported
@@ -88,4 +93,4 @@ jobs:
           else
             NPROC=$(nproc)
           fi
-          OMP_PROC_BIND=false ctest --test-dir build/ -j ${NPROC}
+          OMP_PROC_BIND=false ctest --test-dir build/ -j ${NPROC} --output-on-failure
