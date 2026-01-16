@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 
 include(GoogleTest)
 
-add_executable(scaluq_test
+set(ALL_TEST_SOURCES
     circuit/circuit_test.cpp
     circuit/circuit_optimize_test.cpp
     circuit/param_circuit_test.cpp
@@ -16,6 +16,16 @@ add_executable(scaluq_test
     state/state_vector_test.cpp
     state/state_vector_batched_test.cpp
 )
+
+if(DEFINED SCALUQ_TEST_SOURCES)
+    add_executable(scaluq_test
+        ${SCALUQ_TEST_SOURCES}
+    )
+else()
+    add_executable(scaluq_test
+        ${ALL_TEST_SOURCES}
+    )
+endif()
 
 target_link_libraries(scaluq_test PUBLIC 
     scaluq
