@@ -48,6 +48,7 @@ jobs:
     env:
       CMAKE_C_COMPILER: ${{ matrix.os == 'macos' && matrix.arch == 'x86_64' && '/usr/local/bin/gcc-14' || matrix.os == 'macos' && 'gcc-14' || 'gcc' }}
       CMAKE_CXX_COMPILER: ${{ matrix.os == 'macos' && matrix.arch == 'x86_64' && '/usr/local/bin/g++-14' || matrix.os == 'macos' && 'g++-14' || 'g++' }}
+      SCALUQ_CPU_NATIVE: 'OFF'
       CIBW_ARCHS: ${{ matrix.arch }}
       CIBW_BUILD: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}
       CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
