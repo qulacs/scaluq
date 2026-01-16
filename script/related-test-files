@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+set -eu
+
+TAB=$(printf "\t")
+
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+CURRENT_DIR=$(pwd)
+if [ "$SCRIPT_DIR" != "$CURRENT_DIR/script" ]; then
+    echo "error: this script should be called from project root"
+    exit 1
+fi
+
+# prepare target files
+TARGETS_FILE=$(mktemp)
+trap 'rm -f "$TARGETS_FILE"' EXIT
+for arg in "$@"; do
+    arg_abs=$(realpath -m "$arg")
+    src_prefix="${CURRENT_DIR}/src/"
+    if [[ "$arg_abs" == "$src_prefix"* ]]; then
+        # cpp source file cannot be a direct dependency, convert to header file
+        relative_path="${arg_abs#$src_prefix}"
+        if [[ "$relative_path" == "gate/update_ops"* ]]; then
+            echo "${CURRENT_DIR}/include/scaluq/gate/gate.hpp" >> "$TARGETS_FILE"
+        else
+            echo "${CURRENT_DIR}/include/scaluq/${relative_path/.cpp/.hpp}" >> "$TARGETS_FILE"
+        fi
+    else
+        realpath -m "$arg" >> "$TARGETS_FILE"
+    fi
+done
+
+# generate compile_flags.json
+mkdir -p ./build
+cmake -B build -G Ninja -D SCALUQ_USE_TEST=ON -D CMAKE_EXPORT_COMPILE_COMMANDS=ON > /dev/null
+
+# find related test files
+jq -r ".[] | select(.file | startswith(\"$(pwd)/tests\")) | [.directory, .file, .command] | @tsv" build/compile_commands.json | \
+while IFS="$TAB" read -r dir file command; do
+    command_enumerate_includes="cd $dir && $(echo "$command" | sed -E 's/-c\b/-M/g; s/-o\s+\S+//g') && cd $CURRENT_DIR"
+    deps_abs=$(cd "$dir" && eval "$command_enumerate_includes" | \
+               sed 's/.*: //' | sed 's/\\//g' | tr -s '[:space:]' '\n' | \
+               grep -E "${CURRENT_DIR}/include/scaluq/|${CURRENT_DIR}/tests/" | \
+               xargs -I {} realpath -m "{}")
+
+    if echo "$deps_abs" | grep -Fxf "$TARGETS_FILE" > /dev/null; then
+        echo "$file"
+    fi
+done
