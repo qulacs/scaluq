@@ -89,29 +89,29 @@ jobs:
           fi
       
       - name: Install Ninja
-        if: ${{ matrix.os == 'linux' }} and (env.SCALUQ_TEST_SOURCES != '')
+        if: ${{ matrix.os == 'linux' && env.SCALUQ_TEST_SOURCES != '' }}
         run: sudo apt update && sudo apt install ninja-build
 
       - name: Install Ninja
-        if: ${{ matrix.os == 'macos' }} and (env.SCALUQ_TEST_SOURCES != '')
+        if: ${{ matrix.os == 'macos' && env.SCALUQ_TEST_SOURCES != '' }}
         run: brew install ninja
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
-        if: env.SCALUQ_TEST_SOURCES != ''
+        if: ${{ env.SCALUQ_TEST_SOURCES != '' }}
         with:
           key: "${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.device }}"
           verbose: 2
       
       - name: Install CUDA toolkit
-        if: ${{ matrix.device == 'cuda' }} and (env.SCALUQ_TEST_SOURCES != '')
+        if: ${{ matrix.device == 'cuda' && env.SCALUQ_TEST_SOURCES != '' }}
         uses: Jimver/cuda-toolkit@v0.2.19
         with:
           cuda: "12.6.1"
           method: "network"
       
       - name: Show installed Compiler version
-        if: env.SCALUQ_TEST_SOURCES != ''
+        if: ${{ env.SCALUQ_TEST_SOURCES != '' }}
         run: |
           [ $SCALUQ_USE_CUDA = 'ON' ] && nvcc --version
           ccache --version
@@ -121,13 +121,13 @@ jobs:
           ninja --version
 
       - name: Configure & Build
-        if: env.SCALUQ_TEST_SOURCES != ''
+        if: ${{ env.SCALUQ_TEST_SOURCES != '' }}
         run: |
           ./script/configure
           ninja -C build/
 
       - name: Test
-        if: ${{ matrix.device == 'cpu' }} and env.SCALUQ_TEST_SOURCES != '' # currently GPU runner is not supported
+        if: ${{ matrix.device == 'cpu' && env.SCALUQ_TEST_SOURCES != '' }} # currently GPU runner is not supported
         run: |
           if [ "$(uname)" == 'Darwin' ]; then
             NPROC=$(sysctl -n hw.physicalcpu)
