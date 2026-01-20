@@ -217,7 +217,8 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def("update_quantum_state",
              nb::overload_cast<StateVector<Prec, ExecutionSpace::HostSerial>&,
                                const std::map<std::string, double>&>(
-                 &Circuit<Prec>::update_quantum_state, nb::const_),
+                 &Circuit<Prec>::template update_quantum_state<ExecutionSpace::HostSerial>,
+                 nb::const_),
              "state"_a,
              "params"_a,
              "Apply gate to the StateVector. StateVector in args is directly updated. If the "
@@ -243,7 +244,8 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "update_quantum_state",
             nb::overload_cast<StateVectorBatched<Prec, ExecutionSpace::HostSerial>&,
                               const std::map<std::string, std::vector<double>>&>(
-                &Circuit<Prec>::update_quantum_state, nb::const_),
+                &Circuit<Prec>::template update_quantum_state<ExecutionSpace::HostSerial>,
+                nb::const_),
             "state"_a,
             "params"_a,
             "Apply gate to the StateVectorBatched. StateVectorBatched in args is directly updated. "
