@@ -22,7 +22,7 @@ https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
 - GCC 11 以上 (CUDAを利用しない場合13以上)
 - CMake 3.24 以上
 - CUDA 12.6 以上（CUDA利用時のみ）
-- Python 3.9 以上 (Python利用時のみ)
+- Python 3.10 以上 (Python利用時のみ)
 
 ※これより低いバージョンでも動作する可能性はありますが確認していません
 
@@ -44,6 +44,8 @@ https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
 |`CMAKE_INSTALL_PREFIX`|-|See [CMake Document](https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html)|
 |`SCALUQ_USE_OMP`|`ON`|CPUでの並列処理にOpenMPを利用するか|
 |`SCALUQ_USE_CUDA`|`OFF`|GPU (CUDA)での並列処理を行うか|
+|`SCALUQ_CPU_NATIVE`|`ON`| ビルダーのCPUアーキテクチャでビルドするか|
+|`SCALUQ_CPU_ARCH`|-| ターゲットとなるCPUアーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CPU_ARCH=SKX`)|
 |`SCALUQ_CUDA_ARCH`|(自動識別)|`CMAKE_USE_CUDA=ON`の場合、ターゲットとなるNvidia GPU アーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CUDA_ARCH=AMPERE80`)|
 |`SCALUQ_USE_TEST`|ON|`test/`をビルドターゲットに含める。`ctest --test-dir build/`でテストのビルド/実行ができる|
 |`SCALUQ_USE_EXE`|ON|`exe/`をビルドターゲットに含める。インストールせずに実行を試すことができ、`ninja -C build`でのビルド後、`exe/main.cpp`の内容を`build/exe/main`で実行できる。|

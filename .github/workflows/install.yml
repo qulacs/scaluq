@@ -37,6 +37,7 @@ jobs:
       CMAKE_C_COMPILER: ${{ (matrix.runs-on == 'macos-14' || matrix.runs-on == 'macos-15') && '/opt/homebrew/opt/ccache/libexec/gcc-14' || '/usr/lib/ccache/gcc' }}
       CMAKE_CXX_COMPILER: ${{ (matrix.runs-on == 'macos-14' || matrix.runs-on == 'macos-15') && '/opt/homebrew/opt/ccache/libexec/g++-14' || '/usr/lib/ccache/g++' }}
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
+      SCALUQ_CPU_NATIVE: "OFF"
       SCALUQ_CUDA_ARCH: "PASCAL61"
       SCALUQ_FLOAT16: "ON"
       SCALUQ_FLOAT32: "ON"
@@ -119,6 +120,7 @@ jobs:
       CMAKE_C_COMPILER: ${{ (matrix.runs-on == 'macos-14' || matrix.runs-on == 'macos-15') && '/opt/homebrew/opt/ccache/libexec/gcc-14' || '/usr/lib/ccache/gcc' }}
       CMAKE_CXX_COMPILER: ${{ (matrix.runs-on == 'macos-14' || matrix.runs-on == 'macos-15') && '/opt/homebrew/opt/ccache/libexec/g++-14' || '/usr/lib/ccache/g++' }}
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
+      SCALUQ_CPU_NATIVE: "OFF"
       SCALUQ_CUDA_ARCH: "PASCAL61"
     steps:
       - uses: actions/checkout@v4

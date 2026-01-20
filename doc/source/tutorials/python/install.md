@@ -24,7 +24,7 @@ The build requirements are below.
 - GCC ≥ 11 (≥ 13 if not using CUDA)
 - CMake ≥ 3.21
 - CUDA ≥ 12.6 (only when using CUDA)
-- Python ≥ 3.9 (only when using Python)
+- Python ≥ 3.10 (only when using Python)
 
 The build options are below.
 
@@ -36,6 +36,8 @@ The build options are below.
 | `CMAKE_INSTALL_PREFIX` | -           | See [CMake Documentation](https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html) |
 | `SCALUQ_USE_OMP`       | `ON`        | Use OpenMP for parallel computation on CPU |
 | `SCALUQ_USE_CUDA`      | `OFF`       | Enable parallel computation using GPU (CUDA) |
+| `SCALUQ_CPU_NATIVE`    | `ON`        | Build for native CPU architecture of builder's |
+| `SCALUQ_CPU_ARCH`      | -           | Target CPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_CPU_ARCH=SKX`) |
 | `SCALUQ_CUDA_ARCH`     | (auto)      | Target Nvidia GPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_CUDA_ARCH=AMPERE80`) |
 | `SCALUQ_USE_TEST`      | `ON`        | Include `test/` in build targets. You can build and run tests with `ctest --test-dir build/` |
 | `SCALUQ_USE_EXE`       | `ON`        | Include `exe/` in build targets. You can try running without installing by building with `ninja -C build` and running `build/exe/main` |
