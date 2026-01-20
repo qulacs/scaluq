@@ -69,7 +69,7 @@ void StateVector<Prec, Space>::set_computational_basis(std::uint64_t basis) {
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::set_Haar_random_state(std::uint64_t seed) {
-    if constexpr (Space == ExecutionSpace::HostSerialSpace) {
+    if constexpr (Space == ExecutionSpace::HostSerial) {
         Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> rand_pool(seed);
         Kokkos::View<ComplexType*, Kokkos::HostSpace> host_raw("host_raw", _dim);
         Kokkos::parallel_for(

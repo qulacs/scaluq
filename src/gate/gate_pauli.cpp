@@ -28,8 +28,8 @@ std::string PauliGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_PAULI_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_PAULI_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_PAULI_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_PAULI_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_PAULI_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_PAULI_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_PAULI_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_PAULI_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -75,8 +75,8 @@ std::string PauliRotationGateImpl<Prec>::to_string(const std::string& indent) co
     }
 DEFINE_PAULI_ROTATION_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_PAULI_ROTATION_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_PAULI_ROTATION_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_PAULI_ROTATION_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_PAULI_ROTATION_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_PAULI_ROTATION_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_PAULI_ROTATION_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_PAULI_ROTATION_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)

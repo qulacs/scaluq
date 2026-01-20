@@ -201,7 +201,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def(
             "update_quantum_state",
             [&](const Circuit<Prec>& circuit,
-                StateVector<Prec, ExecutionSpace::HostSerialSpace>& state,
+                StateVector<Prec, ExecutionSpace::HostSerial>& state,
                 nb::kwargs kwargs) {
                 std::map<std::string, double> parameters;
                 for (auto&& [key, param] : kwargs) {
@@ -215,9 +215,9 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "circuit contains parametric gate, you have to give real value of parameter as "
             "\"name=value\" format in kwargs.")
         .def("update_quantum_state",
-             nb::overload_cast<StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>&,
+             nb::overload_cast<StateVectorBatched<Prec, ExecutionSpace::HostSerial>&,
                                const std::map<std::string, std::vector<double>>&>(
-                 &Circuit<Prec>::template update_quantum_state<ExecutionSpace::HostSerialSpace>,
+                 &Circuit<Prec>::template update_quantum_state<ExecutionSpace::HostSerial>,
                  nb::const_),
              "state"_a,
              "params"_a,
@@ -227,7 +227,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def(
             "update_quantum_state",
             [&](const Circuit<Prec>& circuit,
-                StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states,
+                StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
                 nb::kwargs kwargs) {
                 std::map<std::string, std::vector<double>> parameters;
                 for (auto&& [key, param] : kwargs) {
@@ -242,9 +242,9 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "dict[str, list[float]] in 2nd arg.")
         .def(
             "update_quantum_state",
-            nb::overload_cast<StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>&,
+            nb::overload_cast<StateVectorBatched<Prec, ExecutionSpace::HostSerial>&,
                               const std::map<std::string, std::vector<double>>&>(
-                &Circuit<Prec>::template update_quantum_state<ExecutionSpace::HostSerialSpace>,
+                &Circuit<Prec>::template update_quantum_state<ExecutionSpace::HostSerial>,
                 nb::const_),
             "state"_a,
             "params"_a,
@@ -253,18 +253,18 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "dict[str, list[float]] in 2nd arg.")
         .def("optimize",
              nb::overload_cast<std::uint64_t>(
-                 &Circuit<Prec>::template optimize<ExecutionSpace::HostSerialSpace>),
+                 &Circuit<Prec>::template optimize<ExecutionSpace::HostSerial>),
              "max_block_size"_a = 3,
              "Optimize circuit. Create qubit dependency tree and merge neighboring gates if the "
              "new gate has less than or equal to `max_block_size` or the new gate is Pauli.")
         .def(
             "simulate_noise",
             [](const Circuit<Prec>& circuit,
-               const StateVector<Prec, ExecutionSpace::HostSerialSpace>& initial_state,
+               const StateVector<Prec, ExecutionSpace::HostSerial>& initial_state,
                std::uint64_t sampling_count,
                const std::map<std::string, double>& parameters,
                std::optional<std::uint64_t> seed) {
-                return circuit.template simulate_noise<ExecutionSpace::HostSerialSpace>(
+                return circuit.template simulate_noise<ExecutionSpace::HostSerial>(
                     initial_state,
                     sampling_count,
                     parameters,

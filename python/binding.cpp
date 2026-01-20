@@ -97,8 +97,8 @@ NB_MODULE(scaluq_core, m) {
         bind_on_precision_and_space<Precision::F16, ExecutionSpace::Host>(mp_host, gate_def);
 #endif
         auto mp_serial = mhost_serial.def_submodule("f16", "module for f16 precision");
-        bind_on_precision_and_space<Precision::F16, ExecutionSpace::HostSerialSpace>(mp_serial,
-                                                                                     gate_def);
+        bind_on_precision_and_space<Precision::F16, ExecutionSpace::HostSerial>(mp_serial,
+                                                                                gate_def);
     }
 #endif
 #ifdef SCALUQ_FLOAT32
@@ -115,8 +115,8 @@ NB_MODULE(scaluq_core, m) {
         bind_on_precision_and_space<Precision::F32, ExecutionSpace::Host>(mp_host, gate_def);
 #endif
         auto mp_serial = mhost_serial.def_submodule("f32", "module for f32 precision");
-        bind_on_precision_and_space<Precision::F32, ExecutionSpace::HostSerialSpace>(mp_serial,
-                                                                                     gate_def);
+        bind_on_precision_and_space<Precision::F32, ExecutionSpace::HostSerial>(mp_serial,
+                                                                                gate_def);
     }
 #endif
 #ifdef SCALUQ_FLOAT64
@@ -133,8 +133,8 @@ NB_MODULE(scaluq_core, m) {
         bind_on_precision_and_space<Precision::F64, ExecutionSpace::Host>(mp_host, gate_def);
 #endif
         auto mp_serial = mhost_serial.def_submodule("f64", "module for f64 precision");
-        bind_on_precision_and_space<Precision::F64, ExecutionSpace::HostSerialSpace>(mp_serial,
-                                                                                     gate_def);
+        bind_on_precision_and_space<Precision::F64, ExecutionSpace::HostSerial>(mp_serial,
+                                                                                gate_def);
     }
 #endif
 #ifdef SCALUQ_BFLOAT16
@@ -151,8 +151,8 @@ NB_MODULE(scaluq_core, m) {
         bind_on_precision_and_space<Precision::BF16, ExecutionSpace::Host>(mp_host, gate_def);
 #endif
         auto mp_serial = mhost_serial.def_submodule("bf16", "module for bf16 precision");
-        bind_on_precision_and_space<Precision::BF16, ExecutionSpace::HostSerialSpace>(mp_serial,
-                                                                                      gate_def);
+        bind_on_precision_and_space<Precision::BF16, ExecutionSpace::HostSerial>(mp_serial,
+                                                                                 gate_def);
     }
 #endif
 

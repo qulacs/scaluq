@@ -59,7 +59,7 @@ void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector, double param) const {
+    StateVector<Prec, ExecutionSpace::HostSerial>& state_vector, double param) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
     apply_pauli_rotation(this->_control_mask,
                          this->_control_value_mask,
@@ -71,7 +71,7 @@ void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states,
+    StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
     std::vector<double> params) const {
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
     std::vector<Float<Prec>> params_prec(params.size());

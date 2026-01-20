@@ -161,7 +161,7 @@ constexpr GateType get_gate_type() {
     else if constexpr (
         std::is_same_v<TWithoutConst, internal::SparseMatrixGateImpl<Prec, ExecutionSpace::Host>> ||
         std::is_same_v<TWithoutConst,
-                       internal::SparseMatrixGateImpl<Prec, ExecutionSpace::HostSerialSpace>> ||
+                       internal::SparseMatrixGateImpl<Prec, ExecutionSpace::HostSerial>> ||
         std::is_same_v<TWithoutConst,
                        internal::SparseMatrixGateImpl<Prec, ExecutionSpace::Default>>)
         return GateType::SparseMatrix;
@@ -169,7 +169,7 @@ constexpr GateType get_gate_type() {
                                       internal::DenseMatrixGateImpl<Prec, ExecutionSpace::Host>> ||
                        std::is_same_v<
                            TWithoutConst,
-                           internal::DenseMatrixGateImpl<Prec, ExecutionSpace::HostSerialSpace>> ||
+                           internal::DenseMatrixGateImpl<Prec, ExecutionSpace::HostSerial>> ||
                        std::is_same_v<TWithoutConst,
                                       internal::DenseMatrixGateImpl<Prec, ExecutionSpace::Default>>)
         return GateType::DenseMatrix;
@@ -196,9 +196,9 @@ protected:
     void check_qubit_mask_within_bounds(
         const StateVectorBatched<Prec, ExecutionSpace::Host>& states) const;
     void check_qubit_mask_within_bounds(
-        const StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector) const;
+        const StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const;
     void check_qubit_mask_within_bounds(
-        const StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states) const;
+        const StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states) const;
 #ifdef SCALUQ_USE_CUDA
     void check_qubit_mask_within_bounds(
         const StateVector<Prec, ExecutionSpace::Default>& state_vector) const;
@@ -241,9 +241,9 @@ public:
     virtual void update_quantum_state(
         StateVectorBatched<Prec, ExecutionSpace::Host>& states) const = 0;
     virtual void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector) const = 0;
+        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const = 0;
     virtual void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states) const = 0;
+        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states) const = 0;
 #ifdef SCALUQ_USE_CUDA
     virtual void update_quantum_state(
         StateVector<Prec, ExecutionSpace::Default>& state_vector) const = 0;
@@ -474,15 +474,14 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
             "Apply gate to `states`. `states` in args is directly updated.")
         .def(
             "update_quantum_state",
-            [](const GateT& gate, StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector) {
+            [](const GateT& gate, StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) {
                 gate->update_quantum_state(state_vector);
             },
             "state_vector"_a,
             "Apply gate to `state_vector`. `state_vector` in args is directly updated.")
         .def(
             "update_quantum_state",
-            [](const GateT& gate,
-               StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states) {
+            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states) {
                 gate->update_quantum_state(states);
             },
             "states"_a,

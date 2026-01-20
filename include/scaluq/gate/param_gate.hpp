@@ -69,9 +69,9 @@ protected:
     void check_qubit_mask_within_bounds(
         const StateVectorBatched<Prec, ExecutionSpace::Host>& states) const;
     void check_qubit_mask_within_bounds(
-        const StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector) const;
+        const StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const;
     void check_qubit_mask_within_bounds(
-        const StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states) const;
+        const StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states) const;
 #ifdef SCALUQ_USE_CUDA
     void check_qubit_mask_within_bounds(
         const StateVector<Prec, ExecutionSpace::Default>& state_vector) const;
@@ -116,11 +116,10 @@ public:
                                       double param) const = 0;
     virtual void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Host>& states,
                                       std::vector<double> params) const = 0;
-    virtual void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector, double param) const = 0;
-    virtual void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states,
-        std::vector<double> params) const = 0;
+    virtual void update_quantum_state(StateVector<Prec, ExecutionSpace::HostSerial>& state_vector,
+                                      double param) const = 0;
+    virtual void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
+                                      std::vector<double> params) const = 0;
 #ifdef SCALUQ_USE_CUDA
     virtual void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
                                       double param) const = 0;
@@ -301,7 +300,7 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
         .def(
             "update_quantum_state",
             [](const GateT& gate,
-               StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector,
+               StateVector<Prec, ExecutionSpace::HostSerial>& state_vector,
                double param) { gate->update_quantum_state(state_vector, param); },
             "state"_a,
             "param"_a,
@@ -310,7 +309,7 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
         .def(
             "update_quantum_state",
             [](const GateT& gate,
-               StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states,
+               StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
                std::vector<double> params) { gate->update_quantum_state(states, params); },
             "states"_a,
             "params"_a,

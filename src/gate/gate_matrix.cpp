@@ -62,8 +62,8 @@ std::string DenseMatrixGateImpl<Prec, Space>::to_string(const std::string& inden
     }
 DEFINE_DENSE_MATRIX_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_DENSE_MATRIX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_DENSE_MATRIX_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_DENSE_MATRIX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_DENSE_MATRIX_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_DENSE_MATRIX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_DENSE_MATRIX_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_DENSE_MATRIX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -131,8 +131,8 @@ std::string SparseMatrixGateImpl<Prec, Space>::to_string(const std::string& inde
     }
 DEFINE_SPARSE_MATRIX_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_SPARSE_MATRIX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_SPARSE_MATRIX_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_SPARSE_MATRIX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_SPARSE_MATRIX_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_SPARSE_MATRIX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_SPARSE_MATRIX_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_SPARSE_MATRIX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)

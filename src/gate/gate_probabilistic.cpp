@@ -75,7 +75,7 @@ std::string ProbabilisticGateImpl<Prec>::to_string(const std::string& indent) co
         }                                                                                          \
     }
 DEFINE_PROBABILISTIC_GATE_UPDATE(ExecutionSpace::Host)
-DEFINE_PROBABILISTIC_GATE_UPDATE(ExecutionSpace::HostSerialSpace)
+DEFINE_PROBABILISTIC_GATE_UPDATE(ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_PROBABILISTIC_GATE_UPDATE(ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA

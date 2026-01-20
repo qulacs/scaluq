@@ -24,7 +24,7 @@ void ParamGateBase<Prec>::check_qubit_mask_within_bounds(
 }
 template <Precision Prec>
 void ParamGateBase<Prec>::check_qubit_mask_within_bounds(
-    const StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector) const {
+    const StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const {
     std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
     if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
         throw std::runtime_error(
@@ -34,7 +34,7 @@ void ParamGateBase<Prec>::check_qubit_mask_within_bounds(
 }
 template <Precision Prec>
 void ParamGateBase<Prec>::check_qubit_mask_within_bounds(
-    const StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states) const {
+    const StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states) const {
     std::uint64_t full_mask = (1ULL << states.n_qubits()) - 1;
     if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
         throw std::runtime_error(

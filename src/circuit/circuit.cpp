@@ -125,11 +125,11 @@ template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host
     StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states,
     const std::map<std::string, std::vector<double>>& parameters) const;
 
-template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerialSpace>(
-    StateVector<internal::Prec, ExecutionSpace::HostSerialSpace>& state,
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
+    StateVector<internal::Prec, ExecutionSpace::HostSerial>& state,
     const std::map<std::string, double>& parameters) const;
-template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerialSpace>(
-    StateVectorBatched<internal::Prec, ExecutionSpace::HostSerialSpace>& states,
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
+    StateVectorBatched<internal::Prec, ExecutionSpace::HostSerial>& states,
     const std::map<std::string, std::vector<double>>& parameters) const;
 
 #ifdef SCALUQ_USE_CUDA
@@ -322,7 +322,7 @@ void Circuit<Prec>::optimize(std::uint64_t max_block_size) {
     _gate_list.swap(new_gate_list);
 }
 template void Circuit<internal::Prec>::optimize<ExecutionSpace::Host>(std::uint64_t max_block_size);
-template void Circuit<internal::Prec>::optimize<ExecutionSpace::HostSerialSpace>(
+template void Circuit<internal::Prec>::optimize<ExecutionSpace::HostSerial>(
     std::uint64_t max_block_size);
 #ifdef SCALUQ_USE_CUDA
 template void Circuit<internal::Prec>::optimize<ExecutionSpace::Default>(
@@ -441,9 +441,9 @@ Circuit<internal::Prec>::simulate_noise<ExecutionSpace::Host>(
     std::uint64_t seed) const;
 
 template std::vector<
-    std::pair<StateVector<internal::Prec, ExecutionSpace::HostSerialSpace>, std::int64_t>>
-Circuit<internal::Prec>::simulate_noise<ExecutionSpace::HostSerialSpace>(
-    const StateVector<internal::Prec, ExecutionSpace::HostSerialSpace>& initial_state,
+    std::pair<StateVector<internal::Prec, ExecutionSpace::HostSerial>, std::int64_t>>
+Circuit<internal::Prec>::simulate_noise<ExecutionSpace::HostSerial>(
+    const StateVector<internal::Prec, ExecutionSpace::HostSerial>& initial_state,
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
     std::uint64_t seed) const;

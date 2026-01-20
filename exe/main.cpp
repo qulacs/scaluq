@@ -117,7 +117,7 @@ int main() {
     //     test<Precision::F64, ExecutionSpace::Default>();
     // }
     for (int _ : std::views::iota(0, 100)) {
-        test<Precision::F64, ExecutionSpace::HostSerialSpace>();
+        test<Precision::F64, ExecutionSpace::HostSerial>();
     }
     {
         ComplexMatrix mat(4, 4);

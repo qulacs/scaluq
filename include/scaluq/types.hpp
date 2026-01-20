@@ -32,7 +32,7 @@ struct SpaceTypeImpl<ExecutionSpace::Host> {
     using Type = Kokkos::DefaultHostExecutionSpace;
 };
 template <>
-struct SpaceTypeImpl<ExecutionSpace::HostSerialSpace> {
+struct SpaceTypeImpl<ExecutionSpace::HostSerial> {
     using Type = Kokkos::Serial;
 };
 #ifdef SCALUQ_USE_CUDA

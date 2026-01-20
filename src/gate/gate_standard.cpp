@@ -21,8 +21,8 @@ std::string IGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_I_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_I_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_I_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_I_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_I_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_I_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_I_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_I_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -54,8 +54,8 @@ std::string GlobalPhaseGateImpl<Prec>::to_string(const std::string& indent) cons
     }
 DEFINE_GLOBAL_PHASE_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_GLOBAL_PHASE_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_GLOBAL_PHASE_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_GLOBAL_PHASE_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_GLOBAL_PHASE_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_GLOBAL_PHASE_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_GLOBAL_PHASE_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_GLOBAL_PHASE_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -84,8 +84,8 @@ std::string XGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_X_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_X_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_X_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_X_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_X_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_X_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_X_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_X_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -114,8 +114,8 @@ std::string YGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_Y_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_Y_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_Y_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_Y_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_Y_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_Y_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_Y_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_Y_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -144,8 +144,8 @@ std::string ZGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_Z_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_Z_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_Z_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_Z_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_Z_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_Z_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_Z_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_Z_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -175,8 +175,8 @@ std::string HGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_H_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_H_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_H_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_H_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_H_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_H_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_H_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_H_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -205,8 +205,8 @@ std::string SGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_S_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_S_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_S_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_S_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_S_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_S_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_S_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_S_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -236,8 +236,8 @@ std::string SdagGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_S_DAG_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_S_DAG_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_S_DAG_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_S_DAG_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_S_DAG_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_S_DAG_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_S_DAG_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_S_DAG_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -266,8 +266,8 @@ std::string TGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_T_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_T_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_T_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_T_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_T_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_T_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_T_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_T_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -297,8 +297,8 @@ std::string TdagGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_T_DAG_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_T_DAG_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_T_DAG_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_T_DAG_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_T_DAG_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_T_DAG_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_T_DAG_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_T_DAG_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -328,8 +328,8 @@ std::string SqrtXGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_SQRT_X_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_SQRT_X_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_SQRT_X_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_SQRT_X_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_SQRT_X_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_SQRT_X_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_SQRT_X_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_SQRT_X_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -359,8 +359,8 @@ std::string SqrtXdagGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_SQRT_XDAG_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_SQRT_XDAG_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_SQRT_XDAG_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_SQRT_XDAG_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_SQRT_XDAG_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_SQRT_XDAG_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_SQRT_XDAG_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_SQRT_XDAG_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -390,8 +390,8 @@ std::string SqrtYGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_SQRT_Y_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_SQRT_Y_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_SQRT_Y_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_SQRT_Y_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_SQRT_Y_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_SQRT_Y_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_SQRT_Y_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_SQRT_Y_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -421,8 +421,8 @@ std::string SqrtYdagGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_SQRT_YDAG_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_SQRT_YDAG_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_SQRT_YDAG_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_SQRT_YDAG_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_SQRT_YDAG_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_SQRT_YDAG_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_SQRT_YDAG_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_SQRT_YDAG_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -451,8 +451,8 @@ std::string P0GateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_P0_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_P0_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_P0_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_P0_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_P0_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_P0_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_P0_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_P0_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -481,8 +481,8 @@ std::string P1GateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_P1_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_P1_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_P1_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_P1_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_P1_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_P1_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_P1_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_P1_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -518,8 +518,8 @@ std::string RXGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_RX_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_RX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_RX_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_RX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_RX_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_RX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_RX_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_RX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -554,8 +554,8 @@ std::string RYGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_RY_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_RY_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_RY_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_RY_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_RY_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_RY_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_RY_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_RY_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -590,8 +590,8 @@ std::string RZGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_RZ_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_RZ_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_RZ_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_RZ_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_RZ_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_RZ_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_RZ_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_RZ_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -625,8 +625,8 @@ std::string U1GateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_U1_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_U1_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_U1_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_U1_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_U1_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_U1_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_U1_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_U1_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -667,8 +667,8 @@ std::string U2GateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_U2_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_U2_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_U2_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_U2_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_U2_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_U2_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_U2_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_U2_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -713,8 +713,8 @@ std::string U3GateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_U3_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_U3_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_U3_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_U3_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_U3_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_U3_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_U3_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_U3_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
@@ -744,8 +744,8 @@ std::string SwapGateImpl<Prec>::to_string(const std::string& indent) const {
     }
 DEFINE_SWAP_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_SWAP_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_SWAP_GATE_UPDATE(StateVector, ExecutionSpace::HostSerialSpace)
-DEFINE_SWAP_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerialSpace)
+DEFINE_SWAP_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_SWAP_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
 DEFINE_SWAP_GATE_UPDATE(StateVector, ExecutionSpace::Default)
 DEFINE_SWAP_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)

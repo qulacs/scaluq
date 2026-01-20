@@ -49,7 +49,7 @@ void ParamRXGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamRXGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector, double param) const {
+    StateVector<Prec, ExecutionSpace::HostSerial>& state_vector, double param) const {
     this->check_qubit_mask_within_bounds(state_vector);
     rx_gate(this->_target_mask,
             this->_control_mask,
@@ -59,7 +59,7 @@ void ParamRXGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamRXGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states,
+    StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
     std::vector<double> params) const {
     this->check_qubit_mask_within_bounds(states);
     std::vector<Float<Prec>> params_prec(params.size());
@@ -154,7 +154,7 @@ void ParamRYGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamRYGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector, double param) const {
+    StateVector<Prec, ExecutionSpace::HostSerial>& state_vector, double param) const {
     this->check_qubit_mask_within_bounds(state_vector);
     ry_gate(this->_target_mask,
             this->_control_mask,
@@ -164,7 +164,7 @@ void ParamRYGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamRYGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states,
+    StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
     std::vector<double> params) const {
     this->check_qubit_mask_within_bounds(states);
     std::vector<Float<Prec>> params_prec(params.size());
@@ -259,7 +259,7 @@ void ParamRZGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamRZGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector, double param) const {
+    StateVector<Prec, ExecutionSpace::HostSerial>& state_vector, double param) const {
     this->check_qubit_mask_within_bounds(state_vector);
     rz_gate(this->_target_mask,
             this->_control_mask,
@@ -269,7 +269,7 @@ void ParamRZGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamRZGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states,
+    StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
     std::vector<double> params) const {
     this->check_qubit_mask_within_bounds(states);
     std::vector<Float<Prec>> params_prec(params.size());

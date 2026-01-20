@@ -93,7 +93,7 @@ void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector, double param) const {
+    StateVector<Prec, ExecutionSpace::HostSerial>& state_vector, double param) const {
     Random random;
     double r = random.uniform();
     std::uint64_t i = std::distance(_cumulative_distribution.begin(),
@@ -109,7 +109,7 @@ void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states,
+    StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
     std::vector<double> params) const {
     Random random;
     std::vector<double> r(states.batch_size());
@@ -126,7 +126,7 @@ void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
     });
     for (std::size_t i = 0; i < states.batch_size(); ++i) {
         const auto& gate = _gate_list[indicies[i]];
-        auto state_vector = StateVector<Prec, ExecutionSpace::HostSerialSpace>(
+        auto state_vector = StateVector<Prec, ExecutionSpace::HostSerial>(
             Kokkos::subview(states._raw, i, Kokkos::ALL));
         if (gate.index() == 0) {
             std::get<0>(gate)->update_quantum_state(state_vector);

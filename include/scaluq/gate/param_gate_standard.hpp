@@ -22,9 +22,9 @@ public:
                               double param) const override;
     void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Host>& states,
                               std::vector<double> params) const override;
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector,
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::HostSerial>& state_vector,
                               double param) const override;
-    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states,
+    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
                               std::vector<double> params) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
@@ -59,9 +59,9 @@ public:
                               double param) const override;
     void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Host>& states,
                               std::vector<double> params) const override;
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector,
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::HostSerial>& state_vector,
                               double param) const override;
-    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states,
+    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
                               std::vector<double> params) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
@@ -96,9 +96,9 @@ public:
                               double param) const override;
     void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Host>& states,
                               std::vector<double> params) const override;
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::HostSerialSpace>& state_vector,
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::HostSerial>& state_vector,
                               double param) const override;
-    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::HostSerialSpace>& states,
+    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
                               std::vector<double> params) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,

@@ -32,7 +32,7 @@ struct TestType {
             ret += "HostSpace";
         else if constexpr (Space == ExecutionSpace::Default)
             ret += "DefaultSpace";
-        else if constexpr (Space == ExecutionSpace::HostSerialSpace)
+        else if constexpr (Space == ExecutionSpace::HostSerial)
             ret += "HostSerialSpace";
         return ret;
     }
@@ -40,16 +40,15 @@ struct TestType {
 
 template <Precision Prec, typename... Types>
 struct AddPrecision {
-    using Type =
-        std::conditional_t<std::is_same_v<internal::SpaceType<ExecutionSpace::Host>,
-                                          internal::SpaceType<ExecutionSpace::Default>>,
-                           ::testing::Types<TestType<Prec, ExecutionSpace::Host>,
-                                            TestType<Prec, ExecutionSpace::HostSerialSpace>,
-                                            Types...>,
-                           ::testing::Types<TestType<Prec, ExecutionSpace::Host>,
-                                            TestType<Prec, ExecutionSpace::Default>,
-                                            TestType<Prec, ExecutionSpace::HostSerialSpace>,
-                                            Types...>>;
+    using Type = std::conditional_t<std::is_same_v<internal::SpaceType<ExecutionSpace::Host>,
+                                                   internal::SpaceType<ExecutionSpace::Default>>,
+                                    ::testing::Types<TestType<Prec, ExecutionSpace::Host>,
+                                                     TestType<Prec, ExecutionSpace::HostSerial>,
+                                                     Types...>,
+                                    ::testing::Types<TestType<Prec, ExecutionSpace::Host>,
+                                                     TestType<Prec, ExecutionSpace::Default>,
+                                                     TestType<Prec, ExecutionSpace::HostSerial>,
+                                                     Types...>>;
 };
 
 template <typename List>
