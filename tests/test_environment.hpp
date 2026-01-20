@@ -33,7 +33,7 @@ struct TestType {
         else if constexpr (Space == ExecutionSpace::Default)
             ret += "DefaultSpace";
         else if constexpr (Space == ExecutionSpace::HostSerial)
-            ret += "HostSerialSpace";
+            ret += "HostSerial";
         return ret;
     }
 };

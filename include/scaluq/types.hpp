@@ -16,9 +16,9 @@ using StdComplex = std::complex<double>;
 using Json = nlohmann::json;
 
 #ifdef SCALUQ_USE_CUDA
-enum class ExecutionSpace { Host, HostSerialSpace, Default };
+enum class ExecutionSpace { Host, HostSerial, Default };
 #else
-enum class ExecutionSpace { Host, HostSerialSpace, Default = Host };
+enum class ExecutionSpace { Host, HostSerial, Default = Host };
 #endif
 
 using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;

@@ -52,7 +52,7 @@ void test_gate(ParamGate<Prec> gate_control,
                std::uint64_t control_value_mask,
                double param) {
     // Generate random state on Host first to avoid potential issues with Random Pool on
-    // HostSerialSpace
+    // HostSerial
     StateVector<Prec, ExecutionSpace::Host> state_host =
         StateVector<Prec, ExecutionSpace::Host>::Haar_random_state(n_qubits);
     auto amplitudes = state_host.get_amplitudes();
