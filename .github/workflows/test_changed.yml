@@ -1,7 +1,7 @@
-name: Build and Test
+name: Test Changed Files
 
 on:
-  push:
+  pull_request:
     paths-ignore:
       - ".devcontainer/**"
       - ".vscode/**"
@@ -47,28 +47,71 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check if build-related file is changed
+        id: check-build-files
+        uses: tj-actions/changed-files@v47.0.1
+        with:
+          files: |
+            cmake/**
+            script/configure
+            script/related-test-files
+            CMakeLists.txt
+            src/CMakeLists.txt
+            tests/CMakeLists.txt
+      
+      - name: Set SCALUQ_TEST_SOURCES to ALL
+        if: ${{ steps.check-build-files.outputs.any_changed == 'true' }}
+        run: echo "SCALUQ_TEST_SOURCES=ALL" >> $GITHUB_ENV
+      
+      - name: List changed source files
+        id: check-source-files
+        if: ${{ steps.check-build-files.outputs.any_changed == 'false' }}
+        uses: tj-actions/changed-files@v47.0.1
+        with:
+          files: |
+            include/scaluq/**.hpp
+            src/**.hpp
+            src/**.cpp
+            tests/**.hpp
+            tests/**.cpp
+      
+      - name: List related test files
+        if: ${{ steps.check-build-files.outputs.any_changed == 'false' }}
+        run: |
+          RELATED_TEST_FILES=$(./script/related-test-files ${{ steps.check-source-files.outputs.changed_files }})
+          if [ -z "$RELATED_TEST_FILES" ]; then
+            echo "No related test files found. Skipping tests."
+          else
+            echo "Related test files:"
+            echo "$RELATED_TEST_FILES"
+            SCALUQ_TEST_SOURCES=$(echo "$RELATED_TEST_FILES" | tr '\n' ';')
+            echo "SCALUQ_TEST_SOURCES=$SCALUQ_TEST_SOURCES" >> $GITHUB_ENV
+          fi
+      
       - name: Install Ninja
-        if: ${{ matrix.os == 'linux' }}
+        if: ${{ matrix.os == 'linux' && env.SCALUQ_TEST_SOURCES != '' }}
         run: sudo apt update && sudo apt install ninja-build
 
       - name: Install Ninja
-        if: ${{ matrix.os == 'macos' }}
+        if: ${{ matrix.os == 'macos' && env.SCALUQ_TEST_SOURCES != '' }}
         run: brew install ninja
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
+        if: ${{ env.SCALUQ_TEST_SOURCES != '' }}
         with:
           key: "${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.device }}"
           verbose: 2
       
       - name: Install CUDA toolkit
-        if: ${{ matrix.device == 'cuda' }}
+        if: ${{ matrix.device == 'cuda' && env.SCALUQ_TEST_SOURCES != '' }}
         uses: Jimver/cuda-toolkit@v0.2.19
         with:
           cuda: "12.6.1"
           method: "network"
       
       - name: Show installed Compiler version
+        if: ${{ env.SCALUQ_TEST_SOURCES != '' }}
         run: |
           [ $SCALUQ_USE_CUDA = 'ON' ] && nvcc --version
           ccache --version
@@ -77,15 +120,18 @@ jobs:
           cmake --version
           ninja --version
 
-      - name: Install Scaluq for Ubuntu
-        run: ./script/build_gcc.sh
+      - name: Configure & Build
+        if: ${{ env.SCALUQ_TEST_SOURCES != '' }}
+        run: |
+          ./script/configure
+          ninja -C build/
 
       - name: Test
-        if: ${{ matrix.device == 'cpu' }} # currently GPU runner is not supported
+        if: ${{ matrix.device == 'cpu' && env.SCALUQ_TEST_SOURCES != '' }} # currently GPU runner is not supported
         run: |
           if [ "$(uname)" == 'Darwin' ]; then
             NPROC=$(sysctl -n hw.physicalcpu)
           else
             NPROC=$(nproc)
           fi
-          OMP_PROC_BIND=false ctest --test-dir build/ -j ${NPROC}
+          OMP_PROC_BIND=false ctest --test-dir build/ -j ${NPROC} --output-on-failure
