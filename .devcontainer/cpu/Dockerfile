@@ -18,6 +18,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \
     ca-certificates \
+    ccache \
     clang-format \
     curl \
     git \
@@ -33,8 +34,8 @@ RUN apt-get update && \
     update-alternatives --set gcc /usr/bin/gcc-13 && \
     update-alternatives --set g++ /usr/bin/g++-13
 
-ENV CC=gcc
-ENV CXX=g++
+ENV CC=/usr/lib/ccache/gcc
+ENV CXX=/usr/lib/ccache/g++
 
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.28.0/cmake-3.28.0-Linux-x86_64.sh -q -O /tmp/cmake-install.sh && \
     chmod u+x /tmp/cmake-install.sh && \
