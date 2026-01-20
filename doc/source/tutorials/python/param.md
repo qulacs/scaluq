@@ -14,7 +14,7 @@ p_ry = ParamRY(1) # Parametric RY gate with target 1 and coef 1.0 (default)
 ```
 
 ## Add parametric gates to Circuit
-You can add {class}`ParamGate` to `Circuit` using {func}`add_param_gate <scaluq.default.f64.Circuit.add_param_gate>`. This method requires a key (string) to identify the parameter. Multiple gates can share the same key.
+You can add {class}`ParamGate <scaluq.default.f64.ParamGate>` to {class}`Circuit <scaluq.default.f64.Circuit>` using {func}`add_param_gate <scaluq.default.f64.Circuit.add_param_gate>`. This method requires a key (string) to identify the parameter. Multiple gates can share the same key.
 
 You can also retrieve information about parameter keys from the circuit.
 ```
