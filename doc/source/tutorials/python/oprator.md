@@ -41,8 +41,8 @@ op1 = Operator(n_qubits)
 op1.add_operator(PauliOperator("Z 0 Z 1", coef=1.0)) #(1.0 + 0.0j) Z0 Z1
 
 # Use arithmetic operations to add more terms or scale the operator
-op1 = op1 + PauliOperator("Z 0 Z 1", coef=0.5) # (1.0 + 0.0j) Z0 Z1 + (0.5 + 0.0j) X0
-op1 *= 0.8 # (0.8 + 0.0j) Z0 Z1 + (0.4 + 0.0j) X0
+op1 = op1 + PauliOperator("Z 0 Z 1", coef=0.5) # (1.0 + 0.0j) Z0 Z1 + (0.5 + 0.0j) Z0 Z1
+op1 *= 0.8 # (0.8 + 0.0j) Z0 Z1 + (0.4 + 0.0j) Z0 Z1
 
 
 op2 = Operator(n_qubits)
