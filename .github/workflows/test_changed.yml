@@ -108,7 +108,7 @@ jobs:
           ninja --version
 
       - name: List related test files
-        if: ${{ steps.check-build-files.outputs.any_changed == 'false' }}
+        if: ${{ steps.check-build-files.outputs.any_changed == 'false' && steps.check-source-files.outputs.any_changed == 'true' }}
         run: |
           RELATED_TEST_FILES=$(./script/related-test-files ${{ steps.check-source-files.outputs.changed_files }})
           if [ -z "$RELATED_TEST_FILES" ]; then
