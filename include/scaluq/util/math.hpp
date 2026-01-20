@@ -133,7 +133,7 @@ public:
     using value_type = std::remove_cv_t<Scalar>;
     static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
-    using result_view_type = Kokkos::View<value_type, SpaceType<Space>>;
+    using result_view_type = Kokkos::View<value_type, SpaceType<Space>, Kokkos::MemoryUnmanaged>;
 
 private:
     result_view_type value;
