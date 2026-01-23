@@ -75,8 +75,40 @@ jobs:
             tests/**.hpp
             tests/**.cpp
       
+      - name: Install Ninja
+        if: ${{ steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true' }}
+        run: sudo apt update && sudo apt install ninja-build
+
+      - name: Install Ninja
+        if: ${{ steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true' }}
+        run: brew install ninja
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        if: ${{ steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true' }}
+        with:
+          key: "${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.device }}"
+          verbose: 2
+      
+      - name: Install CUDA toolkit
+        if: ${{ matrix.device == 'cuda' && (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') }}
+        uses: Jimver/cuda-toolkit@v0.2.19
+        with:
+          cuda: "12.6.1"
+          method: "network"
+      
+      - name: Show installed Compiler version
+        if: ${{ steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true' }}
+        run: |
+          [ $SCALUQ_USE_CUDA = 'ON' ] && nvcc --version
+          ccache --version
+          $CMAKE_C_COMPILER --version
+          $CMAKE_CXX_COMPILER --version
+          cmake --version
+          ninja --version
+
       - name: List related test files
-        if: ${{ steps.check-build-files.outputs.any_changed == 'false' }}
+        if: ${{ steps.check-build-files.outputs.any_changed == 'false' && steps.check-source-files.outputs.any_changed == 'true' }}
         run: |
           RELATED_TEST_FILES=$(./script/related-test-files ${{ steps.check-source-files.outputs.changed_files }})
           if [ -z "$RELATED_TEST_FILES" ]; then
@@ -88,38 +120,6 @@ jobs:
             echo "SCALUQ_TEST_SOURCES=$SCALUQ_TEST_SOURCES" >> $GITHUB_ENV
           fi
       
-      - name: Install Ninja
-        if: ${{ matrix.os == 'linux' && env.SCALUQ_TEST_SOURCES != '' }}
-        run: sudo apt update && sudo apt install ninja-build
-
-      - name: Install Ninja
-        if: ${{ matrix.os == 'macos' && env.SCALUQ_TEST_SOURCES != '' }}
-        run: brew install ninja
-
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        if: ${{ env.SCALUQ_TEST_SOURCES != '' }}
-        with:
-          key: "${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.device }}"
-          verbose: 2
-      
-      - name: Install CUDA toolkit
-        if: ${{ matrix.device == 'cuda' && env.SCALUQ_TEST_SOURCES != '' }}
-        uses: Jimver/cuda-toolkit@v0.2.19
-        with:
-          cuda: "12.6.1"
-          method: "network"
-      
-      - name: Show installed Compiler version
-        if: ${{ env.SCALUQ_TEST_SOURCES != '' }}
-        run: |
-          [ $SCALUQ_USE_CUDA = 'ON' ] && nvcc --version
-          ccache --version
-          $CMAKE_C_COMPILER --version
-          $CMAKE_CXX_COMPILER --version
-          cmake --version
-          ninja --version
-
       - name: Configure & Build
         if: ${{ env.SCALUQ_TEST_SOURCES != '' }}
         run: |
