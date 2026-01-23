@@ -15,13 +15,15 @@ jobs:
       matrix:
         os: ["linux", "macos"]
         architecture: ["x86_64", "arm64"]
-        device: ["cpu", "cuda"]
+        device: ["cpu"]
         exclude:
           - os: "macos"
             device: "cuda"
           # currently ARM runner is not supported
           - os: "linux"
             architecture: "arm64"
+          - os: "macos"
+            architecture: "x86_64"
         include:
           - os: "linux"
             architecture: "x86_64"

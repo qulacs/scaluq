@@ -1,12 +1,21 @@
 name: Format
 
 on:
-  push:
+  pull_request:
     paths-ignore:
       - ".devcontainer/**"
       - ".vscode/**"
       - "doc/**"
       - "*.md"
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - ".devcontainer/**"
+      - ".vscode/**"
+      - "doc/**"
+      - "*.md"
+  workflow_dispatch:
 
 jobs:
   check-format:

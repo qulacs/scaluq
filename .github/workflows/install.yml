@@ -1,12 +1,21 @@
 name: Install to System
 
 on:
-  push:
+  pull_request:
     paths-ignore:
       - ".devcontainer/**"
       - ".vscode/**"
       - "doc/**"
       - "*.md"
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - ".devcontainer/**"
+      - ".vscode/**"
+      - "doc/**"
+      - "*.md"
+  workflow_dispatch:
 
 jobs:
   library:
@@ -16,12 +25,17 @@ jobs:
         os: ["linux", "macos"]
         architecture: ["x86_64", "arm64"]
         device: ["cpu", "cuda"]
+        trigger: ${{ github.event_name }}
         exclude:
           - os: "macos"
             device: "cuda"
           # currently ARM runner is not supported
           - os: "linux"
             architecture: "arm64"
+          - os: "macos"
+            trigger: "pull_request"
+          - device: "cuda"
+            trigger: "pull_request"
         include:
           - os: "linux"
             architecture: "x86_64"
@@ -99,12 +113,17 @@ jobs:
         architecture: ["x86_64", "arm64"]
         device: ["cpu", "cuda"]
         python-version: ["3.13"]
+        trigger: ${{ github.event_name }}
         exclude:
           - os: "macos"
             device: "cuda"
           # currently ARM runner is not supported
           - os: "linux"
             architecture: "arm64"
+          - os: "macos"
+            trigger: "pull_request"
+          - device: "cuda"
+            trigger: "pull_request"
         include:
           - os: "linux"
             architecture: "x86_64"

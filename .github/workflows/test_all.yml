@@ -18,7 +18,7 @@ jobs:
       matrix:
         os: ["linux", "macos"]
         architecture: ["x86_64", "arm64"]
-        device: ["cpu", "cuda"]
+        device: ["cpu"]
         exclude:
           - os: "macos"
             device: "cuda"
