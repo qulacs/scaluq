@@ -1,6 +1,8 @@
 #pragma once
 
+#include <map>
 #include <set>
+#include <string_view>
 #include <variant>
 
 #include "../gate/gate.hpp"
@@ -50,18 +52,13 @@ public:
     void add_circuit(const Circuit<Prec>& circuit);
     void add_circuit(Circuit<Prec>&& circuit);
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state,
+    template <ExecutionSpace Space>
+    void update_quantum_state(StateVector<Prec, Space>& state,
                               const std::map<std::string, double>& parameters = {}) const;
+    template <ExecutionSpace Space>
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& states,
+        StateVectorBatched<Prec, Space>& states,
         const std::map<std::string, std::vector<double>>& parameters = {}) const;
-#ifdef SCALUQ_USE_CUDA
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state,
-                              const std::map<std::string, double>& parameters = {}) const;
-    void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& states,
-        const std::map<std::string, std::vector<double>>& parameters = {}) const;
-#endif  // SCALUQ_USE_CUDA
 
     Circuit copy() const;
 
@@ -161,7 +158,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def("update_quantum_state",
              nb::overload_cast<StateVector<Prec, ExecutionSpace::Host>&,
                                const std::map<std::string, double>&>(
-                 &Circuit<Prec>::update_quantum_state, nb::const_),
+                 &Circuit<Prec>::template update_quantum_state<ExecutionSpace::Host>, nb::const_),
              "state"_a,
              "kwargs"_a,
              "Apply gate to the StateVector. StateVector in args is directly updated. If the "
@@ -171,7 +168,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "update_quantum_state",
             nb::overload_cast<StateVectorBatched<Prec, ExecutionSpace::Host>&,
                               const std::map<std::string, std::vector<double>>&>(
-                &Circuit<Prec>::update_quantum_state, nb::const_),
+                &Circuit<Prec>::template update_quantum_state<ExecutionSpace::Host>, nb::const_),
             "state"_a,
             "params"_a,
             "Apply gate to the StateVectorBatched. StateVectorBatched in args is directly updated. "
@@ -201,21 +198,99 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "parameters"_a = std::map<std::string, double>{},
             "seed"_a = std::nullopt,
             "Simulate noise circuit. Return all the possible states and their counts.")
-#ifdef SCALUQ_USE_CUDA
+        .def(
+            "update_quantum_state",
+            [&](const Circuit<Prec>& circuit,
+                StateVector<Prec, ExecutionSpace::HostSerial>& state,
+                nb::kwargs kwargs) {
+                std::map<std::string, double> parameters;
+                for (auto&& [key, param] : kwargs) {
+                    parameters[nb::cast<std::string>(key)] = nb::cast<double>(param);
+                }
+                circuit.update_quantum_state(state, parameters);
+            },
+            "state"_a,
+            "kwargs"_a,
+            "Apply gate to the StateVector. StateVector in args is directly updated. If the "
+            "circuit contains parametric gate, you have to give real value of parameter as "
+            "\"name=value\" format in kwargs.")
         .def("update_quantum_state",
-             nb::overload_cast<StateVector<Prec, ExecutionSpace::Default>&,
+             nb::overload_cast<StateVector<Prec, ExecutionSpace::HostSerial>&,
                                const std::map<std::string, double>&>(
-                 &Circuit<Prec>::update_quantum_state, nb::const_),
+                 &Circuit<Prec>::template update_quantum_state<ExecutionSpace::HostSerial>,
+                 nb::const_),
              "state"_a,
-             "kwargs"_a,
+             "params"_a,
              "Apply gate to the StateVector. StateVector in args is directly updated. If the "
              "circuit contains parametric gate, you have to give real value of parameter as "
-             "\"name=value\" format in kwargs.")
+             "dict[str, float] in 2nd arg.")
+        .def(
+            "update_quantum_state",
+            [&](const Circuit<Prec>& circuit,
+                StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
+                nb::kwargs kwargs) {
+                std::map<std::string, std::vector<double>> parameters;
+                for (auto&& [key, param] : kwargs) {
+                    parameters[nb::cast<std::string>(key)] = nb::cast<std::vector<double>>(param);
+                }
+                circuit.update_quantum_state(states, parameters);
+            },
+            "state"_a,
+            "kwargs"_a,
+            "Apply gate to the StateVectorBatched. StateVectorBatched in args is directly updated. "
+            "If the circuit contains parametric gate, you have to give real value of parameter as "
+            "\"name=[value1, value2, ...]\" format in kwargs.")
+        .def(
+            "update_quantum_state",
+            nb::overload_cast<StateVectorBatched<Prec, ExecutionSpace::HostSerial>&,
+                              const std::map<std::string, std::vector<double>>&>(
+                &Circuit<Prec>::template update_quantum_state<ExecutionSpace::HostSerial>,
+                nb::const_),
+            "state"_a,
+            "params"_a,
+            "Apply gate to the StateVectorBatched. StateVectorBatched in args is directly updated. "
+            "If the circuit contains parametric gate, you have to give real value of parameter as "
+            "dict[str, list[float]] in 2nd arg.")
+        .def("optimize",
+             nb::overload_cast<std::uint64_t>(
+                 &Circuit<Prec>::template optimize<ExecutionSpace::HostSerial>),
+             "max_block_size"_a = 3,
+             "Optimize circuit. Create qubit dependency tree and merge neighboring gates if the "
+             "new gate has less than or equal to `max_block_size` or the new gate is Pauli.")
+        .def(
+            "simulate_noise",
+            [](const Circuit<Prec>& circuit,
+               const StateVector<Prec, ExecutionSpace::HostSerial>& initial_state,
+               std::uint64_t sampling_count,
+               const std::map<std::string, double>& parameters,
+               std::optional<std::uint64_t> seed) {
+                return circuit.template simulate_noise<ExecutionSpace::HostSerial>(
+                    initial_state,
+                    sampling_count,
+                    parameters,
+                    seed.value_or(std::random_device{}()));
+            },
+            "initial_state"_a,
+            "sampling_count"_a,
+            "parameters"_a = std::map<std::string, double>{},
+            "seed"_a = std::nullopt,
+            "Simulate noise circuit. Return all the possible states and their counts.")
+#ifdef SCALUQ_USE_CUDA
+        .def(
+            "update_quantum_state",
+            nb::overload_cast<StateVector<Prec, ExecutionSpace::Default>&,
+                              const std::map<std::string, double>&>(
+                &Circuit<Prec>::template update_quantum_state<ExecutionSpace::Default>, nb::const_),
+            "state"_a,
+            "kwargs"_a,
+            "Apply gate to the StateVector. StateVector in args is directly updated. If the "
+            "circuit contains parametric gate, you have to give real value of parameter as "
+            "\"name=value\" format in kwargs.")
         .def(
             "update_quantum_state",
             nb::overload_cast<StateVectorBatched<Prec, ExecutionSpace::Default>&,
                               const std::map<std::string, std::vector<double>>&>(
-                &Circuit<Prec>::update_quantum_state, nb::const_),
+                &Circuit<Prec>::template update_quantum_state<ExecutionSpace::Default>, nb::const_),
             "state"_a,
             "params"_a,
             "Apply gate to the StateVectorBatched. StateVectorBatched in args is directly updated. "
