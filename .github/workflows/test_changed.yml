@@ -75,12 +75,12 @@ jobs:
             tests/**.hpp
             tests/**.cpp
       
-      - name: Install Ninja
-        if: ${{ steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true' }}
-        run: sudo apt update && sudo apt install ninja-build
+      - name: Install Ninja (Linux)
+        if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && runner.os == 'Linux' }}
+        run: sudo apt update && sudo apt install -y ninja-build
 
-      - name: Install Ninja
-        if: ${{ steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true' }}
+      - name: Install Ninja (macos)
+        if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && runner.os == 'macos' }}
         run: brew install ninja
 
       - name: Setup ccache
