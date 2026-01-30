@@ -117,7 +117,6 @@ TYPED_TEST(OperatorTest, ParallelExpectationValue) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     std::uint64_t n = 4;
-    std::uint64_t dim = 1ULL << n;
     Random random;
 
     for (std::uint64_t repeat = 0; repeat < 10; ++repeat) {
