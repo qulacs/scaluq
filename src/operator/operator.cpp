@@ -161,7 +161,6 @@ StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
     return static_cast<StdComplex>(res);
 }
 
-// TODO: テストの追加
 // 各termの期待値からなるベクトルを返す
 template <>
 std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectation_values(
