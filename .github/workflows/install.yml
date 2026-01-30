@@ -28,14 +28,14 @@ jobs:
             runs-on: "ubuntu-24.04"
           - os: "macos"
             architecture: "x86_64"
-            runs-on: "macos-15"
+            runs-on: "macos-15-intel"
           - os: "macos"
             architecture: "arm64"
-            runs-on: "macos-14"
+            runs-on: "macos-15"
     runs-on: ${{ matrix.runs-on }}
     env:
-      CMAKE_C_COMPILER: ${{ (matrix.runs-on == 'macos-14' || matrix.runs-on == 'macos-15') && '/opt/homebrew/opt/ccache/libexec/gcc-14' || '/usr/lib/ccache/gcc' }}
-      CMAKE_CXX_COMPILER: ${{ (matrix.runs-on == 'macos-14' || matrix.runs-on == 'macos-15') && '/opt/homebrew/opt/ccache/libexec/g++-14' || '/usr/lib/ccache/g++' }}
+      CMAKE_C_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/gcc-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/gcc-15' || '/usr/lib/ccache/gcc') }}
+      CMAKE_CXX_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/g++-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/g++-15' || '/usr/lib/ccache/g++') }}
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
       SCALUQ_CPU_NATIVE: "OFF"
       SCALUQ_CUDA_ARCH: "PASCAL61"
@@ -57,7 +57,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: "${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.device }}"
+          key: "${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.device }}"
           verbose: 2
       
       - name: Install CUDA toolkit
@@ -111,14 +111,14 @@ jobs:
             runs-on: "ubuntu-24.04"
           - os: "macos"
             architecture: "x86_64"
-            runs-on: "macos-15"
+            runs-on: "macos-15-intel"
           - os: "macos"
             architecture: "arm64"
-            runs-on: "macos-14"
+            runs-on: "macos-15"
     runs-on: ${{ matrix.runs-on }}
     env:
-      CMAKE_C_COMPILER: ${{ (matrix.runs-on == 'macos-14' || matrix.runs-on == 'macos-15') && '/opt/homebrew/opt/ccache/libexec/gcc-14' || '/usr/lib/ccache/gcc' }}
-      CMAKE_CXX_COMPILER: ${{ (matrix.runs-on == 'macos-14' || matrix.runs-on == 'macos-15') && '/opt/homebrew/opt/ccache/libexec/g++-14' || '/usr/lib/ccache/g++' }}
+      CMAKE_C_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/gcc-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/gcc-15' || '/usr/lib/ccache/gcc') }}
+      CMAKE_CXX_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/g++-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/g++-15' || '/usr/lib/ccache/g++') }}
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
       SCALUQ_CPU_NATIVE: "OFF"
       SCALUQ_CUDA_ARCH: "PASCAL61"
@@ -132,7 +132,8 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: "${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.device }}"
+          key: "${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.device }}"
+          save: false
           verbose: 2
       
       - name: Install CUDA toolkit
