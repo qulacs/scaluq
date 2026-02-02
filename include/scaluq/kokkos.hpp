@@ -9,9 +9,41 @@ void synchronize();
 }  // namespace scaluq
 
 #ifdef SCALUQ_USE_NANOBIND
+#include "../types.hpp"
 #include "../python/docstring.hpp"
 namespace scaluq::internal {
 void bind_kokkos_hpp(nb::module_& m) {
+    nb::class_<DefaultExecutionSpace>(
+        m,
+        "DefaultExecutionSpace",
+        DocString()
+            .desc("Kokkos::DefaultExecutionSpace instance.")
+            .build_as_google_style()
+            .c_str())
+        .def(nb::init<>(),
+             DocString()
+                 .desc("Construct default execution space instance.")
+                 .build_as_google_style()
+                 .c_str())
+#ifdef SCALUQ_USE_CUDA
+        .def(nb::init<std::uintptr_t>(),
+             "stream"_a,
+             DocString()
+                 .desc("Construct execution space instance from CUDA stream.")
+                 .arg("stream", "int", "CUDA stream handle")
+                 .build_as_google_style()
+                 .c_str())
+        .def("stream",
+             [](const DefaultExecutionSpace& space) {
+                 return reinterpret_cast<std::uintptr_t>(space.cuda_stream());
+             },
+             DocString()
+                 .desc("Get CUDA stream handle.")
+                 .ret("int", "CUDA stream handle")
+                 .build_as_google_style()
+                 .c_str())
+#endif
+        ;
     m.def("initialize",
           &initialize,
           DocString()

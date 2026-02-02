@@ -109,7 +109,7 @@ template <>
 void Operator<internal::Prec, internal::Space>::apply_to_state(
     StateVector<internal::Prec, internal::Space>& state_vector) const {
     auto states = StateVectorBatched<internal::Prec, internal::Space>::uninitialized_state(
-        _terms.size(), state_vector.n_qubits());
+        _terms.size(), state_vector.n_qubits(), state_vector.execution_space());
     states.set_state_vector(state_vector);
     internal::apply_pauli<internal::Prec, internal::Space>(0, 0, _terms, states);
     state_vector = states.get_reduced_state();
@@ -124,7 +124,7 @@ StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
     Kokkos::parallel_reduce(
         "get_expectation_value",
         Kokkos::MDRangePolicy<internal::SpaceType<internal::Space>, Kokkos::Rank<2>>(
-            {0, 0}, {nterms, dim >> 1}),
+            state_vector.execution_space(), {0, 0}, {nterms, dim >> 1}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t term_id, std::uint64_t state_idx, ComplexType & res_lcl) {
             auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
             auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
@@ -171,7 +171,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
     Kokkos::parallel_for(
         "get_expectation_value",
         Kokkos::TeamPolicy<internal::SpaceType<internal::Space>>(
-            internal::SpaceType<internal::Space>(), states.batch_size(), Kokkos::AUTO),
+            states.execution_space(), states.batch_size(), Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const typename Kokkos::TeamPolicy<internal::SpaceType<internal::Space>>::member_type&
                 team) {
@@ -238,7 +238,7 @@ StdComplex Operator<internal::Prec, internal::Space>::get_transition_amplitude(
     Kokkos::parallel_reduce(
         "get_transition_amplitude",
         Kokkos::MDRangePolicy<internal::SpaceType<internal::Space>, Kokkos::Rank<2>>(
-            {0, 0}, {nterms, dim >> 1}),
+            state_vector_bra.execution_space(), {0, 0}, {nterms, dim >> 1}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t term_id, std::uint64_t state_idx, ComplexType & res_lcl) {
             auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
             auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
@@ -295,7 +295,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transitio
     Kokkos::parallel_for(
         "get_transition_amplitude",
         Kokkos::TeamPolicy<internal::SpaceType<internal::Space>>(
-            internal::SpaceType<internal::Space>(), states_bra.batch_size(), Kokkos::AUTO),
+            states_bra.execution_space(), states_bra.batch_size(), Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const typename Kokkos::TeamPolicy<internal::SpaceType<internal::Space>>::member_type&
                 team) {
@@ -379,7 +379,6 @@ StdComplex Operator<internal::Prec, internal::Space>::calculate_default_mu() con
             res_lcl += internal::abs(_terms(i)._coef.real());
         },
         mu);
-    Kokkos::fence();
     return StdComplex(static_cast<double>(mu));
 }
 
@@ -397,7 +396,8 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_power_method(
     std::uint64_t nqubits = initial_state.n_qubits();
     StdComplex mu_realized = mu.value_or(calculate_default_mu());
     auto state = initial_state.copy();
-    auto tmp_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(nqubits);
+    auto tmp_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(
+        nqubits, initial_state.execution_space());
     for (std::uint64_t i = 0; i < iter_count; i++) {
         // |state> <- (A-mu I)|state>
         tmp_state.load(state);
@@ -463,7 +463,8 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
             eigenvalues,
             [](const StdComplex& a, const StdComplex& b) { return a.real() < b.real(); }) -
         eigenvalues.begin();
-    auto ground_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(nqubits);
+    auto ground_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(
+        nqubits, initial_state.execution_space());
     ground_state.set_zero_norm_state();
     for (std::uint64_t i = 0; i < iter_count; i++) {
         ground_state.add_state_vector_with_coef(eigenvectors(i, minimum_eigenvalue_index),

@@ -70,6 +70,7 @@ public:
     SparseMatrix(const SparseComplexMatrix& sp);
 };
 }  // namespace internal
+using DefaultExecutionSpace = internal::SpaceType<ExecutionSpace::Default>;
 }  // namespace scaluq
 
 namespace nlohmann {

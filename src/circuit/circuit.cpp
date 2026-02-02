@@ -392,8 +392,7 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
                 if (j >= probs.size()) {
                     throw std::runtime_error(
                         "Circuit::simulate_noise: discrete_distribution returned out of "
-                        "range "
-                        "index.");
+                        "range index.");
                 }
                 if (gate_used_count[i][j] == 0) {
                     ++new_size;
@@ -402,8 +401,8 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
             }
         }
 
-        new_states = StateVectorBatched<Prec, Space>::uninitialized_state(new_size,
-                                                                          initial_state.n_qubits());
+        new_states = StateVectorBatched<Prec, Space>::uninitialized_state(
+            new_size, initial_state.n_qubits(), initial_state.execution_space());
         new_scounts.assign(new_size, 0);
 
         std::int64_t insert_idx = 0;

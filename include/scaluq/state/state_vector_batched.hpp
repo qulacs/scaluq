@@ -13,14 +13,20 @@ class StateVectorBatched {
     using FloatType = internal::Float<Prec>;
     using ComplexType = internal::Complex<Prec>;
     using ExecutionSpaceType = internal::SpaceType<Space>;
+    ExecutionSpaceType _space{};
 
 public:
     Kokkos::View<ComplexType**, Kokkos::LayoutRight, ExecutionSpaceType> _raw;
     StateVectorBatched() = default;
-    StateVectorBatched(std::uint64_t batch_size, std::uint64_t n_qubits);
+    StateVectorBatched(std::uint64_t batch_size,
+                       std::uint64_t n_qubits,
+                       ExecutionSpaceType space = ExecutionSpaceType());
     StateVectorBatched(const StateVectorBatched& other) = default;
 
     StateVectorBatched& operator=(const StateVectorBatched& other) = default;
+
+    [[nodiscard]] const ExecutionSpaceType& execution_space() const { return _space; }
+    void set_execution_space(ExecutionSpaceType space) { _space = space; }
 
     [[nodiscard]] std::uint64_t n_qubits() const { return this->_n_qubits; }
 
@@ -50,8 +56,10 @@ public:
         std::uint64_t n_qubits,
         bool set_same_state,
         std::uint64_t seed = std::random_device()());
-    [[nodiscard]] static StateVectorBatched uninitialized_state(std::uint64_t batch_size,
-                                                                std::uint64_t n_qubits);
+    [[nodiscard]] static StateVectorBatched uninitialized_state(
+        std::uint64_t batch_size,
+        std::uint64_t n_qubits,
+        ExecutionSpaceType space = ExecutionSpaceType());
 
     [[nodiscard]] std::vector<std::vector<StdComplex>> get_amplitudes() const;
 
@@ -189,6 +197,22 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                                       "<BLANKLINE>"}))
                  .build_as_google_style()
                  .c_str())
+        .def(nb::init([](std::uint64_t batch_size,
+                         std::uint64_t n_qubits,
+                         const DefaultExecutionSpace& space) {
+                 return StateVectorBatched<Prec, Space>(batch_size, n_qubits, space);
+             }),
+             "batch_size"_a,
+             "n_qubits"_a,
+             "space"_a,
+             DocString()
+                 .desc("Construct batched state vector with specified batch size, qubits, and "
+                       "execution space.")
+                 .arg("batch_size", "int", "Number of batches.")
+                 .arg("n_qubits", "int", "Number of qubits in each state vector.")
+                 .arg("space", "DefaultExecutionSpaceWrapper", "execution space instance")
+                 .build_as_google_style()
+                 .c_str())
         // Constructor: Copy constructor
         .def(nb::init<const StateVectorBatched<Prec, Space>&>(),
              "other"_a,
@@ -262,6 +286,16 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
         .def("set_zero_norm_state",
              &StateVectorBatched<Prec, Space>::set_zero_norm_state,
              DocString().desc("Set all amplitudes to zero.").build_as_google_style().c_str())
+        .def("set_execution_space",
+             [](StateVectorBatched<Prec, Space>& self, const DefaultExecutionSpace& space) {
+                 self.set_execution_space(space);
+             },
+             "space"_a,
+             DocString()
+                 .desc("Set execution space instance for subsequent operations.")
+                 .arg("space", "DefaultExecutionSpaceWrapper", "execution space instance")
+                 .build_as_google_style()
+                 .c_str())
         // Haar random state methods
         .def(
             "set_Haar_random_state",
@@ -305,9 +339,11 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                 .build_as_google_style()
                 .c_str())
         .def_static("uninitialized_state",
-                    &StateVectorBatched<Prec, Space>::uninitialized_state,
+                    nb::overload_cast<std::uint64_t, std::uint64_t, ExecutionSpaceType>(
+                        &StateVectorBatched<Prec, Space>::uninitialized_state),
                     "batch_size"_a,
                     "n_qubits"_a,
+                    "space"_a = ExecutionSpaceType(),
                     DocString()
                         .desc("Construct :class:`StateVectorBatched` without initializing.")
                         .arg("batch_size", "int", "Number of states in batch.")

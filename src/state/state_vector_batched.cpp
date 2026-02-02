@@ -5,10 +5,12 @@
 namespace scaluq {
 template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, Space>::StateVectorBatched(std::uint64_t batch_size,
-                                                    std::uint64_t n_qubits)
+                                                    std::uint64_t n_qubits,
+                                                    ExecutionSpaceType space)
     : _batch_size(batch_size),
       _n_qubits(n_qubits),
       _dim(1ULL << _n_qubits),
+      _space(space),
       _raw(Kokkos::ViewAllocateWithoutInitializing("states"), _batch_size, _dim) {
     set_zero_state();
 }
@@ -22,8 +24,8 @@ void StateVectorBatched<Prec, Space>::set_state_vector(const StateVector<Prec, S
     }
     Kokkos::parallel_for(
         "set_state_vector",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
-                                                                           {_batch_size, _dim}),
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+            _space, {0, 0}, {_batch_size, _dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
             _raw(batch_id, i) = state._raw(i);
         });
@@ -39,17 +41,17 @@ void StateVectorBatched<Prec, Space>::set_state_vector_at(std::uint64_t batch_id
     }
     Kokkos::parallel_for(
         "set_state_vector_at",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
+        Kokkos::RangePolicy<internal::SpaceType<Space>>(_space, 0, _dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw(batch_id, i) = state._raw(i); });
 }
 
 template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_state_vector_at(
     std::uint64_t batch_id) const {
-    auto ret = StateVector<Prec, Space>::uninitialized_state(_n_qubits);
+    auto ret = StateVector<Prec, Space>::uninitialized_state(_n_qubits, _space);
     Kokkos::parallel_for(
         "get_state_vector_at",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
+        Kokkos::RangePolicy<internal::SpaceType<Space>>(_space, 0, _dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { ret._raw(i) = _raw(batch_id, i); });
     return ret;
 }
@@ -63,8 +65,8 @@ void StateVectorBatched<Prec, Space>::set_computational_basis(std::uint64_t basi
     }
     Kokkos::parallel_for(
         "set_computational_basis",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
-                                                                           {_batch_size, _dim}),
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+            _space, {0, 0}, {_batch_size, _dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t b, std::uint64_t i) { _raw(b, i) = (i == basis); });
 }
 
@@ -88,7 +90,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
     Kokkos::parallel_for(
         "sampling (compute stacked prob)",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-            internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
+            _space, _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
@@ -120,7 +122,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
             Kokkos::ViewAllocateWithoutInitializing("result_buf"), todo_count);
         Kokkos::parallel_for(
             "sampling (choose)",
-            Kokkos::RangePolicy<internal::SpaceType<Space>>(0, todo_count),
+            Kokkos::RangePolicy<internal::SpaceType<Space>>(_space, 0, todo_count),
             KOKKOS_CLASS_LAMBDA(std::uint64_t idx) {
                 std::uint64_t batch_id = batch_ids[idx];
                 auto rand_gen = rand_pool.get_state();
@@ -167,7 +169,7 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::Haar_random_sta
         Kokkos::parallel_for(
             "Haar_random_state",
             Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
-                {0, 0}, {states.batch_size(), states.dim()}),
+                states.execution_space(), {0, 0}, {states.batch_size(), states.dim()}),
             KOKKOS_LAMBDA(std::uint64_t b, std::uint64_t i) {
                 auto rand_gen = rand_pool.get_state();
                 states._raw(b, i) =
@@ -181,11 +183,12 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::Haar_random_sta
 
 template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::uninitialized_state(
-    std::uint64_t batch_size, std::uint64_t n_qubits) {
+    std::uint64_t batch_size, std::uint64_t n_qubits, ExecutionSpaceType space) {
     StateVectorBatched states;
     states._n_qubits = n_qubits;
     states._dim = 1ULL << n_qubits;
     states._batch_size = batch_size;
+    states._space = space;
     states._raw = Kokkos::View<ComplexType**, Kokkos::LayoutRight, ExecutionSpaceType>(
         Kokkos::ViewAllocateWithoutInitializing("states"), states._batch_size, states._dim);
     return states;
@@ -210,7 +213,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_squared_norm() const {
     Kokkos::parallel_for(
         "get_squared_norm",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-            internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
+            _space, _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
             FloatType nrm = 0;
@@ -236,7 +239,7 @@ void StateVectorBatched<Prec, Space>::normalize() {
     Kokkos::parallel_for(
         "normalize",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-            internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
+            _space, _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
             FloatType nrm = 0;
@@ -266,7 +269,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_zero_probability(
     Kokkos::parallel_for(
         "get_zero_probability",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-            internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
+            _space, _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
             FloatType sum = 0;
@@ -320,7 +323,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_marginal_probability(
     Kokkos::parallel_for(
         "get_marginal_probability",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-            internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
+            _space, _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
             FloatType sum = 0;
@@ -354,7 +357,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_entropy() const {
     Kokkos::parallel_for(
         "get_entropy",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-            internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
+            _space, _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
             FloatType sum = 0;
@@ -387,8 +390,8 @@ void StateVectorBatched<Prec, Space>::add_state_vector_with_coef(const StdComple
     }
     Kokkos::parallel_for(
         "add_state_vector_with_coef",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
-                                                                           {_batch_size, _dim}),
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+            _space, {0, 0}, {_batch_size, _dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
             _raw(batch_id, i) += ComplexType(coef) * states._raw(batch_id, i);
         });
@@ -398,8 +401,8 @@ template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::multiply_coef(const StdComplex& coef) {
     Kokkos::parallel_for(
         "multiply_coef",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
-                                                                           {_batch_size, _dim}),
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+            _space, {0, 0}, {_batch_size, _dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
             _raw(batch_id, i) *= ComplexType(coef);
         });
@@ -449,7 +452,8 @@ void StateVectorBatched<Prec, Space>::load(const StateVectorBatched<Prec, Space>
 
 template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::copy() const {
-    auto cp = StateVectorBatched<Prec, Space>::uninitialized_state(_batch_size, _n_qubits);
+    auto cp =
+        StateVectorBatched<Prec, Space>::uninitialized_state(_batch_size, _n_qubits, _space);
     Kokkos::deep_copy(cp._raw, _raw);
     return cp;
 }
@@ -457,11 +461,11 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::copy() const {
 template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_reduced_state() const {
     StateVector<Prec, Space> reduced_state =
-        StateVector<Prec, Space>::uninitialized_state(_n_qubits);
+        StateVector<Prec, Space>::uninitialized_state(_n_qubits, _space);
     Kokkos::parallel_for(
         "get_reduced_state",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-            internal::SpaceType<Space>(), _dim, Kokkos::AUTO),
+            _space, _dim, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
             std::uint64_t i = team.league_rank();
