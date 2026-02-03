@@ -221,7 +221,7 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
             FloatType res = 0;
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
-                Kokkos::TeamThreadRange(team, states.dim()),
+                Kokkos::TeamThreadRange(team, states.dim() >> 1),
                 [&](std::uint64_t state_idx, FloatType& sum) {
                     std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
                     std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
