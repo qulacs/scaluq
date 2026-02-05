@@ -26,7 +26,6 @@ inline std::vector<ConcurrentStream> create_streams(const std::vector<double>& w
 
 #ifdef SCALUQ_USE_NANOBIND
 #include "../python/docstring.hpp"
-#include "../types.hpp"
 namespace scaluq::internal {
 void bind_kokkos_hpp(nb::module_& m) {
     nb::class_<ConcurrentStream>(
