@@ -154,9 +154,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                                       "<BLANKLINE>"}))
                  .build_as_google_style()
                  .c_str())
-        .def(nb::init([](const ConcurrentStream& space, std::uint64_t n_qubits) {
-                 return StateVector<Prec, Space>(space, n_qubits);
-             }),
+        .def(nb::init<const ConcurrentStream&, std::uint64_t>(),
              "space"_a,
              "n_qubits"_a,
              DocString()

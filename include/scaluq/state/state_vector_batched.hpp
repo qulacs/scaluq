@@ -214,11 +214,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                                       "<BLANKLINE>"}))
                  .build_as_google_style()
                  .c_str())
-        .def(nb::init([](const ConcurrentStream& space,
-                         std::uint64_t batch_size,
-                         std::uint64_t n_qubits) {
-                 return StateVectorBatched<Prec, Space>(space, batch_size, n_qubits);
-             }),
+        .def(nb::init<const ConcurrentStream&, std::uint64_t, std::uint64_t>(),
              "space"_a,
              "batch_size"_a,
              "n_qubits"_a,
