@@ -3,15 +3,10 @@
 #include <Kokkos_Core.hpp>
 #include <vector>
 
+#include "runtime.hpp"
 #include "types.hpp"
 
 namespace scaluq {
-void initialize();
-void finalize();
-bool is_initialized();
-bool is_finalized();
-void synchronize();
-
 inline std::vector<ConcurrentStream> create_streams(const std::vector<double>& weights) {
     auto instances =
         Kokkos::Experimental::partition_space(Kokkos::DefaultExecutionSpace(), weights);

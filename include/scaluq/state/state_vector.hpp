@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include "../runtime.hpp"
 #include "../types.hpp"
 #include "../util/random.hpp"
 #include "../util/utility.hpp"
