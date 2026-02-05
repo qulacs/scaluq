@@ -218,15 +218,9 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
 template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::Haar_random_state(
     std::uint64_t batch_size, std::uint64_t n_qubits, bool set_same_state, std::uint64_t seed) {
-    if constexpr (Space == ExecutionSpace::Default) {
-        auto states = StateVectorBatched<Prec, Space>::uninitialized_state(batch_size, n_qubits);
-        states.set_Haar_random_state(set_same_state, seed);
-        return states;
-    } else {
-        throw std::runtime_error(
-            "Error: StateVectorBatched::Haar_random_state with ConcurrentStream is only valid for "
-            "ExecutionSpace::Default");
-    }
+    auto states = StateVectorBatched<Prec, Space>::uninitialized_state(batch_size, n_qubits);
+    states.set_Haar_random_state(set_same_state, seed);
+    return states;
 }
 template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::Haar_random_state(

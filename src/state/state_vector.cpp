@@ -11,11 +11,15 @@ StateVector<Prec, Space>::StateVector(std::uint64_t n_qubits) {
     _n_qubits = n_qubits;
     _dim = 1ULL << n_qubits;
     _raw = Kokkos::View<ComplexType*, internal::SpaceType<Space>>("state", _dim);
+    set_zero_state();
 }
 template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space>::StateVector(const ConcurrentStream& stream, std::uint64_t n_qubits)
-    : StateVector(n_qubits) {
-    _space = stream.get<ExecutionSpaceType>();
+    : _n_qubits(n_qubits),
+      _dim(1ULL << n_qubits),
+      _space(stream.get<ExecutionSpaceType>()),
+      _raw(Kokkos::View<ComplexType*, internal::SpaceType<Space>>("state", _dim)) {
+    set_zero_state();
 }
 template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space>::StateVector(Kokkos::View<ComplexType*, internal::SpaceType<Space>> view)
@@ -300,7 +304,9 @@ void StateVector<Prec, Space>::load(const StateVector<Prec, Space>& other) {
 }
 template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space> StateVector<Prec, Space>::copy() const {
-    return StateVector<Prec, Space>(concurrent_stream(), _raw);
+    auto cp = StateVector<Prec, Space>::uninitialized_state(concurrent_stream(), _n_qubits);
+    Kokkos::deep_copy(_space, cp._raw, _raw);
+    return cp;
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string StateVector<Prec, Space>::to_string() const {
