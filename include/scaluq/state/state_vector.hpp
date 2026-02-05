@@ -26,15 +26,18 @@ public:
     static constexpr std::uint64_t UNMEASURED = 2;
     Kokkos::View<ComplexType*, ExecutionSpaceType> _raw;
     StateVector() = default;
-    StateVector(std::uint64_t n_qubits, ExecutionSpaceType space = ExecutionSpaceType());
-    StateVector(Kokkos::View<ComplexType*, ExecutionSpaceType> view,
-                ExecutionSpaceType space = ExecutionSpaceType());
+    StateVector(std::uint64_t n_qubits);
+    StateVector(const ConcurrentStream& space, std::uint64_t n_qubits);
+    StateVector(Kokkos::View<ComplexType*, ExecutionSpaceType> view);
+    StateVector(const ConcurrentStream& space,
+                Kokkos::View<ComplexType*, ExecutionSpaceType> view);
     StateVector(const StateVector& other) = default;
 
     StateVector& operator=(const StateVector& other) = default;
 
     [[nodiscard]] const ExecutionSpaceType& execution_space() const { return _space; }
-    void set_execution_space(ExecutionSpaceType space) { _space = space; }
+    [[nodiscard]] ConcurrentStream concurrent_stream() const { return ConcurrentStream(_space); }
+    void set_concurrent_stream(const ConcurrentStream& stream) { _space = stream.get<ExecutionSpaceType>(); }
 
     /**
      * @attention Very slow. You should use load() instead if you can.
@@ -48,8 +51,9 @@ public:
 
     [[nodiscard]] static StateVector Haar_random_state(std::uint64_t n_qubits,
                                                        std::uint64_t seed = std::random_device()());
-    [[nodiscard]] static StateVector uninitialized_state(
-        std::uint64_t n_qubits, ExecutionSpaceType space = ExecutionSpaceType());
+    [[nodiscard]] static StateVector uninitialized_state(std::uint64_t n_qubits);
+    [[nodiscard]] static StateVector uninitialized_state(const ConcurrentStream& space,
+                                                         std::uint64_t n_qubits);
 
     /**
      * @brief zero-fill
@@ -150,15 +154,15 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                                       "<BLANKLINE>"}))
                  .build_as_google_style()
                  .c_str())
-        .def(nb::init([](std::uint64_t n_qubits, const DefaultExecutionSpace& space) {
-                 return StateVector<Prec, Space>(n_qubits, space);
+        .def(nb::init([](const ConcurrentStream& space, std::uint64_t n_qubits) {
+                 return StateVector<Prec, Space>(space, n_qubits);
              }),
-             "n_qubits"_a,
              "space"_a,
+             "n_qubits"_a,
              DocString()
                  .desc("Construct with specified number of qubits and execution space.")
+                 .arg("space", "ConcurrentStream", "execution space instance")
                  .arg("n_qubits", "int", "number of qubits")
-                 .arg("space", "DefaultExecutionSpaceWrapper", "execution space instance")
                  .build_as_google_style()
                  .c_str())
         .def_static(
@@ -204,13 +208,23 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                      "(0.15213024630399696-0.2871374092016799j)]"}))
                 .build_as_google_style()
                 .c_str())
+        .def_static(
+            "uninitialized_state",
+            nb::overload_cast<std::uint64_t>(&StateVector<Prec, Space>::uninitialized_state),
+            "n_qubits"_a,
+            DocString()
+                .desc("Construct :class:`StateVector` without initializing.")
+                .arg("n_qubits", "int", "number of qubits")
+                .build_as_google_style()
+                .c_str())
         .def_static("uninitialized_state",
-                    nb::overload_cast<std::uint64_t, ExecutionSpaceType>(
+                    nb::overload_cast<const ConcurrentStream&, std::uint64_t>(
                         &StateVector<Prec, Space>::uninitialized_state),
+                    "space"_a,
                     "n_qubits"_a,
-                    "space"_a = ExecutionSpaceType(),
                     DocString()
                         .desc("Construct :class:`StateVector` without initializing.")
+                        .arg("space", "ConcurrentStream", "Execution space wrapper.")
                         .arg("n_qubits", "int", "number of qubits")
                         .build_as_google_style()
                         .c_str())
@@ -236,16 +250,17 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                                      "(0.2991187916479724+0.2650813322096342j)]"}))
                 .build_as_google_style()
                 .c_str())
-        .def("set_execution_space",
-             [](StateVector<Prec, Space>& self, const DefaultExecutionSpace& space) {
-                 self.set_execution_space(space);
-             },
-             "space"_a,
-             DocString()
-                 .desc("Set execution space instance for subsequent operations.")
-                 .arg("space", "DefaultExecutionSpaceWrapper", "execution space instance")
-                 .build_as_google_style()
-                 .c_str())
+        .def(
+            "set_execution_space",
+            [](StateVector<Prec, Space>& self, const ConcurrentStream& space) {
+                self.set_concurrent_stream(space);
+            },
+            "space"_a,
+            DocString()
+                .desc("Set execution space instance for subsequent operations.")
+                .arg("space", "ConcurrentStream", "execution space instance")
+                .build_as_google_style()
+                .c_str())
         .def("set_amplitude_at",
              &StateVector<Prec, Space>::set_amplitude_at,
              "index"_a,

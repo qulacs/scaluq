@@ -167,9 +167,8 @@ void apply_pauli(std::uint64_t control_mask,
             "apply_pauli: batch size of states and ops must be same, and row_ptr extent must be "
             "batch_size + 1");
     }
-    auto results = StateVectorBatched<Prec, Space>::uninitialized_state(states.batch_size(),
-                                                                        states.n_qubits(),
-                                                                        states.execution_space());
+    auto results = StateVectorBatched<Prec, Space>::uninitialized_state(
+        states.concurrent_stream(), states.batch_size(), states.n_qubits());
     results.set_zero_norm_state();
     std::uint64_t dim = states.dim();
     std::uint64_t rsize = row_ptr.extent(0) - 1;
@@ -359,10 +358,8 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                           const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
                           StateVectorBatched<Prec, Space>& states) {
     std::uint64_t global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    auto team_policy =
-        Kokkos::TeamPolicy<SpaceType<Space>>(states.execution_space(),
-                                             states.batch_size(),
-                                             Kokkos::AUTO);
+    auto team_policy = Kokkos::TeamPolicy<SpaceType<Space>>(
+        states.execution_space(), states.batch_size(), Kokkos::AUTO);
     Kokkos::parallel_for(
         "apply_pauli_rotation",
         team_policy,

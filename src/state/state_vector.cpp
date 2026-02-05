@@ -1,3 +1,4 @@
+#include <bit>
 #include <scaluq/prec_space.hpp>
 #include <scaluq/state/state_vector.hpp>
 #include <scaluq/util/math.hpp>
@@ -6,30 +7,35 @@
 
 namespace scaluq {
 template <Precision Prec, ExecutionSpace Space>
-StateVector<Prec, Space>::StateVector(std::uint64_t n_qubits, ExecutionSpaceType space)
-    : _n_qubits(n_qubits),
-      _dim(1ULL << n_qubits),
-      _space(space),
-      _raw(Kokkos::ViewAllocateWithoutInitializing("state"), this->_dim) {
-    set_zero_state();
+StateVector<Prec, Space>::StateVector(std::uint64_t n_qubits) {
+    _n_qubits = n_qubits;
+    _dim = 1ULL << n_qubits;
+    _raw = Kokkos::View<ComplexType*, internal::SpaceType<Space>>("state", _dim);
 }
 template <Precision Prec, ExecutionSpace Space>
-StateVector<Prec, Space>::StateVector(Kokkos::View<ComplexType*, internal::SpaceType<Space>> view,
-                                      ExecutionSpaceType space)
-    : _n_qubits(std::bit_width(view.extent(0)) - 1),
-      _dim(view.extent(0)),
-      _space(space),
-      _raw(view) {}
+StateVector<Prec, Space>::StateVector(const ConcurrentStream& stream, std::uint64_t n_qubits)
+    : StateVector(n_qubits) {
+    _space = stream.get<ExecutionSpaceType>();
+}
+template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, Space>::StateVector(Kokkos::View<ComplexType*, internal::SpaceType<Space>> view)
+    : _n_qubits(std::bit_width(view.extent(0)) - 1), _dim(view.extent(0)), _raw(view) {}
+template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, Space>::StateVector(const ConcurrentStream& stream,
+                                      Kokkos::View<ComplexType*, internal::SpaceType<Space>> view)
+    : StateVector(view) {
+    _space = stream.get<ExecutionSpaceType>();
+}
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::set_amplitude_at(std::uint64_t index, StdComplex c) {
     Kokkos::View<ComplexType, Kokkos::HostSpace> host_view("single_value");
     host_view() = c;
-    Kokkos::deep_copy(Kokkos::subview(_raw, index), host_view());
+    Kokkos::deep_copy(_space, Kokkos::subview(_raw, index), host_view());
 }
 template <Precision Prec, ExecutionSpace Space>
 StdComplex StateVector<Prec, Space>::get_amplitude_at(std::uint64_t index) {
     Kokkos::View<ComplexType, Kokkos::HostSpace> host_view("single_value");
-    Kokkos::deep_copy(host_view, Kokkos::subview(_raw, index));
+    Kokkos::deep_copy(_space, host_view, Kokkos::subview(_raw, index));
     ComplexType val = host_view();
     return StdComplex(static_cast<double>(val.real()), static_cast<double>(val.imag()));
 }
@@ -41,15 +47,17 @@ StateVector<Prec, Space> StateVector<Prec, Space>::Haar_random_state(std::uint64
     return state;
 }
 template <Precision Prec, ExecutionSpace Space>
-StateVector<Prec, Space> StateVector<Prec, Space>::uninitialized_state(std::uint64_t n_qubits,
-                                                                       ExecutionSpaceType space) {
-    StateVector<Prec, Space> state;
-    state._n_qubits = n_qubits;
-    state._dim = 1ULL << n_qubits;
-    state._space = space;
-    state._raw = Kokkos::View<ComplexType*, internal::SpaceType<Space>>(
-        Kokkos::ViewAllocateWithoutInitializing("state"), state._dim);
-    return state;
+StateVector<Prec, Space> StateVector<Prec, Space>::uninitialized_state(std::uint64_t n_qubits) {
+    Kokkos::View<ComplexType*, internal::SpaceType<Space>> view(
+        Kokkos::ViewAllocateWithoutInitializing("state"), 1ULL << n_qubits);
+    return StateVector<Prec, Space>(view);
+}
+template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, Space> StateVector<Prec, Space>::uninitialized_state(
+    const ConcurrentStream& stream, std::uint64_t n_qubits) {
+    Kokkos::View<ComplexType*, internal::SpaceType<Space>> view(
+        Kokkos::ViewAllocateWithoutInitializing("state"), 1ULL << n_qubits);
+    return StateVector<Prec, Space>(stream, view);
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::set_zero_state() {
@@ -60,7 +68,7 @@ void StateVector<Prec, Space>::set_zero_state() {
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::set_zero_norm_state() {
-    Kokkos::deep_copy(_raw, 0);
+    Kokkos::deep_copy(_space, _raw, 0);
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::set_computational_basis(std::uint64_t basis) {
@@ -279,7 +287,7 @@ void StateVector<Prec, Space>::load(const std::vector<StdComplex>& other) {
         return ComplexType(static_cast<FloatType>(c.real()), static_cast<FloatType>(c.imag()));
     });
     auto host_view = internal::wrapped_host_view(tmp);
-    Kokkos::deep_copy(_raw, host_view);
+    Kokkos::deep_copy(_space, _raw, host_view);
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::load(const StateVector<Prec, Space>& other) {
@@ -288,13 +296,11 @@ void StateVector<Prec, Space>::load(const StateVector<Prec, Space>& other) {
             "Error: StateVector::load(const StateVector<Prec, Space>&): invalid "
             "length of state");
     }
-    Kokkos::deep_copy(_raw, other._raw);
+    Kokkos::deep_copy(_space, _raw, other._raw);
 }
 template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space> StateVector<Prec, Space>::copy() const {
-    auto new_vec = StateVector<Prec, Space>::uninitialized_state(_n_qubits, _space);
-    Kokkos::deep_copy(new_vec._raw, _raw);
-    return new_vec;
+    return StateVector<Prec, Space>(concurrent_stream(), _raw);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string StateVector<Prec, Space>::to_string() const {

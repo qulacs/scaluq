@@ -1,49 +1,58 @@
 #pragma once
 
+#include <Kokkos_Core.hpp>
+#include <vector>
+
+#include "types.hpp"
+
 namespace scaluq {
 void initialize();
 void finalize();
 bool is_initialized();
 bool is_finalized();
 void synchronize();
+
+inline std::vector<ConcurrentStream> create_streams(const std::vector<double>& weights) {
+    auto instances =
+        Kokkos::Experimental::partition_space(Kokkos::DefaultExecutionSpace(), weights);
+    std::vector<ConcurrentStream> out;
+    out.reserve(instances.size());
+    for (const auto& inst : instances) {
+        out.emplace_back(inst);
+    }
+    return out;
+}
 }  // namespace scaluq
 
 #ifdef SCALUQ_USE_NANOBIND
-#include "../types.hpp"
 #include "../python/docstring.hpp"
+#include "../types.hpp"
 namespace scaluq::internal {
 void bind_kokkos_hpp(nb::module_& m) {
-    nb::class_<DefaultExecutionSpace>(
+    nb::class_<ConcurrentStream>(
         m,
-        "DefaultExecutionSpace",
+        "ConcurrentStream",
         DocString()
-            .desc("Kokkos::DefaultExecutionSpace instance.")
+            .desc("Execution space instance for concurrent stream control.")
             .build_as_google_style()
             .c_str())
-        .def(nb::init<>(),
+        .def("fence",
+             &ConcurrentStream::fence,
+             "name"_a = "scaluq::ConcurrentStream::fence",
              DocString()
-                 .desc("Construct default execution space instance.")
+                 .desc("Fence the execution space instance.")
+                 .arg("name", "str", "Fence label")
                  .build_as_google_style()
-                 .c_str())
-#ifdef SCALUQ_USE_CUDA
-        .def(nb::init<std::uintptr_t>(),
-             "stream"_a,
-             DocString()
-                 .desc("Construct execution space instance from CUDA stream.")
-                 .arg("stream", "int", "CUDA stream handle")
-                 .build_as_google_style()
-                 .c_str())
-        .def("stream",
-             [](const DefaultExecutionSpace& space) {
-                 return reinterpret_cast<std::uintptr_t>(space.cuda_stream());
-             },
-             DocString()
-                 .desc("Get CUDA stream handle.")
-                 .ret("int", "CUDA stream handle")
-                 .build_as_google_style()
-                 .c_str())
-#endif
-        ;
+                 .c_str());
+    m.def("create_streams",
+          &create_streams,
+          "weights"_a,
+          DocString()
+              .desc("Create concurrent streams by partitioning the default execution space.")
+              .arg("weights", "list[float]", "Partition weights")
+              .ret("list[ConcurrentStream]", "Concurrent stream instances")
+              .build_as_google_style()
+              .c_str());
     m.def("initialize",
           &initialize,
           DocString()

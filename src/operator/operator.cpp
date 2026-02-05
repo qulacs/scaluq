@@ -109,7 +109,7 @@ template <>
 void Operator<internal::Prec, internal::Space>::apply_to_state(
     StateVector<internal::Prec, internal::Space>& state_vector) const {
     auto states = StateVectorBatched<internal::Prec, internal::Space>::uninitialized_state(
-        _terms.size(), state_vector.n_qubits(), state_vector.execution_space());
+        state_vector.concurrent_stream(), _terms.size(), state_vector.n_qubits());
     states.set_state_vector(state_vector);
     internal::apply_pauli<internal::Prec, internal::Space>(0, 0, _terms, states);
     state_vector = states.get_reduced_state();
@@ -397,7 +397,7 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_power_method(
     StdComplex mu_realized = mu.value_or(calculate_default_mu());
     auto state = initial_state.copy();
     auto tmp_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(
-        nqubits, initial_state.execution_space());
+        initial_state.concurrent_stream(), nqubits);
     for (std::uint64_t i = 0; i < iter_count; i++) {
         // |state> <- (A-mu I)|state>
         tmp_state.load(state);
@@ -464,7 +464,7 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
             [](const StdComplex& a, const StdComplex& b) { return a.real() < b.real(); }) -
         eigenvalues.begin();
     auto ground_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(
-        nqubits, initial_state.execution_space());
+        initial_state.concurrent_stream(), nqubits);
     ground_state.set_zero_norm_state();
     for (std::uint64_t i = 0; i < iter_count; i++) {
         ground_state.add_state_vector_with_coef(eigenvectors(i, minimum_eigenvalue_index),

@@ -61,7 +61,7 @@ OperatorBatched<internal::Prec, internal::Space>::get_applied_states(
     const StateVector<internal::Prec, internal::Space>& state_vector,
     std::uint64_t batch_size) const {
     auto res = StateVectorBatched<internal::Prec, internal::Space>::uninitialized_state(
-        _row_ptr.extent(0) - 1, state_vector.n_qubits(), state_vector.execution_space());
+        state_vector.concurrent_stream(), _row_ptr.extent(0) - 1, state_vector.n_qubits());
     res.set_state_vector(state_vector);
     internal::apply_pauli<internal::Prec, internal::Space>(0, 0, _ops, _row_ptr, res, batch_size);
     return res;

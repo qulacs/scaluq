@@ -7,7 +7,6 @@
 #include "gate/merge_gate.hpp"
 #include "gate/param_gate.hpp"
 #include "gate/param_gate_factory.hpp"
-#include "kokkos.hpp"
 #include "operator/operator.hpp"
 #include "operator/operator_batched.hpp"
 #include "operator/pauli_operator.hpp"
