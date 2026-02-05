@@ -11,7 +11,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
         Kokkos::ViewAllocateWithoutInitializing("update"), state.dim());
     Kokkos::parallel_for(
         "sparse_matrix_gate (initialize)",
-        Kokkos::RangePolicy<SpaceType<Space>>(0, state.dim()),
+        Kokkos::RangePolicy<SpaceType<Space>>(state.execution_space(), 0, state.dim()),
         KOKKOS_LAMBDA(std::uint64_t i) {
             if ((i & control_mask) == control_value_mask) {
                 update(i) = 0;
@@ -24,7 +24,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     Kokkos::parallel_for(
         "sparse_matrix_gate (update)",
         Kokkos::TeamPolicy<SpaceType<Space>>(
-            SpaceType<Space>(),
+            state.execution_space(),
             state.dim() >> std::popcount(target_mask | control_mask),
             Kokkos::AUTO),
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team) {
@@ -64,7 +64,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     Kokkos::parallel_for(
         "sparse_matrix_gate (initialize)",
         Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0}, {states.batch_size(), states.dim()}),
+            states.execution_space(), {0, 0}, {states.batch_size(), states.dim()}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
             if ((i & control_mask) == control_value_mask) {
                 update(batch_id, i) = 0;
@@ -78,7 +78,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     Kokkos::parallel_for(
         "sparse_matrix_gate (update)",
         Kokkos::TeamPolicy<SpaceType<Space>>(
-            SpaceType<Space>(), outer_size * states.batch_size(), Kokkos::AUTO),
+            states.execution_space(), outer_size * states.batch_size(), Kokkos::AUTO),
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team) {
             std::uint64_t basis = team.league_rank() % outer_size;
             std::uint64_t batch_id = team.league_rank() / outer_size;

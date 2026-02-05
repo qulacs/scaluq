@@ -23,7 +23,9 @@ void apply_pauli(std::uint64_t control_mask,
         Kokkos::parallel_for(
             "apply_pauli",
             Kokkos::RangePolicy<SpaceType<Space>>(
-                0, state_vector.dim() >> std::popcount(control_mask)),
+                state_vector.execution_space(),
+                0,
+                state_vector.dim() >> std::popcount(control_mask)),
             KOKKOS_LAMBDA(std::uint64_t i) {
                 std::uint64_t state_idx =
                     insert_zero_at_mask_positions(i, control_mask) | control_value_mask;
@@ -41,7 +43,9 @@ void apply_pauli(std::uint64_t control_mask,
     Kokkos::parallel_for(
         "apply_pauli",
         Kokkos::RangePolicy<SpaceType<Space>>(
-            0, state_vector.dim() >> (std::popcount(control_mask) + 1)),
+            state_vector.execution_space(),
+            0,
+            state_vector.dim() >> (std::popcount(control_mask) + 1)),
         KOKKOS_LAMBDA(std::uint64_t i) {
             std::uint64_t basis_0 =
                 insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) | control_value_mask;
@@ -65,7 +69,9 @@ void apply_pauli(std::uint64_t control_mask,
         Kokkos::parallel_for(
             "apply_pauli",
             Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-                {0, 0}, {states.batch_size(), states.dim() >> std::popcount(control_mask)}),
+                states.execution_space(),
+                {0, 0},
+                {states.batch_size(), states.dim() >> std::popcount(control_mask)}),
             KOKKOS_LAMBDA(const std::uint64_t batch_id, const std::uint64_t i) {
                 std::uint64_t state_idx =
                     insert_zero_at_mask_positions(i, control_mask) | control_value_mask;
@@ -83,7 +89,9 @@ void apply_pauli(std::uint64_t control_mask,
     Kokkos::parallel_for(
         "apply_pauli",
         Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0}, {states.batch_size(), states.dim() >> (std::popcount(control_mask) + 1)}),
+            states.execution_space(),
+            {0, 0},
+            {states.batch_size(), states.dim() >> (std::popcount(control_mask) + 1)}),
         KOKKOS_LAMBDA(const std::uint64_t batch_id, const std::uint64_t i) {
             std::uint64_t basis_0 =
                 insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) | control_value_mask;
@@ -105,7 +113,7 @@ void apply_pauli(std::uint64_t control_mask,
     std::uint64_t dim = states.dim();
     Kokkos::parallel_for(
         "apply_pauli",
-        Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), ops.extent(0), Kokkos::AUTO),
+        Kokkos::TeamPolicy<SpaceType<Space>>(states.execution_space(), ops.extent(0), Kokkos::AUTO),
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
             auto bit_flip_mask = ops(batch_id)._bit_flip_mask;
@@ -159,15 +167,16 @@ void apply_pauli(std::uint64_t control_mask,
             "apply_pauli: batch size of states and ops must be same, and row_ptr extent must be "
             "batch_size + 1");
     }
-    auto results = StateVectorBatched<Prec, Space>::uninitialized_state(states.batch_size(),
-                                                                        states.n_qubits());
+    auto results = StateVectorBatched<Prec, Space>::uninitialized_state(
+        states.concurrent_stream(), states.batch_size(), states.n_qubits());
     results.set_zero_norm_state();
     std::uint64_t dim = states.dim();
     std::uint64_t rsize = row_ptr.extent(0) - 1;
     for (std::uint64_t b = 0; b < rsize; b += batch_size)
         Kokkos::parallel_for(
             "apply_pauli",
-            Kokkos::TeamPolicy<Sp>(Sp(), std::min(batch_size, rsize - b), Kokkos::AUTO),
+            Kokkos::TeamPolicy<Sp>(
+                states.execution_space(), std::min(batch_size, rsize - b), Kokkos::AUTO),
             KOKKOS_LAMBDA(const Kokkos::TeamPolicy<Sp>::member_type& team) {
                 std::uint64_t batch_id = team.league_rank() + b;
                 Kokkos::parallel_for(
@@ -231,7 +240,9 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         Kokkos::parallel_for(
             "apply_pauli_rotation",
             Kokkos::RangePolicy<SpaceType<Space>>(
-                0, state_vector.dim() >> std::popcount(control_mask)),
+                state_vector.execution_space(),
+                0,
+                state_vector.dim() >> std::popcount(control_mask)),
             KOKKOS_LAMBDA(std::uint64_t i) {
                 std::uint64_t state_idx =
                     insert_zero_at_mask_positions(i, control_mask) | control_value_mask;
@@ -247,7 +258,9 @@ void apply_pauli_rotation(std::uint64_t control_mask,
     Kokkos::parallel_for(
         "apply_pauli_rotation",
         Kokkos::RangePolicy<SpaceType<Space>>(
-            0, state_vector.dim() >> (std::popcount(control_mask) + 1)),
+            state_vector.execution_space(),
+            0,
+            state_vector.dim() >> (std::popcount(control_mask) + 1)),
         KOKKOS_LAMBDA(std::uint64_t i) {
             std::uint64_t basis_0 =
                 internal::insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
@@ -290,7 +303,9 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         Kokkos::parallel_for(
             "apply_pauli_rotation",
             Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-                {0, 0}, {states.batch_size(), states.dim() >> std::popcount(control_mask)}),
+                states.execution_space(),
+                {0, 0},
+                {states.batch_size(), states.dim() >> std::popcount(control_mask)}),
             KOKKOS_LAMBDA(const std::uint64_t batch_id, const std::uint64_t i) {
                 std::uint64_t state_idx =
                     insert_zero_at_mask_positions(i, control_mask) | control_value_mask;
@@ -306,7 +321,9 @@ void apply_pauli_rotation(std::uint64_t control_mask,
     Kokkos::parallel_for(
         "apply_pauli_rotation",
         Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0}, {states.batch_size(), states.dim() >> (std::popcount(control_mask) + 1)}),
+            states.execution_space(),
+            {0, 0},
+            {states.batch_size(), states.dim() >> (std::popcount(control_mask) + 1)}),
         KOKKOS_LAMBDA(const std::uint64_t batch_id, const std::uint64_t i) {
             std::uint64_t basis_0 =
                 internal::insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
@@ -341,8 +358,8 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                           const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
                           StateVectorBatched<Prec, Space>& states) {
     std::uint64_t global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
-    auto team_policy =
-        Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), states.batch_size(), Kokkos::AUTO);
+    auto team_policy = Kokkos::TeamPolicy<SpaceType<Space>>(
+        states.execution_space(), states.batch_size(), Kokkos::AUTO);
     Kokkos::parallel_for(
         "apply_pauli_rotation",
         team_policy,

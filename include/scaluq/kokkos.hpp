@@ -1,17 +1,52 @@
 #pragma once
 
+#include <Kokkos_Core.hpp>
+#include <vector>
+
+#include "runtime.hpp"
+#include "types.hpp"
+
 namespace scaluq {
-void initialize();
-void finalize();
-bool is_initialized();
-bool is_finalized();
-void synchronize();
+inline std::vector<ConcurrentStream> create_streams(const std::vector<double>& weights) {
+    auto instances =
+        Kokkos::Experimental::partition_space(Kokkos::DefaultExecutionSpace(), weights);
+    std::vector<ConcurrentStream> out;
+    out.reserve(instances.size());
+    for (const auto& inst : instances) {
+        out.emplace_back(inst);
+    }
+    return out;
+}
 }  // namespace scaluq
 
 #ifdef SCALUQ_USE_NANOBIND
 #include "../python/docstring.hpp"
 namespace scaluq::internal {
 void bind_kokkos_hpp(nb::module_& m) {
+    nb::class_<ConcurrentStream>(
+        m,
+        "ConcurrentStream",
+        DocString()
+            .desc("Execution space instance for concurrent stream control.")
+            .build_as_google_style()
+            .c_str())
+        .def("fence",
+             &ConcurrentStream::fence,
+             "name"_a = "scaluq::ConcurrentStream::fence",
+             DocString()
+                 .desc("Fence the execution space instance.")
+                 .arg("name", "str", "Fence label")
+                 .build_as_google_style()
+                 .c_str());
+    m.def("create_streams",
+          &create_streams,
+          "weights"_a,
+          DocString()
+              .desc("Create concurrent streams by partitioning the default execution space.")
+              .arg("weights", "list[float]", "Partition weights")
+              .ret("list[ConcurrentStream]", "Concurrent stream instances")
+              .build_as_google_style()
+              .c_str());
     m.def("initialize",
           &initialize,
           DocString()

@@ -230,6 +230,7 @@ if(SCALUQ_USE_CUDA)
         -DEIGEN_NO_CUDA
         "SHELL:-Xcudafe --diag_suppress=1675" # for suppressing warning of Eigen
         "SHELL:-Xcudafe --diag_suppress=186"
+        "SHELL:-Xcudafe --diag_suppress=68"
     ) 
 endif()
 

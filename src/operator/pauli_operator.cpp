@@ -142,7 +142,8 @@ StdComplex PauliOperator<Prec>::get_expectation_value(
         FloatType res;
         Kokkos::parallel_reduce(
             "get_expectation_value",
-            Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector.dim()),
+            Kokkos::RangePolicy<internal::SpaceType<Space>>(
+                state_vector.execution_space(), 0, state_vector.dim()),
             KOKKOS_LAMBDA(std::uint64_t state_idx, FloatType & sum) {
                 FloatType tmp = (scaluq::internal::conj(state_vector._raw[state_idx]) *
                                  state_vector._raw[state_idx])
@@ -159,7 +160,8 @@ StdComplex PauliOperator<Prec>::get_expectation_value(
     FloatType res;
     Kokkos::parallel_reduce(
         "get_expectation_value",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector.dim() >> 1),
+        Kokkos::RangePolicy<internal::SpaceType<Space>>(
+            state_vector.execution_space(), 0, state_vector.dim() >> 1),
         KOKKOS_LAMBDA(std::uint64_t state_idx, FloatType & sum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
@@ -185,7 +187,7 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
         Kokkos::parallel_for(
             "get_expectation_value",
             Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-                internal::SpaceType<Space>(), states.batch_size(), Kokkos::AUTO),
+                states.execution_space(), states.batch_size(), Kokkos::AUTO),
             KOKKOS_CLASS_LAMBDA(
                 const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
                 FloatType res = 0;
@@ -215,7 +217,7 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
     Kokkos::parallel_for(
         "get_expectation_value",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-            internal::SpaceType<Space>(), states.batch_size(), Kokkos::AUTO),
+            states.execution_space(), states.batch_size(), Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
             FloatType res = 0;
@@ -251,7 +253,8 @@ StdComplex PauliOperator<Prec>::get_transition_amplitude(
         ComplexType res;
         Kokkos::parallel_reduce(
             "get_transition_amplitude",
-            Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector_bra.dim()),
+            Kokkos::RangePolicy<internal::SpaceType<Space>>(
+                state_vector_bra.execution_space(), 0, state_vector_bra.dim()),
             KOKKOS_LAMBDA(std::uint64_t state_idx, ComplexType & sum) {
                 ComplexType tmp = scaluq::internal::conj(state_vector_bra._raw[state_idx]) *
                                   state_vector_ket._raw[state_idx];
@@ -267,7 +270,8 @@ StdComplex PauliOperator<Prec>::get_transition_amplitude(
     ComplexType res;
     Kokkos::parallel_reduce(
         "get_transition_amplitude",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector_bra.dim() >> 1),
+        Kokkos::RangePolicy<internal::SpaceType<Space>>(
+            state_vector_bra.execution_space(), 0, state_vector_bra.dim() >> 1),
         KOKKOS_LAMBDA(std::uint64_t state_idx, ComplexType & sum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
@@ -302,7 +306,7 @@ std::vector<StdComplex> PauliOperator<Prec>::get_transition_amplitude(
         Kokkos::parallel_for(
             "get_transition_amplitude",
             Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-                internal::SpaceType<Space>(), states_bra.batch_size(), Kokkos::AUTO),
+                states_bra.execution_space(), states_bra.batch_size(), Kokkos::AUTO),
             KOKKOS_CLASS_LAMBDA(
                 const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
                 FloatType res = 0;
@@ -332,7 +336,7 @@ std::vector<StdComplex> PauliOperator<Prec>::get_transition_amplitude(
     Kokkos::parallel_for(
         "get_transition_amplitude",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-            internal::SpaceType<Space>(), states_bra.batch_size(), Kokkos::AUTO),
+            states_bra.execution_space(), states_bra.batch_size(), Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
             FloatType res = 0;

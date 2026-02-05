@@ -1,3 +1,4 @@
+#include <Kokkos_Core.hpp>
 #include <chrono>
 #include <iostream>
 #include <scaluq/all.hpp>

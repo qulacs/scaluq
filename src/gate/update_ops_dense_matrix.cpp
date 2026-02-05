@@ -8,7 +8,8 @@ void none_target_dense_matrix_gate(std::uint64_t control_mask,
                                    StateVector<Prec, Space>& state) {
     Kokkos::parallel_for(
         "none_target_dense_matrix_gate",
-        Kokkos::RangePolicy<SpaceType<Space>>(0, state.dim() >> std::popcount(control_mask)),
+        Kokkos::RangePolicy<SpaceType<Space>>(
+            state.execution_space(), 0, state.dim() >> std::popcount(control_mask)),
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis =
                 insert_zero_at_mask_positions(it, control_mask) | control_value_mask;
@@ -24,7 +25,9 @@ void none_target_dense_matrix_gate(std::uint64_t control_mask,
     Kokkos::parallel_for(
         "none_target_dense_matrix_gate",
         Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0}, {states.batch_size(), states.dim() >> std::popcount(control_mask)}),
+            states.execution_space(),
+            {0, 0},
+            {states.batch_size(), states.dim() >> std::popcount(control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
             std::uint64_t basis =
                 insert_zero_at_mask_positions(it, control_mask) | control_value_mask;
@@ -41,7 +44,7 @@ void single_target_dense_matrix_gate(std::uint64_t target_mask,
     Kokkos::parallel_for(
         "single_target_dense_matrix_gate",
         Kokkos::RangePolicy<SpaceType<Space>>(
-            0, state.dim() >> std::popcount(target_mask | control_mask)),
+            state.execution_space(), 0, state.dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis_0 =
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
@@ -64,6 +67,7 @@ void single_target_dense_matrix_gate(std::uint64_t target_mask,
     Kokkos::parallel_for(
         "single_target_dense_matrix_gate",
         Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
+            states.execution_space(),
             {0, 0},
             {states.batch_size(), states.dim() >> std::popcount(target_mask | control_mask)}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t it) {
@@ -91,7 +95,7 @@ void double_target_dense_matrix_gate(std::uint64_t target_mask,
     Kokkos::parallel_for(
         "double_target_dense_matrix_gate",
         Kokkos::RangePolicy<SpaceType<Space>>(
-            0, state.dim() >> std::popcount(target_mask | control_mask)),
+            state.execution_space(), 0, state.dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(const std::uint64_t it) {
             std::uint64_t basis_0 =
                 insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
@@ -129,7 +133,8 @@ void double_target_dense_matrix_gate(std::uint64_t target_mask,
 
     Kokkos::parallel_for(
         "double_target_dense_matrix_gate_flat",
-        Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
+        Kokkos::RangePolicy<SpaceType<Space>>(
+            states.execution_space(), 0, states.batch_size() * span),
         KOKKOS_LAMBDA(std::uint64_t g) {
             const std::uint64_t batch_id = g / span;
             const std::uint64_t it = g % span;
@@ -168,7 +173,7 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
         Kokkos::ViewAllocateWithoutInitializing("update"), state.dim());
     Kokkos::parallel_for(
         "multi_target_dense_matrix_gate (initialize)",
-        Kokkos::RangePolicy<SpaceType<Space>>(0, state.dim()),
+        Kokkos::RangePolicy<SpaceType<Space>>(state.execution_space(), 0, state.dim()),
         KOKKOS_LAMBDA(std::uint64_t i) {
             if ((i & control_mask) == control_value_mask) {
                 update(i) = -1;
@@ -181,7 +186,7 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
     Kokkos::parallel_for(
         "multi_target_dense_matrix_gate (update)",
         Kokkos::TeamPolicy<SpaceType<Space>>(
-            SpaceType<Space>(),
+            state.execution_space(),
             state.dim() >> std::popcount(target_mask | control_mask),
             Kokkos::AUTO),
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team) {
@@ -222,7 +227,7 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
     Kokkos::parallel_for(
         "multi_target_dense_matrix_gate (initialize)",
         Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0}, {states.batch_size(), states.dim()}),
+            states.execution_space(), {0, 0}, {states.batch_size(), states.dim()}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
             if ((i & control_mask) == control_value_mask) {
                 update(batch_id, i) = 0;
@@ -236,7 +241,7 @@ void multi_target_dense_matrix_gate(std::uint64_t target_mask,
     Kokkos::parallel_for(
         "multi_target_dense_matrix_gate (update)",
         Kokkos::TeamPolicy<SpaceType<Space>>(
-            SpaceType<Space>(), outer_size * states.batch_size(), Kokkos::AUTO),
+            states.execution_space(), outer_size * states.batch_size(), Kokkos::AUTO),
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team) {
             std::uint64_t basis = team.league_rank() % outer_size;
             std::uint64_t batch_id = team.league_rank() / outer_size;
