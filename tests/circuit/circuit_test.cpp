@@ -29,7 +29,6 @@ void circuit_test() {
     Circuit<Prec> circuit(n);
     std::uint64_t target, target_sub;
     double angle;
-    StdComplex imag_unit(0, 1);
 
     target = random.int32() % n;
     circuit.add_gate(gate::X<Prec>(target));
