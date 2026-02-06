@@ -29,8 +29,6 @@ void run_random_gate_apply(std::uint64_t n_qubits) {
         gate->update_quantum_state(state);
         state_cp = state.get_amplitudes();
 
-        test_state = test_state;
-
         for (int i = 0; i < dim; i++) {
             check_near<Prec>(state_cp[i], test_state[i]);
         }

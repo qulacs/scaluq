@@ -758,7 +758,7 @@ template <Precision Prec>
 std::shared_ptr<const IGateImpl<Prec>> GetGateFromJson<IGateImpl<Prec>>::get(const Json&) {
     return std::make_shared<const IGateImpl<Prec>>();
 }
-template class GetGateFromJson<IGateImpl<Prec>>;
+template struct GetGateFromJson<IGateImpl<Prec>>;
 
 // GlobalPhase
 template <Precision Prec>
@@ -771,7 +771,7 @@ std::shared_ptr<const GlobalPhaseGateImpl<Prec>> GetGateFromJson<GlobalPhaseGate
         vector_to_mask(control_qubits, control_values),
         static_cast<Float<Prec>>(j.at("phase").get<double>()));
 }
-template class GetGateFromJson<GlobalPhaseGateImpl<Prec>>;
+template struct GetGateFromJson<GlobalPhaseGateImpl<Prec>>;
 
 // X, Y, Z, H, S, Sdag, T, Tdag, SqrtX, SqrtY, P0, P1
 #define DECLARE_GET_FROM_JSON_SINGLE_IMPL(Impl)                                         \
@@ -784,7 +784,7 @@ template class GetGateFromJson<GlobalPhaseGateImpl<Prec>>;
             vector_to_mask(control_qubits),                                             \
             vector_to_mask(control_qubits, control_values));                            \
     }                                                                                   \
-    template class GetGateFromJson<Impl<Prec>>;
+    template struct GetGateFromJson<Impl<Prec>>;
 DECLARE_GET_FROM_JSON_SINGLE_IMPL(XGateImpl)
 DECLARE_GET_FROM_JSON_SINGLE_IMPL(YGateImpl)
 DECLARE_GET_FROM_JSON_SINGLE_IMPL(ZGateImpl)
@@ -813,7 +813,7 @@ DECLARE_GET_FROM_JSON_SINGLE_IMPL(P1GateImpl)
             vector_to_mask(control_qubits, control_values),                             \
             static_cast<Float<Prec>>(j.at("angle").get<double>()));                     \
     }                                                                                   \
-    template class GetGateFromJson<Impl<Prec>>;
+    template struct GetGateFromJson<Impl<Prec>>;
 DECLARE_GET_FROM_JSON_R_SINGLE_IMPL(RXGateImpl)
 DECLARE_GET_FROM_JSON_R_SINGLE_IMPL(RYGateImpl)
 DECLARE_GET_FROM_JSON_R_SINGLE_IMPL(RZGateImpl)
@@ -853,9 +853,9 @@ std::shared_ptr<const U3GateImpl<Prec>> GetGateFromJson<U3GateImpl<Prec>>::get(c
         static_cast<Float<Prec>>(j.at("phi").get<double>()),
         static_cast<Float<Prec>>(j.at("lambda").get<double>()));
 }
-template class GetGateFromJson<U1GateImpl<Prec>>;
-template class GetGateFromJson<U2GateImpl<Prec>>;
-template class GetGateFromJson<U3GateImpl<Prec>>;
+template struct GetGateFromJson<U1GateImpl<Prec>>;
+template struct GetGateFromJson<U2GateImpl<Prec>>;
+template struct GetGateFromJson<U3GateImpl<Prec>>;
 
 // Swap
 template <Precision Prec>
@@ -867,5 +867,5 @@ std::shared_ptr<const SwapGateImpl<Prec>> GetGateFromJson<SwapGateImpl<Prec>>::g
         vector_to_mask(control_qubits),
         vector_to_mask(control_qubits, control_values));
 }
-template class GetGateFromJson<SwapGateImpl<Prec>>;
+template struct GetGateFromJson<SwapGateImpl<Prec>>;
 }  // namespace scaluq::internal
