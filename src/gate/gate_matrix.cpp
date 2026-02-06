@@ -151,7 +151,7 @@ GetGateFromJson<DenseMatrixGateImpl<Prec, Space>>::get(const Json& j) {
         vector_to_mask(control_qubits, control_values),
         j.at("matrix").get<ComplexMatrix>());
 }
-template class GetGateFromJson<DenseMatrixGateImpl<Prec, Space>>;
+template struct GetGateFromJson<DenseMatrixGateImpl<Prec, Space>>;
 template <Precision Prec, ExecutionSpace Space>
 std::shared_ptr<const SparseMatrixGateImpl<Prec, Space>>
 GetGateFromJson<SparseMatrixGateImpl<Prec, Space>>::get(const Json& j) {
@@ -163,5 +163,5 @@ GetGateFromJson<SparseMatrixGateImpl<Prec, Space>>::get(const Json& j) {
         vector_to_mask(control_qubits, control_values),
         j.at("matrix").get<SparseComplexMatrix>());
 }
-template class GetGateFromJson<SparseMatrixGateImpl<Prec, Space>>;
+template struct GetGateFromJson<SparseMatrixGateImpl<Prec, Space>>;
 }  // namespace scaluq::internal

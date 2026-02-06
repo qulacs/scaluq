@@ -481,6 +481,6 @@ std::string PauliOperator<Prec>::to_string() const {
     return ss.str();
 }
 
-template class PauliOperator<internal::Prec>;
+template struct PauliOperator<internal::Prec>;
 
 }  // namespace scaluq
