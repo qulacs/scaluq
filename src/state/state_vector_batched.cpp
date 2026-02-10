@@ -517,6 +517,14 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::copy() const {
     Kokkos::deep_copy(_space, cp._raw, _raw);
     return cp;
 }
+template <Precision Prec, ExecutionSpace Space>
+StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::copy(
+    const ConcurrentStream& stream) const {
+    auto cp =
+        StateVectorBatched<Prec, Space>::uninitialized_state(stream, _batch_size, _n_qubits);
+    Kokkos::deep_copy(stream.get<ExecutionSpaceType>(), cp._raw, _raw);
+    return cp;
+}
 
 template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_reduced_state() const {

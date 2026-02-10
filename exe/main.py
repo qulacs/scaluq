@@ -2,7 +2,8 @@ import statistics
 import time
 
 import scaluq
-from scaluq.default.f64 import Circuit, StateVector
+from scaluq.default.f64 import Circuit
+from scaluq.host.f64 import StateVector
 from scaluq.default.f64.gate import H, RX, RZ, X
 
 
@@ -73,7 +74,7 @@ def main() -> int:
     # Independent tasks on multiple streams
     states = [StateVector(n_qubits) for _ in range(stream_count)]
     for idx, state in enumerate(states):
-        state.set_execution_space(streams[idx])
+        state.set_concurrent_stream(streams[idx])
 
     # Warmup: sequential (no overlap)
     for _ in range(n_warmup):

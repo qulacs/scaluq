@@ -309,6 +309,12 @@ StateVector<Prec, Space> StateVector<Prec, Space>::copy() const {
     return cp;
 }
 template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, Space> StateVector<Prec, Space>::copy(const ConcurrentStream& stream) const {
+    auto cp = StateVector<Prec, Space>::uninitialized_state(stream, _n_qubits);
+    Kokkos::deep_copy(stream.get<ExecutionSpaceType>(), cp._raw, _raw);
+    return cp;
+}
+template <Precision Prec, ExecutionSpace Space>
 std::string StateVector<Prec, Space>::to_string() const {
     std::stringstream os;
     auto amp = this->get_amplitudes();

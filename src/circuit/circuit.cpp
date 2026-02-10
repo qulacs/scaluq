@@ -401,6 +401,8 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
             }
         }
 
+        new_states = StateVectorBatched<Prec, Space>::uninitialized_state(new_size,
+                                                                          initial_state.n_qubits());
         new_scounts.assign(new_size, 0);
 
         std::int64_t insert_idx = 0;

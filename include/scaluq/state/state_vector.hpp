@@ -29,15 +29,16 @@ public:
     StateVector(std::uint64_t n_qubits);
     StateVector(const ConcurrentStream& space, std::uint64_t n_qubits);
     StateVector(Kokkos::View<ComplexType*, ExecutionSpaceType> view);
-    StateVector(const ConcurrentStream& space,
-                Kokkos::View<ComplexType*, ExecutionSpaceType> view);
+    StateVector(const ConcurrentStream& space, Kokkos::View<ComplexType*, ExecutionSpaceType> view);
     StateVector(const StateVector& other) = default;
 
     StateVector& operator=(const StateVector& other) = default;
 
     [[nodiscard]] const ExecutionSpaceType& execution_space() const { return _space; }
     [[nodiscard]] ConcurrentStream concurrent_stream() const { return ConcurrentStream(_space); }
-    void set_concurrent_stream(const ConcurrentStream& stream) { _space = stream.get<ExecutionSpaceType>(); }
+    void set_concurrent_stream(const ConcurrentStream& stream) {
+        _space = stream.get<ExecutionSpaceType>();
+    }
 
     /**
      * @attention Very slow. You should use load() instead if you can.
@@ -90,6 +91,7 @@ public:
     void load(const StateVector& other);
 
     [[nodiscard]] StateVector copy() const;
+    [[nodiscard]] StateVector copy(const ConcurrentStream& stream) const;
 
     friend std::ostream& operator<<(std::ostream& os, const StateVector& state) {
         os << state.to_string();
@@ -248,17 +250,6 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                                      "(0.2991187916479724+0.2650813322096342j)]"}))
                 .build_as_google_style()
                 .c_str())
-        .def(
-            "set_execution_space",
-            [](StateVector<Prec, Space>& self, const ConcurrentStream& space) {
-                self.set_concurrent_stream(space);
-            },
-            "space"_a,
-            DocString()
-                .desc("Set execution space instance for subsequent operations.")
-                .arg("space", "ConcurrentStream", "execution space instance")
-                .build_as_google_style()
-                .c_str())
         .def("set_amplitude_at",
              &StateVector<Prec, Space>::set_amplitude_at,
              "index"_a,
@@ -278,6 +269,37 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                                       "[(1+0j), 0j, (3+1j), 0j]"}))
                  .note("If you want to set amplitudes at all indices, you should use "
                        ":meth:`.load`.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("concurrent_stream",
+             &StateVector<Prec, Space>::concurrent_stream,
+             DocString()
+                 .desc("Return execution space instance for subsequent operations.")
+                 .ret("ConcurrentStream", "execution space instance")
+                 .build_as_google_style()
+                 .c_str())
+        .def("set_concurrent_stream",
+             &StateVector<Prec, Space>::set_concurrent_stream,
+             "stream"_a,
+             DocString()
+                 .desc("Set execution space instance for subsequent operations.")
+                 .arg("stream", "ConcurrentStream", "execution space instance")
+                 .build_as_google_style()
+                 .c_str())
+        .def("copy",
+             nb::overload_cast<>(&StateVector<Prec, Space>::copy, nb::const_),
+             DocString()
+                 .desc("Return a copy of the state vector.")
+                 .ret("StateVector", "Copied state vector")
+                 .build_as_google_style()
+                 .c_str())
+        .def("copy",
+             nb::overload_cast<const ConcurrentStream&>(&StateVector<Prec, Space>::copy, nb::const_),
+             "stream"_a,
+             DocString()
+                 .desc("Return a copy of the state vector on the specified execution space.")
+                 .arg("stream", "ConcurrentStream", "Execution space instance for the copied object.")
+                 .ret("StateVector", "Copied state vector")
                  .build_as_google_style()
                  .c_str())
         .def("get_amplitude_at",

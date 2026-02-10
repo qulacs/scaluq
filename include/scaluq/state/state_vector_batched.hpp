@@ -66,12 +66,12 @@ public:
         std::uint64_t n_qubits,
         bool set_same_state,
         std::uint64_t seed = std::random_device()());
-    [[nodiscard]] static StateVectorBatched Haar_random_state(const ConcurrentStream& space,
-                                                             std::uint64_t batch_size,
-                                                             std::uint64_t n_qubits,
-                                                             bool set_same_state,
-                                                             std::uint64_t seed =
-                                                                 std::random_device()());
+    [[nodiscard]] static StateVectorBatched Haar_random_state(
+        const ConcurrentStream& space,
+        std::uint64_t batch_size,
+        std::uint64_t n_qubits,
+        bool set_same_state,
+        std::uint64_t seed = std::random_device()());
     [[nodiscard]] static StateVectorBatched uninitialized_state(std::uint64_t batch_size,
                                                                 std::uint64_t n_qubits);
     [[nodiscard]] static StateVectorBatched uninitialized_state(const ConcurrentStream& space,
@@ -102,6 +102,7 @@ public:
     [[nodiscard]] StateVector<Prec, Space> get_reduced_state() const;
 
     [[nodiscard]] StateVectorBatched copy() const;
+    [[nodiscard]] StateVectorBatched copy(const ConcurrentStream& stream) const;
 
     [[nodiscard]] std::string to_string() const;
 
@@ -299,17 +300,38 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
         .def("set_zero_norm_state",
              &StateVectorBatched<Prec, Space>::set_zero_norm_state,
              DocString().desc("Set all amplitudes to zero.").build_as_google_style().c_str())
-        .def(
-            "set_execution_space",
-            [](StateVectorBatched<Prec, Space>& self, const ConcurrentStream& space) {
-                self.set_concurrent_stream(space);
-            },
-            "space"_a,
-            DocString()
-                .desc("Set execution space instance for subsequent operations.")
-                .arg("space", "ConcurrentStream", "execution space instance")
-                .build_as_google_style()
-                .c_str())
+        .def("concurrent_stream",
+             &StateVectorBatched<Prec, Space>::concurrent_stream,
+             DocString()
+                 .desc("Return execution space instance for subsequent operations.")
+                 .ret("ConcurrentStream", "execution space instance")
+                 .build_as_google_style()
+                 .c_str())
+        .def("set_concurrent_stream",
+             &StateVectorBatched<Prec, Space>::set_concurrent_stream,
+             "stream"_a,
+             DocString()
+                 .desc("Set execution space instance for subsequent operations.")
+                 .arg("stream", "ConcurrentStream", "execution space instance")
+                 .build_as_google_style()
+                 .c_str())
+        .def("copy",
+             nb::overload_cast<>(&StateVectorBatched<Prec, Space>::copy, nb::const_),
+             DocString()
+                 .desc("Return a copy of the batched state vector.")
+                 .ret("StateVectorBatched", "Copied state vector")
+                 .build_as_google_style()
+                 .c_str())
+        .def("copy",
+             nb::overload_cast<const ConcurrentStream&>(&StateVectorBatched<Prec, Space>::copy,
+                                                        nb::const_),
+             "stream"_a,
+             DocString()
+                 .desc("Return a copy of the batched state vector on the specified execution space.")
+                 .arg("stream", "ConcurrentStream", "Execution space instance for the copied object.")
+                 .ret("StateVectorBatched", "Copied state vector")
+                 .build_as_google_style()
+                 .c_str())
         // Haar random state methods
         .def(
             "set_Haar_random_state",
@@ -358,7 +380,11 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                bool set_same_state,
                std::optional<std::uint64_t> seed) {
                 return StateVectorBatched<Prec, Space>::Haar_random_state(
-                    space, batch_size, n_qubits, set_same_state, seed.value_or(std::random_device()()));
+                    space,
+                    batch_size,
+                    n_qubits,
+                    set_same_state,
+                    seed.value_or(std::random_device()()));
             },
             "space"_a,
             "batch_size"_a,
@@ -388,9 +414,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                         .build_as_google_style()
                         .c_str())
         .def_static("uninitialized_state",
-                    nb::overload_cast<const ConcurrentStream&,
-                                      std::uint64_t,
-                                      std::uint64_t>(
+                    nb::overload_cast<const ConcurrentStream&, std::uint64_t, std::uint64_t>(
                         &StateVectorBatched<Prec, Space>::uninitialized_state),
                     "space"_a,
                     "batch_size"_a,
