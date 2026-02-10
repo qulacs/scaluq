@@ -2,6 +2,7 @@
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/gate/merge_gate.hpp>
 #include <scaluq/gate/param_gate_factory.hpp>
+#include <scaluq/util/utility.hpp>
 
 namespace scaluq {
 template <Precision Prec>
@@ -515,8 +516,8 @@ std::unordered_map<std::string, double> Circuit<Prec>::backprop_inner_product(
     StateVector<Prec, Space>& state,
     StateVector<Prec, Space>& bistate,
     const std::map<std::string, double>& parameters) {
+    const auto eps = internal::get_epsilon<Prec>();
     const std::uint64_t n_qubits = this->n_qubits();
-
     const std::uint64_t n_gates = this->n_gates();
 
     std::unordered_map<std::string, double> gradients;
@@ -535,13 +536,29 @@ std::unordered_map<std::string, double> Circuit<Prec>::backprop_inner_product(
             const auto& [pgate, key] = std::get<1>(cur_gate);
 
             Astate = state.copy();
-            const double pcoef = pgate->param_coef();
-            if (pcoef == 0.0) {
-                throw std::runtime_error("backprop_inner_product: param_coef is zero");
+            double pauli_coef = 1.0;
+            if (pgate.param_gate_type() == ParamGateType::ParamPauliRotation) {
+                internal::ParamGatePtr<internal::ParamPauliRotationGateImpl<Prec>> ppr(pgate);
+
+                const auto c = ppr->pauli().coef();
+                const double cre = static_cast<double>(std::real(c));
+                const double cim = static_cast<double>(std::imag(c));
+                if (std::abs(cim) >= eps) {
+                    throw std::runtime_error("backprop_inner_product: pauli coef must be real");
+                }
+                if (std::abs(cre) < eps) {
+                    throw std::runtime_error("backprop_inner_product: pauli coef must be nonzero");
+                }
+                pauli_coef = cre;
             }
-            pgate->update_quantum_state(Astate, -M_PI / pcoef);
+            const double scale = pgate->param_coef() * pauli_coef;
+            if (std::abs(scale) < eps) {
+                throw std::runtime_error(
+                    "backprop_inner_product: param_coef or pauli coef is zero");
+            }
+            pgate->update_quantum_state(Astate, -M_PI / scale);
             const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
-            const double contrib = pcoef * static_cast<double>(ip.real()) * pcoef;
+            const double contrib = scale * static_cast<double>(ip.real()) * scale;
 
             gradients[key] += contrib;
         }
