@@ -3,20 +3,17 @@
 #include <Kokkos_Core.hpp>
 #include <vector>
 
-#include "runtime.hpp"
 #include "types.hpp"
 
 namespace scaluq {
-inline std::vector<ConcurrentStream> create_streams(const std::vector<double>& weights) {
-    auto instances =
-        Kokkos::Experimental::partition_space(Kokkos::DefaultExecutionSpace(), weights);
-    std::vector<ConcurrentStream> out;
-    out.reserve(instances.size());
-    for (const auto& inst : instances) {
-        out.emplace_back(inst);
-    }
-    return out;
-}
+void initialize();
+void finalize();
+bool is_initialized();
+bool is_finalized();
+void synchronize();
+void synchronize(const ConcurrentStream& stream);
+void synchronize(const std::vector<ConcurrentStream>& streams);
+std::vector<ConcurrentStream> create_streams(const std::vector<double>& weights);
 }  // namespace scaluq
 
 #ifdef SCALUQ_USE_NANOBIND
@@ -29,24 +26,7 @@ void bind_kokkos_hpp(nb::module_& m) {
         DocString()
             .desc("Execution space instance for concurrent stream control.")
             .build_as_google_style()
-            .c_str())
-        .def("fence",
-             &ConcurrentStream::fence,
-             "name"_a = "scaluq::ConcurrentStream::fence",
-             DocString()
-                 .desc("Fence the execution space instance.")
-                 .arg("name", "str", "Fence label")
-                 .build_as_google_style()
-                 .c_str());
-    m.def("create_streams",
-          &create_streams,
-          "weights"_a,
-          DocString()
-              .desc("Create concurrent streams by partitioning the default execution space.")
-              .arg("weights", "list[float]", "Partition weights")
-              .ret("list[ConcurrentStream]", "Concurrent stream instances")
-              .build_as_google_style()
-              .c_str());
+            .c_str());
     m.def("initialize",
           &initialize,
           DocString()
@@ -76,11 +56,36 @@ void bind_kokkos_hpp(nb::module_& m) {
              &is_finalized,
              "Return true if :func:`~scaluq.finalize()` is already called.")
         .def("synchronize",
-             &synchronize,
+             nb::overload_cast<>(&scaluq::synchronize),
              DocString()
                  .desc("Synchronize the device if the execution space is not host.")
                  .note("This function is required to ensure that all operations on device are "
                        "finished when you measure the elapsed time of some operations on device.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("synchronize",
+             nb::overload_cast<const ConcurrentStream&>(&scaluq::synchronize),
+             "stream"_a,
+             DocString()
+                 .desc("Fence the execution space instance.")
+                 .arg("stream", "ConcurrentStream", "Execution space instance")
+                 .build_as_google_style()
+                 .c_str())
+        .def("synchronize",
+             nb::overload_cast<const std::vector<ConcurrentStream>&>(&scaluq::synchronize),
+             "streams"_a,
+             DocString()
+                 .desc("Fence multiple execution space instances.")
+                 .arg("streams", "list[ConcurrentStream]", "Execution space instances")
+                 .build_as_google_style()
+                 .c_str())
+        .def("create_streams",
+             &create_streams,
+             "weights"_a,
+             DocString()
+                 .desc("Create concurrent streams by partitioning the default execution space.")
+                 .arg("weights", "list[float]", "Partition weights")
+                 .ret("list[ConcurrentStream]", "Concurrent stream instances")
                  .build_as_google_style()
                  .c_str());
 }

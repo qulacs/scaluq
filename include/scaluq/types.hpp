@@ -85,7 +85,7 @@ public:
     ConcurrentStream() : ConcurrentStream(ExecutionSpaceType{}) {}
 
     template <typename SpaceType>
-        requires internal::KokkosExecutionSpace<SpaceType>
+    requires internal::KokkosExecutionSpace<SpaceType>
     explicit ConcurrentStream(const SpaceType& space)
         : _space(space), _fence(&ConcurrentStream::fence_impl<SpaceType>) {}
 
@@ -96,7 +96,7 @@ public:
     [[nodiscard]] const ExecutionSpaceType& get() const { return get<ExecutionSpaceType>(); }
 
     template <typename SpaceType>
-        requires internal::KokkosExecutionSpace<SpaceType>
+    requires internal::KokkosExecutionSpace<SpaceType>
     [[nodiscard]] const SpaceType& get() const {
         const auto* space = std::any_cast<SpaceType>(&_space);
         if (space == nullptr) {
@@ -109,7 +109,7 @@ public:
 
 private:
     template <typename SpaceType>
-        requires internal::KokkosExecutionSpace<SpaceType>
+    requires internal::KokkosExecutionSpace<SpaceType>
     static void fence_impl(const std::any& any_space, const std::string& name) {
         std::any_cast<const SpaceType&>(any_space).fence(name);
     }
