@@ -297,6 +297,17 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "parameters"_a = std::map<std::string, double>{},
             "seed"_a = std::nullopt,
             "Simulate noise circuit. Return all the possible states and their counts.")
+        .def("backprop_inner_product",
+             &Circuit<Prec>::template backprop_inner_product<ExecutionSpace::HostSerial>,
+             "state"_a,
+             "bistate"_a,
+             "parameters"_a,
+             "Compute gradients of inner product between state and bistate using back propagation.")
+        .def("backprop",
+             &Circuit<Prec>::template backprop<ExecutionSpace::HostSerial>,
+             "observable"_a,
+             "parameters"_a,
+             "Compute gradients of expectation value of observable using back propagation.")
 #ifdef SCALUQ_USE_CUDA
         .def(
             "update_quantum_state",
