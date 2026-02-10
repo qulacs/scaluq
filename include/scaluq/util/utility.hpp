@@ -113,7 +113,7 @@ Complex<Prec> inner_product(const Kokkos::View<Complex<Prec>*, SpaceType<Space>>
     Kokkos::parallel_reduce(
         "inner_product",
         Kokkos::RangePolicy<SpaceType<Space>>(0, a.extent(0)),
-        KOKKOS_LAMBDA(std::uint64_t i, Complex<Prec> & lsum) {
+        KOKKOS_LAMBDA(std::uint64_t i, Complex<Prec>& lsum) {
             lsum += internal::conj(a(i)) * b(i);
         },
         result);
@@ -226,6 +226,20 @@ inline SparseComplexMatrix transform_sparse_matrix_by_order(
     const SparseComplexMatrix& mat,
     const std::vector<std::uint64_t>& targets) {
     return transform_dense_matrix_by_order(mat.toDense(), targets).sparseView();
+}
+
+template <Precision Prec>
+constexpr double get_epsilon() {
+    if constexpr (Prec == Precision::F16)
+        return 1.;
+    else if constexpr (Prec == Precision::F32)
+        return 1e-4;
+    else if constexpr (Prec == Precision::F64)
+        return 1e-12;
+    else if constexpr (Prec == Precision::BF16)
+        return 1.;
+    else
+        static_assert(internal::lazy_false_v<internal::Float<Prec>>, "unknown Precision");
 }
 
 }  // namespace internal
