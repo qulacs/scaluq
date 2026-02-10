@@ -143,7 +143,7 @@ StdComplex PauliOperator<Prec>::get_expectation_value(
         Kokkos::parallel_reduce(
             "get_expectation_value",
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector.dim()),
-            KOKKOS_LAMBDA(std::uint64_t state_idx, FloatType& sum) {
+            KOKKOS_LAMBDA(std::uint64_t state_idx, FloatType & sum) {
                 FloatType tmp = (scaluq::internal::conj(state_vector._raw[state_idx]) *
                                  state_vector._raw[state_idx])
                                     .real();
@@ -160,7 +160,7 @@ StdComplex PauliOperator<Prec>::get_expectation_value(
     Kokkos::parallel_reduce(
         "get_expectation_value",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector.dim() >> 1),
-        KOKKOS_LAMBDA(std::uint64_t state_idx, FloatType& sum) {
+        KOKKOS_LAMBDA(std::uint64_t state_idx, FloatType & sum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
             FloatType tmp = scaluq::internal::real(
@@ -252,7 +252,7 @@ StdComplex PauliOperator<Prec>::get_transition_amplitude(
         Kokkos::parallel_reduce(
             "get_transition_amplitude",
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector_bra.dim()),
-            KOKKOS_LAMBDA(std::uint64_t state_idx, ComplexType& sum) {
+            KOKKOS_LAMBDA(std::uint64_t state_idx, ComplexType & sum) {
                 ComplexType tmp = scaluq::internal::conj(state_vector_bra._raw[state_idx]) *
                                   state_vector_ket._raw[state_idx];
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
@@ -268,7 +268,7 @@ StdComplex PauliOperator<Prec>::get_transition_amplitude(
     Kokkos::parallel_reduce(
         "get_transition_amplitude",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector_bra.dim() >> 1),
-        KOKKOS_LAMBDA(std::uint64_t state_idx, ComplexType& sum) {
+        KOKKOS_LAMBDA(std::uint64_t state_idx, ComplexType & sum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
             ComplexType tmp1 = scaluq::internal::conj(state_vector_bra._raw[basis_1]) *
@@ -364,8 +364,12 @@ std::vector<StdComplex> PauliOperator<Prec>::get_transition_amplitude(
 
 template StdComplex PauliOperator<internal::Prec>::get_expectation_value(
     const StateVector<internal::Prec, ExecutionSpace::Host>& state_vector) const;
+template StdComplex PauliOperator<internal::Prec>::get_expectation_value(
+    const StateVector<internal::Prec, ExecutionSpace::HostSerial>& state_vector) const;
 template std::vector<StdComplex> PauliOperator<internal::Prec>::get_expectation_value(
     const StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states) const;
+template std::vector<StdComplex> PauliOperator<internal::Prec>::get_expectation_value(
+    const StateVectorBatched<internal::Prec, ExecutionSpace::HostSerial>& states) const;
 template StdComplex PauliOperator<internal::Prec>::get_transition_amplitude(
     const StateVector<internal::Prec, ExecutionSpace::Host>& state_vector_bra,
     const StateVector<internal::Prec, ExecutionSpace::Host>& state_vector_ket) const;
