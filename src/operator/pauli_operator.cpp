@@ -221,7 +221,7 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
             FloatType res = 0;
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
-                Kokkos::TeamThreadRange(team, states.dim()),
+                Kokkos::TeamThreadRange(team, states.dim() >> 1),
                 [&](std::uint64_t state_idx, FloatType& sum) {
                     std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
                     std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
@@ -364,15 +364,19 @@ std::vector<StdComplex> PauliOperator<Prec>::get_transition_amplitude(
 
 template StdComplex PauliOperator<internal::Prec>::get_expectation_value(
     const StateVector<internal::Prec, ExecutionSpace::Host>& state_vector) const;
+template StdComplex PauliOperator<internal::Prec>::get_expectation_value(
+    const StateVector<internal::Prec, ExecutionSpace::HostSerial>& state_vector) const;
 template std::vector<StdComplex> PauliOperator<internal::Prec>::get_expectation_value(
     const StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states) const;
+template std::vector<StdComplex> PauliOperator<internal::Prec>::get_expectation_value(
+    const StateVectorBatched<internal::Prec, ExecutionSpace::HostSerial>& states) const;
 template StdComplex PauliOperator<internal::Prec>::get_transition_amplitude(
     const StateVector<internal::Prec, ExecutionSpace::Host>& state_vector_bra,
     const StateVector<internal::Prec, ExecutionSpace::Host>& state_vector_ket) const;
 template std::vector<StdComplex> PauliOperator<internal::Prec>::get_transition_amplitude(
     const StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states_bra,
     const StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states_ket) const;
-#ifdef SCALUQ_ENABLE_CUDA
+#ifdef SCALUQ_USE_CUDA
 template StdComplex PauliOperator<internal::Prec>::get_expectation_value(
     const StateVector<internal::Prec, ExecutionSpace::Default>& state_vector) const;
 template std::vector<StdComplex> PauliOperator<internal::Prec>::get_expectation_value(

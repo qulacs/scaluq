@@ -2,6 +2,7 @@
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/gate/merge_gate.hpp>
 #include <scaluq/gate/param_gate_factory.hpp>
+#include <scaluq/util/utility.hpp>
 
 namespace scaluq {
 template <Precision Prec>
@@ -497,6 +498,121 @@ void Circuit<Prec>::check_gate_is_valid(const ParamGate<Prec>& gate) const {
         }
     }
 }
+
+template <Precision Prec>
+template <ExecutionSpace Space>
+std::unordered_map<std::string, double> Circuit<Prec>::backprop_inner_product(
+    StateVector<Prec, Space>& state,
+    StateVector<Prec, Space>& bistate,
+    const std::map<std::string, double>& parameters) {
+    const auto eps = internal::get_epsilon<Prec>();
+    const std::uint64_t n_qubits = this->n_qubits();
+    const std::uint64_t n_gates = this->n_gates();
+
+    std::unordered_map<std::string, double> gradients;
+    const auto& key_set = this->key_set();
+    gradients.reserve(key_set.size());
+    for (const auto& key : key_set) {
+        gradients.emplace(key, 0.0);
+    }
+
+    StateVector<Prec, Space> Astate(n_qubits);
+
+    for (std::int64_t i = static_cast<std::int64_t>(n_gates) - 1; i >= 0; i--) {
+        const auto& cur_gate = this->get_gate_at(static_cast<std::uint64_t>(i));
+
+        if (cur_gate.index() == 1) {
+            const auto& [pgate, key] = std::get<1>(cur_gate);
+
+            Astate = state.copy();
+            double pauli_coef = 1.0;
+            if (pgate.param_gate_type() == ParamGateType::ParamPauliRotation) {
+                internal::ParamGatePtr<internal::ParamPauliRotationGateImpl<Prec>> ppr(pgate);
+
+                const auto c = ppr->pauli().coef();
+                const double cre = static_cast<double>(std::real(c));
+                const double cim = static_cast<double>(std::imag(c));
+                if (std::abs(cim) >= eps) {
+                    throw std::runtime_error("backprop_inner_product: pauli coef must be real");
+                }
+                if (std::abs(cre) < eps) {
+                    throw std::runtime_error("backprop_inner_product: pauli coef must be nonzero");
+                }
+                pauli_coef = cre;
+            }
+            const double scale = pgate->param_coef() * pauli_coef;
+            if (std::abs(scale) < eps) {
+                throw std::runtime_error(
+                    "backprop_inner_product: param_coef or pauli coef is zero");
+            }
+            pgate->update_quantum_state(Astate, -M_PI / scale);
+            const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
+            const double contrib = scale * static_cast<double>(ip.real()) * scale;
+
+            gradients[key] += contrib;
+        }
+
+        if (cur_gate.index() == 0) {
+            const auto& g = std::get<0>(cur_gate);
+
+            auto inv = g->get_inverse();
+            inv->update_quantum_state(bistate);
+            inv->update_quantum_state(state);
+        } else {
+            const auto& [pgate, key] = std::get<1>(cur_gate);
+
+            auto inv = pgate->get_inverse();
+            const auto it = parameters.find(key);
+            if (it == parameters.end()) {
+                throw std::runtime_error("backprop_inner_product: missing parameter for key=" +
+                                         key);
+            }
+            const auto param = it->second;
+
+            inv->update_quantum_state(bistate, param);
+            inv->update_quantum_state(state, param);
+        }
+    }
+    return gradients;
+}
+template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop_inner_product(
+    StateVector<internal::Prec, ExecutionSpace::Host>& state,
+    StateVector<internal::Prec, ExecutionSpace::Host>& bistate,
+    const std::map<std::string, double>& parameters);
+template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop_inner_product(
+    StateVector<internal::Prec, ExecutionSpace::HostSerial>& state,
+    StateVector<internal::Prec, ExecutionSpace::HostSerial>& bistate,
+    const std::map<std::string, double>& parameters);
+#ifdef SCALUQ_USE_CUDA
+template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop_inner_product(
+    StateVector<internal::Prec, ExecutionSpace::Default>& state,
+    StateVector<internal::Prec, ExecutionSpace::Default>& bistate,
+    const std::map<std::string, double>& parameters);
+#endif  // SCALUQ_USE_CUDA
+
+template <Precision Prec>
+template <ExecutionSpace Space>
+std::unordered_map<std::string, double> Circuit<Prec>::backprop(
+    const Operator<Prec, Space>& obs, const std::map<std::string, double>& parameters) {
+    const std::uint64_t n_qubits = this->n_qubits();
+    StateVector<Prec, Space> state(n_qubits);
+    this->update_quantum_state(state, parameters);
+
+    StateVector<Prec, Space> bistate = state.copy();
+    obs.apply_to_state(bistate);
+    return backprop_inner_product(state, bistate, parameters);
+}
+template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop<
+    ExecutionSpace::Host>(const Operator<internal::Prec, ExecutionSpace::Host>& obs,
+                          const std::map<std::string, double>& parameters);
+template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop<
+    ExecutionSpace::HostSerial>(const Operator<internal::Prec, ExecutionSpace::HostSerial>& obs,
+                                const std::map<std::string, double>& parameters);
+#ifdef SCALUQ_USE_CUDA
+template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop<
+    ExecutionSpace::Default>(const Operator<internal::Prec, ExecutionSpace::Default>& obs,
+                             const std::map<std::string, double>& parameters);
+#endif  // SCALUQ_USE_CUDA
 
 template class Circuit<internal::Prec>;
 }  // namespace scaluq
