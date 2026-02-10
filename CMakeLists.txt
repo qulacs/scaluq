@@ -170,6 +170,8 @@ if(SCALUQ_USE_CUDA)
     list(APPEND SCALUQ_SPACE_NAMES host)
     list(APPEND SCALUQ_SPACE_VALUES Host)
 endif()
+list(APPEND SCALUQ_SPACE_NAMES host_serial)
+list(APPEND SCALUQ_SPACE_VALUES HostSerial)
 list_max_idx(SCALUQ_SPACE_VALUES space_max_idx)
 
 foreach(space_idx RANGE 0 ${space_max_idx})

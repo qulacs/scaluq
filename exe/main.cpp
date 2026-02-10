@@ -51,8 +51,15 @@ void test_gate(ParamGate<Prec> gate_control,
                std::uint64_t control_mask,
                std::uint64_t control_value_mask,
                double param) {
-    StateVector state = StateVector<Prec, Space>::Haar_random_state(n_qubits);
-    auto amplitudes = state.get_amplitudes();
+    // Generate random state on Host first to avoid potential issues with Random Pool on
+    // HostSerial
+    StateVector<Prec, ExecutionSpace::Host> state_host =
+        StateVector<Prec, ExecutionSpace::Host>::Haar_random_state(n_qubits);
+    auto amplitudes = state_host.get_amplitudes();
+
+    StateVector<Prec, Space> state(n_qubits);
+    state.load(amplitudes);
+
     StateVector<Prec, Space> state_controlled(n_qubits - std::popcount(control_mask));
     std::vector<StdComplex> amplitudes_controlled(state_controlled.dim());
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
@@ -109,6 +116,9 @@ int main() {
     // for (int _ : std::views::iota(0, 20000)) {
     //     test<Precision::F64, ExecutionSpace::Default>();
     // }
+    for (int _ : std::views::iota(0, 100)) {
+        test<Precision::F64, ExecutionSpace::HostSerial>();
+    }
     {
         ComplexMatrix mat(4, 4);
         mat << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0;

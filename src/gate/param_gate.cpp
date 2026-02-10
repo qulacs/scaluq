@@ -22,6 +22,26 @@ void ParamGateBase<Prec>::check_qubit_mask_within_bounds(
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
+template <Precision Prec>
+void ParamGateBase<Prec>::check_qubit_mask_within_bounds(
+    const StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const {
+    std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
+    if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
+        throw std::runtime_error(
+            "Error: ParamGate::update_quantum_state(StateVector& state): "
+            "Target/Control qubit exceeds the number of qubits in the system.");
+    }
+}
+template <Precision Prec>
+void ParamGateBase<Prec>::check_qubit_mask_within_bounds(
+    const StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states) const {
+    std::uint64_t full_mask = (1ULL << states.n_qubits()) - 1;
+    if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
+        throw std::runtime_error(
+            "Error: ParamGate::update_quantum_state(StateVector& state): "
+            "Target/Control qubit exceeds the number of qubits in the system.");
+    }
+}
 #ifdef SCALUQ_USE_CUDA
 template <Precision Prec>
 void ParamGateBase<Prec>::check_qubit_mask_within_bounds(

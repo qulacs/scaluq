@@ -71,7 +71,8 @@ void Circuit<Prec>::add_circuit(Circuit<Prec>&& circuit) {
 }
 
 template <Precision Prec>
-void Circuit<Prec>::update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state,
+template <ExecutionSpace Space>
+void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
                                          const std::map<std::string, double>& parameters) const {
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0) continue;
@@ -92,9 +93,11 @@ void Circuit<Prec>::update_quantum_state(StateVector<Prec, ExecutionSpace::Host>
         }
     }
 }
+
 template <Precision Prec>
+template <ExecutionSpace Space>
 void Circuit<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::Host>& states,
+    StateVectorBatched<Prec, Space>& states,
     const std::map<std::string, std::vector<double>>& parameters) const {
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0) continue;
@@ -115,52 +118,28 @@ void Circuit<Prec>::update_quantum_state(
         }
     }
 }
+
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
+    StateVector<internal::Prec, ExecutionSpace::Host>& state,
+    const std::map<std::string, double>& parameters) const;
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
+    StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states,
+    const std::map<std::string, std::vector<double>>& parameters) const;
+
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
+    StateVector<internal::Prec, ExecutionSpace::HostSerial>& state,
+    const std::map<std::string, double>& parameters) const;
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
+    StateVectorBatched<internal::Prec, ExecutionSpace::HostSerial>& states,
+    const std::map<std::string, std::vector<double>>& parameters) const;
+
 #ifdef SCALUQ_USE_CUDA
-template <Precision Prec>
-void Circuit<Prec>::update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state,
-                                         const std::map<std::string, double>& parameters) const {
-    for (auto&& gate : _gate_list) {
-        if (gate.index() == 0) continue;
-        const auto& key = std::get<1>(gate).second;
-        if (!parameters.contains(key)) {
-            using namespace std::string_literals;
-            throw std::runtime_error(
-                "Circuit::update_quantum_state(StateVector&, const std::map<std::string_view, double>&) const: parameter named "s +
-                std::string(key) + "is not given.");
-        }
-    }
-    for (auto&& gate : _gate_list) {
-        if (gate.index() == 0) {
-            std::get<0>(gate)->update_quantum_state(state);
-        } else {
-            const auto& [param_gate, key] = std::get<1>(gate);
-            param_gate->update_quantum_state(state, parameters.at(key));
-        }
-    }
-}
-template <Precision Prec>
-void Circuit<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::Default>& states,
-    const std::map<std::string, std::vector<double>>& parameters) const {
-    for (auto&& gate : _gate_list) {
-        if (gate.index() == 0) continue;
-        const auto& key = std::get<1>(gate).second;
-        if (!parameters.contains(key)) {
-            using namespace std::string_literals;
-            throw std::runtime_error(
-                "Circuit::update_quantum_state(StateVector&, const std::map<std::string_view, double>&) const: parameter named "s +
-                std::string(key) + "is not given.");
-        }
-    }
-    for (auto&& gate : _gate_list) {
-        if (gate.index() == 0) {
-            std::get<0>(gate)->update_quantum_state(states);
-        } else {
-            const auto& [param_gate, key] = std::get<1>(gate);
-            param_gate->update_quantum_state(states, parameters.at(key));
-        }
-    }
-}
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
+    StateVector<internal::Prec, ExecutionSpace::Default>& state,
+    const std::map<std::string, double>& parameters) const;
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
+    StateVectorBatched<internal::Prec, ExecutionSpace::Default>& states,
+    const std::map<std::string, std::vector<double>>& parameters) const;
 #endif  // SCALUQ_USE_CUDA
 
 template <Precision Prec>
@@ -344,6 +323,8 @@ void Circuit<Prec>::optimize(std::uint64_t max_block_size) {
     _gate_list.swap(new_gate_list);
 }
 template void Circuit<internal::Prec>::optimize<ExecutionSpace::Host>(std::uint64_t max_block_size);
+template void Circuit<internal::Prec>::optimize<ExecutionSpace::HostSerial>(
+    std::uint64_t max_block_size);
 #ifdef SCALUQ_USE_CUDA
 template void Circuit<internal::Prec>::optimize<ExecutionSpace::Default>(
     std::uint64_t max_block_size);
@@ -456,6 +437,14 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
 template std::vector<std::pair<StateVector<internal::Prec, ExecutionSpace::Host>, std::int64_t>>
 Circuit<internal::Prec>::simulate_noise<ExecutionSpace::Host>(
     const StateVector<internal::Prec, ExecutionSpace::Host>& initial_state,
+    std::uint64_t sampling_count,
+    const std::map<std::string, double>& parameters,
+    std::uint64_t seed) const;
+
+template std::vector<
+    std::pair<StateVector<internal::Prec, ExecutionSpace::HostSerial>, std::int64_t>>
+Circuit<internal::Prec>::simulate_noise<ExecutionSpace::HostSerial>(
+    const StateVector<internal::Prec, ExecutionSpace::HostSerial>& initial_state,
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
     std::uint64_t seed) const;
