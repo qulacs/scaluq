@@ -39,6 +39,7 @@ void backprop_test_parametric_rc() {
     auto operator_matrix = pcoef1 * (X0 * Y1) + pcoef2 * (Y1 * Z2) + pcoef3 * (Z2 * X0);
 
     std::map<std::string, double> parameters;
+    std::vector<double> gate_coefs;
     std::vector<std::uint64_t> gate_targets;
     for (auto idx = std::size_t{0}; idx < n; idx++) {
         int idx_first = 3 * idx;
@@ -51,12 +52,16 @@ void backprop_test_parametric_rc() {
         gate_targets.push_back(dist_target(engine));
         gate_targets.push_back(dist_target(engine));
         gate_targets.push_back(dist_target(engine));
+        gate_coefs.push_back(dist_param(engine));
+        gate_coefs.push_back(dist_param(engine));
+        gate_coefs.push_back(dist_param(engine));
 
-        circuit.add_param_gate(gate::ParamRX<Prec>(gate_targets[idx_first]),
+        circuit.add_param_gate(gate::ParamRX<Prec>(gate_targets[idx_first], gate_coefs[idx_first]),
                                std::to_string(idx_first));
-        circuit.add_param_gate(gate::ParamRY<Prec>(gate_targets[idx_second]),
-                               std::to_string(idx_second));
-        circuit.add_param_gate(gate::ParamRZ<Prec>(gate_targets[idx_third]),
+        circuit.add_param_gate(
+            gate::ParamRY<Prec>(gate_targets[idx_second], gate_coefs[idx_second]),
+            std::to_string(idx_second));
+        circuit.add_param_gate(gate::ParamRZ<Prec>(gate_targets[idx_third], gate_coefs[idx_third]),
                                std::to_string(idx_third));
     }
     auto gradients = circuit.backprop(op, parameters);
@@ -66,17 +71,20 @@ void backprop_test_parametric_rc() {
     ComplexVector state_eigen = ComplexVector::Zero(dim);
     state_eigen[0] = StdComplex(1.0, 0.0);
     std::vector<ComplexMatrix> matrices;
+    const auto make_angle_rc = [&](int idx) {
+        return parameters.at(std::to_string(idx)) * gate_coefs[idx];
+    };
     for (auto idx = std::size_t{0}; idx < n; idx++) {
         const std::size_t idx_first = 3 * idx;
         const std::size_t idx_second = 3 * idx + 1;
         const std::size_t idx_third = 3 * idx + 2;
 
         matrices.push_back(get_expanded_eigen_matrix_with_identity(
-            gate_targets[idx_first], make_RX(parameters.at(std::to_string(idx_first))), n));
+            gate_targets[idx_first], make_RX(make_angle_rc(idx_first)), n));
         matrices.push_back(get_expanded_eigen_matrix_with_identity(
-            gate_targets[idx_second], make_RY(parameters.at(std::to_string(idx_second))), n));
+            gate_targets[idx_second], make_RY(make_angle_rc(idx_second)), n));
         matrices.push_back(get_expanded_eigen_matrix_with_identity(
-            gate_targets[idx_third], make_RZ(parameters.at(std::to_string(idx_third))), n));
+            gate_targets[idx_third], make_RZ(make_angle_rc(idx_third)), n));
 
         state_eigen = matrices[idx_first] * state_eigen;
         state_eigen = matrices[idx_second] * state_eigen;
@@ -104,8 +112,7 @@ void backprop_test_parametric_rc() {
         }
 
         const StdComplex ip = (bistate_eigen.adjoint() * tmp_state)(0, 0);
-        const double contrib =
-            1.0 * static_cast<double>(ip.real()) * 1.0;  // 各gateの係数は1.0としたため
+        const double contrib = gate_coefs[idx] * static_cast<double>(ip.real()) * gate_coefs[idx];
         gradients_eigen[std::to_string(idx)] += contrib;
 
         const auto& gate = matrices[idx];
