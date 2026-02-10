@@ -3,7 +3,7 @@ import time
 
 import scaluq
 from scaluq.default.f64 import Circuit
-from scaluq.host.f64 import StateVector
+from scaluq.default.f64 import StateVector
 from scaluq.default.f64.gate import H, RX, RZ, X
 
 

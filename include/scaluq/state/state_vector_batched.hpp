@@ -532,13 +532,6 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         // Copy and string representation
-        .def("copy",
-             &StateVectorBatched<Prec, Space>::copy,
-             DocString()
-                 .desc("Create a deep copy of this batched state vector.")
-                 .ret("StateVectorBatched", "New copy of the states.")
-                 .build_as_google_style()
-                 .c_str())
         .def("to_string",
              &StateVectorBatched<Prec, Space>::to_string,
              DocString()
