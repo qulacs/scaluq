@@ -579,6 +579,10 @@ template std::unordered_map<std::string, double> Circuit<internal::Prec>::backpr
     StateVector<internal::Prec, ExecutionSpace::Host>& state,
     StateVector<internal::Prec, ExecutionSpace::Host>& bistate,
     const std::map<std::string, double>& parameters);
+template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop_inner_product(
+    StateVector<internal::Prec, ExecutionSpace::HostSerial>& state,
+    StateVector<internal::Prec, ExecutionSpace::HostSerial>& bistate,
+    const std::map<std::string, double>& parameters);
 #ifdef SCALUQ_USE_CUDA
 template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop_inner_product(
     StateVector<internal::Prec, ExecutionSpace::Default>& state,
@@ -601,6 +605,9 @@ std::unordered_map<std::string, double> Circuit<Prec>::backprop(
 template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop<
     ExecutionSpace::Host>(const Operator<internal::Prec, ExecutionSpace::Host>& obs,
                           const std::map<std::string, double>& parameters);
+template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop<
+    ExecutionSpace::HostSerial>(const Operator<internal::Prec, ExecutionSpace::HostSerial>& obs,
+                                const std::map<std::string, double>& parameters);
 #ifdef SCALUQ_USE_CUDA
 template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop<
     ExecutionSpace::Default>(const Operator<internal::Prec, ExecutionSpace::Default>& obs,
