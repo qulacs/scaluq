@@ -26,9 +26,7 @@ using F16 = __half;
 #elif defined(__STDCPP_FLOAT16_T__)
 using F16 = std::float16_t;
 #else
-static_assert(std::numeric_limits<_Float16>::is_iec559 && sizeof(_Float16) == 2,
-              "Standard double precision float (IEEE 754) is required.");
-using F16 = _Float16;
+static_assert(false, "This compiler does not support standard F16 type.")
 #endif
 
 template <>
@@ -46,7 +44,7 @@ using F32 = float;
 using F32 = std::float32_t;
 #else
 static_assert(std::numeric_limits<float>::is_iec559 && sizeof(float) == 4,
-              "Standard double precision float (IEEE 754) is required.");
+              "standard single precision float (IEEE 754) is required");
 using F32 = float;
 #endif
 
@@ -65,7 +63,7 @@ using F64 = double;
 using F64 = std::float64_t;
 #else
 static_assert(std::numeric_limits<double>::is_iec559 && sizeof(double) == 8,
-              "Standard double precision float (IEEE 754) is required.");
+              "standard double precision float (IEEE 754) is required");
 using F64 = double;
 #endif
 
@@ -83,14 +81,7 @@ using BF16 = __nv_bfloat16;
 #elif defined(__STDCPP_BFLOAT16_T__)
 using BF16 = std::bfloat16_t;
 #else
-static_assert(sizeof(__bf16) == 2, "__bf16 must be 2 bytes");
-static_assert(std::numeric_limits<__bf16>::is_specialized,
-              "__bf16 must have numeric_limits specialization");
-static_assert(std::numeric_limits<__bf16>::max_exponent == std::numeric_limits<float>::max_exponent,
-              "__bf16 must have the same exponent range as float32");
-static_assert(std::numeric_limits<__bf16>::digits == 8,
-              "__bf16 must have 8 bits of mantissa precision (including implicit bit)");
-using BF16 = __bf16;
+static_assert(false, "This compiler does not support standard BF16 type.")
 #endif
 
 template <>
