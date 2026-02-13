@@ -1,14 +1,17 @@
 #pragma once
 
+#include <limits>
 #include <type_traits>
 
 #ifdef SCALUQ_USE_CUDA
 #include <cuda_bf16.h>
 #include <cuda_fp16.h>
-#else
+#elif __has_include(<stdfloat>)
 #include <stdfloat>
+#define STDFLOAT_ENABLED 1
+#else
+#define STDFLOAT_ENABLED 0
 #endif
-#include <limits>
 
 namespace scaluq {
 enum class Precision { F16, F32, F64, BF16 };
@@ -23,10 +26,10 @@ struct IsFloatingPoint : public std::false_type {};
 #ifdef SCALUQ_FLOAT16
 #if defined(SCALUQ_USE_CUDA)
 using F16 = __half;
-#elif defined(__STDCPP_FLOAT16_T__)
+#elif STDFLOAT_ENABLED && defined(__STDCPP_FLOAT16_T__)
 using F16 = std::float16_t;
 #else
-static_assert(false, "This compiler does not support standard F16 type.")
+static_assert(false, "This compiler does not support standard F16 type.");
 #endif
 
 template <>
@@ -40,7 +43,7 @@ struct FloatTypeImpl<Precision::F16> {
 #ifdef SCALUQ_FLOAT32
 #if defined(SCALUQ_USE_CUDA)
 using F32 = float;
-#elif defined(__STDCPP_FLOAT32_T__)
+#elif STDFLOAT_ENABLED && defined(__STDCPP_FLOAT32_T__)
 using F32 = std::float32_t;
 #else
 static_assert(std::numeric_limits<float>::is_iec559 && sizeof(float) == 4,
@@ -59,7 +62,7 @@ struct FloatTypeImpl<Precision::F32> {
 #ifdef SCALUQ_FLOAT64
 #if defined(SCALUQ_USE_CUDA)
 using F64 = double;
-#elif defined(__STDCPP_FLOAT64_T__)
+#elif STDFLOAT_ENABLED && defined(__STDCPP_FLOAT64_T__)
 using F64 = std::float64_t;
 #else
 static_assert(std::numeric_limits<double>::is_iec559 && sizeof(double) == 8,
@@ -78,10 +81,10 @@ struct FloatTypeImpl<Precision::F64> {
 #ifdef SCALUQ_BFLOAT16
 #if defined(SCALUQ_USE_CUDA)
 using BF16 = __nv_bfloat16;
-#elif defined(__STDCPP_BFLOAT16_T__)
+#elif STDFLOAT_ENABLED && defined(__STDCPP_BFLOAT16_T__)
 using BF16 = std::bfloat16_t;
 #else
-static_assert(false, "This compiler does not support standard BF16 type.")
+static_assert(false, "This compiler does not support standard BF16 type.");
 #endif
 
 template <>

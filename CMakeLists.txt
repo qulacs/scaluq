@@ -52,6 +52,16 @@ message(STATUS "SCALUQ_BFLOAT16 = ${SCALUQ_BFLOAT16}")
 message(STATUS "SCALUQ_USE_TEST = ${SCALUQ_USE_TEST}")
 message(STATUS "SCALUQ_USE_EXE = ${SCALUQ_USE_EXE}")
 
+### Check compiler compatibility ###
+if(NOT CMAKE_C_COMPILER_ID STREQUAL CMAKE_CXX_COMPILER_ID)
+    message(FATAL_ERROR "C compiler and CXX compiler must be same")
+endif()
+
+set(SUPPORTED_COMPILERS "GNU" "Clang")
+if(NOT CMAKE_C_COMPILER_ID IN_LIST SUPPORTED_COMPILERS)
+    message(FATAL_ERROR "Only GCC and LLVM Clang is supported")
+endif()
+
 ### Kokkos options ###
 set(Kokkos_ENABLE_SERIAL ON CACHE BOOL "Enable Kokkos Serial backend")
 if(SCALUQ_CPU_NATIVE AND NOT DEFINED SCALUQ_CPU_ARCH)
@@ -202,8 +212,10 @@ target_link_libraries(scaluq INTERFACE ${SCALUQ_LIBRARIES})
 # Standard
 if(SCALUQ_USE_CUDA)
     target_compile_features(scaluq_base PUBLIC cxx_std_20)
-else()
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_features(scaluq_base PUBLIC cxx_std_23)
+else()
+    target_compile_features(scaluq_base PUBLIC cxx_std_20)
 endif()
 
 # Warning
