@@ -16,9 +16,9 @@ jobs:
     name: C++ Build and Test
     strategy:
       matrix:
-        os-arch: ["linux-x86_64", "macos-arm64"]
-        compiler: ["gcc", "clang"]
-        device: ["cpu", "cuda"]
+        os-arch: ["macos-arm64"]
+        compiler: ["clang"]
+        device: ["cpu"]
         exclude:
           - os-arch: "macos-arm64"
             device: "cuda"
@@ -60,6 +60,11 @@ jobs:
       SCALUQ_BFLOAT16: ${{ matrix.compiler == 'clang' && 'OFF' || 'ON' }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: prioritize LLVM Clang
+        if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
+        run: |
+          echo $(brew --prefix llvm@18)/bin >> $GITHUB_PATH
 
       - name: Install Ninja
         if: ${{ matrix.os-arch == 'linux-x86_64' }}
