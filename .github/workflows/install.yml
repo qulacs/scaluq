@@ -56,6 +56,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup LLVM Clang
+        if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
+        run: |
+          echo $(brew --prefix llvm@18)/bin >> $GITHUB_PATH
+          echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
+
       - name: Install Ninja
         if: ${{ matrix.os-arch == 'linux-x86_64' }}
         run: sudo apt update && sudo apt install ninja-build
@@ -155,6 +161,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+
+      - name: Setup LLVM Clang
+        if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
+        run: |
+          echo $(brew --prefix llvm@18)/bin >> $GITHUB_PATH
+          echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
 
       - name: Install libomp
         if: ${{ matrix.os-arch == 'linux-x86_64' && matrix.compiler == 'clang' }}

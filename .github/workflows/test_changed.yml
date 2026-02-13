@@ -57,6 +57,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup LLVM Clang
+        if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
+        run: |
+          echo $(brew --prefix llvm@18)/bin >> $GITHUB_PATH
+          echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
+
       - name: Check if build-related file is changed
         id: check-build-files
         uses: tj-actions/changed-files@v47.0.1
