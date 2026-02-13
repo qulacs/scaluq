@@ -202,8 +202,10 @@ target_link_libraries(scaluq INTERFACE ${SCALUQ_LIBRARIES})
 # Standard
 if(SCALUQ_USE_CUDA)
     target_compile_features(scaluq_base PUBLIC cxx_std_20)
-else()
+elseif(CMAKE_CXX_COMPILER_ID EQUAL "GNU")
     target_compile_features(scaluq_base PUBLIC cxx_std_23)
+else()
+    target_compile_features(scaluq_base PUBLIC cxx_std_20)
 endif()
 
 # Warning
