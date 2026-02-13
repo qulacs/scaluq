@@ -81,7 +81,9 @@ jobs:
 
       - name: Install libomp
         if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
-        run: brew install libomp
+        run: |
+          brew install libomp
+          echo "OpenMP_ROOT=$(brew --prefix libomp)" >> $GITHUB_ENV
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
