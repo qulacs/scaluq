@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <complex>
+#include <numbers>
 #include <scaluq/types.hpp>
 
 using namespace scaluq;
