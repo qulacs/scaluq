@@ -69,8 +69,8 @@ void test_apply_parametric_multi_pauli_rotation(std::uint64_t n_qubits) {
         }
 
         PauliOperator<Prec> pauli(target_vec, pauli_id_vec, 1.0);
-        Gate gate = gate::PauliRotation<Prec>(pauli, param_coef * param);
-        ParamGate pgate = gate::ParamPauliRotation<Prec>(pauli, param_coef);
+        Gate<Prec> gate = gate::PauliRotation<Prec>(pauli, param_coef * param);
+        ParamGate<Prec> pgate = gate::ParamPauliRotation<Prec>(pauli, param_coef);
         gate->update_quantum_state(state);
         pgate->update_quantum_state(state_cp, param);
         auto state_amp = state.get_amplitudes();
@@ -210,8 +210,8 @@ void test_ppauli_control(std::uint64_t n) {
         }
     }
     double param = random.uniform() * std::numbers::pi * 2;
-    ParamGate g1 = gate::ParamPauliRotation(pauli1, 1., controls, control_values);
-    ParamGate g2 = gate::ParamPauliRotation(pauli2, 1., {}, {});
+    ParamGate<Prec> g1 = gate::ParamPauliRotation(pauli1, 1., controls, control_values);
+    ParamGate<Prec> g2 = gate::ParamPauliRotation(pauli2, 1., {}, {});
     test_gate<Prec, Space>(g1, g2, n, control_mask, control_value_mask, param);
 }
 

@@ -13,39 +13,55 @@ jobs:
     name: C++ Build and Test
     strategy:
       matrix:
-        os: ["linux", "macos"]
-        architecture: ["x86_64", "arm64"]
+        os-arch: ["linux-x86_64", "macos-arm64"]
+        compiler: ["gcc", "clang"]
         device: ["cpu", "cuda"]
         exclude:
-          - os: "macos"
+          - os-arch: "macos-arm64"
             device: "cuda"
-          # currently ARM runner is not supported
-          - os: "linux"
-            architecture: "arm64"
+          - compiler: "clang"
+            device: "cuda"
         include:
-          - os: "linux"
-            architecture: "x86_64"
+          - os-arch: "linux-x86_64"
             runs-on: "ubuntu-24.04"
-          - os: "macos"
-            architecture: "x86_64"
-            runs-on: "macos-15-intel"
-          - os: "macos"
-            architecture: "arm64"
+          - os-arch: "macos-arm64"
             runs-on: "macos-15"
+          - os-arch: "linux-x86_64"
+            compiler: "gcc"
+            c-compiler: "/usr/lib/ccache/gcc"
+            cxx-compiler: "/usr/lib/ccache/g++"
+          - os-arch: "linux-x86_64"
+            compiler: "clang"
+            c-compiler: "/usr/lib/ccache/clang"
+            cxx-compiler: "/usr/lib/ccache/clang++"
+          - os-arch: "macos-arm64"
+            compiler: "gcc"
+            c-compiler: "/opt/homebrew/opt/ccache/libexec/gcc-15"
+            cxx-compiler: "/opt/homebrew/opt/ccache/libexec/g++-15"
+          - os-arch: "macos-arm64"
+            compiler: "clang"
+            c-compiler: "/opt/homebrew/opt/ccache/libexec/clang"
+            cxx-compiler: "/opt/homebrew/opt/ccache/libexec/clang++"
     runs-on: ${{ matrix.runs-on }}
     env:
-      CMAKE_C_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/gcc-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/gcc-15' || '/usr/lib/ccache/gcc') }}
-      CMAKE_CXX_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/g++-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/g++-15' || '/usr/lib/ccache/g++') }}
+      CMAKE_C_COMPILER: ${{ matrix.c-compiler }}
+      CMAKE_CXX_COMPILER: ${{ matrix.cxx-compiler }}
       CMAKE_BUILD_TYPE: ${{ matrix.device == 'cuda' && 'Release' || 'Debug' }}
       SCALUQ_USE_TEST: "ON"
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
       SCALUQ_CUDA_ARCH: "PASCAL61"
-      SCALUQ_FLOAT16: "ON"
+      SCALUQ_FLOAT16: ${{ matrix.compiler == 'clang' && 'OFF' || 'ON' }}
       SCALUQ_FLOAT32: "ON"
       SCALUQ_FLOAT64: "ON"
-      SCALUQ_BFLOAT16: "ON"
+      SCALUQ_BFLOAT16: ${{ matrix.compiler == 'clang' && 'OFF' || 'ON' }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup LLVM Clang
+        if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
+        run: |
+          echo $(brew --prefix llvm@18)/bin >> $GITHUB_PATH
+          echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
 
       - name: Check if build-related file is changed
         id: check-build-files
@@ -75,19 +91,29 @@ jobs:
             tests/**.hpp
             tests/**.cpp
       
-      - name: Install Ninja (Linux)
-        if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && runner.os == 'Linux' }}
+      - name: Install Ninja
+        if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && matrix.os-arch == 'linux-x86_64' }}
         run: sudo apt update && sudo apt install -y ninja-build
 
-      - name: Install Ninja (macos)
-        if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && runner.os == 'macos' }}
+      - name: Install Ninja
+        if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && runner.os-arch == 'macos-arm64' }}
         run: brew install ninja
+
+      - name: Install libomp
+        if: ${{ matrix.os-arch == 'linux-x86_64' && matrix.compiler == 'clang' }}
+        run: sudo apt update && sudo apt install libomp-dev
+
+      - name: Install libomp
+        if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
+        run: |
+          brew install libomp
+          echo "OpenMP_ROOT=$(brew --prefix libomp)" >> $GITHUB_ENV
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         if: ${{ steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true' }}
         with:
-          key: "${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.device }}"
+          key: "${{ matrix.os-arch }}-${{ matrix.compiler }}-${{ matrix.device }}"
           verbose: 2
       
       - name: Install CUDA toolkit

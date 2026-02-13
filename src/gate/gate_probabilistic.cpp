@@ -89,5 +89,5 @@ GetGateFromJson<ProbabilisticGateImpl<Prec>>::get(const Json& j) {
         j.at("distribution").get<std::vector<double>>(),
         j.at("gate_list").get<std::vector<Gate<Prec>>>());
 }
-template class GetGateFromJson<ProbabilisticGateImpl<Prec>>;
+template struct GetGateFromJson<ProbabilisticGateImpl<Prec>>;
 }  // namespace scaluq::internal
