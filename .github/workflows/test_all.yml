@@ -42,10 +42,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: prioritize LLVM Clang
-        if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
-        run: |
-          echo $(brew --prefix llvm@18)/bin >> $GITHUB_PATH
+      # - name: prioritize LLVM Clang
+      #   if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
+      #   run: |
+      #     echo $(brew --prefix llvm@18)/bin >> $GITHUB_PATH
 
       - name: Install Ninja
         if: ${{ matrix.os-arch == 'linux-x86_64' }}
