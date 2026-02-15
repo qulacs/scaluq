@@ -70,7 +70,8 @@ jobs:
         uses: Jimver/cuda-toolkit@v0.2.19
         with:
           cuda: "12.6.1"
-          method: "network"
+          method: "local"
+          linux-local-args: ["--toolkit"]
       
       - name: Show installed Compiler version
         run: |
