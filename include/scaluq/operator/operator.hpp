@@ -203,7 +203,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("load",
-             &Operator<Prec, Space>::load,
+             nb::overload_cast<const std::vector<PauliOperator<Prec>>&>(&Operator<Prec, Space>::load),
              "terms"_a,
              "Load the operator with a list of Pauli operators.")
         .def("load",
@@ -218,7 +218,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def_static("uninitialized_operator",
-                    &Operator<Prec, Space>::uninitialized_operator,
+                    nb::overload_cast<std::uint64_t>(&Operator<Prec, Space>::uninitialized_operator),
                     "n_terms"_a,
                     "Create an uninitialized operator with a specified number of terms.")
         .def_static("uninitialized_operator",
@@ -239,7 +239,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
              &Operator<Prec, Space>::optimize,
              "Optimize the operator by combining like terms.")
         .def("get_dagger",
-             &Operator<Prec, Space>::get_dagger,
+             nb::overload_cast<>(&Operator<Prec, Space>::get_dagger, nb::const_),
              "Get the adjoint (Hermitian conjugate) of the operator.")
         .def("get_dagger",
              nb::overload_cast<const ConcurrentStream&>(&Operator<Prec, Space>::get_dagger,

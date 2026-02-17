@@ -8,11 +8,6 @@ bool is_initialized() { return Kokkos::is_initialized(); }
 bool is_finalized() { return Kokkos::is_finalized(); }
 void synchronize() { Kokkos::fence(); }
 void synchronize(const ConcurrentStream& stream) { stream.fence("scaluq::synchronize"); }
-void synchronize(const std::vector<ConcurrentStream>& streams) {
-    for (const auto& stream : streams) {
-        stream.fence("scaluq::synchronize");
-    }
-}
 
 std::vector<ConcurrentStream> create_default_streams(const std::vector<double>& weights) {
     auto instances =

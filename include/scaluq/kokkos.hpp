@@ -12,7 +12,6 @@ bool is_initialized();
 bool is_finalized();
 void synchronize();
 void synchronize(const ConcurrentStream& stream);
-void synchronize(const std::vector<ConcurrentStream>& streams);
 std::vector<ConcurrentStream> create_default_streams(const std::vector<double>& weights);
 std::vector<ConcurrentStream> create_host_streams(const std::vector<double>& weights);
 }  // namespace scaluq
@@ -70,14 +69,6 @@ void bind_kokkos_hpp(nb::module_& m) {
              DocString()
                  .desc("Fence the execution space instance.")
                  .arg("stream", "ConcurrentStream", "Execution space instance")
-                 .build_as_google_style()
-                 .c_str())
-        .def("synchronize",
-             nb::overload_cast<const std::vector<ConcurrentStream>&>(&scaluq::synchronize),
-             "streams"_a,
-             DocString()
-                 .desc("Fence multiple execution space instances.")
-                 .arg("streams", "list[ConcurrentStream]", "Execution space instances")
                  .build_as_google_style()
                  .c_str())
         .def("create_default_streams",

@@ -281,7 +281,8 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def_static("uninitialized_operator",
-                    &OperatorBatched<Prec, Space>::uninitialized_operator,
+                    nb::overload_cast<std::uint64_t>(
+                        &OperatorBatched<Prec, Space>::uninitialized_operator),
                     "batch_size"_a,
                     DocString()
                         .desc("Construct OperatorBatched without initializing operator data.")
@@ -327,7 +328,7 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("get_dagger",
-             &OperatorBatched<Prec, Space>::get_dagger,
+             nb::overload_cast<>(&OperatorBatched<Prec, Space>::get_dagger, nb::const_),
              DocString()
                  .desc("Return the Hermitian conjugate of the operator.")
                  .build_as_google_style()

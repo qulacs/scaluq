@@ -1,13 +1,38 @@
+import math
 import statistics
 import time
 
 import scaluq
-from scaluq.default.f64 import Circuit
+from scaluq.default.f64 import Operator
 from scaluq.default.f64 import StateVector
 from scaluq.default.f64.gate import H, RX, RZ, X
+from scaluq.default.f64 import Circuit, PauliOperator
 
 
-def build_circuit(n_qubits: int, depth: int) -> Circuit:
+def synchronize_all(streams):
+    for stream in streams:
+        scaluq.synchronize(stream)
+
+
+def create_default_streams(weights):
+    if hasattr(scaluq, "create_default_streams"):
+        return scaluq.create_default_streams(weights)
+    if hasattr(scaluq, "create_streams"):
+        return scaluq.create_streams(weights)
+    raise RuntimeError("No stream creation API found in scaluq module")
+
+
+def create_host_streams(weights):
+    if hasattr(scaluq, "create_host_streams"):
+        return scaluq.create_host_streams(weights)
+    raise RuntimeError("create_host_streams is not available in this scaluq build")
+
+
+def mean_ms(samples):
+    return statistics.mean(samples) * 1e3
+
+
+def build_circuit(n_qubits, depth):
     circuit = Circuit(n_qubits)
     for layer in range(depth):
         for q in range(n_qubits):
@@ -22,103 +47,110 @@ def build_circuit(n_qubits: int, depth: int) -> Circuit:
     return circuit
 
 
-def bench_update(circuit: Circuit, state: StateVector, n_iters: int) -> list[float]:
-    times = []
+def bench_stream_overlap(circuit, streams, n_qubits, n_warmup=2, n_iters=6):
+    states = [StateVector(streams[i], n_qubits) for i in range(len(streams))]
+
+    # Warmup
+    for _ in range(n_warmup):
+        for st in states:
+            st.set_zero_state()
+            circuit.update_quantum_state(st, {})
+            scaluq.synchronize(st.concurrent_stream())
+
+    seq = []
     for _ in range(n_iters):
-        state.set_zero_state()
-        scaluq.synchronize()
         t0 = time.perf_counter()
-        circuit.update_quantum_state(state, {})
-        scaluq.synchronize()
+        for st in states:
+            st.set_zero_state()
+            circuit.update_quantum_state(st, {})
+            scaluq.synchronize(st.concurrent_stream())
         t1 = time.perf_counter()
-        times.append(t1 - t0)
-    return times
+        seq.append(t1 - t0)
+
+    ovl = []
+    for _ in range(n_iters):
+        for st in states:
+            st.set_zero_state()
+        synchronize_all(streams)
+        t0 = time.perf_counter()
+        for st in states:
+            circuit.update_quantum_state(st, {})
+        synchronize_all(streams)
+        t1 = time.perf_counter()
+        ovl.append(t1 - t0)
+    return seq, ovl
 
 
-def print_stats(label: str, times: list[float]) -> None:
-    mean_s = statistics.mean(times)
-    stdev_s = statistics.stdev(times) if len(times) > 1 else 0.0
-    print(f"{label}: {mean_s * 1e3:.3f} ms (stdev {stdev_s * 1e3:.3f} ms)")
-
-
-def main() -> int:
-    n_qubits = 20
-    depth = 50
-    n_warmup = 2
-    n_iters = 8
-
+def main():
+    has_cuda = False
     try:
         import scaluq.host  # noqa: F401
         has_cuda = True
     except Exception:
-        has_cuda = False
+        pass
 
-    print("ScaluQ CUDA build:", "yes" if has_cuda else "no")
-    print(f"Circuit: n_qubits={n_qubits}, depth={depth}")
+    print("CUDA build:", has_cuda)
 
-    circuit = build_circuit(n_qubits, depth)
-    state = StateVector(n_qubits)
+    print("\n[1] Create streams")
+    s0, s1 = create_default_streams([1.0, 1.0])
+    print("default streams created:", bool(s0 and s1))
 
-    for _ in range(n_warmup):
-        state.set_zero_state()
-        circuit.update_quantum_state(state, {})
-        scaluq.synchronize()
+    print("\n[2] Copy across streams with explicit source sync")
+    psi = StateVector(s0, 3)
+    psi.set_Haar_random_state(7)
+    scaluq.synchronize(s0)
+    psi_s1 = psi.copy(s1)
+    scaluq.synchronize(s1)
+    amp0 = psi.get_amplitudes()
+    amp1 = psi_s1.get_amplitudes()
+    max_abs_err = max(abs(a - b) for a, b in zip(amp0, amp1))
+    print("max |psi - copy|:", max_abs_err)
 
-    times_default = bench_update(circuit, state, n_iters)
-    print_stats("Default stream (single task)", times_default)
+    print("\n[3] set_concurrent_stream behavior")
+    psi.set_concurrent_stream(s1)
+    psi.normalize()
+    scaluq.synchronize(s1)
+    norm = psi.get_squared_norm()
+    print("squared norm after normalize on s1:", norm)
+    if not math.isclose(norm, 1.0, rel_tol=1e-10, abs_tol=1e-10):
+        raise RuntimeError("normalize() on switched stream failed")
 
-    stream_count = 4
-    streams = scaluq.create_default_streams([1.0] * stream_count)
-    print("ConcurrentStream enabled:", "yes" if streams else "no")
+    print("\n[4] Operator uses StateVector stream for state operations")
+    try:
+        op = Operator(s0, [PauliOperator("X 0")])
+    except TypeError:
+        # Compatibility for old Python package that does not expose stream ctor.
+        op = Operator([PauliOperator("X 0")])
+        if hasattr(op, "set_concurrent_stream"):
+            op.set_concurrent_stream(s0)
+    st = StateVector(s1, 1)
+    st.set_zero_state()
+    op.apply_to_state(st)
+    scaluq.synchronize(s1)
+    amps = st.get_amplitudes()
+    print("state after X on |0>:", amps)
 
-    # Independent tasks on multiple streams
-    states = [StateVector(n_qubits) for _ in range(stream_count)]
-    for idx, state in enumerate(states):
-        state.set_concurrent_stream(streams[idx])
+    print("\n[5] Stream-overlap benchmark (not guaranteed to speed up)")
+    circuit = build_circuit(n_qubits=18, depth=40)
+    seq, ovl = bench_stream_overlap(circuit, [s0, s1], n_qubits=18, n_warmup=1, n_iters=4)
+    print(f"sequential avg: {mean_ms(seq):.3f} ms")
+    print(f"overlapped avg: {mean_ms(ovl):.3f} ms")
 
-    # Warmup: sequential (no overlap)
-    for _ in range(n_warmup):
-        for state in states:
-            state.set_zero_state()
-        for state in states:
-            circuit.update_quantum_state(state, {})
-            scaluq.synchronize(streams)
+    if has_cuda:
+        print("\n[6] Type mismatch check (default object + host stream)")
+        if hasattr(scaluq, "create_host_streams"):
+            h0 = create_host_streams([1.0])[0]
+            caught = False
+            try:
+                _ = psi.copy(h0)
+            except RuntimeError as e:
+                caught = True
+                print("caught RuntimeError:", str(e))
+            print("type mismatch raised:", caught)
+        else:
+            print("skipped: create_host_streams() is not available in this build")
 
-    # Measure sequential execution (all tasks, with fences)
-    times_seq = []
-    for _ in range(n_iters):
-        for state in states:
-            state.set_zero_state()
-        scaluq.synchronize(streams)
-        t0 = time.perf_counter()
-        for idx, state in enumerate(states):
-            circuit.update_quantum_state(state, {})
-            scaluq.synchronize(streams[idx])
-        t1 = time.perf_counter()
-        times_seq.append(t1 - t0)
-    print_stats(f"ConcurrentStream ({stream_count} tasks, sequential)", times_seq)
-
-    # Warmup: concurrent (enqueue all, fence once)
-    for _ in range(n_warmup):
-        for state in states:
-            state.set_zero_state()
-        for state in states:
-            circuit.update_quantum_state(state, {})
-        scaluq.synchronize(streams)
-
-    # Measure concurrent execution (enqueue all, fence once)
-    times_conc = []
-    for _ in range(n_iters):
-        for state in states:
-            state.set_zero_state()
-        scaluq.synchronize(streams)
-        t0 = time.perf_counter()
-        for state in states:
-            circuit.update_quantum_state(state, {})
-        scaluq.synchronize(streams)
-        t1 = time.perf_counter()
-        times_conc.append(t1 - t0)
-    print_stats(f"ConcurrentStream ({stream_count} tasks, overlapped)", times_conc)
+    print("\nDone.")
     return 0
 
 
