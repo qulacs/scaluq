@@ -117,6 +117,7 @@ private:
     std::any _space;
     FenceFn _fence = nullptr;
 };
+
 }  // namespace scaluq
 
 namespace nlohmann {

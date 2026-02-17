@@ -68,7 +68,7 @@ def main() -> int:
     print_stats("Default stream (single task)", times_default)
 
     stream_count = 4
-    streams = scaluq.create_streams([1.0] * stream_count)
+    streams = scaluq.create_default_streams([1.0] * stream_count)
     print("ConcurrentStream enabled:", "yes" if streams else "no")
 
     # Independent tasks on multiple streams

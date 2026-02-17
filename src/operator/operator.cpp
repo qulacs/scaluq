@@ -34,6 +34,7 @@ Operator<internal::Prec, internal::Space>::Operator(
     }
 }
 
+
 template <>
 Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Space>::copy() const {
     Operator<internal::Prec, internal::Space> copy_operator(_terms.size());
@@ -88,6 +89,7 @@ void Operator<internal::Prec, internal::Space>::load(
     load(terms);
 }
 
+
 template <>
 Operator<internal::Prec, internal::Space>
 Operator<internal::Prec, internal::Space>::uninitialized_operator(std::uint64_t n_terms) {
@@ -107,6 +109,7 @@ Operator<internal::Prec, internal::Space>::uninitialized_operator(const Concurre
         Kokkos::ViewAllocateWithoutInitializing("terms"), n_terms);
     return tmp;
 }
+
 
 template <>
 void Operator<internal::Prec, internal::Space>::optimize() {
