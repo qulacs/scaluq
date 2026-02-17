@@ -12,7 +12,6 @@ bool is_initialized();
 bool is_finalized();
 void synchronize();
 void synchronize(const ConcurrentStream& stream);
-void synchronize(const std::vector<ConcurrentStream>& streams);
 std::vector<ConcurrentStream> create_streams(const std::vector<double>& weights);
 }  // namespace scaluq
 

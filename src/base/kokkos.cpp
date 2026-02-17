@@ -7,6 +7,7 @@ void finalize() { Kokkos::finalize(); }
 bool is_initialized() { return Kokkos::is_initialized(); }
 bool is_finalized() { return Kokkos::is_finalized(); }
 void synchronize() { Kokkos::fence(); }
+void synchronize(const ConcurrentStream& stream) { stream.fence("scaluq::synchronize"); }
 
 std::vector<ConcurrentStream> create_streams(const std::vector<double>& weights) {
     auto instances =
@@ -19,21 +20,4 @@ std::vector<ConcurrentStream> create_streams(const std::vector<double>& weights)
     return out;
 }
 
-void synchronize(const ConcurrentStream& stream) {
-#if defined(SCALUQ_USE_CUDA)
-    stream.fence("scaluq::synchronize");
-#else
-    Kokkos::fence("scaluq::synchronize");
-#endif
-}
-
-void synchronize(const std::vector<ConcurrentStream>& streams) {
-#if defined(SCALUQ_USE_CUDA)
-    for (const auto& stream : streams) {
-        stream.fence("scaluq::synchronize");
-    }
-#else
-    Kokkos::fence("scaluq::synchronize");
-#endif
-}
 }  // namespace scaluq
