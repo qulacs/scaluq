@@ -92,7 +92,7 @@ jobs:
       
       - name: Install CUDA toolkit
         if: ${{ matrix.device == 'cuda' && (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') }}
-        uses: Jimver/cuda-toolkit@v0.2.19
+        uses: Jimver/cuda-toolkit@v0.2.30
         with:
           cuda: "12.9.1"
           method: "local"
