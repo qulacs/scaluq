@@ -69,7 +69,7 @@ jobs:
         if: ${{ matrix.device == 'cuda' }}
         uses: Jimver/cuda-toolkit@v0.2.19
         with:
-          cuda: "12.6.1"
+          cuda: "12.9.1"
           method: "local"
           linux-local-args: '["--toolkit"]'
           log-file-suffix: '${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}'
