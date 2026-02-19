@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../kokkos.hpp"
 #include "../util/utility.hpp"
 #include "param_gate_pauli.hpp"
 #include "param_gate_probabilistic.hpp"

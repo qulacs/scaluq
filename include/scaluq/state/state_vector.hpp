@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include "../kokkos.hpp"
 #include "../types.hpp"
 #include "../util/random.hpp"
 #include "../util/utility.hpp"
@@ -293,15 +294,17 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .ret("StateVector", "Copied state vector")
                  .build_as_google_style()
                  .c_str())
-        .def("copy",
-             nb::overload_cast<const ConcurrentStream&>(&StateVector<Prec, Space>::copy, nb::const_),
-             "stream"_a,
-             DocString()
-                 .desc("Return a copy of the state vector on the specified execution space.")
-                 .arg("stream", "ConcurrentStream", "Execution space instance for the copied object.")
-                 .ret("StateVector", "Copied state vector")
-                 .build_as_google_style()
-                 .c_str())
+        .def(
+            "copy",
+            nb::overload_cast<const ConcurrentStream&>(&StateVector<Prec, Space>::copy, nb::const_),
+            "stream"_a,
+            DocString()
+                .desc("Return a copy of the state vector on the specified execution space.")
+                .arg(
+                    "stream", "ConcurrentStream", "Execution space instance for the copied object.")
+                .ret("StateVector", "Copied state vector")
+                .build_as_google_style()
+                .c_str())
         .def("get_amplitude_at",
              &StateVector<Prec, Space>::get_amplitude_at,
              "index"_a,
