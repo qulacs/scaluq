@@ -417,7 +417,7 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
             }
             for (std::uint64_t j = 0; j < tmp_states.batch_size(); ++j) {
                 if (gate_used_count[j][i] == 0) continue;
-                new_states.set_state_vector_at(insert_idx, tmp_states.get_state_vector_at(j));
+                new_states.set_state_vector_at(insert_idx, tmp_states.view_state_vector_at(j));
                 new_scounts[insert_idx] = gate_used_count[j][i];
                 ++insert_idx;
             }

@@ -81,6 +81,62 @@ TYPED_TEST(StateVectorBatchedTest, OperateState) {
     }
 }
 
+TYPED_TEST(StateVectorBatchedTest, ViewStateVectorAtSharesStorage) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    const std::uint64_t batch_size = 2, n_qubits = 3;
+    StateVectorBatched<Prec, Space> states(batch_size, n_qubits);
+    states.set_zero_norm_state();
+
+    auto stream = states.concurrent_stream();
+    auto view = states.view_state_vector_at(stream, 1);
+    const StdComplex changed(0.25, -0.5);
+    view.set_amplitude_at(3, changed);
+
+    auto copied_from_batched = states.get_state_vector_at(stream, 1);
+    auto got = copied_from_batched.get_amplitude_at(3);
+    ASSERT_NEAR(got.real(), changed.real(), eps<Prec>);
+    ASSERT_NEAR(got.imag(), changed.imag(), eps<Prec>);
+
+    auto another_batch = states.get_state_vector_at(0);
+    auto another_amp = another_batch.get_amplitude_at(3);
+    ASSERT_NEAR(another_amp.real(), 0., eps<Prec>);
+    ASSERT_NEAR(another_amp.imag(), 0., eps<Prec>);
+}
+
+TYPED_TEST(StateVectorBatchedTest, CopyStateVectorAtDoesNotAliasStorage) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    const std::uint64_t batch_size = 2, n_qubits = 3;
+    StateVectorBatched<Prec, Space> states(batch_size, n_qubits);
+    states.set_zero_norm_state();
+
+    auto copied = states.get_state_vector_at(states.concurrent_stream(), 1);
+    const StdComplex changed(0.75, 0.125);
+    copied.set_amplitude_at(2, changed);
+
+    auto original = states.get_state_vector_at(1);
+    auto got = original.get_amplitude_at(2);
+    ASSERT_NEAR(got.real(), 0., eps<Prec>);
+    ASSERT_NEAR(got.imag(), 0., eps<Prec>);
+}
+
+TYPED_TEST(StateVectorBatchedTest, BatchIdBoundsCheck) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    const std::uint64_t batch_size = 2, n_qubits = 3;
+    StateVectorBatched<Prec, Space> states(batch_size, n_qubits);
+    StateVector<Prec, Space> state(n_qubits);
+
+    EXPECT_THROW((void)states.view_state_vector_at(batch_size), std::runtime_error);
+    EXPECT_THROW((void)states.view_state_vector_at(states.concurrent_stream(), batch_size),
+                 std::runtime_error);
+    EXPECT_THROW((void)states.get_state_vector_at(batch_size), std::runtime_error);
+    EXPECT_THROW((void)states.get_state_vector_at(states.concurrent_stream(), batch_size),
+                 std::runtime_error);
+    EXPECT_THROW(states.set_state_vector_at(batch_size, state), std::runtime_error);
+}
+
 TYPED_TEST(StateVectorBatchedTest, ZeroProbs) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;

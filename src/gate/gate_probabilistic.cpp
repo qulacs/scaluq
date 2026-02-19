@@ -68,10 +68,8 @@ std::string ProbabilisticGateImpl<Prec>::to_string(const std::string& indent) co
                                        std::ranges::upper_bound(_cumulative_distribution, r[i])) - \
                          1;                                                                        \
             if (indices[i] >= _gate_list.size()) indices[i] = _gate_list.size() - 1;               \
-            auto state_vector =                                                                    \
-                StateVector<Prec, Space>(Kokkos::subview(states._raw, i, Kokkos::ALL));            \
+            auto state_vector = states.view_state_vector_at(i);                                     \
             _gate_list[indices[i]]->update_quantum_state(state_vector);                            \
-            states.set_state_vector_at(i, state_vector);                                           \
         }                                                                                          \
     }
 DEFINE_PROBABILISTIC_GATE_UPDATE(ExecutionSpace::Host)

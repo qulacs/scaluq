@@ -158,3 +158,34 @@ zero probability of 0: 0.25
 zero probability of 1: 0.25
 marginal probability of [1, UNMEASURED]: 0.7499999999999999
 ```
+
+## StateVectorBatched: view and copy
+
+{class}`StateVectorBatched <scaluq.default.f64.StateVectorBatched>` stores multiple state vectors in one object.
+You can extract each element as a single {class}`StateVector <scaluq.default.f64.StateVector>` in two ways:
+
+- `view_state_vector_at(...)`: returns a view (shared memory).
+- `get_state_vector_at(...)`: returns a copied state vector.
+
+The stream overload takes {class}`ConcurrentStream <scaluq.ConcurrentStream>` as the first argument:
+- `view_state_vector_at(stream, batch_id)`
+- `get_state_vector_at(stream, batch_id)`
+
+```py
+import scaluq
+from scaluq.default.f64 import StateVectorBatched
+
+s0, s1 = scaluq.create_default_streams([1.0, 1.0])
+states = StateVectorBatched(2, 2)
+states.set_zero_norm_state()
+
+# View: write-through to the original batched object.
+view_state = states.view_state_vector_at(1)
+view_state.set_amplitude_at(3, 0.25 - 0.5j)
+assert states.get_state_vector_at(1).get_amplitude_at(3) == 0.25 - 0.5j
+
+# Get: independent copy.
+copied_state = states.get_state_vector_at(1)
+copied_state.set_amplitude_at(3, 0.9 + 0.1j)
+assert states.get_state_vector_at(1).get_amplitude_at(3) == 0.25 - 0.5j
+```

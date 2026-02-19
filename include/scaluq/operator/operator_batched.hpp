@@ -136,8 +136,16 @@ public:
     [[nodiscard]] StdComplex solve_ground_state_eigenvalue_by_power_method(
         const StateVector<Prec, Space>& state, std::uint64_t iter_count, StdComplex mu = 0.) const;
 
+    [[nodiscard]] Operator<Prec, Space> view_operator_at(std::uint64_t index);
+    [[nodiscard]] Operator<Prec, Space> view_operator_at(const ConcurrentStream& stream,
+                                                         std::uint64_t index);
+
     [[nodiscard]] Operator<Prec, Space> get_operator_at(std::uint64_t index) const;
+    [[nodiscard]] Operator<Prec, Space> get_operator_at(const ConcurrentStream& stream,
+                                                        std::uint64_t index) const;
     [[nodiscard]] std::vector<Operator<Prec, Space>> get_operators() const;
+    [[nodiscard]] std::vector<Operator<Prec, Space>> get_operators(
+        const ConcurrentStream& stream) const;
 
     OperatorBatched operator*(const std::vector<StdComplex>& coef) const;
     OperatorBatched& operator*=(const std::vector<StdComplex>& coef);
@@ -396,16 +404,57 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
         //          .build_as_google_style()
         //          .c_str())
         .def("get_operator_at",
-             &OperatorBatched<Prec, Space>::get_operator_at,
+             nb::overload_cast<std::uint64_t>(&OperatorBatched<Prec, Space>::get_operator_at,
+                                              nb::const_),
              "index"_a,
              DocString()
                  .desc("Return the operator at the specified index.")
                  .arg("index", "Index of the operator.")
                  .build_as_google_style()
                  .c_str())
+        .def("get_operator_at",
+             nb::overload_cast<const ConcurrentStream&, std::uint64_t>(
+                 &OperatorBatched<Prec, Space>::get_operator_at,
+                 nb::const_),
+             "stream"_a,
+             "index"_a,
+             DocString()
+                 .desc("Return the operator at the specified index and execution space.")
+                 .arg("stream", "ConcurrentStream", "Execution space instance")
+                 .arg("index", "Index of the operator.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("view_operator_at",
+             nb::overload_cast<std::uint64_t>(&OperatorBatched<Prec, Space>::view_operator_at),
+             "index"_a,
+             DocString()
+                 .desc("Return a view of the operator at the specified index.")
+                 .arg("index", "Index of the operator.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("view_operator_at",
+             nb::overload_cast<const ConcurrentStream&, std::uint64_t>(
+                 &OperatorBatched<Prec, Space>::view_operator_at),
+             "stream"_a,
+             "index"_a,
+             DocString()
+                 .desc("Return a view of the operator at the specified index and execution space.")
+                 .arg("stream", "ConcurrentStream", "Execution space instance")
+                 .arg("index", "Index of the operator.")
+                 .build_as_google_style()
+                 .c_str())
         .def("get_operators",
-             &OperatorBatched<Prec, Space>::get_operators,
+             nb::overload_cast<>(&OperatorBatched<Prec, Space>::get_operators, nb::const_),
              DocString().desc("Return a vector of all operators.").build_as_google_style().c_str())
+        .def("get_operators",
+             nb::overload_cast<const ConcurrentStream&>(&OperatorBatched<Prec, Space>::get_operators,
+                                                        nb::const_),
+             "stream"_a,
+             DocString()
+                 .desc("Return a vector of all operators using the specified execution space.")
+                 .arg("stream", "ConcurrentStream", "Execution space instance")
+                 .build_as_google_style()
+                 .c_str())
         .def(nb::self * std::vector<StdComplex>())
         .def(nb::self *= std::vector<StdComplex>())
         .def(nb::self + nb::self)

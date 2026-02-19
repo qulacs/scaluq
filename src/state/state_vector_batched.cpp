@@ -66,6 +66,11 @@ void StateVectorBatched<Prec, Space>::set_state_vector(const StateVector<Prec, S
 template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::set_state_vector_at(std::uint64_t batch_id,
                                                           const StateVector<Prec, Space>& state) {
+    if (batch_id >= _batch_size) [[unlikely]] {
+        throw std::runtime_error(
+            "Error: StateVectorBatched::set_state_vector_at(std::uint64_t, const StateVector&): "
+            "batch_id must be smaller than batch_size");
+    }
     if (_raw.extent(1) != state._raw.extent(0)) [[unlikely]] {
         throw std::runtime_error(
             "Error: StateVectorBatched::set_state_vector(std::uint64_t, const StateVector&): "
@@ -78,13 +83,39 @@ void StateVectorBatched<Prec, Space>::set_state_vector_at(std::uint64_t batch_id
 }
 
 template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, Space> StateVectorBatched<Prec, Space>::view_state_vector_at(
+    std::uint64_t batch_id) {
+    return view_state_vector_at(concurrent_stream(), batch_id);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, Space> StateVectorBatched<Prec, Space>::view_state_vector_at(
+    const ConcurrentStream& stream, std::uint64_t batch_id) {
+    if (batch_id >= _batch_size) [[unlikely]] {
+        throw std::runtime_error(
+            "Error: StateVectorBatched::view_state_vector_at(std::uint64_t): "
+            "batch_id must be smaller than batch_size");
+    }
+    return StateVector<Prec, Space>(stream, Kokkos::subview(_raw, batch_id, Kokkos::ALL()));
+}
+
+template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_state_vector_at(
     std::uint64_t batch_id) const {
-    auto ret = StateVector<Prec, Space>::uninitialized_state(ConcurrentStream(_space), _n_qubits);
-    Kokkos::parallel_for(
-        "get_state_vector_at",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(_space, 0, _dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { ret._raw(i) = _raw(batch_id, i); });
+    return get_state_vector_at(concurrent_stream(), batch_id);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_state_vector_at(
+    const ConcurrentStream& stream, std::uint64_t batch_id) const {
+    if (batch_id >= _batch_size) [[unlikely]] {
+        throw std::runtime_error(
+            "Error: StateVectorBatched::get_state_vector_at(std::uint64_t): "
+            "batch_id must be smaller than batch_size");
+    }
+    auto ret = StateVector<Prec, Space>::uninitialized_state(stream, _n_qubits);
+    Kokkos::deep_copy(
+        stream.get<ExecutionSpaceType>(), ret._raw, Kokkos::subview(_raw, batch_id, Kokkos::ALL()));
     return ret;
 }
 

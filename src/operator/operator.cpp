@@ -34,6 +34,15 @@ Operator<internal::Prec, internal::Space>::Operator(
     }
 }
 
+template <>
+void Operator<internal::Prec, internal::Space>::throw_if_view_for_resize_inplace(
+    const char* method_name) const {
+    if (_is_view) [[unlikely]] {
+        throw std::runtime_error(std::string("Operator::") + method_name +
+                                 ": this operation is not allowed for a view operator.");
+    }
+}
+
 
 template <>
 Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Space>::copy() const {
@@ -41,6 +50,7 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
     copy_operator._space = _space;
     Kokkos::deep_copy(_space, copy_operator._terms, _terms);
     copy_operator._is_hermitian = _is_hermitian;
+    copy_operator._is_view = false;
     return copy_operator;
 }
 
@@ -51,6 +61,7 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
     copy_operator._space = stream.get<ExecutionSpaceType>();
     Kokkos::deep_copy(stream.get<ExecutionSpaceType>(), copy_operator._terms, _terms);
     copy_operator._is_hermitian = _is_hermitian;
+    copy_operator._is_view = false;
     return copy_operator;
 }
 
@@ -113,6 +124,7 @@ Operator<internal::Prec, internal::Space>::uninitialized_operator(const Concurre
 
 template <>
 void Operator<internal::Prec, internal::Space>::optimize() {
+    throw_if_view_for_resize_inplace("optimize");
     // TODO: use Kokkos::UnorderedMap
     std::map<std::tuple<std::uint64_t, std::uint64_t>, ComplexType> pauli_and_coef;
     auto terms_h = get_terms();

@@ -39,6 +39,7 @@ public:
     static Operator uninitialized_operator(const ConcurrentStream& stream, std::uint64_t n_terms);
 
     [[nodiscard]] inline bool is_hermitian() const { return _is_hermitian; }
+    [[nodiscard]] inline bool is_view() const { return _is_view; }
     [[nodiscard]] inline std::vector<PauliOperator<Prec>> get_terms() const {
         return internal::convert_view_to_vector<PauliOperator<Prec>, Space>(_terms);
     }
@@ -124,9 +125,14 @@ public:
 
     StdComplex calculate_default_mu() const;
 
+private:
+    void throw_if_view_for_resize_inplace(const char* method_name) const;
+
+public:
     ExecutionSpaceType _space{};
     Kokkos::View<PauliOperator<Prec>*, ExecutionSpaceType> _terms;
     bool _is_hermitian = true;
+    bool _is_view = false;
 };
 
 #ifdef SCALUQ_USE_NANOBIND

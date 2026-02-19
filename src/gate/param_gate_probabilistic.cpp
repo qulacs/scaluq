@@ -82,8 +82,7 @@ void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
     });
     for (std::size_t i = 0; i < states.batch_size(); ++i) {
         const auto& gate = _gate_list[indicies[i]];
-        auto state_vector =
-            StateVector<Prec, ExecutionSpace::Host>(Kokkos::subview(states._raw, i, Kokkos::ALL));
+        auto state_vector = states.view_state_vector_at(i);
         if (gate.index() == 0) {
             std::get<0>(gate)->update_quantum_state(state_vector);
         } else {
@@ -126,8 +125,7 @@ void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
     });
     for (std::size_t i = 0; i < states.batch_size(); ++i) {
         const auto& gate = _gate_list[indicies[i]];
-        auto state_vector = StateVector<Prec, ExecutionSpace::HostSerial>(
-            Kokkos::subview(states._raw, i, Kokkos::ALL));
+        auto state_vector = states.view_state_vector_at(i);
         if (gate.index() == 0) {
             std::get<0>(gate)->update_quantum_state(state_vector);
         } else {
@@ -170,8 +168,7 @@ void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
     });
     for (std::size_t i = 0; i < states.batch_size(); ++i) {
         const auto& gate = _gate_list[indicies[i]];
-        auto state_vector = StateVector<Prec, ExecutionSpace::Default>(
-            Kokkos::subview(states._raw, i, Kokkos::ALL));
+        auto state_vector = states.view_state_vector_at(i);
         if (gate.index() == 0) {
             std::get<0>(gate)->update_quantum_state(state_vector);
         } else {

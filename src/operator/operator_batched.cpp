@@ -271,6 +271,36 @@ OperatorBatched<internal::Prec, internal::Space>::get_dagger(const ConcurrentStr
 
 template <>
 Operator<internal::Prec, internal::Space>
+OperatorBatched<internal::Prec, internal::Space>::view_operator_at(std::uint64_t index) {
+    if (index >= _row_ptr.extent(0) - 1) {
+        throw std::out_of_range("OperatorBatched::view_operator_at: index out of range");
+    }
+    std::uint64_t begin = _row_ptr(index);
+    std::uint64_t end = _row_ptr(index + 1);
+    Operator<internal::Prec, internal::Space> res;
+    res._space = _space;
+    res._terms = Kokkos::subview(_ops, std::make_pair(begin, end));
+    res._is_view = true;
+    return res;
+}
+
+template <>
+Operator<internal::Prec, internal::Space> OperatorBatched<internal::Prec, internal::Space>::
+    view_operator_at(const ConcurrentStream& stream, std::uint64_t index) {
+    if (index >= _row_ptr.extent(0) - 1) {
+        throw std::out_of_range("OperatorBatched::view_operator_at: index out of range");
+    }
+    std::uint64_t begin = _row_ptr(index);
+    std::uint64_t end = _row_ptr(index + 1);
+    Operator<internal::Prec, internal::Space> res;
+    res._space = stream.get<ExecutionSpaceType>();
+    res._terms = Kokkos::subview(_ops, std::make_pair(begin, end));
+    res._is_view = true;
+    return res;
+}
+
+template <>
+Operator<internal::Prec, internal::Space>
 OperatorBatched<internal::Prec, internal::Space>::get_operator_at(std::uint64_t index) const {
     if (index >= _row_ptr.extent(0) - 1) {
         throw std::out_of_range("OperatorBatched::get_operator_at: index out of range");
@@ -278,9 +308,23 @@ OperatorBatched<internal::Prec, internal::Space>::get_operator_at(std::uint64_t 
     std::uint64_t begin = _row_ptr(index);
     std::uint64_t end = _row_ptr(index + 1);
     auto ops_subview = Kokkos::subview(_ops, std::make_pair(begin, end));
-    Operator<internal::Prec, internal::Space> res(end - begin);
-    res.set_concurrent_stream(ConcurrentStream(_space));
+    auto res = Operator<internal::Prec, internal::Space>::uninitialized_operator(end - begin);
+    res._space = _space;
     Kokkos::deep_copy(_space, res._terms, ops_subview);
+    return res;
+}
+
+template <>
+Operator<internal::Prec, internal::Space> OperatorBatched<internal::Prec, internal::Space>::
+    get_operator_at(const ConcurrentStream& stream, std::uint64_t index) const {
+    if (index >= _row_ptr.extent(0) - 1) {
+        throw std::out_of_range("OperatorBatched::get_operator_at: index out of range");
+    }
+    std::uint64_t begin = _row_ptr(index);
+    std::uint64_t end = _row_ptr(index + 1);
+    auto ops_subview = Kokkos::subview(_ops, std::make_pair(begin, end));
+    auto res = Operator<internal::Prec, internal::Space>::uninitialized_operator(stream, end - begin);
+    Kokkos::deep_copy(stream.get<ExecutionSpaceType>(), res._terms, ops_subview);
     return res;
 }
 
@@ -289,7 +333,27 @@ std::vector<Operator<internal::Prec, internal::Space>>
 OperatorBatched<internal::Prec, internal::Space>::get_operators() const {
     std::vector<Operator<internal::Prec, internal::Space>> res(_row_ptr.extent(0) - 1);
     for (std::uint64_t i = 0; i < _row_ptr.extent(0) - 1; ++i) {
-        res[i] = get_operator_at(i);
+        std::uint64_t begin = _row_ptr(i);
+        std::uint64_t end = _row_ptr(i + 1);
+        auto ops_subview = Kokkos::subview(_ops, std::make_pair(begin, end));
+        res[i] = Operator<internal::Prec, internal::Space>::uninitialized_operator(end - begin);
+        res[i]._space = _space;
+        Kokkos::deep_copy(_space, res[i]._terms, ops_subview);
+    }
+    return res;
+}
+
+template <>
+std::vector<Operator<internal::Prec, internal::Space>>
+OperatorBatched<internal::Prec, internal::Space>::get_operators(const ConcurrentStream& stream) const {
+    std::vector<Operator<internal::Prec, internal::Space>> res(_row_ptr.extent(0) - 1);
+    for (std::uint64_t i = 0; i < _row_ptr.extent(0) - 1; ++i) {
+        std::uint64_t begin = _row_ptr(i);
+        std::uint64_t end = _row_ptr(i + 1);
+        auto ops_subview = Kokkos::subview(_ops, std::make_pair(begin, end));
+        res[i] =
+            Operator<internal::Prec, internal::Space>::uninitialized_operator(stream, end - begin);
+        Kokkos::deep_copy(stream.get<ExecutionSpaceType>(), res[i]._terms, ops_subview);
     }
     return res;
 }

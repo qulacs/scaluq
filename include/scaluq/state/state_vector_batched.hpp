@@ -48,7 +48,13 @@ public:
 
     void set_state_vector_at(std::uint64_t batch_id, const StateVector<Prec, Space>& state);
 
+    [[nodiscard]] StateVector<Prec, Space> view_state_vector_at(std::uint64_t batch_id);
+    [[nodiscard]] StateVector<Prec, Space> view_state_vector_at(const ConcurrentStream& stream,
+                                                                std::uint64_t batch_id);
+
     [[nodiscard]] StateVector<Prec, Space> get_state_vector_at(std::uint64_t batch_id) const;
+    [[nodiscard]] StateVector<Prec, Space> get_state_vector_at(
+        const ConcurrentStream& stream, std::uint64_t batch_id) const;
 
     void set_zero_state() { set_computational_basis(0); }
 
@@ -277,12 +283,49 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("get_state_vector_at",
-             &StateVectorBatched<Prec, Space>::get_state_vector_at,
+             nb::overload_cast<std::uint64_t>(&StateVectorBatched<Prec, Space>::get_state_vector_at,
+                                              nb::const_),
              "batch_id"_a,
              DocString()
                  .desc("Get the state vector at a specific batch index.")
                  .arg("batch_id", "int", "Index in batch to get.")
                  .ret("StateVector", "The state vector at the specified batch index.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("get_state_vector_at",
+             nb::overload_cast<const ConcurrentStream&, std::uint64_t>(
+                 &StateVectorBatched<Prec, Space>::get_state_vector_at,
+                 nb::const_),
+             "stream"_a,
+             "batch_id"_a,
+             DocString()
+                 .desc("Get the state vector at a specific batch index and execution space.")
+                 .arg("stream", "ConcurrentStream", "Execution space instance")
+                 .arg("batch_id", "int", "Index in batch to get.")
+                 .ret("StateVector", "The state vector at the specified batch index.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("view_state_vector_at",
+             nb::overload_cast<std::uint64_t>(
+                 &StateVectorBatched<Prec, Space>::view_state_vector_at),
+             "batch_id"_a,
+             DocString()
+                 .desc("Return a view of the state vector at a specific batch index.")
+                 .arg("batch_id", "int", "Index in batch to view.")
+                 .ret("StateVector", "A view of the state vector at the specified batch index.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("view_state_vector_at",
+             nb::overload_cast<const ConcurrentStream&, std::uint64_t>(
+                 &StateVectorBatched<Prec, Space>::view_state_vector_at),
+             "stream"_a,
+             "batch_id"_a,
+             DocString()
+                 .desc("Return a view of the state vector at a specific batch index and execution "
+                       "space.")
+                 .arg("stream", "ConcurrentStream", "Execution space instance")
+                 .arg("batch_id", "int", "Index in batch to view.")
+                 .ret("StateVector", "A view of the state vector at the specified batch index.")
                  .build_as_google_style()
                  .c_str())
         // State initialization methods
