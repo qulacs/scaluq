@@ -96,6 +96,49 @@ TYPED_TEST(OperatorBatchedTest, Copy) {
     EXPECT_EQ(op_batched.to_string(), op_batched_copy.to_string());
 }
 
+TYPED_TEST(OperatorBatchedTest, ViewOperatorAtSharesStorage) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    OperatorBatched<Prec, Space> op_batched(
+        std::vector<std::vector<PauliOperator<Prec>>>{{PauliOperator<Prec>("X 0", 1.)},
+                                                      {PauliOperator<Prec>("Z 0", 2.)}});
+
+    auto view = op_batched.view_operator_at(op_batched.concurrent_stream(), 0);
+    view *= StdComplex(3., 0.);
+
+    auto copied = op_batched.get_operator_at(0);
+    auto terms = copied.get_terms();
+    ASSERT_EQ(terms.size(), 1);
+    ASSERT_NEAR(terms[0].coef().real(), 3., eps<Prec>);
+    ASSERT_NEAR(terms[0].coef().imag(), 0., eps<Prec>);
+}
+
+TYPED_TEST(OperatorBatchedTest, CopyOperatorAtDoesNotAliasStorage) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    OperatorBatched<Prec, Space> op_batched(
+        std::vector<std::vector<PauliOperator<Prec>>>{{PauliOperator<Prec>("X 0", 1.)},
+                                                      {PauliOperator<Prec>("Z 0", 2.)}});
+
+    auto copied = op_batched.get_operator_at(op_batched.concurrent_stream(), 1);
+    copied *= StdComplex(5., 0.);
+
+    auto original = op_batched.get_operator_at(op_batched.concurrent_stream(), 1);
+    auto terms = original.get_terms();
+    ASSERT_EQ(terms.size(), 1);
+    ASSERT_NEAR(terms[0].coef().real(), 2., eps<Prec>);
+    ASSERT_NEAR(terms[0].coef().imag(), 0., eps<Prec>);
+}
+
+TYPED_TEST(OperatorBatchedTest, ViewOperatorAtForbidsOptimize) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    OperatorBatched<Prec, Space> op_batched(
+        std::vector<std::vector<PauliOperator<Prec>>>{{PauliOperator<Prec>("X 0", 1.)}});
+    auto view = op_batched.view_operator_at(0);
+    EXPECT_THROW(view.optimize(), std::runtime_error);
+}
+
 TYPED_TEST(OperatorBatchedTest, Apply) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
