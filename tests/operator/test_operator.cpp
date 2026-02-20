@@ -113,6 +113,28 @@ TYPED_TEST(OperatorTest, CheckBatchedExpectationValue) {
     }
 }
 
+TYPED_TEST(OperatorTest, ParallelExpectationValue) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    std::uint64_t n = 4;
+    Random random;
+
+    for (std::uint64_t repeat = 0; repeat < 10; ++repeat) {
+        auto [rand_observable, test_rand_observable] =
+            generate_random_observable_with_eigen<Prec, Space>(n, random);
+
+        auto state = StateVector<Prec, Space>::Haar_random_state(n);
+        auto res_parallel = rand_observable.get_expectation_values(state);
+        std::vector<PauliOperator<Prec>> terms = rand_observable.get_terms();
+        for (std::uint64_t term_id = 0; term_id < terms.size(); ++term_id) {
+            auto pauli = terms[term_id];
+            auto res = pauli.get_expectation_value(state);
+            ASSERT_NEAR(res.real(), res_parallel[term_id].real(), eps<Prec>);
+            ASSERT_NEAR(res.imag(), res_parallel[term_id].imag(), eps<Prec>);
+        }
+    }
+}
+
 TYPED_TEST(OperatorTest, CheckTransitionAmplitude) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
