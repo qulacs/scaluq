@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include "../kokkos.hpp"
 #include "../types.hpp"
 #include "../util/random.hpp"
 #include "../util/utility.hpp"
@@ -20,16 +21,25 @@ class StateVector {
     using FloatType = internal::Float<Prec>;
     using ComplexType = internal::Complex<Prec>;
     using ExecutionSpaceType = internal::SpaceType<Space>;
+    ExecutionSpaceType _space{};
 
 public:
     static constexpr std::uint64_t UNMEASURED = 2;
     Kokkos::View<ComplexType*, ExecutionSpaceType> _raw;
     StateVector() = default;
     StateVector(std::uint64_t n_qubits);
+    StateVector(const ConcurrentStream& space, std::uint64_t n_qubits);
     StateVector(Kokkos::View<ComplexType*, ExecutionSpaceType> view);
+    StateVector(const ConcurrentStream& space, Kokkos::View<ComplexType*, ExecutionSpaceType> view);
     StateVector(const StateVector& other) = default;
 
     StateVector& operator=(const StateVector& other) = default;
+
+    [[nodiscard]] const ExecutionSpaceType& execution_space() const { return _space; }
+    [[nodiscard]] ConcurrentStream concurrent_stream() const { return ConcurrentStream(_space); }
+    void set_concurrent_stream(const ConcurrentStream& stream) {
+        _space = stream.get<ExecutionSpaceType>();
+    }
 
     /**
      * @attention Very slow. You should use load() instead if you can.
@@ -44,6 +54,8 @@ public:
     [[nodiscard]] static StateVector Haar_random_state(std::uint64_t n_qubits,
                                                        std::uint64_t seed = std::random_device()());
     [[nodiscard]] static StateVector uninitialized_state(std::uint64_t n_qubits);
+    [[nodiscard]] static StateVector uninitialized_state(const ConcurrentStream& space,
+                                                         std::uint64_t n_qubits);
 
     /**
      * @brief zero-fill
@@ -80,6 +92,7 @@ public:
     void load(const StateVector& other);
 
     [[nodiscard]] StateVector copy() const;
+    [[nodiscard]] StateVector copy(const ConcurrentStream& stream) const;
 
     friend std::ostream& operator<<(std::ostream& os, const StateVector& state) {
         os << state.to_string();
@@ -144,6 +157,15 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                                       "<BLANKLINE>"}))
                  .build_as_google_style()
                  .c_str())
+        .def(nb::init<const ConcurrentStream&, std::uint64_t>(),
+             "space"_a,
+             "n_qubits"_a,
+             DocString()
+                 .desc("Construct with specified number of qubits and execution space.")
+                 .arg("space", "ConcurrentStream", "execution space instance")
+                 .arg("n_qubits", "int", "number of qubits")
+                 .build_as_google_style()
+                 .c_str())
         .def_static(
             "Haar_random_state",
             [](std::uint64_t n_qubits, std::optional<std::uint64_t> seed) {
@@ -187,11 +209,23 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                      "(0.15213024630399696-0.2871374092016799j)]"}))
                 .build_as_google_style()
                 .c_str())
+        .def_static(
+            "uninitialized_state",
+            nb::overload_cast<std::uint64_t>(&StateVector<Prec, Space>::uninitialized_state),
+            "n_qubits"_a,
+            DocString()
+                .desc("Construct :class:`StateVector` without initializing.")
+                .arg("n_qubits", "int", "number of qubits")
+                .build_as_google_style()
+                .c_str())
         .def_static("uninitialized_state",
-                    &StateVector<Prec, Space>::uninitialized_state,
+                    nb::overload_cast<const ConcurrentStream&, std::uint64_t>(
+                        &StateVector<Prec, Space>::uninitialized_state),
+                    "space"_a,
                     "n_qubits"_a,
                     DocString()
                         .desc("Construct :class:`StateVector` without initializing.")
+                        .arg("space", "ConcurrentStream", "Execution space wrapper.")
                         .arg("n_qubits", "int", "number of qubits")
                         .build_as_google_style()
                         .c_str())
@@ -238,6 +272,39 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                        ":meth:`.load`.")
                  .build_as_google_style()
                  .c_str())
+        .def("concurrent_stream",
+             &StateVector<Prec, Space>::concurrent_stream,
+             DocString()
+                 .desc("Return execution space instance for subsequent operations.")
+                 .ret("ConcurrentStream", "execution space instance")
+                 .build_as_google_style()
+                 .c_str())
+        .def("set_concurrent_stream",
+             &StateVector<Prec, Space>::set_concurrent_stream,
+             "stream"_a,
+             DocString()
+                 .desc("Set execution space instance for subsequent operations.")
+                 .arg("stream", "ConcurrentStream", "execution space instance")
+                 .build_as_google_style()
+                 .c_str())
+        .def("copy",
+             nb::overload_cast<>(&StateVector<Prec, Space>::copy, nb::const_),
+             DocString()
+                 .desc("Return a copy of the state vector.")
+                 .ret("StateVector", "Copied state vector")
+                 .build_as_google_style()
+                 .c_str())
+        .def(
+            "copy",
+            nb::overload_cast<const ConcurrentStream&>(&StateVector<Prec, Space>::copy, nb::const_),
+            "stream"_a,
+            DocString()
+                .desc("Return a copy of the state vector on the specified execution space.")
+                .arg(
+                    "stream", "ConcurrentStream", "Execution space instance for the copied object.")
+                .ret("StateVector", "Copied state vector")
+                .build_as_google_style()
+                .c_str())
         .def("get_amplitude_at",
              &StateVector<Prec, Space>::get_amplitude_at,
              "index"_a,

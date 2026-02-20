@@ -1,3 +1,4 @@
+#include <scaluq/kokkos.hpp>
 #include <scaluq/operator/apply_pauli.hpp>
 #include <scaluq/operator/operator_batched.hpp>
 #include <scaluq/prec_space.hpp>
@@ -9,13 +10,48 @@ template <>
 OperatorBatched<internal::Prec, internal::Space>
 OperatorBatched<internal::Prec, internal::Space>::copy() const {
     OperatorBatched<internal::Prec, internal::Space> copy_operator;
+    copy_operator._space = _space;
     copy_operator._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
         Kokkos::ViewAllocateWithoutInitializing("row_ptr"), _row_ptr.extent(0));
     copy_operator._ops = Kokkos::View<Pauli*, ExecutionSpaceType>(
         Kokkos::ViewAllocateWithoutInitializing("ops"), _ops.extent(0));
-    Kokkos::deep_copy(copy_operator._row_ptr, _row_ptr);
-    Kokkos::deep_copy(copy_operator._ops, _ops);
+    Kokkos::deep_copy(_space, copy_operator._row_ptr, _row_ptr);
+    Kokkos::deep_copy(_space, copy_operator._ops, _ops);
     return copy_operator;
+}
+
+template <>
+OperatorBatched<internal::Prec, internal::Space>
+OperatorBatched<internal::Prec, internal::Space>::copy(const ConcurrentStream& stream) const {
+    OperatorBatched<internal::Prec, internal::Space> copy_operator;
+    copy_operator._space = stream.get<ExecutionSpaceType>();
+    copy_operator._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
+        Kokkos::ViewAllocateWithoutInitializing("row_ptr"), _row_ptr.extent(0));
+    copy_operator._ops = Kokkos::View<Pauli*, ExecutionSpaceType>(
+        Kokkos::ViewAllocateWithoutInitializing("ops"), _ops.extent(0));
+    Kokkos::deep_copy(stream.get<ExecutionSpaceType>(), copy_operator._row_ptr, _row_ptr);
+    Kokkos::deep_copy(stream.get<ExecutionSpaceType>(), copy_operator._ops, _ops);
+    return copy_operator;
+}
+
+template <>
+OperatorBatched<internal::Prec, internal::Space>
+OperatorBatched<internal::Prec, internal::Space>::uninitialized_operator(std::uint64_t batch_size) {
+    OperatorBatched<internal::Prec, internal::Space> tmp;
+    tmp._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
+        Kokkos::ViewAllocateWithoutInitializing("row_ptr"), batch_size + 1);
+    return tmp;
+}
+
+template <>
+OperatorBatched<internal::Prec, internal::Space>
+OperatorBatched<internal::Prec, internal::Space>::uninitialized_operator(
+    const ConcurrentStream& stream, std::uint64_t batch_size) {
+    OperatorBatched<internal::Prec, internal::Space> tmp;
+    tmp._space = stream.get<ExecutionSpaceType>();
+    tmp._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
+        Kokkos::ViewAllocateWithoutInitializing("row_ptr"), batch_size + 1);
+    return tmp;
 }
 
 template <>
@@ -27,14 +63,22 @@ void OperatorBatched<internal::Prec, internal::Space>::load(
         row_ptr_h.push_back(row_ptr_h.back() + op.size());
     }
     auto row_ptr_h_view = internal::wrapped_host_view(row_ptr_h);
-    Kokkos::deep_copy(_row_ptr, row_ptr_h_view);
+    Kokkos::deep_copy(_space, _row_ptr, row_ptr_h_view);
     _ops = Kokkos::View<Pauli*, ExecutionSpaceType>("operator_ops", row_ptr_h.back());
     std::vector<PauliOperator<internal::Prec>> ops_h;
     for (const auto& op : terms) {
         ops_h.insert(ops_h.end(), op.begin(), op.end());
     }
     auto ops_h_view = internal::wrapped_host_view(ops_h);
-    Kokkos::deep_copy(_ops, ops_h_view);
+    Kokkos::deep_copy(_space, _ops, ops_h_view);
+}
+
+template <>
+void OperatorBatched<internal::Prec, internal::Space>::load(
+    const std::vector<std::vector<PauliOperator<internal::Prec>>>& terms,
+    const ConcurrentStream& stream) {
+    _space = stream.get<ExecutionSpaceType>();
+    load(terms);
 }
 
 template <>
@@ -46,13 +90,22 @@ void OperatorBatched<internal::Prec, internal::Space>::load(
         row_ptr_h.push_back(row_ptr_h.back() + op.n_terms());
     }
     auto row_ptr_h_view = internal::wrapped_host_view(row_ptr_h);
-    Kokkos::deep_copy(_row_ptr, row_ptr_h_view);
+    Kokkos::deep_copy(_space, _row_ptr, row_ptr_h_view);
     _ops = Kokkos::View<Pauli*, ExecutionSpaceType>("operator_ops", row_ptr_h.back());
     for (std::uint64_t i = 0; i < terms.size(); ++i) {
         auto term_ops = terms[i]._terms;
-        Kokkos::deep_copy(Kokkos::subview(_ops, Kokkos::make_pair(row_ptr_h[i], row_ptr_h[i + 1])),
+        Kokkos::deep_copy(_space,
+                          Kokkos::subview(_ops, Kokkos::make_pair(row_ptr_h[i], row_ptr_h[i + 1])),
                           term_ops);
     }
+}
+
+template <>
+void OperatorBatched<internal::Prec, internal::Space>::load(
+    const std::vector<Operator<internal::Prec, internal::Space>>& terms,
+    const ConcurrentStream& stream) {
+    _space = stream.get<ExecutionSpaceType>();
+    load(terms);
 }
 
 template <>
@@ -61,7 +114,7 @@ OperatorBatched<internal::Prec, internal::Space>::get_applied_states(
     const StateVector<internal::Prec, internal::Space>& state_vector,
     std::uint64_t batch_size) const {
     auto res = StateVectorBatched<internal::Prec, internal::Space>::uninitialized_state(
-        _row_ptr.extent(0) - 1, state_vector.n_qubits());
+        state_vector.concurrent_stream(), _row_ptr.extent(0) - 1, state_vector.n_qubits());
     res.set_state_vector(state_vector);
     internal::apply_pauli<internal::Prec, internal::Space>(0, 0, _ops, _row_ptr, res, batch_size);
     return res;
@@ -75,7 +128,8 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_ex
         Kokkos::ViewAllocateWithoutInitializing("expectation_value"), _row_ptr.extent(0) - 1);
     Kokkos::parallel_for(
         "get_expectation_value",
-        Kokkos::TeamPolicy<ExecutionSpaceType>(_row_ptr.extent(0) - 1, Kokkos::AUTO),
+        Kokkos::TeamPolicy<ExecutionSpaceType>(
+            state_vector.execution_space(), _row_ptr.extent(0) - 1, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(const Kokkos::TeamPolicy<ExecutionSpaceType>::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
             ComplexType res_lcl = 0;
@@ -140,7 +194,8 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_tr
 
     Kokkos::parallel_for(
         "get_transition_amplitude",
-        Kokkos::TeamPolicy<ExecutionSpaceType>(_row_ptr.extent(0) - 1, Kokkos::AUTO),
+        Kokkos::TeamPolicy<ExecutionSpaceType>(
+            state_vector_bra.execution_space(), _row_ptr.extent(0) - 1, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(const Kokkos::TeamPolicy<ExecutionSpaceType>::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
             ComplexType res_lcl = 0;
@@ -197,7 +252,19 @@ OperatorBatched<internal::Prec, internal::Space>::get_dagger() const {
     OperatorBatched<internal::Prec, internal::Space> res = this->copy();
     Kokkos::parallel_for(
         "get_dagger",
-        Kokkos::RangePolicy<ExecutionSpaceType>(0, res._ops.extent(0)),
+        Kokkos::RangePolicy<ExecutionSpaceType>(_space, 0, res._ops.extent(0)),
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { res._ops[i] = res._ops[i].get_dagger(); });
+    return res;
+}
+
+template <>
+OperatorBatched<internal::Prec, internal::Space>
+OperatorBatched<internal::Prec, internal::Space>::get_dagger(const ConcurrentStream& stream) const {
+    OperatorBatched<internal::Prec, internal::Space> res = this->copy(stream);
+    Kokkos::parallel_for(
+        "get_dagger",
+        Kokkos::RangePolicy<ExecutionSpaceType>(
+            stream.get<ExecutionSpaceType>(), 0, res._ops.extent(0)),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { res._ops[i] = res._ops[i].get_dagger(); });
     return res;
 }
@@ -212,7 +279,8 @@ OperatorBatched<internal::Prec, internal::Space>::get_operator_at(std::uint64_t 
     std::uint64_t end = _row_ptr(index + 1);
     auto ops_subview = Kokkos::subview(_ops, std::make_pair(begin, end));
     Operator<internal::Prec, internal::Space> res(end - begin);
-    Kokkos::deep_copy(res._terms, ops_subview);
+    res.set_concurrent_stream(ConcurrentStream(_space));
+    Kokkos::deep_copy(_space, res._terms, ops_subview);
     return res;
 }
 
@@ -250,7 +318,7 @@ OperatorBatched<internal::Prec, internal::Space>::operator*(
     OperatorBatched<internal::Prec, internal::Space> res = this->copy();
     Kokkos::parallel_for(
         "operator*",
-        Kokkos::RangePolicy<ExecutionSpaceType>(0, res._ops.extent(0)),
+        Kokkos::RangePolicy<ExecutionSpaceType>(_space, 0, res._ops.extent(0)),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { res._ops[i] *= coef_view[i]; });
     return res;
 }
@@ -266,7 +334,7 @@ OperatorBatched<internal::Prec, internal::Space>::operator*=(const std::vector<S
     auto coef_view = internal::convert_vector_to_view<ComplexType, internal::Space>(tmp);
     Kokkos::parallel_for(
         "operator*=",
-        Kokkos::RangePolicy<ExecutionSpaceType>(0, _ops.extent(0)),
+        Kokkos::RangePolicy<ExecutionSpaceType>(_space, 0, _ops.extent(0)),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _ops[i] *= coef_view[i]; });
     return *this;
 }
@@ -285,14 +353,15 @@ OperatorBatched<internal::Prec, internal::Space>::operator+(const OperatorBatche
                             (target._row_ptr[i + 1] - target._row_ptr[i]));
     }
     OperatorBatched<internal::Prec, internal::Space> res;
+    res._space = _space;
     res._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
         Kokkos::ViewAllocateWithoutInitializing("row_ptr"), row_ptr_h.size());
-    Kokkos::deep_copy(res._row_ptr, internal::wrapped_host_view(row_ptr_h));
+    Kokkos::deep_copy(_space, res._row_ptr, internal::wrapped_host_view(row_ptr_h));
     res._ops = Kokkos::View<Pauli*, ExecutionSpaceType>(
         Kokkos::ViewAllocateWithoutInitializing("operator_ops"), row_ptr_h.back());
     Kokkos::parallel_for(
         "operator+",
-        Kokkos::TeamPolicy<ExecutionSpaceType>(_row_ptr.extent(0) - 1, Kokkos::AUTO),
+        Kokkos::TeamPolicy<ExecutionSpaceType>(_space, _row_ptr.extent(0) - 1, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(const Kokkos::TeamPolicy<ExecutionSpaceType>::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
             std::uint64_t begin1 = _row_ptr(batch_id);
@@ -325,14 +394,15 @@ OperatorBatched<internal::Prec, internal::Space>::operator*(const OperatorBatche
                                                    (target._row_ptr[i + 1] - target._row_ptr[i]));
     }
     OperatorBatched<internal::Prec, internal::Space> res;
+    res._space = _space;
     res._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
         Kokkos::ViewAllocateWithoutInitializing("row_ptr"), row_ptr_h.size());
-    Kokkos::deep_copy(res._row_ptr, internal::wrapped_host_view(row_ptr_h));
+    Kokkos::deep_copy(_space, res._row_ptr, internal::wrapped_host_view(row_ptr_h));
     res._ops = Kokkos::View<Pauli*, ExecutionSpaceType>(
         Kokkos::ViewAllocateWithoutInitializing("operator_ops"), row_ptr_h.back());
     Kokkos::parallel_for(
         "operator+",
-        Kokkos::TeamPolicy<ExecutionSpaceType>(_row_ptr.extent(0) - 1, Kokkos::AUTO),
+        Kokkos::TeamPolicy<ExecutionSpaceType>(_space, _row_ptr.extent(0) - 1, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(const Kokkos::TeamPolicy<ExecutionSpaceType>::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
             std::uint64_t begin1 = _row_ptr(batch_id);
@@ -365,14 +435,15 @@ OperatorBatched<internal::Prec, internal::Space>::operator+(
         row_ptr_h.push_back(row_ptr_h.back() + (_row_ptr[i + 1] - _row_ptr[i]) + 1);
     }
     OperatorBatched<internal::Prec, internal::Space> res;
+    res._space = _space;
     res._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
         Kokkos::ViewAllocateWithoutInitializing("row_ptr"), row_ptr_h.size());
-    Kokkos::deep_copy(res._row_ptr, internal::wrapped_host_view(row_ptr_h));
+    Kokkos::deep_copy(_space, res._row_ptr, internal::wrapped_host_view(row_ptr_h));
     res._ops = Kokkos::View<Pauli*, ExecutionSpaceType>(
         Kokkos::ViewAllocateWithoutInitializing("operator_ops"), row_ptr_h.back());
     Kokkos::parallel_for(
         "operator+",
-        Kokkos::TeamPolicy<ExecutionSpaceType>(_row_ptr.extent(0) - 1, Kokkos::AUTO),
+        Kokkos::TeamPolicy<ExecutionSpaceType>(_space, _row_ptr.extent(0) - 1, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(const Kokkos::TeamPolicy<ExecutionSpaceType>::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
             std::uint64_t begin = _row_ptr(batch_id);
@@ -397,7 +468,7 @@ OperatorBatched<internal::Prec, internal::Space>::operator*(
     OperatorBatched<internal::Prec, internal::Space> res = this->copy();
     Kokkos::parallel_for(
         "operator+",
-        Kokkos::TeamPolicy<ExecutionSpaceType>(_row_ptr.extent(0) - 1, Kokkos::AUTO),
+        Kokkos::TeamPolicy<ExecutionSpaceType>(_space, _row_ptr.extent(0) - 1, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(const Kokkos::TeamPolicy<ExecutionSpaceType>::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
             std::uint64_t begin = _row_ptr(batch_id);
@@ -419,7 +490,7 @@ OperatorBatched<internal::Prec, internal::Space>::operator*=(
     }
     Kokkos::parallel_for(
         "operator+",
-        Kokkos::TeamPolicy<ExecutionSpaceType>(_row_ptr.extent(0) - 1, Kokkos::AUTO),
+        Kokkos::TeamPolicy<ExecutionSpaceType>(_space, _row_ptr.extent(0) - 1, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(const Kokkos::TeamPolicy<ExecutionSpaceType>::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
             std::uint64_t begin = _row_ptr(batch_id);

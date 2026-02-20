@@ -3,6 +3,7 @@
 #include <random>
 #include <vector>
 
+#include "../kokkos.hpp"
 #include "operator.hpp"
 
 namespace scaluq {
@@ -16,6 +17,8 @@ class OperatorBatched {
 
 public:
     OperatorBatched() = default;
+    explicit OperatorBatched(const ConcurrentStream& stream)
+        : _space(stream.get<ExecutionSpaceType>()) {}
     explicit OperatorBatched(const std::vector<std::vector<Pauli>>& ops)
         : _row_ptr("operator_row_ptr", ops.size() + 1) {
         std::vector<std::uint64_t> row_ptr_h;
@@ -24,7 +27,7 @@ public:
             row_ptr_h.push_back(row_ptr_h.back() + op.size());
         }
         auto row_ptr_h_view = internal::wrapped_host_view(row_ptr_h);
-        Kokkos::deep_copy(_row_ptr, row_ptr_h_view);
+        Kokkos::deep_copy(_space, _row_ptr, row_ptr_h_view);
 
         _ops = Kokkos::View<Pauli*, ExecutionSpaceType>("operator_ops", row_ptr_h.back());
         std::vector<Pauli> ops_h;
@@ -32,7 +35,25 @@ public:
             ops_h.insert(ops_h.end(), op.begin(), op.end());
         }
         auto ops_h_view = internal::wrapped_host_view(ops_h);
-        Kokkos::deep_copy(_ops, ops_h_view);
+        Kokkos::deep_copy(_space, _ops, ops_h_view);
+    }
+    OperatorBatched(const ConcurrentStream& stream, const std::vector<std::vector<Pauli>>& ops)
+        : _space(stream.get<ExecutionSpaceType>()), _row_ptr("operator_row_ptr", ops.size() + 1) {
+        std::vector<std::uint64_t> row_ptr_h;
+        row_ptr_h.push_back(0);
+        for (const auto& op : ops) {
+            row_ptr_h.push_back(row_ptr_h.back() + op.size());
+        }
+        auto row_ptr_h_view = internal::wrapped_host_view(row_ptr_h);
+        Kokkos::deep_copy(_space, _row_ptr, row_ptr_h_view);
+
+        _ops = Kokkos::View<Pauli*, ExecutionSpaceType>("operator_ops", row_ptr_h.back());
+        std::vector<Pauli> ops_h;
+        for (const auto& op : ops) {
+            ops_h.insert(ops_h.end(), op.begin(), op.end());
+        }
+        auto ops_h_view = internal::wrapped_host_view(ops_h);
+        Kokkos::deep_copy(_space, _ops, ops_h_view);
     }
     explicit OperatorBatched(const std::vector<Operator<Prec, Space>>& ops)
         : _row_ptr("operator_row_ptr", ops.size() + 1) {
@@ -42,26 +63,61 @@ public:
             row_ptr_h.push_back(row_ptr_h.back() + op.n_terms());
         }
         auto row_ptr_h_view = internal::wrapped_host_view(row_ptr_h);
-        Kokkos::deep_copy(_row_ptr, row_ptr_h_view);
+        Kokkos::deep_copy(_space, _row_ptr, row_ptr_h_view);
 
         _ops = Kokkos::View<Pauli*, ExecutionSpaceType>("operator_ops", row_ptr_h.back());
         for (std::uint64_t i = 0; i < ops.size(); ++i) {
             auto terms = ops[i].get_terms();  // TODO: _terms を直に取りたい
             auto terms_h_view = internal::wrapped_host_view(terms);
             Kokkos::deep_copy(
+                _space,
+                Kokkos::subview(_ops, Kokkos::make_pair(row_ptr_h[i], row_ptr_h[i + 1])),
+                terms_h_view);
+        }
+    }
+    OperatorBatched(const ConcurrentStream& stream, const std::vector<Operator<Prec, Space>>& ops)
+        : _space(stream.get<ExecutionSpaceType>()), _row_ptr("operator_row_ptr", ops.size() + 1) {
+        std::vector<std::uint64_t> row_ptr_h;
+        row_ptr_h.push_back(0);
+        for (const auto& op : ops) {
+            row_ptr_h.push_back(row_ptr_h.back() + op.n_terms());
+        }
+        auto row_ptr_h_view = internal::wrapped_host_view(row_ptr_h);
+        Kokkos::deep_copy(_space, _row_ptr, row_ptr_h_view);
+
+        _ops = Kokkos::View<Pauli*, ExecutionSpaceType>("operator_ops", row_ptr_h.back());
+        for (std::uint64_t i = 0; i < ops.size(); ++i) {
+            auto terms = ops[i].get_terms();  // TODO: _terms を直に取りたい
+            auto terms_h_view = internal::wrapped_host_view(terms);
+            Kokkos::deep_copy(
+                _space,
                 Kokkos::subview(_ops, Kokkos::make_pair(row_ptr_h[i], row_ptr_h[i + 1])),
                 terms_h_view);
         }
     }
 
     [[nodiscard]] OperatorBatched copy() const;
+    [[nodiscard]] OperatorBatched copy(const ConcurrentStream& stream) const;
     void load(const std::vector<std::vector<PauliOperator<Prec>>>& terms);
+    void load(const std::vector<std::vector<PauliOperator<Prec>>>& terms,
+              const ConcurrentStream& stream);
     void load(const std::vector<Operator<Prec, Space>>& terms);
+    void load(const std::vector<Operator<Prec, Space>>& terms, const ConcurrentStream& stream);
+    [[nodiscard]] static OperatorBatched uninitialized_operator(std::uint64_t batch_size);
+    [[nodiscard]] static OperatorBatched uninitialized_operator(const ConcurrentStream& stream,
+                                                                std::uint64_t batch_size);
 
     [[nodiscard]] std::string to_string() const;
     [[nodiscard]] std::uint64_t batch_size() const { return _row_ptr.extent(0) - 1; }
 
+    [[nodiscard]] const ExecutionSpaceType& execution_space() const { return _space; }
+    [[nodiscard]] ConcurrentStream concurrent_stream() const { return ConcurrentStream(_space); }
+    void set_concurrent_stream(const ConcurrentStream& stream) {
+        _space = stream.get<ExecutionSpaceType>();
+    }
+
     [[nodiscard]] OperatorBatched get_dagger() const;
+    [[nodiscard]] OperatorBatched get_dagger(const ConcurrentStream& stream) const;
 
     StateVectorBatched<Prec, Space> get_applied_states(const StateVector<Prec, Space>& state_vector,
                                                        std::uint64_t batch_size = 1) const;
@@ -90,7 +146,7 @@ public:
         OperatorBatched result = copy();
         Kokkos::parallel_for(
             "OperatorBatched::operator-",
-            Kokkos::RangePolicy<ExecutionSpaceType>(0, _ops.extent(0)),
+            Kokkos::RangePolicy<ExecutionSpaceType>(_space, 0, _ops.extent(0)),
             KOKKOS_LAMBDA(const std::uint64_t i) { result._ops(i) *= -1.; });
         return result;
     }
@@ -125,6 +181,7 @@ public:
     }
 
 private:
+    ExecutionSpaceType _space{};
     Kokkos::View<PauliOperator<Prec>*, ExecutionSpaceType> _ops;
     Kokkos::View<std::uint64_t*, Kokkos::SharedSpace> _row_ptr;
 };
@@ -141,9 +198,22 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
             .build_as_google_style()
             .c_str())
         .def(nb::init<>(), DocString().desc("Default constructor.").build_as_google_style().c_str())
+        .def(nb::init<const ConcurrentStream&>(),
+             "stream"_a,
+             DocString()
+                 .desc("Constructor with specified execution space.")
+                 .build_as_google_style()
+                 .c_str())
         .def(nb::init<const std::vector<std::vector<PauliOperator<Prec>>>&>(),
              DocString()
                  .desc("Constructor from a vector of Pauli operators.")
+                 .build_as_google_style()
+                 .c_str())
+        .def(nb::init<const ConcurrentStream&, const std::vector<std::vector<PauliOperator<Prec>>>&>(),
+             "stream"_a,
+             "terms"_a,
+             DocString()
+                 .desc("Constructor with specified execution space and vector of Pauli operators.")
                  .build_as_google_style()
                  .c_str())
         .def(nb::init<const std::vector<Operator<Prec, Space>>&>(),
@@ -151,9 +221,25 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
                  .desc("Constructor from a vector of Operators.")
                  .build_as_google_style()
                  .c_str())
+        .def(nb::init<const ConcurrentStream&, const std::vector<Operator<Prec, Space>>&>(),
+             "stream"_a,
+             "terms"_a,
+             DocString()
+                 .desc("Constructor with specified execution space and vector of Operators.")
+                 .build_as_google_style()
+                 .c_str())
         .def("copy",
-             &OperatorBatched<Prec, Space>::copy,
+             nb::overload_cast<>(&OperatorBatched<Prec, Space>::copy, nb::const_),
              DocString().desc("Return a copy.").build_as_google_style().c_str())
+        .def("copy",
+             nb::overload_cast<const ConcurrentStream&>(&OperatorBatched<Prec, Space>::copy,
+                                                        nb::const_),
+             "stream"_a,
+             DocString()
+                 .desc("Return a copy using the specified execution space.")
+                 .arg("stream", "ConcurrentStream", "Execution space instance")
+                 .build_as_google_style()
+                 .c_str())
         .def("load",
              nb::overload_cast<const std::vector<std::vector<PauliOperator<Prec>>>&>(
                  &OperatorBatched<Prec, Space>::load),
@@ -161,6 +247,17 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
              DocString()
                  .desc("Load a vector of Pauli operators.")
                  .arg("terms", "A vector of Pauli operators.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("load",
+             nb::overload_cast<const std::vector<std::vector<PauliOperator<Prec>>>&,
+                               const ConcurrentStream&>(&OperatorBatched<Prec, Space>::load),
+             "terms"_a,
+             "stream"_a,
+             DocString()
+                 .desc("Load a vector of Pauli operators using the specified execution space.")
+                 .arg("terms", "A vector of Pauli operators.")
+                 .arg("stream", "ConcurrentStream", "Execution space instance")
                  .build_as_google_style()
                  .c_str())
         .def("load",
@@ -172,10 +269,56 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
                  .arg("terms", "A vector of Operators.")
                  .build_as_google_style()
                  .c_str())
+        .def("load",
+             nb::overload_cast<const std::vector<Operator<Prec, Space>>&,
+                               const ConcurrentStream&>(&OperatorBatched<Prec, Space>::load),
+             "terms"_a,
+             "stream"_a,
+             DocString()
+                 .desc("Load a vector of Operators using the specified execution space.")
+                 .arg("terms", "A vector of Operators.")
+                 .arg("stream", "ConcurrentStream", "Execution space instance")
+                 .build_as_google_style()
+                 .c_str())
+        .def_static("uninitialized_operator",
+                    nb::overload_cast<std::uint64_t>(
+                        &OperatorBatched<Prec, Space>::uninitialized_operator),
+                    "batch_size"_a,
+                    DocString()
+                        .desc("Construct OperatorBatched without initializing operator data.")
+                        .arg("batch_size", "int", "Batch size.")
+                        .build_as_google_style()
+                        .c_str())
+        .def_static("uninitialized_operator",
+                    nb::overload_cast<const ConcurrentStream&, std::uint64_t>(
+                        &OperatorBatched<Prec, Space>::uninitialized_operator),
+                    "stream"_a,
+                    "batch_size"_a,
+                    DocString()
+                        .desc("Construct OperatorBatched without initializing operator data.")
+                        .arg("stream", "ConcurrentStream", "Execution space instance.")
+                        .arg("batch_size", "int", "Batch size.")
+                        .build_as_google_style()
+                        .c_str())
         .def("to_string",
              &OperatorBatched<Prec, Space>::to_string,
              DocString()
                  .desc("Return a string representation of the operator.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("concurrent_stream",
+             &OperatorBatched<Prec, Space>::concurrent_stream,
+             DocString()
+                 .desc("Return execution space instance for subsequent operations.")
+                 .ret("ConcurrentStream", "execution space instance")
+                 .build_as_google_style()
+                 .c_str())
+        .def("set_concurrent_stream",
+             &OperatorBatched<Prec, Space>::set_concurrent_stream,
+             "stream"_a,
+             DocString()
+                 .desc("Set execution space instance for subsequent operations.")
+                 .arg("stream", "ConcurrentStream", "execution space instance")
                  .build_as_google_style()
                  .c_str())
         .def("batch_size",
@@ -185,9 +328,18 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("get_dagger",
-             &OperatorBatched<Prec, Space>::get_dagger,
+             nb::overload_cast<>(&OperatorBatched<Prec, Space>::get_dagger, nb::const_),
              DocString()
                  .desc("Return the Hermitian conjugate of the operator.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("get_dagger",
+             nb::overload_cast<const ConcurrentStream&>(&OperatorBatched<Prec, Space>::get_dagger,
+                                                        nb::const_),
+             "stream"_a,
+             DocString()
+                 .desc("Return the Hermitian conjugate using the specified execution space.")
+                 .arg("stream", "ConcurrentStream", "Execution space instance")
                  .build_as_google_style()
                  .c_str())
         .def("get_applied_states",

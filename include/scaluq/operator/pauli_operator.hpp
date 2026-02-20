@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "../constant.hpp"
+#include "../kokkos.hpp"
 #include "../state/state_vector.hpp"
 #include "../state/state_vector_batched.hpp"
 #include "../types.hpp"

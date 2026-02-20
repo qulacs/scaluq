@@ -1,17 +1,32 @@
 #pragma once
 
+#include <Kokkos_Core.hpp>
+#include <vector>
+
+#include "types.hpp"
+
 namespace scaluq {
 void initialize();
 void finalize();
 bool is_initialized();
 bool is_finalized();
 void synchronize();
+void synchronize(const ConcurrentStream& stream);
+std::vector<ConcurrentStream> create_default_streams(const std::vector<double>& weights);
+std::vector<ConcurrentStream> create_host_streams(const std::vector<double>& weights);
 }  // namespace scaluq
 
 #ifdef SCALUQ_USE_NANOBIND
 #include "../python/docstring.hpp"
 namespace scaluq::internal {
 void bind_kokkos_hpp(nb::module_& m) {
+    nb::class_<ConcurrentStream>(
+        m,
+        "ConcurrentStream",
+        DocString()
+            .desc("Execution space instance for concurrent stream control.")
+            .build_as_google_style()
+            .c_str());
     m.def("initialize",
           &initialize,
           DocString()
@@ -41,11 +56,37 @@ void bind_kokkos_hpp(nb::module_& m) {
              &is_finalized,
              "Return true if :func:`~scaluq.finalize()` is already called.")
         .def("synchronize",
-             &synchronize,
+             nb::overload_cast<>(&scaluq::synchronize),
              DocString()
                  .desc("Synchronize the device if the execution space is not host.")
                  .note("This function is required to ensure that all operations on device are "
                        "finished when you measure the elapsed time of some operations on device.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("synchronize",
+             nb::overload_cast<const ConcurrentStream&>(&scaluq::synchronize),
+             "stream"_a,
+             DocString()
+                 .desc("Fence the execution space instance.")
+                 .arg("stream", "ConcurrentStream", "Execution space instance")
+                 .build_as_google_style()
+                 .c_str())
+        .def("create_default_streams",
+             &create_default_streams,
+             "weights"_a,
+             DocString()
+                 .desc("Create concurrent streams by partitioning the default execution space.")
+                 .arg("weights", "list[float]", "Partition weights")
+                 .ret("list[ConcurrentStream]", "Concurrent stream instances")
+                 .build_as_google_style()
+                 .c_str())
+        .def("create_host_streams",
+             &create_host_streams,
+             "weights"_a,
+             DocString()
+                 .desc("Create concurrent streams by partitioning the host execution space.")
+                 .arg("weights", "list[float]", "Partition weights")
+                 .ret("list[ConcurrentStream]", "Host concurrent stream instances")
                  .build_as_google_style()
                  .c_str());
 }

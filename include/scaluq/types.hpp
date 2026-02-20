@@ -3,11 +3,14 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 #include <Kokkos_Core.hpp>
+#include <any>
 #include <complex>
 #include <cstdint>
 #include <nlohmann/json.hpp>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
 
-#include "kokkos.hpp"
 #include "type/complex.hpp"
 #include "type/floating_point.hpp"
 
@@ -25,6 +28,9 @@ using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, 
 using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex, Eigen::RowMajor>;
 
 namespace internal {
+template <typename SpaceType>
+concept KokkosExecutionSpace = Kokkos::is_execution_space_v<SpaceType>;
+
 template <ExecutionSpace Space>
 struct SpaceTypeImpl {};
 template <>
@@ -70,6 +76,48 @@ public:
     SparseMatrix(const SparseComplexMatrix& sp);
 };
 }  // namespace internal
+
+class ConcurrentStream {
+public:
+    using ExecutionSpaceType = internal::SpaceType<ExecutionSpace::Default>;
+    using FenceFn = void (*)(const std::any&, const std::string&);
+
+    ConcurrentStream() : ConcurrentStream(ExecutionSpaceType{}) {}
+
+    template <typename SpaceType>
+    requires internal::KokkosExecutionSpace<SpaceType>
+    explicit ConcurrentStream(const SpaceType& space)
+        : _space(space), _fence(&ConcurrentStream::fence_impl<SpaceType>) {}
+
+    void fence(const std::string& name = "scaluq::ConcurrentStream::fence") const {
+        _fence(_space, name);
+    }
+
+    [[nodiscard]] const ExecutionSpaceType& get() const { return get<ExecutionSpaceType>(); }
+
+    template <typename SpaceType>
+    requires internal::KokkosExecutionSpace<SpaceType>
+    [[nodiscard]] const SpaceType& get() const {
+        const auto* space = std::any_cast<SpaceType>(&_space);
+        if (space == nullptr) {
+            throw std::runtime_error(
+                "Error: ConcurrentStream::get requested execution space does not match the "
+                "contained space type.");
+        }
+        return *space;
+    }
+
+private:
+    template <typename SpaceType>
+    requires internal::KokkosExecutionSpace<SpaceType>
+    static void fence_impl(const std::any& any_space, const std::string& name) {
+        std::any_cast<const SpaceType&>(any_space).fence(name);
+    }
+
+    std::any _space;
+    FenceFn _fence = nullptr;
+};
+
 }  // namespace scaluq
 
 namespace nlohmann {

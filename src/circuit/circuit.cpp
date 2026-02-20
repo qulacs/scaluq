@@ -392,8 +392,7 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
                 if (j >= probs.size()) {
                     throw std::runtime_error(
                         "Circuit::simulate_noise: discrete_distribution returned out of "
-                        "range "
-                        "index.");
+                        "range index.");
                 }
                 if (gate_used_count[i][j] == 0) {
                     ++new_size;

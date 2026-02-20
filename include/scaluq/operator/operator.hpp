@@ -3,6 +3,7 @@
 #include <random>
 #include <vector>
 
+#include "../kokkos.hpp"
 #include "../types.hpp"
 #include "../util/random.hpp"
 #include "pauli_operator.hpp"
@@ -23,11 +24,19 @@ public:
 
     Operator() = default;
     explicit Operator(std::uint64_t n_terms) : _terms("terms", n_terms) {}
+    explicit Operator(const ConcurrentStream& stream)
+        : _space(stream.get<ExecutionSpaceType>()) {}
+    Operator(const ConcurrentStream& stream, std::uint64_t n_terms)
+        : _space(stream.get<ExecutionSpaceType>()), _terms("terms", n_terms) {}
     explicit Operator(std::vector<PauliOperator<Prec>> terms);
+    Operator(const ConcurrentStream& stream, std::vector<PauliOperator<Prec>> terms);
 
     [[nodiscard]] Operator copy() const;
+    [[nodiscard]] Operator copy(const ConcurrentStream& stream) const;
     void load(const std::vector<PauliOperator<Prec>>& terms);
+    void load(const std::vector<PauliOperator<Prec>>& terms, const ConcurrentStream& stream);
     static Operator uninitialized_operator(std::uint64_t n_terms);
+    static Operator uninitialized_operator(const ConcurrentStream& stream, std::uint64_t n_terms);
 
     [[nodiscard]] inline bool is_hermitian() const { return _is_hermitian; }
     [[nodiscard]] inline std::vector<PauliOperator<Prec>> get_terms() const {
@@ -36,9 +45,16 @@ public:
     [[nodiscard]] std::string to_string() const;
     [[nodiscard]] std::uint64_t n_terms() const { return _terms.extent(0); }
 
+    [[nodiscard]] const ExecutionSpaceType& execution_space() const { return _space; }
+    [[nodiscard]] ConcurrentStream concurrent_stream() const { return ConcurrentStream(_space); }
+    void set_concurrent_stream(const ConcurrentStream& stream) {
+        _space = stream.get<ExecutionSpaceType>();
+    }
+
     void optimize();
 
     [[nodiscard]] Operator get_dagger() const;
+    [[nodiscard]] Operator get_dagger(const ConcurrentStream& stream) const;
 
     [[nodiscard]] ComplexMatrix get_full_matrix(std::uint64_t n_qubits) const;
 
@@ -108,6 +124,7 @@ public:
 
     StdComplex calculate_default_mu() const;
 
+    ExecutionSpaceType _space{};
     Kokkos::View<PauliOperator<Prec>*, ExecutionSpaceType> _terms;
     bool _is_hermitian = true;
 };
@@ -138,23 +155,79 @@ void bind_operator_operator_hpp(nb::module_& m) {
             .desc("Structure to hold the ground state information.")
             .build_as_google_style()
             .c_str());
-    op.def(nb::init<std::uint64_t>(),
-           "n_terms"_a,
-           "Initialize operator with specified number of terms.")
+    op.def(nb::init<>(), "Initialize operator with default execution space.")
+        .def(nb::init<const ConcurrentStream&>(),
+             "stream"_a,
+             "Initialize operator with specified execution space.")
+        .def(nb::init<std::uint64_t>(),
+             "n_terms"_a,
+             "Initialize operator with specified number of terms.")
+        .def(nb::init<const ConcurrentStream&, std::uint64_t>(),
+             "stream"_a,
+             "n_terms"_a,
+             "Initialize operator with specified execution space and number of terms.")
         .def(nb::init<std::vector<PauliOperator<Prec>>>(),
              "terms"_a,
              "Initialize operator with given list of terms.")
+        .def(nb::init<const ConcurrentStream&, std::vector<PauliOperator<Prec>>>(),
+             "stream"_a,
+             "terms"_a,
+             "Initialize operator with specified execution space and given list of terms.")
+        .def("copy",
+             nb::overload_cast<>(&Operator<Prec, Space>::copy, nb::const_),
+             DocString().desc("Return a copy.").build_as_google_style().c_str())
+        .def("copy",
+             nb::overload_cast<const ConcurrentStream&>(&Operator<Prec, Space>::copy, nb::const_),
+             "stream"_a,
+             DocString()
+                 .desc("Return a copy using the specified execution space.")
+                 .arg("stream", "ConcurrentStream", "Execution space instance")
+                 .build_as_google_style()
+                 .c_str())
         .def("is_hermitian",
              &Operator<Prec, Space>::is_hermitian,
              "Check if the operator is Hermitian.")
+        .def("concurrent_stream",
+             &Operator<Prec, Space>::concurrent_stream,
+             DocString()
+                 .desc("Return execution space instance for subsequent operations.")
+                 .ret("ConcurrentStream", "execution space instance")
+                 .build_as_google_style()
+                 .c_str())
+        .def("set_concurrent_stream",
+             &Operator<Prec, Space>::set_concurrent_stream,
+             "stream"_a,
+             DocString()
+                 .desc("Set execution space instance for subsequent operations.")
+                 .arg("stream", "ConcurrentStream", "execution space instance")
+                 .build_as_google_style()
+                 .c_str())
         .def("load",
-             &Operator<Prec, Space>::load,
+             nb::overload_cast<const std::vector<PauliOperator<Prec>>&>(&Operator<Prec, Space>::load),
              "terms"_a,
              "Load the operator with a list of Pauli operators.")
+        .def("load",
+             nb::overload_cast<const std::vector<PauliOperator<Prec>>&, const ConcurrentStream&>(
+                 &Operator<Prec, Space>::load),
+             "terms"_a,
+             "stream"_a,
+             DocString()
+                 .desc("Load the operator with a list of Pauli operators.")
+                 .arg("terms", "A vector of Pauli operators.")
+                 .arg("stream", "ConcurrentStream", "Execution space instance")
+                 .build_as_google_style()
+                 .c_str())
         .def_static("uninitialized_operator",
-                    &Operator<Prec, Space>::uninitialized_operator,
+                    nb::overload_cast<std::uint64_t>(&Operator<Prec, Space>::uninitialized_operator),
                     "n_terms"_a,
                     "Create an uninitialized operator with a specified number of terms.")
+        .def_static("uninitialized_operator",
+                    nb::overload_cast<const ConcurrentStream&, std::uint64_t>(
+                        &Operator<Prec, Space>::uninitialized_operator),
+                    "stream"_a,
+                    "n_terms"_a,
+                    "Create an uninitialized operator with a specified execution space and number "
+                    "of terms.")
         .def("n_terms", &Operator<Prec, Space>::n_terms, "Get the number of terms in the operator.")
         .def("get_terms",
              &Operator<Prec, Space>::get_terms,
@@ -166,8 +239,17 @@ void bind_operator_operator_hpp(nb::module_& m) {
              &Operator<Prec, Space>::optimize,
              "Optimize the operator by combining like terms.")
         .def("get_dagger",
-             &Operator<Prec, Space>::get_dagger,
+             nb::overload_cast<>(&Operator<Prec, Space>::get_dagger, nb::const_),
              "Get the adjoint (Hermitian conjugate) of the operator.")
+        .def("get_dagger",
+             nb::overload_cast<const ConcurrentStream&>(&Operator<Prec, Space>::get_dagger,
+                                                        nb::const_),
+             "stream"_a,
+             DocString()
+                 .desc("Get the adjoint (Hermitian conjugate) using the specified execution space.")
+                 .arg("stream", "ConcurrentStream", "Execution space instance")
+                 .build_as_google_style()
+                 .c_str())
         .def("apply_to_state",
              &Operator<Prec, Space>::apply_to_state,
              "state"_a,

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../kokkos.hpp"
 #include "../util/utility.hpp"
 #include "gate_matrix.hpp"
 #include "gate_pauli.hpp"
