@@ -96,12 +96,9 @@ jobs:
         uses: Jimver/cuda-toolkit@v0.2.19
         with:
           cuda: "12.6.1"
-          method: "network"
-
-      - name: LS
-        if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
-        run: |
-          ls /opt/homebrew/opt/ccache/libexec/
+          method: "local"
+          linux-local-args: '["--toolkit"]'
+          log-file-suffix: '${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}'
       
       - name: Show installed Compiler version
         run: |
