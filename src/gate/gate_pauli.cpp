@@ -94,7 +94,7 @@ std::shared_ptr<const PauliGateImpl<Prec>> GetGateFromJson<PauliGateImpl<Prec>>:
         vector_to_mask(control_qubits, control_values),
         j.at("pauli").get<PauliOperator<Prec>>());
 }
-template class GetGateFromJson<PauliGateImpl<Prec>>;
+template struct GetGateFromJson<PauliGateImpl<Prec>>;
 template <>
 std::shared_ptr<const PauliRotationGateImpl<Prec>>
 GetGateFromJson<PauliRotationGateImpl<Prec>>::get(const Json& j) {
@@ -106,5 +106,5 @@ GetGateFromJson<PauliRotationGateImpl<Prec>>::get(const Json& j) {
         j.at("pauli").get<PauliOperator<Prec>>(),
         static_cast<Float<Prec>>(j.at("angle").get<double>()));
 }
-template class GetGateFromJson<PauliRotationGateImpl<Prec>>;
+template struct GetGateFromJson<PauliRotationGateImpl<Prec>>;
 }  // namespace scaluq::internal

@@ -1,13 +1,16 @@
 #pragma once
 
+#include <limits>
 #include <type_traits>
 
 #ifdef SCALUQ_USE_CUDA
 #include <cuda_bf16.h>
 #include <cuda_fp16.h>
-#else
-#include <iostream>
+#elif __has_include(<stdfloat>)
 #include <stdfloat>
+#define STDFLOAT_ENABLED 1
+#else
+#define STDFLOAT_ENABLED 0
 #endif
 
 namespace scaluq {
@@ -21,14 +24,14 @@ struct FloatTypeImpl {};
 template <typename T>
 struct IsFloatingPoint : public std::false_type {};
 #ifdef SCALUQ_FLOAT16
-#ifdef SCALUQ_USE_CUDA
+#if defined(SCALUQ_USE_CUDA)
 using F16 = __half;
+#elif STDFLOAT_ENABLED && defined(__STDCPP_FLOAT16_T__)
+using F16 = std::float16_t;
 #else
-#ifndef __STDCPP_FLOAT16_T__
-static_assert(false && "float16 is not supported")
+static_assert(false, "This compiler does not support standard F16 type.");
 #endif
-    using F16 = std::float16_t;
-#endif
+
 template <>
 struct IsFloatingPoint<F16> : public std::true_type {};
 template <>
@@ -36,15 +39,18 @@ struct FloatTypeImpl<Precision::F16> {
     using Type = F16;
 };
 #endif
+
 #ifdef SCALUQ_FLOAT32
-#ifdef SCALUQ_USE_CUDA
+#if defined(SCALUQ_USE_CUDA)
 using F32 = float;
+#elif STDFLOAT_ENABLED && defined(__STDCPP_FLOAT32_T__)
+using F32 = std::float32_t;
 #else
-#ifndef __STDCPP_FLOAT32_T__
-static_assert(false && "float32 is not supported")
+static_assert(std::numeric_limits<float>::is_iec559 && sizeof(float) == 4,
+              "standard single precision float (IEEE 754) is required");
+using F32 = float;
 #endif
-    using F32 = std::float32_t;
-#endif
+
 template <>
 struct IsFloatingPoint<F32> : public std::true_type {};
 template <>
@@ -52,15 +58,18 @@ struct FloatTypeImpl<Precision::F32> {
     using Type = F32;
 };
 #endif
+
 #ifdef SCALUQ_FLOAT64
-#ifdef SCALUQ_USE_CUDA
+#if defined(SCALUQ_USE_CUDA)
 using F64 = double;
+#elif STDFLOAT_ENABLED && defined(__STDCPP_FLOAT64_T__)
+using F64 = std::float64_t;
 #else
-#ifndef __STDCPP_FLOAT64_T__
-static_assert(false && "float64 is not supported")
+static_assert(std::numeric_limits<double>::is_iec559 && sizeof(double) == 8,
+              "standard double precision float (IEEE 754) is required");
+using F64 = double;
 #endif
-    using F64 = std::float64_t;
-#endif
+
 template <>
 struct IsFloatingPoint<F64> : public std::true_type {};
 template <>
@@ -68,15 +77,16 @@ struct FloatTypeImpl<Precision::F64> {
     using Type = F64;
 };
 #endif
+
 #ifdef SCALUQ_BFLOAT16
-#ifdef SCALUQ_USE_CUDA
+#if defined(SCALUQ_USE_CUDA)
 using BF16 = __nv_bfloat16;
+#elif STDFLOAT_ENABLED && defined(__STDCPP_BFLOAT16_T__)
+using BF16 = std::bfloat16_t;
 #else
-#ifndef __STDCPP_BFLOAT16_T__
-static_assert(false && "bfloat16 is not supported")
+static_assert(false, "This compiler does not support standard BF16 type.");
 #endif
-    using BF16 = std::bfloat16_t;
-#endif
+
 template <>
 struct IsFloatingPoint<BF16> : public std::true_type {};
 template <>
@@ -84,6 +94,7 @@ struct FloatTypeImpl<Precision::BF16> {
     using Type = BF16;
 };
 #endif
+
 template <typename T>
 constexpr bool IsFloatingPointV = IsFloatingPoint<T>::value;
 template <typename T>
