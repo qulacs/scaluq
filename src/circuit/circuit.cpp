@@ -80,7 +80,7 @@ void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
         if (!parameters.contains(key)) {
             using namespace std::string_literals;
             throw std::runtime_error(
-                "Circuit::update_quantum_state(StateVector&, const std::map<std::string_view, double>&) const: parameter named "s +
+                "Circuit::update_quantum_state(StateVector&, const std::map<std::string, double>&) const: parameter named "s +
                 std::string(key) + "is not given.");
         }
     }
