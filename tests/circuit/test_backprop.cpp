@@ -42,9 +42,9 @@ void backprop_test_parametric_rc() {
     std::vector<double> gate_coefs;
     std::vector<std::uint64_t> gate_targets;
     for (auto idx = std::size_t{0}; idx < n; idx++) {
-        int idx_first = 3 * idx;
-        int idx_second = 3 * idx + 1;
-        int idx_third = 3 * idx + 2;
+        const std::size_t idx_first = 3 * idx;
+        const std::size_t idx_second = 3 * idx + 1;
+        const std::size_t idx_third = 3 * idx + 2;
 
         parameters[std::to_string(idx_first)] = dist_param(engine);
         parameters[std::to_string(idx_second)] = dist_param(engine);
