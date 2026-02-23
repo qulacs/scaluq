@@ -250,8 +250,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
             0, state_vector.dim() >> (std::popcount(control_mask) + 1)),
         KOKKOS_LAMBDA(std::uint64_t i) {
             std::uint64_t basis_0 =
-                internal::insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
-                control_value_mask;
+                insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) | control_value_mask;
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
 
             int bit_parity_0 = Kokkos::popcount(basis_0 & phase_flip_mask) & 1;
@@ -309,8 +308,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
             {0, 0}, {states.batch_size(), states.dim() >> (std::popcount(control_mask) + 1)}),
         KOKKOS_LAMBDA(const std::uint64_t batch_id, const std::uint64_t i) {
             std::uint64_t basis_0 =
-                internal::insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
-                control_value_mask;
+                insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) | control_value_mask;
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
 
             int bit_parity_0 = Kokkos::popcount(basis_0 & phase_flip_mask) & 1;
@@ -372,9 +370,9 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                     Kokkos::TeamThreadRange(team,
                                             states.dim() >> (std::popcount(control_mask) + 1)),
                     [&](const std::uint64_t i) {
-                        std::uint64_t basis_0 = internal::insert_zero_at_mask_positions(
-                                                    i, control_mask | 1ULL << pivot) |
-                                                control_value_mask;
+                        std::uint64_t basis_0 =
+                            insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
+                            control_value_mask;
                         std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
                         int bit_parity_0 = Kokkos::popcount(basis_0 & phase_flip_mask) & 1;
                         int bit_parity_1 = Kokkos::popcount(basis_1 & phase_flip_mask) & 1;
