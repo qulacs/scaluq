@@ -24,6 +24,8 @@ https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
 - CUDA 12.6 以上（CUDA利用時のみ）
 - Python 3.10 以上 (Python利用時のみ)
 
+CUDA を利用する場合は、使用する CUDA がサポートするホストコンパイラのバージョンを使用してください（CUDA Installation Guide の Host Compiler Support Policy を参照）。
+
 ※これより低いバージョンでも動作する可能性はありますが確認していません
 
 ## 実行時要件

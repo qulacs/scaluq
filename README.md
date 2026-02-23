@@ -33,6 +33,8 @@ See https://scaluq.readthedocs.io/en/latest/index.html
 - CUDA ≥ 12.6 (only when using CUDA)
 - Python ≥ 3.10 (only when using Python)
 
+When using CUDA, use a host compiler version supported by your CUDA toolkit (see the CUDA Installation Guide Host Compiler Support Policy).
+
 Note: It may work with lower versions, but this has not been verified.
 
 ## Runtime Requirements
