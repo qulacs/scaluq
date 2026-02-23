@@ -103,7 +103,7 @@ TYPED_TEST(OperatorBatchedTest, ViewOperatorAtSharesStorage) {
         std::vector<std::vector<PauliOperator<Prec>>>{{PauliOperator<Prec>("X 0", 1.)},
                                                       {PauliOperator<Prec>("Z 0", 2.)}});
 
-    auto view = op_batched.view_operator_at(op_batched.concurrent_stream(), 0);
+    auto view = op_batched.view_operator_at(0);
     view *= StdComplex(3., 0.);
 
     auto copied = op_batched.get_operator_at(0);
@@ -120,10 +120,10 @@ TYPED_TEST(OperatorBatchedTest, CopyOperatorAtDoesNotAliasStorage) {
         std::vector<std::vector<PauliOperator<Prec>>>{{PauliOperator<Prec>("X 0", 1.)},
                                                       {PauliOperator<Prec>("Z 0", 2.)}});
 
-    auto copied = op_batched.get_operator_at(op_batched.concurrent_stream(), 1);
+    auto copied = op_batched.get_operator_at(1);
     copied *= StdComplex(5., 0.);
 
-    auto original = op_batched.get_operator_at(op_batched.concurrent_stream(), 1);
+    auto original = op_batched.get_operator_at(1);
     auto terms = original.get_terms();
     ASSERT_EQ(terms.size(), 1);
     ASSERT_NEAR(terms[0].coef().real(), 2., eps<Prec>);

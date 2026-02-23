@@ -88,12 +88,11 @@ TYPED_TEST(StateVectorBatchedTest, ViewStateVectorAtSharesStorage) {
     StateVectorBatched<Prec, Space> states(batch_size, n_qubits);
     states.set_zero_norm_state();
 
-    auto stream = states.concurrent_stream();
-    auto view = states.view_state_vector_at(stream, 1);
+    auto view = states.view_state_vector_at(1);
     const StdComplex changed(0.25, -0.5);
     view.set_amplitude_at(3, changed);
 
-    auto copied_from_batched = states.get_state_vector_at(stream, 1);
+    auto copied_from_batched = states.get_state_vector_at(1);
     auto got = copied_from_batched.get_amplitude_at(3);
     ASSERT_NEAR(got.real(), changed.real(), eps<Prec>);
     ASSERT_NEAR(got.imag(), changed.imag(), eps<Prec>);
@@ -111,7 +110,7 @@ TYPED_TEST(StateVectorBatchedTest, CopyStateVectorAtDoesNotAliasStorage) {
     StateVectorBatched<Prec, Space> states(batch_size, n_qubits);
     states.set_zero_norm_state();
 
-    auto copied = states.get_state_vector_at(states.concurrent_stream(), 1);
+    auto copied = states.get_state_vector_at(1);
     const StdComplex changed(0.75, 0.125);
     copied.set_amplitude_at(2, changed);
 
@@ -129,11 +128,7 @@ TYPED_TEST(StateVectorBatchedTest, BatchIdBoundsCheck) {
     StateVector<Prec, Space> state(n_qubits);
 
     EXPECT_THROW((void)states.view_state_vector_at(batch_size), std::runtime_error);
-    EXPECT_THROW((void)states.view_state_vector_at(states.concurrent_stream(), batch_size),
-                 std::runtime_error);
     EXPECT_THROW((void)states.get_state_vector_at(batch_size), std::runtime_error);
-    EXPECT_THROW((void)states.get_state_vector_at(states.concurrent_stream(), batch_size),
-                 std::runtime_error);
     EXPECT_THROW(states.set_state_vector_at(batch_size, state), std::runtime_error);
 }
 

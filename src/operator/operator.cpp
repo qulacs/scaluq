@@ -1,5 +1,4 @@
 #include <Eigen/Eigenvalues>
-#include <scaluq/kokkos.hpp>
 #include <scaluq/operator/operator.hpp>
 #include <scaluq/prec_space.hpp>
 #include <scaluq/util/math.hpp>
@@ -8,9 +7,8 @@ namespace scaluq {
 template <>
 Operator<internal::Prec, internal::Space>::Operator(
     std::vector<PauliOperator<internal::Prec>> terms)
-    : _terms(Kokkos::ViewAllocateWithoutInitializing("terms"), terms.size()) {
-    auto host_view = internal::wrapped_host_view(terms);
-    Kokkos::deep_copy(_space, _terms, host_view);
+    : _terms(internal::convert_vector_to_view<PauliOperator<internal::Prec>, internal::Space>(
+          terms, "terms")) {
     for (auto& term : terms) {
         if (term.coef().imag() != 0) {
             _is_hermitian = false;
@@ -20,18 +18,12 @@ Operator<internal::Prec, internal::Space>::Operator(
 }
 
 template <>
-Operator<internal::Prec, internal::Space>::Operator(
-    const ConcurrentStream& stream, std::vector<PauliOperator<internal::Prec>> terms)
-    : _space(stream.get<ExecutionSpaceType>()),
-      _terms(Kokkos::ViewAllocateWithoutInitializing("terms"), terms.size()) {
-    auto host_view = internal::wrapped_host_view(terms);
-    Kokkos::deep_copy(_space, _terms, host_view);
-    for (auto& term : terms) {
-        if (term.coef().imag() != 0) {
-            _is_hermitian = false;
-            break;
-        }
-    }
+Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Space>::copy() const {
+    Operator<internal::Prec, internal::Space> copy_operator(_terms.size());
+    Kokkos::deep_copy(copy_operator._terms, _terms);
+    copy_operator._is_hermitian = _is_hermitian;
+    copy_operator._is_view = false;
+    return copy_operator;
 }
 
 template <>
@@ -41,28 +33,6 @@ void Operator<internal::Prec, internal::Space>::throw_if_view_for_resize_inplace
         throw std::runtime_error(std::string("Operator::") + method_name +
                                  ": this operation is not allowed for a view operator.");
     }
-}
-
-
-template <>
-Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Space>::copy() const {
-    Operator<internal::Prec, internal::Space> copy_operator(_terms.size());
-    copy_operator._space = _space;
-    Kokkos::deep_copy(_space, copy_operator._terms, _terms);
-    copy_operator._is_hermitian = _is_hermitian;
-    copy_operator._is_view = false;
-    return copy_operator;
-}
-
-template <>
-Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Space>::copy(
-    const ConcurrentStream& stream) const {
-    Operator<internal::Prec, internal::Space> copy_operator(_terms.size());
-    copy_operator._space = stream.get<ExecutionSpaceType>();
-    Kokkos::deep_copy(stream.get<ExecutionSpaceType>(), copy_operator._terms, _terms);
-    copy_operator._is_hermitian = _is_hermitian;
-    copy_operator._is_view = false;
-    return copy_operator;
 }
 
 template <>
@@ -83,7 +53,7 @@ void Operator<internal::Prec, internal::Space>::load(
             "Operator::load: size of terms does not match the current operator size.");
     }
     auto host_view = internal::wrapped_host_view(terms);
-    Kokkos::deep_copy(_space, _terms, host_view);
+    Kokkos::deep_copy(_terms, host_view);
     _is_hermitian = true;
     for (auto& term : terms) {
         if (term.coef().imag() != 0) {
@@ -94,14 +64,6 @@ void Operator<internal::Prec, internal::Space>::load(
 }
 
 template <>
-void Operator<internal::Prec, internal::Space>::load(
-    const std::vector<PauliOperator<internal::Prec>>& terms, const ConcurrentStream& stream) {
-    _space = stream.get<ExecutionSpaceType>();
-    load(terms);
-}
-
-
-template <>
 Operator<internal::Prec, internal::Space>
 Operator<internal::Prec, internal::Space>::uninitialized_operator(std::uint64_t n_terms) {
     Operator<internal::Prec, internal::Space> tmp;
@@ -109,18 +71,6 @@ Operator<internal::Prec, internal::Space>::uninitialized_operator(std::uint64_t 
         Kokkos::ViewAllocateWithoutInitializing("terms"), n_terms);
     return tmp;
 }
-
-template <>
-Operator<internal::Prec, internal::Space>
-Operator<internal::Prec, internal::Space>::uninitialized_operator(const ConcurrentStream& stream,
-                                                                  std::uint64_t n_terms) {
-    Operator<internal::Prec, internal::Space> tmp;
-    tmp._space = stream.get<ExecutionSpaceType>();
-    tmp._terms = Kokkos::View<PauliOperator<internal::Prec>*, ExecutionSpaceType>(
-        Kokkos::ViewAllocateWithoutInitializing("terms"), n_terms);
-    return tmp;
-}
-
 
 template <>
 void Operator<internal::Prec, internal::Space>::optimize() {
@@ -144,23 +94,9 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
     const {
     auto copy_operator =
         Operator<internal::Prec, internal::Space>::uninitialized_operator(_terms.size());
-    copy_operator._space = _space;
     Kokkos::parallel_for(
         "get_dagger",
-        Kokkos::RangePolicy<ExecutionSpaceType>(_space, 0, _terms.size()),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { copy_operator._terms(i) = _terms(i).get_dagger(); });
-    return copy_operator;
-}
-
-template <>
-Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Space>::get_dagger(
-    const ConcurrentStream& stream) const {
-    auto copy_operator =
-        Operator<internal::Prec, internal::Space>::uninitialized_operator(_terms.size());
-    copy_operator._space = stream.get<ExecutionSpaceType>();
-    Kokkos::parallel_for(
-        "get_dagger",
-        Kokkos::RangePolicy<ExecutionSpaceType>(stream.get<ExecutionSpaceType>(), 0, _terms.size()),
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, _terms.size()),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { copy_operator._terms(i) = _terms(i).get_dagger(); });
     return copy_operator;
 }
@@ -184,7 +120,7 @@ template <>
 void Operator<internal::Prec, internal::Space>::apply_to_state(
     StateVector<internal::Prec, internal::Space>& state_vector) const {
     auto states = StateVectorBatched<internal::Prec, internal::Space>::uninitialized_state(
-        state_vector.concurrent_stream(), _terms.size(), state_vector.n_qubits());
+        _terms.size(), state_vector.n_qubits());
     states.set_state_vector(state_vector);
     internal::apply_pauli<internal::Prec, internal::Space>(0, 0, _terms, states);
     state_vector = states.get_reduced_state();
@@ -199,7 +135,7 @@ StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
     Kokkos::parallel_reduce(
         "get_expectation_value",
         Kokkos::MDRangePolicy<internal::SpaceType<internal::Space>, Kokkos::Rank<2>>(
-            state_vector.execution_space(), {0, 0}, {nterms, dim >> 1}),
+            {0, 0}, {nterms, dim >> 1}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t term_id, std::uint64_t state_idx, ComplexType & res_lcl) {
             auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
             auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
@@ -246,7 +182,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
     Kokkos::parallel_for(
         "get_expectation_value",
         Kokkos::TeamPolicy<internal::SpaceType<internal::Space>>(
-            states.execution_space(), states.batch_size(), Kokkos::AUTO),
+            internal::SpaceType<internal::Space>(), states.batch_size(), Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const typename Kokkos::TeamPolicy<internal::SpaceType<internal::Space>>::member_type&
                 team) {
@@ -313,7 +249,7 @@ StdComplex Operator<internal::Prec, internal::Space>::get_transition_amplitude(
     Kokkos::parallel_reduce(
         "get_transition_amplitude",
         Kokkos::MDRangePolicy<internal::SpaceType<internal::Space>, Kokkos::Rank<2>>(
-            state_vector_bra.execution_space(), {0, 0}, {nterms, dim >> 1}),
+            {0, 0}, {nterms, dim >> 1}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t term_id, std::uint64_t state_idx, ComplexType & res_lcl) {
             auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
             auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
@@ -370,7 +306,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transitio
     Kokkos::parallel_for(
         "get_transition_amplitude",
         Kokkos::TeamPolicy<internal::SpaceType<internal::Space>>(
-            states_bra.execution_space(), states_bra.batch_size(), Kokkos::AUTO),
+            internal::SpaceType<internal::Space>(), states_bra.batch_size(), Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const typename Kokkos::TeamPolicy<internal::SpaceType<internal::Space>>::member_type&
                 team) {
@@ -426,22 +362,9 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transitio
 template <>
 Operator<internal::Prec, ExecutionSpace::Default>
 Operator<internal::Prec, internal::Space>::to_default_space() const {
-    const ConcurrentStream stream{internal::SpaceType<ExecutionSpace::Default>()};
     auto op =
-        Operator<internal::Prec, ExecutionSpace::Default>::uninitialized_operator(stream,
-                                                                                   _terms.extent(0));
-    Kokkos::deep_copy(stream.get<internal::SpaceType<ExecutionSpace::Default>>(), op._terms, _terms);
-    op._is_hermitian = _is_hermitian;
-    return op;
-}
-
-template <>
-Operator<internal::Prec, ExecutionSpace::Default>
-Operator<internal::Prec, internal::Space>::to_default_space(const ConcurrentStream& stream) const {
-    auto op =
-        Operator<internal::Prec, ExecutionSpace::Default>::uninitialized_operator(stream,
-                                                                                   _terms.extent(0));
-    Kokkos::deep_copy(stream.get<internal::SpaceType<ExecutionSpace::Default>>(), op._terms, _terms);
+        Operator<internal::Prec, ExecutionSpace::Default>::uninitialized_operator(_terms.extent(0));
+    // Kokkos::deep_copy(op._terms, _terms);
     op._is_hermitian = _is_hermitian;
     return op;
 }
@@ -449,20 +372,9 @@ Operator<internal::Prec, internal::Space>::to_default_space(const ConcurrentStre
 template <>
 Operator<internal::Prec, ExecutionSpace::Host>
 Operator<internal::Prec, internal::Space>::to_host_space() const {
-    const ConcurrentStream stream{internal::SpaceType<ExecutionSpace::Host>()};
-    auto op = Operator<internal::Prec, ExecutionSpace::Host>::uninitialized_operator(
-        stream, _terms.extent(0));
-    Kokkos::deep_copy(stream.get<internal::SpaceType<ExecutionSpace::Host>>(), op._terms, _terms);
-    op._is_hermitian = _is_hermitian;
-    return op;
-}
-
-template <>
-Operator<internal::Prec, ExecutionSpace::Host>
-Operator<internal::Prec, internal::Space>::to_host_space(const ConcurrentStream& stream) const {
-    auto op = Operator<internal::Prec, ExecutionSpace::Host>::uninitialized_operator(
-        stream, _terms.extent(0));
-    Kokkos::deep_copy(stream.get<internal::SpaceType<ExecutionSpace::Host>>(), op._terms, _terms);
+    auto op =
+        Operator<internal::Prec, ExecutionSpace::Host>::uninitialized_operator(_terms.extent(0));
+    Kokkos::deep_copy(op._terms, this->_terms);
     op._is_hermitian = _is_hermitian;
     return op;
 }
@@ -473,11 +385,12 @@ StdComplex Operator<internal::Prec, internal::Space>::calculate_default_mu() con
     std::uint64_t nterms = _terms.size();
     Kokkos::parallel_reduce(
         "calculate_default_mu",
-        Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(_space, 0, nterms),
+        Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(0, nterms),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & res_lcl) {
             res_lcl += internal::abs(_terms(i)._coef.real());
         },
         mu);
+    Kokkos::fence();
     return StdComplex(static_cast<double>(mu));
 }
 
@@ -495,8 +408,7 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_power_method(
     std::uint64_t nqubits = initial_state.n_qubits();
     StdComplex mu_realized = mu.value_or(calculate_default_mu());
     auto state = initial_state.copy();
-    auto tmp_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(
-        initial_state.concurrent_stream(), nqubits);
+    auto tmp_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(nqubits);
     for (std::uint64_t i = 0; i < iter_count; i++) {
         // |state> <- (A-mu I)|state>
         tmp_state.load(state);
@@ -532,7 +444,7 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
         // make |state> orthogonal to others
         for (std::uint64_t j = 0; j <= i; j++) {
             auto coef = internal::inner_product<internal::Prec, internal::Space>(
-                state.concurrent_stream(), krylov_space_basis[j]._raw, state._raw);
+                krylov_space_basis[j]._raw, state._raw);
             hessenberg_matrix(j, i) = static_cast<StdComplex>(coef);
             state.add_state_vector_with_coef(-coef, krylov_space_basis[j]);
         }
@@ -562,8 +474,7 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
             eigenvalues,
             [](const StdComplex& a, const StdComplex& b) { return a.real() < b.real(); }) -
         eigenvalues.begin();
-    auto ground_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(
-        initial_state.concurrent_stream(), nqubits);
+    auto ground_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(nqubits);
     ground_state.set_zero_norm_state();
     for (std::uint64_t i = 0; i < iter_count; i++) {
         ground_state.add_state_vector_with_coef(eigenvectors(i, minimum_eigenvalue_index),
@@ -578,7 +489,7 @@ Operator<internal::Prec, internal::Space>& Operator<internal::Prec, internal::Sp
     StdComplex coef) {
     Kokkos::parallel_for(
         "operator*=",
-        Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(_space, 0, _terms.size()),
+        Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(0, _terms.size()),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _terms(i)._coef *= coef; });
     _is_hermitian &= (coef.imag() == 0);
     return *this;
@@ -595,12 +506,11 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
     const Operator<internal::Prec, internal::Space>& target) const {
     auto ret = Operator<internal::Prec, internal::Space>::uninitialized_operator(
         _terms.size() * target._terms.size());
-    ret._space = _space;
     std::uint64_t nnz_count = 0;
     Kokkos::parallel_reduce(
         "operator*",
         Kokkos::MDRangePolicy<internal::SpaceType<internal::Space>, Kokkos::Rank<2>>(
-            _space, {0, 0}, {_terms.size(), target._terms.size()}),
+            {0, 0}, {_terms.size(), target._terms.size()}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j, std::uint64_t & nnz_lcl) {
             ret._terms(i * target._terms.size() + j) = _terms(i) * target._terms(j);
             if (static_cast<double>(ret._terms(i * target._terms.size() + j)._coef.imag()) == 0.)
@@ -616,7 +526,7 @@ Operator<internal::Prec, internal::Space>& Operator<internal::Prec, internal::Sp
     const PauliOperator<internal::Prec>& target) {
     Kokkos::parallel_for(
         "operator*=",
-        Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(_space, 0, _terms.size()),
+        Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(0, _terms.size()),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _terms(i) *= target; });
     _is_hermitian &= (target.coef().imag() == 0);
     return *this;
@@ -633,11 +543,10 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
     const Operator<internal::Prec, internal::Space>& target) const {
     auto ret = Operator<internal::Prec, internal::Space>::uninitialized_operator(
         _terms.size() + target._terms.size());
-    ret._space = _space;
     Kokkos::parallel_for(
         "operator+",
         Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(
-            _space, 0, _terms.size() + target._terms.size()),
+            0, _terms.size() + target._terms.size()),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) {
             if (i < _terms.size()) {
                 ret._terms(i) = _terms(i);
@@ -653,10 +562,9 @@ template <>
 Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Space>::operator+(
     const PauliOperator<internal::Prec>& target) const {
     auto ret = Operator<internal::Prec, internal::Space>::uninitialized_operator(_terms.size() + 1);
-    ret._space = _space;
     Kokkos::parallel_for(
         "operator+",
-        Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(_space, 0, _terms.size() + 1),
+        Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(0, _terms.size() + 1),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) {
             if (i < _terms.size()) {
                 ret._terms(i) = _terms(i);
