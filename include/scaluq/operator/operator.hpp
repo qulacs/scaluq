@@ -30,7 +30,6 @@ public:
     static Operator uninitialized_operator(std::uint64_t n_terms);
 
     [[nodiscard]] inline bool is_hermitian() const { return _is_hermitian; }
-    [[nodiscard]] inline bool is_view() const { return _is_view; }
     [[nodiscard]] inline std::vector<PauliOperator<Prec>> get_terms() const {
         return internal::convert_view_to_vector<PauliOperator<Prec>, Space>(_terms);
     }
