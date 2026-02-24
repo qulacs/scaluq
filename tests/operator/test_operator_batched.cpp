@@ -139,6 +139,30 @@ TYPED_TEST(OperatorBatchedTest, ViewOperatorAtForbidsOptimize) {
     EXPECT_THROW(view.optimize(), std::runtime_error);
 }
 
+TYPED_TEST(OperatorBatchedTest, OperatorAtLastIndexIsValid) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    const std::uint64_t batch_size = 2;
+    OperatorBatched<Prec, Space> op_batched(
+        std::vector<std::vector<PauliOperator<Prec>>>{{PauliOperator<Prec>("X 0", 1.)},
+                                                      {PauliOperator<Prec>("Z 0", 2.)}});
+
+    EXPECT_NO_THROW((void)op_batched.view_operator_at(batch_size - 1));
+    EXPECT_NO_THROW((void)op_batched.get_operator_at(batch_size - 1));
+}
+
+TYPED_TEST(OperatorBatchedTest, OperatorAtBoundsCheck) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    const std::uint64_t batch_size = 2;
+    OperatorBatched<Prec, Space> op_batched(
+        std::vector<std::vector<PauliOperator<Prec>>>{{PauliOperator<Prec>("X 0", 1.)},
+                                                      {PauliOperator<Prec>("Z 0", 2.)}});
+
+    EXPECT_THROW((void)op_batched.view_operator_at(batch_size), std::out_of_range);
+    EXPECT_THROW((void)op_batched.get_operator_at(batch_size), std::out_of_range);
+}
+
 TYPED_TEST(OperatorBatchedTest, Apply) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;

@@ -127,6 +127,10 @@ TYPED_TEST(StateVectorBatchedTest, BatchIdBoundsCheck) {
     StateVectorBatched<Prec, Space> states(batch_size, n_qubits);
     StateVector<Prec, Space> state(n_qubits);
 
+    EXPECT_NO_THROW((void)states.view_state_vector_at(batch_size - 1));
+    EXPECT_NO_THROW((void)states.get_state_vector_at(batch_size - 1));
+    EXPECT_NO_THROW(states.set_state_vector_at(batch_size - 1, state));
+
     EXPECT_THROW((void)states.view_state_vector_at(batch_size), std::runtime_error);
     EXPECT_THROW((void)states.get_state_vector_at(batch_size), std::runtime_error);
     EXPECT_THROW(states.set_state_vector_at(batch_size, state), std::runtime_error);
