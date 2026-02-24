@@ -27,15 +27,6 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
 }
 
 template <>
-void Operator<internal::Prec, internal::Space>::throw_if_view_for_resize_inplace(
-    const char* method_name) const {
-    if (_is_view) [[unlikely]] {
-        throw std::runtime_error(std::string("Operator::") + method_name +
-                                 ": this operation is not allowed for a view operator.");
-    }
-}
-
-template <>
 std::string Operator<internal::Prec, internal::Space>::to_string() const {
     std::stringstream ss;
     auto vec = get_terms();
@@ -74,7 +65,10 @@ Operator<internal::Prec, internal::Space>::uninitialized_operator(std::uint64_t 
 
 template <>
 void Operator<internal::Prec, internal::Space>::optimize() {
-    throw_if_view_for_resize_inplace("optimize");
+    if (_is_view) [[unlikely]] {
+        throw std::runtime_error(
+            "Operator::optimize: this operation is not allowed for a view operator.");
+    }
     // TODO: use Kokkos::UnorderedMap
     std::map<std::tuple<std::uint64_t, std::uint64_t>, ComplexType> pauli_and_coef;
     auto terms_h = get_terms();

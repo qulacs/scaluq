@@ -109,9 +109,6 @@ public:
 
     StdComplex calculate_default_mu() const;
 
-private:
-    void throw_if_view_for_resize_inplace(const char* method_name) const;
-
 public:
     Kokkos::View<PauliOperator<Prec>*, ExecutionSpaceType> _terms;
     bool _is_hermitian = true;
