@@ -7,7 +7,6 @@
 
 #include "../test_environment.hpp"
 #include "../util/util.hpp"
-
 using namespace scaluq;
 
 template <typename T>
