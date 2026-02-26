@@ -3,10 +3,31 @@
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
+namespace {
+template <Precision Prec>
+void flatten_probabilistic_gate(double prob_prefix,
+                                const Gate<Prec>& gate,
+                                std::vector<double>& flattened_distribution,
+                                std::vector<Gate<Prec>>& flattened_gate_list) {
+    if (gate.gate_type() != GateType::Probabilistic) {
+        flattened_distribution.push_back(prob_prefix);
+        flattened_gate_list.push_back(gate);
+        return;
+    }
+    auto probabilistic_gate = ProbabilisticGate<Prec>(gate);
+    const auto& distribution = probabilistic_gate->distribution();
+    const auto& gate_list = probabilistic_gate->gate_list();
+    for (std::size_t i = 0; i < distribution.size(); ++i) {
+        flatten_probabilistic_gate(
+            prob_prefix * distribution[i], gate_list[i], flattened_distribution, flattened_gate_list);
+    }
+}
+}  // namespace
+
 template <Precision Prec>
 ProbabilisticGateImpl<Prec>::ProbabilisticGateImpl(const std::vector<double>& distribution,
                                                    const std::vector<Gate<Prec>>& gate_list)
-    : GateBase<Prec>(0, 0, 0), _distribution(distribution), _gate_list(gate_list) {
+    : GateBase<Prec>(0, 0, 0) {
     std::uint64_t n = distribution.size();
     if (n == 0) {
         throw std::runtime_error("At least one gate is required.");
@@ -14,9 +35,18 @@ ProbabilisticGateImpl<Prec>::ProbabilisticGateImpl(const std::vector<double>& di
     if (n != gate_list.size()) {
         throw std::runtime_error("distribution and gate_list have different size.");
     }
-    _cumulative_distribution.resize(n + 1);
+
+    _distribution.clear();
+    _gate_list.clear();
+    _distribution.reserve(n);
+    _gate_list.reserve(n);
+    for (std::size_t i = 0; i < n; ++i) {
+        flatten_probabilistic_gate(distribution[i], gate_list[i], _distribution, _gate_list);
+    }
+
+    _cumulative_distribution.resize(_distribution.size() + 1);
     std::partial_sum(
-        distribution.begin(), distribution.end(), _cumulative_distribution.begin() + 1);
+        _distribution.begin(), _distribution.end(), _cumulative_distribution.begin() + 1);
     if (std::abs(_cumulative_distribution.back() - 1.) > 1e-6) {
         throw std::runtime_error("Sum of distribution must be equal to 1.");
     }

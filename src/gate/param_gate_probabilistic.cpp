@@ -3,11 +3,56 @@
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
+namespace {
+template <Precision Prec>
+using EitherGate = std::variant<Gate<Prec>, ParamGate<Prec>>;
+
+template <Precision Prec>
+void flatten_param_probabilistic_gate(double prob_prefix,
+                                      const EitherGate<Prec>& gate,
+                                      std::vector<double>& flattened_distribution,
+                                      std::vector<EitherGate<Prec>>& flattened_gate_list) {
+    if (gate.index() == 0) {
+        const auto& gate_non_param = std::get<0>(gate);
+        if (gate_non_param.gate_type() == GateType::Probabilistic) {
+            auto probabilistic_gate = ProbabilisticGate<Prec>(gate_non_param);
+            const auto& distribution = probabilistic_gate->distribution();
+            const auto& gate_list = probabilistic_gate->gate_list();
+            for (std::size_t i = 0; i < distribution.size(); ++i) {
+                flatten_param_probabilistic_gate(
+                    prob_prefix * distribution[i],
+                    EitherGate<Prec>{gate_list[i]},
+                    flattened_distribution,
+                    flattened_gate_list);
+            }
+            return;
+        }
+    } else {
+        const auto& gate_param = std::get<1>(gate);
+        if (gate_param.param_gate_type() == ParamGateType::ParamProbabilistic) {
+            auto probabilistic_gate = ParamProbabilisticGate<Prec>(gate_param);
+            const auto& distribution = probabilistic_gate->distribution();
+            const auto& gate_list = probabilistic_gate->gate_list();
+            for (std::size_t i = 0; i < distribution.size(); ++i) {
+                flatten_param_probabilistic_gate(
+                    prob_prefix * distribution[i],
+                    gate_list[i],
+                    flattened_distribution,
+                    flattened_gate_list);
+            }
+            return;
+        }
+    }
+    flattened_distribution.push_back(prob_prefix);
+    flattened_gate_list.push_back(gate);
+}
+}  // namespace
+
 template <Precision Prec>
 ParamProbabilisticGateImpl<Prec>::ParamProbabilisticGateImpl(
     const std::vector<double>& distribution,
     const std::vector<std::variant<Gate<Prec>, ParamGate<Prec>>>& gate_list)
-    : ParamGateBase<Prec>(0, 0, 0), _distribution(distribution), _gate_list(gate_list) {
+    : ParamGateBase<Prec>(0, 0, 0) {
     std::uint64_t n = distribution.size();
     if (n == 0) {
         throw std::runtime_error("At least one gate is required.");
@@ -15,9 +60,18 @@ ParamProbabilisticGateImpl<Prec>::ParamProbabilisticGateImpl(
     if (n != gate_list.size()) {
         throw std::runtime_error("distribution and gate_list have different size.");
     }
-    _cumulative_distribution.resize(n + 1);
+
+    _distribution.clear();
+    _gate_list.clear();
+    _distribution.reserve(n);
+    _gate_list.reserve(n);
+    for (std::size_t i = 0; i < n; ++i) {
+        flatten_param_probabilistic_gate(distribution[i], gate_list[i], _distribution, _gate_list);
+    }
+
+    _cumulative_distribution.resize(_distribution.size() + 1);
     std::partial_sum(
-        distribution.begin(), distribution.end(), _cumulative_distribution.begin() + 1);
+        _distribution.begin(), _distribution.end(), _cumulative_distribution.begin() + 1);
     if (std::abs(_cumulative_distribution.back() - 1.) > 1e-6) {
         throw std::runtime_error("Sum of distribution must be equal to 1.");
     }
