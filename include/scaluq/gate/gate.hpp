@@ -376,39 +376,135 @@ namespace internal {
 #define DEF_GATE_BASE(GATE_TYPE, PREC, SPACE, DESCRIPTION)                                         \
     nb::class_<GATE_TYPE<PREC, SPACE>>(m, #GATE_TYPE, DESCRIPTION)                                 \
         .def(nb::init<Gate<PREC, SPACE>>(), "Downcast from Gate.")                                 \
-        .def("gate_type", &GATE_TYPE<PREC, SPACE>::gate_type, "Get gate type as `GateType` enum.") \
+        .def("gate_type",                                                                          \
+             &GATE_TYPE<PREC, SPACE>::gate_type,                                                   \
+             std::is_same_v<GATE_TYPE<PREC, SPACE>, Gate<PREC, SPACE>>                             \
+                 ? DocString()                                                                     \
+                       .desc("Get gate type as `GateType` enum.")                                  \
+                       .ex(DocString::Code(                                                        \
+                           {">>> g = H(0)", ">>> print(g.gate_type())", "GateType.H"}))            \
+                       .build_as_google_style()                                                    \
+                       .c_str()                                                                    \
+                 : DocString()                                                                     \
+                       .desc("Get gate type as `GateType` enum.")                                  \
+                       .build_as_google_style()                                                    \
+                       .c_str())                                                                   \
         .def(                                                                                      \
             "target_qubit_list",                                                                   \
             [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->target_qubit_list(); },          \
-            "Get target qubits as `list[int]`. **Control qubits are not included.**")              \
+            std::is_same_v<GATE_TYPE<PREC, SPACE>, Gate<PREC, SPACE>>                              \
+                ? DocString()                                                                      \
+                      .desc("Get target qubits as `list[int]`. **Control qubits are not "          \
+                            "included.**")                                                         \
+                      .ex(DocString::Code(                                                         \
+                          {">>> gate = CX(0, 1)", ">>> gate.target_qubit_list()", "[1]"}))         \
+                      .build_as_google_style()                                                     \
+                      .c_str()                                                                     \
+                : DocString()                                                                      \
+                      .desc("Get target qubits as `list[int]`. **Control qubits are not "          \
+                            "included.**")                                                         \
+                      .build_as_google_style()                                                     \
+                      .c_str())                                                                    \
         .def(                                                                                      \
             "control_qubit_list",                                                                  \
             [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->control_qubit_list(); },         \
-            "Get control qubits as `list[int]`.")                                                  \
+            std::is_same_v<GATE_TYPE<PREC, SPACE>, Gate<PREC, SPACE>>                              \
+                ? DocString()                                                                      \
+                      .desc("Get control qubits as `list[int]`.")                                  \
+                      .ex(DocString::Code(                                                         \
+                          {">>> gate = CX(0, 1)", ">>> gate.control_qubit_list()", "[0]"}))        \
+                      .build_as_google_style()                                                     \
+                      .c_str()                                                                     \
+                : DocString()                                                                      \
+                      .desc("Get control qubits as `list[int]`.")                                  \
+                      .build_as_google_style()                                                     \
+                      .c_str())                                                                    \
         .def(                                                                                      \
             "control_value_list",                                                                  \
             [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->control_value_list(); },         \
-            "Get control values as `list[int]`.")                                                  \
+            std::is_same_v<GATE_TYPE<PREC, SPACE>, Gate<PREC, SPACE>>                              \
+                ? DocString()                                                                      \
+                      .desc("Get control values as `list[int]`.")                                  \
+                      .ex(DocString::Code(                                                         \
+                          {">>> gate = CX(0, 1)", ">>> gate.control_value_list()", "[1]"}))        \
+                      .build_as_google_style()                                                     \
+                      .c_str()                                                                     \
+                : DocString()                                                                      \
+                      .desc("Get control values as `list[int]`.")                                  \
+                      .build_as_google_style()                                                     \
+                      .c_str())                                                                    \
         .def(                                                                                      \
             "operand_qubit_list",                                                                  \
             [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->operand_qubit_list(); },         \
-            "Get target and control qubits as `list[int]`.")                                       \
+            std::is_same_v<GATE_TYPE<PREC, SPACE>, Gate<PREC, SPACE>>                              \
+                ? DocString()                                                                      \
+                      .desc("Get target and control qubits as `list[int]`.")                       \
+                      .ex(DocString::Code(                                                         \
+                          {">>> gate = CX(0, 1)", ">>> gate.operand_qubit_list()", "[0, 1]"}))     \
+                      .build_as_google_style()                                                     \
+                      .c_str()                                                                     \
+                : DocString()                                                                      \
+                      .desc("Get target and control qubits as `list[int]`.")                       \
+                      .build_as_google_style()                                                     \
+                      .c_str())                                                                    \
         .def(                                                                                      \
             "target_qubit_mask",                                                                   \
             [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->target_qubit_mask(); },          \
-            "Get target qubits as mask. **Control qubits are not included.**")                     \
+            std::is_same_v<GATE_TYPE<PREC, SPACE>, Gate<PREC, SPACE>>                              \
+                ? DocString()                                                                      \
+                      .desc("Get target qubits as mask. **Control qubits are not included.**")     \
+                      .ex(DocString::Code(                                                         \
+                          {">>> gate = H(0, controls=[1, 2], control_values=[1, 0])",              \
+                           ">>> print(bin(gate.target_qubit_mask()))",                             \
+                           "0b1"}))                                                                \
+                      .build_as_google_style()                                                     \
+                      .c_str()                                                                     \
+                : DocString()                                                                      \
+                      .desc("Get target qubits as mask. **Control qubits are not included.**")     \
+                      .build_as_google_style()                                                     \
+                      .c_str())                                                                    \
         .def(                                                                                      \
             "control_qubit_mask",                                                                  \
             [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->control_qubit_mask(); },         \
-            "Get control qubits as mask.")                                                         \
+            std::is_same_v<GATE_TYPE<PREC, SPACE>, Gate<PREC, SPACE>>                              \
+                ? DocString()                                                                      \
+                      .desc("Get control qubits as mask.")                                         \
+                      .ex(DocString::Code(                                                         \
+                          {">>> gate = H(0, controls=[1, 2], control_values=[1, 0])",              \
+                           ">>> print(bin(gate.control_qubit_mask()))",                            \
+                           "0b110"}))                                                              \
+                      .build_as_google_style()                                                     \
+                      .c_str()                                                                     \
+                : DocString().desc("Get control qubits as mask.").build_as_google_style().c_str()) \
         .def(                                                                                      \
             "control_value_mask",                                                                  \
             [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->control_value_mask(); },         \
-            "Get control values as mask.")                                                         \
+            std::is_same_v<GATE_TYPE<PREC, SPACE>, Gate<PREC, SPACE>>                              \
+                ? DocString()                                                                      \
+                      .desc("Get control values as mask.")                                         \
+                      .ex(DocString::Code(                                                         \
+                          {">>> gate = H(0, controls=[1, 2], control_values=[1, 0])",              \
+                           ">>> print(bin(gate.control_value_mask()))",                            \
+                           "0b10"}))                                                               \
+                      .build_as_google_style()                                                     \
+                      .c_str()                                                                     \
+                : DocString().desc("Get control values as mask.").build_as_google_style().c_str()) \
         .def(                                                                                      \
             "operand_qubit_mask",                                                                  \
             [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->operand_qubit_mask(); },         \
-            "Get target and control qubits as mask.")                                              \
+            std::is_same_v<GATE_TYPE<PREC, SPACE>, Gate<PREC, SPACE>>                              \
+                ? DocString()                                                                      \
+                      .desc("Get target and control qubits as mask.")                              \
+                      .ex(DocString::Code(                                                         \
+                          {">>> gate = H(0, controls=[1, 2], control_values=[1, 0])",              \
+                           ">>> print(bin(gate.operand_qubit_mask()))",                            \
+                           "0b111"}))                                                              \
+                      .build_as_google_style()                                                     \
+                      .c_str()                                                                     \
+                : DocString()                                                                      \
+                      .desc("Get target and control qubits as mask.")                              \
+                      .build_as_google_style()                                                     \
+                      .c_str())                                                                    \
         .def(                                                                                      \
             "get_inverse",                                                                         \
             [](const GATE_TYPE<PREC, SPACE>& gate) {                                               \
@@ -416,37 +512,145 @@ namespace internal {
                 if (!inv) nb::none();                                                              \
                 return Gate<PREC, SPACE>(inv);                                                     \
             },                                                                                     \
-            "Generate inverse gate as `Gate` type. If not exists, return None.")                   \
+            std::is_same_v<GATE_TYPE<PREC, SPACE>, Gate<PREC, SPACE>>                              \
+                ? DocString()                                                                      \
+                      .desc("Generate inverse gate as `Gate` type. If not exists, return None.")   \
+                      .ex(DocString::Code({">>> s = S(0)",                                         \
+                                           ">>> print(s.get_inverse())",                           \
+                                           "Gate Type: Sdag",                                      \
+                                           "  Target Qubits: {0}",                                 \
+                                           "  Control Qubits: {}",                                 \
+                                           "  Control Value: {}"}))                                \
+                      .build_as_google_style()                                                     \
+                      .c_str()                                                                     \
+                : DocString()                                                                      \
+                      .desc("Generate inverse gate as `Gate` type. If not exists, return None.")   \
+                      .build_as_google_style()                                                     \
+                      .c_str())                                                                    \
         .def(                                                                                      \
             "update_quantum_state",                                                                \
             [](const GATE_TYPE<PREC, SPACE>& gate, StateVector<PREC, SPACE>& state_vector) {       \
                 gate->update_quantum_state(state_vector);                                          \
             },                                                                                     \
             "state_vector"_a,                                                                      \
-            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")           \
+            std::is_same_v<GATE_TYPE<PREC, SPACE>, Gate<PREC, SPACE>>                              \
+                ? DocString()                                                                      \
+                      .desc("Apply gate to `state_vector`. `state_vector` in args is directly "    \
+                            "updated.")                                                            \
+                      .ex(DocString::Code({">>> state = StateVector(2)",                           \
+                                           ">>> state.set_computational_basis(0)",                 \
+                                           ">>> H(0).update_quantum_state(state)",                 \
+                                           ">>> print(state)",                                     \
+                                           "Qubit Count : 2",                                      \
+                                           "Dimension : 4",                                        \
+                                           "State vector : ",                                      \
+                                           "  00 : (0.707107,0)",                                  \
+                                           "  01 : (0.707107,0)",                                  \
+                                           "  10 : (0,0)",                                         \
+                                           "  11 : (0,0)"}))                                       \
+                      .build_as_google_style()                                                     \
+                      .c_str()                                                                     \
+                : DocString()                                                                      \
+                      .desc("Apply gate to `state_vector`. `state_vector` in args is directly "    \
+                            "updated.")                                                            \
+                      .build_as_google_style()                                                     \
+                      .c_str())                                                                    \
         .def(                                                                                      \
             "update_quantum_state",                                                                \
             [](const GATE_TYPE<PREC, SPACE>& gate, StateVectorBatched<PREC, SPACE>& states) {      \
                 gate->update_quantum_state(states);                                                \
             },                                                                                     \
             "states"_a,                                                                            \
-            "Apply gate to `states`. `states` in args is directly updated.")                       \
+            std::is_same_v<GATE_TYPE<PREC, SPACE>, Gate<PREC, SPACE>>                              \
+                ? DocString()                                                                      \
+                      .desc("Apply gate to `states`. `states` in args is directly updated.")       \
+                      .ex(DocString::Code({">>> states = StateVectorBatched(2, 1)",                \
+                                           ">>> states.set_computational_basis(0)",                \
+                                           ">>> H(0).update_quantum_state(states)",                \
+                                           ">>> print(states)",                                    \
+                                           "Qubit Count : 1",                                      \
+                                           "Dimension : 2",                                        \
+                                           "--------------------",                                 \
+                                           "Batch_id : 0",                                         \
+                                           "State vector : ",                                      \
+                                           "  0 : (0.707107,0)",                                   \
+                                           "  1 : (0.707107,0)",                                   \
+                                           "--------------------",                                 \
+                                           "Batch_id : 1",                                         \
+                                           "State vector : ",                                      \
+                                           "  0 : (0.707107,0)",                                   \
+                                           "  1 : (0.707107,0)",                                   \
+                                           "<BLANKLINE>"}))                                        \
+                      .build_as_google_style()                                                     \
+                      .c_str()                                                                     \
+                : DocString()                                                                      \
+                      .desc("Apply gate to `states`. `states` in args is directly updated.")       \
+                      .build_as_google_style()                                                     \
+                      .c_str())                                                                    \
         .def(                                                                                      \
             "get_matrix",                                                                          \
             [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->get_matrix(); },                 \
-            "Get matrix representation of the gate.")                                              \
+            std::is_same_v<GATE_TYPE<PREC, SPACE>, Gate<PREC, SPACE>>                              \
+                ? DocString()                                                                      \
+                      .desc("Get the matrix representation of the gate.")                          \
+                      .ex(DocString::Code(                                                         \
+                          {">>> gate = H(0, controls=[1, 2], control_values=[1, 0])",              \
+                           ">>> print(gate.get_matrix())",                                         \
+                           "[[ 0.70710678+0.j  0.70710678+0.j]",                                   \
+                           " [ 0.70710678+0.j -0.70710678+0.j]]"}))                                \
+                      .build_as_google_style()                                                     \
+                      .c_str()                                                                     \
+                : DocString()                                                                      \
+                      .desc("Get the matrix representation of the gate.")                          \
+                      .build_as_google_style()                                                     \
+                      .c_str())                                                                    \
         .def(                                                                                      \
             "to_string",                                                                           \
             [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->to_string(""); },                \
-            "Get string representation of the gate.")                                              \
+            std::is_same_v<GATE_TYPE<PREC, SPACE>, Gate<PREC, SPACE>>                              \
+                ? DocString()                                                                      \
+                      .desc("Information as `str`.")                                               \
+                      .ex(DocString::Code({">>> g = H(0)",                                         \
+                                           ">>> print(g.to_string())",                             \
+                                           "Gate Type: H  Target Qubits: {0}  Control Qubits: {} " \
+                                           " Control Value: {}"}))                                 \
+                      .build_as_google_style()                                                     \
+                      .c_str()                                                                     \
+                : DocString().desc("Information as `str`.").build_as_google_style().c_str())       \
         .def(                                                                                      \
             "__str__",                                                                             \
             [](const GATE_TYPE<PREC, SPACE>& gate) { return gate->to_string(""); },                \
-            "Get string representation of the gate.")                                              \
+            std::is_same_v<GATE_TYPE<PREC, SPACE>, Gate<PREC, SPACE>>                              \
+                ? DocString()                                                                      \
+                      .desc("Information as `str`.")                                               \
+                      .desc("Same as :meth:`.to_string()`")                                        \
+                      .ex(DocString::Code({">>> g = H(0)",                                         \
+                                           ">>> print(g.to_string())",                             \
+                                           "Gate Type: H  Target Qubits: {0}  Control Qubits: {} " \
+                                           " Control Value: {}"}))                                 \
+                      .build_as_google_style()                                                     \
+                      .c_str()                                                                     \
+                : DocString()                                                                      \
+                      .desc("Information as `str`.")                                               \
+                      .desc("Same as :meth:`.to_string()`")                                        \
+                      .build_as_google_style()                                                     \
+                      .c_str())                                                                    \
         .def(                                                                                      \
             "to_json",                                                                             \
             [](const GATE_TYPE<PREC, SPACE>& gate) { return Json(gate).dump(); },                  \
-            "Get JSON representation of the gate.")                                                \
+            std::is_same_v<GATE_TYPE<PREC, SPACE>, Gate<PREC, SPACE>>                              \
+                ? DocString()                                                                      \
+                      .desc("Get JSON representation of the gate.")                                \
+                      .ex(DocString::Code({">>> g = H(0)",                                         \
+                                           ">>> print(g.to_json())",                               \
+                                           "{\"control\":[],\"control_value\":[],\"target\":[0],"  \
+                                           "\"type\":\"H\"}"}))                                    \
+                      .build_as_google_style()                                                     \
+                      .c_str()                                                                     \
+                : DocString()                                                                      \
+                      .desc("Get JSON representation of the gate.")                                \
+                      .build_as_google_style()                                                     \
+                      .c_str())                                                                    \
         .def(                                                                                      \
             "load_json",                                                                           \
             [](GATE_TYPE<PREC, SPACE>& gate, const std::string& str) {                             \
