@@ -1,0 +1,59 @@
+name: Issue:Task
+description: Internal task in scaluq
+title: "[task] "
+labels: ["internal"]
+body:
+
+  - type: markdown
+    attributes:
+      value: (en/ja)Describe the task clearly.
+  
+  - type: dropdown
+    id: task_type
+    attributes:
+      label: Task type
+      description: Select the type of task.
+      multiple: false 
+      options:
+        - Migration from qulacs to scaluq
+        - New feature
+        - Fix
+        - CI/CD
+        - Documentation
+
+  - type: markdown
+    attributes:
+      value: "---"
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Task description
+      description: write description about task.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: "---"
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Related code (if applicable)
+      description: Paste any relevant code snippets.
+      render: c++
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: "---"
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context.
+    validations:
+      required: false

@@ -32,7 +32,7 @@ body:
       value: "---"
 
   - type: textarea
-    id: use case
+    id: use_case
     attributes:
       label: Use case
       description: Describe how this feature would be used.
