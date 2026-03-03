@@ -193,5 +193,5 @@ GetParamGateFromJson<ParamProbabilisticGateImpl<Prec>>::get(const Json& j) {
     }
     return std::make_shared<const ParamProbabilisticGateImpl<Prec>>(distribution, gate_list);
 }
-template class GetParamGateFromJson<ParamProbabilisticGateImpl<Prec>>;
+template struct GetParamGateFromJson<ParamProbabilisticGateImpl<Prec>>;
 }  // namespace scaluq::internal
