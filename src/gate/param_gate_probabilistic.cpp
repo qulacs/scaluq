@@ -10,8 +10,8 @@ using EitherGate = std::variant<Gate<Prec>, ParamGate<Prec>>;
 template <Precision Prec>
 void flatten_param_probabilistic_gate(double prob_prefix,
                                       const EitherGate<Prec>& gate,
-                                      std::vector<double>& flattened_distribution,
-                                      std::vector<EitherGate<Prec>>& flattened_gate_list) {
+                                      std::vector<double>& accumulated_distribution,
+                                      std::vector<EitherGate<Prec>>& accumulated_gate_list) {
     if (gate.index() == 0) {
         const auto& gate_non_param = std::get<0>(gate);
         if (gate_non_param.gate_type() == GateType::Probabilistic) {
@@ -19,11 +19,10 @@ void flatten_param_probabilistic_gate(double prob_prefix,
             const auto& distribution = probabilistic_gate->distribution();
             const auto& gate_list = probabilistic_gate->gate_list();
             for (std::size_t i = 0; i < distribution.size(); ++i) {
-                flatten_param_probabilistic_gate(
-                    prob_prefix * distribution[i],
-                    EitherGate<Prec>{gate_list[i]},
-                    flattened_distribution,
-                    flattened_gate_list);
+                flatten_param_probabilistic_gate(prob_prefix * distribution[i],
+                                                 EitherGate<Prec>{gate_list[i]},
+                                                 accumulated_distribution,
+                                                 accumulated_gate_list);
             }
             return;
         }
@@ -34,17 +33,16 @@ void flatten_param_probabilistic_gate(double prob_prefix,
             const auto& distribution = probabilistic_gate->distribution();
             const auto& gate_list = probabilistic_gate->gate_list();
             for (std::size_t i = 0; i < distribution.size(); ++i) {
-                flatten_param_probabilistic_gate(
-                    prob_prefix * distribution[i],
-                    gate_list[i],
-                    flattened_distribution,
-                    flattened_gate_list);
+                flatten_param_probabilistic_gate(prob_prefix * distribution[i],
+                                                 gate_list[i],
+                                                 accumulated_distribution,
+                                                 accumulated_gate_list);
             }
             return;
         }
     }
-    flattened_distribution.push_back(prob_prefix);
-    flattened_gate_list.push_back(gate);
+    accumulated_distribution.push_back(prob_prefix);
+    accumulated_gate_list.push_back(gate);
 }
 }  // namespace
 
@@ -61,10 +59,6 @@ ParamProbabilisticGateImpl<Prec>::ParamProbabilisticGateImpl(
         throw std::runtime_error("distribution and gate_list have different size.");
     }
 
-    _distribution.clear();
-    _gate_list.clear();
-    _distribution.reserve(n);
-    _gate_list.reserve(n);
     for (std::size_t i = 0; i < n; ++i) {
         flatten_param_probabilistic_gate(distribution[i], gate_list[i], _distribution, _gate_list);
     }

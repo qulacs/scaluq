@@ -7,19 +7,21 @@ namespace {
 template <Precision Prec>
 void flatten_probabilistic_gate(double prob_prefix,
                                 const Gate<Prec>& gate,
-                                std::vector<double>& flattened_distribution,
-                                std::vector<Gate<Prec>>& flattened_gate_list) {
+                                std::vector<double>& accumulated_distribution,
+                                std::vector<Gate<Prec>>& accumulated_gate_list) {
     if (gate.gate_type() != GateType::Probabilistic) {
-        flattened_distribution.push_back(prob_prefix);
-        flattened_gate_list.push_back(gate);
+        accumulated_distribution.push_back(prob_prefix);
+        accumulated_gate_list.push_back(gate);
         return;
     }
     auto probabilistic_gate = ProbabilisticGate<Prec>(gate);
     const auto& distribution = probabilistic_gate->distribution();
     const auto& gate_list = probabilistic_gate->gate_list();
     for (std::size_t i = 0; i < distribution.size(); ++i) {
-        flatten_probabilistic_gate(
-            prob_prefix * distribution[i], gate_list[i], flattened_distribution, flattened_gate_list);
+        flatten_probabilistic_gate(prob_prefix * distribution[i],
+                                   gate_list[i],
+                                   accumulated_distribution,
+                                   accumulated_gate_list);
     }
 }
 }  // namespace
@@ -36,10 +38,6 @@ ProbabilisticGateImpl<Prec>::ProbabilisticGateImpl(const std::vector<double>& di
         throw std::runtime_error("distribution and gate_list have different size.");
     }
 
-    _distribution.clear();
-    _gate_list.clear();
-    _distribution.reserve(n);
-    _gate_list.reserve(n);
     for (std::size_t i = 0; i < n; ++i) {
         flatten_probabilistic_gate(distribution[i], gate_list[i], _distribution, _gate_list);
     }
