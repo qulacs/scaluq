@@ -95,6 +95,37 @@ loaded state: [(0.5+0j), (0.5+0j), (-0.5+0j), (0.5+0j)]
 loaded numpy state: [(0.7071067811865475+0j), 0j, 0j, (0.7071067811865475+0j)]
 ```
 
+## View from StateVectorBatched
+
+When you work with {class}`StateVectorBatched <scaluq.default.f64.StateVectorBatched>`, you can extract a single state vector in two ways.
+
+- {func}`get_state_vector_at <scaluq.default.f64.StateVectorBatched.get_state_vector_at>` returns a copy.
+- {func}`view_state_vector_at <scaluq.default.f64.StateVectorBatched.view_state_vector_at>` returns a view (shared memory).
+
+`view_state_vector_at` does not copy the amplitudes, so updating the returned {class}`StateVector <scaluq.default.f64.StateVector>` also updates the corresponding batch in the original `StateVectorBatched`.
+
+```py
+from scaluq.default.f64 import StateVectorBatched
+
+states = StateVectorBatched(2, 2)
+
+# View: in-place update to batch 0
+state0_view = states.view_state_vector_at(0)
+state0_view.set_computational_basis(3)
+print("batch 0 in states:", states.get_state_vector_at(0).get_amplitudes())
+
+# Copy: detached update from batch 1
+state1_copy = states.get_state_vector_at(1)
+state1_copy.set_computational_basis(2)
+print("batch 1 in states:", states.get_state_vector_at(1).get_amplitudes())
+print("detached copy:", state1_copy.get_amplitudes())
+```
+```
+batch 0 in states: [0j, 0j, 0j, (1+0j)]
+batch 1 in states: [(1+0j), 0j, 0j, 0j]
+detached copy: [0j, 0j, (1+0j), 0j]
+```
+
 ## Operation to StateVector
 
 You can perform some operations to {class}`StateVector <scaluq.default.f64.StateVector>`.

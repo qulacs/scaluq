@@ -108,8 +108,10 @@ public:
 
     StdComplex calculate_default_mu() const;
 
+public:
     Kokkos::View<PauliOperator<Prec>*, ExecutionSpaceType> _terms;
     bool _is_hermitian = true;
+    bool _is_view = false;
 };
 
 #ifdef SCALUQ_USE_NANOBIND
