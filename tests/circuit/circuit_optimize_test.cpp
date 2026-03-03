@@ -19,19 +19,18 @@ TYPED_TEST(CircuitOptimizeTest, Basic) {
     constexpr std::uint64_t N = 10;
     constexpr std::uint64_t M = 100;
     Random random;
-    Circuit<Prec, Space> circuit(N);
+    Circuit<Prec> circuit(N);
     std::vector<std::function<void()>> adders;
     std::vector<std::string> keys;
-    adders.push_back([&] { circuit.add_gate(gate::I<Prec, Space>()); });
+    adders.push_back([&] { circuit.add_gate(gate::I<Prec>()); });
     adders.push_back([&] {
         circuit.add_gate(
-            gate::GlobalPhase<Prec, Space>(random.uniform() * std::numbers::pi_v<double> * 2));
+            gate::GlobalPhase<Prec>(random.uniform() * std::numbers::pi_v<double> * 2));
     });
     adders.push_back([&] {
-        circuit.add_gate(
-            gate::GlobalPhase<Prec, Space>(random.uniform() * std::numbers::pi_v<double> * 2,
-                                           {random.int64() % N},
-                                           {random.int32() & 1}));
+        circuit.add_gate(gate::GlobalPhase<Prec>(random.uniform() * std::numbers::pi_v<double> * 2,
+                                                 {random.int64() % N},
+                                                 {random.int32() & 1}));
     });
     auto gen_dense = [&](std::uint64_t num_targets, std::uint64_t num_controls) {
         auto perm = random.permutation(N);
@@ -54,12 +53,10 @@ TYPED_TEST(CircuitOptimizeTest, Basic) {
     adders.push_back([&] { circuit.add_gate(gen_dense(2, 0)); });
     adders.push_back([&] { circuit.add_gate(gen_dense(2, 1)); });
     adders.push_back([&] { circuit.add_gate(gen_dense(2, 2)); });
-    adders.push_back([&] {
-        circuit.add_gate(gate::Probabilistic<Prec, Space>({1.}, {gate::I<Prec, Space>()}));
-    });
+    adders.push_back([&] { circuit.add_gate(gate::Probabilistic<Prec>({1.}, {gate::I<Prec>()})); });
     adders.push_back([&] {
         std::string new_key = std::to_string(keys.size());
-        circuit.add_param_gate(gate::ParamRX<Prec, Space>(0), new_key);
+        circuit.add_param_gate(gate::ParamRX<Prec>(0), new_key);
         keys.push_back(new_key);
     });
     for ([[maybe_unused]] std::uint64_t _ : std::views::iota(std::uint64_t{0}, M)) {
@@ -70,10 +67,10 @@ TYPED_TEST(CircuitOptimizeTest, Basic) {
         params[key] = random.uniform() * std::numbers::pi_v<double> * 2;
     }
 
-    StateVector<Prec, Space> state0 = StateVector<Prec, Space>::Haar_random_state(N);
-    StateVector<Prec, Space> state1 = state0.copy();
+    auto state0 = StateVector<Prec, Space>::Haar_random_state(N);
+    auto state1 = state0.copy();
     circuit.update_quantum_state(state0, params);
-    circuit.optimize();
+    circuit.template optimize<Space>();
     circuit.update_quantum_state(state1, params);
     assert(same_state(state0, state1));
 }

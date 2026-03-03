@@ -4,6 +4,8 @@
 #include <scaluq/types.hpp>
 
 #include "../prec_space.hpp"
+#include "../type/complex.hpp"
+#include "../type/floating_point.hpp"
 
 #ifndef SCALUQ_USE_CUDA
 #define IMPL_MATH_UNARY_FUNCTION(FUNC) \
@@ -131,7 +133,7 @@ public:
     using value_type = std::remove_cv_t<Scalar>;
     static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
-    using result_view_type = Kokkos::View<value_type, SpaceType<Space>>;
+    using result_view_type = Kokkos::View<value_type, SpaceType<Space>, Kokkos::MemoryUnmanaged>;
 
 private:
     result_view_type value;

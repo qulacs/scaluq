@@ -1,4 +1,3 @@
-#include "../prec_space.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {

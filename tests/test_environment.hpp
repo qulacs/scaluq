@@ -32,19 +32,23 @@ struct TestType {
             ret += "HostSpace";
         else if constexpr (Space == ExecutionSpace::Default)
             ret += "DefaultSpace";
+        else if constexpr (Space == ExecutionSpace::HostSerial)
+            ret += "HostSerial";
         return ret;
     }
 };
 
 template <Precision Prec, typename... Types>
 struct AddPrecision {
-    using Type =
-        std::conditional_t<std::is_same_v<internal::SpaceType<ExecutionSpace::Host>,
-                                          internal::SpaceType<ExecutionSpace::Default>>,
-                           ::testing::Types<TestType<Prec, ExecutionSpace::Host>, Types...>,
-                           ::testing::Types<TestType<Prec, ExecutionSpace::Host>,
-                                            TestType<Prec, ExecutionSpace::Default>,
-                                            Types...>>;
+    using Type = std::conditional_t<std::is_same_v<internal::SpaceType<ExecutionSpace::Host>,
+                                                   internal::SpaceType<ExecutionSpace::Default>>,
+                                    ::testing::Types<TestType<Prec, ExecutionSpace::Host>,
+                                                     TestType<Prec, ExecutionSpace::HostSerial>,
+                                                     Types...>,
+                                    ::testing::Types<TestType<Prec, ExecutionSpace::Host>,
+                                                     TestType<Prec, ExecutionSpace::Default>,
+                                                     TestType<Prec, ExecutionSpace::HostSerial>,
+                                                     Types...>>;
 };
 
 template <typename List>

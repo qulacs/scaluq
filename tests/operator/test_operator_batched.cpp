@@ -16,11 +16,11 @@ std::pair<OperatorBatched<Prec, Space>, std::vector<Operator<Prec, Space>>>
 generate_random_observable(int n) {
     Random random;
     std::uint64_t batch_size = random.int32() % 5 + 1;
-    std::vector<std::vector<PauliOperator<Prec, Space>>> rand_observable;
+    std::vector<std::vector<PauliOperator<Prec>>> rand_observable;
     std::vector<Operator<Prec, Space>> test_rand_observable;
 
     for (std::uint64_t b = 0; b < batch_size; ++b) {
-        std::vector<PauliOperator<Prec, Space>> ops;
+        std::vector<PauliOperator<Prec>> ops;
         std::uint64_t term_count = random.int32() % 10 + 1;
         for (std::uint64_t term = 0; term < term_count; ++term) {
             std::vector<std::uint64_t> paulis(n, 0);
@@ -42,7 +42,7 @@ generate_random_observable(int n) {
                     str += " " + std::to_string(ind);
                 }
             }
-            ops.push_back(PauliOperator<Prec, Space>(str.c_str(), coef));
+            ops.push_back(PauliOperator<Prec>(str.c_str(), coef));
         }
         rand_observable.push_back(ops);
         test_rand_observable.push_back(Operator<Prec, Space>(ops));
@@ -94,6 +94,73 @@ TYPED_TEST(OperatorBatchedTest, Copy) {
     auto [op_batched, ops] = generate_random_observable<Prec, Space>(n);
     OperatorBatched<Prec, Space> op_batched_copy = op_batched.copy();
     EXPECT_EQ(op_batched.to_string(), op_batched_copy.to_string());
+}
+
+TYPED_TEST(OperatorBatchedTest, ViewOperatorAtSharesStorage) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    OperatorBatched<Prec, Space> op_batched(
+        std::vector<std::vector<PauliOperator<Prec>>>{{PauliOperator<Prec>("X 0", 1.)},
+                                                      {PauliOperator<Prec>("Z 0", 2.)}});
+
+    auto view = op_batched.view_operator_at(0);
+    view *= StdComplex(3., 0.);
+
+    auto copied = op_batched.get_operator_at(0);
+    auto terms = copied.get_terms();
+    ASSERT_EQ(terms.size(), 1);
+    ASSERT_NEAR(terms[0].coef().real(), 3., eps<Prec>);
+    ASSERT_NEAR(terms[0].coef().imag(), 0., eps<Prec>);
+}
+
+TYPED_TEST(OperatorBatchedTest, CopyOperatorAtDoesNotAliasStorage) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    OperatorBatched<Prec, Space> op_batched(
+        std::vector<std::vector<PauliOperator<Prec>>>{{PauliOperator<Prec>("X 0", 1.)},
+                                                      {PauliOperator<Prec>("Z 0", 2.)}});
+
+    auto copied = op_batched.get_operator_at(1);
+    copied *= StdComplex(5., 0.);
+
+    auto original = op_batched.get_operator_at(1);
+    auto terms = original.get_terms();
+    ASSERT_EQ(terms.size(), 1);
+    ASSERT_NEAR(terms[0].coef().real(), 2., eps<Prec>);
+    ASSERT_NEAR(terms[0].coef().imag(), 0., eps<Prec>);
+}
+
+TYPED_TEST(OperatorBatchedTest, ViewOperatorAtForbidsOptimize) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    OperatorBatched<Prec, Space> op_batched(
+        std::vector<std::vector<PauliOperator<Prec>>>{{PauliOperator<Prec>("X 0", 1.)}});
+    auto view = op_batched.view_operator_at(0);
+    EXPECT_THROW(view.optimize(), std::runtime_error);
+}
+
+TYPED_TEST(OperatorBatchedTest, OperatorAtLastIndexIsValid) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    const std::uint64_t batch_size = 2;
+    OperatorBatched<Prec, Space> op_batched(
+        std::vector<std::vector<PauliOperator<Prec>>>{{PauliOperator<Prec>("X 0", 1.)},
+                                                      {PauliOperator<Prec>("Z 0", 2.)}});
+
+    EXPECT_NO_THROW((void)op_batched.view_operator_at(batch_size - 1));
+    EXPECT_NO_THROW((void)op_batched.get_operator_at(batch_size - 1));
+}
+
+TYPED_TEST(OperatorBatchedTest, OperatorAtBoundsCheck) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    const std::uint64_t batch_size = 2;
+    OperatorBatched<Prec, Space> op_batched(
+        std::vector<std::vector<PauliOperator<Prec>>>{{PauliOperator<Prec>("X 0", 1.)},
+                                                      {PauliOperator<Prec>("Z 0", 2.)}});
+
+    EXPECT_THROW((void)op_batched.view_operator_at(batch_size), std::out_of_range);
+    EXPECT_THROW((void)op_batched.get_operator_at(batch_size), std::out_of_range);
 }
 
 TYPED_TEST(OperatorBatchedTest, Apply) {
