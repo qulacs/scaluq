@@ -6,6 +6,7 @@ on:
       - ".devcontainer/**"
       - ".vscode/**"
       - "*.md"
+      - ".github/ISSUE_TEMPLATE/**"
   workflow_dispatch:
   
 jobs:
