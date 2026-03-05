@@ -1,4 +1,4 @@
-name: Issue:Feature
+name: "Issue:Feature"
 description: New feature request in scaluq
 title: "[Feature] "
 labels: ["enhancement"]
@@ -11,7 +11,7 @@ body:
     id: description
     attributes:
       label: Feature description (機能を説明してください。)
-      description: provide a clear and concise description of the feature.
+      description: Provide a clear and concise description of the feature.
     validations:
       required: true
 
@@ -54,7 +54,6 @@ body:
   - type: markdown
     attributes:
       value: "---"
-
 
   - type: textarea
     id: additional

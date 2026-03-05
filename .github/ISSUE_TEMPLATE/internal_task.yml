@@ -1,6 +1,6 @@
-name: Issue:Task
+name: "Issue:Task"
 description: Internal task in scaluq
-title: "[task] "
+title: "[Task] "
 labels: ["internal"]
 body:
 
@@ -13,7 +13,7 @@ body:
     attributes:
       label: Task type
       description: Select the type of task.
-      multiple: false 
+      multiple: false
       options:
         - Migration from qulacs to scaluq
         - New feature
@@ -29,7 +29,7 @@ body:
     id: description
     attributes:
       label: Task description
-      description: write description about task.
+      description: Write description about task.
     validations:
       required: true
 
@@ -42,7 +42,7 @@ body:
     attributes:
       label: Related code (if applicable)
       description: Paste any relevant code snippets.
-      render: c++
+      render: cpp
     validations:
       required: false
 
