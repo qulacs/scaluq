@@ -58,8 +58,8 @@ Build options can be specified using environment variables when running `script/
 | `SCALUQ_CPU_NATIVE`    | `ON`        | Build for native CPU architecture of builder's |
 | `SCALUQ_CPU_ARCH`      | -           | Target CPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_CPU_ARCH=SKX`) |
 | `SCALUQ_CUDA_ARCH`     | (auto)      | Target Nvidia GPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_CUDA_ARCH=AMPERE80`) |
-| `SCALUQ_USE_TEST`      | `ON`        | Include `test/` in build targets. You can build and run tests with `ctest --test-dir build/` |
-| `SCALUQ_USE_EXE`       | `ON`        | Include `exe/` in build targets. You can try running without installing by building with `ninja -C build` and running `build/exe/main` |
+| `SCALUQ_USE_TEST`      | `OFF`        | Include `test/` in build targets. You can build and run tests with `ctest --test-dir build/` |
+| `SCALUQ_USE_EXE`       | `OFF`        | Include `exe/` in build targets. You can try running without installing by building with `ninja -C build` and running `build/exe/main` |
 | `SCALUQ_FLOAT16`       | `OFF`       | Enable `f16` precision |
 | `SCALUQ_FLOAT32`       | `ON`        | Enable `f32` precision |
 | `SCALUQ_FLOAT64`       | `ON`        | Enable `f64` precision |
@@ -115,9 +115,8 @@ https://scaluq.readthedocs.io/en/latest/index.html
 ## Sample Code (C++)
 
 ```cpp
-#include <iostream>
 #include <cstdint>
-
+#include <iostream>
 #include <scaluq/circuit/circuit.hpp>
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/operator/operator.hpp>
@@ -126,21 +125,23 @@ https://scaluq.readthedocs.io/en/latest/index.html
 int main() {
     scaluq::initialize();  // must be called before using any scaluq methods
     {
-        constexpr Precision Prec = scaluq::Precision::F64;
-        constexpr ExecutionSpace Space = scaluq::ExecutionSpace::Default;
+        constexpr scaluq::Precision Prec = scaluq::Precision::F64;
+        constexpr scaluq::ExecutionSpace Space = scaluq::ExecutionSpace::Default;
         const std::uint64_t n_qubits = 3;
-        scaluq::StateVector<Prec, Default> state = scaluq::StateVector<Prec, Default>::Haar_random_state(n_qubits, 0);
+        scaluq::StateVector<Prec, Space> state =
+            scaluq::StateVector<Prec, Space>::Haar_random_state(n_qubits, 0);
         std::cout << state << std::endl;
 
-        scaluq::Circuit<Prec, Default> circuit(n_qubits);
-        circuit.add_gate(scaluq::gate::X<Prec, Default>(0));
-        circuit.add_gate(scaluq::gate::CNot<Prec, Default>(0, 1));
-        circuit.add_gate(scaluq::gate::Y<Prec, Default>(1));
-        circuit.add_gate(scaluq::gate::RX<Prec, Default>(1, std::numbers::pi / 2));
+        scaluq::Circuit<Prec> circuit(n_qubits);
+        circuit.add_gate(scaluq::gate::X<Prec>(0));
+        circuit.add_gate(scaluq::gate::CNot<Prec>(0, 1));
+        circuit.add_gate(scaluq::gate::Y<Prec>(1));
+        circuit.add_gate(scaluq::gate::RX<Prec>(1, std::numbers::pi / 2));
         circuit.update_quantum_state(state);
 
-        scaluq::Operator<Prec, Default> observable(n_qubits);
-        observable.add_random_operator(1, 0);
+        std::vector<scaluq::PauliOperator<Prec>> terms;
+        terms.emplace_back(1, 0);
+        scaluq::Operator<Prec, Space> observable(terms);
         auto value = observable.get_expectation_value(state);
         std::cout << value << std::endl;
     }
@@ -151,13 +152,12 @@ int main() {
 By including `scaluq/all.hpp`, you can omit template arguments using `SCALUQ_OMIT_TEMPLATE`.
 
 ```cpp
-#include <iostream>
 #include <cstdint>
-
+#include <iostream>
 #include <scaluq/all.hpp>
 
 namespace my_scaluq {
-    SCALUQ_OMIT_TEMPLATE(scaluq::Precision::F64, scaluq::ExecutionSpace::Default)
+SCALUQ_OMIT_TEMPLATE(scaluq::Precision::F64, scaluq::ExecutionSpace::Default)
 }
 
 using namespace my_scaluq;
@@ -176,8 +176,9 @@ int main() {
         circuit.add_gate(gate::RX(1, std::numbers::pi / 2));
         circuit.update_quantum_state(state);
 
-        Operator observable(n_qubits);
-        observable.add_random_operator(1, 0);
+        std::vector<PauliOperator> terms;
+        terms.emplace_back(1, 0);
+        Operator observable(terms);
         auto value = observable.get_expectation_value(state);
         std::cout << value << std::endl;
     }
@@ -225,10 +226,11 @@ Note: With `f16` / `bf16` precision, the calculation error may be very large (so
 
 Execution spaces determine whether computation is performed on CPU or GPU:
 
-| Execution Space | C++ Template Argument      | Python Submodule      | Description                                |
-|------------------|---------------------------|------------------------|--------------------------------------------|
-| `default`        | `ExecutionSpace::Default` | `default`              | GPU if CUDA is enabled, otherwise CPU      |
-| `host`           | `ExecutionSpace::Host`    | `host`                 | Always CPU                                 |
+| Execution Space  | C++ Template Argument        | Python Submodule       | Description                                   |
+|------------------|------------------------------|------------------------|-----------------------------------------------|
+| `default`        | `ExecutionSpace::Default`    | `default`              | Runs on GPU if CUDA is enabled, otherwise CPU |
+| `host`           | `ExecutionSpace::Host`       | `host`                 | Always runs on CPU                            |
+| `host`           | `ExecutionSpace::HostSerial` | `host_serial`          | Always runs sequentially on CPU               |
 
 Note: You can only perform operations between objects with the same precision and execution space. For example, a gate created for 32-bit precision cannot be used with a 64-bit StateVector, even if both are CPU-based.
 
