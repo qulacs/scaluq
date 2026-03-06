@@ -9,6 +9,7 @@ on:
       - ".vscode/**"
       - "doc/**"
       - "*.md"
+      - ".github/ISSUE_TEMPLATE/**"
   workflow_dispatch:
 
 jobs:

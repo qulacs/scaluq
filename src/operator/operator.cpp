@@ -22,6 +22,7 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
     Operator<internal::Prec, internal::Space> copy_operator(_terms.size());
     Kokkos::deep_copy(copy_operator._terms, _terms);
     copy_operator._is_hermitian = _is_hermitian;
+    copy_operator._is_view = false;
     return copy_operator;
 }
 
@@ -64,6 +65,10 @@ Operator<internal::Prec, internal::Space>::uninitialized_operator(std::uint64_t 
 
 template <>
 void Operator<internal::Prec, internal::Space>::optimize() {
+    if (_is_view) [[unlikely]] {
+        throw std::runtime_error(
+            "Operator::optimize: this operation is not allowed for a view operator.");
+    }
     // TODO: use Kokkos::UnorderedMap
     std::map<std::tuple<std::uint64_t, std::uint64_t>, ComplexType> pauli_and_coef;
     auto terms_h = get_terms();

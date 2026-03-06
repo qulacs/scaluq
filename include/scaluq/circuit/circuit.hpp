@@ -94,7 +94,6 @@ public:
 
     /**
      * @brief サンプリングされうるすべてのパターンに対して，それぞれが何回選ばれたかを返す
-     * @attention ProbabilisticGate に ProbabilisticGate が含まれてはいけない
      */
     template <ExecutionSpace Space>
     std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> simulate_noise(
