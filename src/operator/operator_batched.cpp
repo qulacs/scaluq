@@ -204,6 +204,20 @@ OperatorBatched<internal::Prec, internal::Space>::get_dagger() const {
 
 template <>
 Operator<internal::Prec, internal::Space>
+OperatorBatched<internal::Prec, internal::Space>::view_operator_at(std::uint64_t index) {
+    if (index >= _row_ptr.extent(0) - 1) {
+        throw std::out_of_range("OperatorBatched::view_operator_at: index out of range");
+    }
+    std::uint64_t begin = _row_ptr(index);
+    std::uint64_t end = _row_ptr(index + 1);
+    Operator<internal::Prec, internal::Space> res;
+    res._terms = Kokkos::subview(_ops, std::make_pair(begin, end));
+    res._is_view = true;
+    return res;
+}
+
+template <>
+Operator<internal::Prec, internal::Space>
 OperatorBatched<internal::Prec, internal::Space>::get_operator_at(std::uint64_t index) const {
     if (index >= _row_ptr.extent(0) - 1) {
         throw std::out_of_range("OperatorBatched::get_operator_at: index out of range");

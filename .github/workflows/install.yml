@@ -7,6 +7,7 @@ on:
       - ".vscode/**"
       - "doc/**"
       - "*.md"
+      - ".github/ISSUE_TEMPLATE/**"
 
 jobs:
   library:
@@ -62,10 +63,12 @@ jobs:
       
       - name: Install CUDA toolkit
         if: ${{ matrix.device == 'cuda' }}
-        uses: Jimver/cuda-toolkit@v0.2.19
+        uses: Jimver/cuda-toolkit@v0.2.30
         with:
-          cuda: "12.6.1"
-          method: "network"
+          cuda: "12.9.1"
+          method: "local"
+          linux-local-args: '["--toolkit"]'
+          log-file-suffix: '${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}'
       
       - name: Show installed Compiler version
         run: |
@@ -138,10 +141,12 @@ jobs:
       
       - name: Install CUDA toolkit
         if: ${{ matrix.device == 'cuda' }}
-        uses: Jimver/cuda-toolkit@v0.2.19
+        uses: Jimver/cuda-toolkit@v0.2.30
         with:
-          cuda: "12.6.1"
-          method: "network"
+          cuda: "12.9.1"
+          method: "local"
+          linux-local-args: '["--toolkit"]'
+          log-file-suffix: '${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}'
       
       - name: Show installed Compiler version
         run: |

@@ -32,6 +32,11 @@ void StateVectorBatched<Prec, Space>::set_state_vector(const StateVector<Prec, S
 template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::set_state_vector_at(std::uint64_t batch_id,
                                                           const StateVector<Prec, Space>& state) {
+    if (batch_id >= _batch_size) [[unlikely]] {
+        throw std::runtime_error(
+            "Error: StateVectorBatched::set_state_vector_at(std::uint64_t, const StateVector&): "
+            "batch_id must be smaller than batch_size");
+    }
     if (_raw.extent(1) != state._raw.extent(0)) [[unlikely]] {
         throw std::runtime_error(
             "Error: StateVectorBatched::set_state_vector(std::uint64_t, const StateVector&): "
@@ -44,8 +49,24 @@ void StateVectorBatched<Prec, Space>::set_state_vector_at(std::uint64_t batch_id
 }
 
 template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, Space> StateVectorBatched<Prec, Space>::view_state_vector_at(
+    std::uint64_t batch_id) {
+    if (batch_id >= _batch_size) [[unlikely]] {
+        throw std::runtime_error(
+            "Error: StateVectorBatched::view_state_vector_at(std::uint64_t): "
+            "batch_id must be smaller than batch_size");
+    }
+    return StateVector<Prec, Space>(Kokkos::subview(_raw, batch_id, Kokkos::ALL()));
+}
+
+template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_state_vector_at(
     std::uint64_t batch_id) const {
+    if (batch_id >= _batch_size) [[unlikely]] {
+        throw std::runtime_error(
+            "Error: StateVectorBatched::get_state_vector_at(std::uint64_t): "
+            "batch_id must be smaller than batch_size");
+    }
     auto ret = StateVector<Prec, Space>::uninitialized_state(_n_qubits);
     Kokkos::parallel_for(
         "get_state_vector_at",

@@ -33,6 +33,8 @@ See https://scaluq.readthedocs.io/en/latest/index.html
 - CUDA ≥ 12.6 (only when using CUDA)
 - Python ≥ 3.10 (only when using Python)
 
+When using CUDA, use a host compiler version supported by your CUDA toolkit (see the CUDA Installation Guide Host Compiler Support Policy).
+
 Note: It may work with lower versions, but this has not been verified.
 
 ## Runtime Requirements
@@ -199,8 +201,9 @@ circuit.add_gate(gate.Y(1))
 circuit.add_gate(gate.RX(1, math.pi / 2))
 circuit.update_quantum_state(state)
 
-observable = Operator(n_qubits)
-observable.add_random_operator(1, 0)
+terms = []
+terms.append(PauliOperator(1, 0))
+observable = Operator(terms)
 value = observable.get_expectation_value(state)
 print(value)
 ```
