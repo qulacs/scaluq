@@ -547,7 +547,7 @@ std::unordered_map<std::string, double> Circuit<Prec>::backprop_inner_product(
             }
             pgate->update_quantum_state(Astate, -M_PI / scale);
             const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
-            const double contrib = scale * static_cast<double>(ip.real()) * scale;
+            const double contrib = -scale * static_cast<double>(ip.real());
 
             gradients[key] += contrib;
         }

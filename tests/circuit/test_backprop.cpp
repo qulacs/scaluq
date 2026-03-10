@@ -111,7 +111,7 @@ void backprop_test_parametric_rc() {
         }
 
         const StdComplex ip = (bistate_eigen.adjoint() * tmp_state)(0, 0);
-        const double contrib = gate_coefs[idx] * static_cast<double>(ip.real()) * gate_coefs[idx];
+        const double contrib = -gate_coefs[idx] * static_cast<double>(ip.real());
         gradients_eigen[std::to_string(idx)] += contrib;
 
         const auto& gate = matrices[idx];
@@ -240,8 +240,7 @@ void backprop_test_parametric_rotation() {
         }
 
         const StdComplex ip = (bistate_eigen.adjoint() * tmp_state)(0, 0);
-        const double contrib =
-            make_scale_rc(idx) * static_cast<double>(ip.real()) * make_scale_rc(idx);
+        const double contrib = -make_scale_rc(idx) * static_cast<double>(ip.real());
         gradients_eigen[std::to_string(idx)] += contrib;
 
         const auto& gate = matrices[idx];
