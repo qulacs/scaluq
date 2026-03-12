@@ -7,8 +7,10 @@ on:
       - ".vscode/**"
       - "*.md"
       - ".github/ISSUE_TEMPLATE/**"
+      - ".github/workflows/yamllint.yml"
+      - ".yamllint"
   workflow_dispatch:
-  
+
 jobs:
   wheel-build:
     name: Python wheel build
@@ -70,13 +72,13 @@ jobs:
           key: "${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.device }}"
           save: false
           verbose: 2
-      
+
       - name: Install Python dependencies
         run: python -m pip install cibuildwheel
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheels
-          
+
       - name: Upload wheel to GitHub
         uses: actions/upload-artifact@v4
         with:
@@ -118,7 +120,7 @@ jobs:
 
       - name: Install Python dependencies
         run: python -m pip install twine
-      
+
       - uses: actions/download-artifact@v4
         with:
           name: cp310-${{ matrix.cibw-os-arch }}
