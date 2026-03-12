@@ -43,6 +43,31 @@ TYPED_TEST(StateVectorTest, CopyState) {
     ASSERT_EQ(vec1, vec2);
 }
 
+TYPED_TEST(StateVectorTest, SpaceConversionCreatesIndependentCopy) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    const std::uint64_t n = 5;
+    auto state = StateVector<Prec, Space>::Haar_random_state(n, 0);
+    const auto original = state.get_amplitudes();
+
+    auto state_default = state.to_default_space();
+    auto state_host = state.to_host_space();
+
+    auto default_amp = state_default.get_amplitudes();
+    auto host_amp = state_host.get_amplitudes();
+    for (std::uint64_t i = 0; i < state.dim(); ++i) {
+        ASSERT_NEAR(default_amp[i].real(), original[i].real(), eps<Prec>);
+        ASSERT_NEAR(default_amp[i].imag(), original[i].imag(), eps<Prec>);
+        ASSERT_NEAR(host_amp[i].real(), original[i].real(), eps<Prec>);
+        ASSERT_NEAR(host_amp[i].imag(), original[i].imag(), eps<Prec>);
+    }
+
+    state_default.set_amplitude_at(0, StdComplex(0.25, -0.5));
+    auto unchanged = state.get_amplitude_at(0);
+    ASSERT_NEAR(unchanged.real(), original[0].real(), eps<Prec>);
+    ASSERT_NEAR(unchanged.imag(), original[0].imag(), eps<Prec>);
+}
+
 TYPED_TEST(StateVectorTest, ZeroNormState) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;

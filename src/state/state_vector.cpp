@@ -304,6 +304,18 @@ StateVector<Prec, Space> StateVector<Prec, Space>::copy() const {
     return new_vec;
 }
 template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, ExecutionSpace::Default> StateVector<Prec, Space>::to_default_space() const {
+    auto new_vec = StateVector<Prec, ExecutionSpace::Default>::uninitialized_state(_n_qubits);
+    Kokkos::deep_copy(new_vec._raw, _raw);
+    return new_vec;
+}
+template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, ExecutionSpace::Host> StateVector<Prec, Space>::to_host_space() const {
+    auto new_vec = StateVector<Prec, ExecutionSpace::Host>::uninitialized_state(_n_qubits);
+    Kokkos::deep_copy(new_vec._raw, _raw);
+    return new_vec;
+}
+template <Precision Prec, ExecutionSpace Space>
 std::string StateVector<Prec, Space>::to_string() const {
     std::stringstream os;
     auto amp = this->get_amplitudes();
