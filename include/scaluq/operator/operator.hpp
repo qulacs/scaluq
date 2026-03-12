@@ -27,7 +27,12 @@ public:
 
     [[nodiscard]] Operator copy() const;
     void load(const std::vector<PauliOperator<Prec>>& terms);
-    static Operator uninitialized_operator(std::uint64_t n_terms);
+    static Operator uninitialized_operator(std::uint64_t n_terms) {
+        Operator tmp;
+        tmp._terms = Kokkos::View<PauliOperator<Prec>*, ExecutionSpaceType>(
+            Kokkos::ViewAllocateWithoutInitializing("terms"), n_terms);
+        return tmp;
+    }
 
     [[nodiscard]] inline bool is_hermitian() const { return _is_hermitian; }
     [[nodiscard]] inline std::vector<PauliOperator<Prec>> get_terms() const {
