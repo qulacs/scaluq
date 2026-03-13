@@ -8,6 +8,8 @@ on:
       - "doc/**"
       - "*.md"
       - ".github/ISSUE_TEMPLATE/**"
+      - ".github/workflows/yamllint.yml"
+      - ".yamllint"
 
 jobs:
   test:
@@ -59,11 +61,11 @@ jobs:
             CMakeLists.txt
             src/CMakeLists.txt
             tests/CMakeLists.txt
-      
+
       - name: Set SCALUQ_TEST_SOURCES to ALL
         if: ${{ steps.check-build-files.outputs.any_changed == 'true' }}
         run: echo "SCALUQ_TEST_SOURCES=ALL" >> $GITHUB_ENV
-      
+
       - name: List changed source files
         id: check-source-files
         if: ${{ steps.check-build-files.outputs.any_changed == 'false' }}
@@ -75,7 +77,7 @@ jobs:
             src/**.cpp
             tests/**.hpp
             tests/**.cpp
-      
+
       - name: Install Ninja (Linux)
         if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && runner.os == 'Linux' }}
         run: sudo apt update && sudo apt install -y ninja-build
@@ -90,7 +92,7 @@ jobs:
         with:
           key: "${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.device }}"
           verbose: 2
-      
+
       - name: Install CUDA toolkit
         if: ${{ matrix.device == 'cuda' && (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') }}
         uses: Jimver/cuda-toolkit@v0.2.30
@@ -99,7 +101,7 @@ jobs:
           method: "local"
           linux-local-args: '["--toolkit"]'
           log-file-suffix: '${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}'
-      
+
       - name: Show installed Compiler version
         if: ${{ steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true' }}
         run: |
@@ -122,7 +124,7 @@ jobs:
             SCALUQ_TEST_SOURCES=$(echo "$RELATED_TEST_FILES" | tr '\n' ';')
             echo "SCALUQ_TEST_SOURCES=$SCALUQ_TEST_SOURCES" >> $GITHUB_ENV
           fi
-      
+
       - name: Configure & Build
         if: ${{ env.SCALUQ_TEST_SOURCES != '' }}
         run: |
@@ -130,7 +132,7 @@ jobs:
           ninja -C build/
 
       - name: Test
-        if: ${{ matrix.device == 'cpu' && env.SCALUQ_TEST_SOURCES != '' }} # currently GPU runner is not supported
+        if: ${{ matrix.device == 'cpu' && env.SCALUQ_TEST_SOURCES != '' }}  # currently GPU runner is not supported
         run: |
           if [ "$(uname)" == 'Darwin' ]; then
             NPROC=$(sysctl -n hw.physicalcpu)
