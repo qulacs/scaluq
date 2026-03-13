@@ -96,7 +96,7 @@ jobs:
         run: sudo apt update && sudo apt install -y ninja-build
 
       - name: Install Ninja
-        if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && runner.os-arch == 'macos-arm64' }}
+        if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && matrix.os-arch == 'macos-arm64' }}
         run: brew install ninja
 
       - name: Install libomp
