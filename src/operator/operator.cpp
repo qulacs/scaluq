@@ -55,15 +55,6 @@ void Operator<internal::Prec, internal::Space>::load(
 }
 
 template <>
-Operator<internal::Prec, internal::Space>
-Operator<internal::Prec, internal::Space>::uninitialized_operator(std::uint64_t n_terms) {
-    Operator<internal::Prec, internal::Space> tmp;
-    tmp._terms = Kokkos::View<PauliOperator<internal::Prec>*, ExecutionSpaceType>(
-        Kokkos::ViewAllocateWithoutInitializing("terms"), n_terms);
-    return tmp;
-}
-
-template <>
 void Operator<internal::Prec, internal::Space>::optimize() {
     if (_is_view) [[unlikely]] {
         throw std::runtime_error(
@@ -358,7 +349,7 @@ Operator<internal::Prec, ExecutionSpace::Default>
 Operator<internal::Prec, internal::Space>::to_default_space() const {
     auto op =
         Operator<internal::Prec, ExecutionSpace::Default>::uninitialized_operator(_terms.extent(0));
-    // Kokkos::deep_copy(op._terms, _terms);
+    Kokkos::deep_copy(op._terms, _terms);
     op._is_hermitian = _is_hermitian;
     return op;
 }
