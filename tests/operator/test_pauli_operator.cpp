@@ -111,7 +111,7 @@ std::ostream& operator<<(std::ostream& stream, const PauliTestParam<Prec>& p) {
         EXPECT_EQ(p.expected.coef(), res.coef());                                                 \
     }                                                                                             \
                                                                                                   \
-    INSTANTIATE_TEST_CASE_P(                                                                      \
+    INSTANTIATE_TEST_SUITE_P(                                                                     \
         SinglePauli,                                                                              \
         PauliOperatorMultiplyTest_##PREC,                                                         \
         testing::Values(PauliTestParam("XX",                                                      \
@@ -152,7 +152,7 @@ std::ostream& operator<<(std::ostream& stream, const PauliTestParam<Prec>& p) {
                                        PauliOperator<Precision::PREC>("I 0", 4.0))),              \
         testing::PrintToStringParamName());                                                       \
                                                                                                   \
-    INSTANTIATE_TEST_CASE_P(                                                                      \
+    INSTANTIATE_TEST_SUITE_P(                                                                     \
         MultiPauli,                                                                               \
         PauliOperatorMultiplyTest_##PREC,                                                         \
         testing::Values(PauliTestParam("X_Y",                                                     \
@@ -165,7 +165,7 @@ std::ostream& operator<<(std::ostream& stream, const PauliTestParam<Prec>& p) {
                                        PauliOperator<Precision::PREC>("Z 0 Z 1", 4.0))),          \
         testing::PrintToStringParamName());                                                       \
                                                                                                   \
-    INSTANTIATE_TEST_CASE_P(                                                                      \
+    INSTANTIATE_TEST_SUITE_P(                                                                     \
         MultiPauliPauli,                                                                          \
         PauliOperatorMultiplyTest_##PREC,                                                         \
         ([]() {                                                                                   \
@@ -214,7 +214,7 @@ TYPED_TEST(PauliOperatorTest, ApplyToStateTest) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t n_qubits = 3;
     StateVector<Prec, Space> state_vector(n_qubits);
-    state_vector.load([n_qubits] {
+    state_vector.load([] {
         std::vector<StdComplex> tmp(1 << n_qubits);
         for (std::uint64_t i = 0; i < tmp.size(); ++i) tmp[i] = StdComplex(i, 0);
         return tmp;

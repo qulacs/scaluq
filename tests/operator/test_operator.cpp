@@ -243,7 +243,7 @@ TYPED_TEST(OperatorTest, ApplyToStateTest) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t n_qubits = 3;
     StateVector<Prec, Space> state_vector(n_qubits);
-    state_vector.load([n_qubits] {
+    state_vector.load([] {
         std::vector<StdComplex> tmp(1 << n_qubits);
         for (std::uint64_t i = 0; i < tmp.size(); ++i) tmp[i] = StdComplex(i, 0);
         return tmp;

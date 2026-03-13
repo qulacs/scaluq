@@ -330,7 +330,7 @@ template class ParamRZGateImpl<Prec>;
             vector_to_mask(control_values),                                                  \
             static_cast<Float<Prec>>(j.at("param_coef").get<double>()));                     \
     }                                                                                        \
-    template class GetParamGateFromJson<Impl<Prec>>;
+    template struct GetParamGateFromJson<Impl<Prec>>;
 
 DECLARE_GET_FROM_JSON(ParamRXGateImpl)
 DECLARE_GET_FROM_JSON(ParamRYGateImpl)
