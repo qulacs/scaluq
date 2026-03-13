@@ -230,7 +230,7 @@ Execution spaces determine whether computation is performed on CPU or GPU:
 |------------------|------------------------------|------------------------|-----------------------------------------------|
 | `default`        | `ExecutionSpace::Default`    | `default`              | Runs on GPU if CUDA is enabled, otherwise CPU |
 | `host`           | `ExecutionSpace::Host`       | `host`                 | Always runs on CPU                            |
-| `host`           | `ExecutionSpace::HostSerial` | `host_serial`          | Always runs sequentially on CPU               |
+| `host_serial`    | `ExecutionSpace::HostSerial` | `host_serial`          | Always runs sequentially on CPU               |
 
 Note: You can only perform operations between objects with the same precision and execution space. For example, a gate created for 32-bit precision cannot be used with a 64-bit StateVector, even if both are CPU-based.
 
