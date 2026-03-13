@@ -46,7 +46,6 @@ jobs:
       CIBW_BUILD: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}
       CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
       CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
-      PYTHON: ${{ matrix.python-version }}
       MACOSX_DEPLOYMENT_TARGET: ${{ matrix.os == 'macos' && '15.0' || '' }}
 
     steps:
