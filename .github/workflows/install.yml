@@ -125,6 +125,7 @@ jobs:
       matrix:
         os-arch: ["linux-x86_64", "macos-arm64"]
         compiler: ["gcc", "clang"]
+        python-version: ["3.13"]
         device: ["cpu", "cuda"]
         exclude:
           - os-arch: "macos-arm64"
