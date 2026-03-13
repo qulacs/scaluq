@@ -132,7 +132,7 @@ jobs:
           ninja -C build/
 
       - name: Test
-        if: ${{ matrix.device == 'cpu' && env.SCALUQ_TEST_SOURCES != '' }} # currently GPU runner is not supported
+        if: ${{ matrix.device == 'cpu' && env.SCALUQ_TEST_SOURCES != '' }}  # currently GPU runner is not supported
         run: |
           if [ "$(uname)" == 'Darwin' ]; then
             NPROC=$(sysctl -n hw.physicalcpu)
