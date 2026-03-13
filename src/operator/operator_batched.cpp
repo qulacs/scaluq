@@ -241,6 +241,32 @@ OperatorBatched<internal::Prec, internal::Space>::get_operators() const {
 }
 
 template <>
+OperatorBatched<internal::Prec, ExecutionSpace::Default>
+OperatorBatched<internal::Prec, internal::Space>::to_default_space() const {
+    OperatorBatched<internal::Prec, ExecutionSpace::Default> res;
+    res._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
+        Kokkos::ViewAllocateWithoutInitializing("row_ptr"), _row_ptr.extent(0));
+    res._ops = Kokkos::View<Pauli*, internal::SpaceType<ExecutionSpace::Default>>(
+        Kokkos::ViewAllocateWithoutInitializing("operator_ops"), _ops.extent(0));
+    Kokkos::deep_copy(res._row_ptr, _row_ptr);
+    Kokkos::deep_copy(res._ops, _ops);
+    return res;
+}
+
+template <>
+OperatorBatched<internal::Prec, ExecutionSpace::Host>
+OperatorBatched<internal::Prec, internal::Space>::to_host_space() const {
+    OperatorBatched<internal::Prec, ExecutionSpace::Host> res;
+    res._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
+        Kokkos::ViewAllocateWithoutInitializing("row_ptr"), _row_ptr.extent(0));
+    res._ops = Kokkos::View<Pauli*, internal::SpaceType<ExecutionSpace::Host>>(
+        Kokkos::ViewAllocateWithoutInitializing("operator_ops"), _ops.extent(0));
+    Kokkos::deep_copy(res._row_ptr, _row_ptr);
+    Kokkos::deep_copy(res._ops, _ops);
+    return res;
+}
+
+template <>
 std::string OperatorBatched<internal::Prec, internal::Space>::to_string() const {
     std::string res;
     for (std::uint64_t i = 0; i < _row_ptr.extent(0) - 1; ++i) {

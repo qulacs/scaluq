@@ -78,6 +78,8 @@ public:
     [[nodiscard]] StateVector<Prec, Space> get_reduced_state() const;
 
     [[nodiscard]] StateVectorBatched copy() const;
+    [[nodiscard]] StateVectorBatched<Prec, ExecutionSpace::Default> to_default_space() const;
+    [[nodiscard]] StateVectorBatched<Prec, ExecutionSpace::Host> to_host_space() const;
 
     [[nodiscard]] std::string to_string() const;
 
@@ -435,6 +437,20 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
              DocString()
                  .desc("Create a deep copy of this batched state vector.")
                  .ret("StateVectorBatched", "New copy of the states.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("to_default_space",
+             &StateVectorBatched<Prec, Space>::to_default_space,
+             DocString()
+                 .desc("Return a deep copy in the default execution space.")
+                 .ret("StateVectorBatched", "Copied batched state vector.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("to_host_space",
+             &StateVectorBatched<Prec, Space>::to_host_space,
+             DocString()
+                 .desc("Return a deep copy in the host execution space.")
+                 .ret("StateVectorBatched", "Copied batched state vector.")
                  .build_as_google_style()
                  .c_str())
         .def("to_string",

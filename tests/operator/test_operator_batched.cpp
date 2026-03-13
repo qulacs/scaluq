@@ -96,6 +96,23 @@ TYPED_TEST(OperatorBatchedTest, Copy) {
     EXPECT_EQ(op_batched.to_string(), op_batched_copy.to_string());
 }
 
+TYPED_TEST(OperatorBatchedTest, SpaceConversionCreatesIndependentCopy) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    auto [op_batched, _] = generate_random_observable<Prec, Space>(4);
+
+    auto op_default = op_batched.to_default_space();
+    auto op_host = op_batched.to_host_space();
+
+    ASSERT_EQ(op_batched.to_string(), op_default.to_string());
+    ASSERT_EQ(op_batched.to_string(), op_host.to_string());
+
+    auto view = op_default.view_operator_at(0);
+    view *= StdComplex(2., 0.);
+    ASSERT_NE(op_batched.to_string(), op_default.to_string());
+    ASSERT_EQ(op_batched.to_string(), op_host.to_string());
+}
+
 TYPED_TEST(OperatorBatchedTest, ViewOperatorAtSharesStorage) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;

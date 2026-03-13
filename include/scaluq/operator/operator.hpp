@@ -308,6 +308,18 @@ void bind_operator_operator_hpp(nb::module_& m) {
                  .ret("complex", "Calculated shift value `mu`.")
                  .build_as_google_style()
                  .c_str())
+        .def("to_default_space",
+             &Operator<Prec, Space>::to_default_space,
+             DocString()
+                 .desc("Return a deep copy in the default execution space.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("to_host_space",
+             &Operator<Prec, Space>::to_host_space,
+             DocString()
+                 .desc("Return a deep copy in the host execution space.")
+                 .build_as_google_style()
+                 .c_str())
         .def(nb::self *= StdComplex())
         .def(nb::self * StdComplex())
         .def(+nb::self)
