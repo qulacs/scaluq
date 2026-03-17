@@ -164,6 +164,25 @@ TYPED_TEST(OperatorTest, CheckBatchedTransitionAmplitude) {
     }
 }
 
+TYPED_TEST(OperatorTest, SpaceConversionCreatesIndependentCopy) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    Random random(0);
+    auto op = generate_random_observable_with_eigen<Prec, Space>(4, random).first;
+
+    auto op_default = op.copy_to_default_space();
+    auto op_host = op.copy_to_host_space();
+
+    ASSERT_EQ(op.to_string(), op_default.to_string());
+    ASSERT_EQ(op.to_string(), op_host.to_string());
+    ASSERT_EQ(op.is_hermitian(), op_default.is_hermitian());
+    ASSERT_EQ(op.is_hermitian(), op_host.is_hermitian());
+
+    op_default *= StdComplex(2., 0.);
+    ASSERT_NE(op.to_string(), op_default.to_string());
+    ASSERT_EQ(op.to_string(), op_host.to_string());
+}
+
 TYPED_TEST(OperatorTest, AddTest) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
