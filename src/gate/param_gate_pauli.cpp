@@ -139,5 +139,5 @@ GetParamGateFromJson<ParamPauliRotationGateImpl<Prec>>::get(const Json& j) {
         j.at("pauli").get<PauliOperator<Prec>>(),
         static_cast<Float<Prec>>(j.at("param_coef").get<double>()));
 }
-template class GetParamGateFromJson<ParamPauliRotationGateImpl<Prec>>;
+template struct GetParamGateFromJson<ParamPauliRotationGateImpl<Prec>>;
 }  // namespace scaluq::internal

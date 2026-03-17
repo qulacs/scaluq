@@ -38,8 +38,6 @@ void run_random_batched_gate_apply(std::uint64_t n_qubits) {
         gate->update_quantum_state(states);
         auto states_cp = states.get_amplitudes();
 
-        test_state = test_state;
-
         for (std::uint64_t batch_id = 0; batch_id < states.batch_size(); batch_id++) {
             for (int i = 0; i < dim; i++) {
                 check_near<Prec>(states_cp[batch_id][i], test_state[i]);
