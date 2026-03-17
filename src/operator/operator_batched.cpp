@@ -242,7 +242,7 @@ OperatorBatched<internal::Prec, internal::Space>::get_operators() const {
 
 template <>
 OperatorBatched<internal::Prec, ExecutionSpace::Default>
-OperatorBatched<internal::Prec, internal::Space>::to_default_space() const {
+OperatorBatched<internal::Prec, internal::Space>::copy_to_default_space() const {
     OperatorBatched<internal::Prec, ExecutionSpace::Default> res;
     res._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
         Kokkos::ViewAllocateWithoutInitializing("row_ptr"), _row_ptr.extent(0));
@@ -255,7 +255,7 @@ OperatorBatched<internal::Prec, internal::Space>::to_default_space() const {
 
 template <>
 OperatorBatched<internal::Prec, ExecutionSpace::Host>
-OperatorBatched<internal::Prec, internal::Space>::to_host_space() const {
+OperatorBatched<internal::Prec, internal::Space>::copy_to_host_space() const {
     OperatorBatched<internal::Prec, ExecutionSpace::Host> res;
     res._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
         Kokkos::ViewAllocateWithoutInitializing("row_ptr"), _row_ptr.extent(0));

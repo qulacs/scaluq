@@ -477,20 +477,18 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::copy() const {
 
 template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, ExecutionSpace::Default>
-StateVectorBatched<Prec, Space>::to_default_space() const {
-    auto cp =
-        StateVectorBatched<Prec, ExecutionSpace::Default>::uninitialized_state(_batch_size,
-                                                                               _n_qubits);
+StateVectorBatched<Prec, Space>::copy_to_default_space() const {
+    auto cp = StateVectorBatched<Prec, ExecutionSpace::Default>::uninitialized_state(_batch_size,
+                                                                                     _n_qubits);
     Kokkos::deep_copy(cp._raw, _raw);
     return cp;
 }
 
 template <Precision Prec, ExecutionSpace Space>
-StateVectorBatched<Prec, ExecutionSpace::Host>
-StateVectorBatched<Prec, Space>::to_host_space() const {
+StateVectorBatched<Prec, ExecutionSpace::Host> StateVectorBatched<Prec, Space>::copy_to_host_space()
+    const {
     auto cp =
-        StateVectorBatched<Prec, ExecutionSpace::Host>::uninitialized_state(_batch_size,
-                                                                            _n_qubits);
+        StateVectorBatched<Prec, ExecutionSpace::Host>::uninitialized_state(_batch_size, _n_qubits);
     Kokkos::deep_copy(cp._raw, _raw);
     return cp;
 }

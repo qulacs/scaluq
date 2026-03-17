@@ -85,8 +85,8 @@ public:
     [[nodiscard]] Operator<Prec, Space> view_operator_at(std::uint64_t index);
     [[nodiscard]] Operator<Prec, Space> get_operator_at(std::uint64_t index) const;
     [[nodiscard]] std::vector<Operator<Prec, Space>> get_operators() const;
-    [[nodiscard]] OperatorBatched<Prec, ExecutionSpace::Default> to_default_space() const;
-    [[nodiscard]] OperatorBatched<Prec, ExecutionSpace::Host> to_host_space() const;
+    [[nodiscard]] OperatorBatched<Prec, ExecutionSpace::Default> copy_to_default_space() const;
+    [[nodiscard]] OperatorBatched<Prec, ExecutionSpace::Host> copy_to_host_space() const;
 
     OperatorBatched operator*(const std::vector<StdComplex>& coef) const;
     OperatorBatched& operator*=(const std::vector<StdComplex>& coef);
@@ -267,14 +267,14 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
         .def("get_operators",
              &OperatorBatched<Prec, Space>::get_operators,
              DocString().desc("Return a vector of all operators.").build_as_google_style().c_str())
-        .def("to_default_space",
-             &OperatorBatched<Prec, Space>::to_default_space,
+        .def("copy_to_default_space",
+             &OperatorBatched<Prec, Space>::copy_to_default_space,
              DocString()
                  .desc("Return a deep copy in the default execution space.")
                  .build_as_google_style()
                  .c_str())
-        .def("to_host_space",
-             &OperatorBatched<Prec, Space>::to_host_space,
+        .def("copy_to_host_space",
+             &OperatorBatched<Prec, Space>::copy_to_host_space,
              DocString()
                  .desc("Return a deep copy in the host execution space.")
                  .build_as_google_style()

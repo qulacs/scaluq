@@ -44,6 +44,14 @@ struct SpaceTypeImpl<ExecutionSpace::Default> {
 template <ExecutionSpace Space>
 using SpaceType = typename SpaceTypeImpl<Space>::Type;
 
+inline std::string to_string(Precision prec) {
+    if (prec == Precision::F16) return "f16";
+    if (prec == Precision::F32) return "f32";
+    if (prec == Precision::F64) return "f64";
+    if (prec == Precision::BF16) return "bf16";
+    throw std::invalid_argument("Unknown precision type!");
+}
+
 template <typename DummyType>
 constexpr bool lazy_false_v = false;  // Used for lazy evaluation in static_assert.
 
@@ -69,6 +77,7 @@ public:
 
     SparseMatrix(const SparseComplexMatrix& sp);
 };
+
 }  // namespace internal
 }  // namespace scaluq
 

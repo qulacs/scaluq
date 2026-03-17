@@ -50,8 +50,8 @@ TYPED_TEST(StateVectorTest, SpaceConversionCreatesIndependentCopy) {
     auto state = StateVector<Prec, Space>::Haar_random_state(n, 0);
     const auto original = state.get_amplitudes();
 
-    auto state_default = state.to_default_space();
-    auto state_host = state.to_host_space();
+    auto state_default = state.copy_to_default_space();
+    auto state_host = state.copy_to_host_space();
 
     auto default_amp = state_default.get_amplitudes();
     auto host_amp = state_host.get_amplitudes();

@@ -47,11 +47,12 @@ TYPED_TEST(StateVectorBatchedTest, SpaceConversionCreatesIndependentCopy) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     const std::uint64_t batch_size = 4, n_qubits = 3;
-    auto states = StateVectorBatched<Prec, Space>::Haar_random_state(batch_size, n_qubits, false, 0);
+    auto states =
+        StateVectorBatched<Prec, Space>::Haar_random_state(batch_size, n_qubits, false, 0);
     const auto original = states.get_amplitudes();
 
-    auto states_default = states.to_default_space();
-    auto states_host = states.to_host_space();
+    auto states_default = states.copy_to_default_space();
+    auto states_host = states.copy_to_host_space();
     auto default_amp = states_default.get_amplitudes();
     auto host_amp = states_host.get_amplitudes();
 

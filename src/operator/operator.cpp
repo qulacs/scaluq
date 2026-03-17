@@ -346,7 +346,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transitio
 
 template <>
 Operator<internal::Prec, ExecutionSpace::Default>
-Operator<internal::Prec, internal::Space>::to_default_space() const {
+Operator<internal::Prec, internal::Space>::copy_to_default_space() const {
     auto op =
         Operator<internal::Prec, ExecutionSpace::Default>::uninitialized_operator(_terms.extent(0));
     Kokkos::deep_copy(op._terms, _terms);
@@ -356,7 +356,7 @@ Operator<internal::Prec, internal::Space>::to_default_space() const {
 
 template <>
 Operator<internal::Prec, ExecutionSpace::Host>
-Operator<internal::Prec, internal::Space>::to_host_space() const {
+Operator<internal::Prec, internal::Space>::copy_to_host_space() const {
     auto op =
         Operator<internal::Prec, ExecutionSpace::Host>::uninitialized_operator(_terms.extent(0));
     Kokkos::deep_copy(op._terms, this->_terms);
