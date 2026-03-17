@@ -3,10 +3,33 @@
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
+namespace {
+template <Precision Prec>
+void flatten_probabilistic_gate(double prob_prefix,
+                                const Gate<Prec>& gate,
+                                std::vector<double>& accumulated_distribution,
+                                std::vector<Gate<Prec>>& accumulated_gate_list) {
+    if (gate.gate_type() != GateType::Probabilistic) {
+        accumulated_distribution.push_back(prob_prefix);
+        accumulated_gate_list.push_back(gate);
+        return;
+    }
+    auto probabilistic_gate = ProbabilisticGate<Prec>(gate);
+    const auto& distribution = probabilistic_gate->distribution();
+    const auto& gate_list = probabilistic_gate->gate_list();
+    for (std::size_t i = 0; i < distribution.size(); ++i) {
+        flatten_probabilistic_gate(prob_prefix * distribution[i],
+                                   gate_list[i],
+                                   accumulated_distribution,
+                                   accumulated_gate_list);
+    }
+}
+}  // namespace
+
 template <Precision Prec>
 ProbabilisticGateImpl<Prec>::ProbabilisticGateImpl(const std::vector<double>& distribution,
                                                    const std::vector<Gate<Prec>>& gate_list)
-    : GateBase<Prec>(0, 0, 0), _distribution(distribution), _gate_list(gate_list) {
+    : GateBase<Prec>(0, 0, 0) {
     std::uint64_t n = distribution.size();
     if (n == 0) {
         throw std::runtime_error("At least one gate is required.");
@@ -14,9 +37,14 @@ ProbabilisticGateImpl<Prec>::ProbabilisticGateImpl(const std::vector<double>& di
     if (n != gate_list.size()) {
         throw std::runtime_error("distribution and gate_list have different size.");
     }
-    _cumulative_distribution.resize(n + 1);
+
+    for (std::size_t i = 0; i < n; ++i) {
+        flatten_probabilistic_gate(distribution[i], gate_list[i], _distribution, _gate_list);
+    }
+
+    _cumulative_distribution.resize(_distribution.size() + 1);
     std::partial_sum(
-        distribution.begin(), distribution.end(), _cumulative_distribution.begin() + 1);
+        _distribution.begin(), _distribution.end(), _cumulative_distribution.begin() + 1);
     if (std::abs(_cumulative_distribution.back() - 1.) > 1e-6) {
         throw std::runtime_error("Sum of distribution must be equal to 1.");
     }
@@ -68,10 +96,8 @@ std::string ProbabilisticGateImpl<Prec>::to_string(const std::string& indent) co
                                        std::ranges::upper_bound(_cumulative_distribution, r[i])) - \
                          1;                                                                        \
             if (indices[i] >= _gate_list.size()) indices[i] = _gate_list.size() - 1;               \
-            auto state_vector =                                                                    \
-                StateVector<Prec, Space>(Kokkos::subview(states._raw, i, Kokkos::ALL));            \
+            auto state_vector = states.view_state_vector_at(i);                                     \
             _gate_list[indices[i]]->update_quantum_state(state_vector);                            \
-            states.set_state_vector_at(i, state_vector);                                           \
         }                                                                                          \
     }
 DEFINE_PROBABILISTIC_GATE_UPDATE(ExecutionSpace::Host)

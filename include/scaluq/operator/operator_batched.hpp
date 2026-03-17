@@ -80,6 +80,7 @@ public:
     [[nodiscard]] StdComplex solve_ground_state_eigenvalue_by_power_method(
         const StateVector<Prec, Space>& state, std::uint64_t iter_count, StdComplex mu = 0.) const;
 
+    [[nodiscard]] Operator<Prec, Space> view_operator_at(std::uint64_t index);
     [[nodiscard]] Operator<Prec, Space> get_operator_at(std::uint64_t index) const;
     [[nodiscard]] std::vector<Operator<Prec, Space>> get_operators() const;
 
@@ -248,6 +249,14 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
              "index"_a,
              DocString()
                  .desc("Return the operator at the specified index.")
+                 .arg("index", "Index of the operator.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("view_operator_at",
+             &OperatorBatched<Prec, Space>::view_operator_at,
+             "index"_a,
+             DocString()
+                 .desc("Return a view of the operator at the specified index.")
                  .arg("index", "Index of the operator.")
                  .build_as_google_style()
                  .c_str())

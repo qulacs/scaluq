@@ -7,6 +7,9 @@ on:
       - ".vscode/**"
       - "doc/**"
       - "*.md"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/workflows/yamllint.yml"
+      - ".yamllint"
 
 jobs:
   check-format:
@@ -17,7 +20,7 @@ jobs:
 
       - name: Setup cmake
         uses: lukka/get-cmake@latest
-          
+
       - name: Install Ninja
         run: sudo apt install ninja-build
 

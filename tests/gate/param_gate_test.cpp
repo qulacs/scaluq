@@ -137,6 +137,34 @@ TYPED_TEST(ParamGateTest, ApplyParamProbabilisticGate) {
     ASSERT_LT(x_cnt, i_cnt);
 }
 
+TYPED_TEST(ParamGateTest, FlattenNestedParamProbabilisticGate) {
+    constexpr Precision Prec = TestFixture::Prec;
+    ParamGate<Prec> nested_gate = gate::ParamProbabilistic<Prec>(
+        {0.5, 0.5},
+        {gate::Probabilistic<Prec>({0.2, 0.8}, {gate::X<Prec>(0), gate::Y<Prec>(0)}),
+         gate::ParamProbabilistic<Prec>({0.3, 0.7}, {gate::ParamRX<Prec>(0), gate::I<Prec>()})});
+    auto probabilistic_gate = ParamProbabilisticGate<Prec>(nested_gate);
+
+    const auto& distribution = probabilistic_gate->distribution();
+    const auto& gate_list = probabilistic_gate->gate_list();
+    ASSERT_EQ(distribution.size(), 4);
+    ASSERT_EQ(gate_list.size(), 4);
+    ASSERT_NEAR(distribution[0], 0.1, 1e-12);
+    ASSERT_NEAR(distribution[1], 0.4, 1e-12);
+    ASSERT_NEAR(distribution[2], 0.15, 1e-12);
+    ASSERT_NEAR(distribution[3], 0.35, 1e-12);
+
+    ASSERT_EQ(gate_list[0].index(), 0);
+    ASSERT_EQ(gate_list[1].index(), 0);
+    ASSERT_EQ(gate_list[2].index(), 1);
+    ASSERT_EQ(gate_list[3].index(), 0);
+
+    ASSERT_EQ(std::get<0>(gate_list[0]).gate_type(), GateType::X);
+    ASSERT_EQ(std::get<0>(gate_list[1]).gate_type(), GateType::Y);
+    ASSERT_EQ(std::get<1>(gate_list[2]).param_gate_type(), ParamGateType::ParamRX);
+    ASSERT_EQ(std::get<0>(gate_list[3]).gate_type(), GateType::I);
+}
+
 template <Precision Prec, ExecutionSpace Space>
 void test_gate(ParamGate<Prec> gate_control,
                ParamGate<Prec> gate_simple,

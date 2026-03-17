@@ -6,8 +6,11 @@ on:
       - ".devcontainer/**"
       - ".vscode/**"
       - "*.md"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/workflows/yamllint.yml"
+      - ".yamllint"
   workflow_dispatch:
-  
+
 jobs:
   sdist-build:
     name: Source distribution
@@ -20,7 +23,7 @@ jobs:
       PYTHON: ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v4
-        
+
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -30,7 +33,7 @@ jobs:
 
       - name: Build sdist
         run: python -m build --sdist
-          
+
       - name: Upload sdist data if the Git tag is set
         run: python -m twine upload dist/*.tar.gz
         if: ${{ contains(github.ref, 'tags/') }}

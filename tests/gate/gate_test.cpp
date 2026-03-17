@@ -724,6 +724,26 @@ TYPED_TEST(GateTest, ApplyProbabilisticGate) {
     }
 }
 
+TYPED_TEST(GateTest, FlattenNestedProbabilisticGate) {
+    constexpr Precision Prec = TestFixture::Prec;
+    Gate<Prec> nested_gate = gate::Probabilistic<Prec>(
+        {0.4, 0.6},
+        {gate::Probabilistic<Prec>({0.2, 0.8}, {gate::X<Prec>(0), gate::Y<Prec>(0)}),
+         gate::Z<Prec>(0)});
+    auto probabilistic_gate = ProbabilisticGate<Prec>(nested_gate);
+
+    const auto& distribution = probabilistic_gate->distribution();
+    const auto& gate_list = probabilistic_gate->gate_list();
+    ASSERT_EQ(distribution.size(), 3);
+    ASSERT_EQ(gate_list.size(), 3);
+    ASSERT_NEAR(distribution[0], 0.08, 1e-12);
+    ASSERT_NEAR(distribution[1], 0.32, 1e-12);
+    ASSERT_NEAR(distribution[2], 0.6, 1e-12);
+    ASSERT_EQ(gate_list[0].gate_type(), GateType::X);
+    ASSERT_EQ(gate_list[1].gate_type(), GateType::Y);
+    ASSERT_EQ(gate_list[2].gate_type(), GateType::Z);
+}
+
 template <Precision Prec, ExecutionSpace Space>
 void test_gate(Gate<Prec> gate_control,
                Gate<Prec> gate_simple,

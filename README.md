@@ -201,8 +201,9 @@ circuit.add_gate(gate.Y(1))
 circuit.add_gate(gate.RX(1, math.pi / 2))
 circuit.update_quantum_state(state)
 
-observable = Operator(n_qubits)
-observable.add_random_operator(1, 0)
+terms = []
+terms.append(PauliOperator(1, 0))
+observable = Operator(terms)
 value = observable.get_expectation_value(state)
 print(value)
 ```

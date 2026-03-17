@@ -7,6 +7,9 @@ on:
       - ".vscode/**"
       - "doc/**"
       - "*.md"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/workflows/yamllint.yml"
+      - ".yamllint"
 
 jobs:
   library:
@@ -85,7 +88,7 @@ jobs:
         with:
           key: "${{ matrix.os-arch }}-${{ matrix.compiler }}-${{ matrix.device }}"
           verbose: 2
-      
+
       - name: Install CUDA toolkit
         if: ${{ matrix.device == 'cuda' }}
         uses: Jimver/cuda-toolkit@v0.2.30
@@ -94,7 +97,7 @@ jobs:
           method: "local"
           linux-local-args: '["--toolkit"]'
           log-file-suffix: '${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}'
-      
+
       - name: Show installed Compiler version
         run: |
           [ $SCALUQ_USE_CUDA = 'ON' ] && nvcc --version
@@ -189,7 +192,7 @@ jobs:
           key: "${{ matrix.os-arch }}-${{ matrix.compiler }}-${{ matrix.device }}"
           save: false
           verbose: 2
-      
+
       - name: Install CUDA toolkit
         if: ${{ matrix.device == 'cuda' }}
         uses: Jimver/cuda-toolkit@v0.2.30
@@ -198,7 +201,7 @@ jobs:
           method: "local"
           linux-local-args: '["--toolkit"]'
           log-file-suffix: '${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}'
-      
+
       - name: Show installed Compiler version
         run: |
           [ $SCALUQ_USE_CUDA = 'ON' ] && nvcc --version
@@ -213,20 +216,20 @@ jobs:
         run: python -m pip install .
 
       - name: Run / Test stub
-        if: ${{ matrix.device == 'cpu' }} # currently GPU runner is not supported
+        if: ${{ matrix.device == 'cpu' }}  # currently GPU runner is not supported
         run: |
           echo -e "from scaluq.default.f64 import StateVector, gate\nstate = StateVector(2)\nx = gate.X(0)\nx.update_quantum_state(state)\nprint(state.get_amplitudes())" > /tmp/sample.py
           python /tmp/sample.py
           python -m mypy /tmp/sample.py
 
       - name: Run doctest default f64
-        if: ${{ matrix.device == 'cpu' }} # currently GPU runner is not supported
+        if: ${{ matrix.device == 'cpu' }}  # currently GPU runner is not supported
         run: |
           ( set -o pipefail; python python_test/run_doctest.py default f64 | tee /tmp/doctest.log )
           ! grep -q "Failed" /tmp/doctest.log
 
       - name: Run doctest host f64
-        if: ${{ matrix.device == 'cpu' }} # currently GPU runner is not supported
+        if: ${{ matrix.device == 'cpu' }}  # currently GPU runner is not supported
         run: |
           ( set -o pipefail; python python_test/run_doctest.py host f64 | tee /tmp/doctest.log )
           ! grep -q "Failed" /tmp/doctest.log

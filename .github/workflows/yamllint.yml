@@ -1,0 +1,23 @@
+name: yamllint
+
+on:
+  push:
+    paths:
+      - ".github/ISSUE_TEMPLATE/*.yml"
+      - ".github/workflows/*.yml"
+
+jobs:
+  yamllint:
+    name: Check YAML
+    runs-on: "ubuntu-24.04"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: sudo apt-get update && sudo apt-get install -y yamllint
+
+      - name: Running yamllint
+        run: |
+          yamllint .github/ISSUE_TEMPLATE
+          yamllint .github/workflows
