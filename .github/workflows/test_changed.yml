@@ -93,7 +93,7 @@ jobs:
             src/**.cpp
             tests/**.hpp
             tests/**.cpp
-      
+
       - name: Install Ninja
         if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && matrix.os-arch == 'linux-x86_64' }}
         run: sudo apt update && sudo apt install -y ninja-build
