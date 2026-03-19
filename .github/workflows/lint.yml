@@ -1,0 +1,27 @@
+name: Lint
+
+on:
+  push:
+    paths:
+      - ".github/**/*.yml"
+
+jobs:
+  lint:
+    name: Check YAML
+    runs-on: "ubuntu-24.04"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: sudo apt-get update && sudo apt-get install -y yamllint
+
+      - name: Run yamllint
+        run: |
+          yamllint -d "{extends: default, rules: {line-length: disable, document-start: disable, truthy: disable, comments-indentation: disable}}" .github
+
+      - name: Install actionlint
+        run: bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+
+      - name: Run actionlint
+        run: ./actionlint -color -ignore "info:"

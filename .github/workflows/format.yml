@@ -8,8 +8,7 @@ on:
       - "doc/**"
       - "*.md"
       - ".github/ISSUE_TEMPLATE/**"
-      - ".github/workflows/yamllint.yml"
-      - ".yamllint"
+      - ".github/workflows/lint.yml"
 
 jobs:
   check-format:
@@ -33,4 +32,4 @@ jobs:
           ninja -C build format
           diff=$(git diff)
           echo -n "$diff"
-          test $(echo -n "$diff" | wc -l) -eq 0
+          test "$(echo -n "$diff" | wc -l) -eq 0"
