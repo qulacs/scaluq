@@ -7,8 +7,7 @@ on:
       - ".vscode/**"
       - "*.md"
       - ".github/ISSUE_TEMPLATE/**"
-      - ".github/workflows/yamllint.yml"
-      - ".yamllint"
+      - ".github/workflows/lint.yml"
   workflow_dispatch:
 
 jobs:

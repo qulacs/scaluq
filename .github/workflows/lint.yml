@@ -1,13 +1,12 @@
-name: yamllint
+name: Lint
 
 on:
   push:
     paths:
-      - ".github/ISSUE_TEMPLATE/*.yml"
-      - ".github/workflows/*.yml"
+      - ".github/**/*.yml"
 
 jobs:
-  yamllint:
+  lint:
     name: Check YAML
     runs-on: "ubuntu-24.04"
     steps:
@@ -19,5 +18,4 @@ jobs:
 
       - name: Running yamllint
         run: |
-          yamllint .github/ISSUE_TEMPLATE
-          yamllint .github/workflows
+          yamllint -d "{extends: default, rules: {line-length: disable, document-start: disable, truthy: disable, comments-indentation: disable}}" .github
