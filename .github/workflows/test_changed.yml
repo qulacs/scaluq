@@ -62,8 +62,8 @@ jobs:
       - name: Setup LLVM Clang
         if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
         run: |
-          echo "$(brew --prefix llvm@18)/bin" >> $GITHUB_PATH
-          echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
+          echo "$(brew --prefix llvm@18)/bin" >> "$GITHUB_PATH"
+          echo "SDKROOT=$(xcrun --show-sdk-path)" >> "$GITHUB_ENV"
 
       - name: Check if build-related file is changed
         id: check-build-files
@@ -79,7 +79,7 @@ jobs:
 
       - name: Set SCALUQ_TEST_SOURCES to ALL
         if: ${{ steps.check-build-files.outputs.any_changed == 'true' }}
-        run: echo "SCALUQ_TEST_SOURCES=ALL" >> $GITHUB_ENV
+        run: echo "SCALUQ_TEST_SOURCES=ALL" >> "$GITHUB_ENV"
 
       - name: List changed source files
         id: check-source-files
@@ -109,7 +109,7 @@ jobs:
         if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
         run: |
           brew install libomp
-          echo "OpenMP_ROOT=$(brew --prefix libomp)" >> $GITHUB_ENV
+          echo "OpenMP_ROOT=$(brew --prefix libomp)" >> "$GITHUB_ENV"
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -130,7 +130,7 @@ jobs:
       - name: Show installed Compiler version
         if: ${{ steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true' }}
         run: |
-          [ $SCALUQ_USE_CUDA = 'ON' ] && nvcc --version
+          [ "$SCALUQ_USE_CUDA" = 'ON' ] && nvcc --version
           ccache --version
           $CMAKE_C_COMPILER --version
           $CMAKE_CXX_COMPILER --version
@@ -147,7 +147,7 @@ jobs:
             echo "Related test files:"
             echo "$RELATED_TEST_FILES"
             SCALUQ_TEST_SOURCES=$(echo "$RELATED_TEST_FILES" | tr '\n' ';')
-            echo "SCALUQ_TEST_SOURCES=$SCALUQ_TEST_SOURCES" >> $GITHUB_ENV
+            echo "SCALUQ_TEST_SOURCES=$SCALUQ_TEST_SOURCES" >> "$GITHUB_ENV"
           fi
 
       - name: Configure & Build
@@ -164,4 +164,4 @@ jobs:
           else
             NPROC=$(nproc)
           fi
-          OMP_PROC_BIND=false ctest --test-dir build/ -j ${NPROC} --output-on-failure
+          OMP_PROC_BIND=false ctest --test-dir build/ -j "${NPROC}" --output-on-failure
