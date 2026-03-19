@@ -69,10 +69,6 @@ jobs:
         if: ${{ matrix.os-arch == 'linux-x86_64' }}
         run: sudo apt update && sudo apt install ninja-build
 
-      - name: Install Ninja (macOS)
-        if: ${{ matrix.os-arch == 'macos-arm64' }}
-        run: brew install ninja
-
       - name: Install libomp (Linux clang)
         if: ${{ matrix.os-arch == 'linux-x86_64' && matrix.compiler == 'clang' }}
         run: sudo apt update && sudo apt install libomp-dev
