@@ -125,7 +125,7 @@ jobs:
           cuda: "12.9.1"
           method: "local"
           linux-local-args: '["--toolkit"]'
-          log-file-suffix: '${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}'
+          log-file-suffix: '${{ github.job }}-${{ matrix.os-arch }}-${{ matrix.device }}'
 
       - name: Show installed Compiler version
         if: ${{ steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true' }}

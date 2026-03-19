@@ -57,7 +57,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: "${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.device }}"
+          key: "${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.runs-on }}"
           save: false
           verbose: 2
 
