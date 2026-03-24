@@ -43,6 +43,34 @@ TYPED_TEST(StateVectorBatchedTest, LoadAndAmplitudes) {
     }
 }
 
+TYPED_TEST(StateVectorBatchedTest, SpaceConversionCreatesIndependentCopy) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    const std::uint64_t batch_size = 4, n_qubits = 3;
+    auto states =
+        StateVectorBatched<Prec, Space>::Haar_random_state(batch_size, n_qubits, false, 0);
+    const auto original = states.get_amplitudes();
+
+    auto states_default = states.copy_to_default_space();
+    auto states_host = states.copy_to_host_space();
+    auto default_amp = states_default.get_amplitudes();
+    auto host_amp = states_host.get_amplitudes();
+
+    for (std::uint64_t b = 0; b < batch_size; ++b) {
+        for (std::uint64_t i = 0; i < states.dim(); ++i) {
+            ASSERT_NEAR(default_amp[b][i].real(), original[b][i].real(), eps<Prec>);
+            ASSERT_NEAR(default_amp[b][i].imag(), original[b][i].imag(), eps<Prec>);
+            ASSERT_NEAR(host_amp[b][i].real(), original[b][i].real(), eps<Prec>);
+            ASSERT_NEAR(host_amp[b][i].imag(), original[b][i].imag(), eps<Prec>);
+        }
+    }
+
+    states_default.view_state_vector_at(0).set_amplitude_at(0, StdComplex(0.25, -0.5));
+    auto unchanged = states.get_state_vector_at(0).get_amplitude_at(0);
+    ASSERT_NEAR(unchanged.real(), original[0][0].real(), eps<Prec>);
+    ASSERT_NEAR(unchanged.imag(), original[0][0].imag(), eps<Prec>);
+}
+
 TYPED_TEST(StateVectorBatchedTest, OperateState) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;

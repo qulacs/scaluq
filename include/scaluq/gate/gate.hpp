@@ -261,7 +261,7 @@ concept GateImpl = std::derived_from<T, GateBase<T::Prec>>;
 
 template <GateImpl T>
 struct GetGateFromJson {
-    static std::shared_ptr<const T> get(const Json& j) {
+    static std::shared_ptr<const T> get(const Json&) {
         throw std::runtime_error("GetGateFromJson<T>::get() is not implemented");
     }
 };
@@ -416,40 +416,126 @@ template <typename GateT, Precision Prec>
 void register_gate_common_methods(nb::class_<GateT>& c) {
     using namespace nb::literals;
 
+    constexpr bool is_base_gate = std::is_same_v<GateT, Gate<Prec>>;
+
     c.def(nb::init<GateT>(), "Downcast from Gate.")
-        .def("gate_type", &GateT::gate_type, "Get gate type as `GateType` enum.")
+        .def("gate_type",
+             &GateT::gate_type,
+             ([]() {
+                 auto ds = DocString().desc("Get gate type as `GateType` enum.");
+                 if constexpr (is_base_gate) {
+                     ds.ex(DocString::Code(
+                         {">>> g = H(0)", ">>> print(g.gate_type())", "GateType.H"}));
+                 }
+                 return ds.build_as_google_style();
+             }())
+                 .c_str())
         .def(
             "target_qubit_list",
             [](const GateT& gate) { return gate->target_qubit_list(); },
-            "Get target qubits as `list[int]`. **Control qubits are not included.**")
+            ([]() {
+                auto ds = DocString().desc(
+                    "Get target qubits as `list[int]`. **Control qubits are not included.**");
+                if constexpr (is_base_gate) {
+                    ds.ex(DocString::Code(
+                        {">>> gate = CX(0, 1)", ">>> gate.target_qubit_list()", "[1]"}));
+                }
+                return ds.build_as_google_style();
+            }())
+                .c_str())
         .def(
             "control_qubit_list",
             [](const GateT& gate) { return gate->control_qubit_list(); },
-            "Get control qubits as `list[int]`.")
+            ([]() {
+                auto ds = DocString().desc("Get control qubits as `list[int]`.");
+                if constexpr (is_base_gate) {
+                    ds.ex(DocString::Code(
+                        {">>> gate = CX(0, 1)", ">>> gate.control_qubit_list()", "[0]"}));
+                }
+                return ds.build_as_google_style();
+            }())
+                .c_str())
         .def(
             "control_value_list",
             [](const GateT& gate) { return gate->control_value_list(); },
-            "Get control values as `list[int]`.")
+            ([]() {
+                auto ds = DocString().desc("Get control values as `list[int]`.");
+                if constexpr (is_base_gate) {
+                    ds.ex(DocString::Code(
+                        {">>> gate = CX(0, 1)", ">>> gate.control_value_list()", "[1]"}));
+                }
+                return ds.build_as_google_style();
+            }())
+                .c_str())
         .def(
             "operand_qubit_list",
             [](const GateT& gate) { return gate->operand_qubit_list(); },
-            "Get target and control qubits as `list[int]`.")
+            ([]() {
+                auto ds = DocString().desc("Get target and control qubits as `list[int]`.");
+                if constexpr (is_base_gate) {
+                    ds.ex(DocString::Code(
+                        {">>> gate = CX(0, 1)", ">>> gate.operand_qubit_list()", "[0, 1]"}));
+                }
+                return ds.build_as_google_style();
+            }())
+                .c_str())
         .def(
             "target_qubit_mask",
             [](const GateT& gate) { return gate->target_qubit_mask(); },
-            "Get target qubits as mask. **Control qubits are not included.**")
+            ([]() {
+                auto ds = DocString().desc(
+                    "Get target qubits as mask. **Control qubits are not included.**");
+                if constexpr (is_base_gate) {
+                    ds.ex(
+                        DocString::Code({">>> gate = H(0, controls=[1, 2], control_values=[1, 0])",
+                                         ">>> print(bin(gate.target_qubit_mask()))",
+                                         "0b1"}));
+                }
+                return ds.build_as_google_style();
+            }())
+                .c_str())
         .def(
             "control_qubit_mask",
             [](const GateT& gate) { return gate->control_qubit_mask(); },
-            "Get control qubits as mask.")
+            ([]() {
+                auto ds = DocString().desc("Get control qubits as mask.");
+                if constexpr (is_base_gate) {
+                    ds.ex(
+                        DocString::Code({">>> gate = H(0, controls=[1, 2], control_values=[1, 0])",
+                                         ">>> print(bin(gate.control_qubit_mask()))",
+                                         "0b110"}));
+                }
+                return ds.build_as_google_style();
+            }())
+                .c_str())
         .def(
             "control_value_mask",
             [](const GateT& gate) { return gate->control_value_mask(); },
-            "Get control values as mask.")
+            ([]() {
+                auto ds = DocString().desc("Get control values as mask.");
+                if constexpr (is_base_gate) {
+                    ds.ex(
+                        DocString::Code({">>> gate = H(0, controls=[1, 2], control_values=[1, 0])",
+                                         ">>> print(bin(gate.control_value_mask()))",
+                                         "0b10"}));
+                }
+                return ds.build_as_google_style();
+            }())
+                .c_str())
         .def(
             "operand_qubit_mask",
             [](const GateT& gate) { return gate->operand_qubit_mask(); },
-            "Get target and control qubits as mask.")
+            ([]() {
+                auto ds = DocString().desc("Get target and control qubits as mask.");
+                if constexpr (is_base_gate) {
+                    ds.ex(
+                        DocString::Code({">>> gate = H(0, controls=[1, 2], control_values=[1, 0])",
+                                         ">>> print(bin(gate.operand_qubit_mask()))",
+                                         "0b111"}));
+                }
+                return ds.build_as_google_style();
+            }())
+                .c_str())
         .def(
             "get_inverse",
             [](const GateT& gate) -> nb::object {
@@ -457,72 +543,174 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
                 if (!inv) return nb::none();
                 return nb::cast(Gate<Prec>(inv));
             },
-            "Generate inverse gate as `Gate` type. If not exists, return None.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate, StateVector<Prec, ExecutionSpace::Host>& state_vector) {
-                gate->update_quantum_state(state_vector);
-            },
-            "state_vector"_a,
-            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::Host>& states) {
-                gate->update_quantum_state(states);
-            },
-            "states"_a,
-            "Apply gate to `states`. `states` in args is directly updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate, StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) {
-                gate->update_quantum_state(state_vector);
-            },
-            "state_vector"_a,
-            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states) {
-                gate->update_quantum_state(states);
-            },
-            "states"_a,
-            "Apply gate to `states`. `states` in args is directly updated.")
-#ifdef SCALUQ_USE_CUDA
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate, StateVector<Prec, ExecutionSpace::Default>& state_vector) {
-                gate->update_quantum_state(state_vector);
-            },
-            "state_vector"_a,
-            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::Default>& states) {
-                gate->update_quantum_state(states);
-            },
-            "states"_a,
-            "Apply gate to `states`. `states` in args is directly updated.")
-#endif  // SCALUQ_USE_CUDA
+            ([]() {
+                auto ds = DocString().desc(
+                    "Generate inverse gate as `Gate` type. If not exists, return None.");
+                if constexpr (is_base_gate) {
+                    ds.ex(DocString::Code({">>> s = S(0)",
+                                           ">>> print(s.get_inverse())",
+                                           "Gate Type: Sdag",
+                                           "  Target Qubits: {0}",
+                                           "  Control Qubits: {}",
+                                           "  Control Value: {}"}));
+                }
+                return ds.build_as_google_style();
+            }())
+                .c_str())
         .def(
             "get_matrix",
             [](const GateT& gate) { return gate->get_matrix(); },
-            "Get matrix representation of the gate.")
+            ([]() {
+                auto ds = DocString().desc("Get matrix representation of the gate.");
+                if constexpr (is_base_gate) {
+                    ds.ex(
+                        DocString::Code({">>> gate = H(0, controls=[1, 2], control_values=[1, 0])",
+                                         ">>> print(gate.get_matrix())",
+                                         "[[ 0.70710678+0.j  0.70710678+0.j]",
+                                         " [ 0.70710678+0.j -0.70710678+0.j]]"}));
+                }
+                return ds.build_as_google_style();
+            }())
+                .c_str())
         .def(
             "to_string",
             [](const GateT& gate) { return gate->to_string(""); },
-            "Get string representation of the gate.")
+            ([]() {
+                auto ds = DocString().desc("Get string representation of the gate.");
+                if constexpr (is_base_gate) {
+                    ds.ex(DocString::Code({">>> g = H(0)",
+                                           ">>> print(g.to_string())",
+                                           "Gate Type: H  Target Qubits: {0}  Control Qubits: {}  "
+                                           "Control Value: {}"}));
+                }
+                return ds.build_as_google_style();
+            }())
+                .c_str())
         .def(
             "__str__",
             [](const GateT& gate) { return gate->to_string(""); },
-            "Get string representation of the gate.")
+            ([]() {
+                auto ds =
+                    DocString().desc("Information as `str`.").desc("Same as :meth:`.to_string()`.");
+                if constexpr (is_base_gate) {
+                    ds.ex(DocString::Code({">>> g = H(0)",
+                                           ">>> print(g)",
+                                           "Gate Type: H  Target Qubits: {0}  Control Qubits: {}  "
+                                           "Control Value: {}"}));
+                }
+                return ds.build_as_google_style();
+            }())
+                .c_str())
         .def(
             "to_json",
             [](const GateT& gate) { return Json(gate).dump(); },
-            "Get JSON representation of the gate.")
+            ([]() {
+                auto ds = DocString().desc("Get JSON representation of the gate.");
+                if constexpr (is_base_gate) {
+                    ds.ex(DocString::Code(
+                        {">>> g = H(0)",
+                         ">>> print(g.to_json())",
+                         "{\"control\":[],\"control_value\":[],\"target\":[0],\"type\":\"H\"}"}));
+                }
+                return ds.build_as_google_style();
+            }())
+                .c_str())
         .def(
             "load_json",
             [](GateT& gate, const std::string& str) { gate = nlohmann::json::parse(str); },
             "json_str"_a,
             "Read an object from the JSON representation of the gate.");
+
+    auto single_doc_str = ([]() {
+        auto ds = DocString().desc(
+            "Apply gate to `state_vector`. `state_vector` in args is directly updated.");
+        if constexpr (is_base_gate) {
+            ds.ex(DocString::Code({">>> state = StateVector(2)",
+                                   ">>> state.set_computational_basis(0)",
+                                   ">>> H(0).update_quantum_state(state)",
+                                   ">>> print(state)",
+                                   "Qubit Count : 2",
+                                   "Dimension : 4",
+                                   "State vector : ",
+                                   "  00 : (0.707107,0)",
+                                   "  01 : (0.707107,0)",
+                                   "  10 : (0,0)",
+                                   "  11 : (0,0)"}));
+        }
+        return ds.build_as_google_style();
+    }());
+    const char* up_single_ptr = single_doc_str.c_str();
+
+    auto batched_doc_str = ([]() {
+        auto ds = DocString().desc("Apply gate to `states`. `states` in args is directly updated.");
+        if constexpr (is_base_gate) {
+            ds.ex(DocString::Code({">>> states = StateVectorBatched(2, 1)",
+                                   ">>> states.set_computational_basis(0)",
+                                   ">>> H(0).update_quantum_state(states)",
+                                   ">>> print(states)",
+                                   "Qubit Count : 1",
+                                   "Dimension : 2",
+                                   "--------------------",
+                                   "Batch_id : 0",
+                                   "State vector : ",
+                                   "  0 : (0.707107,0)",
+                                   "  1 : (0.707107,0)",
+                                   "--------------------",
+                                   "Batch_id : 1",
+                                   "State vector : ",
+                                   "  0 : (0.707107,0)",
+                                   "  1 : (0.707107,0)",
+                                   "<BLANKLINE>"}));
+        }
+        return ds.build_as_google_style();
+    }());
+    const char* up_batched_ptr = batched_doc_str.c_str();
+
+    c.def(
+         "update_quantum_state",
+         [](const GateT& gate, StateVector<Prec, ExecutionSpace::Host>& sv) {
+             gate->update_quantum_state(sv);
+         },
+         "state_vector"_a,
+         up_single_ptr)
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::Host>& sv) {
+                gate->update_quantum_state(sv);
+            },
+            "states"_a,
+            up_batched_ptr)
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate, StateVector<Prec, ExecutionSpace::HostSerial>& sv) {
+                gate->update_quantum_state(sv);
+            },
+            "state_vector"_a,
+            up_single_ptr)
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::HostSerial>& sv) {
+                gate->update_quantum_state(sv);
+            },
+            "states"_a,
+            up_batched_ptr);
+
+#ifdef SCALUQ_USE_CUDA
+    c.def(
+         "update_quantum_state",
+         [](const GateT& gate, StateVector<Prec, ExecutionSpace::Default>& sv) {
+             gate->update_quantum_state(sv);
+         },
+         "state_vector"_a,
+         up_single_ptr)
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::Default>& sv) {
+                gate->update_quantum_state(sv);
+            },
+            "states"_a,
+            up_batched_ptr);
+#endif
 }
 
 void bind_gate_gate_hpp_without_precision_and_space(nb::module_& m) {

@@ -80,6 +80,8 @@ public:
     void load(const StateVector& other);
 
     [[nodiscard]] StateVector copy() const;
+    [[nodiscard]] StateVector<Prec, ExecutionSpace::Default> copy_to_default_space() const;
+    [[nodiscard]] StateVector<Prec, ExecutionSpace::Host> copy_to_host_space() const;
 
     friend std::ostream& operator<<(std::ostream& os, const StateVector& state) {
         os << state.to_string();
@@ -529,6 +531,22 @@ void bind_state_state_vector_hpp(nb::module_& m) {
              DocString()
                  .desc("Load amplitudes of :class:`StateVector`")
                  .arg("other", ":class:`StateVector`", "State vector to load from.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("copy_to_default_space",
+             &StateVector<Prec, Space>::copy_to_default_space,
+             DocString()
+                 .desc("Return a deep copy in the default execution space.")
+                 .ret(std::string(":class:`scaluq.default.") + to_string(Prec) + ".StateVector`",
+                      "Copied state vector.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("copy_to_host_space",
+             &StateVector<Prec, Space>::copy_to_host_space,
+             DocString()
+                 .desc("Return a deep copy in the host execution space.")
+                 .ret(std::string(":class:`scaluq.host.") + to_string(Prec) + ".StateVector`",
+                      "Copied state vector.")
                  .build_as_google_style()
                  .c_str())
         .def_static(

@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: (en/ja)Describe the task clearly.
-  
+
   - type: dropdown
     id: task_type
     attributes:
