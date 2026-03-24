@@ -2,11 +2,11 @@
 
 A quantum operator represents a mathematical object that acts on a quantum state, typically used to represent physical observables (such as energy) or to perform state transformations.
 
-Quantum operators in Scaluq are expressed as {class}Operator <scaluq.default.f64.Operator>, which is composed of one or more {class}PauliOperator <scaluq.default.f64.PauliOperator> instances.
+Quantum operators in Scaluq are expressed as {class}`Operator <scaluq.default.f64.Operator>`, which is composed of one or more {class}`PauliOperator <scaluq.default.f64.PauliOperator>` instances.
 
 ## PauliOperator
 
-{class}PauliOperator <scaluq.default.f64.PauliOperator> represents a tensor product of Pauli operations (I,X,Y,Z) acting on specific qubits, multiplied by a complex coefficient (coef).
+{class}`PauliOperator <scaluq.default.f64.PauliOperator>` represents a tensor product of Pauli operations (I,X,Y,Z) acting on specific qubits, multiplied by a complex coefficient (coef).
 
 Pauli operators can be defined flexibly using strings, lists, or bitmasks.
 
@@ -26,53 +26,37 @@ p3 = PauliOperator(bit_flip_mask=0b101, phase_flip_mask=0b010, coef=1.0)
 
 ## Operator
 
-The {class}Operator <scaluq.default.f64.Operator> class represents a more general operator (such as a Hamiltonian) that is the sum of multiple PauliOperator terms. 
-
-You can use {func}add_operator <scaluq.default.f64.Operator.add_operator> to add terms, or use standard Python arithmetic operators (+, -, *) to construct them intuitively.
+The {class}`Operator <scaluq.default.f64.Operator>` represents a general operator (such as a Hamiltonian) that is defined as a sum of multiple {class}`PauliOperator <scaluq.default.f64.PauliOperator>` terms.
 
 ```py
 from scaluq.default.f64 import Operator, PauliOperator
 
-# Initialize an operator for 2 qubits
-n_qubits = 2
-op1 = Operator(n_qubits)
+#prepare two pauli
+pauli1 = PauliOperator("Z 0 Z 1", coef=0.5) # (0.5 + 0.0j) Z0 Z1
+pauli2 = PauliOperator("Z 0 Z 1", coef=0.3) # (0.3 + 0.0j) Z0 Z1
+terms = [pauli1, pauli2]
 
-# Add a Pauli term
-op1.add_operator(PauliOperator("Z 0 Z 1", coef=1.0)) #(1.0 + 0.0j) Z0 Z1
+op1 = Operator(terms)
+print(op1) # (0.5 + 0.0j) Z0 Z1，(0.3 + 0.0j) Z0 Z1
 
-# Use arithmetic operations to add more terms or scale the operator
-op1 = op1 + PauliOperator("Z 0 Z 1", coef=0.5) # (1.0 + 0.0j) Z0 Z1 + (0.5 + 0.0j) Z0 Z1
-op1 *= 0.8 # (0.8 + 0.0j) Z0 Z1 + (0.4 + 0.0j) Z0 Z1
-
-
-op2 = Operator(n_qubits)
-op2.add_operator(PauliOperator("Z 0 Z 1", coef=1.0)) #(1.0 + 0.0j) Z0 Z1
-op2.add_operator(PauliOperator("Z 0 Z 1", coef=1.0)) #(1.0 + 0.0j) Z0 Z1 + (1.0 + 0.0j) Z0 Z1
-# Optimize to combine identical Pauli terms
-op2.optimize()  # (2.0 + 0.0j) Z0 Z1
+# you can optimize the operator by merging terms with the same Pauli string
+op1.optimize()
+print(op1) # (0.8 + 0.0j) Z0 Z1
 ```
 
 ## Calculating Expectation Values and Transition Amplitudes
 
-You can use defined operators to extract physical information from a {class}StateVector <scaluq.default.f64.StateVector>.
-Basic Calculations
-
-    Expectation Value: ⟨ψ∣O^∣ψ⟩ Calculated via {func}get_expectation_value <scaluq.default.f64.Operator.get_expectation_value>.
-
-    Transition Amplitude: ⟨ϕ∣O^∣ψ⟩ Calculated via {func}get_transition_amplitude <scaluq.default.f64.Operator.get_transition_amplitude>.
-
+You can use defined operators to extract physical information from a {class}`StateVector <scaluq.default.f64.StateVector>`.
 
 ```Python
 from scaluq.default.f64 import Operator, PauliOperator, StateVector
-
-n_qubits = 2
-op = Operator(n_qubits)
-op.add_operator(PauliOperator("Z 0 X 1", coef=1.0))
 
 # Initialize a random state vector using Haar measure
 state = StateVector.Haar_random_state(2)
 
 # 1. Get expectation value: <state|op|state>
+pauli = PauliOperator("Z 0 X 1", coef=1.0)
+op = Operator([pauli])
 exp_val = op.get_expectation_value(state)
 print(f"Expectation value: {exp_val}") # e.g., (0.16471708718595834+0j)
 
