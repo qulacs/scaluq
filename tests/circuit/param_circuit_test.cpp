@@ -18,8 +18,8 @@ void param_circuit_test() {
     std::uint64_t n_qubits = 5;
     Random random;
     for ([[maybe_unused]] std::uint64_t repeat : std::views::iota(0, 10)) {
-        Circuit<Prec> circuit(n_qubits);
-        Circuit<Prec> pcircuit(n_qubits);
+        Circuit<Prec> circuit;
+        Circuit<Prec> pcircuit;
         constexpr std::uint64_t nparams = 5;
         std::array<std::string, nparams> pkeys = {};
         for (std::uint64_t pidx : std::views::iota(std::uint64_t{0}, nparams))
@@ -102,7 +102,7 @@ TYPED_TEST(ParamCircuitTest, InsufficientParameterGiven) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     {
-        Circuit<Prec> circuit(1);
+        Circuit<Prec> circuit;
         circuit.add_param_gate(gate::ParamRX<Prec>(0), "0");
         circuit.add_param_gate(gate::ParamRX<Prec>(0), "1");
         circuit.add_param_gate(gate::ParamRX<Prec>(0), "0");
