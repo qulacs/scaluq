@@ -10,11 +10,11 @@
 using namespace scaluq;
 
 template <typename T>
-class CircuitBackpropTest : public FixtureBase<T> {};
-TYPED_TEST_SUITE(CircuitBackpropTest, TestTypes, NameGenerator);
+class CircuitExpectationGradientsTest : public FixtureBase<T> {};
+TYPED_TEST_SUITE(CircuitExpectationGradientsTest, TestTypes, NameGenerator);
 
 template <Precision Prec, ExecutionSpace Space>
-void backprop_test_parametric_rc() {
+void compute_expectation_gradients_test_parametric_rc() {
     const std::uint64_t n = 5;
     const std::uint64_t dim = 1ULL << n;
 
@@ -63,7 +63,7 @@ void backprop_test_parametric_rc() {
         circuit.add_param_gate(gate::ParamRZ<Prec>(gate_targets[idx_third], gate_coefs[idx_third]),
                                std::to_string(idx_third));
     }
-    auto gradients = circuit.backprop(op, parameters);
+    auto gradients = circuit.compute_expectation_gradients(op, parameters);
 
     // make gradients by eigen matrix calculation
     // make forward state
@@ -125,7 +125,7 @@ void backprop_test_parametric_rc() {
 }
 
 template <Precision Prec, ExecutionSpace Space>
-void backprop_test_parametric_rotation() {
+void compute_expectation_gradients_test_parametric_pauli_rotation() {
     const std::uint64_t n = 5;
     const std::uint64_t dim = 1ULL << n;
 
@@ -189,7 +189,7 @@ void backprop_test_parametric_rotation() {
                 pauli_rotation_coefs[idx_third]),
             std::to_string(idx_third));
     }
-    auto gradients = circuit.backprop(op, parameters);
+    auto gradients = circuit.compute_expectation_gradients(op, parameters);
 
     // make gradients by eigen matrix calculation
     // make forward state
@@ -253,14 +253,14 @@ void backprop_test_parametric_rotation() {
     }
 }
 
-TYPED_TEST(CircuitBackpropTest, BackpropCircuitParametricRC) {
+TYPED_TEST(CircuitExpectationGradientsTest, ComputeExpectationGradientsForParametricRC) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
-    backprop_test_parametric_rc<Prec, Space>();
+    compute_expectation_gradients_test_parametric_rc<Prec, Space>();
 }
 
-TYPED_TEST(CircuitBackpropTest, BackpropCircuitPauliRotation) {
+TYPED_TEST(CircuitExpectationGradientsTest, ComputeExpectationGradientsForPauliRotation) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
-    backprop_test_parametric_rotation<Prec, Space>();
+    compute_expectation_gradients_test_parametric_pauli_rotation<Prec, Space>();
 }

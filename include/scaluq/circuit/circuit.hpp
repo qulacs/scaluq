@@ -103,13 +103,13 @@ public:
         std::uint64_t seed = 0) const;
 
     template <ExecutionSpace Space>
-    std::unordered_map<std::string, double> backprop_inner_product(
+    std::unordered_map<std::string, double> compute_expectation_gradients_backprop(
         StateVector<Prec, Space>& state,
         StateVector<Prec, Space>& bistate,
         const std::map<std::string, double>& parameters);
 
     template <ExecutionSpace Space>
-    std::unordered_map<std::string, double> backprop(
+    std::unordered_map<std::string, double> compute_expectation_gradients(
         const Operator<Prec, Space>& observable, const std::map<std::string, double>& parameters);
 
 private:
@@ -240,14 +240,16 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "parameters"_a = std::map<std::string, double>{},
             "seed"_a = std::nullopt,
             "Simulate noise circuit. Return all the possible states and their counts.")
-        .def("backprop_inner_product",
-             &Circuit<Prec>::template backprop_inner_product<ExecutionSpace::Host>,
+        .def("compute_expectation_gradients_backprop",
+             &Circuit<Prec>::template compute_expectation_gradients_backprop<ExecutionSpace::Host>,
              "state"_a,
              "bistate"_a,
              "parameters"_a,
-             "Compute gradients of inner product between state and bistate using back propagation.")
-        .def("backprop",
-             &Circuit<Prec>::template backprop<ExecutionSpace::Host>,
+             "Low-level implementation for expectation gradients that assumes the forward state and "
+             "observable-applied bistate are already prepared, and computes gradients using back "
+             "propagation.")
+        .def("compute_expectation_gradients",
+             &Circuit<Prec>::template compute_expectation_gradients<ExecutionSpace::Host>,
              "observable"_a,
              "parameters"_a,
              "Compute gradients of expectation value of observable using back propagation.")
@@ -328,14 +330,17 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "parameters"_a = std::map<std::string, double>{},
             "seed"_a = std::nullopt,
             "Simulate noise circuit. Return all the possible states and their counts.")
-        .def("backprop_inner_product",
-             &Circuit<Prec>::template backprop_inner_product<ExecutionSpace::HostSerial>,
+        .def("compute_expectation_gradients_backprop",
+             &Circuit<Prec>::template compute_expectation_gradients_backprop<
+                 ExecutionSpace::HostSerial>,
              "state"_a,
              "bistate"_a,
              "parameters"_a,
-             "Compute gradients of inner product between state and bistate using back propagation.")
-        .def("backprop",
-             &Circuit<Prec>::template backprop<ExecutionSpace::HostSerial>,
+             "Low-level implementation for expectation gradients that assumes the forward state and "
+             "observable-applied bistate are already prepared, and computes gradients using back "
+             "propagation.")
+        .def("compute_expectation_gradients",
+             &Circuit<Prec>::template compute_expectation_gradients<ExecutionSpace::HostSerial>,
              "observable"_a,
              "parameters"_a,
              "Compute gradients of expectation value of observable using back propagation.")
@@ -416,14 +421,17 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "parameters"_a = std::map<std::string, double>{},
             "seed"_a = std::nullopt,
             "Simulate noise circuit. Return all the possible states and their counts.")
-        .def("backprop_inner_product",
-             &Circuit<Prec>::template backprop_inner_product<ExecutionSpace::Default>,
+        .def("compute_expectation_gradients_backprop",
+             &Circuit<Prec>::template compute_expectation_gradients_backprop<
+                 ExecutionSpace::Default>,
              "state"_a,
              "bistate"_a,
              "parameters"_a,
-             "Compute gradients of inner product between state and bistate using back propagation.")
-        .def("backprop",
-             &Circuit<Prec>::template backprop<ExecutionSpace::Default>,
+             "Low-level implementation for expectation gradients that assumes the forward state and "
+             "observable-applied bistate are already prepared, and computes gradients using back "
+             "propagation.")
+        .def("compute_expectation_gradients",
+             &Circuit<Prec>::template compute_expectation_gradients<ExecutionSpace::Default>,
              "observable"_a,
              "parameters"_a,
              "Compute gradients of expectation value of observable using back propagation.")
@@ -440,9 +448,8 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "Information as json style.")
         .def(
             "load_json",
-            [](Circuit<Prec>& circuit, const std::string& str) {
-                circuit = nlohmann::json::parse(str);
-            },
+            [](Circuit<Prec>& circuit,
+               const std::string& str) { circuit = nlohmann::json::parse(str); },
             "json_str"_a,
             "Read an object from the JSON representation of the circuit.");
 }

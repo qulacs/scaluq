@@ -501,7 +501,10 @@ void Circuit<Prec>::check_gate_is_valid(const ParamGate<Prec>& gate) const {
 
 template <Precision Prec>
 template <ExecutionSpace Space>
-std::unordered_map<std::string, double> Circuit<Prec>::backprop_inner_product(
+// Low-level implementation for expectation gradients that assumes the forward state and
+// observable-applied bistate are already prepared, and accumulates gradients by
+// traversing the circuit in reverse with backpropagation.
+std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradients_backprop(
     StateVector<Prec, Space>& state,
     StateVector<Prec, Space>& bistate,
     const std::map<std::string, double>& parameters) {
@@ -533,17 +536,19 @@ std::unordered_map<std::string, double> Circuit<Prec>::backprop_inner_product(
                 const double cre = static_cast<double>(std::real(c));
                 const double cim = static_cast<double>(std::imag(c));
                 if (std::abs(cim) >= eps) {
-                    throw std::runtime_error("backprop_inner_product: pauli coef must be real");
+                    throw std::runtime_error(
+                        "compute_expectation_gradients_backprop: pauli coef must be real");
                 }
                 if (std::abs(cre) < eps) {
-                    throw std::runtime_error("backprop_inner_product: pauli coef must be nonzero");
+                    throw std::runtime_error(
+                        "compute_expectation_gradients_backprop: pauli coef must be nonzero");
                 }
                 pauli_coef = cre;
             }
             const double scale = pgate->param_coef() * pauli_coef;
             if (std::abs(scale) < eps) {
                 throw std::runtime_error(
-                    "backprop_inner_product: param_coef or pauli coef is zero");
+                    "compute_expectation_gradients_backprop: param_coef or pauli coef is zero");
             }
             pgate->update_quantum_state(Astate, -M_PI / scale);
             const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
@@ -564,8 +569,8 @@ std::unordered_map<std::string, double> Circuit<Prec>::backprop_inner_product(
             auto inv = pgate->get_inverse();
             const auto it = parameters.find(key);
             if (it == parameters.end()) {
-                throw std::runtime_error("backprop_inner_product: missing parameter for key=" +
-                                         key);
+                throw std::runtime_error(
+                    "compute_expectation_gradients_backprop: missing parameter for key=" + key);
             }
             const auto param = it->second;
 
@@ -575,16 +580,19 @@ std::unordered_map<std::string, double> Circuit<Prec>::backprop_inner_product(
     }
     return gradients;
 }
-template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop_inner_product(
+template std::unordered_map<std::string, double>
+Circuit<internal::Prec>::compute_expectation_gradients_backprop(
     StateVector<internal::Prec, ExecutionSpace::Host>& state,
     StateVector<internal::Prec, ExecutionSpace::Host>& bistate,
     const std::map<std::string, double>& parameters);
-template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop_inner_product(
+template std::unordered_map<std::string, double>
+Circuit<internal::Prec>::compute_expectation_gradients_backprop(
     StateVector<internal::Prec, ExecutionSpace::HostSerial>& state,
     StateVector<internal::Prec, ExecutionSpace::HostSerial>& bistate,
     const std::map<std::string, double>& parameters);
 #ifdef SCALUQ_USE_CUDA
-template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop_inner_product(
+template std::unordered_map<std::string, double>
+Circuit<internal::Prec>::compute_expectation_gradients_backprop(
     StateVector<internal::Prec, ExecutionSpace::Default>& state,
     StateVector<internal::Prec, ExecutionSpace::Default>& bistate,
     const std::map<std::string, double>& parameters);
@@ -592,7 +600,7 @@ template std::unordered_map<std::string, double> Circuit<internal::Prec>::backpr
 
 template <Precision Prec>
 template <ExecutionSpace Space>
-std::unordered_map<std::string, double> Circuit<Prec>::backprop(
+std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradients(
     const Operator<Prec, Space>& obs, const std::map<std::string, double>& parameters) {
     const std::uint64_t n_qubits = this->n_qubits();
     StateVector<Prec, Space> state(n_qubits);
@@ -600,18 +608,21 @@ std::unordered_map<std::string, double> Circuit<Prec>::backprop(
 
     StateVector<Prec, Space> bistate = state.copy();
     obs.apply_to_state(bistate);
-    return backprop_inner_product(state, bistate, parameters);
+    return compute_expectation_gradients_backprop(state, bistate, parameters);
 }
-template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop<
-    ExecutionSpace::Host>(const Operator<internal::Prec, ExecutionSpace::Host>& obs,
-                          const std::map<std::string, double>& parameters);
-template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop<
-    ExecutionSpace::HostSerial>(const Operator<internal::Prec, ExecutionSpace::HostSerial>& obs,
-                                const std::map<std::string, double>& parameters);
+template std::unordered_map<std::string, double>
+Circuit<internal::Prec>::compute_expectation_gradients<ExecutionSpace::Host>(
+    const Operator<internal::Prec, ExecutionSpace::Host>& obs,
+    const std::map<std::string, double>& parameters);
+template std::unordered_map<std::string, double>
+Circuit<internal::Prec>::compute_expectation_gradients<ExecutionSpace::HostSerial>(
+    const Operator<internal::Prec, ExecutionSpace::HostSerial>& obs,
+    const std::map<std::string, double>& parameters);
 #ifdef SCALUQ_USE_CUDA
-template std::unordered_map<std::string, double> Circuit<internal::Prec>::backprop<
-    ExecutionSpace::Default>(const Operator<internal::Prec, ExecutionSpace::Default>& obs,
-                             const std::map<std::string, double>& parameters);
+template std::unordered_map<std::string, double>
+Circuit<internal::Prec>::compute_expectation_gradients<ExecutionSpace::Default>(
+    const Operator<internal::Prec, ExecutionSpace::Default>& obs,
+    const std::map<std::string, double>& parameters);
 #endif  // SCALUQ_USE_CUDA
 
 template class Circuit<internal::Prec>;
