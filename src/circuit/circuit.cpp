@@ -602,6 +602,10 @@ template <Precision Prec>
 template <ExecutionSpace Space>
 std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradients(
     const Operator<Prec, Space>& obs, const std::map<std::string, double>& parameters) {
+    if (!obs.is_hermitian()) {
+        throw std::runtime_error(
+            "compute_expectation_gradients: observable must be Hermitian");
+    }
     const std::uint64_t n_qubits = this->n_qubits();
     StateVector<Prec, Space> state(n_qubits);
     this->update_quantum_state(state, parameters);

@@ -264,3 +264,16 @@ TYPED_TEST(CircuitExpectationGradientsTest, ComputeExpectationGradientsForPauliR
     constexpr ExecutionSpace Space = TestFixture::Space;
     compute_expectation_gradients_test_parametric_pauli_rotation<Prec, Space>();
 }
+
+TYPED_TEST(CircuitExpectationGradientsTest, RejectsNonHermitianObservable) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Circuit<Prec> circuit(1);
+    circuit.add_param_gate(gate::ParamRX<Prec>(0, 1.0), "theta");
+
+    const Operator<Prec, Space> op({PauliOperator<Prec>("X 0", StdComplex(0.0, 1.0))});
+    const std::map<std::string, double> parameters{{"theta", 0.1}};
+
+    EXPECT_THROW((void)circuit.compute_expectation_gradients(op, parameters), std::runtime_error);
+}
