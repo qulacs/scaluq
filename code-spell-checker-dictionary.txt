@@ -2,6 +2,7 @@ arnoldi
 autoapi
 autoremove
 backprop
+backpropagation
 BFLOAT
 braket
 ccache
