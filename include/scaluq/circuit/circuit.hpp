@@ -1,7 +1,6 @@
 #pragma once
 
 #include <bit>
-
 #include <map>
 #include <set>
 #include <string_view>
@@ -40,9 +39,7 @@ public:
 
     [[nodiscard]] std::uint64_t calculate_depth() const;
 
-    void add_gate(const Gate<Prec>& gate) {
-        _gate_list.push_back(gate);
-    }
+    void add_gate(const Gate<Prec>& gate) { _gate_list.push_back(gate); }
     void add_param_gate(const ParamGate<Prec>& param_gate, std::string_view parameter_key) {
         _gate_list.push_back(std::make_pair(param_gate, std::string(parameter_key)));
     }
@@ -110,15 +107,15 @@ private:
 namespace internal {
 template <Precision Prec>
 void bind_circuit_circuit_hpp(nb::module_& m) {
-    nb::class_<Circuit<Prec>>(m,
-                              "Circuit",
-                              DocString()
-                                  .desc("Quantum circuit representation.")
-                                  .ex(DocString::Code({">>> circuit = Circuit()",
-                                                       ">>> print(circuit.to_json())",
-                                                       "{\"gate_list\":[]}"}))
-                                  .build_as_google_style()
-                                  .c_str())
+    nb::class_<Circuit<Prec>>(
+        m,
+        "Circuit",
+        DocString()
+            .desc("Quantum circuit representation.")
+            .ex(DocString::Code(
+                {">>> circuit = Circuit()", ">>> print(circuit.to_json())", "{\"gate_list\":[]}"}))
+            .build_as_google_style()
+            .c_str())
         .def(nb::init<>(), "Initialize empty circuit.")
         .def("gate_list",
              &Circuit<Prec>::gate_list,
