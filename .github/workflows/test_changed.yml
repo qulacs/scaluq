@@ -59,7 +59,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup LLVM Clang
+      - name: Setup LLVM Clang (macOS clang)
         if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
         run: |
           echo "$(brew --prefix llvm@18)/bin" >> "$GITHUB_PATH"
@@ -93,20 +93,16 @@ jobs:
             tests/**.hpp
             tests/**.cpp
 
-      - name: Install Ninja
+      - name: Install Ninja (Linux)
         if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && matrix.os-arch == 'linux-x86_64' }}
         run: sudo apt update && sudo apt install -y ninja-build
 
-      - name: Install Ninja
-        if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && matrix.os-arch == 'macos-arm64' }}
-        run: brew install ninja
+      - name: Install libomp (Linux clang)
+        if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && matrix.os-arch == 'linux-x86_64' && matrix.compiler == 'clang' }}
+        run: sudo apt update && sudo apt install -y libomp-dev
 
-      - name: Install libomp
-        if: ${{ matrix.os-arch == 'linux-x86_64' && matrix.compiler == 'clang' }}
-        run: sudo apt update && sudo apt install libomp-dev
-
-      - name: Install libomp
-        if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
+      - name: Install libomp (macOS clang)
+        if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
         run: |
           brew install libomp
           echo "OpenMP_ROOT=$(brew --prefix libomp)" >> "$GITHUB_ENV"

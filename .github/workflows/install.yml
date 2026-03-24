@@ -58,25 +58,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup LLVM Clang
+      - name: Setup LLVM Clang (macOS clang)
         if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
         run: |
           echo "$(brew --prefix llvm@18)/bin" >> "$GITHUB_PATH"
           echo "SDKROOT=$(xcrun --show-sdk-path)" >> "$GITHUB_ENV"
 
-      - name: Install Ninja
+      - name: Install Ninja (Linux)
         if: ${{ matrix.os-arch == 'linux-x86_64' }}
         run: sudo apt update && sudo apt install ninja-build
 
-      - name: Install Ninja
-        if: ${{ matrix.os-arch == 'macos-arm64' }}
-        run: brew install ninja
-
-      - name: Install libomp
+      - name: Install libomp (Linux clang)
         if: ${{ matrix.os-arch == 'linux-x86_64' && matrix.compiler == 'clang' }}
         run: sudo apt update && sudo apt install libomp-dev
 
-      - name: Install libomp
+      - name: Install libomp (macOS clang)
         if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
         run: |
           brew install libomp
@@ -169,17 +165,17 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Setup LLVM Clang
+      - name: Setup LLVM Clang (macOS clang)
         if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
         run: |
           echo "$(brew --prefix llvm@18)/bin" >> "$GITHUB_PATH"
           echo "SDKROOT=$(xcrun --show-sdk-path)" >> "$GITHUB_ENV"
 
-      - name: Install libomp
+      - name: Install libomp (Linux clang)
         if: ${{ matrix.os-arch == 'linux-x86_64' && matrix.compiler == 'clang' }}
         run: sudo apt update && sudo apt install libomp-dev
 
-      - name: Install libomp
+      - name: Install libomp (macOS clang)
         if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
         run: |
           brew install libomp
