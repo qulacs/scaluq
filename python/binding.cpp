@@ -15,8 +15,6 @@
 #include <nanobind/stl/variant.h>
 #include <nanobind/stl/vector.h>
 
-#include <stdfloat>
-
 #include "docstring.hpp"
 
 namespace nb = nanobind;

@@ -27,7 +27,12 @@ public:
 
     [[nodiscard]] Operator copy() const;
     void load(const std::vector<PauliOperator<Prec>>& terms);
-    static Operator uninitialized_operator(std::uint64_t n_terms);
+    static Operator uninitialized_operator(std::uint64_t n_terms) {
+        Operator tmp;
+        tmp._terms = Kokkos::View<PauliOperator<Prec>*, ExecutionSpaceType>(
+            Kokkos::ViewAllocateWithoutInitializing("terms"), n_terms);
+        return tmp;
+    }
 
     [[nodiscard]] inline bool is_hermitian() const { return _is_hermitian; }
     [[nodiscard]] inline std::vector<PauliOperator<Prec>> get_terms() const {
@@ -101,8 +106,8 @@ public:
         op = Operator<Prec, Space>(res);
     }
 
-    Operator<Prec, ExecutionSpace::Default> to_default_space() const;
-    Operator<Prec, ExecutionSpace::Host> to_host_space() const;
+    Operator<Prec, ExecutionSpace::Default> copy_to_default_space() const;
+    Operator<Prec, ExecutionSpace::Host> copy_to_host_space() const;
 
     friend std::ostream& operator<<(std::ostream& os, const Operator& op) {
         return os << op.to_string();
@@ -310,6 +315,18 @@ void bind_operator_operator_hpp(nb::module_& m) {
              DocString()
                  .desc("Calculate a default shift value `mu` for ground state solvers.")
                  .ret("complex", "Calculated shift value `mu`.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("copy_to_default_space",
+             &Operator<Prec, Space>::copy_to_default_space,
+             DocString()
+                 .desc("Return a deep copy in the default execution space.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("copy_to_host_space",
+             &Operator<Prec, Space>::copy_to_host_space,
+             DocString()
+                 .desc("Return a deep copy in the host execution space.")
                  .build_as_google_style()
                  .c_str())
         .def(nb::self *= StdComplex())

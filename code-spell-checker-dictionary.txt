@@ -59,6 +59,7 @@ kwargs
 libboost-dev
 LIBDL
 libexec
+libomp
 libpython
 lsum
 lukka
@@ -105,6 +106,7 @@ scikit
 scipy
 Sdag
 sdist
+SDKROOT
 seccomp
 setuptools
 SKBUILD
@@ -132,6 +134,7 @@ Wtype-limits
 Wuninitialized
 Wunused
 xaver
+xcrun
 xcoef
 Xdag
 ycoef
