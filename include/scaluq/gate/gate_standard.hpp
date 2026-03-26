@@ -892,6 +892,50 @@ public:
     }
 };
 
+template <Precision Prec>
+class EcrGateImpl : public GateBase<Prec> {
+    std::uint64_t _target1_mask;
+
+public:
+    EcrGateImpl(std::uint64_t target_mask,
+                std::uint64_t control_mask,
+                std::uint64_t control_value_mask,
+                std::uint64_t target1_mask)
+        : GateBase<Prec>(target_mask, control_mask, control_value_mask),
+          _target1_mask(target1_mask) {}
+
+    std::uint64_t target1_mask() const { return _target1_mask; }
+
+    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
+        return this->shared_from_this();
+    }
+    ComplexMatrix get_matrix() const override;
+
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(
+        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+    void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+#ifdef SCALUQ_USE_CUDA
+    void update_quantum_state(
+        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+    void update_quantum_state(
+        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+#endif  // SCALUQ_USE_CUDA
+
+    std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "Ecr"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
+                 {"target1", this->target1_mask()}};
+    }
+};
+
 }  // namespace internal
 
 template <Precision Prec>
@@ -940,6 +984,8 @@ template <Precision Prec>
 using U3Gate = internal::GatePtr<internal::U3GateImpl<Prec>>;
 template <Precision Prec>
 using SwapGate = internal::GatePtr<internal::SwapGateImpl<Prec>>;
+template <Precision Prec>
+using EcrGate = internal::GatePtr<internal::EcrGateImpl<Prec>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
@@ -1091,6 +1137,19 @@ void bind_gate_gate_standard_hpp(nb::module_& m, nb::class_<Gate<Prec>>& gate_ba
             "Get `lambda` property.");
     bind_specific_gate<SwapGate<Prec>, Prec>(
         m, gate_base_def, "SwapGate", "Specific class of two-qubit swap gate.");
+    bind_specific_gate<EcrGate<Prec>, Prec>(m,
+                                            gate_base_def,
+                                            "EcrGate",
+                                            "Specific class of two-qubit ecr gate."
+                                            "represented as "
+                                            "$\\frac{1}{\\sqrt{2}}\\begin{bmatrix}"
+                                            "0 & 1 & 0 & i \\\\ "
+                                            "1 & 0 & -i & 0 \\\\ "
+                                            "0 & i & 0 & 1 \\\\ "
+                                            "-i & 0 & 1 & 0 \\end{bmatrix}$.")
+        .def("target1_mask", [](const EcrGate<Prec>& gate) {
+            return gate->target1_mask();
+        } "Get `target1` property.");
 }
 }  // namespace internal
 #endif
