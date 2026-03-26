@@ -753,6 +753,42 @@ DEFINE_SWAP_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
 #undef DEFINE_SWAP_GATE_UPDATE
 template class SwapGateImpl<Prec>;
 
+template <Precision Prec>
+ComplexMatrix EcrGateImpl<Prec>::get_matrix() const {
+    ComplexMatrix mat = ComplexMatrix::Identity(1 << 2, 1 << 2);
+    mat << 0, 1, 0, StdComplex(0, 1), 1, 0, StdComplex(0, -1), 0, 0, StdComplex(0, 1), 0, 1,
+        StdComplex(0, -1), 0, 1, 0;
+    mat /= Kokkos::numbers::sqrt2;
+    return mat;
+}
+template <Precision Prec>
+std::string EcrGateImpl<Prec>::to_string(const std::string& indent) const {
+    std::ostringstream ss;
+    ss << indent << "Gate Type: Ecr\n";
+    ss << this->get_qubit_info_as_string(indent);
+    return ss.str();
+}
+#define DEFINE_ECR_GATE_UPDATE(Class, Space)                                               \
+    template <Precision Prec>                                                              \
+    void EcrGateImpl<Prec>::update_quantum_state(Class<Prec, Space>& state_vector) const { \
+        this->check_qubit_mask_within_bounds(state_vector);                                \
+        ecr_gate(this->_target_mask,                                                       \
+                 this->_control_mask,                                                      \
+                 this->_control_value_mask,                                                \
+                 this->_target1_mask,                                                      \
+                 state_vector);                                                            \
+    }
+DEFINE_ECR_GATE_UPDATE(StateVector, ExecutionSpace::Host)
+DEFINE_ECR_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
+DEFINE_ECR_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
+DEFINE_ECR_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_ECR_GATE_UPDATE(StateVector, ExecutionSpace::Default)
+DEFINE_ECR_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
+#undef DEFINE_ECR_GATE_UPDATE
+template class EcrGateImpl<Prec>;
+
 // I
 template <Precision Prec>
 std::shared_ptr<const IGateImpl<Prec>> GetGateFromJson<IGateImpl<Prec>>::get(const Json&) {
@@ -868,4 +904,18 @@ std::shared_ptr<const SwapGateImpl<Prec>> GetGateFromJson<SwapGateImpl<Prec>>::g
         vector_to_mask(control_qubits, control_values));
 }
 template struct GetGateFromJson<SwapGateImpl<Prec>>;
+
+// Ecr
+template <Precision Prec>
+std::shared_ptr<const EcrGateImpl<Prec>> GetGateFromJson<EcrGateImpl<Prec>>::get(const Json& j) {
+    auto control_qubits = j.at("control").get<std::vector<std::uint64_t>>();
+    auto control_values = j.at("control_value").get<std::vector<std::uint64_t>>();
+    return std::make_shared<const EcrGateImpl<Prec>>(
+        vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),
+        vector_to_mask(control_qubits),
+        vector_to_mask(control_qubits, control_values),
+        vector_to_mask(j.at("target1").get<std::vector<std::uint64_t>>()));
+}
+template struct GetGateFromJson<EcrGateImpl<Prec>>;
+
 }  // namespace scaluq::internal
