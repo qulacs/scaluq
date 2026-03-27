@@ -184,7 +184,7 @@
         return ::scaluq::gate::Swap<Prec>(target1, target2, controls, control_values);         \
     }                                                                                          \
     inline Gate Ecr(std::uint64_t control, std::uint64_t target) {                             \
-        return ::scaluq::gate::Ecr<Prec>(target1, target2);                                    \
+        return ::scaluq::gate::Ecr<Prec>(control, target);                                     \
     }                                                                                          \
     inline Gate Pauli(const PauliOperator& pauli,                                              \
                       const std::vector<std::uint64_t>& controls = {},                         \
