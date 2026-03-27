@@ -894,17 +894,8 @@ public:
 
 template <Precision Prec>
 class EcrGateImpl : public GateBase<Prec> {
-    std::uint64_t _target1_mask;
-
 public:
-    EcrGateImpl(std::uint64_t target_mask,
-                std::uint64_t control_mask,
-                std::uint64_t control_value_mask,
-                std::uint64_t target1_mask)
-        : GateBase<Prec>(target_mask, control_mask, control_value_mask),
-          _target1_mask(target1_mask) {}
-
-    std::uint64_t target1_mask() const { return _target1_mask; }
+    using GateBase<Prec>::GateBase;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
@@ -931,8 +922,7 @@ public:
         j = Json{{"type", "Ecr"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
-                 {"control_value", this->control_value_list()},
-                 {"target1", this->target1_mask()}};
+                 {"control_value", this->control_value_list()}};
     }
 };
 
@@ -1142,14 +1132,11 @@ void bind_gate_gate_standard_hpp(nb::module_& m, nb::class_<Gate<Prec>>& gate_ba
                                             "EcrGate",
                                             "Specific class of two-qubit ecr gate."
                                             "represented as "
-                                            "$\\frac{1}{\\sqrt{2}}\\begin{bmatrix}"
+                                            "$\\frac{1}{\\sqrt{2}}\\begin{bmatrix} "
                                             "0 & 1 & 0 & i \\\\ "
                                             "1 & 0 & -i & 0 \\\\ "
                                             "0 & i & 0 & 1 \\\\ "
-                                            "-i & 0 & 1 & 0 \\end{bmatrix}$.")
-        .def("target1_mask", [](const EcrGate<Prec>& gate) {
-            return gate->target1_mask();
-        } "Get `target1` property.");
+                                            "-i & 0 & 1 & 0 \\end{bmatrix}$.");
 }
 }  // namespace internal
 #endif

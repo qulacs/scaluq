@@ -682,9 +682,7 @@ template <>
 void ecr_gate(std::uint64_t target_mask,
               std::uint64_t control_mask,
               std::uint64_t control_value_mask,
-              std::uint64_t target1_mask,
               StateVector<Prec, Space>& state) {
-    std::uint64_t target2_mask = target_mask ^ target1_mask;
     Kokkos::parallel_for(
         "ecr_gate",
         Kokkos::RangePolicy<SpaceType<Space>>(
@@ -692,9 +690,9 @@ void ecr_gate(std::uint64_t target_mask,
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis_0 =
                 insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
-            std::uint64_t basis_1 = basis_0 | target1_mask;
-            std::uint64_t basis_2 = basis_0 | target2_mask;
-            std::uint64_t basis_3 = basis_0 | target_mask;
+            std::uint64_t basis_1 = basis_0 | control_mask;
+            std::uint64_t basis_2 = basis_0 | target_mask;
+            std::uint64_t basis_3 = basis_1 | target_mask;
 
             Complex<Prec> val0 = state._raw[basis_0];
             Complex<Prec> val1 = state._raw[basis_1];
@@ -721,9 +719,7 @@ template <>
 void ecr_gate(std::uint64_t target_mask,
               std::uint64_t control_mask,
               std::uint64_t control_value_mask,
-              std::uint64_t target1_mask,
               StateVectorBatched<Prec, Space>& states) {
-    std::uint64_t target2_mask = target_mask ^ target1_mask;
     const std::uint64_t span = states.dim() >> std::popcount(target_mask | control_mask);
     Kokkos::parallel_for(
         "ecr_gate_flat",
@@ -733,9 +729,9 @@ void ecr_gate(std::uint64_t target_mask,
             const std::uint64_t it = g % span;
             std::uint64_t basis_0 =
                 insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
-            std::uint64_t basis_1 = basis_0 | target1_mask;
-            std::uint64_t basis_2 = basis_0 | target2_mask;
-            std::uint64_t basis_3 = basis_0 | target_mask;
+            std::uint64_t basis_1 = basis_0 | control_mask;
+            std::uint64_t basis_2 = basis_0 | target_mask;
+            std::uint64_t basis_3 = basis_1 | target_mask;
 
             Complex<Prec> val0 = states._raw(batch_id, basis_0);
             Complex<Prec> val1 = states._raw(batch_id, basis_1);

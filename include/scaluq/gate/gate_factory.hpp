@@ -290,16 +290,11 @@ inline Gate<Prec> Swap(std::uint64_t target1,
         internal::vector_to_mask(controls, control_values));
 }
 template <Precision Prec>
-inline Gate<Prec> Ecr(std::uint64_t target1,
-                      std::uint64_t target2,
-                      const std::vector<std::uint64_t>& controls = {},
-                      std::vector<std::uint64_t> control_values = {}) {
-    internal::resize_and_check_control_values(controls, control_values);
+inline Gate<Prec> Ecr(std::uint64_t control, std::uint64_t target) {
     return internal::GateFactory::create_gate<internal::EcrGateImpl<Prec>>(
-        internal::vector_to_mask({target1, target2}),
-        internal::vector_to_mask(controls),
-        internal::vector_to_mask(controls, control_values),
-        internal::vector_to_mask({target1}));
+        internal::vector_to_mask({target}),
+        internal::vector_to_mask({control}),
+        internal::vector_to_mask({}));
 }
 template <Precision Prec>
 inline Gate<Prec> Pauli(const PauliOperator<Prec>& pauli,
@@ -903,23 +898,19 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .c_str());
     mgate.def(
         "Ecr",
-        &gate::Swap<Prec>,
-        "target1"_a,
-        "target2"_a,
-        "controls"_a = std::vector<std::uint64_t>{},
-        "control_values"_a = std::vector<std::uint64_t>{},
+        &gate::Ecr<Prec>,
+        "control"_a,
+        "target"_a,
         DocString()
-            .desc("Generate ECR gate.")
+            .desc("Generate ECR gate. Echoed cross-resonance gate.")
             .note(
                 "If you need to use functions specific to the :class:`~scaluq.f64.EcrGate` class, "
                 "please downcast it.")
-            .arg("target1", "int", "First target qubit index")
-            .arg("target2", "int", "Second target qubit index")
-            .arg("controls", "list[int]", true, "Control qubit indices")
-            .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("control", "int", "Control qubit index")
+            .arg("target", "int", "Target qubit index")
             .ret("Gate", "Ecr gate instance")
-            .ex(DocString::Code({">>> gate = Ecr(0, 1)  # target1:0 and target2:1",
-                                 ">>> gate = Ecr(1, 2, [0])  # Controlled-ECR"}))
+            .ex(DocString::Code({">>> gate = Ecr(0, 1)  # control : 0 and target : 1",
+                                 ">>> gate = Ecr(0, 2)  # control : 1 and target : 2"}))
             .build_as_google_style()
             .c_str());
     mgate.def("CX",

@@ -509,13 +509,11 @@ template <Precision Prec, ExecutionSpace Space>
 void ecr_gate(std::uint64_t target_mask,
               std::uint64_t control_mask,
               std::uint64_t control_value_mask,
-              std::uint64_t target1_mask,
               StateVector<Prec, Space>& state);
 template <Precision Prec, ExecutionSpace Space>
 void ecr_gate(std::uint64_t target_mask,
               std::uint64_t control_mask,
               std::uint64_t control_value_mask,
-              std::uint64_t target1_mask,
               StateVectorBatched<Prec, Space>& state);
 
 template <Precision Prec, ExecutionSpace Space>

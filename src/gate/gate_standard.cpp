@@ -768,15 +768,12 @@ std::string EcrGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_ECR_GATE_UPDATE(Class, Space)                                               \
-    template <Precision Prec>                                                              \
-    void EcrGateImpl<Prec>::update_quantum_state(Class<Prec, Space>& state_vector) const { \
-        this->check_qubit_mask_within_bounds(state_vector);                                \
-        ecr_gate(this->_target_mask,                                                       \
-                 this->_control_mask,                                                      \
-                 this->_control_value_mask,                                                \
-                 this->_target1_mask,                                                      \
-                 state_vector);                                                            \
+#define DEFINE_ECR_GATE_UPDATE(Class, Space)                                                   \
+    template <Precision Prec>                                                                  \
+    void EcrGateImpl<Prec>::update_quantum_state(Class<Prec, Space>& state_vector) const {     \
+        this->check_qubit_mask_within_bounds(state_vector);                                    \
+        ecr_gate(                                                                              \
+            this->_target_mask, this->_control_mask, this->_control_value_mask, state_vector); \
     }
 DEFINE_ECR_GATE_UPDATE(StateVector, ExecutionSpace::Host)
 DEFINE_ECR_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
@@ -913,8 +910,7 @@ std::shared_ptr<const EcrGateImpl<Prec>> GetGateFromJson<EcrGateImpl<Prec>>::get
     return std::make_shared<const EcrGateImpl<Prec>>(
         vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),
         vector_to_mask(control_qubits),
-        vector_to_mask(control_qubits, control_values),
-        vector_to_mask(j.at("target1").get<std::vector<std::uint64_t>>()));
+        vector_to_mask(control_qubits, control_values));
 }
 template struct GetGateFromJson<EcrGateImpl<Prec>>;
 
