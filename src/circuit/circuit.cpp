@@ -501,10 +501,10 @@ void Circuit<Prec>::check_gate_is_valid(const ParamGate<Prec>& gate) const {
 
 template <Precision Prec>
 template <ExecutionSpace Space>
-// Low-level implementation for expectation gradients that assumes the forward state and
-// observable-applied bistate are already prepared, and accumulates gradients by
+// Low-level implementation for expectation gradient that assumes the forward state and
+// observable-applied bistate are already prepared, and accumulates gradient by
 // traversing the circuit in reverse with backpropagation.
-std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradients_backprop(
+std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradient_backprop(
     StateVector<Prec, Space>& state,
     StateVector<Prec, Space>& bistate,
     const std::map<std::string, double>& parameters) {
@@ -512,11 +512,11 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
     const std::uint64_t n_qubits = this->n_qubits();
     const std::uint64_t n_gates = this->n_gates();
 
-    std::unordered_map<std::string, double> gradients;
+    std::unordered_map<std::string, double> gradient;
     const auto& key_set = this->key_set();
-    gradients.reserve(key_set.size());
+    gradient.reserve(key_set.size());
     for (const auto& key : key_set) {
-        gradients.emplace(key, 0.0);
+        gradient.emplace(key, 0.0);
     }
 
     StateVector<Prec, Space> Astate(n_qubits);
@@ -537,24 +537,24 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
                 const double cim = static_cast<double>(std::imag(c));
                 if (std::abs(cim) >= eps) {
                     throw std::runtime_error(
-                        "compute_expectation_gradients_backprop: pauli coef must be real");
+                        "compute_expectation_gradient_backprop: pauli coef must be real");
                 }
                 if (std::abs(cre) < eps) {
                     throw std::runtime_error(
-                        "compute_expectation_gradients_backprop: pauli coef must be nonzero");
+                        "compute_expectation_gradient_backprop: pauli coef must be nonzero");
                 }
                 pauli_coef = cre;
             }
             const double scale = pgate->param_coef() * pauli_coef;
             if (std::abs(scale) < eps) {
                 throw std::runtime_error(
-                    "compute_expectation_gradients_backprop: param_coef or pauli coef is zero");
+                    "compute_expectation_gradient_backprop: param_coef or pauli coef is zero");
             }
             pgate->update_quantum_state(Astate, -M_PI / scale);
             const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
             const double contrib = -scale * static_cast<double>(ip.real());
 
-            gradients[key] += contrib;
+            gradient[key] += contrib;
         }
 
         if (cur_gate.index() == 0) {
@@ -570,7 +570,7 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
             const auto it = parameters.find(key);
             if (it == parameters.end()) {
                 throw std::runtime_error(
-                    "compute_expectation_gradients_backprop: missing parameter for key=" + key);
+                    "compute_expectation_gradient_backprop: missing parameter for key=" + key);
             }
             const auto param = it->second;
 
@@ -578,21 +578,21 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
             inv->update_quantum_state(state, param);
         }
     }
-    return gradients;
+    return gradient;
 }
 template std::unordered_map<std::string, double>
-Circuit<internal::Prec>::compute_expectation_gradients_backprop(
+Circuit<internal::Prec>::compute_expectation_gradient_backprop(
     StateVector<internal::Prec, ExecutionSpace::Host>& state,
     StateVector<internal::Prec, ExecutionSpace::Host>& bistate,
     const std::map<std::string, double>& parameters);
 template std::unordered_map<std::string, double>
-Circuit<internal::Prec>::compute_expectation_gradients_backprop(
+Circuit<internal::Prec>::compute_expectation_gradient_backprop(
     StateVector<internal::Prec, ExecutionSpace::HostSerial>& state,
     StateVector<internal::Prec, ExecutionSpace::HostSerial>& bistate,
     const std::map<std::string, double>& parameters);
 #ifdef SCALUQ_USE_CUDA
 template std::unordered_map<std::string, double>
-Circuit<internal::Prec>::compute_expectation_gradients_backprop(
+Circuit<internal::Prec>::compute_expectation_gradient_backprop(
     StateVector<internal::Prec, ExecutionSpace::Default>& state,
     StateVector<internal::Prec, ExecutionSpace::Default>& bistate,
     const std::map<std::string, double>& parameters);
@@ -600,11 +600,10 @@ Circuit<internal::Prec>::compute_expectation_gradients_backprop(
 
 template <Precision Prec>
 template <ExecutionSpace Space>
-std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradients(
+std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradient(
     const Operator<Prec, Space>& obs, const std::map<std::string, double>& parameters) {
     if (!obs.is_hermitian()) {
-        throw std::runtime_error(
-            "compute_expectation_gradients: observable must be Hermitian");
+        throw std::runtime_error("compute_expectation_gradient: observable must be Hermitian");
     }
     const std::uint64_t n_qubits = this->n_qubits();
     StateVector<Prec, Space> state(n_qubits);
@@ -612,19 +611,19 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
 
     StateVector<Prec, Space> bistate = state.copy();
     obs.apply_to_state(bistate);
-    return compute_expectation_gradients_backprop(state, bistate, parameters);
+    return compute_expectation_gradient_backprop(state, bistate, parameters);
 }
 template std::unordered_map<std::string, double>
-Circuit<internal::Prec>::compute_expectation_gradients<ExecutionSpace::Host>(
+Circuit<internal::Prec>::compute_expectation_gradient<ExecutionSpace::Host>(
     const Operator<internal::Prec, ExecutionSpace::Host>& obs,
     const std::map<std::string, double>& parameters);
 template std::unordered_map<std::string, double>
-Circuit<internal::Prec>::compute_expectation_gradients<ExecutionSpace::HostSerial>(
+Circuit<internal::Prec>::compute_expectation_gradient<ExecutionSpace::HostSerial>(
     const Operator<internal::Prec, ExecutionSpace::HostSerial>& obs,
     const std::map<std::string, double>& parameters);
 #ifdef SCALUQ_USE_CUDA
 template std::unordered_map<std::string, double>
-Circuit<internal::Prec>::compute_expectation_gradients<ExecutionSpace::Default>(
+Circuit<internal::Prec>::compute_expectation_gradient<ExecutionSpace::Default>(
     const Operator<internal::Prec, ExecutionSpace::Default>& obs,
     const std::map<std::string, double>& parameters);
 #endif  // SCALUQ_USE_CUDA

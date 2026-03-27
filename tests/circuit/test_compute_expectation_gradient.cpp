@@ -10,11 +10,11 @@
 using namespace scaluq;
 
 template <typename T>
-class CircuitExpectationGradientsTest : public FixtureBase<T> {};
-TYPED_TEST_SUITE(CircuitExpectationGradientsTest, TestTypes, NameGenerator);
+class CircuitExpectationGradientTest : public FixtureBase<T> {};
+TYPED_TEST_SUITE(CircuitExpectationGradientTest, TestTypes, NameGenerator);
 
 template <Precision Prec, ExecutionSpace Space>
-void compute_expectation_gradients_test_parametric_rc() {
+void compute_expectation_gradient_test_parametric_rc() {
     const std::uint64_t n = 5;
     const std::uint64_t dim = 1ULL << n;
 
@@ -63,9 +63,9 @@ void compute_expectation_gradients_test_parametric_rc() {
         circuit.add_param_gate(gate::ParamRZ<Prec>(gate_targets[idx_third], gate_coefs[idx_third]),
                                std::to_string(idx_third));
     }
-    auto gradients = circuit.compute_expectation_gradients(op, parameters);
+    auto gradient = circuit.compute_expectation_gradient(op, parameters);
 
-    // make gradients by eigen matrix calculation
+    // make gradient by eigen matrix calculation
     // make forward state
     ComplexVector state_eigen = ComplexVector::Zero(dim);
     state_eigen[0] = StdComplex(1.0, 0.0);
@@ -91,7 +91,7 @@ void compute_expectation_gradients_test_parametric_rc() {
     }
     ComplexVector bistate_eigen = operator_matrix * state_eigen;
 
-    std::unordered_map<std::string, double> gradients_eigen;
+    std::unordered_map<std::string, double> gradient_eigen;
 
     // apply inverse gates
     for (int idx = matrices.size() - 1; idx >= 0; idx--) {
@@ -112,7 +112,7 @@ void compute_expectation_gradients_test_parametric_rc() {
 
         const StdComplex ip = (bistate_eigen.adjoint() * tmp_state)(0, 0);
         const double contrib = -gate_coefs[idx] * static_cast<double>(ip.real());
-        gradients_eigen[std::to_string(idx)] += contrib;
+        gradient_eigen[std::to_string(idx)] += contrib;
 
         const auto& gate = matrices[idx];
         state_eigen = gate.adjoint() * state_eigen;
@@ -120,12 +120,12 @@ void compute_expectation_gradients_test_parametric_rc() {
     }
 
     for (auto idx = std::size_t{0}; idx < 3 * n; idx++) {
-        check_near<Prec>(gradients[std::to_string(idx)], gradients_eigen[std::to_string(idx)]);
+        check_near<Prec>(gradient[std::to_string(idx)], gradient_eigen[std::to_string(idx)]);
     }
 }
 
 template <Precision Prec, ExecutionSpace Space>
-void compute_expectation_gradients_test_parametric_pauli_rotation() {
+void compute_expectation_gradient_test_parametric_pauli_rotation() {
     const std::uint64_t n = 5;
     const std::uint64_t dim = 1ULL << n;
 
@@ -189,9 +189,9 @@ void compute_expectation_gradients_test_parametric_pauli_rotation() {
                 pauli_rotation_coefs[idx_third]),
             std::to_string(idx_third));
     }
-    auto gradients = circuit.compute_expectation_gradients(op, parameters);
+    auto gradient = circuit.compute_expectation_gradient(op, parameters);
 
-    // make gradients by eigen matrix calculation
+    // make gradient by eigen matrix calculation
     // make forward state
     ComplexVector state_eigen = ComplexVector::Zero(dim);
     state_eigen[0] = StdComplex(1.0, 0.0);
@@ -217,7 +217,7 @@ void compute_expectation_gradients_test_parametric_pauli_rotation() {
     }
     ComplexVector bistate_eigen = operator_matrix * state_eigen;
 
-    std::unordered_map<std::string, double> gradients_eigen;
+    std::unordered_map<std::string, double> gradient_eigen;
 
     // apply inverse gates
     const auto make_scale_rc = [&](int idx) {
@@ -241,7 +241,7 @@ void compute_expectation_gradients_test_parametric_pauli_rotation() {
 
         const StdComplex ip = (bistate_eigen.adjoint() * tmp_state)(0, 0);
         const double contrib = -make_scale_rc(idx) * static_cast<double>(ip.real());
-        gradients_eigen[std::to_string(idx)] += contrib;
+        gradient_eigen[std::to_string(idx)] += contrib;
 
         const auto& gate = matrices[idx];
         state_eigen = gate.adjoint() * state_eigen;
@@ -249,23 +249,23 @@ void compute_expectation_gradients_test_parametric_pauli_rotation() {
     }
 
     for (auto idx = std::size_t{0}; idx < 3 * n; idx++) {
-        check_near<Prec>(gradients[std::to_string(idx)], gradients_eigen[std::to_string(idx)]);
+        check_near<Prec>(gradient[std::to_string(idx)], gradient_eigen[std::to_string(idx)]);
     }
 }
 
-TYPED_TEST(CircuitExpectationGradientsTest, ComputeExpectationGradientsForParametricRC) {
+TYPED_TEST(CircuitExpectationGradientTest, ComputeExpectationgradientForParametricRC) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
-    compute_expectation_gradients_test_parametric_rc<Prec, Space>();
+    compute_expectation_gradient_test_parametric_rc<Prec, Space>();
 }
 
-TYPED_TEST(CircuitExpectationGradientsTest, ComputeExpectationGradientsForPauliRotation) {
+TYPED_TEST(CircuitExpectationGradientTest, ComputeExpectationgradientForPauliRotation) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
-    compute_expectation_gradients_test_parametric_pauli_rotation<Prec, Space>();
+    compute_expectation_gradient_test_parametric_pauli_rotation<Prec, Space>();
 }
 
-TYPED_TEST(CircuitExpectationGradientsTest, RejectsNonHermitianObservable) {
+TYPED_TEST(CircuitExpectationGradientTest, RejectsNonHermitianObservable) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
 
@@ -275,5 +275,5 @@ TYPED_TEST(CircuitExpectationGradientsTest, RejectsNonHermitianObservable) {
     const Operator<Prec, Space> op({PauliOperator<Prec>("X 0", StdComplex(0.0, 1.0))});
     const std::map<std::string, double> parameters{{"theta", 0.1}};
 
-    EXPECT_THROW((void)circuit.compute_expectation_gradients(op, parameters), std::runtime_error);
+    EXPECT_THROW((void)circuit.compute_expectation_gradient(op, parameters), std::runtime_error);
 }
