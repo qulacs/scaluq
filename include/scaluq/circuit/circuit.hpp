@@ -130,30 +130,121 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def("n_qubits", &Circuit<Prec>::n_qubits, "Get property of `n_qubits`.")
         .def("gate_list",
              &Circuit<Prec>::gate_list,
-             "Get property of `gate_list`.",
+             DocString()
+                 .desc("Get property of `gate_list`.")
+                 .ret("list", "List of gates.")
+                 .ex(DocString::Code{">>> circuit = Circuit(3)",
+                                     ">>> circuit.add_gate(gate.X(0))",
+                                     ">>> len(circuit.gate_list())",
+                                     "1"})
+                 .build_as_google_style()
+                 .c_str(),
              nb::rv_policy::reference)
-        .def("n_gates", &Circuit<Prec>::n_gates, "Get property of `n_gates`.")
-        .def("key_set", &Circuit<Prec>::key_set, "Get set of keys of parameters.")
-        .def("get_gate_at", &Circuit<Prec>::get_gate_at, "index"_a, "Get reference of i-th gate.")
+        .def("n_gates",
+             &Circuit<Prec>::n_gates,
+             DocString()
+                 .desc("Get property of `n_gates`.")
+                 .ret("int", "Property of `n_gates`.")
+                 .ex(DocString::Code{">>> circuit = Circuit(3)",
+                                     ">>> circuit.add_gate(gate.X(0))",
+                                     ">>> circuit.add_gate(gate.CX(0, 1))",
+                                     ">>> print(circuit.n_gates())",
+                                     "2"})
+                 .build_as_google_style()
+                 .c_str())
+        .def("key_set",
+             &Circuit<Prec>::key_set,
+             DocString()
+                 .desc("Get set of keys of parameters.")
+                 .ret("set[str]", "Set of keys.")
+                 .ex(DocString::Code{">>> circuit = Circuit(3)",
+                                     ">>> circuit.add_param_gate(gate.ParamRX(0, 0.0), \"theta\")",
+                                     ">>> circuit.add_param_gate(gate.ParamRY(1, 2.0), \"phi\")",
+                                     ">>> print(sorted(circuit.key_set()))",
+                                     "[\'phi\', \'theta\']"})
+                 .build_as_google_style()
+                 .c_str())
+        .def("get_gate_at",
+             &Circuit<Prec>::get_gate_at,
+             "index"_a,
+             DocString()
+                 .desc("Get reference of i-th gate.")
+                 .arg("index", "int", "Index of gate")
+                 .ret("Gate", "Gate at i-th index")
+                 .ex(DocString::Code{">>> circuit = Circuit(3)",
+                                     ">>> circuit.add_gate(gate.X(0))",
+                                     ">>> print(circuit.get_gate_at(0))",
+                                     "Gate Type: X",
+                                     "  Target Qubits: {0}",
+                                     "  Control Qubits: {}",
+                                     "  Control Value: {}"})
+                 .build_as_google_style()
+                 .c_str())
         .def("get_param_key_at",
              &Circuit<Prec>::get_param_key_at,
              "index"_a,
-             "Get parameter key of i-th gate. If it is not parametric, return None.")
-        .def("calculate_depth", &Circuit<Prec>::calculate_depth, "Get depth of circuit.")
+             DocString()
+                 .desc("Get parameter key of i-th gate. If it is not parametric, return None.")
+                 .arg("index", "int", "Index of gate")
+                 .ret("str | None", "Parameter key")
+                 .ex(DocString::Code{">>> circuit = Circuit(3)",
+                                     ">>> circuit.add_param_gate(gate.ParamRX(0, 0.0), \"theta\")",
+                                     ">>> circuit.add_gate(gate.X(1))",
+                                     ">>> circuit.get_param_key_at(0)",
+                                     "\'theta\'",
+                                     ">>> circuit.get_param_key_at(1) is None",
+                                     "True"})
+                 .build_as_google_style()
+                 .c_str())
+        .def("calculate_depth",
+             &Circuit<Prec>::calculate_depth,
+             DocString()
+                 .desc("Get depth of circuit.")
+                 .ret("int", "Depth of circuit")
+                 .ex(DocString::Code{">>> circuit = Circuit(3)",
+                                     ">>> circuit.add_gate(gate.X(0))",
+                                     ">>> circuit.add_gate(gate.Y(1))",
+                                     ">>> print(circuit.calculate_depth())",
+                                     "1"})
+                 .build_as_google_style()
+                 .c_str())
         .def("add_gate",
              nb::overload_cast<const Gate<Prec>&>(&Circuit<Prec>::add_gate),
              "gate"_a,
-             "Add gate. Given gate is copied.")
+             DocString()
+                 .desc("Add gate. Given gate is copied.")
+                 .arg("gate", "Gate", "Gate to add")
+                 .ex(DocString::Code{">>> circuit = Circuit(3)", ">>> circuit.add_gate(gate.X(0))"})
+                 .build_as_google_style()
+                 .c_str())
         .def("add_param_gate",
              nb::overload_cast<const ParamGate<Prec>&, std::string_view>(
                  &Circuit<Prec>::add_param_gate),
              "param_gate"_a,
              "param_key"_a,
-             "Add parametric gate with specifying key. Given param_gate is copied.")
+             DocString()
+                 .desc("Add parametric gate with specifying key. Given param_gate is copied.")
+                 .arg("param_gate", "ParamGate", "Parametric gate to add")
+                 .arg("param_key", "str", "Parameter key")
+                 .ex(DocString::Code{">>> circuit = Circuit(3)",
+                                     ">>> circuit.add_param_gate(gate.ParamRX(0, 0.0), \"theta\")"})
+                 .build_as_google_style()
+                 .c_str())
         .def("add_circuit",
              nb::overload_cast<const Circuit<Prec>&>(&Circuit<Prec>::add_circuit),
              "other"_a,
-             "Add all gates in specified circuit. Given gates are copied.")
+             DocString()
+                 .desc("Add all gates in specified circuit. Given gates are copied.")
+                 .arg("other", "Circuit", "Circuit to add")
+                 .ex(DocString::Code{">>> circuit = Circuit(3)",
+                                     ">>> circuit.add_gate(gate.X(0))",
+                                     ">>> circuit2 = Circuit(3)",
+                                     ">>> circuit2.add_gate(gate.Y(1))",
+                                     ">>> circuit.add_circuit(circuit2)",
+                                     ">>> circuit.n_gates()",
+                                     "2"})
+                 .build_as_google_style()
+                 .c_str())
         .def(
             "update_quantum_state",
             [&](const Circuit<Prec>& circuit,
@@ -396,9 +487,8 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "Information as json style.")
         .def(
             "load_json",
-            [](Circuit<Prec>& circuit, const std::string& str) {
-                circuit = nlohmann::json::parse(str);
-            },
+            [](Circuit<Prec>& circuit,
+               const std::string& str) { circuit = nlohmann::json::parse(str); },
             "json_str"_a,
             "Read an object from the JSON representation of the circuit.");
 }
