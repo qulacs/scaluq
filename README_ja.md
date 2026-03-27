@@ -1,5 +1,14 @@
 # Scaluq
 
+![](https://app.readthedocs.org/projects/scaluq/badge/)
+[![Build and Test](https://github.com/qulacs/scaluq/actions/workflows/test.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/test.yml)
+[![Format](https://github.com/qulacs/scaluq/actions/workflows/format.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/format.yml)
+[![Install to System](https://github.com/qulacs/scaluq/actions/workflows/install.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/install.yml)
+[![Sdist build](https://github.com/qulacs/scaluq/actions/workflows/sdist.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/sdist.yml)
+[![Wheel build](https://github.com/qulacs/scaluq/actions/workflows/wheel.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/wheel.yml)
+
+**英語版の README は [README.md](README.md) を参照してください。**
+
 Scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/qulacs) をもとに再開発された、新しい Python/C++ ライブラリです。
 大規模な量子回路、ノイズを伴う量子回路、パラメトリック量子回路の高速シミュレーションを実行することができます。
 本ライブラリは、MITライセンスの下で公開されています。
@@ -48,13 +57,13 @@ CUDA を利用する場合は、使用する CUDA がサポートするホスト
 |`SCALUQ_USE_CUDA`|`OFF`|GPU (CUDA)での並列処理を行うか|
 |`SCALUQ_CPU_NATIVE`|`ON`| ビルダーのCPUアーキテクチャでビルドするか|
 |`SCALUQ_CPU_ARCH`|-| ターゲットとなるCPUアーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CPU_ARCH=SKX`)|
-|`SCALUQ_CUDA_ARCH`|(自動識別)|`CMAKE_USE_CUDA=ON`の場合、ターゲットとなるNvidia GPU アーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CUDA_ARCH=AMPERE80`)|
-|`SCALUQ_USE_TEST`|ON|`test/`をビルドターゲットに含める。`ctest --test-dir build/`でテストのビルド/実行ができる|
-|`SCALUQ_USE_EXE`|ON|`exe/`をビルドターゲットに含める。インストールせずに実行を試すことができ、`ninja -C build`でのビルド後、`exe/main.cpp`の内容を`build/exe/main`で実行できる。|
-|`SCALUQ_FLOAT16`|OFF|`f16`精度を有効にする|
-|`SCALUQ_FLOAT32`|ON|`f32`精度を有効にする|
-|`SCALUQ_FLOAT64`|ON|`f64`精度を有効にする|
-|`SCALUQ_BFLOAT16`|OFF|`bf16`精度を有効にする|
+|`SCALUQ_CUDA_ARCH`|(自動識別)|`SCALUQ_USE_CUDA=ON`の場合、ターゲットとなるNvidia GPU アーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CUDA_ARCH=AMPERE80`)|
+|`SCALUQ_USE_TEST`|`OFF`|`test/`をビルドターゲットに含める。`ctest --test-dir build/`でテストのビルド・実行ができます|
+|`SCALUQ_USE_EXE`|`OFF`|`exe/`をビルドターゲットに含める。`ninja -C build`でビルドしたあと、`build/exe/main` を実行してインストールなしで試せます|
+|`SCALUQ_FLOAT16`|`OFF`|`f16`精度を有効にする|
+|`SCALUQ_FLOAT32`|`ON`|`f32`精度を有効にする|
+|`SCALUQ_FLOAT64`|`ON`|`f64`精度を有効にする|
+|`SCALUQ_BFLOAT16`|`OFF`|`bf16`精度を有効にする|
 
 ## C++ ライブラリとしてインストール
 
@@ -70,7 +79,7 @@ sudo -E env "PATH=$PATH" ninja -C build install
 - 依存ライブラリのEigenとKokkosも同時にインストールされます
 - `CMAKE_INSTALL_PREFIX`を設定することで `/usr/local/`以外にインストールすることもできます。ユーザーローカルにインストールしたい場合や、別の設定でビルドしたKokkosと衝突させたくない場合は明示的に指定してください。例: `CMAKE_INSTALL_PREFIX=~/.local script/configure; ninja -C build install`
 - ビルドしたものを`/usr/local/`に配置するため`sudo`コマンドを用いていますが、ビルド時の環境変数をユーザーのものにするため例では`-E`と`env "PATH=$PATH"`を指定しています。
-- NVIDIA GPU と CUDA が利用可能ならば、`SCALUQ_USE_CUDA=ON`を設定してconfigureすることでCUDAを利用するライブラリとしてインストールできます。例: `SCALUQ_USE_CUDA=ON script/configure; sudo env -E "PATH=$PATH" ninja -C build install'`
+- NVIDIA GPU と CUDA が利用可能ならば、`SCALUQ_USE_CUDA=ON`を設定してconfigureすることでCUDAを利用するライブラリとしてインストールできます。例: `SCALUQ_USE_CUDA=ON script/configure; sudo env -E "PATH=$PATH" ninja -C build install`
 
 オプションを変更して再ビルドする際には、CMake にセットされたキャッシュ変数をクリアするため、必ず以下のコマンドを実行してください。
 
@@ -90,10 +99,9 @@ pip install scaluq
 
 GPUを利用する場合や`f32` `f64`以外の精度のサポートが必要な場合は、リポジトリをクローンしたのちにオプションを指定してインストールします。
 ```txt
-
 git clone https://github.com/qulacs/scaluq
 cd ./scaluq
-SCALUQ_USE_CUDA=ON pip install . 
+SCALUQ_USE_CUDA=ON pip install .
 ```
 
 ## Python ドキュメント
@@ -105,8 +113,8 @@ https://scaluq.readthedocs.io/en/latest/index.html
 ## サンプルコード(C++)
 
 ```cpp
-#include <iostream>
 #include <cstdint>
+#include <iostream>
 
 #include <scaluq/circuit/circuit.hpp>
 #include <scaluq/gate/gate_factory.hpp>
@@ -116,18 +124,18 @@ https://scaluq.readthedocs.io/en/latest/index.html
 int main() {
     scaluq::initialize();  // must be called before using any scaluq methods
     {
-        constexpr Precision Prec = scaluq::Precision::F64;
-        constexpr ExecutionSpace Space = scaluq::ExecutionSpace::Default;
+        constexpr scaluq::Precision Prec = scaluq::Precision::F64;
+        constexpr scaluq::ExecutionSpace Space = scaluq::ExecutionSpace::Default;
         const std::uint64_t n_qubits = 3;
         scaluq::StateVector<Prec, Space> state =
             scaluq::StateVector<Prec, Space>::Haar_random_state(n_qubits, 0);
         std::cout << state << std::endl;
 
-        scaluq::Circuit<Prec, Space> circuit(n_qubits);
-        circuit.add_gate(scaluq::gate::X<Prec, Space>(0));
-        circuit.add_gate(scaluq::gate::CNot<Prec, Space>(0, 1));
-        circuit.add_gate(scaluq::gate::Y<Prec, Space>(1));
-        circuit.add_gate(scaluq::gate::RX<Prec, Space>(1, std::numbers::pi / 2));
+        scaluq::Circuit<Prec> circuit(n_qubits);
+        circuit.add_gate(scaluq::gate::X<Prec>(0));
+        circuit.add_gate(scaluq::gate::CNot<Prec>(0, 1));
+        circuit.add_gate(scaluq::gate::Y<Prec>(1));
+        circuit.add_gate(scaluq::gate::RX<Prec>(1, std::numbers::pi / 2));
         circuit.update_quantum_state(state);
 
         std::vector<scaluq::PauliOperator<Prec>> terms;
@@ -140,16 +148,16 @@ int main() {
 }
 ```
 
-`scaluq/all.hpp` をincludeすれば、`SCALUQ_OMIT_TEMPLATE` を使うことでテンプレート引数を省略することもできます。
+`scaluq/all.hpp` を include すると、`SCALUQ_OMIT_TEMPLATE` を使ってテンプレート引数を省略できます。
 
 ```cpp
-#include <iostream>
 #include <cstdint>
+#include <iostream>
 
 #include <scaluq/all.hpp>
 
 namespace my_scaluq {
-    SCALUQ_OMIT_TEMPLATE(scaluq::Precision::F64, scaluq::ExecutionSpace::Default)
+SCALUQ_OMIT_TEMPLATE(scaluq::Precision::F64, scaluq::ExecutionSpace::Default)
 }
 
 using namespace my_scaluq;
@@ -157,8 +165,6 @@ using namespace my_scaluq;
 int main() {
     scaluq::initialize();  // must be called before using any scaluq methods
     {
-        constexpr Precision Prec = Precision::F64;
-        constexpr ExecutionSpace Space = ExecutionSpace::Default;
         const std::uint64_t n_qubits = 3;
         StateVector state = StateVector::Haar_random_state(n_qubits, 0);
         std::cout << state << std::endl;
@@ -170,9 +176,9 @@ int main() {
         circuit.add_gate(gate::RX(1, std::numbers::pi / 2));
         circuit.update_quantum_state(state);
 
-        std::vector<scaluq::PauliOperator> terms;
+        std::vector<PauliOperator> terms;
         terms.emplace_back(1, 0);
-        scaluq::Operator observable(terms);
+        Operator observable(terms);
         auto value = observable.get_expectation_value(state);
         std::cout << value << std::endl;
     }
@@ -182,7 +188,7 @@ int main() {
 
 ## サンプルコード(Python)
 
-```Python
+```python
 from scaluq.default.f64 import *
 import math
 
@@ -216,15 +222,17 @@ Scaluqでは、計算に使用する浮動小数点数のサイズとして`f16`
 |`f64`|`Precision::F64`|`f64`|IEEE754 binary64|
 |`bf16`|`Precision::BF16`|`bf16`|bfloat16|
 
-また、実行スペースとして `default` `host` が選択できます。CPUビルドではこの2つの振る舞いは等しく、`SCALUQ_USE_CUDA`を使用してCUDA環境でビルドした場合、`default`はGPU上での実行、`host`はCPU上での実行となります。
-規模が大きくなるとGPU上での実行のほうが高速ですが、ホスト・デバイス間のメモリ転送にはオーバーヘッドがかかります。
+注意：`f16` / `bf16` 精度では、計算誤差が非常に大きくなる可能性があります（場合によっては $0.1$ を超えることもあります）。これらのオプションについては精度の検証を行っていません。
+
+実行スペースは、計算を CPU と GPU のどちらで実行するかを決めます。
 
 各実行スペースの指定方法と内容は以下のとおりです。
 
 |実行スペース|C++で指定するテンプレート引数|Pythonで指定するサブモジュールの名前|内容|
 |-|-|-|-|
-|`default`|`ExecutionSpace::Default`|`default`|CUDA環境の場合GPU、そうでない場合CPU|
-|`host`|`ExecutionSpace::Host`|`host`|CPU|
+|`default`|`ExecutionSpace::Default`|`default`|CUDA が有効なら GPU、そうでなければ CPU で実行|
+|`host`|`ExecutionSpace::Host`|`host`|常に CPU で実行|
+|`host_serial`|`ExecutionSpace::HostSerial`|`host_serial`|常に CPU で逐次実行|
 
 同じ精度、実行スペースのオブジェクト同士でしか演算を行うことができません。
 例えば32bit用に作成したゲートでは64bitの`StateVector`を更新できず、同じ精度でもhost用に作成したゲートではdefault用に作成した`StateVector`を更新できません。
