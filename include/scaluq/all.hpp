@@ -171,12 +171,12 @@
                    std::vector<std::uint64_t> control_values = {}) {                           \
         return ::scaluq::gate::U3<Prec>(target, theta, phi, lambda, controls, control_values); \
     }                                                                                          \
-    inline auto& CX = ::scaluq::gate::CX<Prec, Space>;                                         \
-    inline auto& CNot = ::scaluq::gate::CNot<Prec, Space>;                                     \
-    inline auto& CZ = ::scaluq::gate::CZ<Prec, Space>;                                         \
-    inline auto& CCX = ::scaluq::gate::CCX<Prec, Space>;                                       \
-    inline auto& Toffoli = ::scaluq::gate::Toffoli<Prec, Space>;                               \
-    inline auto& CCNot = ::scaluq::gate::CCNot<Prec, Space>;                                   \
+    inline auto& CX = ::scaluq::gate::CX<Prec>;                                                \
+    inline auto& CNot = ::scaluq::gate::CNot<Prec>;                                            \
+    inline auto& CZ = ::scaluq::gate::CZ<Prec>;                                                \
+    inline auto& CCX = ::scaluq::gate::CCX<Prec>;                                              \
+    inline auto& Toffoli = ::scaluq::gate::Toffoli<Prec>;                                      \
+    inline auto& CCNot = ::scaluq::gate::CCNot<Prec>;                                          \
     inline Gate Swap(std::uint64_t target1,                                                    \
                      std::uint64_t target2,                                                    \
                      const std::vector<std::uint64_t>& controls = {},                          \
