@@ -894,11 +894,27 @@ public:
 
 template <Precision Prec>
 class EcrGateImpl : public GateBase<Prec> {
+    std::uint64_t _physical_control_mask, _physical_target_mask;
+
 public:
-    using GateBase<Prec>::GateBase;
+    EcrGateImpl(std::uint64_t target_mask,
+                std::uint64_t control_mask,
+                std::uint64_t control_value_mask,
+                std::uint64_t physical_control_mask,
+                std::uint64_t physical_target_mask)
+        : GateBase<Prec>(target_mask, control_mask, control_value_mask),
+          _physical_control_mask(physical_control_mask),
+          _physical_target_mask(physical_target_mask) {}
+
+    double physical_control() const { return _physical_control_mask; }
+    double physical_target() const { return _physical_target_mask; }
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return this->shared_from_this();
+        return std::make_shared<const EcrGateImpl<Prec>>(this->_target_mask,
+                                                         this->_control_mask,
+                                                         this->_control_value_mask,
+                                                         _physical_control_mask,
+                                                         _physical_target_mask);
     }
     ComplexMatrix get_matrix() const override;
 
@@ -922,7 +938,9 @@ public:
         j = Json{{"type", "Ecr"},
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
-                 {"control_value", this->control_value_list()}};
+                 {"control_value", this->control_value_list()},
+                 {"physical_control", this->physical_control()},
+                 {"physical_target", this->physical_target()}};
     }
 };
 
@@ -1136,7 +1154,15 @@ void bind_gate_gate_standard_hpp(nb::module_& m, nb::class_<Gate<Prec>>& gate_ba
                                             "0 & 1 & 0 & i \\\\ "
                                             "1 & 0 & -i & 0 \\\\ "
                                             "0 & i & 0 & 1 \\\\ "
-                                            "-i & 0 & 1 & 0 \\end{bmatrix}$.");
+                                            "-i & 0 & 1 & 0 \\end{bmatrix}$.")
+        .def(
+            "physical_control",
+            [](const EcrGate<Prec>& gate) { return gate->physical_control(); },
+            "Get `physical_control_mask` property.")
+        .def(
+            "physical_target",
+            [](const EcrGate<Prec>& gate) { return gate->physical_target(); },
+            "Get `physical_target_mask` property.");
 }
 }  // namespace internal
 #endif

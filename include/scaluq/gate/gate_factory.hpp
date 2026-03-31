@@ -292,9 +292,11 @@ inline Gate<Prec> Swap(std::uint64_t target1,
 template <Precision Prec>
 inline Gate<Prec> Ecr(std::uint64_t control, std::uint64_t target) {
     return internal::GateFactory::create_gate<internal::EcrGateImpl<Prec>>(
-        internal::vector_to_mask({target}),
+        internal::vector_to_mask({target, control}),
+        internal::vector_to_mask({}),
+        internal::vector_to_mask({}),
         internal::vector_to_mask({control}),
-        internal::vector_to_mask({}));
+        internal::vector_to_mask({target}));
 }
 template <Precision Prec>
 inline Gate<Prec> Pauli(const PauliOperator<Prec>& pauli,
@@ -905,7 +907,8 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .desc("Generate ECR gate. Echoed cross-resonance gate.")
             .note(
                 "If you need to use functions specific to the :class:`~scaluq.f64.EcrGate` class, "
-                "please downcast it.")
+                "please downcast it."
+                "These control and target mean physical layer")
             .arg("control", "int", "Control qubit index")
             .arg("target", "int", "Target qubit index")
             .ret("Gate", "Ecr gate instance")
