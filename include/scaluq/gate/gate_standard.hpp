@@ -906,8 +906,8 @@ public:
           _physical_control_mask(physical_control_mask),
           _physical_target_mask(physical_target_mask) {}
 
-    double physical_control() const { return _physical_control_mask; }
-    double physical_target() const { return _physical_target_mask; }
+    std::uint64_t physical_control() const { return _physical_control_mask; }
+    std::uint64_t physical_target() const { return _physical_target_mask; }
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const EcrGateImpl<Prec>>(this->_target_mask,
