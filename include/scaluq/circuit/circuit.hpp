@@ -7,6 +7,7 @@
 
 #include "../gate/gate.hpp"
 #include "../gate/param_gate.hpp"
+#include "../operator/operator.hpp"
 #include "../types.hpp"
 
 namespace scaluq {
@@ -100,6 +101,16 @@ public:
         std::uint64_t sampling_count,
         const std::map<std::string, double>& parameters = {},
         std::uint64_t seed = 0) const;
+
+    template <ExecutionSpace Space>
+    std::unordered_map<std::string, double> compute_expectation_gradient_backprop(
+        StateVector<Prec, Space>& state,
+        StateVector<Prec, Space>& bistate,
+        const std::map<std::string, double>& parameters);
+
+    template <ExecutionSpace Space>
+    std::unordered_map<std::string, double> compute_expectation_gradient(
+        const Operator<Prec, Space>& observable, const std::map<std::string, double>& parameters);
 
 private:
     std::uint64_t _n_qubits;
@@ -229,6 +240,19 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "parameters"_a = std::map<std::string, double>{},
             "seed"_a = std::nullopt,
             "Simulate noise circuit. Return all the possible states and their counts.")
+        .def("compute_expectation_gradient_backprop",
+             &Circuit<Prec>::template compute_expectation_gradient_backprop<ExecutionSpace::Host>,
+             "state"_a,
+             "bistate"_a,
+             "parameters"_a,
+             "Low-level implementation for expectation gradient that assumes the forward state and "
+             "observable-applied bistate are already prepared, and computes gradient using back "
+             "propagation.")
+        .def("compute_expectation_gradient",
+             &Circuit<Prec>::template compute_expectation_gradient<ExecutionSpace::Host>,
+             "observable"_a,
+             "parameters"_a,
+             "Compute gradient of expectation value of observable using back propagation.")
         .def(
             "update_quantum_state",
             [&](const Circuit<Prec>& circuit,
@@ -306,6 +330,20 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "parameters"_a = std::map<std::string, double>{},
             "seed"_a = std::nullopt,
             "Simulate noise circuit. Return all the possible states and their counts.")
+        .def("compute_expectation_gradient_backprop",
+             &Circuit<Prec>::template compute_expectation_gradient_backprop<
+                 ExecutionSpace::HostSerial>,
+             "state"_a,
+             "bistate"_a,
+             "parameters"_a,
+             "Low-level implementation for expectation gradient that assumes the forward state and "
+             "observable-applied bistate are already prepared, and computes gradient using back "
+             "propagation.")
+        .def("compute_expectation_gradient",
+             &Circuit<Prec>::template compute_expectation_gradient<ExecutionSpace::HostSerial>,
+             "observable"_a,
+             "parameters"_a,
+             "Compute gradient of expectation value of observable using back propagation.")
 #ifdef SCALUQ_USE_CUDA
         .def(
             "update_quantum_state",
@@ -383,6 +421,20 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "parameters"_a = std::map<std::string, double>{},
             "seed"_a = std::nullopt,
             "Simulate noise circuit. Return all the possible states and their counts.")
+        .def(
+            "compute_expectation_gradient_backprop",
+            &Circuit<Prec>::template compute_expectation_gradient_backprop<ExecutionSpace::Default>,
+            "state"_a,
+            "bistate"_a,
+            "parameters"_a,
+            "Low-level implementation for expectation gradient that assumes the forward state and "
+            "observable-applied bistate are already prepared, and computes gradient using back "
+            "propagation.")
+        .def("compute_expectation_gradient",
+             &Circuit<Prec>::template compute_expectation_gradient<ExecutionSpace::Default>,
+             "observable"_a,
+             "parameters"_a,
+             "Compute gradient of expectation value of observable using back propagation.")
 #endif  // SCALUQ_USE_CUDA
         .def("copy",
              &Circuit<Prec>::copy,
