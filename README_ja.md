@@ -1,11 +1,11 @@
 # Scaluq
 
 ![](https://app.readthedocs.org/projects/scaluq/badge/)
-[![Build and Test](https://github.com/qulacs/scaluq/actions/workflows/test.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/test.yml)
+[![Build and Test](https://github.com/qulacs/scaluq/actions/workflows/test_all.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/test_all.yml)
 [![Format](https://github.com/qulacs/scaluq/actions/workflows/format.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/format.yml)
-[![Install to System](https://github.com/qulacs/scaluq/actions/workflows/install.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/install.yml)
+[![Install to System](https://github.com/qulacs/scaluq/actions/workflows/install_merge.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/install_merge.yml)
 [![Sdist build](https://github.com/qulacs/scaluq/actions/workflows/sdist.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/sdist.yml)
-[![Wheel build](https://github.com/qulacs/scaluq/actions/workflows/wheel.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/wheel.yml)
+[![Wheel build](https://github.com/qulacs/scaluq/actions/workflows/wheel_merge.yml/badge.svg)](https://github.com/qulacs/scaluq/actions/workflows/wheel_merge.yml)
 
 **英語版の README は [README.md](README.md) を参照してください。**
 
