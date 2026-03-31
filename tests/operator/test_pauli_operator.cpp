@@ -285,7 +285,7 @@ TYPED_TEST(PauliOperatorTest, GetExpectationValueTest) {
     PauliOperator<Prec> pauli(indices, pauli_id_vec, coef);
     StdComplex res = pauli.get_expectation_value(state);
     ComplexVector eigen_state = convert_to_eigen_vector(state);
-    StdComplex res_eigen = eigen_state.adjoint() * matrix * eigen_state;
+    StdComplex res_eigen = eigen_state.dot(matrix * eigen_state);
     res_eigen *= coef;
     check_near<Prec>(res, res_eigen);
 
@@ -294,7 +294,7 @@ TYPED_TEST(PauliOperatorTest, GetExpectationValueTest) {
     for (auto i = 0ULL; i < n_batches; i++) {
         auto sv = states.get_state_vector_at(i);
         eigen_state = convert_to_eigen_vector(sv);
-        res_eigen = eigen_state.adjoint() * matrix * eigen_state;
+        res_eigen = eigen_state.dot(matrix * eigen_state);
         res_eigen *= coef;
         check_near<Prec>(results[i], res_eigen);
     }
