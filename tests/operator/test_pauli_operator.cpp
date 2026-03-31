@@ -3,6 +3,7 @@
 #include <scaluq/operator/pauli_operator.hpp>
 
 #include "../test_environment.hpp"
+#include "../util/util.hpp"
 
 using namespace scaluq;
 
@@ -224,4 +225,77 @@ TYPED_TEST(PauliOperatorTest, ApplyToStateTest) {
     op.apply_to_state(state_vector);
     std::vector<StdComplex> expected = {2, 0, -6, -4, 10, 8, -14, -12};
     ASSERT_EQ(state_vector.get_amplitudes(), expected);
+}
+
+TYPED_TEST(PauliOperatorTest, GetExpectationValueTest) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    const std::uint64_t n_qubits = 5;
+    const std::uint64_t n_batches = 10;
+    const double coef = 2.0;
+    const std::uint64_t n_pauli_gate_types = 4;
+    std::default_random_engine engine(0);
+    std::uniform_int_distribution<std::size_t> dist(0, 3);
+
+    std::vector<std::uint64_t> indices(n_qubits);
+    std::iota(indices.begin(), indices.end(), 0);
+    std::vector<std::uint64_t> pauli_id_vec;
+    std::vector<std::uint64_t> pauli_on(n_qubits);
+    for (std::uint64_t target = 0; target < n_qubits; target++) {
+        pauli_id_vec.emplace_back(dist(engine) % n_pauli_gate_types);
+    }
+
+    ComplexMatrix matrix;
+    if (pauli_id_vec[0] == 0) {
+        matrix = make_I();
+    } else if (pauli_id_vec[0] == 1) {
+        matrix = make_X();
+    } else if (pauli_id_vec[0] == 2) {
+        matrix = make_Y();
+    } else if (pauli_id_vec[0] == 3) {
+        matrix = make_Z();
+    }
+    for (int i = 1; i < (int)n_qubits; i++) {
+        if (pauli_id_vec[i] == 0) {
+            matrix = internal::kronecker_product(make_I(), matrix);
+        } else if (pauli_id_vec[i] == 1) {
+            matrix = internal::kronecker_product(make_X(), matrix);
+        } else if (pauli_id_vec[i] == 2) {
+            matrix = internal::kronecker_product(make_Y(), matrix);
+        } else if (pauli_id_vec[i] == 3) {
+            matrix = internal::kronecker_product(make_Z(), matrix);
+        }
+    }
+
+    auto convert_to_eigen_vector = [&](StateVector<Prec, Space>& state) {
+        auto amplitudes = state.get_amplitudes();
+        ComplexVector state_eigen = ComplexVector::Zero(state.dim());
+        for (auto i = std::size_t{0}; i < amplitudes.size(); i++) {
+            state_eigen[i] = amplitudes[i];
+        }
+        return state_eigen;
+    };
+
+    StateVector<Prec, Space> state(n_qubits);
+    StateVectorBatched<Prec, Space> states(n_batches, n_qubits);
+    state.set_Haar_random_state(0);
+    states.set_Haar_random_state(false, 0);
+
+    // check get_expectation_value(StateVector)
+    PauliOperator<Prec> pauli(indices, pauli_id_vec, coef);
+    StdComplex res = pauli.get_expectation_value(state);
+    ComplexVector eigen_state = convert_to_eigen_vector(state);
+    StdComplex res_eigen = eigen_state.adjoint() * matrix * eigen_state;
+    res_eigen *= coef;
+    check_near<Prec>(res, res_eigen);
+
+    // check get_expectation_value(BatchedStateVector)
+    auto results = pauli.get_expectation_value(states);
+    for (auto i = 0ULL; i < n_batches; i++) {
+        auto sv = states.get_state_vector_at(i);
+        eigen_state = convert_to_eigen_vector(sv);
+        res_eigen = eigen_state.adjoint() * matrix * eigen_state;
+        res_eigen *= coef;
+        check_near<Prec>(results[i], res_eigen);
+    }
 }
