@@ -220,7 +220,7 @@ TYPED_TEST(StateVectorTest, EntropyCalculation) {
                 double prob = z.real() * z.real() + z.imag() * z.imag();
                 if (prob > 0.) ent += -prob * std::log2(prob);
             }
-            ASSERT_NEAR(ent, state.get_entropy(), eps<Prec>);
+            ASSERT_NEAR(ent, state.get_computational_basis_entropy(), eps<Prec>);
         }
     }
 }

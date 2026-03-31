@@ -67,7 +67,7 @@ public:
 
     [[nodiscard]] double get_marginal_probability(
         const std::vector<std::uint64_t>& measured_values) const;
-    [[nodiscard]] double get_entropy() const;
+    [[nodiscard]] double get_computational_basis_entropy() const;
 
     void add_state_vector_with_coef(StdComplex coef, const StateVector& state);
     void multiply_coef(StdComplex coef);
@@ -422,17 +422,17 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                      "0.0625"})
                  .build_as_google_style()
                  .c_str())
-        .def("get_entropy",
-             &StateVector<Prec, Space>::get_entropy,
+        .def("get_computational_basis_entropy",
+             &StateVector<Prec, Space>::get_computational_basis_entropy,
              DocString()
-                 .desc("Get the entropy of the vector.")
+                 .desc("Get the Shannon entropy of the Z-basis measurement distribution.")
                  .desc("**State must be normalized.**")
                  .ret("float", "entropy")
                  .ex(DocString::Code{
                      ">>> v = [1/4, 1/2, 0, 1/4, 1/4, 1/2, 1/4, 1/2]",
                      ">>> state = StateVector(3)",
                      ">>> state.load(v)",
-                     ">>> state.get_entropy()",
+                     ">>> state.get_computational_basis_entropy()",
                      "2.5",
                      ">>> import math",
                      ">>> sum(-abs(a)**2 * math.log2(abs(a)**2) for a in v if a != 0)",
