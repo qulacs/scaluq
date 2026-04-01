@@ -939,8 +939,8 @@ public:
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
                  {"control_value", this->control_value_list()},
-                 {"physical_control", this->physical_control()},
-                 {"physical_target", this->physical_target()}};
+                 {"physical_control", mask_to_vector(this->physical_control())},
+                 {"physical_target", mask_to_vector(this->physical_target())}};
     }
 };
 

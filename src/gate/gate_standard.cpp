@@ -756,9 +756,19 @@ template class SwapGateImpl<Prec>;
 template <Precision Prec>
 ComplexMatrix EcrGateImpl<Prec>::get_matrix() const {
     ComplexMatrix mat = ComplexMatrix::Identity(1 << 2, 1 << 2);
-    mat << 0, 1, 0, StdComplex(0, 1), 1, 0, StdComplex(0, -1), 0, 0, StdComplex(0, 1), 0, 1,
-        StdComplex(0, -1), 0, 1, 0;
-    mat /= Kokkos::numbers::sqrt2;
+    if (_physical_target_mask > _physical_control_mask) {
+        mat << 0, 1, 0, StdComplex(0, 1), 1, 0, StdComplex(0, -1), 0, 0, StdComplex(0, 1), 0, 1,
+            StdComplex(0, -1), 0, 1, 0;
+        mat /= Kokkos::numbers::sqrt2;
+        return mat;
+    }
+    if (_physical_target_mask < _physical_control_mask) {
+        mat << 0, 0, 1, StdComplex(0, 1), 0, 0, StdComplex(0, 1), 1, 1, StdComplex(0, -1), 0, 0,
+            StdComplex(0, -1), 1, 0, 0;
+        mat /= Kokkos::numbers::sqrt2;
+        return mat;
+    }
+
     return mat;
 }
 template <Precision Prec>
