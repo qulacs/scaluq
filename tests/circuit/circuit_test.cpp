@@ -26,7 +26,7 @@ void circuit_test() {
     auto state_cp = state.get_amplitudes();
     for (std::uint64_t i = 0; i < dim; ++i) state_eigen[i] = state_cp[i];
 
-    Circuit<Prec> circuit(n);
+    Circuit<Prec> circuit;
     std::uint64_t target, target_sub;
     double angle;
 
@@ -163,7 +163,7 @@ void circuit_rev_test() {
     ComplexVector state_eigen(dim);
     for (std::uint64_t i = 0; i < dim; ++i) state_eigen[i] = state_cp[i];
 
-    Circuit<Prec> circuit(n);
+    Circuit<Prec> circuit;
     std::uint64_t target, target_sub;
     double angle;
 
@@ -245,4 +245,15 @@ TYPED_TEST(CircuitTest, CircuitRev) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     circuit_rev_test<Prec, Space>();
+}
+
+TYPED_TEST(CircuitTest, ThrowsWhenStateHasTooFewQubits) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Circuit<Prec> circuit;
+    circuit.add_gate(gate::X<Prec>(1));
+
+    StateVector<Prec, Space> state(1);
+    ASSERT_THROW(circuit.update_quantum_state(state), std::runtime_error);
 }

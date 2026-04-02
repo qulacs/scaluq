@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bit>
 #include <map>
 #include <set>
 #include <string_view>
@@ -17,9 +18,7 @@ class Circuit {
 public:
     using GateWithKey = std::variant<Gate<Prec>, std::pair<ParamGate<Prec>, std::string>>;
     Circuit() = default;
-    explicit Circuit(std::uint64_t n_qubits) : _n_qubits(n_qubits) {}
 
-    [[nodiscard]] inline std::uint64_t n_qubits() const { return _n_qubits; }
     [[nodiscard]] inline const std::vector<GateWithKey>& gate_list() const { return _gate_list; }
     [[nodiscard]] inline std::uint64_t n_gates() const { return _gate_list.size(); }
     [[nodiscard]] std::set<std::string> key_set() const;
@@ -41,12 +40,8 @@ public:
 
     [[nodiscard]] std::uint64_t calculate_depth() const;
 
-    void add_gate(const Gate<Prec>& gate) {
-        check_gate_is_valid(gate);
-        _gate_list.push_back(gate);
-    }
+    void add_gate(const Gate<Prec>& gate) { _gate_list.push_back(gate); }
     void add_param_gate(const ParamGate<Prec>& param_gate, std::string_view parameter_key) {
-        check_gate_is_valid(param_gate);
         _gate_list.push_back(std::make_pair(param_gate, std::string(parameter_key)));
     }
 
@@ -69,7 +64,7 @@ public:
     void optimize(std::uint64_t max_block_size = 3);
 
     friend void to_json(Json& j, const Circuit& circuit) {
-        j = Json{{"n_qubits", circuit.n_qubits()}, {"gate_list", Json::array()}};
+        j = Json{{"gate_list", Json::array()}};
         for (auto&& gate : circuit.gate_list()) {
             if (gate.index() == 0)
                 j["gate_list"].emplace_back(Json{{"gate", std::get<0>(gate)}});
@@ -80,7 +75,7 @@ public:
     }
 
     friend void from_json(const Json& j, Circuit& circuit) {
-        circuit = Circuit(j.at("n_qubits").get<std::uint64_t>());
+        circuit = Circuit();
         const Json& tmp_list = j.at("gate_list");
         for (const Json& gate_with_key : tmp_list) {
             if (gate_with_key.contains("key")) {
@@ -113,32 +108,26 @@ public:
         const Operator<Prec, Space>& observable, const std::map<std::string, double>& parameters);
 
 private:
-    std::uint64_t _n_qubits;
-
     std::vector<GateWithKey> _gate_list;
 
-    void check_gate_is_valid(const Gate<Prec>& gate) const;
-    void check_gate_is_valid(const ParamGate<Prec>& gate) const;
+    [[nodiscard]] std::uint64_t required_n_qubits() const;
+    void check_state_vector_n_qubits(std::uint64_t n_qubits) const;
 };
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 template <Precision Prec>
 void bind_circuit_circuit_hpp(nb::module_& m) {
-    nb::class_<Circuit<Prec>>(m,
-                              "Circuit",
-                              DocString()
-                                  .desc("Quantum circuit representation.")
-                                  .arg("n_qubits", "Number of qubits in the circuit.")
-                                  .ex(DocString::Code({">>> circuit = Circuit(3)",
-                                                       ">>> print(circuit.to_json())",
-                                                       "{\"gate_list\":[],\"n_qubits\":3}"}))
-                                  .build_as_google_style()
-                                  .c_str())
-        .def(nb::init<std::uint64_t>(),
-             "n_qubits"_a,
-             "Initialize empty circuit of specified qubits.")
-        .def("n_qubits", &Circuit<Prec>::n_qubits, "Get property of `n_qubits`.")
+    nb::class_<Circuit<Prec>>(
+        m,
+        "Circuit",
+        DocString()
+            .desc("Quantum circuit representation.")
+            .ex(DocString::Code(
+                {">>> circuit = Circuit()", ">>> print(circuit.to_json())", "{\"gate_list\":[]}"}))
+            .build_as_google_style()
+            .c_str())
+        .def(nb::init<>(), "Initialize empty circuit.")
         .def("gate_list",
              &Circuit<Prec>::gate_list,
              "Get property of `gate_list`.",
