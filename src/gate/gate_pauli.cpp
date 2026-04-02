@@ -15,26 +15,39 @@ std::string PauliGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << indent << "  Pauli Operator: \"" << _pauli.get_pauli_string() << "\"";
     return ss.str();
 }
-#define DEFINE_PAULI_GATE_UPDATE(Class, Space)                                               \
-    template <Precision Prec>                                                                \
-    void PauliGateImpl<Prec>::update_quantum_state(Class<Prec, Space>& state_vector) const { \
-        auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();         \
-        apply_pauli(this->_control_mask,                                                     \
-                    this->_control_value_mask,                                               \
-                    bit_flip_mask,                                                           \
-                    phase_flip_mask,                                                         \
-                    Complex<Prec>(_pauli.coef()),                                            \
-                    state_vector);                                                           \
+#define DEFINE_PAULI_GATE_CONTEXT_UPDATE(Space)                                                   \
+    template <Precision Prec>                                                                     \
+    void PauliGateImpl<Prec>::update_quantum_state(ExecutionContext<Prec, Space> context) const { \
+        auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();              \
+        apply_pauli(this->_control_mask,                                                          \
+                    this->_control_value_mask,                                                    \
+                    bit_flip_mask,                                                                \
+                    phase_flip_mask,                                                              \
+                    Complex<Prec>(_pauli.coef()),                                                 \
+                    context.state);                                                               \
     }
-DEFINE_PAULI_GATE_UPDATE(StateVector, ExecutionSpace::Host)
-DEFINE_PAULI_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_PAULI_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
-DEFINE_PAULI_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
+#define DEFINE_PAULI_GATE_BATCHED_UPDATE(Space)                                                  \
+    template <Precision Prec>                                                                    \
+    void PauliGateImpl<Prec>::update_quantum_state(BatchedExecutionContext<Prec, Space> context) \
+        const {                                                                                  \
+        auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();             \
+        apply_pauli(this->_control_mask,                                                         \
+                    this->_control_value_mask,                                                   \
+                    bit_flip_mask,                                                               \
+                    phase_flip_mask,                                                             \
+                    Complex<Prec>(_pauli.coef()),                                                \
+                    context.states);                                                             \
+    }
+DEFINE_PAULI_GATE_CONTEXT_UPDATE(ExecutionSpace::Host)
+DEFINE_PAULI_GATE_BATCHED_UPDATE(ExecutionSpace::Host)
+DEFINE_PAULI_GATE_CONTEXT_UPDATE(ExecutionSpace::HostSerial)
+DEFINE_PAULI_GATE_BATCHED_UPDATE(ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
-DEFINE_PAULI_GATE_UPDATE(StateVector, ExecutionSpace::Default)
-DEFINE_PAULI_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
+DEFINE_PAULI_GATE_CONTEXT_UPDATE(ExecutionSpace::Default)
+DEFINE_PAULI_GATE_BATCHED_UPDATE(ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
-#undef DEFINE_PAULI_GATE_UPDATE
+#undef DEFINE_PAULI_GATE_CONTEXT_UPDATE
+#undef DEFINE_PAULI_GATE_BATCHED_UPDATE
 template class PauliGateImpl<Prec>;
 
 template <Precision Prec>
@@ -60,28 +73,42 @@ std::string PauliRotationGateImpl<Prec>::to_string(const std::string& indent) co
     ss << indent << "  Pauli Operator: \"" << _pauli.get_pauli_string() << "\"";
     return ss.str();
 }
-#define DEFINE_PAULI_ROTATION_GATE_UPDATE(Class, Space)                                      \
-    template <Precision Prec>                                                                \
-    void PauliRotationGateImpl<Prec>::update_quantum_state(Class<Prec, Space>& state_vector) \
-        const {                                                                              \
-        auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();         \
-        apply_pauli_rotation(this->_control_mask,                                            \
-                             this->_control_value_mask,                                      \
-                             bit_flip_mask,                                                  \
-                             phase_flip_mask,                                                \
-                             Complex<Prec>(_pauli.coef()),                                   \
-                             _angle,                                                         \
-                             state_vector);                                                  \
+#define DEFINE_PAULI_ROTATION_GATE_CONTEXT_UPDATE(Space)                                          \
+    template <Precision Prec>                                                                     \
+    void PauliRotationGateImpl<Prec>::update_quantum_state(ExecutionContext<Prec, Space> context) \
+        const {                                                                                   \
+        auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();              \
+        apply_pauli_rotation(this->_control_mask,                                                 \
+                             this->_control_value_mask,                                           \
+                             bit_flip_mask,                                                       \
+                             phase_flip_mask,                                                     \
+                             Complex<Prec>(_pauli.coef()),                                        \
+                             _angle,                                                              \
+                             context.state);                                                      \
     }
-DEFINE_PAULI_ROTATION_GATE_UPDATE(StateVector, ExecutionSpace::Host)
-DEFINE_PAULI_ROTATION_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_PAULI_ROTATION_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
-DEFINE_PAULI_ROTATION_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
+#define DEFINE_PAULI_ROTATION_GATE_BATCHED_UPDATE(Space)                             \
+    template <Precision Prec>                                                        \
+    void PauliRotationGateImpl<Prec>::update_quantum_state(                          \
+        BatchedExecutionContext<Prec, Space> context) const {                        \
+        auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation(); \
+        apply_pauli_rotation(this->_control_mask,                                    \
+                             this->_control_value_mask,                              \
+                             bit_flip_mask,                                          \
+                             phase_flip_mask,                                        \
+                             Complex<Prec>(_pauli.coef()),                           \
+                             _angle,                                                 \
+                             context.states);                                        \
+    }
+DEFINE_PAULI_ROTATION_GATE_CONTEXT_UPDATE(ExecutionSpace::Host)
+DEFINE_PAULI_ROTATION_GATE_BATCHED_UPDATE(ExecutionSpace::Host)
+DEFINE_PAULI_ROTATION_GATE_CONTEXT_UPDATE(ExecutionSpace::HostSerial)
+DEFINE_PAULI_ROTATION_GATE_BATCHED_UPDATE(ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
-DEFINE_PAULI_ROTATION_GATE_UPDATE(StateVector, ExecutionSpace::Default)
-DEFINE_PAULI_ROTATION_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
+DEFINE_PAULI_ROTATION_GATE_CONTEXT_UPDATE(ExecutionSpace::Default)
+DEFINE_PAULI_ROTATION_GATE_BATCHED_UPDATE(ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
-#undef DEFINE_PAULI_ROTATION_GATE_UPDATE
+#undef DEFINE_PAULI_ROTATION_GATE_CONTEXT_UPDATE
+#undef DEFINE_PAULI_ROTATION_GATE_BATCHED_UPDATE
 template class PauliRotationGateImpl<Prec>;
 
 template <Precision Prec>

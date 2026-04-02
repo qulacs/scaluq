@@ -762,9 +762,11 @@ TYPED_TEST(BatchedGateTest, ApplyProbabilisticGate) {
         StateVectorBatched<Prec, Space> states(BATCH_SIZE, 1);
         std::vector<std::vector<std::uint64_t>> befores, afters;
         std::vector<std::uint64_t> x_counts(BATCH_SIZE), i_counts(BATCH_SIZE);
+        std::mt19937_64 rng(0);
         for ([[maybe_unused]] auto _ : std::views::iota(0, 100)) {
             befores = states.sampling(1);
-            probgate->update_quantum_state(states);
+            probgate->update_quantum_state(
+                BatchedExecutionContext<Prec, Space>{states, nullptr, 0, &rng});
             afters = states.sampling(1);
             for (std::size_t i = 0; i < BATCH_SIZE; i++) {
                 if (befores[i][0] != afters[i][0]) {
@@ -780,6 +782,61 @@ TYPED_TEST(BatchedGateTest, ApplyProbabilisticGate) {
             ASSERT_GT(i_counts[i], 0);
             ASSERT_LT(x_counts[i], i_counts[i]);
         }
+    }
+}
+
+TYPED_TEST(BatchedGateTest, ApplyMeasurementGate) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    constexpr std::uint64_t N_CLASSICAL_BITS = 2;
+
+    StateVectorBatched<Prec, Space> states(BATCH_SIZE, 1);
+    std::vector<std::vector<StdComplex>> amplitudes(BATCH_SIZE, std::vector<StdComplex>(2, 0.));
+    std::vector<bool> reg(BATCH_SIZE * N_CLASSICAL_BITS, false);
+    std::mt19937_64 rng(0);
+
+    for (std::size_t i = 0; i < BATCH_SIZE; ++i) {
+        amplitudes[i][i % 2] = 1.;
+    }
+    states.load(amplitudes);
+
+    gate::Measurement<Prec>(0, 1)->update_quantum_state(
+        BatchedExecutionContext<Prec, Space>{states, &reg, N_CLASSICAL_BITS, &rng});
+
+    const auto states_amp = states.get_amplitudes();
+    for (std::size_t i = 0; i < BATCH_SIZE; ++i) {
+        EXPECT_FALSE(reg[i * N_CLASSICAL_BITS]);
+        EXPECT_EQ(reg[i * N_CLASSICAL_BITS + 1], static_cast<bool>(i % 2));
+        check_near<Prec>(states_amp[i][0], amplitudes[i][0]);
+        check_near<Prec>(states_amp[i][1], amplitudes[i][1]);
+    }
+}
+
+TYPED_TEST(BatchedGateTest, ApplyProbabilisticMeasurementGate) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    constexpr std::uint64_t N_CLASSICAL_BITS = 2;
+
+    StateVectorBatched<Prec, Space> states(BATCH_SIZE, 1);
+    std::vector<std::vector<StdComplex>> amplitudes(BATCH_SIZE, std::vector<StdComplex>(2, 0.));
+    std::vector<bool> reg(BATCH_SIZE * N_CLASSICAL_BITS, false);
+    std::mt19937_64 rng(1);
+
+    for (std::size_t i = 0; i < BATCH_SIZE; ++i) {
+        amplitudes[i][i % 2] = 1.;
+    }
+    states.load(amplitudes);
+
+    gate::Probabilistic<Prec>({1.0}, {gate::Measurement<Prec>(0, 1)})
+        ->update_quantum_state(
+            BatchedExecutionContext<Prec, Space>{states, &reg, N_CLASSICAL_BITS, &rng});
+
+    const auto states_amp = states.get_amplitudes();
+    for (std::size_t i = 0; i < BATCH_SIZE; ++i) {
+        EXPECT_FALSE(reg[i * N_CLASSICAL_BITS]);
+        EXPECT_EQ(reg[i * N_CLASSICAL_BITS + 1], static_cast<bool>(i % 2));
+        check_near<Prec>(states_amp[i][0], amplitudes[i][0]);
+        check_near<Prec>(states_amp[i][1], amplitudes[i][1]);
     }
 }
 
@@ -805,7 +862,7 @@ void test_batched_gate(Gate<Prec> gate_control,
     }
     states_controlled.load(amplitudes_controlled);
     gate_control->update_quantum_state(states);
-    gate_simple->update_quantum_state(states_controlled);
+    gate_simple->update_quantum_state(BatchedExecutionContext<Prec, Space>{states_controlled});
     amplitudes = states.get_amplitudes();
     amplitudes_controlled = states_controlled.get_amplitudes();
     for (std::uint64_t i = 0; i < BATCH_SIZE; i++) {

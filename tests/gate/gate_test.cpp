@@ -707,9 +707,10 @@ TYPED_TEST(GateTest, ApplyProbabilisticGate) {
         auto probgate = gate::Probabilistic<Prec>({.1, .9}, {gate::X<Prec>(0), gate::I<Prec>()});
         std::uint64_t x_cnt = 0, i_cnt = 0;
         StateVector<Prec, Space> state(1);
+        std::mt19937_64 rng(0);
         for ([[maybe_unused]] auto _ : std::views::iota(0, 100)) {
             std::uint64_t before = state.sampling(1)[0];
-            probgate->update_quantum_state(state);
+            probgate->update_quantum_state(ExecutionContext<Prec, Space>{state, nullptr, &rng});
             std::uint64_t after = state.sampling(1)[0];
             if (before != after) {
                 x_cnt++;
@@ -722,6 +723,41 @@ TYPED_TEST(GateTest, ApplyProbabilisticGate) {
         ASSERT_GT(i_cnt, 0);
         ASSERT_LT(x_cnt, i_cnt);
     }
+}
+
+TYPED_TEST(GateTest, ApplyMeasurementGateOnZeroState) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    StateVector<Prec, Space> state(1);
+    std::vector<bool> reg(1, true);
+    std::mt19937_64 rng(0);
+
+    gate::Measurement<Prec>(0, 0)->update_quantum_state(
+        ExecutionContext<Prec, Space>{state, &reg, &rng});
+
+    EXPECT_FALSE(reg[0]);
+    const auto amplitudes = state.get_amplitudes();
+    check_near<Prec>(amplitudes[0], StdComplex{1.0, 0.0});
+    check_near<Prec>(amplitudes[1], StdComplex{0.0, 0.0});
+}
+
+TYPED_TEST(GateTest, ApplyMeasurementGateOnOneState) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    StateVector<Prec, Space> state(1);
+    gate::X<Prec>(0)->update_quantum_state(state);
+    std::vector<bool> reg(1, false);
+    std::mt19937_64 rng(0);
+
+    gate::Measurement<Prec>(0, 0)->update_quantum_state(
+        ExecutionContext<Prec, Space>{state, &reg, &rng});
+
+    EXPECT_TRUE(reg[0]);
+    const auto amplitudes = state.get_amplitudes();
+    check_near<Prec>(amplitudes[0], StdComplex{0.0, 0.0});
+    check_near<Prec>(amplitudes[1], StdComplex{1.0, 0.0});
 }
 
 TYPED_TEST(GateTest, FlattenNestedProbabilisticGate) {
@@ -761,7 +797,7 @@ void test_gate(Gate<Prec> gate_control,
     }
     state_controlled.load(amplitudes_controlled);
     gate_control->update_quantum_state(state);
-    gate_simple->update_quantum_state(state_controlled);
+    gate_simple->update_quantum_state(ExecutionContext<Prec, Space>{state_controlled});
     amplitudes = state.get_amplitudes();
     amplitudes_controlled = state_controlled.get_amplitudes();
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {

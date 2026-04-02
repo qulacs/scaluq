@@ -1,3 +1,8 @@
+#include <algorithm>
+#include <bit>
+#include <cmath>
+#include <numeric>
+#include <random>
 #include <scaluq/circuit/circuit.hpp>
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/gate/merge_gate.hpp>
@@ -49,39 +54,52 @@ std::uint64_t Circuit<Prec>::calculate_depth() const {
 template <Precision Prec>
 void Circuit<Prec>::add_circuit(const Circuit<Prec>& circuit) {
     _gate_list.reserve(_gate_list.size() + circuit._gate_list.size());
+    _classical_conditions.reserve(_classical_conditions.size() +
+                                  circuit._classical_conditions.size());
+    if (_n_classical_bits < circuit._n_classical_bits) {
+        _n_classical_bits = circuit._n_classical_bits;
+        _reg.resize(_n_classical_bits, false);
+    }
     for (const auto& gate : circuit._gate_list) {
         _gate_list.push_back(gate);
+    }
+    for (const auto& condition : circuit._classical_conditions) {
+        _classical_conditions.push_back(condition);
     }
 }
 template <Precision Prec>
 void Circuit<Prec>::add_circuit(Circuit<Prec>&& circuit) {
     _gate_list.reserve(_gate_list.size() + circuit._gate_list.size());
+    _classical_conditions.reserve(_classical_conditions.size() +
+                                  circuit._classical_conditions.size());
+    if (_n_classical_bits < circuit._n_classical_bits) {
+        _n_classical_bits = circuit._n_classical_bits;
+        _reg.resize(_n_classical_bits, false);
+    }
     for (auto&& gate : circuit._gate_list) {
         _gate_list.push_back(std::move(gate));
+    }
+    for (auto&& condition : circuit._classical_conditions) {
+        _classical_conditions.push_back(std::move(condition));
     }
 }
 
 template <Precision Prec>
 template <ExecutionSpace Space>
 void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
-                                         const std::map<std::string, double>& parameters) const {
+                                         const std::map<std::string, double>& parameters,
+                                         std::uint64_t seed) {
     check_state_vector_n_qubits(state.n_qubits());
-    for (auto&& gate : _gate_list) {
-        if (gate.index() == 0) continue;
-        const auto& key = std::get<1>(gate).second;
-        if (!parameters.contains(key)) {
-            using namespace std::string_literals;
-            throw std::runtime_error(
-                "Circuit::update_quantum_state(StateVector&, const std::map<std::string_view, double>&) const: parameter named "s +
-                std::string(key) + "is not given.");
-        }
-    }
-    for (auto&& gate : _gate_list) {
+    _reg.assign(_n_classical_bits, false);
+    std::mt19937_64 random_engine(seed);
+    ExecutionContext<Prec, Space> context{state, &_reg, &random_engine};
+
+    for (const auto& gate : _gate_list) {
         if (gate.index() == 0) {
-            std::get<0>(gate)->update_quantum_state(state);
+            std::get<0>(gate)->update_quantum_state(context);
         } else {
             const auto& [param_gate, key] = std::get<1>(gate);
-            param_gate->update_quantum_state(state, parameters.at(key));
+            param_gate->update_quantum_state(context, parameters.at(key));
         }
     }
 }
@@ -90,54 +108,54 @@ template <Precision Prec>
 template <ExecutionSpace Space>
 void Circuit<Prec>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states,
-    const std::map<std::string, std::vector<double>>& parameters) const {
+    const std::map<std::string, std::vector<double>>& parameters,
+    std::uint64_t seed) {
     check_state_vector_n_qubits(states.n_qubits());
-    for (auto&& gate : _gate_list) {
-        if (gate.index() == 0) continue;
-        const auto& key = std::get<1>(gate).second;
-        if (!parameters.contains(key)) {
-            using namespace std::string_literals;
-            throw std::runtime_error(
-                "Circuit::update_quantum_state(StateVector&, const std::map<std::string_view, double>&) const: parameter named "s +
-                std::string(key) + "is not given.");
-        }
-    }
-    for (auto&& gate : _gate_list) {
+    _reg.assign(_n_classical_bits * states.batch_size(), false);
+    std::mt19937_64 random_engine(seed);
+    BatchedExecutionContext<Prec, Space> context{
+        states, &_reg, _n_classical_bits, &random_engine};
+    for (const auto& gate : _gate_list) {
         if (gate.index() == 0) {
-            std::get<0>(gate)->update_quantum_state(states);
+            std::get<0>(gate)->update_quantum_state(context);
         } else {
             const auto& [param_gate, key] = std::get<1>(gate);
-            param_gate->update_quantum_state(states, parameters.at(key));
+            param_gate->update_quantum_state(context, parameters.at(key));
         }
     }
 }
 
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
     StateVector<internal::Prec, ExecutionSpace::Host>& state,
-    const std::map<std::string, double>& parameters) const;
+    const std::map<std::string, double>& parameters,
+    std::uint64_t seed);
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
     StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states,
-    const std::map<std::string, std::vector<double>>& parameters) const;
-
+    const std::map<std::string, std::vector<double>>& parameters,
+    std::uint64_t seed);
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
     StateVector<internal::Prec, ExecutionSpace::HostSerial>& state,
-    const std::map<std::string, double>& parameters) const;
+    const std::map<std::string, double>& parameters,
+    std::uint64_t seed);
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
     StateVectorBatched<internal::Prec, ExecutionSpace::HostSerial>& states,
-    const std::map<std::string, std::vector<double>>& parameters) const;
+    const std::map<std::string, std::vector<double>>& parameters,
+    std::uint64_t seed);
 
 #ifdef SCALUQ_USE_CUDA
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
     StateVector<internal::Prec, ExecutionSpace::Default>& state,
-    const std::map<std::string, double>& parameters) const;
+    const std::map<std::string, double>& parameters,
+    std::uint64_t seed);
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
     StateVectorBatched<internal::Prec, ExecutionSpace::Default>& states,
-    const std::map<std::string, std::vector<double>>& parameters) const;
+    const std::map<std::string, std::vector<double>>& parameters,
+    std::uint64_t seed);
 #endif  // SCALUQ_USE_CUDA
 
 template <Precision Prec>
 Circuit<Prec> Circuit<Prec>::copy() const {
-    Circuit<Prec> ccircuit;
+    Circuit<Prec> ccircuit(_n_classical_bits);
     ccircuit._gate_list.reserve(_gate_list.size());
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0)
@@ -147,20 +165,27 @@ Circuit<Prec> Circuit<Prec>::copy() const {
             ccircuit._gate_list.push_back(std::make_pair(param_gate, key));
         }
     }
+    ccircuit._classical_conditions = _classical_conditions;
+    ccircuit._reg = _reg;
+    ccircuit._n_classical_bits = _n_classical_bits;
     return ccircuit;
 }
 
 template <Precision Prec>
 Circuit<Prec> Circuit<Prec>::get_inverse() const {
-    Circuit<Prec> icircuit;
+    Circuit<Prec> icircuit(_n_classical_bits);
     icircuit._gate_list.reserve(_gate_list.size());
-    for (auto&& gate : _gate_list | std::views::reverse) {
+    icircuit._classical_conditions.reserve(_classical_conditions.size());
+    for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
+        const auto& gate = _gate_list[_gate_list.size() - 1 - idx];
         if (gate.index() == 0)
             icircuit._gate_list.push_back(std::get<0>(gate)->get_inverse());
         else {
             const auto& [param_gate, key] = std::get<1>(gate);
             icircuit._gate_list.push_back(std::make_pair(param_gate->get_inverse(), key));
         }
+        icircuit._classical_conditions.push_back(
+            _classical_conditions[_classical_conditions.size() - 1 - idx]);
     }
     return icircuit;
 }
@@ -224,8 +249,9 @@ void Circuit<Prec>::optimize(std::uint64_t max_block_size) {
 
     for (const GateWithKey& gate_with_key : _gate_list) {
         if (gate_with_key.index() == 1 ||
-            std::get<0>(gate_with_key).gate_type() == GateType::Probabilistic) {
-            // ParamGate and Probabilistic cannot be merged with others
+            std::get<0>(gate_with_key).gate_type() == GateType::Probabilistic ||
+            std::get<0>(gate_with_key).gate_type() == GateType::Measurement) {
+            // ParamGate, Probabilistic, and Measurement cannot be merged with others
             push_waiting_gates(gate_with_key);
             push(gate_with_key);
             continue;
@@ -406,7 +432,8 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
         for (std::uint64_t i = 0; i < probs.size(); ++i) {
             StateVectorBatched<Prec, Space> tmp_states(states.copy());
             if (gates[i].index() == 0) {
-                std::get<0>(gates[i])->update_quantum_state(tmp_states);
+                std::get<0>(gates[i])->update_quantum_state(
+                    BatchedExecutionContext<Prec, Space>{tmp_states});
             } else {
                 const auto& [param_gate, key] = std::get<1>(gates[i]);
                 param_gate->update_quantum_state(
@@ -464,9 +491,9 @@ std::uint64_t Circuit<Prec>::required_n_qubits() const {
 
 template <Precision Prec>
 void Circuit<Prec>::check_state_vector_n_qubits(std::uint64_t n_qubits) const {
-    if (required_n_qubits() > n_qubits) {
-        throw std::runtime_error(
-            "Circuit::update_quantum_state: state does not have enough qubits for this circuit.");
+    const std::uint64_t required = required_n_qubits();
+    if (required > n_qubits) {
+        throw std::runtime_error("Circuit: state does not have enough qubits for this circuit.");
     }
 }
 

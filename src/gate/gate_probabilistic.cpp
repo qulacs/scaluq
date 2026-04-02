@@ -4,6 +4,21 @@
 
 namespace scaluq::internal {
 namespace {
+template <Precision Prec, ExecutionSpace Space>
+std::uint64_t select_probabilistic_gate_index(const std::vector<double>& cumulative_distribution,
+                                              ExecutionContext<Prec, Space> context) {
+    if (context.rng == nullptr) {
+        throw std::runtime_error(
+            "ProbabilisticGateImpl::update_quantum_state(): random engine is required.");
+    }
+    std::uniform_real_distribution<double> dist(0., 1.);
+    std::uint64_t i =
+        std::distance(cumulative_distribution.begin(),
+                      std::ranges::upper_bound(cumulative_distribution, dist(*context.rng))) -
+        1;
+    return std::min<std::uint64_t>(i, cumulative_distribution.size() - 2);
+}
+
 template <Precision Prec>
 void flatten_probabilistic_gate(double prob_prefix,
                                 const Gate<Prec>& gate,
@@ -71,34 +86,30 @@ std::string ProbabilisticGateImpl<Prec>::to_string(const std::string& indent) co
     }
     return ss.str();
 }
-#define DEFINE_PROBABILISTIC_GATE_UPDATE(Space)                                                    \
-    template <Precision Prec>                                                                      \
-    void ProbabilisticGateImpl<Prec>::update_quantum_state(StateVector<Prec, Space>& state_vector) \
-        const {                                                                                    \
-        Random random;                                                                             \
-        double r = random.uniform();                                                               \
-        std::uint64_t i = std::distance(_cumulative_distribution.begin(),                          \
-                                        std::ranges::upper_bound(_cumulative_distribution, r)) -   \
-                          1;                                                                       \
-        if (i >= _gate_list.size()) i = _gate_list.size() - 1;                                     \
-        _gate_list[i]->update_quantum_state(state_vector);                                         \
-    }                                                                                              \
-    template <Precision Prec>                                                                      \
-    void ProbabilisticGateImpl<Prec>::update_quantum_state(                                        \
-        StateVectorBatched<Prec, Space>& states) const {                                           \
-        std::vector<std::uint64_t> indices(states.batch_size());                                   \
-        std::vector<double> r(states.batch_size());                                                \
-                                                                                                   \
-        Random random;                                                                             \
-        for (std::size_t i = 0; i < states.batch_size(); ++i) {                                    \
-            r[i] = random.uniform();                                                               \
-            indices[i] = std::distance(_cumulative_distribution.begin(),                           \
-                                       std::ranges::upper_bound(_cumulative_distribution, r[i])) - \
-                         1;                                                                        \
-            if (indices[i] >= _gate_list.size()) indices[i] = _gate_list.size() - 1;               \
-            auto state_vector = states.view_state_vector_at(i);                                     \
-            _gate_list[indices[i]]->update_quantum_state(state_vector);                            \
-        }                                                                                          \
+#define DEFINE_PROBABILISTIC_GATE_UPDATE(Space)                                                   \
+    template <Precision Prec>                                                                     \
+    void ProbabilisticGateImpl<Prec>::update_quantum_state(ExecutionContext<Prec, Space> context) \
+        const {                                                                                   \
+        const std::uint64_t i =                                                                   \
+            select_probabilistic_gate_index(_cumulative_distribution, context);                   \
+        _gate_list[i]->update_quantum_state(context);                                             \
+    }                                                                                             \
+    template <Precision Prec>                                                                     \
+    void ProbabilisticGateImpl<Prec>::update_quantum_state(                                       \
+        BatchedExecutionContext<Prec, Space> context) const {                                     \
+        if (context.reg != nullptr &&                                                             \
+            context.reg->size() != context.n_classical_bits * context.states.batch_size()) {      \
+            throw std::runtime_error(                                                             \
+                "ProbabilisticGateImpl::update_quantum_state(): classical register size must "    \
+                "match n_classical_bits * batch size.");                                          \
+        }                                                                                         \
+        for (std::size_t i = 0; i < context.states.batch_size(); ++i) {                           \
+            auto state_vector = context.states.view_state_vector_at(i);                           \
+            this->update_quantum_state(ExecutionContext<Prec, Space>{state_vector,                \
+                                                                     context.reg,                 \
+                                                                     context.rng,                 \
+                                                                     i * context.n_classical_bits});\
+        }                                                                                         \
     }
 DEFINE_PROBABILISTIC_GATE_UPDATE(ExecutionSpace::Host)
 DEFINE_PROBABILISTIC_GATE_UPDATE(ExecutionSpace::HostSerial)

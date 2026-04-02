@@ -1,11 +1,15 @@
 #pragma once
 
+#include <random>
+#include <vector>
+
 #include "../state/state_vector.hpp"
 #include "../state/state_vector_batched.hpp"
 #include "../types.hpp"
 #include "../util/utility.hpp"
 
 namespace scaluq {
+
 namespace internal {
 // forward declarations
 
@@ -44,6 +48,8 @@ template <Precision Prec>
 class P0GateImpl;
 template <Precision Prec>
 class P1GateImpl;
+template <Precision Prec>
+class MeasurementGateImpl;
 template <Precision Prec>
 class RXGateImpl;
 template <Precision Prec>
@@ -89,6 +95,7 @@ enum class GateType {
     SqrtYdag,
     P0,
     P1,
+    Measurement,
     RX,
     RY,
     RZ,
@@ -101,6 +108,40 @@ enum class GateType {
     SparseMatrix,
     DenseMatrix,
     Probabilistic
+};
+
+template <Precision Prec, ExecutionSpace Space>
+struct ExecutionContext {
+    StateVector<Prec, Space> state;
+    std::vector<bool>* reg = nullptr;
+    std::mt19937_64* rng = nullptr;
+    std::uint64_t reg_offset = 0;
+
+    explicit ExecutionContext(StateVector<Prec, Space>& state_) : state(state_) {}
+    ExecutionContext(StateVector<Prec, Space>& state_,
+                     std::vector<bool>* reg_,
+                     std::mt19937_64* rng_)
+        : state(state_), reg(reg_), rng(rng_) {}
+    ExecutionContext(StateVector<Prec, Space>& state_,
+                     std::vector<bool>* reg_,
+                     std::mt19937_64* rng_,
+                     std::uint64_t reg_offset_)
+        : state(state_), reg(reg_), rng(rng_), reg_offset(reg_offset_) {}
+};
+
+template <Precision Prec, ExecutionSpace Space>
+struct BatchedExecutionContext {
+    StateVectorBatched<Prec, Space> states;
+    std::vector<bool>* reg = nullptr;
+    std::mt19937_64* rng = nullptr;
+    std::uint64_t n_classical_bits = 0;
+
+    explicit BatchedExecutionContext(StateVectorBatched<Prec, Space>& states_) : states(states_) {}
+    BatchedExecutionContext(StateVectorBatched<Prec, Space>& states_,
+                            std::vector<bool>* reg_,
+                            std::uint64_t n_classical_bits_,
+                            std::mt19937_64* rng_)
+        : states(states_), reg(reg_), rng(rng_), n_classical_bits(n_classical_bits_) {}
 };
 
 template <typename T, Precision Prec>
@@ -140,6 +181,8 @@ constexpr GateType get_gate_type() {
         return GateType::P0;
     else if constexpr (std::is_same_v<TWithoutConst, internal::P1GateImpl<Prec>>)
         return GateType::P1;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::MeasurementGateImpl<Prec>>)
+        return GateType::Measurement;
     else if constexpr (std::is_same_v<TWithoutConst, internal::RXGateImpl<Prec>>)
         return GateType::RX;
     else if constexpr (std::is_same_v<TWithoutConst, internal::RYGateImpl<Prec>>)
@@ -237,18 +280,18 @@ public:
     [[nodiscard]] virtual ComplexMatrix get_matrix() const = 0;
 
     virtual void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Host>& state_vector) const = 0;
+        ExecutionContext<Prec, ExecutionSpace::Host> context) const = 0;
     virtual void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& states) const = 0;
+        BatchedExecutionContext<Prec, ExecutionSpace::Host> context) const = 0;
     virtual void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const = 0;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const = 0;
     virtual void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states) const = 0;
+        BatchedExecutionContext<Prec, ExecutionSpace::HostSerial> context) const = 0;
 #ifdef SCALUQ_USE_CUDA
     virtual void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const = 0;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const = 0;
     virtual void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& states) const = 0;
+        BatchedExecutionContext<Prec, ExecutionSpace::Default> context) const = 0;
 #endif  // SCALUQ_USE_CUDA
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
@@ -291,6 +334,7 @@ DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SqrtYGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SqrtYdagGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(P0GateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(P1GateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(MeasurementGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(RXGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(RYGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(RZGateImpl)
@@ -391,6 +435,7 @@ public:
         else if (type == "SqrtXdag") gate = GetGateFromJson<SqrtXdagGateImpl<Prec>>::get(j);
         else if (type == "SqrtY") gate = GetGateFromJson<SqrtYGateImpl<Prec>>::get(j);
         else if (type == "SqrtYdag") gate = GetGateFromJson<SqrtYdagGateImpl<Prec>>::get(j);
+        else if (type == "Measurement") gate = GetGateFromJson<MeasurementGateImpl<Prec>>::get(j);
         else if (type == "RX") gate = GetGateFromJson<RXGateImpl<Prec>>::get(j);
         else if (type == "RY") gate = GetGateFromJson<RYGateImpl<Prec>>::get(j);
         else if (type == "RZ") gate = GetGateFromJson<RZGateImpl<Prec>>::get(j);
@@ -412,6 +457,24 @@ using Gate = internal::GatePtr<internal::GateBase<Prec>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
+template <typename GateT, Precision Prec, ExecutionSpace Space>
+void register_gate_execution_methods(nb::class_<GateT>& c) {
+    c.def(
+         "update_quantum_state",
+         [](const GateT& gate, StateVector<Prec, Space>& state_vector) {
+             gate->update_quantum_state(ExecutionContext<Prec, Space>{state_vector});
+         },
+         "state_vector"_a,
+         "Apply gate to `state_vector`. `state_vector` in args is directly updated.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate, StateVectorBatched<Prec, Space>& states) {
+                gate->update_quantum_state(BatchedExecutionContext<Prec, Space>{states});
+            },
+            "states"_a,
+            "Apply gate to `states`. `states` in args is directly updated.");
+}
+
 template <typename GateT, Precision Prec>
 void register_gate_common_methods(nb::class_<GateT>& c) {
     using namespace nb::literals;
@@ -457,55 +520,18 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
                 if (!inv) return nb::none();
                 return nb::cast(Gate<Prec>(inv));
             },
-            "Generate inverse gate as `Gate` type. If not exists, return None.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate, StateVector<Prec, ExecutionSpace::Host>& state_vector) {
-                gate->update_quantum_state(state_vector);
-            },
-            "state_vector"_a,
-            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::Host>& states) {
-                gate->update_quantum_state(states);
-            },
-            "states"_a,
-            "Apply gate to `states`. `states` in args is directly updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate, StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) {
-                gate->update_quantum_state(state_vector);
-            },
-            "state_vector"_a,
-            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states) {
-                gate->update_quantum_state(states);
-            },
-            "states"_a,
-            "Apply gate to `states`. `states` in args is directly updated.")
+            "Generate inverse gate as `Gate` type. If not exists, return None.");
+
+    register_gate_execution_methods<GateT, Prec, ExecutionSpace::Host>(c);
+    register_gate_execution_methods<GateT, Prec, ExecutionSpace::HostSerial>(c);
 #ifdef SCALUQ_USE_CUDA
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate, StateVector<Prec, ExecutionSpace::Default>& state_vector) {
-                gate->update_quantum_state(state_vector);
-            },
-            "state_vector"_a,
-            "Apply gate to `state_vector`. `state_vector` in args is directly updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::Default>& states) {
-                gate->update_quantum_state(states);
-            },
-            "states"_a,
-            "Apply gate to `states`. `states` in args is directly updated.")
+    register_gate_execution_methods<GateT, Prec, ExecutionSpace::Default>(c);
 #endif  // SCALUQ_USE_CUDA
-        .def(
-            "get_matrix",
-            [](const GateT& gate) { return gate->get_matrix(); },
-            "Get matrix representation of the gate.")
+
+    c.def(
+         "get_matrix",
+         [](const GateT& gate) { return gate->get_matrix(); },
+         "Get matrix representation of the gate.")
         .def(
             "to_string",
             [](const GateT& gate) { return gate->to_string(""); },
@@ -543,6 +569,7 @@ void bind_gate_gate_hpp_without_precision_and_space(nb::module_& m) {
         .value("SqrtYdag", GateType::SqrtYdag)
         .value("P0", GateType::P0)
         .value("P1", GateType::P1)
+        .value("Measurement", GateType::Measurement)
         .value("RX", GateType::RX)
         .value("RY", GateType::RY)
         .value("RZ", GateType::RZ)

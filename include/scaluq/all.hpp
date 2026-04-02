@@ -42,6 +42,7 @@
     using SqrtYdagGate = ::scaluq::SqrtYdagGate<Prec>;                                         \
     using P0Gate = ::scaluq::P0Gate<Prec>;                                                     \
     using P1Gate = ::scaluq::P1Gate<Prec>;                                                     \
+    using MeasurementGate = ::scaluq::MeasurementGate<Prec>;                                   \
     using RXGate = ::scaluq::RXGate<Prec>;                                                     \
     using RYGate = ::scaluq::RYGate<Prec>;                                                     \
     using RZGate = ::scaluq::RZGate<Prec>;                                                     \
@@ -130,6 +131,9 @@
                    const std::vector<std::uint64_t>& controls = {},                            \
                    std::vector<std::uint64_t> control_values = {}) {                           \
         return ::scaluq::gate::P1<Prec>(target, controls, control_values);                     \
+    }                                                                                          \
+    inline Gate Measurement(std::uint64_t target, std::uint64_t classical_bit) {               \
+        return ::scaluq::gate::Measurement<Prec>(target, classical_bit);                       \
     }                                                                                          \
     inline Gate RX(std::uint64_t target,                                                       \
                    double angle,                                                               \
@@ -249,4 +253,6 @@
     const auto& ParamProbabilistic = ::scaluq::gate::ParamProbabilistic<Prec>;                 \
     }                                                                                          \
     inline auto& merge_gate = ::scaluq::merge_gate<Prec, Space>;                               \
+    using ClassicalCondition = ::scaluq::ClassicalCondition;                                   \
+    using ClassicalRegister = ::scaluq::ClassicalRegister;                                     \
     using Circuit = ::scaluq::Circuit<Prec>;

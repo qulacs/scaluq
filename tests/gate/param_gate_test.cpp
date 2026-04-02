@@ -121,9 +121,11 @@ TYPED_TEST(ParamGateTest, ApplyParamProbabilisticGate) {
         gate::ParamProbabilistic<Prec>({.1, .9}, {gate::ParamRX<Prec>(0), gate::I<Prec>()});
     std::uint64_t x_cnt = 0, i_cnt = 0;
     StateVector<Prec, Space> state(1);
+    std::mt19937_64 rng(0);
     for ([[maybe_unused]] auto _ : std::views::iota(0, 100)) {
         std::uint64_t before = state.sampling(1)[0];
-        probgate->update_quantum_state(state, std::numbers::pi);
+        probgate->update_quantum_state(ExecutionContext<Prec, Space>{state, nullptr, &rng},
+                                       std::numbers::pi);
         std::uint64_t after = state.sampling(1)[0];
         if (before != after) {
             x_cnt++;

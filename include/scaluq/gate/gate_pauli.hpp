@@ -29,18 +29,18 @@ public:
     }
     ComplexMatrix get_matrix() const override { return this->_pauli.get_matrix(); }
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& states) const override;
+        BatchedExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states) const override;
+        BatchedExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& states) const override;
+        BatchedExecutionContext<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -79,18 +79,18 @@ public:
 
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& states) const override;
+        BatchedExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states) const override;
+        BatchedExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& states) const override;
+        BatchedExecutionContext<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;

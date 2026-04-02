@@ -174,6 +174,11 @@ inline Gate<Prec> P1(std::uint64_t target,
         internal::vector_to_mask(controls, control_values));
 }
 template <Precision Prec>
+inline Gate<Prec> Measurement(std::uint64_t target, std::uint64_t classical_bit) {
+    return internal::GateFactory::create_gate<internal::MeasurementGateImpl<Prec>>(
+        internal::vector_to_mask({target}), classical_bit);
+}
+template <Precision Prec>
 inline Gate<Prec> RX(std::uint64_t target,
                      double angle,
                      const std::vector<std::uint64_t>& controls = {},
@@ -483,6 +488,19 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .ret("Gate", "Pauli-Y gate instance")
             .ex(DocString::Code({">>> gate = Y(0)  # Y gate on qubit 0",
                                  ">>> gate = Y(1, [0])  # Controlled-Y with control on qubit 0"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "Measurement",
+        &gate::Measurement<Prec>,
+        "target"_a,
+        "classical_bit"_a,
+        DocString()
+            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
+                  ":class:`~scaluq.f64.MeasurementGate`.")
+            .arg("target", "int", "Target qubit index")
+            .arg("classical_bit", "int", "Destination classical bit index")
+            .ret("Gate", "Measurement gate instance")
             .build_as_google_style()
             .c_str());
     mgate.def(

@@ -137,7 +137,7 @@ void circuit_test() {
     state_eigen =
         get_expanded_eigen_matrix_with_identity(target, make_U(-angle, 0, 0), n) * state_eigen;
 
-    circuit.update_quantum_state(state);
+    circuit.update_quantum_state(state, {}, 0);
 
     state_cp = state.get_amplitudes();
     for (std::uint64_t i = 0; i < dim; ++i) {
@@ -230,11 +230,11 @@ void circuit_rev_test() {
     if (target_sub >= target) target_sub++;
     circuit.add_gate(gate::Swap<Prec>(target, target_sub));
 
-    circuit.update_quantum_state(state);
+    circuit.update_quantum_state(state, {}, 0);
 
     auto revcircuit = circuit.get_inverse();
 
-    revcircuit.update_quantum_state(state);
+    revcircuit.update_quantum_state(state, {}, 0);
     state_cp = state.get_amplitudes();
     for (std::uint64_t i = 0; i < dim; ++i) {
         check_near<Prec>(state_eigen[i], state_cp[i]);
@@ -255,5 +255,102 @@ TYPED_TEST(CircuitTest, ThrowsWhenStateHasTooFewQubits) {
     circuit.add_gate(gate::X<Prec>(1));
 
     StateVector<Prec, Space> state(1);
-    ASSERT_THROW(circuit.update_quantum_state(state), std::runtime_error);
+    ASSERT_THROW(circuit.update_quantum_state(state, {}, 0), std::runtime_error);
+}
+
+TYPED_TEST(CircuitTest, UpdateQuantumStateStoresMeasurementInCircuitRegister) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Circuit<Prec> circuit(4);
+    circuit.add_gate(gate::X<Prec>(0));
+    circuit.add_gate(gate::Measurement<Prec>(0, 3));
+
+    StateVector<Prec, Space> state(1);
+    circuit.update_quantum_state(state, {}, 0);
+
+    EXPECT_TRUE(circuit.classical_register()[3]);
+
+    const auto amplitudes = state.get_amplitudes();
+    check_near<Prec>(amplitudes[0], StdComplex{0.0, 0.0});
+    check_near<Prec>(amplitudes[1], StdComplex{1.0, 0.0});
+}
+
+TYPED_TEST(CircuitTest, UpdateQuantumStateExecutesAdaptiveGateFromCircuitRegister) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Circuit<Prec> circuit(2);
+    circuit.add_gate(gate::X<Prec>(0));
+    circuit.add_gate(gate::X<Prec>(1));
+    circuit.add_gate(gate::Measurement<Prec>(0, 0));
+    circuit.add_gate(gate::Measurement<Prec>(1, 1));
+    circuit.add_conditional_gate(gate::X<Prec>(2), [](const ClassicalRegister& reg) {
+        for (std::uint64_t bit = 0; bit < 2; ++bit) {
+            if (bit >= reg.size() || !reg[bit]) return false;
+        }
+        return true;
+    });
+
+    StateVector<Prec, Space> state(3);
+    circuit.update_quantum_state(state, {}, 0);
+
+    EXPECT_TRUE(circuit.classical_register()[0]);
+    EXPECT_TRUE(circuit.classical_register()[1]);
+
+    const auto amplitudes = state.get_amplitudes();
+    check_near<Prec>(amplitudes[0], StdComplex{0.0, 0.0});
+    check_near<Prec>(amplitudes[1], StdComplex{0.0, 0.0});
+    check_near<Prec>(amplitudes[2], StdComplex{0.0, 0.0});
+    check_near<Prec>(amplitudes[3], StdComplex{0.0, 0.0});
+    check_near<Prec>(amplitudes[4], StdComplex{0.0, 0.0});
+    check_near<Prec>(amplitudes[5], StdComplex{0.0, 0.0});
+    check_near<Prec>(amplitudes[6], StdComplex{0.0, 0.0});
+    check_near<Prec>(amplitudes[7], StdComplex{1.0, 0.0});
+}
+
+TYPED_TEST(CircuitTest, UpdateQuantumStateBatchedStoresMeasurementInFlatRegister) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Circuit<Prec> circuit(2);
+    circuit.add_gate(gate::X<Prec>(0));
+    circuit.add_gate(gate::Measurement<Prec>(0, 1));
+
+    StateVectorBatched<Prec, Space> states(2, 1);
+    ASSERT_NO_THROW(circuit.update_quantum_state(states, {}, 0));
+    EXPECT_TRUE(circuit.classical_register()[1]);
+    EXPECT_TRUE(circuit.classical_register()[3]);
+}
+
+TYPED_TEST(CircuitTest, AddCircuitKeepsLongerClassicalRegister) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Circuit<Prec> lhs(1);
+    Circuit<Prec> rhs(4);
+    rhs.add_gate(gate::X<Prec>(0));
+    rhs.add_gate(gate::Measurement<Prec>(0, 3));
+
+    lhs.add_circuit(rhs);
+
+    StateVector<Prec, Space> state(1);
+    lhs.update_quantum_state(state, {}, 0);
+
+    EXPECT_TRUE(lhs.classical_register()[3]);
+}
+
+TYPED_TEST(CircuitTest, JsonRoundTripKeepsClassicalRegisterSize) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Circuit<Prec> circuit(4);
+    circuit.add_gate(gate::X<Prec>(0));
+    circuit.add_gate(gate::Measurement<Prec>(0, 3));
+
+    auto loaded = Json(circuit).template get<Circuit<Prec>>();
+
+    StateVector<Prec, Space> state(1);
+    ASSERT_NO_THROW(loaded.update_quantum_state(state, {}, 0));
+    EXPECT_TRUE(loaded.classical_register()[3]);
 }

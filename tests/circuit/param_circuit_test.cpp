@@ -72,8 +72,8 @@ void param_circuit_test() {
         StateVector state = StateVector<Prec, Space>::Haar_random_state(n_qubits);
         StateVector state_cp = state.copy();
         auto amplitudes_base = state.get_amplitudes();
-        circuit.update_quantum_state(state);
-        pcircuit.update_quantum_state(state_cp, pmap);
+        circuit.update_quantum_state(state, {}, 0);
+        pcircuit.update_quantum_state(state_cp, pmap, 0);
         auto amplitudes = state.get_amplitudes();
         auto amplitudes_cp = state_cp.get_amplitudes();
         for (std::uint64_t idx : std::views::iota(std::uint64_t{0}, 1ULL << n_qubits)) {
@@ -81,8 +81,8 @@ void param_circuit_test() {
         }
         auto icircuit = circuit.get_inverse();
         auto ipcircuit = pcircuit.get_inverse();
-        icircuit.update_quantum_state(state);
-        ipcircuit.update_quantum_state(state_cp, pmap);
+        icircuit.update_quantum_state(state, {}, 0);
+        ipcircuit.update_quantum_state(state_cp, pmap, 0);
         amplitudes = state.get_amplitudes();
         amplitudes_cp = state_cp.get_amplitudes();
         for (std::uint64_t idx : std::views::iota(std::uint64_t{0}, 1ULL << n_qubits)) {
@@ -107,11 +107,41 @@ TYPED_TEST(ParamCircuitTest, InsufficientParameterGiven) {
         circuit.add_param_gate(gate::ParamRX<Prec>(0), "1");
         circuit.add_param_gate(gate::ParamRX<Prec>(0), "0");
         StateVector<Prec, Space> state(1);
-        ASSERT_NO_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"1", 0}}));
-        ASSERT_NO_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"1", 0}, {"2", 0}}));
-        ASSERT_THROW(circuit.update_quantum_state(state), std::runtime_error);
-        ASSERT_THROW(circuit.update_quantum_state(state, {}), std::runtime_error);
-        ASSERT_THROW(circuit.update_quantum_state(state, {{"0", 0}}), std::runtime_error);
-        ASSERT_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"2", 0}}), std::runtime_error);
+        ASSERT_NO_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"1", 0}}, 0));
+        ASSERT_NO_THROW(circuit.update_quantum_state(
+            state, {{"0", 0}, {"1", 0}, {"2", 0}}, 0));
+        ASSERT_THROW(circuit.update_quantum_state(state, {}, 0), std::runtime_error);
+        ASSERT_THROW(circuit.update_quantum_state(state, {{"0", 0}}, 0), std::runtime_error);
+        ASSERT_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"2", 0}}, 0),
+                     std::runtime_error);
     }
+}
+
+TYPED_TEST(ParamCircuitTest, UpdateQuantumStateBatchedExecutesParamProbabilisticGate) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Circuit<Prec> circuit;
+    circuit.add_param_gate(
+        gate::ParamProbabilistic<Prec>({1.0}, {gate::ParamRX<Prec>(0)}), "theta");
+    StateVectorBatched<Prec, Space> states(2, 1);
+
+    ASSERT_NO_THROW(circuit.update_quantum_state(
+        states, {{"theta", {std::numbers::pi, std::numbers::pi}}}, 0));
+}
+
+TYPED_TEST(ParamCircuitTest, UpdateQuantumStateExecutesParamProbabilisticGate) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Circuit<Prec> circuit;
+    circuit.add_param_gate(
+        gate::ParamProbabilistic<Prec>({1.0}, {gate::ParamRX<Prec>(0)}), "theta");
+
+    StateVector<Prec, Space> state(1);
+    circuit.update_quantum_state(state, {{"theta", std::numbers::pi}}, 0);
+
+    const auto amplitudes = state.get_amplitudes();
+    check_near<Prec>(amplitudes[0], StdComplex(0., 0.));
+    check_near<Prec>(amplitudes[1], StdComplex(0., -1.));
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "gate.hpp"
+
 #include "../state/state_vector.hpp"
 #include "../state/state_vector_batched.hpp"
 #include "../types.hpp"
@@ -112,18 +114,47 @@ public:
     [[nodiscard]] virtual std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const = 0;
     [[nodiscard]] virtual ComplexMatrix get_matrix(double param) const = 0;
 
-    virtual void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector,
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector,
+                              double param) const {
+        update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host>{state_vector}, param);
+    }
+    virtual void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context,
                                       double param) const = 0;
-    virtual void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Host>& states,
+    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Host>& states,
+                              std::vector<double> params) const {
+        update_quantum_state(BatchedExecutionContext<Prec, ExecutionSpace::Host>{states},
+                             std::move(params));
+    }
+    virtual void update_quantum_state(BatchedExecutionContext<Prec, ExecutionSpace::Host> context,
                                       std::vector<double> params) const = 0;
-    virtual void update_quantum_state(StateVector<Prec, ExecutionSpace::HostSerial>& state_vector,
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::HostSerial>& state_vector,
+                              double param) const {
+        update_quantum_state(ExecutionContext<Prec, ExecutionSpace::HostSerial>{state_vector},
+                             param);
+    }
+    virtual void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::HostSerial> context,
                                       double param) const = 0;
-    virtual void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
-                                      std::vector<double> params) const = 0;
+    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
+                              std::vector<double> params) const {
+        update_quantum_state(BatchedExecutionContext<Prec, ExecutionSpace::HostSerial>{states},
+                             std::move(params));
+    }
+    virtual void update_quantum_state(
+        BatchedExecutionContext<Prec, ExecutionSpace::HostSerial> context,
+        std::vector<double> params) const = 0;
 #ifdef SCALUQ_USE_CUDA
-    virtual void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
+    void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
+                              double param) const {
+        update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Default>{state_vector}, param);
+    }
+    virtual void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Default> context,
                                       double param) const = 0;
-    virtual void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Default>& states,
+    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Default>& states,
+                              std::vector<double> params) const {
+        update_quantum_state(BatchedExecutionContext<Prec, ExecutionSpace::Default>{states},
+                             std::move(params));
+    }
+    virtual void update_quantum_state(BatchedExecutionContext<Prec, ExecutionSpace::Default> context,
                                       std::vector<double> params) const = 0;
 #endif  // SCALUQ_USE_CUDA
 
@@ -238,6 +269,28 @@ using ParamGate = internal::ParamGatePtr<internal::ParamGateBase<Prec>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
+template <typename GateT, Precision Prec, ExecutionSpace Space>
+void register_param_gate_execution_methods(nb::class_<GateT>& c) {
+    c.def(
+         "update_quantum_state",
+         [](const GateT& gate, StateVector<Prec, Space>& state_vector, double param) {
+             gate->update_quantum_state(ExecutionContext<Prec, Space>{state_vector}, param);
+         },
+         "state"_a,
+         "param"_a,
+         "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is "
+         "directly updated.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate, StateVectorBatched<Prec, Space>& states, std::vector<double> params) {
+                gate->update_quantum_state(BatchedExecutionContext<Prec, Space>{states}, params);
+            },
+            "states"_a,
+            "params"_a,
+            "Apply gate to `states` with holding the parameters. `states` in args is directly "
+            "updated.");
+}
+
 template <typename GateT, Precision Prec>
 void register_param_gate_common_methods(nb::class_<GateT>& c) {
     c.def(nb::init<GateT>(), "Downcast from ParamGate.")
@@ -279,63 +332,15 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
                 if (!inv) return nb::none();
                 return nb::cast(ParamGate<Prec>(inv));
             },
-            "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVector<Prec, ExecutionSpace::Host>& state_vector,
-               double param) { gate->update_quantum_state(state_vector, param); },
-            "state"_a,
-            "param"_a,
-            "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is "
-            "directly updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVectorBatched<Prec, ExecutionSpace::Host>& states,
-               std::vector<double> params) { gate->update_quantum_state(states, params); },
-            "states"_a,
-            "params"_a,
-            "updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVector<Prec, ExecutionSpace::HostSerial>& state_vector,
-               double param) { gate->update_quantum_state(state_vector, param); },
-            "state"_a,
-            "param"_a,
-            "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is "
-            "directly updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
-               std::vector<double> params) { gate->update_quantum_state(states, params); },
-            "states"_a,
-            "params"_a,
-            "Apply gate to `states` with holding the parameters. `states` in args is directly "
-            "updated.")
+            "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.");
+
+    register_param_gate_execution_methods<GateT, Prec, ExecutionSpace::Host>(c);
+    register_param_gate_execution_methods<GateT, Prec, ExecutionSpace::HostSerial>(c);
 #ifdef SCALUQ_USE_CUDA
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVector<Prec, ExecutionSpace::Default>& state_vector,
-               double param) { gate->update_quantum_state(state_vector, param); },
-            "state"_a,
-            "param"_a,
-            "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is "
-            "directly updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVectorBatched<Prec, ExecutionSpace::Default>& states,
-               std::vector<double> params) { gate->update_quantum_state(states, params); },
-            "states"_a,
-            "params"_a,
-            "Apply gate to `states` with holding the parameters. `states` in args is directly "
-            "updated.")
+    register_param_gate_execution_methods<GateT, Prec, ExecutionSpace::Default>(c);
 #endif  // SCALUQ_USE_CUDA
-        .def(
+
+    c.def(
             "get_matrix",
             [](const GateT& gate, double param) { return gate->get_matrix(param); },
             "param"_a,

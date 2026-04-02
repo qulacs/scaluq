@@ -8,7 +8,7 @@ void GateBase<Prec>::check_qubit_mask_within_bounds(
     std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
     if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
         throw std::runtime_error(
-            "Error: Gate::update_quantum_state(StateVector& state): "
+            "Error: Gate::update_quantum_state(ExecutionContext& state): "
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
@@ -18,7 +18,7 @@ void GateBase<Prec>::check_qubit_mask_within_bounds(
     std::uint64_t full_mask = (1ULL << states.n_qubits()) - 1;
     if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
         throw std::runtime_error(
-            "Error: Gate::update_quantum_state(StateVectorBatched& states): "
+            "Error: Gate::update_quantum_state(BatchedExecutionContext& states): "
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
@@ -28,7 +28,7 @@ void GateBase<Prec>::check_qubit_mask_within_bounds(
     std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
     if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
         throw std::runtime_error(
-            "Error: Gate::update_quantum_state(StateVector& state): "
+            "Error: Gate::update_quantum_state(ExecutionContext& state): "
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
@@ -38,7 +38,7 @@ void GateBase<Prec>::check_qubit_mask_within_bounds(
     std::uint64_t full_mask = (1ULL << states.n_qubits()) - 1;
     if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
         throw std::runtime_error(
-            "Error: Gate::update_quantum_state(StateVectorBatched& states): "
+            "Error: Gate::update_quantum_state(BatchedExecutionContext& states): "
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
@@ -49,7 +49,7 @@ void GateBase<Prec>::check_qubit_mask_within_bounds(
     std::uint64_t full_mask = (1ULL << state_vector.n_qubits()) - 1;
     if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
         throw std::runtime_error(
-            "Error: Gate::update_quantum_state(StateVector& state): "
+            "Error: Gate::update_quantum_state(ExecutionContext& state): "
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
@@ -59,7 +59,7 @@ void GateBase<Prec>::check_qubit_mask_within_bounds(
     std::uint64_t full_mask = (1ULL << states.n_qubits()) - 1;
     if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
         throw std::runtime_error(
-            "Error: Gate::update_quantum_state(StateVectorBatched& states): "
+            "Error: Gate::update_quantum_state(BatchedExecutionContext& states): "
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }

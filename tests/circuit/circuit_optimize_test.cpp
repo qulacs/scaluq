@@ -69,8 +69,8 @@ TYPED_TEST(CircuitOptimizeTest, Basic) {
 
     auto state0 = StateVector<Prec, Space>::Haar_random_state(N);
     auto state1 = state0.copy();
-    circuit.update_quantum_state(state0, params);
+    circuit.update_quantum_state(state0, params, 0);
     circuit.template optimize<Space>();
-    circuit.update_quantum_state(state1, params);
+    circuit.update_quantum_state(state1, params, 0);
     assert(same_state(state0, state1));
 }
