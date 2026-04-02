@@ -8,8 +8,7 @@ on:
       - "doc/**"
       - "*.md"
       - ".github/ISSUE_TEMPLATE/**"
-      - ".github/workflows/yamllint.yml"
-      - ".yamllint"
+      - ".github/workflows/lint.yml"
 
 jobs:
   test:
@@ -60,11 +59,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup LLVM Clang
+      - name: Setup LLVM Clang (macOS clang)
         if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
         run: |
-          echo $(brew --prefix llvm@18)/bin >> $GITHUB_PATH
-          echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
+          echo "$(brew --prefix llvm@18)/bin" >> "$GITHUB_PATH"
+          echo "SDKROOT=$(xcrun --show-sdk-path)" >> "$GITHUB_ENV"
 
       - name: Check if build-related file is changed
         id: check-build-files
@@ -80,7 +79,7 @@ jobs:
 
       - name: Set SCALUQ_TEST_SOURCES to ALL
         if: ${{ steps.check-build-files.outputs.any_changed == 'true' }}
-        run: echo "SCALUQ_TEST_SOURCES=ALL" >> $GITHUB_ENV
+        run: echo "SCALUQ_TEST_SOURCES=ALL" >> "$GITHUB_ENV"
 
       - name: List changed source files
         id: check-source-files
@@ -94,23 +93,19 @@ jobs:
             tests/**.hpp
             tests/**.cpp
 
-      - name: Install Ninja
+      - name: Install Ninja (Linux)
         if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && matrix.os-arch == 'linux-x86_64' }}
         run: sudo apt update && sudo apt install -y ninja-build
 
-      - name: Install Ninja
-        if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && matrix.os-arch == 'macos-arm64' }}
-        run: brew install ninja
+      - name: Install libomp (Linux clang)
+        if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && matrix.os-arch == 'linux-x86_64' && matrix.compiler == 'clang' }}
+        run: sudo apt update && sudo apt install -y libomp-dev
 
-      - name: Install libomp
-        if: ${{ matrix.os-arch == 'linux-x86_64' && matrix.compiler == 'clang' }}
-        run: sudo apt update && sudo apt install libomp-dev
-
-      - name: Install libomp
-        if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
+      - name: Install libomp (macOS clang)
+        if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
         run: |
           brew install libomp
-          echo "OpenMP_ROOT=$(brew --prefix libomp)" >> $GITHUB_ENV
+          echo "OpenMP_ROOT=$(brew --prefix libomp)" >> "$GITHUB_ENV"
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -126,12 +121,12 @@ jobs:
           cuda: "12.9.1"
           method: "local"
           linux-local-args: '["--toolkit"]'
-          log-file-suffix: '${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}'
+          log-file-suffix: '${{ github.job }}-${{ matrix.os-arch }}-${{ matrix.device }}'
 
       - name: Show installed Compiler version
         if: ${{ steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true' }}
         run: |
-          [ $SCALUQ_USE_CUDA = 'ON' ] && nvcc --version
+          [ "$SCALUQ_USE_CUDA" = 'ON' ] && nvcc --version
           ccache --version
           $CMAKE_C_COMPILER --version
           $CMAKE_CXX_COMPILER --version
@@ -148,7 +143,7 @@ jobs:
             echo "Related test files:"
             echo "$RELATED_TEST_FILES"
             SCALUQ_TEST_SOURCES=$(echo "$RELATED_TEST_FILES" | tr '\n' ';')
-            echo "SCALUQ_TEST_SOURCES=$SCALUQ_TEST_SOURCES" >> $GITHUB_ENV
+            echo "SCALUQ_TEST_SOURCES=$SCALUQ_TEST_SOURCES" >> "$GITHUB_ENV"
           fi
 
       - name: Configure & Build
@@ -165,4 +160,4 @@ jobs:
           else
             NPROC=$(nproc)
           fi
-          OMP_PROC_BIND=false ctest --test-dir build/ -j ${NPROC} --output-on-failure
+          OMP_PROC_BIND=false ctest --test-dir build/ -j "${NPROC}" --output-on-failure
