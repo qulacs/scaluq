@@ -568,7 +568,11 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
             "get_matrix",
             [](const GateT& gate) { return gate->get_matrix(); },
             ([]() {
-                auto ds = DocString().desc("Get matrix representation of the gate.");
+                auto ds = DocString().desc(
+                    "Get matrix representation of the gate. "
+                    "Note: The matrix is constructed by reordering "
+                    "target qubits in ascending order of their indices. The qubit with the "
+                    "smaller index is treated as the first target, and the larger as the second.");
                 if constexpr (is_base_gate) {
                     ds.ex(
                         DocString::Code({">>> gate = H(0, controls=[1, 2], control_values=[1, 0])",

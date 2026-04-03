@@ -774,8 +774,32 @@ ComplexMatrix EcrGateImpl<Prec>::get_matrix() const {
 template <Precision Prec>
 std::string EcrGateImpl<Prec>::to_string(const std::string& indent) const {
     std::ostringstream ss;
+    auto targets = this->target_qubit_list();
+    auto controls = this->control_qubit_list();
+    auto control_values = this->control_value_list();
+    auto physical_control = physical_control_index();
+    auto physical_target = physical_target_index();
     ss << indent << "Gate Type: Ecr\n";
-    ss << this->get_qubit_info_as_string(indent);
+    ss << indent << "  Physical Control Qubit: {";
+    ss << physical_control[0];
+    ss << "}\n";
+    ss << indent << "  Physical Target Qubit: {";
+    ss << physical_target[0];
+    ss << "}\n";
+
+    ss << indent << "  Target Qubits: {";
+    for (std::uint32_t i = 0; i < targets.size(); ++i)
+        ss << targets[i] << (i == targets.size() - 1 ? "" : ", ");
+    ss << "}\n";
+
+    ss << indent << "  Control Qubits: {";
+    for (std::uint32_t i = 0; i < controls.size(); ++i)
+        ss << controls[i] << (i == controls.size() - 1 ? "" : ", ");
+    ss << "}\n";
+    ss << indent << "  Control Value: {";
+    for (std::uint32_t i = 0; i < control_values.size(); ++i)
+        ss << control_values[i] << (i == control_values.size() - 1 ? "" : ", ");
+    ss << "}";
     return ss.str();
 }
 #define DEFINE_ECR_GATE_UPDATE(Class, Space)                                               \
