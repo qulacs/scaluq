@@ -2,6 +2,7 @@
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/gate/merge_gate.hpp>
 #include <scaluq/gate/param_gate_factory.hpp>
+#include <scaluq/util/utility.hpp>
 
 namespace scaluq {
 template <Precision Prec>
@@ -15,7 +16,9 @@ std::set<std::string> Circuit<Prec>::key_set() const {
 
 template <Precision Prec>
 std::uint64_t Circuit<Prec>::calculate_depth() const {
-    std::vector<std::uint64_t> filled_step(_n_qubits, 0ULL);
+    const std::uint64_t n_qubits = required_n_qubits();
+    if (n_qubits == 0) return 0;
+    std::vector<std::uint64_t> filled_step(n_qubits, 0ULL);
     for (const auto& gate : _gate_list) {
         std::vector<std::uint64_t> control_qubits =
             gate.index() == 0 ? std::get<0>(gate)->control_qubit_list()
@@ -29,7 +32,7 @@ std::uint64_t Circuit<Prec>::calculate_depth() const {
                 max_step_amount_target_qubits = filled_step[control];
             }
         }
-        for (std::uint64_t target : control_qubits) {
+        for (std::uint64_t target : target_qubits) {
             if (max_step_amount_target_qubits < filled_step[target]) {
                 max_step_amount_target_qubits = filled_step[target];
             }
@@ -46,11 +49,6 @@ std::uint64_t Circuit<Prec>::calculate_depth() const {
 
 template <Precision Prec>
 void Circuit<Prec>::add_circuit(const Circuit<Prec>& circuit) {
-    if (circuit._n_qubits != _n_qubits) {
-        throw std::runtime_error(
-            "Circuit::add_circuit(const Circuit&): circuit with different qubit count cannot "
-            "be merged.");
-    }
     _gate_list.reserve(_gate_list.size() + circuit._gate_list.size());
     for (const auto& gate : circuit._gate_list) {
         _gate_list.push_back(gate);
@@ -58,11 +56,6 @@ void Circuit<Prec>::add_circuit(const Circuit<Prec>& circuit) {
 }
 template <Precision Prec>
 void Circuit<Prec>::add_circuit(Circuit<Prec>&& circuit) {
-    if (circuit._n_qubits != _n_qubits) {
-        throw std::runtime_error(
-            "Circuit::add_circuit(Circuit&&): circuit with different qubit count cannot be "
-            "merged.");
-    }
     _gate_list.reserve(_gate_list.size() + circuit._gate_list.size());
     for (auto&& gate : circuit._gate_list) {
         _gate_list.push_back(std::move(gate));
@@ -73,13 +66,14 @@ template <Precision Prec>
 template <ExecutionSpace Space>
 void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
                                          const std::map<std::string, double>& parameters) const {
+    check_state_vector_n_qubits(state.n_qubits());
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0) continue;
         const auto& key = std::get<1>(gate).second;
         if (!parameters.contains(key)) {
             using namespace std::string_literals;
             throw std::runtime_error(
-                "Circuit::update_quantum_state(StateVector&, const std::map<std::string_view, double>&) const: parameter named "s +
+                "Circuit::update_quantum_state(StateVector&, const std::map<std::string, double>&) const: parameter named "s +
                 std::string(key) + "is not given.");
         }
     }
@@ -98,6 +92,7 @@ template <ExecutionSpace Space>
 void Circuit<Prec>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states,
     const std::map<std::string, std::vector<double>>& parameters) const {
+    check_state_vector_n_qubits(states.n_qubits());
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0) continue;
         const auto& key = std::get<1>(gate).second;
@@ -143,7 +138,7 @@ template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Defa
 
 template <Precision Prec>
 Circuit<Prec> Circuit<Prec>::copy() const {
-    Circuit<Prec> ccircuit(_n_qubits);
+    Circuit<Prec> ccircuit;
     ccircuit._gate_list.reserve(_gate_list.size());
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0)
@@ -158,7 +153,7 @@ Circuit<Prec> Circuit<Prec>::copy() const {
 
 template <Precision Prec>
 Circuit<Prec> Circuit<Prec>::get_inverse() const {
-    Circuit<Prec> icircuit(_n_qubits);
+    Circuit<Prec> icircuit;
     icircuit._gate_list.reserve(_gate_list.size());
     for (auto&& gate : _gate_list | std::views::reverse) {
         if (gate.index() == 0)
@@ -178,8 +173,9 @@ void Circuit<Prec>::optimize(std::uint64_t max_block_size) {
     double global_phase = 0.;
     std::vector<Gate<Prec>> gate_pool;  // waitlist for merge or push
     constexpr std::uint64_t NO_GATES = std::numeric_limits<std::uint64_t>::max();
+    const std::uint64_t n_qubits = required_n_qubits();
     std::vector<std::uint64_t> waiting_gate_idx_at_qubit(
-        _n_qubits,
+        n_qubits,
         NO_GATES);  // which gate is waiting in the qubit (by index of gate_pool)
     auto get_operand_list = [&](const GateWithKey& gate_with_key) {
         if (gate_with_key.index() == 0)
@@ -342,6 +338,7 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
     std::uint64_t seed) const {
+    check_state_vector_n_qubits(initial_state.n_qubits());
     std::mt19937 mt(seed);
     StateVectorBatched<Prec, Space> states(1, initial_state.n_qubits()), new_states;
     states.set_state_vector_at(0, initial_state);
@@ -457,46 +454,151 @@ Circuit<internal::Prec>::simulate_noise<ExecutionSpace::Default>(
 #endif  // SCALUQ_USE_CUDA
 
 template <Precision Prec>
-void Circuit<Prec>::check_gate_is_valid(const Gate<Prec>& gate) const {
-    if (gate.gate_type() == GateType::Probabilistic) {
-        for (auto g : ProbabilisticGate<Prec>(gate)->gate_list()) {
-            check_gate_is_valid(g);
-        }
-    } else {
-        auto targets = gate->target_qubit_list();
-        auto controls = gate->control_qubit_list();
-        bool valid = true;
-        if (!targets.empty() && *std::ranges::max_element(targets) >= _n_qubits) valid = false;
-        if (!controls.empty() && *std::ranges::max_element(controls) >= _n_qubits) valid = false;
-        if (!valid) {
-            throw std::runtime_error("Gate to be added to the circuit has invalid qubit range");
-        }
+std::uint64_t Circuit<Prec>::required_n_qubits() const {
+    std::uint64_t operand_mask = 0;
+    for (const auto& gate : _gate_list) {
+        operand_mask |= gate.index() == 0 ? std::get<0>(gate)->operand_qubit_mask()
+                                          : std::get<1>(gate).first->operand_qubit_mask();
+    }
+    return std::bit_width(operand_mask);
+}
+
+template <Precision Prec>
+void Circuit<Prec>::check_state_vector_n_qubits(std::uint64_t n_qubits) const {
+    if (required_n_qubits() > n_qubits) {
+        throw std::runtime_error(
+            "Circuit::update_quantum_state: state does not have enough qubits for this circuit.");
     }
 }
 
 template <Precision Prec>
-void Circuit<Prec>::check_gate_is_valid(const ParamGate<Prec>& gate) const {
-    if (gate.param_gate_type() == ParamGateType::ParamProbabilistic) {
-        for (auto g : ParamProbabilisticGate<Prec>(gate)->gate_list()) {
-            if (g.index() == 0) {
-                check_gate_is_valid(std::get<0>(g));
-            } else {
-                check_gate_is_valid(std::get<1>(g));
+template <ExecutionSpace Space>
+// Low-level implementation for expectation gradient that assumes the forward state and
+// observable-applied bistate are already prepared, and accumulates gradient by
+// traversing the circuit in reverse with backpropagation.
+std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradient_backprop(
+    StateVector<Prec, Space>& state,
+    StateVector<Prec, Space>& bistate,
+    const std::map<std::string, double>& parameters) {
+    const auto eps = internal::get_epsilon<Prec>();
+    const std::uint64_t n_qubits = this->n_qubits();
+    const std::uint64_t n_gates = this->n_gates();
+
+    std::unordered_map<std::string, double> gradient;
+    const auto& key_set = this->key_set();
+    gradient.reserve(key_set.size());
+    for (const auto& key : key_set) {
+        gradient.emplace(key, 0.0);
+    }
+
+    StateVector<Prec, Space> Astate(n_qubits);
+
+    for (std::int64_t i = static_cast<std::int64_t>(n_gates) - 1; i >= 0; i--) {
+        const auto& cur_gate = this->get_gate_at(static_cast<std::uint64_t>(i));
+
+        if (cur_gate.index() == 1) {
+            const auto& [pgate, key] = std::get<1>(cur_gate);
+
+            Astate = state.copy();
+            double pauli_coef = 1.0;
+            if (pgate.param_gate_type() == ParamGateType::ParamPauliRotation) {
+                internal::ParamGatePtr<internal::ParamPauliRotationGateImpl<Prec>> ppr(pgate);
+
+                const auto c = ppr->pauli().coef();
+                const double cre = static_cast<double>(std::real(c));
+                const double cim = static_cast<double>(std::imag(c));
+                if (std::abs(cim) >= eps) {
+                    throw std::runtime_error(
+                        "compute_expectation_gradient_backprop: pauli coef must be real");
+                }
+                if (std::abs(cre) < eps) {
+                    throw std::runtime_error(
+                        "compute_expectation_gradient_backprop: pauli coef must be nonzero");
+                }
+                pauli_coef = cre;
             }
+            const double scale = pgate->param_coef() * pauli_coef;
+            if (std::abs(scale) < eps) {
+                throw std::runtime_error(
+                    "compute_expectation_gradient_backprop: param_coef or pauli coef is zero");
+            }
+            pgate->update_quantum_state(Astate, -M_PI / scale);
+            const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
+            const double contrib = -scale * static_cast<double>(ip.real());
+
+            gradient[key] += contrib;
         }
-    } else {
-        auto targets = gate->target_qubit_list();
-        auto controls = gate->control_qubit_list();
-        bool valid = true;
-        if (!targets.empty())
-            valid &= *std::max_element(targets.begin(), targets.end()) < _n_qubits;
-        if (!controls.empty())
-            valid &= *std::max_element(controls.begin(), controls.end()) < _n_qubits;
-        if (!valid) {
-            throw std::runtime_error("Gate to be added to the circuit has invalid qubit range");
+
+        if (cur_gate.index() == 0) {
+            const auto& g = std::get<0>(cur_gate);
+
+            auto inv = g->get_inverse();
+            inv->update_quantum_state(bistate);
+            inv->update_quantum_state(state);
+        } else {
+            const auto& [pgate, key] = std::get<1>(cur_gate);
+
+            auto inv = pgate->get_inverse();
+            const auto it = parameters.find(key);
+            if (it == parameters.end()) {
+                throw std::runtime_error(
+                    "compute_expectation_gradient_backprop: missing parameter for key=" + key);
+            }
+            const auto param = it->second;
+
+            inv->update_quantum_state(bistate, param);
+            inv->update_quantum_state(state, param);
         }
     }
+    return gradient;
 }
+template std::unordered_map<std::string, double>
+Circuit<internal::Prec>::compute_expectation_gradient_backprop(
+    StateVector<internal::Prec, ExecutionSpace::Host>& state,
+    StateVector<internal::Prec, ExecutionSpace::Host>& bistate,
+    const std::map<std::string, double>& parameters);
+template std::unordered_map<std::string, double>
+Circuit<internal::Prec>::compute_expectation_gradient_backprop(
+    StateVector<internal::Prec, ExecutionSpace::HostSerial>& state,
+    StateVector<internal::Prec, ExecutionSpace::HostSerial>& bistate,
+    const std::map<std::string, double>& parameters);
+#ifdef SCALUQ_USE_CUDA
+template std::unordered_map<std::string, double>
+Circuit<internal::Prec>::compute_expectation_gradient_backprop(
+    StateVector<internal::Prec, ExecutionSpace::Default>& state,
+    StateVector<internal::Prec, ExecutionSpace::Default>& bistate,
+    const std::map<std::string, double>& parameters);
+#endif  // SCALUQ_USE_CUDA
+
+template <Precision Prec>
+template <ExecutionSpace Space>
+std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradient(
+    const Operator<Prec, Space>& obs, const std::map<std::string, double>& parameters) {
+    if (!obs.is_hermitian()) {
+        throw std::runtime_error("compute_expectation_gradient: observable must be Hermitian");
+    }
+    const std::uint64_t n_qubits = this->n_qubits();
+    StateVector<Prec, Space> state(n_qubits);
+    this->update_quantum_state(state, parameters);
+
+    StateVector<Prec, Space> bistate = state.copy();
+    obs.apply_to_state(bistate);
+    return compute_expectation_gradient_backprop(state, bistate, parameters);
+}
+template std::unordered_map<std::string, double>
+Circuit<internal::Prec>::compute_expectation_gradient<ExecutionSpace::Host>(
+    const Operator<internal::Prec, ExecutionSpace::Host>& obs,
+    const std::map<std::string, double>& parameters);
+template std::unordered_map<std::string, double>
+Circuit<internal::Prec>::compute_expectation_gradient<ExecutionSpace::HostSerial>(
+    const Operator<internal::Prec, ExecutionSpace::HostSerial>& obs,
+    const std::map<std::string, double>& parameters);
+#ifdef SCALUQ_USE_CUDA
+template std::unordered_map<std::string, double>
+Circuit<internal::Prec>::compute_expectation_gradient<ExecutionSpace::Default>(
+    const Operator<internal::Prec, ExecutionSpace::Default>& obs,
+    const std::map<std::string, double>& parameters);
+#endif  // SCALUQ_USE_CUDA
 
 template class Circuit<internal::Prec>;
 }  // namespace scaluq

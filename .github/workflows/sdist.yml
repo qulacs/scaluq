@@ -5,10 +5,9 @@ on:
     paths-ignore:
       - ".devcontainer/**"
       - ".vscode/**"
-      - "*.md"
+      - "**/*.md"
       - ".github/ISSUE_TEMPLATE/**"
-      - ".github/workflows/yamllint.yml"
-      - ".yamllint"
+      - ".github/workflows/lint.yml"
   workflow_dispatch:
 
 jobs:

@@ -1,14 +1,10 @@
 name: Wheel build
 
 on:
+  merge_group:
   push:
-    paths-ignore:
-      - ".devcontainer/**"
-      - ".vscode/**"
-      - "*.md"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/workflows/yamllint.yml"
-      - ".yamllint"
+    branches:
+      - main  # For badge updates only. Actual checks are done via merge queue.
   workflow_dispatch:
 
 jobs:
@@ -58,7 +54,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: "${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.device }}"
+          key: "${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.runs-on }}"
           save: false
           verbose: 2
 
@@ -132,14 +128,14 @@ jobs:
           path: ./cp314
 
       - name: Upload wheel data to PyPI if the Git tag is set
-        run: for path in cp39 cp310 cp311 cp312 cp313; do python -m twine upload --skip-existing $path/*.whl
+        run: for path in cp39 cp310 cp311 cp312 cp313; do python -m twine upload --skip-existing $path/*.whl; done
         if: ${{ contains(github.ref, 'tags/') }}
         env:
           TWINE_USERNAME: "__token__"
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN_SCALUQ }}
 
       - name: Upload wheel data to TestPyPI when workflow_dispatch
-        run: for path in cp39 cp310 cp311 cp312 cp313; do python -m twine upload --repository testpypi --skip-existing $path/*.whl
+        run: for path in cp39 cp310 cp311 cp312 cp313; do python -m twine upload --repository testpypi --skip-existing $path/*.whl; done
         if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
           TWINE_USERNAME: "__token__"

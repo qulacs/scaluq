@@ -1,15 +1,10 @@
 name: Install to System
 
 on:
+  merge_group:
   push:
-    paths-ignore:
-      - ".devcontainer/**"
-      - ".vscode/**"
-      - "doc/**"
-      - "*.md"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/workflows/yamllint.yml"
-      - ".yamllint"
+    branches:
+      - main  # For badge updates only. Actual checks are done via merge queue.
 
 jobs:
   library:
@@ -59,29 +54,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup LLVM Clang
+      - name: Setup LLVM Clang (macOS clang)
         if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
         run: |
-          echo $(brew --prefix llvm@18)/bin >> $GITHUB_PATH
-          echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
+          echo "$(brew --prefix llvm@18)/bin" >> "$GITHUB_PATH"
+          echo "SDKROOT=$(xcrun --show-sdk-path)" >> "$GITHUB_ENV"
 
-      - name: Install Ninja
+      - name: Install Ninja (Linux)
         if: ${{ matrix.os-arch == 'linux-x86_64' }}
         run: sudo apt update && sudo apt install ninja-build
 
-      - name: Install Ninja
-        if: ${{ matrix.os-arch == 'macos-arm64' }}
-        run: brew install ninja
-
-      - name: Install libomp
+      - name: Install libomp (Linux clang)
         if: ${{ matrix.os-arch == 'linux-x86_64' && matrix.compiler == 'clang' }}
         run: sudo apt update && sudo apt install libomp-dev
 
-      - name: Install libomp
+      - name: Install libomp (macOS clang)
         if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
         run: |
           brew install libomp
-          echo "OpenMP_ROOT=$(brew --prefix libomp)" >> $GITHUB_ENV
+          echo "OpenMP_ROOT=$(brew --prefix libomp)" >> "$GITHUB_ENV"
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -96,11 +87,11 @@ jobs:
           cuda: "12.9.1"
           method: "local"
           linux-local-args: '["--toolkit"]'
-          log-file-suffix: '${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}'
+          log-file-suffix: '${{ github.job }}-${{ matrix.os-arch }}-${{ matrix.device }}'
 
       - name: Show installed Compiler version
         run: |
-          [ $SCALUQ_USE_CUDA = 'ON' ] && nvcc --version
+          [ "$SCALUQ_USE_CUDA" = 'ON' ] && nvcc --version
           ccache --version
           $CMAKE_C_COMPILER --version
           $CMAKE_CXX_COMPILER --version
@@ -170,21 +161,21 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Setup LLVM Clang
+      - name: Setup LLVM Clang (macOS clang)
         if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
         run: |
-          echo $(brew --prefix llvm@18)/bin >> $GITHUB_PATH
-          echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
+          echo "$(brew --prefix llvm@18)/bin" >> "$GITHUB_PATH"
+          echo "SDKROOT=$(xcrun --show-sdk-path)" >> "$GITHUB_ENV"
 
-      - name: Install libomp
+      - name: Install libomp (Linux clang)
         if: ${{ matrix.os-arch == 'linux-x86_64' && matrix.compiler == 'clang' }}
         run: sudo apt update && sudo apt install libomp-dev
 
-      - name: Install libomp
+      - name: Install libomp (macOS clang)
         if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
         run: |
           brew install libomp
-          echo "OpenMP_ROOT=$(brew --prefix libomp)" >> $GITHUB_ENV
+          echo "OpenMP_ROOT=$(brew --prefix libomp)" >> "$GITHUB_ENV"
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -200,11 +191,11 @@ jobs:
           cuda: "12.9.1"
           method: "local"
           linux-local-args: '["--toolkit"]'
-          log-file-suffix: '${{ github.job }}-${{ matrix.os }}-${{ matrix.architecture }}'
+          log-file-suffix: '${{ github.job }}-${{ matrix.os-arch }}-${{ matrix.device }}'
 
       - name: Show installed Compiler version
         run: |
-          [ $SCALUQ_USE_CUDA = 'ON' ] && nvcc --version
+          [ "$SCALUQ_USE_CUDA" = 'ON' ] && nvcc --version
           ccache --version
           $CMAKE_C_COMPILER --version
           $CMAKE_CXX_COMPILER --version
