@@ -6,7 +6,7 @@ on:
       - ".devcontainer/**"
       - ".vscode/**"
       - "doc/**"
-      - "*.md"
+      - "**/*.md"
       - ".github/ISSUE_TEMPLATE/**"
       - ".github/workflows/lint.yml"
 
