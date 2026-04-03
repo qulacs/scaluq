@@ -37,6 +37,7 @@ jobs:
       CMAKE_C_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/gcc-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/gcc-15' || '/usr/lib/ccache/gcc') }}
       CMAKE_CXX_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/g++-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/g++-15' || '/usr/lib/ccache/g++') }}
       SCALUQ_CPU_NATIVE: 'OFF'
+      CIBW_ENVIRONMENT: SCALUQ_FLOAT32=OFF SCALUQ_FLOAT64=ON
       CIBW_ARCHS: ${{ matrix.arch }}
       CIBW_BUILD: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}
       CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28

@@ -152,6 +152,8 @@ jobs:
       SCALUQ_USE_CUDA: "OFF"
       SCALUQ_CPU_NATIVE: "OFF"
       SCALUQ_CUDA_ARCH: "PASCAL61"
+      SCALUQ_FLOAT32: "OFF"
+      SCALUQ_FLOAT64: "ON"
     steps:
       - uses: actions/checkout@v4
 
