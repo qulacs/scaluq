@@ -248,6 +248,18 @@ endif()
 # Enable pthread
 target_compile_options(scaluq_base PUBLIC -pthread)
 
+# Precompiled Headers (PCH)
+target_precompile_headers(scaluq_base PUBLIC
+    <Kokkos_Core.hpp>
+    <Eigen/Core>
+    <Eigen/Dense>
+    <vector>
+    <complex>
+    <memory>
+    <iostream>
+    <type_traits>
+)
+
 # Enable openmp
 if(SCALUQ_USE_OMP)
     target_compile_options(scaluq_base PUBLIC -fopenmp)
