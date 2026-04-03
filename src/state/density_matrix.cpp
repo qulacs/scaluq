@@ -1,5 +1,6 @@
 #include <scaluq/prec_space.hpp>
 #include <scaluq/state/density_matrix.hpp>
+#include <scaluq/util/math.hpp>
 
 namespace scaluq {
 template <Precision Prec, ExecutionSpace Space>
@@ -252,7 +253,7 @@ double DensityMatrix<Prec, Space>::get_zero_probability(std::uint64_t target_qub
         throw std::runtime_error(
             "DensityMatrix::get_zero_probability: Target qubit index is out of range.");
     }
-    FloatType zero_prob = 0.;
+    FloatType zero_prob{0};
     Kokkos::parallel_reduce(
         "get_zero_probability",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> 1),
@@ -368,7 +369,7 @@ double DensityMatrix<Prec, Space>::get_computational_basis_entropy() const {
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & lsum) {
             FloatType prob = _raw(i, i).real();
             if (prob > 0) {
-                lsum += -prob * Kokkos::log2(prob);
+                lsum += -prob * internal::log2(prob);
             }
         },
         entropy);
