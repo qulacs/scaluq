@@ -1,13 +1,10 @@
 name: Wheel build
 
 on:
+  merge_group:
   push:
-    paths-ignore:
-      - ".devcontainer/**"
-      - ".vscode/**"
-      - "*.md"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/workflows/lint.yml"
+    branches:
+      - main  # For badge updates only. Actual checks are done via merge queue.
   workflow_dispatch:
 
 jobs:
