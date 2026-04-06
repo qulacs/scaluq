@@ -808,6 +808,7 @@ std::string EcrGateImpl<Prec>::to_string(const std::string& indent) const {
         this->check_qubit_mask_within_bounds(state_vector);                                \
         ecr_gate(this->_physical_target_mask,                                              \
                  this->_physical_control_mask,                                             \
+                 this->_control_mask,                                                      \
                  this->_control_value_mask,                                                \
                  state_vector);                                                            \
     }

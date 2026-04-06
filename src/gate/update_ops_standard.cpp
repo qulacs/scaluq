@@ -681,15 +681,19 @@ void swap_gate(std::uint64_t target_mask,
 template <>
 void ecr_gate(std::uint64_t physical_target_mask,
               std::uint64_t physical_control_mask,
+              std::uint64_t control_mask,
               std::uint64_t control_value_mask,
               StateVector<Prec, Space>& state) {
     Kokkos::parallel_for(
         "ecr_gate",
         Kokkos::RangePolicy<SpaceType<Space>>(
-            0, state.dim() >> std::popcount(physical_target_mask | physical_control_mask)),
+            0,
+            state.dim() >>
+                std::popcount(physical_target_mask | physical_control_mask | control_mask)),
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis_0 =
-                insert_zero_at_mask_positions(it, physical_target_mask | physical_control_mask) |
+                insert_zero_at_mask_positions(
+                    it, physical_target_mask | physical_control_mask | control_mask) |
                 control_value_mask;
             std::uint64_t basis_1 = basis_0 | physical_control_mask;
             std::uint64_t basis_2 = basis_0 | physical_target_mask;
@@ -719,10 +723,11 @@ void ecr_gate(std::uint64_t physical_target_mask,
 template <>
 void ecr_gate(std::uint64_t physical_target_mask,
               std::uint64_t physical_control_mask,
+              std::uint64_t control_mask,
               std::uint64_t control_value_mask,
               StateVectorBatched<Prec, Space>& states) {
     const std::uint64_t span =
-        states.dim() >> std::popcount(physical_target_mask | physical_control_mask);
+        states.dim() >> std::popcount(physical_target_mask | physical_control_mask | control_mask);
     Kokkos::parallel_for(
         "ecr_gate_flat",
         Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
@@ -730,7 +735,8 @@ void ecr_gate(std::uint64_t physical_target_mask,
             const std::uint64_t batch_id = g / span;
             const std::uint64_t it = g % span;
             std::uint64_t basis_0 =
-                insert_zero_at_mask_positions(it, physical_target_mask | physical_control_mask) |
+                insert_zero_at_mask_positions(
+                    it, physical_target_mask | physical_control_mask | control_mask) |
                 control_value_mask;
             std::uint64_t basis_1 = basis_0 | physical_control_mask;
             std::uint64_t basis_2 = basis_0 | physical_target_mask;

@@ -1056,6 +1056,7 @@ TYPED_TEST(BatchedGateTest, Control) {
         test_batched_standard_gate_control<Prec, Space, 1, 2>(gate::U2<Prec>, n);
         test_batched_standard_gate_control<Prec, Space, 1, 3>(gate::U3<Prec>, n);
         test_batched_standard_gate_control<Prec, Space, 2, 0>(gate::Swap<Prec>, n);
+        test_batched_standard_gate_control<Prec, Space, 2, 0>(gate::Ecr<Prec>, n);
         test_batched_pauli_control<Prec, Space, false>(n);
         test_batched_pauli_control<Prec, Space, true>(n);
         test_batched_matrix_control<Prec, Space, 0>(n);
