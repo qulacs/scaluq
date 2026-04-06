@@ -920,7 +920,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .arg("control_values", "list[int]", true, "Control qubit values")
             .ret("Gate", "Ecr gate instance")
             .ex(DocString::Code({">>> gate = Ecr(0, 1)  # control : 0 and target : 1",
-                                 ">>> gate = Ecr(0, 2, [0])  #Controlled-ECR"}))
+                                 ">>> gate = Ecr(1, 2, [0])  #Controlled-ECR"}))
             .build_as_google_style()
             .c_str());
     mgate.def("CX",
