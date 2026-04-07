@@ -1,3 +1,4 @@
+#include <limits>
 #include <scaluq/circuit/circuit.hpp>
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/gate/merge_gate.hpp>
@@ -510,14 +511,14 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
                     throw std::runtime_error(
                         "compute_expectation_gradient_backprop: pauli coef must be real");
                 }
-                if (std::abs(cre) < eps) {
+                if (std::abs(cre) < std::numeric_limits<double>::epsilon()) {
                     throw std::runtime_error(
                         "compute_expectation_gradient_backprop: pauli coef must be nonzero");
                 }
                 pauli_coef = cre;
             }
             const double scale = pgate->param_coef() * pauli_coef;
-            if (std::abs(scale) < eps) {
+            if (std::abs(scale) < std::numeric_limits<double>::epsilon()) {
                 throw std::runtime_error(
                     "compute_expectation_gradient_backprop: param_coef or pauli coef is zero");
             }
