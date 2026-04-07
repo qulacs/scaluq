@@ -55,15 +55,15 @@ void DensityMatrix<Prec, Space>::set_coherence_at(std::uint64_t row_index,
 }
 
 template <Precision Prec, ExecutionSpace Space>
-std::vector<std::vector<StdComplex>> DensityMatrix<Prec, Space>::get_matrix() const {
-    Kokkos::View<ComplexType**, Kokkos::HostSpace> host_view("single_value", _dim, _dim);
-    Kokkos::deep_copy(host_view, _raw);
-    std::vector<std::vector<StdComplex>> matrix(_dim, std::vector<StdComplex>(_dim));
-    for (std::uint64_t i = 0; i < _dim; i++) {
-        for (std::uint64_t j = 0; j < _dim; j++) {
-            const auto& val = host_view(i, j);
-            matrix[i][j] =
-                StdComplex(static_cast<double>(val.real()), static_cast<double>(val.imag()));
+ComplexMatrix DensityMatrix<Prec, Space>::get_matrix() const {
+    Kokkos::View<ComplexType**, Kokkos::HostSpace> host_view("host_view", this->_dim, this->_dim);
+    Kokkos::deep_copy(host_view, this->_raw);
+    ComplexMatrix matrix(this->_dim, this->_dim);
+    matrix.setZero();
+    for (std::uint64_t i = 0; i < this->_dim; i++) {
+        for (std::uint64_t j = 0; j < this->_dim; j++) {
+            matrix(i, j) = StdComplex(static_cast<double>(host_view(i, j).real()),
+                                      static_cast<double>(host_view(i, j).imag()));
         }
     }
     return matrix;

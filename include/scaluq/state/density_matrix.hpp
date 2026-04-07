@@ -33,7 +33,7 @@ public:
     void force_hermitian() { this->_is_hermitian = true; }
 
     /**
-     * @attention Very slow. You should use get_coherences() instead if you can.
+     * @attention Very slow. You should use get_matrix() instead if you can.
      */
     [[nodiscard]] StdComplex get_coherence_at(std::uint64_t row_index,
                                               std::uint64_t col_index) const;
@@ -44,7 +44,7 @@ public:
      */
     void set_coherence_at(std::uint64_t row_index, std::uint64_t col_index, StdComplex c);
 
-    [[nodiscard]] std::vector<std::vector<StdComplex>> get_matrix() const;
+    [[nodiscard]] ComplexMatrix get_matrix() const;
     [[nodiscard]] DensityMatrix copy() const;
     [[nodiscard]] DensityMatrix<Prec, ExecutionSpace::Default> copy_to_default_space() const;
     [[nodiscard]] DensityMatrix<Prec, ExecutionSpace::Host> copy_to_host_space() const;
