@@ -777,8 +777,8 @@ std::string EcrGateImpl<Prec>::to_string(const std::string& indent) const {
     auto targets = this->target_qubit_list();
     auto controls = this->control_qubit_list();
     auto control_values = this->control_value_list();
-    auto physical_control = physical_control_index();
-    auto physical_target = physical_target_index();
+    auto physical_control = physical_control_indices();
+    auto physical_target = physical_target_indices();
     ss << indent << "Gate Type: Ecr\n";
     ss << indent << "  Physical Control Qubit: {";
     ss << physical_control[0];

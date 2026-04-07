@@ -906,8 +906,12 @@ public:
           _physical_control_mask(physical_control_mask),
           _physical_target_mask(physical_target_mask) {}
 
-    std::vector<std::uint64_t> physical_control_index() const { return mask_to_vector(_physical_control_mask); }
-    std::vector<std::uint64_t> physical_target_index() const { return mask_to_vector(_physical_target_mask); }
+    std::vector<std::uint64_t> physical_control_indices() const {
+        return mask_to_vector(_physical_control_mask);
+    }
+    std::vector<std::uint64_t> physical_target_indices() const {
+        return mask_to_vector(_physical_target_mask);
+    }
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const EcrGateImpl<Prec>>(this->_target_mask,
@@ -939,8 +943,8 @@ public:
                  {"target", this->target_qubit_list()},
                  {"control", this->control_qubit_list()},
                  {"control_value", this->control_value_list()},
-                 {"physical_control", this->physical_control_index()},
-                 {"physical_target", this->physical_target_index()}};
+                 {"physical_control", this->physical_control_indices()},
+                 {"physical_target", this->physical_target_indices()}};
     }
 };
 
@@ -1157,12 +1161,12 @@ void bind_gate_gate_standard_hpp(nb::module_& m, nb::class_<Gate<Prec>>& gate_ba
                                             "-i & 0 & 1 & 0 \\end{bmatrix}$.")
         .def(
             "physical_control",
-            [](const EcrGate<Prec>& gate) { return gate->physical_control_index(); },
-            "Get `physical_control_index` property.")
+            [](const EcrGate<Prec>& gate) { return gate->physical_control_indices(); },
+            "Get `physical_control_indices` property.")
         .def(
             "physical_target",
-            [](const EcrGate<Prec>& gate) { return gate->physical_target_index(); },
-            "Get `physical_target_index` property.");
+            [](const EcrGate<Prec>& gate) { return gate->physical_target_indices(); },
+            "Get `physical_target_indices` property.");
 }
 }  // namespace internal
 #endif

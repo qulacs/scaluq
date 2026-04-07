@@ -261,6 +261,33 @@ void run_random_batched_gate_apply_two_target(std::uint64_t n_qubits) {
             }
         }
     }
+
+    for (int repeat = 0; repeat < 10; repeat++) {
+        auto states =
+            StateVectorBatched<Prec, Space>::Haar_random_state(BATCH_SIZE, n_qubits, true);
+        auto state_cp = states.get_state_vector_at(0).get_amplitudes();
+        for (int i = 0; i < dim; i++) {
+            test_state[i] = state_cp[i];
+        }
+
+        std::uint64_t physical_control = random.int64() % n_qubits;
+        std::uint64_t physical_target = random.int64() % n_qubits;
+        if (physical_control == physical_target)
+            physical_control = (physical_control + 1) % n_qubits;
+        auto gate = gate::Ecr<Prec>(physical_control, physical_target);
+        gate->update_quantum_state(states);
+
+        ComplexMatrix test_mat =
+            get_eigen_matrix_full_qubit_Ecr(physical_control, physical_target, n_qubits);
+        test_state = test_mat * test_state;
+
+        auto states_cp = states.get_amplitudes();
+        for (std::uint64_t batch_id = 0; batch_id < states.batch_size(); batch_id++) {
+            for (int i = 0; i < dim; i++) {
+                check_near<Prec>(states_cp[batch_id][i], test_state[i]);
+            }
+        }
+    }
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -735,6 +762,11 @@ TYPED_TEST(BatchedGateTest, ApplyIBMQ) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     run_random_batched_gate_apply_IBMQ<Prec, Space>(5, make_U);
+}
+TYPED_TEST(BatchedGateTest, ApplyTwoTargetGate) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    run_random_batched_gate_apply_two_target<Prec, Space>(5);
 }
 TYPED_TEST(BatchedGateTest, ApplySparseMatrixGate) {
     constexpr Precision Prec = TestFixture::Prec;

@@ -208,6 +208,40 @@ inline ComplexMatrix get_eigen_matrix_full_qubit_Swap(std::uint64_t target_qubit
     return result;
 }
 
+inline ComplexMatrix get_eigen_matrix_full_qubit_Ecr(std::uint64_t physical_control_qubit_index,
+                                                     std::uint64_t physical_target_qubit_index,
+                                                     std::uint64_t qubit_count) {
+    std::uint64_t dim = 1ULL << qubit_count;
+    ComplexMatrix alpha = ComplexMatrix::Zero(dim, dim);
+    ComplexMatrix beta = ComplexMatrix::Identity(1, 1);
+
+    // alpha: physical_control:X, physical_target:I
+    for (std::uint64_t i = 0; i < 1; ++i) {
+        ComplexMatrix matrix;
+        matrix = get_eigen_matrix_single_Pauli(1);
+        alpha += get_expanded_eigen_matrix_with_identity(
+            physical_control_qubit_index, matrix, qubit_count);
+    }
+
+    // beta: physical_control:Y, physical_target: X
+    for (std::uint64_t i = 0; i < qubit_count; ++i) {
+        if (i == physical_control_qubit_index) {
+            ComplexMatrix cmatrix;
+            cmatrix = get_eigen_matrix_single_Pauli(2);
+            beta = internal::kronecker_product(cmatrix, beta).eval();
+        } else if (i == physical_target_qubit_index) {
+            ComplexMatrix tmatrix;
+            tmatrix = get_eigen_matrix_single_Pauli(1);
+            beta = internal::kronecker_product(tmatrix, beta).eval();
+        } else {
+            ComplexMatrix matrix;
+            matrix = get_eigen_matrix_single_Pauli(0);
+            beta = internal::kronecker_product(matrix, beta).eval();
+        }
+    } // Ecr gate matrix representation (IX-XY)/sqrt(2)
+    return (alpha - beta) / std::sqrt(2);
+}
+
 inline ComplexMatrix make_2x2_matrix(const StdComplex& a00,
                                      const StdComplex& a01,
                                      const StdComplex& a10,
