@@ -22,7 +22,7 @@ void compute_expectation_gradient_test_parametric_rc() {
     std::uniform_int_distribution<std::uint64_t> dist_target(0, n - 1);
     std::uniform_real_distribution<double> dist_param(-M_PI, M_PI);
 
-    Circuit<Prec> circuit(n);
+    Circuit<Prec> circuit;
 
     const double pcoef1 = 0.7;
     const double pcoef2 = 0.2;
@@ -133,7 +133,7 @@ void compute_expectation_gradient_test_parametric_pauli_rotation() {
     std::uniform_int_distribution<std::uint64_t> dist_target(0, n - 1);
     std::uniform_real_distribution<double> dist_param(-M_PI, M_PI);
 
-    Circuit<Prec> circuit(n);
+    Circuit<Prec> circuit;
 
     const double pcoef1 = 0.7;
     const double pcoef2 = 0.2;
@@ -269,7 +269,7 @@ TYPED_TEST(CircuitExpectationGradientTest, RejectsNonHermitianObservable) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
 
-    Circuit<Prec> circuit(1);
+    Circuit<Prec> circuit;
     circuit.add_param_gate(gate::ParamRX<Prec>(0, 1.0), "theta");
 
     const Operator<Prec, Space> op({PauliOperator<Prec>("X 0", StdComplex(0.0, 1.0))});
