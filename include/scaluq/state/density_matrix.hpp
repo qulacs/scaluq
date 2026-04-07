@@ -9,6 +9,7 @@ template <Precision Prec, ExecutionSpace Space>
 class DensityMatrix {
     std::uint64_t _n_qubits;
     std::uint64_t _dim;
+    bool _is_hermitian;
     using FloatType = internal::Float<Prec>;
     using ComplexType = internal::Complex<Prec>;
     using ExecutionSpaceType = internal::SpaceType<Space>;
@@ -18,7 +19,7 @@ public:
     Kokkos::View<ComplexType**, ExecutionSpaceType> _raw;
     DensityMatrix() = default;
     DensityMatrix(std::uint64_t n_qubits);
-    DensityMatrix(Kokkos::View<ComplexType**, ExecutionSpaceType> view);
+    DensityMatrix(Kokkos::View<ComplexType**, ExecutionSpaceType> view, bool is_hermitian = false);
     DensityMatrix(const StateVector<Prec, Space>& other);
     DensityMatrix(const DensityMatrix& other) = default;
 
@@ -28,6 +29,9 @@ public:
 
     [[nodiscard]] std::uint64_t dim() const { return this->_dim; }
 
+    [[nodiscard]] bool is_hermitian() const { return this->_is_hermitian; }
+    void force_hermitian() { this->_is_hermitian = true; }
+
     /**
      * @attention Very slow. You should use get_coherences() instead if you can.
      */
@@ -36,6 +40,7 @@ public:
 
     /**
      * @attention Very slow. You should use load() instead if you can.
+     * @note is_hermitian is set to false unless diagonal element and real value is passed in.
      */
     void set_coherence_at(std::uint64_t row_index, std::uint64_t col_index, StdComplex c);
 
@@ -44,11 +49,12 @@ public:
     [[nodiscard]] DensityMatrix<Prec, ExecutionSpace::Default> copy_to_default_space() const;
     [[nodiscard]] DensityMatrix<Prec, ExecutionSpace::Host> copy_to_host_space() const;
 
-    void load(const std::vector<std::vector<StdComplex>>& other);
+    void load(const std::vector<std::vector<StdComplex>>& other, bool is_hermitian = false);
     void load(const DensityMatrix& other);
     void load(const StateVector<Prec, Space>& other);
 
-    [[nodiscard]] static DensityMatrix uninitialized_state(std::uint64_t n_qubits);
+    [[nodiscard]] static DensityMatrix uninitialized_state(std::uint64_t n_qubits,
+                                                           bool is_hermitian = false);
 
     [[nodiscard]] static DensityMatrix Haar_random_state(
         std::uint64_t n_qubits, std::uint64_t seed = std::random_device()());
@@ -58,7 +64,7 @@ public:
     void set_computational_basis(std::uint64_t basis);
     void set_Haar_random_state(std::uint64_t seed = std::random_device()());
 
-    [[nodiscard]] double get_trace() const;
+    [[nodiscard]] StdComplex get_trace() const;
     [[nodiscard]] DensityMatrix get_partial_trace(
         const std::vector<std::uint64_t>& traced_out_qubits) const;
     void normalize();
@@ -74,8 +80,8 @@ public:
 
     [[nodiscard]] double get_computational_basis_entropy() const;
 
-    void add_density_matrix_with_coef(double coef, const DensityMatrix& other);
-    void multiply_coef(double coef);
+    void add_density_matrix_with_coef(StdComplex coef, const DensityMatrix& other);
+    void multiply_coef(StdComplex coef);
 
     [[nodiscard]] std::string to_string() const;
     friend std::ostream& operator<<(std::ostream& os, const DensityMatrix& state) {

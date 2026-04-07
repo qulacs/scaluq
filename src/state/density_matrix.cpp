@@ -7,18 +7,24 @@ template <Precision Prec, ExecutionSpace Space>
 DensityMatrix<Prec, Space>::DensityMatrix(std::uint64_t n_qubits)
     : _n_qubits(n_qubits),
       _dim(1ULL << n_qubits),
+      _is_hermitian(true),
       _raw(Kokkos::ViewAllocateWithoutInitializing("state"), this->_dim, this->_dim) {
     set_zero_state();
 }
 
 template <Precision Prec, ExecutionSpace Space>
-DensityMatrix<Prec, Space>::DensityMatrix(Kokkos::View<ComplexType**, ExecutionSpaceType> view)
-    : _n_qubits(std::bit_width(view.extent(0)) - 1), _dim(view.extent(0)), _raw(view) {}
+DensityMatrix<Prec, Space>::DensityMatrix(Kokkos::View<ComplexType**, ExecutionSpaceType> view,
+                                          bool is_hermitian)
+    : _n_qubits(std::bit_width(view.extent(0)) - 1),
+      _dim(view.extent(0)),
+      _is_hermitian(is_hermitian),
+      _raw(view) {}
 
 template <Precision Prec, ExecutionSpace Space>
 DensityMatrix<Prec, Space>::DensityMatrix(const StateVector<Prec, Space>& other)
     : _n_qubits(other.n_qubits()),
       _dim(other.dim()),
+      _is_hermitian(true),
       _raw(Kokkos::ViewAllocateWithoutInitializing("state"), this->_dim, this->_dim) {
     Kokkos::parallel_for(
         "initialize_from_StateVector",
@@ -45,6 +51,7 @@ void DensityMatrix<Prec, Space>::set_coherence_at(std::uint64_t row_index,
     Kokkos::View<ComplexType, Kokkos::HostSpace> host_view("single_value");
     host_view() = c;
     Kokkos::deep_copy(Kokkos::subview(_raw, row_index, col_index), host_view());
+    _is_hermitian &= (row_index == col_index) && (c.imag() == 0);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -63,31 +70,36 @@ std::vector<std::vector<StdComplex>> DensityMatrix<Prec, Space>::get_matrix() co
 }
 template <Precision Prec, ExecutionSpace Space>
 DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::copy() const {
-    DensityMatrix<Prec, Space> new_state(this->_n_qubits);
+    auto new_state =
+        DensityMatrix<Prec, Space>::uninitialized_state(this->_n_qubits, this->_is_hermitian);
     Kokkos::deep_copy(new_state._raw, this->_raw);
     return new_state;
 }
 template <Precision Prec, ExecutionSpace Space>
 DensityMatrix<Prec, ExecutionSpace::Default> DensityMatrix<Prec, Space>::copy_to_default_space()
     const {
-    DensityMatrix<Prec, ExecutionSpace::Default> new_state(this->_n_qubits);
+    auto new_state = DensityMatrix<Prec, ExecutionSpace::Default>::uninitialized_state(
+        this->_n_qubits, this->_is_hermitian);
     Kokkos::deep_copy(new_state._raw, this->_raw);
     return new_state;
 }
 template <Precision Prec, ExecutionSpace Space>
 DensityMatrix<Prec, ExecutionSpace::Host> DensityMatrix<Prec, Space>::copy_to_host_space() const {
-    DensityMatrix<Prec, ExecutionSpace::Host> new_state(this->_n_qubits);
+    auto new_state = DensityMatrix<Prec, ExecutionSpace::Host>::uninitialized_state(
+        this->_n_qubits, this->_is_hermitian);
     Kokkos::deep_copy(new_state._raw, this->_raw);
     return new_state;
 }
 
 template <Precision Prec, ExecutionSpace Space>
-void DensityMatrix<Prec, Space>::load(const std::vector<std::vector<StdComplex>>& other) {
+void DensityMatrix<Prec, Space>::load(const std::vector<std::vector<StdComplex>>& other,
+                                      bool is_hermitian) {
     if (other.size() != _dim || other[0].size() != _dim) {
         throw std::runtime_error(
             "DensityMatrix::load(const std::vector<std::vector<StdComplex>>&): Input matrix size "
             "does not match density matrix size.");
     }
+    _is_hermitian = is_hermitian;
     Kokkos::View<ComplexType**, Kokkos::HostSpace> host_view("host_view", _dim, _dim);
 
     for (std::uint64_t i = 0; i < _dim; i++) {
@@ -102,6 +114,12 @@ void DensityMatrix<Prec, Space>::load(const std::vector<std::vector<StdComplex>>
 
 template <Precision Prec, ExecutionSpace Space>
 void DensityMatrix<Prec, Space>::load(const DensityMatrix& other) {
+    if (other.n_qubits() != this->n_qubits()) {
+        throw std::runtime_error(
+            "DensityMatrix::load(const DensityMatrix&): Input density matrix size does not match "
+            "density matrix size.");
+    }
+    this->_is_hermitian = other._is_hermitian;
     Kokkos::deep_copy(this->_raw, other._raw);
 }
 
@@ -112,6 +130,7 @@ void DensityMatrix<Prec, Space>::load(const StateVector<Prec, Space>& other) {
             "DensityMatrix::load(const StateVector&): Input state vector size does not match "
             "density matrix size.");
     }
+    this->_is_hermitian = true;
     Kokkos::parallel_for(
         "load_from_StateVector",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
@@ -123,10 +142,11 @@ void DensityMatrix<Prec, Space>::load(const StateVector<Prec, Space>& other) {
 
 template <Precision Prec, ExecutionSpace Space>
 [[nodiscard]] DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::uninitialized_state(
-    std::uint64_t n_qubits) {
+    std::uint64_t n_qubits, bool is_hermitian) {
     DensityMatrix<Prec, Space> state;
     state._n_qubits = n_qubits;
     state._dim = 1ULL << n_qubits;
+    state._is_hermitian = is_hermitian;
     state._raw = Kokkos::View<ComplexType**, ExecutionSpaceType>(
         Kokkos::ViewAllocateWithoutInitializing("state"), state._dim, state._dim);
     return state;
@@ -135,13 +155,14 @@ template <Precision Prec, ExecutionSpace Space>
 template <Precision Prec, ExecutionSpace Space>
 [[nodiscard]] DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::Haar_random_state(
     std::uint64_t n_qubits, std::uint64_t seed) {
-    auto state(DensityMatrix<Prec, Space>::uninitialized_state(n_qubits));
+    auto state(DensityMatrix<Prec, Space>::uninitialized_state(n_qubits, true));
     state.set_Haar_random_state(seed);
     return state;
 }
 
 template <Precision Prec, ExecutionSpace Space>
 void DensityMatrix<Prec, Space>::set_zero_state() {
+    this->_is_hermitian = true;
     Kokkos::parallel_for(
         "set_zero_state",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
@@ -151,11 +172,13 @@ void DensityMatrix<Prec, Space>::set_zero_state() {
 
 template <Precision Prec, ExecutionSpace Space>
 void DensityMatrix<Prec, Space>::set_zero_norm_state() {
+    this->_is_hermitian = true;
     Kokkos::deep_copy(_raw, 0);
 }
 
 template <Precision Prec, ExecutionSpace Space>
 void DensityMatrix<Prec, Space>::set_computational_basis(std::uint64_t basis) {
+    this->_is_hermitian = true;
     Kokkos::parallel_for(
         "set_computational_basis",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
@@ -168,18 +191,19 @@ void DensityMatrix<Prec, Space>::set_computational_basis(std::uint64_t basis) {
 template <Precision Prec, ExecutionSpace Space>
 void DensityMatrix<Prec, Space>::set_Haar_random_state(std::uint64_t seed) {
     auto random_pure_state = StateVector<Prec, Space>::Haar_random_state(this->_n_qubits, seed);
+    this->_is_hermitian = true;
     this->load(random_pure_state);
 }
 
 template <Precision Prec, ExecutionSpace Space>
-double DensityMatrix<Prec, Space>::get_trace() const {
-    FloatType trace;
+StdComplex DensityMatrix<Prec, Space>::get_trace() const {
+    ComplexType trace;
     Kokkos::parallel_reduce(
         "get_trace",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & tmp) { tmp += _raw(i, i).real(); },
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, ComplexType & tmp) { tmp += _raw(i, i); },
         trace);
-    return static_cast<double>(trace);
+    return StdComplex(static_cast<double>(trace.real()), static_cast<double>(trace.imag()));
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -187,7 +211,8 @@ DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::get_partial_trace(
     const std::vector<std::uint64_t>& traced_out_qubits) const {
     if (*std::ranges::max_element(traced_out_qubits) >= this->_n_qubits) {
         throw std::runtime_error(
-            "DensityMatrix::get_partial_trace: Input vector for traced out qubits contains invalid "
+            "DensityMatrix::get_partial_trace: Input vector for traced out qubits contains "
+            "invalid "
             "qubit index.");
     }
 
@@ -225,7 +250,7 @@ DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::get_partial_trace(
 
 template <Precision Prec, ExecutionSpace Space>
 void DensityMatrix<Prec, Space>::normalize() {
-    const double trace = this->get_trace();
+    const StdComplex trace = this->get_trace();
     Kokkos::parallel_for(
         "normalize",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
@@ -235,6 +260,11 @@ void DensityMatrix<Prec, Space>::normalize() {
 
 template <Precision Prec, ExecutionSpace Space>
 double DensityMatrix<Prec, Space>::get_purity() const {
+    if (!this->_is_hermitian) {
+        throw std::runtime_error(
+            "DensityMatrix::get_purity: Purity is only defined for hermitian "
+            "density matrices.");
+    }
     FloatType purity;
     Kokkos::parallel_reduce(
         "get_purity",
@@ -253,6 +283,11 @@ double DensityMatrix<Prec, Space>::get_zero_probability(std::uint64_t target_qub
         throw std::runtime_error(
             "DensityMatrix::get_zero_probability: Target qubit index is out of range.");
     }
+    if (!this->_is_hermitian) {
+        throw std::runtime_error(
+            "DensityMatrix::get_zero_probability: Zero probability is only defined for hermitian "
+            "density matrices.");
+    }
     FloatType zero_prob{0};
     Kokkos::parallel_reduce(
         "get_zero_probability",
@@ -268,6 +303,11 @@ double DensityMatrix<Prec, Space>::get_zero_probability(std::uint64_t target_qub
 template <Precision Prec, ExecutionSpace Space>
 double DensityMatrix<Prec, Space>::get_marginal_probability(
     const std::vector<std::uint64_t>& measured_values) const {
+    if (measured_values.size() != this->_n_qubits) {
+        throw std::runtime_error(
+            "DensityMatrix::get_marginal_probability: Input vector size does not match number of "
+            "qubits.");
+    }
     std::vector<std::uint64_t> target_index;
     std::vector<std::uint64_t> target_value;
     for (std::uint64_t i = 0; i < measured_values.size(); ++i) {
@@ -307,6 +347,11 @@ double DensityMatrix<Prec, Space>::get_marginal_probability(
 template <Precision Prec, ExecutionSpace Space>
 std::vector<std::uint64_t> DensityMatrix<Prec, Space>::sampling(std::uint64_t sampling_count,
                                                                 std::uint64_t seed) const {
+    if (!this->_is_hermitian) {
+        throw std::runtime_error(
+            "DensityMatrix::sampling: Sampling is only defined for hermitian density matrices.");
+    }
+
     Kokkos::View<FloatType*, internal::SpaceType<Space>> stacked_prob("prob", _dim + 1);
     Kokkos::parallel_scan(
         "sampling (compute stacked prob)",
@@ -362,6 +407,11 @@ std::vector<std::uint64_t> DensityMatrix<Prec, Space>::sampling(std::uint64_t sa
 
 template <Precision Prec, ExecutionSpace Space>
 double DensityMatrix<Prec, Space>::get_computational_basis_entropy() const {
+    if (!this->_is_hermitian) {
+        throw std::runtime_error(
+            "DensityMatrix::get_computational_basis_entropy: Computational basis entropy is only "
+            "defined for hermitian density matrices.");
+    }
     FloatType entropy = 0;
     Kokkos::parallel_reduce(
         "computational_basis_entropy",
@@ -377,26 +427,24 @@ double DensityMatrix<Prec, Space>::get_computational_basis_entropy() const {
 }
 
 template <Precision Prec, ExecutionSpace Space>
-void DensityMatrix<Prec, Space>::add_density_matrix_with_coef(double coef,
+void DensityMatrix<Prec, Space>::add_density_matrix_with_coef(StdComplex coef,
                                                               const DensityMatrix& other) {
     Kokkos::parallel_for(
         "add_density_matrix_with_coef",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) {
-            _raw(i, j) += static_cast<ComplexType>(coef) * other._raw(i, j);
+            _raw(i, j) += ComplexType(coef) * other._raw(i, j);
         });
 }
 
 template <Precision Prec, ExecutionSpace Space>
-void DensityMatrix<Prec, Space>::multiply_coef(double coef) {
+void DensityMatrix<Prec, Space>::multiply_coef(StdComplex coef) {
     Kokkos::parallel_for(
         "multiply_coef",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
             {0, 0}, {this->_dim, this->_dim}),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) {
-            _raw(i, j) *= static_cast<ComplexType>(coef);
-        });
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) { _raw(i, j) *= ComplexType(coef); });
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -405,6 +453,7 @@ std::string DensityMatrix<Prec, Space>::to_string() const {
     auto matrix = this->get_matrix();
     os << "Qubit Count : " << _n_qubits << '\n';
     os << "Dimension : " << _dim << '\n';
+    os << "Is Hermitian : " << std::boolalpha << _is_hermitian << '\n';
     os << "Density Matrix : \n";
     auto binary = [](std::uint64_t n, std::uint64_t len) {
         std::string tmp;
