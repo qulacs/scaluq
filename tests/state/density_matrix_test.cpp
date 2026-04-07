@@ -226,6 +226,28 @@ TYPED_TEST(DensityMatrixTest, SamplingComputationalBasis) {
     }
 }
 
+TYPED_TEST(DensityMatrixTest, GetPartialTrace) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    const std::uint64_t n = 4;
+    auto state = DensityMatrix<Prec, Space>::Haar_random_state(n);
+    auto mat_state = state.get_matrix();
+    auto partial_traced = state.get_partial_trace({0, 2});
+    auto mat_partial_traced = partial_traced.get_matrix();
+    ASSERT_EQ(partial_traced.n_qubits(), 2);
+    int remained_base[] = {0, 2, 8, 10};
+    for (std::uint64_t i = 0; i < partial_traced.dim(); ++i) {
+        for (std::uint64_t j = 0; j < partial_traced.dim(); ++j) {
+            StdComplex sum = StdComplex(0, 0);
+            for (auto k : {0, 1, 4, 5}) {
+                sum += mat_state[remained_base[i] + k][remained_base[j] + k];
+            }
+            ASSERT_NEAR(mat_partial_traced[i][j].real(), sum.real(), eps<Prec>);
+            ASSERT_NEAR(mat_partial_traced[i][j].imag(), sum.imag(), eps<Prec>);
+        }
+    }
+}
+
 TYPED_TEST(DensityMatrixTest, AddDensityMatrixWithCoef) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;

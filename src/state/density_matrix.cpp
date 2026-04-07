@@ -250,7 +250,7 @@ DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::get_partial_trace(
 
 template <Precision Prec, ExecutionSpace Space>
 void DensityMatrix<Prec, Space>::normalize() {
-    const StdComplex trace = this->get_trace();
+    const ComplexType trace(this->get_trace());
     Kokkos::parallel_for(
         "normalize",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
@@ -465,7 +465,7 @@ std::string DensityMatrix<Prec, Space>::to_string() const {
     for (std::uint64_t i = 0; i < _dim; ++i) {
         auto i_binary = binary(i, _n_qubits);
         for (std::uint64_t j = 0; j < _dim; ++j) {
-            os << "  (" << i_binary << ", " << binary(j, _n_qubits) << ") : " << matrix[i][j]
+            os << "  (" << i_binary << ", " << binary(j, _n_qubits) << ") : " << matrix(i, j)
                << std::endl;
         }
     }
