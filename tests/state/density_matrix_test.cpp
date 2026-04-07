@@ -17,7 +17,8 @@ TYPED_TEST(DensityMatrixTest, HaarRandomStateTracePurity) {
     const int n_tries = 10;
     for (int n = 1; n <= n_tries; n++) {
         const auto state = DensityMatrix<Prec, Space>::Haar_random_state(n);
-        ASSERT_NEAR(state.get_trace(), 1., eps<Prec>);
+        ASSERT_NEAR(state.get_trace().real(), 1., eps<Prec>);
+        ASSERT_NEAR(state.get_trace().imag(), 0., eps<Prec>);
         ASSERT_NEAR(state.get_purity(),
                     1.,
                     eps<Prec> * 10.);  // Large epsilon because the purity calculation involves
@@ -47,7 +48,7 @@ TYPED_TEST(DensityMatrixTest, ZeroNormState) {
 
     for (std::uint64_t i = 0; i < state.dim(); ++i) {
         for (std::uint64_t j = 0; j < state.dim(); ++j) {
-            ASSERT_EQ((StdComplex)state_cp[i][j], StdComplex(0, 0));
+            ASSERT_EQ((StdComplex)state_cp(i, j), StdComplex(0, 0));
         }
     }
 }
@@ -64,9 +65,9 @@ TYPED_TEST(DensityMatrixTest, ComputationalBasisState) {
     for (std::uint64_t i = 0; i < state.dim(); ++i) {
         for (std::uint64_t j = 0; j < state.dim(); ++j) {
             if (i == 31 && j == 31) {
-                ASSERT_EQ((StdComplex)state_cp[i][j], StdComplex(1, 0));
+                ASSERT_EQ((StdComplex)state_cp(i, j), StdComplex(1, 0));
             } else {
-                ASSERT_EQ((StdComplex)state_cp[i][j], StdComplex(0, 0));
+                ASSERT_EQ((StdComplex)state_cp(i, j), StdComplex(0, 0));
             }
         }
     }
@@ -112,22 +113,22 @@ TYPED_TEST(DensityMatrixTest, SpaceConversionCreatesIndependentCopy) {
     auto host_mat = state_host.get_matrix();
     for (std::uint64_t i = 0; i < state.dim(); ++i) {
         for (std::uint64_t j = 0; j < state.dim(); ++j) {
-            ASSERT_NEAR(default_mat[i][j].real(), original[i][j].real(), eps<Prec>);
-            ASSERT_NEAR(default_mat[i][j].imag(), original[i][j].imag(), eps<Prec>);
-            ASSERT_NEAR(host_mat[i][j].real(), original[i][j].real(), eps<Prec>);
-            ASSERT_NEAR(host_mat[i][j].imag(), original[i][j].imag(), eps<Prec>);
+            ASSERT_NEAR(default_mat(i, j).real(), original(i, j).real(), eps<Prec>);
+            ASSERT_NEAR(default_mat(i, j).imag(), original(i, j).imag(), eps<Prec>);
+            ASSERT_NEAR(host_mat(i, j).real(), original(i, j).real(), eps<Prec>);
+            ASSERT_NEAR(host_mat(i, j).imag(), original(i, j).imag(), eps<Prec>);
         }
     }
 
     state_default.set_coherence_at(0, 0, StdComplex(0.25, -0.5));
     auto unchanged = state.get_coherence_at(0, 0);
-    ASSERT_NEAR(unchanged.real(), original[0][0].real(), eps<Prec>);
-    ASSERT_NEAR(unchanged.imag(), original[0][0].imag(), eps<Prec>);
+    ASSERT_NEAR(unchanged.real(), original(0, 0).real(), eps<Prec>);
+    ASSERT_NEAR(unchanged.imag(), original(0, 0).imag(), eps<Prec>);
 
     state_host.set_coherence_at(0, 0, StdComplex(0.25, -0.5));
     unchanged = state.get_coherence_at(0, 0);
-    ASSERT_NEAR(unchanged.real(), original[0][0].real(), eps<Prec>);
-    ASSERT_NEAR(unchanged.imag(), original[0][0].imag(), eps<Prec>);
+    ASSERT_NEAR(unchanged.real(), original(0, 0).real(), eps<Prec>);
+    ASSERT_NEAR(unchanged.imag(), original(0, 0).imag(), eps<Prec>);
 }
 
 TYPED_TEST(DensityMatrixTest, GetZeroProbability) {
@@ -240,10 +241,10 @@ TYPED_TEST(DensityMatrixTest, GetPartialTrace) {
         for (std::uint64_t j = 0; j < partial_traced.dim(); ++j) {
             StdComplex sum = StdComplex(0, 0);
             for (auto k : {0, 1, 4, 5}) {
-                sum += mat_state[remained_base[i] + k][remained_base[j] + k];
+                sum += mat_state(remained_base[i] + k, remained_base[j] + k);
             }
-            ASSERT_NEAR(mat_partial_traced[i][j].real(), sum.real(), eps<Prec>);
-            ASSERT_NEAR(mat_partial_traced[i][j].imag(), sum.imag(), eps<Prec>);
+            ASSERT_NEAR(mat_partial_traced(i, j).real(), sum.real(), eps<Prec>);
+            ASSERT_NEAR(mat_partial_traced(i, j).imag(), sum.imag(), eps<Prec>);
         }
     }
 }
@@ -263,7 +264,7 @@ TYPED_TEST(DensityMatrixTest, AddDensityMatrixWithCoef) {
 
     for (std::uint64_t i = 0; i < state1.dim(); ++i) {
         for (std::uint64_t j = 0; j < state1.dim(); ++j) {
-            StdComplex res = new_mat[i][j], val = mat1[i][j] + coef * mat2[i][j];
+            StdComplex res = new_mat(i, j), val = mat1(i, j) + coef * mat2(i, j);
             ASSERT_NEAR(res.real(), val.real(), eps<Prec>);
             ASSERT_NEAR(res.imag(), val.imag(), eps<Prec>);
         }
@@ -283,7 +284,7 @@ TYPED_TEST(DensityMatrixTest, MultiplyCoef) {
 
     for (std::uint64_t i = 0; i < state.dim(); ++i) {
         for (std::uint64_t j = 0; j < state.dim(); ++j) {
-            StdComplex res = new_mat[i][j], val = coef * mat[i][j];
+            StdComplex res = new_mat(i, j), val = coef * mat(i, j);
             ASSERT_NEAR(res.real(), val.real(), eps<Prec>);
             ASSERT_NEAR(res.imag(), val.imag(), eps<Prec>);
         }
