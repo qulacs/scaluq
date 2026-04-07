@@ -481,7 +481,6 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
     StateVector<Prec, Space>& bistate,
     const std::map<std::string, double>& parameters) {
     const auto eps = internal::get_epsilon<Prec>();
-    const std::uint64_t n_qubits = this->n_qubits();
     const std::uint64_t n_gates = this->n_gates();
 
     std::unordered_map<std::string, double> gradient;
@@ -491,7 +490,7 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
         gradient.emplace(key, 0.0);
     }
 
-    StateVector<Prec, Space> Astate(n_qubits);
+    StateVector<Prec, Space> Astate(state.n_qubits());
 
     for (std::int64_t i = static_cast<std::int64_t>(n_gates) - 1; i >= 0; i--) {
         const auto& cur_gate = this->get_gate_at(static_cast<std::uint64_t>(i));
@@ -577,8 +576,7 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
     if (!obs.is_hermitian()) {
         throw std::runtime_error("compute_expectation_gradient: observable must be Hermitian");
     }
-    const std::uint64_t n_qubits = this->n_qubits();
-    StateVector<Prec, Space> state(n_qubits);
+    StateVector<Prec, Space> state(required_n_qubits());
     this->update_quantum_state(state, parameters);
 
     StateVector<Prec, Space> bistate = state.copy();
