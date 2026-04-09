@@ -1,5 +1,7 @@
 #pragma once
 
+#include "classical_register/classical_register.hpp"
+#include "classical_register/classical_register_batched.hpp"
 #include "circuit/circuit.hpp"
 #include "constant.hpp"
 #include "gate/gate.hpp"
@@ -23,6 +25,8 @@
 #define SCALUQ_OMIT_TEMPLATE(Prec, Space)                                                      \
     using StateVector = ::scaluq::StateVector<Prec, Space>;                                    \
     using StateVectorBatched = ::scaluq::StateVectorBatched<Prec, Space>;                      \
+    using ClassicalRegister = ::scaluq::ClassicalRegister;                                     \
+    using ClassicalRegisterBatched = ::scaluq::ClassicalRegisterBatched;                       \
     using PauliOperator = ::scaluq::PauliOperator<Prec>;                                       \
     using Operator = ::scaluq::Operator<Prec, Space>;                                          \
     using Gate = ::scaluq::Gate<Prec>;                                                         \

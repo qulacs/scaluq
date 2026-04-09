@@ -11,23 +11,26 @@ class IGateImpl : public GateBase<Prec> {
 public:
     IGateImpl() : GateBase<Prec>(0, 0, 0) {}
 
+    using GateBase<Prec>::update_quantum_state;
+
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
+    void update_quantum_state(
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -46,6 +49,8 @@ public:
                         Float<Prec> phase)
         : GateBase<Prec>(0, control_mask, control_value_mask), _phase(phase){};
 
+    using GateBase<Prec>::update_quantum_state;
+
     [[nodiscard]] double phase() const { return _phase; }
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
@@ -54,18 +59,19 @@ public:
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
+    void update_quantum_state(
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -98,24 +104,25 @@ template <Precision Prec>
 class XGateImpl : public GateBase<Prec> {
 public:
     using GateBase<Prec>::GateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -132,24 +139,25 @@ template <Precision Prec>
 class YGateImpl : public GateBase<Prec> {
 public:
     using GateBase<Prec>::GateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -166,24 +174,25 @@ template <Precision Prec>
 class ZGateImpl : public GateBase<Prec> {
 public:
     using GateBase<Prec>::GateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -200,24 +209,25 @@ template <Precision Prec>
 class HGateImpl : public GateBase<Prec> {
 public:
     using GateBase<Prec>::GateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -251,6 +261,7 @@ template <Precision Prec>
 class SGateImpl : public GateBase<Prec> {
 public:
     using GateBase<Prec>::GateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const SdagGateImpl<Prec>>(
@@ -258,18 +269,18 @@ public:
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -286,6 +297,7 @@ template <Precision Prec>
 class SdagGateImpl : public GateBase<Prec> {
 public:
     using GateBase<Prec>::GateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const SGateImpl<Prec>>(
@@ -293,18 +305,18 @@ public:
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -321,6 +333,7 @@ template <Precision Prec>
 class TGateImpl : public GateBase<Prec> {
 public:
     using GateBase<Prec>::GateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const TdagGateImpl<Prec>>(
@@ -328,18 +341,18 @@ public:
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -356,6 +369,7 @@ template <Precision Prec>
 class TdagGateImpl : public GateBase<Prec> {
 public:
     using GateBase<Prec>::GateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const TGateImpl<Prec>>(
@@ -363,18 +377,18 @@ public:
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -391,6 +405,7 @@ template <Precision Prec>
 class SqrtXGateImpl : public GateBase<Prec> {
 public:
     using GateBase<Prec>::GateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const SqrtXdagGateImpl<Prec>>(
@@ -399,18 +414,18 @@ public:
 
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -427,6 +442,7 @@ template <Precision Prec>
 class SqrtXdagGateImpl : public GateBase<Prec> {
 public:
     using GateBase<Prec>::GateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const SqrtXGateImpl<Prec>>(
@@ -434,18 +450,18 @@ public:
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -462,6 +478,7 @@ template <Precision Prec>
 class SqrtYGateImpl : public GateBase<Prec> {
 public:
     using GateBase<Prec>::GateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const SqrtYdagGateImpl<Prec>>(
@@ -470,18 +487,18 @@ public:
 
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -498,6 +515,7 @@ template <Precision Prec>
 class SqrtYdagGateImpl : public GateBase<Prec> {
 public:
     using GateBase<Prec>::GateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const SqrtYGateImpl<Prec>>(
@@ -505,18 +523,18 @@ public:
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -533,24 +551,25 @@ template <Precision Prec>
 class P0GateImpl : public GateBase<Prec> {
 public:
     using GateBase<Prec>::GateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         throw std::runtime_error("P0::get_inverse: Projection gate doesn't have inverse gate");
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -567,24 +586,25 @@ template <Precision Prec>
 class P1GateImpl : public GateBase<Prec> {
 public:
     using GateBase<Prec>::GateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         throw std::runtime_error("P1::get_inverse: Projection gate doesn't have inverse gate");
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -601,6 +621,7 @@ template <Precision Prec>
 class RXGateImpl : public RotationGateBase<Prec> {
 public:
     using RotationGateBase<Prec>::RotationGateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const RXGateImpl<Prec>>(
@@ -608,18 +629,18 @@ public:
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -637,6 +658,7 @@ template <Precision Prec>
 class RYGateImpl : public RotationGateBase<Prec> {
 public:
     using RotationGateBase<Prec>::RotationGateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const RYGateImpl<Prec>>(
@@ -644,18 +666,18 @@ public:
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -673,6 +695,7 @@ template <Precision Prec>
 class RZGateImpl : public RotationGateBase<Prec> {
 public:
     using RotationGateBase<Prec>::RotationGateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const RZGateImpl<Prec>>(
@@ -680,18 +703,18 @@ public:
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -710,6 +733,8 @@ class U1GateImpl : public GateBase<Prec> {
     Float<Prec> _lambda;
 
 public:
+    using GateBase<Prec>::update_quantum_state;
+
     U1GateImpl(std::uint64_t target_mask,
                std::uint64_t control_mask,
                std::uint64_t control_value_mask,
@@ -724,18 +749,18 @@ public:
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -753,6 +778,8 @@ class U2GateImpl : public GateBase<Prec> {
     Float<Prec> _phi, _lambda;
 
 public:
+    using GateBase<Prec>::update_quantum_state;
+
     U2GateImpl(std::uint64_t target_mask,
                std::uint64_t control_mask,
                std::uint64_t control_value_mask,
@@ -775,18 +802,18 @@ public:
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -806,6 +833,8 @@ class U3GateImpl : public GateBase<Prec> {
     Float<Prec> _theta, _phi, _lambda;
 
 public:
+    using GateBase<Prec>::update_quantum_state;
+
     U3GateImpl(std::uint64_t target_mask,
                std::uint64_t control_mask,
                std::uint64_t control_value_mask,
@@ -831,18 +860,18 @@ public:
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -862,24 +891,25 @@ template <Precision Prec>
 class SwapGateImpl : public GateBase<Prec> {
 public:
     using GateBase<Prec>::GateBase;
+    using GateBase<Prec>::update_quantum_state;
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;

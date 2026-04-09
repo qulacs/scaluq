@@ -2,10 +2,13 @@
 
 #include <bit>
 #include <map>
+#include <random>
 #include <set>
 #include <string_view>
 #include <variant>
 
+#include "../classical_register/classical_register.hpp"
+#include "../classical_register/classical_register_batched.hpp"
 #include "../gate/gate.hpp"
 #include "../gate/param_gate.hpp"
 #include "../operator/operator.hpp"
@@ -50,11 +53,24 @@ public:
 
     template <ExecutionSpace Space>
     void update_quantum_state(StateVector<Prec, Space>& state,
-                              const std::map<std::string, double>& parameters = {}) const;
+                              const std::map<std::string, double>& parameters = {},
+                              std::uint64_t seed = std::random_device{}()) const;
+    template <ExecutionSpace Space>
+    void update_quantum_state(StateVector<Prec, Space>& state,
+                              ClassicalRegister& classical_register,
+                              const std::map<std::string, double>& parameters = {},
+                              std::uint64_t seed = std::random_device{}()) const;
     template <ExecutionSpace Space>
     void update_quantum_state(
         StateVectorBatched<Prec, Space>& states,
-        const std::map<std::string, std::vector<double>>& parameters = {}) const;
+        const std::map<std::string, std::vector<double>>& parameters = {},
+        std::uint64_t seed = std::random_device{}()) const;
+    template <ExecutionSpace Space>
+    void update_quantum_state(
+        StateVectorBatched<Prec, Space>& states,
+        ClassicalRegisterBatched& classical_register,
+        const std::map<std::string, std::vector<double>>& parameters = {},
+        std::uint64_t seed = std::random_device{}()) const;
 
     Circuit copy() const;
 
