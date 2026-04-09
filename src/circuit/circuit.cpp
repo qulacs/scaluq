@@ -509,18 +509,18 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
                 const double cim = static_cast<double>(std::imag(c));
                 if (std::abs(cim) >= eps) {
                     throw std::runtime_error(
-                        "compute_expectation_gradient_backprop: pauli coef must be real");
+                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be real.");
                 }
                 if (std::abs(cre) < std::numeric_limits<double>::epsilon()) {
                     throw std::runtime_error(
-                        "compute_expectation_gradient_backprop: pauli coef must be nonzero");
+                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be nonzero.");
                 }
                 pauli_coef = cre;
             }
             const double scale = pgate->param_coef() * pauli_coef;
             if (std::abs(scale) < std::numeric_limits<double>::epsilon()) {
                 throw std::runtime_error(
-                    "compute_expectation_gradient_backprop: param_coef or pauli coef is zero");
+                    "Circuit::compute_expectation_gradient_backprop: param_coef * pauli_coef must be nonzero.");
             }
             pgate->update_quantum_state(Astate, -M_PI / scale);
             const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
@@ -542,7 +542,8 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
             const auto it = parameters.find(key);
             if (it == parameters.end()) {
                 throw std::runtime_error(
-                    "compute_expectation_gradient_backprop: missing parameter for key=" + key);
+                    "Circuit::compute_expectation_gradient_backprop: parameter named " + key +
+                    " is not given.");
             }
             const auto param = it->second;
 
@@ -575,7 +576,8 @@ template <ExecutionSpace Space>
 std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradient(
     const Operator<Prec, Space>& obs, const std::map<std::string, double>& parameters) {
     if (!obs.is_hermitian()) {
-        throw std::runtime_error("compute_expectation_gradient: observable must be Hermitian");
+        throw std::runtime_error(
+            "Circuit::compute_expectation_gradient: observable must be Hermitian.");
     }
     StateVector<Prec, Space> state(required_n_qubits());
     this->update_quantum_state(state, parameters);
