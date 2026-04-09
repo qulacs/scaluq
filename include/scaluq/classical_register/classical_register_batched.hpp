@@ -4,6 +4,10 @@
 #include <stdexcept>
 #include <vector>
 
+#ifdef SCALUQ_USE_NANOBIND
+#include "../types.hpp"
+#endif
+
 #include "classical_register.hpp"
 
 namespace scaluq {
@@ -45,5 +49,30 @@ public:
         for (auto&& reg : _registers) reg.reset();
     }
 };
+
+#ifdef SCALUQ_USE_NANOBIND
+namespace internal {
+inline void bind_classical_register_batched_hpp(nb::module_& m) {
+    using namespace nb::literals;
+
+    nb::class_<ClassicalRegisterBatched>(m, "ClassicalRegisterBatched", "Batched classical register.")
+        .def(nb::init<std::uint64_t, std::uint64_t>(),
+             "register_size"_a,
+             "batch_size"_a,
+             "Initialize batched classical register.")
+        .def("register_size", &ClassicalRegisterBatched::register_size, "Get register size.")
+        .def("batch_size", &ClassicalRegisterBatched::batch_size, "Get batch size.")
+        .def("__len__", &ClassicalRegisterBatched::batch_size, "Get batch size.")
+        .def(
+            "__getitem__",
+            [](ClassicalRegisterBatched& classical_register, std::uint64_t batch_index)
+                -> ClassicalRegister& { return classical_register[batch_index]; },
+            "batch_index"_a,
+            nb::rv_policy::reference_internal,
+            "Get classical register at `batch_index`.")
+        .def("reset", &ClassicalRegisterBatched::reset, "Reset all bits to `False`.");
+}
+}  // namespace internal
+#endif
 
 }  // namespace scaluq

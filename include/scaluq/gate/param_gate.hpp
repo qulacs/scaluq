@@ -436,11 +436,41 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
         .def(
             "update_quantum_state",
             [](const GateT& gate,
+               StateVector<Prec, ExecutionSpace::Host>& state_vector,
+               ClassicalRegister& classical_register,
+               double param,
+               std::optional<std::uint64_t> seed) {
+                gate->update_quantum_state(
+                    state_vector, classical_register, param, seed.value_or(std::random_device{}()));
+            },
+            "state"_a,
+            "classical_register"_a,
+            "param"_a,
+            "seed"_a = std::nullopt,
+            "Apply gate to `state_vector` with `classical_register`, parameter, and `seed`.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate,
                StateVectorBatched<Prec, ExecutionSpace::Host>& states,
                const std::vector<double>& params) { gate->update_quantum_state(states, params); },
             "states"_a,
             "params"_a,
             "updated.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate,
+               StateVectorBatched<Prec, ExecutionSpace::Host>& states,
+               ClassicalRegisterBatched& classical_register,
+               const std::vector<double>& params,
+               std::optional<std::uint64_t> seed) {
+                gate->update_quantum_state(
+                    states, classical_register, params, seed.value_or(std::random_device{}()));
+            },
+            "states"_a,
+            "classical_register"_a,
+            "params"_a,
+            "seed"_a = std::nullopt,
+            "Apply gate to `states` with `classical_register`, parameters, and `seed`.")
         .def(
             "update_quantum_state",
             [](const GateT& gate,
@@ -453,12 +483,42 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
         .def(
             "update_quantum_state",
             [](const GateT& gate,
+               StateVector<Prec, ExecutionSpace::HostSerial>& state_vector,
+               ClassicalRegister& classical_register,
+               double param,
+               std::optional<std::uint64_t> seed) {
+                gate->update_quantum_state(
+                    state_vector, classical_register, param, seed.value_or(std::random_device{}()));
+            },
+            "state"_a,
+            "classical_register"_a,
+            "param"_a,
+            "seed"_a = std::nullopt,
+            "Apply gate to `state_vector` with `classical_register`, parameter, and `seed`.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate,
                StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
                const std::vector<double>& params) { gate->update_quantum_state(states, params); },
             "states"_a,
             "params"_a,
             "Apply gate to `states` with holding the parameters. `states` in args is directly "
             "updated.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate,
+               StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
+               ClassicalRegisterBatched& classical_register,
+               const std::vector<double>& params,
+               std::optional<std::uint64_t> seed) {
+                gate->update_quantum_state(
+                    states, classical_register, params, seed.value_or(std::random_device{}()));
+            },
+            "states"_a,
+            "classical_register"_a,
+            "params"_a,
+            "seed"_a = std::nullopt,
+            "Apply gate to `states` with `classical_register`, parameters, and `seed`.")
 #ifdef SCALUQ_USE_CUDA
         .def(
             "update_quantum_state",
@@ -472,12 +532,42 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
         .def(
             "update_quantum_state",
             [](const GateT& gate,
+               StateVector<Prec, ExecutionSpace::Default>& state_vector,
+               ClassicalRegister& classical_register,
+               double param,
+               std::optional<std::uint64_t> seed) {
+                gate->update_quantum_state(
+                    state_vector, classical_register, param, seed.value_or(std::random_device{}()));
+            },
+            "state"_a,
+            "classical_register"_a,
+            "param"_a,
+            "seed"_a = std::nullopt,
+            "Apply gate to `state_vector` with `classical_register`, parameter, and `seed`.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate,
                StateVectorBatched<Prec, ExecutionSpace::Default>& states,
                const std::vector<double>& params) { gate->update_quantum_state(states, params); },
             "states"_a,
             "params"_a,
             "Apply gate to `states` with holding the parameters. `states` in args is directly "
             "updated.")
+        .def(
+            "update_quantum_state",
+            [](const GateT& gate,
+               StateVectorBatched<Prec, ExecutionSpace::Default>& states,
+               ClassicalRegisterBatched& classical_register,
+               const std::vector<double>& params,
+               std::optional<std::uint64_t> seed) {
+                gate->update_quantum_state(
+                    states, classical_register, params, seed.value_or(std::random_device{}()));
+            },
+            "states"_a,
+            "classical_register"_a,
+            "params"_a,
+            "seed"_a = std::nullopt,
+            "Apply gate to `states` with `classical_register`, parameters, and `seed`.")
 #endif  // SCALUQ_USE_CUDA
         .def(
             "get_matrix",
