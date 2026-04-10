@@ -64,33 +64,35 @@ ComplexMatrix DensityMatrix<Prec, Space>::get_matrix() const {
 }
 template <Precision Prec, ExecutionSpace Space>
 DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::copy() const {
-    auto new_state =
-        DensityMatrix<Prec, Space>::uninitialized_state(this->_n_qubits, this->_is_hermitian);
+    auto new_state = DensityMatrix<Prec, Space>::uninitialized_state(this->_n_qubits);
+    new_state._is_hermitian = this->_is_hermitian;
     Kokkos::deep_copy(new_state._raw, this->_raw);
     return new_state;
 }
 template <Precision Prec, ExecutionSpace Space>
 DensityMatrix<Prec, ExecutionSpace::Default> DensityMatrix<Prec, Space>::copy_to_default_space()
     const {
-    auto new_state = DensityMatrix<Prec, ExecutionSpace::Default>::uninitialized_state(
-        this->_n_qubits, this->_is_hermitian);
+    auto new_state =
+        DensityMatrix<Prec, ExecutionSpace::Default>::uninitialized_state(this->_n_qubits);
+    new_state._is_hermitian = this->_is_hermitian;
     Kokkos::deep_copy(new_state._raw, this->_raw);
     return new_state;
 }
 template <Precision Prec, ExecutionSpace Space>
 DensityMatrix<Prec, ExecutionSpace::Host> DensityMatrix<Prec, Space>::copy_to_host_space() const {
-    auto new_state = DensityMatrix<Prec, ExecutionSpace::Host>::uninitialized_state(
-        this->_n_qubits, this->_is_hermitian);
+    auto new_state =
+        DensityMatrix<Prec, ExecutionSpace::Host>::uninitialized_state(this->_n_qubits);
+    new_state._is_hermitian = this->_is_hermitian;
     Kokkos::deep_copy(new_state._raw, this->_raw);
     return new_state;
 }
 
 template <Precision Prec, ExecutionSpace Space>
-void DensityMatrix<Prec, Space>::load(const std::vector<std::vector<StdComplex>>& other,
-                                      bool is_hermitian) {
-    if (other.size() != _dim || other[0].size() != _dim) {
+void DensityMatrix<Prec, Space>::load(const ComplexMatrix& other, bool is_hermitian) {
+    if (static_cast<std::uint64_t>(other.rows()) != _dim ||
+        static_cast<std::uint64_t>(other.cols()) != _dim) {
         throw std::runtime_error(
-            "DensityMatrix::load(const std::vector<std::vector<StdComplex>>&): Input matrix size "
+            "DensityMatrix::load(const ComplexMatrix&): Input matrix size "
             "does not match density matrix size.");
     }
     _is_hermitian = is_hermitian;
@@ -98,7 +100,7 @@ void DensityMatrix<Prec, Space>::load(const std::vector<std::vector<StdComplex>>
 
     for (std::uint64_t i = 0; i < _dim; i++) {
         for (std::uint64_t j = 0; j < _dim; j++) {
-            const auto& c = other[i][j];
+            const auto& c = other(i, j);
             host_view(i, j) =
                 ComplexType(static_cast<FloatType>(c.real()), static_cast<FloatType>(c.imag()));
         }
@@ -136,11 +138,11 @@ void DensityMatrix<Prec, Space>::load(const StateVector<Prec, Space>& other) {
 
 template <Precision Prec, ExecutionSpace Space>
 [[nodiscard]] DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::uninitialized_state(
-    std::uint64_t n_qubits, bool is_hermitian) {
+    std::uint64_t n_qubits) {
     DensityMatrix<Prec, Space> state;
     state._n_qubits = n_qubits;
     state._dim = 1ULL << n_qubits;
-    state._is_hermitian = is_hermitian;
+    state._is_hermitian = false;
     state._raw = Kokkos::View<ComplexType**, ExecutionSpaceType>(
         Kokkos::ViewAllocateWithoutInitializing("state"), state._dim, state._dim);
     return state;
@@ -149,7 +151,7 @@ template <Precision Prec, ExecutionSpace Space>
 template <Precision Prec, ExecutionSpace Space>
 [[nodiscard]] DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::Haar_random_state(
     std::uint64_t n_qubits, std::uint64_t seed) {
-    auto state(DensityMatrix<Prec, Space>::uninitialized_state(n_qubits, true));
+    auto state(DensityMatrix<Prec, Space>::uninitialized_state(n_qubits));
     state.set_Haar_random_state(seed);
     return state;
 }
