@@ -1,16 +1,10 @@
 name: Test All
 
 on:
+  merge_group:
   push:
     branches:
-      - main
-    paths-ignore:
-      - ".devcontainer/**"
-      - ".vscode/**"
-      - "doc/**"
-      - "*.md"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/workflows/lint.yml"
+      - main  # For badge updates only. Actual checks are done via merge queue.
   workflow_dispatch:
 
 jobs:

@@ -1,14 +1,10 @@
 name: Install to System
 
 on:
+  merge_group:
   push:
-    paths-ignore:
-      - ".devcontainer/**"
-      - ".vscode/**"
-      - "doc/**"
-      - "*.md"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/workflows/lint.yml"
+    branches:
+      - main  # For badge updates only. Actual checks are done via merge queue.
 
 jobs:
   library:
