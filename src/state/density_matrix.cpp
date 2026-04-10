@@ -26,15 +26,7 @@ DensityMatrix<Prec, Space>::DensityMatrix(const StateVector<Prec, Space>& other)
       _dim(other.dim()),
       _is_hermitian(true),
       _raw(Kokkos::ViewAllocateWithoutInitializing("state"), this->_dim, this->_dim) {
-    auto dst_raw = this->_raw;
-    auto src_raw = other._raw;
-    Kokkos::parallel_for(
-        "initialize_from_StateVector",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
-            {0, 0}, {this->_dim, this->_dim}),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) {
-            dst_raw(i, j) = src_raw(i) * internal::conj(src_raw(j));
-        });
+    this->load(other);
 }
 
 template <Precision Prec, ExecutionSpace Space>
