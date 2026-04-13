@@ -205,10 +205,10 @@ TYPED_TEST(StateVectorBatchedTest, Entropy) {
     const std::uint64_t batch_size = 4, n_qubits = 3;
     auto states = StateVectorBatched<Prec, Space>::Haar_random_state(batch_size, n_qubits, false);
 
-    auto entropies = states.get_computational_basis_entropies();
+    auto entropies = states.get_computational_basis_entropy();
     for (std::uint64_t b = 0; b < batch_size; ++b) {
         auto state = states.get_state_vector_at(b);
-        ASSE auto entropies = states.get_computational_basis_entropies(); eps<Prec>);
+        ASSERT_NEAR(entropies[b], state.get_computational_basis_entropy(), eps<Prec>);
     }
 }
 
