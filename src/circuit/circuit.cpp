@@ -297,8 +297,9 @@ void Circuit<Prec>::optimize(std::uint64_t max_block_size) {
 
     for (const GateWithKey& gate_with_key : _gate_list) {
         if (gate_with_key.index() == 1 ||
-            std::get<0>(gate_with_key).gate_type() == GateType::Probabilistic) {
-            // ParamGate and Probabilistic cannot be merged with others
+            std::get<0>(gate_with_key).gate_type() == GateType::Probabilistic ||
+            std::get<0>(gate_with_key).gate_type() == GateType::Measurement) {
+            // ParamGate, Probabilistic, and Measurement cannot be merged with others
             push_waiting_gates(gate_with_key);
             push(gate_with_key);
             continue;

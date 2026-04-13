@@ -724,6 +724,47 @@ TYPED_TEST(GateTest, ApplyProbabilisticGate) {
     }
 }
 
+TYPED_TEST(GateTest, ApplyMeasurementGateOnZeroState) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    StateVector<Prec, Space> state(1);
+    ClassicalRegister classical_register(1);
+
+    gate::Measurement<Prec>(0, 0)->update_quantum_state(state, classical_register, 0);
+
+    EXPECT_FALSE(classical_register[0]);
+    const auto amplitudes = state.get_amplitudes();
+    check_near<Prec>(amplitudes[0], StdComplex{1.0, 0.0});
+    check_near<Prec>(amplitudes[1], StdComplex{0.0, 0.0});
+}
+
+TYPED_TEST(GateTest, ApplyMeasurementGateOnOneState) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    StateVector<Prec, Space> state(1);
+    gate::X<Prec>(0)->update_quantum_state(state);
+    ClassicalRegister classical_register(1);
+
+    gate::Measurement<Prec>(0, 0)->update_quantum_state(state, classical_register, 0);
+
+    EXPECT_TRUE(classical_register[0]);
+    const auto amplitudes = state.get_amplitudes();
+    check_near<Prec>(amplitudes[0], StdComplex{0.0, 0.0});
+    check_near<Prec>(amplitudes[1], StdComplex{1.0, 0.0});
+}
+
+TYPED_TEST(GateTest, MeasurementGateJsonRoundTrip) {
+    constexpr Precision Prec = TestFixture::Prec;
+
+    Gate<Prec> gate = gate::Measurement<Prec>(0, 3);
+    Gate<Prec> loaded = Json(gate).template get<Gate<Prec>>();
+
+    ASSERT_EQ(loaded.gate_type(), GateType::Measurement);
+    EXPECT_EQ(MeasurementGate<Prec>(loaded)->classical_bit_index(), 3);
+}
+
 TYPED_TEST(GateTest, FlattenNestedProbabilisticGate) {
     constexpr Precision Prec = TestFixture::Prec;
     Gate<Prec> nested_gate = gate::Probabilistic<Prec>(
