@@ -55,7 +55,8 @@ namespace internal {
 inline void bind_classical_register_batched_hpp(nb::module_& m) {
     using namespace nb::literals;
 
-    nb::class_<ClassicalRegisterBatched>(m, "ClassicalRegisterBatched", "Batched classical register.")
+    nb::class_<ClassicalRegisterBatched>(
+        m, "ClassicalRegisterBatched", "Batched classical register.")
         .def(nb::init<std::uint64_t, std::uint64_t>(),
              "register_size"_a,
              "batch_size"_a,
@@ -70,6 +71,43 @@ inline void bind_classical_register_batched_hpp(nb::module_& m) {
             "batch_index"_a,
             nb::rv_policy::reference_internal,
             "Get classical register at `batch_index`.")
+        .def(
+            "__setitem__",
+            [](ClassicalRegisterBatched& classical_register,
+               std::uint64_t batch_index,
+               const ClassicalRegister& value) {
+                if (value.register_size() != classical_register.register_size()) {
+                    throw std::runtime_error(
+                        "__setitem__ expects a ClassicalRegister with matching register_size");
+                }
+                classical_register[batch_index] = value;
+            },
+            "batch_index"_a,
+            "value"_a,
+            "Set classical register at `batch_index`.")
+        .def(
+            "__getitem__",
+            [](ClassicalRegisterBatched& classical_register, nb::tuple idx) -> bool {
+                if (nb::len(idx) != 2) {
+                    throw std::runtime_error("__getitem__ expects 2 indices");
+                }
+                auto batch_index = nb::cast<std::uint64_t>(idx[0]);
+                auto bit_index = nb::cast<std::uint64_t>(idx[1]);
+                return classical_register(batch_index, bit_index);
+            },
+            "idx"_a)
+        .def(
+            "__setitem__",
+            [](ClassicalRegisterBatched& classical_register, nb::tuple idx, bool value) {
+                if (nb::len(idx) != 2) {
+                    throw std::runtime_error("__setitem__ expects 2 indices");
+                }
+                auto batch_index = nb::cast<std::uint64_t>(idx[0]);
+                auto bit_index = nb::cast<std::uint64_t>(idx[1]);
+                classical_register(batch_index, bit_index) = value;
+            },
+            "idx"_a,
+            "value"_a)
         .def("reset", &ClassicalRegisterBatched::reset, "Reset all bits to `False`.");
 }
 }  // namespace internal

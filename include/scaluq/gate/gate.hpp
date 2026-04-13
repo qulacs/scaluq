@@ -184,6 +184,7 @@ constexpr GateType get_gate_type() {
         static_assert(internal::lazy_false_v<T>, "unknown GateImpl");
 }
 
+namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 struct ExecutionContext {
     StateVector<Prec, Space> state;
@@ -211,10 +212,6 @@ struct ExecutionContextBatched {
           classical_register(classical_register_),
           random_engine(random_engine_) {}
 };
-
-namespace internal {
-using ::scaluq::ExecutionContext;
-using ::scaluq::ExecutionContextBatched;
 
 // GateBase テンプレートクラス
 template <Precision _Prec>
