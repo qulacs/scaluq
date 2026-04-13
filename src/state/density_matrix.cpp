@@ -425,6 +425,14 @@ double DensityMatrix<Prec, Space>::get_computational_basis_entropy() const {
 template <Precision Prec, ExecutionSpace Space>
 void DensityMatrix<Prec, Space>::add_density_matrix_with_coef(StdComplex coef,
                                                               const DensityMatrix& other) {
+    if (other.n_qubits() != this->n_qubits()) {
+        throw std::runtime_error(
+            "DensityMatrix::add_density_matrix_with_coef: Input density matrix size does not match "
+            "density matrix size.");
+    }
+    if (!other._is_hermitian && coef.imag() != 0) {
+        this->_is_hermitian = false;
+    }
     Kokkos::parallel_for(
         "add_density_matrix_with_coef",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
@@ -436,6 +444,9 @@ void DensityMatrix<Prec, Space>::add_density_matrix_with_coef(StdComplex coef,
 
 template <Precision Prec, ExecutionSpace Space>
 void DensityMatrix<Prec, Space>::multiply_coef(StdComplex coef) {
+    if (coef.imag() != 0) {
+        this->_is_hermitian = false;
+    }
     Kokkos::parallel_for(
         "multiply_coef",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(

@@ -241,17 +241,17 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
                  .arg("col_index", "int", "column index")
                  .arg("value", "complex", "value to set at the specified position")
                  .ex(DocString::Code{">>> state = DensityMatrix(2)",
-                                     ">>> state.get_matrix()",
+                                     ">>> print(state.get_matrix())",
                                      "[[1.+0.j 0.+0.j 0.+0.j 0.+0.j]",
                                      " [0.+0.j 0.+0.j 0.+0.j 0.+0.j]",
                                      " [0.+0.j 0.+0.j 0.+0.j 0.+0.j]",
                                      " [0.+0.j 0.+0.j 0.+0.j 0.+0.j]]",
                                      ">>> state.set_coherence_at(0, 1, 0.5+0.5j)",
-                                     ">>> state.get_matrix()",
-                                     "[[1.+0.j 0.5+0.5j 0.+0.j 0.+0.j]",
-                                     " [0.5-0.5j 0.+0.j 0.+0.j 0.+0.j]",
-                                     " [0.+0.j 0.+0.j 0.+0.j 0.+0.j]",
-                                     " [0.+0.j 0.+0.j 0.+0.j 0.+0.j]]"})
+                                     ">>> print(state.get_matrix())",
+                                     "[[1. +0.j  0.5+0.5j 0. +0.j  0. +0.j ]",
+                                     " [0. +0.j  0. +0.j  0. +0.j  0. +0.j ]",
+                                     " [0. +0.j  0. +0.j  0. +0.j  0. +0.j ]",
+                                     " [0. +0.j  0. +0.j  0. +0.j  0. +0.j ]]"})
                  .build_as_google_style()
                  .c_str())
         .def("get_matrix",
@@ -331,13 +331,13 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
                  .arg("is_hermitian",
                       "bool",
                       "Whether the input matrix is guaranteed to be Hermitian.")
-                 .ex(DocString::Code({"import numpy as np",
-                                      ">>> state = DensityMatrix(2)",
+                 .ex(DocString::Code({">>> import numpy as np",
+                                      ">>> state = DensityMatrix(1)",
                                       ">>> matrix = np.array([[0.5+0.5j, 0], [0, 0.5-0.5j]])",
                                       ">>> state.load(matrix, is_hermitian=True)",
                                       ">>> print(state.get_matrix())",
-                                      "[[0.5+0.5j 0.+0.j]",
-                                      " [0.+0.j 0.5-0.5j]]"}))
+                                      "[[0.5+0.5j 0. +0.j ]",
+                                      " [0. +0.j  0.5-0.5j]]"}))
                  .build_as_google_style()
                  .c_str())
         .def(
@@ -405,8 +405,8 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
                      "If not specified, the value from random device is used.")
                 .ret("DensityMatrix", "a density matrix representing a Haar random state")
                 .ex(DocString::Code(
-                    {">>> state = DensityMatrix.Haar_random_state(1) # doctest: +SKIP",
-                     ">>> print(state.get_matrix())",
+                    {">>> state = DensityMatrix.Haar_random_state(1)",
+                     ">>> print(state.get_matrix()) # doctest: +SKIP",
                      "[[ 0.35920411+8.30722924e-18j -0.29205502-3.80631554e-01j]",
                      " [-0.29205502+3.80631554e-01j  0.64079589+5.48595618e-18j]]",
                      ">>> state1 = DensityMatrix.Haar_random_state(1, seed=42)",
@@ -466,7 +466,7 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
                 .c_str())
         .def(
             "set_Haar_random_state",
-            [](std::optional<std::uint64_t> seed, DensityMatrix<Prec, Space>& self) {
+            [](DensityMatrix<Prec, Space>& self, std::optional<std::uint64_t> seed) {
                 self.set_Haar_random_state(seed.value_or(std::random_device{}()));
             },
             "seed"_a = std::nullopt,
@@ -562,37 +562,37 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
                 .ex(DocString::Code{">>> state = DensityMatrix(2)",
                                     ">>> state.set_computational_basis(2) # sets state to |10><10|",
                                     ">>> state.get_zero_probability(0)",
-                                    "0.0",
+                                    "1.0",
                                     ">>> state.get_zero_probability(1)",
-                                    "1.0"})
-                .build_as_google_style()
-                .c_str())
-        .def(
-            "get_marginal_probability",
-            &DensityMatrix<Prec, Space>::get_marginal_probability,
-            "measured_values"_a,
-            DocString()
-                .desc("Get the marginal probability to observe as given.")
-                .note("The matrix must be hermitian and normalized")
-                .arg("measured_values",
-                     "list[int]",
-                     "list with len n_qubits.",
-                     "`0`, `1` or :attr:`.UNMEASURED` is allowed for each elements. `0` or `1` "
-                     "shows the qubit is observed and the value is got. :attr:`.UNMEASURED` "
-                     "shows the the qubit is not observed.")
-                .ret("float", "probability to observe as given")
-                .ex(DocString::Code{">>> state = DensityMatrix(2)",
-                                    ">>> state.set_computational_basis(2) # sets state to |10><10|",
-                                    ">>> state.get_marginal_probability([0, 1])",
-                                    "1.0",
-                                    ">>> state.get_marginal_probability([0, UNMEASURED])",
-                                    "1.0",
-                                    ">>> state.get_marginal_probability([UNMEASURED, 1])",
-                                    "1.0",
-                                    ">>> state.get_marginal_probability([1, UNMEASURED])",
                                     "0.0"})
                 .build_as_google_style()
                 .c_str())
+        .def("get_marginal_probability",
+             &DensityMatrix<Prec, Space>::get_marginal_probability,
+             "measured_values"_a,
+             DocString()
+                 .desc("Get the marginal probability to observe as given.")
+                 .note("The matrix must be hermitian and normalized")
+                 .arg("measured_values",
+                      "list[int]",
+                      "list with len n_qubits.",
+                      "`0`, `1` or :attr:`.UNMEASURED` is allowed for each elements. `0` or `1` "
+                      "shows the qubit is observed and the value is got. :attr:`.UNMEASURED` "
+                      "shows the the qubit is not observed.")
+                 .ret("float", "probability to observe as given")
+                 .ex(DocString::Code{
+                     ">>> state = DensityMatrix(2)",
+                     ">>> state.set_computational_basis(2) # sets state to |10><10|",
+                     ">>> state.get_marginal_probability([0, 1])",
+                     "1.0",
+                     ">>> state.get_marginal_probability([0, DensityMatrix.UNMEASURED])",
+                     "1.0",
+                     ">>> state.get_marginal_probability([DensityMatrix.UNMEASURED, 1])",
+                     "1.0",
+                     ">>> state.get_marginal_probability([1, DensityMatrix.UNMEASURED])",
+                     "0.0"})
+                 .build_as_google_style()
+                 .c_str())
         .def(
             "sampling",
             [](const DensityMatrix<Prec, Space>& self,
@@ -633,6 +633,7 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
                 .ex(DocString::Code{">>> state = DensityMatrix(2)",
                                     ">>> state.set_computational_basis(2) # sets state to |10><10|",
                                     ">>> state.get_computational_basis_entropy()",
+                                    "0.0",
                                     ">>> import numpy as np",
                                     ">>> state = DensityMatrix.uninitialized_state(1)",
                                     ">>> state.load(np.array([[0.5, -0.5j], [0.5j, 0.5]]), True)",
@@ -723,6 +724,14 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
             "json_str"_a,
             DocString()
                 .desc("Read an object from the JSON representation of the density matrix.")
+                .build_as_google_style()
+                .c_str())
+        .def_ro_static(
+            "UNMEASURED",
+            &DensityMatrix<Prec, Space>::UNMEASURED,
+            DocString()
+                .desc("Constant used for `DensityMatrix::get_marginal_probability` to express the "
+                      "the qubit is not measured.")
                 .build_as_google_style()
                 .c_str());
 }
