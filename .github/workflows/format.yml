@@ -1,6 +1,7 @@
 name: Format
 
 on:
+  merge_group:
   push:
     paths-ignore:
       - ".devcontainer/**"
@@ -33,3 +34,15 @@ jobs:
           diff=$(git diff)
           echo -n "$diff"
           test "$(echo -n "$diff" | wc -l) -eq 0"
+
+  format-check-passed:
+    name: Format Check Passed
+    needs: [check-format]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: All checks passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            exit 1
+          fi
