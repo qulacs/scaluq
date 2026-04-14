@@ -70,6 +70,18 @@ jobs:
           name: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}
           path: ./wheels/*.whl
 
+  wheel-build-passed:
+    name: Wheel Build Passed
+    needs: [wheel-build]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: All checks passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            exit 1
+          fi
+
   upload-to-pypi:
     name: Upload to PyPI
     needs: wheel-build

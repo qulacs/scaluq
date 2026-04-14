@@ -802,23 +802,23 @@ std::string EcrGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << "}";
     return ss.str();
 }
-#define DEFINE_ECR_GATE_UPDATE(Class, Space)                                               \
-    template <Precision Prec>                                                              \
-    void EcrGateImpl<Prec>::update_quantum_state(Class<Prec, Space>& state_vector) const { \
-        this->check_qubit_mask_within_bounds(state_vector);                                \
-        ecr_gate(this->_physical_target_mask,                                              \
-                 this->_physical_control_mask,                                             \
-                 this->_control_mask,                                                      \
-                 this->_control_value_mask,                                                \
-                 state_vector);                                                            \
+#define DEFINE_ECR_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                               \
+    void EcrGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
+        this->check_qubit_mask_within_bounds(context.state_member);                         \
+        ecr_gate(this->_physical_target_mask,                                               \
+                 this->_physical_control_mask,                                              \
+                 this->_control_mask,                                                       \
+                 this->_control_value_mask,                                                 \
+                 context.state_member);                                                     \
     }
-DEFINE_ECR_GATE_UPDATE(StateVector, ExecutionSpace::Host)
-DEFINE_ECR_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_ECR_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
-DEFINE_ECR_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
+DEFINE_ECR_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
+DEFINE_ECR_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
+DEFINE_ECR_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::HostSerial)
+DEFINE_ECR_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
-DEFINE_ECR_GATE_UPDATE(StateVector, ExecutionSpace::Default)
-DEFINE_ECR_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
+DEFINE_ECR_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
+DEFINE_ECR_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_ECR_GATE_UPDATE
 template class EcrGateImpl<Prec>;
