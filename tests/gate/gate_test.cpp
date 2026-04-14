@@ -232,6 +232,30 @@ void run_random_gate_apply_two_target(std::uint64_t n_qubits) {
             check_near<Prec>(state_cp[i], test_state[i]);
         }
     }
+
+    for (int repeat = 0; repeat < 10; repeat++) {
+        auto state = StateVector<Prec, Space>::Haar_random_state(n_qubits);
+        auto state_cp = state.get_amplitudes();
+        for (int i = 0; i < dim; i++) {
+            test_state[i] = state_cp[i];
+        }
+
+        std::uint64_t physical_control = random.int64() % n_qubits;
+        std::uint64_t physical_target = random.int64() % n_qubits;
+        if (physical_control == physical_target)
+            physical_control = (physical_control + 1) % n_qubits;
+        auto gate = gate::Ecr<Prec>(physical_control, physical_target);
+        gate->update_quantum_state(state);
+        state_cp = state.get_amplitudes();
+
+        ComplexMatrix test_mat =
+            get_eigen_matrix_full_qubit_Ecr(physical_control, physical_target, n_qubits);
+        test_state = test_mat * test_state;
+
+        for (int i = 0; i < dim; i++) {
+            check_near<Prec>(state_cp[i], test_state[i]);
+        }
+    }
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -681,6 +705,12 @@ TYPED_TEST(GateTest, ApplyIBMQ) {
     run_random_gate_apply_IBMQ<Prec, Space>(5, make_U);
 }
 
+TYPED_TEST(GateTest, ApplyTwoTargetGate) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    run_random_gate_apply_two_target<Prec, Space>(5);
+}
+
 TYPED_TEST(GateTest, ApplySparseMatrixGate) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
@@ -1005,6 +1035,7 @@ TYPED_TEST(GateTest, Control) {
         test_standard_gate_control<Prec, Space, 1, 2>(gate::U2<Prec>, n);
         test_standard_gate_control<Prec, Space, 1, 3>(gate::U3<Prec>, n);
         test_standard_gate_control<Prec, Space, 2, 0>(gate::Swap<Prec>, n);
+        test_standard_gate_control<Prec, Space, 2, 0>(gate::Ecr<Prec>, n);
         test_pauli_control<Prec, Space, false>(n);
         test_pauli_control<Prec, Space, true>(n);
         test_matrix_control<Prec, Space, 0>(n);

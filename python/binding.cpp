@@ -74,6 +74,8 @@ void bind_on_precision(nb::module_& mp,
 
 NB_MODULE(scaluq_core, m) {
     internal::bind_kokkos_hpp(m);
+    internal::bind_classical_register_hpp(m);
+    internal::bind_classical_register_batched_hpp(m);
     internal::bind_gate_gate_hpp_without_precision_and_space(m);
     internal::bind_gate_param_gate_hpp_without_precision_and_space(m);
 
