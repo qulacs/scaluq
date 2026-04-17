@@ -1,14 +1,10 @@
 name: Install to System
 
 on:
+  merge_group:
   push:
-    paths-ignore:
-      - ".devcontainer/**"
-      - ".vscode/**"
-      - "doc/**"
-      - "*.md"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/workflows/lint.yml"
+    branches:
+      - main  # For badge updates only. Actual checks are done via merge queue.
 
 jobs:
   library:
@@ -228,3 +224,15 @@ jobs:
         run: |
           ( set -o pipefail; python python_test/run_doctest.py host f64 | tee /tmp/doctest.log )
           ! grep -q "Failed" /tmp/doctest.log
+
+  install-checks-passed:
+    name: Install Checks Passed
+    needs: [library, python]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: All checks passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            exit 1
+          fi
