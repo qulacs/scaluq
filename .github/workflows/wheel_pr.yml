@@ -10,7 +10,7 @@ jobs:
     outputs:
       any_changed: ${{ steps.check.outputs.any_changed }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Check relevant files
         id: check
@@ -60,14 +60,14 @@ jobs:
       MACOSX_DEPLOYMENT_TARGET: ${{ matrix.os == 'macos' && '15.0' || '' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
 
       - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@v1.2.20
         with:
           key: "${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.runs-on }}"
           save: false

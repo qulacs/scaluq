@@ -52,7 +52,7 @@ jobs:
       SCALUQ_FLOAT64: "ON"
       SCALUQ_BFLOAT16: ${{ matrix.compiler == 'clang' && 'OFF' || 'ON' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup LLVM Clang (macOS clang)
         if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
@@ -75,7 +75,7 @@ jobs:
           echo "OpenMP_ROOT=$(brew --prefix libomp)" >> "$GITHUB_ENV"
 
       - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@v1.2.20
         with:
           key: "${{ matrix.os-arch }}-${{ matrix.compiler }}-${{ matrix.device }}"
           verbose: 2
@@ -155,7 +155,7 @@ jobs:
       SCALUQ_CPU_NATIVE: "OFF"
       SCALUQ_CUDA_ARCH: "TURING75"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v5
         with:
@@ -178,7 +178,7 @@ jobs:
           echo "OpenMP_ROOT=$(brew --prefix libomp)" >> "$GITHUB_ENV"
 
       - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@v1.2.20
         with:
           key: "${{ matrix.os-arch }}-${{ matrix.compiler }}-${{ matrix.device }}"
           save: false
