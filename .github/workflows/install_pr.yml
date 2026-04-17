@@ -2,17 +2,33 @@ name: Install to System (PR)
 
 on:
   pull_request:
-    paths-ignore:
-      - ".devcontainer/**"
-      - ".vscode/**"
-      - "doc/**"
-      - "**/*.md"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/workflows/lint.yml"
 
 jobs:
+  check-changed:
+    name: Check Changed Files
+    runs-on: ubuntu-24.04
+    outputs:
+      any_changed: ${{ steps.check.outputs.any_changed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check relevant files
+        id: check
+        uses: tj-actions/changed-files@v47.0.1
+        with:
+          files: |
+            include/**
+            src/**
+            cmake/**
+            CMakeLists.txt
+            script/configure
+            python/**
+            example_project/**
+
   library:
     name: Install Library
+    needs: [check-changed]
+    if: ${{ needs.check-changed.outputs.any_changed == 'true' }}
     strategy:
       matrix:
         os-arch: ["linux-x86_64", "macos-arm64"]
@@ -119,6 +135,8 @@ jobs:
 
   python:
     name: Install Python package
+    needs: [check-changed]
+    if: ${{ needs.check-changed.outputs.any_changed == 'true' }}
     strategy:
       matrix:
         os-arch: ["linux-x86_64", "macos-arm64"]
@@ -211,3 +229,15 @@ jobs:
         run: |
           ( set -o pipefail; python python_test/run_doctest.py host f64 | tee /tmp/doctest.log )
           ! grep -q "Failed" /tmp/doctest.log
+
+  install-checks-passed:
+    name: Install Checks Passed
+    needs: [check-changed, library, python]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: All checks passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            exit 1
+          fi

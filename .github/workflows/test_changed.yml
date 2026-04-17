@@ -161,3 +161,15 @@ jobs:
             NPROC=$(nproc)
           fi
           OMP_PROC_BIND=false ctest --test-dir build/ -j "${NPROC}" --output-on-failure
+
+  cpp-tests-passed:
+    name: C++ Tests Passed
+    needs: [test]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: All checks passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            exit 1
+          fi
