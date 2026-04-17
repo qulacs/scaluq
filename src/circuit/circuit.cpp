@@ -1,3 +1,4 @@
+#include <limits>
 #include <scaluq/circuit/circuit.hpp>
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/gate/merge_gate.hpp>
@@ -65,7 +66,18 @@ void Circuit<Prec>::add_circuit(Circuit<Prec>&& circuit) {
 template <Precision Prec>
 template <ExecutionSpace Space>
 void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
-                                         const std::map<std::string, double>& parameters) const {
+                                         const std::map<std::string, double>& parameters,
+                                         std::uint64_t seed) const {
+    ClassicalRegister classical_register(0);
+    update_quantum_state(state, classical_register, parameters, seed);
+}
+
+template <Precision Prec>
+template <ExecutionSpace Space>
+void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
+                                         ClassicalRegister& classical_register,
+                                         const std::map<std::string, double>& parameters,
+                                         std::uint64_t seed) const {
     check_state_vector_n_qubits(state.n_qubits());
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0) continue;
@@ -77,12 +89,14 @@ void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
                 std::string(key) + "is not given.");
         }
     }
+    std::mt19937_64 random_engine(seed);
+    internal::ExecutionContext<Prec, Space> context{state, classical_register, random_engine};
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0) {
-            std::get<0>(gate)->update_quantum_state(state);
+            std::get<0>(gate)->update_quantum_state(context);
         } else {
             const auto& [param_gate, key] = std::get<1>(gate);
-            param_gate->update_quantum_state(state, parameters.at(key));
+            param_gate->update_quantum_state(context, parameters.at(key));
         }
     }
 }
@@ -91,8 +105,25 @@ template <Precision Prec>
 template <ExecutionSpace Space>
 void Circuit<Prec>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states,
-    const std::map<std::string, std::vector<double>>& parameters) const {
+    const std::map<std::string, std::vector<double>>& parameters,
+    std::uint64_t seed) const {
+    ClassicalRegisterBatched classical_register(0, states.batch_size());
+    update_quantum_state(states, classical_register, parameters, seed);
+}
+
+template <Precision Prec>
+template <ExecutionSpace Space>
+void Circuit<Prec>::update_quantum_state(
+    StateVectorBatched<Prec, Space>& states,
+    ClassicalRegisterBatched& classical_register,
+    const std::map<std::string, std::vector<double>>& parameters,
+    std::uint64_t seed) const {
     check_state_vector_n_qubits(states.n_qubits());
+    if (classical_register.batch_size() != states.batch_size()) {
+        throw std::runtime_error(
+            "Circuit::update_quantum_state(StateVectorBatched&, ClassicalRegisterBatched&, ...): "
+            "batch size mismatch.");
+    }
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0) continue;
         const auto& key = std::get<1>(gate).second;
@@ -102,38 +133,80 @@ void Circuit<Prec>::update_quantum_state(
                 "Circuit::update_quantum_state(StateVector&, const std::map<std::string_view, double>&) const: parameter named "s +
                 std::string(key) + "is not given.");
         }
+        if (parameters.at(key).size() != states.batch_size()) {
+            throw std::runtime_error(
+                "Circuit::update_quantum_state(StateVectorBatched&, const std::map<std::string, std::vector<double>>&): parameter size mismatch.");
+        }
     }
+    std::mt19937_64 random_engine(seed);
+    internal::ExecutionContextBatched<Prec, Space> context{states, classical_register, random_engine};
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0) {
-            std::get<0>(gate)->update_quantum_state(states);
+            std::get<0>(gate)->update_quantum_state(context);
         } else {
             const auto& [param_gate, key] = std::get<1>(gate);
-            param_gate->update_quantum_state(states, parameters.at(key));
+            param_gate->update_quantum_state(context, parameters.at(key));
         }
     }
 }
 
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
     StateVector<internal::Prec, ExecutionSpace::Host>& state,
-    const std::map<std::string, double>& parameters) const;
+    const std::map<std::string, double>& parameters,
+    std::uint64_t seed) const;
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
+    StateVector<internal::Prec, ExecutionSpace::Host>& state,
+    ClassicalRegister& classical_register,
+    const std::map<std::string, double>& parameters,
+    std::uint64_t seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
     StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states,
-    const std::map<std::string, std::vector<double>>& parameters) const;
+    const std::map<std::string, std::vector<double>>& parameters,
+    std::uint64_t seed) const;
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
+    StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states,
+    ClassicalRegisterBatched& classical_register,
+    const std::map<std::string, std::vector<double>>& parameters,
+    std::uint64_t seed) const;
 
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
     StateVector<internal::Prec, ExecutionSpace::HostSerial>& state,
-    const std::map<std::string, double>& parameters) const;
+    const std::map<std::string, double>& parameters,
+    std::uint64_t seed) const;
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
+    StateVector<internal::Prec, ExecutionSpace::HostSerial>& state,
+    ClassicalRegister& classical_register,
+    const std::map<std::string, double>& parameters,
+    std::uint64_t seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
     StateVectorBatched<internal::Prec, ExecutionSpace::HostSerial>& states,
-    const std::map<std::string, std::vector<double>>& parameters) const;
+    const std::map<std::string, std::vector<double>>& parameters,
+    std::uint64_t seed) const;
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
+    StateVectorBatched<internal::Prec, ExecutionSpace::HostSerial>& states,
+    ClassicalRegisterBatched& classical_register,
+    const std::map<std::string, std::vector<double>>& parameters,
+    std::uint64_t seed) const;
 
 #ifdef SCALUQ_USE_CUDA
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
     StateVector<internal::Prec, ExecutionSpace::Default>& state,
-    const std::map<std::string, double>& parameters) const;
+    const std::map<std::string, double>& parameters,
+    std::uint64_t seed) const;
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
+    StateVector<internal::Prec, ExecutionSpace::Default>& state,
+    ClassicalRegister& classical_register,
+    const std::map<std::string, double>& parameters,
+    std::uint64_t seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
     StateVectorBatched<internal::Prec, ExecutionSpace::Default>& states,
-    const std::map<std::string, std::vector<double>>& parameters) const;
+    const std::map<std::string, std::vector<double>>& parameters,
+    std::uint64_t seed) const;
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
+    StateVectorBatched<internal::Prec, ExecutionSpace::Default>& states,
+    ClassicalRegisterBatched& classical_register,
+    const std::map<std::string, std::vector<double>>& parameters,
+    std::uint64_t seed) const;
 #endif  // SCALUQ_USE_CUDA
 
 template <Precision Prec>
@@ -508,18 +581,18 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
                 const double cim = static_cast<double>(std::imag(c));
                 if (std::abs(cim) >= eps) {
                     throw std::runtime_error(
-                        "compute_expectation_gradient_backprop: pauli coef must be real");
+                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be real.");
                 }
-                if (std::abs(cre) < eps) {
+                if (std::abs(cre) < std::numeric_limits<double>::epsilon()) {
                     throw std::runtime_error(
-                        "compute_expectation_gradient_backprop: pauli coef must be nonzero");
+                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be nonzero.");
                 }
                 pauli_coef = cre;
             }
             const double scale = pgate->param_coef() * pauli_coef;
-            if (std::abs(scale) < eps) {
+            if (std::abs(scale) < std::numeric_limits<double>::epsilon()) {
                 throw std::runtime_error(
-                    "compute_expectation_gradient_backprop: param_coef or pauli coef is zero");
+                    "Circuit::compute_expectation_gradient_backprop: param_coef * pauli_coef must be nonzero.");
             }
             pgate->update_quantum_state(Astate, -M_PI / scale);
             const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
@@ -541,7 +614,8 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
             const auto it = parameters.find(key);
             if (it == parameters.end()) {
                 throw std::runtime_error(
-                    "compute_expectation_gradient_backprop: missing parameter for key=" + key);
+                    "Circuit::compute_expectation_gradient_backprop: parameter named " + key +
+                    " is not given.");
             }
             const auto param = it->second;
 
@@ -574,7 +648,8 @@ template <ExecutionSpace Space>
 std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradient(
     const Operator<Prec, Space>& obs, const std::map<std::string, double>& parameters) {
     if (!obs.is_hermitian()) {
-        throw std::runtime_error("compute_expectation_gradient: observable must be Hermitian");
+        throw std::runtime_error(
+            "Circuit::compute_expectation_gradient: observable must be Hermitian.");
     }
     StateVector<Prec, Space> state(required_n_qubits());
     this->update_quantum_state(state, parameters);
