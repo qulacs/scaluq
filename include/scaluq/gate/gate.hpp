@@ -192,7 +192,7 @@ constexpr GateType get_gate_type() {
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 struct ExecutionContext {
-    StateVector<Prec, Space> state;
+    StateVector<Prec, Space>& state;
     ClassicalRegister& classical_register;
     std::mt19937_64& random_engine;
 
@@ -206,7 +206,7 @@ struct ExecutionContext {
 
 template <Precision Prec, ExecutionSpace Space>
 struct ExecutionContextBatched {
-    StateVectorBatched<Prec, Space> states;
+    StateVectorBatched<Prec, Space>& states;
     ClassicalRegisterBatched& classical_register;
     std::mt19937_64& random_engine;
 
