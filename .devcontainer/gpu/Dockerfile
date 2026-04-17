@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.6.1-devel-ubuntu22.04
+FROM nvidia/cuda:12.6.1-devel-ubuntu24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -9,9 +9,6 @@ ENV PYTHONPATH="${PROJECT_DIR}/dist:${PYTHONPATH}"
 ENV PYTHONPATH="${PROJECT_DIR}/build:${PYTHONPATH}"
 
 RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository ppa:ubuntu-toolchain-r/test && \
-    apt-get update && \
     apt-get install -y gcc-13 g++-13 && \
     update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 && \
     update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100 && \
@@ -19,6 +16,8 @@ RUN apt-get update && \
     ca-certificates \
     ccache \
     clang-format \
+    clang-tidy \
+    libomp-dev \
     curl \
     git \
     gdb \
@@ -30,7 +29,9 @@ RUN apt-get update && \
     wget && \
     apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* && \
     update-alternatives --set gcc /usr/bin/gcc-13 && \
-    update-alternatives --set g++ /usr/bin/g++-13
+    update-alternatives --set g++ /usr/bin/g++-13 && \
+    update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100 && \
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100
 
 ENV CC=/usr/lib/ccache/gcc
 ENV CXX=/usr/lib/ccache/g++
@@ -50,6 +51,14 @@ RUN git clone --recursive https://github.com/kokkos/kokkos.git /tmp/kokkos --dep
     cp -r /tmp/kokkos-build/include /usr/local/include/kokkos && \
     rm -rf /tmp/kokkos /tmp/kokkos-build
 
-RUN pip install nanobind==2.0.0
+RUN pip install nanobind==2.0.0 --break-system-packages
 
-USER vscode
+ARG USERNAME=ubuntu
+RUN apt-get update \
+    && apt-get install -y sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+USER ubuntu
+
+ENV PATH="/home/ubuntu/.local/bin:${PATH}"

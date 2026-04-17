@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.24)
 
 project(scaluq)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 include(FetchContent)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -281,6 +283,23 @@ if(SKBUILD)
         DEPENDS scaluq_core
     )
 endif(SKBUILD)
+
+# clang-tidy
+find_program(CLANG_TIDY "clang-tidy")
+if(CLANG_TIDY)
+    file(GLOB_RECURSE ALL_CXX_TIDY_SOURCE_FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
+    )
+    add_custom_target(
+        clang-tidy
+        COMMAND ${CLANG_TIDY}
+        -p=${CMAKE_BINARY_DIR}
+        --warnings-as-errors=*
+        ${ALL_CXX_TIDY_SOURCE_FILES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+endif()
 
 # format
 find_program(CLANG_FORMAT "clang-format")
