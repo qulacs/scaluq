@@ -2,7 +2,7 @@
 
 Quantum gate is expressed as {class}`Gate <scaluq.default.f64.Gate>`.
 This holds indices of target and control qubits, types of Gate (ex: `X`, `H`, `RY`, `DenseMatrix`...), and other properties.
-Properties of a Gate differ by its type. To access these properties, down-casting to specific class is required. (See [Downcast to GateType-specific function](#downcast-to-gatetype-specific-function))
+Properties of a Gate differ by its type. To access these properties, down-casting to specific class is required. (See [Downcast to GateType-specific function](#gate-downcast))
 
 Unlike Qulacs, {class}`Gate <scaluq.default.f64.Gate>` objects are immutable. You have to pass all properties when generating the gate. This change enables us to provide fast and safe copy.
 
@@ -87,6 +87,7 @@ Gate Type: Sdag
 '''
 ```
 
+(gate-downcast)=
 ## Downcast to GateType-specific function
 To get GateType-specific properties, downcast to specific class is required.
 
