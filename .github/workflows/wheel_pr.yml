@@ -1,18 +1,33 @@
 name: Wheel build (PR)
 
 on:
-  push:
-    paths-ignore:
-      - ".devcontainer/**"
-      - ".vscode/**"
-      - "doc/**"
-      - "**/*.md"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/workflows/lint.yml"
+  pull_request:
 
 jobs:
+  check-changed:
+    name: Check Changed Files
+    runs-on: ubuntu-24.04
+    outputs:
+      any_changed: ${{ steps.check.outputs.any_changed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check relevant files
+        id: check
+        uses: tj-actions/changed-files@v47.0.1
+        with:
+          files: |
+            include/**
+            src/**
+            cmake/**
+            CMakeLists.txt
+            python/**
+            pyproject.toml
+
   wheel-build:
     name: Python wheel build
+    needs: [check-changed]
+    if: ${{ needs.check-changed.outputs.any_changed == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -63,3 +78,15 @@ jobs:
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheels
+
+  wheel-build-passed:
+    name: Wheel Build Passed
+    needs: [check-changed, wheel-build]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: All checks passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            exit 1
+          fi
