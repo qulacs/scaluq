@@ -51,7 +51,7 @@ jobs:
       CMAKE_BUILD_TYPE: ${{ matrix.device == 'cuda' && 'Release' || 'Debug' }}
       SCALUQ_USE_TEST: "ON"
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
-      SCALUQ_CUDA_ARCH: "PASCAL61"
+      SCALUQ_CUDA_ARCH: "TURING75"
       SCALUQ_FLOAT16: ${{ matrix.compiler == 'clang' && 'OFF' || 'ON' }}
       SCALUQ_FLOAT32: "ON"
       SCALUQ_FLOAT64: "ON"
