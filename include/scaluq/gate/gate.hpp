@@ -993,6 +993,7 @@ nb::class_<SpecificGateT> bind_specific_gate(nb::module_& m,
 
 // Include all gate header files for the correct definition of concept GateImpl
 #include "./gate_matrix.hpp"
+#include "./gate_measurement.hpp"
 #include "./gate_pauli.hpp"
 #include "./gate_probabilistic.hpp"
 #include "./gate_standard.hpp"

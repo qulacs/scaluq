@@ -1,5 +1,4 @@
 #include <bit>
-
 #include <scaluq/gate/gate_standard.hpp>
 
 #include "update_ops.hpp"
@@ -16,10 +15,13 @@ std::string IGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_I_GATE_UPDATE(ContextClass, state_member, Space)                                                        \
-    template <Precision Prec>                                                                     \
-    void IGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
-        i_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, context.state_member); \
+#define DEFINE_I_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                             \
+    void IGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
+        i_gate(this->_target_mask,                                                        \
+               this->_control_mask,                                                       \
+               this->_control_value_mask,                                                 \
+               context.state_member);                                                     \
     }
 DEFINE_I_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_I_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -44,15 +46,16 @@ std::string GlobalPhaseGateImpl<Prec>::to_string(const std::string& indent) cons
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_GLOBAL_PHASE_GATE_UPDATE(ContextClass, state_member, Space)                                              \
-    template <Precision Prec>                                                                      \
-    void GlobalPhaseGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
-        this->check_qubit_mask_within_bounds(context.state_member);                                 \
-        global_phase_gate(this->_target_mask,                                                      \
-                          this->_control_mask,                                                     \
-                          this->_control_value_mask,                                               \
-                          this->_phase,                                                            \
-                          context.state_member);                                                   \
+#define DEFINE_GLOBAL_PHASE_GATE_UPDATE(ContextClass, state_member, Space)                  \
+    template <Precision Prec>                                                               \
+    void GlobalPhaseGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) \
+        const {                                                                             \
+        this->check_qubit_mask_within_bounds(context.state_member);                         \
+        global_phase_gate(this->_target_mask,                                               \
+                          this->_control_mask,                                              \
+                          this->_control_value_mask,                                        \
+                          this->_phase,                                                     \
+                          context.state_member);                                            \
     }
 DEFINE_GLOBAL_PHASE_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_GLOBAL_PHASE_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -78,11 +81,14 @@ std::string XGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_X_GATE_UPDATE(ContextClass, state_member, Space)                                                        \
-    template <Precision Prec>                                                                     \
-    void XGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
-        this->check_qubit_mask_within_bounds(context.state_member);                                \
-        x_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, context.state_member); \
+#define DEFINE_X_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                             \
+    void XGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
+        this->check_qubit_mask_within_bounds(context.state_member);                       \
+        x_gate(this->_target_mask,                                                        \
+               this->_control_mask,                                                       \
+               this->_control_value_mask,                                                 \
+               context.state_member);                                                     \
     }
 DEFINE_X_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_X_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -108,11 +114,14 @@ std::string YGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_Y_GATE_UPDATE(ContextClass, state_member, Space)                                                        \
-    template <Precision Prec>                                                                     \
-    void YGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
-        this->check_qubit_mask_within_bounds(context.state_member);                                \
-        y_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, context.state_member); \
+#define DEFINE_Y_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                             \
+    void YGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
+        this->check_qubit_mask_within_bounds(context.state_member);                       \
+        y_gate(this->_target_mask,                                                        \
+               this->_control_mask,                                                       \
+               this->_control_value_mask,                                                 \
+               context.state_member);                                                     \
     }
 DEFINE_Y_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_Y_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -138,11 +147,14 @@ std::string ZGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_Z_GATE_UPDATE(ContextClass, state_member, Space)                                                        \
-    template <Precision Prec>                                                                     \
-    void ZGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
-        this->check_qubit_mask_within_bounds(context.state_member);                                \
-        z_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, context.state_member); \
+#define DEFINE_Z_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                             \
+    void ZGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
+        this->check_qubit_mask_within_bounds(context.state_member);                       \
+        z_gate(this->_target_mask,                                                        \
+               this->_control_mask,                                                       \
+               this->_control_value_mask,                                                 \
+               context.state_member);                                                     \
     }
 DEFINE_Z_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_Z_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -169,11 +181,14 @@ std::string HGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_H_GATE_UPDATE(ContextClass, state_member, Space)                                                        \
-    template <Precision Prec>                                                                     \
-    void HGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
-        this->check_qubit_mask_within_bounds(context.state_member);                                \
-        h_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, context.state_member); \
+#define DEFINE_H_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                             \
+    void HGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
+        this->check_qubit_mask_within_bounds(context.state_member);                       \
+        h_gate(this->_target_mask,                                                        \
+               this->_control_mask,                                                       \
+               this->_control_value_mask,                                                 \
+               context.state_member);                                                     \
     }
 DEFINE_H_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_H_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -199,11 +214,14 @@ std::string SGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_S_GATE_UPDATE(ContextClass, state_member, Space)                                                        \
-    template <Precision Prec>                                                                     \
-    void SGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
-        this->check_qubit_mask_within_bounds(context.state_member);                                \
-        s_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, context.state_member); \
+#define DEFINE_S_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                             \
+    void SGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
+        this->check_qubit_mask_within_bounds(context.state_member);                       \
+        s_gate(this->_target_mask,                                                        \
+               this->_control_mask,                                                       \
+               this->_control_value_mask,                                                 \
+               context.state_member);                                                     \
     }
 DEFINE_S_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_S_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -229,12 +247,14 @@ std::string SdagGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_S_DAG_GATE_UPDATE(ContextClass, state_member, Space)                                                 \
-    template <Precision Prec>                                                                  \
-    void SdagGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
-        this->check_qubit_mask_within_bounds(context.state_member);                             \
-        sdag_gate(                                                                             \
-            this->_target_mask, this->_control_mask, this->_control_value_mask, context.state_member); \
+#define DEFINE_S_DAG_GATE_UPDATE(ContextClass, state_member, Space)                          \
+    template <Precision Prec>                                                                \
+    void SdagGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
+        this->check_qubit_mask_within_bounds(context.state_member);                          \
+        sdag_gate(this->_target_mask,                                                        \
+                  this->_control_mask,                                                       \
+                  this->_control_value_mask,                                                 \
+                  context.state_member);                                                     \
     }
 DEFINE_S_DAG_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_S_DAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -260,11 +280,14 @@ std::string TGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_T_GATE_UPDATE(ContextClass, state_member, Space)                                                        \
-    template <Precision Prec>                                                                     \
-    void TGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
-        this->check_qubit_mask_within_bounds(context.state_member);                                \
-        t_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, context.state_member); \
+#define DEFINE_T_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                             \
+    void TGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
+        this->check_qubit_mask_within_bounds(context.state_member);                       \
+        t_gate(this->_target_mask,                                                        \
+               this->_control_mask,                                                       \
+               this->_control_value_mask,                                                 \
+               context.state_member);                                                     \
     }
 DEFINE_T_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_T_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -290,12 +313,14 @@ std::string TdagGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_T_DAG_GATE_UPDATE(ContextClass, state_member, Space)                                                 \
-    template <Precision Prec>                                                                  \
-    void TdagGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
-        this->check_qubit_mask_within_bounds(context.state_member);                             \
-        tdag_gate(                                                                             \
-            this->_target_mask, this->_control_mask, this->_control_value_mask, context.state_member); \
+#define DEFINE_T_DAG_GATE_UPDATE(ContextClass, state_member, Space)                          \
+    template <Precision Prec>                                                                \
+    void TdagGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
+        this->check_qubit_mask_within_bounds(context.state_member);                          \
+        tdag_gate(this->_target_mask,                                                        \
+                  this->_control_mask,                                                       \
+                  this->_control_value_mask,                                                 \
+                  context.state_member);                                                     \
     }
 DEFINE_T_DAG_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_T_DAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -321,12 +346,14 @@ std::string SqrtXGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_SQRT_X_GATE_UPDATE(ContextClass, state_member, Space)                                                \
-    template <Precision Prec>                                                                  \
-    void SqrtXGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
-        this->check_qubit_mask_within_bounds(context.state_member);                             \
-        sqrtx_gate(                                                                            \
-            this->_target_mask, this->_control_mask, this->_control_value_mask, context.state_member); \
+#define DEFINE_SQRT_X_GATE_UPDATE(ContextClass, state_member, Space)                          \
+    template <Precision Prec>                                                                 \
+    void SqrtXGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
+        this->check_qubit_mask_within_bounds(context.state_member);                           \
+        sqrtx_gate(this->_target_mask,                                                        \
+                   this->_control_mask,                                                       \
+                   this->_control_value_mask,                                                 \
+                   context.state_member);                                                     \
     }
 DEFINE_SQRT_X_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_SQRT_X_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -352,12 +379,14 @@ std::string SqrtXdagGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_SQRT_XDAG_GATE_UPDATE(ContextClass, state_member, Space)                                              \
-    template <Precision Prec>                                                                   \
-    void SqrtXdagGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
+#define DEFINE_SQRT_XDAG_GATE_UPDATE(ContextClass, state_member, Space)                          \
+    template <Precision Prec>                                                                    \
+    void SqrtXdagGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
         this->check_qubit_mask_within_bounds(context.state_member);                              \
-        sqrtxdag_gate(                                                                          \
-            this->_target_mask, this->_control_mask, this->_control_value_mask, context.state_member);  \
+        sqrtxdag_gate(this->_target_mask,                                                        \
+                      this->_control_mask,                                                       \
+                      this->_control_value_mask,                                                 \
+                      context.state_member);                                                     \
     }
 DEFINE_SQRT_XDAG_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_SQRT_XDAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -383,12 +412,14 @@ std::string SqrtYGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_SQRT_Y_GATE_UPDATE(ContextClass, state_member, Space)                                                \
-    template <Precision Prec>                                                                  \
-    void SqrtYGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
-        this->check_qubit_mask_within_bounds(context.state_member);                             \
-        sqrty_gate(                                                                            \
-            this->_target_mask, this->_control_mask, this->_control_value_mask, context.state_member); \
+#define DEFINE_SQRT_Y_GATE_UPDATE(ContextClass, state_member, Space)                          \
+    template <Precision Prec>                                                                 \
+    void SqrtYGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
+        this->check_qubit_mask_within_bounds(context.state_member);                           \
+        sqrty_gate(this->_target_mask,                                                        \
+                   this->_control_mask,                                                       \
+                   this->_control_value_mask,                                                 \
+                   context.state_member);                                                     \
     }
 DEFINE_SQRT_Y_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_SQRT_Y_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -414,12 +445,14 @@ std::string SqrtYdagGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_SQRT_YDAG_GATE_UPDATE(ContextClass, state_member, Space)                                              \
-    template <Precision Prec>                                                                   \
-    void SqrtYdagGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
+#define DEFINE_SQRT_YDAG_GATE_UPDATE(ContextClass, state_member, Space)                          \
+    template <Precision Prec>                                                                    \
+    void SqrtYdagGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
         this->check_qubit_mask_within_bounds(context.state_member);                              \
-        sqrtydag_gate(                                                                          \
-            this->_target_mask, this->_control_mask, this->_control_value_mask, context.state_member);  \
+        sqrtydag_gate(this->_target_mask,                                                        \
+                      this->_control_mask,                                                       \
+                      this->_control_value_mask,                                                 \
+                      context.state_member);                                                     \
     }
 DEFINE_SQRT_YDAG_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_SQRT_YDAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -445,11 +478,14 @@ std::string P0GateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_P0_GATE_UPDATE(ContextClass, state_member, Space)                                                        \
-    template <Precision Prec>                                                                      \
-    void P0GateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
-        this->check_qubit_mask_within_bounds(context.state_member);                                 \
-        p0_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, context.state_member); \
+#define DEFINE_P0_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                              \
+    void P0GateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
+        this->check_qubit_mask_within_bounds(context.state_member);                        \
+        p0_gate(this->_target_mask,                                                        \
+                this->_control_mask,                                                       \
+                this->_control_value_mask,                                                 \
+                context.state_member);                                                     \
     }
 DEFINE_P0_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_P0_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -475,11 +511,14 @@ std::string P1GateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_P1_GATE_UPDATE(ContextClass, state_member, Space)                                                        \
-    template <Precision Prec>                                                                      \
-    void P1GateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
-        this->check_qubit_mask_within_bounds(context.state_member);                                 \
-        p1_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, context.state_member); \
+#define DEFINE_P1_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                              \
+    void P1GateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
+        this->check_qubit_mask_within_bounds(context.state_member);                        \
+        p1_gate(this->_target_mask,                                                        \
+                this->_control_mask,                                                       \
+                this->_control_value_mask,                                                 \
+                context.state_member);                                                     \
     }
 DEFINE_P1_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_P1_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -491,88 +530,6 @@ DEFINE_P1_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_P1_GATE_UPDATE
 template class P1GateImpl<Prec>;
-
-template <Precision Prec>
-ComplexMatrix MeasurementGateImpl<Prec>::get_matrix() const {
-    throw std::runtime_error(
-        "MeasurementGate::get_matrix(): measurement gate does not have a matrix representation");
-}
-template <Precision Prec>
-std::string MeasurementGateImpl<Prec>::to_string(const std::string& indent) const {
-    std::ostringstream ss;
-    ss << indent << "Gate Type: Measurement\n";
-    ss << indent << "  Classical Bit Index: " << _classical_bit_index << "\n";
-    ss << this->get_qubit_info_as_string(indent);
-    return ss.str();
-}
-
-namespace {
-template <Precision Prec, ExecutionSpace Space>
-void apply_measurement_update(StateVector<Prec, Space>& state,
-                              ClassicalRegister& classical_register,
-                              std::mt19937_64& random_engine,
-                              std::uint64_t target_mask,
-                              std::uint64_t classical_bit_index) {
-    const std::uint64_t target = std::countr_zero(target_mask);
-    const double zero_probability = state.get_zero_probability(target);
-    std::bernoulli_distribution zero_distribution(zero_probability);
-    const bool measured_zero = zero_distribution(random_engine);
-    if (measured_zero) {
-        p0_gate(target_mask, 0, 0, state);
-    } else {
-        p1_gate(target_mask, 0, 0, state);
-    }
-    state.normalize();
-    classical_register[classical_bit_index] = !measured_zero;
-}
-}  // namespace
-
-#define DEFINE_MEASUREMENT_GATE_UPDATE(Space)                                                 \
-    template <Precision Prec>                                                                 \
-    void MeasurementGateImpl<Prec>::update_quantum_state(                                     \
-        ExecutionContext<Prec, Space> context) const {                                        \
-        this->check_qubit_mask_within_bounds(context.state);                                  \
-        if (context.classical_register.register_size() <= _classical_bit_index) {             \
-            throw std::runtime_error(                                                          \
-                "MeasurementGate::update_quantum_state(): classical register size is too "    \
-                "small for the requested classical bit index.");                              \
-        }                                                                                     \
-        apply_measurement_update(context.state,                                                \
-                                 context.classical_register,                                   \
-                                 context.random_engine,                                        \
-                                 this->_target_mask,                                           \
-                                 _classical_bit_index);                                        \
-    }                                                                                         \
-    template <Precision Prec>                                                                 \
-    void MeasurementGateImpl<Prec>::update_quantum_state(                                     \
-        ExecutionContextBatched<Prec, Space> context) const {                                 \
-        this->check_qubit_mask_within_bounds(context.states);                                 \
-        if (context.classical_register.batch_size() != context.states.batch_size()) {         \
-            throw std::runtime_error(                                                          \
-                "MeasurementGate::update_quantum_state(): batch size mismatch.");             \
-        }                                                                                     \
-        if (context.classical_register.register_size() <= _classical_bit_index) {             \
-            throw std::runtime_error(                                                          \
-                "MeasurementGate::update_quantum_state(): classical register size is too "    \
-                "small for the requested classical bit index.");                              \
-        }                                                                                     \
-        for (std::uint64_t batch_index = 0; batch_index < context.states.batch_size();        \
-             ++batch_index) {                                                                  \
-            auto state = context.states.view_state_vector_at(batch_index);                     \
-            apply_measurement_update(state,                                                    \
-                                     context.classical_register[batch_index],                  \
-                                     context.random_engine,                                    \
-                                     this->_target_mask,                                       \
-                                     _classical_bit_index);                                    \
-        }                                                                                     \
-    }
-DEFINE_MEASUREMENT_GATE_UPDATE(ExecutionSpace::Host)
-DEFINE_MEASUREMENT_GATE_UPDATE(ExecutionSpace::HostSerial)
-#ifdef SCALUQ_USE_CUDA
-DEFINE_MEASUREMENT_GATE_UPDATE(ExecutionSpace::Default)
-#endif  // SCALUQ_USE_CUDA
-#undef DEFINE_MEASUREMENT_GATE_UPDATE
-template class MeasurementGateImpl<Prec>;
 
 template <Precision Prec>
 ComplexMatrix RXGateImpl<Prec>::get_matrix() const {
@@ -590,15 +547,15 @@ std::string RXGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_RX_GATE_UPDATE(ContextClass, state_member, Space)                                               \
-    template <Precision Prec>                                                             \
-    void RXGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
+#define DEFINE_RX_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                              \
+    void RXGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
         this->check_qubit_mask_within_bounds(context.state_member);                        \
-        rx_gate(this->_target_mask,                                                       \
-                this->_control_mask,                                                      \
-                this->_control_value_mask,                                                \
-                this->_angle,                                                             \
-                context.state_member);                                                    \
+        rx_gate(this->_target_mask,                                                        \
+                this->_control_mask,                                                       \
+                this->_control_value_mask,                                                 \
+                this->_angle,                                                              \
+                context.state_member);                                                     \
     }
 DEFINE_RX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_RX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -626,15 +583,15 @@ std::string RYGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_RY_GATE_UPDATE(ContextClass, state_member, Space)                                               \
-    template <Precision Prec>                                                             \
-    void RYGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
+#define DEFINE_RY_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                              \
+    void RYGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
         this->check_qubit_mask_within_bounds(context.state_member);                        \
-        ry_gate(this->_target_mask,                                                       \
-                this->_control_mask,                                                      \
-                this->_control_value_mask,                                                \
-                this->_angle,                                                             \
-                context.state_member);                                                    \
+        ry_gate(this->_target_mask,                                                        \
+                this->_control_mask,                                                       \
+                this->_control_value_mask,                                                 \
+                this->_angle,                                                              \
+                context.state_member);                                                     \
     }
 DEFINE_RY_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_RY_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -662,15 +619,15 @@ std::string RZGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_RZ_GATE_UPDATE(ContextClass, state_member, Space)                                               \
-    template <Precision Prec>                                                             \
-    void RZGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
+#define DEFINE_RZ_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                              \
+    void RZGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
         this->check_qubit_mask_within_bounds(context.state_member);                        \
-        rz_gate(this->_target_mask,                                                       \
-                this->_control_mask,                                                      \
-                this->_control_value_mask,                                                \
-                this->_angle,                                                             \
-                context.state_member);                                                    \
+        rz_gate(this->_target_mask,                                                        \
+                this->_control_mask,                                                       \
+                this->_control_value_mask,                                                 \
+                this->_angle,                                                              \
+                context.state_member);                                                     \
     }
 DEFINE_RZ_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_RZ_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -697,15 +654,15 @@ std::string U1GateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_U1_GATE_UPDATE(ContextClass, state_member, Space)                                               \
-    template <Precision Prec>                                                             \
-    void U1GateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
+#define DEFINE_U1_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                              \
+    void U1GateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
         this->check_qubit_mask_within_bounds(context.state_member);                        \
-        u1_gate(this->_target_mask,                                                       \
-                this->_control_mask,                                                      \
-                this->_control_value_mask,                                                \
-                this->_lambda,                                                            \
-                context.state_member);                                                    \
+        u1_gate(this->_target_mask,                                                        \
+                this->_control_mask,                                                       \
+                this->_control_value_mask,                                                 \
+                this->_lambda,                                                             \
+                context.state_member);                                                     \
     }
 DEFINE_U1_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_U1_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -738,16 +695,16 @@ std::string U2GateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_U2_GATE_UPDATE(ContextClass, state_member, Space)                                               \
-    template <Precision Prec>                                                             \
-    void U2GateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
+#define DEFINE_U2_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                              \
+    void U2GateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
         this->check_qubit_mask_within_bounds(context.state_member);                        \
-        u2_gate(this->_target_mask,                                                       \
-                this->_control_mask,                                                      \
-                this->_control_value_mask,                                                \
-                this->_phi,                                                               \
-                this->_lambda,                                                            \
-                context.state_member);                                                    \
+        u2_gate(this->_target_mask,                                                        \
+                this->_control_mask,                                                       \
+                this->_control_value_mask,                                                 \
+                this->_phi,                                                                \
+                this->_lambda,                                                             \
+                context.state_member);                                                     \
     }
 DEFINE_U2_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_U2_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -783,17 +740,17 @@ std::string U3GateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_U3_GATE_UPDATE(ContextClass, state_member, Space)                                               \
-    template <Precision Prec>                                                             \
-    void U3GateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
+#define DEFINE_U3_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                              \
+    void U3GateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
         this->check_qubit_mask_within_bounds(context.state_member);                        \
-        u3_gate(this->_target_mask,                                                       \
-                this->_control_mask,                                                      \
-                this->_control_value_mask,                                                \
-                this->_theta,                                                             \
-                this->_phi,                                                               \
-                this->_lambda,                                                            \
-                context.state_member);                                                    \
+        u3_gate(this->_target_mask,                                                        \
+                this->_control_mask,                                                       \
+                this->_control_value_mask,                                                 \
+                this->_theta,                                                              \
+                this->_phi,                                                                \
+                this->_lambda,                                                             \
+                context.state_member);                                                     \
     }
 DEFINE_U3_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_U3_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -819,12 +776,14 @@ std::string SwapGateImpl<Prec>::to_string(const std::string& indent) const {
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_SWAP_GATE_UPDATE(ContextClass, state_member, Space)                                                  \
-    template <Precision Prec>                                                                  \
-    void SwapGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
-        this->check_qubit_mask_within_bounds(context.state_member);                             \
-        swap_gate(                                                                             \
-            this->_target_mask, this->_control_mask, this->_control_value_mask, context.state_member); \
+#define DEFINE_SWAP_GATE_UPDATE(ContextClass, state_member, Space)                           \
+    template <Precision Prec>                                                                \
+    void SwapGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const { \
+        this->check_qubit_mask_within_bounds(context.state_member);                          \
+        swap_gate(this->_target_mask,                                                        \
+                  this->_control_mask,                                                       \
+                  this->_control_value_mask,                                                 \
+                  context.state_member);                                                     \
     }
 DEFINE_SWAP_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_SWAP_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -884,15 +843,6 @@ DECLARE_GET_FROM_JSON_SINGLE_IMPL(SqrtYdagGateImpl)
 DECLARE_GET_FROM_JSON_SINGLE_IMPL(P0GateImpl)
 DECLARE_GET_FROM_JSON_SINGLE_IMPL(P1GateImpl)
 #undef DECLARE_GET_FROM_JSON_SINGLE_IMPL
-
-template <Precision Prec>
-std::shared_ptr<const MeasurementGateImpl<Prec>> GetGateFromJson<MeasurementGateImpl<Prec>>::get(
-    const Json& j) {
-    return std::make_shared<const MeasurementGateImpl<Prec>>(
-        vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),
-        j.at("classical_bit").get<std::uint64_t>());
-}
-template struct GetGateFromJson<MeasurementGateImpl<Prec>>;
 
 // RX, RY, RZ
 #define DECLARE_GET_FROM_JSON_R_SINGLE_IMPL(Impl)                                       \

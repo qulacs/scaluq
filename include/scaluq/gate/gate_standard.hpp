@@ -618,47 +618,6 @@ public:
 };
 
 template <Precision Prec>
-class MeasurementGateImpl : public GateBase<Prec> {
-    std::uint64_t _classical_bit_index;
-
-public:
-    using GateBase<Prec>::update_quantum_state;
-
-    MeasurementGateImpl(std::uint64_t target_mask, std::uint64_t classical_bit_index)
-        : GateBase<Prec>(target_mask, 0, 0), _classical_bit_index(classical_bit_index) {}
-
-    [[nodiscard]] std::uint64_t classical_bit_index() const { return _classical_bit_index; }
-
-    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        throw std::runtime_error(
-            "Measurement::get_inverse: Measurement gate doesn't have inverse gate");
-    }
-    ComplexMatrix get_matrix() const override;
-
-    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
-    void update_quantum_state(
-        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
-    void update_quantum_state(
-        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
-    void update_quantum_state(
-        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
-#ifdef SCALUQ_USE_CUDA
-    void update_quantum_state(
-        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
-    void update_quantum_state(
-        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
-#endif  // SCALUQ_USE_CUDA
-
-    std::string to_string(const std::string& indent) const override;
-
-    void get_as_json(Json& j) const override {
-        j = Json{{"type", "Measurement"},
-                 {"target", this->target_qubit_list()},
-                 {"classical_bit", _classical_bit_index}};
-    }
-};
-
-template <Precision Prec>
 class RXGateImpl : public RotationGateBase<Prec> {
 public:
     using RotationGateBase<Prec>::RotationGateBase;
@@ -998,8 +957,6 @@ using P0Gate = internal::GatePtr<internal::P0GateImpl<Prec>>;
 template <Precision Prec>
 using P1Gate = internal::GatePtr<internal::P1GateImpl<Prec>>;
 template <Precision Prec>
-using MeasurementGate = internal::GatePtr<internal::MeasurementGateImpl<Prec>>;
-template <Precision Prec>
 using RXGate = internal::GatePtr<internal::RXGateImpl<Prec>>;
 template <Precision Prec>
 using RYGate = internal::GatePtr<internal::RYGateImpl<Prec>>;
@@ -1090,15 +1047,6 @@ void bind_gate_gate_standard_hpp(nb::module_& m, nb::class_<Gate<Prec>>& gate_ba
         "P1Gate",
         "Specific class of projection gate to $\\ket{1}$.\n\nNotes:\n\tThis gate is "
         "not unitary.");
-    bind_specific_gate<MeasurementGate<Prec>, Prec>(
-        m,
-        gate_base_def,
-        "MeasurementGate",
-        "Specific class of computational-basis measurement gate.\n\nNotes:\n\tThis gate is "
-        "not unitary and requires a classical register when applied.")
-        .def("classical_bit_index",
-             [](const MeasurementGate<Prec>& gate) { return gate->classical_bit_index(); },
-             "Get `classical_bit_index` property.");
     bind_specific_gate<RXGate<Prec>, Prec>(
         m,
         gate_base_def,
