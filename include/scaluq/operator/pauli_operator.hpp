@@ -261,12 +261,12 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "$(n-1)$ -th qubit to $0$ -th qubit.")
         .def("get_matrix_ignoring_coef",
              &PauliOperator<Prec>::get_matrix_ignoring_coef,
-             "Get matrix representation of the PauliOperator, but with forcing `coef=1.`Only the "
+             "Get matrix representation of the PauliOperator, but with forcing coef=1. Only the "
              "X, Y, and Z components are taken into account in the result.")
         .def("get_full_matrix_ignoring_coef",
              &PauliOperator<Prec>::get_full_matrix_ignoring_coef,
              "n_qubits"_a,
-             "Get matrix representation of the PauliOperator, but with forcing `coef=1.`")
+             "Get matrix representation of the PauliOperator, but with forcing coef=1.")
         .def(nb::self * nb::self)
         .def(nb::self * StdComplex())
         .def(

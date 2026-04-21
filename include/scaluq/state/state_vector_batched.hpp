@@ -262,7 +262,9 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
         // State initialization methods
         .def("set_zero_state",
              &StateVectorBatched<Prec, Space>::set_zero_state,
-             DocString().desc("Initialize all states to |0...0⟩.").build_as_google_style().c_str())
+             DocString().desc("Initialize all states to $\\ket{00\\dots0}$.")
+                 .build_as_google_style()
+                 .c_str())
         .def("set_computational_basis",
              &StateVectorBatched<Prec, Space>::set_computational_basis,
              "basis"_a,
@@ -341,7 +343,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
              &StateVectorBatched<Prec, Space>::get_zero_probability,
              "target_qubit_index"_a,
              DocString()
-                 .desc("Get probability of measuring |0⟩ on specified qubit for each state.")
+                 .desc("Get probability of measuring $\\ket{0}$ on specified qubit for each state.")
                  .arg("target_qubit_index", "int", "Index of qubit to measure.")
                  .ret("list[float]", "Probabilities for each state in batch.")
                  .build_as_google_style()
