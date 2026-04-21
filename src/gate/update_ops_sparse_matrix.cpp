@@ -34,7 +34,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
             Kokkos::parallel_for(Kokkos::TeamThreadRange(team, mat._rows), [&](std::uint64_t r) {
                 std::uint64_t dst_index =
                     internal::insert_zero_at_mask_positions(r, outer_mask) | basis;
-                Complex<Prec> sum = Float<Prec>{0};
+                Complex<Prec> sum(Float<Prec>{0});
                 Kokkos::parallel_reduce(
                     Kokkos::ThreadVectorRange(team, mat._row_ptr[r], mat._row_ptr[r + 1]),
                     [&](std::uint64_t idx, Complex<Prec>& inner_sum) {
@@ -87,7 +87,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
             Kokkos::parallel_for(Kokkos::TeamThreadRange(team, mat._rows), [&](std::uint64_t r) {
                 std::uint64_t dst_index =
                     internal::insert_zero_at_mask_positions(r, outer_mask) | basis;
-                Complex<Prec> sum = Float<Prec>{0};
+                Complex<Prec> sum(Float<Prec>{0});
                 Kokkos::parallel_reduce(
                     Kokkos::ThreadVectorRange(team, mat._row_ptr[r], mat._row_ptr[r + 1]),
                     [&](std::uint64_t idx, Complex<Prec>& inner_sum) {

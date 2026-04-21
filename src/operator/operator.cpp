@@ -64,7 +64,7 @@ void Operator<internal::Prec, internal::Space>::optimize() {
     std::map<std::tuple<std::uint64_t, std::uint64_t>, ComplexType> pauli_and_coef;
     auto terms_h = get_terms();
     for (const auto& pauli : terms_h) {
-        pauli_and_coef[pauli.get_XZ_mask_representation()] += pauli.coef();
+        pauli_and_coef[pauli.get_XZ_mask_representation()] += ComplexType(pauli.coef());
     }
     terms_h.clear();
     for (const auto& [mask, coef] : pauli_and_coef) {
@@ -249,7 +249,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
         KOKKOS_CLASS_LAMBDA(
             const typename Kokkos::TeamPolicy<internal::SpaceType<internal::Space>>::member_type&
                 team) {
-            ComplexType sum = 0;
+            ComplexType sum{};
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadMDRange(team, nterms, dim >> 1),
@@ -373,7 +373,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transitio
         KOKKOS_CLASS_LAMBDA(
             const typename Kokkos::TeamPolicy<internal::SpaceType<internal::Space>>::member_type&
                 team) {
-            ComplexType res = 0;
+            ComplexType res{};
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadMDRange(team, nterms, (dim >> 1)),
@@ -516,7 +516,7 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
             auto coef = internal::inner_product<internal::Prec, internal::Space>(
                 krylov_space_basis[j]._raw, state._raw);
             hessenberg_matrix(j, i) = static_cast<StdComplex>(coef);
-            state.add_state_vector_with_coef(-coef, krylov_space_basis[j]);
+            state.add_state_vector_with_coef(static_cast<StdComplex>(-coef), krylov_space_basis[j]);
         }
         // normalize |state>
         double norm = std::sqrt(state.get_squared_norm());
@@ -557,10 +557,11 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
 template <>
 Operator<internal::Prec, internal::Space>& Operator<internal::Prec, internal::Space>::operator*=(
     StdComplex coef) {
+    ComplexType coef_internal(coef);
     Kokkos::parallel_for(
         "operator*=",
         Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(0, _terms.size()),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _terms(i)._coef *= coef; });
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _terms(i)._coef *= coef_internal; });
     _is_hermitian &= (coef.imag() == 0);
     return *this;
 }

@@ -16,9 +16,9 @@ using StdComplex = std::complex<double>;
 using Json = nlohmann::json;
 
 #ifdef SCALUQ_USE_CUDA
-enum class ExecutionSpace { Host, HostSerial, Default };
+enum class ExecutionSpace : std::uint8_t { Host, HostSerial, Default };
 #else
-enum class ExecutionSpace { Host, HostSerial, Default = Host };
+enum class ExecutionSpace : std::uint8_t { Host, HostSerial, Default = Host };
 #endif
 
 using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
@@ -75,7 +75,7 @@ public:
     Kokkos::View<std::uint32_t*, SpaceType<Space>> _col_idx, _row_ptr;
     std::uint64_t _rows, _cols;
 
-    SparseMatrix(const SparseComplexMatrix& sp);
+    explicit SparseMatrix(const SparseComplexMatrix& sp);
 };
 
 }  // namespace internal
@@ -107,8 +107,8 @@ struct adl_serializer<::scaluq::ComplexMatrix> {
         }
     }
     static void from_json(const json& j, ::scaluq::ComplexMatrix& value) {
-        int rows = j.size();
-        int cols = j[0].size();
+        int rows = static_cast<int>(j.size());
+        int cols = static_cast<int>(j[0].size());
         value.resize(rows, cols);
         int row_idx = 0;
         for (const auto& row : j) {
@@ -130,7 +130,7 @@ struct adl_serializer<::scaluq::SparseComplexMatrix> {
         json triplets = json::array();
         for (std::uint64_t row_idx = 0; row_idx < static_cast<std::uint64_t>(value.outerSize());
              ++row_idx) {
-            for (typename ::scaluq::SparseComplexMatrix::InnerIterator it(value, row_idx); it;
+            for (typename ::scaluq::SparseComplexMatrix::InnerIterator it(value, static_cast<Eigen::Index>(row_idx)); it;
                  ++it) {
                 triplets.push_back({{"row", it.row()}, {"col", it.col()}, {"val", it.value()}});
             }
@@ -140,7 +140,7 @@ struct adl_serializer<::scaluq::SparseComplexMatrix> {
     static void from_json(const json& j, ::scaluq::SparseComplexMatrix& value) {
         std::uint64_t rows = j["rows"].get<std::uint64_t>();
         std::uint64_t cols = j["cols"].get<std::uint64_t>();
-        value.resize(rows, cols);
+        value.resize(static_cast<Eigen::Index>(rows), static_cast<Eigen::Index>(cols));
         std::vector<Eigen::Triplet<::scaluq::StdComplex>> triplets;
         for (const auto& triplet : j["triplets"]) {
             triplets.emplace_back(triplet["row"].get<std::uint64_t>(),

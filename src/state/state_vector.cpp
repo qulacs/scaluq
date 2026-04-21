@@ -53,7 +53,7 @@ void StateVector<Prec, Space>::set_zero_state() {
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::set_zero_norm_state() {
-    Kokkos::deep_copy(_raw, 0);
+    Kokkos::deep_copy(_raw, ComplexType{});
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::set_computational_basis(std::uint64_t basis) {
@@ -135,7 +135,7 @@ double StateVector<Prec, Space>::get_zero_probability(std::uint64_t target_qubit
     FloatType sum = 0;
     Kokkos::parallel_reduce(
         "zero_prob",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> 1),
+        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> 1U),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & lsum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(i, target_qubit_index);
             lsum += internal::squared_norm(this->_raw[basis_0]);
@@ -214,10 +214,11 @@ void StateVector<Prec, Space>::add_state_vector_with_coef(StdComplex coef,
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::multiply_coef(StdComplex coef) {
+    ComplexType complex_coef(coef);
     Kokkos::parallel_for(
         "multiply_coef",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { this->_raw[i] *= coef; });
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { this->_raw[i] *= complex_coef; });
 }
 template <Precision Prec, ExecutionSpace Space>
 std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(std::uint64_t sampling_count,
@@ -246,8 +247,9 @@ std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(std::uint64_t samp
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, todo_count),
             KOKKOS_LAMBDA(std::uint64_t i) {
                 auto rand_gen = rand_pool.get_state();
-                FloatType r = static_cast<FloatType>(rand_gen.drand(0., 1.));
-                std::uint64_t lo = 0, hi = stacked_prob.size();
+                auto r = static_cast<FloatType>(rand_gen.drand(0., 1.));
+                std::uint64_t lo = 0;
+                std::uint64_t hi = stacked_prob.size();
                 while (hi - lo > 1) {
                     std::uint64_t mid = (lo + hi) / 2;
                     if (stacked_prob[mid] > r) {
@@ -327,7 +329,7 @@ std::string StateVector<Prec, Space>::to_string() const {
             [](std::uint64_t n, std::uint64_t len) {
                 std::string tmp;
                 while (len--) {
-                    tmp += ((n >> len) & 1) + '0';
+                    tmp += static_cast<char>(((n >> len) & 1U) + '0');
                 }
                 return tmp;
             }(i, _n_qubits)

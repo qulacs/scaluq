@@ -78,7 +78,7 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_ex
         Kokkos::TeamPolicy<ExecutionSpaceType>(_row_ptr.extent(0) - 1, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(const Kokkos::TeamPolicy<ExecutionSpaceType>::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
-            ComplexType res_lcl = 0;
+            ComplexType res_lcl{};
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadMDRange(
                     team, _row_ptr[batch_id + 1] - _row_ptr[batch_id], dim >> 1),
@@ -143,7 +143,7 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_tr
         Kokkos::TeamPolicy<ExecutionSpaceType>(_row_ptr.extent(0) - 1, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(const Kokkos::TeamPolicy<ExecutionSpaceType>::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
-            ComplexType res_lcl = 0;
+            ComplexType res_lcl{};
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadMDRange(
                     team, _row_ptr[batch_id + 1] - _row_ptr[batch_id], dim >> 1),
@@ -291,7 +291,9 @@ OperatorBatched<internal::Prec, internal::Space>::operator*(
     Kokkos::parallel_for(
         "operator*",
         Kokkos::RangePolicy<ExecutionSpaceType>(0, res._ops.extent(0)),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { res._ops[i] *= coef_view[i]; });
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i) {
+            res._ops[i] *= static_cast<StdComplex>(coef_view[i]);
+        });
     return res;
 }
 
@@ -307,7 +309,7 @@ OperatorBatched<internal::Prec, internal::Space>::operator*=(const std::vector<S
     Kokkos::parallel_for(
         "operator*=",
         Kokkos::RangePolicy<ExecutionSpaceType>(0, _ops.extent(0)),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _ops[i] *= coef_view[i]; });
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _ops[i] *= static_cast<StdComplex>(coef_view[i]); });
     return *this;
 }
 

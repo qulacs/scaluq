@@ -5,8 +5,8 @@ template <Precision Prec>
 Matrix2x2<Prec> get_IBMQ_matrix(Float<Prec> _theta, Float<Prec> _phi, Float<Prec> _lambda) {
     Complex<Prec> exp_val1 = internal::exp(Complex<Prec>(0, _phi));
     Complex<Prec> exp_val2 = internal::exp(Complex<Prec>(0, _lambda));
-    Complex<Prec> cos_val = internal::cos(_theta / Float<Prec>{2});
-    Complex<Prec> sin_val = internal::sin(_theta / Float<Prec>{2});
+    Complex<Prec> cos_val(internal::cos(_theta / Float<Prec>{2}));
+    Complex<Prec> sin_val(internal::sin(_theta / Float<Prec>{2}));
     return {
         {{{cos_val, -exp_val2 * sin_val}}, {{exp_val1 * sin_val, exp_val1 * exp_val2 * cos_val}}}};
 }
@@ -365,8 +365,8 @@ void rx_gate(std::uint64_t target_mask,
              StateVector<Prec, Space>& state) {
     const Float<Prec> cosval = internal::cos(angle / Float<Prec>{2});
     const Float<Prec> sinval = internal::sin(angle / Float<Prec>{2});
-    Matrix2x2<Prec> matrix = {
-        {{{cosval, Complex<Prec>(0, -sinval)}}, {{Complex<Prec>(0, -sinval), cosval}}}};
+    Matrix2x2<Prec> matrix = {{{{Complex<Prec>(cosval), Complex<Prec>(0, -sinval)}},
+                               {{Complex<Prec>(0, -sinval), Complex<Prec>(cosval)}}}};
     one_target_dense_matrix_gate(target_mask, control_mask, control_value_mask, matrix, state);
 }
 
@@ -378,8 +378,8 @@ void rx_gate(std::uint64_t target_mask,
              StateVectorBatched<Prec, Space>& states) {
     const Float<Prec> cosval = internal::cos(angle / Float<Prec>{2});
     const Float<Prec> sinval = internal::sin(angle / Float<Prec>{2});
-    Matrix2x2<Prec> matrix = {
-        {{{cosval, Complex<Prec>(0, -sinval)}}, {{Complex<Prec>(0, -sinval), cosval}}}};
+    Matrix2x2<Prec> matrix = {{{{Complex<Prec>(cosval), Complex<Prec>(0, -sinval)}},
+                               {{Complex<Prec>(0, -sinval), Complex<Prec>(cosval)}}}};
     one_target_dense_matrix_gate(target_mask, control_mask, control_value_mask, matrix, states);
 }
 
@@ -400,8 +400,8 @@ void rx_gate(std::uint64_t target_mask,
             const Float<Prec> angle = params(batch_id) * pcoef;
             const Float<Prec> cosval = internal::cos(angle / Float<Prec>{2});
             const Float<Prec> sinval = internal::sin(angle / Float<Prec>{2});
-            Matrix2x2<Prec> matrix = {
-                {{{cosval, Complex<Prec>(0, -sinval)}}, {{Complex<Prec>(0, -sinval), cosval}}}};
+            Matrix2x2<Prec> matrix = {{{{Complex<Prec>(cosval), Complex<Prec>(0, -sinval)}},
+                                       {{Complex<Prec>(0, -sinval), Complex<Prec>(cosval)}}}};
             Kokkos::parallel_for(
                 Kokkos::TeamThreadRange(team_member,
                                         states.dim() >> std::popcount(target_mask | control_mask)),
@@ -428,7 +428,8 @@ void ry_gate(std::uint64_t target_mask,
              StateVector<Prec, Space>& state) {
     const Float<Prec> cosval = internal::cos(angle / Float<Prec>{2});
     const Float<Prec> sinval = internal::sin(angle / Float<Prec>{2});
-    Matrix2x2<Prec> matrix = {{{{cosval, -sinval}}, {{sinval, cosval}}}};
+    Matrix2x2<Prec> matrix = {{{{Complex<Prec>(cosval), Complex<Prec>(-sinval)}},
+                               {{Complex<Prec>(sinval), Complex<Prec>(cosval)}}}};
     one_target_dense_matrix_gate(target_mask, control_mask, control_value_mask, matrix, state);
 }
 
@@ -440,7 +441,8 @@ void ry_gate(std::uint64_t target_mask,
              StateVectorBatched<Prec, Space>& states) {
     const Float<Prec> cosval = internal::cos(angle / Float<Prec>{2});
     const Float<Prec> sinval = internal::sin(angle / Float<Prec>{2});
-    Matrix2x2<Prec> matrix = {{{{cosval, -sinval}}, {{sinval, cosval}}}};
+    Matrix2x2<Prec> matrix = {{{{Complex<Prec>(cosval), Complex<Prec>(-sinval)}},
+                               {{Complex<Prec>(sinval), Complex<Prec>(cosval)}}}};
     one_target_dense_matrix_gate(target_mask, control_mask, control_value_mask, matrix, states);
 }
 
@@ -461,7 +463,8 @@ void ry_gate(std::uint64_t target_mask,
             const Float<Prec> angle = params(batch_id) * pcoef;
             const Float<Prec> cosval = internal::cos(angle / Float<Prec>{2});
             const Float<Prec> sinval = internal::sin(angle / Float<Prec>{2});
-            Matrix2x2<Prec> matrix = {{{{cosval, -sinval}}, {{sinval, cosval}}}};
+            Matrix2x2<Prec> matrix = {{{{Complex<Prec>(cosval), Complex<Prec>(-sinval)}},
+                                       {{Complex<Prec>(sinval), Complex<Prec>(cosval)}}}};
             Kokkos::parallel_for(
                 Kokkos::TeamThreadRange(team_member,
                                         states.dim() >> std::popcount(target_mask | control_mask)),

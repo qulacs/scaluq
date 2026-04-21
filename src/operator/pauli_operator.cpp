@@ -129,7 +129,8 @@ std::string PauliOperator<Prec>::get_pauli_string() const {
 
 template <Precision Prec>
 PauliOperator<Prec> PauliOperator<Prec>::get_dagger() const {
-    return PauliOperator(_bit_flip_mask, _phase_flip_mask, scaluq::internal::conj(_coef));
+    return PauliOperator(
+        _bit_flip_mask, _phase_flip_mask, static_cast<StdComplex>(scaluq::internal::conj(_coef)));
 }
 
 template <Precision Prec>
@@ -151,7 +152,7 @@ StdComplex PauliOperator<Prec>::get_expectation_value(
                 sum += tmp;
             },
             res);
-        return _coef * res;
+        return static_cast<StdComplex>(_coef * res);
     }
     std::uint64_t pivot = std::bit_width(bit_flip_mask) - 1;
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
@@ -262,7 +263,7 @@ StdComplex PauliOperator<Prec>::get_transition_amplitude(
                 sum += tmp;
             },
             internal::Sum<ComplexType, Space>(res));
-        return _coef * res;
+        return static_cast<StdComplex>(_coef * res);
     }
     std::uint64_t pivot = std::bit_width(bit_flip_mask) - 1;
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);

@@ -12,7 +12,7 @@ class Random {
     std::normal_distribution<double> normal_dist;
 
 public:
-    Random(std::uint64_t seed = std::random_device()())
+    explicit Random(std::uint64_t seed = std::random_device()())
         : mt(seed), uniform_dist(0, 1), normal_dist(0, 1) {}
 
     [[nodiscard]] double uniform() { return this->uniform_dist(this->mt); }

@@ -35,7 +35,7 @@ public:
         : _coef(coef), _bit_flip_mask(bit_flip_mask), _phase_flip_mask(phase_flip_mask) {}
 
     void set_coef(StdComplex c) { _coef = c; }
-    [[nodiscard]] StdComplex coef() const { return _coef; }
+    [[nodiscard]] StdComplex coef() const { return static_cast<StdComplex>(_coef); }
     [[nodiscard]] std::vector<std::uint64_t> target_qubit_list() const;
     [[nodiscard]] std::vector<std::uint64_t> pauli_id_list() const;
     [[nodiscard]] std::tuple<std::uint64_t, std::uint64_t> get_XZ_mask_representation() const {
@@ -93,12 +93,15 @@ public:
         extra_90rot_cnt -= Kokkos::popcount(z_left & y_right);  // ZY = -iX
         extra_90rot_cnt %= 4;
         if (extra_90rot_cnt < 0) extra_90rot_cnt += 4;
-        return PauliOperator(_bit_flip_mask ^ target._bit_flip_mask,
-                             _phase_flip_mask ^ target._phase_flip_mask,
-                             _coef * target._coef * internal::PHASE_90ROT<Prec>()[extra_90rot_cnt]);
+        return PauliOperator(
+            _bit_flip_mask ^ target._bit_flip_mask,
+            _phase_flip_mask ^ target._phase_flip_mask,
+            static_cast<StdComplex>(_coef * target._coef *
+                                    internal::PHASE_90ROT<Prec>()[extra_90rot_cnt]));
     }
     [[nodiscard]] KOKKOS_INLINE_FUNCTION PauliOperator operator*(StdComplex coef) const {
-        return PauliOperator(_bit_flip_mask, _phase_flip_mask, _coef * coef);
+        return PauliOperator(
+            _bit_flip_mask, _phase_flip_mask, static_cast<StdComplex>(_coef) * coef);
     }
     KOKKOS_INLINE_FUNCTION PauliOperator& operator*=(const PauliOperator& target) {
         *this = *this * target;
