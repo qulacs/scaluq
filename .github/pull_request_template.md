@@ -1,14 +1,14 @@
 <details>
 <summary>For external contributor</summary>
 
-~~~md
-Thanks for contributing scaluq!
-Please write in English or Japanese.
-PR title name example
-- new feature: 'Add function-name'
-- update: 'Update sample code'
-- bug: 'Fix bug-name'
-~~~
+Thanks for contributing Scaluq!  
+Please write in English or Japanese.  
+
+**PR title name examples**  
+- new feature: `Add function-name`
+- update: `Update sample code`
+- bug: `Fix bug-name`
+
 </details>
 
 ## Summary
