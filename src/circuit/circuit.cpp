@@ -49,6 +49,17 @@ std::uint64_t Circuit<Prec>::calculate_depth() const {
 }
 
 template <Precision Prec>
+void Circuit<Prec>::add_observable_rotation_gate(const std::vector<PauliOperator<Prec>>& observable,
+                                                 double theta,
+                                                 std::uint64_t split_num) {
+    for (uint64_t i = 0; i < split_num; ++i) {
+        for (auto term : observable) {
+            this->add_gate(gate::PauliRotation<Prec>(term, theta));
+        }
+    }
+}
+
+template <Precision Prec>
 void Circuit<Prec>::add_circuit(const Circuit<Prec>& circuit) {
     _gate_list.reserve(_gate_list.size() + circuit._gate_list.size());
     for (const auto& gate : circuit._gate_list) {
@@ -135,11 +146,13 @@ void Circuit<Prec>::update_quantum_state(
         }
         if (parameters.at(key).size() != states.batch_size()) {
             throw std::runtime_error(
-                "Circuit::update_quantum_state(StateVectorBatched&, const std::map<std::string, std::vector<double>>&): parameter size mismatch.");
+                "Circuit::update_quantum_state(StateVectorBatched&, const std::map<std::string, "
+                "std::vector<double>>&): parameter size mismatch.");
         }
     }
     std::mt19937_64 random_engine(seed);
-    internal::ExecutionContextBatched<Prec, Space> context{states, classical_register, random_engine};
+    internal::ExecutionContextBatched<Prec, Space> context{
+        states, classical_register, random_engine};
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0) {
             std::get<0>(gate)->update_quantum_state(context);
@@ -581,18 +594,21 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
                 const double cim = static_cast<double>(std::imag(c));
                 if (std::abs(cim) >= eps) {
                     throw std::runtime_error(
-                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be real.");
+                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be "
+                        "real.");
                 }
                 if (std::abs(cre) < std::numeric_limits<double>::epsilon()) {
                     throw std::runtime_error(
-                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be nonzero.");
+                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be "
+                        "nonzero.");
                 }
                 pauli_coef = cre;
             }
             const double scale = pgate->param_coef() * pauli_coef;
             if (std::abs(scale) < std::numeric_limits<double>::epsilon()) {
                 throw std::runtime_error(
-                    "Circuit::compute_expectation_gradient_backprop: param_coef * pauli_coef must be nonzero.");
+                    "Circuit::compute_expectation_gradient_backprop: param_coef * pauli_coef must "
+                    "be nonzero.");
             }
             pgate->update_quantum_state(Astate, -M_PI / scale);
             const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
