@@ -25,20 +25,7 @@ bool apply_measurement_update(StateVector<Prec, Space>& state,
                               std::mt19937_64& random_engine,
                               std::uint64_t target_mask,
                               bool reset) {
-    const std::uint64_t target = std::countr_zero(target_mask);
-    if (reset) {
-        const double zero_probability = state.get_zero_probability(target);
-        std::vector<std::uint64_t> one_values(state.n_qubits(),
-                                              StateVector<Prec, Space>::UNMEASURED);
-        one_values[target] = 1;
-        const double one_probability = state.get_marginal_probability(one_values);
-        if (zero_probability != 0.0 && one_probability != 0.0) {
-            throw std::runtime_error(
-                "MeasurementGate::update_quantum_state(): reset target qubit is neither |0> nor "
-                "|1>.");
-        }
-    }
-    const double zero_probability = state.get_zero_probability(target);
+    const double zero_probability = state.get_zero_probability(std::countr_zero(target_mask));
     std::bernoulli_distribution zero_distribution(zero_probability);
     const bool measured_zero = zero_distribution(random_engine);
     if (measured_zero) {
