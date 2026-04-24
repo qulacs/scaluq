@@ -2,13 +2,6 @@ name: Test Changed Files
 
 on:
   pull_request:
-    paths-ignore:
-      - ".devcontainer/**"
-      - ".vscode/**"
-      - "doc/**"
-      - "**/*.md"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/workflows/lint.yml"
 
 jobs:
   test:
