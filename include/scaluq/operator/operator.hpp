@@ -35,6 +35,7 @@ public:
     }
 
     [[nodiscard]] inline bool is_hermitian() const { return _is_hermitian; }
+    void force_hermitian() { _is_hermitian = true; }
     [[nodiscard]] inline std::vector<PauliOperator<Prec>> get_terms() const {
         return internal::convert_view_to_vector<PauliOperator<Prec>, Space>(_terms);
     }
@@ -274,6 +275,8 @@ void bind_operator_operator_hpp(nb::module_& m) {
             "mu"_a = std::nullopt,
             DocString()
                 .desc("Solve for the ground state using the Arnoldi method.")
+                .note("This works even if it is not Hermitian. An eigenvalue with the smallest "
+                      "real part is returned as the ground state.")
                 .arg("initial_state",
                      ":class:`StateVector`",
                      "Initial state vector for the iteration. Passing Haar_random_state is often "
