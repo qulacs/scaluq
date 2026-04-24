@@ -2,18 +2,35 @@ name: Format
 
 on:
   merge_group:
+  pull_request:
   push:
-    paths-ignore:
-      - ".devcontainer/**"
-      - ".vscode/**"
-      - "doc/**"
-      - "*.md"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/workflows/lint.yml"
+    branches:
+      - main
 
 jobs:
+  check-changed:
+    name: Check Changed Files
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-24.04
+    outputs:
+      any_changed: ${{ steps.check.outputs.any_changed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check relevant files
+        id: check
+        uses: tj-actions/changed-files@v47.0.1
+        with:
+          files: |
+            include/**
+            src/**
+            tests/**
+            python/**
+
   check-format:
     name: Check Format
+    needs: [check-changed]
+    if: ${{ !cancelled() && (needs.check-changed.result == 'skipped' || needs.check-changed.outputs.any_changed == 'true') }}
     runs-on: "ubuntu-24.04"
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +54,7 @@ jobs:
 
   format-check-passed:
     name: Format Check Passed
-    needs: [check-format]
+    needs: [check-changed, check-format]
     if: always()
     runs-on: ubuntu-24.04
     steps:

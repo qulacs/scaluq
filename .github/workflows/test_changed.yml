@@ -51,7 +51,7 @@ jobs:
       CMAKE_BUILD_TYPE: ${{ matrix.device == 'cuda' && 'Release' || 'Debug' }}
       SCALUQ_USE_TEST: "ON"
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
-      SCALUQ_CUDA_ARCH: "PASCAL61"
+      SCALUQ_CUDA_ARCH: "TURING75"
       SCALUQ_FLOAT16: ${{ matrix.compiler == 'clang' && 'OFF' || 'ON' }}
       SCALUQ_FLOAT32: "ON"
       SCALUQ_FLOAT64: "ON"
@@ -87,11 +87,11 @@ jobs:
         uses: tj-actions/changed-files@v47.0.1
         with:
           files: |
-            include/scaluq/**.hpp
-            src/**.hpp
-            src/**.cpp
-            tests/**.hpp
-            tests/**.cpp
+            include/scaluq/**/*.hpp
+            src/**/*.hpp
+            src/**/*.cpp
+            tests/**/*.hpp
+            tests/**/*.cpp
 
       - name: Install Ninja (Linux)
         if: ${{ (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') && matrix.os-arch == 'linux-x86_64' }}
@@ -161,3 +161,15 @@ jobs:
             NPROC=$(nproc)
           fi
           OMP_PROC_BIND=false ctest --test-dir build/ -j "${NPROC}" --output-on-failure
+
+  cpp-tests-passed:
+    name: C++ Tests Passed
+    needs: [test]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: All checks passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            exit 1
+          fi
