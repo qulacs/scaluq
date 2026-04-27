@@ -293,6 +293,35 @@ TYPED_TEST(CircuitTest, UpdateQuantumStateBatchedStoresMeasurementInClassicalReg
     EXPECT_TRUE(classical_register[1][1]);
 }
 
+TYPED_TEST(CircuitTest, ThrowsWhenGateTouchesMeasuredQubitWithoutReset) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Circuit<Prec> circuit;
+    circuit.add_gate(gate::Measurement<Prec>(0, 0));
+    circuit.add_gate(gate::X<Prec>(0));
+
+    StateVector<Prec, Space> state(1);
+    ClassicalRegister classical_register(1);
+
+    ASSERT_THROW(circuit.update_quantum_state(state, classical_register, {}, 0),
+                 std::runtime_error);
+}
+
+TYPED_TEST(CircuitTest, AllowsReusingQubitAfterResettingMeasurement) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Circuit<Prec> circuit;
+    circuit.add_gate(gate::Measurement<Prec>(0, 0, true));
+    circuit.add_gate(gate::X<Prec>(0));
+
+    StateVector<Prec, Space> state(1);
+    ClassicalRegister classical_register(1);
+
+    ASSERT_NO_THROW(circuit.update_quantum_state(state, classical_register, {}, 0));
+}
+
 TYPED_TEST(CircuitTest, OptimizeDoesNotMergeMeasurementGate) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
