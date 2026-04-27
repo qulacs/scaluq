@@ -14,7 +14,7 @@ std::string MeasurementGateImpl<Prec>::to_string(const std::string& indent) cons
     std::ostringstream ss;
     ss << indent << "Gate Type: Measurement\n";
     ss << indent << "  Classical Bit Index: " << _classical_bit_index << "\n";
-    ss << indent << "  Reset: " << (_reset ? "true" : "false") << "\n";
+    ss << indent << "  Reset: " << std::boolalpha << _reset << "\n";
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
