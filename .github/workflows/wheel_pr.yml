@@ -5,7 +5,7 @@ on:
 
 jobs:
   check-changed:
-    name: Check Changed Files
+    name: Check Changed Files (Wheel PR)
     runs-on: ubuntu-24.04
     outputs:
       any_changed: ${{ steps.check.outputs.any_changed }}
