@@ -815,6 +815,55 @@ TYPED_TEST(BatchedGateTest, ApplyProbabilisticGate) {
     }
 }
 
+TYPED_TEST(BatchedGateTest, ApplyMeasurementGate) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    StateVectorBatched<Prec, Space> states(BATCH_SIZE, 1);
+    std::vector<std::vector<StdComplex>> amplitudes(BATCH_SIZE, std::vector<StdComplex>(2, 0.));
+    ClassicalRegisterBatched classical_register(2, BATCH_SIZE);
+
+    for (std::size_t i = 0; i < BATCH_SIZE; ++i) {
+        amplitudes[i][i % 2] = 1.;
+    }
+    states.load(amplitudes);
+
+    gate::Measurement<Prec>(0, 1)->update_quantum_state(states, classical_register, 0);
+
+    const auto states_amp = states.get_amplitudes();
+    for (std::size_t i = 0; i < BATCH_SIZE; ++i) {
+        EXPECT_FALSE(classical_register[i][0]);
+        EXPECT_EQ(classical_register[i][1], static_cast<bool>(i % 2));
+        check_near<Prec>(states_amp[i][0], amplitudes[i][0]);
+        check_near<Prec>(states_amp[i][1], amplitudes[i][1]);
+    }
+}
+
+TYPED_TEST(BatchedGateTest, ApplyProbabilisticMeasurementGate) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    StateVectorBatched<Prec, Space> states(BATCH_SIZE, 1);
+    std::vector<std::vector<StdComplex>> amplitudes(BATCH_SIZE, std::vector<StdComplex>(2, 0.));
+    ClassicalRegisterBatched classical_register(2, BATCH_SIZE);
+
+    for (std::size_t i = 0; i < BATCH_SIZE; ++i) {
+        amplitudes[i][i % 2] = 1.;
+    }
+    states.load(amplitudes);
+
+    gate::Probabilistic<Prec>({1.0}, {gate::Measurement<Prec>(0, 1)})
+        ->update_quantum_state(states, classical_register, 1);
+
+    const auto states_amp = states.get_amplitudes();
+    for (std::size_t i = 0; i < BATCH_SIZE; ++i) {
+        EXPECT_FALSE(classical_register[i][0]);
+        EXPECT_EQ(classical_register[i][1], static_cast<bool>(i % 2));
+        check_near<Prec>(states_amp[i][0], amplitudes[i][0]);
+        check_near<Prec>(states_amp[i][1], amplitudes[i][1]);
+    }
+}
+
 template <Precision Prec, ExecutionSpace Space>
 void test_batched_gate(Gate<Prec> gate_control,
                        Gate<Prec> gate_simple,

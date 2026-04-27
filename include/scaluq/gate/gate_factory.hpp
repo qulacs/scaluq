@@ -2,6 +2,7 @@
 
 #include "../util/utility.hpp"
 #include "gate_matrix.hpp"
+#include "gate_measurement.hpp"
 #include "gate_pauli.hpp"
 #include "gate_probabilistic.hpp"
 #include "gate_standard.hpp"
@@ -172,6 +173,13 @@ inline Gate<Prec> P1(std::uint64_t target,
         internal::vector_to_mask({target}),
         internal::vector_to_mask(controls),
         internal::vector_to_mask(controls, control_values));
+}
+template <Precision Prec>
+inline Gate<Prec> Measurement(std::uint64_t target,
+                              std::uint64_t classical_bit,
+                              bool reset = false) {
+    return internal::GateFactory::create_gate<internal::MeasurementGateImpl<Prec>>(
+        internal::vector_to_mask({target}), classical_bit, reset);
 }
 template <Precision Prec>
 inline Gate<Prec> RX(std::uint64_t target,
@@ -741,6 +749,24 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                                        ">>> gate = P1(1, [0])  # Controlled-P1"}))
                   .build_as_google_style()
                   .c_str());
+    mgate.def(
+        "Measurement",
+        &gate::Measurement<Prec>,
+        "target"_a,
+        "classical_bit"_a,
+        "reset"_a = false,
+        DocString()
+            .desc("Generate computational-basis measurement gate.")
+            .note("Applying this gate requires a classical register whose size is greater than "
+                  "`classical_bit`. If `reset` is true, the target qubit is reset to |0> after "
+                  "the measurement.")
+            .arg("target", "int", "Target qubit index")
+            .arg("classical_bit", "int", "Destination classical bit index")
+            .arg("reset", "bool", true, "Whether to reset the target qubit to |0>")
+            .ret("Gate", "Measurement gate instance")
+            .ex(DocString::Code({">>> gate = Measurement(0, 1)"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def(
         "RX",
         &gate::RX<Prec>,
