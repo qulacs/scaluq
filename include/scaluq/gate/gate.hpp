@@ -50,6 +50,8 @@ class P0GateImpl;
 template <Precision Prec>
 class P1GateImpl;
 template <Precision Prec>
+class MeasurementGateImpl;
+template <Precision Prec>
 class RXGateImpl;
 template <Precision Prec>
 class RYGateImpl;
@@ -96,6 +98,7 @@ enum class GateType {
     SqrtYdag,
     P0,
     P1,
+    Measurement,
     RX,
     RY,
     RZ,
@@ -148,6 +151,8 @@ constexpr GateType get_gate_type() {
         return GateType::P0;
     else if constexpr (std::is_same_v<TWithoutConst, internal::P1GateImpl<Prec>>)
         return GateType::P1;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::MeasurementGateImpl<Prec>>)
+        return GateType::Measurement;
     else if constexpr (std::is_same_v<TWithoutConst, internal::RXGateImpl<Prec>>)
         return GateType::RX;
     else if constexpr (std::is_same_v<TWithoutConst, internal::RYGateImpl<Prec>>)
@@ -424,6 +429,7 @@ DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SqrtYGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SqrtYdagGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(P0GateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(P1GateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(MeasurementGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(RXGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(RYGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(RZGateImpl)
@@ -525,6 +531,7 @@ public:
         else if (type == "SqrtXdag") gate = GetGateFromJson<SqrtXdagGateImpl<Prec>>::get(j);
         else if (type == "SqrtY") gate = GetGateFromJson<SqrtYGateImpl<Prec>>::get(j);
         else if (type == "SqrtYdag") gate = GetGateFromJson<SqrtYdagGateImpl<Prec>>::get(j);
+        else if (type == "Measurement") gate = GetGateFromJson<MeasurementGateImpl<Prec>>::get(j);
         else if (type == "RX") gate = GetGateFromJson<RXGateImpl<Prec>>::get(j);
         else if (type == "RY") gate = GetGateFromJson<RYGateImpl<Prec>>::get(j);
         else if (type == "RZ") gate = GetGateFromJson<RZGateImpl<Prec>>::get(j);
@@ -948,6 +955,7 @@ void bind_gate_gate_hpp_without_precision_and_space(nb::module_& m) {
         .value("SqrtYdag", GateType::SqrtYdag)
         .value("P0", GateType::P0)
         .value("P1", GateType::P1)
+        .value("Measurement", GateType::Measurement)
         .value("RX", GateType::RX)
         .value("RY", GateType::RY)
         .value("RZ", GateType::RZ)
@@ -997,6 +1005,7 @@ nb::class_<SpecificGateT> bind_specific_gate(nb::module_& m,
 
 // Include all gate header files for the correct definition of concept GateImpl
 #include "./gate_matrix.hpp"
+#include "./gate_measurement.hpp"
 #include "./gate_pauli.hpp"
 #include "./gate_probabilistic.hpp"
 #include "./gate_standard.hpp"
