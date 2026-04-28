@@ -78,7 +78,7 @@ jobs:
           echo "OpenMP_ROOT=$(brew --prefix libomp)" >> "$GITHUB_ENV"
 
       - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2.20
+        uses: hendrikmuhs/ccache-action@v1.2.21
         with:
           key: "${{ matrix.os-arch }}-${{ matrix.compiler }}-${{ matrix.device }}"
           verbose: 2

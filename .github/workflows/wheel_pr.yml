@@ -67,7 +67,7 @@ jobs:
           python-version: "3.13"
 
       - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2.20
+        uses: hendrikmuhs/ccache-action@v1.2.21
         with:
           key: "${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.runs-on }}"
           save: false
