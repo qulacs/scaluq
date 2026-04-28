@@ -37,7 +37,7 @@ KOKKOS_INLINE_FUNCTION std::uint64_t insert_zero_at_mask_positions(std::uint64_t
          bit_mask &= (bit_mask - 1)) {  // loop through set bits
         std::uint64_t lower_mask = ~bit_mask & (bit_mask - 1);
         std::uint64_t upper_mask = ~lower_mask;
-        basis_index = ((basis_index & upper_mask) << 1) | (basis_index & lower_mask);
+        basis_index = ((basis_index & upper_mask) << 1U) | (basis_index & lower_mask);
     }
     return basis_index;
 }
@@ -51,7 +51,7 @@ inline std::uint64_t vector_to_mask(const std::vector<std::uint64_t>& indices) {
             if (x >= sizeof(std::uint64_t) * 8) [[unlikely]] {
                 throw std::runtime_error("The size of the qubit system must be less than 64.");
             }
-            if ((mask >> x) & 1) [[unlikely]] {
+            if ((mask >> x) & 1U) [[unlikely]] {
                 throw std::runtime_error("The specified qubit is duplicated.");
             }
         }
@@ -88,7 +88,7 @@ inline std::vector<std::uint64_t> mask_to_vector(std::uint64_t mask) {
 inline std::vector<std::uint64_t> mask_to_vector(std::uint64_t indices_mask, std::uint64_t mask) {
     std::vector<std::uint64_t> values;
     for (std::uint64_t sub_mask = indices_mask; sub_mask; sub_mask &= (sub_mask - 1)) {
-        values.push_back((mask >> std::countr_zero(sub_mask)) & 1);
+        values.push_back((mask >> static_cast<std::uint64_t>(std::countr_zero(sub_mask))) & 1U);
     }
     return values;
 }
@@ -214,7 +214,7 @@ inline ComplexMatrix transform_dense_matrix_by_order(const ComplexMatrix& mat,
         std::size_t row_src = transformed[i];
         for (std::size_t j = 0; j < matrix_size; j++) {
             std::size_t col_src = transformed[j];
-            ret(i, j) = mat(row_src, col_src);
+            ret(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j)) = mat(static_cast<Eigen::Index>(row_src), static_cast<Eigen::Index>(col_src));
         }
     }
     return ret;
@@ -230,14 +230,12 @@ inline SparseComplexMatrix transform_sparse_matrix_by_order(
 
 template <Precision Prec>
 constexpr double get_epsilon() {
-    if constexpr (Prec == Precision::F16)
+    if constexpr (Prec == Precision::F16 || Prec == Precision::BF16)
         return 1.;
     else if constexpr (Prec == Precision::F32)
         return 1e-4;
     else if constexpr (Prec == Precision::F64)
         return 1e-12;
-    else if constexpr (Prec == Precision::BF16)
-        return 1.;
     else
         static_assert(internal::lazy_false_v<internal::Float<Prec>>, "unknown Precision");
 }

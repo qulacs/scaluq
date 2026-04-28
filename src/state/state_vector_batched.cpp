@@ -91,7 +91,7 @@ void StateVectorBatched<Prec, Space>::set_computational_basis(std::uint64_t basi
 
 template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::set_zero_norm_state() {
-    Kokkos::deep_copy(_raw, 0.);
+    Kokkos::deep_copy(_raw, ComplexType{});
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -145,8 +145,9 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
             KOKKOS_CLASS_LAMBDA(std::uint64_t idx) {
                 std::uint64_t batch_id = batch_ids[idx];
                 auto rand_gen = rand_pool.get_state();
-                FloatType r = static_cast<FloatType>(rand_gen.drand(0., 1.));
-                std::uint64_t lo = 0, hi = stacked_prob.extent(1);
+                auto r = static_cast<FloatType>(rand_gen.drand(0., 1.));
+                std::uint64_t lo = 0;
+                std::uint64_t hi = stacked_prob.extent(1);
                 while (hi - lo > 1) {
                     std::uint64_t mid = (lo + hi) / 2;
                     if (stacked_prob(batch_id, mid) > r) {
@@ -293,7 +294,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_zero_probability(
             FloatType sum = 0;
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
-                Kokkos::TeamThreadRange(team, _dim >> 1),
+                Kokkos::TeamThreadRange(team, _dim >> 1U),
                 [&](std::uint64_t i, FloatType& lsum) {
                     std::uint64_t basis_0 =
                         internal::insert_zero_to_basis_index(i, target_qubit_index);
@@ -371,7 +372,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_marginal_probability(
 template <Precision Prec, ExecutionSpace Space>
 std::vector<double> StateVectorBatched<Prec, Space>::get_entropy() const {
     Kokkos::View<FloatType*, internal::SpaceType<Space>> ents("ents", _batch_size);
-    const FloatType eps = static_cast<FloatType>(1e-15);
+    const auto eps = static_cast<FloatType>(1e-15);
     Kokkos::parallel_for(
         "get_entropy",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
@@ -504,7 +505,7 @@ StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_reduced_state() co
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
             std::uint64_t i = team.league_rank();
-            ComplexType sum = 0;
+            ComplexType sum{};
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _batch_size),
                 [&](std::uint64_t b, ComplexType& lsum) { lsum += _raw(b, i); },
@@ -530,7 +531,7 @@ std::string StateVectorBatched<Prec, Space>::to_string() const {
                 [](std::uint64_t n, std::uint64_t len) {
                     std::string tmp;
                     while (len--) {
-                        tmp += ((n >> len) & 1) + '0';
+                        tmp += static_cast<char>(((n >> len) & 1U) + '0');
                     }
                     return tmp;
                 }(i, _n_qubits)

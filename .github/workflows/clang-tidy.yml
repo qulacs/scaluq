@@ -1,0 +1,48 @@
+name: clang-tidy
+
+on:
+  merge_group:
+  push:
+    paths-ignore:
+      - ".devcontainer/**"
+      - ".vscode/**"
+      - "doc/**"
+      - "**/*.md"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/workflows/lint.yml"
+
+jobs:
+  clang-tidy:
+    name: Run clang-tidy
+    runs-on: "ubuntu-24.04"
+    env:
+      CMAKE_C_COMPILER: "clang"
+      CMAKE_CXX_COMPILER: "clang++"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup cmake
+        uses: lukka/get-cmake@latest
+
+      - name: Install dependencies
+        run: sudo apt update && sudo apt install -y ninja-build libomp-dev
+
+      - name: Configure
+        run: |
+          script/configure
+
+      - name: Run clang-tidy
+        run: |
+          ninja -C build clang-tidy
+
+  clang-tidy-passed:
+    name: clang-tidy Passed
+    needs: [clang-tidy]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: All checks passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            exit 1
+          fi

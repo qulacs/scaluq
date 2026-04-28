@@ -7,20 +7,19 @@ namespace scaluq {
 
 template <Precision Prec, ExecutionSpace Space>
 class StateVectorBatched {
-    std::uint64_t _batch_size;
-    std::uint64_t _n_qubits;
-    std::uint64_t _dim;
+    std::uint64_t _batch_size{};
+    std::uint64_t _n_qubits{};
+    std::uint64_t _dim{};
     using FloatType = internal::Float<Prec>;
     using ComplexType = internal::Complex<Prec>;
     using ExecutionSpaceType = internal::SpaceType<Space>;
 
 public:
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight, ExecutionSpaceType> _raw;
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight, ExecutionSpaceType>
+        _raw;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+
     StateVectorBatched() = default;
     StateVectorBatched(std::uint64_t batch_size, std::uint64_t n_qubits);
-    StateVectorBatched(const StateVectorBatched& other) = default;
-
-    StateVectorBatched& operator=(const StateVectorBatched& other) = default;
 
     [[nodiscard]] std::uint64_t n_qubits() const { return this->_n_qubits; }
 

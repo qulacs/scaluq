@@ -74,7 +74,7 @@ ComplexMatrix convert_csr_to_external_matrix<Prec, Space>(SparseMatrix<Prec, Spa
     auto row_ptr = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), mat._row_ptr);
     for (std::uint32_t i = 0; i < mat._rows; ++i) {
         for (std::uint32_t idx = row_ptr[i]; idx < row_ptr[i + 1]; ++idx) {
-            eigen_matrix(i, col_idx[idx]) = vals[idx];
+            eigen_matrix(i, col_idx[idx]) = static_cast<StdComplex>(vals[idx]);
         }
     }
     return eigen_matrix;

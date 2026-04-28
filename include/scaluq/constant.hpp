@@ -71,7 +71,8 @@ KOKKOS_INLINE_FUNCTION Matrix2x2<Prec> T_DAG_GATE_MATRIX() {
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Matrix2x2<Prec> HADAMARD_MATRIX() {
     Float<Prec> ISQRT2 = static_cast<Float<Prec>>(INVERSE_SQRT2());
-    return {{{{ISQRT2, ISQRT2}}, {{ISQRT2, -ISQRT2}}}};
+    return {{{{Complex<Prec>(ISQRT2), Complex<Prec>(ISQRT2)}},
+             {{Complex<Prec>(ISQRT2), Complex<Prec>(-ISQRT2)}}}};
 }
 //! square root of X gate
 template <Precision Prec>
@@ -100,22 +101,24 @@ KOKKOS_INLINE_FUNCTION Matrix2x2<Prec> SQRT_Y_DAG_GATE_MATRIX() {
 //! Projection to 0
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Matrix2x2<Prec> PROJ_0_MATRIX() {
-    return {{{{1, 0}}, {{0, 0}}}};
+    return {{{{Complex<Prec>(1, 0), Complex<Prec>(0, 0)}},
+             {{Complex<Prec>(0, 0), Complex<Prec>(0, 0)}}}};
 }
 //! Projection to 1
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Matrix2x2<Prec> PROJ_1_MATRIX() {
-    return {{{{0, 0}}, {{0, 1}}}};
+    return {{{{Complex<Prec>(0, 0), Complex<Prec>(0, 0)}},
+             {{Complex<Prec>(0, 0), Complex<Prec>(1, 0)}}}};
 }
 //! complex values for exp(j * i*pi/4 )
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Kokkos::Array<Complex<Prec>, 4> PHASE_90ROT() {
-    return {1, Complex<Prec>(0, 1), -1, Complex<Prec>(0, -1)};
+    return {Complex<Prec>(1, 0), Complex<Prec>(0, 1), Complex<Prec>(-1, 0), Complex<Prec>(0, -1)};
 }
 //! complex values for exp(-j * i*pi/4 )
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Kokkos::Array<Complex<Prec>, 4> PHASE_M90ROT() {
-    return {1, Complex<Prec>(0, -1), -1, Complex<Prec>(0, 1)};
+    return {Complex<Prec>(1, 0), Complex<Prec>(0, -1), Complex<Prec>(-1, 0), Complex<Prec>(0, 1)};
 }
 }  // namespace internal
 }  // namespace scaluq

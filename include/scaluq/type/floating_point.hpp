@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <limits>
 #include <type_traits>
 
@@ -14,7 +15,7 @@
 #endif
 
 namespace scaluq {
-enum class Precision { F16, F32, F64, BF16 };
+enum class Precision : std::uint8_t { F16, F32, F64, BF16 };
 }  // namespace scaluq
 
 namespace scaluq::internal {
@@ -100,5 +101,5 @@ constexpr bool IsFloatingPointV = IsFloatingPoint<T>::value;
 template <typename T>
 concept FloatingPoint = IsFloatingPointV<T>;
 template <Precision Prec>
-using Float = FloatTypeImpl<Prec>::Type;
+using Float = typename FloatTypeImpl<Prec>::Type;
 };  // namespace scaluq::internal

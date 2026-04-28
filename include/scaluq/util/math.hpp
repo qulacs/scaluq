@@ -141,10 +141,10 @@ private:
 
 public:
     KOKKOS_INLINE_FUNCTION
-    Sum(value_type& value_) : value(&value_), references_scalar_v(true) {}
+    explicit Sum(value_type& value_) : value(&value_), references_scalar_v(true) {}
 
     KOKKOS_INLINE_FUNCTION
-    Sum(const result_view_type& value_) : value(value_), references_scalar_v(false) {}
+    explicit Sum(const result_view_type& value_) : value(value_), references_scalar_v(false) {}
 
     // Required
     KOKKOS_INLINE_FUNCTION
