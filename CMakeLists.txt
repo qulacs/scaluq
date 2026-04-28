@@ -35,11 +35,15 @@ endif(NOT DEFINED SCALUQ_FLOAT64)
 if(NOT DEFINED SCALUQ_BFLOAT16)
     set(SCALUQ_BFLOAT16 OFF)
 endif(NOT DEFINED SCALUQ_BFLOAT16)
+if(NOT DEFINED SCALUQ_STATIC_ANALYSIS)
+    set(SCALUQ_STATIC_ANALYSIS OFF)
+endif(NOT DEFINED SCALUQ_STATIC_ANALYSIS)
 
 message(STATUS "CMAKE_C_COMPILER = ${CMAKE_C_COMPILER}")
 message(STATUS "CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER}")
 message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 message(STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "CMAKE_EXPORT_COMPILE_COMMANDS = ${CMAKE_EXPORT_COMPILE_COMMANDS}")
 message(STATUS "SCALUQ_USE_OMP = ${SCALUQ_USE_OMP}")
 message(STATUS "SCALUQ_USE_CUDA = ${SCALUQ_USE_CUDA}")
 message(STATUS "SCALUQ_CPU_NATIVE = ${SCALUQ_CPU_NATIVE}")
@@ -51,6 +55,7 @@ message(STATUS "SCALUQ_FLOAT64 = ${SCALUQ_FLOAT64}")
 message(STATUS "SCALUQ_BFLOAT16 = ${SCALUQ_BFLOAT16}")
 message(STATUS "SCALUQ_USE_TEST = ${SCALUQ_USE_TEST}")
 message(STATUS "SCALUQ_USE_EXE = ${SCALUQ_USE_EXE}")
+message(STATUS "SCALUQ_STATIC_ANALYSIS = ${SCALUQ_STATIC_ANALYSIS}")
 
 ### Check compiler compatibility ###
 if(NOT CMAKE_C_COMPILER_ID STREQUAL CMAKE_CXX_COMPILER_ID)
@@ -143,6 +148,12 @@ else()
     message(STATUS "Skip downloading googletest")
 endif(SCALUQ_USE_TEST)
 
+### Static analysis options ###
+if(SCALUQ_STATIC_ANALYSIS)
+    add_compile_definitions(SCALUQ_STATIC_ANALYSIS)
+    set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+endif()
+
 set(SCALUQ_LIBRARIES)
 list(APPEND SCALUQ_LIBRARIES scaluq_base)
 add_library(scaluq_base)
@@ -187,6 +198,10 @@ list_max_idx(SCALUQ_SPACE_VALUES space_max_idx)
 foreach(space_idx RANGE 0 ${space_max_idx})
     list(GET SCALUQ_SPACE_NAMES ${space_idx} SPACE)
     list(GET SCALUQ_SPACE_VALUES ${space_idx} SPACE_VALUE)
+
+    if(SCALUQ_STATIC_ANALYSIS AND NOT SPACE_VALUE STREQUAL "Default")
+        continue()
+    endif()
 
     foreach(precision_idx RANGE 0 ${precision_max_idx})
         list(GET SCALUQ_PRECISION_DEFINITIONS ${precision_idx} DEF)
@@ -281,6 +296,29 @@ if(SKBUILD)
         DEPENDS scaluq_core
     )
 endif(SKBUILD)
+
+# clang-tidy
+find_program(CLANG_TIDY "clang-tidy")
+if(CLANG_TIDY)
+    file(GLOB_RECURSE ALL_CXX_TIDY_SOURCE_FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+    )
+    set(_tidy_commands "")
+    foreach(_src ${ALL_CXX_TIDY_SOURCE_FILES})
+        list(APPEND _tidy_commands
+            COMMAND ${CMAKE_COMMAND} -E echo "[clang-tidy] ${_src}"
+            COMMAND ${CLANG_TIDY} -p=${CMAKE_BINARY_DIR} ${_src}
+        )
+    endforeach()
+    add_custom_target(
+        clang-tidy
+        # workaround for https://gitlab.kitware.com/cmake/cmake/-/work_items/25657 : remove unintentionally inserted modmap
+        COMMAND sed -i 's/@[^ ]*\\.modmap//g' ${CMAKE_BINARY_DIR}/compile_commands.json
+        ${_tidy_commands}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        USES_TERMINAL
+    )
+endif()
 
 # format
 find_program(CLANG_FORMAT "clang-format")
