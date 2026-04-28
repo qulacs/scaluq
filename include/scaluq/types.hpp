@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Eigen/Core>
-#include <Eigen/Sparse>
 #include <Kokkos_Core.hpp>
 #include <complex>
 #include <cstdint>
@@ -9,6 +7,7 @@
 
 #include "kokkos.hpp"
 #include "type/complex.hpp"
+#include "type/eigen_types.hpp"
 #include "type/floating_point.hpp"
 
 namespace scaluq {
@@ -20,9 +19,6 @@ enum class ExecutionSpace { Host, HostSerial, Default };
 #else
 enum class ExecutionSpace { Host, HostSerial, Default = Host };
 #endif
-
-using ComplexMatrix = Eigen::Matrix<StdComplex, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
-using SparseComplexMatrix = Eigen::SparseMatrix<StdComplex, Eigen::RowMajor>;
 
 namespace internal {
 template <ExecutionSpace Space>
@@ -94,6 +90,21 @@ struct adl_serializer<::scaluq::StdComplex> {
     }
 };
 
+#ifdef SCALUQ_STATIC_ANALYSIS
+// Stub serializers so inline call-sites like
+//   j = Json{..., {"matrix", this->get_matrix()}};
+// still type-check without including full Eigen.
+template <>
+struct adl_serializer<::scaluq::ComplexMatrix> {
+    static void to_json(json&, const ::scaluq::ComplexMatrix&) {}
+    static void from_json(const json&, ::scaluq::ComplexMatrix&) {}
+};
+template <>
+struct adl_serializer<::scaluq::SparseComplexMatrix> {
+    static void to_json(json&, const ::scaluq::SparseComplexMatrix&) {}
+    static void from_json(const json&, ::scaluq::SparseComplexMatrix&) {}
+};
+#else
 template <>
 struct adl_serializer<::scaluq::ComplexMatrix> {
     static void to_json(json& j, const ::scaluq::ComplexMatrix& value) {
@@ -128,11 +139,13 @@ struct adl_serializer<::scaluq::SparseComplexMatrix> {
         j["rows"] = value.rows();
         j["cols"] = value.cols();
         json triplets = json::array();
-        for (std::uint64_t row_idx = 0; row_idx < static_cast<std::uint64_t>(value.outerSize());
+        for (std::uint64_t row_idx = 0;
+             row_idx < static_cast<std::uint64_t>(value.outerSize());
              ++row_idx) {
-            for (typename ::scaluq::SparseComplexMatrix::InnerIterator it(value, row_idx); it;
-                 ++it) {
-                triplets.push_back({{"row", it.row()}, {"col", it.col()}, {"val", it.value()}});
+            for (typename ::scaluq::SparseComplexMatrix::InnerIterator it(value, row_idx);
+                 it; ++it) {
+                triplets.push_back(
+                    {{"row", it.row()}, {"col", it.col()}, {"val", it.value()}});
             }
         }
         j["triplets"] = triplets;
@@ -150,6 +163,7 @@ struct adl_serializer<::scaluq::SparseComplexMatrix> {
         value.setFromTriplets(triplets.begin(), triplets.end());
     }
 };
+#endif
 }  // namespace nlohmann
 
 #ifdef SCALUQ_USE_NANOBIND
