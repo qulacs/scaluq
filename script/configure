@@ -6,6 +6,7 @@ variables="CMAKE_C_COMPILER \
   CMAKE_CXX_COMPILER \
   CMAKE_BUILD_TYPE \
   CMAKE_INSTALL_PREFIX \
+  CMAKE_EXPORT_COMPILE_COMMANDS \
   SCALUQ_USE_OMP \
   SCALUQ_USE_CUDA \
   SCALUQ_CPU_NATIVE \
@@ -17,7 +18,8 @@ variables="CMAKE_C_COMPILER \
   SCALUQ_FLOAT32 \
   SCALUQ_FLOAT64 \
   SCALUQ_BFLOAT16 \
-  SCALUQ_TEST_SOURCES"
+  SCALUQ_TEST_SOURCES \
+  SCALUQ_STATIC_ANALYSIS"
 
 CMAKE_OPS=""
 for var in $variables; do
@@ -28,4 +30,4 @@ for var in $variables; do
 done
 
 mkdir -p ./build
-cmake -B build -G Ninja ${CMAKE_OPS}
+cmake -B ${BUILD:-build} -G Ninja ${CMAKE_OPS}

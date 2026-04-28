@@ -7,6 +7,10 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
     )
     target_include_directories(${LIBRARY} PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
     target_include_directories(${LIBRARY} PRIVATE ${eigen_SOURCE_DIR})
+    if(SCALUQ_STATIC_ANALYSIS)
+        target_include_directories(${LIBRARY} BEFORE PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/analysis_stubs)
+    endif()
     if(${LIBRARY} STREQUAL scaluq_base)
         target_sources(${LIBRARY} PRIVATE
             base/kokkos.cpp
