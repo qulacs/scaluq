@@ -50,15 +50,25 @@ std::uint64_t Circuit<Prec>::calculate_depth() const {
 template <Precision Prec>
 void Circuit<Prec>::add_circuit(const Circuit<Prec>& circuit) {
     _gate_list.reserve(_gate_list.size() + circuit._gate_list.size());
+    _classical_conditions.reserve(_classical_conditions.size() +
+                                  circuit._classical_conditions.size());
     for (const auto& gate : circuit._gate_list) {
         _gate_list.push_back(gate);
+    }
+    for (const auto& condition : circuit._classical_conditions) {
+        _classical_conditions.push_back(condition);
     }
 }
 template <Precision Prec>
 void Circuit<Prec>::add_circuit(Circuit<Prec>&& circuit) {
     _gate_list.reserve(_gate_list.size() + circuit._gate_list.size());
+    _classical_conditions.reserve(_classical_conditions.size() +
+                                  circuit._classical_conditions.size());
     for (auto&& gate : circuit._gate_list) {
         _gate_list.push_back(std::move(gate));
+    }
+    for (auto&& condition : circuit._classical_conditions) {
+        _classical_conditions.push_back(std::move(condition));
     }
 }
 
@@ -67,6 +77,11 @@ template <ExecutionSpace Space>
 void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
                                          const std::map<std::string, double>& parameters,
                                          std::uint64_t seed) const {
+    if (has_classical_instructions()) {
+        throw std::runtime_error(
+            "Circuit::update_quantum_state(StateVector&, ...): a classical register is required "
+            "when the circuit contains measurement or classically controlled instructions.");
+    }
     ClassicalRegister classical_register(0);
     update_quantum_state(state, classical_register, parameters, seed);
 }
@@ -90,7 +105,12 @@ void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
     }
     std::mt19937_64 random_engine(seed);
     internal::ExecutionContext<Prec, Space> context{state, classical_register, random_engine};
-    for (auto&& gate : _gate_list) {
+    for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
+        if (_classical_conditions[idx].has_value() &&
+            !_classical_conditions[idx].value()(classical_register)) {
+            continue;
+        }
+        auto&& gate = _gate_list[idx];
         if (gate.index() == 0) {
             std::get<0>(gate)->update_quantum_state(context);
         } else {
@@ -106,6 +126,12 @@ void Circuit<Prec>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states,
     const std::map<std::string, std::vector<double>>& parameters,
     std::uint64_t seed) const {
+    if (has_classical_instructions()) {
+        throw std::runtime_error(
+            "Circuit::update_quantum_state(StateVectorBatched&, ...): a classical register is "
+            "required when the circuit contains measurement or classically controlled "
+            "instructions.");
+    }
     ClassicalRegisterBatched classical_register(0, states.batch_size());
     update_quantum_state(states, classical_register, parameters, seed);
 }
@@ -134,12 +160,31 @@ void Circuit<Prec>::update_quantum_state(
         }
         if (parameters.at(key).size() != states.batch_size()) {
             throw std::runtime_error(
-                "Circuit::update_quantum_state(StateVectorBatched&, const std::map<std::string, std::vector<double>>&): parameter size mismatch.");
+                "Circuit::update_quantum_state(StateVectorBatched&, const std::map<std::string, "
+                "std::vector<double>>&): parameter size mismatch.");
         }
     }
     std::mt19937_64 random_engine(seed);
-    internal::ExecutionContextBatched<Prec, Space> context{states, classical_register, random_engine};
-    for (auto&& gate : _gate_list) {
+    internal::ExecutionContextBatched<Prec, Space> context{
+        states, classical_register, random_engine};
+    for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
+        auto&& gate = _gate_list[idx];
+        if (_classical_conditions[idx].has_value()) {
+            for (std::uint64_t batch_index = 0; batch_index < states.batch_size(); ++batch_index) {
+                auto& reg = classical_register[batch_index];
+                if (!_classical_conditions[idx].value()(reg)) continue;
+                auto state = states.view_state_vector_at(batch_index);
+                internal::ExecutionContext<Prec, Space> state_context{state, reg, random_engine};
+                if (gate.index() == 0) {
+                    std::get<0>(gate)->update_quantum_state(state_context);
+                } else {
+                    const auto& [param_gate, key] = std::get<1>(gate);
+                    param_gate->update_quantum_state(state_context,
+                                                     parameters.at(key)[batch_index]);
+                }
+            }
+            continue;
+        }
         if (gate.index() == 0) {
             std::get<0>(gate)->update_quantum_state(context);
         } else {
@@ -220,6 +265,7 @@ Circuit<Prec> Circuit<Prec>::copy() const {
             ccircuit._gate_list.push_back(std::make_pair(param_gate, key));
         }
     }
+    ccircuit._classical_conditions = _classical_conditions;
     return ccircuit;
 }
 
@@ -227,13 +273,17 @@ template <Precision Prec>
 Circuit<Prec> Circuit<Prec>::get_inverse() const {
     Circuit<Prec> icircuit;
     icircuit._gate_list.reserve(_gate_list.size());
-    for (auto&& gate : _gate_list | std::views::reverse) {
+    icircuit._classical_conditions.reserve(_classical_conditions.size());
+    for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
+        auto&& gate = _gate_list[_gate_list.size() - 1 - idx];
         if (gate.index() == 0)
             icircuit._gate_list.push_back(std::get<0>(gate)->get_inverse());
         else {
             const auto& [param_gate, key] = std::get<1>(gate);
             icircuit._gate_list.push_back(std::make_pair(param_gate->get_inverse(), key));
         }
+        icircuit._classical_conditions.push_back(
+            _classical_conditions[_classical_conditions.size() - 1 - idx]);
     }
     return icircuit;
 }
@@ -242,6 +292,7 @@ template <Precision Prec>
 template <ExecutionSpace Space>
 void Circuit<Prec>::optimize(std::uint64_t max_block_size) {
     std::vector<GateWithKey> new_gate_list;  // result
+    std::vector<std::optional<ClassicalCondition>> new_classical_conditions;
     double global_phase = 0.;
     std::vector<Gate<Prec>> gate_pool;  // waitlist for merge or push
     constexpr std::uint64_t NO_GATES = std::numeric_limits<std::uint64_t>::max();
@@ -255,12 +306,14 @@ void Circuit<Prec>::optimize(std::uint64_t max_block_size) {
         else
             return std::get<1>(gate_with_key).first->operand_qubit_list();
     };
-    auto push = [&](const GateWithKey& gate_with_key) {
+    auto push = [&](const GateWithKey& gate_with_key,
+                    std::optional<ClassicalCondition> condition = std::nullopt) {
         // clear waitlist and push gate to result
         for (std::uint64_t operand : get_operand_list(gate_with_key)) {
             waiting_gate_idx_at_qubit[operand] = NO_GATES;
         }
         new_gate_list.push_back(gate_with_key);
+        new_classical_conditions.push_back(std::move(condition));
     };
     auto wait = [&](const Gate<Prec>& gate) {
         // wait for merge or push
@@ -295,13 +348,15 @@ void Circuit<Prec>::optimize(std::uint64_t max_block_size) {
         return newly_applied_qubits;
     };
 
-    for (const GateWithKey& gate_with_key : _gate_list) {
-        if (gate_with_key.index() == 1 ||
+    for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
+        const GateWithKey& gate_with_key = _gate_list[idx];
+        const auto& classical_condition = _classical_conditions[idx];
+        if (classical_condition.has_value() || gate_with_key.index() == 1 ||
             std::get<0>(gate_with_key).gate_type() == GateType::Probabilistic ||
             std::get<0>(gate_with_key).gate_type() == GateType::Measurement) {
             // ParamGate, Probabilistic, and Measurement cannot be merged with others
             push_waiting_gates(gate_with_key);
-            push(gate_with_key);
+            push(gate_with_key, classical_condition);
             continue;
         }
         const Gate<Prec>& gate = std::get<0>(gate_with_key);
@@ -385,10 +440,11 @@ void Circuit<Prec>::optimize(std::uint64_t max_block_size) {
                                        finally_waiting_gate_indices.end());
     for (std::uint64_t idx : finally_waiting_gate_indices) {
         new_gate_list.push_back(gate_pool[idx]);
+        new_classical_conditions.push_back(std::nullopt);
     }
-    if (std::abs(global_phase) > 1e-12)
-        new_gate_list.push_back(gate::GlobalPhase<Prec>(global_phase));
+    if (std::abs(global_phase) > 1e-12) push(gate::GlobalPhase<Prec>(global_phase));
     _gate_list.swap(new_gate_list);
+    _classical_conditions.swap(new_classical_conditions);
 }
 template void Circuit<internal::Prec>::optimize<ExecutionSpace::Host>(std::uint64_t max_block_size);
 template void Circuit<internal::Prec>::optimize<ExecutionSpace::HostSerial>(
@@ -542,6 +598,17 @@ void Circuit<Prec>::check_state_vector_n_qubits(std::uint64_t n_qubits) const {
         throw std::runtime_error(
             "Circuit::update_quantum_state: state does not have enough qubits for this circuit.");
     }
+}
+
+template <Precision Prec>
+bool Circuit<Prec>::has_classical_instructions() const {
+    if (std::ranges::any_of(_classical_conditions,
+                            [](const auto& condition) { return condition.has_value(); })) {
+        return true;
+    }
+    return std::ranges::any_of(_gate_list, [](const GateWithKey& gate) {
+        return gate.index() == 0 && std::get<0>(gate).gate_type() == GateType::Measurement;
+    });
 }
 
 template <Precision Prec>

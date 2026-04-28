@@ -1,10 +1,15 @@
 #pragma once
 
+#include <algorithm>
 #include <bit>
+#include <functional>
 #include <map>
+#include <optional>
 #include <random>
 #include <set>
+#include <string>
 #include <string_view>
+#include <unordered_map>
 #include <variant>
 
 #include "../classical_register/classical_register.hpp"
@@ -15,6 +20,8 @@
 #include "../types.hpp"
 
 namespace scaluq {
+
+using ClassicalCondition = std::function<bool(const ClassicalRegister&)>;
 
 template <Precision Prec>
 class Circuit {
@@ -40,12 +47,53 @@ public:
         if (gate.index() == 0) return std::nullopt;
         return std::get<1>(gate).second;
     }
+    [[nodiscard]] inline std::optional<ClassicalCondition> get_classical_condition_at(
+        std::uint64_t idx) const {
+        if (idx >= _gate_list.size()) {
+            throw std::runtime_error(
+                "Circuit::get_classical_condition_at(std::uint64_t): index out of bounds");
+        }
+        return _classical_conditions[idx];
+    }
 
     [[nodiscard]] std::uint64_t calculate_depth() const;
 
-    void add_gate(const Gate<Prec>& gate) { _gate_list.push_back(gate); }
+    void add_gate(const Gate<Prec>& gate) {
+        _gate_list.push_back(gate);
+        _classical_conditions.push_back(std::nullopt);
+    }
     void add_param_gate(const ParamGate<Prec>& param_gate, std::string_view parameter_key) {
         _gate_list.push_back(std::make_pair(param_gate, std::string(parameter_key)));
+        _classical_conditions.push_back(std::nullopt);
+    }
+    void add_conditional_gate(const Gate<Prec>& gate, ClassicalCondition condition) {
+        add_gate(gate);
+        _classical_conditions.back() = std::move(condition);
+    }
+    void add_conditional_gate(const Gate<Prec>& gate,
+                              std::uint64_t classical_bit_index,
+                              bool expected_value) {
+        add_conditional_gate(gate,
+                             [classical_bit_index, expected_value](const ClassicalRegister& reg) {
+                                 return reg[classical_bit_index] == expected_value;
+                             });
+    }
+    void add_conditional_param_gate(const ParamGate<Prec>& param_gate,
+                                    std::string_view parameter_key,
+                                    ClassicalCondition condition) {
+        add_param_gate(param_gate, parameter_key);
+        _classical_conditions.back() = std::move(condition);
+    }
+    void add_conditional_param_gate(const ParamGate<Prec>& param_gate,
+                                    std::string_view parameter_key,
+                                    std::uint64_t classical_bit_index,
+                                    bool expected_value) {
+        add_conditional_param_gate(
+            param_gate,
+            parameter_key,
+            [classical_bit_index, expected_value](const ClassicalRegister& reg) {
+                return reg[classical_bit_index] == expected_value;
+            });
     }
 
     void add_circuit(const Circuit<Prec>& circuit);
@@ -79,7 +127,12 @@ public:
 
     friend void to_json(Json& j, const Circuit& circuit) {
         j = Json{{"gate_list", Json::array()}};
-        for (auto&& gate : circuit.gate_list()) {
+        for (std::uint64_t idx = 0; idx < circuit.gate_list().size(); ++idx) {
+            if (circuit._classical_conditions[idx].has_value()) {
+                throw std::runtime_error(
+                    "Circuit::to_json: classically controlled instructions cannot be serialized.");
+            }
+            const auto& gate = circuit.gate_list()[idx];
             if (gate.index() == 0)
                 j["gate_list"].emplace_back(Json{{"gate", std::get<0>(gate)}});
             else
@@ -123,8 +176,10 @@ public:
 
 private:
     std::vector<GateWithKey> _gate_list;
+    std::vector<std::optional<ClassicalCondition>> _classical_conditions;
 
     [[nodiscard]] std::uint64_t required_n_qubits() const;
+    [[nodiscard]] bool has_classical_instructions() const;
     void check_state_vector_n_qubits(std::uint64_t n_qubits) const;
 };
 
@@ -323,17 +378,49 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
              &Circuit<Prec>::get_param_key_at,
              "index"_a,
              "Get parameter key of i-th gate. If it is not parametric, return None.")
+        .def("get_classical_condition_at",
+             &Circuit<Prec>::get_classical_condition_at,
+             "index"_a,
+             "Get classical condition of i-th gate. If it is not conditional, return None.")
         .def("calculate_depth", &Circuit<Prec>::calculate_depth, "Get depth of circuit.")
         .def("add_gate",
              nb::overload_cast<const Gate<Prec>&>(&Circuit<Prec>::add_gate),
              "gate"_a,
              "Add gate. Given gate is copied.")
+        .def("add_conditional_gate",
+             nb::overload_cast<const Gate<Prec>&, ClassicalCondition>(
+                 &Circuit<Prec>::add_conditional_gate),
+             "gate"_a,
+             "condition"_a,
+             "Add gate with a user-defined classical condition.")
+        .def("add_conditional_gate",
+             nb::overload_cast<const Gate<Prec>&, std::uint64_t, bool>(
+                 &Circuit<Prec>::add_conditional_gate),
+             "gate"_a,
+             "classical_bit_index"_a,
+             "expected_value"_a,
+             "Add gate with a condition on a classical bit.")
         .def("add_param_gate",
              nb::overload_cast<const ParamGate<Prec>&, std::string_view>(
                  &Circuit<Prec>::add_param_gate),
              "param_gate"_a,
              "param_key"_a,
              "Add parametric gate with specifying key. Given param_gate is copied.")
+        .def("add_conditional_param_gate",
+             nb::overload_cast<const ParamGate<Prec>&, std::string_view, ClassicalCondition>(
+                 &Circuit<Prec>::add_conditional_param_gate),
+             "param_gate"_a,
+             "param_key"_a,
+             "condition"_a,
+             "Add parametric gate with a user-defined classical condition.")
+        .def("add_conditional_param_gate",
+             nb::overload_cast<const ParamGate<Prec>&, std::string_view, std::uint64_t, bool>(
+                 &Circuit<Prec>::add_conditional_param_gate),
+             "param_gate"_a,
+             "param_key"_a,
+             "classical_bit_index"_a,
+             "expected_value"_a,
+             "Add parametric gate with a condition on a classical bit.")
         .def("add_circuit",
              nb::overload_cast<const Circuit<Prec>&>(&Circuit<Prec>::add_circuit),
              "other"_a,
