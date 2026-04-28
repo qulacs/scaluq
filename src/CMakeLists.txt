@@ -1,7 +1,13 @@
 cmake_minimum_required(VERSION 3.24)
 
+if(NOT SCALUQ_STATIC_ANALYSIS)
+    # scaluq_pch.cpp provides explicit instantiation definitions; the PCH (which contains
+    # extern template declarations) must NOT be injected into it.
+    set_source_files_properties(scaluq_pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+endif()
+
 foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
-    target_link_libraries(${LIBRARY} PUBLIC 
+    target_link_libraries(${LIBRARY} PUBLIC
         Kokkos::kokkos
         nlohmann_json::nlohmann_json
     )
@@ -17,6 +23,11 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
             base/util/utility.cpp
         )
     else()
+        if(NOT SCALUQ_STATIC_ANALYSIS)
+            target_precompile_headers(${LIBRARY} PRIVATE
+                "${CMAKE_CURRENT_SOURCE_DIR}/scaluq_pch.hpp")
+            target_sources(${LIBRARY} PRIVATE scaluq_pch.cpp)
+        endif()
         target_link_libraries(${LIBRARY} PRIVATE scaluq_base)
         target_sources(${LIBRARY} PRIVATE
             gate/merge_gate.cpp
