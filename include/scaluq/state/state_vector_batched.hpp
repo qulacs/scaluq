@@ -65,7 +65,7 @@ public:
     [[nodiscard]] std::vector<double> get_marginal_probability(
         const std::vector<std::uint64_t>& measured_values) const;
 
-    [[nodiscard]] std::vector<double> get_entropy() const;
+    [[nodiscard]] std::vector<double> get_computational_basis_entropy() const;
 
     void add_state_vector_with_coef(const StdComplex& coef, const StateVectorBatched& states);
 
@@ -356,10 +356,11 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         // Entropy and sampling methods
-        .def("get_entropy",
-             &StateVectorBatched<Prec, Space>::get_entropy,
+        .def("get_computational_basis_entropy",
+             &StateVectorBatched<Prec, Space>::get_computational_basis_entropy,
              DocString()
-                 .desc("Calculate von Neumann entropy for each state.")
+                 .desc("Calculate the Shannon entropy of the Z-basis measurement distribution for "
+                       "each state.")
                  .ret("list[float]", "Entropy values for each state.")
                  .build_as_google_style()
                  .c_str())

@@ -66,6 +66,11 @@ TYPED_TEST(StateVectorTest, SpaceConversionCreatesIndependentCopy) {
     auto unchanged = state.get_amplitude_at(0);
     ASSERT_NEAR(unchanged.real(), original[0].real(), eps<Prec>);
     ASSERT_NEAR(unchanged.imag(), original[0].imag(), eps<Prec>);
+
+    state_host.set_amplitude_at(0, StdComplex(0.25, -0.5));
+    unchanged = state.get_amplitude_at(0);
+    ASSERT_NEAR(unchanged.real(), original[0].real(), eps<Prec>);
+    ASSERT_NEAR(unchanged.imag(), original[0].imag(), eps<Prec>);
 }
 
 TYPED_TEST(StateVectorTest, ZeroNormState) {
@@ -220,7 +225,7 @@ TYPED_TEST(StateVectorTest, EntropyCalculation) {
                 double prob = z.real() * z.real() + z.imag() * z.imag();
                 if (prob > 0.) ent += -prob * std::log2(prob);
             }
-            ASSERT_NEAR(ent, state.get_entropy(), eps<Prec>);
+            ASSERT_NEAR(ent, state.get_computational_basis_entropy(), eps<Prec>);
         }
     }
 }
