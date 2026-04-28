@@ -1,0 +1,4 @@
+---
+Checks: -*,bugprone-*,clang-analyzer-*,cppcoreguidelines-*,performance-*,readability-*,-bugprone-easily-swappable-parameters,-readability-identifier-length,-cppcoreguidelines-macro-usage,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-readability-braces-around-statements,-readability-implicit-bool-conversion,-cppcoreguidelines-misleading-capture-default-by-value
+HeaderFilterRegex: 'include/scaluq/.*'
+---
