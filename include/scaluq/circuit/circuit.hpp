@@ -48,8 +48,8 @@ public:
         _gate_list.push_back(std::make_pair(param_gate, std::string(parameter_key)));
     }
     void add_observable_rotation_gate(const std::vector<PauliOperator<Prec>>& observable,
-                                      double theta,
-                                      std::uint64_t split_num);
+                                      double angle,
+                                      std::uint64_t num_repeats);
 
     void add_circuit(const Circuit<Prec>& circuit);
     void add_circuit(Circuit<Prec>&& circuit);
@@ -341,8 +341,8 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
              nb::overload_cast<const std::vector<PauliOperator<Prec>>&, double, std::uint64_t>(
                  &Circuit<Prec>::add_observable_rotation_gate),
              "observable"_a,
-             "theta"_a,
-             "split_num"_a,
+             "angle"_a,
+             "num_repeats"_a,
              "Add observable rotation gate.")
         .def("add_circuit",
              nb::overload_cast<const Circuit<Prec>&>(&Circuit<Prec>::add_circuit),
