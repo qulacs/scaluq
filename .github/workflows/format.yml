@@ -15,7 +15,7 @@ jobs:
     outputs:
       any_changed: ${{ steps.check.outputs.any_changed }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Check relevant files
         id: check
@@ -33,7 +33,7 @@ jobs:
     if: ${{ !cancelled() && (needs.check-changed.result == 'skipped' || needs.check-changed.outputs.any_changed == 'true') }}
     runs-on: "ubuntu-24.04"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup cmake
         uses: lukka/get-cmake@latest
