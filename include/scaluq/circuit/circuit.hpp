@@ -343,7 +343,17 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
              "observable"_a,
              "angle"_a,
              "num_repeats"_a,
-             "Add observable rotation gate.")
+             DocString()
+                 .desc("Add observable rotation gate.")
+                 .arg("observable", "list[PauliOperator]", "observable")
+                 .arg("angle", "float", "angle")
+                 .arg("num_repeats", "int", "repeats num")
+                 .ex(DocString::Code{">>> circuit = Circuit()",
+                                     ">>> terms = []",
+                                     ">>> terms.append(PauliOperator(\"Z 0 Z 1\"))",
+                                     ">>> circuit.add_observable_rotation_gate(terms, 0.1, 100)"})
+                 .build_as_google_style()
+                 .c_str())
         .def("add_circuit",
              nb::overload_cast<const Circuit<Prec>&>(&Circuit<Prec>::add_circuit),
              "other"_a,
