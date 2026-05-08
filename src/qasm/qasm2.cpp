@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <variant>
 
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/gate/param_gate_factory.hpp>
@@ -34,12 +35,85 @@ struct Register {
     std::uint64_t size;
 };
 
+// Result type produced by ExprParser.  It represents the subset of OpenQASM
+// angle expressions that Scaluq can lower: a numeric constant plus at most one
+// symbolic parameter with a numeric coefficient.
 struct LinearExpr {
     double constant = 0.;
     std::optional<std::string> symbol;
     double coefficient = 0.;
 };
 
+// Export-side operation records used to describe what a Scaluq gate means
+// before choosing an OpenQASM dialect.  The classifier below produces one of
+// these records from Gate/ParamGate, and the QASM2 lowering step consumes it.
+struct IgnoredOp {};
+
+struct NamedUnitaryOp {
+    std::string_view name;
+    std::vector<std::uint64_t> targets;
+    std::vector<std::uint64_t> controls;
+    std::vector<std::uint64_t> control_values;
+};
+
+struct RotationOp {
+    std::string_view name;
+    double angle;
+    std::uint64_t target;
+    std::vector<std::uint64_t> controls;
+    std::vector<std::uint64_t> control_values;
+};
+
+struct UGateOp {
+    std::string_view name;
+    std::vector<double> params;
+    std::uint64_t target;
+    std::vector<std::uint64_t> controls;
+    std::vector<std::uint64_t> control_values;
+};
+
+struct ParamRotationOp {
+    std::string_view name;
+    std::string parameter_key;
+    double coefficient;
+    std::uint64_t target;
+    std::vector<std::uint64_t> controls;
+    std::vector<std::uint64_t> control_values;
+};
+
+struct MeasurementOp {
+    std::uint64_t target;
+    std::uint64_t classical_bit;
+    bool reset;
+};
+
+struct UnsupportedCircuitOp {
+    std::string reason;
+};
+
+using CircuitOpView = std::variant<IgnoredOp,
+                                   NamedUnitaryOp,
+                                   RotationOp,
+                                   UGateOp,
+                                   ParamRotationOp,
+                                   MeasurementOp,
+                                   UnsupportedCircuitOp>;
+
+// Concrete OpenQASM 2.0 operation used by the writer.  At this point qelib1
+// names, parameter text, qubit order, and optional classical-bit destination
+// have already been decided by the lowering layer.
+struct OpenQasm2Op {
+    enum class Kind { Gate, Measure };
+
+    Kind kind;
+    std::string name;
+    std::vector<std::string> params;
+    std::vector<std::uint64_t> qubits;
+    std::optional<std::uint64_t> classical_bit;
+};
+
+// Build a location-aware parser error message for a statement-level parser
+// helper.  Callers pass the Location where the offending statement started.
 [[nodiscard]] std::string make_error(const Location& loc, std::string_view message) {
     std::ostringstream oss;
     oss << "OpenQASM 2.0 error at line " << loc.line << ", column " << loc.column << ": "
@@ -69,6 +143,8 @@ struct LinearExpr {
     return !(std::isalnum(c) || c == '_');
 }
 
+// Split source text into semicolon-terminated OpenQASM statements while
+// ignoring comments and preserving the start location of each statement.
 [[nodiscard]] std::vector<Statement> split_statements(std::string_view source) {
     std::vector<Statement> statements;
     std::string current;
@@ -150,6 +226,9 @@ struct LinearExpr {
     return statements;
 }
 
+// Parser for OpenQASM angle expressions.  It converts expressions such as
+// "pi / 2" or "2 * theta" into a LinearExpr so the reader can decide whether
+// to create an ordinary rotation gate or a Scaluq parametric rotation gate.
 class ExprParser {
 public:
     ExprParser(std::string_view source, Location loc) : _source(source), _loc(loc) {}
@@ -313,6 +392,9 @@ private:
     return parts;
 }
 
+// Parse an indexed OpenQASM register operand and return the flattened Scaluq
+// qubit/classical-bit index.  The register map supplies each declared
+// register's offset in the single flat index space used by Circuit.
 template <typename Registers>
 [[nodiscard]] std::uint64_t parse_indexed_register(std::string_view operand,
                                                    const Registers& registers,
@@ -369,9 +451,8 @@ template <typename Registers>
     return trim(std::string_view(s).substr(0, lb));
 }
 
-[[nodiscard]] bool all_control_values_are_one(const Json& j) {
-    if (!j.contains("control_value")) return true;
-    for (std::uint64_t value : j.at("control_value").get<std::vector<std::uint64_t>>()) {
+[[nodiscard]] bool all_control_values_are_one(const std::vector<std::uint64_t>& control_values) {
+    for (std::uint64_t value : control_values) {
         if (value != 1) return false;
     }
     return true;
@@ -383,7 +464,29 @@ template <typename Registers>
     return oss.str();
 }
 
+[[nodiscard]] bool is_qasm_identifier(std::string_view s) {
+    if (s.empty()) return false;
+    auto is_id_start = [](unsigned char c) { return std::isalpha(c) || c == '_'; };
+    auto is_id_char = [](unsigned char c) { return std::isalnum(c) || c == '_'; };
+    if (!is_id_start(static_cast<unsigned char>(s.front()))) return false;
+    for (char c : s.substr(1)) {
+        if (!is_id_char(static_cast<unsigned char>(c))) return false;
+    }
+    std::string low = lower(s);
+    for (std::string_view keyword :
+         {"OPENQASM", "include", "qreg", "creg", "gate", "opaque", "measure", "reset", "barrier", "if", "pi"}) {
+        if (low == lower(keyword)) return false;
+    }
+    return true;
+}
+
+// Convert a Scaluq parameter key and coefficient into the QASM expression used
+// by parametric rotation exports, validating that the key can be emitted as an
+// OpenQASM identifier.
 [[nodiscard]] std::string format_param_angle(std::string_view key, double coef) {
+    if (!is_qasm_identifier(key)) {
+        throw std::runtime_error("OpenQASM 2.0 export requires parameter keys to be valid identifiers");
+    }
     if (coef == 1.) return std::string(key);
     if (coef == -1.) return "-" + std::string(key);
     return format_angle(coef) + "*" + std::string(key);
@@ -424,6 +527,9 @@ void add_rotation(Circuit<Prec>& circuit,
         circuit.add_gate(gate::RZ<Prec>(target, angle.constant, controls));
 }
 
+// Reads OpenQASM 2.0 statements and builds the public Qasm2Circuit load result.
+// It owns the register maps used to translate QASM register operands into
+// Scaluq's flat qubit/classical-bit indices.
 template <Precision Prec>
 class Reader {
 public:
@@ -440,6 +546,8 @@ private:
     std::map<std::string, Register> _cregs;
     bool _saw_version = false;
 
+    // Dispatch one OpenQASM statement to the appropriate reader routine and
+    // update either the output Circuit or the QASM-only metadata.
     void handle_statement(const Statement& statement) {
         std::string stmt = trim(statement.text);
         std::string low = lower(stmt);
@@ -473,7 +581,11 @@ private:
             _result.warnings.push_back("barrier is ignored");
             return;
         }
-        for (std::string_view unsupported : {"measure", "reset", "if", "gate", "opaque"}) {
+        if (starts_with_word(low, "measure")) {
+            parse_measure(stmt, statement.loc);
+            return;
+        }
+        for (std::string_view unsupported : {"reset", "if", "gate", "opaque"}) {
             if (starts_with_word(low, unsupported)) {
                 throw std::runtime_error(
                     make_error(statement.loc, std::string(unsupported) + " is not supported yet"));
@@ -482,6 +594,8 @@ private:
         parse_gate(stmt, statement.loc);
     }
 
+    // Parse a supported qelib-style gate invocation and append the matching
+    // Scaluq gate to the output Circuit.
     void parse_gate(std::string_view stmt, Location loc) {
         if (!_saw_version) {
             _result.warnings.push_back("OPENQASM 2.0 header is missing");
@@ -636,102 +750,337 @@ private:
         }
         throw std::runtime_error(make_error(loc, "unsupported gate '" + std::string(name) + "'"));
     }
+
+    // Parse an OpenQASM measurement statement and append the matching Scaluq
+    // Measurement gate with its destination classical-bit index.
+    void parse_measure(std::string_view stmt, Location loc) {
+        std::string rest = trim(stmt.substr(std::string_view("measure").size()));
+        std::size_t arrow = rest.find("->");
+        if (arrow == std::string::npos) {
+            throw std::runtime_error(make_error(loc, "measurement expects '->'"));
+        }
+        std::string qoperand = trim(std::string_view(rest).substr(0, arrow));
+        std::string coperand = trim(std::string_view(rest).substr(arrow + 2));
+        std::uint64_t qubit = parse_indexed_register(qoperand, _qregs, loc, "quantum");
+        std::uint64_t clbit = parse_indexed_register(coperand, _cregs, loc, "classical");
+        _result.circuit.add_gate(gate::Measurement<Prec>(qubit, clbit));
+    }
 };
 
-[[nodiscard]] std::uint64_t update_required_qubits(std::uint64_t current, const Json& gate_json) {
-    auto update = [&current](const Json& values) {
-        for (std::uint64_t q : values.get<std::vector<std::uint64_t>>()) {
-            current = std::max(current, q + 1);
+// Return the single target qubit required by one-target export records.  This
+// catches malformed internal records before they reach the QASM writer.
+[[nodiscard]] std::uint64_t single_target(const std::vector<std::uint64_t>& targets,
+                                          std::string_view type) {
+    if (targets.size() != 1) {
+        throw std::runtime_error("unexpected target count for " + std::string(type));
+    }
+    return targets[0];
+}
+
+[[nodiscard]] std::uint64_t required_qubits(const OpenQasm2Op& op) {
+    std::uint64_t n_qubits = 0;
+    for (std::uint64_t qubit : op.qubits) n_qubits = std::max(n_qubits, qubit + 1);
+    return n_qubits;
+}
+
+// Compute the classical register size required by a lowered QASM2 operation.
+// Non-measurement operations do not require classical bits.
+[[nodiscard]] std::uint64_t required_clbits(const OpenQasm2Op& op) {
+    if (op.kind != OpenQasm2Op::Kind::Measure) return 0;
+    return op.classical_bit.value_or(0) + 1;
+}
+
+[[nodiscard]] std::string q(std::uint64_t index) {
+    return "q[" + std::to_string(index) + "]";
+}
+
+[[nodiscard]] std::string c(std::uint64_t index) {
+    return "c[" + std::to_string(index) + "]";
+}
+
+// Convert a non-parametric Scaluq Gate into the export operation record that
+// represents the gate's meaning independently of any concrete QASM dialect.
+template <Precision Prec>
+[[nodiscard]] CircuitOpView classify_gate_for_export(const Gate<Prec>& gate) {
+    const std::vector<std::uint64_t> targets = gate->target_qubit_list();
+    const std::vector<std::uint64_t> controls = gate->control_qubit_list();
+    const std::vector<std::uint64_t> control_values = gate->control_value_list();
+
+    switch (gate.gate_type()) {
+        case GateType::I:
+            return IgnoredOp{};
+        case GateType::X:
+            return NamedUnitaryOp{"x", targets, controls, control_values};
+        case GateType::Y:
+            return NamedUnitaryOp{"y", targets, controls, control_values};
+        case GateType::Z:
+            return NamedUnitaryOp{"z", targets, controls, control_values};
+        case GateType::H:
+            return NamedUnitaryOp{"h", targets, controls, control_values};
+        case GateType::S:
+            return NamedUnitaryOp{"s", targets, controls, control_values};
+        case GateType::Sdag:
+            return NamedUnitaryOp{"sdg", targets, controls, control_values};
+        case GateType::T:
+            return NamedUnitaryOp{"t", targets, controls, control_values};
+        case GateType::Tdag:
+            return NamedUnitaryOp{"tdg", targets, controls, control_values};
+        case GateType::Swap:
+            return NamedUnitaryOp{"swap", targets, controls, control_values};
+        case GateType::RX:
+            return RotationOp{
+                "rx", RXGate<Prec>(gate)->angle(), single_target(targets, "RX"), controls, control_values};
+        case GateType::RY:
+            return RotationOp{
+                "ry", RYGate<Prec>(gate)->angle(), single_target(targets, "RY"), controls, control_values};
+        case GateType::RZ:
+            return RotationOp{
+                "rz", RZGate<Prec>(gate)->angle(), single_target(targets, "RZ"), controls, control_values};
+        case GateType::U1:
+            return UGateOp{
+                "u1", {U1Gate<Prec>(gate)->lambda()}, single_target(targets, "U1"), controls, control_values};
+        case GateType::U2:
+            return UGateOp{"u2",
+                           {U2Gate<Prec>(gate)->phi(), U2Gate<Prec>(gate)->lambda()},
+                           single_target(targets, "U2"),
+                           controls,
+                           control_values};
+        case GateType::U3:
+            return UGateOp{"u3",
+                           {U3Gate<Prec>(gate)->theta(), U3Gate<Prec>(gate)->phi(), U3Gate<Prec>(gate)->lambda()},
+                           single_target(targets, "U3"),
+                           controls,
+                           control_values};
+        case GateType::Measurement:
+            return MeasurementOp{single_target(targets, "Measurement"),
+                                 MeasurementGate<Prec>(gate)->classical_bit_index(),
+                                 MeasurementGate<Prec>(gate)->reset()};
+        case GateType::Unknown:
+        case GateType::GlobalPhase:
+        case GateType::SqrtX:
+        case GateType::SqrtXdag:
+        case GateType::SqrtY:
+        case GateType::SqrtYdag:
+        case GateType::P0:
+        case GateType::P1:
+        case GateType::Ecr:
+        case GateType::Pauli:
+        case GateType::PauliRotation:
+        case GateType::SparseMatrix:
+        case GateType::DenseMatrix:
+        case GateType::Probabilistic:
+            return UnsupportedCircuitOp{"unsupported gate for OpenQASM 2.0 export"};
+    }
+    return UnsupportedCircuitOp{"unsupported gate for OpenQASM 2.0 export"};
+}
+
+// Convert a Scaluq ParamGate plus its parameter key into the export operation
+// record used by the QASM lowering layer.
+template <Precision Prec>
+[[nodiscard]] CircuitOpView classify_param_gate_for_export(
+    const std::pair<ParamGate<Prec>, std::string>& gate_with_key) {
+    const ParamGate<Prec>& gate = gate_with_key.first;
+    const std::vector<std::uint64_t> targets = gate->target_qubit_list();
+    const std::vector<std::uint64_t> controls = gate->control_qubit_list();
+    const std::vector<std::uint64_t> control_values = gate->control_value_list();
+
+    switch (gate.param_gate_type()) {
+        case ParamGateType::ParamRX:
+            return ParamRotationOp{"rx",
+                                   gate_with_key.second,
+                                   gate->param_coef(),
+                                   single_target(targets, "ParamRX"),
+                                   controls,
+                                   control_values};
+        case ParamGateType::ParamRY:
+            return ParamRotationOp{"ry",
+                                   gate_with_key.second,
+                                   gate->param_coef(),
+                                   single_target(targets, "ParamRY"),
+                                   controls,
+                                   control_values};
+        case ParamGateType::ParamRZ:
+            return ParamRotationOp{"rz",
+                                   gate_with_key.second,
+                                   gate->param_coef(),
+                                   single_target(targets, "ParamRZ"),
+                                   controls,
+                                   control_values};
+        case ParamGateType::Unknown:
+        case ParamGateType::ParamPauliRotation:
+        case ParamGateType::ParamProbabilistic:
+        case ParamGateType::Error:
+            return UnsupportedCircuitOp{"unsupported param gate for OpenQASM 2.0 export"};
+    }
+    return UnsupportedCircuitOp{"unsupported param gate for OpenQASM 2.0 export"};
+}
+
+// Lower a named unitary export record to a concrete OpenQASM 2.0 operation,
+// applying qelib1 names such as "cx", "ccx", "cz", "ch", and "cswap".
+[[nodiscard]] OpenQasm2Op lower_named_unitary_to_qasm2(const NamedUnitaryOp& op) {
+    if (!all_control_values_are_one(op.control_values)) {
+        throw std::runtime_error("OpenQASM 2.0 export only supports control value 1");
+    }
+    if (op.name == "x" && op.controls.size() == 1) {
+        return {OpenQasm2Op::Kind::Gate,
+                "cx",
+                {},
+                {op.controls[0], single_target(op.targets, "X")},
+                std::nullopt};
+    }
+    if (op.name == "z" && op.controls.size() == 1) {
+        return {OpenQasm2Op::Kind::Gate,
+                "cz",
+                {},
+                {op.controls[0], single_target(op.targets, "Z")},
+                std::nullopt};
+    }
+    if (op.name == "x" && op.controls.size() == 2) {
+        return {OpenQasm2Op::Kind::Gate,
+                "ccx",
+                {},
+                {op.controls[0], op.controls[1], single_target(op.targets, "X")},
+                std::nullopt};
+    }
+    if (op.name == "swap" && op.controls.size() == 1) {
+        if (op.targets.size() != 2) throw std::runtime_error("unexpected target count for Swap");
+        return {OpenQasm2Op::Kind::Gate, "cswap", {}, {op.controls[0], op.targets[0], op.targets[1]}, std::nullopt};
+    }
+    if (op.controls.size() > 1) {
+        throw std::runtime_error("unsupported controlled gate for OpenQASM 2.0 export");
+    }
+    if (op.controls.size() == 1) {
+        if (op.name == "y" || op.name == "h") {
+            return {OpenQasm2Op::Kind::Gate,
+                    "c" + std::string(op.name),
+                    {},
+                    {op.controls[0], single_target(op.targets, op.name)},
+                    std::nullopt};
         }
-    };
-    if (gate_json.contains("target")) update(gate_json.at("target"));
-    if (gate_json.contains("control")) update(gate_json.at("control"));
-    return current;
+        throw std::runtime_error("unsupported controlled gate for OpenQASM 2.0 export");
+    }
+    return {OpenQasm2Op::Kind::Gate, std::string(op.name), {}, op.targets, std::nullopt};
 }
 
-template <Precision Prec>
-std::string dump_gate(const Gate<Prec>& gate) {
-    Json j = gate;
-    if (!all_control_values_are_one(j)) {
+// Lower a numeric rotation export record to a concrete OpenQASM 2.0 operation,
+// choosing "rx/ry/rz" or "crx/cry/crz" based on the control list.
+[[nodiscard]] OpenQasm2Op lower_rotation_to_qasm2(const RotationOp& op) {
+    if (!all_control_values_are_one(op.control_values)) {
         throw std::runtime_error("OpenQASM 2.0 export only supports control value 1");
     }
-    std::string type = j.at("type").get<std::string>();
-    std::vector<std::uint64_t> targets =
-        j.contains("target") ? j.at("target").get<std::vector<std::uint64_t>>() : std::vector<std::uint64_t>{};
-    std::vector<std::uint64_t> controls =
-        j.contains("control") ? j.at("control").get<std::vector<std::uint64_t>>() : std::vector<std::uint64_t>{};
-    auto q = [](std::uint64_t index) { return "q[" + std::to_string(index) + "]"; };
-
-    if (type == "I") return "";
-    if (type == "X" && controls.size() == 1) return "cx " + q(controls[0]) + ", " + q(targets[0]) + ";";
-    if (type == "Z" && controls.size() == 1) return "cz " + q(controls[0]) + ", " + q(targets[0]) + ";";
-    if (type == "X" && controls.size() == 2) {
-        return "ccx " + q(controls[0]) + ", " + q(controls[1]) + ", " + q(targets[0]) + ";";
+    if (op.controls.size() > 1) {
+        throw std::runtime_error("unsupported controlled gate for OpenQASM 2.0 export");
     }
-    if (type == "Swap" && controls.size() == 1) {
-        return "cswap " + q(controls[0]) + ", " + q(targets[0]) + ", " + q(targets[1]) + ";";
+    std::string name = std::string(op.name);
+    std::vector<std::uint64_t> qubits;
+    if (op.controls.empty()) {
+        qubits = {op.target};
+    } else {
+        name = "c" + name;
+        qubits = {op.controls[0], op.target};
     }
-    if (controls.size() > 1) throw std::runtime_error("unsupported controlled gate for OpenQASM 2.0 export");
-
-    std::string prefix;
-    if (controls.size() == 1) {
-        if (type == "Y") prefix = "cy " + q(controls[0]) + ", ";
-        else if (type == "H") prefix = "ch " + q(controls[0]) + ", ";
-        else if (type == "RX") prefix = "crx(" + format_angle(j.at("angle").get<double>()) + ") " + q(controls[0]) + ", ";
-        else if (type == "RY") prefix = "cry(" + format_angle(j.at("angle").get<double>()) + ") " + q(controls[0]) + ", ";
-        else if (type == "RZ") prefix = "crz(" + format_angle(j.at("angle").get<double>()) + ") " + q(controls[0]) + ", ";
-        else if (type == "U1") prefix = "cu1(" + format_angle(j.at("lambda").get<double>()) + ") " + q(controls[0]) + ", ";
-        else if (type == "U3")
-            prefix = "cu3(" + format_angle(j.at("theta").get<double>()) + ", " +
-                     format_angle(j.at("phi").get<double>()) + ", " +
-                     format_angle(j.at("lambda").get<double>()) + ") " + q(controls[0]) + ", ";
-        else
-            throw std::runtime_error("unsupported controlled gate for OpenQASM 2.0 export");
-        return prefix + q(targets[0]) + ";";
-    }
-
-    if (type == "X" || type == "Y" || type == "Z" || type == "H" || type == "S" || type == "T") {
-        return lower(type) + " " + q(targets[0]) + ";";
-    }
-    if (type == "Sdag") return "sdg " + q(targets[0]) + ";";
-    if (type == "Tdag") return "tdg " + q(targets[0]) + ";";
-    if (type == "RX") return "rx(" + format_angle(j.at("angle").get<double>()) + ") " + q(targets[0]) + ";";
-    if (type == "RY") return "ry(" + format_angle(j.at("angle").get<double>()) + ") " + q(targets[0]) + ";";
-    if (type == "RZ") return "rz(" + format_angle(j.at("angle").get<double>()) + ") " + q(targets[0]) + ";";
-    if (type == "U1") return "u1(" + format_angle(j.at("lambda").get<double>()) + ") " + q(targets[0]) + ";";
-    if (type == "U2") {
-        return "u2(" + format_angle(j.at("phi").get<double>()) + ", " +
-               format_angle(j.at("lambda").get<double>()) + ") " + q(targets[0]) + ";";
-    }
-    if (type == "U3") {
-        return "u3(" + format_angle(j.at("theta").get<double>()) + ", " +
-               format_angle(j.at("phi").get<double>()) + ", " +
-               format_angle(j.at("lambda").get<double>()) + ") " + q(targets[0]) + ";";
-    }
-    if (type == "Swap") return "swap " + q(targets[0]) + ", " + q(targets[1]) + ";";
-    throw std::runtime_error("unsupported gate for OpenQASM 2.0 export: " + type);
+    return {OpenQasm2Op::Kind::Gate, name, {format_angle(op.angle)}, qubits, std::nullopt};
 }
 
-template <Precision Prec>
-std::string dump_param_gate(const std::pair<ParamGate<Prec>, std::string>& gate_with_key) {
-    Json j = gate_with_key.first;
-    if (!all_control_values_are_one(j)) {
+// Lower a U-family export record to a concrete OpenQASM 2.0 operation.  QASM2
+// only supports controlled forms for u1 and u3 in the qelib1 subset used here.
+[[nodiscard]] OpenQasm2Op lower_u_to_qasm2(const UGateOp& op) {
+    if (!all_control_values_are_one(op.control_values)) {
         throw std::runtime_error("OpenQASM 2.0 export only supports control value 1");
     }
-    std::string type = j.at("type").get<std::string>();
-    std::vector<std::uint64_t> targets = j.at("target").get<std::vector<std::uint64_t>>();
-    std::vector<std::uint64_t> controls =
-        j.contains("control") ? j.at("control").get<std::vector<std::uint64_t>>() : std::vector<std::uint64_t>{};
-    if (controls.size() > 1) throw std::runtime_error("unsupported controlled param gate for OpenQASM 2.0 export");
-    auto q = [](std::uint64_t index) { return "q[" + std::to_string(index) + "]"; };
-    std::string name;
-    if (type == "ParamRX") name = controls.empty() ? "rx" : "crx";
-    if (type == "ParamRY") name = controls.empty() ? "ry" : "cry";
-    if (type == "ParamRZ") name = controls.empty() ? "rz" : "crz";
-    if (name.empty()) throw std::runtime_error("unsupported param gate for OpenQASM 2.0 export: " + type);
-    std::string angle = format_param_angle(gate_with_key.second, j.at("param_coef").get<double>());
-    if (controls.empty()) return name + "(" + angle + ") " + q(targets[0]) + ";";
-    return name + "(" + angle + ") " + q(controls[0]) + ", " + q(targets[0]) + ";";
+    if (op.controls.size() > 1) {
+        throw std::runtime_error("unsupported controlled gate for OpenQASM 2.0 export");
+    }
+    std::vector<std::string> params;
+    for (double param : op.params) params.push_back(format_angle(param));
+    if (op.controls.empty()) {
+        return {OpenQasm2Op::Kind::Gate, std::string(op.name), params, {op.target}, std::nullopt};
+    }
+    if (op.name == "u1" || op.name == "u3") {
+        return {OpenQasm2Op::Kind::Gate,
+                "c" + std::string(op.name),
+                params,
+                {op.controls[0], op.target},
+                std::nullopt};
+    }
+    throw std::runtime_error("unsupported controlled gate for OpenQASM 2.0 export");
+}
+
+// Lower a parametric rotation export record to OpenQASM 2.0, formatting the
+// Scaluq parameter key and coefficient as a QASM angle expression.
+[[nodiscard]] OpenQasm2Op lower_param_rotation_to_qasm2(const ParamRotationOp& op) {
+    if (!all_control_values_are_one(op.control_values)) {
+        throw std::runtime_error("OpenQASM 2.0 export only supports control value 1");
+    }
+    if (op.controls.size() > 1) {
+        throw std::runtime_error("unsupported controlled param gate for OpenQASM 2.0 export");
+    }
+    std::string name = std::string(op.name);
+    std::vector<std::uint64_t> qubits;
+    if (op.controls.empty()) {
+        qubits = {op.target};
+    } else {
+        name = "c" + name;
+        qubits = {op.controls[0], op.target};
+    }
+    return {OpenQasm2Op::Kind::Gate,
+            name,
+            {format_param_angle(op.parameter_key, op.coefficient)},
+            qubits,
+            std::nullopt};
+}
+
+// Convert one dialect-neutral export operation into an OpenQASM 2.0 operation.
+// This is where QASM2 expressibility limits are enforced.
+[[nodiscard]] std::optional<OpenQasm2Op> lower_to_qasm2(const CircuitOpView& view) {
+    return std::visit(
+        [](const auto& op) -> std::optional<OpenQasm2Op> {
+            using Op = std::decay_t<decltype(op)>;
+            if constexpr (std::is_same_v<Op, IgnoredOp>) {
+                return std::nullopt;
+            } else if constexpr (std::is_same_v<Op, NamedUnitaryOp>) {
+                return lower_named_unitary_to_qasm2(op);
+            } else if constexpr (std::is_same_v<Op, RotationOp>) {
+                return lower_rotation_to_qasm2(op);
+            } else if constexpr (std::is_same_v<Op, UGateOp>) {
+                return lower_u_to_qasm2(op);
+            } else if constexpr (std::is_same_v<Op, ParamRotationOp>) {
+                return lower_param_rotation_to_qasm2(op);
+            } else if constexpr (std::is_same_v<Op, MeasurementOp>) {
+                if (op.reset) {
+                    throw std::runtime_error("OpenQASM 2.0 export does not support reset-after-measurement gates");
+                }
+                return OpenQasm2Op{OpenQasm2Op::Kind::Measure, "measure", {}, {op.target}, op.classical_bit};
+            } else if constexpr (std::is_same_v<Op, UnsupportedCircuitOp>) {
+                throw std::runtime_error(op.reason);
+            }
+        },
+        view);
+}
+
+// Render one OpenQasm2Op as a single OpenQASM statement.  The writer only sees
+// already-lowered QASM2 operations, not Scaluq gate internals.
+[[nodiscard]] std::string write_qasm2_op(const OpenQasm2Op& op) {
+    if (op.kind == OpenQasm2Op::Kind::Measure) {
+        return "measure " + q(op.qubits[0]) + " -> " + c(*op.classical_bit) + ";";
+    }
+    std::ostringstream out;
+    out << op.name;
+    if (!op.params.empty()) {
+        out << '(';
+        for (std::size_t i = 0; i < op.params.size(); ++i) {
+            if (i != 0) out << ", ";
+            out << op.params[i];
+        }
+        out << ')';
+    }
+    out << ' ';
+    for (std::size_t i = 0; i < op.qubits.size(); ++i) {
+        if (i != 0) out << ", ";
+        out << q(op.qubits[i]);
+    }
+    out << ';';
+    return out.str();
 }
 
 }  // namespace
@@ -744,19 +1093,21 @@ Qasm2Circuit<Prec> loads(std::string_view source) {
 template <Precision Prec>
 std::string dumps(const Circuit<Prec>& circuit, std::optional<std::uint64_t> n_qubits) {
     std::uint64_t required_n_qubits = 0;
+    std::uint64_t required_n_clbits = 0;
     std::ostringstream body;
     for (const auto& gate_with_key : circuit.gate_list()) {
-        std::string line;
+        CircuitOpView view;
         if (gate_with_key.index() == 0) {
-            Json j = std::get<0>(gate_with_key);
-            required_n_qubits = update_required_qubits(required_n_qubits, j);
-            line = dump_gate(std::get<0>(gate_with_key));
+            view = classify_gate_for_export(std::get<0>(gate_with_key));
         } else {
-            Json j = std::get<1>(gate_with_key).first;
-            required_n_qubits = update_required_qubits(required_n_qubits, j);
-            line = dump_param_gate(std::get<1>(gate_with_key));
+            view = classify_param_gate_for_export(std::get<1>(gate_with_key));
         }
-        if (!line.empty()) body << line << '\n';
+        std::optional<OpenQasm2Op> op = lower_to_qasm2(view);
+        if (op) {
+            required_n_qubits = std::max(required_n_qubits, required_qubits(*op));
+            required_n_clbits = std::max(required_n_clbits, required_clbits(*op));
+            body << write_qasm2_op(*op) << '\n';
+        }
     }
     if (n_qubits && *n_qubits < required_n_qubits) {
         throw std::runtime_error("specified n_qubits is smaller than circuit operands");
@@ -765,6 +1116,9 @@ std::string dumps(const Circuit<Prec>& circuit, std::optional<std::uint64_t> n_q
     out << "OPENQASM 2.0;\n";
     out << "include \"qelib1.inc\";\n";
     out << "qreg q[" << n_qubits.value_or(required_n_qubits) << "];\n";
+    if (required_n_clbits != 0) {
+        out << "creg c[" << required_n_clbits << "];\n";
+    }
     out << body.str();
     return out.str();
 }
