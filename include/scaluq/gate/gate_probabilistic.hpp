@@ -15,6 +15,7 @@ class ProbabilisticGateImpl : public GateBase<Prec> {
 public:
     ProbabilisticGateImpl(const std::vector<double>& distribution,
                           const std::vector<Gate<Prec>>& gate_list);
+    using GateBase<Prec>::update_quantum_state;
     const std::vector<Gate<Prec>>& gate_list() const { return _gate_list; }
     const std::vector<double>& distribution() const { return _distribution; }
 
@@ -64,18 +65,19 @@ public:
             "ProbabilisticGateImpl.");
     }
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
+    void update_quantum_state(
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;

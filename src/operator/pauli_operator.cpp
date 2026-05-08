@@ -150,7 +150,7 @@ StdComplex PauliOperator<Prec>::get_expectation_value(
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
                 sum += tmp;
             },
-            internal::Sum<FloatType, Space>(res));
+            res);
         return _coef * res;
     }
     std::uint64_t pivot = std::bit_width(bit_flip_mask) - 1;
@@ -169,7 +169,7 @@ StdComplex PauliOperator<Prec>::get_expectation_value(
             if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
             sum += tmp;
         },
-        internal::Sum<FloatType, Space>(res));
+        res);
     return static_cast<StdComplex>(_coef * res);
 }
 
@@ -179,19 +179,19 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
     const StateVectorBatched<Prec, Space>& states) const {
     std::uint64_t bit_flip_mask = _bit_flip_mask;
     std::uint64_t phase_flip_mask = _phase_flip_mask;
+    const std::uint64_t dim = states.dim();
     if (bit_flip_mask == 0) {
         Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<Space>> results(
             "results", states.batch_size());
         Kokkos::parallel_for(
             "get_expectation_value",
-            Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-                internal::SpaceType<Space>(), states.batch_size(), Kokkos::AUTO),
+            Kokkos::TeamPolicy(internal::SpaceType<Space>(), states.batch_size(), Kokkos::AUTO),
             KOKKOS_CLASS_LAMBDA(
                 const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
                 FloatType res = 0;
                 std::uint64_t batch_id = team.league_rank();
                 Kokkos::parallel_reduce(
-                    Kokkos::TeamThreadRange(team, states.dim()),
+                    Kokkos::TeamThreadRange(team, dim),
                     [&](std::uint64_t state_idx, FloatType& sum) {
                         FloatType tmp = (scaluq::internal::conj(states._raw(batch_id, state_idx)) *
                                          states._raw(batch_id, state_idx))
@@ -199,9 +199,11 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
                         if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
                         sum += tmp;
                     },
-                    internal::Sum<FloatType, Space>(res));
-                ComplexType cres = _coef * res;
-                results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
+                    res);
+                Kokkos::single(Kokkos::PerTeam(team), [&]() {
+                    ComplexType cres = _coef * res;
+                    results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
+                });
             });
         auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
         return std::vector<StdComplex>(results_h.data(), results_h.data() + results_h.size());
@@ -214,14 +216,13 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
     ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
     Kokkos::parallel_for(
         "get_expectation_value",
-        Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-            internal::SpaceType<Space>(), states.batch_size(), Kokkos::AUTO),
+        Kokkos::TeamPolicy(internal::SpaceType<Space>(), states.batch_size(), Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
             FloatType res = 0;
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
-                Kokkos::TeamThreadRange(team, states.dim()),
+                Kokkos::TeamThreadRange(team, dim >> 1),
                 [&](std::uint64_t state_idx, FloatType& sum) {
                     std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
                     std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
@@ -232,9 +233,11 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
                     if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
                     sum += tmp;
                 },
-                internal::Sum<FloatType, Space>(res));
-            ComplexType cres = _coef * res;
-            results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
+                res);
+            Kokkos::single(Kokkos::PerTeam(team), [&]() {
+                ComplexType cres = _coef * res;
+                results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
+            });
         });
     auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
     return std::vector<StdComplex>(results_h.data(), results_h.data() + results_h.size());
@@ -364,15 +367,19 @@ std::vector<StdComplex> PauliOperator<Prec>::get_transition_amplitude(
 
 template StdComplex PauliOperator<internal::Prec>::get_expectation_value(
     const StateVector<internal::Prec, ExecutionSpace::Host>& state_vector) const;
+template StdComplex PauliOperator<internal::Prec>::get_expectation_value(
+    const StateVector<internal::Prec, ExecutionSpace::HostSerial>& state_vector) const;
 template std::vector<StdComplex> PauliOperator<internal::Prec>::get_expectation_value(
     const StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states) const;
+template std::vector<StdComplex> PauliOperator<internal::Prec>::get_expectation_value(
+    const StateVectorBatched<internal::Prec, ExecutionSpace::HostSerial>& states) const;
 template StdComplex PauliOperator<internal::Prec>::get_transition_amplitude(
     const StateVector<internal::Prec, ExecutionSpace::Host>& state_vector_bra,
     const StateVector<internal::Prec, ExecutionSpace::Host>& state_vector_ket) const;
 template std::vector<StdComplex> PauliOperator<internal::Prec>::get_transition_amplitude(
     const StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states_bra,
     const StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states_ket) const;
-#ifdef SCALUQ_ENABLE_CUDA
+#ifdef SCALUQ_USE_CUDA
 template StdComplex PauliOperator<internal::Prec>::get_expectation_value(
     const StateVector<internal::Prec, ExecutionSpace::Default>& state_vector) const;
 template std::vector<StdComplex> PauliOperator<internal::Prec>::get_expectation_value(

@@ -226,7 +226,7 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "source"_a,
              "target"_a,
              "Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.")
-#ifdef SCALUQ_ENABLE_CUDA
+#ifdef SCALUQ_USE_CUDA
         .def("get_expectation_value",
              nb::overload_cast<const StateVectorBatched<Prec, ExecutionSpace::Default>&>(
                  &PauliOperator<Prec>::template get_expectation_value<ExecutionSpace::Default>,

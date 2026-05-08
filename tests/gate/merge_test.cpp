@@ -158,6 +158,7 @@ void merge_gate_test() {
     single_target_rotation2(gate::U2<Prec>);
     single_target_rotation3(gate::U3<Prec>);
     double_target(gate::Swap<Prec>);
+    double_target(gate::Ecr<Prec>);
     dense_matrix(gate::DenseMatrix<Prec, Space>);
     sparse_matrix(gate::SparseMatrix<Prec, Space>);
     gates.push_back(gate::Pauli<Prec>(PauliOperator<Prec>("X 0 Y 2", random.uniform())));

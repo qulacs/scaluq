@@ -79,6 +79,8 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
     const {
     auto copy_operator =
         Operator<internal::Prec, internal::Space>::uninitialized_operator(_terms.size());
+    copy_operator._is_view = false;
+    copy_operator._is_hermitian = _is_hermitian;
     Kokkos::parallel_for(
         "get_dagger",
         Kokkos::RangePolicy<ExecutionSpaceType>(0, _terms.size()),
@@ -155,6 +157,82 @@ StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
         },
         res);
     return static_cast<StdComplex>(res);
+}
+
+// 各termの期待値からなるベクトルを返す
+template <>
+std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectation_values(
+    const StateVector<internal::Prec, internal::Space>& state_vector) const {
+    const std::uint64_t nterms = _terms.size();
+    const std::uint64_t dim = state_vector.dim();
+
+    Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<internal::Space>> res("expvals",
+                                                                                     nterms);
+
+    using ExecSpace = internal::SpaceType<internal::Space>;
+    using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
+    using Member = typename TeamPolicy::member_type;
+
+    Kokkos::parallel_for(
+        "get_expectation_values",
+        TeamPolicy(static_cast<int>(nterms), Kokkos::AUTO),
+        KOKKOS_CLASS_LAMBDA(const Member& team) {
+            const std::uint64_t term_id = static_cast<std::uint64_t>(team.league_rank());
+
+            const auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
+            const auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
+            const ComplexType coef = _terms[term_id]._coef;
+
+            ComplexType sum = ComplexType(0.0, 0.0);
+
+            Kokkos::parallel_reduce(
+                Kokkos::TeamThreadRange(team, static_cast<int>(dim >> 1)),
+                [&](const int state_idx_i, ComplexType& lsum) {
+                    const std::uint64_t state_idx = static_cast<std::uint64_t>(state_idx_i);
+
+                    if (bit_flip_mask == 0) {
+                        const std::uint64_t state_idx1 = state_idx << 1;
+                        FloatType tmp1 = (scaluq::internal::conj(state_vector._raw[state_idx1]) *
+                                          state_vector._raw[state_idx1])
+                                             .real();
+                        if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
+
+                        const std::uint64_t state_idx2 = state_idx1 | 1;
+                        FloatType tmp2 = (scaluq::internal::conj(state_vector._raw[state_idx2]) *
+                                          state_vector._raw[state_idx2])
+                                             .real();
+                        if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
+
+                        lsum += coef * (tmp1 + tmp2);
+                    } else {
+                        const std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
+                        const std::uint64_t global_phase_90rot_count =
+                            Kokkos::popcount(bit_flip_mask & phase_flip_mask);
+                        const ComplexType global_phase =
+                            internal::PHASE_90ROT<internal::Prec>()[global_phase_90rot_count % 4];
+
+                        const std::uint64_t basis_0 =
+                            internal::insert_zero_to_basis_index(state_idx, pivot);
+                        const std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
+
+                        FloatType tmp = scaluq::internal::real(
+                            state_vector._raw[basis_0] *
+                            scaluq::internal::conj(state_vector._raw[basis_1]) * global_phase *
+                            FloatType(2));
+
+                        if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
+
+                        lsum += coef * tmp;
+                    }
+                },
+                sum);
+
+            Kokkos::single(Kokkos::PerTeam(team),
+                           [&] { res(term_id) = Kokkos::complex<double>(sum.real(), sum.imag()); });
+        });
+
+    auto res_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), res);
+    return std::vector<StdComplex>(res_h.data(), res_h.data() + res_h.size());
 }
 
 template <>
@@ -350,6 +428,7 @@ Operator<internal::Prec, internal::Space>::copy_to_default_space() const {
     auto op =
         Operator<internal::Prec, ExecutionSpace::Default>::uninitialized_operator(_terms.extent(0));
     Kokkos::deep_copy(op._terms, _terms);
+    op._is_view = false;
     op._is_hermitian = _is_hermitian;
     return op;
 }
@@ -360,6 +439,7 @@ Operator<internal::Prec, internal::Space>::copy_to_host_space() const {
     auto op =
         Operator<internal::Prec, ExecutionSpace::Host>::uninitialized_operator(_terms.extent(0));
     Kokkos::deep_copy(op._terms, this->_terms);
+    op._is_view = false;
     op._is_hermitian = _is_hermitian;
     return op;
 }
@@ -389,6 +469,11 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_power_method(
         throw std::runtime_error(
             "Operator::solve_ground_state_eigenvalue_by_power_method: At least one PauliOperator "
             "is required.");
+    }
+    if (!this->is_hermitian()) {
+        throw std::runtime_error(
+            "Operator::solve_ground_state_eigenvalue_by_power_method: The operator must be "
+            "Hermitian.");
     }
     std::uint64_t nqubits = initial_state.n_qubits();
     StdComplex mu_realized = mu.value_or(calculate_default_mu());
@@ -502,6 +587,7 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
                 ++nnz_lcl;
         },
         nnz_count);
+    ret._is_view = false;
     ret._is_hermitian = (nnz_count == 0);
     return ret;
 }
@@ -528,6 +614,7 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
     const Operator<internal::Prec, internal::Space>& target) const {
     auto ret = Operator<internal::Prec, internal::Space>::uninitialized_operator(
         _terms.size() + target._terms.size());
+    ret._is_view = false;
     Kokkos::parallel_for(
         "operator+",
         Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(
@@ -547,6 +634,7 @@ template <>
 Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Space>::operator+(
     const PauliOperator<internal::Prec>& target) const {
     auto ret = Operator<internal::Prec, internal::Space>::uninitialized_operator(_terms.size() + 1);
+    ret._is_view = false;
     Kokkos::parallel_for(
         "operator+",
         Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(0, _terms.size() + 1),

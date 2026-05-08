@@ -22,24 +22,27 @@ public:
                         const ComplexMatrix& mat,
                         bool is_unitary = false);
 
+    using GateBase<Prec>::update_quantum_state;
+
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override;
 
     Matrix<Prec, Space> get_matrix_internal() const;
 
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
+    void update_quantum_state(
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -64,6 +67,8 @@ public:
                          std::uint64_t control_value_mask,
                          const SparseComplexMatrix& mat);
 
+    using GateBase<Prec>::update_quantum_state;
+
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override;
 
     Matrix<Prec, Space> get_matrix_internal() const;
@@ -72,18 +77,19 @@ public:
 
     SparseComplexMatrix get_sparse_matrix() const { return get_matrix().sparseView(); }
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
+    void update_quantum_state(
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;

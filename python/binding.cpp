@@ -11,6 +11,7 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/tuple.h>
+#include <nanobind/stl/unordered_map.h>
 #include <nanobind/stl/variant.h>
 #include <nanobind/stl/vector.h>
 
@@ -57,6 +58,7 @@ void bind_on_precision(nb::module_& mp,
                        nb::class_<ParamGate<Prec>>& param_gate_base_def) {
     auto mgate = mp.def_submodule("gate", "Define gates.");
     internal::bind_gate_gate_standard_hpp<Prec>(mp, gate_base_def);
+    internal::bind_gate_gate_measurement_hpp<Prec>(mp, gate_base_def);
     internal::bind_gate_gate_pauli_hpp<Prec>(mp, gate_base_def);
     internal::bind_gate_gate_factory_hpp<Prec>(mgate);
 
@@ -72,6 +74,8 @@ void bind_on_precision(nb::module_& mp,
 
 NB_MODULE(scaluq_core, m) {
     internal::bind_kokkos_hpp(m);
+    internal::bind_classical_register_hpp(m);
+    internal::bind_classical_register_batched_hpp(m);
     internal::bind_gate_gate_hpp_without_precision_and_space(m);
     internal::bind_gate_param_gate_hpp_without_precision_and_space(m);
 

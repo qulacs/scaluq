@@ -114,7 +114,7 @@ from scaluq.default.f64.gate import RX
 import math
 
 rx = RXGate(RX(0, math.pi/4))
-circuit = Circuit(1)
+circuit = Circuit()
 rx = Gate(rx) # omitting this downcast causes error on next line
 circuit.add_gate(rx)
 ```

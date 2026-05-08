@@ -20,6 +20,7 @@ public:
     ParamProbabilisticGateImpl(
         const std::vector<double>& distribution,
         const std::vector<std::variant<Gate<Prec>, ParamGate<Prec>>>& gate_list);
+    using ParamGateBase<Prec>::update_quantum_state;
     const std::vector<EitherGate>& gate_list() const { return _gate_list; }
     const std::vector<double>& distribution() const { return _distribution; }
 
@@ -70,19 +71,23 @@ public:
             "ParamProbabilisticGateImpl.");
     }
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector,
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context,
                               double param) const override;
-    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Host>& states,
-                              std::vector<double> params) const override;
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::HostSerial>& state_vector,
+    void update_quantum_state(
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context,
+                              const std::vector<double>& params) const override;
+    void update_quantum_state(
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context,
                               double param) const override;
-    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
-                              std::vector<double> params) const override;
+    void update_quantum_state(
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context,
+                              const std::vector<double>& params) const override;
 #ifdef SCALUQ_USE_CUDA
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Default> context,
                               double param) const override;
-    void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Default>& states,
-                              std::vector<double> params) const override;
+    void update_quantum_state(
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context,
+                              const std::vector<double>& params) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;

@@ -34,6 +34,7 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
                 operator/pauli_operator.cpp
                 gate/gate_pauli.cpp
                 gate/gate_probabilistic.cpp
+                gate/gate_measurement.cpp
                 gate/gate_standard.cpp
                 gate/gate.cpp
                 gate/param_gate_pauli.cpp

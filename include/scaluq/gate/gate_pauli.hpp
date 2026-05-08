@@ -21,6 +21,8 @@ public:
               vector_to_mask<false>(pauli.target_qubit_list()), control_mask, control_value_mask),
           _pauli(pauli) {}
 
+    using GateBase<Prec>::update_quantum_state;
+
     PauliOperator<Prec> pauli() const { return _pauli; };
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
 
@@ -29,18 +31,19 @@ public:
     }
     ComplexMatrix get_matrix() const override { return this->_pauli.get_matrix(); }
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& states) const override;
+        ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
+    void update_quantum_state(
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& states) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;
@@ -68,6 +71,8 @@ public:
           _pauli(pauli),
           _angle(angle) {}
 
+    using GateBase<Prec>::update_quantum_state;
+
     PauliOperator<Prec> pauli() const { return _pauli; }
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
     double angle() const { return static_cast<double>(_angle); }
@@ -79,18 +84,19 @@ public:
 
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Host>& states) const override;
+        ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states) const override;
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
+    void update_quantum_state(
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(
-        StateVector<Prec, ExecutionSpace::Default>& state_vector) const override;
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
     void update_quantum_state(
-        StateVectorBatched<Prec, ExecutionSpace::Default>& states) const override;
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
 #endif  // SCALUQ_USE_CUDA
 
     std::string to_string(const std::string& indent) const override;

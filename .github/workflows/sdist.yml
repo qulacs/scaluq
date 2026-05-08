@@ -5,7 +5,7 @@ on:
     paths-ignore:
       - ".devcontainer/**"
       - ".vscode/**"
-      - "*.md"
+      - "**/*.md"
       - ".github/ISSUE_TEMPLATE/**"
       - ".github/workflows/lint.yml"
   workflow_dispatch:
@@ -21,9 +21,9 @@ jobs:
     env:
       PYTHON: ${{ matrix.python-version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 

@@ -21,18 +21,19 @@ std::string ParamRXGateImpl<Prec>::to_string(const std::string& indent) const {
 }
 template <Precision Prec>
 void ParamRXGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::Host>& state_vector, double param) const {
-    this->check_qubit_mask_within_bounds(state_vector);
+    ExecutionContext<Prec, ExecutionSpace::Host> context, double param) const {
+    this->check_qubit_mask_within_bounds(context.state);
     rx_gate(this->_target_mask,
             this->_control_mask,
             this->_control_value_mask,
             this->_pcoef * static_cast<Float<Prec>>(param),
-            state_vector);
+            context.state);
 }
 template <Precision Prec>
 void ParamRXGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::Host>& states, std::vector<double> params) const {
-    this->check_qubit_mask_within_bounds(states);
+    ExecutionContextBatched<Prec, ExecutionSpace::Host> context,
+    const std::vector<double>& params) const {
+    this->check_qubit_mask_within_bounds(context.states);
     std::vector<Float<Prec>> params_prec(params.size());
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
@@ -45,23 +46,23 @@ void ParamRXGateImpl<Prec>::update_quantum_state(
             this->_control_value_mask,
             this->_pcoef,
             params_view,
-            states);
+            context.states);
 }
 template <Precision Prec>
 void ParamRXGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::HostSerial>& state_vector, double param) const {
-    this->check_qubit_mask_within_bounds(state_vector);
+    ExecutionContext<Prec, ExecutionSpace::HostSerial> context, double param) const {
+    this->check_qubit_mask_within_bounds(context.state);
     rx_gate(this->_target_mask,
             this->_control_mask,
             this->_control_value_mask,
             this->_pcoef * static_cast<Float<Prec>>(param),
-            state_vector);
+            context.state);
 }
 template <Precision Prec>
 void ParamRXGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
-    std::vector<double> params) const {
-    this->check_qubit_mask_within_bounds(states);
+    ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context,
+    const std::vector<double>& params) const {
+    this->check_qubit_mask_within_bounds(context.states);
     std::vector<Float<Prec>> params_prec(params.size());
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
@@ -74,23 +75,24 @@ void ParamRXGateImpl<Prec>::update_quantum_state(
             this->_control_value_mask,
             this->_pcoef,
             params_view,
-            states);
+            context.states);
 }
 #ifdef SCALUQ_USE_CUDA
 template <Precision Prec>
 void ParamRXGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::Default>& state_vector, double param) const {
-    this->check_qubit_mask_within_bounds(state_vector);
+    ExecutionContext<Prec, ExecutionSpace::Default> context, double param) const {
+    this->check_qubit_mask_within_bounds(context.state);
     rx_gate(this->_target_mask,
             this->_control_mask,
             this->_control_value_mask,
             this->_pcoef * static_cast<Float<Prec>>(param),
-            state_vector);
+            context.state);
 }
 template <Precision Prec>
 void ParamRXGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::Default>& states, std::vector<double> params) const {
-    this->check_qubit_mask_within_bounds(states);
+    ExecutionContextBatched<Prec, ExecutionSpace::Default> context,
+    const std::vector<double>& params) const {
+    this->check_qubit_mask_within_bounds(context.states);
     std::vector<Float<Prec>> params_prec(params.size());
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
@@ -104,7 +106,7 @@ void ParamRXGateImpl<Prec>::update_quantum_state(
             this->_control_value_mask,
             this->_pcoef,
             params_view,
-            states);
+            context.states);
 }
 #endif  // SCALUQ_USE_CUDA
 template class ParamRXGateImpl<Prec>;
@@ -126,18 +128,19 @@ std::string ParamRYGateImpl<Prec>::to_string(const std::string& indent) const {
 }
 template <Precision Prec>
 void ParamRYGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::Host>& state_vector, double param) const {
-    this->check_qubit_mask_within_bounds(state_vector);
+    ExecutionContext<Prec, ExecutionSpace::Host> context, double param) const {
+    this->check_qubit_mask_within_bounds(context.state);
     ry_gate(this->_target_mask,
             this->_control_mask,
             this->_control_value_mask,
             this->_pcoef * static_cast<Float<Prec>>(param),
-            state_vector);
+            context.state);
 }
 template <Precision Prec>
 void ParamRYGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::Host>& states, std::vector<double> params) const {
-    this->check_qubit_mask_within_bounds(states);
+    ExecutionContextBatched<Prec, ExecutionSpace::Host> context,
+    const std::vector<double>& params) const {
+    this->check_qubit_mask_within_bounds(context.states);
     std::vector<Float<Prec>> params_prec(params.size());
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
@@ -150,23 +153,23 @@ void ParamRYGateImpl<Prec>::update_quantum_state(
             this->_control_value_mask,
             this->_pcoef,
             params_view,
-            states);
+            context.states);
 }
 template <Precision Prec>
 void ParamRYGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::HostSerial>& state_vector, double param) const {
-    this->check_qubit_mask_within_bounds(state_vector);
+    ExecutionContext<Prec, ExecutionSpace::HostSerial> context, double param) const {
+    this->check_qubit_mask_within_bounds(context.state);
     ry_gate(this->_target_mask,
             this->_control_mask,
             this->_control_value_mask,
             this->_pcoef * static_cast<Float<Prec>>(param),
-            state_vector);
+            context.state);
 }
 template <Precision Prec>
 void ParamRYGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
-    std::vector<double> params) const {
-    this->check_qubit_mask_within_bounds(states);
+    ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context,
+    const std::vector<double>& params) const {
+    this->check_qubit_mask_within_bounds(context.states);
     std::vector<Float<Prec>> params_prec(params.size());
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
@@ -179,23 +182,24 @@ void ParamRYGateImpl<Prec>::update_quantum_state(
             this->_control_value_mask,
             this->_pcoef,
             params_view,
-            states);
+            context.states);
 }
 #ifdef SCALUQ_USE_CUDA
 template <Precision Prec>
 void ParamRYGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::Default>& state_vector, double param) const {
-    this->check_qubit_mask_within_bounds(state_vector);
+    ExecutionContext<Prec, ExecutionSpace::Default> context, double param) const {
+    this->check_qubit_mask_within_bounds(context.state);
     ry_gate(this->_target_mask,
             this->_control_mask,
             this->_control_value_mask,
             this->_pcoef * static_cast<Float<Prec>>(param),
-            state_vector);
+            context.state);
 }
 template <Precision Prec>
 void ParamRYGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::Default>& states, std::vector<double> params) const {
-    this->check_qubit_mask_within_bounds(states);
+    ExecutionContextBatched<Prec, ExecutionSpace::Default> context,
+    const std::vector<double>& params) const {
+    this->check_qubit_mask_within_bounds(context.states);
     std::vector<Float<Prec>> params_prec(params.size());
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
@@ -209,7 +213,7 @@ void ParamRYGateImpl<Prec>::update_quantum_state(
             this->_control_value_mask,
             this->_pcoef,
             params_view,
-            states);
+            context.states);
 }
 #endif  // SCALUQ_USE_CUDA
 template class ParamRYGateImpl<Prec>;
@@ -231,18 +235,19 @@ std::string ParamRZGateImpl<Prec>::to_string(const std::string& indent) const {
 }
 template <Precision Prec>
 void ParamRZGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::Host>& state_vector, double param) const {
-    this->check_qubit_mask_within_bounds(state_vector);
+    ExecutionContext<Prec, ExecutionSpace::Host> context, double param) const {
+    this->check_qubit_mask_within_bounds(context.state);
     rz_gate(this->_target_mask,
             this->_control_mask,
             this->_control_value_mask,
             this->_pcoef * static_cast<Float<Prec>>(param),
-            state_vector);
+            context.state);
 }
 template <Precision Prec>
 void ParamRZGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::Host>& states, std::vector<double> params) const {
-    this->check_qubit_mask_within_bounds(states);
+    ExecutionContextBatched<Prec, ExecutionSpace::Host> context,
+    const std::vector<double>& params) const {
+    this->check_qubit_mask_within_bounds(context.states);
     std::vector<Float<Prec>> params_prec(params.size());
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
@@ -255,23 +260,23 @@ void ParamRZGateImpl<Prec>::update_quantum_state(
             this->_control_value_mask,
             this->_pcoef,
             params_view,
-            states);
+            context.states);
 }
 template <Precision Prec>
 void ParamRZGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::HostSerial>& state_vector, double param) const {
-    this->check_qubit_mask_within_bounds(state_vector);
+    ExecutionContext<Prec, ExecutionSpace::HostSerial> context, double param) const {
+    this->check_qubit_mask_within_bounds(context.state);
     rz_gate(this->_target_mask,
             this->_control_mask,
             this->_control_value_mask,
             this->_pcoef * static_cast<Float<Prec>>(param),
-            state_vector);
+            context.state);
 }
 template <Precision Prec>
 void ParamRZGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
-    std::vector<double> params) const {
-    this->check_qubit_mask_within_bounds(states);
+    ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context,
+    const std::vector<double>& params) const {
+    this->check_qubit_mask_within_bounds(context.states);
     std::vector<Float<Prec>> params_prec(params.size());
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
@@ -284,23 +289,24 @@ void ParamRZGateImpl<Prec>::update_quantum_state(
             this->_control_value_mask,
             this->_pcoef,
             params_view,
-            states);
+            context.states);
 }
 #ifdef SCALUQ_USE_CUDA
 template <Precision Prec>
 void ParamRZGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::Default>& state_vector, double param) const {
-    this->check_qubit_mask_within_bounds(state_vector);
+    ExecutionContext<Prec, ExecutionSpace::Default> context, double param) const {
+    this->check_qubit_mask_within_bounds(context.state);
     rz_gate(this->_target_mask,
             this->_control_mask,
             this->_control_value_mask,
             this->_pcoef * static_cast<Float<Prec>>(param),
-            state_vector);
+            context.state);
 }
 template <Precision Prec>
 void ParamRZGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::Default>& states, std::vector<double> params) const {
-    this->check_qubit_mask_within_bounds(states);
+    ExecutionContextBatched<Prec, ExecutionSpace::Default> context,
+    const std::vector<double>& params) const {
+    this->check_qubit_mask_within_bounds(context.states);
     std::vector<Float<Prec>> params_prec(params.size());
     std::ranges::transform(
         params, params_prec.begin(), [](double p) { return static_cast<Float<Prec>>(p); });
@@ -314,7 +320,7 @@ void ParamRZGateImpl<Prec>::update_quantum_state(
             this->_control_value_mask,
             this->_pcoef,
             params_view,
-            states);
+            context.states);
 }
 #endif  // SCALUQ_USE_CUDA
 template class ParamRZGateImpl<Prec>;

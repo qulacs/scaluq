@@ -1,6 +1,8 @@
 arnoldi
 autoapi
 autoremove
+backprop
+backpropagation
 BFLOAT
 braket
 ccache
@@ -38,8 +40,8 @@ GROUPNAME
 gtest
 habs
 Hadamard
-hessenberg
 hendrikmuhs
+hessenberg
 IBMQ
 IBMQ's
 icircuit

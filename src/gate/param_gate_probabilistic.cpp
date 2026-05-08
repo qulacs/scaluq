@@ -7,6 +7,17 @@ namespace {
 template <Precision Prec>
 using EitherGate = std::variant<Gate<Prec>, ParamGate<Prec>>;
 
+template <Precision Prec, ExecutionSpace Space>
+std::uint64_t select_probabilistic_gate_index(const std::vector<double>& cumulative_distribution,
+                                              ExecutionContext<Prec, Space> context) {
+    std::uniform_real_distribution<double> dist(0., 1.);
+    std::uint64_t i = std::distance(cumulative_distribution.begin(),
+                                    std::ranges::upper_bound(cumulative_distribution,
+                                                             dist(context.random_engine))) -
+                      1;
+    return std::min<std::uint64_t>(i, cumulative_distribution.size() - 2);
+}
+
 template <Precision Prec>
 void flatten_param_probabilistic_gate(double prob_prefix,
                                       const EitherGate<Prec>& gate,
@@ -98,130 +109,75 @@ std::string ParamProbabilisticGateImpl<Prec>::to_string(const std::string& inden
 }
 template <Precision Prec>
 void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::Host>& state_vector, double param) const {
-    Random random;
-    double r = random.uniform();
-    std::uint64_t i = std::distance(_cumulative_distribution.begin(),
-                                    std::ranges::upper_bound(_cumulative_distribution, r)) -
-                      1;
-    if (i >= _gate_list.size()) i = _gate_list.size() - 1;
+    ExecutionContext<Prec, ExecutionSpace::Host> context, double param) const {
+    const std::uint64_t i = select_probabilistic_gate_index(_cumulative_distribution, context);
     const auto& gate = _gate_list[i];
     if (gate.index() == 0) {
-        std::get<0>(gate)->update_quantum_state(state_vector);
+        std::get<0>(gate)->update_quantum_state(context);
     } else {
-        std::get<1>(gate)->update_quantum_state(state_vector, param);
+        std::get<1>(gate)->update_quantum_state(context, param);
     }
 }
 template <Precision Prec>
 void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::Host>& states, std::vector<double> params) const {
-    Random random;
-    std::vector<double> r(states.batch_size());
-    std::ranges::generate(r, [&random]() { return random.uniform(); });
-    std::vector<std::uint64_t> indicies(states.batch_size());
-    std::ranges::transform(r, indicies.begin(), [this](double r) {
-        return std::distance(_cumulative_distribution.begin(),
-                             std::ranges::upper_bound(_cumulative_distribution, r)) -
-               1;
-    });
-    std::ranges::transform(indicies, indicies.begin(), [this](std::uint64_t i) {
-        if (i >= _gate_list.size()) i = _gate_list.size() - 1;
-        return i;
-    });
-    for (std::size_t i = 0; i < states.batch_size(); ++i) {
-        const auto& gate = _gate_list[indicies[i]];
-        auto state_vector = states.view_state_vector_at(i);
-        if (gate.index() == 0) {
-            std::get<0>(gate)->update_quantum_state(state_vector);
-        } else {
-            std::get<1>(gate)->update_quantum_state(state_vector, params[i]);
-        }
+    ExecutionContextBatched<Prec, ExecutionSpace::Host> context,
+    const std::vector<double>& params) const {
+    for (std::size_t i = 0; i < context.states.batch_size(); ++i) {
+        auto state_vector = context.states.view_state_vector_at(i);
+        this->update_quantum_state(
+            ExecutionContext<Prec, ExecutionSpace::Host>{state_vector,
+                                                         context.classical_register[i],
+                                                         context.random_engine},
+            params[i]);
     }
 }
 template <Precision Prec>
 void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::HostSerial>& state_vector, double param) const {
-    Random random;
-    double r = random.uniform();
-    std::uint64_t i = std::distance(_cumulative_distribution.begin(),
-                                    std::ranges::upper_bound(_cumulative_distribution, r)) -
-                      1;
-    if (i >= _gate_list.size()) i = _gate_list.size() - 1;
+    ExecutionContext<Prec, ExecutionSpace::HostSerial> context, double param) const {
+    const std::uint64_t i = select_probabilistic_gate_index(_cumulative_distribution, context);
     const auto& gate = _gate_list[i];
     if (gate.index() == 0) {
-        std::get<0>(gate)->update_quantum_state(state_vector);
+        std::get<0>(gate)->update_quantum_state(context);
     } else {
-        std::get<1>(gate)->update_quantum_state(state_vector, param);
+        std::get<1>(gate)->update_quantum_state(context, param);
     }
 }
 template <Precision Prec>
 void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
-    std::vector<double> params) const {
-    Random random;
-    std::vector<double> r(states.batch_size());
-    std::ranges::generate(r, [&random]() { return random.uniform(); });
-    std::vector<std::uint64_t> indicies(states.batch_size());
-    std::ranges::transform(r, indicies.begin(), [this](double r) {
-        return std::distance(_cumulative_distribution.begin(),
-                             std::ranges::upper_bound(_cumulative_distribution, r)) -
-               1;
-    });
-    std::ranges::transform(indicies, indicies.begin(), [this](std::uint64_t i) {
-        if (i >= _gate_list.size()) i = _gate_list.size() - 1;
-        return i;
-    });
-    for (std::size_t i = 0; i < states.batch_size(); ++i) {
-        const auto& gate = _gate_list[indicies[i]];
-        auto state_vector = states.view_state_vector_at(i);
-        if (gate.index() == 0) {
-            std::get<0>(gate)->update_quantum_state(state_vector);
-        } else {
-            std::get<1>(gate)->update_quantum_state(state_vector, params[i]);
-        }
+    ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context,
+    const std::vector<double>& params) const {
+    for (std::size_t i = 0; i < context.states.batch_size(); ++i) {
+        auto state_vector = context.states.view_state_vector_at(i);
+        this->update_quantum_state(
+            ExecutionContext<Prec, ExecutionSpace::HostSerial>{state_vector,
+                                                               context.classical_register[i],
+                                                               context.random_engine},
+            params[i]);
     }
 }
 #ifdef SCALUQ_USE_CUDA
 template <Precision Prec>
 void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
-    StateVector<Prec, ExecutionSpace::Default>& state_vector, double param) const {
-    Random random;
-    double r = random.uniform();
-    std::uint64_t i = std::distance(_cumulative_distribution.begin(),
-                                    std::ranges::upper_bound(_cumulative_distribution, r)) -
-                      1;
-    if (i >= _gate_list.size()) i = _gate_list.size() - 1;
+    ExecutionContext<Prec, ExecutionSpace::Default> context, double param) const {
+    const std::uint64_t i = select_probabilistic_gate_index(_cumulative_distribution, context);
     const auto& gate = _gate_list[i];
     if (gate.index() == 0) {
-        std::get<0>(gate)->update_quantum_state(state_vector);
+        std::get<0>(gate)->update_quantum_state(context);
     } else {
-        std::get<1>(gate)->update_quantum_state(state_vector, param);
+        std::get<1>(gate)->update_quantum_state(context, param);
     }
 }
 template <Precision Prec>
 void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
-    StateVectorBatched<Prec, ExecutionSpace::Default>& states, std::vector<double> params) const {
-    Random random;
-    std::vector<double> r(states.batch_size());
-    std::ranges::generate(r, [&random]() { return random.uniform(); });
-    std::vector<std::uint64_t> indicies(states.batch_size());
-    std::ranges::transform(r, indicies.begin(), [this](double r) {
-        return std::distance(_cumulative_distribution.begin(),
-                             std::ranges::upper_bound(_cumulative_distribution, r)) -
-               1;
-    });
-    std::ranges::transform(indicies, indicies.begin(), [this](std::uint64_t i) {
-        if (i >= _gate_list.size()) i = _gate_list.size() - 1;
-        return i;
-    });
-    for (std::size_t i = 0; i < states.batch_size(); ++i) {
-        const auto& gate = _gate_list[indicies[i]];
-        auto state_vector = states.view_state_vector_at(i);
-        if (gate.index() == 0) {
-            std::get<0>(gate)->update_quantum_state(state_vector);
-        } else {
-            std::get<1>(gate)->update_quantum_state(state_vector, params[i]);
-        }
+    ExecutionContextBatched<Prec, ExecutionSpace::Default> context,
+    const std::vector<double>& params) const {
+    for (std::size_t i = 0; i < context.states.batch_size(); ++i) {
+        auto state_vector = context.states.view_state_vector_at(i);
+        this->update_quantum_state(
+            ExecutionContext<Prec, ExecutionSpace::Default>{state_vector,
+                                                            context.classical_register[i],
+                                                            context.random_engine},
+            params[i]);
     }
 }
 #endif

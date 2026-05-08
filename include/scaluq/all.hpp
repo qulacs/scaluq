@@ -1,6 +1,8 @@
 #pragma once
 
 #include "circuit/circuit.hpp"
+#include "classical_register/classical_register.hpp"
+#include "classical_register/classical_register_batched.hpp"
 #include "constant.hpp"
 #include "gate/gate.hpp"
 #include "gate/gate_factory.hpp"
@@ -23,6 +25,8 @@
 #define SCALUQ_OMIT_TEMPLATE(Prec, Space)                                                      \
     using StateVector = ::scaluq::StateVector<Prec, Space>;                                    \
     using StateVectorBatched = ::scaluq::StateVectorBatched<Prec, Space>;                      \
+    using ClassicalRegister = ::scaluq::ClassicalRegister;                                     \
+    using ClassicalRegisterBatched = ::scaluq::ClassicalRegisterBatched;                       \
     using PauliOperator = ::scaluq::PauliOperator<Prec>;                                       \
     using Operator = ::scaluq::Operator<Prec, Space>;                                          \
     using Gate = ::scaluq::Gate<Prec>;                                                         \
@@ -42,6 +46,7 @@
     using SqrtYdagGate = ::scaluq::SqrtYdagGate<Prec>;                                         \
     using P0Gate = ::scaluq::P0Gate<Prec>;                                                     \
     using P1Gate = ::scaluq::P1Gate<Prec>;                                                     \
+    using MeasurementGate = ::scaluq::MeasurementGate<Prec>;                                   \
     using RXGate = ::scaluq::RXGate<Prec>;                                                     \
     using RYGate = ::scaluq::RYGate<Prec>;                                                     \
     using RZGate = ::scaluq::RZGate<Prec>;                                                     \
@@ -49,6 +54,7 @@
     using U2Gate = ::scaluq::U2Gate<Prec>;                                                     \
     using U3Gate = ::scaluq::U3Gate<Prec>;                                                     \
     using SwapGate = ::scaluq::SwapGate<Prec>;                                                 \
+    using EcrGate = ::scaluq::EcrGate<Prec>;                                                   \
     using PauliGate = ::scaluq::PauliGate<Prec>;                                               \
     using PauliRotationGate = ::scaluq::PauliRotationGate<Prec>;                               \
     using SparseMatrixGate = ::scaluq::SparseMatrixGate<Prec, Space>;                          \
@@ -131,6 +137,11 @@
                    std::vector<std::uint64_t> control_values = {}) {                           \
         return ::scaluq::gate::P1<Prec>(target, controls, control_values);                     \
     }                                                                                          \
+    inline Gate Measurement(std::uint64_t target,                                              \
+                            std::uint64_t classical_bit,                                       \
+                            bool reset = false) {                                              \
+        return ::scaluq::gate::Measurement<Prec>(target, classical_bit, reset);                \
+    }                                                                                          \
     inline Gate RX(std::uint64_t target,                                                       \
                    double angle,                                                               \
                    const std::vector<std::uint64_t>& controls = {},                            \
@@ -170,17 +181,24 @@
                    std::vector<std::uint64_t> control_values = {}) {                           \
         return ::scaluq::gate::U3<Prec>(target, theta, phi, lambda, controls, control_values); \
     }                                                                                          \
-    inline auto& CX = ::scaluq::gate::CX<Prec, Space>;                                         \
-    inline auto& CNot = ::scaluq::gate::CNot<Prec, Space>;                                     \
-    inline auto& CZ = ::scaluq::gate::CZ<Prec, Space>;                                         \
-    inline auto& CCX = ::scaluq::gate::CCX<Prec, Space>;                                       \
-    inline auto& Toffoli = ::scaluq::gate::Toffoli<Prec, Space>;                               \
-    inline auto& CCNot = ::scaluq::gate::CCNot<Prec, Space>;                                   \
+    inline auto& CX = ::scaluq::gate::CX<Prec>;                                                \
+    inline auto& CNot = ::scaluq::gate::CNot<Prec>;                                            \
+    inline auto& CZ = ::scaluq::gate::CZ<Prec>;                                                \
+    inline auto& CCX = ::scaluq::gate::CCX<Prec>;                                              \
+    inline auto& Toffoli = ::scaluq::gate::Toffoli<Prec>;                                      \
+    inline auto& CCNot = ::scaluq::gate::CCNot<Prec>;                                          \
     inline Gate Swap(std::uint64_t target1,                                                    \
                      std::uint64_t target2,                                                    \
                      const std::vector<std::uint64_t>& controls = {},                          \
                      std::vector<std::uint64_t> control_values = {}) {                         \
         return ::scaluq::gate::Swap<Prec>(target1, target2, controls, control_values);         \
+    }                                                                                          \
+    inline Gate Ecr(std::uint64_t physical_control,                                            \
+                    std::uint64_t physical_target,                                             \
+                    const std::vector<std::uint64_t>& controls = {},                           \
+                    std::vector<std::uint64_t> control_values = {}) {                          \
+        return ::scaluq::gate::Ecr<Prec>(                                                      \
+            physical_control, physical_target, controls, control_values);                      \
     }                                                                                          \
     inline Gate Pauli(const PauliOperator& pauli,                                              \
                       const std::vector<std::uint64_t>& controls = {},                         \

@@ -50,6 +50,22 @@ std::pair<Operator<Prec, Space>, Eigen::MatrixXcd> generate_random_observable_wi
     return {Operator<Prec, Space>(rand_observable), std::move(test_rand_observable)};
 }
 
+TYPED_TEST(OperatorTest, Hermitian) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    std::vector<PauliOperator<Prec>> terms = {
+        PauliOperator<Prec>("X 0 Y 2", StdComplex(1, 0)),
+        PauliOperator<Prec>("Y 1 X 3", StdComplex(2, 0)),
+    };
+    Operator<Prec, Space> op(terms);
+    EXPECT_TRUE(op.is_hermitian());
+    op *= StdComplex(0, 1);
+    EXPECT_FALSE(op.is_hermitian());
+    op *= StdComplex(0, -1);
+    op.force_hermitian();
+    EXPECT_TRUE(op.is_hermitian());
+}
+
 TYPED_TEST(OperatorTest, GetMatrix) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
@@ -110,6 +126,28 @@ TYPED_TEST(OperatorTest, CheckBatchedExpectationValue) {
         StdComplex res = rand_observable.get_expectation_value(state);
         ASSERT_NEAR(res.real(), results[b].real(), eps<Prec>);
         ASSERT_NEAR(res.imag(), results[b].imag(), eps<Prec>);
+    }
+}
+
+TYPED_TEST(OperatorTest, ParallelExpectationValue) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    std::uint64_t n = 4;
+    Random random;
+
+    for (std::uint64_t repeat = 0; repeat < 10; ++repeat) {
+        auto [rand_observable, test_rand_observable] =
+            generate_random_observable_with_eigen<Prec, Space>(n, random);
+
+        auto state = StateVector<Prec, Space>::Haar_random_state(n);
+        auto res_parallel = rand_observable.get_expectation_values(state);
+        std::vector<PauliOperator<Prec>> terms = rand_observable.get_terms();
+        for (std::uint64_t term_id = 0; term_id < terms.size(); ++term_id) {
+            auto pauli = terms[term_id];
+            auto res = pauli.get_expectation_value(state);
+            ASSERT_NEAR(res.real(), res_parallel[term_id].real(), eps<Prec>);
+            ASSERT_NEAR(res.imag(), res_parallel[term_id].imag(), eps<Prec>);
+        }
     }
 }
 

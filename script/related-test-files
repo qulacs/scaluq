@@ -31,8 +31,33 @@ for arg in "$@"; do
 done
 
 # generate compile_flags.json
+variables="CMAKE_C_COMPILER \
+  CMAKE_CXX_COMPILER \
+  CMAKE_BUILD_TYPE \
+  CMAKE_INSTALL_PREFIX \
+  SCALUQ_USE_OMP \
+  SCALUQ_USE_CUDA \
+  SCALUQ_CPU_NATIVE \
+  SCALUQ_CPU_ARCH \
+  SCALUQ_CUDA_ARCH \
+  SCALUQ_USE_TEST \
+  SCALUQ_USE_EXE \
+  SCALUQ_FLOAT16 \
+  SCALUQ_FLOAT32 \
+  SCALUQ_FLOAT64 \
+  SCALUQ_BFLOAT16 \
+  SCALUQ_TEST_SOURCES"
+
+CMAKE_OPS=""
+for var in $variables; do
+  eval value=\${$var:-}
+  if [ -n "$value" ]; then
+    CMAKE_OPS="${CMAKE_OPS} -D $var=$value"
+  fi
+done
+
 mkdir -p ./build
-cmake -B build -G Ninja -D SCALUQ_USE_TEST=ON -D CMAKE_EXPORT_COMPILE_COMMANDS=ON > /dev/null
+cmake -B build -G Ninja ${CMAKE_OPS} > /dev/null
 
 # find related test files
 jq -r ".[] | select(.file | startswith(\"$(pwd)/tests\")) | [.directory, .file, .command] | @tsv" build/compile_commands.json | \

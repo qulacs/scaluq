@@ -23,7 +23,7 @@ from scaluq.default.f64 import Circuit
 import math
 
 nqubits = 2
-circuit = Circuit(nqubits)
+circuit = Circuit()
 
 circuit.add_gate(H(0))
 circuit.add_param_gate(ParamRX(0), "p_rx")
@@ -49,7 +49,7 @@ from scaluq.default.f64 import Circuit, StateVector
 import math
 
 n_qubits = 2
-circuit = Circuit(n_qubits)
+circuit = Circuit()
 state = StateVector(n_qubits) # Initial state |00>
 
 circuit.add_param_gate(ParamRX(0,0.5), "angle_x") # coef 0.5

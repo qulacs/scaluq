@@ -19,7 +19,7 @@ TYPED_TEST(CircuitOptimizeTest, Basic) {
     constexpr std::uint64_t N = 10;
     constexpr std::uint64_t M = 100;
     Random random;
-    Circuit<Prec> circuit(N);
+    Circuit<Prec> circuit;
     std::vector<std::function<void()>> adders;
     std::vector<std::string> keys;
     adders.push_back([&] { circuit.add_gate(gate::I<Prec>()); });

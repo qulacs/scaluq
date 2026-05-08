@@ -42,31 +42,31 @@ std::string DenseMatrixGateImpl<Prec, Space>::to_string(const std::string& inden
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_DENSE_MATRIX_GATE_UPDATE(Class, TargetSpace)                                 \
+#define DEFINE_DENSE_MATRIX_GATE_UPDATE(ContextClass, state_member, TargetSpace)            \
     template <Precision Prec, ExecutionSpace GateSpace>                                     \
     void DenseMatrixGateImpl<Prec, GateSpace>::update_quantum_state(                        \
-        Class<Prec, TargetSpace>& state_vector) const {                                     \
+        ContextClass<Prec, TargetSpace> context) const {                                    \
         if constexpr (GateSpace == TargetSpace) {                                           \
-            this->check_qubit_mask_within_bounds(state_vector);                             \
+            this->check_qubit_mask_within_bounds(context.state_member);                     \
             dense_matrix_gate(this->_target_mask,                                           \
                               this->_control_mask,                                          \
                               this->_control_value_mask,                                    \
                               _matrix,                                                      \
-                              state_vector);                                                \
+                              context.state_member);                                        \
         } else {                                                                            \
             throw std::runtime_error(                                                       \
-                "Error: DenseMatrixGateImpl::update_quantum_state(" #Class                  \
+                "Error: DenseMatrixGateImpl::update_quantum_state(" #ContextClass           \
                 "& state_vector): Trying to run on " #TargetSpace                           \
                 " execution space, but the gate is defined on different execution space."); \
         }                                                                                   \
     }
-DEFINE_DENSE_MATRIX_GATE_UPDATE(StateVector, ExecutionSpace::Host)
-DEFINE_DENSE_MATRIX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_DENSE_MATRIX_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
-DEFINE_DENSE_MATRIX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
+DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
+DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
+DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::HostSerial)
+DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
-DEFINE_DENSE_MATRIX_GATE_UPDATE(StateVector, ExecutionSpace::Default)
-DEFINE_DENSE_MATRIX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
+DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
+DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif
 #undef DEFINE_DENSE_MATRIX_GATE_UPDATE
 template class DenseMatrixGateImpl<Prec, Space>;
@@ -111,31 +111,31 @@ std::string SparseMatrixGateImpl<Prec, Space>::to_string(const std::string& inde
     return ss.str();
 }
 
-#define DEFINE_SPARSE_MATRIX_GATE_UPDATE(Class, TargetSpace)                                \
+#define DEFINE_SPARSE_MATRIX_GATE_UPDATE(ContextClass, state_member, TargetSpace)           \
     template <Precision Prec, ExecutionSpace GateSpace>                                     \
     void SparseMatrixGateImpl<Prec, GateSpace>::update_quantum_state(                       \
-        Class<Prec, TargetSpace>& state_vector) const {                                     \
+        ContextClass<Prec, TargetSpace> context) const {                                    \
         if constexpr (GateSpace == TargetSpace) {                                           \
-            this->check_qubit_mask_within_bounds(state_vector);                             \
+            this->check_qubit_mask_within_bounds(context.state_member);                     \
             sparse_matrix_gate(this->_target_mask,                                          \
                                this->_control_mask,                                         \
                                this->_control_value_mask,                                   \
                                _matrix,                                                     \
-                               state_vector);                                               \
+                               context.state_member);                                       \
         } else {                                                                            \
             throw std::runtime_error(                                                       \
-                "Error: SparseMatrixGateImpl::update_quantum_state(" #Class                 \
+                "Error: SparseMatrixGateImpl::update_quantum_state(" #ContextClass          \
                 "& state_vector): Trying to run on " #TargetSpace                           \
                 " execution space, but the gate is defined on different execution space."); \
         }                                                                                   \
     }
-DEFINE_SPARSE_MATRIX_GATE_UPDATE(StateVector, ExecutionSpace::Host)
-DEFINE_SPARSE_MATRIX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Host)
-DEFINE_SPARSE_MATRIX_GATE_UPDATE(StateVector, ExecutionSpace::HostSerial)
-DEFINE_SPARSE_MATRIX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::HostSerial)
+DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
+DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
+DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::HostSerial)
+DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_CUDA
-DEFINE_SPARSE_MATRIX_GATE_UPDATE(StateVector, ExecutionSpace::Default)
-DEFINE_SPARSE_MATRIX_GATE_UPDATE(StateVectorBatched, ExecutionSpace::Default)
+DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
+DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif
 #undef DEFINE_SPARSE_MATRIX_GATE_UPDATE
 template class SparseMatrixGateImpl<Prec, Space>;

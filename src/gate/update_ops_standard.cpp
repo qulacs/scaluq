@@ -677,4 +677,90 @@ void swap_gate(std::uint64_t target_mask,
                                 states._raw(batch_id, basis | upper_target_mask));
         });
 }
+
+template <>
+void ecr_gate(std::uint64_t physical_target_mask,
+              std::uint64_t physical_control_mask,
+              std::uint64_t control_mask,
+              std::uint64_t control_value_mask,
+              StateVector<Prec, Space>& state) {
+    Kokkos::parallel_for(
+        "ecr_gate",
+        Kokkos::RangePolicy<SpaceType<Space>>(
+            0,
+            state.dim() >>
+                std::popcount(physical_target_mask | physical_control_mask | control_mask)),
+        KOKKOS_LAMBDA(std::uint64_t it) {
+            std::uint64_t basis_0 =
+                insert_zero_at_mask_positions(
+                    it, physical_target_mask | physical_control_mask | control_mask) |
+                control_value_mask;
+            std::uint64_t basis_1 = basis_0 | physical_control_mask;
+            std::uint64_t basis_2 = basis_0 | physical_target_mask;
+            std::uint64_t basis_3 = basis_1 | physical_target_mask;
+
+            Complex<Prec> val0 = state._raw[basis_0];
+            Complex<Prec> val1 = state._raw[basis_1];
+            Complex<Prec> val2 = state._raw[basis_2];
+            Complex<Prec> val3 = state._raw[basis_3];
+
+            Complex<Prec> res0 =
+                (val1 + val3 * Complex<Prec>(0, 1)) * Complex<Prec>(INVERSE_SQRT2());
+            Complex<Prec> res1 =
+                (val0 + val2 * Complex<Prec>(0, -1)) * Complex<Prec>(INVERSE_SQRT2());
+            Complex<Prec> res2 =
+                (val1 * Complex<Prec>(0, 1) + val3) * Complex<Prec>(INVERSE_SQRT2());
+            Complex<Prec> res3 =
+                (val0 * Complex<Prec>(0, -1) + val2) * Complex<Prec>(INVERSE_SQRT2());
+
+            state._raw[basis_0] = res0;
+            state._raw[basis_1] = res1;
+            state._raw[basis_2] = res2;
+            state._raw[basis_3] = res3;
+        });
+}
+
+template <>
+void ecr_gate(std::uint64_t physical_target_mask,
+              std::uint64_t physical_control_mask,
+              std::uint64_t control_mask,
+              std::uint64_t control_value_mask,
+              StateVectorBatched<Prec, Space>& states) {
+    const std::uint64_t span =
+        states.dim() >> std::popcount(physical_target_mask | physical_control_mask | control_mask);
+    Kokkos::parallel_for(
+        "ecr_gate_flat",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t batch_id = g / span;
+            const std::uint64_t it = g % span;
+            std::uint64_t basis_0 =
+                insert_zero_at_mask_positions(
+                    it, physical_target_mask | physical_control_mask | control_mask) |
+                control_value_mask;
+            std::uint64_t basis_1 = basis_0 | physical_control_mask;
+            std::uint64_t basis_2 = basis_0 | physical_target_mask;
+            std::uint64_t basis_3 = basis_1 | physical_target_mask;
+
+            Complex<Prec> val0 = states._raw(batch_id, basis_0);
+            Complex<Prec> val1 = states._raw(batch_id, basis_1);
+            Complex<Prec> val2 = states._raw(batch_id, basis_2);
+            Complex<Prec> val3 = states._raw(batch_id, basis_3);
+
+            Complex<Prec> res0 =
+                (val1 + val3 * Complex<Prec>(0, 1)) * Complex<Prec>(INVERSE_SQRT2());
+            Complex<Prec> res1 =
+                (val0 + val2 * Complex<Prec>(0, -1)) * Complex<Prec>(INVERSE_SQRT2());
+            Complex<Prec> res2 =
+                (val1 * Complex<Prec>(0, 1) + val3) * Complex<Prec>(INVERSE_SQRT2());
+            Complex<Prec> res3 =
+                (val0 * Complex<Prec>(0, -1) + val2) * Complex<Prec>(INVERSE_SQRT2());
+
+            states._raw(batch_id, basis_0) = res0;
+            states._raw(batch_id, basis_1) = res1;
+            states._raw(batch_id, basis_2) = res2;
+            states._raw(batch_id, basis_3) = res3;
+        });
+}
+
 }  // namespace scaluq::internal
