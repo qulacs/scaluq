@@ -205,6 +205,9 @@ StdComplex DensityMatrix<Prec, Space>::get_trace() const {
 template <Precision Prec, ExecutionSpace Space>
 DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::get_partial_trace(
     const std::vector<std::uint64_t>& traced_out_qubits) const {
+    if (traced_out_qubits.empty()) {
+        return this->copy();
+    }
     if (*std::ranges::max_element(traced_out_qubits) >= this->_n_qubits) {
         throw std::runtime_error(
             "DensityMatrix::get_partial_trace: Input vector for traced out qubits contains "
@@ -218,6 +221,7 @@ DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::get_partial_trace(
     const std::uint64_t remaining_qubits = this->_n_qubits - traced_out_qubits.size();
     auto result =
         DensityMatrix<Prec, Space>::uninitialized_state(this->_n_qubits - traced_out_qubits.size());
+    result._is_hermitian = this->_is_hermitian;
     Kokkos::parallel_for(
         "get_partial_trace",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
@@ -303,6 +307,11 @@ double DensityMatrix<Prec, Space>::get_marginal_probability(
         throw std::runtime_error(
             "DensityMatrix::get_marginal_probability: Input vector size does not match number of "
             "qubits.");
+    }
+    if (!this->_is_hermitian) {
+        throw std::runtime_error(
+            "DensityMatrix::get_marginal_probability: Marginal probability is only defined for "
+            "hermitian density matrices.");
     }
     std::vector<std::uint64_t> target_index;
     std::vector<std::uint64_t> target_value;
@@ -430,7 +439,7 @@ void DensityMatrix<Prec, Space>::add_density_matrix_with_coef(StdComplex coef,
             "DensityMatrix::add_density_matrix_with_coef: Input density matrix size does not match "
             "density matrix size.");
     }
-    if (!other._is_hermitian && coef.imag() != 0) {
+    if (!other._is_hermitian || coef.imag() != 0) {
         this->_is_hermitian = false;
     }
     Kokkos::parallel_for(
