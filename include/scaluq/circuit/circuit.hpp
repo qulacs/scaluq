@@ -397,7 +397,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
              nb::overload_cast<const Gate<Prec>&>(&Circuit<Prec>::add_gate),
              "gate"_a,
              DocString()
-                 .desc("Add gate. Given gate is copied.")
+                 .desc("Add gate to circuit.")
                  .arg("gate", "Gate", "Gate to add")
                  .ex(DocString::Code{">>> circuit = Circuit()", ">>> circuit.add_gate(gate.X(0))"})
                  .build_as_google_style()
