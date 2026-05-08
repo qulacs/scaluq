@@ -354,7 +354,8 @@ void Circuit<Prec>::optimize(std::uint64_t max_block_size) {
         if (classical_condition.has_value() || gate_with_key.index() == 1 ||
             std::get<0>(gate_with_key).gate_type() == GateType::Probabilistic ||
             std::get<0>(gate_with_key).gate_type() == GateType::Measurement) {
-            // ParamGate, Probabilistic, and Measurement cannot be merged with others
+            // ParamGate, Probabilistic, Gate with classical branches, and Measurement cannot be
+            // merged with others
             push_waiting_gates(gate_with_key);
             push(gate_with_key, classical_condition);
             continue;
