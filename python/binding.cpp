@@ -58,6 +58,7 @@ void bind_on_precision(nb::module_& mp,
                        nb::class_<ParamGate<Prec>>& param_gate_base_def) {
     auto mgate = mp.def_submodule("gate", "Define gates.");
     internal::bind_gate_gate_standard_hpp<Prec>(mp, gate_base_def);
+    internal::bind_gate_gate_measurement_hpp<Prec>(mp, gate_base_def);
     internal::bind_gate_gate_pauli_hpp<Prec>(mp, gate_base_def);
     internal::bind_gate_gate_factory_hpp<Prec>(mgate);
 
