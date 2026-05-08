@@ -49,6 +49,19 @@ void DensityMatrix<Prec, Space>::set_coherence_at(std::uint64_t row_index,
 }
 
 template <Precision Prec, ExecutionSpace Space>
+void DensityMatrix<Prec, Space>::set_coherence_pair_at(std::uint64_t row_index,
+                                                       std::uint64_t col_index,
+                                                       StdComplex c) {
+    Kokkos::View<ComplexType, Kokkos::HostSpace> host_view("single_value");
+    host_view() = c;
+    Kokkos::deep_copy(Kokkos::subview(_raw, row_index, col_index), host_view());
+    if (row_index != col_index) {
+        host_view() = internal::conj(host_view());
+        Kokkos::deep_copy(Kokkos::subview(_raw, col_index, row_index), host_view());
+    }
+}
+
+template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix DensityMatrix<Prec, Space>::get_matrix() const {
     Kokkos::View<ComplexType**, Kokkos::HostSpace> host_view("host_view", this->_dim, this->_dim);
     Kokkos::deep_copy(host_view, this->_raw);

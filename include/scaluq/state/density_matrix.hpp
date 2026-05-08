@@ -46,6 +46,10 @@ public:
      * @note is_hermitian is set to false unless diagonal element and real value is passed in.
      */
     void set_coherence_at(std::uint64_t row_index, std::uint64_t col_index, StdComplex c);
+    /**
+     * @attention Very slow. You should use load() instead if you can.
+     */
+    void set_coherence_pair_at(std::uint64_t row_index, std::uint64_t col_index, StdComplex c);
 
     [[nodiscard]] ComplexMatrix get_matrix() const;
     [[nodiscard]] DensityMatrix copy() const;
@@ -250,6 +254,32 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
                                      ">>> print(state.get_matrix())",
                                      "[[1. +0.j  0.5+0.5j 0. +0.j  0. +0.j ]",
                                      " [0. +0.j  0. +0.j  0. +0.j  0. +0.j ]",
+                                     " [0. +0.j  0. +0.j  0. +0.j  0. +0.j ]",
+                                     " [0. +0.j  0. +0.j  0. +0.j  0. +0.j ]]"})
+                 .build_as_google_style()
+                 .c_str())
+        .def("set_coherence_pair_at",
+             &DensityMatrix<Prec, Space>::set_coherence_pair_at,
+             "row_index"_a,
+             "col_index"_a,
+             "value"_a,
+             DocString()
+                 .desc("Set coherence at specified position and its conjugate position to maintain "
+                       "Hermitian property.")
+                 .desc("This is a very slow operation. Use load() instead if possible.")
+                 .arg("row_index", "int", "row index")
+                 .arg("col_index", "int", "column index")
+                 .arg("value", "complex", "value to set at the specified position")
+                 .ex(DocString::Code{">>> state = DensityMatrix(2)",
+                                     ">>> print(state.get_matrix())",
+                                     "[[1.+0.j 0.+0.j 0.+0.j 0.+0.j]",
+                                     " [0.+0.j 0.+0.j 0.+0.j 0.+0.j]",
+                                     " [0.+0.j 0.+0.j 0.+0.j 0.+0.j]",
+                                     " [0.+0.j 0.+0.j 0.+0.j 0.+0.j]]",
+                                     ">>> state.set_coherence_pair_at(0, 1, 0.5+0.5j)",
+                                     ">>> print(state.get_matrix())",
+                                     "[[1. +0.j  0.5+0.5j 0. +0.j  0. +0.j ]",
+                                     " [0.5-0.5j 0. +0.j  0. +0.j  0. +0.j ]",
                                      " [0. +0.j  0. +0.j  0. +0.j  0. +0.j ]",
                                      " [0. +0.j  0. +0.j  0. +0.j  0. +0.j ]]"})
                  .build_as_google_style()
