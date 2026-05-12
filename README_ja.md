@@ -131,7 +131,7 @@ int main() {
             scaluq::StateVector<Prec, Space>::Haar_random_state(n_qubits, 0);
         std::cout << state << std::endl;
 
-        scaluq::Circuit<Prec> circuit(n_qubits);
+        scaluq::Circuit<Prec> circuit;
         circuit.add_gate(scaluq::gate::X<Prec>(0));
         circuit.add_gate(scaluq::gate::CNot<Prec>(0, 1));
         circuit.add_gate(scaluq::gate::Y<Prec>(1));
