@@ -20,6 +20,11 @@ void flatten_probabilistic_gate(double prob_prefix,
                                 const Gate<Prec>& gate,
                                 std::vector<double>& accumulated_distribution,
                                 std::vector<Gate<Prec>>& accumulated_gate_list) {
+    if (gate.gate_type() == GateType::Measurement) {
+        throw std::runtime_error(
+            "ProbabilisticGateImpl::ProbabilisticGateImpl() MeasurementGate cannot be added to "
+            "ProbabilisticGate.");
+    }
     if (gate.gate_type() != GateType::Probabilistic) {
         accumulated_distribution.push_back(prob_prefix);
         accumulated_gate_list.push_back(gate);
@@ -43,10 +48,13 @@ ProbabilisticGateImpl<Prec>::ProbabilisticGateImpl(const std::vector<double>& di
     : GateBase<Prec>(0, 0, 0) {
     std::uint64_t n = distribution.size();
     if (n == 0) {
-        throw std::runtime_error("At least one gate is required.");
+        throw std::runtime_error(
+            "ProbabilisticGateImpl::ProbabilisticGateImpl() At least one gate is required.");
     }
     if (n != gate_list.size()) {
-        throw std::runtime_error("distribution and gate_list have different size.");
+        throw std::runtime_error(
+            "ProbabilisticGateImpl::ProbabilisticGateImpl() distribution and gate_list have "
+            "different size.");
     }
 
     for (std::size_t i = 0; i < n; ++i) {
@@ -95,10 +103,8 @@ std::string ProbabilisticGateImpl<Prec>::to_string(const std::string& indent) co
         ExecutionContextBatched<Prec, Space> context) const {                                     \
         for (std::size_t i = 0; i < context.states.batch_size(); ++i) {                           \
             auto state_vector = context.states.view_state_vector_at(i);                           \
-            this->update_quantum_state(                                                           \
-                ExecutionContext<Prec, Space>{state_vector,                                       \
-                                              context.classical_register[i],                      \
-                                              context.random_engine});                            \
+            this->update_quantum_state(ExecutionContext<Prec, Space>{                             \
+                state_vector, context.classical_register[i], context.random_engine});             \
         }                                                                                         \
     }
 DEFINE_PROBABILISTIC_GATE_CONTEXT_UPDATE(ExecutionSpace::Host)

@@ -25,6 +25,11 @@ void flatten_param_probabilistic_gate(double prob_prefix,
                                       std::vector<EitherGate<Prec>>& accumulated_gate_list) {
     if (gate.index() == 0) {
         const auto& gate_non_param = std::get<0>(gate);
+        if (gate_non_param.gate_type() == GateType::Measurement) {
+            throw std::runtime_error(
+                "ParamProbabilisticGateImpl::ParamProbabilisticGateImpl() MeasurementGate cannot "
+                "be added to ParamProbabilisticGate.");
+        }
         if (gate_non_param.gate_type() == GateType::Probabilistic) {
             auto probabilistic_gate = ProbabilisticGate<Prec>(gate_non_param);
             const auto& distribution = probabilistic_gate->distribution();
@@ -64,10 +69,14 @@ ParamProbabilisticGateImpl<Prec>::ParamProbabilisticGateImpl(
     : ParamGateBase<Prec>(0, 0, 0) {
     std::uint64_t n = distribution.size();
     if (n == 0) {
-        throw std::runtime_error("At least one gate is required.");
+        throw std::runtime_error(
+            "ParamProbabilisticGateImpl::ParamProbabilisticGateImpl() At least one gate is "
+            "required.");
     }
     if (n != gate_list.size()) {
-        throw std::runtime_error("distribution and gate_list have different size.");
+        throw std::runtime_error(
+            "ParamProbabilisticGateImpl::ParamProbabilisticGateImpl() Distribution and gate_list "
+            "have different size.");
     }
 
     for (std::size_t i = 0; i < n; ++i) {
@@ -125,9 +134,8 @@ void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
     for (std::size_t i = 0; i < context.states.batch_size(); ++i) {
         auto state_vector = context.states.view_state_vector_at(i);
         this->update_quantum_state(
-            ExecutionContext<Prec, ExecutionSpace::Host>{state_vector,
-                                                         context.classical_register[i],
-                                                         context.random_engine},
+            ExecutionContext<Prec, ExecutionSpace::Host>{
+                state_vector, context.classical_register[i], context.random_engine},
             params[i]);
     }
 }
@@ -149,9 +157,8 @@ void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
     for (std::size_t i = 0; i < context.states.batch_size(); ++i) {
         auto state_vector = context.states.view_state_vector_at(i);
         this->update_quantum_state(
-            ExecutionContext<Prec, ExecutionSpace::HostSerial>{state_vector,
-                                                               context.classical_register[i],
-                                                               context.random_engine},
+            ExecutionContext<Prec, ExecutionSpace::HostSerial>{
+                state_vector, context.classical_register[i], context.random_engine},
             params[i]);
     }
 }
@@ -174,9 +181,8 @@ void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
     for (std::size_t i = 0; i < context.states.batch_size(); ++i) {
         auto state_vector = context.states.view_state_vector_at(i);
         this->update_quantum_state(
-            ExecutionContext<Prec, ExecutionSpace::Default>{state_vector,
-                                                            context.classical_register[i],
-                                                            context.random_engine},
+            ExecutionContext<Prec, ExecutionSpace::Default>{
+                state_vector, context.classical_register[i], context.random_engine},
             params[i]);
     }
 }
