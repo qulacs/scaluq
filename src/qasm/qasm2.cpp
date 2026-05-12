@@ -35,13 +35,10 @@ struct Register {
     std::uint64_t size;
 };
 
-// Result type produced by ExprParser.  It represents the subset of OpenQASM
-// angle expressions that Scaluq can lower: a numeric constant plus at most one
-// symbolic parameter with a numeric coefficient.
+// Result type produced by ExprParser.  It represents the numeric subset of
+// OpenQASM angle expressions that Scaluq can lower.
 struct LinearExpr {
     double constant = 0.;
-    std::optional<std::string> symbol;
-    double coefficient = 0.;
 };
 
 // Export-side operation records used to describe what a Scaluq gate means
@@ -72,15 +69,6 @@ struct UGateOp {
     std::vector<std::uint64_t> control_values;
 };
 
-struct ParamRotationOp {
-    std::string_view name;
-    std::string parameter_key;
-    double coefficient;
-    std::uint64_t target;
-    std::vector<std::uint64_t> controls;
-    std::vector<std::uint64_t> control_values;
-};
-
 struct MeasurementOp {
     std::uint64_t target;
     std::uint64_t classical_bit;
@@ -95,7 +83,6 @@ using CircuitOpView = std::variant<IgnoredOp,
                                    NamedUnitaryOp,
                                    RotationOp,
                                    UGateOp,
-                                   ParamRotationOp,
                                    MeasurementOp,
                                    UnsupportedCircuitOp>;
 
@@ -226,9 +213,8 @@ struct OpenQasm2Op {
     return statements;
 }
 
-// Parser for OpenQASM angle expressions.  It converts expressions such as
-// "pi / 2" or "2 * theta" into a LinearExpr so the reader can decide whether
-// to create an ordinary rotation gate or a Scaluq parametric rotation gate.
+// Parser for OpenQASM angle expressions.  It converts numeric expressions such
+// as "pi / 2" into a LinearExpr used to create ordinary rotation gates.
 class ExprParser {
 public:
     ExprParser(std::string_view source, Location loc) : _source(source), _loc(loc) {}
@@ -287,11 +273,10 @@ private:
                 lhs = multiply(lhs, parse_unary());
             } else if (consume('/')) {
                 LinearExpr rhs = parse_unary();
-                if (rhs.symbol || rhs.constant == 0.) {
-                    throw std::runtime_error(error("division by non-constant expression"));
+                if (rhs.constant == 0.) {
+                    throw std::runtime_error(error("division by zero"));
                 }
                 lhs.constant /= rhs.constant;
-                lhs.coefficient /= rhs.constant;
             } else {
                 return lhs;
             }
@@ -323,10 +308,9 @@ private:
             }
             std::string id(_source.substr(begin, _pos - begin));
             if (id == "pi") {
-                return {
-                    .constant = std::numbers::pi, .symbol = std::nullopt, .coefficient = 0.};
+                return {.constant = std::numbers::pi};
             }
-            return {.constant = 0., .symbol = id, .coefficient = 1.};
+            throw std::runtime_error(error("only the OpenQASM constant 'pi' is supported in angle expressions"));
         }
 
         char* end = nullptr;
@@ -334,42 +318,21 @@ private:
         double value = std::strtod(rest.c_str(), &end);
         if (end == rest.c_str()) throw std::runtime_error(error("expected number or identifier"));
         _pos += static_cast<std::size_t>(end - rest.c_str());
-        return {.constant = value, .symbol = std::nullopt, .coefficient = 0.};
+        return {.constant = value};
     }
 
     [[nodiscard]] LinearExpr add(LinearExpr lhs, const LinearExpr& rhs) const {
         lhs.constant += rhs.constant;
-        if (lhs.symbol && rhs.symbol && *lhs.symbol != *rhs.symbol) {
-            throw std::runtime_error(error("multiple symbolic parameters in one angle are unsupported"));
-        }
-        if (!lhs.symbol && rhs.symbol) lhs.symbol = rhs.symbol;
-        lhs.coefficient += rhs.coefficient;
         return lhs;
     }
 
     [[nodiscard]] LinearExpr negate(LinearExpr expr) const {
         expr.constant = -expr.constant;
-        expr.coefficient = -expr.coefficient;
         return expr;
     }
 
     [[nodiscard]] LinearExpr multiply(const LinearExpr& lhs, const LinearExpr& rhs) const {
-        if (lhs.symbol && rhs.symbol) {
-            throw std::runtime_error(error("non-linear symbolic angle is unsupported"));
-        }
-        if (lhs.symbol) {
-            return {.constant = lhs.constant * rhs.constant,
-                    .symbol = lhs.symbol,
-                    .coefficient = lhs.coefficient * rhs.constant};
-        }
-        if (rhs.symbol) {
-            return {.constant = lhs.constant * rhs.constant,
-                    .symbol = rhs.symbol,
-                    .coefficient = lhs.constant * rhs.coefficient};
-        }
-        return {.constant = lhs.constant * rhs.constant,
-                .symbol = std::nullopt,
-                .coefficient = 0.};
+        return {.constant = lhs.constant * rhs.constant};
     }
 };
 
@@ -464,34 +427,6 @@ template <typename Registers>
     return oss.str();
 }
 
-[[nodiscard]] bool is_qasm_identifier(std::string_view s) {
-    if (s.empty()) return false;
-    auto is_id_start = [](unsigned char c) { return std::isalpha(c) || c == '_'; };
-    auto is_id_char = [](unsigned char c) { return std::isalnum(c) || c == '_'; };
-    if (!is_id_start(static_cast<unsigned char>(s.front()))) return false;
-    for (char c : s.substr(1)) {
-        if (!is_id_char(static_cast<unsigned char>(c))) return false;
-    }
-    std::string low = lower(s);
-    for (std::string_view keyword :
-         {"OPENQASM", "include", "qreg", "creg", "gate", "opaque", "measure", "reset", "barrier", "if", "pi"}) {
-        if (low == lower(keyword)) return false;
-    }
-    return true;
-}
-
-// Convert a Scaluq parameter key and coefficient into the QASM expression used
-// by parametric rotation exports, validating that the key can be emitted as an
-// OpenQASM identifier.
-[[nodiscard]] std::string format_param_angle(std::string_view key, double coef) {
-    if (!is_qasm_identifier(key)) {
-        throw std::runtime_error("OpenQASM 2.0 export requires parameter keys to be valid identifiers");
-    }
-    if (coef == 1.) return std::string(key);
-    if (coef == -1.) return "-" + std::string(key);
-    return format_angle(coef) + "*" + std::string(key);
-}
-
 template <Precision Prec>
 void add_rotation(Circuit<Prec>& circuit,
                   std::string_view name,
@@ -499,32 +434,14 @@ void add_rotation(Circuit<Prec>& circuit,
                   const LinearExpr& angle,
                   const std::vector<std::uint64_t>& controls,
                   Location loc) {
-    if (angle.symbol) {
-        if (angle.constant != 0.) {
-            throw std::runtime_error(
-                make_error(loc, "symbolic angles with a constant offset are unsupported"));
-        }
-        if (name == "rx") {
-            circuit.add_param_gate(
-                gate::ParamRX<Prec>(target, angle.coefficient, controls), *angle.symbol);
-        } else if (name == "ry") {
-            circuit.add_param_gate(
-                gate::ParamRY<Prec>(target, angle.coefficient, controls), *angle.symbol);
-        } else if (name == "rz") {
-            circuit.add_param_gate(
-                gate::ParamRZ<Prec>(target, angle.coefficient, controls), *angle.symbol);
-        } else {
-            throw std::runtime_error(
-                make_error(loc, "symbolic angles are only supported for rx, ry, and rz"));
-        }
-        return;
-    }
     if (name == "rx")
         circuit.add_gate(gate::RX<Prec>(target, angle.constant, controls));
     else if (name == "ry")
         circuit.add_gate(gate::RY<Prec>(target, angle.constant, controls));
     else if (name == "rz")
         circuit.add_gate(gate::RZ<Prec>(target, angle.constant, controls));
+    else
+        throw std::runtime_error(make_error(loc, "unsupported rotation gate"));
 }
 
 // Reads OpenQASM 2.0 statements and builds the public Qasm2Circuit load result.
@@ -610,7 +527,6 @@ private:
         if (name_end == 0) throw std::runtime_error(make_error(loc, "expected gate name"));
         std::string name = lower(stmt.substr(0, name_end));
         if (name == "u") name = "u3";
-        if (name == "cx") name = "cx";
 
         std::string rest = trim(stmt.substr(name_end));
         std::vector<LinearExpr> params;
@@ -685,15 +601,11 @@ private:
         }
         if (name == "u1") {
             expect(name, params, qubits, 1, 1, loc);
-            if (params[0].symbol) throw std::runtime_error(make_error(loc, "symbolic u1 is unsupported"));
             _result.circuit.add_gate(gate::U1<Prec>(qubits[0], params[0].constant));
             return;
         }
         if (name == "u2" || name == "u3") {
             expect(name, params, qubits, name == "u2" ? 2 : 3, 1, loc);
-            for (const auto& param : params) {
-                if (param.symbol) throw std::runtime_error(make_error(loc, "symbolic u2/u3 is unsupported"));
-            }
             if (name == "u2")
                 _result.circuit.add_gate(gate::U2<Prec>(qubits[0], params[0].constant, params[1].constant));
             else
@@ -720,15 +632,11 @@ private:
         }
         if (name == "cu1") {
             expect(name, params, qubits, 1, 2, loc);
-            if (params[0].symbol) throw std::runtime_error(make_error(loc, "symbolic cu1 is unsupported"));
             _result.circuit.add_gate(gate::U1<Prec>(qubits[1], params[0].constant, {qubits[0]}));
             return;
         }
         if (name == "cu3") {
             expect(name, params, qubits, 3, 2, loc);
-            for (const auto& param : params) {
-                if (param.symbol) throw std::runtime_error(make_error(loc, "symbolic cu3 is unsupported"));
-            }
             _result.circuit.add_gate(gate::U3<Prec>(
                 qubits[1], params[0].constant, params[1].constant, params[2].constant, {qubits[0]}));
             return;
@@ -879,33 +787,11 @@ template <Precision Prec>
 template <Precision Prec>
 [[nodiscard]] CircuitOpView classify_param_gate_for_export(
     const std::pair<ParamGate<Prec>, std::string>& gate_with_key) {
-    const ParamGate<Prec>& gate = gate_with_key.first;
-    const std::vector<std::uint64_t> targets = gate->target_qubit_list();
-    const std::vector<std::uint64_t> controls = gate->control_qubit_list();
-    const std::vector<std::uint64_t> control_values = gate->control_value_list();
-
-    switch (gate.param_gate_type()) {
+    switch (gate_with_key.first.param_gate_type()) {
         case ParamGateType::ParamRX:
-            return ParamRotationOp{"rx",
-                                   gate_with_key.second,
-                                   gate->param_coef(),
-                                   single_target(targets, "ParamRX"),
-                                   controls,
-                                   control_values};
         case ParamGateType::ParamRY:
-            return ParamRotationOp{"ry",
-                                   gate_with_key.second,
-                                   gate->param_coef(),
-                                   single_target(targets, "ParamRY"),
-                                   controls,
-                                   control_values};
         case ParamGateType::ParamRZ:
-            return ParamRotationOp{"rz",
-                                   gate_with_key.second,
-                                   gate->param_coef(),
-                                   single_target(targets, "ParamRZ"),
-                                   controls,
-                                   control_values};
+            return UnsupportedCircuitOp{"OpenQASM 2.0 export does not support parametric gates"};
         case ParamGateType::Unknown:
         case ParamGateType::ParamPauliRotation:
         case ParamGateType::ParamProbabilistic:
@@ -1006,30 +892,6 @@ template <Precision Prec>
     throw std::runtime_error("unsupported controlled gate for OpenQASM 2.0 export");
 }
 
-// Lower a parametric rotation export record to OpenQASM 2.0, formatting the
-// Scaluq parameter key and coefficient as a QASM angle expression.
-[[nodiscard]] OpenQasm2Op lower_param_rotation_to_qasm2(const ParamRotationOp& op) {
-    if (!all_control_values_are_one(op.control_values)) {
-        throw std::runtime_error("OpenQASM 2.0 export only supports control value 1");
-    }
-    if (op.controls.size() > 1) {
-        throw std::runtime_error("unsupported controlled param gate for OpenQASM 2.0 export");
-    }
-    std::string name = std::string(op.name);
-    std::vector<std::uint64_t> qubits;
-    if (op.controls.empty()) {
-        qubits = {op.target};
-    } else {
-        name = "c" + name;
-        qubits = {op.controls[0], op.target};
-    }
-    return {OpenQasm2Op::Kind::Gate,
-            name,
-            {format_param_angle(op.parameter_key, op.coefficient)},
-            qubits,
-            std::nullopt};
-}
-
 // Convert one dialect-neutral export operation into an OpenQASM 2.0 operation.
 // This is where QASM2 expressibility limits are enforced.
 [[nodiscard]] std::optional<OpenQasm2Op> lower_to_qasm2(const CircuitOpView& view) {
@@ -1044,8 +906,6 @@ template <Precision Prec>
                 return lower_rotation_to_qasm2(op);
             } else if constexpr (std::is_same_v<Op, UGateOp>) {
                 return lower_u_to_qasm2(op);
-            } else if constexpr (std::is_same_v<Op, ParamRotationOp>) {
-                return lower_param_rotation_to_qasm2(op);
             } else if constexpr (std::is_same_v<Op, MeasurementOp>) {
                 if (op.reset) {
                     throw std::runtime_error("OpenQASM 2.0 export does not support reset-after-measurement gates");
@@ -1111,6 +971,9 @@ std::string dumps(const Circuit<Prec>& circuit, std::optional<std::uint64_t> n_q
     }
     if (n_qubits && *n_qubits < required_n_qubits) {
         throw std::runtime_error("specified n_qubits is smaller than circuit operands");
+    }
+    if (n_qubits.value_or(required_n_qubits) == 0) {
+        throw std::runtime_error("OpenQASM 2.0 export requires at least one qubit");
     }
     std::ostringstream out;
     out << "OPENQASM 2.0;\n";

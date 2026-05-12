@@ -76,6 +76,8 @@ void bind_qasm2_hpp(nb::module_& m) {
             .note("Measurements are imported as :func:`gate.Measurement` gates. Unsupported "
                   "features such as custom gate definitions, conditionals, and reset statements "
                   "raise `RuntimeError`.")
+            .note("Angle expressions must be numeric OpenQASM 2.0 expressions using constants "
+                  "such as `pi`; undeclared symbolic parameters are rejected.")
             .ex(DocString::Code({">>> result = qasm2.loads('OPENQASM 2.0; include \"qelib1.inc\"; qreg q[1]; h q[0];')",
                                  ">>> result.n_qubits",
                                  "1",
@@ -100,10 +102,8 @@ void bind_qasm2_hpp(nb::module_& m) {
                         "smallest value required by the circuit operands is used.")
                    .ret("str", "OpenQASM 2.0 source code.")
                    .note("Only gates representable by the supported OpenQASM 2.0/qelib1 subset "
-                         "can be exported. Unsupported gates, control value 0, and "
-                         "reset-after-measurement gates raise `RuntimeError`.")
-                   .note("Parameter keys used by parametric rotation gates must be valid "
-                         "OpenQASM identifiers because they are emitted into angle expressions.")
+                         "can be exported. Unsupported gates, parametric gates, control value 0, "
+                         "and reset-after-measurement gates raise `RuntimeError`.")
                    .ex(DocString::Code({">>> circuit = Circuit()",
                                         ">>> circuit.add_gate(gate.H(0))",
                                         ">>> print(qasm2.dumps(circuit, 1))",

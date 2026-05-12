@@ -38,19 +38,16 @@ TYPED_TEST(Qasm2Test, LoadsStandardGates) {
     EXPECT_EQ(std::get<0>(loaded.circuit.get_gate_at(6)).gate_type(), GateType::Measurement);
 }
 
-TYPED_TEST(Qasm2Test, LoadsSymbolicRotationsAsParamGates) {
+TYPED_TEST(Qasm2Test, RejectsSymbolicRotationAngles) {
     constexpr Precision Prec = TestFixture::Prec;
-    auto loaded = qasm2::loads<Prec>(R"(
-        OPENQASM 2.0;
-        include "qelib1.inc";
-        qreg q[2];
-        rx(2 * theta) q[0];
-        crz(phi / 2) q[0], q[1];
-    )");
-
-    EXPECT_EQ(loaded.circuit.n_gates(), 2);
-    EXPECT_EQ(loaded.circuit.get_param_key_at(0), std::optional<std::string>("theta"));
-    EXPECT_EQ(loaded.circuit.get_param_key_at(1), std::optional<std::string>("phi"));
+    EXPECT_THROW(
+        (qasm2::loads<Prec>(R"(
+            OPENQASM 2.0;
+            include "qelib1.inc";
+            qreg q[1];
+            rx(theta) q[0];
+        )")),
+        std::runtime_error);
 }
 
 TYPED_TEST(Qasm2Test, DumpsAndLoadsCircuit) {
@@ -59,22 +56,19 @@ TYPED_TEST(Qasm2Test, DumpsAndLoadsCircuit) {
     circuit.add_gate(gate::H<Prec>(0));
     circuit.add_gate(gate::CX<Prec>(0, 1));
     circuit.add_gate(gate::RZ<Prec>(1, std::numbers::pi / 4));
-    circuit.add_param_gate(gate::ParamRX<Prec>(2, 0.5), "theta");
-    circuit.add_gate(gate::Measurement<Prec>(2, 1));
+    circuit.add_gate(gate::Measurement<Prec>(1, 1));
 
-    const std::string dumped = qasm2::dumps(circuit, 3);
-    EXPECT_NE(dumped.find("qreg q[3];"), std::string::npos);
+    const std::string dumped = qasm2::dumps(circuit, 2);
+    EXPECT_NE(dumped.find("qreg q[2];"), std::string::npos);
     EXPECT_NE(dumped.find("creg c[2];"), std::string::npos);
     EXPECT_NE(dumped.find("cx q[0], q[1];"), std::string::npos);
-    EXPECT_NE(dumped.find("rx(0.5*theta) q[2];"), std::string::npos);
-    EXPECT_NE(dumped.find("measure q[2] -> c[1];"), std::string::npos);
+    EXPECT_NE(dumped.find("measure q[1] -> c[1];"), std::string::npos);
 
     auto loaded = qasm2::loads<Prec>(dumped);
-    EXPECT_EQ(loaded.n_qubits, 3);
+    EXPECT_EQ(loaded.n_qubits, 2);
     EXPECT_EQ(loaded.n_clbits, 2);
-    EXPECT_EQ(loaded.circuit.n_gates(), 5);
-    EXPECT_EQ(loaded.circuit.get_param_key_at(3), std::optional<std::string>("theta"));
-    EXPECT_EQ(std::get<0>(loaded.circuit.get_gate_at(4)).gate_type(), GateType::Measurement);
+    EXPECT_EQ(loaded.circuit.n_gates(), 4);
+    EXPECT_EQ(std::get<0>(loaded.circuit.get_gate_at(3)).gate_type(), GateType::Measurement);
 }
 
 TYPED_TEST(Qasm2Test, LoadedCircuitExecutionMatchesQasmSemantics) {
@@ -110,14 +104,33 @@ TYPED_TEST(Qasm2Test, DumpsAreStableAfterReload) {
     circuit.add_gate(gate::H<Prec>(0));
     circuit.add_gate(gate::CX<Prec>(0, 1));
     circuit.add_gate(gate::RZ<Prec>(1, std::numbers::pi / 4));
-    circuit.add_param_gate(gate::ParamRX<Prec>(2, 0.5), "theta");
-    circuit.add_gate(gate::Measurement<Prec>(2, 1));
+    circuit.add_gate(gate::Measurement<Prec>(1, 1));
 
-    const std::string first_dump = qasm2::dumps(circuit, 3);
+    const std::string first_dump = qasm2::dumps(circuit, 2);
     auto loaded = qasm2::loads<Prec>(first_dump);
     const std::string second_dump = qasm2::dumps(loaded.circuit, loaded.n_qubits);
 
     EXPECT_EQ(second_dump, first_dump);
+}
+
+TYPED_TEST(Qasm2Test, RejectsParametricGateExport) {
+    constexpr Precision Prec = TestFixture::Prec;
+    Circuit<Prec> circuit;
+    circuit.add_param_gate(gate::ParamRX<Prec>(0, 0.5), "theta");
+
+    EXPECT_THROW(qasm2::dumps(circuit, 1), std::runtime_error);
+}
+
+TYPED_TEST(Qasm2Test, RejectsZeroQubitExport) {
+    constexpr Precision Prec = TestFixture::Prec;
+    Circuit<Prec> empty_circuit;
+    Circuit<Prec> identity_only_circuit;
+    identity_only_circuit.add_gate(gate::I<Prec>());
+
+    EXPECT_THROW(qasm2::dumps(empty_circuit), std::runtime_error);
+    EXPECT_THROW(qasm2::dumps(empty_circuit, 0), std::runtime_error);
+    EXPECT_THROW(qasm2::dumps(identity_only_circuit), std::runtime_error);
+    EXPECT_NE(qasm2::dumps(identity_only_circuit, 1).find("qreg q[1];"), std::string::npos);
 }
 
 TYPED_TEST(Qasm2Test, RejectsMissingClassicalRegisterMeasurement) {
