@@ -7,6 +7,9 @@ include(FetchContent)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(ScaluqUtility)
 
+### Linker ###
+add_link_options("-fuse-ld=mold")
+
 ### Define variables ###
 if(NOT DEFINED SCALUQ_USE_OMP)
     set(SCALUQ_USE_OMP ON)
