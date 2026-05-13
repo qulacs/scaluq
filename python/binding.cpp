@@ -48,6 +48,8 @@ void bind_on_precision_and_space(nb::module_& mp, nb::class_<Gate<Prec>>& gate_b
 
     internal::bind_gate_merge_gate_hpp<Prec, Space>(mp);
 
+    internal::bind_circuit_circuit_hpp<Prec, Space>(mp);
+
     internal::bind_operator_operator_hpp<Prec, Space>(mp);
     internal::bind_operator_operator_batched_hpp<Prec, Space>(mp);
 }
@@ -66,8 +68,6 @@ void bind_on_precision(nb::module_& mp,
     internal::bind_gate_param_gate_pauli_hpp<Prec>(mp, param_gate_base_def);
     internal::bind_gate_param_gate_probabilistic_hpp<Prec>(mp, param_gate_base_def);
     internal::bind_gate_param_gate_factory<Prec>(mgate);
-
-    internal::bind_circuit_circuit_hpp<Prec>(mp);
 
     internal::bind_operator_pauli_operator_hpp<Prec>(mp);
 }

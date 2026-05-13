@@ -284,15 +284,15 @@ void circuit_suzuki_trotter_test() {
     double angle = 2 * random.uniform() * 3.141592653589793;
     const auto num_repeats = static_cast<uint64_t>(std::ceil(angle * (double)n * 500.));
     std::vector<PauliOperator<Prec>> terms;
-    terms.push_back(PauliOperator<Prec>("Z 0 I 1", coef[0]));
-    terms.push_back(PauliOperator<Prec>("X 0 Y 1", coef[1]));
-    terms.push_back(PauliOperator<Prec>("Z 0 Z 1", coef[2]));
-    terms.push_back(PauliOperator<Prec>("Z 0 X 1", coef[3]));
-    terms.push_back(PauliOperator<Prec>("Y 0 X 1", coef[4]));
-    terms.push_back(PauliOperator<Prec>("I 0 Z 1", coef[5]));
+    terms.emplace_back(PauliOperator<Prec>("Z 0 I 1", coef[0]));
+    terms.emplace_back(PauliOperator<Prec>("X 0 Y 1", coef[1]));
+    terms.emplace_back(PauliOperator<Prec>("Z 0 Z 1", coef[2]));
+    terms.emplace_back(PauliOperator<Prec>("Z 0 X 1", coef[3]));
+    terms.emplace_back(PauliOperator<Prec>("Y 0 X 1", coef[4]));
+    terms.emplace_back(PauliOperator<Prec>("I 0 Z 1", coef[5]));
 
-    circuit.add_observable_rotation_gate(terms, angle, num_repeats);
     Operator<Prec, Space> observable(terms);
+    circuit.add_observable_rotation_gate(observable, angle, num_repeats);
 
     ComplexMatrix test_observable = coef[0] * internal::kronecker_product(I, Z);
     test_observable += coef[1] * internal::kronecker_product(Y, X);

@@ -49,18 +49,6 @@ std::uint64_t Circuit<Prec>::calculate_depth() const {
 }
 
 template <Precision Prec>
-void Circuit<Prec>::add_observable_rotation_gate(const std::vector<PauliOperator<Prec>>& observable,
-                                                 double angle,
-                                                 std::uint64_t num_repeats) {
-    for (uint64_t i = 0; i < num_repeats; ++i) {
-        for (auto term : observable) {
-            double theta = angle / static_cast<double>(num_repeats);
-            this->add_gate(gate::PauliRotation<Prec>(term, theta));
-        }
-    }
-}
-
-template <Precision Prec>
 void Circuit<Prec>::add_circuit(const Circuit<Prec>& circuit) {
     _gate_list.reserve(_gate_list.size() + circuit._gate_list.size());
     for (const auto& gate : circuit._gate_list) {

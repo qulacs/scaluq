@@ -10,6 +10,7 @@
 #include "../classical_register/classical_register.hpp"
 #include "../classical_register/classical_register_batched.hpp"
 #include "../gate/gate.hpp"
+#include "../gate/gate_factory.hpp"
 #include "../gate/param_gate.hpp"
 #include "../operator/operator.hpp"
 #include "../types.hpp"
@@ -47,9 +48,17 @@ public:
     void add_param_gate(const ParamGate<Prec>& param_gate, std::string_view parameter_key) {
         _gate_list.push_back(std::make_pair(param_gate, std::string(parameter_key)));
     }
-    void add_observable_rotation_gate(const std::vector<PauliOperator<Prec>>& observable,
+    template <ExecutionSpace Space>
+    void add_observable_rotation_gate(const Operator<Prec, Space>& observable,
                                       double angle,
-                                      std::uint64_t num_repeats);
+                                      std::uint64_t num_repeats) {
+        double theta = angle / static_cast<double>(num_repeats);
+        for (uint64_t i = 0; i < num_repeats; ++i) {
+            for (auto term : observable.get_terms()) {
+                this->add_gate(gate::PauliRotation<Prec>(term, theta));
+            }
+        }
+    }
 
     void add_circuit(const Circuit<Prec>& circuit);
     void add_circuit(Circuit<Prec>&& circuit);
@@ -300,7 +309,7 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
              "Compute gradient of expectation value of observable using back propagation.");
 }
 
-template <Precision Prec>
+template <Precision Prec, ExecutionSpace Space>
 void bind_circuit_circuit_hpp(nb::module_& m) {
     using namespace nb::literals;
 
@@ -338,20 +347,22 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
              "param_key"_a,
              "Add parametric gate with specifying key. Given param_gate is copied.")
         .def("add_observable_rotation_gate",
-             nb::overload_cast<const std::vector<PauliOperator<Prec>>&, double, std::uint64_t>(
-                 &Circuit<Prec>::add_observable_rotation_gate),
+             nb::overload_cast<const Operator<Prec, Space>&, double, std::uint64_t>(
+                 &Circuit<Prec>::template add_observable_rotation_gate<Space>),
              "observable"_a,
              "angle"_a,
              "num_repeats"_a,
              DocString()
                  .desc("Add observable rotation gate.")
-                 .arg("observable", "list[PauliOperator]", "observable")
+                 .arg("observable", "Operator", "observable")
                  .arg("angle", "float", "angle")
                  .arg("num_repeats", "int", "repeats num")
-                 .ex(DocString::Code{">>> circuit = Circuit()",
-                                     ">>> terms = []",
-                                     ">>> terms.append(PauliOperator(\"Z 0 Z 1\"))",
-                                     ">>> circuit.add_observable_rotation_gate(terms, 0.1, 100)"})
+                 .ex(DocString::Code{
+                     ">>> circuit = Circuit()",
+                     ">>> terms = []",
+                     ">>> terms.append(PauliOperator(\"Z 0 Z 1\"))",
+                     ">>> observable = Operator(terms)",
+                     ">>> circuit.add_observable_rotation_gate(observable, 0.1, 100)"})
                  .build_as_google_style()
                  .c_str())
         .def("add_circuit",
