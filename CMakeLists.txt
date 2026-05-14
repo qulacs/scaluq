@@ -7,9 +7,6 @@ include(FetchContent)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(ScaluqUtility)
 
-### Linker ###
-add_link_options("-fuse-ld=mold")
-
 ### Define variables ###
 if(NOT DEFINED SCALUQ_USE_OMP)
     set(SCALUQ_USE_OMP ON)
@@ -38,6 +35,9 @@ endif(NOT DEFINED SCALUQ_FLOAT64)
 if(NOT DEFINED SCALUQ_BFLOAT16)
     set(SCALUQ_BFLOAT16 OFF)
 endif(NOT DEFINED SCALUQ_BFLOAT16)
+if(NOT DEFINED SCALUQ_USE_MOLD)
+    set(SCALUQ_USE_MOLD ON)
+endif(NOT DEFINED SCALUQ_USE_MOLD)
 
 message(STATUS "CMAKE_C_COMPILER = ${CMAKE_C_COMPILER}")
 message(STATUS "CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER}")
@@ -54,6 +54,7 @@ message(STATUS "SCALUQ_FLOAT64 = ${SCALUQ_FLOAT64}")
 message(STATUS "SCALUQ_BFLOAT16 = ${SCALUQ_BFLOAT16}")
 message(STATUS "SCALUQ_USE_TEST = ${SCALUQ_USE_TEST}")
 message(STATUS "SCALUQ_USE_EXE = ${SCALUQ_USE_EXE}")
+message(STATUS "SCALUQ_USE_MOLD = ${SCALUQ_USE_MOLD}")
 
 ### Check compiler compatibility ###
 if(NOT CMAKE_C_COMPILER_ID STREQUAL CMAKE_CXX_COMPILER_ID)
@@ -262,6 +263,17 @@ target_compile_options(scaluq_base PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g,-O3>)
 else()
 target_compile_options(scaluq_base PUBLIC $<IF:$<CONFIG:Debug>,-O0 -g -fsanitize=address$<COMMA>undefined,-O3>)
 target_link_options(scaluq_base PUBLIC $<$<CONFIG:Debug>:-fsanitize=address$<COMMA>undefined>)
+endif()
+
+### Linker option ###
+if (SCALUQ_USE_MOLD AND UNIX AND NOT APPLE)
+    find_program(MOLD_PATH mold)
+    if (MOLD_PATH)
+        message(STATUS "mold linker found at ${MOLD_PATH}. Enabling for faster builds.")
+        add_link_options("-fuse-ld=mold")
+    else()
+        message(STATUS "mold linker not found. Falling back to default linker.")
+    endif (MOLD_PATH)
 endif()
 
 ### Add subdirectories ###
