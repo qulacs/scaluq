@@ -1,6 +1,7 @@
 #pragma once
 
 #include <random>
+#include <variant>
 #include <vector>
 
 #include "operator.hpp"
@@ -159,24 +160,19 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
         .def("copy",
              &OperatorBatched<Prec, Space>::copy,
              DocString().desc("Return a copy.").build_as_google_style().c_str())
-        .def("load",
-             nb::overload_cast<const std::vector<std::vector<PauliOperator<Prec>>>&>(
-                 &OperatorBatched<Prec, Space>::load),
-             "terms"_a,
-             DocString()
-                 .desc("Load a vector of Pauli operators.")
-                 .arg("terms", "A vector of Pauli operators.")
-                 .build_as_google_style()
-                 .c_str())
-        .def("load",
-             nb::overload_cast<const std::vector<Operator<Prec, Space>>&>(
-                 &OperatorBatched<Prec, Space>::load),
-             "terms"_a,
-             DocString()
-                 .desc("Load a vector of Operators.")
-                 .arg("terms", "A vector of Operators.")
-                 .build_as_google_style()
-                 .c_str())
+        .def(
+            "load",
+            [](OperatorBatched<Prec, Space>& op,
+               const std::variant<std::vector<std::vector<PauliOperator<Prec>>>,
+                                  std::vector<Operator<Prec, Space>>>& terms) {
+                std::visit([&](const auto& value) { op.load(value); }, terms);
+            },
+            "terms"_a,
+            DocString()
+                .desc("Load a vector of Pauli operators or a vector of Operators.")
+                .arg("terms", "list[list[PauliOperator]] | list[Operator]", "terms to load")
+                .build_as_google_style()
+                .c_str())
         .def("to_string",
              &OperatorBatched<Prec, Space>::to_string,
              DocString()

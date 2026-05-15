@@ -1,5 +1,7 @@
 #pragma once
 
+#include <variant>
+
 #include "../types.hpp"
 #include "state_vector.hpp"
 
@@ -399,24 +401,31 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         // Data access methods
-        .def("load",
-             nb::overload_cast<const std::vector<std::vector<StdComplex>>&>(
-                 &StateVectorBatched<Prec, Space>::load),
-             "states"_a,
-             DocString()
-                 .desc("Load amplitudes for all states in batch.")
-                 .arg("states", "list[list[complex]]", "Amplitudes for each state.")
-                 .build_as_google_style()
-                 .c_str())
-        .def("load",
-             nb::overload_cast<const StateVectorBatched<Prec, Space>&>(
-                 &StateVectorBatched<Prec, Space>::load),
-             "other"_a,
-             DocString()
-                 .desc("Load states from another :class:`StateVectorBatched`.")
-                 .arg("other", ":class:`StateVectorBatched`", "Batched state vector to load from.")
-                 .build_as_google_style()
-                 .c_str())
+        .def(
+            "load",
+            [](StateVectorBatched<Prec, Space>& states,
+               const std::variant<std::vector<std::vector<StdComplex>>,
+                                  StateVectorBatched<Prec, Space>*>& other) {
+                std::visit(
+                    [&](const auto& value) {
+                        using T = std::decay_t<decltype(value)>;
+                        if constexpr (std::is_same_v<T, std::vector<std::vector<StdComplex>>>) {
+                            states.load(value);
+                        } else {
+                            states.load(*value);
+                        }
+                    },
+                    other);
+            },
+            "other"_a,
+            DocString()
+                .desc("Load amplitudes from a nested sequence or another "
+                      ":class:`StateVectorBatched`.")
+                .arg("other",
+                     "list[list[complex]] | StateVectorBatched",
+                     "amplitudes for each state or source batched state vector")
+                .build_as_google_style()
+                .c_str())
         .def("get_reduced_state",
              &StateVectorBatched<Prec, Space>::get_reduced_state,
              DocString()
