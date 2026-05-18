@@ -922,6 +922,64 @@ public:
     }
 };
 
+template <Precision Prec>
+class EcrGateImpl : public GateBase<Prec> {
+    std::uint64_t _physical_control_mask, _physical_target_mask;
+
+public:
+    EcrGateImpl(std::uint64_t target_mask,
+                std::uint64_t control_mask,
+                std::uint64_t control_value_mask,
+                std::uint64_t physical_control_mask,
+                std::uint64_t physical_target_mask)
+        : GateBase<Prec>(target_mask, control_mask, control_value_mask),
+          _physical_control_mask(physical_control_mask),
+          _physical_target_mask(physical_target_mask) {}
+
+    using GateBase<Prec>::update_quantum_state;
+
+    std::vector<std::uint64_t> physical_control_indices() const {
+        return mask_to_vector(_physical_control_mask);
+    }
+    std::vector<std::uint64_t> physical_target_indices() const {
+        return mask_to_vector(_physical_target_mask);
+    }
+
+    std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
+        return std::make_shared<const EcrGateImpl<Prec>>(this->_target_mask,
+                                                         this->_control_mask,
+                                                         this->_control_value_mask,
+                                                         _physical_control_mask,
+                                                         _physical_target_mask);
+    }
+    ComplexMatrix get_matrix() const override;
+
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
+    void update_quantum_state(
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context) const override;
+    void update_quantum_state(
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context) const override;
+    void update_quantum_state(
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context) const override;
+#ifdef SCALUQ_USE_CUDA
+    void update_quantum_state(
+        ExecutionContext<Prec, ExecutionSpace::Default> context) const override;
+    void update_quantum_state(
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context) const override;
+#endif  // SCALUQ_USE_CUDA
+
+    std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{{"type", "Ecr"},
+                 {"target", this->target_qubit_list()},
+                 {"control", this->control_qubit_list()},
+                 {"control_value", this->control_value_list()},
+                 {"physical_control", this->physical_control_indices()},
+                 {"physical_target", this->physical_target_indices()}};
+    }
+};
+
 }  // namespace internal
 
 template <Precision Prec>
@@ -970,6 +1028,8 @@ template <Precision Prec>
 using U3Gate = internal::GatePtr<internal::U3GateImpl<Prec>>;
 template <Precision Prec>
 using SwapGate = internal::GatePtr<internal::SwapGateImpl<Prec>>;
+template <Precision Prec>
+using EcrGate = internal::GatePtr<internal::EcrGateImpl<Prec>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
@@ -1121,6 +1181,24 @@ void bind_gate_gate_standard_hpp(nb::module_& m, nb::class_<Gate<Prec>>& gate_ba
             "Get `lambda` property.");
     bind_specific_gate<SwapGate<Prec>, Prec>(
         m, gate_base_def, "SwapGate", "Specific class of two-qubit swap gate.");
+    bind_specific_gate<EcrGate<Prec>, Prec>(m,
+                                            gate_base_def,
+                                            "EcrGate",
+                                            "Specific class of two-qubit ecr gate."
+                                            "represented as "
+                                            "$\\frac{1}{\\sqrt{2}}\\begin{bmatrix} "
+                                            "0 & 1 & 0 & i \\\\ "
+                                            "1 & 0 & -i & 0 \\\\ "
+                                            "0 & i & 0 & 1 \\\\ "
+                                            "-i & 0 & 1 & 0 \\end{bmatrix}$.")
+        .def(
+            "physical_control",
+            [](const EcrGate<Prec>& gate) { return gate->physical_control_indices(); },
+            "Get `physical_control_indices` property.")
+        .def(
+            "physical_target",
+            [](const EcrGate<Prec>& gate) { return gate->physical_target_indices(); },
+            "Get `physical_target_indices` property.");
 }
 }  // namespace internal
 #endif

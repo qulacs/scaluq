@@ -79,6 +79,8 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
     const {
     auto copy_operator =
         Operator<internal::Prec, internal::Space>::uninitialized_operator(_terms.size());
+    copy_operator._is_view = false;
+    copy_operator._is_hermitian = _is_hermitian;
     Kokkos::parallel_for(
         "get_dagger",
         Kokkos::RangePolicy<ExecutionSpaceType>(0, _terms.size()),
@@ -121,7 +123,7 @@ StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
         "get_expectation_value",
         Kokkos::MDRangePolicy<internal::SpaceType<internal::Space>, Kokkos::Rank<2>>(
             {0, 0}, {nterms, dim >> 1}),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t term_id, std::uint64_t state_idx, ComplexType& res_lcl) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t term_id, std::uint64_t state_idx, ComplexType & res_lcl) {
             auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
             auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
             ComplexType coef = _terms[term_id]._coef;
@@ -311,7 +313,7 @@ StdComplex Operator<internal::Prec, internal::Space>::get_transition_amplitude(
         "get_transition_amplitude",
         Kokkos::MDRangePolicy<internal::SpaceType<internal::Space>, Kokkos::Rank<2>>(
             {0, 0}, {nterms, dim >> 1}),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t term_id, std::uint64_t state_idx, ComplexType& res_lcl) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t term_id, std::uint64_t state_idx, ComplexType & res_lcl) {
             auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
             auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
             ComplexType coef = _terms[term_id]._coef;
@@ -426,6 +428,7 @@ Operator<internal::Prec, internal::Space>::copy_to_default_space() const {
     auto op =
         Operator<internal::Prec, ExecutionSpace::Default>::uninitialized_operator(_terms.extent(0));
     Kokkos::deep_copy(op._terms, _terms);
+    op._is_view = false;
     op._is_hermitian = _is_hermitian;
     return op;
 }
@@ -436,6 +439,7 @@ Operator<internal::Prec, internal::Space>::copy_to_host_space() const {
     auto op =
         Operator<internal::Prec, ExecutionSpace::Host>::uninitialized_operator(_terms.extent(0));
     Kokkos::deep_copy(op._terms, this->_terms);
+    op._is_view = false;
     op._is_hermitian = _is_hermitian;
     return op;
 }
@@ -447,7 +451,7 @@ StdComplex Operator<internal::Prec, internal::Space>::calculate_default_mu() con
     Kokkos::parallel_reduce(
         "calculate_default_mu",
         Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(0, nterms),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType& res_lcl) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & res_lcl) {
             res_lcl += internal::abs(_terms(i)._coef.real());
         },
         mu);
@@ -465,6 +469,11 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_power_method(
         throw std::runtime_error(
             "Operator::solve_ground_state_eigenvalue_by_power_method: At least one PauliOperator "
             "is required.");
+    }
+    if (!this->is_hermitian()) {
+        throw std::runtime_error(
+            "Operator::solve_ground_state_eigenvalue_by_power_method: The operator must be "
+            "Hermitian.");
     }
     std::uint64_t nqubits = initial_state.n_qubits();
     StdComplex mu_realized = mu.value_or(calculate_default_mu());
@@ -572,12 +581,13 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
         "operator*",
         Kokkos::MDRangePolicy<internal::SpaceType<internal::Space>, Kokkos::Rank<2>>(
             {0, 0}, {_terms.size(), target._terms.size()}),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j, std::uint64_t& nnz_lcl) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j, std::uint64_t & nnz_lcl) {
             ret._terms(i * target._terms.size() + j) = _terms(i) * target._terms(j);
             if (static_cast<double>(ret._terms(i * target._terms.size() + j)._coef.imag()) == 0.)
                 ++nnz_lcl;
         },
         nnz_count);
+    ret._is_view = false;
     ret._is_hermitian = (nnz_count == 0);
     return ret;
 }
@@ -604,6 +614,7 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
     const Operator<internal::Prec, internal::Space>& target) const {
     auto ret = Operator<internal::Prec, internal::Space>::uninitialized_operator(
         _terms.size() + target._terms.size());
+    ret._is_view = false;
     Kokkos::parallel_for(
         "operator+",
         Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(
@@ -623,6 +634,7 @@ template <>
 Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Space>::operator+(
     const PauliOperator<internal::Prec>& target) const {
     auto ret = Operator<internal::Prec, internal::Space>::uninitialized_operator(_terms.size() + 1);
+    ret._is_view = false;
     Kokkos::parallel_for(
         "operator+",
         Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(0, _terms.size() + 1),

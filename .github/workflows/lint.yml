@@ -5,13 +5,17 @@ on:
     paths:
       - ".github/**/*.yml"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Check YAML
     runs-on: "ubuntu-24.04"
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install yamllint
         run: sudo apt-get update && sudo apt-get install -y yamllint

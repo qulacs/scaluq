@@ -1,18 +1,38 @@
 name: Install to System (PR)
 
 on:
-  push:
-    paths-ignore:
-      - ".devcontainer/**"
-      - ".vscode/**"
-      - "doc/**"
-      - "**/*.md"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/workflows/lint.yml"
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  check-changed:
+    name: Check Changed Files
+    runs-on: ubuntu-24.04
+    outputs:
+      any_changed: ${{ steps.check.outputs.any_changed }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check relevant files
+        id: check
+        uses: tj-actions/changed-files@v47.0.1
+        with:
+          files: |
+            include/**
+            src/**
+            cmake/**
+            CMakeLists.txt
+            script/configure
+            python/**
+            example_project/**
+
   library:
     name: Install Library
+    needs: [check-changed]
+    if: ${{ needs.check-changed.outputs.any_changed == 'true' }}
     strategy:
       matrix:
         os-arch: ["linux-x86_64", "macos-arm64"]
@@ -50,13 +70,13 @@ jobs:
       CMAKE_CXX_COMPILER: ${{ matrix.cxx-compiler }}
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
       SCALUQ_CPU_NATIVE: "OFF"
-      SCALUQ_CUDA_ARCH: "PASCAL61"
+      SCALUQ_CUDA_ARCH: "TURING75"
       SCALUQ_FLOAT16: ${{ (matrix.device == 'cpu' || matrix.compiler == 'clang') && 'OFF' || 'ON' }}
       SCALUQ_FLOAT32: ${{ matrix.device == 'cpu' && 'OFF' || 'ON' }}
       SCALUQ_FLOAT64: "ON"
       SCALUQ_BFLOAT16: ${{ (matrix.device == 'cpu' || matrix.compiler == 'clang') && 'OFF' || 'ON' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup LLVM Clang (macOS clang)
         if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
@@ -67,6 +87,10 @@ jobs:
       - name: Install Ninja (Linux)
         if: ${{ matrix.os-arch == 'linux-x86_64' }}
         run: sudo apt update && sudo apt install ninja-build
+
+      - name: Install mold (Linux)
+        if: ${{ matrix.os-arch == 'linux-x86_64' }}
+        run: sudo apt update && sudo apt install mold
 
       - name: Install libomp (Linux clang)
         if: ${{ matrix.os-arch == 'linux-x86_64' && matrix.compiler == 'clang' }}
@@ -79,14 +103,14 @@ jobs:
           echo "OpenMP_ROOT=$(brew --prefix libomp)" >> "$GITHUB_ENV"
 
       - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@v1.2.21
         with:
           key: "${{ matrix.os-arch }}-${{ matrix.compiler }}-${{ matrix.device }}"
           verbose: 2
 
       - name: Install CUDA toolkit
         if: ${{ matrix.device == 'cuda' }}
-        uses: Jimver/cuda-toolkit@v0.2.30
+        uses: Jimver/cuda-toolkit@v0.2.35
         with:
           cuda: "12.9.1"
           method: "local"
@@ -119,6 +143,8 @@ jobs:
 
   python:
     name: Install Python package
+    needs: [check-changed]
+    if: ${{ needs.check-changed.outputs.any_changed == 'true' }}
     strategy:
       matrix:
         os-arch: ["linux-x86_64", "macos-arm64"]
@@ -151,13 +177,13 @@ jobs:
       CMAKE_CXX_COMPILER: ${{ matrix.cxx-compiler }}
       SCALUQ_USE_CUDA: "OFF"
       SCALUQ_CPU_NATIVE: "OFF"
-      SCALUQ_CUDA_ARCH: "PASCAL61"
+      SCALUQ_CUDA_ARCH: "TURING75"
       SCALUQ_FLOAT32: "OFF"
       SCALUQ_FLOAT64: "ON"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -178,7 +204,7 @@ jobs:
           echo "OpenMP_ROOT=$(brew --prefix libomp)" >> "$GITHUB_ENV"
 
       - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@v1.2.21
         with:
           key: "${{ matrix.os-arch }}-${{ matrix.compiler }}-cpu"
           save: false
@@ -211,3 +237,15 @@ jobs:
         run: |
           ( set -o pipefail; python python_test/run_doctest.py host f64 | tee /tmp/doctest.log )
           ! grep -q "Failed" /tmp/doctest.log
+
+  install-checks-passed:
+    name: Install Checks Passed
+    needs: [check-changed, library, python]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: All checks passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            exit 1
+          fi

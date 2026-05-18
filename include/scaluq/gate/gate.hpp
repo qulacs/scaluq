@@ -66,6 +66,8 @@ class U3GateImpl;
 template <Precision Prec>
 class SwapGateImpl;
 template <Precision Prec>
+class EcrGateImpl;
+template <Precision Prec>
 class PauliGateImpl;
 template <Precision Prec>
 class PauliRotationGateImpl;
@@ -104,6 +106,7 @@ enum class GateType {
     U2,
     U3,
     Swap,
+    Ecr,
     Pauli,
     PauliRotation,
     SparseMatrix,
@@ -164,6 +167,8 @@ constexpr GateType get_gate_type() {
         return GateType::U3;
     else if constexpr (std::is_same_v<TWithoutConst, internal::SwapGateImpl<Prec>>)
         return GateType::Swap;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::EcrGateImpl<Prec>>)
+        return GateType::Ecr;
     else if constexpr (std::is_same_v<TWithoutConst, internal::PauliGateImpl<Prec>>)
         return GateType::Pauli;
     else if constexpr (std::is_same_v<TWithoutConst, internal::PauliRotationGateImpl<Prec>>)
@@ -192,7 +197,7 @@ constexpr GateType get_gate_type() {
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 struct ExecutionContext {
-    StateVector<Prec, Space> state;
+    StateVector<Prec, Space>& state;
     ClassicalRegister& classical_register;
     std::mt19937_64& random_engine;
 
@@ -206,7 +211,7 @@ struct ExecutionContext {
 
 template <Precision Prec, ExecutionSpace Space>
 struct ExecutionContextBatched {
-    StateVectorBatched<Prec, Space> states;
+    StateVectorBatched<Prec, Space>& states;
     ClassicalRegisterBatched& classical_register;
     std::mt19937_64& random_engine;
 
@@ -432,6 +437,7 @@ DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(U1GateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(U2GateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(U3GateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SwapGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(EcrGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(PauliGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(PauliRotationGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ProbabilisticGateImpl)
@@ -533,6 +539,7 @@ public:
         else if (type == "U2") gate = GetGateFromJson<U2GateImpl<Prec>>::get(j);
         else if (type == "U3") gate = GetGateFromJson<U3GateImpl<Prec>>::get(j);
         else if (type == "Swap") gate = GetGateFromJson<SwapGateImpl<Prec>>::get(j);
+        else if (type == "Ecr") gate = GetGateFromJson<EcrGateImpl<Prec>>::get(j);
         else if (type == "Pauli") gate = GetGateFromJson<PauliGateImpl<Prec>>::get(j);
         else if (type == "PauliRotation") gate = GetGateFromJson<PauliRotationGateImpl<Prec>>::get(j);
         else if (type == "Probabilistic") gate = GetGateFromJson<ProbabilisticGateImpl<Prec>>::get(j);
@@ -696,7 +703,11 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
             "get_matrix",
             [](const GateT& gate) { return gate->get_matrix(); },
             ([]() {
-                auto ds = DocString().desc("Get matrix representation of the gate.");
+                auto ds = DocString().desc(
+                    "Get matrix representation of the gate. "
+                    "Note: The matrix is constructed by reordering "
+                    "target qubits in ascending order of their indices. The qubit with the "
+                    "smaller index is treated as the first target, and the larger as the second.");
                 if constexpr (is_base_gate) {
                     ds.ex(
                         DocString::Code({">>> gate = H(0, controls=[1, 2], control_values=[1, 0])",
@@ -952,6 +963,7 @@ void bind_gate_gate_hpp_without_precision_and_space(nb::module_& m) {
         .value("U2", GateType::U2)
         .value("U3", GateType::U3)
         .value("Swap", GateType::Swap)
+        .value("Ecr", GateType::Ecr)
         .value("Pauli", GateType::Pauli)
         .value("PauliRotation", GateType::PauliRotation)
         .value("SparseMatrix", GateType::SparseMatrix)

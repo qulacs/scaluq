@@ -50,6 +50,22 @@ std::pair<Operator<Prec, Space>, Eigen::MatrixXcd> generate_random_observable_wi
     return {Operator<Prec, Space>(rand_observable), std::move(test_rand_observable)};
 }
 
+TYPED_TEST(OperatorTest, Hermitian) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    std::vector<PauliOperator<Prec>> terms = {
+        PauliOperator<Prec>("X 0 Y 2", StdComplex(1, 0)),
+        PauliOperator<Prec>("Y 1 X 3", StdComplex(2, 0)),
+    };
+    Operator<Prec, Space> op(terms);
+    EXPECT_TRUE(op.is_hermitian());
+    op *= StdComplex(0, 1);
+    EXPECT_FALSE(op.is_hermitian());
+    op *= StdComplex(0, -1);
+    op.force_hermitian();
+    EXPECT_TRUE(op.is_hermitian());
+}
+
 TYPED_TEST(OperatorTest, GetMatrix) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
