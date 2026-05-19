@@ -22,6 +22,7 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
             gate/update_ops_standard.cpp
             state/state_vector.cpp
             state/state_vector_batched.cpp
+            state/density_matrix.cpp
             operator/operator.cpp
             operator/operator_batched.cpp
             util/utility.cpp
