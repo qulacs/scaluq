@@ -3,6 +3,7 @@
 #include <bitset>
 #include <csignal>
 #include <cstdlib>
+#include <limits>
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/gate/param_gate_factory.hpp>
 
@@ -163,6 +164,22 @@ TYPED_TEST(ParamGateTest, FlattenNestedParamProbabilisticGate) {
     ASSERT_EQ(std::get<0>(gate_list[1]).gate_type(), GateType::Y);
     ASSERT_EQ(std::get<1>(gate_list[2]).param_gate_type(), ParamGateType::ParamRX);
     ASSERT_EQ(std::get<0>(gate_list[3]).gate_type(), GateType::I);
+}
+
+TYPED_TEST(ParamGateTest, ParamProbabilisticGateRejectsInvalidDistributionValues) {
+    constexpr Precision Prec = TestFixture::Prec;
+
+    EXPECT_THROW(
+        gate::ParamProbabilistic<Prec>({-0.2, 1.2}, {gate::ParamRX<Prec>(0), gate::I<Prec>()}),
+        std::runtime_error);
+    EXPECT_THROW(
+        gate::ParamProbabilistic<Prec>({std::numeric_limits<double>::quiet_NaN(), 1.0},
+                                       {gate::ParamRX<Prec>(0), gate::I<Prec>()}),
+        std::runtime_error);
+    EXPECT_THROW(
+        gate::ParamProbabilistic<Prec>({std::numeric_limits<double>::infinity(), 0.0},
+                                       {gate::ParamRX<Prec>(0), gate::I<Prec>()}),
+        std::runtime_error);
 }
 
 template <Precision Prec, ExecutionSpace Space>

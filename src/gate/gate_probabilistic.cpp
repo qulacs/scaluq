@@ -56,6 +56,14 @@ ProbabilisticGateImpl<Prec>::ProbabilisticGateImpl(const std::vector<double>& di
             "ProbabilisticGateImpl::ProbabilisticGateImpl() distribution and gate_list have "
             "different size.");
     }
+    for (double probability : distribution) {
+        if (!std::isfinite(probability)) {
+            throw std::runtime_error("distribution must contain only finite values.");
+        }
+        if (probability < 0. || probability > 1.) {
+            throw std::runtime_error("Each probability must be between 0 and 1.");
+        }
+    }
 
     for (std::size_t i = 0; i < n; ++i) {
         flatten_probabilistic_gate(distribution[i], gate_list[i], _distribution, _gate_list);

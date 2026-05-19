@@ -27,6 +27,7 @@ RUN apt-get update && \
     libpython3-dev \
     locales \
     ninja-build \
+    mold \
     python3 \
     python3-pip \
     wget && \
