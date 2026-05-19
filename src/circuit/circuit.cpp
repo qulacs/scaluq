@@ -105,6 +105,7 @@ void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
         }
     }
     std::mt19937_64 random_engine(seed);
+    std::uint64_t unreset_measured_qubit_mask = 0ULL;
     internal::ExecutionContext<Prec, Space> context{state, classical_register, random_engine};
     for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
         if (_classical_conditions[idx].has_value() &&
@@ -113,9 +114,26 @@ void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
         }
         auto&& gate = _gate_list[idx];
         if (gate.index() == 0) {
-            std::get<0>(gate)->update_quantum_state(context);
+            const auto& fixed_gate = std::get<0>(gate);
+            if ((unreset_measured_qubit_mask & fixed_gate->operand_qubit_mask()) != 0ULL) {
+                throw std::runtime_error(
+                    "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
+                    "and has not been reset.");
+            }
+            fixed_gate->update_quantum_state(context);
+            if (fixed_gate.gate_type() == GateType::Measurement) {
+                const auto measurement_gate = MeasurementGate<Prec>(fixed_gate);
+                if (!measurement_gate->reset()) {
+                    unreset_measured_qubit_mask |= measurement_gate->target_qubit_mask();
+                }
+            }
         } else {
             const auto& [param_gate, key] = std::get<1>(gate);
+            if ((unreset_measured_qubit_mask & param_gate->operand_qubit_mask()) != 0ULL) {
+                throw std::runtime_error(
+                    "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
+                    "and has not been reset.");
+            }
             param_gate->update_quantum_state(context, parameters.at(key));
         }
     }
@@ -166,6 +184,7 @@ void Circuit<Prec>::update_quantum_state(
         }
     }
     std::mt19937_64 random_engine(seed);
+    std::uint64_t unreset_measured_qubit_mask = 0ULL;
     internal::ExecutionContextBatched<Prec, Space> context{
         states, classical_register, random_engine};
     for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
@@ -187,9 +206,26 @@ void Circuit<Prec>::update_quantum_state(
             continue;
         }
         if (gate.index() == 0) {
-            std::get<0>(gate)->update_quantum_state(context);
+            const auto& fixed_gate = std::get<0>(gate);
+            if ((unreset_measured_qubit_mask & fixed_gate->operand_qubit_mask()) != 0ULL) {
+                throw std::runtime_error(
+                    "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
+                    "and has not been reset.");
+            }
+            fixed_gate->update_quantum_state(context);
+            if (fixed_gate.gate_type() == GateType::Measurement) {
+                const auto measurement_gate = MeasurementGate<Prec>(fixed_gate);
+                if (!measurement_gate->reset()) {
+                    unreset_measured_qubit_mask |= measurement_gate->target_qubit_mask();
+                }
+            }
         } else {
             const auto& [param_gate, key] = std::get<1>(gate);
+            if ((unreset_measured_qubit_mask & param_gate->operand_qubit_mask()) != 0ULL) {
+                throw std::runtime_error(
+                    "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
+                    "and has not been reset.");
+            }
             param_gate->update_quantum_state(context, parameters.at(key));
         }
     }
@@ -486,6 +522,9 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
                 for (const auto& tmp : gate_list) {
                     gates.push_back(tmp);
                 }
+            } else if (gate.gate_type() == GateType::Measurement) {
+                throw std::runtime_error(
+                    "Circuit::simulate_noise: Measurement gate is not supported.");
             } else {
                 probs = std::vector<double>{1.0};
                 gates.push_back(gate);
@@ -520,8 +559,7 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
                 if (j >= probs.size()) {
                     throw std::runtime_error(
                         "Circuit::simulate_noise: discrete_distribution returned out of "
-                        "range "
-                        "index.");
+                        "range index.");
                 }
                 if (gate_used_count[i][j] == 0) {
                     ++new_size;
@@ -650,18 +688,21 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
                 const double cim = static_cast<double>(std::imag(c));
                 if (std::abs(cim) >= eps) {
                     throw std::runtime_error(
-                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be real.");
+                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be "
+                        "real.");
                 }
                 if (std::abs(cre) < std::numeric_limits<double>::epsilon()) {
                     throw std::runtime_error(
-                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be nonzero.");
+                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be "
+                        "nonzero.");
                 }
                 pauli_coef = cre;
             }
             const double scale = pgate->param_coef() * pauli_coef;
             if (std::abs(scale) < std::numeric_limits<double>::epsilon()) {
                 throw std::runtime_error(
-                    "Circuit::compute_expectation_gradient_backprop: param_coef * pauli_coef must be nonzero.");
+                    "Circuit::compute_expectation_gradient_backprop: param_coef * pauli_coef must "
+                    "be nonzero.");
             }
             pgate->update_quantum_state(Astate, -M_PI / scale);
             const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
