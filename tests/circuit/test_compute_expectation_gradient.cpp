@@ -22,7 +22,7 @@ void compute_expectation_gradient_test_parametric_rc() {
     std::uniform_int_distribution<std::uint64_t> dist_target(0, n - 1);
     std::uniform_real_distribution<double> dist_param(-M_PI, M_PI);
 
-    Circuit<Prec> circuit;
+    CircuitBuilder<Prec> builder;
 
     const double pcoef1 = 0.7;
     const double pcoef2 = 0.2;
@@ -55,14 +55,15 @@ void compute_expectation_gradient_test_parametric_rc() {
         gate_coefs.push_back(dist_param(engine));
         gate_coefs.push_back(dist_param(engine));
 
-        circuit.add_param_gate(gate::ParamRX<Prec>(gate_targets[idx_first], gate_coefs[idx_first]),
+        builder.add_param_gate(gate::ParamRX<Prec>(gate_targets[idx_first], gate_coefs[idx_first]),
                                std::to_string(idx_first));
-        circuit.add_param_gate(
+        builder.add_param_gate(
             gate::ParamRY<Prec>(gate_targets[idx_second], gate_coefs[idx_second]),
             std::to_string(idx_second));
-        circuit.add_param_gate(gate::ParamRZ<Prec>(gate_targets[idx_third], gate_coefs[idx_third]),
+        builder.add_param_gate(gate::ParamRZ<Prec>(gate_targets[idx_third], gate_coefs[idx_third]),
                                std::to_string(idx_third));
     }
+    Circuit<Prec> circuit = builder.build();
     auto gradient = circuit.compute_expectation_gradient(op, parameters);
 
     // make gradient by eigen matrix calculation
@@ -133,7 +134,7 @@ void compute_expectation_gradient_test_parametric_pauli_rotation() {
     std::uniform_int_distribution<std::uint64_t> dist_target(0, n - 1);
     std::uniform_real_distribution<double> dist_param(-M_PI, M_PI);
 
-    Circuit<Prec> circuit;
+    CircuitBuilder<Prec> builder;
 
     const double pcoef1 = 0.7;
     const double pcoef2 = 0.2;
@@ -170,25 +171,26 @@ void compute_expectation_gradient_test_parametric_pauli_rotation() {
         pauli_op_coefs.push_back(dist_param(engine));
         pauli_op_coefs.push_back(dist_param(engine));
 
-        circuit.add_param_gate(
+        builder.add_param_gate(
             gate::ParamPauliRotation<Prec>(
                 PauliOperator<Prec>("X " + std::to_string(gate_targets[idx_first]),
                                     pauli_op_coefs[idx_first]),
                 pauli_rotation_coefs[idx_first]),
             std::to_string(idx_first));
-        circuit.add_param_gate(
+        builder.add_param_gate(
             gate::ParamPauliRotation<Prec>(
                 PauliOperator<Prec>("Y " + std::to_string(gate_targets[idx_second]),
                                     pauli_op_coefs[idx_second]),
                 pauli_rotation_coefs[idx_second]),
             std::to_string(idx_second));
-        circuit.add_param_gate(
+        builder.add_param_gate(
             gate::ParamPauliRotation<Prec>(
                 PauliOperator<Prec>("Z " + std::to_string(gate_targets[idx_third]),
                                     pauli_op_coefs[idx_third]),
                 pauli_rotation_coefs[idx_third]),
             std::to_string(idx_third));
     }
+    Circuit<Prec> circuit = builder.build();
     auto gradient = circuit.compute_expectation_gradient(op, parameters);
 
     // make gradient by eigen matrix calculation
@@ -269,8 +271,9 @@ TYPED_TEST(CircuitExpectationGradientTest, RejectsNonHermitianObservable) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
 
-    Circuit<Prec> circuit;
-    circuit.add_param_gate(gate::ParamRX<Prec>(0, 1.0), "theta");
+    CircuitBuilder<Prec> builder;
+    builder.add_param_gate(gate::ParamRX<Prec>(0, 1.0), "theta");
+    Circuit<Prec> circuit = builder.build();
 
     const Operator<Prec, Space> op({PauliOperator<Prec>("X 0", StdComplex(0.0, 1.0))});
     const std::map<std::string, double> parameters{{"theta", 0.1}};

@@ -29,6 +29,7 @@
     using ClassicalRegisterBatched = ::scaluq::ClassicalRegisterBatched;                       \
     using PauliOperator = ::scaluq::PauliOperator<Prec>;                                       \
     using Operator = ::scaluq::Operator<Prec, Space>;                                          \
+    using CircuitBuilder = ::scaluq::CircuitBuilder<Prec>;                                     \
     using Gate = ::scaluq::Gate<Prec>;                                                         \
     using IGate = ::scaluq::IGate<Prec>;                                                       \
     using GlobalPhaseGate = ::scaluq::GlobalPhaseGate<Prec>;                                   \

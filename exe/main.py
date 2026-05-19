@@ -1,17 +1,18 @@
-from scaluq.default.f64 import Circuit
+from scaluq.default.f64 import CircuitBuilder
 from scaluq.default.f64.gate import H, X
 from scaluq.host_serial.f64 import StateVector
 
 nqubits = 2
-circuit = Circuit()
-circuit.add_gate(H(0))
-circuit.add_gate(X(1))
-circuit.add_gate(X(1, controls=[0]))
+builder = CircuitBuilder()
+builder.add_gate(H(0))
+builder.add_gate(X(1))
+builder.add_gate(X(1, controls=[0]))
+circuit = builder.build()
 
-print(circuit.gate_list()[0]) # [H, X, CX]
-print(circuit.gate_list()[1]) # [H, X, CX]
-print(circuit.gate_list()[2]) # [H, X, CX]
-print(circuit.n_gates()) # 3
+print(circuit.instructions()[0]) # H
+print(circuit.instructions()[1]) # X
+print(circuit.instructions()[2]) # CX
+print(circuit.n_instructions()) # 3
 print(circuit.calculate_depth()) # 2
 
 state = StateVector(nqubits)

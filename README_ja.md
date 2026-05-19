@@ -131,11 +131,12 @@ int main() {
             scaluq::StateVector<Prec, Space>::Haar_random_state(n_qubits, 0);
         std::cout << state << std::endl;
 
-        scaluq::Circuit<Prec> circuit(n_qubits);
-        circuit.add_gate(scaluq::gate::X<Prec>(0));
-        circuit.add_gate(scaluq::gate::CNot<Prec>(0, 1));
-        circuit.add_gate(scaluq::gate::Y<Prec>(1));
-        circuit.add_gate(scaluq::gate::RX<Prec>(1, std::numbers::pi / 2));
+        scaluq::CircuitBuilder<Prec> builder;
+        builder.add_gate(scaluq::gate::X<Prec>(0));
+        builder.add_gate(scaluq::gate::CNot<Prec>(0, 1));
+        builder.add_gate(scaluq::gate::Y<Prec>(1));
+        builder.add_gate(scaluq::gate::RX<Prec>(1, std::numbers::pi / 2));
+        scaluq::Circuit<Prec> circuit = builder.build();
         circuit.update_quantum_state(state);
 
         std::vector<scaluq::PauliOperator<Prec>> terms;
@@ -169,11 +170,12 @@ int main() {
         StateVector state = StateVector::Haar_random_state(n_qubits, 0);
         std::cout << state << std::endl;
 
-        Circuit circuit;
-        circuit.add_gate(gate::X(0));
-        circuit.add_gate(gate::CNot(0, 1));
-        circuit.add_gate(gate::Y(1));
-        circuit.add_gate(gate::RX(1, std::numbers::pi / 2));
+        CircuitBuilder builder;
+        builder.add_gate(gate::X(0));
+        builder.add_gate(gate::CNot(0, 1));
+        builder.add_gate(gate::Y(1));
+        builder.add_gate(gate::RX(1, std::numbers::pi / 2));
+        Circuit circuit = builder.build();
         circuit.update_quantum_state(state);
 
         std::vector<PauliOperator> terms;
@@ -195,11 +197,12 @@ import math
 n_qubits = 3
 state = StateVector.Haar_random_state(n_qubits, 0)
 
-circuit = Circuit()
-circuit.add_gate(gate.X(0))
-circuit.add_gate(gate.CNot(0, 1))
-circuit.add_gate(gate.Y(1))
-circuit.add_gate(gate.RX(1, math.pi / 2))
+builder = CircuitBuilder()
+builder.add_gate(gate.X(0))
+builder.add_gate(gate.CNot(0, 1))
+builder.add_gate(gate.Y(1))
+builder.add_gate(gate.RX(1, math.pi / 2))
+circuit = builder.build()
 circuit.update_quantum_state(state)
 
 terms = []

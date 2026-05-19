@@ -109,14 +109,15 @@ print(rx.angle())
 Since this inheritance relation is not shown in language layer, explicit upcast is required when you pass the Gate as {class}`Gate <scaluq.default.f64.Gate>` type.
 
 ```py
-from scaluq.default.f64 import Gate, RXGate, Circuit
+from scaluq.default.f64 import Gate, RXGate, CircuitBuilder
 from scaluq.default.f64.gate import RX
 import math
 
 rx = RXGate(RX(0, math.pi/4))
-circuit = Circuit()
+builder = CircuitBuilder()
 rx = Gate(rx) # omitting this downcast causes error on next line
-circuit.add_gate(rx)
+builder.add_gate(rx)
+circuit = builder.build()
 ```
 
 ## Apply to StateVector

@@ -14,21 +14,22 @@ p_ry = ParamRY(1) # Parametric RY gate with target 1 and coef 1.0 (default)
 ```
 
 ## Add parametric gates to Circuit
-You can add {class}`ParamGate <scaluq.default.f64.ParamGate>` to {class}`Circuit <scaluq.default.f64.Circuit>` using {func}`add_param_gate <scaluq.default.f64.Circuit.add_param_gate>`. This method requires a key (string) to identify the parameter. Multiple gates can share the same key.
+You can add {class}`ParamGate <scaluq.default.f64.ParamGate>` to `CircuitBuilder` using `add_param_gate`, and create a {class}`Circuit <scaluq.default.f64.Circuit>` by calling `build`. This method requires a key (string) to identify the parameter. Multiple gates can share the same key.
 
 You can also retrieve information about parameter keys from the circuit.
 ```
 from scaluq.default.f64.gate import ParamRX, ParamRY, H
-from scaluq.default.f64 import Circuit
+from scaluq.default.f64 import CircuitBuilder
 import math
 
 nqubits = 2
-circuit = Circuit()
+builder = CircuitBuilder()
 
-circuit.add_gate(H(0))
-circuit.add_param_gate(ParamRX(0), "p_rx")
-circuit.add_param_gate(ParamRX(1), "p_rx") # Same key can be used
-circuit.add_param_gate(ParamRY(1), "p_ry")
+builder.add_gate(H(0))
+builder.add_param_gate(ParamRX(0), "p_rx")
+builder.add_param_gate(ParamRX(1), "p_rx") # Same key can be used
+builder.add_param_gate(ParamRY(1), "p_ry")
+circuit = builder.build()
 
 # Get parameter key at specific gate index
 print(circuit.get_param_key_at(0)) # None (H gate is not parametric)
@@ -45,15 +46,16 @@ When executing the circuit, you must provide values for each parameter key. The 
 
 ```
 from scaluq.default.f64.gate import H, ParamRX, ParamRY
-from scaluq.default.f64 import Circuit, StateVector
+from scaluq.default.f64 import CircuitBuilder, StateVector
 import math
 
 n_qubits = 2
-circuit = Circuit()
+builder = CircuitBuilder()
 state = StateVector(n_qubits) # Initial state |00>
 
-circuit.add_param_gate(ParamRX(0,0.5), "angle_x") # coef 0.5
-circuit.add_param_gate(ParamRY(1), "angle_y")
+builder.add_param_gate(ParamRX(0,0.5), "angle_x") # coef 0.5
+builder.add_param_gate(ParamRY(1), "angle_y")
+circuit = builder.build()
 params_1 = {
     "angle_x": math.pi,
     "angle_y": math.pi/2
