@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <functional>
+#include <limits>
 #include <scaluq/gate/gate_factory.hpp>
 
 #include "../test_environment.hpp"
@@ -754,6 +755,47 @@ TYPED_TEST(GateTest, ApplyProbabilisticGate) {
     }
 }
 
+TYPED_TEST(GateTest, ApplyMeasurementGateOnZeroState) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    StateVector<Prec, Space> state(1);
+    ClassicalRegister classical_register(1);
+
+    gate::Measurement<Prec>(0, 0)->update_quantum_state(state, classical_register, 0);
+
+    EXPECT_FALSE(classical_register[0]);
+    const auto amplitudes = state.get_amplitudes();
+    check_near<Prec>(amplitudes[0], StdComplex{1.0, 0.0});
+    check_near<Prec>(amplitudes[1], StdComplex{0.0, 0.0});
+}
+
+TYPED_TEST(GateTest, ApplyMeasurementGateOnOneState) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    StateVector<Prec, Space> state(1);
+    gate::X<Prec>(0)->update_quantum_state(state);
+    ClassicalRegister classical_register(1);
+
+    gate::Measurement<Prec>(0, 0)->update_quantum_state(state, classical_register, 0);
+
+    EXPECT_TRUE(classical_register[0]);
+    const auto amplitudes = state.get_amplitudes();
+    check_near<Prec>(amplitudes[0], StdComplex{0.0, 0.0});
+    check_near<Prec>(amplitudes[1], StdComplex{1.0, 0.0});
+}
+
+TYPED_TEST(GateTest, MeasurementGateJsonRoundTrip) {
+    constexpr Precision Prec = TestFixture::Prec;
+
+    Gate<Prec> gate = gate::Measurement<Prec>(0, 3);
+    Gate<Prec> loaded = Json(gate).template get<Gate<Prec>>();
+
+    ASSERT_EQ(loaded.gate_type(), GateType::Measurement);
+    EXPECT_EQ(MeasurementGate<Prec>(loaded)->classical_bit_index(), 3);
+}
+
 TYPED_TEST(GateTest, FlattenNestedProbabilisticGate) {
     constexpr Precision Prec = TestFixture::Prec;
     Gate<Prec> nested_gate = gate::Probabilistic<Prec>(
@@ -772,6 +814,22 @@ TYPED_TEST(GateTest, FlattenNestedProbabilisticGate) {
     ASSERT_EQ(gate_list[0].gate_type(), GateType::X);
     ASSERT_EQ(gate_list[1].gate_type(), GateType::Y);
     ASSERT_EQ(gate_list[2].gate_type(), GateType::Z);
+}
+
+TYPED_TEST(GateTest, ProbabilisticGateRejectsInvalidDistributionValues) {
+    constexpr Precision Prec = TestFixture::Prec;
+
+    EXPECT_THROW(
+        gate::Probabilistic<Prec>({-0.2, 1.2}, {gate::X<Prec>(0), gate::I<Prec>()}),
+        std::runtime_error);
+    EXPECT_THROW(
+        gate::Probabilistic<Prec>({std::numeric_limits<double>::quiet_NaN(), 1.0},
+                                  {gate::X<Prec>(0), gate::I<Prec>()}),
+        std::runtime_error);
+    EXPECT_THROW(
+        gate::Probabilistic<Prec>({std::numeric_limits<double>::infinity(), 0.0},
+                                  {gate::X<Prec>(0), gate::I<Prec>()}),
+        std::runtime_error);
 }
 
 template <Precision Prec, ExecutionSpace Space>
