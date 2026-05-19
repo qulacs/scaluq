@@ -31,6 +31,10 @@
 *.out
 *.app
 
+# python cache
+__pycache__/
+*.py[cod]
+
 *.egg-info
 /.mypy_cache
 /.vscode

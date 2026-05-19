@@ -33,7 +33,7 @@ endif()
 if(SCALUQ_BFLOAT16)
     list(APPEND PRECISIONS bf16)
 endif()
-foreach(SPACE default host)
+foreach(SPACE default host host_serial)
     set(PYTHON_MODULE_NAME scaluq.scaluq_core.${SPACE})
     if(NOT(SCALUQ_USE_CUDA) AND SPACE STREQUAL host)
         set(PYTHON_MODULE_NAME scaluq.scaluq_core.default)
@@ -60,6 +60,14 @@ foreach(SPACE default host)
             INSTALL_TIME
             MODULE ${PYTHON_MODULE_NAME}.${PRECISION}.gate
             OUTPUT scaluq/${SPACE}/${PRECISION}/gate/__init__.pyi
+            MARKER_FILE scaluq/py.typed
+            VERBOSE
+        )
+        nanobind_add_stub(
+            scaluq_stub
+            INSTALL_TIME
+            MODULE scaluq.scaluq_core.default.${PRECISION}.qasm2
+            OUTPUT scaluq/${SPACE}/${PRECISION}/qasm2/__init__.pyi
             MARKER_FILE scaluq/py.typed
             VERBOSE
         )
