@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <random>
+#include <variant>
 
 #include "../classical_register/classical_register.hpp"
 #include "../classical_register/classical_register_batched.hpp"
@@ -204,9 +205,7 @@ struct ExecutionContext {
     ExecutionContext(StateVector<Prec, Space>& state_,
                      ClassicalRegister& classical_register_,
                      std::mt19937_64& random_engine_)
-        : state(state_),
-          classical_register(classical_register_),
-          random_engine(random_engine_) {}
+        : state(state_), classical_register(classical_register_), random_engine(random_engine_) {}
 };
 
 template <Precision Prec, ExecutionSpace Space>
@@ -218,9 +217,7 @@ struct ExecutionContextBatched {
     ExecutionContextBatched(StateVectorBatched<Prec, Space>& states_,
                             ClassicalRegisterBatched& classical_register_,
                             std::mt19937_64& random_engine_)
-        : states(states_),
-          classical_register(classical_register_),
-          random_engine(random_engine_) {}
+        : states(states_), classical_register(classical_register_), random_engine(random_engine_) {}
 };
 
 // GateBase テンプレートクラス
@@ -282,8 +279,8 @@ public:
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector) const {
         ClassicalRegister classical_register(0);
         std::mt19937_64 random_engine(std::random_device{}());
-        update_quantum_state(
-            ExecutionContext<Prec, ExecutionSpace::Host>{state_vector, classical_register, random_engine});
+        update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host>{
+            state_vector, classical_register, random_engine});
     }
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector,
                               ClassicalRegister& classical_register,
@@ -307,8 +304,8 @@ public:
                 "...): batch size mismatch.");
         }
         std::mt19937_64 random_engine(seed);
-        update_quantum_state(
-            ExecutionContextBatched<Prec, ExecutionSpace::Host>{states, classical_register, random_engine});
+        update_quantum_state(ExecutionContextBatched<Prec, ExecutionSpace::Host>{
+            states, classical_register, random_engine});
     }
     void update_quantum_state(StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const {
         ClassicalRegister classical_register(0);
@@ -345,8 +342,8 @@ public:
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector) const {
         ClassicalRegister classical_register(0);
         std::mt19937_64 random_engine(std::random_device{}());
-        update_quantum_state(
-            ExecutionContext<Prec, ExecutionSpace::Default>{state_vector, classical_register, random_engine});
+        update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Default>{
+            state_vector, classical_register, random_engine});
     }
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
                               ClassicalRegister& classical_register,
@@ -370,8 +367,8 @@ public:
                 "...): batch size mismatch.");
         }
         std::mt19937_64 random_engine(seed);
-        update_quantum_state(
-            ExecutionContextBatched<Prec, ExecutionSpace::Default>{states, classical_register, random_engine});
+        update_quantum_state(ExecutionContextBatched<Prec, ExecutionSpace::Default>{
+            states, classical_register, random_engine});
     }
 #endif  // SCALUQ_USE_CUDA
     virtual void update_quantum_state(
@@ -554,6 +551,82 @@ using Gate = internal::GatePtr<internal::GateBase<Prec>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
+template <class... Ts>
+struct Overloaded : Ts... {
+    using Ts::operator()...;
+};
+template <class... Ts>
+Overloaded(Ts...) -> Overloaded<Ts...>;
+
+using ClassicalRegisterVariant =
+    std::variant<std::monostate, ClassicalRegister*, ClassicalRegisterBatched*>;
+using GateUpdateControlVariant =
+    std::variant<std::monostate, ClassicalRegister*, ClassicalRegisterBatched*, std::uint64_t>;
+
+template <Precision Prec>
+using GateStateVariant = std::variant<StateVector<Prec, ExecutionSpace::Host>*,
+                                      StateVectorBatched<Prec, ExecutionSpace::Host>*,
+                                      StateVector<Prec, ExecutionSpace::HostSerial>*,
+                                      StateVectorBatched<Prec, ExecutionSpace::HostSerial>*
+#ifdef SCALUQ_USE_CUDA
+                                      ,
+                                      StateVector<Prec, ExecutionSpace::Default>*,
+                                      StateVectorBatched<Prec, ExecutionSpace::Default>*
+#endif
+                                      >;
+
+template <typename GateT, Precision Prec, ExecutionSpace Space>
+void update_gate_state(const GateT& gate,
+                       StateVector<Prec, Space>* state,
+                       ClassicalRegisterVariant classical_register,
+                       std::optional<std::uint64_t> seed) {
+    std::visit(
+        Overloaded{[&](std::monostate) {
+                       if (seed) {
+                           ClassicalRegister reg(0);
+                           gate->update_quantum_state(*state, reg, *seed);
+                       } else {
+                           gate->update_quantum_state(*state);
+                       }
+                   },
+                   [&](ClassicalRegister* reg) {
+                       gate->update_quantum_state(
+                           *state, *reg, seed.value_or(std::random_device{}()));
+                   },
+                   [&](ClassicalRegisterBatched*) {
+                       throw std::runtime_error(
+                           "Gate::update_quantum_state(): ClassicalRegisterBatched cannot be "
+                           "used with StateVector.");
+                   }},
+        classical_register);
+}
+
+template <typename GateT, Precision Prec, ExecutionSpace Space>
+void update_gate_state(const GateT& gate,
+                       StateVectorBatched<Prec, Space>* states,
+                       ClassicalRegisterVariant classical_register,
+                       std::optional<std::uint64_t> seed) {
+    std::visit(
+        Overloaded{[&](std::monostate) {
+                       if (seed) {
+                           ClassicalRegisterBatched reg(0, states->batch_size());
+                           gate->update_quantum_state(*states, reg, *seed);
+                       } else {
+                           gate->update_quantum_state(*states);
+                       }
+                   },
+                   [&](ClassicalRegister*) {
+                       throw std::runtime_error(
+                           "Gate::update_quantum_state(): ClassicalRegister cannot be used with "
+                           "StateVectorBatched.");
+                   },
+                   [&](ClassicalRegisterBatched* reg) {
+                       gate->update_quantum_state(
+                           *states, *reg, seed.value_or(std::random_device{}()));
+                   }},
+        classical_register);
+}
+
 template <typename GateT, Precision Prec>
 void register_gate_common_methods(nb::class_<GateT>& c) {
     using namespace nb::literals;
@@ -785,7 +858,6 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
         }
         return ds.build_as_google_style();
     }());
-    const char* up_single_ptr = single_doc_str.c_str();
 
     auto batched_doc_str = ([]() {
         auto ds = DocString().desc("Apply gate to `states`. `states` in args is directly updated.");
@@ -810,131 +882,42 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
         }
         return ds.build_as_google_style();
     }());
-    const char* up_batched_ptr = batched_doc_str.c_str();
+    auto update_doc_str = single_doc_str + "\n\n" + batched_doc_str +
+                          "\n\nOptionally pass a matching classical register and seed.";
 
     c.def(
-         "update_quantum_state",
-         [](const GateT& gate, StateVector<Prec, ExecutionSpace::Host>& sv) {
-             gate->update_quantum_state(sv);
-         },
-         "state_vector"_a,
-         up_single_ptr)
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVector<Prec, ExecutionSpace::Host>& sv,
-               ClassicalRegister& classical_register,
-               std::optional<std::uint64_t> seed) {
-                gate->update_quantum_state(
-                    sv, classical_register, seed.value_or(std::random_device{}()));
-            },
-            "state_vector"_a,
-            "classical_register"_a,
-            "seed"_a = std::nullopt,
-            "Apply gate to `state_vector` with `classical_register` and `seed`.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::Host>& sv) {
-                gate->update_quantum_state(sv);
-            },
-            "states"_a,
-            up_batched_ptr)
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVectorBatched<Prec, ExecutionSpace::Host>& sv,
-               ClassicalRegisterBatched& classical_register,
-               std::optional<std::uint64_t> seed) {
-                gate->update_quantum_state(
-                    sv, classical_register, seed.value_or(std::random_device{}()));
-            },
-            "states"_a,
-            "classical_register"_a,
-            "seed"_a = std::nullopt,
-            "Apply gate to `states` with `classical_register` and `seed`.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate, StateVector<Prec, ExecutionSpace::HostSerial>& sv) {
-                gate->update_quantum_state(sv);
-            },
-            "state_vector"_a,
-            up_single_ptr)
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVector<Prec, ExecutionSpace::HostSerial>& sv,
-               ClassicalRegister& classical_register,
-               std::optional<std::uint64_t> seed) {
-                gate->update_quantum_state(
-                    sv, classical_register, seed.value_or(std::random_device{}()));
-            },
-            "state_vector"_a,
-            "classical_register"_a,
-            "seed"_a = std::nullopt,
-            "Apply gate to `state_vector` with `classical_register` and `seed`.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::HostSerial>& sv) {
-                gate->update_quantum_state(sv);
-            },
-            "states"_a,
-            up_batched_ptr)
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVectorBatched<Prec, ExecutionSpace::HostSerial>& sv,
-               ClassicalRegisterBatched& classical_register,
-               std::optional<std::uint64_t> seed) {
-                gate->update_quantum_state(
-                    sv, classical_register, seed.value_or(std::random_device{}()));
-            },
-            "states"_a,
-            "classical_register"_a,
-            "seed"_a = std::nullopt,
-            "Apply gate to `states` with `classical_register` and `seed`.");
+        "update_quantum_state",
+        [](const GateT& gate,
+           GateStateVariant<Prec> state,
+           GateUpdateControlVariant classical_register_or_seed,
+           std::optional<std::uint64_t> seed) {
+            ClassicalRegisterVariant classical_register = std::monostate{};
+            std::optional<std::uint64_t> actual_seed = seed;
 
-#ifdef SCALUQ_USE_CUDA
-    c.def(
-         "update_quantum_state",
-         [](const GateT& gate, StateVector<Prec, ExecutionSpace::Default>& sv) {
-             gate->update_quantum_state(sv);
-         },
-         "state_vector"_a,
-         up_single_ptr)
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVector<Prec, ExecutionSpace::Default>& sv,
-               ClassicalRegister& classical_register,
-               std::optional<std::uint64_t> seed) {
-                gate->update_quantum_state(
-                    sv, classical_register, seed.value_or(std::random_device{}()));
-            },
-            "state_vector"_a,
-            "classical_register"_a,
-            "seed"_a = std::nullopt,
-            "Apply gate to `state_vector` with `classical_register` and `seed`.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate, StateVectorBatched<Prec, ExecutionSpace::Default>& sv) {
-                gate->update_quantum_state(sv);
-            },
-            "states"_a,
-            up_batched_ptr)
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVectorBatched<Prec, ExecutionSpace::Default>& sv,
-               ClassicalRegisterBatched& classical_register,
-               std::optional<std::uint64_t> seed) {
-                gate->update_quantum_state(
-                    sv, classical_register, seed.value_or(std::random_device{}()));
-            },
-            "states"_a,
-            "classical_register"_a,
-            "seed"_a = std::nullopt,
-            "Apply gate to `states` with `classical_register` and `seed`.");
-#endif
+            std::visit(
+                Overloaded{[&](std::monostate) {},
+                           [&](ClassicalRegister* reg) { classical_register = reg; },
+                           [&](ClassicalRegisterBatched* reg) { classical_register = reg; },
+                           [&](std::uint64_t value) {
+                               if (actual_seed) {
+                                   throw std::runtime_error(
+                                       "Gate::update_quantum_state(): seed was specified twice.");
+                               }
+                               actual_seed = value;
+                           }},
+                classical_register_or_seed);
+
+            std::visit(
+                [&](auto* state_ptr) {
+                    update_gate_state<GateT, Prec>(
+                        gate, state_ptr, classical_register, actual_seed);
+                },
+                state);
+        },
+        "state"_a,
+        "classical_register_or_seed"_a = std::monostate{},
+        "seed"_a = std::nullopt,
+        update_doc_str.c_str());
 }
 
 void bind_gate_gate_hpp_without_precision_and_space(nb::module_& m) {

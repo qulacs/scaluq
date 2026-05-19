@@ -5,6 +5,7 @@
 #include <random>
 #include <ranges>
 #include <stdexcept>
+#include <variant>
 #include <vector>
 
 #include "../types.hpp"
@@ -515,24 +516,29 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                     R"('Qubit Count : 1\nDimension : 2\nState vector : \n  0 : (1,0)\n  1 : (0,0)\n')"})
                 .build_as_google_style()
                 .c_str())
-        .def("load",
-             nb::overload_cast<const std::vector<StdComplex>&>(&StateVector<Prec, Space>::load),
-             "other"_a,
-             DocString()
-                 .desc("Load amplitudes of `Sequence`")
-                 .arg("other",
-                      "collections.abc.Sequence[complex]",
-                      "list of complex amplitudes with len $2^{\\mathrm{n\\_qubits}}$")
-                 .build_as_google_style()
-                 .c_str())
-        .def("load",
-             nb::overload_cast<const StateVector<Prec, Space>&>(&StateVector<Prec, Space>::load),
-             "other"_a,
-             DocString()
-                 .desc("Load amplitudes of :class:`StateVector`")
-                 .arg("other", ":class:`StateVector`", "State vector to load from.")
-                 .build_as_google_style()
-                 .c_str())
+        .def(
+            "load",
+            [](StateVector<Prec, Space>& state,
+               const std::variant<std::vector<StdComplex>, StateVector<Prec, Space>*>& other) {
+                std::visit(
+                    [&](const auto& value) {
+                        using T = std::decay_t<decltype(value)>;
+                        if constexpr (std::is_same_v<T, std::vector<StdComplex>>) {
+                            state.load(value);
+                        } else {
+                            state.load(*value);
+                        }
+                    },
+                    other);
+            },
+            "other"_a,
+            DocString()
+                .desc("Load amplitudes from a sequence or another :class:`StateVector`.")
+                .arg("other",
+                     "collections.abc.Sequence[complex] | StateVector",
+                     "amplitudes with len $2^{\\mathrm{n\\_qubits}}$ or source state vector")
+                .build_as_google_style()
+                .c_str())
         .def("copy_to_default_space",
              &StateVector<Prec, Space>::copy_to_default_space,
              DocString()
