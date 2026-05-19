@@ -207,9 +207,7 @@ void Circuit<Prec>::update_quantum_state(
         }
         if (gate.index() == 0) {
             const auto& fixed_gate = std::get<0>(gate);
-            if ((
-              
-              & fixed_gate->operand_qubit_mask()) != 0ULL) {
+            if ((unreset_measured_qubit_mask & fixed_gate->operand_qubit_mask()) != 0ULL) {
                 throw std::runtime_error(
                     "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
                     "and has not been reset.");
