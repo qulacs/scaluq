@@ -98,6 +98,27 @@ TYPED_TEST(Qasm2Test, LoadedCircuitExecutionMatchesQasmSemantics) {
     check_near<Prec>(amplitudes[3], StdComplex{1.0, 0.0});
 }
 
+TYPED_TEST(Qasm2Test, LoadsWholeRegisterMeasurement) {
+    constexpr Precision Prec = TestFixture::Prec;
+    auto loaded = qasm2::loads<Prec>(R"(
+        OPENQASM 2.0;
+        include "qelib1.inc";
+        qreg q[3];
+        creg c[3];
+        measure q -> c;
+    )");
+
+    EXPECT_EQ(loaded.n_qubits, 3);
+    EXPECT_EQ(loaded.n_clbits, 3);
+    ASSERT_EQ(loaded.circuit.n_gates(), 3);
+    for (std::uint64_t i = 0; i < 3; ++i) {
+        const auto& gate = std::get<0>(loaded.circuit.get_gate_at(i));
+        EXPECT_EQ(gate.gate_type(), GateType::Measurement);
+        EXPECT_EQ(MeasurementGate<Prec>(gate)->classical_bit_index(), i);
+        EXPECT_EQ(gate->target_qubit_list(), std::vector<std::uint64_t>{i});
+    }
+}
+
 TYPED_TEST(Qasm2Test, DumpsAreStableAfterReload) {
     constexpr Precision Prec = TestFixture::Prec;
     Circuit<Prec> circuit;
@@ -141,6 +162,19 @@ TYPED_TEST(Qasm2Test, RejectsMissingClassicalRegisterMeasurement) {
             include "qelib1.inc";
             qreg q[1];
             measure q[0] -> c[0];
+        )")),
+        std::runtime_error);
+}
+
+TYPED_TEST(Qasm2Test, RejectsMismatchedRegisterMeasurement) {
+    constexpr Precision Prec = TestFixture::Prec;
+    EXPECT_THROW(
+        (qasm2::loads<Prec>(R"(
+            OPENQASM 2.0;
+            include "qelib1.inc";
+            qreg q[2];
+            creg c[3];
+            measure q -> c;
         )")),
         std::runtime_error);
 }

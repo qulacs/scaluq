@@ -35,6 +35,11 @@ struct Register {
     std::uint64_t size;
 };
 
+struct RegisterOperand {
+    std::uint64_t offset;
+    std::uint64_t size;
+};
+
 // Result type produced by ExprParser.  It represents the numeric subset of
 // OpenQASM angle expressions that Scaluq can lower.
 struct LinearExpr {
@@ -387,6 +392,25 @@ template <typename Registers>
     return it->second.offset + index;
 }
 
+// Parse a measurement operand, which OpenQASM permits to be either a single
+// indexed bit/qubit or a whole register.
+template <typename Registers>
+[[nodiscard]] RegisterOperand parse_measure_register_operand(std::string_view operand,
+                                                             const Registers& registers,
+                                                             Location loc,
+                                                             std::string_view kind) {
+    std::string op = trim(operand);
+    if (op.find('[') != std::string::npos || op.find(']') != std::string::npos) {
+        return RegisterOperand{parse_indexed_register(op, registers, loc, kind), 1};
+    }
+    auto it = registers.find(op);
+    if (it == registers.end()) {
+        throw std::runtime_error(make_error(
+            loc, std::string("unknown ") + std::string(kind) + " register '" + op + "'"));
+    }
+    return RegisterOperand{it->second.offset, it->second.size};
+}
+
 [[nodiscard]] std::uint64_t parse_register_decl(std::string_view stmt,
                                                 std::string_view keyword,
                                                 Location loc) {
@@ -669,9 +693,14 @@ private:
         }
         std::string qoperand = trim(std::string_view(rest).substr(0, arrow));
         std::string coperand = trim(std::string_view(rest).substr(arrow + 2));
-        std::uint64_t qubit = parse_indexed_register(qoperand, _qregs, loc, "quantum");
-        std::uint64_t clbit = parse_indexed_register(coperand, _cregs, loc, "classical");
-        _result.circuit.add_gate(gate::Measurement<Prec>(qubit, clbit));
+        RegisterOperand qubits = parse_measure_register_operand(qoperand, _qregs, loc, "quantum");
+        RegisterOperand clbits = parse_measure_register_operand(coperand, _cregs, loc, "classical");
+        if (qubits.size != clbits.size) {
+            throw std::runtime_error(make_error(loc, "measurement register sizes must match"));
+        }
+        for (std::uint64_t i = 0; i < qubits.size; ++i) {
+            _result.circuit.add_gate(gate::Measurement<Prec>(qubits.offset + i, clbits.offset + i));
+        }
     }
 };
 
