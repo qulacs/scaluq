@@ -130,7 +130,8 @@ jobs:
       - name: Configure
         run: ./script/configure
 
-      - name: Inspect Runner Hardware
+      - name: Inspect Runner Hardware (Linux only)
+        if: ${{ matrix.os-arch == 'linux-x86_64' }}
         run: |
           echo "=== CPU Info ==="
           nproc
