@@ -2,6 +2,7 @@ name: Install to System (PR)
 
 on:
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -129,7 +130,22 @@ jobs:
       - name: Configure
         run: ./script/configure
 
-      - name: Install to system
+      - name: Inspect Runner Hardware
+        run: |
+          echo "=== CPU Info ==="
+          nproc
+          lscpu | grep -E "Model name|CPU\(s\):|Thread\(s\) per core"
+          echo "=== Memory Info ==="
+          free -h
+          echo "=== Disk Info ==="
+          df -h /
+
+      - name: Install to system (CUDA)
+        if: ${{ matrix.device == 'cuda' }}
+        run: sudo -E env "PATH=$PATH" ninja -j 2 -C build install
+
+      - name: Install to system (CPU)
+        if: ${{ matrix.device == 'cpu' }}
         run: sudo -E env "PATH=$PATH" ninja -C build install
 
       - name: Build and Run other project
