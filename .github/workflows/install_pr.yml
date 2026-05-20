@@ -2,7 +2,6 @@ name: Install to System (PR)
 
 on:
   pull_request:
-  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -143,7 +142,7 @@ jobs:
 
       - name: Install to system (CUDA)
         if: ${{ matrix.device == 'cuda' }}
-        run: sudo -E env "PATH=$PATH" ninja -j 2 -C build install
+        run: sudo -E env "PATH=$PATH" ninja -j 4 -C build install
 
       - name: Install to system (CPU)
         if: ${{ matrix.device == 'cpu' }}
