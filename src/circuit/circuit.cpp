@@ -650,18 +650,21 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
                 const double cim = static_cast<double>(std::imag(c));
                 if (std::abs(cim) >= eps) {
                     throw std::runtime_error(
-                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be real.");
+                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be "
+                        "real.");
                 }
                 if (std::abs(cre) < std::numeric_limits<double>::epsilon()) {
                     throw std::runtime_error(
-                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be nonzero.");
+                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be "
+                        "nonzero.");
                 }
                 pauli_coef = cre;
             }
             const double scale = pgate->param_coef() * pauli_coef;
             if (std::abs(scale) < std::numeric_limits<double>::epsilon()) {
                 throw std::runtime_error(
-                    "Circuit::compute_expectation_gradient_backprop: param_coef * pauli_coef must be nonzero.");
+                    "Circuit::compute_expectation_gradient_backprop: param_coef * pauli_coef must "
+                    "be nonzero.");
             }
             pgate->update_quantum_state(Astate, -M_PI / scale);
             const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
