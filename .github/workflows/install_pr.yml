@@ -33,7 +33,7 @@ jobs:
   library:
     name: Install Library
     needs: [check-changed]
-    if: ${{ needs.check-changed.outputs.any_changed == 'true' }}
+    # if: ${{ needs.check-changed.outputs.any_changed == 'true' }}
     strategy:
       matrix:
         os-arch: ["linux-x86_64", "macos-arm64"]
