@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <functional>
+#include <limits>
 #include <scaluq/gate/gate_factory.hpp>
 
 #include "../test_environment.hpp"
@@ -813,6 +814,22 @@ TYPED_TEST(GateTest, FlattenNestedProbabilisticGate) {
     ASSERT_EQ(gate_list[0].gate_type(), GateType::X);
     ASSERT_EQ(gate_list[1].gate_type(), GateType::Y);
     ASSERT_EQ(gate_list[2].gate_type(), GateType::Z);
+}
+
+TYPED_TEST(GateTest, ProbabilisticGateRejectsInvalidDistributionValues) {
+    constexpr Precision Prec = TestFixture::Prec;
+
+    EXPECT_THROW(
+        gate::Probabilistic<Prec>({-0.2, 1.2}, {gate::X<Prec>(0), gate::I<Prec>()}),
+        std::runtime_error);
+    EXPECT_THROW(
+        gate::Probabilistic<Prec>({std::numeric_limits<double>::quiet_NaN(), 1.0},
+                                  {gate::X<Prec>(0), gate::I<Prec>()}),
+        std::runtime_error);
+    EXPECT_THROW(
+        gate::Probabilistic<Prec>({std::numeric_limits<double>::infinity(), 0.0},
+                                  {gate::X<Prec>(0), gate::I<Prec>()}),
+        std::runtime_error);
 }
 
 template <Precision Prec, ExecutionSpace Space>

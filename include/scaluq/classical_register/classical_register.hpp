@@ -32,6 +32,7 @@ public:
         return _bits[index];
     }
     [[nodiscard]] std::uint64_t register_size() const { return _bits.size(); }
+    [[nodiscard]] bool empty() const { return _bits.empty(); }
 
     void reset() {
         for (auto&& bit : _bits) bit = false;
