@@ -25,6 +25,18 @@ Scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 
 https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
 
+# パフォーマンス
+
+202x年において、量子回路のシミュレーション時間(方法: CX, RX, RZゲートを各ターゲット量子ビットに適用する際の平均実行時間のベンチマーク)を、複数の既存量子回路シミュレータと比較した。
+
+ベンチマークのリポジトリはこちらです。 [the benchmark repository](https://github.com/Qulacs-Osaka/benchmark-scaluq).
+
+## Single State Vector Update (CPU)
+![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/multithread/image/circuit.png)
+
+## Single State Vector Update (GPU)
+![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/gpu/image/circuit.png)
+
 ## ビルド時要件
 
 - Ninja 1.10 以上

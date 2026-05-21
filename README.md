@@ -25,6 +25,18 @@ Compared to [Qulacs](https://github.com/qulacs/qulacs), the following improvemen
 
 See https://scaluq.readthedocs.io/en/latest/index.html
 
+# Performance
+
+The time for simulating quantum circuits (Method: Benchmark execution time to apply CX, RX and RZ gates (averaged over every target qubit)) is compared with several quantum circuit simulators in 202x.
+
+See [the benchmark repository](https://github.com/Qulacs-Osaka/benchmark-scaluq).
+
+## Single State Vector Update (CPU)
+![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/multithread/image/circuit.png)
+
+## Single State Vector Update (GPU)
+![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/gpu/image/circuit.png)
+
 ## Build Requirements
 
 - Ninja ≥ 1.10
