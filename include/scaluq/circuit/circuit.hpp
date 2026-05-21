@@ -105,15 +105,11 @@ public:
             throw std::runtime_error(
                 "Circuit::add_observable_rotation_gate: not implemented for non hermitian.");
         }
-        if (num_repeats < 0) {
-            throw std::invalid_argument("add_observable_rotation_gate: num_repeats must be >= 0.");
+        if (num_repeats <= 0) {
+            throw std::invalid_argument("add_observable_rotation_gate: num_repeats must be > 0.");
         }
         if (std::abs(angle) < 1e-12) {
             return;
-        }
-
-        if (num_repeats == 0) {
-            num_repeats = static_cast<std::uint64_t>(std::ceil(std::abs(angle) * 100.));
         }
 
         double theta = angle / static_cast<double>(num_repeats);
