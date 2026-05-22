@@ -427,8 +427,10 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
     mgate.def("I",
               &gate::I<Prec>,
               DocString()
-                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                        ":class:`~scaluq.f64.IGate`.")
+                  .replace_signature_to("def I(precision='f64') -> Gate")
+                  .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                        ":class:`~scaluq.IGate`.")
+                  .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
                   .ret("Gate", "Identity gate instance")
                   .ex(DocString::Code({">>> gate = I()",
                                        ">>> print(gate)",
@@ -445,14 +447,16 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.GlobalPhaseGate`.")
-            .note(
-                "If you need to use functions specific to the :class:`~scaluq.f64.GlobalPhaseGate` "
-                "class, please downcast it.")
+            .replace_signature_to("def GlobalPhase(gamma: float, controls: list[int] = [], "
+                                  "control_values: list[int] = [], precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.GlobalPhaseGate`.")
+            .note("If you need to use functions specific to the :class:`~scaluq.GlobalPhaseGate` "
+                  "class, please downcast it.")
             .arg("gamma", "float", "Global phase angle in radians")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "Global phase gate instance")
             .ex(DocString::Code({">>> import math",
                                  ">>> gate = GlobalPhase(math.pi/2)",
@@ -471,15 +475,18 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.XGate`. "
+            .replace_signature_to("def X(target: int, controls: list[int] = [], control_values: "
+                                  "list[int] = [], precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.XGate`. "
                   "Performs bit flip operation.")
             .note("XGate represents the Pauli-X (NOT) gate class.If you need to use functions "
-                  "specific to the :class:`~scaluq.f64.XGate` "
+                  "specific to the :class:`~scaluq.XGate` "
                   "class, please downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "Pauli-X gate instance")
             .ex(DocString::Code({">>> gate = X(0)  # X gate on qubit 0",
                                  ">>> gate = X(1, [0])  # Controlled-X with control on qubit 0"}))
@@ -492,15 +499,18 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.YGate`. "
+            .replace_signature_to("def Y(target: int, controls: list[int] = [], control_values: "
+                                  "list[int] = [], precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.YGate`. "
                   "Performs bit flip and phase flip operation.")
             .note("YGate represents the Pauli-Y gate class. If you need to use functions specific "
-                  "to the :class:`~scaluq.f64.YGate` "
+                  "to the :class:`~scaluq.YGate` "
                   "class, please downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "Pauli-Y gate instance")
             .ex(DocString::Code({">>> gate = Y(0)  # Y gate on qubit 0",
                                  ">>> gate = Y(1, [0])  # Controlled-Y with control on qubit 0"}))
@@ -513,15 +523,18 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.ZGate`. "
+            .replace_signature_to("def Z(target: int, controls: list[int] = [], control_values: "
+                                  "list[int] = [], precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.ZGate`. "
                   "Performs bit flip and phase flip operation.")
             .note("ZGate represents the Pauli-Z gate class. If you need to use functions specific "
-                  "to the :class:`~scaluq.f64.ZGate` "
+                  "to the :class:`~scaluq.ZGate` "
                   "class, please downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "Pauli-Z gate instance")
             .ex(DocString::Code({">>> gate = Z(0)  # Z gate on qubit 0",
                                  ">>> gate = Z(1, [0])  # Controlled-Z with control on qubit 0"}))
@@ -534,15 +547,18 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.HGate`. "
+            .replace_signature_to("def H(target: int, controls: list[int] = [], control_values: "
+                                  "list[int] = [], precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.HGate`. "
                   "Performs superposition operation.")
-            .note("If you need to use functions specific to the :class:`~scaluq.f64.HGate` class, "
+            .note("If you need to use functions specific to the :class:`~scaluq.HGate` class, "
                   "please "
                   "downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "Hadamard gate instance")
             .ex(DocString::Code({">>> gate = H(0)  # H gate on qubit 0",
                                  ">>> gate = H(1, [0])  # Controlled-H with control on qubit 0"}))
@@ -555,14 +571,17 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.SGate`.")
-            .note("If you need to use functions specific to the :class:`~scaluq.f64.SGate` class, "
+            .replace_signature_to("def S(target: int, controls: list[int] = [], control_values: "
+                                  "list[int] = [], precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.SGate`.")
+            .note("If you need to use functions specific to the :class:`~scaluq.SGate` class, "
                   "please "
                   "downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "S gate instance")
             .ex(DocString::Code({">>> gate = S(0)  # S gate on qubit 0",
                                  ">>> gate = S(1, [0])  # Controlled-S with control on qubit 0"}))
@@ -574,14 +593,17 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "controls"_a = std::vector<std::uint64_t>{},
               "control_values"_a = std::vector<std::uint64_t>{},
               DocString()
-                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                        ":class:`~scaluq.f64.SdagGate`.")
+                  .replace_signature_to("def Sdag(target: int, controls: list[int] = [], "
+                                        "control_values: list[int] = [], precision='f64') -> Gate")
+                  .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                        ":class:`~scaluq.SdagGate`.")
                   .note("If you need to use functions specific to the "
-                        ":class:`~scaluq.f64.SdagGate` class, please "
+                        ":class:`~scaluq.SdagGate` class, please "
                         "downcast it.")
                   .arg("target", "int", "Target qubit index")
                   .arg("controls", "list[int]", true, "Control qubit indices")
                   .arg("control_values", "list[int]", true, "Control qubit values")
+                  .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
                   .ret("Gate", "Sdag gate instance")
                   .ex(DocString::Code(
                       {">>> gate = Sdag(0)  # Sdag gate on qubit 0",
@@ -595,14 +617,17 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.TGate`.")
-            .note("If you need to use functions specific to the :class:`~scaluq.f64.TGate` class, "
+            .replace_signature_to("def T(target: int, controls: list[int] = [], control_values: "
+                                  "list[int] = [], precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.TGate`.")
+            .note("If you need to use functions specific to the :class:`~scaluq.TGate` class, "
                   "please "
                   "downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "T gate instance")
             .ex(DocString::Code({">>> gate = T(0)  # T gate on qubit 0",
                                  ">>> gate = T(1, [0])  # Controlled-T with control on qubit 0"}))
@@ -614,40 +639,45 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "controls"_a = std::vector<std::uint64_t>{},
               "control_values"_a = std::vector<std::uint64_t>{},
               DocString()
-                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                        ":class:`~scaluq.f64.TdagGate`.")
+                  .replace_signature_to("def Tdag(target: int, controls: list[int] = [], "
+                                        "control_values: list[int] = [], precision='f64') -> Gate")
+                  .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                        ":class:`~scaluq.TdagGate`.")
                   .note("If you need to use functions specific to the "
-                        ":class:`~scaluq.f64.TdagGate` class, please "
+                        ":class:`~scaluq.TdagGate` class, please "
                         "downcast it.")
                   .arg("target", "int", "Target qubit index")
                   .arg("controls", "list[int]", true, "Control qubit indices")
                   .arg("control_values", "list[int]", true, "Control qubit values")
+                  .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
                   .ret("Gate", "Tdag gate instance")
                   .ex(DocString::Code(
                       {">>> gate = Tdag(0)  # Tdag gate on qubit 0",
                        ">>> gate = Tdag(1, [0])  # Controlled-Tdag with control on qubit 0"}))
                   .build_as_google_style()
                   .c_str());
-    mgate.def(
-        "SqrtX",
-        &gate::SqrtX<Prec>,
-        "target"_a,
-        "controls"_a = std::vector<std::uint64_t>{},
-        "control_values"_a = std::vector<std::uint64_t>{},
-        DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.SqrtXGate`, represented as "
-                  "$\\frac{1}{2}\\begin{bmatrix} 1+i & 1-i \\\\ 1-i & 1+i \\end{bmatrix}$.")
-            .note("If you need to use functions specific to the :class:`~scaluq.f64.SqrtXGate` "
-                  "class, please downcast it.")
-            .arg("target", "int", "Target qubit index")
-            .arg("controls", "list[int]", true, "Control qubit indices")
-            .arg("control_values", "list[int]", true, "Control qubit values")
-            .ret("Gate", "SqrtX gate instance")
-            .ex(DocString::Code({">>> gate = SqrtX(0)  # SqrtX gate on qubit 0",
-                                 ">>> gate = SqrtX(1, [0])  # Controlled-SqrtX"}))
-            .build_as_google_style()
-            .c_str());
+    mgate.def("SqrtX",
+              &gate::SqrtX<Prec>,
+              "target"_a,
+              "controls"_a = std::vector<std::uint64_t>{},
+              "control_values"_a = std::vector<std::uint64_t>{},
+              DocString()
+                  .replace_signature_to("def SqrtX(target: int, controls: list[int] = [], "
+                                        "control_values: list[int] = [], precision='f64') -> Gate")
+                  .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                        ":class:`~scaluq.SqrtXGate`, represented as "
+                        "$\\frac{1}{2}\\begin{bmatrix} 1+i & 1-i \\\\ 1-i & 1+i \\end{bmatrix}$.")
+                  .note("If you need to use functions specific to the :class:`~scaluq.SqrtXGate` "
+                        "class, please downcast it.")
+                  .arg("target", "int", "Target qubit index")
+                  .arg("controls", "list[int]", true, "Control qubit indices")
+                  .arg("control_values", "list[int]", true, "Control qubit values")
+                  .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
+                  .ret("Gate", "SqrtX gate instance")
+                  .ex(DocString::Code({">>> gate = SqrtX(0)  # SqrtX gate on qubit 0",
+                                       ">>> gate = SqrtX(1, [0])  # Controlled-SqrtX"}))
+                  .build_as_google_style()
+                  .c_str());
     mgate.def(
         "SqrtXdag",
         &gate::SqrtXdag<Prec>,
@@ -655,41 +685,46 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.SqrtXdagGate`, represented as "
+            .replace_signature_to("def SqrtXdag(target: int, controls: list[int] = [], "
+                                  "control_values: list[int] = [], precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.SqrtXdagGate`, represented as "
                   "$\\begin{bmatrix} 1-i & 1+i\\\\ 1+i "
                   "& 1-i \\end{bmatrix}$.")
-            .note("If you need to use functions specific to the :class:`~scaluq.f64.SqrtXdagGate` "
+            .note("If you need to use functions specific to the :class:`~scaluq.SqrtXdagGate` "
                   "class, please downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "SqrtXdag gate instance")
             .ex(DocString::Code({">>> gate = SqrtXdag(0)  # SqrtXdag gate on qubit 0",
                                  ">>> gate = SqrtXdag(1, [0])  # Controlled-SqrtXdag"}))
             .build_as_google_style()
             .c_str());
-    mgate.def(
-        "SqrtY",
-        &gate::SqrtY<Prec>,
-        "target"_a,
-        "controls"_a = std::vector<std::uint64_t>{},
-        "control_values"_a = std::vector<std::uint64_t>{},
-        DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.SqrtYGate`, represented as "
-                  "$\\begin{bmatrix} 1+i & -1-i "
-                  "\\\\ 1+i & 1+i \\end{bmatrix}$.")
-            .note("If you need to use functions specific to the :class:`~scaluq.f64.SqrtYGate` "
-                  "class, please downcast it.")
-            .arg("target", "int", "Target qubit index")
-            .arg("controls", "list[int]", true, "Control qubit indices")
-            .arg("control_values", "list[int]", true, "Control qubit values")
-            .ret("Gate", "SqrtY gate instance")
-            .ex(DocString::Code({">>> gate = SqrtY(0)  # SqrtY gate on qubit 0",
-                                 ">>> gate = SqrtY(1, [0])  # Controlled-SqrtY"}))
-            .build_as_google_style()
-            .c_str());
+    mgate.def("SqrtY",
+              &gate::SqrtY<Prec>,
+              "target"_a,
+              "controls"_a = std::vector<std::uint64_t>{},
+              "control_values"_a = std::vector<std::uint64_t>{},
+              DocString()
+                  .replace_signature_to("def SqrtY(target: int, controls: list[int] = [], "
+                                        "control_values: list[int] = [], precision='f64') -> Gate")
+                  .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                        ":class:`~scaluq.SqrtYGate`, represented as "
+                        "$\\begin{bmatrix} 1+i & -1-i "
+                        "\\\\ 1+i & 1+i \\end{bmatrix}$.")
+                  .note("If you need to use functions specific to the :class:`~scaluq.SqrtYGate` "
+                        "class, please downcast it.")
+                  .arg("target", "int", "Target qubit index")
+                  .arg("controls", "list[int]", true, "Control qubit indices")
+                  .arg("control_values", "list[int]", true, "Control qubit values")
+                  .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
+                  .ret("Gate", "SqrtY gate instance")
+                  .ex(DocString::Code({">>> gate = SqrtY(0)  # SqrtY gate on qubit 0",
+                                       ">>> gate = SqrtY(1, [0])  # Controlled-SqrtY"}))
+                  .build_as_google_style()
+                  .c_str());
     mgate.def(
         "SqrtYdag",
         &gate::SqrtYdag<Prec>,
@@ -697,15 +732,18 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.SqrtYdagGate`, represented as "
+            .replace_signature_to("def SqrtYdag(target: int, controls: list[int] = [], "
+                                  "control_values: list[int] = [], precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.SqrtYdagGate`, represented as "
                   "$\\begin{bmatrix} 1-i & 1-i "
                   "\\\\ -1+i & 1-i \\end{bmatrix}$.")
-            .note("If you need to use functions specific to the :class:`~scaluq.f64.SqrtYdagGate` "
+            .note("If you need to use functions specific to the :class:`~scaluq.SqrtYdagGate` "
                   "class, please downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "SqrtYdag gate instance")
             .ex(DocString::Code({">>> gate = SqrtYdag(0)  # SqrtYdag gate on qubit 0",
                                  ">>> gate = SqrtYdag(1, [0])  # Controlled-SqrtYdag"}))
@@ -717,14 +755,17 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "controls"_a = std::vector<std::uint64_t>{},
               "control_values"_a = std::vector<std::uint64_t>{},
               DocString()
-                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                        ":class:`~scaluq.f64.P0Gate`.")
-                  .note("If you need to use functions specific to the :class:`~scaluq.f64.P0Gate` "
+                  .replace_signature_to("def P0(target: int, controls: list[int] = [], "
+                                        "control_values: list[int] = [], precision='f64') -> Gate")
+                  .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                        ":class:`~scaluq.P0Gate`.")
+                  .note("If you need to use functions specific to the :class:`~scaluq.P0Gate` "
                         "class, please "
                         "downcast it.")
                   .arg("target", "int", "Target qubit index")
                   .arg("controls", "list[int]", true, "Control qubit indices")
                   .arg("control_values", "list[int]", true, "Control qubit values")
+                  .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
                   .ret("Gate", "P0 gate instance")
                   .ex(DocString::Code({">>> gate = P0(0)  # P0 gate on qubit 0",
                                        ">>> gate = P0(1, [0])  # Controlled-P0"}))
@@ -736,14 +777,17 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "controls"_a = std::vector<std::uint64_t>{},
               "control_values"_a = std::vector<std::uint64_t>{},
               DocString()
-                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                        ":class:`~scaluq.f64.P1Gate`.")
-                  .note("If you need to use functions specific to the :class:`~scaluq.f64.P1Gate` "
+                  .replace_signature_to("def P1(target: int, controls: list[int] = [], "
+                                        "control_values: list[int] = [], precision='f64') -> Gate")
+                  .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                        ":class:`~scaluq.P1Gate`.")
+                  .note("If you need to use functions specific to the :class:`~scaluq.P1Gate` "
                         "class, please "
                         "downcast it.")
                   .arg("target", "int", "Target qubit index")
                   .arg("controls", "list[int]", true, "Control qubit indices")
                   .arg("control_values", "list[int]", true, "Control qubit values")
+                  .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
                   .ret("Gate", "P1 gate instance")
                   .ex(DocString::Code({">>> gate = P1(0)  # P1 gate on qubit 0",
                                        ">>> gate = P1(1, [0])  # Controlled-P1"}))
@@ -756,6 +800,8 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "classical_bit"_a,
         "reset"_a = false,
         DocString()
+            .replace_signature_to("def Measurement(target: int, classical_bit: int, reset: bool = "
+                                  "False, precision='f64') -> Gate")
             .desc("Generate computational-basis measurement gate.")
             .note("Applying this gate requires a classical register whose size is greater than "
                   "`classical_bit`. If `reset` is true, the target qubit is reset to |0> after "
@@ -763,6 +809,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .arg("target", "int", "Target qubit index")
             .arg("classical_bit", "int", "Destination classical bit index")
             .arg("reset", "bool", true, "Whether to reset the target qubit to |0>")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "Measurement gate instance")
             .ex(DocString::Code({">>> gate = Measurement(0, 1)"}))
             .build_as_google_style()
@@ -775,14 +822,17 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
+            .replace_signature_to("def RX(target: int, theta: float, controls: list[int] = [], "
+                                  "control_values: list[int] = [], precision='f64') -> Gate")
             .desc("Generate rotation gate around X-axis. Rotation angle is specified in radians.")
-            .note("If you need to use functions specific to the :class:`~scaluq.f64.RXGate` class, "
+            .note("If you need to use functions specific to the :class:`~scaluq.RXGate` class, "
                   "please "
                   "downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("theta", "float", "Rotation angle in radians")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "RX gate instance")
             .ex(DocString::Code({">>> import math",
                                  ">>> gate = RX(0, math.pi/2)  # π/2 rotation around X-axis",
@@ -797,13 +847,16 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
+            .replace_signature_to("def RY(target: int, theta: float, controls: list[int] = [], "
+                                  "control_values: list[int] = [], precision='f64') -> Gate")
             .desc("Generate rotation gate around Y-axis. Rotation angle is specified in radians.")
-            .note("If you need to use functions specific to the :class:`~scaluq.f64.RYGate` class, "
+            .note("If you need to use functions specific to the :class:`~scaluq.RYGate` class, "
                   "please downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("theta", "float", "Rotation angle in radians")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "RY gate instance")
             .ex(DocString::Code({">>> import math",
                                  ">>> gate = RY(0, math.pi/2)  # π/2 rotation around Y-axis",
@@ -818,42 +871,49 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
+            .replace_signature_to("def RZ(target: int, theta: float, controls: list[int] = [], "
+                                  "control_values: list[int] = [], precision='f64') -> Gate")
             .desc("Generate rotation gate around Z-axis. Rotation angle is specified in radians.")
-            .note("If you need to use functions specific to the :class:`~scaluq.f64.RZGate` class, "
+            .note("If you need to use functions specific to the :class:`~scaluq.RZGate` class, "
                   "please "
                   "downcast it.")
             .arg("target", "int", "Target qubit index")
             .arg("theta", "float", "Rotation angle in radians")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "RZ gate instance")
             .ex(DocString::Code({">>> import math",
                                  ">>> gate = RZ(0, math.pi/2)  # π/2 rotation around Z-axis",
                                  ">>> gate = RZ(1, math.pi, [0])  # Controlled-RZ"}))
             .build_as_google_style()
             .c_str());
-    mgate.def("U1",
-              &gate::U1<Prec>,
-              "target"_a,
-              "lambda_"_a,
-              "controls"_a = std::vector<std::uint64_t>{},
-              "control_values"_a = std::vector<std::uint64_t>{},
-              DocString()
-                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                        ":class:`~scaluq.f64.U1Gate`.")
-                  .note("If you need to use functions specific to the :class:`~scaluq.f64.U1Gate` "
-                        "class, please "
-                        "downcast it.")
-                  .arg("target", "int", "Target qubit index")
-                  .arg("lambda_", "float", "Rotation angle in radians")
-                  .arg("controls", "list[int]", true, "Control qubit indices")
-                  .arg("control_values", "list[int]", true, "Control qubit values")
-                  .ret("Gate", "U1 gate instance")
-                  .ex(DocString::Code({">>> import math",
-                                       ">>> gate = U1(0, math.pi/2)  # π/2 rotation around Z-axis",
-                                       ">>> gate = U1(1, math.pi, [0])  # Controlled-U1"}))
-                  .build_as_google_style()
-                  .c_str());
+    mgate.def(
+        "U1",
+        &gate::U1<Prec>,
+        "target"_a,
+        "lambda_"_a,
+        "controls"_a = std::vector<std::uint64_t>{},
+        "control_values"_a = std::vector<std::uint64_t>{},
+        DocString()
+            .replace_signature_to("def U1(target: int, lambda_: float, controls: list[int] = [], "
+                                  "control_values: list[int] = [], precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.U1Gate`.")
+            .note("If you need to use functions specific to the :class:`~scaluq.U1Gate` "
+                  "class, please "
+                  "downcast it.")
+            .arg("target", "int", "Target qubit index")
+            .arg("lambda_", "float", "Rotation angle in radians")
+            .arg("controls", "list[int]", true, "Control qubit indices")
+            .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
+            .ret("Gate", "U1 gate instance")
+            .ex(DocString::Code({">>> import math",
+                                 ">>> gate = U1(0, math.pi/2)  # π/2 rotation around Z-axis",
+                                 ">>> gate = U1(1, math.pi, [0])  # Controlled-U1"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def("U2",
               &gate::U2<Prec>,
               "target"_a,
@@ -862,9 +922,12 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "controls"_a = std::vector<std::uint64_t>{},
               "control_values"_a = std::vector<std::uint64_t>{},
               DocString()
-                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                        ":class:`~scaluq.f64.U2Gate`.")
-                  .note("If you need to use functions specific to the :class:`~scaluq.f64.U2Gate` "
+                  .replace_signature_to(
+                      "def U2(target: int, phi: float, lambda_: float, controls: list[int] = [], "
+                      "control_values: list[int] = [], precision='f64') -> Gate")
+                  .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                        ":class:`~scaluq.U2Gate`.")
+                  .note("If you need to use functions specific to the :class:`~scaluq.U2Gate` "
                         "class, please "
                         "downcast it.")
                   .arg("target", "int", "Target qubit index")
@@ -872,6 +935,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .arg("lambda_", "float", "Rotation angle in radians")
                   .arg("controls", "list[int]", true, "Control qubit indices")
                   .arg("control_values", "list[int]", true, "Control qubit values")
+                  .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
                   .ret("Gate", "U2 gate instance")
                   .ex(DocString::Code(
                       {">>> import math",
@@ -889,9 +953,12 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.U3Gate`.")
-            .note("If you need to use functions specific to the :class:`~scaluq.f64.U3Gate` class, "
+            .replace_signature_to(
+                "def U3(target: int, theta: float, phi: float, lambda_: float, controls: list[int] "
+                "= [], control_values: list[int] = [], precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.U3Gate`.")
+            .note("If you need to use functions specific to the :class:`~scaluq.U3Gate` class, "
                   "please "
                   "downcast it.")
             .arg("target", "int", "Target qubit index")
@@ -900,6 +967,7 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .arg("lambda_", "float", "Rotation angle in radians")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "U3 gate instance")
             .ex(DocString::Code(
                 {">>> import math",
@@ -915,14 +983,16 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
+            .replace_signature_to("def Swap(target1: int, target2: int, controls: list[int] = [], "
+                                  "control_values: list[int] = [], precision='f64') -> Gate")
             .desc("Generate SWAP gate. Swaps the states of two qubits.")
-            .note(
-                "If you need to use functions specific to the :class:`~scaluq.f64.SwapGate` class, "
-                "please downcast it.")
+            .note("If you need to use functions specific to the :class:`~scaluq.SwapGate` class, "
+                  "please downcast it.")
             .arg("target1", "int", "First target qubit index")
             .arg("target2", "int", "Second target qubit index")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "SWAP gate instance")
             .ex(DocString::Code({">>> gate = Swap(0, 1)  # Swap qubits 0 and 1",
                                  ">>> gate = Swap(1, 2, [0])  # Controlled-SWAP"}))
@@ -936,152 +1006,176 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
+            .replace_signature_to(
+                "def Ecr(physical_control: int, physical_target: int, controls: list[int] = [], "
+                "control_values: list[int] = [], precision='f64') -> Gate")
             .desc("Generate ECR gate. Echoed cross-resonance gate.")
-            .note(
-                "If you need to use functions specific to the :class:`~scaluq.f64.EcrGate` class, "
-                "please downcast it.")
+            .note("If you need to use functions specific to the :class:`~scaluq.EcrGate` class, "
+                  "please downcast it.")
             .arg("physical_control", "int", "Physical control qubit index")
             .arg("physical_target", "int", "Physical target qubit index")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "Ecr gate instance")
             .ex(DocString::Code({">>> gate = Ecr(0, 1)  # control : 0 and target : 1",
                                  ">>> gate = Ecr(1, 2, [0])  #Controlled-ECR"}))
             .build_as_google_style()
             .c_str());
-    mgate.def("CX",
-              &gate::CX<Prec>,
-              "control"_a,
-              "target"_a,
-              DocString()
-                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                        ":class:`~scaluq.f64.XGate` with one control qubit. Performs "
-                        "controlled-X operation.")
-                  .note("CX is a specialization of X. If you need to use functions specific to the "
-                        ":class:`~scaluq.f64.XGate` class, please downcast it.")
-                  .arg("control", "int", "Control qubit index")
-                  .arg("target", "int", "Target qubit index")
-                  .ret("Gate", "CX gate instance")
-                  .ex(DocString::Code({">>> gate = CX(0, 1)  # CX gate with control on qubit 0",
-                                       ">>> gate = CX(1, 2)  # CX gate with control on qubit 1"}))
-                  .build_as_google_style()
-                  .c_str());
+    mgate.def(
+        "CX",
+        &gate::CX<Prec>,
+        "control"_a,
+        "target"_a,
+        DocString()
+            .replace_signature_to("def CX(control: int, target: int, precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.XGate` with one control qubit. Performs "
+                  "controlled-X operation.")
+            .note("CX is a specialization of X. If you need to use functions specific to the "
+                  ":class:`~scaluq.XGate` class, please downcast it.")
+            .arg("control", "int", "Control qubit index")
+            .arg("target", "int", "Target qubit index")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
+            .ret("Gate", "CX gate instance")
+            .ex(DocString::Code({">>> gate = CX(0, 1)  # CX gate with control on qubit 0",
+                                 ">>> gate = CX(1, 2)  # CX gate with control on qubit 1"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def(
         "CNot",
         &gate::CX<Prec>,
         "control"_a,
         "target"_a,
         DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.XGate` with "
+            .replace_signature_to("def CNot(control: int, target: int, precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.XGate` with "
                   "one control qubit. Performs controlled-X operation.")
             .note("CNot is an alias of CX. If you need to use functions specific to the "
-                  ":class:`~scaluq.f64.XGate` class, please downcast it.")
+                  ":class:`~scaluq.XGate` class, please downcast it.")
             .arg("control", "int", "Control qubit index")
             .arg("target", "int", "Target qubit index")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "CNot gate instance")
             .ex(DocString::Code({">>> gate = CNot(0, 1)  # CNot gate with control on qubit 0",
                                  ">>> gate = CNot(1, 2)  # CNot gate with control on qubit 1"}))
             .build_as_google_style()
             .c_str());
-    mgate.def("CZ",
-              &gate::CZ<Prec>,
-              "control"_a,
-              "target"_a,
-              DocString()
-                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                        ":class:`~scaluq.f64.ZGate` with one control qubit. Performs "
-                        "controlled-Z operation.")
-                  .note("CZ is a specialization of Z. If you need to use functions specific to the "
-                        ":class:`~scaluq.f64.ZGate` class, please downcast it.")
-                  .arg("control", "int", "Control qubit index")
-                  .arg("target", "int", "Target qubit index")
-                  .ret("Gate", "CZ gate instance")
-                  .ex(DocString::Code({">>> gate = CZ(0, 1)  # CZ gate with control on qubit 0",
-                                       ">>> gate = CZ(1, 2)  # CZ gate with control on qubit 1"}))
-                  .build_as_google_style()
-                  .c_str());
+    mgate.def(
+        "CZ",
+        &gate::CZ<Prec>,
+        "control"_a,
+        "target"_a,
+        DocString()
+            .replace_signature_to("def CZ(control: int, target: int, precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.ZGate` with one control qubit. Performs "
+                  "controlled-Z operation.")
+            .note("CZ is a specialization of Z. If you need to use functions specific to the "
+                  ":class:`~scaluq.ZGate` class, please downcast it.")
+            .arg("control", "int", "Control qubit index")
+            .arg("target", "int", "Target qubit index")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
+            .ret("Gate", "CZ gate instance")
+            .ex(DocString::Code({">>> gate = CZ(0, 1)  # CZ gate with control on qubit 0",
+                                 ">>> gate = CZ(1, 2)  # CZ gate with control on qubit 1"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def("CCX",
               &gate::CCX<Prec>,
               "control1"_a,
               "control2"_a,
               "target"_a,
               DocString()
-                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                        ":class:`~scaluq.f64.XGate` with two control qubits. Performs "
+                  .replace_signature_to(
+                      "def CCX(control1: int, control2: int, target: int, precision='f64') -> Gate")
+                  .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                        ":class:`~scaluq.XGate` with two control qubits. Performs "
                         "controlled-controlled-X operation.")
-                  .note("If you need to use functions specific to the :class:`~scaluq.f64.XGate` "
+                  .note("If you need to use functions specific to the :class:`~scaluq.XGate` "
                         "class, please downcast it.")
                   .arg("control1", "int", "First control qubit index")
                   .arg("control2", "int", "Second control qubit index")
                   .arg("target", "int", "Target qubit index")
+                  .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
                   .ret("Gate", "CCX gate instance")
                   .ex(DocString::Code(
                       {">>> gate = CCX(0, 1, 2)  # CCX gate with controls on qubits 0 and 1",
                        ">>> gate = CCX(1, 2, 3)  # CCX gate with controls on qubits 1 and 2"}))
                   .build_as_google_style()
                   .c_str());
-    mgate.def("CCNot",
-              &gate::CCX<Prec>,
-              "control1"_a,
-              "control2"_a,
-              "target"_a,
-              DocString()
-                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                        ":class:`~scaluq.f64.XGate` with two control qubits. Performs "
-                        "controlled-controlled-X operation.")
-                  .note("CCNot is an alias of CCX. If you need to use functions specific to the "
-                        ":class:`~scaluq.f64.XGate` class, please downcast it.")
-                  .arg("control1", "int", "First control qubit index")
-                  .arg("control2", "int", "Second control qubit index")
-                  .arg("target", "int", "Target qubit index")
-                  .ret("Gate", "CCNot gate instance")
-                  .ex(DocString::Code(
-                      {">>> gate = CCNot(0, 1, 2)  # CCNot gate with controls on qubits 0 and 1",
-                       ">>> gate = CCNot(1, 2, 3)  # CCNot gate with controls on qubits 1 and 2"}))
-                  .build_as_google_style()
-                  .c_str());
-    mgate.def("Toffoli",
-              &gate::CCX<Prec>,
-              "control1"_a,
-              "control2"_a,
-              "target"_a,
-              DocString()
-                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                        ":class:`~scaluq.f64.XGate` with two control qubits. "
-                        "Performs controlled-controlled-X operation.")
-                  .note("Toffoli is an alias of CCX. If you need to use functions specific to the "
-                        ":class:`~scaluq.f64.XGate` class, please downcast it.")
-                  .arg("control1", "int", "First control qubit index")
-                  .arg("control2", "int", "Second control qubit index")
-                  .arg("target", "int", "Target qubit index")
-                  .ret("Gate", "Toffoli gate instance")
-                  .ex(DocString::Code({">>> gate = Toffoli(0, 1, 2)  # Toffoli gate with "
-                                       "controls on qubits 0 and 1",
-                                       ">>> gate = Toffoli(1, 2, 3)  # Toffoli gate with "
-                                       "controls on qubits 1 and 2"}))
-                  .build_as_google_style()
-                  .c_str());
     mgate.def(
-        "Pauli",
-        &gate::Pauli<Prec>,
-        "pauli"_a,
-        "controls"_a = std::vector<std::uint64_t>{},
-        "control_values"_a = std::vector<std::uint64_t>{},
+        "CCNot",
+        &gate::CCX<Prec>,
+        "control1"_a,
+        "control2"_a,
+        "target"_a,
         DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.PauliGate`. Performs Pauli operation.")
-            .note("If you need to use functions specific to the :class:`~scaluq.f64.PauliGate` "
-                  "class, please downcast it.")
-            .arg("pauli", "PauliOperator", "Pauli operator")
-            .arg("controls", "list[int]", true, "Control qubit indices")
-            .arg("control_values", "list[int]", true, "Control qubit values")
-            .ret("Gate", "Pauli gate instance")
-            .ex(DocString::Code({">>> pauli = PauliOperator('X 0')",
-                                 ">>> gate = Pauli(pauli)",
-                                 ">>> gate = Pauli(pauli, [1])  # Controlled-Pauli"}))
+            .replace_signature_to(
+                "def CCNot(control1: int, control2: int, target: int, precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.XGate` with two control qubits. Performs "
+                  "controlled-controlled-X operation.")
+            .note("CCNot is an alias of CCX. If you need to use functions specific to the "
+                  ":class:`~scaluq.XGate` class, please downcast it.")
+            .arg("control1", "int", "First control qubit index")
+            .arg("control2", "int", "Second control qubit index")
+            .arg("target", "int", "Target qubit index")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
+            .ret("Gate", "CCNot gate instance")
+            .ex(DocString::Code(
+                {">>> gate = CCNot(0, 1, 2)  # CCNot gate with controls on qubits 0 and 1",
+                 ">>> gate = CCNot(1, 2, 3)  # CCNot gate with controls on qubits 1 and 2"}))
             .build_as_google_style()
             .c_str());
+    mgate.def(
+        "Toffoli",
+        &gate::CCX<Prec>,
+        "control1"_a,
+        "control2"_a,
+        "target"_a,
+        DocString()
+            .replace_signature_to(
+                "def Toffoli(control1: int, control2: int, target: int, precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.XGate` with two control qubits. "
+                  "Performs controlled-controlled-X operation.")
+            .note("Toffoli is an alias of CCX. If you need to use functions specific to the "
+                  ":class:`~scaluq.XGate` class, please downcast it.")
+            .arg("control1", "int", "First control qubit index")
+            .arg("control2", "int", "Second control qubit index")
+            .arg("target", "int", "Target qubit index")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
+            .ret("Gate", "Toffoli gate instance")
+            .ex(DocString::Code({">>> gate = Toffoli(0, 1, 2)  # Toffoli gate with "
+                                 "controls on qubits 0 and 1",
+                                 ">>> gate = Toffoli(1, 2, 3)  # Toffoli gate with "
+                                 "controls on qubits 1 and 2"}))
+            .build_as_google_style()
+            .c_str());
+    mgate.def("Pauli",
+              &gate::Pauli<Prec>,
+              "pauli"_a,
+              "controls"_a = std::vector<std::uint64_t>{},
+              "control_values"_a = std::vector<std::uint64_t>{},
+              DocString()
+                  .replace_signature_to("def Pauli(pauli: PauliOperator, controls: list[int] = [], "
+                                        "control_values: list[int] = [], precision='f64') -> Gate")
+                  .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                        ":class:`~scaluq.PauliGate`. Performs Pauli operation.")
+                  .note("If you need to use functions specific to the :class:`~scaluq.PauliGate` "
+                        "class, please downcast it.")
+                  .arg("pauli", "PauliOperator", "Pauli operator")
+                  .arg("controls", "list[int]", true, "Control qubit indices")
+                  .arg("control_values", "list[int]", true, "Control qubit values")
+                  .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
+                  .ret("Gate", "Pauli gate instance")
+                  .ex(DocString::Code({">>> pauli = PauliOperator('X 0')",
+                                       ">>> gate = Pauli(pauli)",
+                                       ">>> gate = Pauli(pauli, [1])  # Controlled-Pauli"}))
+                  .build_as_google_style()
+                  .c_str());
     mgate.def(
         "PauliRotation",
         &gate::PauliRotation<Prec>,
@@ -1090,15 +1184,19 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.PauliRotationGate`. Performs Pauli rotation operation.")
+            .replace_signature_to(
+                "def PauliRotation(pauli: PauliOperator, theta: float, controls: list[int] = [], "
+                "control_values: list[int] = [], precision='f64') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.PauliRotationGate`. Performs Pauli rotation operation.")
             .note("If you need to use functions specific to the "
-                  ":class:`~scaluq.f64.PauliRotationGate` "
+                  ":class:`~scaluq.PauliRotationGate` "
                   "class, please downcast it.")
             .arg("pauli", "PauliOperator", "Pauli operator")
             .arg("theta", "float", "Rotation angle in radians")
             .arg("controls", "list[int]", true, "Control qubit indices")
             .arg("control_values", "list[int]", true, "Control qubit values")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "PauliRotation gate instance")
             .ex(DocString::Code(
                 {">>> pauli = PauliOperator('X 0')",
@@ -1112,13 +1210,16 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "distribution"_a,
               "gate_list"_a,
               DocString()
-                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                        ":class:`~scaluq.f64.ProbabilisticGate`. Performs probabilistic operation.")
+                  .replace_signature_to("def Probabilistic(distribution: list[float], gate_list: "
+                                        "list[Gate], precision='f64') -> Gate")
+                  .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                        ":class:`~scaluq.ProbabilisticGate`. Performs probabilistic operation.")
                   .note("If you need to use functions specific to the "
-                        ":class:`~scaluq.f64.ProbabilisticGate` "
+                        ":class:`~scaluq.ProbabilisticGate` "
                         "class, please downcast it.")
                   .arg("distribution", "list[float]", "Probabilistic distribution")
                   .arg("gate_list", "list[Gate]", "List of gates")
+                  .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
                   .ret("Gate", "Probabilistic gate instance")
                   .ex(DocString::Code(
                       {">>> distribution = [0.3, 0.7]",
@@ -1129,31 +1230,58 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                   .c_str());
     mgate.def("BitFlipNoise",
               &gate::BitFlipNoise<Prec>,
-              "Generates a general Gate class instance of BitFlipNoise. `error_rate` is the "
-              "probability of a bit-flip noise, corresponding to the X gate.",
               "target"_a,
-              "error_rate"_a);
-    mgate.def("DephasingNoise",
-              &gate::DephasingNoise<Prec>,
-              "Generates a general Gate class instance of DephasingNoise. `error_rate` is the "
-              "probability of a dephasing noise, corresponding to the Z gate.",
-              "target"_a,
-              "error_rate"_a);
+              "error_rate"_a,
+              DocString()
+                  .replace_signature_to(
+                      "def BitFlipNoise(target: int, error_rate: float, precision='f64') -> Gate")
+                  .desc("Generates a general Gate class instance of BitFlipNoise. `error_rate` is "
+                        "the probability of a bit-flip noise, corresponding to the X gate.")
+                  .build_as_google_style()
+                  .c_str());
+    mgate.def(
+        "DephasingNoise",
+        &gate::DephasingNoise<Prec>,
+        "target"_a,
+        "error_rate"_a,
+        DocString()
+            .replace_signature_to(
+                "def DephasingNoise(target: int, error_rate: float, precision='f64') -> Gate")
+            .desc("Generates a general Gate class instance of DephasingNoise. `error_rate` is the "
+                  "probability of a dephasing noise, corresponding to the Z gate.")
+            .build_as_google_style()
+            .c_str());
     mgate.def(
         "BitFlipAndDephasingNoise",
         &gate::BitFlipAndDephasingNoise<Prec>,
-        "Generates a general Gate class instance of BitFlipAndDephasingNoise. `error_rate` is the "
-        "probability of both bit-flip noise and dephasing noise, corresponding to the X gate and "
-        "Z gate.",
         "target"_a,
-        "error_rate"_a);
-    mgate.def("DepolarizingNoise",
-              &gate::DepolarizingNoise<Prec>,
-              "Generates a general Gate class instance of DepolarizingNoise. `error_rate` is the "
-              "total probability of depolarizing noise, where an X, Y, or Z gate is applied with a "
-              "probability of `error_rate / 3` each.",
-              "target"_a,
-              "error_rate"_a);
+        "error_rate"_a,
+        DocString()
+            .replace_signature_to(
+                "def BitFlipAndDephasingNoise(target: int, error_rate: float, precision='f64') -> "
+                "Gate")
+            .desc("Generates a general Gate class instance of BitFlipAndDephasingNoise. "
+                  "`error_rate` is the "
+                  "probability of both bit-flip noise and dephasing noise, corresponding to the X "
+                  "gate and "
+                  "Z gate.")
+            .build_as_google_style()
+            .c_str());
+    mgate.def(
+        "DepolarizingNoise",
+        &gate::DepolarizingNoise<Prec>,
+        "target"_a,
+        "error_rate"_a,
+        DocString()
+            .replace_signature_to(
+                "def DepolarizingNoise(target: int, error_rate: float, precision='f64') -> Gate")
+            .desc(
+                "Generates a general Gate class instance of DepolarizingNoise. `error_rate` is the "
+                "total probability of depolarizing noise, where an X, Y, or Z gate is applied with "
+                "a "
+                "probability of `error_rate / 3` each.")
+            .build_as_google_style()
+            .c_str());
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -1167,11 +1295,14 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         "control_values"_a = std::vector<std::uint64_t>{},
         "is_unitary"_a = false,
         DocString()
-            .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                  ":class:`~scaluq.f64.DenseMatrixGate`. Performs dense matrix operation.")
-            .note(
-                "If you need to use functions specific to the :class:`~scaluq.f64.DenseMatrixGate` "
-                "class, please downcast it.")
+            .replace_signature_to("def DenseMatrix(targets: list[int], matrix: numpy.ndarray, "
+                                  "controls: list[int] = [], "
+                                  "control_values: list[int] = [], is_unitary: bool = False, "
+                                  "precision='f64', space='default') -> Gate")
+            .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                  ":class:`~scaluq.DenseMatrixGate`. Performs dense matrix operation.")
+            .note("If you need to use functions specific to the :class:`~scaluq.DenseMatrixGate` "
+                  "class, please downcast it.")
             .arg("targets", "list[int]", "Target qubit indices")
             .arg("matrix", "numpy.ndarray", "Matrix to be applied")
             .arg("controls", "list[int]", true, "Control qubit indices")
@@ -1181,6 +1312,8 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                  true,
                  "Whether the matrix is unitary. When the flag indicating that the gate is "
                  "unitary is set to True, a more efficient implementation is used.")
+            .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
+            .arg("space", "str", true, "Execution space of the gate. Default is 'default'.")
             .ret("Gate", "DenseMatrix gate instance")
             .ex(DocString::Code(
                 {">>> import numpy as np",
@@ -1196,15 +1329,21 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               "controls"_a = std::vector<std::uint64_t>{},
               "control_values"_a = std::vector<std::uint64_t>{},
               DocString()
-                  .desc("Generate general :class:`~scaluq.f64.Gate` class instance of "
-                        ":class:`~scaluq.f64.SparseMatrixGate`. Performs sparse matrix operation.")
+                  .replace_signature_to(
+                      "def SparseMatrix(targets: list[int], matrix: scipy.sparse.csr_matrix, "
+                      "controls: list[int] = [], control_values: list[int] = [], "
+                      "precision='f64', space='default') -> Gate")
+                  .desc("Generate general :class:`~scaluq.Gate` class instance of "
+                        ":class:`~scaluq.SparseMatrixGate`. Performs sparse matrix operation.")
                   .note("If you need to use functions specific to the "
-                        ":class:`~scaluq.f64.SparseMatrixGate` "
+                        ":class:`~scaluq.SparseMatrixGate` "
                         "class, please downcast it.")
                   .arg("targets", "list[int]", "Target qubit indices")
                   .arg("matrix", "scipy.sparse.csr_matrix", "Matrix to be applied")
                   .arg("controls", "list[int]", true, "Control qubit indices")
                   .arg("control_values", "list[int]", true, "Control qubit values")
+                  .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
+                  .arg("space", "str", true, "Execution space of the gate. Default is 'default'.")
                   .ret("Gate", "SparseMatrix gate instance")
                   .ex(DocString::Code(
                       {">>> import scipy",

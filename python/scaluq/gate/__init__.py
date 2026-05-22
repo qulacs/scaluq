@@ -23,12 +23,23 @@ def _get_module(precision, space):
             raise ValueError(f"Execution space {space} is not supported.")
         raise ValueError(f"Precision {precision} is not available.")
 
-def _make_factory_wrapper(name, is_space_specific):
-    def factory(*args, precision='f64', space='default', **kwargs):
-        mod = _get_module(precision, space if is_space_specific else 'default')
+def _make_factory_wrapper(name):
+    def factory(*args, precision='f64', **kwargs):
+        mod = _get_module(precision, 'default')
         factory_func = getattr(mod, name, None)
         if factory_func is None:
-            raise ValueError(f"{name} is not available in space={space}")
+            raise ValueError(f"{name} is not available in precision={precision}")
+        return factory_func(*args, **kwargs)
+    factory.__name__ = name
+    factory.__qualname__ = name
+    return factory
+
+def _make_factory_wrapper_space_specific(name):
+    def factory(*args, precision='f64', space='default', **kwargs):
+        mod = _get_module(precision, space)
+        factory_func = getattr(mod, name, None)
+        if factory_func is None:
+            raise ValueError(f"{name} is not available in precision={precision}, space={space}")
         return factory_func(*args, **kwargs)
     factory.__name__ = name
     factory.__qualname__ = name
@@ -40,4 +51,8 @@ if len(_available_precisions) > 0:
     for _name in dir(_default_mod):
         if _name.startswith('_'):
             continue
-        globals()[_name] = _make_factory_wrapper(_name, is_space_specific=(_name in ['SparseMatrix', 'DenseMatrix']))
+        if hasattr(getattr(_default_mod, _name), '__call__'):
+            if _name in ['SparseMatrix', 'DenseMatrix']:
+                globals()[_name] = _make_factory_wrapper_space_specific(_name)
+            else:
+                globals()[_name] = _make_factory_wrapper(_name)

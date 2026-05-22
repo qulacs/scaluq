@@ -23,6 +23,10 @@ public:
     };
 
     explicit DocString() {}
+    DocString& replace_signature_to(std::string_view signature) {
+        description.push_back(std::string("[replace signature to] ") + std::string(signature));
+        return *this;
+    }
     DocString& desc(const Block& desc) {
         description.push_back(desc);
         return *this;

@@ -389,14 +389,6 @@ using ParamGate = internal::ParamGatePtr<internal::ParamGateBase<Prec>>;
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
 using ParamValueVariant = std::variant<std::monostate, double, std::vector<double>>;
-using ParamUpdateArgVariant =
-    std::variant<ClassicalRegister*, ClassicalRegisterBatched*, double, std::vector<double>>;
-using ParamUpdateOptionalArgVariant = std::variant<std::monostate,
-                                                   std::uint64_t,
-                                                   ClassicalRegister*,
-                                                   ClassicalRegisterBatched*,
-                                                   double,
-                                                   std::vector<double>>;
 
 template <typename GateT, Precision Prec, ExecutionSpace Space>
 void update_param_gate_state(const GateT& gate,
@@ -465,6 +457,8 @@ void update_param_gate_state(const GateT& gate,
 
 template <typename GateT, Precision Prec>
 void register_param_gate_common_methods(nb::class_<GateT>& c) {
+    constexpr bool is_base_gate = std::is_same_v<GateT, ParamGate<Prec>>;
+
     c.def(nb::init<GateT>(), "Downcast from ParamGate.")
         .def("param_gate_type",
              &GateT::param_gate_type,
@@ -504,93 +498,90 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
                 if (!inv) return nb::none();
                 return nb::cast(ParamGate<Prec>(inv));
             },
-            "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               GateStateVariant<Prec> state,
-               ParamUpdateArgVariant param_or_register,
-               ParamUpdateOptionalArgVariant param_or_register2,
-               std::optional<std::uint64_t> seed) {
-                ParamValueVariant param;
-                ClassicalRegisterVariant classical_register = std::monostate{};
-                std::optional<std::uint64_t> actual_seed = seed;
-
-                std::visit(
-                    Overloaded{[&](double value) { param = value; },
-                               [&](const std::vector<double>& value) { param = value; },
-                               [&](ClassicalRegister* reg) { classical_register = reg; },
-                               [&](ClassicalRegisterBatched* reg) { classical_register = reg; }},
-                    param_or_register);
-
-                std::visit(
-                    Overloaded{
-                        [&](std::monostate) {},
-                        [&](std::uint64_t value) {
-                            if (std::holds_alternative<std::monostate>(param) &&
-                                !std::holds_alternative<std::monostate>(classical_register)) {
-                                param = static_cast<double>(value);
-                                return;
-                            }
-                            if (actual_seed) {
-                                throw std::runtime_error(
-                                    "ParamGate::update_quantum_state(): seed was specified "
-                                    "twice.");
-                            }
-                            actual_seed = value;
-                        },
-                        [&](double value) {
-                            if (!std::holds_alternative<std::monostate>(param)) {
-                                throw std::runtime_error(
-                                    "ParamGate::update_quantum_state(): parameter was "
-                                    "specified twice.");
-                            }
-                            param = value;
-                        },
-                        [&](const std::vector<double>& value) {
-                            if (!std::holds_alternative<std::monostate>(param)) {
-                                throw std::runtime_error(
-                                    "ParamGate::update_quantum_state(): parameter was "
-                                    "specified twice.");
-                            }
-                            param = value;
-                        },
-                        [&](ClassicalRegister* reg) {
-                            if (!std::holds_alternative<std::monostate>(classical_register)) {
-                                throw std::runtime_error(
-                                    "ParamGate::update_quantum_state(): classical register "
-                                    "was specified twice.");
-                            }
-                            classical_register = reg;
-                        },
-                        [&](ClassicalRegisterBatched* reg) {
-                            if (!std::holds_alternative<std::monostate>(classical_register)) {
-                                throw std::runtime_error(
-                                    "ParamGate::update_quantum_state(): classical register "
-                                    "was specified twice.");
-                            }
-                            classical_register = reg;
-                        }},
-                    param_or_register2);
-
-                std::visit(
-                    [&](auto* state_ptr) {
-                        update_param_gate_state<GateT, Prec>(
-                            gate, state_ptr, param, classical_register, actual_seed);
-                    },
-                    state);
-            },
-            "state"_a,
-            "param_or_register"_a,
-            "param_or_register2"_a = std::monostate{},
-            "seed"_a = std::nullopt,
-            "Apply gate to a state with a parameter. Optionally pass a matching classical "
-            "register and seed.")
-        .def(
-            "get_matrix",
-            [](const GateT& gate, double param) { return gate->get_matrix(param); },
-            "param"_a,
-            "Get matrix representation of the gate with holding the parameter.")
+            "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.");
+    auto update_doc_str = ([]() {
+        auto ds =
+            DocString()
+                .replace_signature_to(
+                    "def update_quantum_state(self, state: StateVector | StateVectorBatched, "
+                    "param: float | list[float], classical_register: ClassicalRegister | "
+                    "ClassicalRegisterBatched | None = None, seed: int | None = None) -> None")
+                .desc("Apply gate to `state`. `state` in args is directly updated.")
+                .desc("Optionally pass a matching classical register and seed.")
+                .arg("state",
+                     "StateVector | StateVectorBatched",
+                     "State vector to be updated. Can be `StateVector` or `StateVectorBatched`.")
+                .arg("param",
+                     "float | list[float]",
+                     "Parameter value(s) for the gate. Should be a single float for `StateVector` "
+                     "and a list of floats (one for each batch) for `StateVectorBatched`.")
+                .arg("classical_register",
+                     "ClassicalRegister | ClassicalRegisterBatched | None",
+                     "Classical register to be used in the gate. If not provided, a new register "
+                     "with appropriate size is created and used internally.")
+                .arg("seed",
+                     "int | None",
+                     "Seed for random number generator. If not provided, a random seed is "
+                     "generated using `std::random_device`.");
+        if constexpr (is_base_gate) {
+            ds.ex(DocString::Code({">>> import math",
+                                   ">>> state = StateVector(2)",
+                                   ">>> state.set_computational_basis(0)",
+                                   ">>> ParamRX(0).update_quantum_state(state, math.pi / 4)",
+                                   ">>> print(state)",
+                                   "Qubit Count : 2",
+                                   "Dimension : 4",
+                                   "State vector : ",
+                                   "  00 : (0.707107,0)",
+                                   "  01 : (0.707107,0)",
+                                   "  10 : (0,0)",
+                                   "  11 : (0,0)"}));
+            ds.ex(DocString::Code(
+                {">>> import math",
+                 ">>> states = StateVectorBatched(2, 1)",
+                 ">>> states.set_computational_basis(0)",
+                 ">>> ParamRX(0).update_quantum_state(states, [math.pi / 4, -math.pi / 4])",
+                 ">>> print(states)",
+                 "Qubit Count : 1",
+                 "Dimension : 2",
+                 "--------------------",
+                 "Batch_id : 0",
+                 "State vector : ",
+                 "  0 : (0.707107,0)",
+                 "  1 : (0.707107,0)",
+                 "--------------------",
+                 "Batch_id : 1",
+                 "State vector : ",
+                 "  0 : (0.707107,0)",
+                 "  1 : (0.707107,0)",
+                 "<BLANKLINE>"}));
+        }
+        return ds.build_as_google_style();
+    }());
+    c.def(
+        "update_quantum_state",
+        [](const GateT& gate,
+           GateStateVariant<Prec> state,
+           ParamValueVariant param,
+           ClassicalRegisterVariant classical_register,
+           std::optional<std::uint64_t> seed) {
+            std::visit(
+                [&](auto* state_ptr) {
+                    update_param_gate_state<GateT, Prec>(
+                        gate, state_ptr, param, classical_register, seed);
+                },
+                state);
+        },
+        "state"_a,
+        "param"_a,
+        "classical_register"_a = std::monostate{},
+        "seed"_a = std::nullopt,
+        update_doc_str.c_str());
+    c.def(
+         "get_matrix",
+         [](const GateT& gate, double param) { return gate->get_matrix(param); },
+         "param"_a,
+         "Get matrix representation of the gate with holding the parameter.")
         .def(
             "to_string",
             [](const GateT& gate) { return gate->to_string(""); },

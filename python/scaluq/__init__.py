@@ -1,5 +1,8 @@
 from .scaluq_core import *
-from . import gate
+try:
+    from . import gate
+except AttributeError:
+    gate = None
 
 import inspect
 

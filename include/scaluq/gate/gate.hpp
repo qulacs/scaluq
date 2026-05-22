@@ -560,8 +560,6 @@ Overloaded(Ts...) -> Overloaded<Ts...>;
 
 using ClassicalRegisterVariant =
     std::variant<std::monostate, ClassicalRegister*, ClassicalRegisterBatched*>;
-using GateUpdateControlVariant =
-    std::variant<std::monostate, ClassicalRegister*, ClassicalRegisterBatched*, std::uint64_t>;
 
 template <Precision Prec>
 using GateStateVariant = std::variant<StateVector<Prec, ExecutionSpace::Host>*,
@@ -840,9 +838,27 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
             "json_str"_a,
             "Read an object from the JSON representation of the gate.");
 
-    auto single_doc_str = ([]() {
-        auto ds = DocString().desc(
-            "Apply gate to `state_vector`. `state_vector` in args is directly updated.");
+    auto update_doc_str = ([]() {
+        auto ds =
+            DocString()
+                .replace_signature_to(
+                    "def update_quantum_state(self, state: StateVector | StateVectorBatched, "
+                    "classical_register: scaluq.scaluq_core.ClassicalRegister | "
+                    "scaluq.scaluq_core.ClassicalRegisterBatched | None = None, seed: int | None = "
+                    "None) -> None")
+                .desc("Apply gate to `state`. `state` in args is directly updated.")
+                .desc("Optionally pass a matching classical register and seed.")
+                .arg("state",
+                     "StateVector | StateVectorBatched",
+                     "State vector to be updated. Can be `StateVector` or `StateVectorBatched`.")
+                .arg("classical_register",
+                     "ClassicalRegister | ClassicalRegisterBatched | None",
+                     "Classical register to be used in the gate. If not provided, a new register "
+                     "with appropriate size is created and used internally.")
+                .arg("seed",
+                     "int | None",
+                     "Seed for random number generator. If not provided, a random seed is "
+                     "generated using `std::random_device`.");
         if constexpr (is_base_gate) {
             ds.ex(DocString::Code({">>> state = StateVector(2)",
                                    ">>> state.set_computational_basis(0)",
@@ -855,13 +871,6 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
                                    "  01 : (0.707107,0)",
                                    "  10 : (0,0)",
                                    "  11 : (0,0)"}));
-        }
-        return ds.build_as_google_style();
-    }());
-
-    auto batched_doc_str = ([]() {
-        auto ds = DocString().desc("Apply gate to `states`. `states` in args is directly updated.");
-        if constexpr (is_base_gate) {
             ds.ex(DocString::Code({">>> states = StateVectorBatched(2, 1)",
                                    ">>> states.set_computational_basis(0)",
                                    ">>> H(0).update_quantum_state(states)",
@@ -882,40 +891,21 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
         }
         return ds.build_as_google_style();
     }());
-    auto update_doc_str = single_doc_str + "\n\n" + batched_doc_str +
-                          "\n\nOptionally pass a matching classical register and seed.";
 
     c.def(
         "update_quantum_state",
         [](const GateT& gate,
            GateStateVariant<Prec> state,
-           GateUpdateControlVariant classical_register_or_seed,
+           ClassicalRegisterVariant classical_register,
            std::optional<std::uint64_t> seed) {
-            ClassicalRegisterVariant classical_register = std::monostate{};
-            std::optional<std::uint64_t> actual_seed = seed;
-
-            std::visit(
-                Overloaded{[&](std::monostate) {},
-                           [&](ClassicalRegister* reg) { classical_register = reg; },
-                           [&](ClassicalRegisterBatched* reg) { classical_register = reg; },
-                           [&](std::uint64_t value) {
-                               if (actual_seed) {
-                                   throw std::runtime_error(
-                                       "Gate::update_quantum_state(): seed was specified twice.");
-                               }
-                               actual_seed = value;
-                           }},
-                classical_register_or_seed);
-
             std::visit(
                 [&](auto* state_ptr) {
-                    update_gate_state<GateT, Prec>(
-                        gate, state_ptr, classical_register, actual_seed);
+                    update_gate_state<GateT, Prec>(gate, state_ptr, classical_register, seed);
                 },
                 state);
         },
         "state"_a,
-        "classical_register_or_seed"_a = std::monostate{},
+        "classical_register"_a = std::monostate{},
         "seed"_a = std::nullopt,
         update_doc_str.c_str());
 }
