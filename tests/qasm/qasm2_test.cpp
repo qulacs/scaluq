@@ -71,6 +71,39 @@ TYPED_TEST(Qasm2Test, DumpsAndLoadsCircuit) {
     EXPECT_EQ(std::get<0>(loaded.circuit.get_gate_at(3)).gate_type(), GateType::Measurement);
 }
 
+TYPED_TEST(Qasm2Test, DumpsAndLoadsControlledGatesWithControlValues) {
+    constexpr Precision Prec = TestFixture::Prec;
+    Circuit<Prec> circuit;
+    circuit.add_gate(gate::X<Prec>(1, {0}, {1}));
+    circuit.add_gate(gate::X<Prec>(3, {0, 2}, {1, 1}));
+    circuit.add_gate(gate::Swap<Prec>(0, 1, {2}, {1}));
+
+    const std::string dumped = qasm2::dumps(circuit, 4);
+    EXPECT_NE(dumped.find("cx q[0], q[1];"), std::string::npos);
+    EXPECT_NE(dumped.find("ccx q[0], q[2], q[3];"), std::string::npos);
+    EXPECT_NE(dumped.find("cswap q[2], q[0], q[1];"), std::string::npos);
+
+    auto loaded = qasm2::loads<Prec>(dumped);
+    ASSERT_EQ(loaded.circuit.n_gates(), 3);
+    const auto& cx = std::get<0>(loaded.circuit.get_gate_at(0));
+    const auto& ccx = std::get<0>(loaded.circuit.get_gate_at(1));
+    const auto& cswap = std::get<0>(loaded.circuit.get_gate_at(2));
+    EXPECT_EQ(cx->control_qubit_list(), std::vector<std::uint64_t>{0});
+    EXPECT_EQ(cx->control_value_list(), std::vector<std::uint64_t>{1});
+    EXPECT_EQ(ccx->control_qubit_list(), (std::vector<std::uint64_t>{0, 2}));
+    EXPECT_EQ(ccx->control_value_list(), (std::vector<std::uint64_t>{1, 1}));
+    EXPECT_EQ(cswap->control_qubit_list(), std::vector<std::uint64_t>{2});
+    EXPECT_EQ(cswap->control_value_list(), std::vector<std::uint64_t>{1});
+}
+
+TYPED_TEST(Qasm2Test, RejectsZeroControlValueExport) {
+    constexpr Precision Prec = TestFixture::Prec;
+    Circuit<Prec> circuit;
+    circuit.add_gate(gate::X<Prec>(1, {0}, {0}));
+
+    EXPECT_THROW(qasm2::dumps(circuit, 2), std::runtime_error);
+}
+
 TYPED_TEST(Qasm2Test, LoadedCircuitExecutionMatchesQasmSemantics) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
