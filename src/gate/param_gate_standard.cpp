@@ -333,7 +333,7 @@ template class ParamRZGateImpl<Prec>;
         return std::make_shared<const Impl<Prec>>(                                           \
             vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),                \
             vector_to_mask(controls),                                                        \
-            vector_to_mask(control_values),                                                  \
+            vector_to_mask(controls, control_values),                                        \
             static_cast<Float<Prec>>(j.at("param_coef").get<double>()));                     \
     }                                                                                        \
     template struct GetParamGateFromJson<Impl<Prec>>;
