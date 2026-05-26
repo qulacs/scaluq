@@ -6,7 +6,7 @@ namespace scaluq::internal {
 namespace {
 template <Precision Prec, ExecutionSpace Space>
 std::uint64_t select_probabilistic_gate_index(const std::vector<double>& cumulative_distribution,
-                                              ExecutionContext<Prec, Space> context) {
+                                              ExecutionContext<Prec, Space>& context) {
     std::uniform_real_distribution<double> dist(0., 1.);
     std::uint64_t i = std::distance(cumulative_distribution.begin(),
                                     std::ranges::upper_bound(cumulative_distribution,
@@ -100,7 +100,7 @@ std::string ProbabilisticGateImpl<Prec>::to_string(const std::string& indent) co
 }
 #define DEFINE_PROBABILISTIC_GATE_CONTEXT_UPDATE(Space)                                           \
     template <Precision Prec>                                                                     \
-    void ProbabilisticGateImpl<Prec>::update_quantum_state(ExecutionContext<Prec, Space> context) \
+    void ProbabilisticGateImpl<Prec>::update_quantum_state(ExecutionContext<Prec, Space>& context) \
         const {                                                                                   \
         const std::uint64_t i =                                                                   \
             select_probabilistic_gate_index(_cumulative_distribution, context);                   \
@@ -108,11 +108,14 @@ std::string ProbabilisticGateImpl<Prec>::to_string(const std::string& indent) co
     }                                                                                             \
     template <Precision Prec>                                                                     \
     void ProbabilisticGateImpl<Prec>::update_quantum_state(                                       \
-        ExecutionContextBatched<Prec, Space> context) const {                                     \
+        ExecutionContextBatched<Prec, Space>& context) const {                                     \
         for (std::size_t i = 0; i < context.states.batch_size(); ++i) {                           \
             auto state_vector = context.states.view_state_vector_at(i);                           \
-            this->update_quantum_state(ExecutionContext<Prec, Space>{                             \
-                state_vector, context.classical_register[i], context.random_engine});             \
+            ExecutionContext<Prec, Space> state_context{                                          \
+                state_vector,                                                                      \
+                context.classical_register[i],                                                     \
+                context.random_engine};                                                            \
+            this->update_quantum_state(state_context);                                             \
         }                                                                                         \
     }
 DEFINE_PROBABILISTIC_GATE_CONTEXT_UPDATE(ExecutionSpace::Host)

@@ -9,7 +9,7 @@ using EitherGate = std::variant<Gate<Prec>, ParamGate<Prec>>;
 
 template <Precision Prec, ExecutionSpace Space>
 std::uint64_t select_probabilistic_gate_index(const std::vector<double>& cumulative_distribution,
-                                              ExecutionContext<Prec, Space> context) {
+                                              ExecutionContext<Prec, Space>& context) {
     std::uniform_real_distribution<double> dist(0., 1.);
     std::uint64_t i = std::distance(cumulative_distribution.begin(),
                                     std::ranges::upper_bound(cumulative_distribution,
@@ -126,7 +126,7 @@ std::string ParamProbabilisticGateImpl<Prec>::to_string(const std::string& inden
 }
 template <Precision Prec>
 void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
-    ExecutionContext<Prec, ExecutionSpace::Host> context, double param) const {
+    ExecutionContext<Prec, ExecutionSpace::Host>& context, double param) const {
     const std::uint64_t i = select_probabilistic_gate_index(_cumulative_distribution, context);
     const auto& gate = _gate_list[i];
     if (gate.index() == 0) {
@@ -137,19 +137,18 @@ void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
-    ExecutionContextBatched<Prec, ExecutionSpace::Host> context,
+    ExecutionContextBatched<Prec, ExecutionSpace::Host>& context,
     const std::vector<double>& params) const {
     for (std::size_t i = 0; i < context.states.batch_size(); ++i) {
         auto state_vector = context.states.view_state_vector_at(i);
-        this->update_quantum_state(
-            ExecutionContext<Prec, ExecutionSpace::Host>{
-                state_vector, context.classical_register[i], context.random_engine},
-            params[i]);
+        ExecutionContext<Prec, ExecutionSpace::Host> state_context{
+            state_vector, context.classical_register[i], context.random_engine};
+        this->update_quantum_state(state_context, params[i]);
     }
 }
 template <Precision Prec>
 void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
-    ExecutionContext<Prec, ExecutionSpace::HostSerial> context, double param) const {
+    ExecutionContext<Prec, ExecutionSpace::HostSerial>& context, double param) const {
     const std::uint64_t i = select_probabilistic_gate_index(_cumulative_distribution, context);
     const auto& gate = _gate_list[i];
     if (gate.index() == 0) {
@@ -160,20 +159,19 @@ void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
-    ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context,
+    ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context,
     const std::vector<double>& params) const {
     for (std::size_t i = 0; i < context.states.batch_size(); ++i) {
         auto state_vector = context.states.view_state_vector_at(i);
-        this->update_quantum_state(
-            ExecutionContext<Prec, ExecutionSpace::HostSerial>{
-                state_vector, context.classical_register[i], context.random_engine},
-            params[i]);
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> state_context{
+            state_vector, context.classical_register[i], context.random_engine};
+        this->update_quantum_state(state_context, params[i]);
     }
 }
 #ifdef SCALUQ_USE_CUDA
 template <Precision Prec>
 void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
-    ExecutionContext<Prec, ExecutionSpace::Default> context, double param) const {
+    ExecutionContext<Prec, ExecutionSpace::Default>& context, double param) const {
     const std::uint64_t i = select_probabilistic_gate_index(_cumulative_distribution, context);
     const auto& gate = _gate_list[i];
     if (gate.index() == 0) {
@@ -184,14 +182,13 @@ void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
-    ExecutionContextBatched<Prec, ExecutionSpace::Default> context,
+    ExecutionContextBatched<Prec, ExecutionSpace::Default>& context,
     const std::vector<double>& params) const {
     for (std::size_t i = 0; i < context.states.batch_size(); ++i) {
         auto state_vector = context.states.view_state_vector_at(i);
-        this->update_quantum_state(
-            ExecutionContext<Prec, ExecutionSpace::Default>{
-                state_vector, context.classical_register[i], context.random_engine},
-            params[i]);
+        ExecutionContext<Prec, ExecutionSpace::Default> state_context{
+            state_vector, context.classical_register[i], context.random_engine};
+        this->update_quantum_state(state_context, params[i]);
     }
 }
 #endif

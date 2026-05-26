@@ -117,27 +117,26 @@ public:
                               double param) const {
         ClassicalRegister classical_register(0);
         std::mt19937_64 random_engine(std::random_device{}());
-        update_quantum_state(
-            ExecutionContext<Prec, ExecutionSpace::Host>{state_vector, classical_register, random_engine},
-            param);
+        ExecutionContext<Prec, ExecutionSpace::Host> context{
+            state_vector, classical_register, random_engine};
+        update_quantum_state(context, param);
     }
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector,
                               ClassicalRegister& classical_register,
                               double param,
                               std::uint64_t seed = std::random_device{}()) const {
         std::mt19937_64 random_engine(seed);
-        update_quantum_state(
-            ExecutionContext<Prec, ExecutionSpace::Host>{
-                state_vector, classical_register, random_engine},
-            param);
+        ExecutionContext<Prec, ExecutionSpace::Host> context{
+            state_vector, classical_register, random_engine};
+        update_quantum_state(context, param);
     }
     void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Host>& states,
                               const std::vector<double>& params) const {
         ClassicalRegisterBatched classical_register(0, states.batch_size());
         std::mt19937_64 random_engine(std::random_device{}());
-        update_quantum_state(
-            ExecutionContextBatched<Prec, ExecutionSpace::Host>{states, classical_register, random_engine},
-            params);
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context{
+            states, classical_register, random_engine};
+        update_quantum_state(context, params);
     }
     void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Host>& states,
                               ClassicalRegisterBatched& classical_register,
@@ -154,37 +153,34 @@ public:
                 "ClassicalRegisterBatched&, ...): parameter size mismatch.");
         }
         std::mt19937_64 random_engine(seed);
-        update_quantum_state(
-            ExecutionContextBatched<Prec, ExecutionSpace::Host>{states, classical_register, random_engine},
-            params);
+        ExecutionContextBatched<Prec, ExecutionSpace::Host> context{
+            states, classical_register, random_engine};
+        update_quantum_state(context, params);
     }
     void update_quantum_state(StateVector<Prec, ExecutionSpace::HostSerial>& state_vector,
                               double param) const {
         ClassicalRegister classical_register(0);
         std::mt19937_64 random_engine(std::random_device{}());
-        update_quantum_state(
-            ExecutionContext<Prec, ExecutionSpace::HostSerial>{
-                state_vector, classical_register, random_engine},
-            param);
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context{
+            state_vector, classical_register, random_engine};
+        update_quantum_state(context, param);
     }
     void update_quantum_state(StateVector<Prec, ExecutionSpace::HostSerial>& state_vector,
                               ClassicalRegister& classical_register,
                               double param,
                               std::uint64_t seed = std::random_device{}()) const {
         std::mt19937_64 random_engine(seed);
-        update_quantum_state(
-            ExecutionContext<Prec, ExecutionSpace::HostSerial>{
-                state_vector, classical_register, random_engine},
-            param);
+        ExecutionContext<Prec, ExecutionSpace::HostSerial> context{
+            state_vector, classical_register, random_engine};
+        update_quantum_state(context, param);
     }
     void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
                               const std::vector<double>& params) const {
         ClassicalRegisterBatched classical_register(0, states.batch_size());
         std::mt19937_64 random_engine(std::random_device{}());
-        update_quantum_state(
-            ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>{
-                states, classical_register, random_engine},
-            params);
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context{
+            states, classical_register, random_engine};
+        update_quantum_state(context, params);
     }
     void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
                               ClassicalRegisterBatched& classical_register,
@@ -201,37 +197,35 @@ public:
                 "ClassicalRegisterBatched&, ...): parameter size mismatch.");
         }
         std::mt19937_64 random_engine(seed);
-        update_quantum_state(ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>{
-                                 states, classical_register, random_engine},
-                             params);
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context{
+            states, classical_register, random_engine};
+        update_quantum_state(context, params);
     }
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
                               double param) const {
         ClassicalRegister classical_register(0);
         std::mt19937_64 random_engine(std::random_device{}());
-        update_quantum_state(
-            ExecutionContext<Prec, ExecutionSpace::Default>{state_vector, classical_register, random_engine},
-            param);
+        ExecutionContext<Prec, ExecutionSpace::Default> context{
+            state_vector, classical_register, random_engine};
+        update_quantum_state(context, param);
     }
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
                               ClassicalRegister& classical_register,
                               double param,
                               std::uint64_t seed = std::random_device{}()) const {
         std::mt19937_64 random_engine(seed);
-        update_quantum_state(
-            ExecutionContext<Prec, ExecutionSpace::Default>{
-                state_vector, classical_register, random_engine},
-            param);
+        ExecutionContext<Prec, ExecutionSpace::Default> context{
+            state_vector, classical_register, random_engine};
+        update_quantum_state(context, param);
     }
     void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Default>& states,
                               const std::vector<double>& params) const {
         ClassicalRegisterBatched classical_register(0, states.batch_size());
         std::mt19937_64 random_engine(std::random_device{}());
-        update_quantum_state(
-            ExecutionContextBatched<Prec, ExecutionSpace::Default>{
-                states, classical_register, random_engine},
-            params);
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context{
+            states, classical_register, random_engine};
+        update_quantum_state(context, params);
     }
     void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Default>& states,
                               ClassicalRegisterBatched& classical_register,
@@ -248,26 +242,26 @@ public:
                 "ClassicalRegisterBatched&, ...): parameter size mismatch.");
         }
         std::mt19937_64 random_engine(seed);
-        update_quantum_state(
-            ExecutionContextBatched<Prec, ExecutionSpace::Default>{states, classical_register, random_engine},
-            params);
+        ExecutionContextBatched<Prec, ExecutionSpace::Default> context{
+            states, classical_register, random_engine};
+        update_quantum_state(context, params);
     }
 #endif  // SCALUQ_USE_CUDA
 
-    virtual void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context,
+    virtual void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host>& context,
                                       double param) const = 0;
-    virtual void update_quantum_state(ExecutionContextBatched<Prec, ExecutionSpace::Host> context,
+    virtual void update_quantum_state(ExecutionContextBatched<Prec, ExecutionSpace::Host>& context,
                                       const std::vector<double>& params) const = 0;
-    virtual void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::HostSerial> context,
+    virtual void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::HostSerial>& context,
                                       double param) const = 0;
     virtual void update_quantum_state(
-        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context,
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context,
         const std::vector<double>& params) const = 0;
 #ifdef SCALUQ_USE_CUDA
-    virtual void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Default> context,
+    virtual void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Default>& context,
                                       double param) const = 0;
     virtual void update_quantum_state(
-        ExecutionContextBatched<Prec, ExecutionSpace::Default> context,
+        ExecutionContextBatched<Prec, ExecutionSpace::Default>& context,
         const std::vector<double>& params) const = 0;
 #endif
 
