@@ -15,22 +15,22 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
     else()
         target_link_libraries(${LIBRARY} PRIVATE scaluq_base)
         target_sources(${LIBRARY} PRIVATE
-            # gate/merge_gate.cpp
+            gate/merge_gate.cpp
             gate/gate_matrix.cpp
             gate/update_ops_dense_matrix.cpp
             gate/update_ops_sparse_matrix.cpp
             gate/update_ops_standard.cpp
             state/state_vector.cpp
             state/state_vector_batched.cpp
-            # operator/operator.cpp
-            # operator/operator_batched.cpp
+            operator/operator.cpp
+            operator/operator_batched.cpp
             util/utility.cpp
             types.cpp
         )
 
         if(${LIBRARY} MATCHES "scaluq_default_")
             target_sources(${LIBRARY} PRIVATE
-            #     circuit/circuit.cpp
+                circuit/circuit.cpp
                 operator/pauli_operator.cpp
                 gate/gate_pauli.cpp
                 gate/gate_probabilistic.cpp

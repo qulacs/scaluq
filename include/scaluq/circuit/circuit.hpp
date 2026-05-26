@@ -130,140 +130,158 @@ private:
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
+using CircuitSingleParameters = std::map<std::string, double>;
+using CircuitBatchedParameters = std::map<std::string, std::vector<double>>;
+using CircuitParameterVariant =
+    std::variant<std::monostate, CircuitBatchedParameters, CircuitSingleParameters>;
+
+template <Precision Prec, ExecutionSpace Space>
+void update_circuit_state(const Circuit<Prec>& circuit,
+                          StateVector<Prec, Space>* state,
+                          ClassicalRegisterVariant classical_register,
+                          const CircuitParameterVariant& parameter_arg,
+                          std::optional<std::uint64_t> seed,
+                          const nb::kwargs& kwargs) {
+    CircuitSingleParameters parameters;
+    if (const auto* value = std::get_if<CircuitSingleParameters>(&parameter_arg)) {
+        parameters = *value;
+    } else if (const auto* value = std::get_if<CircuitBatchedParameters>(&parameter_arg)) {
+        if (!value->empty()) {
+            throw std::runtime_error(
+                "Circuit::update_quantum_state(): StateVector requires dict[str, float] "
+                "parameters.");
+        }
+    }
+    for (auto&& [key, param] : kwargs) {
+        if (!std::holds_alternative<std::monostate>(parameter_arg)) {
+            throw std::runtime_error(
+                "Circuit::update_quantum_state(): parameters were specified both as dict and "
+                "kwargs.");
+        }
+        parameters[nb::cast<std::string>(key)] = nb::cast<double>(param);
+    }
+
+    std::visit(
+        Overloaded{[&](std::monostate) {
+                       circuit.template update_quantum_state<Space>(
+                           *state, parameters, seed.value_or(std::random_device{}()));
+                   },
+                   [&](ClassicalRegister* reg) {
+                       circuit.template update_quantum_state<Space>(
+                           *state, *reg, parameters, seed.value_or(std::random_device{}()));
+                   },
+                   [&](ClassicalRegisterBatched*) {
+                       throw std::runtime_error(
+                           "Circuit::update_quantum_state(): ClassicalRegisterBatched cannot be "
+                           "used with StateVector.");
+                   }},
+        classical_register);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+void update_circuit_state(const Circuit<Prec>& circuit,
+                          StateVectorBatched<Prec, Space>* states,
+                          ClassicalRegisterVariant classical_register,
+                          const CircuitParameterVariant& parameter_arg,
+                          std::optional<std::uint64_t> seed,
+                          const nb::kwargs& kwargs) {
+    CircuitBatchedParameters parameters;
+    if (const auto* value = std::get_if<CircuitBatchedParameters>(&parameter_arg)) {
+        parameters = *value;
+    } else if (const auto* value = std::get_if<CircuitSingleParameters>(&parameter_arg)) {
+        if (!value->empty()) {
+            throw std::runtime_error(
+                "Circuit::update_quantum_state(): StateVectorBatched requires dict[str, "
+                "Sequence[float]] parameters.");
+        }
+    }
+    for (auto&& [key, param] : kwargs) {
+        if (!std::holds_alternative<std::monostate>(parameter_arg)) {
+            throw std::runtime_error(
+                "Circuit::update_quantum_state(): parameters were specified both as dict and "
+                "kwargs.");
+        }
+        parameters[nb::cast<std::string>(key)] = nb::cast<std::vector<double>>(param);
+    }
+
+    std::visit(
+        Overloaded{[&](std::monostate) {
+                       circuit.template update_quantum_state<Space>(
+                           *states, parameters, seed.value_or(std::random_device{}()));
+                   },
+                   [&](ClassicalRegister*) {
+                       throw std::runtime_error(
+                           "Circuit::update_quantum_state(): ClassicalRegister cannot be used "
+                           "with StateVectorBatched.");
+                   },
+                   [&](ClassicalRegisterBatched* reg) {
+                       circuit.template update_quantum_state<Space>(
+                           *states, *reg, parameters, seed.value_or(std::random_device{}()));
+                   }},
+        classical_register);
+}
+
+template <Precision Prec>
+void register_circuit_update_quantum_state(nb::class_<Circuit<Prec>>& c) {
+    using namespace nb::literals;
+
+    constexpr const char* update_signature =
+        "def update_quantum_state(self, state: StateVector | StateVectorBatched, "
+        "*, params: Mapping[str, float] | Mapping[str, Sequence[float]] | None = None, "
+        "classical_register: scaluq.scaluq_core.ClassicalRegister | "
+        "scaluq.scaluq_core.ClassicalRegisterBatched | None = None, seed: int | None = "
+        "None, **kwargs) -> None";
+    auto update_doc_str =
+        DocString()
+            .desc("Apply circuit to `state`. `state` in args is directly updated.")
+            .desc(
+                "Parameters can be passed as a dict or keyword arguments. For batched states, "
+                "parameter values must be sequences with length equal to batch size.")
+            .arg("state", "StateVector | StateVectorBatched", "State vector to be updated.")
+            .arg("params",
+                 "Mapping[str, float] | Mapping[str, Sequence[float]] | None",
+                 "Parameter dictionary. Use float values for `StateVector` and sequences for "
+                 "`StateVectorBatched`.")
+            .arg("classical_register",
+                 "ClassicalRegister | ClassicalRegisterBatched | None",
+                 "Classical register to be used by gates in the circuit.")
+            .arg("seed", "int | None", "Seed for random number generator.")
+            .build_as_google_style();
+
+    c.def(
+        "update_quantum_state",
+        [](const Circuit<Prec>& circuit,
+           GateStateVariant<Prec> state,
+           CircuitParameterVariant parameters,
+           ClassicalRegisterVariant classical_register,
+           std::optional<std::uint64_t> seed,
+           nb::kwargs kwargs) {
+            std::visit(
+                [&](auto* state_ptr) {
+                    update_circuit_state<Prec>(
+                        circuit, state_ptr, classical_register, parameters, seed, kwargs);
+                },
+                state);
+        },
+        "state"_a,
+        nb::kw_only(),
+        "params"_a = std::monostate{},
+        "classical_register"_a = std::monostate{},
+        "seed"_a = std::nullopt,
+        "kwargs"_a,
+        nb::sig(update_signature),
+        update_doc_str.c_str());
+}
+
 template <Precision Prec, ExecutionSpace Space>
 void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
     using namespace nb::literals;
 
-    c.def(
-         "update_quantum_state",
-         [&](const Circuit<Prec>& circuit, StateVector<Prec, Space>& state, nb::kwargs kwargs) {
-             std::map<std::string, double> parameters;
-             for (auto&& [key, param] : kwargs) {
-                 parameters[nb::cast<std::string>(key)] = nb::cast<double>(param);
-             }
-             circuit.update_quantum_state(state, parameters);
-         },
-         "state"_a,
-         "kwargs"_a,
-         "Apply gate to the StateVector. StateVector in args is directly updated. If the "
-         "circuit contains parametric gate, you have to give real value of parameter as "
-         "\"name=value\" format in kwargs.")
-        .def(
-            "update_quantum_state",
-            [](const Circuit<Prec>& circuit,
-               StateVector<Prec, Space>& state,
-               const std::map<std::string, double>& parameters,
-               std::optional<std::uint64_t> seed) {
-                circuit.update_quantum_state(
-                    state, parameters, seed.value_or(std::random_device{}()));
-            },
-            "state"_a,
-            "params"_a = std::map<std::string, double>{},
-            "seed"_a = std::nullopt,
-            "Apply gate to the StateVector. StateVector in args is directly updated. If the "
-            "circuit contains parametric gate, you have to give real value of parameter as "
-            "dict[str, float] in 2nd arg.")
-        .def(
-            "update_quantum_state",
-            [](const Circuit<Prec>& circuit,
-               StateVector<Prec, Space>& state,
-               ClassicalRegister& classical_register,
-               const std::map<std::string, double>& parameters,
-               std::optional<std::uint64_t> seed) {
-                circuit.update_quantum_state(
-                    state, classical_register, parameters, seed.value_or(std::random_device{}()));
-            },
-            "state"_a,
-            "classical_register"_a,
-            "params"_a = std::map<std::string, double>{},
-            "seed"_a = std::nullopt,
-            "Apply gate to the StateVector with classical register and optional seed.")
-        .def(
-            "update_quantum_state",
-            [&](const Circuit<Prec>& circuit,
-                StateVector<Prec, Space>& state,
-                ClassicalRegister& classical_register,
-                nb::kwargs kwargs) {
-                std::map<std::string, double> parameters;
-                for (auto&& [key, param] : kwargs) {
-                    parameters[nb::cast<std::string>(key)] = nb::cast<double>(param);
-                }
-                circuit.update_quantum_state(state, classical_register, parameters);
-            },
-            "state"_a,
-            "classical_register"_a,
-            "kwargs"_a,
-            "Apply gate to the StateVector with classical register. If the circuit contains "
-            "parametric gate, give parameter values as \"name=value\" in kwargs.")
-        .def(
-            "update_quantum_state",
-            [&](const Circuit<Prec>& circuit,
-                StateVectorBatched<Prec, Space>& states,
-                nb::kwargs kwargs) {
-                std::map<std::string, std::vector<double>> parameters;
-                for (auto&& [key, param] : kwargs) {
-                    parameters[nb::cast<std::string>(key)] = nb::cast<std::vector<double>>(param);
-                }
-                circuit.update_quantum_state(states, parameters);
-            },
-            "state"_a,
-            "kwargs"_a,
-            "Apply gate to the StateVectorBatched. StateVectorBatched in args is directly updated. "
-            "If the circuit contains parametric gate, you have to give real value of parameter as "
-            "\"name=[value1, value2, ...]\" format in kwargs.")
-        .def(
-            "update_quantum_state",
-            [](const Circuit<Prec>& circuit,
-               StateVectorBatched<Prec, Space>& states,
-               const std::map<std::string, std::vector<double>>& parameters,
-               std::optional<std::uint64_t> seed) {
-                circuit.update_quantum_state(
-                    states, parameters, seed.value_or(std::random_device{}()));
-            },
-            "state"_a,
-            "params"_a = std::map<std::string, std::vector<double>>{},
-            "seed"_a = std::nullopt,
-            "Apply gate to the StateVectorBatched. StateVectorBatched in args is directly updated. "
-            "If the circuit contains parametric gate, you have to give real value of parameter as "
-            "dict[str, list[float]] in 2nd arg.")
-        .def(
-            "update_quantum_state",
-            [](const Circuit<Prec>& circuit,
-               StateVectorBatched<Prec, Space>& states,
-               ClassicalRegisterBatched& classical_register,
-               const std::map<std::string, std::vector<double>>& parameters,
-               std::optional<std::uint64_t> seed) {
-                circuit.update_quantum_state(
-                    states, classical_register, parameters, seed.value_or(std::random_device{}()));
-            },
-            "state"_a,
-            "classical_register"_a,
-            "params"_a = std::map<std::string, std::vector<double>>{},
-            "seed"_a = std::nullopt,
-            "Apply gate to the StateVectorBatched with classical register and optional seed.")
-        .def(
-            "update_quantum_state",
-            [&](const Circuit<Prec>& circuit,
-                StateVectorBatched<Prec, Space>& states,
-                ClassicalRegisterBatched& classical_register,
-                nb::kwargs kwargs) {
-                std::map<std::string, std::vector<double>> parameters;
-                for (auto&& [key, param] : kwargs) {
-                    parameters[nb::cast<std::string>(key)] = nb::cast<std::vector<double>>(param);
-                }
-                circuit.update_quantum_state(states, classical_register, parameters);
-            },
-            "state"_a,
-            "classical_register"_a,
-            "kwargs"_a,
-            "Apply gate to the StateVectorBatched with classical register. If the circuit "
-            "contains parametric gate, give parameter values as "
-            "\"name=[value1, value2, ...]\" in kwargs.")
-        .def("optimize",
-             nb::overload_cast<std::uint64_t>(&Circuit<Prec>::template optimize<Space>),
-             "max_block_size"_a = 3,
-             "Optimize circuit. Create qubit dependency tree and merge neighboring gates if the "
-             "new gate has less than or equal to `max_block_size` or the new gate is Pauli.")
+    c.def("optimize",
+          nb::overload_cast<std::uint64_t>(&Circuit<Prec>::template optimize<Space>),
+          "max_block_size"_a = 3,
+          "Optimize circuit. Create qubit dependency tree and merge neighboring gates if the "
+          "new gate has less than or equal to `max_block_size` or the new gate is Pauli.")
         .def(
             "simulate_noise",
             [](const Circuit<Prec>& circuit,
@@ -356,6 +374,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
             "json_str"_a,
             "Read an object from the JSON representation of the circuit.");
 
+    register_circuit_update_quantum_state<Prec>(c);
     register_circuit_space_bindings<Prec, ExecutionSpace::Host>(c);
     register_circuit_space_bindings<Prec, ExecutionSpace::HostSerial>(c);
 #ifdef SCALUQ_USE_CUDA

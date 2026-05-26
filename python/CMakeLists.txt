@@ -49,17 +49,9 @@ install(CODE "
     execute_process(
         COMMAND
             \"${Python_EXECUTABLE}\"
-            \"${CMAKE_CURRENT_SOURCE_DIR}/generate_stubs.py\"
-            \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/root.pyi\" \"${CMAKE_INSTALL_PREFIX}/scaluq/\")
-    execute_process(
-        COMMAND
-            \"${Python_EXECUTABLE}\"
-            \"${CMAKE_CURRENT_SOURCE_DIR}/generate_stubs.py\"
-            \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/main.pyi\" \"${CMAKE_INSTALL_PREFIX}/scaluq/\")
-    file(MAKE_DIRECTORY \"${CMAKE_INSTALL_PREFIX}/scaluq/gate/\")
-    execute_process(
-        COMMAND
-            \"${Python_EXECUTABLE}\"
-            \"${CMAKE_CURRENT_SOURCE_DIR}/generate_stubs.py\"
-            \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/gate.pyi\" \"${CMAKE_INSTALL_PREFIX}/scaluq/gate/\")
+            \"${CMAKE_CURRENT_SOURCE_DIR}/install_public_stubs.py\"
+            \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/root.pyi\"
+            \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/main.pyi\"
+            \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/gate.pyi\"
+            \"${CMAKE_INSTALL_PREFIX}\")
 ")

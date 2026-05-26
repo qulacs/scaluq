@@ -131,8 +131,6 @@ void bind_state_state_vector_hpp(nb::module_& m) {
         .def(nb::init<std::uint64_t>(),
              "n_qubits"_a,
              DocString()
-                 .replace_signature_to("def __init__(n_qubits: int, precision: str = 'f64', "
-                                       "space: str = 'default')")
                  .desc("Construct with specified number of qubits.")
                  .desc("Vector is initialized with computational "
                        "basis $\\ket{0\\dots0}$.")
@@ -160,9 +158,6 @@ void bind_state_state_vector_hpp(nb::module_& m) {
             "n_qubits"_a,
             "seed"_a = std::nullopt,
             DocString()
-                .replace_signature_to(
-                    "def Haar_random_state(n_qubits: int, seed: int | None = None, precision: str "
-                    "= 'f64', space: str = 'default')")
                 .desc("Construct :class:`StateVector` with Haar random state.")
                 .arg("n_qubits", "int", "number of qubits")
                 .arg("seed",
@@ -203,8 +198,6 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                     &StateVector<Prec, Space>::uninitialized_state,
                     "n_qubits"_a,
                     DocString()
-                        .replace_signature_to("def uninitialized_state(n_qubits: int, precision: "
-                                              "str = 'f64', space: str = 'default')")
                         .desc("Construct :class:`StateVector` without initializing.")
                         .arg("n_qubits", "int", "number of qubits")
                         .arg("precision", "str", true, "precision of the state vector")
@@ -577,6 +570,11 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                 .desc("Calculate inner product $\\braket{a | b}$.")
                 .arg("a", ":class:`StateVector`", "left hand side of inner product")
                 .arg("b", ":class:`StateVector`", "right hand side of inner product")
+                .arg("precision", "str", true, "precision of the state vector")
+                .arg("space",
+                     "str",
+                     true,
+                     "execution space to allocate the state vector for calculation")
                 .ret("complex", "inner product $\\braket{a | b}$")
                 .ex(DocString::Code{">>> state1 = StateVector(2)",
                                     ">>> state1.load([1/2, 0, 0, 1/2]) # (|00> + |11>)/sqrt(2)",

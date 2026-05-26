@@ -163,9 +163,6 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
              "batch_size"_a,
              "n_qubits"_a,
              DocString()
-                 .replace_signature_to(
-                     "def __init__(batch_size: int, n_qubits: int, precision: str = 'f64', "
-                     "space: str = 'default')")
                  .desc("Construct batched state vector with specified batch size and qubits.")
                  .arg("batch_size", "int", "Number of batches.")
                  .arg("n_qubits", "int", "Number of qubits in each state vector.")
@@ -306,9 +303,6 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
             "set_same_state"_a,
             "seed"_a = std::nullopt,
             DocString()
-                .replace_signature_to(
-                    "def Haar_random_state(batch_size: int, n_qubits: int, set_same_state: bool, "
-                    "seed: int | None = None, precision: str = 'f64', space: str = 'default')")
                 .desc("Construct :class:`StateVectorBatched` with Haar random state.")
                 .arg("batch_size", "int", "Number of states in batch.")
                 .arg("n_qubits", "int", "Number of qubits per state.")
@@ -325,9 +319,6 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                     "batch_size"_a,
                     "n_qubits"_a,
                     DocString()
-                        .replace_signature_to("def uninitialized_state(batch_size: int, n_qubits: "
-                                              "int, precision: str = 'f64', "
-                                              "space: str = 'default')")
                         .desc("Construct :class:`StateVectorBatched` without initializing.")
                         .arg("batch_size", "int", "Number of states in batch.")
                         .arg("n_qubits", "int", "number of qubits")

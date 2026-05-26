@@ -499,22 +499,22 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
                 return nb::cast(ParamGate<Prec>(inv));
             },
             "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.");
+    constexpr const char* update_signature =
+        "def update_quantum_state(self, state: StateVector | StateVectorBatched, "
+        "*, param: float | Sequence[float], classical_register: ClassicalRegister | "
+        "ClassicalRegisterBatched | None = None, seed: int | None = None) -> None";
     auto update_doc_str = ([]() {
         auto ds =
             DocString()
-                .replace_signature_to(
-                    "def update_quantum_state(self, state: StateVector | StateVectorBatched, "
-                    "param: float | list[float], classical_register: ClassicalRegister | "
-                    "ClassicalRegisterBatched | None = None, seed: int | None = None) -> None")
                 .desc("Apply gate to `state`. `state` in args is directly updated.")
                 .desc("Optionally pass a matching classical register and seed.")
                 .arg("state",
                      "StateVector | StateVectorBatched",
                      "State vector to be updated. Can be `StateVector` or `StateVectorBatched`.")
                 .arg("param",
-                     "float | list[float]",
+                     "float | Sequence[float]",
                      "Parameter value(s) for the gate. Should be a single float for `StateVector` "
-                     "and a list of floats (one for each batch) for `StateVectorBatched`.")
+                     "and a sequence of floats (one for each batch) for `StateVectorBatched`.")
                 .arg("classical_register",
                      "ClassicalRegister | ClassicalRegisterBatched | None",
                      "Classical register to be used in the gate. If not provided, a new register "
@@ -527,33 +527,33 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
             ds.ex(DocString::Code({">>> import math",
                                    ">>> state = StateVector(2)",
                                    ">>> state.set_computational_basis(0)",
-                                   ">>> ParamRX(0).update_quantum_state(state, math.pi / 4)",
+                                   ">>> ParamRX(0).update_quantum_state(state, param=math.pi / 4)",
                                    ">>> print(state)",
                                    "Qubit Count : 2",
                                    "Dimension : 4",
                                    "State vector : ",
-                                   "  00 : (0.707107,0)",
-                                   "  01 : (0.707107,0)",
+                                   "  00 : (0.92388,0)",
+                                   "  01 : (0,-0.382683)",
                                    "  10 : (0,0)",
                                    "  11 : (0,0)"}));
             ds.ex(DocString::Code(
                 {">>> import math",
                  ">>> states = StateVectorBatched(2, 1)",
                  ">>> states.set_computational_basis(0)",
-                 ">>> ParamRX(0).update_quantum_state(states, [math.pi / 4, -math.pi / 4])",
+                 ">>> ParamRX(0).update_quantum_state(states, param=[math.pi / 4, -math.pi / 4])",
                  ">>> print(states)",
                  "Qubit Count : 1",
                  "Dimension : 2",
                  "--------------------",
                  "Batch_id : 0",
                  "State vector : ",
-                 "  0 : (0.707107,0)",
-                 "  1 : (0.707107,0)",
+                 "  0 : (0.92388,0)",
+                 "  1 : (0,-0.382683)",
                  "--------------------",
                  "Batch_id : 1",
                  "State vector : ",
-                 "  0 : (0.707107,0)",
-                 "  1 : (0.707107,0)",
+                 "  0 : (0.92388,0)",
+                 "  1 : (0,0.382683)",
                  "<BLANKLINE>"}));
         }
         return ds.build_as_google_style();
@@ -573,9 +573,11 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
                 state);
         },
         "state"_a,
+        nb::kw_only(),
         "param"_a,
         "classical_register"_a = std::monostate{},
         "seed"_a = std::nullopt,
+        nb::sig(update_signature),
         update_doc_str.c_str());
     c.def(
          "get_matrix",

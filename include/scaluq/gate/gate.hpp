@@ -631,18 +631,17 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
 
     constexpr bool is_base_gate = std::is_same_v<GateT, Gate<Prec>>;
 
-    c.def(nb::init<GateT>(), "Downcast from Gate.")
-        .def("gate_type",
-             &GateT::gate_type,
-             ([]() {
-                 auto ds = DocString().desc("Get gate type as `GateType` enum.");
-                 if constexpr (is_base_gate) {
-                     ds.ex(DocString::Code(
-                         {">>> g = H(0)", ">>> print(g.gate_type())", "GateType.H"}));
-                 }
-                 return ds.build_as_google_style();
-             }())
-                 .c_str())
+    c.def(
+         "gate_type",
+         &GateT::gate_type,
+         ([]() {
+             auto ds = DocString().desc("Get gate type as `GateType` enum.");
+             if constexpr (is_base_gate) {
+                 ds.ex(DocString::Code({">>> g = H(0)", ">>> print(g.gate_type())", "GateType.H"}));
+             }
+             return ds.build_as_google_style();
+         }())
+             .c_str())
         .def(
             "target_qubit_list",
             [](const GateT& gate) { return gate->target_qubit_list(); },
@@ -838,14 +837,14 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
             "json_str"_a,
             "Read an object from the JSON representation of the gate.");
 
+    constexpr const char* update_signature =
+        "def update_quantum_state(self, state: StateVector | StateVectorBatched, "
+        "*, classical_register: scaluq.scaluq_core.ClassicalRegister | "
+        "scaluq.scaluq_core.ClassicalRegisterBatched | None = None, seed: int | None = "
+        "None) -> None";
     auto update_doc_str = ([]() {
         auto ds =
             DocString()
-                .replace_signature_to(
-                    "def update_quantum_state(self, state: StateVector | StateVectorBatched, "
-                    "classical_register: scaluq.scaluq_core.ClassicalRegister | "
-                    "scaluq.scaluq_core.ClassicalRegisterBatched | None = None, seed: int | None = "
-                    "None) -> None")
                 .desc("Apply gate to `state`. `state` in args is directly updated.")
                 .desc("Optionally pass a matching classical register and seed.")
                 .arg("state",
@@ -905,8 +904,10 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
                 state);
         },
         "state"_a,
+        nb::kw_only(),
         "classical_register"_a = std::monostate{},
         "seed"_a = std::nullopt,
+        nb::sig(update_signature),
         update_doc_str.c_str());
 }
 
@@ -952,7 +953,6 @@ nb::class_<Gate<Prec>> bind_gate_gate_hpp(nb::module_& m) {
         "Downcast to required to use gate-specific functions.";
     auto c = nb::class_<BaseGateT>(m, "Gate", description);
     register_gate_common_methods<BaseGateT, Prec>(c);
-    c.def(nb::init<BaseGateT>(), "Just copy shallowly.");
     return c;
 }
 
@@ -968,7 +968,7 @@ nb::class_<SpecificGateT> bind_specific_gate(nb::module_& m,
                                    "(ex: add to Circuit).";
     auto c = nb::class_<SpecificGateT>(m, name, full_description.c_str());
     register_gate_common_methods<SpecificGateT, Prec>(c);
-    c.def(nb::init<BaseGateT>());
+    c.def(nb::init<BaseGateT>(), "Downcast from `Gate`.");
     return c;
 }
 }  // namespace internal

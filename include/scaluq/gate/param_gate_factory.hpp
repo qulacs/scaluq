@@ -85,9 +85,6 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
-            .replace_signature_to(
-                "def ParamRX(target: int, coef: float = 1., controls: list[int] = [], "
-                "control_values: list[int] = [], precision='f64') -> ParamGate")
             .desc("Generate general :class:`~scaluq.ParamGate` class instance of "
                   ":class:`~scaluq.ParamRXGate`.")
             .note("If you need to use functions specific to the :class:`~scaluq.ParamRXGate` "
@@ -110,9 +107,6 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
-            .replace_signature_to(
-                "def ParamRY(target: int, coef: float = 1., controls: list[int] = [], "
-                "control_values: list[int] = [], precision='f64') -> ParamGate")
             .desc("Generate general :class:`~scaluq.ParamGate` class instance of "
                   ":class:`~scaluq.ParamRYGate`.")
             .note("If you need to use functions specific to the :class:`~scaluq.ParamRYGate` "
@@ -135,9 +129,6 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
-            .replace_signature_to(
-                "def ParamRZ(target: int, coef: float = 1., controls: list[int] = [], "
-                "control_values: list[int] = [], precision='f64') -> ParamGate")
             .desc("Generate general :class:`~scaluq.ParamGate` class instance of "
                   ":class:`~scaluq.ParamRZGate`.")
             .note("If you need to use functions specific to the "
@@ -161,9 +152,6 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
         "controls"_a = std::vector<std::uint64_t>{},
         "control_values"_a = std::vector<std::uint64_t>{},
         DocString()
-            .replace_signature_to("def ParamPauliRotation(pauli: PauliOperator, coef: float = 1., "
-                                  "controls: list[int] = [], "
-                                  "control_values: list[int] = [], precision='f64') -> ParamGate")
             .desc("Generate general :class:`~scaluq.ParamGate` class instance of "
                   ":class:`~scaluq.ParamPauliRotationGate`.")
             .note("If you need to use functions specific to the "
@@ -186,9 +174,6 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
               "distribution"_a,
               "gate_list"_a,
               DocString()
-                  .replace_signature_to("def ParamProbabilistic(distribution: list[float], "
-                                        "gate_list: list[Union[Gate, ParamGate]], "
-                                        "precision='f64') -> ParamGate")
                   .desc("Generate general :class:`~scaluq.ParamGate` class instance of "
                         ":class:`~scaluq.ParamProbabilisticGate`.")
                   .arg("distribution", "list[float]", "List of probability")
@@ -216,8 +201,6 @@ void bind_gate_param_gate_factory(nb::module_& mgate) {
         },
         "prob_gate_list"_a,
         DocString()
-            .replace_signature_to("def ParamProbabilistic(prob_gate_list: list[tuple[float, "
-                                  "Union[Gate, ParamGate]]], precision='f64') -> ParamGate")
             .desc("Generate general :class:`~scaluq.ParamGate` class instance of "
                   ":class:`~scaluq.ParamProbabilisticGate`.")
             .arg("prob_gate_list",
