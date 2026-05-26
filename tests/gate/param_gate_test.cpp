@@ -109,6 +109,53 @@ TYPED_TEST(ParamGateTest, ApplyParamRZGate) {
     test_apply_parametric_single_pauli_rotation<Prec, Space>(
         5, &gate::RZ<Prec>, &gate::ParamRZ<Prec>);
 }
+
+template <Precision Prec, ExecutionSpace Space, typename Factory>
+void test_param_gate_json_roundtrip_preserves_control_value(Factory factory) {
+    using ParamGateT = ParamGate<Prec>;
+    using StateVectorT = StateVector<Prec, Space>;
+
+    const ParamGateT original =
+        factory(0, 1.0, std::vector<std::uint64_t>{5}, std::vector<std::uint64_t>{1});
+    const ParamGateT restored = Json(original).template get<ParamGateT>();
+
+    ASSERT_EQ(restored->control_qubit_list(), (std::vector<std::uint64_t>{5}));
+    ASSERT_EQ(restored->control_value_list(), (std::vector<std::uint64_t>{1}));
+
+    StateVectorT state_original(6);
+    StateVectorT state_restored(6);
+    state_original.set_computational_basis(1ULL << 5);
+    state_restored.set_computational_basis(1ULL << 5);
+
+    original->update_quantum_state(state_original, std::numbers::pi);
+    restored->update_quantum_state(state_restored, std::numbers::pi);
+
+    const auto amps_original = state_original.get_amplitudes();
+    const auto amps_restored = state_restored.get_amplitudes();
+    ASSERT_EQ(amps_original.size(), amps_restored.size());
+    for (std::size_t i = 0; i < amps_original.size(); ++i) {
+        check_near<Prec>(amps_original[i], amps_restored[i]);
+    }
+}
+
+TYPED_TEST(ParamGateTest, ParamRXJsonRoundtripPreservesControlValue) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    test_param_gate_json_roundtrip_preserves_control_value<Prec, Space>(&gate::ParamRX<Prec>);
+}
+
+TYPED_TEST(ParamGateTest, ParamRYJsonRoundtripPreservesControlValue) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    test_param_gate_json_roundtrip_preserves_control_value<Prec, Space>(&gate::ParamRY<Prec>);
+}
+
+TYPED_TEST(ParamGateTest, ParamRZJsonRoundtripPreservesControlValue) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    test_param_gate_json_roundtrip_preserves_control_value<Prec, Space>(&gate::ParamRZ<Prec>);
+}
+
 TYPED_TEST(ParamGateTest, ApplyParamPauliRotationGate) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
