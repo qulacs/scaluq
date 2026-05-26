@@ -492,12 +492,14 @@ private:
     void handle_statement(const Statement& statement) {
         std::string stmt = trim(statement.text);
         std::string low = lower(stmt);
-        if (low == "openqasm 2.0") {
+        if (starts_with_word(low, "openqasm") &&
+            trim(std::string_view(low).substr(std::string_view("openqasm").size())) == "2.0") {
             _saw_version = true;
             return;
         }
         if (starts_with_word(low, "include")) {
-            if (low != "include \"qelib1.inc\"") {
+            if (trim(std::string_view(low).substr(std::string_view("include").size())) !=
+                "\"qelib1.inc\"") {
                 throw std::runtime_error(make_error(statement.loc, "only include \"qelib1.inc\" is supported"));
             }
             return;

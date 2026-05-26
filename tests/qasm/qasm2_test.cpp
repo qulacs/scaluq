@@ -50,6 +50,60 @@ TYPED_TEST(Qasm2Test, RejectsSymbolicRotationAngles) {
         std::runtime_error);
 }
 
+TYPED_TEST(Qasm2Test, LoadsSourceWithComments) {
+    constexpr Precision Prec = TestFixture::Prec;
+    auto loaded = qasm2::loads<Prec>(R"(
+        // This program uses both OpenQASM comment styles.
+        OPENQASM 2.0;
+        include "qelib1.inc"; /* include standard gates */
+        qreg q[2];
+        x q[0]; // prepare the control qubit
+        /*
+         * Comments between operations must not become statements.
+         */
+        cx q[0], q[1];
+    )");
+
+    ASSERT_EQ(loaded.circuit.n_gates(), 2);
+    EXPECT_EQ(std::get<0>(loaded.circuit.get_gate_at(0)).gate_type(), GateType::X);
+    const auto& cx = std::get<0>(loaded.circuit.get_gate_at(1));
+    EXPECT_EQ(cx.gate_type(), GateType::X);
+    EXPECT_EQ(cx->control_qubit_list(), std::vector<std::uint64_t>{0});
+    EXPECT_EQ(cx->target_qubit_list(), std::vector<std::uint64_t>{1});
+}
+
+TYPED_TEST(Qasm2Test, LoadsSourceWithWhitespaceAndNewlines) {
+    constexpr Precision Prec = TestFixture::Prec;
+    auto loaded = qasm2::loads<Prec>(R"(
+
+            OPENQASM 2.0       ;
+        include   "qelib1.inc"
+            ;
+
+        qreg     q [ 2 ] ;
+        creg
+            c [ 1 ]
+            ;
+
+        rz (
+            pi / 2
+        )
+            q [ 1 ]
+            ;
+        measure
+            q [ 1 ]
+            ->
+            c [ 0 ]
+            ;
+    )");
+
+    EXPECT_EQ(loaded.n_qubits, 2);
+    EXPECT_EQ(loaded.n_clbits, 1);
+    ASSERT_EQ(loaded.circuit.n_gates(), 2);
+    EXPECT_EQ(std::get<0>(loaded.circuit.get_gate_at(0)).gate_type(), GateType::RZ);
+    EXPECT_EQ(std::get<0>(loaded.circuit.get_gate_at(1)).gate_type(), GateType::Measurement);
+}
+
 TYPED_TEST(Qasm2Test, DumpsAndLoadsCircuit) {
     constexpr Precision Prec = TestFixture::Prec;
     Circuit<Prec> circuit;
