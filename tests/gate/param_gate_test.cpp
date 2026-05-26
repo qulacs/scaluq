@@ -91,21 +91,13 @@ void test_apply_parametric_multi_pauli_rotation(std::uint64_t n_qubits) {
     }
 }
 
-TYPED_TEST(ParamGateTest, ApplyParamRXGate) {
+TYPED_TEST(ParamGateTest, ApplyParamRotationGates) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     test_apply_parametric_single_pauli_rotation<Prec, Space>(
         5, &gate::RX<Prec>, &gate::ParamRX<Prec>);
-}
-TYPED_TEST(ParamGateTest, ApplyParamRYGate) {
-    constexpr Precision Prec = TestFixture::Prec;
-    constexpr ExecutionSpace Space = TestFixture::Space;
     test_apply_parametric_single_pauli_rotation<Prec, Space>(
         5, &gate::RY<Prec>, &gate::ParamRY<Prec>);
-}
-TYPED_TEST(ParamGateTest, ApplyParamRZGate) {
-    constexpr Precision Prec = TestFixture::Prec;
-    constexpr ExecutionSpace Space = TestFixture::Space;
     test_apply_parametric_single_pauli_rotation<Prec, Space>(
         5, &gate::RZ<Prec>, &gate::ParamRZ<Prec>);
 }
@@ -138,21 +130,11 @@ void test_param_gate_json_roundtrip_preserves_control_value(Factory factory) {
     }
 }
 
-TYPED_TEST(ParamGateTest, ParamRXJsonRoundtripPreservesControlValue) {
+TYPED_TEST(ParamGateTest, ParamGateJsonRoundtripPreservesControlValue) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     test_param_gate_json_roundtrip_preserves_control_value<Prec, Space>(&gate::ParamRX<Prec>);
-}
-
-TYPED_TEST(ParamGateTest, ParamRYJsonRoundtripPreservesControlValue) {
-    constexpr Precision Prec = TestFixture::Prec;
-    constexpr ExecutionSpace Space = TestFixture::Space;
     test_param_gate_json_roundtrip_preserves_control_value<Prec, Space>(&gate::ParamRY<Prec>);
-}
-
-TYPED_TEST(ParamGateTest, ParamRZJsonRoundtripPreservesControlValue) {
-    constexpr Precision Prec = TestFixture::Prec;
-    constexpr ExecutionSpace Space = TestFixture::Space;
     test_param_gate_json_roundtrip_preserves_control_value<Prec, Space>(&gate::ParamRZ<Prec>);
 }
 
@@ -219,14 +201,12 @@ TYPED_TEST(ParamGateTest, ParamProbabilisticGateRejectsInvalidDistributionValues
     EXPECT_THROW(
         gate::ParamProbabilistic<Prec>({-0.2, 1.2}, {gate::ParamRX<Prec>(0), gate::I<Prec>()}),
         std::runtime_error);
-    EXPECT_THROW(
-        gate::ParamProbabilistic<Prec>({std::numeric_limits<double>::quiet_NaN(), 1.0},
-                                       {gate::ParamRX<Prec>(0), gate::I<Prec>()}),
-        std::runtime_error);
-    EXPECT_THROW(
-        gate::ParamProbabilistic<Prec>({std::numeric_limits<double>::infinity(), 0.0},
-                                       {gate::ParamRX<Prec>(0), gate::I<Prec>()}),
-        std::runtime_error);
+    EXPECT_THROW(gate::ParamProbabilistic<Prec>({std::numeric_limits<double>::quiet_NaN(), 1.0},
+                                                {gate::ParamRX<Prec>(0), gate::I<Prec>()}),
+                 std::runtime_error);
+    EXPECT_THROW(gate::ParamProbabilistic<Prec>({std::numeric_limits<double>::infinity(), 0.0},
+                                                {gate::ParamRX<Prec>(0), gate::I<Prec>()}),
+                 std::runtime_error);
 }
 
 template <Precision Prec, ExecutionSpace Space>
