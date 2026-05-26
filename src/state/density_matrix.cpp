@@ -32,6 +32,10 @@ DensityMatrix<Prec, Space>::DensityMatrix(const StateVector<Prec, Space>& other)
 template <Precision Prec, ExecutionSpace Space>
 StdComplex DensityMatrix<Prec, Space>::get_coherence_at(std::uint64_t row_index,
                                                         std::uint64_t col_index) const {
+    if (row_index >= this->_dim || col_index >= this->_dim) {
+        throw std::runtime_error(
+            "DensityMatrix::get_coherence_at: Row index or column index is out of range.");
+    }
     Kokkos::View<ComplexType, Kokkos::HostSpace> host_view("single_value");
     Kokkos::deep_copy(host_view, Kokkos::subview(_raw, row_index, col_index));
     ComplexType val = host_view();
@@ -42,6 +46,10 @@ template <Precision Prec, ExecutionSpace Space>
 void DensityMatrix<Prec, Space>::set_coherence_at(std::uint64_t row_index,
                                                   std::uint64_t col_index,
                                                   StdComplex c) {
+    if (row_index >= this->_dim || col_index >= this->_dim) {
+        throw std::runtime_error(
+            "DensityMatrix::set_coherence_at: Row index or column index is out of range.");
+    }
     Kokkos::View<ComplexType, Kokkos::HostSpace> host_view("single_value");
     host_view() = c;
     Kokkos::deep_copy(Kokkos::subview(_raw, row_index, col_index), host_view());
@@ -52,6 +60,10 @@ template <Precision Prec, ExecutionSpace Space>
 void DensityMatrix<Prec, Space>::set_coherence_pair_at(std::uint64_t row_index,
                                                        std::uint64_t col_index,
                                                        StdComplex c) {
+    if (row_index >= this->_dim || col_index >= this->_dim) {
+        throw std::runtime_error(
+            "DensityMatrix::set_coherence_pair_at: Row index or column index is out of range.");
+    }
     Kokkos::View<ComplexType, Kokkos::HostSpace> host_view("single_value");
     host_view() = c;
     Kokkos::deep_copy(Kokkos::subview(_raw, row_index, col_index), host_view());
@@ -187,6 +199,10 @@ void DensityMatrix<Prec, Space>::set_zero_norm_state() {
 
 template <Precision Prec, ExecutionSpace Space>
 void DensityMatrix<Prec, Space>::set_computational_basis(std::uint64_t basis) {
+    if (basis >= this->_dim) {
+        throw std::runtime_error(
+            "DensityMatrix::set_computational_basis: Basis index is out of range.");
+    }
     this->_is_hermitian = true;
     Kokkos::parallel_for(
         "set_computational_basis",
@@ -229,6 +245,11 @@ DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::get_partial_trace(
     }
 
     const std::uint64_t traced_out_mask = internal::vector_to_mask(traced_out_qubits);
+    if (popcount(traced_out_mask) != traced_out_qubits.size()) {
+        throw std::runtime_error(
+            "DensityMatrix::get_partial_trace: Input vector for traced out qubits contains "
+            "duplicate indices.");
+    }
     const std::uint64_t traced_out_dim = 1ULL << traced_out_qubits.size();
     const std::uint64_t remaining_dim = this->_dim / traced_out_dim;
     const std::uint64_t remaining_qubits = this->_n_qubits - traced_out_qubits.size();
