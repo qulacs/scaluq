@@ -27,15 +27,25 @@ https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
 
 # パフォーマンス
 
-202x年において、量子回路のシミュレーション時間(方法: CX, RX, RZゲートを各ターゲット量子ビットに適用する際の平均実行時間のベンチマーク)を、複数の既存量子回路シミュレータと比較した。
+2026年において、量子回路のシミュレーション時間(方法: CX, RX, RZゲートを各ターゲット量子ビットに適用する際の平均実行時間のベンチマーク)を、複数の既存量子回路シミュレータと比較しました。
 
-ベンチマークのリポジトリはこちらです。 [the benchmark repository](https://github.com/Qulacs-Osaka/benchmark-scaluq).
+[ベンチマークのリポジトリ](https://github.com/Qulacs-Osaka/benchmark-scaluq) をご確認ください。
 
-## Single State Vector Update (CPU)
+## 単一状態ベクトル更新 (2026年1月)
+
+### CPU 結果
 ![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/multithread/image/circuit.png)
 
-## Single State Vector Update (GPU)
+### GPU 結果
 ![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/gpu/image/circuit.png)
+
+## バッジ状態ベクトル更新 (2026年5月)
+
+### バッジサイズを変化させた場合 (#qubits=16)
+![Batched State Vector Update (batch sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/batch_sweep.png)
+
+### 量子ビット数を変化させた場合 (batch size=100)
+![Batched State Vector Update (qubits sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/qubits_sweep.png)
 
 ## ビルド時要件
 

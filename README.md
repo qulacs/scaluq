@@ -27,15 +27,25 @@ See https://scaluq.readthedocs.io/en/latest/index.html
 
 # Performance
 
-The time for simulating quantum circuits (Method: Benchmark execution time to apply CX, RX and RZ gates (averaged over every target qubit)) is compared with several quantum circuit simulators in 202x.
+The time for simulating quantum circuits (Method: Benchmark execution time to apply CX, RX and RZ gates (averaged over every target qubit)) is compared with several quantum circuit simulators in 2026.
 
 See [the benchmark repository](https://github.com/Qulacs-Osaka/benchmark-scaluq).
 
-## Single State Vector Update (CPU)
+## Single State Vector Update in January 2026
+
+### CPU result
 ![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/multithread/image/circuit.png)
 
-## Single State Vector Update (GPU)
+### GPU result
 ![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/gpu/image/circuit.png)
+
+## Batched State Vector Update in May 2026
+
+### Varying batch size (#qubits=16)
+![Batched State Vector Update (batch sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/batch_sweep.png)
+
+### Varying #qubits (batch size=100)
+![Batched State Vector Update (qubits sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/qubits_sweep.png)
 
 ## Build Requirements
 
