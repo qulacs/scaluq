@@ -261,6 +261,11 @@ TYPED_TEST(CircuitTest, ThrowsWhenStateHasTooFewQubits) {
 
 template <Precision Prec, ExecutionSpace Space>
 void circuit_suzuki_trotter_test() {
+    if constexpr (Prec == Precision::F16) {
+        // skip suzuki trotter for f16
+        GTEST_SKIP() << "F16 is skipped due to the limitation of floating-point precision in "
+                        "Suzuki Trotter decomposition.";
+    }
     const std::uint64_t n = 2;
     const std::uint64_t dim = 1ULL << n;
     const double suzuki_trotter_eps = 1e-2;
