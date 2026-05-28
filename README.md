@@ -31,7 +31,7 @@ The time for simulating quantum circuits (Method: Benchmark execution time to ap
 
 See [the benchmark repository](https://github.com/Qulacs-Osaka/benchmark-scaluq).
 
-## Single State Vector Update in January 2026
+## Single State Vector Update (January 2026)
 
 ### CPU result
 ![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/multithread/image/circuit.png)
@@ -39,7 +39,7 @@ See [the benchmark repository](https://github.com/Qulacs-Osaka/benchmark-scaluq)
 ### GPU result
 ![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/gpu/image/circuit.png)
 
-## Batched State Vector Update in May 2026
+## Batched State Vector Update (May 2026)
 
 ### Varying batch size (#qubits=16)
 ![Batched State Vector Update (batch sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/batch_sweep.png)
