@@ -801,27 +801,31 @@ TYPED_TEST(GateTest, UGateJsonRoundTrip) {
 
     {
         Gate<Prec> gate = gate::U1<Prec>(0, 0.75, {2}, {1});
+        Gate<Prec> loaded;
         ASSERT_NO_THROW({
-            Gate<Prec> loaded = Json(gate).template get<Gate<Prec>>();
-            ASSERT_EQ(loaded.gate_type(), GateType::U1);
-            EXPECT_EQ(loaded->control_qubit_list(), (std::vector<std::uint64_t>{2}));
-            EXPECT_EQ(loaded->control_value_list(), (std::vector<std::uint64_t>{1}));
-            EXPECT_NEAR(U1Gate<Prec>(loaded)->lambda(), 0.75, 1e-12);
-            const auto original_matrix = gate->get_matrix();
-            const auto loaded_matrix = loaded->get_matrix();
-            ASSERT_EQ(original_matrix.rows(), loaded_matrix.rows());
-            ASSERT_EQ(original_matrix.cols(), loaded_matrix.cols());
-            for (Eigen::Index r = 0; r < original_matrix.rows(); ++r) {
-                for (Eigen::Index c = 0; c < original_matrix.cols(); ++c) {
-                    check_near<Prec>(original_matrix(r, c), loaded_matrix(r, c));
-                }
-            }
+            loaded = Json(gate).template get<Gate<Prec>>();
         });
+        ASSERT_EQ(loaded.gate_type(), GateType::U1);
+        EXPECT_EQ(loaded->control_qubit_list(), (std::vector<std::uint64_t>{2}));
+        EXPECT_EQ(loaded->control_value_list(), (std::vector<std::uint64_t>{1}));
+        EXPECT_NEAR(U1Gate<Prec>(loaded)->lambda(), 0.75, 1e-12);
+        const auto original_matrix = gate->get_matrix();
+        const auto loaded_matrix = loaded->get_matrix();
+        ASSERT_EQ(original_matrix.rows(), loaded_matrix.rows());
+        ASSERT_EQ(original_matrix.cols(), loaded_matrix.cols());
+        for (Eigen::Index r = 0; r < original_matrix.rows(); ++r) {
+            for (Eigen::Index c = 0; c < original_matrix.cols(); ++c) {
+                check_near<Prec>(original_matrix(r, c), loaded_matrix(r, c));
+            }
+        }
     }
 
     {
         Gate<Prec> gate = gate::U2<Prec>(1, 0.25, 0.75, {3}, {1});
-        Gate<Prec> loaded = Json(gate).template get<Gate<Prec>>();
+        Gate<Prec> loaded;
+        ASSERT_NO_THROW({
+            loaded = Json(gate).template get<Gate<Prec>>();
+        });
         ASSERT_EQ(loaded.gate_type(), GateType::U2);
         EXPECT_EQ(loaded->control_qubit_list(), (std::vector<std::uint64_t>{3}));
         EXPECT_EQ(loaded->control_value_list(), (std::vector<std::uint64_t>{1}));
@@ -840,7 +844,10 @@ TYPED_TEST(GateTest, UGateJsonRoundTrip) {
 
     {
         Gate<Prec> gate = gate::U3<Prec>(2, 0.5, 0.25, 0.75, {4}, {1});
-        Gate<Prec> loaded = Json(gate).template get<Gate<Prec>>();
+        Gate<Prec> loaded;
+        ASSERT_NO_THROW({
+            loaded = Json(gate).template get<Gate<Prec>>();
+        });
         ASSERT_EQ(loaded.gate_type(), GateType::U3);
         EXPECT_EQ(loaded->control_qubit_list(), (std::vector<std::uint64_t>{4}));
         EXPECT_EQ(loaded->control_value_list(), (std::vector<std::uint64_t>{1}));
