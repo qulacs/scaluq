@@ -1,18 +1,26 @@
 cmake_minimum_required(VERSION 3.24)
 
 foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
-    target_link_libraries(${LIBRARY} PUBLIC 
+    target_link_libraries(${LIBRARY} PUBLIC
         Kokkos::kokkos
         nlohmann_json::nlohmann_json
     )
     target_include_directories(${LIBRARY} PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
     target_include_directories(${LIBRARY} PRIVATE ${eigen_SOURCE_DIR})
+    if(SCALUQ_STATIC_ANALYSIS)
+        target_include_directories(${LIBRARY} BEFORE PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/analysis_stubs)
+    endif()
     if(${LIBRARY} STREQUAL scaluq_base)
         target_sources(${LIBRARY} PRIVATE
             base/kokkos.cpp
             base/util/utility.cpp
         )
     else()
+        if(NOT SCALUQ_STATIC_ANALYSIS)
+            target_precompile_headers(${LIBRARY} PRIVATE
+                "${CMAKE_CURRENT_SOURCE_DIR}/scaluq_pch.hpp")
+        endif()
         target_link_libraries(${LIBRARY} PRIVATE scaluq_base)
         target_sources(${LIBRARY} PRIVATE
             gate/merge_gate.cpp

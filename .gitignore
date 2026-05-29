@@ -36,6 +36,7 @@
 /.vscode
 /bin
 /build
+/build-tidy
 /typings
 /dist
 /doc/source/autoapi/
