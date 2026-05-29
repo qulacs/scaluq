@@ -941,7 +941,7 @@ std::shared_ptr<const U1GateImpl<Prec>> GetGateFromJson<U1GateImpl<Prec>>::get(c
         vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),
         vector_to_mask(control_qubits),
         vector_to_mask(control_qubits, control_values),
-        static_cast<Float<Prec>>(j.at("theta").get<double>()));
+        static_cast<Float<Prec>>(j.at("lambda").get<double>()));
 }
 template <Precision Prec>
 std::shared_ptr<const U2GateImpl<Prec>> GetGateFromJson<U2GateImpl<Prec>>::get(const Json& j) {
@@ -951,8 +951,8 @@ std::shared_ptr<const U2GateImpl<Prec>> GetGateFromJson<U2GateImpl<Prec>>::get(c
         vector_to_mask(j.at("target").get<std::vector<std::uint64_t>>()),
         vector_to_mask(control_qubits),
         vector_to_mask(control_qubits, control_values),
-        static_cast<Float<Prec>>(j.at("theta").get<double>()),
-        static_cast<Float<Prec>>(j.at("phi").get<double>()));
+        static_cast<Float<Prec>>(j.at("phi").get<double>()),
+        static_cast<Float<Prec>>(j.at("lambda").get<double>()));
 }
 template <Precision Prec>
 std::shared_ptr<const U3GateImpl<Prec>> GetGateFromJson<U3GateImpl<Prec>>::get(const Json& j) {
