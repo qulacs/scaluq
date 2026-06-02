@@ -517,6 +517,12 @@ void ecr_gate(std::uint64_t physical_target_mask,
               std::uint64_t control_mask,
               std::uint64_t control_value_mask,
               StateVectorBatched<Prec, Space>& states);
+template <Precision Prec, ExecutionSpace Space>
+void permutation_gate(const std::vector<std::pair<std::uint64_t, std::uint64_t>>& swap_schedule,
+                      StateVector<Prec, Space>& state);
+template <Precision Prec, ExecutionSpace Space>
+void permutation_gate(const std::vector<std::pair<std::uint64_t, std::uint64_t>>& swap_schedule,
+                      StateVectorBatched<Prec, Space>& states);
 
 template <Precision Prec, ExecutionSpace Space>
 void sparse_matrix_gate(std::uint64_t target_mask,

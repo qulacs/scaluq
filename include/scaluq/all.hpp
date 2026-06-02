@@ -226,6 +226,9 @@
         return ::scaluq::gate::SparseMatrix<Prec, Space>(                                      \
             targets, matrix, controls, control_values);                                        \
     }                                                                                          \
+    inline Gate Permutation(const std::vector<std::uint64_t>& destination_indices) {           \
+        return ::scaluq::gate::Permutation<Prec, Space>(destination_indices);                  \
+    }                                                                                          \
     inline auto& Probabilistic = ::scaluq::gate::Probabilistic<Prec>;                          \
     inline auto& BitFlipNoise = ::scaluq::gate::BitFlipNoise<Prec>;                            \
     inline auto& DephasingNoise = ::scaluq::gate::DephasingNoise<Prec>;                        \

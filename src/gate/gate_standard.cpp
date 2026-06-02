@@ -866,6 +866,53 @@ DEFINE_ECR_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #undef DEFINE_ECR_GATE_UPDATE
 template class EcrGateImpl<Prec>;
 
+template <Precision Prec>
+ComplexMatrix PermutationGateImpl<Prec>::get_matrix() const {
+    const std::uint64_t n_qubits = _dst.size();
+    const std::uint64_t dim = 1ULL << n_qubits;
+    ComplexMatrix matrix = ComplexMatrix::Zero(dim, dim);
+    for (std::uint64_t src = 0; src < dim; ++src) {
+        std::uint64_t dst_index = 0;
+        for (std::uint64_t qubit = 0; qubit < n_qubits; ++qubit) {
+            dst_index |= ((src >> qubit) & 1ULL) << _dst[qubit];
+        }
+        matrix(dst_index, src) = 1.;
+    }
+    return matrix;
+}
+template <Precision Prec>
+std::shared_ptr<const GateBase<Prec>> PermutationGateImpl<Prec>::get_inverse() const {
+    std::vector<std::uint64_t> inv(_dst.size());
+    for (std::uint64_t i = 0; i < _dst.size(); ++i) {
+        inv[_dst[i]] = i;
+    }
+    return std::make_shared<const PermutationGateImpl<Prec>>(inv);
+}
+template <Precision Prec>
+std::string PermutationGateImpl<Prec>::to_string(const std::string& indent) const {
+    std::ostringstream ss;
+    ss << indent << "Gate Type: Permutation\n";
+    ss << this->get_qubit_info_as_string(indent);
+    return ss.str();
+}
+#define DEFINE_PERMUTATION_GATE_UPDATE(ContextClass, state_member, Space)                    \
+    template <Precision Prec>                                                                \
+    void PermutationGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context)  \
+        const {                                                                              \
+        this->check_qubit_mask_within_bounds(context.state_member);                          \
+        permutation_gate(this->_swap_schedule, context.state_member);                        \
+    }
+DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
+DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
+DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::HostSerial)
+DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
+DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
+#endif
+#undef DEFINE_PERMUTATION_GATE_UPDATE
+template class PermutationGateImpl<Prec>;
+
 // I
 template <Precision Prec>
 std::shared_ptr<const IGateImpl<Prec>> GetGateFromJson<IGateImpl<Prec>>::get(const Json&) {
@@ -995,5 +1042,13 @@ std::shared_ptr<const EcrGateImpl<Prec>> GetGateFromJson<EcrGateImpl<Prec>>::get
         vector_to_mask(j.at("physical_target").get<std::vector<std::uint64_t>>()));
 }
 template struct GetGateFromJson<EcrGateImpl<Prec>>;
+
+template <Precision Prec>
+std::shared_ptr<const PermutationGateImpl<Prec>>
+GetGateFromJson<PermutationGateImpl<Prec>>::get(const Json& j) {
+    return std::make_shared<const PermutationGateImpl<Prec>>(
+        j.at("dst").get<std::vector<std::uint64_t>>());
+}
+template struct GetGateFromJson<PermutationGateImpl<Prec>>;
 
 }  // namespace scaluq::internal
