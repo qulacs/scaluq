@@ -17,7 +17,7 @@ std::string PauliGateImpl<Prec>::to_string(const std::string& indent) const {
 }
 #define DEFINE_PAULI_GATE_UPDATE(ContextClass, state_member, Space)                                               \
     template <Precision Prec>                                                                \
-    void PauliGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) const {                     \
+    void PauliGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const {                     \
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();         \
         apply_pauli(this->_control_mask,                                                     \
                     this->_control_value_mask,                                               \
@@ -62,7 +62,7 @@ std::string PauliRotationGateImpl<Prec>::to_string(const std::string& indent) co
 }
 #define DEFINE_PAULI_ROTATION_GATE_UPDATE(ContextClass, state_member, Space)                                      \
     template <Precision Prec>                                                                \
-    void PauliRotationGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) \
+    void PauliRotationGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) \
         const {                                                                              \
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();         \
         apply_pauli_rotation(this->_control_mask,                                            \
