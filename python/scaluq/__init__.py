@@ -33,8 +33,8 @@ def _get_module(precision, space):
             raise ValueError(f"Execution space {space} is not supported.")
         raise ValueError(f"Precision {precision} is not available.")
 
-def _key_for_gate(gate):
-    mod = inspect.getmodule(gate)
+def _key_for_object(obj):
+    mod = inspect.getmodule(obj)
     return _mod_id_to_key.get(id(mod)) if mod is not None else None
 
 class StateVector:
@@ -52,10 +52,13 @@ class StateVector:
         return _get_module(precision, space).StateVector.uninitialized_state(n_qubits)
     
     @staticmethod
-    def inner_product(state1, state2, precision=_DEFAULT_PRECISION, space='default'):
+    def inner_product(state1, state2):
         if type(state1) is not type(state2):
             raise ValueError("State vectors must be of the same type for inner product.")
-        return _get_module(precision, space).StateVector.inner_product(state1, state2)
+        key = _key_for_object(state1)
+        if key is None:
+            raise ValueError(f"Unsupported state vector type: {type(state1)}")
+        return _modules[key].StateVector.inner_product(state1, state2)
 
 class StateVectorBatched:
     def __new__(cls, batch_size, n_qubits, precision=_DEFAULT_PRECISION, space='default'):
@@ -70,20 +73,20 @@ class StateVectorBatched:
         return _get_module(precision, space).StateVectorBatched.uninitialized_state(batch_size, n_qubits)
 
 def Gate(gate):
-    key = _key_for_gate(gate)
+    key = _key_for_object(gate)
     if key is None:
         raise ValueError(f"Unsupported gate type: {type(gate)}")
     return _modules[('default', key[1])].Gate(gate)
 
 def ParamGate(gate):
-    key = _key_for_gate(gate)
+    key = _key_for_object(gate)
     if key is None:
         raise ValueError(f"Unsupported gate type: {type(gate)}")
     return _modules[('default', key[1])].ParamGate(gate)
 
 def _make_gate_wrapper(name, is_param, is_space_specific):
     def caster(gate, space='default'):
-        key = _key_for_gate(gate)
+        key = _key_for_object(gate)
         if key is None:
             raise ValueError(f"Unsupported gate type: {type(gate)}")
         if is_param:
@@ -114,10 +117,19 @@ if len(_available_precisions) > 0:
             continue
         globals()[_name] = _make_gate_wrapper(_name, is_param=(_name.startswith('Param')), is_space_specific=(_name in ['SparseMatrixGate', 'DenseMatrixGate']))
 
-def merge_gate(gate1, gate2, prec=_DEFAULT_PRECISION, space='default'):
-    mod = _get_module(prec, space)
+def merge_gate(gate1, gate2):
+    key1 = _key_for_object(gate1)
+    key2 = _key_for_object(gate2)
+    if key1 is None:
+        raise ValueError(f"Unsupported gate type: {type(gate1)}")
+    if key2 is None:
+        raise ValueError(f"Unsupported gate type: {type(gate2)}")
+    if key1 != key2:
+        raise ValueError("Gates must be from the same precision and execution space.")
+    mod = _modules[key1]
     if not hasattr(mod, 'merge_gate'):
-        raise ValueError(f"merge_gate is not available in space={space} with precision={prec}")
+        space, precision = key1
+        raise ValueError(f"merge_gate is not available in space={space} with precision={precision}")
     return mod.merge_gate(gate1, gate2)
 
 class PauliOperator:

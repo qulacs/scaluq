@@ -151,7 +151,7 @@ def _patch_main_stub(source, default_precision):
     replacements.append(_function_header_replacement(
         lines,
         _method(state_vector, "inner_product"),
-        f"def inner_product(a: StateVector, b: StateVector, precision: str = '{default_precision}', space: str = 'default') -> complex:",
+        "def inner_product(a: StateVector, b: StateVector) -> complex:",
     ))
 
     state_vector_batched = _class(tree, "StateVectorBatched")
@@ -215,7 +215,7 @@ def _patch_main_stub(source, default_precision):
     replacements.append(_function_header_replacement(
         lines,
         merge_gate,
-        f"def merge_gate(gate1, gate2, prec: str = '{default_precision}', space: str = 'default') -> tuple[Gate, float]:",
+        "def merge_gate(gate1, gate2) -> tuple[Gate, float]:",
     ))
 
     operator = _class(tree, "Operator")
