@@ -1,0 +1,5 @@
+#pragma once
+#ifndef EIGEN_EIGENVALUES_MODULE_H
+#define EIGEN_EIGENVALUES_MODULE_H
+#endif
+// Stub: ComplexEigenSolver is defined in scaluq/type/eigen_types.hpp under SCALUQ_STATIC_ANALYSIS.

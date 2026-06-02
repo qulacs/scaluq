@@ -3,6 +3,10 @@ name: Install to System (PR)
 on:
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check-changed:
     name: Check Changed Files
@@ -83,6 +87,10 @@ jobs:
       - name: Install Ninja (Linux)
         if: ${{ matrix.os-arch == 'linux-x86_64' }}
         run: sudo apt update && sudo apt install ninja-build
+
+      - name: Install mold (Linux)
+        if: ${{ matrix.os-arch == 'linux-x86_64' }}
+        run: sudo apt update && sudo apt install mold
 
       - name: Install libomp (Linux clang)
         if: ${{ matrix.os-arch == 'linux-x86_64' && matrix.compiler == 'clang' }}

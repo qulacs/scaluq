@@ -28,9 +28,10 @@ https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
 ## ビルド時要件
 
 - Ninja 1.10 以上
-- GCC 11 以上 (CUDAを利用しない場合13以上)
+- GCC 13 以上 または LLVM Clang 13 以上
+  - CUDA 利用時はGCC 11以上が利用できるが、Clangは利用不可
 - CMake 3.24 以上
-- CUDA 12.6 以上（CUDA利用時のみ）
+- CUDA 12.8 以上（CUDA利用時のみ）
 - Python 3.10 以上 (Python利用時のみ)
 
 CUDA を利用する場合は、使用する CUDA がサポートするホストコンパイラのバージョンを使用してください（CUDA Installation Guide の Host Compiler Support Policy を参照）。
@@ -39,7 +40,7 @@ CUDA を利用する場合は、使用する CUDA がサポートするホスト
 
 ## 実行時要件
 
-- CUDA 12.6 以上（CUDA利用時のみ）
+- CUDA 12.8 以上（CUDA利用時のみ）
 
 ※これより低いバージョンでも動作する可能性はありますが確認していません
 

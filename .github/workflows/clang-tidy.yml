@@ -1,4 +1,4 @@
-name: Format
+name: Clang-tidy
 
 on:
   merge_group:
@@ -6,10 +6,6 @@ on:
   push:
     branches:
       - main
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
-  cancel-in-progress: true
 
 jobs:
   check-changed:
@@ -28,37 +24,32 @@ jobs:
           files: |
             include/**
             src/**
-            tests/**
-            python/**
 
-  check-format:
+  check-tidy:
     name: Check Format
     needs: [check-changed]
     if: ${{ !cancelled() && (needs.check-changed.result == 'skipped' || needs.check-changed.outputs.any_changed == 'true') }}
-    runs-on: "ubuntu-24.04"
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
 
       - name: Setup cmake
         uses: lukka/get-cmake@latest
 
-      - name: Install Ninja
-        run: sudo apt install ninja-build
+      - name: Install dependencies
+        run: sudo apt update && sudo apt install -y ninja-build libomp-dev
 
       - name: Configure
         run: |
-          script/configure
+          script/configure_tidy
 
-      - name: Check format
+      - name: Run clang-tidy
         run: |
-          ninja -C build format
-          diff=$(git diff)
-          echo -n "$diff"
-          test "$(echo -n "$diff" | wc -l) -eq 0"
+          ninja -C build-tidy clang-tidy
 
-  format-check-passed:
-    name: Format Check Passed
-    needs: [check-changed, check-format]
+  tidy-check-passed:
+    name: Tidy Check Passed
+    needs: [check-changed, check-tidy]
     if: always()
     runs-on: ubuntu-24.04
     steps:

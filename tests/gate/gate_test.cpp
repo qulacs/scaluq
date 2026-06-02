@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <functional>
+#include <limits>
 #include <scaluq/gate/gate_factory.hpp>
 
 #include "../test_environment.hpp"
@@ -795,6 +796,76 @@ TYPED_TEST(GateTest, MeasurementGateJsonRoundTrip) {
     EXPECT_EQ(MeasurementGate<Prec>(loaded)->classical_bit_index(), 3);
 }
 
+TYPED_TEST(GateTest, UGateJsonRoundTrip) {
+    constexpr Precision Prec = TestFixture::Prec;
+
+    {
+        Gate<Prec> gate = gate::U1<Prec>(0, 0.75, {2}, {1});
+        Gate<Prec> loaded;
+        ASSERT_NO_THROW({
+            loaded = Json(gate).template get<Gate<Prec>>();
+        });
+        ASSERT_EQ(loaded.gate_type(), GateType::U1);
+        EXPECT_EQ(loaded->control_qubit_list(), (std::vector<std::uint64_t>{2}));
+        EXPECT_EQ(loaded->control_value_list(), (std::vector<std::uint64_t>{1}));
+        EXPECT_NEAR(U1Gate<Prec>(loaded)->lambda(), 0.75, 1e-12);
+        const auto original_matrix = gate->get_matrix();
+        const auto loaded_matrix = loaded->get_matrix();
+        ASSERT_EQ(original_matrix.rows(), loaded_matrix.rows());
+        ASSERT_EQ(original_matrix.cols(), loaded_matrix.cols());
+        for (Eigen::Index r = 0; r < original_matrix.rows(); ++r) {
+            for (Eigen::Index c = 0; c < original_matrix.cols(); ++c) {
+                check_near<Prec>(original_matrix(r, c), loaded_matrix(r, c));
+            }
+        }
+    }
+
+    {
+        Gate<Prec> gate = gate::U2<Prec>(1, 0.25, 0.75, {3}, {1});
+        Gate<Prec> loaded;
+        ASSERT_NO_THROW({
+            loaded = Json(gate).template get<Gate<Prec>>();
+        });
+        ASSERT_EQ(loaded.gate_type(), GateType::U2);
+        EXPECT_EQ(loaded->control_qubit_list(), (std::vector<std::uint64_t>{3}));
+        EXPECT_EQ(loaded->control_value_list(), (std::vector<std::uint64_t>{1}));
+        EXPECT_NEAR(U2Gate<Prec>(loaded)->phi(), 0.25, 1e-12);
+        EXPECT_NEAR(U2Gate<Prec>(loaded)->lambda(), 0.75, 1e-12);
+        const auto original_matrix = gate->get_matrix();
+        const auto loaded_matrix = loaded->get_matrix();
+        ASSERT_EQ(original_matrix.rows(), loaded_matrix.rows());
+        ASSERT_EQ(original_matrix.cols(), loaded_matrix.cols());
+        for (Eigen::Index r = 0; r < original_matrix.rows(); ++r) {
+            for (Eigen::Index c = 0; c < original_matrix.cols(); ++c) {
+                check_near<Prec>(original_matrix(r, c), loaded_matrix(r, c));
+            }
+        }
+    }
+
+    {
+        Gate<Prec> gate = gate::U3<Prec>(2, 0.5, 0.25, 0.75, {4}, {1});
+        Gate<Prec> loaded;
+        ASSERT_NO_THROW({
+            loaded = Json(gate).template get<Gate<Prec>>();
+        });
+        ASSERT_EQ(loaded.gate_type(), GateType::U3);
+        EXPECT_EQ(loaded->control_qubit_list(), (std::vector<std::uint64_t>{4}));
+        EXPECT_EQ(loaded->control_value_list(), (std::vector<std::uint64_t>{1}));
+        EXPECT_NEAR(U3Gate<Prec>(loaded)->theta(), 0.5, 1e-12);
+        EXPECT_NEAR(U3Gate<Prec>(loaded)->phi(), 0.25, 1e-12);
+        EXPECT_NEAR(U3Gate<Prec>(loaded)->lambda(), 0.75, 1e-12);
+        const auto original_matrix = gate->get_matrix();
+        const auto loaded_matrix = loaded->get_matrix();
+        ASSERT_EQ(original_matrix.rows(), loaded_matrix.rows());
+        ASSERT_EQ(original_matrix.cols(), loaded_matrix.cols());
+        for (Eigen::Index r = 0; r < original_matrix.rows(); ++r) {
+            for (Eigen::Index c = 0; c < original_matrix.cols(); ++c) {
+                check_near<Prec>(original_matrix(r, c), loaded_matrix(r, c));
+            }
+        }
+    }
+}
+
 TYPED_TEST(GateTest, FlattenNestedProbabilisticGate) {
     constexpr Precision Prec = TestFixture::Prec;
     Gate<Prec> nested_gate = gate::Probabilistic<Prec>(
@@ -813,6 +884,22 @@ TYPED_TEST(GateTest, FlattenNestedProbabilisticGate) {
     ASSERT_EQ(gate_list[0].gate_type(), GateType::X);
     ASSERT_EQ(gate_list[1].gate_type(), GateType::Y);
     ASSERT_EQ(gate_list[2].gate_type(), GateType::Z);
+}
+
+TYPED_TEST(GateTest, ProbabilisticGateRejectsInvalidDistributionValues) {
+    constexpr Precision Prec = TestFixture::Prec;
+
+    EXPECT_THROW(
+        gate::Probabilistic<Prec>({-0.2, 1.2}, {gate::X<Prec>(0), gate::I<Prec>()}),
+        std::runtime_error);
+    EXPECT_THROW(
+        gate::Probabilistic<Prec>({std::numeric_limits<double>::quiet_NaN(), 1.0},
+                                  {gate::X<Prec>(0), gate::I<Prec>()}),
+        std::runtime_error);
+    EXPECT_THROW(
+        gate::Probabilistic<Prec>({std::numeric_limits<double>::infinity(), 0.0},
+                                  {gate::X<Prec>(0), gate::I<Prec>()}),
+        std::runtime_error);
 }
 
 template <Precision Prec, ExecutionSpace Space>

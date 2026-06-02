@@ -6,7 +6,7 @@ namespace scaluq::internal {
 namespace {
 template <Precision Prec, ExecutionSpace Space>
 std::uint64_t select_probabilistic_gate_index(const std::vector<double>& cumulative_distribution,
-                                              ExecutionContext<Prec, Space> context) {
+                                              ExecutionContext<Prec, Space>& context) {
     std::uniform_real_distribution<double> dist(0., 1.);
     std::uint64_t i = std::distance(cumulative_distribution.begin(),
                                     std::ranges::upper_bound(cumulative_distribution,
@@ -20,6 +20,11 @@ void flatten_probabilistic_gate(double prob_prefix,
                                 const Gate<Prec>& gate,
                                 std::vector<double>& accumulated_distribution,
                                 std::vector<Gate<Prec>>& accumulated_gate_list) {
+    if (gate.gate_type() == GateType::Measurement) {
+        throw std::runtime_error(
+            "ProbabilisticGateImpl::ProbabilisticGateImpl() MeasurementGate cannot be added to "
+            "ProbabilisticGate.");
+    }
     if (gate.gate_type() != GateType::Probabilistic) {
         accumulated_distribution.push_back(prob_prefix);
         accumulated_gate_list.push_back(gate);
@@ -43,10 +48,21 @@ ProbabilisticGateImpl<Prec>::ProbabilisticGateImpl(const std::vector<double>& di
     : GateBase<Prec>(0, 0, 0) {
     std::uint64_t n = distribution.size();
     if (n == 0) {
-        throw std::runtime_error("At least one gate is required.");
+        throw std::runtime_error(
+            "ProbabilisticGateImpl::ProbabilisticGateImpl() At least one gate is required.");
     }
     if (n != gate_list.size()) {
-        throw std::runtime_error("distribution and gate_list have different size.");
+        throw std::runtime_error(
+            "ProbabilisticGateImpl::ProbabilisticGateImpl() distribution and gate_list have "
+            "different size.");
+    }
+    for (double probability : distribution) {
+        if (!std::isfinite(probability)) {
+            throw std::runtime_error("distribution must contain only finite values.");
+        }
+        if (probability < 0. || probability > 1.) {
+            throw std::runtime_error("Each probability must be between 0 and 1.");
+        }
     }
 
     for (std::size_t i = 0; i < n; ++i) {
@@ -84,7 +100,7 @@ std::string ProbabilisticGateImpl<Prec>::to_string(const std::string& indent) co
 }
 #define DEFINE_PROBABILISTIC_GATE_CONTEXT_UPDATE(Space)                                           \
     template <Precision Prec>                                                                     \
-    void ProbabilisticGateImpl<Prec>::update_quantum_state(ExecutionContext<Prec, Space> context) \
+    void ProbabilisticGateImpl<Prec>::update_quantum_state(ExecutionContext<Prec, Space>& context) \
         const {                                                                                   \
         const std::uint64_t i =                                                                   \
             select_probabilistic_gate_index(_cumulative_distribution, context);                   \
@@ -92,13 +108,14 @@ std::string ProbabilisticGateImpl<Prec>::to_string(const std::string& indent) co
     }                                                                                             \
     template <Precision Prec>                                                                     \
     void ProbabilisticGateImpl<Prec>::update_quantum_state(                                       \
-        ExecutionContextBatched<Prec, Space> context) const {                                     \
+        ExecutionContextBatched<Prec, Space>& context) const {                                     \
         for (std::size_t i = 0; i < context.states.batch_size(); ++i) {                           \
             auto state_vector = context.states.view_state_vector_at(i);                           \
-            this->update_quantum_state(                                                           \
-                ExecutionContext<Prec, Space>{state_vector,                                       \
-                                              context.classical_register[i],                      \
-                                              context.random_engine});                            \
+            ExecutionContext<Prec, Space> state_context{                                          \
+                state_vector,                                                                      \
+                context.classical_register[i],                                                     \
+                context.random_engine};                                                            \
+            this->update_quantum_state(state_context);                                             \
         }                                                                                         \
     }
 DEFINE_PROBABILISTIC_GATE_CONTEXT_UPDATE(ExecutionSpace::Host)
