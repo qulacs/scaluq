@@ -177,9 +177,9 @@ double StateVector<Prec, Space>::get_marginal_probability(
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & lsum) {
             std::uint64_t basis = i;
             for (std::uint64_t cursor = 0; cursor < d_target_index.size(); cursor++) {
-                std::uint64_t insert_index = d_target_index[cursor];
+                std::uint64_t insert_index = d_target_index(cursor);
                 basis = internal::insert_zero_to_basis_index(basis, insert_index);
-                basis |= d_target_value[cursor] << insert_index;
+                basis |= d_target_value(cursor) << insert_index;
             }
             lsum += internal::squared_norm(this->_raw[basis]);
         },
@@ -188,10 +188,10 @@ double StateVector<Prec, Space>::get_marginal_probability(
     return static_cast<double>(sum);
 }
 template <Precision Prec, ExecutionSpace Space>
-double StateVector<Prec, Space>::get_entropy() const {
+double StateVector<Prec, Space>::get_computational_basis_entropy() const {
     FloatType ent = 0;
     Kokkos::parallel_reduce(
-        "get_entropy",
+        "get_computational_basis_entropy",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t idx, FloatType & lsum) {
             FloatType prob = internal::squared_norm(_raw[idx]);
@@ -227,7 +227,7 @@ std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(std::uint64_t samp
         "sampling (compute stacked prob)",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & update, const bool final) {
-            update += internal::squared_norm(this->_raw[i]);
+            update += internal::squared_norm(this->_raw(i));
             if (final) {
                 stacked_prob[i + 1] = update;
             }

@@ -369,11 +369,11 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_marginal_probability(
 }
 
 template <Precision Prec, ExecutionSpace Space>
-std::vector<double> StateVectorBatched<Prec, Space>::get_entropy() const {
+std::vector<double> StateVectorBatched<Prec, Space>::get_computational_basis_entropy() const {
     Kokkos::View<FloatType*, internal::SpaceType<Space>> ents("ents", _batch_size);
     const FloatType eps = static_cast<FloatType>(1e-15);
     Kokkos::parallel_for(
-        "get_entropy",
+        "get_computational_basis_entropy",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
