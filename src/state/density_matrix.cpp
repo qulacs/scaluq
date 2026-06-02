@@ -245,7 +245,7 @@ DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::get_partial_trace(
     }
 
     const std::uint64_t traced_out_mask = internal::vector_to_mask(traced_out_qubits);
-    if (popcount(traced_out_mask) != traced_out_qubits.size()) {
+    if (std::popcount(traced_out_mask) != traced_out_qubits.size()) {
         throw std::runtime_error(
             "DensityMatrix::get_partial_trace: Input vector for traced out qubits contains "
             "duplicate indices.");
