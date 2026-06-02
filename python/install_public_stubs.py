@@ -215,7 +215,7 @@ def _patch_main_stub(source):
     replacements.append(_function_header_replacement(
         lines,
         merge_gate,
-        "def merge_gate(gate1, gate2, prec: str = 'f64', space: str = 'default') -> tuple[scaluq.scaluq_core.default.f64.Gate, float]:",
+        "def merge_gate(gate1, gate2, prec: str = 'f64', space: str = 'default') -> tuple[Gate, float]:",
     ))
 
     operator = _class(tree, "Operator")
