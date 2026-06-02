@@ -3,6 +3,7 @@ from .. import scaluq_core
 _PRECISIONS = ['f64', 'f32', 'f16', 'bf16']
 _SPACES = ['default', 'host', 'host_serial']
 _available_precisions = [prec for prec in _PRECISIONS if scaluq_core.precision_available(prec)]
+_DEFAULT_PRECISION = _available_precisions[0]
 
 _modules: dict[tuple[str, str], object] = {}
 for _space in _SPACES:
@@ -16,6 +17,8 @@ for _space in _SPACES:
         _modules[(_space, _prec)] = _prec_mod.gate
 
 def _get_module(precision, space):
+    if precision is None:
+        precision = _DEFAULT_PRECISION
     try:
         return _modules[(space, precision)]
     except KeyError:
@@ -24,7 +27,7 @@ def _get_module(precision, space):
         raise ValueError(f"Precision {precision} is not available.")
 
 def _make_factory_wrapper(name):
-    def factory(*args, precision='f64', **kwargs):
+    def factory(*args, precision=_DEFAULT_PRECISION, **kwargs):
         mod = _get_module(precision, 'default')
         factory_func = getattr(mod, name, None)
         if factory_func is None:
@@ -35,7 +38,7 @@ def _make_factory_wrapper(name):
     return factory
 
 def _make_factory_wrapper_space_specific(name):
-    def factory(*args, precision='f64', space='default', **kwargs):
+    def factory(*args, precision=_DEFAULT_PRECISION, space='default', **kwargs):
         mod = _get_module(precision, space)
         factory_func = getattr(mod, name, None)
         if factory_func is None:

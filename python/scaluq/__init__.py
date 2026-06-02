@@ -9,6 +9,7 @@ import inspect
 _PRECISIONS = ['f64', 'f32', 'f16', 'bf16']
 _SPACES = ['default', 'host', 'host_serial']
 _available_precisions = [prec for prec in _PRECISIONS if precision_available(prec)]
+_DEFAULT_PRECISION = _available_precisions[0]
 
 _modules: dict[tuple[str, str], object] = {}
 for _space in _SPACES:
@@ -23,6 +24,8 @@ for _space in _SPACES:
 _mod_id_to_key = {id(mod): key for key, mod in _modules.items()}
 
 def _get_module(precision, space):
+    if precision is None:
+        precision = _DEFAULT_PRECISION
     try:
         return _modules[(space, precision)]
     except KeyError:
@@ -35,35 +38,35 @@ def _key_for_gate(gate):
     return _mod_id_to_key.get(id(mod)) if mod is not None else None
 
 class StateVector:
-    UNMEASURED = _get_module(_available_precisions[0], 'default').StateVector.UNMEASURED
+    UNMEASURED = _get_module(_DEFAULT_PRECISION, 'default').StateVector.UNMEASURED
 
-    def __new__(cls, n_qubits, precision='f64', space='default'):
+    def __new__(cls, n_qubits, precision=_DEFAULT_PRECISION, space='default'):
         return _get_module(precision, space).StateVector(n_qubits)
 
     @staticmethod
-    def Haar_random_state(n_qubits, seed=None, precision='f64', space='default'):
+    def Haar_random_state(n_qubits, seed=None, precision=_DEFAULT_PRECISION, space='default'):
         return _get_module(precision, space).StateVector.Haar_random_state(n_qubits, seed)
 
     @staticmethod
-    def uninitialized_state(n_qubits, precision='f64', space='default'):
+    def uninitialized_state(n_qubits, precision=_DEFAULT_PRECISION, space='default'):
         return _get_module(precision, space).StateVector.uninitialized_state(n_qubits)
     
     @staticmethod
-    def inner_product(state1, state2, precision='f64', space='default'):
+    def inner_product(state1, state2, precision=_DEFAULT_PRECISION, space='default'):
         if type(state1) is not type(state2):
             raise ValueError("State vectors must be of the same type for inner product.")
         return _get_module(precision, space).StateVector.inner_product(state1, state2)
 
 class StateVectorBatched:
-    def __new__(cls, batch_size, n_qubits, precision='f64', space='default'):
+    def __new__(cls, batch_size, n_qubits, precision=_DEFAULT_PRECISION, space='default'):
         return _get_module(precision, space).StateVectorBatched(batch_size, n_qubits)
 
     @staticmethod
-    def Haar_random_state(batch_size, n_qubits, set_same_state, seed=None, precision='f64', space='default'):
+    def Haar_random_state(batch_size, n_qubits, set_same_state, seed=None, precision=_DEFAULT_PRECISION, space='default'):
         return _get_module(precision, space).StateVectorBatched.Haar_random_state(batch_size, n_qubits, set_same_state, seed)
 
     @staticmethod
-    def uninitialized_state(batch_size, n_qubits, precision='f64', space='default'):
+    def uninitialized_state(batch_size, n_qubits, precision=_DEFAULT_PRECISION, space='default'):
         return _get_module(precision, space).StateVectorBatched.uninitialized_state(batch_size, n_qubits)
 
 def Gate(gate):
@@ -111,7 +114,7 @@ if len(_available_precisions) > 0:
             continue
         globals()[_name] = _make_gate_wrapper(_name, is_param=(_name.startswith('Param')), is_space_specific=(_name in ['SparseMatrixGate', 'DenseMatrixGate']))
 
-def merge_gate(gate1, gate2, prec='f64', space='default'):
+def merge_gate(gate1, gate2, prec=_DEFAULT_PRECISION, space='default'):
     mod = _get_module(prec, space)
     if not hasattr(mod, 'merge_gate'):
         raise ValueError(f"merge_gate is not available in space={space} with precision={prec}")
@@ -119,33 +122,33 @@ def merge_gate(gate1, gate2, prec='f64', space='default'):
 
 class PauliOperator:
     @staticmethod
-    def from_targets_and_pauli_ids(target_qubit_list, pauli_id_list, coef=1.0, precision='f64'):
+    def from_targets_and_pauli_ids(target_qubit_list, pauli_id_list, coef=1.0, precision=_DEFAULT_PRECISION):
         return _get_module(precision, 'default').PauliOperator(target_qubit_list, pauli_id_list, coef=coef)
 
     @staticmethod
-    def from_pauli_string(pauli_string, coef=1.0, precision='f64'):
+    def from_pauli_string(pauli_string, coef=1.0, precision=_DEFAULT_PRECISION):
         return _get_module(precision, 'default').PauliOperator(pauli_string, coef=coef)
     
     @staticmethod
-    def from_pauli_id_par_qubit(pauli_id_par_qubit, coef=1.0, precision='f64'):
+    def from_pauli_id_par_qubit(pauli_id_par_qubit, coef=1.0, precision=_DEFAULT_PRECISION):
         return _get_module(precision, 'default').PauliOperator(pauli_id_par_qubit, coef=coef)
     
     @staticmethod
-    def from_XZ_mask(bit_flip_mask, phase_flip_mask, coef=1.0, precision='f64'):
+    def from_XZ_mask(bit_flip_mask, phase_flip_mask, coef=1.0, precision=_DEFAULT_PRECISION):
         return _get_module(precision, 'default').PauliOperator(bit_flip_mask, phase_flip_mask, coef=coef)
 
-    def __new__(cls, pauli_string="", coef=1.0, precision='f64'):
+    def __new__(cls, pauli_string="", coef=1.0, precision=_DEFAULT_PRECISION):
         return PauliOperator.from_pauli_string(pauli_string, coef=coef, precision=precision)
 
 
 class Operator:
-    def __new__(cls, terms, precision='f64', space='default'):
+    def __new__(cls, terms, precision=_DEFAULT_PRECISION, space='default'):
         return _get_module(precision, space).Operator(terms)
 
 class OperatorBatched:
-    def __new__(cls, terms, precision='f64', space='default'):
+    def __new__(cls, terms, precision=_DEFAULT_PRECISION, space='default'):
         return _get_module(precision, space).OperatorBatched(terms)
 
 class Circuit:
-    def __new__(cls, precision='f64'):
+    def __new__(cls, precision=_DEFAULT_PRECISION):
         return _get_module(precision, 'default').Circuit()

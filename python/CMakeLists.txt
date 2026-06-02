@@ -53,5 +53,6 @@ install(CODE "
             \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/root.pyi\"
             \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/main.pyi\"
             \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/gate.pyi\"
+            \"${MAIN_PRECISION}\"
             \"${CMAKE_INSTALL_PREFIX}\")
 ")

@@ -108,7 +108,7 @@ def _signature_with_extra_keywords(header, extra_keywords):
     return f"{stripped[:open_paren + 1]}{new_params}{stripped[close_paren:]}:"
 
 
-def _patch_gate_stub(source):
+def _patch_gate_stub(source, default_precision):
     tree = ast.parse(source)
     lines = source.splitlines(keepends=True)
     for node in tree.body:
@@ -119,7 +119,7 @@ def _patch_gate_stub(source):
         start = node.lineno - 1
         end = node.body[0].lineno - 1
         header = "".join(lines[start:end])
-        extra = ["precision: str = 'f64'"]
+        extra = [f"precision: str = '{default_precision}'"]
         if node.name in {"DenseMatrix", "SparseMatrix"}:
             extra.append("space: str = 'default'")
         signature = _signature_with_extra_keywords(header, extra)
@@ -127,7 +127,7 @@ def _patch_gate_stub(source):
     return "".join(lines)
 
 
-def _patch_main_stub(source):
+def _patch_main_stub(source, default_precision):
     tree = ast.parse(source)
     lines = source.splitlines(keepends=True)
     replacements = []
@@ -136,39 +136,39 @@ def _patch_main_stub(source):
     replacements.append(_function_header_replacement(
         lines,
         _method(state_vector, "__init__"),
-        "def __init__(self, n_qubits: int, precision: str = 'f64', space: str = 'default') -> None:",
+        f"def __init__(self, n_qubits: int, precision: str = '{default_precision}', space: str = 'default') -> None:",
     ))
     replacements.append(_function_header_replacement(
         lines,
         _method(state_vector, "Haar_random_state"),
-        "def Haar_random_state(n_qubits: int, seed: int | None = None, precision: str = 'f64', space: str = 'default') -> StateVector:",
+        f"def Haar_random_state(n_qubits: int, seed: int | None = None, precision: str = '{default_precision}', space: str = 'default') -> StateVector:",
     ))
     replacements.append(_function_header_replacement(
         lines,
         _method(state_vector, "uninitialized_state"),
-        "def uninitialized_state(n_qubits: int, precision: str = 'f64', space: str = 'default') -> StateVector:",
+        f"def uninitialized_state(n_qubits: int, precision: str = '{default_precision}', space: str = 'default') -> StateVector:",
     ))
     replacements.append(_function_header_replacement(
         lines,
         _method(state_vector, "inner_product"),
-        "def inner_product(a: StateVector, b: StateVector, precision: str = 'f64', space: str = 'default') -> complex:",
+        f"def inner_product(a: StateVector, b: StateVector, precision: str = '{default_precision}', space: str = 'default') -> complex:",
     ))
 
     state_vector_batched = _class(tree, "StateVectorBatched")
     replacements.append(_function_header_replacement(
         lines,
         _method(state_vector_batched, "__init__"),
-        "def __init__(self, batch_size: int, n_qubits: int, precision: str = 'f64', space: str = 'default') -> None:",
+        f"def __init__(self, batch_size: int, n_qubits: int, precision: str = '{default_precision}', space: str = 'default') -> None:",
     ))
     replacements.append(_function_header_replacement(
         lines,
         _method(state_vector_batched, "Haar_random_state"),
-        "def Haar_random_state(batch_size: int, n_qubits: int, set_same_state: bool, seed: int | None = None, precision: str = 'f64', space: str = 'default') -> StateVectorBatched:",
+        f"def Haar_random_state(batch_size: int, n_qubits: int, set_same_state: bool, seed: int | None = None, precision: str = '{default_precision}', space: str = 'default') -> StateVectorBatched:",
     ))
     replacements.append(_function_header_replacement(
         lines,
         _method(state_vector_batched, "uninitialized_state"),
-        "def uninitialized_state(batch_size: int, n_qubits: int, precision: str = 'f64', space: str = 'default') -> StateVectorBatched:",
+        f"def uninitialized_state(batch_size: int, n_qubits: int, precision: str = '{default_precision}', space: str = 'default') -> StateVectorBatched:",
     ))
 
     pauli_operator = _class(tree, "PauliOperator")
@@ -180,23 +180,23 @@ def _patch_main_stub(source):
             start,
             end,
             [
-                "    def __init__(self, pauli_string: str = '', coef: complex = 1.0, precision: str = 'f64') -> None:\n",
+                f"    def __init__(self, pauli_string: str = '', coef: complex = 1.0, precision: str = '{default_precision}') -> None:\n",
                 '        """Initialize a Pauli operator using pauli_string and the requested precision. See `from_pauli_string` for more details."""\n',
                 "\n",
                 "    @staticmethod\n",
-                "    def from_targets_and_pauli_ids(target_qubit_list: Sequence[int], pauli_id_list: Sequence[int], coef: complex = 1.0, precision: str = 'f64') -> PauliOperator:\n",
+                f"    def from_targets_and_pauli_ids(target_qubit_list: Sequence[int], pauli_id_list: Sequence[int], coef: complex = 1.0, precision: str = '{default_precision}') -> PauliOperator:\n",
                 '        """Initialize pauli operator. For each `i`, single pauli correspond to `pauli_id_list[i]` is applied to `target_qubit_list[i]`-th qubit."""\n',
                 "\n",
                 "    @staticmethod\n",
-                "    def from_pauli_string(pauli_string: str, coef: complex = 1.0, precision: str = 'f64') -> PauliOperator:\n",
+                f"    def from_pauli_string(pauli_string: str, coef: complex = 1.0, precision: str = '{default_precision}') -> PauliOperator:\n",
                 '        """Initialize pauli operator. For each `i`, single pauli correspond to `pauli_id_per_qubit[i]` is applied to `i`-th qubit."""\n',
                 "\n",
                 "    @staticmethod\n",
-                "    def from_pauli_id_par_qubit(pauli_id_par_qubit: Sequence[int], coef: complex = 1.0, precision: str = 'f64') -> PauliOperator:\n",
+                f"    def from_pauli_id_par_qubit(pauli_id_par_qubit: Sequence[int], coef: complex = 1.0, precision: str = '{default_precision}') -> PauliOperator:\n",
                 '        """Initialize pauli operator. For each `i`, single pauli correspond to `pauli_id_per_qubit[i]` is applied to `i`-th qubit."""\n',
                 "\n",
                 "    @staticmethod\n",
-                "    def from_XZ_mask(bit_flip_mask: int, phase_flip_mask: int, coef: complex = 1.0, precision: str = 'f64') -> PauliOperator:\n",
+                f"    def from_XZ_mask(bit_flip_mask: int, phase_flip_mask: int, coef: complex = 1.0, precision: str = '{default_precision}') -> PauliOperator:\n",
                 '        """\n',
                 '        Initialize pauli operator. For each `i`, single pauli applied to `i`-th qubit is got from `i-th` bit of `bit_flip_mask` and `phase_flip_mask` as follows.\n',
                 "\n",
@@ -215,7 +215,7 @@ def _patch_main_stub(source):
     replacements.append(_function_header_replacement(
         lines,
         merge_gate,
-        "def merge_gate(gate1, gate2, prec: str = 'f64', space: str = 'default') -> tuple[Gate, float]:",
+        f"def merge_gate(gate1, gate2, prec: str = '{default_precision}', space: str = 'default') -> tuple[Gate, float]:",
     ))
 
     operator = _class(tree, "Operator")
@@ -223,7 +223,7 @@ def _patch_main_stub(source):
         operator,
         "__init__",
         [
-            "    def __init__(self, terms, precision: str = 'f64', space: str = 'default') -> None:",
+            f"    def __init__(self, terms, precision: str = '{default_precision}', space: str = 'default') -> None:",
             '        """Initialize an operator from terms using the requested precision and execution space."""',
         ],
     )
@@ -235,7 +235,7 @@ def _patch_main_stub(source):
         operator_batched,
         "__init__",
         [
-            "    def __init__(self, terms, precision: str = 'f64', space: str = 'default') -> None:",
+            f"    def __init__(self, terms, precision: str = '{default_precision}', space: str = 'default') -> None:",
             '        """Initialize a batched operator using the requested precision and execution space."""',
         ],
     )
@@ -247,7 +247,7 @@ def _patch_main_stub(source):
         circuit,
         "__init__",
         [
-            "    def __init__(self, precision: str = 'f64') -> None:",
+            f"    def __init__(self, precision: str = '{default_precision}') -> None:",
             '        """Initialize an empty circuit using the requested precision."""',
         ],
     )
@@ -263,10 +263,11 @@ def main(argv=None):
     root_stub = Path(argv[1])
     main_stub = Path(argv[2])
     gate_stub = Path(argv[3])
-    install_path = Path(argv[4])
+    default_precision = argv[4]
+    install_path = Path(argv[5])
 
-    public_root = root_stub.read_text() + "\n" + _patch_main_stub(main_stub.read_text())
-    public_gate = _patch_gate_stub(gate_stub.read_text())
+    public_root = root_stub.read_text() + "\n" + _patch_main_stub(main_stub.read_text(), default_precision)
+    public_gate = _patch_gate_stub(gate_stub.read_text(), default_precision)
 
     scaluq_path = install_path / "scaluq"
     gate_path = scaluq_path / "gate"
