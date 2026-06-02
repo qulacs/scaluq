@@ -1,5 +1,7 @@
 #pragma once
 
+#include <variant>
+
 #include "../types.hpp"
 #include "state_vector.hpp"
 
@@ -164,6 +166,8 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .desc("Construct batched state vector with specified batch size and qubits.")
                  .arg("batch_size", "int", "Number of batches.")
                  .arg("n_qubits", "int", "Number of qubits in each state vector.")
+                 .arg("precision", "str", true, "precision of the state vector")
+                 .arg("space", "str", true, "execution space to allocate the state vector")
                  .ex(DocString::Code({">>> states = StateVectorBatched(3, 2)",
                                       ">>> print(states)",
                                       "Qubit Count : 2",
@@ -190,14 +194,6 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                                       "  10 : (0,0)",
                                       "  11 : (0,0)",
                                       "<BLANKLINE>"}))
-                 .build_as_google_style()
-                 .c_str())
-        // Constructor: Copy constructor
-        .def(nb::init<const StateVectorBatched<Prec, Space>&>(),
-             "other"_a,
-             DocString()
-                 .desc("Construct a batched state vector by copying another batched state.")
-                 .arg("other", "StateVectorBatched", "The batched state vector to copy.")
                  .build_as_google_style()
                  .c_str())
         // Basic getters
@@ -313,6 +309,8 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                 .arg(
                     "set_same_state", "bool", "Whether to set all states to the same random state.")
                 .arg("seed", "int, optional", "Random seed (default: random).")
+                .arg("precision", "str", true, "precision of the state vector")
+                .arg("space", "str", true, "execution space to allocate the state vector")
                 .ret("StateVectorBatched", "New batched state vector with random states.")
                 .build_as_google_style()
                 .c_str())
@@ -324,6 +322,8 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                         .desc("Construct :class:`StateVectorBatched` without initializing.")
                         .arg("batch_size", "int", "Number of states in batch.")
                         .arg("n_qubits", "int", "number of qubits")
+                        .arg("precision", "str", true, "precision of the state vector")
+                        .arg("space", "str", true, "execution space to allocate the state vector")
                         .build_as_google_style()
                         .c_str())
         // Measurement and probability methods
@@ -399,24 +399,31 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         // Data access methods
-        .def("load",
-             nb::overload_cast<const std::vector<std::vector<StdComplex>>&>(
-                 &StateVectorBatched<Prec, Space>::load),
-             "states"_a,
-             DocString()
-                 .desc("Load amplitudes for all states in batch.")
-                 .arg("states", "list[list[complex]]", "Amplitudes for each state.")
-                 .build_as_google_style()
-                 .c_str())
-        .def("load",
-             nb::overload_cast<const StateVectorBatched<Prec, Space>&>(
-                 &StateVectorBatched<Prec, Space>::load),
-             "other"_a,
-             DocString()
-                 .desc("Load states from another :class:`StateVectorBatched`.")
-                 .arg("other", ":class:`StateVectorBatched`", "Batched state vector to load from.")
-                 .build_as_google_style()
-                 .c_str())
+        .def(
+            "load",
+            [](StateVectorBatched<Prec, Space>& states,
+               const std::variant<std::vector<std::vector<StdComplex>>,
+                                  StateVectorBatched<Prec, Space>*>& other) {
+                std::visit(
+                    [&](const auto& value) {
+                        using T = std::decay_t<decltype(value)>;
+                        if constexpr (std::is_same_v<T, std::vector<std::vector<StdComplex>>>) {
+                            states.load(value);
+                        } else {
+                            states.load(*value);
+                        }
+                    },
+                    other);
+            },
+            "other"_a,
+            DocString()
+                .desc("Load amplitudes from a nested sequence or another "
+                      ":class:`StateVectorBatched`.")
+                .arg("other",
+                     "list[list[complex]] | StateVectorBatched",
+                     "amplitudes for each state or source batched state vector")
+                .build_as_google_style()
+                .c_str())
         .def("get_reduced_state",
              &StateVectorBatched<Prec, Space>::get_reduced_state,
              DocString()

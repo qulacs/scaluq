@@ -376,8 +376,77 @@ using ParamGate = internal::ParamGatePtr<internal::ParamGateBase<Prec>>;
 
 #ifdef SCALUQ_USE_NANOBIND
 namespace internal {
+using ParamValueVariant = std::variant<std::monostate, double, std::vector<double>>;
+
+template <typename GateT, Precision Prec, ExecutionSpace Space>
+void update_param_gate_state(const GateT& gate,
+                             StateVector<Prec, Space>* state,
+                             const ParamValueVariant& param,
+                             ClassicalRegisterVariant classical_register,
+                             std::optional<std::uint64_t> seed) {
+    const auto* single_param = std::get_if<double>(&param);
+    if (!single_param) {
+        throw std::runtime_error(
+            "ParamGate::update_quantum_state(): StateVector requires a float parameter.");
+    }
+    std::visit(
+        Overloaded{[&](std::monostate) {
+                       if (seed) {
+                           ClassicalRegister reg(0);
+                           gate->update_quantum_state(*state, reg, *single_param, *seed);
+                       } else {
+                           gate->update_quantum_state(*state, *single_param);
+                       }
+                   },
+                   [&](ClassicalRegister* reg) {
+                       gate->update_quantum_state(
+                           *state, *reg, *single_param, seed.value_or(std::random_device{}()));
+                   },
+                   [&](ClassicalRegisterBatched*) {
+                       throw std::runtime_error(
+                           "ParamGate::update_quantum_state(): ClassicalRegisterBatched cannot "
+                           "be used with StateVector.");
+                   }},
+        classical_register);
+}
+
+template <typename GateT, Precision Prec, ExecutionSpace Space>
+void update_param_gate_state(const GateT& gate,
+                             StateVectorBatched<Prec, Space>* states,
+                             const ParamValueVariant& param,
+                             ClassicalRegisterVariant classical_register,
+                             std::optional<std::uint64_t> seed) {
+    const auto* batched_params = std::get_if<std::vector<double>>(&param);
+    if (!batched_params) {
+        throw std::runtime_error(
+            "ParamGate::update_quantum_state(): StateVectorBatched requires a sequence of float "
+            "parameters.");
+    }
+    std::visit(
+        Overloaded{[&](std::monostate) {
+                       if (seed) {
+                           ClassicalRegisterBatched reg(0, states->batch_size());
+                           gate->update_quantum_state(*states, reg, *batched_params, *seed);
+                       } else {
+                           gate->update_quantum_state(*states, *batched_params);
+                       }
+                   },
+                   [&](ClassicalRegister*) {
+                       throw std::runtime_error(
+                           "ParamGate::update_quantum_state(): ClassicalRegister cannot be used "
+                           "with StateVectorBatched.");
+                   },
+                   [&](ClassicalRegisterBatched* reg) {
+                       gate->update_quantum_state(
+                           *states, *reg, *batched_params, seed.value_or(std::random_device{}()));
+                   }},
+        classical_register);
+}
+
 template <typename GateT, Precision Prec>
 void register_param_gate_common_methods(nb::class_<GateT>& c) {
+    constexpr bool is_base_gate = std::is_same_v<GateT, ParamGate<Prec>>;
+
     c.def(nb::init<GateT>(), "Downcast from ParamGate.")
         .def("param_gate_type",
              &GateT::param_gate_type,
@@ -417,157 +486,92 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
                 if (!inv) return nb::none();
                 return nb::cast(ParamGate<Prec>(inv));
             },
-            "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVector<Prec, ExecutionSpace::Host>& state_vector,
-               double param) { gate->update_quantum_state(state_vector, param); },
-            "state"_a,
-            "param"_a,
-            "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is "
-            "directly updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVector<Prec, ExecutionSpace::Host>& state_vector,
-               ClassicalRegister& classical_register,
-               double param,
-               std::optional<std::uint64_t> seed) {
-                gate->update_quantum_state(
-                    state_vector, classical_register, param, seed.value_or(std::random_device{}()));
-            },
-            "state"_a,
-            "classical_register"_a,
-            "param"_a,
-            "seed"_a = std::nullopt,
-            "Apply gate to `state_vector` with `classical_register`, parameter, and `seed`.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVectorBatched<Prec, ExecutionSpace::Host>& states,
-               const std::vector<double>& params) { gate->update_quantum_state(states, params); },
-            "states"_a,
-            "params"_a,
-            "updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVectorBatched<Prec, ExecutionSpace::Host>& states,
-               ClassicalRegisterBatched& classical_register,
-               const std::vector<double>& params,
-               std::optional<std::uint64_t> seed) {
-                gate->update_quantum_state(
-                    states, classical_register, params, seed.value_or(std::random_device{}()));
-            },
-            "states"_a,
-            "classical_register"_a,
-            "params"_a,
-            "seed"_a = std::nullopt,
-            "Apply gate to `states` with `classical_register`, parameters, and `seed`.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVector<Prec, ExecutionSpace::HostSerial>& state_vector,
-               double param) { gate->update_quantum_state(state_vector, param); },
-            "state"_a,
-            "param"_a,
-            "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is "
-            "directly updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVector<Prec, ExecutionSpace::HostSerial>& state_vector,
-               ClassicalRegister& classical_register,
-               double param,
-               std::optional<std::uint64_t> seed) {
-                gate->update_quantum_state(
-                    state_vector, classical_register, param, seed.value_or(std::random_device{}()));
-            },
-            "state"_a,
-            "classical_register"_a,
-            "param"_a,
-            "seed"_a = std::nullopt,
-            "Apply gate to `state_vector` with `classical_register`, parameter, and `seed`.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
-               const std::vector<double>& params) { gate->update_quantum_state(states, params); },
-            "states"_a,
-            "params"_a,
-            "Apply gate to `states` with holding the parameters. `states` in args is directly "
-            "updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
-               ClassicalRegisterBatched& classical_register,
-               const std::vector<double>& params,
-               std::optional<std::uint64_t> seed) {
-                gate->update_quantum_state(
-                    states, classical_register, params, seed.value_or(std::random_device{}()));
-            },
-            "states"_a,
-            "classical_register"_a,
-            "params"_a,
-            "seed"_a = std::nullopt,
-            "Apply gate to `states` with `classical_register`, parameters, and `seed`.")
-#ifdef SCALUQ_USE_CUDA
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVector<Prec, ExecutionSpace::Default>& state_vector,
-               double param) { gate->update_quantum_state(state_vector, param); },
-            "state"_a,
-            "param"_a,
-            "Apply gate to `state_vector` with holding the parameter. `state_vector` in args is "
-            "directly updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVector<Prec, ExecutionSpace::Default>& state_vector,
-               ClassicalRegister& classical_register,
-               double param,
-               std::optional<std::uint64_t> seed) {
-                gate->update_quantum_state(
-                    state_vector, classical_register, param, seed.value_or(std::random_device{}()));
-            },
-            "state"_a,
-            "classical_register"_a,
-            "param"_a,
-            "seed"_a = std::nullopt,
-            "Apply gate to `state_vector` with `classical_register`, parameter, and `seed`.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVectorBatched<Prec, ExecutionSpace::Default>& states,
-               const std::vector<double>& params) { gate->update_quantum_state(states, params); },
-            "states"_a,
-            "params"_a,
-            "Apply gate to `states` with holding the parameters. `states` in args is directly "
-            "updated.")
-        .def(
-            "update_quantum_state",
-            [](const GateT& gate,
-               StateVectorBatched<Prec, ExecutionSpace::Default>& states,
-               ClassicalRegisterBatched& classical_register,
-               const std::vector<double>& params,
-               std::optional<std::uint64_t> seed) {
-                gate->update_quantum_state(
-                    states, classical_register, params, seed.value_or(std::random_device{}()));
-            },
-            "states"_a,
-            "classical_register"_a,
-            "params"_a,
-            "seed"_a = std::nullopt,
-            "Apply gate to `states` with `classical_register`, parameters, and `seed`.")
-#endif  // SCALUQ_USE_CUDA
-        .def(
-            "get_matrix",
-            [](const GateT& gate, double param) { return gate->get_matrix(param); },
-            "param"_a,
-            "Get matrix representation of the gate with holding the parameter.")
+            "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.");
+    constexpr const char* update_signature =
+        "def update_quantum_state(self, state: StateVector | StateVectorBatched, "
+        "*, param: float | Sequence[float], classical_register: ClassicalRegister | "
+        "ClassicalRegisterBatched | None = None, seed: int | None = None) -> None";
+    auto update_doc_str = ([]() {
+        auto ds =
+            DocString()
+                .desc("Apply gate to `state`. `state` in args is directly updated.")
+                .desc("Optionally pass a matching classical register and seed.")
+                .arg("state",
+                     "StateVector | StateVectorBatched",
+                     "State vector to be updated. Can be `StateVector` or `StateVectorBatched`.")
+                .arg("param",
+                     "float | Sequence[float]",
+                     "Parameter value(s) for the gate. Should be a single float for `StateVector` "
+                     "and a sequence of floats (one for each batch) for `StateVectorBatched`.")
+                .arg("classical_register",
+                     "ClassicalRegister | ClassicalRegisterBatched | None",
+                     "Classical register to be used in the gate. If not provided, a new register "
+                     "with appropriate size is created and used internally.")
+                .arg("seed",
+                     "int | None",
+                     "Seed for random number generator. If not provided, a random seed is "
+                     "generated using `std::random_device`.");
+        if constexpr (is_base_gate) {
+            ds.ex(DocString::Code({">>> import math",
+                                   ">>> state = StateVector(2)",
+                                   ">>> state.set_computational_basis(0)",
+                                   ">>> ParamRX(0).update_quantum_state(state, param=math.pi / 4)",
+                                   ">>> print(state)",
+                                   "Qubit Count : 2",
+                                   "Dimension : 4",
+                                   "State vector : ",
+                                   "  00 : (0.92388,0)",
+                                   "  01 : (0,-0.382683)",
+                                   "  10 : (0,0)",
+                                   "  11 : (0,0)"}));
+            ds.ex(DocString::Code(
+                {">>> import math",
+                 ">>> states = StateVectorBatched(2, 1)",
+                 ">>> states.set_computational_basis(0)",
+                 ">>> ParamRX(0).update_quantum_state(states, param=[math.pi / 4, -math.pi / 4])",
+                 ">>> print(states)",
+                 "Qubit Count : 1",
+                 "Dimension : 2",
+                 "--------------------",
+                 "Batch_id : 0",
+                 "State vector : ",
+                 "  0 : (0.92388,0)",
+                 "  1 : (0,-0.382683)",
+                 "--------------------",
+                 "Batch_id : 1",
+                 "State vector : ",
+                 "  0 : (0.92388,0)",
+                 "  1 : (0,0.382683)",
+                 "<BLANKLINE>"}));
+        }
+        return ds.build_as_google_style();
+    }());
+    c.def(
+        "update_quantum_state",
+        [](const GateT& gate,
+           GateStateVariant<Prec> state,
+           ParamValueVariant param,
+           ClassicalRegisterVariant classical_register,
+           std::optional<std::uint64_t> seed) {
+            std::visit(
+                [&](auto* state_ptr) {
+                    update_param_gate_state<GateT, Prec>(
+                        gate, state_ptr, param, classical_register, seed);
+                },
+                state);
+        },
+        "state"_a,
+        nb::kw_only(),
+        "param"_a,
+        "classical_register"_a = std::monostate{},
+        "seed"_a = std::nullopt,
+        nb::sig(update_signature),
+        update_doc_str.c_str());
+    c.def(
+         "get_matrix",
+         [](const GateT& gate, double param) { return gate->get_matrix(param); },
+         "param"_a,
+         "Get matrix representation of the gate with holding the parameter.")
         .def(
             "to_string",
             [](const GateT& gate) { return gate->to_string(""); },
