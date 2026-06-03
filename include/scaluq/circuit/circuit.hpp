@@ -20,6 +20,7 @@
 #include "../gate/param_gate.hpp"
 #include "../operator/operator.hpp"
 #include "../types.hpp"
+#include "../util/random.hpp"
 
 namespace scaluq {
 
@@ -127,21 +128,21 @@ public:
     template <ExecutionSpace Space>
     void update_quantum_state(StateVector<Prec, Space>& state,
                               const std::map<std::string, double>& parameters = {},
-                              std::uint64_t seed = std::random_device{}()) const;
+                              std::optional<std::uint64_t> seed = std::nullopt) const;
     template <ExecutionSpace Space>
     void update_quantum_state(StateVector<Prec, Space>& state,
                               ClassicalRegister& classical_register,
                               const std::map<std::string, double>& parameters = {},
-                              std::uint64_t seed = std::random_device{}()) const;
+                              std::optional<std::uint64_t> seed = std::nullopt) const;
     template <ExecutionSpace Space>
     void update_quantum_state(StateVectorBatched<Prec, Space>& states,
                               const std::map<std::string, std::vector<double>>& parameters = {},
-                              std::uint64_t seed = std::random_device{}()) const;
+                              std::optional<std::uint64_t> seed = std::nullopt) const;
     template <ExecutionSpace Space>
     void update_quantum_state(StateVectorBatched<Prec, Space>& states,
                               ClassicalRegisterBatched& classical_register,
                               const std::map<std::string, std::vector<double>>& parameters = {},
-                              std::uint64_t seed = std::random_device{}()) const;
+                              std::optional<std::uint64_t> seed = std::nullopt) const;
 
     Circuit copy() const;
 
@@ -187,7 +188,7 @@ public:
         const StateVector<Prec, Space>& initial_state,
         std::uint64_t sampling_count,
         const std::map<std::string, double>& parameters = {},
-        std::uint64_t seed = 0) const;
+        std::optional<std::uint64_t> seed = std::nullopt) const;
 
     template <ExecutionSpace Space>
     std::unordered_map<std::string, double> compute_expectation_gradient_backprop(
@@ -234,8 +235,7 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
                StateVector<Prec, Space>& state,
                const std::map<std::string, double>& parameters,
                std::optional<std::uint64_t> seed) {
-                circuit.update_quantum_state(
-                    state, parameters, seed.value_or(std::random_device{}()));
+                circuit.update_quantum_state(state, parameters, seed);
             },
             "state"_a,
             "params"_a = std::map<std::string, double>{},
@@ -250,8 +250,7 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
                ClassicalRegister& classical_register,
                const std::map<std::string, double>& parameters,
                std::optional<std::uint64_t> seed) {
-                circuit.update_quantum_state(
-                    state, classical_register, parameters, seed.value_or(std::random_device{}()));
+                circuit.update_quantum_state(state, classical_register, parameters, seed);
             },
             "state"_a,
             "classical_register"_a,
@@ -297,8 +296,7 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
                StateVectorBatched<Prec, Space>& states,
                const std::map<std::string, std::vector<double>>& parameters,
                std::optional<std::uint64_t> seed) {
-                circuit.update_quantum_state(
-                    states, parameters, seed.value_or(std::random_device{}()));
+                circuit.update_quantum_state(states, parameters, seed);
             },
             "state"_a,
             "params"_a = std::map<std::string, std::vector<double>>{},
@@ -313,8 +311,7 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
                ClassicalRegisterBatched& classical_register,
                const std::map<std::string, std::vector<double>>& parameters,
                std::optional<std::uint64_t> seed) {
-                circuit.update_quantum_state(
-                    states, classical_register, parameters, seed.value_or(std::random_device{}()));
+                circuit.update_quantum_state(states, classical_register, parameters, seed);
             },
             "state"_a,
             "classical_register"_a,
@@ -352,10 +349,7 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
                const std::map<std::string, double>& parameters,
                std::optional<std::uint64_t> seed) {
                 return circuit.template simulate_noise<Space>(
-                    initial_state,
-                    sampling_count,
-                    parameters,
-                    seed.value_or(std::random_device{}()));
+                    initial_state, sampling_count, parameters, seed);
             },
             "initial_state"_a,
             "sampling_count"_a,
