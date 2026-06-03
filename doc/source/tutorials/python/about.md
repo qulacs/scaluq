@@ -12,11 +12,12 @@ Compared to [Qulacs](https://github.com/qulacs/qulacs), the following improvemen
 - Improved execution speed.
 - Pointers are hidden from users, making the code simpler and safer to write.
 - Integration of [nanobind](https://github.com/wjakob/nanobind) enables more compact and faster Python bindings.
-- Provides a faster interface for the case where the same circuit is applied to multiple quantum states.
+- Provides batched execution for efficiently applying quantum circuits with the same structure but different parameters to multiple quantum states.
 
 # Performance
 
-The time for simulating quantum circuits (Method: Benchmark execution time to apply CX, RX and RZ gates (averaged over every target qubit)) is compared with several quantum circuit simulators in 2026.
+The execution times of our quantum circuit simulator and several existing quantum circuit simulators were compared.  
+In this benchmark, a circuit consisting of CX, RX, and RZ gates applied sequentially to different target qubits was executed, and the average execution time was measured.
 
 See [the benchmark repository](https://github.com/Qulacs-Osaka/benchmark-scaluq).
 
