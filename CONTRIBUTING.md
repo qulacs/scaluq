@@ -21,7 +21,7 @@ Please include the following details if possible:
 
 ## Request Features
 Have a new feature in mind? Open an Issue to let us know!  
-The issue title should be prefixed with `[Feat]`.
+The issue title should be prefixed with `[Feature]`.
 
 
 ## Pull Requests
@@ -29,7 +29,10 @@ The issue title should be prefixed with `[Feat]`.
 It is highly recommended to use the provided devcontainer for development.
 
 ### Pull Request Process
+Thanks for contributing Scaluq!  
 Pull Requests (PRs) are always welcome!  
+Please write in English or Japanese.  
+
 Opening an issue first is not strictly necessary (though recommended) for a single, self-contained PR. You can simply submit a PR directly to the `main` branch.  
 However, if you plan to make substantial changes that require multiple PRs, please discuss your proposed changes in an Issue first.
 
@@ -43,7 +46,7 @@ If you need to submit a larger PR, please consult the maintainers first so a ded
 - All GitHub Actions checks pass.
 - At least 1 maintainer approves the PR.
 
-### Pull Request Title Examples  
+### Pull Request Title Examples
 - new feature: `Add function-name`
 - update: `Update ci-version`
 - bug: `Fix bug-name`
@@ -60,7 +63,7 @@ Then, execute the following commands in the root directory of the project:
 
 ```console
 $ export SCALUQ_USE_TEST=ON 
-$ ./script/configure.sh
+$ ./script/configure
 $ ninja -C build
 $ ./build/tests/scaluq_test
 ```
