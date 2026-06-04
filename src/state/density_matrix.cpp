@@ -175,7 +175,7 @@ template <Precision Prec, ExecutionSpace Space>
 
 template <Precision Prec, ExecutionSpace Space>
 [[nodiscard]] DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::Haar_random_state(
-    std::uint64_t n_qubits, std::uint64_t seed) {
+    std::uint64_t n_qubits, std::optional<std::uint64_t> seed) {
     auto state(DensityMatrix<Prec, Space>::uninitialized_state(n_qubits));
     state.set_Haar_random_state(seed);
     return state;
@@ -214,7 +214,7 @@ void DensityMatrix<Prec, Space>::set_computational_basis(std::uint64_t basis) {
 }
 
 template <Precision Prec, ExecutionSpace Space>
-void DensityMatrix<Prec, Space>::set_Haar_random_state(std::uint64_t seed) {
+void DensityMatrix<Prec, Space>::set_Haar_random_state(std::optional<std::uint64_t> seed) {
     auto random_pure_state = StateVector<Prec, Space>::Haar_random_state(this->_n_qubits, seed);
     this->_is_hermitian = true;
     this->load(random_pure_state);
@@ -384,8 +384,8 @@ double DensityMatrix<Prec, Space>::get_marginal_probability(
 }
 
 template <Precision Prec, ExecutionSpace Space>
-std::vector<std::uint64_t> DensityMatrix<Prec, Space>::sampling(std::uint64_t sampling_count,
-                                                                std::uint64_t seed) const {
+std::vector<std::uint64_t> DensityMatrix<Prec, Space>::sampling(
+    std::uint64_t sampling_count, std::optional<std::uint64_t> seed) const {
     if (!this->_is_hermitian) {
         throw std::runtime_error(
             "DensityMatrix::sampling: Sampling is only defined for hermitian density matrices.");
@@ -402,7 +402,8 @@ std::vector<std::uint64_t> DensityMatrix<Prec, Space>::sampling(std::uint64_t sa
             }
         });
 
-    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(seed);
+    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(
+        internal::resolve_seed(seed));
     std::vector<std::uint64_t> result(sampling_count);
     std::vector<std::uint64_t> todo(sampling_count);
     std::iota(todo.begin(), todo.end(), 0);

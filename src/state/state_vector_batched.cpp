@@ -96,13 +96,13 @@ void StateVectorBatched<Prec, Space>::set_zero_norm_state() {
 
 template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::set_Haar_random_state(bool set_same_state,
-                                                            std::uint64_t seed) {
+                                                            std::optional<std::uint64_t> seed) {
     *this = Haar_random_state(_batch_size, _n_qubits, set_same_state, seed);
 }
 
 template <Precision Prec, ExecutionSpace Space>
 std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::sampling(
-    std::uint64_t sampling_count, std::uint64_t seed) const {
+    std::uint64_t sampling_count, std::optional<std::uint64_t> seed) const {
     Kokkos::View<FloatType**, internal::SpaceType<Space>> stacked_prob(
         "prob", _batch_size, _dim + 1);
 
@@ -123,7 +123,8 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
         });
 
     std::vector result(_batch_size, std::vector<std::uint64_t>(sampling_count));
-    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(seed);
+    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(
+        internal::resolve_seed(seed));
     std::vector<std::uint64_t> batch_todo(_batch_size * sampling_count);
     std::vector<std::uint64_t> sample_todo(_batch_size * sampling_count);
     for (std::uint64_t i = 0; i < _batch_size; i++) {
@@ -179,11 +180,15 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
 
 template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::Haar_random_state(
-    std::uint64_t batch_size, std::uint64_t n_qubits, bool set_same_state, std::uint64_t seed) {
-    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(seed);
+    std::uint64_t batch_size,
+    std::uint64_t n_qubits,
+    bool set_same_state,
+    std::optional<std::uint64_t> seed) {
+    std::uint64_t actual_seed = internal::resolve_seed(seed);
+    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(actual_seed);
     auto states(StateVectorBatched<Prec, Space>::uninitialized_state(batch_size, n_qubits));
     if (set_same_state) {
-        states.set_state_vector(StateVector<Prec, Space>::Haar_random_state(n_qubits, seed));
+        states.set_state_vector(StateVector<Prec, Space>::Haar_random_state(n_qubits, actual_seed));
     } else {
         Kokkos::parallel_for(
             "Haar_random_state",
