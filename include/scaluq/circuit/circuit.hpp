@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <bit>
+#include <cmath>
 #include <functional>
 #include <map>
 #include <optional>
@@ -15,9 +16,11 @@
 #include "../classical_register/classical_register.hpp"
 #include "../classical_register/classical_register_batched.hpp"
 #include "../gate/gate.hpp"
+#include "../gate/gate_factory.hpp"
 #include "../gate/param_gate.hpp"
 #include "../operator/operator.hpp"
 #include "../types.hpp"
+#include "../util/random.hpp"
 
 namespace scaluq {
 
@@ -95,6 +98,29 @@ public:
                 return reg[classical_bit_index] == expected_value;
             });
     }
+    template <ExecutionSpace Space>
+    void add_observable_rotation_gate(const Operator<Prec, Space>& observable,
+                                      double angle,
+                                      std::int64_t num_repeats) {
+        if (!observable.is_hermitian()) {
+            throw std::runtime_error(
+                "Circuit::add_observable_rotation_gate: not implemented for non hermitian.");
+        }
+        if (num_repeats <= 0) {
+            throw std::invalid_argument("add_observable_rotation_gate: num_repeats must be > 0.");
+        }
+        if (std::abs(angle) < 1e-12) {
+            return;
+        }
+
+        double theta = angle / static_cast<double>(num_repeats);
+        const std::vector<PauliOperator<Prec>>& terms = observable.get_terms();
+        for (std::int64_t i = 0; i < num_repeats; ++i) {
+            for (const auto& term : terms) {
+                this->add_gate(gate::PauliRotation<Prec>(term, theta));
+            }
+        }
+    }
 
     void add_circuit(const Circuit<Prec>& circuit);
     void add_circuit(Circuit<Prec>&& circuit);
@@ -102,21 +128,21 @@ public:
     template <ExecutionSpace Space>
     void update_quantum_state(StateVector<Prec, Space>& state,
                               const std::map<std::string, double>& parameters = {},
-                              std::uint64_t seed = std::random_device{}()) const;
+                              std::optional<std::uint64_t> seed = std::nullopt) const;
     template <ExecutionSpace Space>
     void update_quantum_state(StateVector<Prec, Space>& state,
                               ClassicalRegister& classical_register,
                               const std::map<std::string, double>& parameters = {},
-                              std::uint64_t seed = std::random_device{}()) const;
+                              std::optional<std::uint64_t> seed = std::nullopt) const;
     template <ExecutionSpace Space>
     void update_quantum_state(StateVectorBatched<Prec, Space>& states,
                               const std::map<std::string, std::vector<double>>& parameters = {},
-                              std::uint64_t seed = std::random_device{}()) const;
+                              std::optional<std::uint64_t> seed = std::nullopt) const;
     template <ExecutionSpace Space>
     void update_quantum_state(StateVectorBatched<Prec, Space>& states,
                               ClassicalRegisterBatched& classical_register,
                               const std::map<std::string, std::vector<double>>& parameters = {},
-                              std::uint64_t seed = std::random_device{}()) const;
+                              std::optional<std::uint64_t> seed = std::nullopt) const;
 
     Circuit copy() const;
 
@@ -162,7 +188,7 @@ public:
         const StateVector<Prec, Space>& initial_state,
         std::uint64_t sampling_count,
         const std::map<std::string, double>& parameters = {},
-        std::uint64_t seed = 0) const;
+        std::optional<std::uint64_t> seed = std::nullopt) const;
 
     template <ExecutionSpace Space>
     std::unordered_map<std::string, double> compute_expectation_gradient_backprop(
@@ -209,8 +235,7 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
                StateVector<Prec, Space>& state,
                const std::map<std::string, double>& parameters,
                std::optional<std::uint64_t> seed) {
-                circuit.update_quantum_state(
-                    state, parameters, seed.value_or(std::random_device{}()));
+                circuit.update_quantum_state(state, parameters, seed);
             },
             "state"_a,
             "params"_a = std::map<std::string, double>{},
@@ -225,8 +250,7 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
                ClassicalRegister& classical_register,
                const std::map<std::string, double>& parameters,
                std::optional<std::uint64_t> seed) {
-                circuit.update_quantum_state(
-                    state, classical_register, parameters, seed.value_or(std::random_device{}()));
+                circuit.update_quantum_state(state, classical_register, parameters, seed);
             },
             "state"_a,
             "classical_register"_a,
@@ -272,8 +296,7 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
                StateVectorBatched<Prec, Space>& states,
                const std::map<std::string, std::vector<double>>& parameters,
                std::optional<std::uint64_t> seed) {
-                circuit.update_quantum_state(
-                    states, parameters, seed.value_or(std::random_device{}()));
+                circuit.update_quantum_state(states, parameters, seed);
             },
             "state"_a,
             "params"_a = std::map<std::string, std::vector<double>>{},
@@ -288,8 +311,7 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
                ClassicalRegisterBatched& classical_register,
                const std::map<std::string, std::vector<double>>& parameters,
                std::optional<std::uint64_t> seed) {
-                circuit.update_quantum_state(
-                    states, classical_register, parameters, seed.value_or(std::random_device{}()));
+                circuit.update_quantum_state(states, classical_register, parameters, seed);
             },
             "state"_a,
             "classical_register"_a,
@@ -327,10 +349,7 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
                const std::map<std::string, double>& parameters,
                std::optional<std::uint64_t> seed) {
                 return circuit.template simulate_noise<Space>(
-                    initial_state,
-                    sampling_count,
-                    parameters,
-                    seed.value_or(std::random_device{}()));
+                    initial_state, sampling_count, parameters, seed);
             },
             "initial_state"_a,
             "sampling_count"_a,
@@ -349,7 +368,26 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
              &Circuit<Prec>::template compute_expectation_gradient<Space>,
              "observable"_a,
              "parameters"_a,
-             "Compute gradient of expectation value of observable using back propagation.");
+             "Compute gradient of expectation value of observable using back propagation.")
+        .def("add_observable_rotation_gate",
+             nb::overload_cast<const Operator<Prec, Space>&, double, std::int64_t>(
+                 &Circuit<Prec>::template add_observable_rotation_gate<Space>),
+             "observable"_a,
+             "angle"_a,
+             "num_repeats"_a,
+             DocString()
+                 .desc("Add observable rotation gate.")
+                 .arg("observable", "Operator", "observable")
+                 .arg("angle", "float", "angle")
+                 .arg("num_repeats", "int", "repeats num")
+                 .ex(DocString::Code{
+                     ">>> circuit = Circuit()",
+                     ">>> terms = []",
+                     ">>> terms.append(PauliOperator(\"Z 0 Z 1\"))",
+                     ">>> observable = Operator(terms)",
+                     ">>> circuit.add_observable_rotation_gate(observable, 0.1, 100)"})
+                 .build_as_google_style()
+                 .c_str());
 }
 
 template <Precision Prec>

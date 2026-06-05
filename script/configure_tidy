@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -eux
+
+export BUILD=${BUILD:-"build-tidy"}
+export CMAKE_C_COMPILER=${CMAKE_C_COMPILER:-"clang"}
+export CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER:-"clang++"}
+export CMAKE_EXPORT_COMPILE_COMMANDS=ON
+export SCALUQ_FLOAT32=${SCALUQ_FLOAT32:-"OFF"}
+export SCALUQ_STATIC_ANALYSIS=${SCALUQ_STATIC_ANALYSIS:-"ON"}
+
+script/configure
+

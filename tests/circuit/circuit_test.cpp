@@ -3,6 +3,7 @@
 #include <scaluq/circuit/circuit.hpp>
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/gate/param_gate_factory.hpp>
+#include <unsupported/Eigen/MatrixFunctions>
 
 #include "../test_environment.hpp"
 #include "../util/util.hpp"
@@ -258,6 +259,82 @@ TYPED_TEST(CircuitTest, ThrowsWhenStateHasTooFewQubits) {
     ASSERT_THROW(circuit.update_quantum_state(state), std::runtime_error);
 }
 
+template <Precision Prec, ExecutionSpace Space>
+void circuit_suzuki_trotter_test() {
+    if constexpr (Prec == Precision::F16 || Prec == Precision::BF16) {
+        // skip suzuki trotter for f16 and bf16
+        GTEST_SKIP()
+            << "F16 and BF16 are skipped due to the limitation of floating-point precision in "
+               "Suzuki Trotter decomposition.";
+    }
+    const std::uint64_t n = 2;
+    const std::uint64_t dim = 1ULL << n;
+    const double suzuki_trotter_eps = 1e-2;
+    std::vector<double> coef;
+    Random random;
+    ComplexMatrix I = make_I();
+    ComplexMatrix X = make_X();
+    ComplexMatrix Y = make_Y();
+    ComplexMatrix Z = make_Z();
+
+    auto state = StateVector<Prec, Space>::Haar_random_state(n);
+    auto state_cp = state.get_amplitudes();
+    ComplexVector state_eigen(dim);
+    for (uint64_t i = 0; i < dim; ++i) state_eigen[i] = state_cp[i];
+
+    Circuit<Prec> circuit;
+
+    for (uint64_t i = 0; i < 6; ++i) {
+        coef.push_back(-random.uniform());
+    }
+    double angle = 2 * random.uniform() * 3.141592653589793;
+    const auto num_repeats = static_cast<uint64_t>(std::ceil(angle * (double)n * 500.));
+    std::vector<PauliOperator<Prec>> terms;
+    terms.emplace_back(PauliOperator<Prec>("Z 0 I 1", coef[0]));
+    terms.emplace_back(PauliOperator<Prec>("X 0 Y 1", coef[1]));
+    terms.emplace_back(PauliOperator<Prec>("Z 0 Z 1", coef[2]));
+    terms.emplace_back(PauliOperator<Prec>("Z 0 X 1", coef[3]));
+    terms.emplace_back(PauliOperator<Prec>("Y 0 X 1", coef[4]));
+    terms.emplace_back(PauliOperator<Prec>("I 0 Z 1", coef[5]));
+
+    Operator<Prec, Space> observable(terms);
+    circuit.add_observable_rotation_gate(observable, angle, num_repeats);
+
+    ComplexMatrix test_observable = coef[0] * internal::kronecker_product(I, Z);
+    test_observable += coef[1] * internal::kronecker_product(Y, X);
+    test_observable += coef[2] * internal::kronecker_product(Z, Z);
+    test_observable += coef[3] * internal::kronecker_product(X, Z);
+    test_observable += coef[4] * internal::kronecker_product(X, Y);
+    test_observable += coef[5] * internal::kronecker_product(Z, I);
+
+    ComplexMatrix test_circuit = StdComplex(0, -1) * angle * 0.5 * test_observable;
+    test_circuit = test_circuit.eval().exp();
+
+    circuit.update_quantum_state(state);
+    state_eigen = test_circuit * state_eigen;
+    auto res = observable.get_expectation_value(state);
+    auto test_res = (state_eigen.adjoint() * test_observable * state_eigen)(0, 0);
+
+    ASSERT_NEAR(abs(test_res.real() - res.real()) / test_res.real(), 0, suzuki_trotter_eps);
+
+    state.set_zero_state();
+    state_cp = state.get_amplitudes();
+    for (uint64_t i = 0; i < dim; ++i) state_eigen[i] = state_cp[i];
+
+    circuit.update_quantum_state(state);
+    state_eigen = test_circuit * state_eigen;
+    res = observable.get_expectation_value(state);
+    test_res = (state_eigen.adjoint() * test_observable * state_eigen)(0, 0);
+
+    ASSERT_NEAR(abs(test_res.real() - res.real()) / test_res.real(), 0, suzuki_trotter_eps);
+}
+
+TYPED_TEST(CircuitTest, CircuitSuzukiTrotter) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    circuit_suzuki_trotter_test<Prec, Space>();
+}
+
 TYPED_TEST(CircuitTest, UpdateQuantumStateStoresMeasurementInClassicalRegister) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
@@ -371,6 +448,35 @@ TYPED_TEST(CircuitTest, UpdateQuantumStateBatchedStoresMeasurementInClassicalReg
     ASSERT_NO_THROW(circuit.update_quantum_state(states, classical_register, {}, 0));
     EXPECT_TRUE(classical_register[0][1]);
     EXPECT_TRUE(classical_register[1][1]);
+}
+
+TYPED_TEST(CircuitTest, ThrowsWhenGateTouchesMeasuredQubitWithoutReset) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Circuit<Prec> circuit;
+    circuit.add_gate(gate::Measurement<Prec>(0, 0));
+    circuit.add_gate(gate::X<Prec>(0));
+
+    StateVector<Prec, Space> state(1);
+    ClassicalRegister classical_register(1);
+
+    ASSERT_THROW(circuit.update_quantum_state(state, classical_register, {}, 0),
+                 std::runtime_error);
+}
+
+TYPED_TEST(CircuitTest, AllowsReusingQubitAfterResettingMeasurement) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Circuit<Prec> circuit;
+    circuit.add_gate(gate::Measurement<Prec>(0, 0, true));
+    circuit.add_gate(gate::X<Prec>(0));
+
+    StateVector<Prec, Space> state(1);
+    ClassicalRegister classical_register(1);
+
+    ASSERT_NO_THROW(circuit.update_quantum_state(state, classical_register, {}, 0));
 }
 
 TYPED_TEST(CircuitTest, OptimizeDoesNotMergeMeasurementGate) {

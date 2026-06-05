@@ -1,19 +1,29 @@
 #pragma once
 
+#include <optional>
 #include <random>
 #include <ranges>
 
 #include "../types.hpp"
 
 namespace scaluq {
+namespace internal {
+inline std::uint64_t resolve_seed(std::optional<std::uint64_t> seed) {
+    if (seed.has_value()) {
+        return seed.value();
+    }
+    return std::random_device{}();
+}
+}  // namespace internal
+
 class Random {
     std::mt19937_64 mt;
     std::uniform_real_distribution<double> uniform_dist;
     std::normal_distribution<double> normal_dist;
 
 public:
-    Random(std::uint64_t seed = std::random_device()())
-        : mt(seed), uniform_dist(0, 1), normal_dist(0, 1) {}
+    Random(std::optional<std::uint64_t> seed = std::nullopt)
+        : mt(internal::resolve_seed(seed)), uniform_dist(0, 1), normal_dist(0, 1) {}
 
     [[nodiscard]] double uniform() { return this->uniform_dist(this->mt); }
 
