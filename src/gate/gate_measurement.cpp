@@ -44,7 +44,7 @@ bool apply_measurement_update(StateVector<Prec, Space>& state,
 
 #define DEFINE_MEASUREMENT_GATE_UPDATE(Space)                                                   \
     template <Precision Prec>                                                                   \
-    void MeasurementGateImpl<Prec>::update_quantum_state(ExecutionContext<Prec, Space> context) \
+    void MeasurementGateImpl<Prec>::update_quantum_state(ExecutionContext<Prec, Space>& context) \
         const {                                                                                 \
         this->check_qubit_mask_within_bounds(context.state);                                    \
         if (context.classical_register.register_size() <= _classical_bit_index) {               \
@@ -58,7 +58,7 @@ bool apply_measurement_update(StateVector<Prec, Space>& state,
     }                                                                                           \
     template <Precision Prec>                                                                   \
     void MeasurementGateImpl<Prec>::update_quantum_state(                                       \
-        ExecutionContextBatched<Prec, Space> context) const {                                   \
+        ExecutionContextBatched<Prec, Space>& context) const {                                   \
         this->check_qubit_mask_within_bounds(context.states);                                   \
         if (context.classical_register.batch_size() != context.states.batch_size()) {           \
             throw std::runtime_error(                                                           \
