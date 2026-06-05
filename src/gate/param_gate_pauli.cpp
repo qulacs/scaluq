@@ -27,7 +27,7 @@ std::string ParamPauliRotationGateImpl<Prec>::to_string(const std::string& inden
 }
 template <Precision Prec>
 void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
-    ExecutionContext<Prec, ExecutionSpace::Host> context, double param) const {
+    ExecutionContext<Prec, ExecutionSpace::Host>& context, double param) const {
     this->check_qubit_mask_within_bounds(context.state);
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
     apply_pauli_rotation(this->_control_mask,
@@ -40,7 +40,7 @@ void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
-    ExecutionContextBatched<Prec, ExecutionSpace::Host> context,
+    ExecutionContextBatched<Prec, ExecutionSpace::Host>& context,
     const std::vector<double>& params) const {
     this->check_qubit_mask_within_bounds(context.states);
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
@@ -62,7 +62,7 @@ void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
-    ExecutionContext<Prec, ExecutionSpace::HostSerial> context, double param) const {
+    ExecutionContext<Prec, ExecutionSpace::HostSerial>& context, double param) const {
     this->check_qubit_mask_within_bounds(context.state);
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
     apply_pauli_rotation(this->_control_mask,
@@ -75,7 +75,7 @@ void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
-    ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context,
+    ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context,
     const std::vector<double>& params) const {
     this->check_qubit_mask_within_bounds(context.states);
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
@@ -98,7 +98,7 @@ void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
 #ifdef SCALUQ_USE_CUDA
 template <Precision Prec>
 void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
-    ExecutionContext<Prec, ExecutionSpace::Default> context, double param) const {
+    ExecutionContext<Prec, ExecutionSpace::Default>& context, double param) const {
     this->check_qubit_mask_within_bounds(context.state);
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
     apply_pauli_rotation(this->_control_mask,
@@ -111,7 +111,7 @@ void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
 }
 template <Precision Prec>
 void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
-    ExecutionContextBatched<Prec, ExecutionSpace::Default> context,
+    ExecutionContextBatched<Prec, ExecutionSpace::Default>& context,
     const std::vector<double>& params) const {
     this->check_qubit_mask_within_bounds(context.states);
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();

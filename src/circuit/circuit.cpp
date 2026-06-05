@@ -51,15 +51,25 @@ std::uint64_t Circuit<Prec>::calculate_depth() const {
 template <Precision Prec>
 void Circuit<Prec>::add_circuit(const Circuit<Prec>& circuit) {
     _gate_list.reserve(_gate_list.size() + circuit._gate_list.size());
+    _classical_conditions.reserve(_classical_conditions.size() +
+                                  circuit._classical_conditions.size());
     for (const auto& gate : circuit._gate_list) {
         _gate_list.push_back(gate);
+    }
+    for (const auto& condition : circuit._classical_conditions) {
+        _classical_conditions.push_back(condition);
     }
 }
 template <Precision Prec>
 void Circuit<Prec>::add_circuit(Circuit<Prec>&& circuit) {
     _gate_list.reserve(_gate_list.size() + circuit._gate_list.size());
+    _classical_conditions.reserve(_classical_conditions.size() +
+                                  circuit._classical_conditions.size());
     for (auto&& gate : circuit._gate_list) {
         _gate_list.push_back(std::move(gate));
+    }
+    for (auto&& condition : circuit._classical_conditions) {
+        _classical_conditions.push_back(std::move(condition));
     }
 }
 
@@ -67,7 +77,12 @@ template <Precision Prec>
 template <ExecutionSpace Space>
 void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
                                          const std::map<std::string, double>& parameters,
-                                         std::uint64_t seed) const {
+                                         std::optional<std::uint64_t> seed) const {
+    if (has_classical_instructions()) {
+        throw std::runtime_error(
+            "Circuit::update_quantum_state(StateVector&, ...): a classical register is required "
+            "when the circuit contains measurement or classically controlled instructions.");
+    }
     ClassicalRegister classical_register(0);
     update_quantum_state(state, classical_register, parameters, seed);
 }
@@ -77,7 +92,7 @@ template <ExecutionSpace Space>
 void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
                                          ClassicalRegister& classical_register,
                                          const std::map<std::string, double>& parameters,
-                                         std::uint64_t seed) const {
+                                         std::optional<std::uint64_t> seed) const {
     check_state_vector_n_qubits(state.n_qubits());
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0) continue;
@@ -89,13 +104,36 @@ void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
                 std::string(key) + "is not given.");
         }
     }
-    std::mt19937_64 random_engine(seed);
+    std::mt19937_64 random_engine(internal::resolve_seed(seed));
+    std::uint64_t unreset_measured_qubit_mask = 0ULL;
     internal::ExecutionContext<Prec, Space> context{state, classical_register, random_engine};
-    for (auto&& gate : _gate_list) {
+    for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
+        if (_classical_conditions[idx].has_value() &&
+            !_classical_conditions[idx].value()(classical_register)) {
+            continue;
+        }
+        auto&& gate = _gate_list[idx];
         if (gate.index() == 0) {
-            std::get<0>(gate)->update_quantum_state(context);
+            const auto& fixed_gate = std::get<0>(gate);
+            if ((unreset_measured_qubit_mask & fixed_gate->operand_qubit_mask()) != 0ULL) {
+                throw std::runtime_error(
+                    "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
+                    "and has not been reset.");
+            }
+            fixed_gate->update_quantum_state(context);
+            if (fixed_gate.gate_type() == GateType::Measurement) {
+                const auto measurement_gate = MeasurementGate<Prec>(fixed_gate);
+                if (!measurement_gate->reset()) {
+                    unreset_measured_qubit_mask |= measurement_gate->target_qubit_mask();
+                }
+            }
         } else {
             const auto& [param_gate, key] = std::get<1>(gate);
+            if ((unreset_measured_qubit_mask & param_gate->operand_qubit_mask()) != 0ULL) {
+                throw std::runtime_error(
+                    "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
+                    "and has not been reset.");
+            }
             param_gate->update_quantum_state(context, parameters.at(key));
         }
     }
@@ -106,7 +144,13 @@ template <ExecutionSpace Space>
 void Circuit<Prec>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states,
     const std::map<std::string, std::vector<double>>& parameters,
-    std::uint64_t seed) const {
+    std::optional<std::uint64_t> seed) const {
+    if (has_classical_instructions()) {
+        throw std::runtime_error(
+            "Circuit::update_quantum_state(StateVectorBatched&, ...): a classical register is "
+            "required when the circuit contains measurement or classically controlled "
+            "instructions.");
+    }
     ClassicalRegisterBatched classical_register(0, states.batch_size());
     update_quantum_state(states, classical_register, parameters, seed);
 }
@@ -117,7 +161,7 @@ void Circuit<Prec>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states,
     ClassicalRegisterBatched& classical_register,
     const std::map<std::string, std::vector<double>>& parameters,
-    std::uint64_t seed) const {
+    std::optional<std::uint64_t> seed) const {
     check_state_vector_n_qubits(states.n_qubits());
     if (classical_register.batch_size() != states.batch_size()) {
         throw std::runtime_error(
@@ -135,16 +179,53 @@ void Circuit<Prec>::update_quantum_state(
         }
         if (parameters.at(key).size() != states.batch_size()) {
             throw std::runtime_error(
-                "Circuit::update_quantum_state(StateVectorBatched&, const std::map<std::string, std::vector<double>>&): parameter size mismatch.");
+                "Circuit::update_quantum_state(StateVectorBatched&, const std::map<std::string, "
+                "std::vector<double>>&): parameter size mismatch.");
         }
     }
-    std::mt19937_64 random_engine(seed);
-    internal::ExecutionContextBatched<Prec, Space> context{states, classical_register, random_engine};
-    for (auto&& gate : _gate_list) {
+    std::mt19937_64 random_engine(internal::resolve_seed(seed));
+    std::uint64_t unreset_measured_qubit_mask = 0ULL;
+    internal::ExecutionContextBatched<Prec, Space> context{
+        states, classical_register, random_engine};
+    for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
+        auto&& gate = _gate_list[idx];
+        if (_classical_conditions[idx].has_value()) {
+            for (std::uint64_t batch_index = 0; batch_index < states.batch_size(); ++batch_index) {
+                auto& reg = classical_register[batch_index];
+                if (!_classical_conditions[idx].value()(reg)) continue;
+                auto state = states.view_state_vector_at(batch_index);
+                internal::ExecutionContext<Prec, Space> state_context{state, reg, random_engine};
+                if (gate.index() == 0) {
+                    std::get<0>(gate)->update_quantum_state(state_context);
+                } else {
+                    const auto& [param_gate, key] = std::get<1>(gate);
+                    param_gate->update_quantum_state(state_context,
+                                                     parameters.at(key)[batch_index]);
+                }
+            }
+            continue;
+        }
         if (gate.index() == 0) {
-            std::get<0>(gate)->update_quantum_state(context);
+            const auto& fixed_gate = std::get<0>(gate);
+            if ((unreset_measured_qubit_mask & fixed_gate->operand_qubit_mask()) != 0ULL) {
+                throw std::runtime_error(
+                    "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
+                    "and has not been reset.");
+            }
+            fixed_gate->update_quantum_state(context);
+            if (fixed_gate.gate_type() == GateType::Measurement) {
+                const auto measurement_gate = MeasurementGate<Prec>(fixed_gate);
+                if (!measurement_gate->reset()) {
+                    unreset_measured_qubit_mask |= measurement_gate->target_qubit_mask();
+                }
+            }
         } else {
             const auto& [param_gate, key] = std::get<1>(gate);
+            if ((unreset_measured_qubit_mask & param_gate->operand_qubit_mask()) != 0ULL) {
+                throw std::runtime_error(
+                    "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
+                    "and has not been reset.");
+            }
             param_gate->update_quantum_state(context, parameters.at(key));
         }
     }
@@ -153,60 +234,60 @@ void Circuit<Prec>::update_quantum_state(
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
     StateVector<internal::Prec, ExecutionSpace::Host>& state,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
     StateVector<internal::Prec, ExecutionSpace::Host>& state,
     ClassicalRegister& classical_register,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
     StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states,
     const std::map<std::string, std::vector<double>>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
     StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states,
     ClassicalRegisterBatched& classical_register,
     const std::map<std::string, std::vector<double>>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
     StateVector<internal::Prec, ExecutionSpace::HostSerial>& state,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
     StateVector<internal::Prec, ExecutionSpace::HostSerial>& state,
     ClassicalRegister& classical_register,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
     StateVectorBatched<internal::Prec, ExecutionSpace::HostSerial>& states,
     const std::map<std::string, std::vector<double>>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
     StateVectorBatched<internal::Prec, ExecutionSpace::HostSerial>& states,
     ClassicalRegisterBatched& classical_register,
     const std::map<std::string, std::vector<double>>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 
 #ifdef SCALUQ_USE_CUDA
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
     StateVector<internal::Prec, ExecutionSpace::Default>& state,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
     StateVector<internal::Prec, ExecutionSpace::Default>& state,
     ClassicalRegister& classical_register,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
     StateVectorBatched<internal::Prec, ExecutionSpace::Default>& states,
     const std::map<std::string, std::vector<double>>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
     StateVectorBatched<internal::Prec, ExecutionSpace::Default>& states,
     ClassicalRegisterBatched& classical_register,
     const std::map<std::string, std::vector<double>>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 #endif  // SCALUQ_USE_CUDA
 
 template <Precision Prec>
@@ -221,6 +302,7 @@ Circuit<Prec> Circuit<Prec>::copy() const {
             ccircuit._gate_list.push_back(std::make_pair(param_gate, key));
         }
     }
+    ccircuit._classical_conditions = _classical_conditions;
     return ccircuit;
 }
 
@@ -228,13 +310,17 @@ template <Precision Prec>
 Circuit<Prec> Circuit<Prec>::get_inverse() const {
     Circuit<Prec> icircuit;
     icircuit._gate_list.reserve(_gate_list.size());
-    for (auto&& gate : _gate_list | std::views::reverse) {
+    icircuit._classical_conditions.reserve(_classical_conditions.size());
+    for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
+        auto&& gate = _gate_list[_gate_list.size() - 1 - idx];
         if (gate.index() == 0)
             icircuit._gate_list.push_back(std::get<0>(gate)->get_inverse());
         else {
             const auto& [param_gate, key] = std::get<1>(gate);
             icircuit._gate_list.push_back(std::make_pair(param_gate->get_inverse(), key));
         }
+        icircuit._classical_conditions.push_back(
+            _classical_conditions[_classical_conditions.size() - 1 - idx]);
     }
     return icircuit;
 }
@@ -243,6 +329,7 @@ template <Precision Prec>
 template <ExecutionSpace Space>
 void Circuit<Prec>::optimize(std::uint64_t max_block_size) {
     std::vector<GateWithKey> new_gate_list;  // result
+    std::vector<std::optional<ClassicalCondition>> new_classical_conditions;
     double global_phase = 0.;
     std::vector<Gate<Prec>> gate_pool;  // waitlist for merge or push
     constexpr std::uint64_t NO_GATES = std::numeric_limits<std::uint64_t>::max();
@@ -256,12 +343,14 @@ void Circuit<Prec>::optimize(std::uint64_t max_block_size) {
         else
             return std::get<1>(gate_with_key).first->operand_qubit_list();
     };
-    auto push = [&](const GateWithKey& gate_with_key) {
+    auto push = [&](const GateWithKey& gate_with_key,
+                    std::optional<ClassicalCondition> condition = std::nullopt) {
         // clear waitlist and push gate to result
         for (std::uint64_t operand : get_operand_list(gate_with_key)) {
             waiting_gate_idx_at_qubit[operand] = NO_GATES;
         }
         new_gate_list.push_back(gate_with_key);
+        new_classical_conditions.push_back(std::move(condition));
     };
     auto wait = [&](const Gate<Prec>& gate) {
         // wait for merge or push
@@ -296,13 +385,16 @@ void Circuit<Prec>::optimize(std::uint64_t max_block_size) {
         return newly_applied_qubits;
     };
 
-    for (const GateWithKey& gate_with_key : _gate_list) {
-        if (gate_with_key.index() == 1 ||
+    for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
+        const GateWithKey& gate_with_key = _gate_list[idx];
+        const auto& classical_condition = _classical_conditions[idx];
+        if (classical_condition.has_value() || gate_with_key.index() == 1 ||
             std::get<0>(gate_with_key).gate_type() == GateType::Probabilistic ||
             std::get<0>(gate_with_key).gate_type() == GateType::Measurement) {
-            // ParamGate, Probabilistic, and Measurement cannot be merged with others
+            // ParamGate, Probabilistic, Gate with classical branches, and Measurement cannot be
+            // merged with others
             push_waiting_gates(gate_with_key);
-            push(gate_with_key);
+            push(gate_with_key, classical_condition);
             continue;
         }
         const Gate<Prec>& gate = std::get<0>(gate_with_key);
@@ -386,10 +478,11 @@ void Circuit<Prec>::optimize(std::uint64_t max_block_size) {
                                        finally_waiting_gate_indices.end());
     for (std::uint64_t idx : finally_waiting_gate_indices) {
         new_gate_list.push_back(gate_pool[idx]);
+        new_classical_conditions.push_back(std::nullopt);
     }
-    if (std::abs(global_phase) > 1e-12)
-        new_gate_list.push_back(gate::GlobalPhase<Prec>(global_phase));
+    if (std::abs(global_phase) > 1e-12) push(gate::GlobalPhase<Prec>(global_phase));
     _gate_list.swap(new_gate_list);
+    _classical_conditions.swap(new_classical_conditions);
 }
 template void Circuit<internal::Prec>::optimize<ExecutionSpace::Host>(std::uint64_t max_block_size);
 template void Circuit<internal::Prec>::optimize<ExecutionSpace::HostSerial>(
@@ -411,9 +504,9 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
     const StateVector<Prec, Space>& initial_state,
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const {
+    std::optional<std::uint64_t> seed) const {
     check_state_vector_n_qubits(initial_state.n_qubits());
-    std::mt19937 mt(seed);
+    std::mt19937 mt(internal::resolve_seed(seed));
     StateVectorBatched<Prec, Space> states(1, initial_state.n_qubits()), new_states;
     states.set_state_vector_at(0, initial_state);
     std::vector<std::uint64_t> scounts{sampling_count}, new_scounts;
@@ -429,6 +522,9 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
                 for (const auto& tmp : gate_list) {
                     gates.push_back(tmp);
                 }
+            } else if (gate.gate_type() == GateType::Measurement) {
+                throw std::runtime_error(
+                    "Circuit::simulate_noise: Measurement gate is not supported.");
             } else {
                 probs = std::vector<double>{1.0};
                 gates.push_back(gate);
@@ -463,8 +559,7 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
                 if (j >= probs.size()) {
                     throw std::runtime_error(
                         "Circuit::simulate_noise: discrete_distribution returned out of "
-                        "range "
-                        "index.");
+                        "range index.");
                 }
                 if (gate_used_count[i][j] == 0) {
                     ++new_size;
@@ -509,7 +604,7 @@ Circuit<internal::Prec>::simulate_noise<ExecutionSpace::Host>(
     const StateVector<internal::Prec, ExecutionSpace::Host>& initial_state,
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 
 template std::vector<
     std::pair<StateVector<internal::Prec, ExecutionSpace::HostSerial>, std::int64_t>>
@@ -517,14 +612,14 @@ Circuit<internal::Prec>::simulate_noise<ExecutionSpace::HostSerial>(
     const StateVector<internal::Prec, ExecutionSpace::HostSerial>& initial_state,
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 #ifdef SCALUQ_USE_CUDA
 template std::vector<std::pair<StateVector<internal::Prec, ExecutionSpace::Default>, std::int64_t>>
 Circuit<internal::Prec>::simulate_noise<ExecutionSpace::Default>(
     const StateVector<internal::Prec, ExecutionSpace::Default>& initial_state,
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 #endif  // SCALUQ_USE_CUDA
 
 template <Precision Prec>
@@ -543,6 +638,17 @@ void Circuit<Prec>::check_state_vector_n_qubits(std::uint64_t n_qubits) const {
         throw std::runtime_error(
             "Circuit::update_quantum_state: state does not have enough qubits for this circuit.");
     }
+}
+
+template <Precision Prec>
+bool Circuit<Prec>::has_classical_instructions() const {
+    if (std::ranges::any_of(_classical_conditions,
+                            [](const auto& condition) { return condition.has_value(); })) {
+        return true;
+    }
+    return std::ranges::any_of(_gate_list, [](const GateWithKey& gate) {
+        return gate.index() == 0 && std::get<0>(gate).gate_type() == GateType::Measurement;
+    });
 }
 
 template <Precision Prec>
@@ -582,18 +688,21 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
                 const double cim = static_cast<double>(std::imag(c));
                 if (std::abs(cim) >= eps) {
                     throw std::runtime_error(
-                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be real.");
+                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be "
+                        "real.");
                 }
                 if (std::abs(cre) < std::numeric_limits<double>::epsilon()) {
                     throw std::runtime_error(
-                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be nonzero.");
+                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be "
+                        "nonzero.");
                 }
                 pauli_coef = cre;
             }
             const double scale = pgate->param_coef() * pauli_coef;
             if (std::abs(scale) < std::numeric_limits<double>::epsilon()) {
                 throw std::runtime_error(
-                    "Circuit::compute_expectation_gradient_backprop: param_coef * pauli_coef must be nonzero.");
+                    "Circuit::compute_expectation_gradient_backprop: param_coef * pauli_coef must "
+                    "be nonzero.");
             }
             pgate->update_quantum_state(Astate, -M_PI / scale);
             const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);

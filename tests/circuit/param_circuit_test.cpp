@@ -115,3 +115,45 @@ TYPED_TEST(ParamCircuitTest, InsufficientParameterGiven) {
         ASSERT_THROW(circuit.update_quantum_state(state, {{"0", 0}, {"2", 0}}), std::runtime_error);
     }
 }
+
+TYPED_TEST(ParamCircuitTest, AddConditionalParamGate) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Circuit<Prec> circuit;
+    circuit.add_gate(gate::Measurement<Prec>(0, 0, true));                      // must be reg[0]=0
+    circuit.add_conditional_param_gate(gate::ParamRX<Prec>(0), "theta", 0, 0);  // must be |01>
+    circuit.add_conditional_param_gate(gate::ParamRX<Prec>(1), "theta", 0, 1);  // must not be |10>
+
+    StateVector<Prec, Space> state(2);
+    ClassicalRegister classical_register(1);
+    circuit.update_quantum_state(state, classical_register, {{"theta", std::numbers::pi}}, 0);
+    EXPECT_FALSE(classical_register[0]);
+
+    const auto amplitudes = state.get_amplitudes();
+    check_near<Prec>(amplitudes[0], StdComplex{0.0, 0.0});
+    check_near<Prec>(amplitudes[1], StdComplex{0.0, -1.});
+    check_near<Prec>(amplitudes[2], StdComplex{0.0, 0.0});
+    check_near<Prec>(amplitudes[3], StdComplex{0.0, 0.0});
+}
+
+TYPED_TEST(ParamCircuitTest, UpdateQuantumStateExecutesConditionalParametricGate) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Circuit<Prec> circuit;
+    circuit.add_gate(gate::X<Prec>(0));
+    circuit.add_gate(gate::Measurement<Prec>(0, 0));
+    circuit.add_conditional_param_gate(gate::ParamRX<Prec>(1), "theta", 0, true);
+
+    StateVector<Prec, Space> state(2);
+    ClassicalRegister classical_register(1);
+    circuit.update_quantum_state(state, classical_register, {{"theta", std::numbers::pi}}, 0);
+
+    EXPECT_TRUE(classical_register[0]);
+    const auto amplitudes = state.get_amplitudes();
+    check_near<Prec>(amplitudes[0], StdComplex(0., 0.));
+    check_near<Prec>(amplitudes[1], StdComplex(0., 0.));
+    check_near<Prec>(amplitudes[2], StdComplex(0., 0.));
+    check_near<Prec>(amplitudes[3], StdComplex(0., -1.));
+}

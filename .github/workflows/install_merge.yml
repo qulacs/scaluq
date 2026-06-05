@@ -64,6 +64,10 @@ jobs:
         if: ${{ matrix.os-arch == 'linux-x86_64' }}
         run: sudo apt update && sudo apt install ninja-build
 
+      - name: Install mold (Linux)
+        if: ${{ matrix.os-arch == 'linux-x86_64' }}
+        run: sudo apt update && sudo apt install mold
+
       - name: Install libomp (Linux clang)
         if: ${{ matrix.os-arch == 'linux-x86_64' && matrix.compiler == 'clang' }}
         run: sudo apt update && sudo apt install libomp-dev
