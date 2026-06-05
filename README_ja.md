@@ -19,11 +19,34 @@ Scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 - よりよい実行速度を実現します。
 - ポインタをユーザから隠蔽したことにより、より安全に、簡単に記述できます。
 - [nanobind](https://github.com/wjakob/nanobind) の導入により、よりコンパクトかつ高速な Python へのバインディングを実現します。
-- 複数の量子状態に対して同じ回路を適用させるようなケースに対して、より高速なインターフェースを提供します。
+- 複数の量子状態に対して、同じ構造を持ちパラメータのみが異なる量子回路を一括実行するためのバッチ実行機能を提供します。
 
 # ドキュメント
 
 https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
+
+# パフォーマンス
+
+量子回路シミュレーションの実行時間を、複数の既存量子回路シミュレータと比較しました。  
+本ベンチマークでは、CX、RX、RZゲートをターゲット量子ビットを変えながら順に適用する回路を実行し、その平均実行時間を測定しました。
+
+[ベンチマークのリポジトリ](https://github.com/Qulacs-Osaka/benchmark-scaluq) をご確認ください。
+
+## 単一状態ベクトル更新 (2026年1月)
+
+### CPU 結果
+![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/multithread/image/circuit.png)
+
+### GPU 結果
+![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/gpu/image/circuit.png)
+
+## バッチ状態ベクトル更新 (2026年5月)
+
+### バッチサイズを変化させた場合 (#qubits=16)
+![Batched State Vector Update (batch sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/batch_sweep.png)
+
+### 量子ビット数を変化させた場合 (batch size=100)
+![Batched State Vector Update (qubits sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/qubits_sweep.png)
 
 ## ビルド時要件
 
