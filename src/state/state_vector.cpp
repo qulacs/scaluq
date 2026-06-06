@@ -29,8 +29,8 @@ StdComplex StateVector<Prec, Space>::get_amplitude_at(std::uint64_t index) {
     return StdComplex(static_cast<double>(val.real()), static_cast<double>(val.imag()));
 }
 template <Precision Prec, ExecutionSpace Space>
-StateVector<Prec, Space> StateVector<Prec, Space>::Haar_random_state(std::uint64_t n_qubits,
-                                                                     std::uint64_t seed) {
+StateVector<Prec, Space> StateVector<Prec, Space>::Haar_random_state(
+    std::uint64_t n_qubits, std::optional<std::uint64_t> seed) {
     auto state(StateVector<Prec, Space>::uninitialized_state(n_qubits));
     state.set_Haar_random_state(seed);
     return state;
@@ -68,9 +68,10 @@ void StateVector<Prec, Space>::set_computational_basis(std::uint64_t basis) {
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw[i] = (i == basis); });
 }
 template <Precision Prec, ExecutionSpace Space>
-void StateVector<Prec, Space>::set_Haar_random_state(std::uint64_t seed) {
+void StateVector<Prec, Space>::set_Haar_random_state(std::optional<std::uint64_t> seed) {
+    std::uint64_t actual_seed = internal::resolve_seed(seed);
     if constexpr (Space == ExecutionSpace::HostSerial) {
-        Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> rand_pool(seed);
+        Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> rand_pool(actual_seed);
         Kokkos::View<ComplexType*, Kokkos::HostSpace> host_raw("host_raw", _dim);
         Kokkos::parallel_for(
             "Haar_random_state_host",
@@ -83,7 +84,7 @@ void StateVector<Prec, Space>::set_Haar_random_state(std::uint64_t seed) {
             });
         Kokkos::deep_copy(_raw, host_raw);
     } else {
-        Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(seed);
+        Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(actual_seed);
         Kokkos::parallel_for(
             "Haar_random_state",
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
@@ -220,8 +221,9 @@ void StateVector<Prec, Space>::multiply_coef(StdComplex coef) {
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { this->_raw[i] *= coef; });
 }
 template <Precision Prec, ExecutionSpace Space>
-std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(std::uint64_t sampling_count,
-                                                              std::uint64_t seed) const {
+std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(
+    std::uint64_t sampling_count, std::optional<std::uint64_t> seed) const {
+    std::uint64_t actual_seed = internal::resolve_seed(seed);
     Kokkos::View<FloatType*, internal::SpaceType<Space>> stacked_prob("prob", _dim + 1);
     Kokkos::parallel_scan(
         "sampling (compute stacked prob)",
@@ -233,7 +235,7 @@ std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(std::uint64_t samp
             }
         });
 
-    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(seed);
+    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(actual_seed);
     std::vector<std::uint64_t> result(sampling_count);
     std::vector<std::uint64_t> todo(sampling_count);
     std::iota(todo.begin(), todo.end(), 0);

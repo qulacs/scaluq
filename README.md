@@ -19,11 +19,34 @@ Compared to [Qulacs](https://github.com/qulacs/qulacs), the following improvemen
 - Improved execution speed.
 - Pointers are hidden from users, making the code simpler and safer to write.
 - Integration of [nanobind](https://github.com/wjakob/nanobind) enables more compact and faster Python bindings.
-- Provides a faster interface for the case where the same circuit is applied to multiple quantum states.
+- Provides batched execution for efficiently applying quantum circuits with the same structure but different parameters to multiple quantum states.
 
 # Documentation
 
 See https://scaluq.readthedocs.io/en/latest/index.html
+
+# Performance
+
+The execution times of our quantum circuit simulator and several existing quantum circuit simulators were compared.  
+In this benchmark, a circuit consisting of CX, RX, and RZ gates applied sequentially to different target qubits was executed, and the average execution time was measured.
+
+See [the benchmark repository](https://github.com/Qulacs-Osaka/benchmark-scaluq).
+
+## Single State Vector Update (January 2026)
+
+### CPU result
+![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/multithread/image/circuit.png)
+
+### GPU result
+![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/gpu/image/circuit.png)
+
+## Batched State Vector Update (May 2026)
+
+### Varying batch size (#qubits=16)
+![Batched State Vector Update (batch sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/batch_sweep.png)
+
+### Varying #qubits (batch size=100)
+![Batched State Vector Update (qubits sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/qubits_sweep.png)
 
 ## Build Requirements
 

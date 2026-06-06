@@ -77,7 +77,7 @@ template <Precision Prec>
 template <ExecutionSpace Space>
 void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
                                          const std::map<std::string, double>& parameters,
-                                         std::uint64_t seed) const {
+                                         std::optional<std::uint64_t> seed) const {
     if (has_classical_instructions()) {
         throw std::runtime_error(
             "Circuit::update_quantum_state(StateVector&, ...): a classical register is required "
@@ -92,7 +92,7 @@ template <ExecutionSpace Space>
 void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
                                          ClassicalRegister& classical_register,
                                          const std::map<std::string, double>& parameters,
-                                         std::uint64_t seed) const {
+                                         std::optional<std::uint64_t> seed) const {
     check_state_vector_n_qubits(state.n_qubits());
     for (auto&& gate : _gate_list) {
         if (gate.index() == 0) continue;
@@ -104,7 +104,7 @@ void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
                 std::string(key) + "is not given.");
         }
     }
-    std::mt19937_64 random_engine(seed);
+    std::mt19937_64 random_engine(internal::resolve_seed(seed));
     std::uint64_t unreset_measured_qubit_mask = 0ULL;
     internal::ExecutionContext<Prec, Space> context{state, classical_register, random_engine};
     for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
@@ -144,7 +144,7 @@ template <ExecutionSpace Space>
 void Circuit<Prec>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states,
     const std::map<std::string, std::vector<double>>& parameters,
-    std::uint64_t seed) const {
+    std::optional<std::uint64_t> seed) const {
     if (has_classical_instructions()) {
         throw std::runtime_error(
             "Circuit::update_quantum_state(StateVectorBatched&, ...): a classical register is "
@@ -161,7 +161,7 @@ void Circuit<Prec>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states,
     ClassicalRegisterBatched& classical_register,
     const std::map<std::string, std::vector<double>>& parameters,
-    std::uint64_t seed) const {
+    std::optional<std::uint64_t> seed) const {
     check_state_vector_n_qubits(states.n_qubits());
     if (classical_register.batch_size() != states.batch_size()) {
         throw std::runtime_error(
@@ -183,7 +183,7 @@ void Circuit<Prec>::update_quantum_state(
                 "std::vector<double>>&): parameter size mismatch.");
         }
     }
-    std::mt19937_64 random_engine(seed);
+    std::mt19937_64 random_engine(internal::resolve_seed(seed));
     std::uint64_t unreset_measured_qubit_mask = 0ULL;
     internal::ExecutionContextBatched<Prec, Space> context{
         states, classical_register, random_engine};
@@ -234,60 +234,60 @@ void Circuit<Prec>::update_quantum_state(
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
     StateVector<internal::Prec, ExecutionSpace::Host>& state,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
     StateVector<internal::Prec, ExecutionSpace::Host>& state,
     ClassicalRegister& classical_register,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
     StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states,
     const std::map<std::string, std::vector<double>>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
     StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states,
     ClassicalRegisterBatched& classical_register,
     const std::map<std::string, std::vector<double>>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
     StateVector<internal::Prec, ExecutionSpace::HostSerial>& state,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
     StateVector<internal::Prec, ExecutionSpace::HostSerial>& state,
     ClassicalRegister& classical_register,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
     StateVectorBatched<internal::Prec, ExecutionSpace::HostSerial>& states,
     const std::map<std::string, std::vector<double>>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
     StateVectorBatched<internal::Prec, ExecutionSpace::HostSerial>& states,
     ClassicalRegisterBatched& classical_register,
     const std::map<std::string, std::vector<double>>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 
 #ifdef SCALUQ_USE_CUDA
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
     StateVector<internal::Prec, ExecutionSpace::Default>& state,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
     StateVector<internal::Prec, ExecutionSpace::Default>& state,
     ClassicalRegister& classical_register,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
     StateVectorBatched<internal::Prec, ExecutionSpace::Default>& states,
     const std::map<std::string, std::vector<double>>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
     StateVectorBatched<internal::Prec, ExecutionSpace::Default>& states,
     ClassicalRegisterBatched& classical_register,
     const std::map<std::string, std::vector<double>>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 #endif  // SCALUQ_USE_CUDA
 
 template <Precision Prec>
@@ -504,9 +504,9 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
     const StateVector<Prec, Space>& initial_state,
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const {
+    std::optional<std::uint64_t> seed) const {
     check_state_vector_n_qubits(initial_state.n_qubits());
-    std::mt19937 mt(seed);
+    std::mt19937 mt(internal::resolve_seed(seed));
     StateVectorBatched<Prec, Space> states(1, initial_state.n_qubits()), new_states;
     states.set_state_vector_at(0, initial_state);
     std::vector<std::uint64_t> scounts{sampling_count}, new_scounts;
@@ -604,7 +604,7 @@ Circuit<internal::Prec>::simulate_noise<ExecutionSpace::Host>(
     const StateVector<internal::Prec, ExecutionSpace::Host>& initial_state,
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 
 template std::vector<
     std::pair<StateVector<internal::Prec, ExecutionSpace::HostSerial>, std::int64_t>>
@@ -612,14 +612,14 @@ Circuit<internal::Prec>::simulate_noise<ExecutionSpace::HostSerial>(
     const StateVector<internal::Prec, ExecutionSpace::HostSerial>& initial_state,
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 #ifdef SCALUQ_USE_CUDA
 template std::vector<std::pair<StateVector<internal::Prec, ExecutionSpace::Default>, std::int64_t>>
 Circuit<internal::Prec>::simulate_noise<ExecutionSpace::Default>(
     const StateVector<internal::Prec, ExecutionSpace::Default>& initial_state,
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
-    std::uint64_t seed) const;
+    std::optional<std::uint64_t> seed) const;
 #endif  // SCALUQ_USE_CUDA
 
 template <Precision Prec>

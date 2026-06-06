@@ -41,8 +41,8 @@ public:
      */
     [[nodiscard]] StdComplex get_amplitude_at(std::uint64_t index);
 
-    [[nodiscard]] static StateVector Haar_random_state(std::uint64_t n_qubits,
-                                                       std::uint64_t seed = std::random_device()());
+    [[nodiscard]] static StateVector Haar_random_state(
+        std::uint64_t n_qubits, std::optional<std::uint64_t> seed = std::nullopt);
     [[nodiscard]] static StateVector uninitialized_state(std::uint64_t n_qubits);
 
     /**
@@ -51,7 +51,7 @@ public:
     void set_zero_state();
     void set_zero_norm_state();
     void set_computational_basis(std::uint64_t basis);
-    void set_Haar_random_state(std::uint64_t seed = std::random_device()());
+    void set_Haar_random_state(std::optional<std::uint64_t> seed = std::nullopt);
 
     [[nodiscard]] std::uint64_t n_qubits() const { return this->_n_qubits; }
 
@@ -73,7 +73,7 @@ public:
     void multiply_coef(StdComplex coef);
 
     [[nodiscard]] std::vector<std::uint64_t> sampling(
-        std::uint64_t sampling_count, std::uint64_t seed = std::random_device()()) const;
+        std::uint64_t sampling_count, std::optional<std::uint64_t> seed = std::nullopt) const;
 
     void load(const std::vector<StdComplex>& other);
 
@@ -148,10 +148,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .c_str())
         .def_static(
             "Haar_random_state",
-            [](std::uint64_t n_qubits, std::optional<std::uint64_t> seed) {
-                return StateVector<Prec, Space>::Haar_random_state(
-                    n_qubits, seed.value_or(std::random_device{}()));
-            },
+            &StateVector<Prec, Space>::Haar_random_state,
             "n_qubits"_a,
             "seed"_a = std::nullopt,
             DocString()
@@ -200,7 +197,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
         .def(
             "set_Haar_random_state",
             [](StateVector<Prec, Space>& self, std::optional<std::uint64_t> seed) {
-                self.set_Haar_random_state(seed.value_or(std::random_device{}()));
+                self.set_Haar_random_state(seed);
             },
             "seed"_a = std::nullopt,
             DocString()
@@ -481,7 +478,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
             [](const StateVector<Prec, Space>& state,
                std::uint64_t sampling_count,
                std::optional<std::uint64_t> seed) {
-                return state.sampling(sampling_count, seed.value_or(std::random_device{}()));
+                return state.sampling(sampling_count, seed);
             },
             "sampling_count"_a,
             "seed"_a = std::nullopt,
