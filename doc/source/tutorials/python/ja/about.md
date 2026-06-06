@@ -4,7 +4,7 @@ Scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 大規模な量子回路、ノイズを伴う量子回路、パラメトリック量子回路の高速シミュレーションを実行することができます。  
 本ライブラリは、MITライセンスの下で公開されています。  
 
-# 特徴
+## 特徴
 
 [Qulacs](https://github.com/qulacs/qulacs) に比べ、以下の点が改善されています。
 
@@ -14,28 +14,28 @@ Scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 - [nanobind](https://github.com/wjakob/nanobind) の導入により、よりコンパクトかつ高速な Python へのバインディングを実現します。
 - 複数の量子状態に対して、同じ構造を持ちパラメータのみが異なる量子回路を一括実行するためのバッチ実行機能を提供します。
 
-# パフォーマンス
+## パフォーマンス
 
 量子回路シミュレーションの実行時間を、複数の既存量子回路シミュレータと比較しました。  
 本ベンチマークでは、CX、RX、RZゲートをターゲット量子ビットを変えながら順に適用する回路を実行し、その平均実行時間を測定しました。
 
 [ベンチマークのリポジトリ](https://github.com/Qulacs-Osaka/benchmark-scaluq) をご確認ください。
 
-## 単一状態ベクトル更新 (2026年1月)
+### 単一状態ベクトル更新 (2026年1月)
 
-### CPU 結果
-![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/multithread/image/circuit.png)
+#### CPU 結果
+![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/multithread/image/circuit.png)
 
-### GPU 結果
-![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/gpu/image/circuit.png)
+#### GPU 結果
+![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/gpu/image/circuit.png)
 
-## バッチ状態ベクトル更新 (2026年5月)
+### バッチ状態ベクトル更新 (2026年5月)
 
-### バッチサイズを変化させた場合 (#qubits=16)
-![Batched State Vector Update (batch sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/batch_sweep.png)
+#### バッチサイズを変化させた場合 (#qubits=16)
+![Batched State Vector Update (batch sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/batch/image/batch_sweep.png)
 
-### 量子ビット数を変化させた場合 (batch size=100)
-![Batched State Vector Update (qubits sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/qubits_sweep.png)
+#### 量子ビット数を変化させた場合 (batch size=100)
+![Batched State Vector Update (qubits sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/batch/image/qubits_sweep.png)
 
 ## ビルド時要件
 
