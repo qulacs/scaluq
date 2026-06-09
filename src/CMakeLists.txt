@@ -40,6 +40,7 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
         if(${LIBRARY} MATCHES "scaluq_default_")
             target_sources(${LIBRARY} PRIVATE
                 circuit/circuit.cpp
+                qasm/qasm2.cpp
                 operator/pauli_operator.cpp
                 gate/gate_pauli.cpp
                 gate/gate_probabilistic.cpp

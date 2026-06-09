@@ -13,6 +13,7 @@
 #include "operator/operator.hpp"
 #include "operator/operator_batched.hpp"
 #include "operator/pauli_operator.hpp"
+#include "qasm/qasm2.hpp"
 #include "state/density_matrix.hpp"
 #include "state/state_vector.hpp"
 #include "state/state_vector_batched.hpp"
