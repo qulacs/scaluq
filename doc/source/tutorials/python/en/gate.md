@@ -86,7 +86,7 @@ Gate Type: Sdag
   Control Value: {}
 '''
 ```
-
+(downcast-to-gatetype-specific-function)=
 ## Downcast to GateType-specific function
 To get GateType-specific properties, downcast to specific class is required.
 

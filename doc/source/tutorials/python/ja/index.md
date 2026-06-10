@@ -1,4 +1,4 @@
-# Python Tutorials
+# Pythonチュートリアル
 
 ```{toctree}
 :maxdepth: 2
