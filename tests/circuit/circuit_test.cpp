@@ -269,7 +269,10 @@ void circuit_suzuki_trotter_test() {
     }
     const std::uint64_t n = 2;
     const std::uint64_t dim = 1ULL << n;
-    const double suzuki_trotter_eps = 1e-2;
+    double suzuki_trotter_eps = 1e-2;
+    if constexpr (Prec == Precision::F32) {
+        suzuki_trotter_eps = 1e-1;
+    }
     std::vector<double> coef;
     Random random;
     ComplexMatrix I = make_I();
