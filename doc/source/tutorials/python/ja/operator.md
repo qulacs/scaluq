@@ -49,7 +49,7 @@ print(op1) # (0.8 + 0.0j) Z0 Z1
 
 定義した演算子を用いて、{class}`StateVector <scaluq.default.f64.StateVector>`から物理的な情報を取得できます。
 
-```Python
+```py
 from scaluq.default.f64 import Operator, PauliOperator, StateVector
 
 # ハール測度を用いてランダムな状態ベクトルに初期化

@@ -5,7 +5,7 @@ In many quantum algorithms, such as VQE or quantum machine learning, processing 
 
 To begin with, you can initialize a batched state vector by specifying the number of `batch_size` and `n_qubits`.
 
-```Python
+```py
 from scaluq.default.f64 import StateVectorBatched
 
 batch_size = 3
@@ -50,7 +50,7 @@ You can apply a {class}`Circuit <scaluq.default.f64.Circuit>` to a {class}`State
 
 You can prepare different initial states for each batch index using {func}`set_state_vector_at <scaluq.default.f64.StateVectorBatched>`.
 
-```Python
+```py
 from scaluq.default.f64 import Circuit, StateVectorBatched, StateVector
 from scaluq.default.f64.gate import H
 
@@ -92,7 +92,7 @@ State vector :
 ### Parametric Execution
 When the circuit is parametric, you can execute circuits with different parameter values across the batch.
 
-```Python
+```py
 from scaluq.default.f64 import Circuit, StateVectorBatched
 from scaluq.default.f64.gate import ParamRX
 import math
@@ -129,7 +129,7 @@ State vector :
 
 The {class}`OperatorBatched <scaluq.default.f64.OperatorBatched>` class allows you to calculate expectation values for multiple different operators against a state.
 
-```Python
+```py
 from scaluq.default.f64 import OperatorBatched, PauliOperator, StateVector
 
 # Initialize a random state vector using Haar measure

@@ -5,7 +5,7 @@
 
 バッチサイズと量子ビット数を指定することでバッチ状態ベクトルを初期化できます。
 
-```Python
+```py
 from scaluq.default.f64 import StateVectorBatched
 
 batch_size = 3
@@ -50,7 +50,7 @@ State vector :
 
 {func}`set_state_vector_at <scaluq.default.f64.StateVectorBatched>`を使って、バッチインデックスごとに異なる初期状態を準備することができます。
 
-```Python
+```py
 from scaluq.default.f64 import Circuit, StateVectorBatched, StateVector
 from scaluq.default.f64.gate import H
 
@@ -93,7 +93,7 @@ State vector :
 
 回路がパラメトリックである時、異なるパラメータをもつ回路をバッチ実行可能です。
 
-```Python
+```py
 from scaluq.default.f64 import Circuit, StateVectorBatched
 from scaluq.default.f64.gate import ParamRX
 import math
@@ -130,7 +130,7 @@ State vector :
 
 {class}`OperatorBatched <scaluq.default.f64.OperatorBatched>`では、単一の量子状態に対して、複数の異なる演算子で期待値の計算可能です。
 
-```Python
+```py
 from scaluq.default.f64 import OperatorBatched, PauliOperator, StateVector
 
 # ハール測度を用いてランダムな状態ベクトルに初期化

@@ -3,7 +3,7 @@
 ## PyPIからインストール
 Scaluqを簡単にインストールするには以下を実行してください。
 
-```python
+```
 pip install scaluq
 ```
 
