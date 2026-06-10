@@ -1,4 +1,4 @@
-# StateVector
+# 状態ベクトル
 
 量子状態の状態ベクトルは {class}`StateVector <scaluq.default.f64.StateVector>` で表されます。
 このクラスは $2^n$ 個の複素数をもちます。ここで、 $n$ は量子ビット数です。

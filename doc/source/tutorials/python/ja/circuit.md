@@ -1,4 +1,4 @@
-# Circuit
+# 量子回路
 
 量子回路は {class}`Circuit <scaluq.default.f64.Circuit>` で表されています。
 量子回路は作用させる {class}`Gate <scaluq.default.f64.Gate>` または {class}`ParamGate <scaluq.default.f64.ParamGate>` のインスタンス配列をもちます。

@@ -1,44 +1,46 @@
-# Gate
+# 量子ゲート
 
-Quantum gate is expressed as {class}`Gate <scaluq.default.f64.Gate>`.
-This holds indices of target and control qubits, types of Gate (ex: `X`, `H`, `RY`, `DenseMatrix`...), and other properties.
-Properties of a Gate differ by its type. To access these properties, down-casting to specific class is required. (See [Downcast to GateType-specific function](#downcast-to-gatetype-specific-function))
+量子ゲートは{class}`Gate <scaluq.default.f64.Gate>`と表します。
+量子ゲートはターゲットとコントロール量子ビットのインデックス、ゲートの型 (`X`, `H`, `RY`, `DenseMatrix`...)、その他プロパティをもちます。
+ゲートのプロパティはその型により異なります。これらのプロパティにアクセスするには、特定クラスへのダウンキャストが必要です。
+詳しくは[特定のGateType (ゲート型)へのダウンキャスト](#特定のgatetype-ゲート型へのダウンキャスト)を参照してください。
 
-Unlike Qulacs, {class}`Gate <scaluq.default.f64.Gate>` objects are immutable. You have to pass all properties when generating the gate. This change enables us to provide fast and safe copy.
+Qulacsとは異なり、{class}`Gate <scaluq.default.f64.Gate>`オブジェクトはイミュータブルです。ゲート作成時にはすべてのプロパティを渡す必要があります。この変更は速さと安全なコピーを可能にしています。
 
-## Creating Gate
+## ゲートを作る
 
-{class}`Gate <scaluq.default.f64.Gate>` type instances are created from factory functions in {mod}`gate <scaluq.default.f64.gate>`.
+{class}`Gate <scaluq.default.f64.Gate>`タイプのインスタンスは{mod}`gate <scaluq.default.f64.gate>`内のファクトリ関数により作られます。
 
 ```py
 from scaluq.default.f64.gate import X, Swap, RX, DenseMatrix
 import math
 import numpy as np
 
-x = X(0) # X gate with target 0
-swap = Swap(2, 4) # Swap gate with target 2, 4
-rx = RX(1, math.pi/4) # RX(pi/4) gate with target 1
+x = X(0) # Xゲート ターゲット量子ビットは0
+swap = Swap(2, 4) # Swapゲート ターゲット量子ビットは2, 4
+rx = RX(1, math.pi/4) # RX(pi/4)ゲート ターゲット量子ビットは1
 
 mat = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
-# DenseMatrix gate with certain unitary matrix and target 1,2
+# 密度行列ゲート 定義したユニタリ行列、ターゲット量子ビットは1, 2
 mat_gate = DenseMatrix([1, 2], mat, is_unitary=True)
 ```
 
-For detail usage of creating each types of gate, see {mod}`API document of gate module <scaluq.default.f64.gate>`.
+それぞれの型のゲートの作り方の詳しい説明は{mod}`API document of gate module <scaluq.default.f64.gate>`を参照してください。
 
-You can add arbitrary number of control qubits to almost all types of Gates.
-Control-values can be passed. All control-values are set to $1$ when omitted.
+ほとんど全てのゲート型で任意の数()のコントロール量子ビット指定できます。
+コントロール値も指定することが可能です。省略された場合、全てのコントロール値は $1$ にセットされます。
 
 ```py
 from scaluq.default.f64.gate import H
 
-ch = H(0, controls=[1]) # H(0) applied when 1st qubit is |1>
-cch = H(0, controls=[1, 2]) # H(0) applied when 1st qubit is |1> and 2nd qubit is |1>
-cch = H(0, controls=[1, 2], control_values=[1, 0]) # H(0) applied when 1st qubit is |1> and 2nd qubit is |0>
+ch = H(0, controls=[1]) # 1番目の量子ビットが|1>の時だけ、H(0)を作用
+cch = H(0, controls=[1, 2]) # 1番目の量子ビットが|1>かつ2番目の量子ビットが|1>の時だけ、H(0)を作用
+cch = H(0, controls=[1, 2], control_values=[1, 0]) # 1番目の量子ビットが|1>かつ2番目の量子ビットが|0>の時だけ、H(0)を作用
 ```
 
-## Getting properties of Gate.
-General properties are simply gotten by using methods of {class}`Gate <scaluq.default.f64.Gate>` class.
+## ゲートのプロパティを取得する
+
+一般的なプロパティは{class}`Gate <scaluq.default.f64.Gate>`クラスのメソッドを利用して簡単に取得できます。
 
 ```py
 from scaluq.default.f64.gate import H
@@ -49,7 +51,7 @@ print(cch.control_qubit_list()) # [1, 2]
 print(cch.control_value_list()) # [1, 0]
 ```
 
-Matrix representation is showed by {func}`get_matrix <scaluq.default.f64.Gate.get_matrix>`. Unlike Qulacs, control qubits are ignored.
+行列は{func}`get_matrix <scaluq.default.f64.Gate.get_matrix>`で取得できます。Qulacsとは異なり、コントロール量子ビットは無視されます。
 
 ```py
 from scaluq.default.f64.gate import H
@@ -62,8 +64,9 @@ print(cch.get_matrix())
 '''
 ```
 
-Inverse gate is gotten by {func}`get_inverse <scaluq.default.f64.Gate.get_inverse>`.
-If inverse gate is completely same as the original gate, the gate is shallow-copied.
+逆行列は{func}`get_inverse <scaluq.default.f64.Gate.get_inverse>`により取得できます。
+逆行列が元のゲートの行列と同一な場合はゲートの浅いコピーが返します。
+
 ```py
 from scaluq.default.f64.gate import H, S
 
@@ -87,12 +90,13 @@ Gate Type: Sdag
 '''
 ```
 
-## Downcast to GateType-specific function
-To get GateType-specific properties, downcast to specific class is required.
+## 特定のGateType (ゲート型)へのダウンキャスト
 
-Scaluq Gate is implemented by tag-based polymorphism. Each Gate has detailed type as enum {class}`GateType <scaluq.GateType>`. You can get type of Gate by {func}`get_type <scaluq.default.f64.Gate.gate_type>`.
+ゲートごとの詳細なプロパティを取得するには、特定クラスへのダウンキャストが必要になります。
 
-There is a specific Gate class for each type. You can use functions of these specific types by downcast.
+Scaluqのゲートはタグベースのポリモーフィズムで実装されています。それぞれのゲートは{class}`GateType <scaluq.GateType>`の列挙型として詳細の型をもちます。{func}`get_type <scaluq.default.f64.Gate.gate_type>`によってゲート型を取得できます。
+
+型ごとに専用のゲートクラスが定義されており、ダウンキャストを行うことでそれらクラスの固有の関数を利用できます。
 
 ```py
 from scaluq import GateType
@@ -102,11 +106,11 @@ import math
 
 rx = RX(0, math.pi/4)
 assert rx.gate_type() == GateType.RX
-rx = RXGate(rx) # downcast to RXGate class
+rx = RXGate(rx) # RXGateクラスへのダウンキャスト
 print(rx.angle())
 ```
 
-Since this inheritance relation is not shown in language layer, explicit upcast is required when you pass the Gate as {class}`Gate <scaluq.default.f64.Gate>` type.
+これらのクラス間の継承関係はPythonの言語層では見ることができないため、{class}`Gate <scaluq.default.f64.Gate>`の型としてゲートを渡すときは、明示的なダウンキャストが必要となります。
 
 ```py
 from scaluq.default.f64 import Gate, RXGate, Circuit
@@ -115,13 +119,14 @@ import math
 
 rx = RXGate(RX(0, math.pi/4))
 circuit = Circuit()
-rx = Gate(rx) # omitting this downcast causes error on next line
+rx = Gate(rx) # このダウンキャストを省略すると次の行でエラーが発生
 circuit.add_gate(rx)
 ```
 
-## Apply to StateVector
-Gate can be applied to {class}`StateVector <scaluq.default.f64.StateVector>` object by function {func}`update_quantum_state <scaluq.default.f64.Gate.update_quantum_state>`.
-Indices of Target/control qubits of Gate are corresponded to that of StateVector.
+## StateVectorに作用させる
+
+{func}`update_quantum_state <scaluq.default.f64.Gate.update_quantum_state>`関数を用いることで{class}`StateVector <scaluq.default.f64.StateVector>`のインスタンスにゲートを作用させることができます。
+ターゲット、コントロール量子ビットのインデックスは状態ベクトルのインデックスと対応しています。
 
 ```py
 from scaluq.default.f64 import StateVector
@@ -137,9 +142,10 @@ cx01.update_quantum_state(state)
 print(state.get_amplitudes()) # [(0.7071067811865476+0j), 0j, 0j, (0.7071067811865476+0j)]
 ```
 
-## Merge two Gates
-You can merge two Gates by {func}`merge_gate <scaluq.default.f64.gate.merge_gate>`
-The type of result gate is flexible.
+## 2つのゲートを統合する
+
+2つのゲートを{func}`merge_gate <scaluq.default.f64.gate.merge_gate>`によって統合可能です。
+統合後のゲートの型は以下のように様々です。
 
 ```py
 from scaluq.default.f64.gate import X, Y, RX, RY, RZ, S
