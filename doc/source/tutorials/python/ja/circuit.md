@@ -1,16 +1,16 @@
 # Circuit
 
-Quantum circuit is expressed as {class}`Circuit <scaluq.default.f64.Circuit>`.
-This holds an array of instances of {class}`Gate <scaluq.default.f64.Gate>` or {class}`ParamGate <scaluq.default.f64.ParamGate>` to be applied. 
+量子回路は {class}`Circuit <scaluq.default.f64.Circuit>` で表されています。
+量子回路は作用させる {class}`Gate <scaluq.default.f64.Gate>` または {class}`ParamGate <scaluq.default.f64.ParamGate>` のインスタンス配列をもちます。
 
 ```{note}
-In this section, we regard `Circuit` as an array of `Gate` instances. To learn about `ParamGate`, see [Using parametric gates and circuits](./param.md).
+このセクションでは`Circuit`を`Gate`インスタンスの配列とみなします。`ParamGate`の詳しい説明は、[パラメトリックゲートと量子回路を使う](./param.md)を参照してください。
 ```
 
-Unlike Qulacs, you cannot insert Gate in the middle of Circuit or remove Gate from Circuit. These operations make user do complicated index-management.
+Qulacsとは異なり、ゲートを回路の途中に入れること、回路からゲートを取り除くことはできません。これらの操作はユーザーへ複雑なインデックス管理を要請するためです。
 
-## Create Circuit
-Circuit is created without arguments.
+## 回路を構築する
+回路は引数なしで構築されます。
 
 ```py
 from scaluq.default.f64 import Circuit
@@ -23,8 +23,8 @@ print(circuit.to_json())
 {"gate_list":[]}
 ```
 
-## Add Gate to Circuit
-You can add `Gate` to `Circuit` by {func}`add_gate <scaluq.default.f64.Circuit.add_gate>`. `Gate` to be added is shallow-copied. Since all the `Gate`s in Scaluq are immutable, this is always safe!
+## 回路にゲートを追加する
+{func}`add_gate <scaluq.default.f64.Circuit.add_gate>` により、`Circuit`に`Gate`を追加できます。`Gate`は浅いコピーで追加されます。Scaluqのすべての`Gate`はイミュータブルであり、これは常に安全です。
 
 ```py
 from scaluq.default.f64 import Circuit
@@ -36,8 +36,8 @@ circuit.add_gate(H(0))
 circuit.add_gate(X(1, controls=[0]))
 ```
 
-## Apply Circuit to StateVector
-You can run Circuit by applying {func}`update_quantum_state <scaluq.default.f64.Circuit.update_quantum_state>` to {class}`StateVector <scaluq.default.f64.StateVector>`.
+## StateVectorに回路を作用させる
+{class}`StateVector <scaluq.default.f64.StateVector>`に{func}`update_quantum_state <scaluq.default.f64.Circuit.update_quantum_state>`を適用することにより、回路を作用させることができます。
 
 ```py
 from scaluq.default.f64 import Circuit, StateVector

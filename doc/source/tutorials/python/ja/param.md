@@ -1,22 +1,22 @@
-# Using parametric gates and circuits
+# パラメトリックゲートと量子回路を使う
 
-## Using parametric gates
-Parametric gates allow you to specify arbitrary rotation angles at the time of circuit execution. You can define these gates with an optional `coef` (coefficient) as the second argument.
+## パラメトリックゲートを使う
+パラメトリックゲートは回路作用時に回転角を任意に指定することが可能です。これらのゲートは2番目の引数に`coef` (係数)を与えることで定義できます。
 
-The actual rotation angle applied is calculated as angle $\times$ coef.
+実際に作用させる回転角はangle $\times$ coefで計算されます。
 
 ```
 from scaluq.default.f64.gate import ParamRX, ParamRY
 import math
 
-p_rx = ParamRX(0, 0.5) # Parametric RX gate with target 0 and coef 0.5
-p_ry = ParamRY(1) # Parametric RY gate with target 1 and coef 1.0 (default)
+p_rx = ParamRX(0, 0.5) # ターゲットが0、coefが0.5のパラメトリックRXゲート
+p_ry = ParamRY(1) # ターゲットが1、coefがデフォルトの1.0となっているパラメトリックRYゲート
 ```
 
-## Add parametric gates to Circuit
-You can add {class}`ParamGate <scaluq.default.f64.ParamGate>` to {class}`Circuit <scaluq.default.f64.Circuit>` using {func}`add_param_gate <scaluq.default.f64.Circuit.add_param_gate>`. This method requires a key (string) to identify the parameter. Multiple gates can share the same key.
+## 回路にパラメトリックゲートを追加する
+{class}`Circuit <scaluq.default.f64.Circuit>`に{func}`add_param_gate <scaluq.default.f64.Circuit.add_param_gate>`を使って、{class}`ParamGate <scaluq.default.f64.ParamGate>`を追加することができます。このメソッドはパラメータを指定するために文字列のkeyが必要です。複数のゲートが同じkeyを共有できます。
 
-You can also retrieve information about parameter keys from the circuit.
+また、回路からパラメータキーの情報を取得できます。
 ```
 from scaluq.default.f64.gate import ParamRX, ParamRY, H
 from scaluq.default.f64 import Circuit
@@ -27,21 +27,22 @@ circuit = Circuit()
 
 circuit.add_gate(H(0))
 circuit.add_param_gate(ParamRX(0), "p_rx")
-circuit.add_param_gate(ParamRX(1), "p_rx") # Same key can be used
+circuit.add_param_gate(ParamRX(1), "p_rx") # 同じキーが使われます
 circuit.add_param_gate(ParamRY(1), "p_ry")
 
-# Get parameter key at specific gate index
-print(circuit.get_param_key_at(0)) # None (H gate is not parametric)
+# 特定のゲートインデックスからパラメトリックキーを取得する
+print(circuit.get_param_key_at(0)) # None (Hゲートはパラメトリックでない)
 print(circuit.get_param_key_at(1)) # p_rx
 print(circuit.get_param_key_at(2)) # p_rx
 print(circuit.get_param_key_at(3)) # p_ry
 
-# Get the set of all unique parameter keys
+# 重複なしで全てのパラメトリックキーを取得する
 print(circuit.key_set()) # {'p_rx', 'p_ry'}
 ```
 
-## Apply Circuit to StateVector
-When executing the circuit, you must provide values for each parameter key. The provided value is applied to all gates with the corresponding key (and multiplied by each gate's coef).
+## StateVectorに回路を作用させる
+
+回路を作用させる時、それぞれのパラメータキーに値を与える必要があります。与えられた値は対応するキーをもつすべてのゲートに適用されます。
 
 ```
 from scaluq.default.f64.gate import H, ParamRX, ParamRY
