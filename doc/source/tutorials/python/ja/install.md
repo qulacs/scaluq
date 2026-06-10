@@ -1,64 +1,65 @@
-# Install Scaluq Python package
+# ScaluqをPythonパッケージとしてインストールする方法
 
-## Install from PyPI
-The most simple way to install Scaluq is running below.
+## PyPIからインストール
+Scaluqを簡単にインストールするには以下を実行してください。
 
 ```python
 pip install scaluq
 ```
 
-The configuration of distributed package is below.
+配布されたパッケージの設定については以下のとおりです。
 
-- Use OpenMP for parallel processing.
-- All of the simulation is run on CPU.
-    - Do not use GPU.
-    - Execution Space `default` and `host` is same.
-- Precision `f32` and `f64` is enabled.
+- 並列実行にはOpenMPを使用してください。
+- すべてのシミュレーションはCPU上で行われます。
+    - GPUは使えません。
+    - 実行スペースの`default`と`host`は同じです。
+- 精度は`f32`と`f64`が利用できます。
 
-## Build from source
-If you want to install on the specific commit or with non-default option, you can install Scaluq from source.
+## ソースコードからインストール
+特定のコミットハッシュやデフォルトでないオプションでインストールしたい場合は、ソースコードからScaluqをインストールすることができます。
 
-The build requirements are below.
+ビルドの要件は以下のとおりです。
 
 - Ninja ≥ 1.10
 - GCC ≥ 13 or LLVM Clang ≥ 18
-  - if you enable CUDA, GCC ≥ 11 is OK, but you cannot use Clang.
+  - CUDAを有効化した場合、GCC ≥ 11は利用できますが、Clangは使用できません。
 - CMake ≥ 3.24
-- CUDA ≥ 12.8 (only when using CUDA)
-- Python ≥ 3.10 (only when using Python)
+- CUDA ≥ 12.8 (CUDA利用時のみ)
+- Python ≥ 3.10 (Python利用時のみ)
 
-When using CUDA, use a host compiler version supported by your CUDA toolkit (see the CUDA Installation Guide Host Compiler Support Policy).
+CUDAの利用時には、お使いのCUDA toolkitでサポートされているホストコンパイラのバージョンを使ってください。
+詳しくはCUDA Installation Guide Host Compiler Support Policyをご確認ください。
 
-Note: It may work with lower versions, but this has not been verified.
+注意：提示したビルド要件よりも低いバージョンでも動作する可能性はありますが、動作確認は行われていないためビルドの要件に記載のバージョンでビルドすることを推奨します。
 
-The build options are below.
+ビルドオプションは以下のとおりです。
 
-| Variable Name           | Default     | Description |
-|------------------------|-------------|-------------|
-| `CMAKE_C_COMPILER`     | -           | See [CMake Documentation](https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_COMPILER.html) |
-| `CMAKE_CXX_COMPILER`   | -           | See [CMake Documentation](https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_COMPILER.html) |
-| `CMAKE_BUILD_TYPE`     | -           | See [CMake Documentation](https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html) |
-| `CMAKE_INSTALL_PREFIX` | -           | See [CMake Documentation](https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html) |
-| `SCALUQ_USE_OMP`       | `ON`        | Use OpenMP for parallel computation on CPU |
-| `SCALUQ_USE_CUDA`      | `OFF`       | Enable parallel computation using GPU (CUDA) |
-| `SCALUQ_CPU_NATIVE`    | `ON`        | Build for native CPU architecture of builder's |
-| `SCALUQ_CPU_ARCH`      | -           | Target CPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_CPU_ARCH=SKX`) |
-| `SCALUQ_CUDA_ARCH`     | (auto)      | Target Nvidia GPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_CUDA_ARCH=AMPERE80`) |
-| `SCALUQ_USE_TEST`      | `ON`        | Include `test/` in build targets. You can build and run tests with `ctest --test-dir build/` |
-| `SCALUQ_USE_EXE`       | `ON`        | Include `exe/` in build targets. You can try running without installing by building with `ninja -C build` and running `build/exe/main` |
-| `SCALUQ_FLOAT16`       | `OFF`       | Enable `f16` precision |
-| `SCALUQ_FLOAT32`       | `ON`        | Enable `f32` precision |
-| `SCALUQ_FLOAT64`       | `ON`        | Enable `f64` precision |
-| `SCALUQ_BFLOAT16`      | `OFF`       | Enable `bf16` precision |
+|変数名|デフォルト値|意味|
+|-|-|-|
+|`CMAKE_C_COMPILER`|-|See [CMake Document](https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_COMPILER.html)|
+|`CMAKE_CXX_COMPILER`|-|See [CMake Document](https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_COMPILER.html)|
+|`CMAKE_BUILD_TYPE`|-|See [CMake Document](https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html)|
+|`CMAKE_INSTALL_PREFIX`|-|See [CMake Document](https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html)|
+|`SCALUQ_USE_OMP`|`ON`|CPUでの並列処理にOpenMPを利用するか|
+|`SCALUQ_USE_CUDA`|`OFF`|GPU (CUDA)での並列処理を行うか|
+|`SCALUQ_CPU_NATIVE`|`ON`| ビルダーのCPUアーキテクチャでビルドするか|
+|`SCALUQ_CPU_ARCH`|-| ターゲットとなるCPUアーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CPU_ARCH=SKX`)|
+|`SCALUQ_CUDA_ARCH`|(自動識別)|`SCALUQ_USE_CUDA=ON`の場合、ターゲットとなるNvidia GPU アーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CUDA_ARCH=AMPERE80`)|
+|`SCALUQ_USE_TEST`|`OFF`|`test/`をビルドターゲットに含める。`ctest --test-dir build/`でテストのビルド・実行ができます|
+|`SCALUQ_USE_EXE`|`OFF`|`exe/`をビルドターゲットに含める。`ninja -C build`でビルドしたあと、`build/exe/main` を実行してインストールなしで試せます|
+|`SCALUQ_FLOAT16`|`OFF`|`f16`精度を有効にする|
+|`SCALUQ_FLOAT32`|`ON`|`f32`精度を有効にする|
+|`SCALUQ_FLOAT64`|`ON`|`f64`精度を有効にする|
+|`SCALUQ_BFLOAT16`|`OFF`|`bf16`精度を有効にする|
 
-To install Scaluq, clone the git repository first and enter.
+Scaluqをインストールするには、まずgithubのリポジトリをクローンし、ディレクトリに入ってください。
 
 ```
 git clone https://github.com/qulacs/scaluq
 cd scaluq
 ```
 
-Then, install qulacs with passing configuration by environment variable.
+そして、環境変数によって設定を行い、Scaluqをインストールしてください。
 
 ```
 SCALUQ_USE_CUDA=ON SCALUQ_FLOAT32=OFF pip install .

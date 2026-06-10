@@ -58,7 +58,7 @@ git clone https://github.com/qulacs/scaluq
 cd scaluq
 ```
 
-Then, install qulacs with passing configuration by environment variable.
+Then, install Scaluq with passing configuration by environment variable.
 
 ```
 SCALUQ_USE_CUDA=ON SCALUQ_FLOAT32=OFF pip install .
