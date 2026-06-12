@@ -34,19 +34,15 @@ https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
 
 ## 単一状態ベクトル更新 (2026年1月)
 
-### CPU 結果
-![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/multithread/image/circuit.png)
-
-### GPU 結果
-![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/gpu/image/circuit.png)
+| CPU 結果 | GPU 結果 |
+| ------- | --------|
+| ![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/multithread/image/circuit.png) | ![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/gpu/image/circuit.png) |
 
 ## バッチ状態ベクトル更新 (2026年5月)
 
-### バッチサイズを変化させた場合 (#qubits=16)
-![Batched State Vector Update (batch sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/batch_sweep.png)
-
-### 量子ビット数を変化させた場合 (batch size=100)
-![Batched State Vector Update (qubits sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/qubits_sweep.png)
+| バッチサイズを変化させた場合 (#qubits=16) | 量子ビット数を変化させた場合 (batch size=100) |
+| -------------------------------------- | ------------------------------------------- |
+| ![Batched State Vector Update (batch sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/batch/image/batch_sweep.png) | ![Batched State Vector Update (qubits sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/batch/image/qubits_sweep.png) |
 
 ## ビルド時要件
 
