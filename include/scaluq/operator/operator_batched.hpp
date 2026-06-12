@@ -208,24 +208,30 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
                       "In the update process, the batch size to be processed simultaneously.")
                  .build_as_google_style()
                  .c_str())
-        .def("get_expectation_value",
-             nb::overload_cast<const StateVector<Prec, Space>&>(
-                 &OperatorBatched<Prec, Space>::get_expectation_value),
-             "state_vector"_a,
-             DocString()
-                 .desc("Return a vector of expectation values for each operator.")
-                 .arg("state_vector", "A state vector to compute expectation values.")
-                 .build_as_google_style()
-                 .c_str())
-        .def("get_expectation_value",
-             nb::overload_cast<const StateVectorBatched<Prec, Space>&>(
-                 &OperatorBatched<Prec, Space>::get_expectation_value),
-             "states" _a,
-             DocString()
-                 .desc("Return a vector of expectation values for each operator.")
-                 .arg("states", "State Vector Batched to compute expectation values.")
-                 .build_as_google_style()
-                 .c_str())
+        .def(
+            "get_expectation_value",
+            [](const OperatorBatched<Prec, Space>& op,
+               const StateVector<Prec, Space>& state_vector) {
+                return op.get_expectation_value(state_vector);
+            },
+            "state_vector"_a,
+            DocString()
+                .desc("Return a vector of expectation values for each operator.")
+                .arg("state_vector", "A state vector to compute expectation values.")
+                .build_as_google_style()
+                .c_str())
+        .def(
+            "get_expectation_value",
+            [](const OperatorBatched<Prec, Space>& op,
+               const StateVectorBatched<Prec, Space>& states) {
+                return op.get_expectation_value(states);
+            },
+            "states"_a,
+            DocString()
+                .desc("Return a vector of expectation values for each operator.")
+                .arg("states", "State Vector Batched to compute expectation values.")
+                .build_as_google_style()
+                .c_str())
         .def("get_transition_amplitude",
              &OperatorBatched<Prec, Space>::get_transition_amplitude,
              "state_vector_bra"_a,
