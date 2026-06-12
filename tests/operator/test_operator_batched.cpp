@@ -50,6 +50,44 @@ generate_random_observable(int n) {
     return {OperatorBatched<Prec, Space>(rand_observable), std::move(test_rand_observable)};
 }
 
+template <Precision Prec, ExecutionSpace Space>
+std::pair<OperatorBatched<Prec, Space>, std::vector<Operator<Prec, Space>>>
+generate_random_observable_with_batch_size(std::uint64_t batch_size, int n) {
+    Random random;
+    std::vector<std::vector<PauliOperator<Prec>>> rand_observable;
+    std::vector<Operator<Prec, Space>> test_rand_observable;
+
+    for (std::uint64_t b = 0; b < batch_size; ++b) {
+        std::vector<PauliOperator<Prec>> ops;
+        std::uint64_t term_count = random.int32() % 10 + 1;
+        for (std::uint64_t term = 0; term < term_count; ++term) {
+            std::vector<std::uint64_t> paulis(n, 0);
+            double coef = random.uniform();
+            for (std::uint64_t i = 0; i < paulis.size(); ++i) {
+                paulis[i] = random.int32() % 4;
+            }
+
+            std::string str = "";
+            for (std::uint64_t ind = 0; ind < paulis.size(); ind++) {
+                std::uint64_t val = paulis[ind];
+                if (val != 0) {
+                    if (val == 1)
+                        str += " X";
+                    else if (val == 2)
+                        str += " Y";
+                    else if (val == 3)
+                        str += " Z";
+                    str += " " + std::to_string(ind);
+                }
+            }
+            ops.push_back(PauliOperator<Prec>(str.c_str(), coef));
+        }
+        rand_observable.push_back(ops);
+        test_rand_observable.push_back(Operator<Prec, Space>(ops));
+    }
+    return {OperatorBatched<Prec, Space>(rand_observable), std::move(test_rand_observable)};
+}
+
 TYPED_TEST(OperatorBatchedTest, TransitionAmplitudes) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
@@ -83,6 +121,31 @@ TYPED_TEST(OperatorBatchedTest, ExpectationValues) {
         auto res = ops[b].get_expectation_value(state_vector);
         ASSERT_NEAR(res.real(), res_batched[b].real(), eps<Prec>);
         ASSERT_NEAR(res.imag(), res_batched[b].imag(), eps<Prec>);
+    }
+}
+
+TYPED_TEST(OperatorBatchedTest, ExpectationValuesBB) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    std::uint64_t n = 4;
+    std::uint64_t batch_size = 3;
+    Random random;
+    auto [op_batched, ops] = generate_random_observable_with_batch_size<Prec, Space>(batch_size, n);
+    StateVectorBatched<Prec, Space> states(batch_size, n);
+    states.set_Haar_random_state(false);
+    auto state0 = states.get_state_vector_at(0);
+    auto state1 = states.get_state_vector_at(1);
+    auto state2 = states.get_state_vector_at(2);
+
+    auto res_batched = op_batched.get_expectation_value(states);
+    std::vector<StdComplex> res = {};
+    res.push_back(ops[0].get_expectation_value(state0));
+    res.push_back(ops[1].get_expectation_value(state1));
+    res.push_back(ops[2].get_expectation_value(state2));
+
+    for (std::uint64_t b = 0; b < op_batched.batch_size(); ++b) {
+        ASSERT_NEAR(res[b].real(), res_batched[b].real(), eps<Prec>);
+        ASSERT_NEAR(res[b].imag(), res_batched[b].imag(), eps<Prec>);
     }
 }
 

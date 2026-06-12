@@ -70,6 +70,8 @@ public:
 
     [[nodiscard]] std::vector<StdComplex> get_expectation_value(
         const StateVector<Prec, Space>& state_vector) const;
+    [[nodiscard]] std::vector<StdComplex> get_expectation_value(
+        const StateVectorBatched<Prec, Space>& states) const;
 
     [[nodiscard]] std::vector<StdComplex> get_transition_amplitude(
         const StateVector<Prec, Space>& state_vector_bra,
@@ -207,11 +209,21 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("get_expectation_value",
-             &OperatorBatched<Prec, Space>::get_expectation_value,
+             nb::overload_cast<const StateVector<Prec, Space>&>(
+                 &OperatorBatched<Prec, Space>::get_expectation_value),
              "state_vector"_a,
              DocString()
                  .desc("Return a vector of expectation values for each operator.")
                  .arg("state_vector", "A state vector to compute expectation values.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("get_expectation_value",
+             nb::overload_cast<const StateVectorBatched<Prec, Space>&>(
+                 &OperatorBatched<Prec, Space>::get_expectation_value),
+             "states" _a,
+             DocString()
+                 .desc("Return a vector of expectation values for each operator.")
+                 .arg("states", "State Vector Batched to compute expectation values.")
                  .build_as_google_style()
                  .c_str())
         .def("get_transition_amplitude",
