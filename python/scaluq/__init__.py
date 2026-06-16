@@ -72,6 +72,20 @@ class StateVectorBatched:
     def uninitialized_state(batch_size, n_qubits, precision=_DEFAULT_PRECISION, space='default'):
         return _get_module(precision, space).StateVectorBatched.uninitialized_state(batch_size, n_qubits)
 
+class DensityMatrix:
+    UNMEASURED = _get_module(_DEFAULT_PRECISION, 'default').DensityMatrix.UNMEASURED
+
+    def __new__(cls, n_qubits, precision=_DEFAULT_PRECISION, space='default'):
+        return _get_module(precision, space).DensityMatrix(n_qubits)
+
+    @staticmethod
+    def Haar_random_state(n_qubits, seed=None, precision=_DEFAULT_PRECISION, space='default'):
+        return _get_module(precision, space).DensityMatrix.Haar_random_state(n_qubits, seed)
+
+    @staticmethod
+    def uninitialized_state(n_qubits, precision=_DEFAULT_PRECISION, space='default'):
+        return _get_module(precision, space).DensityMatrix.uninitialized_state(n_qubits)
+
 def Gate(gate):
     key = _key_for_object(gate)
     if key is None:
@@ -164,18 +178,6 @@ class OperatorBatched:
 class Circuit:
     def __new__(cls, precision=_DEFAULT_PRECISION):
         return _get_module(precision, 'default').Circuit()
-
-class DensityMatrix:
-    def __new__(cls, n_qubits, precision=_DEFAULT_PRECISION, space='default'):
-        return _get_module(precision, space).DensityMatrix(n_qubits)
-
-    @staticmethod
-    def Haar_random_state(n_qubits, seed=None, precision=_DEFAULT_PRECISION, space='default'):
-        return _get_module(precision, space).DensityMatrix.Haar_random_state(n_qubits, seed)
-
-    @staticmethod
-    def uninitialized_state(n_qubits, precision=_DEFAULT_PRECISION, space='default'):
-        return _get_module(precision, space).DensityMatrix.uninitialized_state(n_qubits)
 
 class qasm2:
     @staticmethod
