@@ -766,7 +766,9 @@ void ecr_gate(std::uint64_t physical_target_mask,
 template <>
 void permutation_gate(const std::vector<std::pair<std::uint64_t, std::uint64_t>>& swap_schedule,
                       StateVector<Prec, Space>& state) {
-    for (auto [src, dst] : swap_schedule) {
+    for (const auto& pair : swap_schedule) {
+        const std::uint64_t src = pair.first;
+        const std::uint64_t dst = pair.second;
         const std::uint64_t target_mask = (1ULL << src) | (1ULL << dst);
         const std::uint64_t span = state.dim() >> 2;
         Kokkos::parallel_for(
@@ -783,7 +785,9 @@ void permutation_gate(const std::vector<std::pair<std::uint64_t, std::uint64_t>>
 template <>
 void permutation_gate(const std::vector<std::pair<std::uint64_t, std::uint64_t>>& swap_schedule,
                       StateVectorBatched<Prec, Space>& states) {
-    for (auto [src, dst] : swap_schedule) {
+    for (const auto& pair : swap_schedule) {
+        const std::uint64_t src = pair.first;
+        const std::uint64_t dst = pair.second;
         const std::uint64_t target_mask = (1ULL << src) | (1ULL << dst);
         const std::uint64_t span = states.dim() >> 2;
         Kokkos::parallel_for(
