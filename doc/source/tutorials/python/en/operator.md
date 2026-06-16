@@ -50,7 +50,7 @@ print(op1) # (0.8 + 0.0j) Z0 Z1
 
 You can use defined operators to extract physical information from a {class}`scaluq.StateVector`.
 
-```Python
+```py
 from scaluq import Operator, PauliOperator, StateVector
 
 # Initialize a random state vector using Haar measure

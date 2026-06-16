@@ -86,7 +86,7 @@ Gate Type: Sdag
   Control Value: {}
 '''
 ```
-
+(downcast-to-gatetype-specific-function)=
 ## Downcast to GateType-specific function
 To get GateType-specific properties, downcast to specific class is required.
 
@@ -137,7 +137,7 @@ print(state.get_amplitudes()) # [(0.7071067811865476+0j), 0j, 0j, (0.70710678118
 ```
 
 ## Merge two Gates
-You can merge two Gates by {func}`merge_gate <scaluq.merge_gate>`
+You can merge two Gates by {func}`merge_gate <scaluq.merge_gate>`.
 The type of result gate is flexible.
 
 ```py
