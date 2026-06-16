@@ -901,12 +901,12 @@ std::string PermutationGateImpl<Prec>::to_string(const std::string& indent) cons
     ss << this->get_qubit_info_as_string(indent);
     return ss.str();
 }
-#define DEFINE_PERMUTATION_GATE_UPDATE(ContextClass, state_member, Space)                   \
-    template <Precision Prec>                                                               \
-    void PermutationGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space> context) \
-        const {                                                                             \
-        this->check_qubit_mask_within_bounds(context.state_member);                         \
-        permutation_gate(this->_swap_schedule, context.state_member);                       \
+#define DEFINE_PERMUTATION_GATE_UPDATE(ContextClass, state_member, Space)                    \
+    template <Precision Prec>                                                                \
+    void PermutationGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) \
+        const {                                                                              \
+        this->check_qubit_mask_within_bounds(context.state_member);                          \
+        permutation_gate(this->_swap_schedule, context.state_member);                        \
     }
 DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)

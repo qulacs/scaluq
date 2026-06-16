@@ -28,7 +28,7 @@ public:
 
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Host>& context) const override;
     void update_quantum_state(
@@ -74,7 +74,7 @@ public:
 
     SparseComplexMatrix get_sparse_matrix() const { return get_matrix().sparseView(); }
 
-    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host> context) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Host>& context) const override;
     void update_quantum_state(
