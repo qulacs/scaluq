@@ -254,6 +254,29 @@ def _patch_main_stub(source, default_precision):
     if replacement:
         replacements.append(replacement)
 
+    try:
+        density_matrix = _class(tree, "DensityMatrix")
+        replacement = _function_header_replacement(
+            lines,
+            _method(density_matrix, "__init__"),
+            f"def __init__(self, n_qubits: int, precision: str = '{default_precision}', space: str = 'default') -> None:",
+        )
+        replacements.append(replacement)
+        replacement = _function_header_replacement(
+            lines,
+            _method(density_matrix, "Haar_random_state"),
+            f"def Haar_random_state(n_qubits: int, seed: int | None = None, precision: str = '{default_precision}', space: str = 'default') -> DensityMatrix:",
+        )
+        replacements.append(replacement)
+        replacement = _function_header_replacement(
+            lines,
+            _method(density_matrix, "uninitialized_state"),
+            f"def uninitialized_state(n_qubits: int, precision: str = '{default_precision}', space: str = 'default') -> DensityMatrix:",
+        )
+        replacements.append(replacement)
+    except RuntimeError:
+        pass
+
     _apply_replacements(lines, replacements)
     return "".join(lines)
 

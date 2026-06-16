@@ -164,3 +164,30 @@ class OperatorBatched:
 class Circuit:
     def __new__(cls, precision=_DEFAULT_PRECISION):
         return _get_module(precision, 'default').Circuit()
+
+class DensityMatrix:
+    def __new__(cls, n_qubits, precision=_DEFAULT_PRECISION, space='default'):
+        return _get_module(precision, space).DensityMatrix(n_qubits)
+
+    @staticmethod
+    def Haar_random_state(n_qubits, seed=None, precision=_DEFAULT_PRECISION, space='default'):
+        return _get_module(precision, space).DensityMatrix.Haar_random_state(n_qubits, seed)
+
+    @staticmethod
+    def uninitialized_state(n_qubits, precision=_DEFAULT_PRECISION, space='default'):
+        return _get_module(precision, space).DensityMatrix.uninitialized_state(n_qubits)
+
+class qasm2:
+    @staticmethod
+    def loads(source, precision=_DEFAULT_PRECISION):
+        return _get_module(precision, 'default').qasm2.loads(source)
+
+    @staticmethod
+    def dumps(circuit, n_qubits=None):
+        key = _key_for_object(circuit)
+        if key is None:
+            raise ValueError(f"Cannot infer precision from circuit type: {type(circuit)}")
+        prec_mod = _get_module(key[1], 'default')
+        if n_qubits is None:
+            return prec_mod.qasm2.dumps(circuit)
+        return prec_mod.qasm2.dumps(circuit, n_qubits)
