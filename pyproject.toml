@@ -58,7 +58,7 @@ homepage = "http://www.scaluq.org"
 
 [project.optional-dependencies]
 doc = [
-    "black == 24.4.2",
+    "black == 26.3.1",
     "isort == 5.13.2",
     "myst_parser == 4.0.1",
     "nanobind == 2.0.0",
