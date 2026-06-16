@@ -285,8 +285,8 @@ public:
     }
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Host>& state_vector,
                               ClassicalRegister& classical_register,
-                              std::uint64_t seed = std::random_device{}()) const {
-        std::mt19937_64 random_engine(seed);
+                              std::optional<std::uint64_t> seed = std::nullopt) const {
+        std::mt19937_64 random_engine(resolve_seed(seed));
         ExecutionContext<Prec, ExecutionSpace::Host> context{
             state_vector, classical_register, random_engine};
         update_quantum_state(context);
@@ -300,13 +300,13 @@ public:
     }
     void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Host>& states,
                               ClassicalRegisterBatched& classical_register,
-                              std::uint64_t seed = std::random_device{}()) const {
+                              std::optional<std::uint64_t> seed = std::nullopt) const {
         if (classical_register.batch_size() != states.batch_size()) {
             throw std::runtime_error(
                 "GateBase::update_quantum_state(StateVectorBatched&, ClassicalRegisterBatched&, "
                 "...): batch size mismatch.");
         }
-        std::mt19937_64 random_engine(seed);
+        std::mt19937_64 random_engine(resolve_seed(seed));
         ExecutionContextBatched<Prec, ExecutionSpace::Host> context{
             states, classical_register, random_engine};
         update_quantum_state(context);
@@ -320,8 +320,8 @@ public:
     }
     void update_quantum_state(StateVector<Prec, ExecutionSpace::HostSerial>& state_vector,
                               ClassicalRegister& classical_register,
-                              std::uint64_t seed = std::random_device{}()) const {
-        std::mt19937_64 random_engine(seed);
+                              std::optional<std::uint64_t> seed = std::nullopt) const {
+        std::mt19937_64 random_engine(resolve_seed(seed));
         ExecutionContext<Prec, ExecutionSpace::HostSerial> context{
             state_vector, classical_register, random_engine};
         update_quantum_state(context);
@@ -335,13 +335,13 @@ public:
     }
     void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states,
                               ClassicalRegisterBatched& classical_register,
-                              std::uint64_t seed = std::random_device{}()) const {
+                              std::optional<std::uint64_t> seed = std::nullopt) const {
         if (classical_register.batch_size() != states.batch_size()) {
             throw std::runtime_error(
                 "GateBase::update_quantum_state(StateVectorBatched&, ClassicalRegisterBatched&, "
                 "...): batch size mismatch.");
         }
-        std::mt19937_64 random_engine(seed);
+        std::mt19937_64 random_engine(resolve_seed(seed));
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial> context{
             states, classical_register, random_engine};
         update_quantum_state(context);
@@ -356,8 +356,8 @@ public:
     }
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
                               ClassicalRegister& classical_register,
-                              std::uint64_t seed = std::random_device{}()) const {
-        std::mt19937_64 random_engine(seed);
+                              std::optional<std::uint64_t> seed = std::nullopt) const {
+        std::mt19937_64 random_engine(resolve_seed(seed));
         ExecutionContext<Prec, ExecutionSpace::Default> context{
             state_vector, classical_register, random_engine};
         update_quantum_state(context);
@@ -371,13 +371,13 @@ public:
     }
     void update_quantum_state(StateVectorBatched<Prec, ExecutionSpace::Default>& states,
                               ClassicalRegisterBatched& classical_register,
-                              std::uint64_t seed = std::random_device{}()) const {
+                              std::optional<std::uint64_t> seed = std::nullopt) const {
         if (classical_register.batch_size() != states.batch_size()) {
             throw std::runtime_error(
                 "GateBase::update_quantum_state(StateVectorBatched&, ClassicalRegisterBatched&, "
                 "...): batch size mismatch.");
         }
-        std::mt19937_64 random_engine(seed);
+        std::mt19937_64 random_engine(resolve_seed(seed));
         ExecutionContextBatched<Prec, ExecutionSpace::Default> context{
             states, classical_register, random_engine};
         update_quantum_state(context);

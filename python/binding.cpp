@@ -42,6 +42,7 @@ template <Precision Prec, ExecutionSpace Space>
 void bind_on_precision_and_space(nb::module_& mp, nb::class_<Gate<Prec>>& gate_base_def) {
     internal::bind_state_state_vector_hpp<Prec, Space>(mp);
     internal::bind_state_state_vector_batched_hpp<Prec, Space>(mp);
+    internal::bind_state_density_matrix_hpp<Prec, Space>(mp);
 
     auto mgate = mp.def_submodule("gate", "Define gates.");
     internal::bind_gate_gate_matrix_hpp<Prec, Space>(mp, gate_base_def);
@@ -69,6 +70,7 @@ void bind_on_precision(nb::module_& mp,
     internal::bind_gate_param_gate_factory<Prec>(mgate);
 
     internal::bind_circuit_circuit_hpp<Prec>(mp);
+    internal::bind_qasm2_hpp<Prec>(mp);
 
     internal::bind_operator_pauli_operator_hpp<Prec>(mp);
 }

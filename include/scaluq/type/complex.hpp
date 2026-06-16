@@ -116,6 +116,17 @@ public:
             KOKKOS_INLINE_FUNCTION Complex operator/(Scalar rhs) const {
         return Complex(*this) /= static_cast<FloatType>(rhs);
     }
+    KOKKOS_INLINE_FUNCTION Complex& operator/=(const Complex& rhs) {
+        FloatType denominator = rhs._real * rhs._real + rhs._imag * rhs._imag;
+        FloatType real_part = _real * rhs._real + _imag * rhs._imag;
+        FloatType imag_part = _imag * rhs._real - _real * rhs._imag;
+        _real = real_part / denominator;
+        _imag = imag_part / denominator;
+        return *this;
+    }
+    KOKKOS_INLINE_FUNCTION Complex operator/(const Complex& rhs) const {
+        return Complex(*this) /= rhs;
+    }
 
 private:
     FloatType _real, _imag;

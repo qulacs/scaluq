@@ -20,6 +20,7 @@
 #include "../gate/param_gate.hpp"
 #include "../operator/operator.hpp"
 #include "../types.hpp"
+#include "../util/random.hpp"
 
 namespace scaluq {
 
@@ -127,21 +128,21 @@ public:
     template <ExecutionSpace Space>
     void update_quantum_state(StateVector<Prec, Space>& state,
                               const std::map<std::string, double>& parameters = {},
-                              std::uint64_t seed = std::random_device{}()) const;
+                              std::optional<std::uint64_t> seed = std::nullopt) const;
     template <ExecutionSpace Space>
     void update_quantum_state(StateVector<Prec, Space>& state,
                               ClassicalRegister& classical_register,
                               const std::map<std::string, double>& parameters = {},
-                              std::uint64_t seed = std::random_device{}()) const;
+                              std::optional<std::uint64_t> seed = std::nullopt) const;
     template <ExecutionSpace Space>
     void update_quantum_state(StateVectorBatched<Prec, Space>& states,
                               const std::map<std::string, std::vector<double>>& parameters = {},
-                              std::uint64_t seed = std::random_device{}()) const;
+                              std::optional<std::uint64_t> seed = std::nullopt) const;
     template <ExecutionSpace Space>
     void update_quantum_state(StateVectorBatched<Prec, Space>& states,
                               ClassicalRegisterBatched& classical_register,
                               const std::map<std::string, std::vector<double>>& parameters = {},
-                              std::uint64_t seed = std::random_device{}()) const;
+                              std::optional<std::uint64_t> seed = std::nullopt) const;
 
     Circuit copy() const;
 
@@ -187,7 +188,7 @@ public:
         const StateVector<Prec, Space>& initial_state,
         std::uint64_t sampling_count,
         const std::map<std::string, double>& parameters = {},
-        std::uint64_t seed = 0) const;
+        std::optional<std::uint64_t> seed = std::nullopt) const;
 
     template <ExecutionSpace Space>
     std::unordered_map<std::string, double> compute_expectation_gradient_backprop(
@@ -357,11 +358,132 @@ template <Precision Prec, ExecutionSpace Space>
 void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
     using namespace nb::literals;
 
-    c.def("optimize",
-          nb::overload_cast<std::uint64_t>(&Circuit<Prec>::template optimize<Space>),
-          "max_block_size"_a = 3,
-          "Optimize circuit. Create qubit dependency tree and merge neighboring gates if the "
-          "new gate has less than or equal to `max_block_size` or the new gate is Pauli.")
+    c.def(
+         "update_quantum_state",
+         [&](const Circuit<Prec>& circuit, StateVector<Prec, Space>& state, nb::kwargs kwargs) {
+             std::map<std::string, double> parameters;
+             for (auto&& [key, param] : kwargs) {
+                 parameters[nb::cast<std::string>(key)] = nb::cast<double>(param);
+             }
+             circuit.update_quantum_state(state, parameters);
+         },
+         "state"_a,
+         "kwargs"_a,
+         "Apply gate to the StateVector. StateVector in args is directly updated. If the "
+         "circuit contains parametric gate, you have to give real value of parameter as "
+         "\"name=value\" format in kwargs.")
+        .def(
+            "update_quantum_state",
+            [](const Circuit<Prec>& circuit,
+               StateVector<Prec, Space>& state,
+               const std::map<std::string, double>& parameters,
+               std::optional<std::uint64_t> seed) {
+                circuit.update_quantum_state(state, parameters, seed);
+            },
+            "state"_a,
+            "params"_a = std::map<std::string, double>{},
+            "seed"_a = std::nullopt,
+            "Apply gate to the StateVector. StateVector in args is directly updated. If the "
+            "circuit contains parametric gate, you have to give real value of parameter as "
+            "dict[str, float] in 2nd arg.")
+        .def(
+            "update_quantum_state",
+            [](const Circuit<Prec>& circuit,
+               StateVector<Prec, Space>& state,
+               ClassicalRegister& classical_register,
+               const std::map<std::string, double>& parameters,
+               std::optional<std::uint64_t> seed) {
+                circuit.update_quantum_state(state, classical_register, parameters, seed);
+            },
+            "state"_a,
+            "classical_register"_a,
+            "params"_a = std::map<std::string, double>{},
+            "seed"_a = std::nullopt,
+            "Apply gate to the StateVector with classical register and optional seed.")
+        .def(
+            "update_quantum_state",
+            [&](const Circuit<Prec>& circuit,
+                StateVector<Prec, Space>& state,
+                ClassicalRegister& classical_register,
+                nb::kwargs kwargs) {
+                std::map<std::string, double> parameters;
+                for (auto&& [key, param] : kwargs) {
+                    parameters[nb::cast<std::string>(key)] = nb::cast<double>(param);
+                }
+                circuit.update_quantum_state(state, classical_register, parameters);
+            },
+            "state"_a,
+            "classical_register"_a,
+            "kwargs"_a,
+            "Apply gate to the StateVector with classical register. If the circuit contains "
+            "parametric gate, give parameter values as \"name=value\" in kwargs.")
+        .def(
+            "update_quantum_state",
+            [&](const Circuit<Prec>& circuit,
+                StateVectorBatched<Prec, Space>& states,
+                nb::kwargs kwargs) {
+                std::map<std::string, std::vector<double>> parameters;
+                for (auto&& [key, param] : kwargs) {
+                    parameters[nb::cast<std::string>(key)] = nb::cast<std::vector<double>>(param);
+                }
+                circuit.update_quantum_state(states, parameters);
+            },
+            "state"_a,
+            "kwargs"_a,
+            "Apply gate to the StateVectorBatched. StateVectorBatched in args is directly updated. "
+            "If the circuit contains parametric gate, you have to give real value of parameter as "
+            "\"name=[value1, value2, ...]\" format in kwargs.")
+        .def(
+            "update_quantum_state",
+            [](const Circuit<Prec>& circuit,
+               StateVectorBatched<Prec, Space>& states,
+               const std::map<std::string, std::vector<double>>& parameters,
+               std::optional<std::uint64_t> seed) {
+                circuit.update_quantum_state(states, parameters, seed);
+            },
+            "state"_a,
+            "params"_a = std::map<std::string, std::vector<double>>{},
+            "seed"_a = std::nullopt,
+            "Apply gate to the StateVectorBatched. StateVectorBatched in args is directly updated. "
+            "If the circuit contains parametric gate, you have to give real value of parameter as "
+            "dict[str, list[float]] in 2nd arg.")
+        .def(
+            "update_quantum_state",
+            [](const Circuit<Prec>& circuit,
+               StateVectorBatched<Prec, Space>& states,
+               ClassicalRegisterBatched& classical_register,
+               const std::map<std::string, std::vector<double>>& parameters,
+               std::optional<std::uint64_t> seed) {
+                circuit.update_quantum_state(states, classical_register, parameters, seed);
+            },
+            "state"_a,
+            "classical_register"_a,
+            "params"_a = std::map<std::string, std::vector<double>>{},
+            "seed"_a = std::nullopt,
+            "Apply gate to the StateVectorBatched with classical register and optional seed.")
+        .def(
+            "update_quantum_state",
+            [&](const Circuit<Prec>& circuit,
+                StateVectorBatched<Prec, Space>& states,
+                ClassicalRegisterBatched& classical_register,
+                nb::kwargs kwargs) {
+                std::map<std::string, std::vector<double>> parameters;
+                for (auto&& [key, param] : kwargs) {
+                    parameters[nb::cast<std::string>(key)] = nb::cast<std::vector<double>>(param);
+                }
+                circuit.update_quantum_state(states, classical_register, parameters);
+            },
+            "state"_a,
+            "classical_register"_a,
+            "kwargs"_a,
+            "Apply gate to the StateVectorBatched with classical register. If the circuit "
+            "contains parametric gate, give parameter values as "
+            "\"name=[value1, value2, ...]\" in kwargs.")
+        .def("optimize",
+             nb::overload_cast<std::uint64_t>(&Circuit<Prec>::template optimize<Space>),
+             "max_block_size"_a = 3,
+             "Optimize circuit. Create qubit dependency tree and merge neighboring gates if the "
+             "new gate has less than or equal to `max_block_size` or the new gate is Pauli.")
         .def(
             "simulate_noise",
             [](const Circuit<Prec>& circuit,
@@ -370,10 +492,7 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
                const std::map<std::string, double>& parameters,
                std::optional<std::uint64_t> seed) {
                 return circuit.template simulate_noise<Space>(
-                    initial_state,
-                    sampling_count,
-                    parameters,
-                    seed.value_or(std::random_device{}()));
+                    initial_state, sampling_count, parameters, seed);
             },
             "initial_state"_a,
             "sampling_count"_a,

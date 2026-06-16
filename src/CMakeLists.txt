@@ -30,6 +30,7 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
             gate/update_ops_standard.cpp
             state/state_vector.cpp
             state/state_vector_batched.cpp
+            state/density_matrix.cpp
             operator/operator.cpp
             operator/operator_batched.cpp
             util/utility.cpp
@@ -39,6 +40,7 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
         if(${LIBRARY} MATCHES "scaluq_default_")
             target_sources(${LIBRARY} PRIVATE
                 circuit/circuit.cpp
+                qasm/qasm2.cpp
                 operator/pauli_operator.cpp
                 gate/gate_pauli.cpp
                 gate/gate_probabilistic.cpp

@@ -43,16 +43,17 @@ public:
 
     void set_zero_norm_state();
 
-    void set_Haar_random_state(bool set_same_state, std::uint64_t seed = std::random_device()());
+    void set_Haar_random_state(bool set_same_state,
+                               std::optional<std::uint64_t> seed = std::nullopt);
 
     [[nodiscard]] std::vector<std::vector<std::uint64_t>> sampling(
-        std::uint64_t sampling_count, std::uint64_t seed = std::random_device()()) const;
+        std::uint64_t sampling_count, std::optional<std::uint64_t> seed = std::nullopt) const;
 
     [[nodiscard]] static StateVectorBatched Haar_random_state(
         std::uint64_t batch_size,
         std::uint64_t n_qubits,
         bool set_same_state,
-        std::uint64_t seed = std::random_device()());
+        std::optional<std::uint64_t> seed = std::nullopt);
     [[nodiscard]] static StateVectorBatched uninitialized_state(std::uint64_t batch_size,
                                                                 std::uint64_t n_qubits);
 
@@ -67,7 +68,7 @@ public:
     [[nodiscard]] std::vector<double> get_marginal_probability(
         const std::vector<std::uint64_t>& measured_values) const;
 
-    [[nodiscard]] std::vector<double> get_entropy() const;
+    [[nodiscard]] std::vector<double> get_computational_basis_entropy() const;
 
     void add_state_vector_with_coef(const StdComplex& coef, const StateVectorBatched& states);
 
@@ -276,7 +277,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
             [](StateVectorBatched<Prec, Space>& states,
                bool set_same_state,
                std::optional<std::uint64_t> seed) {
-                states.set_Haar_random_state(set_same_state, seed.value_or(std::random_device()()));
+                states.set_Haar_random_state(set_same_state, seed);
             },
             "set_same_state"_a,
             "seed"_a = std::nullopt,
@@ -296,7 +297,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                bool set_same_state,
                std::optional<std::uint64_t> seed) {
                 return StateVectorBatched<Prec, Space>::Haar_random_state(
-                    batch_size, n_qubits, set_same_state, seed.value_or(std::random_device()()));
+                    batch_size, n_qubits, set_same_state, seed);
             },
             "batch_size"_a,
             "n_qubits"_a,
@@ -356,10 +357,11 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         // Entropy and sampling methods
-        .def("get_entropy",
-             &StateVectorBatched<Prec, Space>::get_entropy,
+        .def("get_computational_basis_entropy",
+             &StateVectorBatched<Prec, Space>::get_computational_basis_entropy,
              DocString()
-                 .desc("Calculate von Neumann entropy for each state.")
+                 .desc("Calculate the Shannon entropy of the Z-basis measurement distribution for "
+                       "each state.")
                  .ret("list[float]", "Entropy values for each state.")
                  .build_as_google_style()
                  .c_str())
@@ -368,7 +370,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
             [](const StateVectorBatched<Prec, Space>& states,
                std::uint64_t sampling_count,
                std::optional<std::uint64_t> seed) {
-                return states.sampling(sampling_count, seed.value_or(std::random_device()()));
+                return states.sampling(sampling_count, seed);
             },
             "sampling_count"_a,
             "seed"_a = std::nullopt,
