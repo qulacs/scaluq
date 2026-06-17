@@ -102,11 +102,11 @@ import math
 
 rx = RX(0, math.pi/4)
 assert rx.gate_type() == GateType.RX
-rx = RXGate(rx) # downcast to RXGate class
+rx = RXGate(rx) # convert to RXGate class
 print(rx.angle())
 ```
 
-Since this inheritance relation is not shown in language layer, explicit downcast is required when you pass the Gate as {class}`Gate <scaluq.default.f64.Gate>` type.
+Since this inheritance relation is not shown in language layer, explicit upcast is required when you pass the Gate as {class}`Gate <scaluq.default.f64.Gate>` type.
 
 ```py
 from scaluq.default.f64 import Gate, RXGate, Circuit
@@ -115,7 +115,7 @@ import math
 
 rx = RXGate(RX(0, math.pi/4))
 circuit = Circuit()
-rx = Gate(rx) # omitting this downcast causes error on next line
+rx = Gate(rx) # omitting this upcast causes error on next line
 circuit.add_gate(rx)
 ```
 

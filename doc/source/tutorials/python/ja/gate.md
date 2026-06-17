@@ -107,11 +107,11 @@ import math
 
 rx = RX(0, math.pi/4)
 assert rx.gate_type() == GateType.RX
-rx = RXGate(rx) # RXGateクラスへのダウンキャスト
+rx = RXGate(rx) # RXGateクラスへの変換
 print(rx.angle())
 ```
 
-これらのクラス間の継承関係はPythonの言語層では見ることができないため、{class}`Gate <scaluq.default.f64.Gate>`の型としてゲートを渡すときは、明示的なダウンキャストが必要となります。
+これらのクラス間の継承関係はPythonの言語層では見ることができないため、{class}`Gate <scaluq.default.f64.Gate>`の型としてゲートを渡すときは、明示的なアップキャストが必要となります。
 
 ```py
 from scaluq.default.f64 import Gate, RXGate, Circuit
@@ -120,7 +120,7 @@ import math
 
 rx = RXGate(RX(0, math.pi/4))
 circuit = Circuit()
-rx = Gate(rx) # このダウンキャストを省略すると次の行でエラーが発生
+rx = Gate(rx) # このアップキャストを省略すると次の行でエラーが発生
 circuit.add_gate(rx)
 ```
 
