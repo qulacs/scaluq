@@ -9,17 +9,6 @@ namespace scaluq {
 namespace internal {
 
 template <Precision Prec, ExecutionSpace Space>
-void none_target_dense_matrix_gate(std::uint64_t control_mask,
-                                   std::uint64_t control_value_mask,
-                                   const Matrix<Prec, Space>& matrix,
-                                   StateVector<Prec, Space>& state);
-template <Precision Prec, ExecutionSpace Space>
-void none_target_dense_matrix_gate(std::uint64_t control_mask,
-                                   std::uint64_t control_value_mask,
-                                   const Matrix<Prec, Space>& matrix,
-                                   StateVectorBatched<Prec, Space>& states);
-
-template <Precision Prec, ExecutionSpace Space>
 void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   std::uint64_t control_value_mask,
@@ -44,45 +33,6 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_value_mask,
                                   const Matrix4x4<Prec>& matrix,
                                   StateVectorBatched<Prec, Space>& states);
-
-template <Precision Prec, ExecutionSpace Space>
-void single_target_dense_matrix_gate(std::uint64_t target_mask,
-                                     std::uint64_t control_mask,
-                                     std::uint64_t control_value_mask,
-                                     const Matrix<Prec, Space>& matrix,
-                                     StateVector<Prec, Space>& state);
-template <Precision Prec, ExecutionSpace Space>
-void single_target_dense_matrix_gate(std::uint64_t target_mask,
-                                     std::uint64_t control_mask,
-                                     std::uint64_t control_value_mask,
-                                     const Matrix<Prec, Space>& matrix,
-                                     StateVectorBatched<Prec, Space>& states);
-
-template <Precision Prec, ExecutionSpace Space>
-void double_target_dense_matrix_gate(std::uint64_t target_mask,
-                                     std::uint64_t control_mask,
-                                     std::uint64_t control_value_mask,
-                                     const Matrix<Prec, Space>& matrix,
-                                     StateVector<Prec, Space>& state);
-template <Precision Prec, ExecutionSpace Space>
-void double_target_dense_matrix_gate(std::uint64_t target_mask,
-                                     std::uint64_t control_mask,
-                                     std::uint64_t control_value_mask,
-                                     const Matrix<Prec, Space>& matrix,
-                                     StateVectorBatched<Prec, Space>& states);
-
-template <Precision Prec, ExecutionSpace Space>
-void multi_target_dense_matrix_gate(std::uint64_t target_mask,
-                                    std::uint64_t control_mask,
-                                    std::uint64_t control_value_mask,
-                                    const Matrix<Prec, Space>& matrix,
-                                    StateVector<Prec, Space>& state);
-template <Precision Prec, ExecutionSpace Space>
-void multi_target_dense_matrix_gate(std::uint64_t target_mask,
-                                    std::uint64_t control_mask,
-                                    std::uint64_t control_value_mask,
-                                    const Matrix<Prec, Space>& matrix,
-                                    StateVectorBatched<Prec, Space>& states);
 
 template <Precision Prec, ExecutionSpace Space>
 void dense_matrix_gate(std::uint64_t target_mask,
