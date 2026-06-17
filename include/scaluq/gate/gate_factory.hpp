@@ -366,6 +366,69 @@ inline Gate<Prec> DenseMatrix(const std::vector<std::uint64_t>& targets,
         is_unitary);
 }
 template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec> OneTargetDenseMatrix(std::uint64_t target,
+                                       const ComplexMatrix& matrix,
+                                       const std::vector<std::uint64_t>& controls = {},
+                                       std::vector<std::uint64_t> control_values = {},
+                                       bool is_unitary = false) {
+    internal::resize_and_check_control_values(controls, control_values);
+    if (matrix.rows() != 2 || matrix.cols() != 2) {
+        throw std::runtime_error(
+            "gate::OneTargetDenseMatrix(std::uint64_t, const ComplexMatrix&): "
+            "matrix size must be 2 x 2.");
+    }
+    return internal::GateFactory::create_gate<
+        internal::OneTargetDenseMatrixGateImpl<Prec, Space>>(
+        internal::vector_to_mask({target}),
+        internal::vector_to_mask(controls),
+        internal::vector_to_mask(controls, control_values),
+        matrix,
+        is_unitary);
+}
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec> TwoTargetDenseMatrix(std::uint64_t target0,
+                                       std::uint64_t target1,
+                                       const ComplexMatrix& matrix,
+                                       const std::vector<std::uint64_t>& controls = {},
+                                       std::vector<std::uint64_t> control_values = {},
+                                       bool is_unitary = false) {
+    internal::resize_and_check_control_values(controls, control_values);
+    if (target0 == target1) {
+        throw std::runtime_error(
+            "gate::TwoTargetDenseMatrix(std::uint64_t, std::uint64_t, const ComplexMatrix&): "
+            "target qubit indices must be different.");
+    }
+    if (matrix.rows() != 4 || matrix.cols() != 4) {
+        throw std::runtime_error(
+            "gate::TwoTargetDenseMatrix(std::uint64_t, std::uint64_t, const ComplexMatrix&): "
+            "matrix size must be 4 x 4.");
+    }
+    const std::vector<std::uint64_t> targets{target0, target1};
+    if (target0 < target1) {
+        return internal::GateFactory::create_gate<
+            internal::TwoTargetDenseMatrixGateImpl<Prec, Space>>(
+            internal::vector_to_mask(targets),
+            internal::vector_to_mask(controls),
+            internal::vector_to_mask(controls, control_values),
+            matrix,
+            is_unitary);
+    }
+    ComplexMatrix matrix_transformed(4, 4);
+    constexpr std::uint64_t index_swapped[] = {0, 2, 1, 3};
+    for (std::uint64_t row = 0; row < 4; ++row) {
+        for (std::uint64_t col = 0; col < 4; ++col) {
+            matrix_transformed(row, col) = matrix(index_swapped[row], index_swapped[col]);
+        }
+    }
+    return internal::GateFactory::create_gate<
+        internal::TwoTargetDenseMatrixGateImpl<Prec, Space>>(
+        internal::vector_to_mask(targets),
+        internal::vector_to_mask(controls),
+        internal::vector_to_mask(controls, control_values),
+        matrix_transformed,
+        is_unitary);
+}
+template <Precision Prec, ExecutionSpace Space>
 inline Gate<Prec> SparseMatrix(const std::vector<std::uint64_t>& targets,
                                const SparseComplexMatrix& matrix,
                                const std::vector<std::uint64_t>& controls = {},
@@ -1189,6 +1252,21 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                  ">>> gate = DenseMatrix([0], matrix, [1])  # Controlled-DenseMatrix"}))
             .build_as_google_style()
             .c_str());
+    mgate.def("OneTargetDenseMatrix",
+              &gate::OneTargetDenseMatrix<Prec, Space>,
+              "target"_a,
+              "matrix"_a,
+              "controls"_a = std::vector<std::uint64_t>{},
+              "control_values"_a = std::vector<std::uint64_t>{},
+              "is_unitary"_a = false);
+    mgate.def("TwoTargetDenseMatrix",
+              &gate::TwoTargetDenseMatrix<Prec, Space>,
+              "target0"_a,
+              "target1"_a,
+              "matrix"_a,
+              "controls"_a = std::vector<std::uint64_t>{},
+              "control_values"_a = std::vector<std::uint64_t>{},
+              "is_unitary"_a = false);
     mgate.def("SparseMatrix",
               &gate::SparseMatrix<Prec, Space>,
               "targets"_a,

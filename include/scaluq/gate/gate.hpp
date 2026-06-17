@@ -77,6 +77,10 @@ template <Precision Prec, ExecutionSpace Space>
 class SparseMatrixGateImpl;
 template <Precision Prec, ExecutionSpace Space>
 class DenseMatrixGateImpl;
+template <Precision Prec, ExecutionSpace Space>
+class OneTargetDenseMatrixGateImpl;
+template <Precision Prec, ExecutionSpace Space>
+class TwoTargetDenseMatrixGateImpl;
 
 }  // namespace internal
 
@@ -186,7 +190,31 @@ constexpr GateType get_gate_type() {
                            TWithoutConst,
                            internal::DenseMatrixGateImpl<Prec, ExecutionSpace::HostSerial>> ||
                        std::is_same_v<TWithoutConst,
-                                      internal::DenseMatrixGateImpl<Prec, ExecutionSpace::Default>>)
+                                      internal::DenseMatrixGateImpl<Prec, ExecutionSpace::Default>> ||
+                       std::is_same_v<TWithoutConst,
+                                      internal::OneTargetDenseMatrixGateImpl<
+                                          Prec,
+                                          ExecutionSpace::Host>> ||
+                       std::is_same_v<TWithoutConst,
+                                      internal::OneTargetDenseMatrixGateImpl<
+                                          Prec,
+                                          ExecutionSpace::HostSerial>> ||
+                       std::is_same_v<TWithoutConst,
+                                      internal::OneTargetDenseMatrixGateImpl<
+                                          Prec,
+                                          ExecutionSpace::Default>> ||
+                       std::is_same_v<TWithoutConst,
+                                      internal::TwoTargetDenseMatrixGateImpl<
+                                          Prec,
+                                          ExecutionSpace::Host>> ||
+                       std::is_same_v<TWithoutConst,
+                                      internal::TwoTargetDenseMatrixGateImpl<
+                                          Prec,
+                                          ExecutionSpace::HostSerial>> ||
+                       std::is_same_v<TWithoutConst,
+                                      internal::TwoTargetDenseMatrixGateImpl<
+                                          Prec,
+                                          ExecutionSpace::Default>>)
         return GateType::DenseMatrix;
     else if constexpr (std::is_same_v<TWithoutConst, internal::ProbabilisticGateImpl<Prec>>)
         return GateType::Probabilistic;
@@ -455,6 +483,8 @@ DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(PauliRotationGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ProbabilisticGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION_WITH_SPACE(SparseMatrixGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION_WITH_SPACE(DenseMatrixGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION_WITH_SPACE(OneTargetDenseMatrixGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION_WITH_SPACE(TwoTargetDenseMatrixGateImpl)
 #undef DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION
 #undef DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION_WITH_SPACE
 
