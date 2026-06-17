@@ -1,131 +1,228 @@
+#include <Kokkos_SIMD.hpp>
+#include <algorithm>
 #include <chrono>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <scaluq/all.hpp>
+#include <string>
+#include <type_traits>
+#include <vector>
 
-using namespace scaluq;
-using namespace nlohmann;
+#include "../src/gate/update_ops.hpp"
 
-template <Precision Prec, ExecutionSpace Space>
-std::pair<OperatorBatched<Prec, Space>, std::vector<Operator<Prec, Space>>>
-generate_random_observable(int n) {
-    Random random;
-    std::uint64_t batch_size = random.int32() % 5 + 1;
-    std::vector<std::vector<PauliOperator<Prec>>> rand_observable;
-    std::vector<Operator<Prec, Space>> test_rand_observable;
+namespace {
+using Space = std::integral_constant<scaluq::ExecutionSpace, scaluq::ExecutionSpace::Default>;
 
-    for (std::uint64_t b = 0; b < batch_size; ++b) {
-        std::vector<PauliOperator<Prec>> ops;
-        std::uint64_t term_count = random.int32() % 10 + 1;
-        for (std::uint64_t term = 0; term < term_count; ++term) {
-            std::vector<std::uint64_t> paulis(n, 0);
-            double coef = random.uniform();
-            for (std::uint64_t i = 0; i < paulis.size(); ++i) {
-                paulis[i] = random.int32() % 4;
-            }
+constexpr std::uint64_t n_qubits = 20;
+int warmup_iterations = 1000;
+int measure_iterations = 10000;
 
-            std::string str = "";
-            for (std::uint64_t ind = 0; ind < paulis.size(); ind++) {
-                std::uint64_t val = paulis[ind];
-                if (val != 0) {
-                    if (val == 1)
-                        str += " X";
-                    else if (val == 2)
-                        str += " Y";
-                    else if (val == 3)
-                        str += " Z";
-                    str += " " + std::to_string(ind);
-                }
-            }
-            ops.push_back(PauliOperator<Prec>(str.c_str(), coef));
-        }
-        rand_observable.push_back(ops);
-        test_rand_observable.push_back(Operator<Prec, Space>(ops));
+struct Case {
+    std::string name;
+    std::uint64_t target;
+    std::vector<std::uint64_t> controls;
+    std::vector<std::uint64_t> control_values;
+};
+
+struct Quartiles {
+    double q1;
+    double median;
+    double q3;
+};
+
+std::vector<scaluq::StdComplex> make_initial_state() {
+    const std::uint64_t dim = 1ULL << n_qubits;
+    std::vector<scaluq::StdComplex> amplitudes(dim);
+    const double scale = 1.0 / std::sqrt(static_cast<double>(dim));
+    for (std::uint64_t i = 0; i < dim; ++i) {
+        const double phase = static_cast<double>((i * 104729ULL) % 65536ULL) * 0.0001;
+        amplitudes[i] = scale * scaluq::StdComplex(std::cos(phase), std::sin(phase));
     }
-    return {OperatorBatched<Prec, Space>(rand_observable), std::move(test_rand_observable)};
+    return amplitudes;
 }
 
-template <Precision Prec, ExecutionSpace Space>
-void test_gate(ParamGate<Prec> gate_control,
-               ParamGate<Prec> gate_simple,
-               std::uint64_t n_qubits,
-               std::uint64_t control_mask,
-               std::uint64_t control_value_mask,
-               double param) {
-    // Generate random state on Host first to avoid potential issues with Random Pool on
-    // HostSerial
-    StateVector<Prec, ExecutionSpace::Host> state_host =
-        StateVector<Prec, ExecutionSpace::Host>::Haar_random_state(n_qubits);
-    auto amplitudes = state_host.get_amplitudes();
-
-    StateVector<Prec, Space> state(n_qubits);
-    state.load(amplitudes);
-
-    StateVector<Prec, Space> state_controlled(n_qubits - std::popcount(control_mask));
-    std::vector<StdComplex> amplitudes_controlled(state_controlled.dim());
-    for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
-        amplitudes_controlled[i] =
-            amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) |
-                       control_value_mask];
-    }
-    state_controlled.load(amplitudes_controlled);
-    gate_control->update_quantum_state(state, param);
-    gate_simple->update_quantum_state(state_controlled, param);
-    amplitudes = state.get_amplitudes();
-    amplitudes_controlled = state_controlled.get_amplitudes();
-
-    for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
-        if (std::abs(amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) |
-                                control_value_mask] -
-                     amplitudes_controlled[i]) > 1e-10) {
-            std::cerr << "Mismatch at index " << i << std::endl;
-            std::exit(1);
-        }
-    }
+template <scaluq::Precision Prec>
+scaluq::internal::Matrix2x2<Prec> make_internal_matrix() {
+    using Complex = scaluq::internal::Complex<Prec>;
+    const auto inv_sqrt2 = static_cast<scaluq::internal::Float<Prec>>(1.0 / std::sqrt(2.0));
+    return scaluq::internal::Matrix2x2<Prec>{Complex(inv_sqrt2, 0.0),
+                                             Complex(0.0, inv_sqrt2),
+                                             Complex(0.0, inv_sqrt2),
+                                             Complex(inv_sqrt2, 0.0)};
 }
 
-template <Precision Prec, ExecutionSpace Space>
-void test() {
-    std::uint64_t n = 10;
-    PauliOperator<Prec> pauli1, pauli2;
-    std::vector<std::uint64_t> controls, control_values;
-    std::uint64_t control_mask = 0, control_value_mask = 0;
-    std::uint64_t num_control = 0;
-    Random random;
-    for (std::uint64_t i : std::views::iota(0ULL, n)) {
-        std::uint64_t dat = random.int32() % 12;
-        if (dat < 4) {
-            pauli1.add_single_pauli(i, dat);
-            pauli2.add_single_pauli(i - num_control, dat);
-        } else if (dat < 8) {
-            controls.push_back(i);
-            control_mask |= 1ULL << i;
-            bool v = random.int64() & 1;
-            control_values.push_back(v);
-            control_value_mask |= v << i;
-            num_control++;
-        }
+std::uint64_t mask_from(const std::vector<std::uint64_t>& indices) {
+    std::uint64_t mask = 0;
+    for (auto index : indices) {
+        mask |= 1ULL << index;
     }
-    double param = random.uniform() * std::numbers::pi * 2;
-    ParamGate g1 = gate::ParamPauliRotation(pauli1, 1., controls, control_values);
-    ParamGate g2 = gate::ParamPauliRotation(pauli2, 1., {}, {});
-    test_gate<Prec, Space>(g1, g2, n, control_mask, control_value_mask, param);
+    return mask;
 }
 
-int main() {
-    scaluq::initialize();  // must be called before using any scaluq methods
-    // for (int _ : std::views::iota(0, 20000)) {
-    //     test<Precision::F64, ExecutionSpace::Default>();
-    // }
-    for (int _ : std::views::iota(0, 100)) {
-        test<Precision::F64, ExecutionSpace::HostSerial>();
+std::uint64_t value_mask_from(const std::vector<std::uint64_t>& indices,
+                              const std::vector<std::uint64_t>& values) {
+    std::uint64_t mask = 0;
+    for (std::size_t i = 0; i < indices.size(); ++i) {
+        if (values[i] != 0) {
+            mask |= 1ULL << indices[i];
+        }
     }
+    return mask;
+}
+
+template <scaluq::Precision Prec>
+void baseline_one_target_dense_matrix(std::uint64_t target_mask,
+                                      std::uint64_t control_mask,
+                                      std::uint64_t control_value_mask,
+                                      const scaluq::internal::Matrix2x2<Prec>& matrix,
+                                      scaluq::StateVector<Prec, Space::value>& state) {
+    using Complex = scaluq::internal::Complex<Prec>;
+    Kokkos::parallel_for(
+        "benchmark_baseline_one_target_dense_matrix",
+        Kokkos::RangePolicy<scaluq::internal::SpaceType<Space::value>>(
+            0, state.dim() >> std::popcount(target_mask | control_mask)),
+        KOKKOS_LAMBDA(std::uint64_t it) {
+            std::uint64_t basis0 =
+                scaluq::internal::insert_zero_at_mask_positions(it, control_mask | target_mask) |
+                control_value_mask;
+            std::uint64_t basis1 = basis0 | target_mask;
+            Complex val0 = state._raw[basis0];
+            Complex val1 = state._raw[basis1];
+            Complex res0 = matrix[0][0] * val0 + matrix[0][1] * val1;
+            Complex res1 = matrix[1][0] * val0 + matrix[1][1] * val1;
+            state._raw[basis0] = res0;
+            state._raw[basis1] = res1;
+        });
+}
+
+Quartiles quartiles(std::vector<double> samples) {
+    std::sort(samples.begin(), samples.end());
+    auto pick = [&](double p) {
+        const double pos = p * static_cast<double>(samples.size() - 1);
+        const auto lo = static_cast<std::size_t>(std::floor(pos));
+        const auto hi = static_cast<std::size_t>(std::ceil(pos));
+        const double frac = pos - static_cast<double>(lo);
+        return samples[lo] * (1.0 - frac) + samples[hi] * frac;
+    };
+    return {pick(0.25), pick(0.50), pick(0.75)};
+}
+
+template <typename F>
+std::vector<double> measure(F&& function) {
+    for (int i = 0; i < warmup_iterations; ++i) {
+        function();
+    }
+    Kokkos::fence();
+
+    std::vector<double> samples;
+    samples.reserve(measure_iterations);
+    for (int i = 0; i < measure_iterations; ++i) {
+        const auto start = std::chrono::steady_clock::now();
+        function();
+        Kokkos::fence();
+        const auto end = std::chrono::steady_clock::now();
+        samples.push_back(std::chrono::duration<double, std::nano>(end - start).count());
+    }
+    return samples;
+}
+
+double max_abs_diff(const std::vector<scaluq::StdComplex>& a,
+                    const std::vector<scaluq::StdComplex>& b) {
+    double max_diff = 0.0;
+    for (std::size_t i = 0; i < a.size(); ++i) {
+        max_diff = std::max(max_diff, std::abs(a[i] - b[i]));
+    }
+    return max_diff;
+}
+
+template <scaluq::Precision Prec>
+void run_case(const Case& bench_case, const std::vector<scaluq::StdComplex>& initial) {
+    using State = scaluq::StateVector<Prec, Space::value>;
+    const auto internal_matrix = make_internal_matrix<Prec>();
+
+    const std::uint64_t target_mask = 1ULL << bench_case.target;
+    const std::uint64_t control_mask = mask_from(bench_case.controls);
+    const std::uint64_t control_value_mask =
+        value_mask_from(bench_case.controls, bench_case.control_values);
+
+    State baseline_state(n_qubits);
+    State implemented_state(n_qubits);
+    baseline_state.load(initial);
+    implemented_state.load(initial);
+
+    baseline_one_target_dense_matrix<Prec>(
+        target_mask, control_mask, control_value_mask, internal_matrix, baseline_state);
+    scaluq::internal::one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, internal_matrix, implemented_state);
+    Kokkos::fence();
+
+    const auto baseline_amplitudes = baseline_state.get_amplitudes();
+    const double implemented_diff =
+        max_abs_diff(baseline_amplitudes, implemented_state.get_amplitudes());
+
+    baseline_state.load(initial);
+    implemented_state.load(initial);
+
+    auto baseline_samples = measure([&]() {
+        baseline_one_target_dense_matrix<Prec>(
+            target_mask, control_mask, control_value_mask, internal_matrix, baseline_state);
+    });
+    auto implemented_samples = measure([&]() {
+        scaluq::internal::one_target_dense_matrix_gate(
+            target_mask, control_mask, control_value_mask, internal_matrix, implemented_state);
+    });
+
+    const auto baseline_q = quartiles(std::move(baseline_samples));
+    const auto implemented_q = quartiles(std::move(implemented_samples));
+
+    std::cout << std::left << std::setw(28) << bench_case.name << " target=" << std::setw(2)
+              << bench_case.target << " controls=" << bench_case.controls.size() << "\n";
+    std::cout << "  baseline ns: q1=" << baseline_q.q1 << " median=" << baseline_q.median
+              << " q3=" << baseline_q.q3 << "\n";
+    std::cout << "  impl ns:     q1=" << implemented_q.q1
+              << " median=" << implemented_q.median << " q3=" << implemented_q.q3
+              << " speedup=" << baseline_q.median / implemented_q.median
+              << "x max_abs_diff=" << std::scientific << implemented_diff << std::defaultfloat
+              << "\n";
+}
+
+template <scaluq::Precision Prec>
+void run_precision(const std::vector<Case>& cases,
+                   const std::vector<scaluq::StdComplex>& initial,
+                   const char* label) {
+    using Scalar = std::conditional_t<Prec == scaluq::Precision::F64, double, float>;
+    using Simd = Kokkos::Experimental::simd<Scalar>;
+    std::cout << "\nprecision=" << label << " simd_lanes=" << Simd::size() << "\n";
+    for (const auto& bench_case : cases) {
+        run_case<Prec>(bench_case, initial);
+    }
+}
+}  // namespace
+
+int main(int argc, char** argv) {
+    if (argc >= 2) {
+        warmup_iterations = std::atoi(argv[1]);
+    }
+    if (argc >= 3) {
+        measure_iterations = std::atoi(argv[2]);
+    }
+    scaluq::initialize();
     {
-        ComplexMatrix mat(4, 4);
-        mat << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0;
-        auto gate = gate::DenseMatrix<Precision::F64, ExecutionSpace::Default>({0, 1}, mat, {}, {});
-        StateVector<Precision::F64, ExecutionSpace::Default> state(3);
-        gate->update_quantum_state(state);
-        std::cout << state << std::endl;
+        std::cout << "n_qubits=" << n_qubits << " warmup=" << warmup_iterations
+                  << " samples=" << measure_iterations << "\n";
+        const auto initial = make_initial_state();
+        const std::vector<Case> cases{
+            {"target-0 indexed", 0, {}, {}},
+            {"target-4 indexed", 4, {}, {}},
+            {"target-8 indexed", 8, {}, {}},
+            {"target-4 control-0", 4, {0}, {1}},
+            {"target-4 control-8", 4, {8}, {1}},
+        };
+        run_precision<scaluq::Precision::F64>(cases, initial, "f64");
+        run_precision<scaluq::Precision::F32>(cases, initial, "f32");
     }
-    scaluq::finalize();  // must be called last
+    scaluq::finalize();
 }
