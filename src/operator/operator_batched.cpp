@@ -257,6 +257,79 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_tr
 }
 
 template <>
+std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_transition_amplitude(
+    const StateVectorBatched<internal::Prec, internal::Space>& states_bra,
+    const StateVectorBatched<internal::Prec, internal::Space>& states_ket) const {
+    if (states_bra.n_qubits() != states_ket.n_qubits()) {
+        throw std::runtime_error(
+            "Operator::get_transition_amplitude: n_qubits of states_bra and "
+            "states_ket must be same");
+    }
+    if (states_bra.batch_size() != states_ket.batch_size()) {
+        throw std::runtime_error(
+            "Operator::get_transition_amplitude: batch_size of states_bra and "
+            "states_ket must be same");
+    }
+    Kokkos::View<Kokkos::complex<double>*, ExecutionSpaceType> res(
+        Kokkos::ViewAllocateWithoutInitializing("expectation_value"), _row_ptr.extent(0) - 1);
+    std::uint64_t dim = states_bra.dim();
+
+    Kokkos::parallel_for(
+        "get_transition_amplitude",
+        Kokkos::TeamPolicy<ExecutionSpaceType>(_row_ptr.extent(0) - 1, Kokkos::AUTO),
+        KOKKOS_CLASS_LAMBDA(const Kokkos::TeamPolicy<ExecutionSpaceType>::member_type& team) {
+            std::uint64_t batch_id = team.league_rank();
+            ComplexType res_lcl = 0;
+            Kokkos::parallel_reduce(
+                Kokkos::TeamThreadMDRange(
+                    team, _row_ptr[batch_id + 1] - _row_ptr[batch_id], dim >> 1),
+                [&](std::uint64_t term_id, std::uint64_t state_idx, ComplexType& res_lcl) {
+                    term_id += _row_ptr[batch_id];
+                    auto bit_flip_mask = _ops[term_id]._bit_flip_mask;
+                    auto phase_flip_mask = _ops[term_id]._phase_flip_mask;
+                    ComplexType coef = _ops[term_id]._coef;
+                    if (bit_flip_mask == 0) {
+                        std::uint64_t state_idx1 = state_idx << 1;
+                        ComplexType tmp1 =
+                            (scaluq::internal::conj(states_bra._raw(batch_id, state_idx1)) *
+                             states_ket._raw(batch_id, state_idx1));
+                        if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
+                        std::uint64_t state_idx2 = state_idx1 | 1;
+                        ComplexType tmp2 =
+                            (scaluq::internal::conj(states_bra._raw(batch_id, state_idx2)) *
+                             states_ket._raw(batch_id, state_idx2));
+                        if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
+                        res_lcl += coef * (tmp1 + tmp2);
+                    } else {
+                        std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
+                        std::uint64_t global_phase_90rot_count =
+                            Kokkos::popcount(bit_flip_mask & phase_flip_mask);
+                        ComplexType global_phase =
+                            internal::PHASE_90ROT<internal::Prec>()[global_phase_90rot_count % 4];
+                        std::uint64_t basis_0 =
+                            internal::insert_zero_to_basis_index(state_idx, pivot);
+                        std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
+                        ComplexType tmp1 =
+                            scaluq::internal::conj(states_bra._raw(batch_id, basis_1)) *
+                            states_ket._raw(batch_id, basis_0) * global_phase;
+                        if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
+                        ComplexType tmp2 =
+                            scaluq::internal::conj(states_bra._raw(batch_id, basis_0)) *
+                            states_ket._raw(batch_id, basis_1) * global_phase;
+                        if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
+                        res_lcl += coef * (tmp1 + tmp2);
+                    }
+                },
+                res_lcl);
+            Kokkos::single(Kokkos::PerTeam(team), [&] {
+                res[batch_id] = Kokkos::complex<double>(res_lcl.real(), res_lcl.imag());
+            });
+        });
+    auto res_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), res);
+    return std::vector<StdComplex>(res_h.data(), res_h.data() + res_h.size());
+}
+
+template <>
 OperatorBatched<internal::Prec, internal::Space>
 OperatorBatched<internal::Prec, internal::Space>::get_dagger() const {
     OperatorBatched<internal::Prec, internal::Space> res = this->copy();

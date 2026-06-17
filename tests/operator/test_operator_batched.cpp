@@ -107,6 +107,35 @@ TYPED_TEST(OperatorBatchedTest, TransitionAmplitudes) {
     }
 }
 
+TYPED_TEST(OperatorBatchedTest, TransitionAmplitudesBB) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    std::uint64_t n = 4;
+    std::uint64_t batch_size = 3;
+    Random random;
+    auto [op_batched, ops] = generate_random_observable_with_batch_size<Prec, Space>(batch_size, n);
+    StateVectorBatched<Prec, Space> states_bra(batch_size, n);
+    states_bra.set_Haar_random_state(false);
+    StateVectorBatched<Prec, Space> states_ket(batch_size, n);
+    states_ket.set_Haar_random_state(false);
+    auto state0_bra = states_bra.get_state_vector_at(0);
+    auto state1_bra = states_bra.get_state_vector_at(1);
+    auto state2_bra = states_bra.get_state_vector_at(2);
+    auto state0_ket = states_ket.get_state_vector_at(0);
+    auto state1_ket = states_ket.get_state_vector_at(1);
+    auto state2_ket = states_ket.get_state_vector_at(2);
+
+    auto res_batched = op_batched.get_transition_amplitude(states_bra, states_ket);
+    std::vector<StdComplex> res = {};
+    res.push_back(ops[0].get_transition_amplitude(state0_bra, state0_ket));
+    res.push_back(ops[1].get_transition_amplitude(state1_bra, state1_ket));
+    res.push_back(ops[2].get_transition_amplitude(state2_bra, state2_ket));
+    for (std::uint64_t b = 0; b < op_batched.batch_size(); ++b) {
+        ASSERT_NEAR(res[b].real(), res_batched[b].real(), eps<Prec>);
+        ASSERT_NEAR(res[b].imag(), res_batched[b].imag(), eps<Prec>);
+    }
+}
+
 TYPED_TEST(OperatorBatchedTest, ExpectationValues) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
