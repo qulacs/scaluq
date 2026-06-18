@@ -763,4 +763,43 @@ void ecr_gate(std::uint64_t physical_target_mask,
         });
 }
 
+template <>
+void permutation_gate(const std::vector<std::pair<std::uint64_t, std::uint64_t>>& swap_schedule,
+                      StateVector<Prec, Space>& state) {
+    for (const auto& pair : swap_schedule) {
+        const std::uint64_t src = pair.first;
+        const std::uint64_t dst = pair.second;
+        const std::uint64_t target_mask = (1ULL << src) | (1ULL << dst);
+        const std::uint64_t span = state.dim() >> 2;
+        Kokkos::parallel_for(
+            "permutation_gate",
+            Kokkos::RangePolicy<SpaceType<Space>>(0, span),
+            KOKKOS_LAMBDA(std::uint64_t it) {
+                const std::uint64_t basis = insert_zero_at_mask_positions(it, target_mask);
+                Kokkos::kokkos_swap(state._raw[basis | (1ULL << src)],
+                                    state._raw[basis | (1ULL << dst)]);
+            });
+    }
+}
+
+template <>
+void permutation_gate(const std::vector<std::pair<std::uint64_t, std::uint64_t>>& swap_schedule,
+                      StateVectorBatched<Prec, Space>& states) {
+    for (const auto& pair : swap_schedule) {
+        const std::uint64_t src = pair.first;
+        const std::uint64_t dst = pair.second;
+        const std::uint64_t target_mask = (1ULL << src) | (1ULL << dst);
+        const std::uint64_t span = states.dim() >> 2;
+        Kokkos::parallel_for(
+            "permutation_gate_flat",
+            Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
+            KOKKOS_LAMBDA(std::uint64_t g) {
+                const std::uint64_t batch_id = g / span;
+                const std::uint64_t it = g % span;
+                const std::uint64_t basis = insert_zero_at_mask_positions(it, target_mask);
+                Kokkos::kokkos_swap(states._raw(batch_id, basis | (1ULL << src)),
+                                    states._raw(batch_id, basis | (1ULL << dst)));
+            });
+    }
+}
 }  // namespace scaluq::internal
