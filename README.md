@@ -16,9 +16,9 @@ This library is released under the MIT License.
 Compared to [Qulacs](https://github.com/qulacs/qulacs), the following improvements have been made:
 
 - Implementation based on [Kokkos](https://github.com/kokkos/kokkos) allows seamless switching between execution environments (CPU/GPU) without requiring code changes.
-- Improved execution speed.
+- Provides execution speeds comparable to Qulacs on CPU, and achieves equivalent or faster speeds on GPU.
 - Pointers are hidden from users, making the code simpler and safer to write.
-- Integration of [nanobind](https://github.com/wjakob/nanobind) enables more compact and faster Python bindings.
+- Integration of [nanobind](https://github.com/wjakob/nanobind) enables lightweight and low-overhead Python bindings.
 - Provides batched execution for efficiently applying quantum circuits with the same structure but different parameters to multiple quantum states.
 
 # Documentation

@@ -106,7 +106,7 @@ import math
 
 rx = RX(0, math.pi/4)
 assert rx.gate_type() == GateType.RX
-rx = RXGate(rx) # RXGateクラスへのダウンキャスト
+rx = RXGate(rx) # RXGateクラスへの変換
 print(rx.angle())
 ```
 
