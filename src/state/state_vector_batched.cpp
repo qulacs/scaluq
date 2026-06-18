@@ -212,7 +212,7 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::uninitialized_s
     states._n_qubits = n_qubits;
     states._dim = 1ULL << n_qubits;
     states._batch_size = batch_size;
-    states._raw = Kokkos::View<ComplexType**, Kokkos::LayoutRight, ExecutionSpaceType>(
+    states._raw = typename StateVectorBatched<Prec, Space>::RawView(
         Kokkos::ViewAllocateWithoutInitializing("states"), states._batch_size, states._dim);
     return states;
 }
