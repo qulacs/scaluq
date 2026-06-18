@@ -10,7 +10,7 @@ authors = [
     { name = "Qulacs-Osaka", email = "qulacs.osaka@gmail.com" }
 ]
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 dependencies = [
@@ -58,7 +58,7 @@ homepage = "http://www.scaluq.org"
 
 [project.optional-dependencies]
 doc = [
-    "black == 24.4.2",
+    "black == 26.3.1",
     "isort == 5.13.2",
     "myst_parser == 4.0.1",
     "nanobind == 2.0.0",
