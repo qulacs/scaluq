@@ -55,6 +55,19 @@ jobs:
       SCALUQ_FLOAT64: "ON"
       SCALUQ_BFLOAT16: ${{ matrix.compiler == 'clang' && 'OFF' || 'ON' }}
     steps:
+      - name: Free Disk Space (cuda)
+        if: ${{ matrix.device == 'cuda' }}
+        run: |
+          df -h
+          echo "Remove Android library"
+          sudo rm -rf /usr/local/lib/android
+          echo "Remove .NET runtime"
+          sudo rm -rf /usr/share/dotnet
+          echo "Remove Haskell runtime"
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/.ghcup
+          df -h
+
       - uses: actions/checkout@v6
 
       - name: Setup LLVM Clang (macOS clang)
