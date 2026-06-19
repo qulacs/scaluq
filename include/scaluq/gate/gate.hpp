@@ -562,6 +562,7 @@ public:
         else if (type == "Pauli") gate = GetGateFromJson<PauliGateImpl<Prec>>::get(j);
         else if (type == "PauliRotation") gate = GetGateFromJson<PauliRotationGateImpl<Prec>>::get(j);
         else if (type == "Probabilistic") gate = GetGateFromJson<ProbabilisticGateImpl<Prec>>::get(j);
+        else throw std::runtime_error("GatePtr::from_json: unsupported gate type: " + type);
         // clang-format on
     }
 };
