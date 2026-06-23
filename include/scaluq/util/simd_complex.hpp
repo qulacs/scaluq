@@ -25,6 +25,8 @@ class SimdComplex {
     using Simd = typename Traits::Simd;
     Simd _data;
 
+    friend class Coef;
+
 public:
     KOKKOS_INLINE_FUNCTION static Simd splat(Scalar value) {
         return Simd(KOKKOS_LAMBDA(std::size_t) { return value; });
@@ -53,6 +55,10 @@ public:
             const auto imag = static_cast<Scalar>(coef.imag());
             return Coef(SimdComplex::splat(real), SimdComplex::splat(imag));
         }
+
+        KOKKOS_INLINE_FUNCTION SimdComplex operator*(const SimdComplex& value) const {
+            return SimdComplex(_real * value._data + _imag * multiply_by_i(value._data));
+        }
     };
 
     static constexpr std::size_t complex_lanes = Traits::complex_lanes;
@@ -73,16 +79,6 @@ public:
     KOKKOS_INLINE_FUNCTION friend SimdComplex operator+(const SimdComplex& lhs,
                                                         const SimdComplex& rhs) {
         return SimdComplex(lhs._data + rhs._data);
-    }
-
-    KOKKOS_INLINE_FUNCTION friend SimdComplex operator*(const Coef& coef,
-                                                        const SimdComplex& value) {
-        return SimdComplex(coef._real * value._data + coef._imag * multiply_by_i(value._data));
-    }
-
-    KOKKOS_INLINE_FUNCTION friend SimdComplex operator*(const SimdComplex& value,
-                                                        const Coef& coef) {
-        return coef * value;
     }
 };
 
