@@ -62,8 +62,6 @@
     using PauliRotationGate = ::scaluq::PauliRotationGate<Prec>;                               \
     using SparseMatrixGate = ::scaluq::SparseMatrixGate<Prec, Space>;                          \
     using DenseMatrixGate = ::scaluq::DenseMatrixGate<Prec, Space>;                            \
-    using OneTargetDenseMatrixGate = ::scaluq::OneTargetDenseMatrixGate<Prec, Space>;           \
-    using TwoTargetDenseMatrixGate = ::scaluq::TwoTargetDenseMatrixGate<Prec, Space>;           \
     using ProbabilisticGate = ::scaluq::ProbabilisticGate<Prec>;                               \
     namespace gate {                                                                           \
     inline auto& I = ::scaluq::gate::I<Prec>;                                                  \
@@ -223,23 +221,6 @@
                             bool is_unitary = false) {                                         \
         return ::scaluq::gate::DenseMatrix<Prec, Space>(                                       \
             targets, matrix, controls, control_values, is_unitary);                            \
-    }                                                                                          \
-    inline Gate OneTargetDenseMatrix(std::uint64_t target,                                     \
-                                     const ::scaluq::ComplexMatrix& matrix,                    \
-                                     const std::vector<std::uint64_t>& controls = {},          \
-                                     std::vector<std::uint64_t> control_values = {},           \
-                                     bool is_unitary = false) {                                \
-        return ::scaluq::gate::OneTargetDenseMatrix<Prec, Space>(                              \
-            target, matrix, controls, control_values, is_unitary);                             \
-    }                                                                                          \
-    inline Gate TwoTargetDenseMatrix(std::uint64_t target0,                                    \
-                                     std::uint64_t target1,                                    \
-                                     const ::scaluq::ComplexMatrix& matrix,                    \
-                                     const std::vector<std::uint64_t>& controls = {},          \
-                                     std::vector<std::uint64_t> control_values = {},           \
-                                     bool is_unitary = false) {                                \
-        return ::scaluq::gate::TwoTargetDenseMatrix<Prec, Space>(                              \
-            target0, target1, matrix, controls, control_values, is_unitary);                   \
     }                                                                                          \
     inline Gate SparseMatrix(const std::vector<std::uint64_t>& targets,                        \
                              const ::scaluq::SparseComplexMatrix& matrix,                      \

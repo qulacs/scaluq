@@ -12,6 +12,37 @@ Matrix2x2<Prec> get_IBMQ_matrix(Float<Prec> _theta, Float<Prec> _phi, Float<Prec
 }
 
 template <>
+void zero_target_dense_matrix_gate(std::uint64_t control_mask,
+                                   std::uint64_t control_value_mask,
+                                   Complex<Prec> matrix,
+                                   StateVector<Prec, Space>& state) {
+    Kokkos::parallel_for(
+        "zero_target_dense_matrix_gate",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, state.dim() >> std::popcount(control_mask)),
+        KOKKOS_LAMBDA(std::uint64_t i) {
+            std::uint64_t basis =
+                insert_zero_at_mask_positions(i, control_mask) | control_value_mask;
+            state._raw[basis] *= matrix;
+        });
+}
+
+template <>
+void zero_target_dense_matrix_gate(std::uint64_t control_mask,
+                                   std::uint64_t control_value_mask,
+                                   Complex<Prec> matrix,
+                                   StateVectorBatched<Prec, Space>& states) {
+    Kokkos::parallel_for(
+        "zero_target_dense_matrix_gate",
+        Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
+            {0, 0}, {states.batch_size(), states.dim() >> std::popcount(control_mask)}),
+        KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
+            std::uint64_t basis =
+                insert_zero_at_mask_positions(i, control_mask) | control_value_mask;
+            states._raw(batch_id, basis) *= matrix;
+        });
+}
+
+template <>
 void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   std::uint64_t control_value_mask,

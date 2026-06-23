@@ -439,7 +439,7 @@ void run_specialized_dense_matrix_gate_apply(std::uint64_t n_qubits) {
 
         ComplexMatrix matrix = get_eigen_matrix_random_one_target_unitary();
         auto dense_gate = gate::DenseMatrix<Prec, Space>({2}, matrix);
-        auto specialized_gate = gate::OneTargetDenseMatrix<Prec, Space>(2, matrix);
+        auto specialized_gate = gate::DenseMatrix<Prec, Space>({2}, matrix);
         dense_gate->update_quantum_state(state);
         specialized_gate->update_quantum_state(specialized_state);
         auto amplitudes = state.get_amplitudes();
@@ -457,7 +457,7 @@ void run_specialized_dense_matrix_gate_apply(std::uint64_t n_qubits) {
         auto matrix1 = get_eigen_matrix_random_one_target_unitary();
         ComplexMatrix matrix = internal::kronecker_product(matrix1, matrix0);
         auto dense_gate = gate::DenseMatrix<Prec, Space>({3, 1}, matrix);
-        auto specialized_gate = gate::TwoTargetDenseMatrix<Prec, Space>(3, 1, matrix);
+        auto specialized_gate = gate::DenseMatrix<Prec, Space>({3, 1}, matrix);
         dense_gate->update_quantum_state(state);
         specialized_gate->update_quantum_state(specialized_state);
         auto amplitudes = state.get_amplitudes();

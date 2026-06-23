@@ -77,10 +77,6 @@ template <Precision Prec, ExecutionSpace Space>
 class SparseMatrixGateImpl;
 template <Precision Prec, ExecutionSpace Space>
 class DenseMatrixGateImpl;
-template <Precision Prec, ExecutionSpace Space>
-class OneTargetDenseMatrixGateImpl;
-template <Precision Prec, ExecutionSpace Space>
-class TwoTargetDenseMatrixGateImpl;
 
 }  // namespace internal
 
@@ -190,31 +186,7 @@ constexpr GateType get_gate_type() {
                            TWithoutConst,
                            internal::DenseMatrixGateImpl<Prec, ExecutionSpace::HostSerial>> ||
                        std::is_same_v<TWithoutConst,
-                                      internal::DenseMatrixGateImpl<Prec, ExecutionSpace::Default>> ||
-                       std::is_same_v<TWithoutConst,
-                                      internal::OneTargetDenseMatrixGateImpl<
-                                          Prec,
-                                          ExecutionSpace::Host>> ||
-                       std::is_same_v<TWithoutConst,
-                                      internal::OneTargetDenseMatrixGateImpl<
-                                          Prec,
-                                          ExecutionSpace::HostSerial>> ||
-                       std::is_same_v<TWithoutConst,
-                                      internal::OneTargetDenseMatrixGateImpl<
-                                          Prec,
-                                          ExecutionSpace::Default>> ||
-                       std::is_same_v<TWithoutConst,
-                                      internal::TwoTargetDenseMatrixGateImpl<
-                                          Prec,
-                                          ExecutionSpace::Host>> ||
-                       std::is_same_v<TWithoutConst,
-                                      internal::TwoTargetDenseMatrixGateImpl<
-                                          Prec,
-                                          ExecutionSpace::HostSerial>> ||
-                       std::is_same_v<TWithoutConst,
-                                      internal::TwoTargetDenseMatrixGateImpl<
-                                          Prec,
-                                          ExecutionSpace::Default>>)
+                                      internal::DenseMatrixGateImpl<Prec, ExecutionSpace::Default>>)
         return GateType::DenseMatrix;
     else if constexpr (std::is_same_v<TWithoutConst, internal::ProbabilisticGateImpl<Prec>>)
         return GateType::Probabilistic;
@@ -232,9 +204,7 @@ struct ExecutionContext {
     ExecutionContext(StateVector<Prec, Space>& state_,
                      ClassicalRegister& classical_register_,
                      std::mt19937_64& random_engine_)
-        : state(state_),
-          classical_register(classical_register_),
-          random_engine(random_engine_) {}
+        : state(state_), classical_register(classical_register_), random_engine(random_engine_) {}
 };
 
 template <Precision Prec, ExecutionSpace Space>
@@ -246,9 +216,7 @@ struct ExecutionContextBatched {
     ExecutionContextBatched(StateVectorBatched<Prec, Space>& states_,
                             ClassicalRegisterBatched& classical_register_,
                             std::mt19937_64& random_engine_)
-        : states(states_),
-          classical_register(classical_register_),
-          random_engine(random_engine_) {}
+        : states(states_), classical_register(classical_register_), random_engine(random_engine_) {}
 };
 
 // GateBase テンプレートクラス
@@ -483,8 +451,6 @@ DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(PauliRotationGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ProbabilisticGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION_WITH_SPACE(SparseMatrixGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION_WITH_SPACE(DenseMatrixGateImpl)
-DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION_WITH_SPACE(OneTargetDenseMatrixGateImpl)
-DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION_WITH_SPACE(TwoTargetDenseMatrixGateImpl)
 #undef DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION
 #undef DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION_WITH_SPACE
 

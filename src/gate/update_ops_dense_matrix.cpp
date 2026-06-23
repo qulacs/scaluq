@@ -2,16 +2,16 @@
 
 namespace scaluq::internal {
 template <>
-void dense_matrix_gate(std::uint64_t target_mask,
-                       std::uint64_t control_mask,
-                       std::uint64_t control_value_mask,
-                       const Matrix<Prec, Space>& matrix,
-                       StateVector<Prec, Space>& state) {
+void multi_dense_matrix_gate(std::uint64_t target_mask,
+                             std::uint64_t control_mask,
+                             std::uint64_t control_value_mask,
+                             const Matrix<Prec, Space>& matrix,
+                             StateVector<Prec, Space>& state) {
     const std::uint64_t matrix_dim = 1ULL << std::popcount(target_mask);
     Kokkos::View<Complex<Prec>*, SpaceType<Space>> update(
         Kokkos::ViewAllocateWithoutInitializing("update"), state.dim());
     Kokkos::parallel_for(
-        "dense_matrix_gate (initialize)",
+        "multi_dense_matrix_gate (initialize)",
         Kokkos::RangePolicy<SpaceType<Space>>(0, state.dim()),
         KOKKOS_LAMBDA(std::uint64_t i) {
             if ((i & control_mask) == control_value_mask) {
@@ -23,7 +23,7 @@ void dense_matrix_gate(std::uint64_t target_mask,
 
     std::uint64_t outer_mask = ~target_mask & ((1ULL << state.n_qubits()) - 1);
     Kokkos::parallel_for(
-        "dense_matrix_gate (update)",
+        "multi_dense_matrix_gate (update)",
         Kokkos::TeamPolicy<SpaceType<Space>>(
             SpaceType<Space>(),
             state.dim() >> std::popcount(target_mask | control_mask),
@@ -53,18 +53,18 @@ void dense_matrix_gate(std::uint64_t target_mask,
 }
 
 template <>
-void dense_matrix_gate(std::uint64_t target_mask,
-                       std::uint64_t control_mask,
-                       std::uint64_t control_value_mask,
-                       const Matrix<Prec, Space>& matrix,
-                       StateVectorBatched<Prec, Space>& states) {
+void multi_dense_matrix_gate(std::uint64_t target_mask,
+                             std::uint64_t control_mask,
+                             std::uint64_t control_value_mask,
+                             const Matrix<Prec, Space>& matrix,
+                             StateVectorBatched<Prec, Space>& states) {
     const std::uint64_t matrix_dim = 1ULL << std::popcount(target_mask);
 
     Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight, SpaceType<Space>> update(
         Kokkos::ViewAllocateWithoutInitializing("update"), states.batch_size(), states.dim());
 
     Kokkos::parallel_for(
-        "dense_matrix_gate (initialize)",
+        "multi_dense_matrix_gate (initialize)",
         Kokkos::MDRangePolicy<SpaceType<Space>, Kokkos::Rank<2>>(
             {0, 0}, {states.batch_size(), states.dim()}),
         KOKKOS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
@@ -78,7 +78,7 @@ void dense_matrix_gate(std::uint64_t target_mask,
     std::uint64_t outer_size = states.dim() >> std::popcount(target_mask | control_mask);
     std::uint64_t outer_mask = ~target_mask & ((1ULL << states.n_qubits()) - 1);
     Kokkos::parallel_for(
-        "dense_matrix_gate (update)",
+        "multi_dense_matrix_gate (update)",
         Kokkos::TeamPolicy<SpaceType<Space>>(
             SpaceType<Space>(), outer_size * states.batch_size(), Kokkos::AUTO),
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team) {
