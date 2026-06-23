@@ -1,6 +1,10 @@
+#include <scaluq/util/simd_complex.hpp>
+#include <type_traits>
+
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
+
 template <Precision Prec>
 Matrix2x2<Prec> get_IBMQ_matrix(Float<Prec> _theta, Float<Prec> _phi, Float<Prec> _lambda) {
     Complex<Prec> exp_val1 = internal::exp(Complex<Prec>(0, _phi));
@@ -42,16 +46,47 @@ void zero_target_dense_matrix_gate(std::uint64_t control_mask,
         });
 }
 
-template <>
-void one_target_dense_matrix_gate(std::uint64_t target_mask,
-                                  std::uint64_t control_mask,
-                                  std::uint64_t control_value_mask,
-                                  const Matrix2x2<Prec>& matrix,
-                                  StateVector<Prec, Space>& state) {
+template <Precision P = Prec>
+void one_target_dense_matrix_gate_simd(std::uint64_t target_mask,
+                                       std::uint64_t control_mask,
+                                       std::uint64_t control_value_mask,
+                                       const Matrix2x2<Prec>& matrix,
+                                       StateVector<Prec, Space>& state,
+                                       std::uint64_t span) {
+    using SimdComplex = internal::SimdComplex<P>;
+    using Coef = typename SimdComplex::Coef;
+    constexpr std::size_t complex_lanes = SimdComplex::complex_lanes;
+    const std::uint64_t skip_mask = target_mask | control_mask;
+    const Coef m00 = Coef::splat(matrix[0][0]);
+    const Coef m01 = Coef::splat(matrix[0][1]);
+    const Coef m10 = Coef::splat(matrix[1][0]);
+    const Coef m11 = Coef::splat(matrix[1][1]);
+
+    Kokkos::parallel_for(
+        "one_target_dense_matrix_gate_simd",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, span / complex_lanes),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t compressed_base = g * complex_lanes;
+            const std::uint64_t basis0 =
+                insert_zero_at_mask_positions(compressed_base, skip_mask) | control_value_mask;
+            const std::uint64_t basis1 = basis0 | target_mask;
+            const auto v0 = SimdComplex::load_aligned(&state._raw[basis0]);
+            const auto v1 = SimdComplex::load_aligned(&state._raw[basis1]);
+            (m00 * v0 + m01 * v1).store_aligned(&state._raw[basis0]);
+            (m10 * v0 + m11 * v1).store_aligned(&state._raw[basis1]);
+        });
+}
+
+template <Precision P = Prec>
+void one_target_dense_matrix_gate_scalar(std::uint64_t target_mask,
+                                         std::uint64_t control_mask,
+                                         std::uint64_t control_value_mask,
+                                         const Matrix2x2<Prec>& matrix,
+                                         StateVector<Prec, Space>& state,
+                                         std::uint64_t span) {
     Kokkos::parallel_for(
         "one_target_dense_matrix_gate",
-        Kokkos::RangePolicy<SpaceType<Space>>(
-            0, state.dim() >> std::popcount(target_mask | control_mask)),
+        Kokkos::RangePolicy<SpaceType<Space>>(0, span),
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis_0 =
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
@@ -65,13 +100,46 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
         });
 }
 
-template <>
-void one_target_dense_matrix_gate(std::uint64_t target_mask,
-                                  std::uint64_t control_mask,
-                                  std::uint64_t control_value_mask,
-                                  const Matrix2x2<Prec>& matrix,
-                                  StateVectorBatched<Prec, Space>& states) {
-    const std::uint64_t span = states.dim() >> std::popcount(target_mask | control_mask);
+template <Precision P = Prec>
+void one_target_dense_matrix_gate_simd(std::uint64_t target_mask,
+                                       std::uint64_t control_mask,
+                                       std::uint64_t control_value_mask,
+                                       const Matrix2x2<Prec>& matrix,
+                                       StateVectorBatched<Prec, Space>& states,
+                                       std::uint64_t span) {
+    using SimdComplex = internal::SimdComplex<P>;
+    using Coef = typename SimdComplex::Coef;
+    constexpr std::size_t complex_lanes = SimdComplex::complex_lanes;
+    const std::uint64_t skip_mask = target_mask | control_mask;
+    const Coef m00 = Coef::splat(matrix[0][0]);
+    const Coef m01 = Coef::splat(matrix[0][1]);
+    const Coef m10 = Coef::splat(matrix[1][0]);
+    const Coef m11 = Coef::splat(matrix[1][1]);
+
+    const std::uint64_t work_items_per_batch = span / complex_lanes;
+    Kokkos::parallel_for(
+        "one_target_dense_matrix_gate_simd_batched",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * work_items_per_batch),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t batch_id = g / work_items_per_batch;
+            const std::uint64_t compressed_base = (g % work_items_per_batch) * complex_lanes;
+            const std::uint64_t basis0 =
+                insert_zero_at_mask_positions(compressed_base, skip_mask) | control_value_mask;
+            const std::uint64_t basis1 = basis0 | target_mask;
+            const auto v0 = SimdComplex::load_aligned(&states._raw(batch_id, basis0));
+            const auto v1 = SimdComplex::load_aligned(&states._raw(batch_id, basis1));
+            (m00 * v0 + m01 * v1).store_aligned(&states._raw(batch_id, basis0));
+            (m10 * v0 + m11 * v1).store_aligned(&states._raw(batch_id, basis1));
+        });
+}
+
+template <Precision P = Prec>
+void one_target_dense_matrix_gate_scalar(std::uint64_t target_mask,
+                                         std::uint64_t control_mask,
+                                         std::uint64_t control_value_mask,
+                                         const Matrix2x2<Prec>& matrix,
+                                         StateVectorBatched<Prec, Space>& states,
+                                         std::uint64_t span) {
     Kokkos::parallel_for(
         "one_target_dense_matrix_gate_flat",
         Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
@@ -90,6 +158,52 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
             states._raw(batch_id, basis0) = r0;
             states._raw(batch_id, basis1) = r1;
         });
+}
+
+template <>
+void one_target_dense_matrix_gate(std::uint64_t target_mask,
+                                  std::uint64_t control_mask,
+                                  std::uint64_t control_value_mask,
+                                  const Matrix2x2<Prec>& matrix,
+                                  StateVector<Prec, Space>& state) {
+    const std::uint64_t skip_mask = target_mask | control_mask;
+    const std::uint64_t span = state.dim() >> std::popcount(skip_mask);
+    if constexpr ((Space == ExecutionSpace::Host || Space == ExecutionSpace::HostSerial) &&
+                  (Prec == Precision::F64 || Prec == Precision::F32)) {
+        constexpr std::size_t complex_lanes = internal::SimdComplex<Prec>::complex_lanes;
+        if (span > complex_lanes && (skip_mask & (complex_lanes - 1)) == 0) {
+            // TODO: (skip_mask & (complex_lanes - 1)) != 0 の場合についてもSIMDを使うようにする
+            one_target_dense_matrix_gate_simd(
+                target_mask, control_mask, control_value_mask, matrix, state, span);
+            return;
+        }
+    }
+    one_target_dense_matrix_gate_scalar(
+        target_mask, control_mask, control_value_mask, matrix, state, span);
+}
+
+template <>
+void one_target_dense_matrix_gate(std::uint64_t target_mask,
+                                  std::uint64_t control_mask,
+                                  std::uint64_t control_value_mask,
+                                  const Matrix2x2<Prec>& matrix,
+                                  StateVectorBatched<Prec, Space>& states) {
+    const std::uint64_t skip_mask = target_mask | control_mask;
+    const std::uint64_t span = states.dim() >> std::popcount(skip_mask);
+    if constexpr ((Space == ExecutionSpace::Host || Space == ExecutionSpace::HostSerial) &&
+                  (Prec == Precision::F64 || Prec == Precision::F32)) {
+        constexpr std::size_t complex_lanes = internal::SimdComplex<Prec>::complex_lanes;
+        if constexpr (complex_lanes > 0) {
+            if (span > complex_lanes && (skip_mask & (complex_lanes - 1)) == 0) {
+                // TODO: (skip_mask & (complex_lanes - 1)) != 0 の場合についてもSIMDを使うようにする
+                one_target_dense_matrix_gate_simd(
+                    target_mask, control_mask, control_value_mask, matrix, states, span);
+                return;
+            }
+        }
+    }
+    one_target_dense_matrix_gate_scalar(
+        target_mask, control_mask, control_value_mask, matrix, states, span);
 }
 
 template <>
@@ -794,43 +908,4 @@ void ecr_gate(std::uint64_t physical_target_mask,
         });
 }
 
-template <>
-void permutation_gate(const std::vector<std::pair<std::uint64_t, std::uint64_t>>& swap_schedule,
-                      StateVector<Prec, Space>& state) {
-    for (const auto& pair : swap_schedule) {
-        const std::uint64_t src = pair.first;
-        const std::uint64_t dst = pair.second;
-        const std::uint64_t target_mask = (1ULL << src) | (1ULL << dst);
-        const std::uint64_t span = state.dim() >> 2;
-        Kokkos::parallel_for(
-            "permutation_gate",
-            Kokkos::RangePolicy<SpaceType<Space>>(0, span),
-            KOKKOS_LAMBDA(std::uint64_t it) {
-                const std::uint64_t basis = insert_zero_at_mask_positions(it, target_mask);
-                Kokkos::kokkos_swap(state._raw[basis | (1ULL << src)],
-                                    state._raw[basis | (1ULL << dst)]);
-            });
-    }
-}
-
-template <>
-void permutation_gate(const std::vector<std::pair<std::uint64_t, std::uint64_t>>& swap_schedule,
-                      StateVectorBatched<Prec, Space>& states) {
-    for (const auto& pair : swap_schedule) {
-        const std::uint64_t src = pair.first;
-        const std::uint64_t dst = pair.second;
-        const std::uint64_t target_mask = (1ULL << src) | (1ULL << dst);
-        const std::uint64_t span = states.dim() >> 2;
-        Kokkos::parallel_for(
-            "permutation_gate_flat",
-            Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
-            KOKKOS_LAMBDA(std::uint64_t g) {
-                const std::uint64_t batch_id = g / span;
-                const std::uint64_t it = g % span;
-                const std::uint64_t basis = insert_zero_at_mask_positions(it, target_mask);
-                Kokkos::kokkos_swap(states._raw(batch_id, basis | (1ULL << src)),
-                                    states._raw(batch_id, basis | (1ULL << dst)));
-            });
-    }
-}
 }  // namespace scaluq::internal
