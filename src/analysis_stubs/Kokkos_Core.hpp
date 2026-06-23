@@ -44,7 +44,11 @@ struct LayoutRight {};
 struct LayoutLeft {};
 
 // ── Memory traits ──────────────────────────────────────────────────────────
-constexpr unsigned Unmanaged = 0x1u;
+constexpr unsigned Unmanaged    = 0x01u;
+constexpr unsigned RandomAccess = 0x02u;
+constexpr unsigned Atomic       = 0x04u;
+constexpr unsigned Restrict     = 0x08u;
+constexpr unsigned Aligned      = 0x10u;
 template<unsigned Flags = 0>
 struct MemoryTraits {};
 using MemoryUnmanaged = MemoryTraits<Unmanaged>;

@@ -25,6 +25,7 @@ class SimdComplex {
     using Simd = typename Traits::Simd;
     Simd _data;
 
+public:
     KOKKOS_INLINE_FUNCTION static Simd splat(Scalar value) {
         return Simd(KOKKOS_LAMBDA(std::size_t) { return value; });
     }
@@ -37,7 +38,6 @@ class SimdComplex {
         });
     }
 
-public:
     class Coef {
         Simd _real;
         Simd _imag;
