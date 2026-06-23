@@ -1,185 +1,9 @@
-#include <Kokkos_SIMD.hpp>
+#include <scaluq/util/simd_complex.hpp>
 #include <type_traits>
 
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
-template <typename Simd>
-KOKKOS_INLINE_FUNCTION Simd complex_scale_interleaved(const Simd& value,
-                                                      const Simd& real,
-                                                      const Simd& imag) {
-    const Simd i = Simd(KOKKOS_LAMBDA(std::size_t lane) {
-        const auto swapped = value[lane ^ 1ULL];
-        return (lane & 1ULL) == 0 ? -swapped : swapped;
-    });
-    return real * value + imag * i;
-}
-
-template <Precision P = Prec>
-bool one_target_dense_matrix_gate_simd(std::uint64_t target_mask,
-                                       std::uint64_t control_mask,
-                                       std::uint64_t control_value_mask,
-                                       const Matrix2x2<Prec>& matrix,
-                                       StateVector<Prec, Space>& state) {
-    if constexpr ((Space != ExecutionSpace::Host && Space != ExecutionSpace::HostSerial) ||
-                  (P != Precision::F64 && P != Precision::F32)) {
-        return false;
-    } else {
-        using StorageScalar = Float<P>;
-        using Scalar = std::conditional_t<P == Precision::F64, double, float>;
-        using Simd = Kokkos::Experimental::simd<Scalar>;
-        constexpr std::size_t simd_lanes = Simd::size();
-        constexpr std::size_t complex_lanes = simd_lanes / 2;
-        if constexpr (simd_lanes < 2 || (simd_lanes % 2) != 0 ||
-                      (complex_lanes & (complex_lanes - 1)) != 0) {
-            return false;
-        } else {
-            static_assert(std::is_standard_layout_v<Complex<Prec>>);
-            static_assert(sizeof(StorageScalar) == sizeof(Scalar));
-            static_assert(sizeof(Complex<Prec>) == 2 * sizeof(StorageScalar));
-
-            const std::uint64_t skip_mask = target_mask | control_mask;
-            const std::uint64_t span = state.dim() >> std::popcount(skip_mask);
-            if (span < complex_lanes || (span % complex_lanes) != 0 ||
-                (skip_mask & (complex_lanes - 1)) != 0) {
-                return false;
-            }
-
-            const Complex<Prec> m00 = matrix[0][0];
-            const Complex<Prec> m01 = matrix[0][1];
-            const Complex<Prec> m10 = matrix[1][0];
-            const Complex<Prec> m11 = matrix[1][1];
-            const Simd r00 =
-                Simd(KOKKOS_LAMBDA(std::size_t) { return static_cast<Scalar>(m00.real()); });
-            const Simd i00 =
-                Simd(KOKKOS_LAMBDA(std::size_t) { return static_cast<Scalar>(m00.imag()); });
-            const Simd r01 =
-                Simd(KOKKOS_LAMBDA(std::size_t) { return static_cast<Scalar>(m01.real()); });
-            const Simd i01 =
-                Simd(KOKKOS_LAMBDA(std::size_t) { return static_cast<Scalar>(m01.imag()); });
-            const Simd r10 =
-                Simd(KOKKOS_LAMBDA(std::size_t) { return static_cast<Scalar>(m10.real()); });
-            const Simd i10 =
-                Simd(KOKKOS_LAMBDA(std::size_t) { return static_cast<Scalar>(m10.imag()); });
-            const Simd r11 =
-                Simd(KOKKOS_LAMBDA(std::size_t) { return static_cast<Scalar>(m11.real()); });
-            const Simd i11 =
-                Simd(KOKKOS_LAMBDA(std::size_t) { return static_cast<Scalar>(m11.imag()); });
-
-            Kokkos::parallel_for(
-                "one_target_dense_matrix_gate_simd",
-                Kokkos::RangePolicy<SpaceType<Space>>(0, span / complex_lanes),
-                KOKKOS_LAMBDA(std::uint64_t g) {
-                    const std::uint64_t compressed_base = g * complex_lanes;
-                    const std::uint64_t basis0 =
-                        insert_zero_at_mask_positions(compressed_base, skip_mask) |
-                        control_value_mask;
-                    const std::uint64_t basis1 = basis0 | target_mask;
-                    const auto* raw0 = reinterpret_cast<const Scalar*>(&state._raw[basis0]);
-                    const auto* raw1 = reinterpret_cast<const Scalar*>(&state._raw[basis1]);
-                    Simd v0(raw0, Kokkos::Experimental::vector_aligned_tag{});
-                    Simd v1(raw1, Kokkos::Experimental::vector_aligned_tag{});
-
-                    const Simd res0 = complex_scale_interleaved(v0, r00, i00) +
-                                      complex_scale_interleaved(v1, r01, i01);
-                    const Simd res1 = complex_scale_interleaved(v0, r10, i10) +
-                                      complex_scale_interleaved(v1, r11, i11);
-
-                    res0.copy_to(reinterpret_cast<Scalar*>(&state._raw[basis0]),
-                                 Kokkos::Experimental::vector_aligned_tag{});
-                    res1.copy_to(reinterpret_cast<Scalar*>(&state._raw[basis1]),
-                                 Kokkos::Experimental::vector_aligned_tag{});
-                });
-            return true;
-        }
-    }
-}
-
-template <Precision P = Prec>
-bool one_target_dense_matrix_gate_simd(std::uint64_t target_mask,
-                                       std::uint64_t control_mask,
-                                       std::uint64_t control_value_mask,
-                                       const Matrix2x2<Prec>& matrix,
-                                       StateVectorBatched<Prec, Space>& states) {
-    if constexpr ((Space != ExecutionSpace::Host && Space != ExecutionSpace::HostSerial) ||
-                  (P != Precision::F64 && P != Precision::F32)) {
-        return false;
-    } else {
-        using StorageScalar = Float<P>;
-        using Scalar = std::conditional_t<P == Precision::F64, double, float>;
-        using Simd = Kokkos::Experimental::simd<Scalar>;
-        constexpr std::size_t simd_lanes = Simd::size();
-        constexpr std::size_t complex_lanes = simd_lanes / 2;
-        if constexpr (simd_lanes < 2 || (simd_lanes % 2) != 0 ||
-                      (complex_lanes & (complex_lanes - 1)) != 0) {
-            return false;
-        } else {
-            static_assert(std::is_standard_layout_v<Complex<Prec>>);
-            static_assert(sizeof(StorageScalar) == sizeof(Scalar));
-            static_assert(sizeof(Complex<Prec>) == 2 * sizeof(StorageScalar));
-
-            const std::uint64_t skip_mask = target_mask | control_mask;
-            const std::uint64_t span = states.dim() >> std::popcount(skip_mask);
-            if (span < complex_lanes || (span % complex_lanes) != 0 ||
-                (skip_mask & (complex_lanes - 1)) != 0) {
-                return false;
-            }
-
-            const Complex<Prec> m00 = matrix[0][0];
-            const Complex<Prec> m01 = matrix[0][1];
-            const Complex<Prec> m10 = matrix[1][0];
-            const Complex<Prec> m11 = matrix[1][1];
-            const Simd r00 =
-                Simd(KOKKOS_LAMBDA(std::size_t) { return static_cast<Scalar>(m00.real()); });
-            const Simd i00 =
-                Simd(KOKKOS_LAMBDA(std::size_t) { return static_cast<Scalar>(m00.imag()); });
-            const Simd r01 =
-                Simd(KOKKOS_LAMBDA(std::size_t) { return static_cast<Scalar>(m01.real()); });
-            const Simd i01 =
-                Simd(KOKKOS_LAMBDA(std::size_t) { return static_cast<Scalar>(m01.imag()); });
-            const Simd r10 =
-                Simd(KOKKOS_LAMBDA(std::size_t) { return static_cast<Scalar>(m10.real()); });
-            const Simd i10 =
-                Simd(KOKKOS_LAMBDA(std::size_t) { return static_cast<Scalar>(m10.imag()); });
-            const Simd r11 =
-                Simd(KOKKOS_LAMBDA(std::size_t) { return static_cast<Scalar>(m11.real()); });
-            const Simd i11 =
-                Simd(KOKKOS_LAMBDA(std::size_t) { return static_cast<Scalar>(m11.imag()); });
-
-            const std::uint64_t work_items_per_batch = span / complex_lanes;
-            Kokkos::parallel_for(
-                "one_target_dense_matrix_gate_simd_batched",
-                Kokkos::RangePolicy<SpaceType<Space>>(
-                    0, states.batch_size() * work_items_per_batch),
-                KOKKOS_LAMBDA(std::uint64_t g) {
-                    const std::uint64_t batch_id = g / work_items_per_batch;
-                    const std::uint64_t compressed_base =
-                        (g % work_items_per_batch) * complex_lanes;
-                    const std::uint64_t basis0 =
-                        insert_zero_at_mask_positions(compressed_base, skip_mask) |
-                        control_value_mask;
-                    const std::uint64_t basis1 = basis0 | target_mask;
-                    const auto* raw0 =
-                        reinterpret_cast<const Scalar*>(&states._raw(batch_id, basis0));
-                    const auto* raw1 =
-                        reinterpret_cast<const Scalar*>(&states._raw(batch_id, basis1));
-                    Simd v0(raw0, Kokkos::Experimental::vector_aligned_tag{});
-                    Simd v1(raw1, Kokkos::Experimental::vector_aligned_tag{});
-
-                    const Simd res0 = complex_scale_interleaved(v0, r00, i00) +
-                                      complex_scale_interleaved(v1, r01, i01);
-                    const Simd res1 = complex_scale_interleaved(v0, r10, i10) +
-                                      complex_scale_interleaved(v1, r11, i11);
-
-                    res0.copy_to(reinterpret_cast<Scalar*>(&states._raw(batch_id, basis0)),
-                                 Kokkos::Experimental::vector_aligned_tag{});
-                    res1.copy_to(reinterpret_cast<Scalar*>(&states._raw(batch_id, basis1)),
-                                 Kokkos::Experimental::vector_aligned_tag{});
-                });
-            return true;
-        }
-    }
-}
 
 template <Precision Prec>
 Matrix2x2<Prec> get_IBMQ_matrix(Float<Prec> _theta, Float<Prec> _phi, Float<Prec> _lambda) {
@@ -191,20 +15,47 @@ Matrix2x2<Prec> get_IBMQ_matrix(Float<Prec> _theta, Float<Prec> _phi, Float<Prec
         {{{cos_val, -exp_val2 * sin_val}}, {{exp_val1 * sin_val, exp_val1 * exp_val2 * cos_val}}}};
 }
 
-template <>
-void one_target_dense_matrix_gate(std::uint64_t target_mask,
-                                  std::uint64_t control_mask,
-                                  std::uint64_t control_value_mask,
-                                  const Matrix2x2<Prec>& matrix,
-                                  StateVector<Prec, Space>& state) {
-    if (one_target_dense_matrix_gate_simd(
-            target_mask, control_mask, control_value_mask, matrix, state)) {
-        return;
-    }
+template <Precision P = Prec>
+void one_target_dense_matrix_gate_simd(std::uint64_t target_mask,
+                                       std::uint64_t control_mask,
+                                       std::uint64_t control_value_mask,
+                                       const Matrix2x2<Prec>& matrix,
+                                       StateVector<Prec, Space>& state,
+                                       std::uint64_t span) {
+    using SimdComplex = internal::SimdComplex<P>;
+    using Coef = typename SimdComplex::Coef;
+    constexpr std::size_t complex_lanes = SimdComplex::complex_lanes;
+    const std::uint64_t skip_mask = target_mask | control_mask;
+    const Coef m00 = Coef::splat(matrix[0][0]);
+    const Coef m01 = Coef::splat(matrix[0][1]);
+    const Coef m10 = Coef::splat(matrix[1][0]);
+    const Coef m11 = Coef::splat(matrix[1][1]);
+
+    Kokkos::parallel_for(
+        "one_target_dense_matrix_gate_simd",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, span / complex_lanes),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t compressed_base = g * complex_lanes;
+            const std::uint64_t basis0 =
+                insert_zero_at_mask_positions(compressed_base, skip_mask) | control_value_mask;
+            const std::uint64_t basis1 = basis0 | target_mask;
+            const auto v0 = SimdComplex::load_aligned(&state._raw[basis0]);
+            const auto v1 = SimdComplex::load_aligned(&state._raw[basis1]);
+            (m00 * v0 + m01 * v1).store_aligned(&state._raw[basis0]);
+            (m10 * v0 + m11 * v1).store_aligned(&state._raw[basis1]);
+        });
+}
+
+template <Precision P = Prec>
+void one_target_dense_matrix_gate_scalar(std::uint64_t target_mask,
+                                         std::uint64_t control_mask,
+                                         std::uint64_t control_value_mask,
+                                         const Matrix2x2<Prec>& matrix,
+                                         StateVector<Prec, Space>& state,
+                                         std::uint64_t span) {
     Kokkos::parallel_for(
         "one_target_dense_matrix_gate",
-        Kokkos::RangePolicy<SpaceType<Space>>(
-            0, state.dim() >> std::popcount(target_mask | control_mask)),
+        Kokkos::RangePolicy<SpaceType<Space>>(0, span),
         KOKKOS_LAMBDA(std::uint64_t it) {
             std::uint64_t basis_0 =
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
@@ -218,17 +69,46 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
         });
 }
 
-template <>
-void one_target_dense_matrix_gate(std::uint64_t target_mask,
-                                  std::uint64_t control_mask,
-                                  std::uint64_t control_value_mask,
-                                  const Matrix2x2<Prec>& matrix,
-                                  StateVectorBatched<Prec, Space>& states) {
-    const std::uint64_t span = states.dim() >> std::popcount(target_mask | control_mask);
-    if (one_target_dense_matrix_gate_simd(
-            target_mask, control_mask, control_value_mask, matrix, states)) {
-        return;
-    }
+template <Precision P = Prec>
+void one_target_dense_matrix_gate_simd(std::uint64_t target_mask,
+                                       std::uint64_t control_mask,
+                                       std::uint64_t control_value_mask,
+                                       const Matrix2x2<Prec>& matrix,
+                                       StateVectorBatched<Prec, Space>& states,
+                                       std::uint64_t span) {
+    using SimdComplex = internal::SimdComplex<P>;
+    using Coef = typename SimdComplex::Coef;
+    constexpr std::size_t complex_lanes = SimdComplex::complex_lanes;
+    const std::uint64_t skip_mask = target_mask | control_mask;
+    const Coef m00 = Coef::splat(matrix[0][0]);
+    const Coef m01 = Coef::splat(matrix[0][1]);
+    const Coef m10 = Coef::splat(matrix[1][0]);
+    const Coef m11 = Coef::splat(matrix[1][1]);
+
+    const std::uint64_t work_items_per_batch = span / complex_lanes;
+    Kokkos::parallel_for(
+        "one_target_dense_matrix_gate_simd_batched",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * work_items_per_batch),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t batch_id = g / work_items_per_batch;
+            const std::uint64_t compressed_base = (g % work_items_per_batch) * complex_lanes;
+            const std::uint64_t basis0 =
+                insert_zero_at_mask_positions(compressed_base, skip_mask) | control_value_mask;
+            const std::uint64_t basis1 = basis0 | target_mask;
+            const auto v0 = SimdComplex::load_aligned(&states._raw(batch_id, basis0));
+            const auto v1 = SimdComplex::load_aligned(&states._raw(batch_id, basis1));
+            (m00 * v0 + m01 * v1).store_aligned(&states._raw(batch_id, basis0));
+            (m10 * v0 + m11 * v1).store_aligned(&states._raw(batch_id, basis1));
+        });
+}
+
+template <Precision P = Prec>
+void one_target_dense_matrix_gate_scalar(std::uint64_t target_mask,
+                                         std::uint64_t control_mask,
+                                         std::uint64_t control_value_mask,
+                                         const Matrix2x2<Prec>& matrix,
+                                         StateVectorBatched<Prec, Space>& states,
+                                         std::uint64_t span) {
     Kokkos::parallel_for(
         "one_target_dense_matrix_gate_flat",
         Kokkos::RangePolicy<SpaceType<Space>>(0, states.batch_size() * span),
@@ -247,6 +127,50 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
             states._raw(batch_id, basis0) = r0;
             states._raw(batch_id, basis1) = r1;
         });
+}
+
+template <>
+void one_target_dense_matrix_gate(std::uint64_t target_mask,
+                                  std::uint64_t control_mask,
+                                  std::uint64_t control_value_mask,
+                                  const Matrix2x2<Prec>& matrix,
+                                  StateVector<Prec, Space>& state) {
+    const std::uint64_t skip_mask = target_mask | control_mask;
+    const std::uint64_t span = state.dim() >> std::popcount(skip_mask);
+    if constexpr ((Space == ExecutionSpace::Host || Space == ExecutionSpace::HostSerial) &&
+                  (Prec == Precision::F64 || Prec == Precision::F32)) {
+        constexpr std::size_t complex_lanes = internal::SimdComplex<Prec>::complex_lanes;
+        if ((span % complex_lanes) == 0 && (skip_mask & (complex_lanes - 1)) == 0) {
+            // TODO: (skip_mask & (complex_lanes - 1)) != 0 の場合についてもSIMDを使うようにする
+            one_target_dense_matrix_gate_simd(
+                target_mask, control_mask, control_value_mask, matrix, state, span);
+            return;
+        }
+    }
+    one_target_dense_matrix_gate_scalar(
+        target_mask, control_mask, control_value_mask, matrix, state, span);
+}
+
+template <>
+void one_target_dense_matrix_gate(std::uint64_t target_mask,
+                                  std::uint64_t control_mask,
+                                  std::uint64_t control_value_mask,
+                                  const Matrix2x2<Prec>& matrix,
+                                  StateVectorBatched<Prec, Space>& states) {
+    const std::uint64_t skip_mask = target_mask | control_mask;
+    const std::uint64_t span = states.dim() >> std::popcount(skip_mask);
+    if constexpr ((Space == ExecutionSpace::Host || Space == ExecutionSpace::HostSerial) &&
+                  (Prec == Precision::F64 || Prec == Precision::F32)) {
+        constexpr std::size_t complex_lanes = internal::SimdComplex<Prec>::complex_lanes;
+        if ((span % complex_lanes) == 0 && (skip_mask & (complex_lanes - 1)) == 0) {
+            // TODO: (skip_mask & (complex_lanes - 1)) != 0 の場合についてもSIMDを使うようにする
+            one_target_dense_matrix_gate_simd(
+                target_mask, control_mask, control_value_mask, matrix, states, span);
+            return;
+        }
+    }
+    one_target_dense_matrix_gate_scalar(
+        target_mask, control_mask, control_value_mask, matrix, states, span);
 }
 
 template <>
