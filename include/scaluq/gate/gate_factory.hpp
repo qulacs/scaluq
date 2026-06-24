@@ -393,6 +393,22 @@ inline Gate<Prec> Probabilistic(const std::vector<double>& distribution,
                                                                                      gate_list);
 }
 
+template <Precision Prec, ExecutionSpace Space>
+inline Gate<Prec> Permutation(const std::vector<std::uint64_t>& dst_indices) {
+    const std::uint64_t n_qubits = dst_indices.size();
+    if (n_qubits >= sizeof(std::uint64_t) * 8) {
+        throw std::runtime_error(
+            "gate::Permutation: the size of the qubit system must be less than 64.");
+    }
+
+    const std::uint64_t expected_mask = n_qubits == 0 ? 0ULL : ((1ULL << n_qubits) - 1);
+    if (internal::vector_to_mask(dst_indices) != expected_mask) {
+        throw std::runtime_error(
+            "gate::Permutation: dst_indices must be a permutation of 0 to n_qubits - 1.");
+    }
+    return internal::GateFactory::create_gate<internal::PermutationGateImpl<Prec>>(dst_indices);
+}
+
 // corresponding to XGate
 template <Precision Prec>
 inline Gate<Prec> BitFlipNoise(std::int64_t target, double error_rate) {
@@ -1158,6 +1174,19 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
 
 template <Precision Prec, ExecutionSpace Space>
 void bind_gate_gate_factory_hpp(nb::module_& mgate) {
+    mgate.def(
+        "Permutation",
+        &gate::Permutation<Prec, Space>,
+        "destination_indices"_a,
+        DocString()
+            .desc("Generate a gate that permutes qubit positions according to destination indices.")
+            .arg("destination_indices",
+                 "list[int]",
+                 "Packed destination index array where element i is the destination of qubit i")
+            .ret("Gate", "Qubit reordering gate instance")
+            .ex(DocString::Code({">>> gate = Permutation([2, 0, 3, 1])"}))
+            .build_as_google_style()
+            .c_str());
     mgate.def(
         "DenseMatrix",
         &gate::DenseMatrix<Prec, Space>,

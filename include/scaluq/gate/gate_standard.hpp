@@ -18,8 +18,7 @@ public:
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(
-        ExecutionContext<Prec, ExecutionSpace::Host>& context) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Host>& context) const override;
     void update_quantum_state(
@@ -59,8 +58,7 @@ public:
     }
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(
-        ExecutionContext<Prec, ExecutionSpace::Host>& context) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Host>& context) const override;
     void update_quantum_state(
@@ -977,6 +975,60 @@ public:
                  {"control_value", this->control_value_list()},
                  {"physical_control", this->physical_control_indices()},
                  {"physical_target", this->physical_target_indices()}};
+    }
+};
+
+template <Precision Prec>
+class PermutationGateImpl : public GateBase<Prec> {
+    std::vector<std::uint64_t> _dst;
+    std::vector<std::pair<std::uint64_t, std::uint64_t>> _swap_schedule;
+
+public:
+    PermutationGateImpl(const std::vector<std::uint64_t>& dst_indices)
+        : GateBase<Prec>(internal::vector_to_mask(dst_indices), 0, 0), _dst(dst_indices) {
+        if (this->_target_mask != (1ULL << _dst.size()) - 1) {
+            throw std::invalid_argument(
+                "PermutationGateImpl: dst_indices must be the permutation of [0, "
+                "dst_indices.size())");
+        }
+
+        std::vector<bool> seen(_dst.size(), false);
+        for (std::uint64_t i = 0; i < _dst.size(); ++i) {
+            if (seen[i]) continue;
+            seen[i] = true;
+            std::uint64_t pos = i;
+            while (!seen[pos = _dst[pos]]) {
+                seen[pos] = true;
+                _swap_schedule.emplace_back(pos, i);
+            }
+        }
+    }
+
+    using GateBase<Prec>::update_quantum_state;
+
+    std::shared_ptr<const GateBase<Prec>> get_inverse() const override;
+
+    ComplexMatrix get_matrix() const override;
+
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host>& context) const override;
+    void update_quantum_state(
+        ExecutionContextBatched<Prec, ExecutionSpace::Host>& context) const override;
+    void update_quantum_state(
+        ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
+    void update_quantum_state(
+        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
+#ifdef SCALUQ_USE_CUDA
+    void update_quantum_state(
+        ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
+    void update_quantum_state(
+        ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
+#endif  // SCALUQ_USE_CUDA
+
+    std::string to_string(const std::string& indent) const override;
+
+    void get_as_json(Json& j) const override {
+        j = Json{
+            {"type", "Permutation"}, {"target", this->target_qubit_list()}, {"dst", this->_dst}};
     }
 };
 
