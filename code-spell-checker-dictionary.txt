@@ -37,6 +37,7 @@ fsanitize
 genindex
 googletest
 GROUPNAME
+ghcup
 gtest
 habs
 Hadamard
