@@ -15,6 +15,8 @@ class StateVectorBatched {
     using ExecutionSpaceType = internal::SpaceType<Space>;
 
 public:
+    static constexpr Precision prec = Prec;
+    static constexpr ExecutionSpace space = Space;
     using RawView = Kokkos::View<ComplexType**,
                                  Kokkos::LayoutRight,
                                  ExecutionSpaceType,
@@ -29,6 +31,18 @@ public:
     [[nodiscard]] std::uint64_t n_qubits() const { return this->_n_qubits; }
 
     [[nodiscard]] std::uint64_t dim() const { return this->_dim; }
+
+    [[nodiscard]] std::uint64_t flat_dim() const { return this->_batch_size * this->_dim; }
+
+    KOKKOS_INLINE_FUNCTION decltype(auto) at_unsafe(std::uint64_t index) const {
+        const std::uint64_t basis_mask = this->_dim - 1;
+        return _raw(index >> this->_n_qubits, index & basis_mask);
+    }
+
+    KOKKOS_INLINE_FUNCTION decltype(auto) at_unsafe(std::uint64_t batch_id,
+                                                    std::uint64_t basis) const {
+        return _raw(batch_id, basis);
+    }
 
     [[nodiscard]] std::uint64_t batch_size() const { return this->_batch_size; }
 
@@ -373,9 +387,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
             "sampling",
             [](const StateVectorBatched<Prec, Space>& states,
                std::uint64_t sampling_count,
-               std::optional<std::uint64_t> seed) {
-                return states.sampling(sampling_count, seed);
-            },
+               std::optional<std::uint64_t> seed) { return states.sampling(sampling_count, seed); },
             "sampling_count"_a,
             "seed"_a = std::nullopt,
             DocString()

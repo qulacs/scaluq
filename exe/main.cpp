@@ -73,6 +73,18 @@ std::uint64_t value_mask_from(const std::vector<std::uint64_t>& indices,
     return mask;
 }
 
+std::string format_indices(const std::vector<std::uint64_t>& indices) {
+    std::string result = "{";
+    for (std::size_t i = 0; i < indices.size(); ++i) {
+        if (i != 0) {
+            result += ",";
+        }
+        result += std::to_string(indices[i]);
+    }
+    result += "}";
+    return result;
+}
+
 template <scaluq::Precision Prec>
 void baseline_one_target_dense_matrix(std::uint64_t target_mask,
                                       std::uint64_t control_mask,
@@ -179,11 +191,11 @@ void run_case(const Case& bench_case, const std::vector<scaluq::StdComplex>& ini
     const auto implemented_q = quartiles(std::move(implemented_samples));
 
     std::cout << std::left << std::setw(28) << bench_case.name << " target=" << std::setw(2)
-              << bench_case.target << " controls=" << bench_case.controls.size() << "\n";
+              << bench_case.target << " controls=" << format_indices(bench_case.controls) << "\n";
     std::cout << "  baseline ns: q1=" << baseline_q.q1 << " median=" << baseline_q.median
               << " q3=" << baseline_q.q3 << "\n";
-    std::cout << "  impl ns:     q1=" << implemented_q.q1
-              << " median=" << implemented_q.median << " q3=" << implemented_q.q3
+    std::cout << "  impl ns:     q1=" << implemented_q.q1 << " median=" << implemented_q.median
+              << " q3=" << implemented_q.q3
               << " speedup=" << baseline_q.median / implemented_q.median
               << "x max_abs_diff=" << std::scientific << implemented_diff << std::defaultfloat
               << "\n";

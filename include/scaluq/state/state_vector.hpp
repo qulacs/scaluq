@@ -22,6 +22,8 @@ class StateVector {
     using ExecutionSpaceType = internal::SpaceType<Space>;
 
 public:
+    static constexpr Precision prec = Prec;
+    static constexpr ExecutionSpace space = Space;
     using RawView =
         Kokkos::View<ComplexType*, ExecutionSpaceType, Kokkos::MemoryTraits<Kokkos::Aligned>>;
     static constexpr std::uint64_t UNMEASURED = 2;
@@ -58,6 +60,12 @@ public:
     [[nodiscard]] std::uint64_t n_qubits() const { return this->_n_qubits; }
 
     [[nodiscard]] std::uint64_t dim() const { return this->_dim; }
+
+    [[nodiscard]] std::uint64_t flat_dim() const { return this->_dim; }
+
+    KOKKOS_INLINE_FUNCTION decltype(auto) at_unsafe(std::uint64_t index) const {
+        return _raw(index);
+    }
 
     [[nodiscard]] std::vector<StdComplex> get_amplitudes() const;
 
@@ -479,9 +487,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
             "sampling",
             [](const StateVector<Prec, Space>& state,
                std::uint64_t sampling_count,
-               std::optional<std::uint64_t> seed) {
-                return state.sampling(sampling_count, seed);
-            },
+               std::optional<std::uint64_t> seed) { return state.sampling(sampling_count, seed); },
             "sampling_count"_a,
             "seed"_a = std::nullopt,
             DocString()
