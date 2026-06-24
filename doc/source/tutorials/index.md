@@ -7,5 +7,6 @@ To get more information, see {doc}`../autoapi/index`.
 ```{toctree}
 :maxdepth: 2
 
-python/index
+python/en/index
+python/ja/index
 ```

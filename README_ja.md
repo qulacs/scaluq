@@ -16,9 +16,9 @@ Scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 [Qulacs](https://github.com/qulacs/qulacs) に比べ、以下の点が改善されています。
 
 - [Kokkos](https://github.com/kokkos/kokkos) をベースとした実装により、実行環境(CPU/GPU) の切り替えを容易に行うことができます。切り替えの際にコードを変更する必要はありません。
-- よりよい実行速度を実現します。
+- CPU実行においては同等の実行速度を実現し、GPU実行においては同等以上の実行速度を実現します。
 - ポインタをユーザから隠蔽したことにより、より安全に、簡単に記述できます。
-- [nanobind](https://github.com/wjakob/nanobind) の導入により、よりコンパクトかつ高速な Python へのバインディングを実現します。
+- [nanobind](https://github.com/wjakob/nanobind) の導入によって、より軽量かつ低オーバーヘッドな Python バインディングを実現します。
 - 複数の量子状態に対して、同じ構造を持ちパラメータのみが異なる量子回路を一括実行するためのバッチ実行機能を提供します。
 
 # ドキュメント
@@ -34,19 +34,15 @@ https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
 
 ## 単一状態ベクトル更新 (2026年1月)
 
-### CPU 結果
-![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/multithread/image/circuit.png)
-
-### GPU 結果
-![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/gpu/image/circuit.png)
+| CPU 結果 | GPU 結果 |
+| ------- | --------|
+| ![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/multithread/image/circuit.png) | ![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/gpu/image/circuit.png) |
 
 ## バッチ状態ベクトル更新 (2026年5月)
 
-### バッチサイズを変化させた場合 (#qubits=16)
-![Batched State Vector Update (batch sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/batch_sweep.png)
-
-### 量子ビット数を変化させた場合 (batch size=100)
-![Batched State Vector Update (qubits sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/qubits_sweep.png)
+| バッチサイズを変化させた場合 (#qubits=16) | 量子ビット数を変化させた場合 (batch size=100) |
+| -------------------------------------- | ------------------------------------------- |
+| ![Batched State Vector Update (batch sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/batch/image/batch_sweep.png) | ![Batched State Vector Update (qubits sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/batch/image/qubits_sweep.png) |
 
 ## ビルド時要件
 

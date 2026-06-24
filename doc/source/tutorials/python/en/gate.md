@@ -86,7 +86,7 @@ Gate Type: Sdag
   Control Value: {}
 '''
 ```
-
+(downcast-to-gatetype-specific-function)=
 ## Downcast to GateType-specific function
 To get GateType-specific properties, downcast to specific class is required.
 
@@ -102,7 +102,7 @@ import math
 
 rx = RX(0, math.pi/4)
 assert rx.gate_type() == GateType.RX
-rx = RXGate(rx) # downcast to RXGate class
+rx = RXGate(rx) # convert to RXGate class
 print(rx.angle())
 ```
 
@@ -115,7 +115,7 @@ import math
 
 rx = RXGate(RX(0, math.pi/4))
 circuit = Circuit()
-rx = Gate(rx) # omitting this downcast causes error on next line
+rx = Gate(rx) # omitting this upcast causes error on next line
 circuit.add_gate(rx)
 ```
 
@@ -138,7 +138,7 @@ print(state.get_amplitudes()) # [(0.7071067811865476+0j), 0j, 0j, (0.70710678118
 ```
 
 ## Merge two Gates
-You can merge two Gates by {func}`merge_gate <scaluq.default.f64.gate.merge_gate>`
+You can merge two Gates by {func}`merge_gate <scaluq.default.f64.gate.merge_gate>`.
 The type of result gate is flexible.
 
 ```py

@@ -5,7 +5,7 @@ Parametric gates allow you to specify arbitrary rotation angles at the time of c
 
 The actual rotation angle applied is calculated as angle $\times$ coef.
 
-```
+```py
 from scaluq.default.f64.gate import ParamRX, ParamRY
 import math
 
@@ -17,7 +17,7 @@ p_ry = ParamRY(1) # Parametric RY gate with target 1 and coef 1.0 (default)
 You can add {class}`ParamGate <scaluq.default.f64.ParamGate>` to {class}`Circuit <scaluq.default.f64.Circuit>` using {func}`add_param_gate <scaluq.default.f64.Circuit.add_param_gate>`. This method requires a key (string) to identify the parameter. Multiple gates can share the same key.
 
 You can also retrieve information about parameter keys from the circuit.
-```
+```py
 from scaluq.default.f64.gate import ParamRX, ParamRY, H
 from scaluq.default.f64 import Circuit
 import math
@@ -43,7 +43,7 @@ print(circuit.key_set()) # {'p_rx', 'p_ry'}
 ## Apply Circuit to StateVector
 When executing the circuit, you must provide values for each parameter key. The provided value is applied to all gates with the corresponding key (and multiplied by each gate's coef).
 
-```
+```py
 from scaluq.default.f64.gate import H, ParamRX, ParamRY
 from scaluq.default.f64 import Circuit, StateVector
 import math
