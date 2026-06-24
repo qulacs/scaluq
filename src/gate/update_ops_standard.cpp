@@ -2,35 +2,14 @@
 
 namespace scaluq::internal {
 
-namespace {
-
 template <Precision Prec>
-Matrix2x2<Prec> get_IBMQ_matrix(Float<Prec> _theta, Float<Prec> _phi, Float<Prec> _lambda) {
+static Matrix2x2<Prec> get_IBMQ_matrix(Float<Prec> _theta, Float<Prec> _phi, Float<Prec> _lambda) {
     Complex<Prec> exp_val1 = internal::exp(Complex<Prec>(0, _phi));
     Complex<Prec> exp_val2 = internal::exp(Complex<Prec>(0, _lambda));
     Complex<Prec> cos_val = internal::cos(_theta / Float<Prec>{2});
     Complex<Prec> sin_val = internal::sin(_theta / Float<Prec>{2});
     return {
         {{{cos_val, -exp_val2 * sin_val}}, {{exp_val1 * sin_val, exp_val1 * exp_val2 * cos_val}}}};
-}
-
-}  // namespace
-
-template <UpdatableStateVector State>
-void global_phase_gate(std::uint64_t,
-                       std::uint64_t control_mask,
-                       std::uint64_t control_value_mask,
-                       Float<State::prec> angle,
-                       State& state) {
-    using ExecSpace = SpaceType<State::space>;
-    Complex<State::prec> coef = internal::polar<State::prec>(Float<State::prec>{1}, angle);
-    Kokkos::parallel_for(
-        "global_phase_gate",
-        Kokkos::RangePolicy<ExecSpace>(0, state.flat_dim() >> std::popcount(control_mask)),
-        KOKKOS_LAMBDA(std::uint64_t i) {
-            state.at_unsafe(insert_zero_at_mask_positions(i, control_mask) | control_value_mask) *=
-                coef;
-        });
 }
 
 template <UpdatableStateVector State>
@@ -85,24 +64,6 @@ void y_gate(std::uint64_t target_mask,
             state.at_unsafe(i) *= ComplexType(0, 1);
             state.at_unsafe(i | target_mask) *= ComplexType(0, -1);
             Kokkos::kokkos_swap(state.at_unsafe(i), state.at_unsafe(i | target_mask));
-        });
-}
-
-template <UpdatableStateVector State>
-void z_gate(std::uint64_t target_mask,
-            std::uint64_t control_mask,
-            std::uint64_t control_value_mask,
-            State& state) {
-    using ExecSpace = SpaceType<State::space>;
-    using ComplexType = Complex<State::prec>;
-    Kokkos::parallel_for(
-        "z_gate",
-        Kokkos::RangePolicy<ExecSpace>(
-            0, state.flat_dim() >> std::popcount(target_mask | control_mask)),
-        KOKKOS_LAMBDA(std::uint64_t it) {
-            std::uint64_t i =
-                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
-            state.at_unsafe(i | target_mask) *= ComplexType(-1, 0);
         });
 }
 
@@ -253,19 +214,6 @@ void rz_gate(std::uint64_t target_mask,
 }
 
 template <UpdatableStateVector State>
-void u1_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<State::prec> lambda,
-             State& state) {
-    one_target_phase_gate(target_mask,
-                          control_mask,
-                          control_value_mask,
-                          internal::exp(Complex<State::prec>(0, lambda)),
-                          state);
-}
-
-template <UpdatableStateVector State>
 void u2_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
              std::uint64_t control_value_mask,
@@ -382,14 +330,11 @@ void permutation_gate(const std::vector<std::pair<std::uint64_t, std::uint64_t>>
         __VA_ARGS__, StateVectorBatched<Prec, Space>&)
 
 INSTANTIATE_FLAT_STATE_OVERLOADS(one_target_phase_gate,          std::uint64_t, std::uint64_t, std::uint64_t, Complex<Prec>);
-INSTANTIATE_FLAT_STATE_OVERLOADS(global_phase_gate,              std::uint64_t, std::uint64_t, std::uint64_t, Float<Prec>);
 INSTANTIATE_FLAT_STATE_OVERLOADS(x_gate,                         std::uint64_t, std::uint64_t, std::uint64_t);
 INSTANTIATE_FLAT_STATE_OVERLOADS(y_gate,                         std::uint64_t, std::uint64_t, std::uint64_t);
-INSTANTIATE_FLAT_STATE_OVERLOADS(z_gate,                         std::uint64_t, std::uint64_t, std::uint64_t);
 INSTANTIATE_FLAT_STATE_OVERLOADS(rx_gate,                        std::uint64_t, std::uint64_t, std::uint64_t, Float<Prec>);
 INSTANTIATE_FLAT_STATE_OVERLOADS(ry_gate,                        std::uint64_t, std::uint64_t, std::uint64_t, Float<Prec>);
 INSTANTIATE_FLAT_STATE_OVERLOADS(rz_gate,                        std::uint64_t, std::uint64_t, std::uint64_t, Float<Prec>);
-INSTANTIATE_FLAT_STATE_OVERLOADS(u1_gate,                        std::uint64_t, std::uint64_t, std::uint64_t, Float<Prec>);
 INSTANTIATE_FLAT_STATE_OVERLOADS(u2_gate,                        std::uint64_t, std::uint64_t, std::uint64_t, Float<Prec>, Float<Prec>);
 INSTANTIATE_FLAT_STATE_OVERLOADS(u3_gate,                        std::uint64_t, std::uint64_t, std::uint64_t, Float<Prec>, Float<Prec>, Float<Prec>);
 INSTANTIATE_FLAT_STATE_OVERLOADS(swap_gate,                      std::uint64_t, std::uint64_t, std::uint64_t);

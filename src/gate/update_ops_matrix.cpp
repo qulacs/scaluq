@@ -40,13 +40,13 @@ void zero_target_dense_matrix_gate(std::uint64_t control_mask,
         });
 }
 
-template <UpdatableStateVector State, Precision P = State::prec>
+template <UpdatableStateVector State>
 void one_target_dense_matrix_gate_simd(std::uint64_t target_mask,
                                        std::uint64_t control_mask,
                                        std::uint64_t control_value_mask,
                                        const Matrix2x2<State::prec>& matrix,
                                        State& state) {
-    using SimdComplex = internal::SimdComplex<P>;
+    using SimdComplex = internal::SimdComplex<State::prec>;
     using Coef = typename SimdComplex::Coef;
     constexpr std::size_t complex_lanes = SimdComplex::complex_lanes;
     const std::uint64_t skip_mask = target_mask | control_mask;
@@ -103,19 +103,13 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_value_mask,
                                   const Matrix2x2<State::prec>& matrix,
                                   State& state) {
-    const std::uint64_t skip_mask = target_mask | control_mask;
-    const std::uint64_t span = state.flat_dim() >> std::popcount(skip_mask);
-    if constexpr (State::RawView::rank == 1 &&
-                  (State::space == ExecutionSpace::Host ||
+    if constexpr ((State::space == ExecutionSpace::Host ||
                    State::space == ExecutionSpace::HostSerial) &&
                   (State::prec == Precision::F64 || State::prec == Precision::F32)) {
         constexpr std::size_t complex_lanes = internal::SimdComplex<State::prec>::complex_lanes;
-        using Scalar = typename internal::SimdComplexTraits<State::prec>::Scalar;
-        constexpr std::size_t simd_alignment =
-            sizeof(Scalar) * internal::SimdComplex<State::prec>::scalar_lanes;
-        const bool base_is_aligned =
-            reinterpret_cast<std::uintptr_t>(&state.at_unsafe(0)) % simd_alignment == 0;
-        if (base_is_aligned && span > complex_lanes && (skip_mask & (complex_lanes - 1)) == 0) {
+        const std::uint64_t skip_mask = target_mask | control_mask;
+        const std::uint64_t span = state.flat_dim() >> std::popcount(skip_mask);
+        if (span > complex_lanes && (skip_mask & (complex_lanes - 1)) == 0) {
             // TODO: (skip_mask & (complex_lanes - 1)) != 0 の場合についてもSIMDを使うようにする
             one_target_dense_matrix_gate_simd(
                 target_mask, control_mask, control_value_mask, matrix, state);

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <concepts>
 #include <scaluq/operator/pauli_operator.hpp>
 #include <scaluq/state/state_vector.hpp>
 #include <scaluq/state/state_vector_batched.hpp>
@@ -8,18 +7,6 @@
 
 namespace scaluq {
 namespace internal {
-
-template <class State>
-concept UpdatableStateVector = requires(State& state, std::uint64_t index) {
-    { State::prec } -> std::convertible_to<Precision>;
-    { State::space } -> std::convertible_to<ExecutionSpace>;
-    typename State::RawView;
-    { state.n_qubits() } -> std::convertible_to<std::uint64_t>;
-    { state.flat_dim() } -> std::convertible_to<std::uint64_t>;
-    { state.copy() } -> std::same_as<State>;
-    state.load(state);
-    state.at_unsafe(index);
-};
 
 template <UpdatableStateVector State>
 void zero_target_dense_matrix_gate(std::uint64_t control_mask,
@@ -63,14 +50,26 @@ void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
                                      State& state);
 
 template <UpdatableStateVector State>
-inline void i_gate(std::uint64_t, std::uint64_t, std::uint64_t, State&) {}
+inline void global_phase_gate(std::uint64_t,
+                              std::uint64_t control_mask,
+                              std::uint64_t control_value_mask,
+                              Float<State::prec> angle,
+                              State& state) {
+    zero_target_dense_matrix_gate(control_mask,
+                                  control_value_mask,
+                                  internal::polar<State::prec>(Float<State::prec>{1}, angle),
+                                  state);
+}
 
 template <UpdatableStateVector State>
-void global_phase_gate(std::uint64_t,
-                       std::uint64_t control_mask,
-                       std::uint64_t control_value_mask,
-                       Float<State::prec> angle,
-                       State& state);
+void one_target_phase_gate(std::uint64_t target_mask,
+                           std::uint64_t control_mask,
+                           std::uint64_t control_value_mask,
+                           Complex<State::prec> phase,
+                           State& state);
+
+template <UpdatableStateVector State>
+inline void i_gate(std::uint64_t, std::uint64_t, std::uint64_t, State&) {}
 
 template <UpdatableStateVector State>
 void x_gate(std::uint64_t target_mask,
@@ -85,10 +84,13 @@ void y_gate(std::uint64_t target_mask,
             State& state);
 
 template <UpdatableStateVector State>
-void z_gate(std::uint64_t target_mask,
-            std::uint64_t control_mask,
-            std::uint64_t control_value_mask,
-            State& state);
+inline void z_gate(std::uint64_t target_mask,
+                   std::uint64_t control_mask,
+                   std::uint64_t control_value_mask,
+                   State& state) {
+    one_target_phase_gate(
+        target_mask, control_mask, control_value_mask, Complex<State::prec>(-1, 0), state);
+}
 
 template <UpdatableStateVector State>
 inline void h_gate(std::uint64_t target_mask,
@@ -98,13 +100,6 @@ inline void h_gate(std::uint64_t target_mask,
     one_target_dense_matrix_gate(
         target_mask, control_mask, control_value_mask, HADAMARD_MATRIX<State::prec>(), state);
 }
-
-template <UpdatableStateVector State>
-void one_target_phase_gate(std::uint64_t target_mask,
-                           std::uint64_t control_mask,
-                           std::uint64_t control_value_mask,
-                           Complex<State::prec> phase,
-                           State& state);
 
 template <UpdatableStateVector State>
 inline void s_gate(std::uint64_t target_mask,
@@ -251,11 +246,17 @@ void rz_gate(std::uint64_t target_mask,
              StateVectorBatched<Prec, Space>& states);
 
 template <UpdatableStateVector State>
-void u1_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<State::prec> lambda,
-             State& state);
+inline void u1_gate(std::uint64_t target_mask,
+                    std::uint64_t control_mask,
+                    std::uint64_t control_value_mask,
+                    Float<State::prec> lambda,
+                    State& state) {
+    one_target_phase_gate(target_mask,
+                          control_mask,
+                          control_value_mask,
+                          internal::exp(Complex<State::prec>(0, lambda)),
+                          state);
+}
 
 template <UpdatableStateVector State>
 void u2_gate(std::uint64_t target_mask,

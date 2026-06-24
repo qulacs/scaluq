@@ -28,36 +28,18 @@ class SimdComplex {
     friend class Coef;
 
 public:
-    KOKKOS_INLINE_FUNCTION static Simd splat(Scalar value) {
-        return Simd(KOKKOS_LAMBDA(std::size_t) { return value; });
-    }
-
-    KOKKOS_INLINE_FUNCTION static Simd multiply_by_i(const Simd& value) {
-        // We can use Memory Permutes Instructions since Kokkos 5.1
-        return Simd(KOKKOS_LAMBDA(std::size_t lane) {
-            const auto swapped = value[lane ^ 1ULL];
-            return (lane & 1ULL) == 0 ? -swapped : swapped;
-        });
-    }
-
     class Coef {
-        Simd _real;
-        Simd _imag;
-
-        KOKKOS_INLINE_FUNCTION Coef(const Simd& real, const Simd& imag)
-            : _real(real), _imag(imag) {}
-
+        Simd _real, _imag;
+        KOKKOS_INLINE_FUNCTION Coef(Scalar real, Scalar imag) : _real(real), _imag(imag) {}
         friend class SimdComplex;
 
     public:
         KOKKOS_INLINE_FUNCTION static Coef splat(const Complex<P>& coef) {
-            const auto real = static_cast<Scalar>(coef.real());
-            const auto imag = static_cast<Scalar>(coef.imag());
-            return Coef(SimdComplex::splat(real), SimdComplex::splat(imag));
+            return Coef(static_cast<Scalar>(coef.real()), static_cast<Scalar>(coef.imag()));
         }
 
         KOKKOS_INLINE_FUNCTION SimdComplex operator*(const SimdComplex& value) const {
-            return SimdComplex(_real * value._data + _imag * multiply_by_i(value._data));
+            return SimdComplex(_real * value._data + _imag * value.multiply_by_i()._data);
         }
     };
 
@@ -74,6 +56,14 @@ public:
 
     KOKKOS_INLINE_FUNCTION void store_aligned(Complex<P>* ptr) const {
         _data.copy_to(reinterpret_cast<Scalar*>(ptr), Kokkos::Experimental::vector_aligned_tag{});
+    }
+
+    KOKKOS_INLINE_FUNCTION SimdComplex multiply_by_i() const {
+        // TODO: もっと効率的にできそう
+        return SimdComplex(Simd(KOKKOS_LAMBDA(std::size_t lane) {
+            const auto swapped = _data[lane ^ 1ULL];
+            return (lane & 1ULL) == 0 ? -swapped : swapped;
+        }));
     }
 
     KOKKOS_INLINE_FUNCTION friend SimdComplex operator+(const SimdComplex& lhs,

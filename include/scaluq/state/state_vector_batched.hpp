@@ -1,5 +1,7 @@
 #pragma once
 
+#include <concepts>
+
 #include "../types.hpp"
 #include "state_vector.hpp"
 
@@ -543,5 +545,21 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
 }
 }  // namespace internal
 #endif
+
+namespace internal {
+
+template <class State>
+concept UpdatableStateVector = requires(State& state, std::uint64_t index) {
+    { State::prec } -> std::convertible_to<Precision>;
+    { State::space } -> std::convertible_to<ExecutionSpace>;
+    typename State::RawView;
+    { state.n_qubits() } -> std::convertible_to<std::uint64_t>;
+    { state.flat_dim() } -> std::convertible_to<std::uint64_t>;
+    { state.copy() } -> std::same_as<State>;
+    state.load(state);
+    state.at_unsafe(index);
+};
+
+}  // namespace internal
 
 }  // namespace scaluq
