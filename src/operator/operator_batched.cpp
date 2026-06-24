@@ -131,13 +131,14 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_ex
     std::uint64_t op_batch_size = _row_ptr.extent(0) - 1;
     if (op_batch_size != states.batch_size()) {
         throw std::runtime_error(
-            "Batch size mismatch between OperatorBatched and StateVectorBatched.");
+            "Operator::get_expectation_value: batch_size of OperatorBatched and "
+            "StateVectorBatched must be same");
     }
     std::uint64_t dim = states.dim();
     Kokkos::View<Kokkos::complex<double>*, ExecutionSpaceType> res(
         Kokkos::ViewAllocateWithoutInitializing("expectation_value"), _row_ptr.extent(0) - 1);
     Kokkos::parallel_for(
-        "get_expectation_value_batched",
+        "get_expectation_value",
         Kokkos::TeamPolicy<ExecutionSpaceType>(_row_ptr.extent(0) - 1, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(const Kokkos::TeamPolicy<ExecutionSpaceType>::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
@@ -200,7 +201,7 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_tr
             "state_vector_ket must be same");
     }
     Kokkos::View<Kokkos::complex<double>*, ExecutionSpaceType> res(
-        Kokkos::ViewAllocateWithoutInitializing("expectation_value"), _row_ptr.extent(0) - 1);
+        Kokkos::ViewAllocateWithoutInitializing("transition_amplitude"), _row_ptr.extent(0) - 1);
     std::uint64_t dim = state_vector_bra.dim();
 
     Kokkos::parallel_for(
@@ -270,8 +271,14 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_tr
             "Operator::get_transition_amplitude: batch_size of states_bra and "
             "states_ket must be same");
     }
+    std::uint64_t op_batch_size = _row_ptr.extent(0) - 1;
+    if (op_batch_size != states_bra.batch_size()) {
+        throw std::runtime_error(
+            "Operator::get_transition_amplitude: batch_size of OperatorBatched and "
+            "StateVectorBatched must be same");
+    }
     Kokkos::View<Kokkos::complex<double>*, ExecutionSpaceType> res(
-        Kokkos::ViewAllocateWithoutInitializing("expectation_value"), _row_ptr.extent(0) - 1);
+        Kokkos::ViewAllocateWithoutInitializing("transition_amplitude"), _row_ptr.extent(0) - 1);
     std::uint64_t dim = states_bra.dim();
 
     Kokkos::parallel_for(
