@@ -40,8 +40,27 @@ using DefaultHostExecutionSpace = OpenMP;
 using DefaultExecutionSpace     = OpenMP;
 
 // ── Layout tags ────────────────────────────────────────────────────────────
-struct LayoutRight {};
+struct LayoutRight {
+    std::size_t dimension[8]{};
+    std::size_t stride{};
+    explicit LayoutRight(std::size_t n0 = 0, std::size_t n1 = 0, std::size_t n2 = 0,
+                         std::size_t n3 = 0, std::size_t n4 = 0, std::size_t n5 = 0,
+                         std::size_t n6 = 0, std::size_t n7 = 0)
+        : dimension{n0, n1, n2, n3, n4, n5, n6, n7} {}
+};
 struct LayoutLeft {};
+struct LayoutStride {
+    std::size_t dimension[8]{};
+    std::size_t stride[8]{};
+    explicit LayoutStride(std::size_t n0 = 0, std::size_t s0 = 0, std::size_t n1 = 0,
+                          std::size_t s1 = 0, std::size_t n2 = 0, std::size_t s2 = 0,
+                          std::size_t n3 = 0, std::size_t s3 = 0, std::size_t n4 = 0,
+                          std::size_t s4 = 0, std::size_t n5 = 0, std::size_t s5 = 0,
+                          std::size_t n6 = 0, std::size_t s6 = 0, std::size_t n7 = 0,
+                          std::size_t s7 = 0)
+        : dimension{n0, n1, n2, n3, n4, n5, n6, n7},
+          stride{s0, s1, s2, s3, s4, s5, s6, s7} {}
+};
 
 // ── Memory traits ──────────────────────────────────────────────────────────
 constexpr unsigned Unmanaged    = 0x01u;
@@ -132,6 +151,8 @@ public:
     View() = default;
     explicit View(const char*, size_type = 0, size_type = 0) {}
     explicit View(ViewAllocateWithoutInitializing, size_type = 0, size_type = 0) {}
+    template<class Layout>
+    explicit View(ViewAllocateWithoutInitializing, Layout) {}
     explicit View(pointer, size_type = 0, size_type = 0) {}
     explicit View(const value_type*, size_type = 0, size_type = 0) {}
     // Cross-space converting constructor: allows View<T*, HostSpace> to convert to View<T*, OpenMP>
