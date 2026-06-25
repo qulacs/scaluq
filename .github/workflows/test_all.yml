@@ -126,13 +126,13 @@ jobs:
           method: "local"
           linux-local-args: '["--toolkit"]'
           log-file-suffix: '${{ github.job }}-${{ matrix.os-arch }}-${{ matrix.device }}'
-      
+
       - name: Install SYCL toolkit
-        if: ${{ matrix.device == "sycl" }}
+        if: ${{ matrix.device == 'sycl' }}
         run: |
           wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | sudo gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
           echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
-          apt-get update 
+          apt-get update
           apt-get install -y --no-install-recommends intel-oneapi-compiler-dpcpp-cpp intel-opencl-icd intel-level-zero-gpu
           echo "/opt/intel/oneapi/compiler/latest/bin" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
