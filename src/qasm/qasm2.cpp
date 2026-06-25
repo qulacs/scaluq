@@ -1,6 +1,3 @@
-#include <scaluq/prec_space.hpp>
-#include <scaluq/qasm/qasm2.hpp>
-
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
@@ -8,14 +5,15 @@
 #include <map>
 #include <numbers>
 #include <optional>
+#include <scaluq/gate/gate_factory.hpp>
+#include <scaluq/gate/param_gate_factory.hpp>
+#include <scaluq/prec_space.hpp>
+#include <scaluq/qasm/qasm2.hpp>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <variant>
-
-#include <scaluq/gate/gate_factory.hpp>
-#include <scaluq/gate/param_gate_factory.hpp>
 
 namespace scaluq::qasm2 {
 namespace {
@@ -84,12 +82,8 @@ struct UnsupportedCircuitOp {
     std::string reason;
 };
 
-using CircuitOpView = std::variant<IgnoredOp,
-                                   NamedUnitaryOp,
-                                   RotationOp,
-                                   UGateOp,
-                                   MeasurementOp,
-                                   UnsupportedCircuitOp>;
+using CircuitOpView = std::
+    variant<IgnoredOp, NamedUnitaryOp, RotationOp, UGateOp, MeasurementOp, UnsupportedCircuitOp>;
 
 // Concrete OpenQASM 2.0 operation used by the writer.  At this point qelib1
 // names, parameter text, qubit order, and optional classical-bit destination
@@ -122,9 +116,8 @@ struct OpenQasm2Op {
 
 [[nodiscard]] std::string lower(std::string_view s) {
     std::string out(s);
-    std::ranges::transform(out, out.begin(), [](unsigned char c) {
-        return static_cast<char>(std::tolower(c));
-    });
+    std::ranges::transform(
+        out, out.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     return out;
 }
 
@@ -243,8 +236,7 @@ private:
     }
 
     void skip_spaces() {
-        while (_pos < _source.size() &&
-               std::isspace(static_cast<unsigned char>(_source[_pos]))) {
+        while (_pos < _source.size() && std::isspace(static_cast<unsigned char>(_source[_pos]))) {
             ++_pos;
         }
     }
@@ -315,7 +307,8 @@ private:
             if (id == "pi") {
                 return {.constant = std::numbers::pi};
             }
-            throw std::runtime_error(error("only the OpenQASM constant 'pi' is supported in angle expressions"));
+            throw std::runtime_error(
+                error("only the OpenQASM constant 'pi' is supported in angle expressions"));
         }
 
         char* end = nullptr;
@@ -434,7 +427,8 @@ template <typename Registers>
                                               Location loc) {
     std::string s = trim(stmt.substr(keyword.size()));
     std::size_t lb = s.find('[');
-    if (lb == std::string::npos) throw std::runtime_error(make_error(loc, "invalid register declaration"));
+    if (lb == std::string::npos)
+        throw std::runtime_error(make_error(loc, "invalid register declaration"));
     return trim(std::string_view(s).substr(0, lb));
 }
 
@@ -500,13 +494,15 @@ private:
         if (starts_with_word(low, "include")) {
             if (trim(std::string_view(low).substr(std::string_view("include").size())) !=
                 "\"qelib1.inc\"") {
-                throw std::runtime_error(make_error(statement.loc, "only include \"qelib1.inc\" is supported"));
+                throw std::runtime_error(
+                    make_error(statement.loc, "only include \"qelib1.inc\" is supported"));
             }
             return;
         }
         if (starts_with_word(low, "qreg")) {
             std::string name = parse_register_name(stmt, "qreg", statement.loc);
-            if (_qregs.contains(name)) throw std::runtime_error(make_error(statement.loc, "duplicate qreg"));
+            if (_qregs.contains(name))
+                throw std::runtime_error(make_error(statement.loc, "duplicate qreg"));
             std::uint64_t size = parse_register_decl(stmt, "qreg", statement.loc);
             _qregs.emplace(name, Register{_result.n_qubits, size});
             _result.n_qubits += size;
@@ -514,7 +510,8 @@ private:
         }
         if (starts_with_word(low, "creg")) {
             std::string name = parse_register_name(stmt, "creg", statement.loc);
-            if (_cregs.contains(name)) throw std::runtime_error(make_error(statement.loc, "duplicate creg"));
+            if (_cregs.contains(name))
+                throw std::runtime_error(make_error(statement.loc, "duplicate creg"));
             std::uint64_t size = parse_register_decl(stmt, "creg", statement.loc);
             _cregs.emplace(name, Register{_result.n_clbits, size});
             _result.n_clbits += size;
@@ -567,8 +564,10 @@ private:
                     break;
                 }
             }
-            if (close == std::string::npos) throw std::runtime_error(make_error(loc, "unmatched '('"));
-            for (const std::string& param : split_comma_list(std::string_view(rest).substr(1, close - 1), loc)) {
+            if (close == std::string::npos)
+                throw std::runtime_error(make_error(loc, "unmatched '('"));
+            for (const std::string& param :
+                 split_comma_list(std::string_view(rest).substr(1, close - 1), loc)) {
                 params.push_back(ExprParser(param, loc).parse());
             }
             rest = trim(std::string_view(rest).substr(close + 1));
@@ -633,10 +632,11 @@ private:
         if (name == "u2" || name == "u3") {
             expect(name, params, qubits, name == "u2" ? 2 : 3, 1, loc);
             if (name == "u2")
-                _result.circuit.add_gate(gate::U2<Prec>(qubits[0], params[0].constant, params[1].constant));
-            else
                 _result.circuit.add_gate(
-                    gate::U3<Prec>(qubits[0], params[0].constant, params[1].constant, params[2].constant));
+                    gate::U2<Prec>(qubits[0], params[0].constant, params[1].constant));
+            else
+                _result.circuit.add_gate(gate::U3<Prec>(
+                    qubits[0], params[0].constant, params[1].constant, params[2].constant));
             return;
         }
         if (name == "cx" || name == "cnot") {
@@ -663,8 +663,11 @@ private:
         }
         if (name == "cu3") {
             expect(name, params, qubits, 3, 2, loc);
-            _result.circuit.add_gate(gate::U3<Prec>(
-                qubits[1], params[0].constant, params[1].constant, params[2].constant, {qubits[0]}));
+            _result.circuit.add_gate(gate::U3<Prec>(qubits[1],
+                                                    params[0].constant,
+                                                    params[1].constant,
+                                                    params[2].constant,
+                                                    {qubits[0]}));
             return;
         }
         if (name == "ccx") {
@@ -729,13 +732,9 @@ private:
     return op.classical_bit.value_or(0) + 1;
 }
 
-[[nodiscard]] std::string q(std::uint64_t index) {
-    return "q[" + std::to_string(index) + "]";
-}
+[[nodiscard]] std::string q(std::uint64_t index) { return "q[" + std::to_string(index) + "]"; }
 
-[[nodiscard]] std::string c(std::uint64_t index) {
-    return "c[" + std::to_string(index) + "]";
-}
+[[nodiscard]] std::string c(std::uint64_t index) { return "c[" + std::to_string(index) + "]"; }
 
 // Convert a non-parametric Scaluq Gate into the export operation record that
 // represents the gate's meaning independently of any concrete QASM dialect.
@@ -767,17 +766,29 @@ template <Precision Prec>
         case GateType::Swap:
             return NamedUnitaryOp{"swap", targets, controls, control_values};
         case GateType::RX:
-            return RotationOp{
-                "rx", RXGate<Prec>(gate)->angle(), single_target(targets, "RX"), controls, control_values};
+            return RotationOp{"rx",
+                              RXGate<Prec>(gate)->angle(),
+                              single_target(targets, "RX"),
+                              controls,
+                              control_values};
         case GateType::RY:
-            return RotationOp{
-                "ry", RYGate<Prec>(gate)->angle(), single_target(targets, "RY"), controls, control_values};
+            return RotationOp{"ry",
+                              RYGate<Prec>(gate)->angle(),
+                              single_target(targets, "RY"),
+                              controls,
+                              control_values};
         case GateType::RZ:
-            return RotationOp{
-                "rz", RZGate<Prec>(gate)->angle(), single_target(targets, "RZ"), controls, control_values};
+            return RotationOp{"rz",
+                              RZGate<Prec>(gate)->angle(),
+                              single_target(targets, "RZ"),
+                              controls,
+                              control_values};
         case GateType::U1:
-            return UGateOp{
-                "u1", {U1Gate<Prec>(gate)->lambda()}, single_target(targets, "U1"), controls, control_values};
+            return UGateOp{"u1",
+                           {U1Gate<Prec>(gate)->lambda()},
+                           single_target(targets, "U1"),
+                           controls,
+                           control_values};
         case GateType::U2:
             return UGateOp{"u2",
                            {U2Gate<Prec>(gate)->phi(), U2Gate<Prec>(gate)->lambda()},
@@ -786,7 +797,9 @@ template <Precision Prec>
                            control_values};
         case GateType::U3:
             return UGateOp{"u3",
-                           {U3Gate<Prec>(gate)->theta(), U3Gate<Prec>(gate)->phi(), U3Gate<Prec>(gate)->lambda()},
+                           {U3Gate<Prec>(gate)->theta(),
+                            U3Gate<Prec>(gate)->phi(),
+                            U3Gate<Prec>(gate)->lambda()},
                            single_target(targets, "U3"),
                            controls,
                            control_values};
@@ -808,6 +821,7 @@ template <Precision Prec>
         case GateType::SparseMatrix:
         case GateType::DenseMatrix:
         case GateType::Probabilistic:
+        case GateType::Permutation:
             return UnsupportedCircuitOp{"unsupported gate for OpenQASM 2.0 export"};
     }
     return UnsupportedCircuitOp{"unsupported gate for OpenQASM 2.0 export"};
@@ -861,7 +875,11 @@ template <Precision Prec>
     }
     if (op.name == "swap" && op.controls.size() == 1) {
         if (op.targets.size() != 2) throw std::runtime_error("unexpected target count for Swap");
-        return {OpenQasm2Op::Kind::Gate, "cswap", {}, {op.controls[0], op.targets[0], op.targets[1]}, std::nullopt};
+        return {OpenQasm2Op::Kind::Gate,
+                "cswap",
+                {},
+                {op.controls[0], op.targets[0], op.targets[1]},
+                std::nullopt};
     }
     if (op.controls.size() > 1) {
         throw std::runtime_error("unsupported controlled gate for OpenQASM 2.0 export");
@@ -939,9 +957,11 @@ template <Precision Prec>
                 return lower_u_to_qasm2(op);
             } else if constexpr (std::is_same_v<Op, MeasurementOp>) {
                 if (op.reset) {
-                    throw std::runtime_error("OpenQASM 2.0 export does not support reset-after-measurement gates");
+                    throw std::runtime_error(
+                        "OpenQASM 2.0 export does not support reset-after-measurement gates");
                 }
-                return OpenQasm2Op{OpenQasm2Op::Kind::Measure, "measure", {}, {op.target}, op.classical_bit};
+                return OpenQasm2Op{
+                    OpenQasm2Op::Kind::Measure, "measure", {}, {op.target}, op.classical_bit};
             } else if constexpr (std::is_same_v<Op, UnsupportedCircuitOp>) {
                 throw std::runtime_error(op.reason);
             }

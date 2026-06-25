@@ -42,7 +42,9 @@ public:
         return {_bit_flip_mask, _phase_flip_mask};
     }
     [[nodiscard]] std::string get_pauli_string() const;
-    [[nodiscard]] PauliOperator get_dagger() const;
+    [[nodiscard]] KOKKOS_INLINE_FUNCTION PauliOperator get_dagger() const {
+        return PauliOperator(_bit_flip_mask, _phase_flip_mask, scaluq::internal::conj(_coef));
+    };
     [[nodiscard]] std::uint64_t get_qubit_count() const;
 
     void add_single_pauli(std::uint64_t target_qubit, std::uint64_t pauli_id);
@@ -226,7 +228,7 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "source"_a,
              "target"_a,
              "Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.")
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
         .def("get_expectation_value",
              nb::overload_cast<const StateVectorBatched<Prec, ExecutionSpace::Default>&>(
                  &PauliOperator<Prec>::template get_expectation_value<ExecutionSpace::Default>,

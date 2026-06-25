@@ -77,7 +77,7 @@ void ParamRXGateImpl<Prec>::update_quantum_state(
             params_view,
             context.states);
 }
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 template <Precision Prec>
 void ParamRXGateImpl<Prec>::update_quantum_state(
     ExecutionContext<Prec, ExecutionSpace::Default>& context, double param) const {
@@ -108,7 +108,7 @@ void ParamRXGateImpl<Prec>::update_quantum_state(
             params_view,
             context.states);
 }
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 template class ParamRXGateImpl<Prec>;
 
 template <Precision Prec>
@@ -184,7 +184,7 @@ void ParamRYGateImpl<Prec>::update_quantum_state(
             params_view,
             context.states);
 }
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 template <Precision Prec>
 void ParamRYGateImpl<Prec>::update_quantum_state(
     ExecutionContext<Prec, ExecutionSpace::Default>& context, double param) const {
@@ -215,7 +215,7 @@ void ParamRYGateImpl<Prec>::update_quantum_state(
             params_view,
             context.states);
 }
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 template class ParamRYGateImpl<Prec>;
 
 template <Precision Prec>
@@ -291,7 +291,7 @@ void ParamRZGateImpl<Prec>::update_quantum_state(
             params_view,
             context.states);
 }
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 template <Precision Prec>
 void ParamRZGateImpl<Prec>::update_quantum_state(
     ExecutionContext<Prec, ExecutionSpace::Default>& context, double param) const {
@@ -322,7 +322,7 @@ void ParamRZGateImpl<Prec>::update_quantum_state(
             params_view,
             context.states);
 }
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 template class ParamRZGateImpl<Prec>;
 
 #define DECLARE_GET_FROM_JSON(Impl)                                                          \

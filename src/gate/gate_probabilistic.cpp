@@ -98,31 +98,29 @@ std::string ProbabilisticGateImpl<Prec>::to_string(const std::string& indent) co
     }
     return ss.str();
 }
-#define DEFINE_PROBABILISTIC_GATE_CONTEXT_UPDATE(Space)                                           \
-    template <Precision Prec>                                                                     \
+#define DEFINE_PROBABILISTIC_GATE_CONTEXT_UPDATE(Space)                                            \
+    template <Precision Prec>                                                                      \
     void ProbabilisticGateImpl<Prec>::update_quantum_state(ExecutionContext<Prec, Space>& context) \
-        const {                                                                                   \
-        const std::uint64_t i =                                                                   \
-            select_probabilistic_gate_index(_cumulative_distribution, context);                   \
-        _gate_list[i]->update_quantum_state(context);                                             \
-    }                                                                                             \
-    template <Precision Prec>                                                                     \
-    void ProbabilisticGateImpl<Prec>::update_quantum_state(                                       \
+        const {                                                                                    \
+        const std::uint64_t i =                                                                    \
+            select_probabilistic_gate_index(_cumulative_distribution, context);                    \
+        _gate_list[i]->update_quantum_state(context);                                              \
+    }                                                                                              \
+    template <Precision Prec>                                                                      \
+    void ProbabilisticGateImpl<Prec>::update_quantum_state(                                        \
         ExecutionContextBatched<Prec, Space>& context) const {                                     \
-        for (std::size_t i = 0; i < context.states.batch_size(); ++i) {                           \
-            auto state_vector = context.states.view_state_vector_at(i);                           \
-            ExecutionContext<Prec, Space> state_context{                                          \
-                state_vector,                                                                      \
-                context.classical_register[i],                                                     \
-                context.random_engine};                                                            \
+        for (std::size_t i = 0; i < context.states.batch_size(); ++i) {                            \
+            auto state_vector = context.states.view_state_vector_at(i);                            \
+            ExecutionContext<Prec, Space> state_context{                                           \
+                state_vector, context.classical_register[i], context.random_engine};               \
             this->update_quantum_state(state_context);                                             \
-        }                                                                                         \
+        }                                                                                          \
     }
 DEFINE_PROBABILISTIC_GATE_CONTEXT_UPDATE(ExecutionSpace::Host)
 DEFINE_PROBABILISTIC_GATE_CONTEXT_UPDATE(ExecutionSpace::HostSerial)
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 DEFINE_PROBABILISTIC_GATE_CONTEXT_UPDATE(ExecutionSpace::Default)
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 #undef DEFINE_PROBABILISTIC_GATE_CONTEXT_UPDATE
 
 template class ProbabilisticGateImpl<Prec>;

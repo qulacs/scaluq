@@ -45,7 +45,7 @@ std::string DenseMatrixGateImpl<Prec, Space>::to_string(const std::string& inden
 #define DEFINE_DENSE_MATRIX_GATE_UPDATE(ContextClass, state_member, TargetSpace)            \
     template <Precision Prec, ExecutionSpace GateSpace>                                     \
     void DenseMatrixGateImpl<Prec, GateSpace>::update_quantum_state(                        \
-        ContextClass<Prec, TargetSpace>& context) const {                                    \
+        ContextClass<Prec, TargetSpace>& context) const {                                   \
         if constexpr (GateSpace == TargetSpace) {                                           \
             this->check_qubit_mask_within_bounds(context.state_member);                     \
             dense_matrix_gate(this->_target_mask,                                           \
@@ -64,7 +64,7 @@ DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
 DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::HostSerial)
 DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial)
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif
@@ -114,7 +114,7 @@ std::string SparseMatrixGateImpl<Prec, Space>::to_string(const std::string& inde
 #define DEFINE_SPARSE_MATRIX_GATE_UPDATE(ContextClass, state_member, TargetSpace)           \
     template <Precision Prec, ExecutionSpace GateSpace>                                     \
     void SparseMatrixGateImpl<Prec, GateSpace>::update_quantum_state(                       \
-        ContextClass<Prec, TargetSpace>& context) const {                                    \
+        ContextClass<Prec, TargetSpace>& context) const {                                   \
         if constexpr (GateSpace == TargetSpace) {                                           \
             this->check_qubit_mask_within_bounds(context.state_member);                     \
             sparse_matrix_gate(this->_target_mask,                                          \
@@ -133,7 +133,7 @@ DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
 DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::HostSerial)
 DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial)
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif
