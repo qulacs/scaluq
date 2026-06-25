@@ -154,7 +154,7 @@ jobs:
           wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | sudo gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
           echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends intel-oneapi-compiler-dpcpp-cpp intel-opencl-icd intel-oneapi-runtime-opencl
+          sudo apt-get install -y --no-install-recommends intel-oneapi-compiler-dpcpp-cpp intel-opencl-icd intel-oneapi-runtime-opencl intel-oneapi-dpl
           echo "/opt/intel/oneapi/compiler/latest/bin" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/latest/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
 
@@ -172,14 +172,21 @@ jobs:
         run: ./script/configure
 
       - name: Install to system
-        run: sudo -E env "PATH=$PATH" ninja -C build install
+        run: |
+          if [ "$SCALUQ_USE_SYCL" = "ON" ]; then
+            source /opt/intel/oneapi/setvars.sh --force
+          fi
+          sudo -E env "PATH=$PATH" ninja -C build install
 
       - name: Build and Run other project
         run: |
+          if [ "$SCALUQ_USE_SYCL" = "ON" ]; then
+            source /opt/intel/oneapi/setvars.sh --force
+          fi
           cd example_project/
           cmake -B build/ -D "CMAKE_C_COMPILER=$CMAKE_C_COMPILER" -D "CMAKE_CXX_COMPILER=$CMAKE_CXX_COMPILER" -D "SCALUQ_USE_CUDA=$SCALUQ_USE_CUDA" -D "SCALUQ_USE_SYCL=$SCALUQ_USE_SYCL"
           make -C build
-          if [[ "$SCALUQ_USE_CUDA" == 'ON' ]] || [[ "$SCALUQ_USE_CUDA" == 'ON' ]]; then
+          if [ "$SCALUQ_USE_CUDA" == 'ON' ]; then
             echo "SKIP"
           else
             build/main
