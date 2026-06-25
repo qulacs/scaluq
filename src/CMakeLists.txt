@@ -25,8 +25,7 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
         target_sources(${LIBRARY} PRIVATE
             gate/merge_gate.cpp
             gate/gate_matrix.cpp
-            gate/update_ops_dense_matrix.cpp
-            gate/update_ops_sparse_matrix.cpp
+            gate/update_ops_matrix.cpp
             gate/update_ops_standard.cpp
             state/state_vector.cpp
             state/state_vector_batched.cpp
