@@ -158,8 +158,13 @@ jobs:
 
       - name: Show installed Compiler version
         run: |
-          [ "$SCALUQ_USE_CUDA" = 'ON' ] && nvcc --version
-          [ "$SCALUQ_USE_SYCL" = "ON" ] && icpx --version
+          if [ "$SCALUQ_USE_CUDA" = 'ON' ]; then
+            nvcc --version
+          fi
+          if [ "$SCALUQ_USE_SYCL" = "ON" ]; then
+            source /opt/intel/oneapi/setvars.sh --force
+            icpx --version
+          fi
           ccache --version
           $CMAKE_C_COMPILER --version
           $CMAKE_CXX_COMPILER --version
@@ -167,7 +172,11 @@ jobs:
           ninja --version
 
       - name: Configure
-        run: ./script/configure
+        run: |
+          if [ "$SCALUQ_USE_SYCL" = "ON" ]; then
+            source /opt/intel/oneapi/setvars.sh --force
+          fi
+          ./script/configure
 
       - name: Install to system
         run: |
