@@ -6,6 +6,7 @@
 
 #include "../classical_register/classical_register.hpp"
 #include "../classical_register/classical_register_batched.hpp"
+#include "../state/density_matrix.hpp"
 #include "../state/state_vector.hpp"
 #include "../state/state_vector_batched.hpp"
 #include "../types.hpp"
@@ -220,6 +221,18 @@ struct ExecutionContextBatched {
         : states(states_), classical_register(classical_register_), random_engine(random_engine_) {}
 };
 
+template <Precision Prec, ExecutionSpace Space>
+struct ExecutionContextDensityMatrix {
+    DensityMatrix<Prec, Space>& state;
+    ClassicalRegister& classical_register;
+    std::mt19937_64& random_engine;
+
+    ExecutionContextDensityMatrix(DensityMatrix<Prec, Space>& state_,
+                                  ClassicalRegister& classical_register_,
+                                  std::mt19937_64& random_engine_)
+        : state(state_), classical_register(classical_register_), random_engine(random_engine_) {}
+};
+
 // GateBase テンプレートクラス
 template <Precision _Prec>
 class GateBase : public std::enable_shared_from_this<GateBase<_Prec>> {
@@ -244,6 +257,14 @@ protected:
         const StateVector<Prec, ExecutionSpace::Default>& state_vector) const;
     void check_qubit_mask_within_bounds(
         const StateVectorBatched<Prec, ExecutionSpace::Default>& states) const;
+#endif  // SCALUQ_USE_CUDA
+    void check_qubit_mask_within_bounds(
+        const DensityMatrix<Prec, ExecutionSpace::Host>& dm) const;
+    void check_qubit_mask_within_bounds(
+        const DensityMatrix<Prec, ExecutionSpace::HostSerial>& dm) const;
+#ifdef SCALUQ_USE_CUDA
+    void check_qubit_mask_within_bounds(
+        const DensityMatrix<Prec, ExecutionSpace::Default>& dm) const;
 #endif  // SCALUQ_USE_CUDA
 
     std::string get_qubit_info_as_string(const std::string& indent) const;
@@ -397,6 +418,71 @@ public:
     virtual void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const = 0;
 #endif
+
+    void update_quantum_state(DensityMatrix<Prec, ExecutionSpace::Host>& state) const {
+        ClassicalRegister classical_register(0);
+        std::mt19937_64 random_engine(std::random_device{}());
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host> context{
+            state, classical_register, random_engine};
+        update_quantum_state(context);
+    }
+    void update_quantum_state(DensityMatrix<Prec, ExecutionSpace::Host>& state,
+                              ClassicalRegister& classical_register,
+                              std::optional<std::uint64_t> seed = std::nullopt) const {
+        std::mt19937_64 random_engine(resolve_seed(seed));
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host> context{
+            state, classical_register, random_engine};
+        update_quantum_state(context);
+    }
+    void update_quantum_state(DensityMatrix<Prec, ExecutionSpace::HostSerial>& state) const {
+        ClassicalRegister classical_register(0);
+        std::mt19937_64 random_engine(std::random_device{}());
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial> context{
+            state, classical_register, random_engine};
+        update_quantum_state(context);
+    }
+    void update_quantum_state(DensityMatrix<Prec, ExecutionSpace::HostSerial>& state,
+                              ClassicalRegister& classical_register,
+                              std::optional<std::uint64_t> seed = std::nullopt) const {
+        std::mt19937_64 random_engine(resolve_seed(seed));
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial> context{
+            state, classical_register, random_engine};
+        update_quantum_state(context);
+    }
+#ifdef SCALUQ_USE_CUDA
+    void update_quantum_state(DensityMatrix<Prec, ExecutionSpace::Default>& state) const {
+        ClassicalRegister classical_register(0);
+        std::mt19937_64 random_engine(std::random_device{}());
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default> context{
+            state, classical_register, random_engine};
+        update_quantum_state(context);
+    }
+    void update_quantum_state(DensityMatrix<Prec, ExecutionSpace::Default>& state,
+                              ClassicalRegister& classical_register,
+                              std::optional<std::uint64_t> seed = std::nullopt) const {
+        std::mt19937_64 random_engine(resolve_seed(seed));
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default> context{
+            state, classical_register, random_engine};
+        update_quantum_state(context);
+    }
+#endif  // SCALUQ_USE_CUDA
+    virtual void update_quantum_state(
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>&) const {
+        throw std::runtime_error(
+            "update_quantum_state for DensityMatrix is not implemented for this gate.");
+    }
+    virtual void update_quantum_state(
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>&) const {
+        throw std::runtime_error(
+            "update_quantum_state for DensityMatrix is not implemented for this gate.");
+    }
+#ifdef SCALUQ_USE_CUDA
+    virtual void update_quantum_state(
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>&) const {
+        throw std::runtime_error(
+            "update_quantum_state for DensityMatrix is not implemented for this gate.");
+    }
+#endif  // SCALUQ_USE_CUDA
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 
