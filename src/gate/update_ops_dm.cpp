@@ -46,8 +46,8 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
             std::uint64_t col1 = col0 | target_mask;
             Complex<Prec> val0 = dm._raw(row, col0);
             Complex<Prec> val1 = dm._raw(row, col1);
-            dm._raw(row, col0) = conj(matrix[0][0]) * val0 + conj(matrix[1][0]) * val1;
-            dm._raw(row, col1) = conj(matrix[0][1]) * val0 + conj(matrix[1][1]) * val1;
+            dm._raw(row, col0) = conj(matrix[0][0]) * val0 + conj(matrix[0][1]) * val1;
+            dm._raw(row, col1) = conj(matrix[1][0]) * val0 + conj(matrix[1][1]) * val1;
         });
 }
 
@@ -398,13 +398,13 @@ void ecr_gate(std::uint64_t physical_target_mask,
             Complex<Prec> v3 = dm._raw(row, basis_3);
             const Float<Prec> inv_sqrt2 = static_cast<Float<Prec>>(INVERSE_SQRT2());
             dm._raw(row, basis_0) =
-                (v1 + v3 * Complex<Prec>(0, 1)) * Complex<Prec>(inv_sqrt2, 0);
+                (v1 + v3 * Complex<Prec>(0, -1)) * Complex<Prec>(inv_sqrt2, 0);
             dm._raw(row, basis_1) =
-                (v0 + v2 * Complex<Prec>(0, -1)) * Complex<Prec>(inv_sqrt2, 0);
+                (v0 + v2 * Complex<Prec>(0, 1)) * Complex<Prec>(inv_sqrt2, 0);
             dm._raw(row, basis_2) =
-                (v1 * Complex<Prec>(0, 1) + v3) * Complex<Prec>(inv_sqrt2, 0);
+                (v1 * Complex<Prec>(0, -1) + v3) * Complex<Prec>(inv_sqrt2, 0);
             dm._raw(row, basis_3) =
-                (v0 * Complex<Prec>(0, -1) + v2) * Complex<Prec>(inv_sqrt2, 0);
+                (v0 * Complex<Prec>(0, 1) + v2) * Complex<Prec>(inv_sqrt2, 0);
         });
 }
 
