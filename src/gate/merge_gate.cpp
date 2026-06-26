@@ -50,6 +50,11 @@ std::pair<Gate<internal::Prec>, double> merge_gate<internal::Prec, internal::Spa
             "merge_gate(const Gate<Prec>&, const Gate<Prec>&): "
             "ProbabilisticGate is not supported.");
     }
+    if (gate_type1 == GateType::Permutation || gate_type2 == GateType::Permutation) {
+        throw std::runtime_error(
+            "merge_gate(const Gate<Prec>&, const Gate<Prec>&): "
+            "PermutationGate is not supported.");
+    }
 
     if (gate_type1 == GateType::I) return {gate2, 0.};
     if (gate_type2 == GateType::I) return {gate1, 0.};

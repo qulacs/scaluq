@@ -69,6 +69,8 @@ class SwapGateImpl;
 template <Precision Prec>
 class EcrGateImpl;
 template <Precision Prec>
+class PermutationGateImpl;
+template <Precision Prec>
 class PauliGateImpl;
 template <Precision Prec>
 class PauliRotationGateImpl;
@@ -108,6 +110,7 @@ enum class GateType {
     U3,
     Swap,
     Ecr,
+    Permutation,
     Pauli,
     PauliRotation,
     SparseMatrix,
@@ -170,6 +173,8 @@ constexpr GateType get_gate_type() {
         return GateType::Swap;
     else if constexpr (std::is_same_v<TWithoutConst, internal::EcrGateImpl<Prec>>)
         return GateType::Ecr;
+    else if constexpr (std::is_same_v<TWithoutConst, internal::PermutationGateImpl<Prec>>)
+        return GateType::Permutation;
     else if constexpr (std::is_same_v<TWithoutConst, internal::PauliGateImpl<Prec>>)
         return GateType::Pauli;
     else if constexpr (std::is_same_v<TWithoutConst, internal::PauliRotationGateImpl<Prec>>)
@@ -447,6 +452,7 @@ DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(U2GateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(U3GateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(SwapGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(EcrGateImpl)
+DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(PermutationGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(PauliGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(PauliRotationGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ProbabilisticGateImpl)
@@ -549,6 +555,7 @@ public:
         else if (type == "U3") gate = GetGateFromJson<U3GateImpl<Prec>>::get(j);
         else if (type == "Swap") gate = GetGateFromJson<SwapGateImpl<Prec>>::get(j);
         else if (type == "Ecr") gate = GetGateFromJson<EcrGateImpl<Prec>>::get(j);
+        else if (type == "Permutation") gate = GetGateFromJson<PermutationGateImpl<Prec>>::get(j);
         else if (type == "Pauli") gate = GetGateFromJson<PauliGateImpl<Prec>>::get(j);
         else if (type == "PauliRotation") gate = GetGateFromJson<PauliRotationGateImpl<Prec>>::get(j);
         else if (type == "Probabilistic") gate = GetGateFromJson<ProbabilisticGateImpl<Prec>>::get(j);
