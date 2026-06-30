@@ -16,7 +16,7 @@ class StateVectorBatched {
 
 public:
     using RawView = Kokkos::View<ComplexType**,
-                                 Kokkos::LayoutRight,
+                                 Kokkos::LayoutStride,
                                  ExecutionSpaceType,
                                  Kokkos::MemoryTraits<Kokkos::Aligned>>;
     RawView _raw;
