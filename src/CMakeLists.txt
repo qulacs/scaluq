@@ -28,7 +28,7 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
             gate/update_ops_dense_matrix.cpp
             gate/update_ops_sparse_matrix.cpp
             gate/update_ops_standard.cpp
-            gate/update_ops_dm.cpp
+            gate/update_ops_dm_standard.cpp
             state/state_vector.cpp
             state/state_vector_batched.cpp
             state/density_matrix.cpp

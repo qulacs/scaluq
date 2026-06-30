@@ -91,7 +91,9 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
 
 // Diagonal gate: ρ → D ρ D†. (D ρ D†)_{ij} = d_{bit_q(i)} * conj(d_{bit_q(j)}) * ρ_{ij}.
 // Uncontrolled: single-pass block; factor[y] = diag[y>>1]*conj(diag[y&1]) per block.
-// Controlled: two-pass.
+// Single control: 4-block — 12 multiplications per block (4 inactive×inactive corners = 1).
+//   ctrl_active / ctrl_inactive derived from control_value_mask & control_mask.
+// Multi-control: two-pass.
 template <>
 void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
                                      std::uint64_t control_mask,
@@ -124,6 +126,47 @@ void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
                 dm._raw(row1, col0) *= factor[2];
                 dm._raw(row1, col1) *= factor[3];
             });
+    } else if (std::popcount(control_mask) == 1) {
+        const std::uint64_t ctrl_active = control_value_mask & control_mask;
+        const std::uint64_t ctrl_inactive = control_mask ^ ctrl_active;
+        const Complex<Prec> d0 = diag[0], d1 = diag[1];
+        const Complex<Prec> cd0 = conj(d0), cd1 = conj(d1);
+        const Complex<Prec> d0cd0 = d0 * cd0, d0cd1 = d0 * cd1;
+        const Complex<Prec> d1cd0 = d1 * cd0, d1cd1 = d1 * cd1;
+        Kokkos::parallel_for(
+            "one_target_diagonal_matrix_gate_dm_4block",
+            Kokkos::RangePolicy<SpaceType<Space>>(0, n_pairs * n_pairs),
+            KOKKOS_LAMBDA(std::uint64_t g) {
+                std::uint64_t it_row = g / n_pairs;
+                std::uint64_t it_col = g % n_pairs;
+                std::uint64_t br =
+                    insert_zero_at_mask_positions(it_row, control_mask | target_mask);
+                std::uint64_t bc =
+                    insert_zero_at_mask_positions(it_col, control_mask | target_mask);
+                std::uint64_t r_act0 = br | ctrl_active;
+                std::uint64_t r_act1 = r_act0 | target_mask;
+                std::uint64_t r_ina0 = br | ctrl_inactive;
+                std::uint64_t r_ina1 = r_ina0 | target_mask;
+                std::uint64_t c_act0 = bc | ctrl_active;
+                std::uint64_t c_act1 = c_act0 | target_mask;
+                std::uint64_t c_ina0 = bc | ctrl_inactive;
+                std::uint64_t c_ina1 = c_ina0 | target_mask;
+                // inactive row × active col: multiply by conj(diag)
+                dm._raw(r_ina0, c_act0) *= cd0;
+                dm._raw(r_ina0, c_act1) *= cd1;
+                dm._raw(r_ina1, c_act0) *= cd0;
+                dm._raw(r_ina1, c_act1) *= cd1;
+                // active row × inactive col: multiply by diag
+                dm._raw(r_act0, c_ina0) *= d0;
+                dm._raw(r_act0, c_ina1) *= d0;
+                dm._raw(r_act1, c_ina0) *= d1;
+                dm._raw(r_act1, c_ina1) *= d1;
+                // active row × active col: multiply by diag[y]*conj(diag[x])
+                dm._raw(r_act0, c_act0) *= d0cd0;
+                dm._raw(r_act0, c_act1) *= d0cd1;
+                dm._raw(r_act1, c_act0) *= d1cd0;
+                dm._raw(r_act1, c_act1) *= d1cd1;
+            });
     } else {
         Kokkos::parallel_for(
             "one_target_diagonal_matrix_gate_dm_left",
@@ -154,9 +197,11 @@ void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
     }
 }
 
-// Phase gate: only off-diagonal blocks (row_bit≠col_bit) change.
+// Phase gate: ρ → [[1,0],[0,p]] ρ [[1,0],[0,p†]]. d0=1, d1=phase.
 // Uncontrolled: single-pass block, 2 ops per block.
-// Controlled: two-pass.
+// Single control: 4-block — 6 multiplications per block (the tgt=1 row/col within active ctrl).
+//   (act_tgt1 × act_tgt1): phase * conj(phase) = 1 → skip.
+// Multi-control: two-pass.
 template <>
 void one_target_phase_gate(std::uint64_t target_mask,
                            std::uint64_t control_mask,
@@ -179,6 +224,37 @@ void one_target_phase_gate(std::uint64_t target_mask,
                     insert_zero_at_mask_positions(it_col, target_mask) | control_value_mask;
                 dm._raw(row0, col0 | target_mask) *= phase_dag;
                 dm._raw(row0 | target_mask, col0) *= phase;
+            });
+    } else if (std::popcount(control_mask) == 1) {
+        const std::uint64_t ctrl_active = control_value_mask & control_mask;
+        const std::uint64_t ctrl_inactive = control_mask ^ ctrl_active;
+        Kokkos::parallel_for(
+            "one_target_phase_gate_dm_4block",
+            Kokkos::RangePolicy<SpaceType<Space>>(0, n_pairs * n_pairs),
+            KOKKOS_LAMBDA(std::uint64_t g) {
+                std::uint64_t it_row = g / n_pairs;
+                std::uint64_t it_col = g % n_pairs;
+                std::uint64_t br =
+                    insert_zero_at_mask_positions(it_row, control_mask | target_mask);
+                std::uint64_t bc =
+                    insert_zero_at_mask_positions(it_col, control_mask | target_mask);
+                std::uint64_t r_act0 = br | ctrl_active;
+                std::uint64_t r_act1 = r_act0 | target_mask;
+                std::uint64_t r_ina0 = br | ctrl_inactive;
+                std::uint64_t r_ina1 = r_ina0 | target_mask;
+                std::uint64_t c_act0 = bc | ctrl_active;
+                std::uint64_t c_act1 = c_act0 | target_mask;
+                std::uint64_t c_ina0 = bc | ctrl_inactive;
+                std::uint64_t c_ina1 = c_ina0 | target_mask;
+                // active tgt=1 row × {ina0,ina1,act0}: multiply by phase
+                dm._raw(r_act1, c_ina0) *= phase;
+                dm._raw(r_act1, c_ina1) *= phase;
+                dm._raw(r_act1, c_act0) *= phase;
+                // {ina0,ina1,act0} × active tgt=1 col: multiply by phase_dag
+                dm._raw(r_ina0, c_act1) *= phase_dag;
+                dm._raw(r_ina1, c_act1) *= phase_dag;
+                dm._raw(r_act0, c_act1) *= phase_dag;
+                // (r_act1, c_act1): phase*conj(phase) = 1 → skip
             });
     } else {
         Kokkos::parallel_for(
@@ -244,7 +320,11 @@ void global_phase_gate(std::uint64_t,
 
 // X gate: XρX† permutes ρ_{ij}→ρ_{flip(i),flip(j)}.
 // Uncontrolled: block approach — two swaps per 2×2 block.
-// Controlled: two-pass (swap rows then swap cols).
+// Single control: 4-block — treat (ctrl,tgt) as 2-qubit subspace; 6 swaps per block.
+//   base = insert_zero(it, ctrl|tgt) with NO ctrl forcing, so all 4 combos are generated.
+//   ctrl_active = control_value_mask & control_mask  (0 if ctrl=|0>, else control_mask)
+//   ctrl_inactive = control_mask ^ ctrl_active
+// Multi-control: two-pass.
 template <>
 void x_gate(std::uint64_t target_mask,
             std::uint64_t control_mask,
@@ -267,6 +347,37 @@ void x_gate(std::uint64_t target_mask,
                                     dm._raw(row0 | target_mask, col0 | target_mask));
                 Kokkos::kokkos_swap(dm._raw(row0, col0 | target_mask),
                                     dm._raw(row0 | target_mask, col0));
+            });
+    } else if (std::popcount(control_mask) == 1) {
+        const std::uint64_t ctrl_active = control_value_mask & control_mask;
+        const std::uint64_t ctrl_inactive = control_mask ^ ctrl_active;
+        Kokkos::parallel_for(
+            "x_gate_dm_4block",
+            Kokkos::RangePolicy<SpaceType<Space>>(0, n_pairs * n_pairs),
+            KOKKOS_LAMBDA(std::uint64_t g) {
+                std::uint64_t it_row = g / n_pairs;
+                std::uint64_t it_col = g % n_pairs;
+                std::uint64_t br =
+                    insert_zero_at_mask_positions(it_row, control_mask | target_mask);
+                std::uint64_t bc =
+                    insert_zero_at_mask_positions(it_col, control_mask | target_mask);
+                std::uint64_t r_act0 = br | ctrl_active;
+                std::uint64_t r_act1 = r_act0 | target_mask;
+                std::uint64_t r_ina0 = br | ctrl_inactive;
+                std::uint64_t r_ina1 = r_ina0 | target_mask;
+                std::uint64_t c_act0 = bc | ctrl_active;
+                std::uint64_t c_act1 = c_act0 | target_mask;
+                std::uint64_t c_ina0 = bc | ctrl_inactive;
+                std::uint64_t c_ina1 = c_ina0 | target_mask;
+                // inactive row × active cols: col-swap within ctrl-inactive rows
+                Kokkos::kokkos_swap(dm._raw(r_ina0, c_act0), dm._raw(r_ina0, c_act1));
+                Kokkos::kokkos_swap(dm._raw(r_ina1, c_act0), dm._raw(r_ina1, c_act1));
+                // active rows × inactive col: row-swap within ctrl-inactive cols
+                Kokkos::kokkos_swap(dm._raw(r_act0, c_ina0), dm._raw(r_act1, c_ina0));
+                Kokkos::kokkos_swap(dm._raw(r_act0, c_ina1), dm._raw(r_act1, c_ina1));
+                // active rows × active cols: diagonal + anti-diagonal swaps
+                Kokkos::kokkos_swap(dm._raw(r_act0, c_act0), dm._raw(r_act1, c_act1));
+                Kokkos::kokkos_swap(dm._raw(r_act0, c_act1), dm._raw(r_act1, c_act0));
             });
     } else {
         Kokkos::parallel_for(
