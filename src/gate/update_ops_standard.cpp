@@ -140,7 +140,7 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
     if constexpr ((Space == ExecutionSpace::Host || Space == ExecutionSpace::HostSerial) &&
                   (Prec == Precision::F64 || Prec == Precision::F32)) {
         constexpr std::size_t complex_lanes = internal::SimdComplex<Prec>::complex_lanes;
-        if (span > complex_lanes && (skip_mask & (complex_lanes - 1)) == 0) {
+        if (span >= complex_lanes && (skip_mask & (complex_lanes - 1)) == 0) {
             // TODO: (skip_mask & (complex_lanes - 1)) != 0 の場合についてもSIMDを使うようにする
             one_target_dense_matrix_gate_simd(
                 target_mask, control_mask, control_value_mask, matrix, state, span);
@@ -163,7 +163,7 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
                   (Prec == Precision::F64 || Prec == Precision::F32)) {
         constexpr std::size_t complex_lanes = internal::SimdComplex<Prec>::complex_lanes;
         if constexpr (complex_lanes > 0) {
-            if (span > complex_lanes && (skip_mask & (complex_lanes - 1)) == 0) {
+            if (span >= complex_lanes && (skip_mask & (complex_lanes - 1)) == 0) {
                 // TODO: (skip_mask & (complex_lanes - 1)) != 0 の場合についてもSIMDを使うようにする
                 one_target_dense_matrix_gate_simd(
                     target_mask, control_mask, control_value_mask, matrix, states, span);
