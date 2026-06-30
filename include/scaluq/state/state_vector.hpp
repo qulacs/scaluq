@@ -22,11 +22,13 @@ class StateVector {
     using ExecutionSpaceType = internal::SpaceType<Space>;
 
 public:
+    using RawView =
+        Kokkos::View<ComplexType*, ExecutionSpaceType, Kokkos::MemoryTraits<Kokkos::Aligned>>;
     static constexpr std::uint64_t UNMEASURED = 2;
-    Kokkos::View<ComplexType*, ExecutionSpaceType> _raw;
+    RawView _raw;
     StateVector() = default;
     StateVector(std::uint64_t n_qubits);
-    StateVector(Kokkos::View<ComplexType*, ExecutionSpaceType> view);
+    StateVector(RawView view);
     StateVector(const StateVector& other) = default;
 
     StateVector& operator=(const StateVector& other) = default;
