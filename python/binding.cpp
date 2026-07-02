@@ -83,7 +83,7 @@ NB_MODULE(scaluq_core, m) {
     internal::bind_gate_param_gate_hpp_without_precision_and_space(m);
 
     auto mdefault = m.def_submodule("default", "module for default execution space");
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     auto mhost = m.def_submodule("host", "module for host execution space");
 #endif
     auto mhost_serial = m.def_submodule("host_serial", "module for host serial execution space");
@@ -97,7 +97,7 @@ NB_MODULE(scaluq_core, m) {
         bind_on_precision_and_space<Precision::F16, ExecutionSpace::Default>(mp, gate_def);
         bind_on_precision<Precision::F16>(mp, gate_def, param_gate_def);
 
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
         auto mp_host = mhost.def_submodule("f16", "module for f16 precision");
         bind_on_precision_and_space<Precision::F16, ExecutionSpace::Host>(mp_host, gate_def);
 #endif
@@ -115,7 +115,7 @@ NB_MODULE(scaluq_core, m) {
         bind_on_precision_and_space<Precision::F32, ExecutionSpace::Default>(mp, gate_def);
         bind_on_precision<Precision::F32>(mp, gate_def, param_gate_def);
 
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
         auto mp_host = mhost.def_submodule("f32", "module for f32 precision");
         bind_on_precision_and_space<Precision::F32, ExecutionSpace::Host>(mp_host, gate_def);
 #endif
@@ -133,7 +133,7 @@ NB_MODULE(scaluq_core, m) {
         bind_on_precision_and_space<Precision::F64, ExecutionSpace::Default>(mp, gate_def);
         bind_on_precision<Precision::F64>(mp, gate_def, param_gate_def);
 
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
         auto mp_host = mhost.def_submodule("f64", "module for f64 precision");
         bind_on_precision_and_space<Precision::F64, ExecutionSpace::Host>(mp_host, gate_def);
 #endif
@@ -151,7 +151,7 @@ NB_MODULE(scaluq_core, m) {
         bind_on_precision_and_space<Precision::BF16, ExecutionSpace::Default>(mp, gate_def);
         bind_on_precision<Precision::BF16>(mp, gate_def, param_gate_def);
 
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
         auto mp_host = mhost.def_submodule("bf16", "module for bf16 precision");
         bind_on_precision_and_space<Precision::BF16, ExecutionSpace::Host>(mp_host, gate_def);
 #endif
@@ -164,8 +164,10 @@ NB_MODULE(scaluq_core, m) {
     m.def(
         "get_default_execution_space",
         []() -> std::string {
-#ifdef SCALUQ_USE_CUDA
+#if defined(SCALUQ_USE_CUDA)
             return "cuda";
+#elif defined(SCALUQ_USE_SYCL)
+            return "sycl";
 #else
             return "host";
 #endif

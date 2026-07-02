@@ -51,15 +51,23 @@ https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
   - CUDA 利用時はGCC 11以上が利用できるが、Clangは利用不可
 - CMake 3.24 以上
 - CUDA 12.8 以上（CUDA利用時のみ）
+- IntelLLVM (SYCL利用時のみ)
+  - Intel oneAPI DPC++/C++ Compiler (CC=icx/CXX=icpx)
 - Python 3.10 以上 (Python利用時のみ)
 
 CUDA を利用する場合は、使用する CUDA がサポートするホストコンパイラのバージョンを使用してください（CUDA Installation Guide の Host Compiler Support Policy を参照）。
 
 ※これより低いバージョンでも動作する可能性はありますが確認していません
 
+※SYCLはCPU上での動作は確認できていますが、Intel GPUやNvidia GPUでの動作確認を行っていません。
+
 ## 実行時要件
 
 - CUDA 12.8 以上（CUDA利用時のみ）
+- SYCL
+    - intel-level-zero-gpu
+    - intel-opencl-icd
+    - level-zero
 
 ※これより低いバージョンでも動作する可能性はありますが確認していません
 
@@ -75,9 +83,11 @@ CUDA を利用する場合は、使用する CUDA がサポートするホスト
 |`CMAKE_INSTALL_PREFIX`|-|See [CMake Document](https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html)|
 |`SCALUQ_USE_OMP`|`ON`|CPUでの並列処理にOpenMPを利用するか|
 |`SCALUQ_USE_CUDA`|`OFF`|GPU (CUDA)での並列処理を行うか|
+|`SCALUQ_USE_SYCL`|`OFF`|GPU (SYCL)での並列処理を行うか|
 |`SCALUQ_CPU_NATIVE`|`ON`| ビルダーのCPUアーキテクチャでビルドするか|
 |`SCALUQ_CPU_ARCH`|-| ターゲットとなるCPUアーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CPU_ARCH=SKX`)|
 |`SCALUQ_CUDA_ARCH`|(自動識別)|`SCALUQ_USE_CUDA=ON`の場合、ターゲットとなるNvidia GPU アーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CUDA_ARCH=AMPERE80`)|
+|`SCALUQ_SYCL_ARCH`|(自動識別)|`SCALUQ_USE_SYCL=ON`の場合、ターゲットとなるIntel GPU アーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_SYCL_ARCH=INTEL_PVC`)|
 |`SCALUQ_USE_TEST`|`OFF`|`test/`をビルドターゲットに含める。`ctest --test-dir build/`でテストのビルド・実行ができます|
 |`SCALUQ_USE_EXE`|`OFF`|`exe/`をビルドターゲットに含める。`ninja -C build`でビルドしたあと、`build/exe/main` を実行してインストールなしで試せます|
 |`SCALUQ_FLOAT16`|`OFF`|`f16`精度を有効にする|
@@ -100,6 +110,7 @@ sudo -E env "PATH=$PATH" ninja -C build install
 - `CMAKE_INSTALL_PREFIX`を設定することで `/usr/local/`以外にインストールすることもできます。ユーザーローカルにインストールしたい場合や、別の設定でビルドしたKokkosと衝突させたくない場合は明示的に指定してください。例: `CMAKE_INSTALL_PREFIX=~/.local script/configure; ninja -C build install`
 - ビルドしたものを`/usr/local/`に配置するため`sudo`コマンドを用いていますが、ビルド時の環境変数をユーザーのものにするため例では`-E`と`env "PATH=$PATH"`を指定しています。
 - NVIDIA GPU と CUDA が利用可能ならば、`SCALUQ_USE_CUDA=ON`を設定してconfigureすることでCUDAを利用するライブラリとしてインストールできます。例: `SCALUQ_USE_CUDA=ON script/configure; sudo env -E "PATH=$PATH" ninja -C build install`
+- Intel GPU と SYCL が利用可能ならば、`SCALUQ_USE_SYCL=ON`を設定してconfigureすることでSYCLを利用するライブラリとしてインストールできます。例: `SCALUQ_USE_SYCL=ON script/configure; sudo env -E "PATH=$PATH" ninja -C build install`
 
 オプションを変更して再ビルドする際には、CMake にセットされたキャッシュ変数をクリアするため、必ず以下のコマンドを実行してください。
 
@@ -250,7 +261,7 @@ Scaluqでは、計算に使用する浮動小数点数のサイズとして`f16`
 
 |実行スペース|C++で指定するテンプレート引数|Pythonで指定するサブモジュールの名前|内容|
 |-|-|-|-|
-|`default`|`ExecutionSpace::Default`|`default`|CUDA が有効なら GPU、そうでなければ CPU で実行|
+|`default`|`ExecutionSpace::Default`|`default`|CUDA、SYCL が有効なら GPU、そうでなければ CPU で実行|
 |`host`|`ExecutionSpace::Host`|`host`|常に CPU で実行|
 |`host_serial`|`ExecutionSpace::HostSerial`|`host_serial`|常に CPU で逐次実行|
 

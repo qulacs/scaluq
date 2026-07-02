@@ -36,13 +36,25 @@ jobs:
     strategy:
       matrix:
         os-arch: ["linux-x86_64", "macos-arm64"]
-        compiler: ["gcc", "clang"]
-        device: ["cpu", "cuda"]
+        compiler: ["gcc", "clang", "intelllvm"]
+        device: ["cpu", "cuda", "sycl"]
         exclude:
           - os-arch: "macos-arm64"
             device: "cuda"
           - compiler: "clang"
             device: "cuda"
+          - os-arch: "macos-arm64"
+            device: "sycl"
+          - os-arch: "macos-arm64"
+            compiler: "intelllvm"
+          - compiler: "clang"
+            device: "sycl"
+          - compiler: "gcc"
+            device: "sycl"
+          - compiler: "intelllvm"
+            device: "cuda"
+          - compiler: "intelllvm"
+            device: "cpu"
         include:
           - os-arch: "linux-x86_64"
             runs-on: "ubuntu-24.04"
@@ -56,6 +68,11 @@ jobs:
             compiler: "clang"
             c-compiler: "/usr/lib/ccache/clang"
             cxx-compiler: "/usr/lib/ccache/clang++"
+          - os-arch: "linux-x86_64"
+            compiler: "intelllvm"
+            device: "sycl"
+            c-compiler: "icx"
+            cxx-compiler: "icpx"
           - os-arch: "macos-arm64"
             compiler: "gcc"
             c-compiler: "/opt/homebrew/opt/ccache/libexec/gcc-15"
@@ -69,13 +86,27 @@ jobs:
       CMAKE_C_COMPILER: ${{ matrix.c-compiler }}
       CMAKE_CXX_COMPILER: ${{ matrix.cxx-compiler }}
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
+      SCALUQ_USE_SYCL: ${{ matrix.device == 'sycl' && 'ON' || 'OFF' }}
       SCALUQ_CPU_NATIVE: "OFF"
       SCALUQ_CUDA_ARCH: "TURING75"
-      SCALUQ_FLOAT16: ${{ (matrix.device == 'cpu' || matrix.compiler == 'clang') && 'OFF' || 'ON' }}
-      SCALUQ_FLOAT32: ${{ matrix.device == 'cpu' && 'OFF' || 'ON' }}
+      SCALUQ_FLOAT16: ${{ (matrix.device == 'cpu' || matrix.compiler == 'clang' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
+      SCALUQ_FLOAT32: ${{ (matrix.device == 'cpu' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
       SCALUQ_FLOAT64: "ON"
-      SCALUQ_BFLOAT16: ${{ (matrix.device == 'cpu' || matrix.compiler == 'clang') && 'OFF' || 'ON' }}
+      SCALUQ_BFLOAT16: ${{ (matrix.device == 'cpu' || matrix.compiler == 'clang' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
     steps:
+      - name: Free Disk Space (gpu)
+        if: ${{ matrix.device == 'cuda' || matrix.device == 'sycl'}}
+        run: |
+          df -h
+          echo "Remove Android library"
+          sudo rm -rf /usr/local/lib/android
+          echo "Remove .NET runtime"
+          sudo rm -rf /usr/share/dotnet
+          echo "Remove Haskell runtime"
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/.ghcup
+          df -h
+
       - uses: actions/checkout@v6
 
       - name: Setup LLVM Clang (macOS clang)
@@ -117,9 +148,23 @@ jobs:
           linux-local-args: '["--toolkit"]'
           log-file-suffix: '${{ github.job }}-${{ matrix.os-arch }}-${{ matrix.device }}'
 
+      - name: Install SYCL toolkit
+        if: ${{ matrix.device == 'sycl' }}
+        uses: rscohn2/setup-oneapi@v0.2.0
+        with:
+          components: |
+            icx
+            dpl
+
       - name: Show installed Compiler version
         run: |
-          [ "$SCALUQ_USE_CUDA" = 'ON' ] && nvcc --version
+          if [ "$SCALUQ_USE_CUDA" = 'ON' ]; then
+            nvcc --version
+          fi
+          if [ "$SCALUQ_USE_SYCL" = "ON" ]; then
+            source /opt/intel/oneapi/setvars.sh --force
+            icpx --version
+          fi
           ccache --version
           $CMAKE_C_COMPILER --version
           $CMAKE_CXX_COMPILER --version
@@ -127,17 +172,30 @@ jobs:
           ninja --version
 
       - name: Configure
-        run: ./script/configure
+        run: |
+          if [ "$SCALUQ_USE_SYCL" = "ON" ]; then
+            source /opt/intel/oneapi/setvars.sh --force
+          fi
+          ./script/configure
 
       - name: Install to system
-        run: sudo -E env "PATH=$PATH" ninja -C build install
+        run: |
+          if [ "$SCALUQ_USE_SYCL" = "ON" ]; then
+            source /opt/intel/oneapi/setvars.sh --force
+          fi
+          sudo -E env "PATH=$PATH" ninja -C build install
 
       - name: Build and Run other project
         run: |
+          if [ "$SCALUQ_USE_SYCL" = "ON" ]; then
+            source /opt/intel/oneapi/setvars.sh --force
+          fi
           cd example_project/
-          cmake -B build/ -D "CMAKE_C_COMPILER=$CMAKE_C_COMPILER" -D "CMAKE_CXX_COMPILER=$CMAKE_CXX_COMPILER" -D "SCALUQ_USE_CUDA=$SCALUQ_USE_CUDA"
+          cmake -B build/ -D "CMAKE_C_COMPILER=$CMAKE_C_COMPILER" -D "CMAKE_CXX_COMPILER=$CMAKE_CXX_COMPILER" -D "SCALUQ_USE_CUDA=$SCALUQ_USE_CUDA" -D "SCALUQ_USE_SYCL=$SCALUQ_USE_SYCL"
           make -C build
-          if [ "$SCALUQ_USE_CUDA" != 'ON' ]; then
+          if [ "$SCALUQ_USE_CUDA" == 'ON' ]; then
+            echo "SKIP"
+          else
             build/main
           fi
 

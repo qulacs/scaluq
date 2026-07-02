@@ -42,7 +42,7 @@ void GateBase<Prec>::check_qubit_mask_within_bounds(
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 template <Precision Prec>
 void GateBase<Prec>::check_qubit_mask_within_bounds(
     const StateVector<Prec, ExecutionSpace::Default>& state_vector) const {

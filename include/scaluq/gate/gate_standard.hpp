@@ -25,12 +25,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -65,12 +65,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -116,12 +116,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -151,12 +151,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -186,12 +186,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -221,12 +221,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -274,12 +274,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -310,12 +310,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -346,12 +346,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -382,12 +382,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -419,12 +419,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -455,12 +455,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -492,12 +492,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -528,12 +528,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -563,12 +563,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -598,12 +598,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -634,12 +634,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -671,12 +671,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -708,12 +708,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -754,12 +754,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -807,12 +807,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -865,12 +865,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -903,12 +903,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -959,12 +959,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
@@ -1017,12 +1017,12 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const override;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 

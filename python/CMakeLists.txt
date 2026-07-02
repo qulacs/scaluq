@@ -35,7 +35,7 @@ if(SCALUQ_BFLOAT16)
 endif()
 foreach(SPACE default host host_serial)
     set(PYTHON_MODULE_NAME scaluq.scaluq_core.${SPACE})
-    if(NOT(SCALUQ_USE_CUDA) AND SPACE STREQUAL host)
+    if(NOT(SCALUQ_USE_CUDA OR SCALUQ_USE_SYCL) AND SPACE STREQUAL host)
         set(PYTHON_MODULE_NAME scaluq.scaluq_core.default)
     endif()
     nanobind_add_stub(

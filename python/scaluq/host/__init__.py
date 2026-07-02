@@ -1,6 +1,8 @@
 import scaluq as _scaluq
 if _scaluq.get_default_execution_space() == 'cuda':
     from ..scaluq_core.host import *
+elif _scaluq.get_default_execution_space() == 'sycl':
+    from ..scaluq_core.host import *
 else:
     from ..scaluq_core.default import *
 if _scaluq.precision_available('f16'):

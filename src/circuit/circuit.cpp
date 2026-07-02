@@ -269,7 +269,7 @@ template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host
     const std::map<std::string, std::vector<double>>& parameters,
     std::optional<std::uint64_t> seed) const;
 
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
     StateVector<internal::Prec, ExecutionSpace::Default>& state,
     const std::map<std::string, double>& parameters,
@@ -288,7 +288,7 @@ template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Defa
     ClassicalRegisterBatched& classical_register,
     const std::map<std::string, std::vector<double>>& parameters,
     std::optional<std::uint64_t> seed) const;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
 template <Precision Prec>
 Circuit<Prec> Circuit<Prec>::copy() const {
@@ -487,10 +487,10 @@ void Circuit<Prec>::optimize(std::uint64_t max_block_size) {
 template void Circuit<internal::Prec>::optimize<ExecutionSpace::Host>(std::uint64_t max_block_size);
 template void Circuit<internal::Prec>::optimize<ExecutionSpace::HostSerial>(
     std::uint64_t max_block_size);
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 template void Circuit<internal::Prec>::optimize<ExecutionSpace::Default>(
     std::uint64_t max_block_size);
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
 // サンプリング回数について，下図のような木をBFSする
 //    1000　　　　 {X:p=0.1, I:p=0.9}
@@ -613,14 +613,14 @@ Circuit<internal::Prec>::simulate_noise<ExecutionSpace::HostSerial>(
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
     std::optional<std::uint64_t> seed) const;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 template std::vector<std::pair<StateVector<internal::Prec, ExecutionSpace::Default>, std::int64_t>>
 Circuit<internal::Prec>::simulate_noise<ExecutionSpace::Default>(
     const StateVector<internal::Prec, ExecutionSpace::Default>& initial_state,
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
     std::optional<std::uint64_t> seed) const;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
 template <Precision Prec>
 std::uint64_t Circuit<Prec>::required_n_qubits() const {
@@ -745,13 +745,13 @@ Circuit<internal::Prec>::compute_expectation_gradient_backprop(
     StateVector<internal::Prec, ExecutionSpace::HostSerial>& state,
     StateVector<internal::Prec, ExecutionSpace::HostSerial>& bistate,
     const std::map<std::string, double>& parameters);
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 template std::unordered_map<std::string, double>
 Circuit<internal::Prec>::compute_expectation_gradient_backprop(
     StateVector<internal::Prec, ExecutionSpace::Default>& state,
     StateVector<internal::Prec, ExecutionSpace::Default>& bistate,
     const std::map<std::string, double>& parameters);
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
 template <Precision Prec>
 template <ExecutionSpace Space>
@@ -776,12 +776,12 @@ template std::unordered_map<std::string, double>
 Circuit<internal::Prec>::compute_expectation_gradient<ExecutionSpace::HostSerial>(
     const Operator<internal::Prec, ExecutionSpace::HostSerial>& obs,
     const std::map<std::string, double>& parameters);
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 template std::unordered_map<std::string, double>
 Circuit<internal::Prec>::compute_expectation_gradient<ExecutionSpace::Default>(
     const Operator<internal::Prec, ExecutionSpace::Default>& obs,
     const std::map<std::string, double>& parameters);
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
 template class Circuit<internal::Prec>;
 }  // namespace scaluq

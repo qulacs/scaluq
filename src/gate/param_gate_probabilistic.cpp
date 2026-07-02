@@ -168,7 +168,7 @@ void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
         this->update_quantum_state(state_context, params[i]);
     }
 }
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 template <Precision Prec>
 void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
     ExecutionContext<Prec, ExecutionSpace::Default>& context, double param) const {

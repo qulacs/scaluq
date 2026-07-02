@@ -247,12 +247,12 @@ protected:
         const StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const;
     void check_qubit_mask_within_bounds(
         const StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states) const;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void check_qubit_mask_within_bounds(
         const StateVector<Prec, ExecutionSpace::Default>& state_vector) const;
     void check_qubit_mask_within_bounds(
         const StateVectorBatched<Prec, ExecutionSpace::Default>& states) const;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string get_qubit_info_as_string(const std::string& indent) const;
 
@@ -354,7 +354,7 @@ public:
             states, classical_register, random_engine};
         update_quantum_state(context);
     }
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector) const {
         ClassicalRegister classical_register(0);
         std::mt19937_64 random_engine(std::random_device{}());
@@ -390,7 +390,7 @@ public:
             states, classical_register, random_engine};
         update_quantum_state(context);
     }
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
     virtual void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Host>& context) const = 0;
     virtual void update_quantum_state(
@@ -399,7 +399,7 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const = 0;
     virtual void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const = 0;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     virtual void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const = 0;
     virtual void update_quantum_state(
@@ -908,7 +908,7 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
             "seed"_a = std::nullopt,
             "Apply gate to `states` with `classical_register` and `seed`.");
 
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     c.def(
          "update_quantum_state",
          [](const GateT& gate, StateVector<Prec, ExecutionSpace::Default>& sv) {
