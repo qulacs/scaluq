@@ -293,6 +293,10 @@ if(SCALUQ_USE_SYCL)
     target_link_options(scaluq_base PUBLIC -fsycl)
 endif()
 
+if(SCALUQ_USE_DEVICE)
+    target_compile_definitions(scaluq_base PUBLIC SCALUQ_USE_DEVICE)
+endif()
+
 # Enable pthread
 target_compile_options(scaluq_base PUBLIC -pthread)
 

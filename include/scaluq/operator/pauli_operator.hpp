@@ -230,11 +230,26 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.")
 #ifdef SCALUQ_USE_DEVICE
         .def("get_expectation_value",
+             nb::overload_cast<const StateVector<Prec, ExecutionSpace::Default>&>(
+                 &PauliOperator<Prec>::template get_expectation_value<ExecutionSpace::Default>,
+                 nb::const_),
+             "states"_a,
+             "Get expectation value of measuring state vector. $\\bra{\\psi_i}P\\ket{\\psi_i}$.")
+        .def("get_expectation_value",
              nb::overload_cast<const StateVectorBatched<Prec, ExecutionSpace::Default>&>(
                  &PauliOperator<Prec>::template get_expectation_value<ExecutionSpace::Default>,
                  nb::const_),
              "states"_a,
              "Get expectation values of measuring state vectors. $\\bra{\\psi_i}P\\ket{\\psi_i}$.")
+        .def("get_transition_amplitude",
+             nb::overload_cast<const StateVector<Prec, ExecutionSpace::Default>&,
+                               const StateVector<Prec, ExecutionSpace::Default>&>(
+                 &PauliOperator<Prec>::template get_transition_amplitude<ExecutionSpace::Default>,
+                 nb::const_),
+             "state_source"_a,
+             "state_target"_a,
+             "Get transition amplitudes of measuring state vector. "
+             "$\\bra{\\chi_i}P\\ket{\\psi_i}$.")
         .def("get_transition_amplitude",
              nb::overload_cast<const StateVectorBatched<Prec, ExecutionSpace::Default>&,
                                const StateVectorBatched<Prec, ExecutionSpace::Default>&>(
