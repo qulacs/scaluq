@@ -251,20 +251,14 @@ jobs:
       - name: Run / Test stub
         if: ${{ matrix.device == 'cpu' }}  # currently GPU runner is not supported
         run: |
-          echo -e "from scaluq.default.f64 import StateVector, gate\nstate = StateVector(2)\nx = gate.X(0)\nx.update_quantum_state(state)\nprint(state.get_amplitudes())" > /tmp/sample.py
+          echo -e "from scaluq import StateVector, gate\nstate = StateVector(2)\nx = gate.X(0)\nx.update_quantum_state(state)\nprint(state.get_amplitudes())" > /tmp/sample.py
           python /tmp/sample.py
           python -m mypy /tmp/sample.py
 
-      - name: Run doctest default f64
+      - name: Run doctest
         if: ${{ matrix.device == 'cpu' }}  # currently GPU runner is not supported
         run: |
-          ( set -o pipefail; python python_test/run_doctest.py default f64 | tee /tmp/doctest.log )
-          ! grep -q "Failed" /tmp/doctest.log
-
-      - name: Run doctest host f64
-        if: ${{ matrix.device == 'cpu' }}  # currently GPU runner is not supported
-        run: |
-          ( set -o pipefail; python python_test/run_doctest.py host f64 | tee /tmp/doctest.log )
+          ( set -o pipefail; python python_test/run_doctest.py | tee /tmp/doctest.log )
           ! grep -q "Failed" /tmp/doctest.log
 
   install-checks-passed:
