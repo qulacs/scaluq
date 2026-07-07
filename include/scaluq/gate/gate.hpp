@@ -203,26 +203,28 @@ constexpr GateType get_gate_type() {
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 struct ExecutionContext {
-    StateVector<Prec, Space>& state;
-    ClassicalRegister& classical_register;
-    std::mt19937_64& random_engine;
+    StateVector<Prec, Space>* state;
+    ClassicalRegister* classical_register;
+    std::mt19937_64* random_engine;
 
     ExecutionContext(StateVector<Prec, Space>& state_,
                      ClassicalRegister& classical_register_,
                      std::mt19937_64& random_engine_)
-        : state(state_), classical_register(classical_register_), random_engine(random_engine_) {}
+        : state(&state_), classical_register(&classical_register_), random_engine(&random_engine_) {}
 };
 
 template <Precision Prec, ExecutionSpace Space>
 struct ExecutionContextBatched {
-    StateVectorBatched<Prec, Space>& states;
-    ClassicalRegisterBatched& classical_register;
-    std::mt19937_64& random_engine;
+    StateVectorBatched<Prec, Space>* states;
+    ClassicalRegisterBatched* classical_register;
+    std::mt19937_64* random_engine;
 
     ExecutionContextBatched(StateVectorBatched<Prec, Space>& states_,
                             ClassicalRegisterBatched& classical_register_,
                             std::mt19937_64& random_engine_)
-        : states(states_), classical_register(classical_register_), random_engine(random_engine_) {}
+        : states(&states_),
+          classical_register(&classical_register_),
+          random_engine(&random_engine_) {}
 };
 
 // GateBase テンプレートクラス

@@ -47,12 +47,12 @@ std::string DenseMatrixGateImpl<Prec, Space>::to_string(const std::string& inden
     void DenseMatrixGateImpl<Prec, GateSpace>::update_quantum_state(                        \
         ContextClass<Prec, TargetSpace>& context) const {                                    \
         if constexpr (GateSpace == TargetSpace) {                                           \
-            this->check_qubit_mask_within_bounds(context.state_member);                     \
+            this->check_qubit_mask_within_bounds(*context.state_member);                     \
             dense_matrix_gate(this->_target_mask,                                           \
                               this->_control_mask,                                          \
                               this->_control_value_mask,                                    \
                               _matrix,                                                      \
-                              context.state_member);                                        \
+                              *context.state_member);                                        \
         } else {                                                                            \
             throw std::runtime_error(                                                       \
                 "Error: DenseMatrixGateImpl::update_quantum_state(" #ContextClass           \
@@ -116,12 +116,12 @@ std::string SparseMatrixGateImpl<Prec, Space>::to_string(const std::string& inde
     void SparseMatrixGateImpl<Prec, GateSpace>::update_quantum_state(                       \
         ContextClass<Prec, TargetSpace>& context) const {                                    \
         if constexpr (GateSpace == TargetSpace) {                                           \
-            this->check_qubit_mask_within_bounds(context.state_member);                     \
+            this->check_qubit_mask_within_bounds(*context.state_member);                     \
             sparse_matrix_gate(this->_target_mask,                                          \
                                this->_control_mask,                                         \
                                this->_control_value_mask,                                   \
                                _matrix,                                                     \
-                               context.state_member);                                       \
+                               *context.state_member);                                       \
         } else {                                                                            \
             throw std::runtime_error(                                                       \
                 "Error: SparseMatrixGateImpl::update_quantum_state(" #ContextClass          \
