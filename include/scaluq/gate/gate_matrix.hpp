@@ -1,6 +1,8 @@
 #pragma once
 
 #include <ranges>
+#include <type_traits>
+#include <variant>
 #include <vector>
 
 #include "../constant.hpp"
@@ -10,7 +12,10 @@ namespace scaluq {
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 class DenseMatrixGateImpl : public GateBase<Prec> {
-    Matrix<Prec, Space> _matrix;
+    using MatrixVariant =
+        std::variant<Complex<Prec>, Matrix2x2<Prec>, Matrix4x4<Prec>, Matrix<Prec, Space>>;
+
+    MatrixVariant _matrix;
     bool _is_unitary;
 
 public:

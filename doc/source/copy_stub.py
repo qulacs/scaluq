@@ -27,10 +27,6 @@ def copy_stub_file(target):
 
 
 copy_stub_file("")
-for space in ["default", "host"]:
-    copy_stub_file(space)
-    for precision in ["f16", "f32", "f64", "bf16"]:
-        copy_stub_file(f"{space}/{precision}")
-        copy_stub_file(f"{space}/{precision}/gate")
+copy_stub_file("gate")
 
 subprocess.run(["sed", "-i", "/@overload/d"] + files, check=True)
