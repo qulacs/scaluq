@@ -28,9 +28,6 @@ public:
     StateVector() = default;
     StateVector(std::uint64_t n_qubits);
     StateVector(Kokkos::View<ComplexType*, ExecutionSpaceType> view);
-    StateVector(const StateVector& other) = default;
-
-    StateVector& operator=(const StateVector& other) = default;
 
     /**
      * @attention Very slow. You should use load() instead if you can.

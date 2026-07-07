@@ -24,9 +24,6 @@ public:
     DensityMatrix(std::uint64_t n_qubits);
     DensityMatrix(Kokkos::View<ComplexType**, ExecutionSpaceType> view, bool is_hermitian = false);
     DensityMatrix(const StateVector<Prec, Space>& other);
-    DensityMatrix(const DensityMatrix& other) = default;
-
-    DensityMatrix& operator=(const DensityMatrix& other) = default;
 
     [[nodiscard]] std::uint64_t n_qubits() const { return this->_n_qubits; }
 

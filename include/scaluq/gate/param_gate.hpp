@@ -88,6 +88,10 @@ public:
                   std::uint64_t control_value_mask,
                   Float<Prec> param_coef = 1);
     virtual ~ParamGateBase() = default;
+    ParamGateBase(const ParamGateBase&) = delete;
+    ParamGateBase(ParamGateBase&&) = delete;
+    ParamGateBase& operator=(const ParamGateBase&) = delete;
+    ParamGateBase& operator=(ParamGateBase&&) = delete;
 
     [[nodiscard]] double param_coef() const { return _pcoef; }
 

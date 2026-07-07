@@ -258,6 +258,10 @@ public:
              std::uint64_t control_mask,
              std::uint64_t control_value_mask);
     virtual ~GateBase() = default;
+    GateBase(const GateBase&) = delete;
+    GateBase(GateBase&&) = delete;
+    GateBase& operator=(const GateBase&) = delete;
+    GateBase& operator=(GateBase&&) = delete;
 
     [[nodiscard]] virtual std::vector<std::uint64_t> target_qubit_list() const {
         return mask_to_vector(_target_mask);

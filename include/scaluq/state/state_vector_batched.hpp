@@ -20,9 +20,6 @@ public:
     Kokkos::View<ComplexType**, Kokkos::LayoutRight, ExecutionSpaceType> _raw;
     StateVectorBatched() = default;
     StateVectorBatched(std::uint64_t batch_size, std::uint64_t n_qubits);
-    StateVectorBatched(const StateVectorBatched& other) = default;
-
-    StateVectorBatched& operator=(const StateVectorBatched& other) = default;
 
     [[nodiscard]] std::uint64_t n_qubits() const { return this->_n_qubits; }
 
