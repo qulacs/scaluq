@@ -31,6 +31,11 @@ DEFINE_I_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial
 DEFINE_I_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_I_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
+DEFINE_I_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_I_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_I_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
 #undef DEFINE_I_GATE_UPDATE
 template class IGateImpl<Prec>;
 
@@ -65,6 +70,11 @@ DEFINE_GLOBAL_PHASE_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace:
 DEFINE_GLOBAL_PHASE_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_GLOBAL_PHASE_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
+DEFINE_GLOBAL_PHASE_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_GLOBAL_PHASE_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_GLOBAL_PHASE_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
 #undef DEFINE_GLOBAL_PHASE_GATE_UPDATE
 template class GlobalPhaseGateImpl<Prec>;
 
@@ -97,6 +107,11 @@ DEFINE_X_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial
 #ifdef SCALUQ_USE_CUDA
 DEFINE_X_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_X_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
+DEFINE_X_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_X_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_X_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_X_GATE_UPDATE
 template class XGateImpl<Prec>;
@@ -131,6 +146,11 @@ DEFINE_Y_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial
 DEFINE_Y_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_Y_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
+DEFINE_Y_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_Y_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_Y_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
 #undef DEFINE_Y_GATE_UPDATE
 template class YGateImpl<Prec>;
 
@@ -163,6 +183,11 @@ DEFINE_Z_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial
 #ifdef SCALUQ_USE_CUDA
 DEFINE_Z_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_Z_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
+DEFINE_Z_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_Z_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_Z_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_Z_GATE_UPDATE
 template class ZGateImpl<Prec>;
@@ -198,6 +223,11 @@ DEFINE_H_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial
 DEFINE_H_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_H_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
+DEFINE_H_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_H_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_H_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
 #undef DEFINE_H_GATE_UPDATE
 template class HGateImpl<Prec>;
 
@@ -230,6 +260,11 @@ DEFINE_S_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial
 #ifdef SCALUQ_USE_CUDA
 DEFINE_S_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_S_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
+DEFINE_S_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_S_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_S_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_S_GATE_UPDATE
 template class SGateImpl<Prec>;
@@ -264,6 +299,11 @@ DEFINE_S_DAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSe
 DEFINE_S_DAG_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_S_DAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
+DEFINE_S_DAG_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_S_DAG_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_S_DAG_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
 #undef DEFINE_S_DAG_GATE_UPDATE
 template class SdagGateImpl<Prec>;
 
@@ -296,6 +336,11 @@ DEFINE_T_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial
 #ifdef SCALUQ_USE_CUDA
 DEFINE_T_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_T_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
+DEFINE_T_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_T_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_T_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_T_GATE_UPDATE
 template class TGateImpl<Prec>;
@@ -330,6 +375,11 @@ DEFINE_T_DAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSe
 DEFINE_T_DAG_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_T_DAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
+DEFINE_T_DAG_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_T_DAG_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_T_DAG_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
 #undef DEFINE_T_DAG_GATE_UPDATE
 template class TdagGateImpl<Prec>;
 
@@ -362,6 +412,11 @@ DEFINE_SQRT_X_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostS
 #ifdef SCALUQ_USE_CUDA
 DEFINE_SQRT_X_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_SQRT_X_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
+DEFINE_SQRT_X_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_SQRT_X_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_SQRT_X_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_SQRT_X_GATE_UPDATE
 template class SqrtXGateImpl<Prec>;
@@ -396,6 +451,11 @@ DEFINE_SQRT_XDAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Ho
 DEFINE_SQRT_XDAG_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_SQRT_XDAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
+DEFINE_SQRT_XDAG_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_SQRT_XDAG_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_SQRT_XDAG_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
 #undef DEFINE_SQRT_XDAG_GATE_UPDATE
 template class SqrtXdagGateImpl<Prec>;
 
@@ -428,6 +488,11 @@ DEFINE_SQRT_Y_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostS
 #ifdef SCALUQ_USE_CUDA
 DEFINE_SQRT_Y_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_SQRT_Y_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
+DEFINE_SQRT_Y_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_SQRT_Y_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_SQRT_Y_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_SQRT_Y_GATE_UPDATE
 template class SqrtYGateImpl<Prec>;
@@ -462,6 +527,11 @@ DEFINE_SQRT_YDAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Ho
 DEFINE_SQRT_YDAG_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_SQRT_YDAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
+DEFINE_SQRT_YDAG_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_SQRT_YDAG_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_SQRT_YDAG_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
 #undef DEFINE_SQRT_YDAG_GATE_UPDATE
 template class SqrtYdagGateImpl<Prec>;
 
@@ -495,6 +565,11 @@ DEFINE_P0_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSeria
 DEFINE_P0_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_P0_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
+DEFINE_P0_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_P0_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_P0_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
 #undef DEFINE_P0_GATE_UPDATE
 template class P0GateImpl<Prec>;
 
@@ -527,6 +602,11 @@ DEFINE_P1_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSeria
 #ifdef SCALUQ_USE_CUDA
 DEFINE_P1_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_P1_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
+DEFINE_P1_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_P1_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_P1_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_P1_GATE_UPDATE
 template class P1GateImpl<Prec>;
@@ -565,6 +645,11 @@ DEFINE_RX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSeria
 DEFINE_RX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_RX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
+DEFINE_RX_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_RX_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_RX_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
 #undef DEFINE_RX_GATE_UPDATE
 template class RXGateImpl<Prec>;
 
@@ -600,6 +685,11 @@ DEFINE_RY_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSeria
 #ifdef SCALUQ_USE_CUDA
 DEFINE_RY_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_RY_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
+DEFINE_RY_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_RY_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_RY_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_RY_GATE_UPDATE
 template class RYGateImpl<Prec>;
@@ -637,6 +727,11 @@ DEFINE_RZ_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSeria
 DEFINE_RZ_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_RZ_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
+DEFINE_RZ_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_RZ_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_RZ_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
 #undef DEFINE_RZ_GATE_UPDATE
 template class RZGateImpl<Prec>;
 
@@ -671,6 +766,11 @@ DEFINE_U1_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSeria
 #ifdef SCALUQ_USE_CUDA
 DEFINE_U1_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_U1_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
+DEFINE_U1_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_U1_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_U1_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_U1_GATE_UPDATE
 template class U1GateImpl<Prec>;
@@ -713,6 +813,11 @@ DEFINE_U2_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSeria
 #ifdef SCALUQ_USE_CUDA
 DEFINE_U2_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_U2_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
+DEFINE_U2_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_U2_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_U2_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_U2_GATE_UPDATE
 template class U2GateImpl<Prec>;
@@ -760,6 +865,11 @@ DEFINE_U3_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSeria
 DEFINE_U3_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_U3_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
+DEFINE_U3_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_U3_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_U3_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
 #undef DEFINE_U3_GATE_UPDATE
 template class U3GateImpl<Prec>;
 
@@ -792,6 +902,11 @@ DEFINE_SWAP_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSer
 #ifdef SCALUQ_USE_CUDA
 DEFINE_SWAP_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_SWAP_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
+DEFINE_SWAP_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_SWAP_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_SWAP_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_SWAP_GATE_UPDATE
 template class SwapGateImpl<Prec>;
@@ -862,6 +977,11 @@ DEFINE_ECR_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSeri
 #ifdef SCALUQ_USE_CUDA
 DEFINE_ECR_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_ECR_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
+#endif  // SCALUQ_USE_CUDA
+DEFINE_ECR_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_ECR_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_CUDA
+DEFINE_ECR_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_ECR_GATE_UPDATE
 template class EcrGateImpl<Prec>;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <scaluq/operator/pauli_operator.hpp>
+#include <scaluq/state/density_matrix.hpp>
 #include <scaluq/state/state_vector.hpp>
 #include <scaluq/state/state_vector_batched.hpp>
 #include <scaluq/types.hpp>
@@ -549,6 +550,218 @@ void dense_matrix_gate(std::uint64_t target_mask,
                        std::uint64_t control_value_mask,
                        const Matrix<Prec, Space>& matrix,
                        StateVectorBatched<Prec, Space>& states);
+
+// DensityMatrix overloads
+
+template <Precision Prec, ExecutionSpace Space>
+void one_target_dense_matrix_gate(std::uint64_t target_mask,
+                                  std::uint64_t control_mask,
+                                  std::uint64_t control_value_mask,
+                                  const Matrix2x2<Prec>& matrix,
+                                  DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
+                                     std::uint64_t control_mask,
+                                     std::uint64_t control_value_mask,
+                                     const DiagonalMatrix2x2<Prec>& diag,
+                                     DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void one_target_phase_gate(std::uint64_t target_mask,
+                           std::uint64_t control_mask,
+                           std::uint64_t control_value_mask,
+                           Complex<Prec> phase,
+                           DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void global_phase_gate(std::uint64_t,
+                       std::uint64_t control_mask,
+                       std::uint64_t control_value_mask,
+                       Float<Prec> angle,
+                       DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void x_gate(std::uint64_t target_mask,
+            std::uint64_t control_mask,
+            std::uint64_t control_value_mask,
+            DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void y_gate(std::uint64_t target_mask,
+            std::uint64_t control_mask,
+            std::uint64_t control_value_mask,
+            DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void z_gate(std::uint64_t target_mask,
+            std::uint64_t control_mask,
+            std::uint64_t control_value_mask,
+            DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void rx_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             std::uint64_t control_value_mask,
+             Float<Prec> angle,
+             DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void ry_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             std::uint64_t control_value_mask,
+             Float<Prec> angle,
+             DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void rz_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             std::uint64_t control_value_mask,
+             Float<Prec> angle,
+             DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void u1_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             std::uint64_t control_value_mask,
+             Float<Prec> lambda,
+             DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void u2_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             std::uint64_t control_value_mask,
+             Float<Prec> phi,
+             Float<Prec> lambda,
+             DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void u3_gate(std::uint64_t target_mask,
+             std::uint64_t control_mask,
+             std::uint64_t control_value_mask,
+             Float<Prec> theta,
+             Float<Prec> phi,
+             Float<Prec> lambda,
+             DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void swap_gate(std::uint64_t target_mask,
+               std::uint64_t control_mask,
+               std::uint64_t control_value_mask,
+               DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void ecr_gate(std::uint64_t physical_target_mask,
+              std::uint64_t physical_control_mask,
+              std::uint64_t control_mask,
+              std::uint64_t control_value_mask,
+              DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+inline void i_gate(std::uint64_t, std::uint64_t, std::uint64_t, DensityMatrix<Prec, Space>&) {}
+
+template <Precision Prec, ExecutionSpace Space>
+inline void h_gate(std::uint64_t target_mask,
+                   std::uint64_t control_mask,
+                   std::uint64_t control_value_mask,
+                   DensityMatrix<Prec, Space>& dm) {
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, HADAMARD_MATRIX<Prec>(), dm);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+inline void s_gate(std::uint64_t target_mask,
+                   std::uint64_t control_mask,
+                   std::uint64_t control_value_mask,
+                   DensityMatrix<Prec, Space>& dm) {
+    one_target_phase_gate(target_mask, control_mask, control_value_mask, Complex<Prec>(0, 1), dm);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+inline void sdag_gate(std::uint64_t target_mask,
+                      std::uint64_t control_mask,
+                      std::uint64_t control_value_mask,
+                      DensityMatrix<Prec, Space>& dm) {
+    one_target_phase_gate(target_mask, control_mask, control_value_mask, Complex<Prec>(0, -1), dm);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+inline void t_gate(std::uint64_t target_mask,
+                   std::uint64_t control_mask,
+                   std::uint64_t control_value_mask,
+                   DensityMatrix<Prec, Space>& dm) {
+    one_target_phase_gate(target_mask,
+                          control_mask,
+                          control_value_mask,
+                          Complex<Prec>(INVERSE_SQRT2(), INVERSE_SQRT2()),
+                          dm);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+inline void tdag_gate(std::uint64_t target_mask,
+                      std::uint64_t control_mask,
+                      std::uint64_t control_value_mask,
+                      DensityMatrix<Prec, Space>& dm) {
+    one_target_phase_gate(target_mask,
+                          control_mask,
+                          control_value_mask,
+                          Complex<Prec>(INVERSE_SQRT2(), -INVERSE_SQRT2()),
+                          dm);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+inline void sqrtx_gate(std::uint64_t target_mask,
+                       std::uint64_t control_mask,
+                       std::uint64_t control_value_mask,
+                       DensityMatrix<Prec, Space>& dm) {
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, SQRT_X_GATE_MATRIX<Prec>(), dm);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+inline void sqrtxdag_gate(std::uint64_t target_mask,
+                          std::uint64_t control_mask,
+                          std::uint64_t control_value_mask,
+                          DensityMatrix<Prec, Space>& dm) {
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, SQRT_X_DAG_GATE_MATRIX<Prec>(), dm);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+inline void sqrty_gate(std::uint64_t target_mask,
+                       std::uint64_t control_mask,
+                       std::uint64_t control_value_mask,
+                       DensityMatrix<Prec, Space>& dm) {
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, SQRT_Y_GATE_MATRIX<Prec>(), dm);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+inline void sqrtydag_gate(std::uint64_t target_mask,
+                          std::uint64_t control_mask,
+                          std::uint64_t control_value_mask,
+                          DensityMatrix<Prec, Space>& dm) {
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, SQRT_Y_DAG_GATE_MATRIX<Prec>(), dm);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+inline void p0_gate(std::uint64_t target_mask,
+                    std::uint64_t control_mask,
+                    std::uint64_t control_value_mask,
+                    DensityMatrix<Prec, Space>& dm) {
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, PROJ_0_MATRIX<Prec>(), dm);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+inline void p1_gate(std::uint64_t target_mask,
+                    std::uint64_t control_mask,
+                    std::uint64_t control_value_mask,
+                    DensityMatrix<Prec, Space>& dm) {
+    one_target_dense_matrix_gate(
+        target_mask, control_mask, control_value_mask, PROJ_1_MATRIX<Prec>(), dm);
+}
 
 }  // namespace internal
 }  // namespace scaluq
