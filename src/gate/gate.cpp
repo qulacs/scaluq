@@ -64,38 +64,6 @@ void GateBase<Prec>::check_qubit_mask_within_bounds(
     }
 }
 #endif  // SCALUQ_USE_CUDA
-template <Precision Prec>
-void GateBase<Prec>::check_qubit_mask_within_bounds(
-    const DensityMatrix<Prec, ExecutionSpace::Host>& dm) const {
-    std::uint64_t full_mask = (1ULL << dm.n_qubits()) - 1;
-    if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
-        throw std::runtime_error(
-            "Error: Gate::update_quantum_state(DensityMatrix& dm): "
-            "Target/Control qubit exceeds the number of qubits in the system.");
-    }
-}
-template <Precision Prec>
-void GateBase<Prec>::check_qubit_mask_within_bounds(
-    const DensityMatrix<Prec, ExecutionSpace::HostSerial>& dm) const {
-    std::uint64_t full_mask = (1ULL << dm.n_qubits()) - 1;
-    if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
-        throw std::runtime_error(
-            "Error: Gate::update_quantum_state(DensityMatrix& dm): "
-            "Target/Control qubit exceeds the number of qubits in the system.");
-    }
-}
-#ifdef SCALUQ_USE_CUDA
-template <Precision Prec>
-void GateBase<Prec>::check_qubit_mask_within_bounds(
-    const DensityMatrix<Prec, ExecutionSpace::Default>& dm) const {
-    std::uint64_t full_mask = (1ULL << dm.n_qubits()) - 1;
-    if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
-        throw std::runtime_error(
-            "Error: Gate::update_quantum_state(DensityMatrix& dm): "
-            "Target/Control qubit exceeds the number of qubits in the system.");
-    }
-}
-#endif  // SCALUQ_USE_CUDA
 
 template <Precision Prec>
 std::string GateBase<Prec>::get_qubit_info_as_string(const std::string& indent) const {
