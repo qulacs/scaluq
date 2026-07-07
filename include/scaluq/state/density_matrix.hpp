@@ -7,9 +7,9 @@ namespace scaluq {
 
 template <Precision Prec, ExecutionSpace Space>
 class DensityMatrix {
-    std::uint64_t _n_qubits;
-    std::uint64_t _dim;
-    bool _is_hermitian;
+    std::uint64_t _n_qubits = 0;
+    std::uint64_t _dim = 0;
+    bool _is_hermitian = false;
     using FloatType = internal::Float<Prec>;
     using ComplexType = internal::Complex<Prec>;
     using ExecutionSpaceType = internal::SpaceType<Space>;

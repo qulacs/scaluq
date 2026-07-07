@@ -9,9 +9,9 @@ namespace scaluq {
 
 template <Precision Prec, ExecutionSpace Space>
 class StateVectorBatched {
-    std::uint64_t _batch_size;
-    std::uint64_t _n_qubits;
-    std::uint64_t _dim;
+    std::uint64_t _batch_size = 0;
+    std::uint64_t _n_qubits = 0;
+    std::uint64_t _dim = 0;
     using FloatType = internal::Float<Prec>;
     using ComplexType = internal::Complex<Prec>;
     using ExecutionSpaceType = internal::SpaceType<Space>;
