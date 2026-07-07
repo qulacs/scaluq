@@ -11,7 +11,7 @@ namespace internal {
 
 template <Precision Prec>
 class PauliGateImpl : public GateBase<Prec> {
-    const PauliOperator<Prec> _pauli;
+    PauliOperator<Prec> _pauli;
 
 public:
     PauliGateImpl(std::uint64_t control_mask,
@@ -58,8 +58,8 @@ public:
 
 template <Precision Prec>
 class PauliRotationGateImpl : public GateBase<Prec> {
-    const PauliOperator<Prec> _pauli;
-    const Float<Prec> _angle;
+    PauliOperator<Prec> _pauli;
+    Float<Prec> _angle;
 
 public:
     PauliRotationGateImpl(std::uint64_t control_mask,

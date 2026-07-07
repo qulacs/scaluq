@@ -10,7 +10,7 @@ namespace scaluq {
 namespace internal {
 template <Precision Prec>
 class ParamPauliRotationGateImpl : public ParamGateBase<Prec> {
-    const PauliOperator<Prec> _pauli;
+    PauliOperator<Prec> _pauli;
 
 public:
     ParamPauliRotationGateImpl(std::uint64_t control_mask,
