@@ -1,6 +1,7 @@
 #pragma once
 
 #include <random>
+#include <variant>
 #include <vector>
 
 #include "operator.hpp"
@@ -70,10 +71,15 @@ public:
 
     [[nodiscard]] std::vector<StdComplex> get_expectation_value(
         const StateVector<Prec, Space>& state_vector) const;
+    [[nodiscard]] std::vector<StdComplex> get_expectation_value(
+        const StateVectorBatched<Prec, Space>& states) const;
 
     [[nodiscard]] std::vector<StdComplex> get_transition_amplitude(
         const StateVector<Prec, Space>& state_vector_bra,
         const StateVector<Prec, Space>& state_vector_ket) const;
+    [[nodiscard]] std::vector<StdComplex> get_transition_amplitude(
+        const StateVectorBatched<Prec, Space>& states_bra,
+        const StateVectorBatched<Prec, Space>& states_ket) const;
 
     // // not implemented yet
     [[nodiscard]] StdComplex solve_ground_state_eigenvalue_by_arnoldi_method(
@@ -159,24 +165,19 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
         .def("copy",
              &OperatorBatched<Prec, Space>::copy,
              DocString().desc("Return a copy.").build_as_google_style().c_str())
-        .def("load",
-             nb::overload_cast<const std::vector<std::vector<PauliOperator<Prec>>>&>(
-                 &OperatorBatched<Prec, Space>::load),
-             "terms"_a,
-             DocString()
-                 .desc("Load a vector of Pauli operators.")
-                 .arg("terms", "A vector of Pauli operators.")
-                 .build_as_google_style()
-                 .c_str())
-        .def("load",
-             nb::overload_cast<const std::vector<Operator<Prec, Space>>&>(
-                 &OperatorBatched<Prec, Space>::load),
-             "terms"_a,
-             DocString()
-                 .desc("Load a vector of Operators.")
-                 .arg("terms", "A vector of Operators.")
-                 .build_as_google_style()
-                 .c_str())
+        .def(
+            "load",
+            [](OperatorBatched<Prec, Space>& op,
+               const std::variant<std::vector<std::vector<PauliOperator<Prec>>>,
+                                  std::vector<Operator<Prec, Space>>>& terms) {
+                std::visit([&](const auto& value) { op.load(value); }, terms);
+            },
+            "terms"_a,
+            DocString()
+                .desc("Load a vector of Pauli operators or a vector of Operators.")
+                .arg("terms", "list[list[PauliOperator]] | list[Operator]", "terms to load")
+                .build_as_google_style()
+                .c_str())
         .def("to_string",
              &OperatorBatched<Prec, Space>::to_string,
              DocString()
@@ -206,24 +207,60 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
                       "In the update process, the batch size to be processed simultaneously.")
                  .build_as_google_style()
                  .c_str())
-        .def("get_expectation_value",
-             &OperatorBatched<Prec, Space>::get_expectation_value,
-             "state_vector"_a,
-             DocString()
-                 .desc("Return a vector of expectation values for each operator.")
-                 .arg("state_vector", "A state vector to compute expectation values.")
-                 .build_as_google_style()
-                 .c_str())
-        .def("get_transition_amplitude",
-             &OperatorBatched<Prec, Space>::get_transition_amplitude,
-             "state_vector_bra"_a,
-             "state_vector_ket"_a,
-             DocString()
-                 .desc("Return a vector of transition amplitudes for each operator.")
-                 .arg("state_vector_bra", "A bra state vector.")
-                 .arg("state_vector_ket", "A ket state vector.")
-                 .build_as_google_style()
-                 .c_str())
+        .def(
+            "get_expectation_value",
+            [](const OperatorBatched<Prec, Space>& op,
+               const StateVector<Prec, Space>& state_vector) {
+                return op.get_expectation_value(state_vector);
+            },
+            "state_vector"_a,
+            DocString()
+                .desc("Return a vector of expectation values for each operator.")
+                .arg("state_vector", "A state vector to compute expectation values.")
+                .build_as_google_style()
+                .c_str())
+        .def(
+            "get_expectation_value",
+            [](const OperatorBatched<Prec, Space>& op,
+               const StateVectorBatched<Prec, Space>& states) {
+                return op.get_expectation_value(states);
+            },
+            "states"_a,
+            DocString()
+                .desc("Return a vector of expectation values for each operator.")
+                .arg("states", "State Vector Batched to compute expectation values.")
+                .build_as_google_style()
+                .c_str())
+        .def(
+            "get_transition_amplitude",
+            [](const OperatorBatched<Prec, Space>& op,
+               const StateVector<Prec, Space>& state_vector_bra,
+               const StateVector<Prec, Space>& state_vector_ket) {
+                return op.get_transition_amplitude(state_vector_bra, state_vector_ket);
+            },
+            "state_vector_bra"_a,
+            "state_vector_ket"_a,
+            DocString()
+                .desc("Return a vector of transition amplitudes for each operator.")
+                .arg("state_vector_bra", "A bra state vector.")
+                .arg("state_vector_ket", "A ket state vector.")
+                .build_as_google_style()
+                .c_str())
+        .def(
+            "get_transition_amplitude",
+            [](const OperatorBatched<Prec, Space>& op,
+               const StateVectorBatched<Prec, Space>& states_bra,
+               const StateVectorBatched<Prec, Space>& states_ket) {
+                return op.get_transition_amplitude(states_bra, states_ket);
+            },
+            "states_bra"_a,
+            "states_ket"_a,
+            DocString()
+                .desc("Return a vector of transition amplitudes for each operator.")
+                .arg("states_bra", "Batched bra state vector.")
+                .arg("states_ket", "Batched ket state vector.")
+                .build_as_google_style()
+                .c_str())
         // .def("solve_ground_state_eigenvalue_by_arnoldi_method",
         //      &OperatorBatched<Prec, Space>::solve_ground_state_eigenvalue_by_arnoldi_method,
         //      "state"_a,

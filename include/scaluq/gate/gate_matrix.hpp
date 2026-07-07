@@ -1,6 +1,8 @@
 #pragma once
 
 #include <ranges>
+#include <type_traits>
+#include <variant>
 #include <vector>
 
 #include "../constant.hpp"
@@ -10,7 +12,10 @@ namespace scaluq {
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 class DenseMatrixGateImpl : public GateBase<Prec> {
-    Matrix<Prec, Space> _matrix;
+    using MatrixVariant =
+        std::variant<Complex<Prec>, Matrix2x2<Prec>, Matrix4x4<Prec>, Matrix<Prec, Space>>;
+
+    MatrixVariant _matrix;
     bool _is_unitary;
 
 public:
@@ -28,8 +33,7 @@ public:
 
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(
-        ExecutionContext<Prec, ExecutionSpace::Host>& context) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Host>& context) const override;
     void update_quantum_state(
@@ -75,8 +79,7 @@ public:
 
     SparseComplexMatrix get_sparse_matrix() const { return get_matrix().sparseView(); }
 
-    void update_quantum_state(
-        ExecutionContext<Prec, ExecutionSpace::Host>& context) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Host>& context) const override;
     void update_quantum_state(

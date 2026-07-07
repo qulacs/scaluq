@@ -16,9 +16,9 @@ This library is released under the MIT License.
 Compared to [Qulacs](https://github.com/qulacs/qulacs), the following improvements have been made:
 
 - Implementation based on [Kokkos](https://github.com/kokkos/kokkos) allows seamless switching between execution environments (CPU/GPU) without requiring code changes.
-- Improved execution speed.
+- Provides execution speeds comparable to Qulacs on CPU, and achieves equivalent or faster speeds on GPU.
 - Pointers are hidden from users, making the code simpler and safer to write.
-- Integration of [nanobind](https://github.com/wjakob/nanobind) enables more compact and faster Python bindings.
+- Integration of [nanobind](https://github.com/wjakob/nanobind) enables lightweight and low-overhead Python bindings.
 - Provides batched execution for efficiently applying quantum circuits with the same structure but different parameters to multiple quantum states.
 
 # Documentation
@@ -34,19 +34,15 @@ See [the benchmark repository](https://github.com/Qulacs-Osaka/benchmark-scaluq)
 
 ## Single State Vector Update (January 2026)
 
-### CPU result
-![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/multithread/image/circuit.png)
-
-### GPU result
-![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/gpu/image/circuit.png)
+| CPU result | GPU result |
+| ---------- | ---------- |
+| ![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/multithread/image/circuit.png) | ![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/gpu/image/circuit.png) |
 
 ## Batched State Vector Update (May 2026)
 
-### Varying batch size (#qubits=16)
-![Batched State Vector Update (batch sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/batch_sweep.png)
-
-### Varying #qubits (batch size=100)
-![Batched State Vector Update (qubits sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/qubits_sweep.png)
+| Varying batch size (#qubits=16) | Varying #qubits (batch size=100) |
+| ------------------------------- | -------------------------------- |
+| ![Batched State Vector Update (batch sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/batch/image/batch_sweep.png) | ![Batched State Vector Update (qubits sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/batch/image/qubits_sweep.png) | 
 
 ## Build Requirements
 
@@ -213,7 +209,8 @@ int main() {
 ## Sample Code (Python)
 
 ```python
-from scaluq.default.f64 import *
+from scaluq import StateVector, Circuit, PauliOperator, Operator
+from scaluq import gate
 import math
 
 n_qubits = 3
@@ -226,8 +223,7 @@ circuit.add_gate(gate.Y(1))
 circuit.add_gate(gate.RX(1, math.pi / 2))
 circuit.update_quantum_state(state)
 
-terms = []
-terms.append(PauliOperator(1, 0))
+terms = [PauliOperator("Z 0")]
 observable = Operator(terms)
 value = observable.get_expectation_value(state)
 print(value)
@@ -239,42 +235,38 @@ Scaluq supports multiple floating-point precisions: `f16`, `f32`, `f64`, and `bf
 By default, only `f32` and `f64` are enabled.  
 While `f64` is generally recommended, lower precisions like `f32` can be up to 2–4x faster in applications such as quantum machine learning that do not require high precision.
 
-| Precision | C++ Template Argument         | Python Submodule      | Description               |
-|-----------|-------------------------------|------------------------|---------------------------|
-| `f16`     | `Precision::F16`              | `f16`                  | IEEE754 binary16          |
-| `f32`     | `Precision::F32`              | `f32`                  | IEEE754 binary32          |
-| `f64`     | `Precision::F64`              | `f64`                  | IEEE754 binary64          |
-| `bf16`    | `Precision::BF16`             | `bf16`                 | bfloat16                  |
+| Precision | C++ Template Argument         | Python keyword (`precision=`) | Description               |
+|-----------|-------------------------------|-------------------------------|---------------------------|
+| `f16`     | `Precision::F16`              | `'f16'`                       | IEEE754 binary16          |
+| `f32`     | `Precision::F32`              | `'f32'`                       | IEEE754 binary32          |
+| `f64`     | `Precision::F64`              | `'f64'`                       | IEEE754 binary64          |
+| `bf16`    | `Precision::BF16`             | `'bf16'`                      | bfloat16                  |
 
 Note: With `f16` / `bf16` precision, the calculation error may be very large (sometimes larger than $0.1$). We do not test the accuracy with these options.
 
 Execution spaces determine whether computation is performed on CPU or GPU:
 
-| Execution Space  | C++ Template Argument        | Python Submodule       | Description                                   |
-|------------------|------------------------------|------------------------|-----------------------------------------------|
-| `default`        | `ExecutionSpace::Default`    | `default`              | Runs on GPU if CUDA is enabled, otherwise CPU |
-| `host`           | `ExecutionSpace::Host`       | `host`                 | Always runs on CPU                            |
-| `host_serial`    | `ExecutionSpace::HostSerial` | `host_serial`          | Always runs sequentially on CPU               |
+| Execution Space  | C++ Template Argument        | Python keyword (`space=`)  | Description                                   |
+|------------------|------------------------------|----------------------------|-----------------------------------------------|
+| `default`        | `ExecutionSpace::Default`    | `'default'`                | Runs on GPU if CUDA is enabled, otherwise CPU |
+| `host`           | `ExecutionSpace::Host`       | `'host'`                   | Always runs on CPU                            |
+| `host_serial`    | `ExecutionSpace::HostSerial` | `'host_serial'`            | Always runs sequentially on CPU               |
 
 Note: You can only perform operations between objects with the same precision and execution space. For example, a gate created for 32-bit precision cannot be used with a 64-bit StateVector, even if both are CPU-based.
 
 In C++, classes like StateVector, Circuit, Gate, and Operator accept `Precision` and `ExecutionSpace` as template arguments.
 
-In Python, you import from submodules like `scaluq.default.f32` or `scaluq.host.f64` based on your desired configuration.
-
-You can dynamically select the submodule using `importlib`:
+In Python, top-level classes such as `StateVector` and `Circuit`, as well as gate factories in `scaluq.gate`, accept `precision` and `space` keyword arguments, defaulting to `'f64'` and `'default'` respectively.
 
 ```python
-import importlib
+from scaluq import StateVector, Circuit
+from scaluq import gate
 
 prec = 'f64'
 space = 'default'
-scaluq_sub = importlib.import_module(f'scaluq.{space}.{prec}')
-StateVector = scaluq_sub.StateVector
-gate = scaluq_sub.gate
 
-state = StateVector(3)
-x = gate.X(0)
+state = StateVector(3, precision=prec, space=space)
+x = gate.X(0, precision=prec)
 x.update_quantum_state(state)
 print(state)
 ```

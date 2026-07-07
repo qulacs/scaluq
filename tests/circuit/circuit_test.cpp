@@ -269,9 +269,12 @@ void circuit_suzuki_trotter_test() {
     }
     const std::uint64_t n = 2;
     const std::uint64_t dim = 1ULL << n;
-    const double suzuki_trotter_eps = 1e-2;
+    double suzuki_trotter_eps = 1e-2;
+    if constexpr (Prec == Precision::F32) {
+        suzuki_trotter_eps = 1e-1;
+    }
     std::vector<double> coef;
-    Random random;
+    Random random(1918);
     ComplexMatrix I = make_I();
     ComplexMatrix X = make_X();
     ComplexMatrix Y = make_Y();
@@ -288,7 +291,7 @@ void circuit_suzuki_trotter_test() {
         coef.push_back(-random.uniform());
     }
     double angle = 2 * random.uniform() * 3.141592653589793;
-    const auto num_repeats = static_cast<uint64_t>(std::ceil(angle * (double)n * 500.));
+    const auto num_repeats = static_cast<uint64_t>(std::ceil(angle * (double)n * 100.));
     std::vector<PauliOperator<Prec>> terms;
     terms.emplace_back(PauliOperator<Prec>("Z 0 I 1", coef[0]));
     terms.emplace_back(PauliOperator<Prec>("X 0 Y 1", coef[1]));

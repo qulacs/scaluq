@@ -52,6 +52,19 @@ jobs:
       SCALUQ_FLOAT64: "ON"
       SCALUQ_BFLOAT16: ${{ matrix.compiler == 'clang' && 'OFF' || 'ON' }}
     steps:
+      - name: Free Disk Space (cuda)
+        if: ${{ matrix.device == 'cuda' }}
+        run: |
+          df -h
+          echo "Remove Android library"
+          sudo rm -rf /usr/local/lib/android
+          echo "Remove .NET runtime"
+          sudo rm -rf /usr/share/dotnet
+          echo "Remove Haskell runtime"
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/.ghcup
+          df -h
+
       - uses: actions/checkout@v6
 
       - name: Setup LLVM Clang (macOS clang)
@@ -171,6 +184,19 @@ jobs:
       SCALUQ_CPU_NATIVE: "OFF"
       SCALUQ_CUDA_ARCH: "TURING75"
     steps:
+      - name: Free Disk Space (cuda)
+        if: ${{ matrix.device == 'cuda' }}
+        run: |
+          df -h
+          echo "Remove Android library"
+          sudo rm -rf /usr/local/lib/android
+          echo "Remove .NET runtime"
+          sudo rm -rf /usr/share/dotnet
+          echo "Remove Haskell runtime"
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/.ghcup
+          df -h
+
       - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v6
@@ -225,20 +251,14 @@ jobs:
       - name: Run / Test stub
         if: ${{ matrix.device == 'cpu' }}  # currently GPU runner is not supported
         run: |
-          echo -e "from scaluq.default.f64 import StateVector, gate\nstate = StateVector(2)\nx = gate.X(0)\nx.update_quantum_state(state)\nprint(state.get_amplitudes())" > /tmp/sample.py
+          echo -e "from scaluq import StateVector, gate\nstate = StateVector(2)\nx = gate.X(0)\nx.update_quantum_state(state)\nprint(state.get_amplitudes())" > /tmp/sample.py
           python /tmp/sample.py
           python -m mypy /tmp/sample.py
 
-      - name: Run doctest default f64
+      - name: Run doctest
         if: ${{ matrix.device == 'cpu' }}  # currently GPU runner is not supported
         run: |
-          ( set -o pipefail; python python_test/run_doctest.py default f64 | tee /tmp/doctest.log )
-          ! grep -q "Failed" /tmp/doctest.log
-
-      - name: Run doctest host f64
-        if: ${{ matrix.device == 'cpu' }}  # currently GPU runner is not supported
-        run: |
-          ( set -o pipefail; python python_test/run_doctest.py host f64 | tee /tmp/doctest.log )
+          ( set -o pipefail; python python_test/run_doctest.py | tee /tmp/doctest.log )
           ! grep -q "Failed" /tmp/doctest.log
 
   install-checks-passed:

@@ -431,6 +431,44 @@ void run_random_gate_apply_general_dense(std::uint64_t n_qubits) {
 }
 
 template <Precision Prec, ExecutionSpace Space>
+void run_specialized_dense_matrix_gate_apply(std::uint64_t n_qubits) {
+    {
+        auto state = StateVector<Prec, Space>::Haar_random_state(n_qubits);
+        auto specialized_state = StateVector<Prec, Space>(n_qubits);
+        specialized_state.load(state.get_amplitudes());
+
+        ComplexMatrix matrix = get_eigen_matrix_random_one_target_unitary();
+        auto dense_gate = gate::DenseMatrix<Prec, Space>({2}, matrix);
+        auto specialized_gate = gate::DenseMatrix<Prec, Space>({2}, matrix);
+        dense_gate->update_quantum_state(state);
+        specialized_gate->update_quantum_state(specialized_state);
+        auto amplitudes = state.get_amplitudes();
+        auto specialized_amplitudes = specialized_state.get_amplitudes();
+        for (std::uint64_t i = 0; i < amplitudes.size(); ++i) {
+            check_near<Prec>(amplitudes[i], specialized_amplitudes[i]);
+        }
+    }
+    {
+        auto state = StateVector<Prec, Space>::Haar_random_state(n_qubits);
+        auto specialized_state = StateVector<Prec, Space>(n_qubits);
+        specialized_state.load(state.get_amplitudes());
+
+        auto matrix0 = get_eigen_matrix_random_one_target_unitary();
+        auto matrix1 = get_eigen_matrix_random_one_target_unitary();
+        ComplexMatrix matrix = internal::kronecker_product(matrix1, matrix0);
+        auto dense_gate = gate::DenseMatrix<Prec, Space>({3, 1}, matrix);
+        auto specialized_gate = gate::DenseMatrix<Prec, Space>({3, 1}, matrix);
+        dense_gate->update_quantum_state(state);
+        specialized_gate->update_quantum_state(specialized_state);
+        auto amplitudes = state.get_amplitudes();
+        auto specialized_amplitudes = specialized_state.get_amplitudes();
+        for (std::uint64_t i = 0; i < amplitudes.size(); ++i) {
+            check_near<Prec>(amplitudes[i], specialized_amplitudes[i]);
+        }
+    }
+}
+
+template <Precision Prec, ExecutionSpace Space>
 void run_random_gate_apply_sparse(std::uint64_t n_qubits) {
     const std::uint64_t dim = 1ULL << n_qubits;
     const std::uint64_t max_repeat = 10;
@@ -723,6 +761,32 @@ TYPED_TEST(GateTest, ApplyDenseMatrixGate) {
     run_random_gate_apply_none_dense<Prec, Space>(6);
     run_random_gate_apply_single_dense<Prec, Space>(6);
     run_random_gate_apply_general_dense<Prec, Space>(6);
+    run_specialized_dense_matrix_gate_apply<Prec, Space>(6);
+}
+
+TYPED_TEST(GateTest, ApplyPermutationGate) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    if constexpr (Prec == Precision::F32 || Prec == Precision::F64) {
+        constexpr std::uint64_t n_qubits = 4;
+        const std::vector<std::uint64_t> destination_indices = {2, 0, 3, 1};
+        auto state = StateVector<Prec, Space>::Haar_random_state(n_qubits);
+        const auto before = state.get_amplitudes();
+
+        gate::Permutation<Prec, Space>(destination_indices)->update_quantum_state(state);
+
+        const auto after = state.get_amplitudes();
+        ComplexVector before_vec(1ULL << n_qubits);
+        for (std::uint64_t i = 0; i < (1ULL << n_qubits); ++i) {
+            before_vec[i] = before[i];
+        }
+        const ComplexVector expected =
+            get_eigen_matrix_full_qubit_reorder(destination_indices) * before_vec;
+        for (std::uint64_t i = 0; i < (1ULL << n_qubits); ++i) {
+            check_near<Prec>(after[i], expected[i]);
+        }
+    }
 }
 
 TYPED_TEST(GateTest, ApplyPauliGate) {
@@ -802,9 +866,7 @@ TYPED_TEST(GateTest, UGateJsonRoundTrip) {
     {
         Gate<Prec> gate = gate::U1<Prec>(0, 0.75, {2}, {1});
         Gate<Prec> loaded;
-        ASSERT_NO_THROW({
-            loaded = Json(gate).template get<Gate<Prec>>();
-        });
+        ASSERT_NO_THROW({ loaded = Json(gate).template get<Gate<Prec>>(); });
         ASSERT_EQ(loaded.gate_type(), GateType::U1);
         EXPECT_EQ(loaded->control_qubit_list(), (std::vector<std::uint64_t>{2}));
         EXPECT_EQ(loaded->control_value_list(), (std::vector<std::uint64_t>{1}));
@@ -823,9 +885,7 @@ TYPED_TEST(GateTest, UGateJsonRoundTrip) {
     {
         Gate<Prec> gate = gate::U2<Prec>(1, 0.25, 0.75, {3}, {1});
         Gate<Prec> loaded;
-        ASSERT_NO_THROW({
-            loaded = Json(gate).template get<Gate<Prec>>();
-        });
+        ASSERT_NO_THROW({ loaded = Json(gate).template get<Gate<Prec>>(); });
         ASSERT_EQ(loaded.gate_type(), GateType::U2);
         EXPECT_EQ(loaded->control_qubit_list(), (std::vector<std::uint64_t>{3}));
         EXPECT_EQ(loaded->control_value_list(), (std::vector<std::uint64_t>{1}));
@@ -845,9 +905,7 @@ TYPED_TEST(GateTest, UGateJsonRoundTrip) {
     {
         Gate<Prec> gate = gate::U3<Prec>(2, 0.5, 0.25, 0.75, {4}, {1});
         Gate<Prec> loaded;
-        ASSERT_NO_THROW({
-            loaded = Json(gate).template get<Gate<Prec>>();
-        });
+        ASSERT_NO_THROW({ loaded = Json(gate).template get<Gate<Prec>>(); });
         ASSERT_EQ(loaded.gate_type(), GateType::U3);
         EXPECT_EQ(loaded->control_qubit_list(), (std::vector<std::uint64_t>{4}));
         EXPECT_EQ(loaded->control_value_list(), (std::vector<std::uint64_t>{1}));
@@ -889,17 +947,14 @@ TYPED_TEST(GateTest, FlattenNestedProbabilisticGate) {
 TYPED_TEST(GateTest, ProbabilisticGateRejectsInvalidDistributionValues) {
     constexpr Precision Prec = TestFixture::Prec;
 
-    EXPECT_THROW(
-        gate::Probabilistic<Prec>({-0.2, 1.2}, {gate::X<Prec>(0), gate::I<Prec>()}),
-        std::runtime_error);
-    EXPECT_THROW(
-        gate::Probabilistic<Prec>({std::numeric_limits<double>::quiet_NaN(), 1.0},
-                                  {gate::X<Prec>(0), gate::I<Prec>()}),
-        std::runtime_error);
-    EXPECT_THROW(
-        gate::Probabilistic<Prec>({std::numeric_limits<double>::infinity(), 0.0},
-                                  {gate::X<Prec>(0), gate::I<Prec>()}),
-        std::runtime_error);
+    EXPECT_THROW(gate::Probabilistic<Prec>({-0.2, 1.2}, {gate::X<Prec>(0), gate::I<Prec>()}),
+                 std::runtime_error);
+    EXPECT_THROW(gate::Probabilistic<Prec>({std::numeric_limits<double>::quiet_NaN(), 1.0},
+                                           {gate::X<Prec>(0), gate::I<Prec>()}),
+                 std::runtime_error);
+    EXPECT_THROW(gate::Probabilistic<Prec>({std::numeric_limits<double>::infinity(), 0.0},
+                                           {gate::X<Prec>(0), gate::I<Prec>()}),
+                 std::runtime_error);
 }
 
 template <Precision Prec, ExecutionSpace Space>

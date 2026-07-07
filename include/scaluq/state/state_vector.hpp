@@ -5,6 +5,7 @@
 #include <random>
 #include <ranges>
 #include <stdexcept>
+#include <variant>
 #include <vector>
 
 #include "../types.hpp"
@@ -136,6 +137,8 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .desc("Vector is initialized with computational "
                        "basis $\\ket{0\\dots0}$.")
                  .arg("n_qubits", "int", "number of qubits")
+                 .arg("precision", "str", true, "precision of the state vector")
+                 .arg("space", "str", true, "execution space to allocate the state vector")
                  .ex(DocString::Code({">>> state1 = StateVector(2)",
                                       ">>> print(state1)",
                                       "Qubit Count : 2",
@@ -161,6 +164,8 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                      true,
                      "random seed",
                      "If not specified, the value from random device is used.")
+                .arg("precision", "str", true, "precision of the state vector")
+                .arg("space", "str", true, "execution space to allocate the state vector")
                 .ex(DocString::Code(
                     {">>> state = StateVector.Haar_random_state(2)",
                      ">>> print(state.get_amplitudes()) # doctest: +SKIP",
@@ -194,6 +199,8 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                     DocString()
                         .desc("Construct :class:`StateVector` without initializing.")
                         .arg("n_qubits", "int", "number of qubits")
+                        .arg("precision", "str", true, "precision of the state vector")
+                        .arg("space", "str", true, "execution space to allocate the state vector")
                         .build_as_google_style()
                         .c_str())
         .def(
@@ -514,24 +521,29 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                     R"('Qubit Count : 1\nDimension : 2\nState vector : \n  0 : (1,0)\n  1 : (0,0)\n')"})
                 .build_as_google_style()
                 .c_str())
-        .def("load",
-             nb::overload_cast<const std::vector<StdComplex>&>(&StateVector<Prec, Space>::load),
-             "other"_a,
-             DocString()
-                 .desc("Load amplitudes of `Sequence`")
-                 .arg("other",
-                      "collections.abc.Sequence[complex]",
-                      "list of complex amplitudes with len $2^{\\mathrm{n\\_qubits}}$")
-                 .build_as_google_style()
-                 .c_str())
-        .def("load",
-             nb::overload_cast<const StateVector<Prec, Space>&>(&StateVector<Prec, Space>::load),
-             "other"_a,
-             DocString()
-                 .desc("Load amplitudes of :class:`StateVector`")
-                 .arg("other", ":class:`StateVector`", "State vector to load from.")
-                 .build_as_google_style()
-                 .c_str())
+        .def(
+            "load",
+            [](StateVector<Prec, Space>& state,
+               const std::variant<std::vector<StdComplex>, StateVector<Prec, Space>*>& other) {
+                std::visit(
+                    [&](const auto& value) {
+                        using T = std::decay_t<decltype(value)>;
+                        if constexpr (std::is_same_v<T, std::vector<StdComplex>>) {
+                            state.load(value);
+                        } else {
+                            state.load(*value);
+                        }
+                    },
+                    other);
+            },
+            "other"_a,
+            DocString()
+                .desc("Load amplitudes from a sequence or another :class:`StateVector`.")
+                .arg("other",
+                     "collections.abc.Sequence[complex] | StateVector",
+                     "amplitudes with len $2^{\\mathrm{n\\_qubits}}$ or source state vector")
+                .build_as_google_style()
+                .c_str())
         .def("copy_to_default_space",
              &StateVector<Prec, Space>::copy_to_default_space,
              DocString()
@@ -557,6 +569,11 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                 .desc("Calculate inner product $\\braket{a | b}$.")
                 .arg("a", ":class:`StateVector`", "left hand side of inner product")
                 .arg("b", ":class:`StateVector`", "right hand side of inner product")
+                .arg("precision", "str", true, "precision of the state vector")
+                .arg("space",
+                     "str",
+                     true,
+                     "execution space to allocate the state vector for calculation")
                 .ret("complex", "inner product $\\braket{a | b}$")
                 .ex(DocString::Code{">>> state1 = StateVector(2)",
                                     ">>> state1.load([1/2, 0, 0, 1/2]) # (|00> + |11>)/sqrt(2)",

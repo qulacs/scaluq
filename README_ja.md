@@ -16,9 +16,9 @@ Scaluq は、量子回路シミュレータ [Qulacs](https://github.com/qulacs/q
 [Qulacs](https://github.com/qulacs/qulacs) に比べ、以下の点が改善されています。
 
 - [Kokkos](https://github.com/kokkos/kokkos) をベースとした実装により、実行環境(CPU/GPU) の切り替えを容易に行うことができます。切り替えの際にコードを変更する必要はありません。
-- よりよい実行速度を実現します。
+- CPU実行においては同等の実行速度を実現し、GPU実行においては同等以上の実行速度を実現します。
 - ポインタをユーザから隠蔽したことにより、より安全に、簡単に記述できます。
-- [nanobind](https://github.com/wjakob/nanobind) の導入により、よりコンパクトかつ高速な Python へのバインディングを実現します。
+- [nanobind](https://github.com/wjakob/nanobind) の導入によって、より軽量かつ低オーバーヘッドな Python バインディングを実現します。
 - 複数の量子状態に対して、同じ構造を持ちパラメータのみが異なる量子回路を一括実行するためのバッチ実行機能を提供します。
 
 # ドキュメント
@@ -34,19 +34,15 @@ https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
 
 ## 単一状態ベクトル更新 (2026年1月)
 
-### CPU 結果
-![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/multithread/image/circuit.png)
-
-### GPU 結果
-![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/multiple-gate/gpu/image/circuit.png)
+| CPU 結果 | GPU 結果 |
+| ------- | --------|
+| ![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/multithread/image/circuit.png) | ![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/gpu/image/circuit.png) |
 
 ## バッチ状態ベクトル更新 (2026年5月)
 
-### バッチサイズを変化させた場合 (#qubits=16)
-![Batched State Vector Update (batch sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/batch_sweep.png)
-
-### 量子ビット数を変化させた場合 (batch size=100)
-![Batched State Vector Update (qubits sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/blob/main/benchmark/batch/image/qubits_sweep.png)
+| バッチサイズを変化させた場合 (#qubits=16) | 量子ビット数を変化させた場合 (batch size=100) |
+| -------------------------------------- | ------------------------------------------- |
+| ![Batched State Vector Update (batch sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/batch/image/batch_sweep.png) | ![Batched State Vector Update (qubits sweep)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/batch/image/qubits_sweep.png) |
 
 ## ビルド時要件
 
@@ -213,7 +209,8 @@ int main() {
 ## サンプルコード(Python)
 
 ```python
-from scaluq.default.f64 import *
+from scaluq import StateVector, Circuit, PauliOperator, Operator
+from scaluq import gate
 import math
 
 n_qubits = 3
@@ -226,8 +223,7 @@ circuit.add_gate(gate.Y(1))
 circuit.add_gate(gate.RX(1, math.pi / 2))
 circuit.update_quantum_state(state)
 
-terms = []
-terms.append(PauliOperator(1, 0))
+terms = [PauliOperator("Z 0")]
 observable = Operator(terms)
 value = observable.get_expectation_value(state)
 print(value)
@@ -239,12 +235,12 @@ Scaluqでは、計算に使用する浮動小数点数のサイズとして`f16`
 通常は`f64`の使用が推奨されますが、量子機械学習での利用などあまり精度が必要でない場合は`f32`以下を使用すると最大2~4倍の高速化が見込めます。
 
 各精度の指定方法と内容は以下のとおりです。
-|精度|C++で指定するテンプレート引数|Pythonで指定するサブモジュールの名前|内容|
+|精度|C++で指定するテンプレート引数|Pythonのキーワード引数 (`precision=`)|内容|
 |-|-|-|-|
-|`f16`|`Precision::F16`|`f16`|IEEE754 binary16|
-|`f32`|`Precision::F32`|`f32`|IEEE754 binary32|
-|`f64`|`Precision::F64`|`f64`|IEEE754 binary64|
-|`bf16`|`Precision::BF16`|`bf16`|bfloat16|
+|`f16`|`Precision::F16`|`'f16'`|IEEE754 binary16|
+|`f32`|`Precision::F32`|`'f32'`|IEEE754 binary32|
+|`f64`|`Precision::F64`|`'f64'`|IEEE754 binary64|
+|`bf16`|`Precision::BF16`|`'bf16'`|bfloat16|
 
 注意：`f16` / `bf16` 精度では、計算誤差が非常に大きくなる可能性があります（場合によっては $0.1$ を超えることもあります）。これらのオプションについては精度の検証を行っていません。
 
@@ -252,32 +248,28 @@ Scaluqでは、計算に使用する浮動小数点数のサイズとして`f16`
 
 各実行スペースの指定方法と内容は以下のとおりです。
 
-|実行スペース|C++で指定するテンプレート引数|Pythonで指定するサブモジュールの名前|内容|
+|実行スペース|C++で指定するテンプレート引数|Pythonのキーワード引数 (`space=`)|内容|
 |-|-|-|-|
-|`default`|`ExecutionSpace::Default`|`default`|CUDA が有効なら GPU、そうでなければ CPU で実行|
-|`host`|`ExecutionSpace::Host`|`host`|常に CPU で実行|
-|`host_serial`|`ExecutionSpace::HostSerial`|`host_serial`|常に CPU で逐次実行|
+|`default`|`ExecutionSpace::Default`|`'default'`|CUDA が有効なら GPU、そうでなければ CPU で実行|
+|`host`|`ExecutionSpace::Host`|`'host'`|常に CPU で実行|
+|`host_serial`|`ExecutionSpace::HostSerial`|`'host_serial'`|常に CPU で逐次実行|
 
 同じ精度、実行スペースのオブジェクト同士でしか演算を行うことができません。
 例えば32bit用に作成したゲートでは64bitの`StateVector`を更新できず、同じ精度でもhost用に作成したゲートではdefault用に作成した`StateVector`を更新できません。
 
 C++の場合、状態、ゲート、演算子、回路のクラスやゲートを生成する関数が、テンプレート引数を取るようになっており、そこに`Precision`型の値と`ExecutionSpace`型の値を指定します。
 
-Pythonの場合、精度と実行スペースに合わせて`scaluq.default.f32`や`scaluq.host.f64`のようなサブモジュールからオブジェクトを`import`します。
-
-Pythonでは以下のように`importlib`を用いることで文字列からダイナミックに選択できます。
+Pythonの場合、`StateVector`や`Circuit`などのトップレベルのクラス、および`scaluq.gate`のゲートファクトリ関数は、`precision`と`space`のキーワード引数を受け取ります（デフォルトはそれぞれ`'f64'`と`'default'`）。
 
 ```py
-import importlib
+from scaluq import StateVector, Circuit
+from scaluq import gate
 
 prec = 'f64'
 space = 'default'
-scaluq_sub = importlib.import_module(f'scaluq.{space}.{prec}')
-StateVector = scaluq_sub.StateVector
-gate = scaluq_sub.gate
 
-state = StateVector(3)
-x = gate.X(0)
+state = StateVector(3, precision=prec, space=space)
+x = gate.X(0, precision=prec)
 x.update_quantum_state(state)
 print(state)
 ```
