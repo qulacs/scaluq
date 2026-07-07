@@ -488,7 +488,8 @@ public:
         } else {
             // downcast
             _gate_type = get_gate_type<T, Prec>();
-            if (!(_gate_ptr = std::dynamic_pointer_cast<const T>(gate_ptr))) {
+            _gate_ptr = std::dynamic_pointer_cast<const T>(gate_ptr);
+            if (!_gate_ptr) {
                 throw std::runtime_error("invalid gate cast");
             }
         }

@@ -317,7 +317,8 @@ public:
         } else {
             // downcast
             _param_gate_type = get_param_gate_type<T, Prec>();
-            if (!(_param_gate_ptr = std::dynamic_pointer_cast<const T>(param_gate_ptr))) {
+            _param_gate_ptr = std::dynamic_pointer_cast<const T>(param_gate_ptr);
+            if (!_param_gate_ptr) {
                 throw std::runtime_error("invalid gate cast");
             }
         }
