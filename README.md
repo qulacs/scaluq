@@ -83,7 +83,7 @@ Build options can be specified using environment variables when running `script/
 | `CMAKE_INSTALL_PREFIX` | -           | See [CMake Documentation](https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html) |
 | `SCALUQ_USE_OMP`       | `ON`        | Use OpenMP for parallel computation on CPU |
 | `SCALUQ_USE_CUDA`      | `OFF`       | Enable parallel computation using GPU (CUDA) |
-| `SCALUQ_USE_SYCL`      | `OFF`       | Enable parallel computation using GPU (SYCL) |
+| `SCALUQ_USE_SYCL`      | `OFF`       | `Experimental` Enable parallel computation using GPU (SYCL) |
 | `SCALUQ_CPU_NATIVE`    | `ON`        | Build for native CPU architecture of builder's |
 | `SCALUQ_CPU_ARCH`      | -           | Target CPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_CPU_ARCH=SKX`) |
 | `SCALUQ_CUDA_ARCH`     | (auto)      | Target Nvidia GPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_CUDA_ARCH=AMPERE80`) |

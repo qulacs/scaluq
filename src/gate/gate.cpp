@@ -63,7 +63,7 @@ void GateBase<Prec>::check_qubit_mask_within_bounds(
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
-#endif  // SCALUQ_USE_CUDA
+#endif
 
 template <Precision Prec>
 std::string GateBase<Prec>::get_qubit_info_as_string(const std::string& indent) const {

@@ -585,7 +585,7 @@ using GateStateVariant = std::variant<StateVector<Prec, ExecutionSpace::Host>*,
                                       StateVectorBatched<Prec, ExecutionSpace::Host>*,
                                       StateVector<Prec, ExecutionSpace::HostSerial>*,
                                       StateVectorBatched<Prec, ExecutionSpace::HostSerial>*
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
                                       ,
                                       StateVector<Prec, ExecutionSpace::Default>*,
                                       StateVectorBatched<Prec, ExecutionSpace::Default>*

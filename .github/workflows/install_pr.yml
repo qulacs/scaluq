@@ -189,6 +189,7 @@ jobs:
         run: |
           if [ "$SCALUQ_USE_SYCL" = "ON" ]; then
             source /opt/intel/oneapi/setvars.sh --force
+            sycl-ls
           fi
           cd example_project/
           cmake -B build/ -D "CMAKE_C_COMPILER=$CMAKE_C_COMPILER" -D "CMAKE_CXX_COMPILER=$CMAKE_CXX_COMPILER" -D "SCALUQ_USE_CUDA=$SCALUQ_USE_CUDA" -D "SCALUQ_USE_SYCL=$SCALUQ_USE_SYCL"

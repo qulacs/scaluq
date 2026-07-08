@@ -154,6 +154,7 @@ jobs:
         run: |
           if [ "$SCALUQ_USE_SYCL" = "ON" ]; then
             source /opt/intel/oneapi/setvars.sh --force
+            sycl-ls
           fi
           ./script/configure
           ninja -C build/
