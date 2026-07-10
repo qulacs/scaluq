@@ -31,8 +31,7 @@ public:
     }
     ComplexMatrix get_matrix() const override { return this->_pauli.get_matrix(); }
 
-    void update_quantum_state(
-        ExecutionContext<Prec, ExecutionSpace::Host>& context) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Host>& context) const override;
     void update_quantum_state(
@@ -84,8 +83,7 @@ public:
 
     ComplexMatrix get_matrix() const override;
 
-    void update_quantum_state(
-        ExecutionContext<Prec, ExecutionSpace::Host>& context) const override;
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host>& context) const override;
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Host>& context) const override;
     void update_quantum_state(
@@ -126,13 +124,33 @@ void bind_gate_gate_pauli_hpp(nb::module_& m, nb::class_<Gate<Prec>>& gate_base_
         "PauliGate",
         "Specific class of multi-qubit pauli gate, which applies single-qubit Pauli "
         "gate to "
-        "each of qubit.");
+        "each of qubit.")
+        .def(
+            "pauli",
+            [](const PauliGate<Prec>& gate) { return gate->pauli(); },
+            nb::rv_policy::reference)
+        .def(
+            "pauli_id_list",
+            [](const PauliGate<Prec>& gate) { return gate->pauli_id_list(); },
+            nb::rv_policy::reference);
     bind_specific_gate<PauliRotationGate<Prec>, Prec>(
         m,
         gate_base_def,
         "PauliRotationGate",
         "Specific class of multi-qubit pauli-rotation gate, represented as "
-        "$e^{-i\\frac{\\theta}{2}P}$.");
+        "$e^{-i\\frac{\\theta}{2}P}$.")
+        .def(
+            "pauli",
+            [](const PauliRotationGate<Prec>& gate) { return gate->pauli(); },
+            nb::rv_policy::reference)
+        .def(
+            "pauli_id_list",
+            [](const PauliRotationGate<Prec>& gate) { return gate->pauli_id_list(); },
+            nb::rv_policy::reference)
+        .def(
+            "angle",
+            [](const PauliRotationGate<Prec>& gate) { return gate->angle(); },
+            nb::rv_policy::reference);
 }
 }  // namespace internal
 #endif

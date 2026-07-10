@@ -280,7 +280,7 @@ void circuit_suzuki_trotter_test() {
     ComplexMatrix Y = make_Y();
     ComplexMatrix Z = make_Z();
 
-    auto state = StateVector<Prec, Space>::Haar_random_state(n);
+    auto state = StateVector<Prec, Space>::Haar_random_state(n, 1918);
     auto state_cp = state.get_amplitudes();
     ComplexVector state_eigen(dim);
     for (uint64_t i = 0; i < dim; ++i) state_eigen[i] = state_cp[i];
