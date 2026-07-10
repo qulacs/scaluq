@@ -890,8 +890,7 @@ TYPED_TEST(GateTest, GateJsonRejectsUnsupportedType) {
 
     const Json j = {{"type", "UnsupportedGate"}};
 
-    EXPECT_THROW({ [[maybe_unused]] Gate<Prec> gate = j.template get<Gate<Prec>>(); },
-                 std::runtime_error);
+    EXPECT_THROW({ (void)j.template get<Gate<Prec>>(); }, std::runtime_error);
 }
 
 TYPED_TEST(GateTest, FlattenNestedProbabilisticGate) {

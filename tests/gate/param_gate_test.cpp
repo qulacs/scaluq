@@ -143,8 +143,7 @@ TYPED_TEST(ParamGateTest, ParamGateJsonRejectsUnsupportedType) {
 
     const Json j = {{"type", "UnsupportedParamGate"}};
 
-    EXPECT_THROW({ [[maybe_unused]] ParamGate<Prec> gate = j.template get<ParamGate<Prec>>(); },
-                 std::runtime_error);
+    EXPECT_THROW({ (void)j.template get<ParamGate<Prec>>(); }, std::runtime_error);
 }
 
 TYPED_TEST(ParamGateTest, ApplyParamPauliRotationGate) {
