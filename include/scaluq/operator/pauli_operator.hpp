@@ -174,6 +174,11 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "Get single-pauli property as string representation. See description of "
              "`__init__(pauli_string: str, coef: float=1.)` for details.")
         .def("get_dagger", &PauliOperator<Prec>::get_dagger, "Get adjoint operator.")
+        .def("add_single_pauli",
+             &PauliOperator<Prec>::add_single_pauli,
+             "target_qubit"_a,
+             "pauli_id"_a,
+             "Add single pauli.")
         .def("apply_to_state",
              nb::overload_cast<StateVector<Prec, ExecutionSpace::Host>&>(
                  &PauliOperator<Prec>::template apply_to_state<ExecutionSpace::Host>, nb::const_),
@@ -185,6 +190,12 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
                  nb::const_),
              "state"_a,
              "Get expectation value of measuring state vector. $\\bra{\\psi}P\\ket{\\psi}$.")
+        .def("get_expectation_value",
+             nb::overload_cast<const StateVectorBatched<Prec, ExecutionSpace::Host>&>(
+                 &PauliOperator<Prec>::template get_expectation_value<ExecutionSpace::Host>,
+                 nb::const_),
+             "states"_a,
+             "Get expectation value of measuring state vectors. $\\bra{\\psi}P\\ket{\\psi}$.")
         .def("get_transition_amplitude",
              nb::overload_cast<const StateVector<Prec, ExecutionSpace::Host>&,
                                const StateVector<Prec, ExecutionSpace::Host>&>(
@@ -193,6 +204,14 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "source"_a,
              "target"_a,
              "Get transition amplitude of measuring state vector. $\\bra{\\chi}P\\ket{\\psi}$.")
+        .def("get_transition_amplitude",
+             nb::overload_cast<const StateVectorBatched<Prec, ExecutionSpace::Host>&,
+                               const StateVectorBatched<Prec, ExecutionSpace::Host>&>(
+                 &PauliOperator<Prec>::template get_transition_amplitude<ExecutionSpace::Host>,
+                 nb::const_),
+             "states_source"_a,
+             "states_target"_a,
+             "Get transition amplitude of measuring state vectors. $\\bra{\\chi}P\\ket{\\psi}$.")
 #ifdef SCALUQ_USE_DEVICE
         .def("get_expectation_value",
              nb::overload_cast<const StateVector<Prec, ExecutionSpace::Default>&>(
@@ -251,6 +270,10 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              &PauliOperator<Prec>::get_full_matrix_ignoring_coef,
              "n_qubits"_a,
              "Get matrix representation of the PauliOperator, but with forcing `coef=1.`")
+        .def("get_matrix_triplets_ignoring_coef",
+             &PauliOperator<Prec>::get_matrix_triplets_ignoring_coef,
+             "Get matrix representation of the PauliOperator, but with forcing `coef=1.` and non "
+             "zero elements")
         .def(nb::self * nb::self)
         .def(nb::self * StdComplex())
         .def(

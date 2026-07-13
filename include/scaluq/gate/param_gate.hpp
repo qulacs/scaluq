@@ -464,6 +464,10 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
             [](const GateT& gate) { return gate->control_qubit_list(); },
             "Get control qubits as `list[int]`.")
         .def(
+            "control_value_list",
+            [](const GateT& gate) { return gate->control_value_list(); },
+            "Get control value as `list[int]`.")
+        .def(
             "operand_qubit_list",
             [](const GateT& gate) { return gate->operand_qubit_list(); },
             "Get target and control qubits as `list[int]`.")
@@ -475,6 +479,10 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
             "control_qubit_mask",
             [](const GateT& gate) { return gate->control_qubit_mask(); },
             "Get control qubits as mask.")
+        .def(
+            "control_value_mask",
+            [](const GateT& gate) { return gate->control_value_mask(); },
+            "Get control value as mask.")
         .def(
             "operand_qubit_mask",
             [](const GateT& gate) { return gate->operand_qubit_mask(); },

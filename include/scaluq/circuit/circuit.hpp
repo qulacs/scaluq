@@ -616,6 +616,15 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
                                      "True"})
                  .build_as_google_style()
                  .c_str())
+        .def("get_classical_condition_at",
+             &Circuit<Prec>::get_classical_condition_at,
+             "index"_a,
+             DocString()
+                 .desc("Get classical register condition.")
+                 .arg("index", "int", "index of classical register")
+                 .ret("bool", "classical bit")
+                 .build_as_google_style()
+                 .c_str())
         .def("calculate_depth",
              &Circuit<Prec>::calculate_depth,
              DocString()
