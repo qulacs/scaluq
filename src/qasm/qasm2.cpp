@@ -973,6 +973,9 @@ template <Precision Prec>
 // already-lowered QASM2 operations, not Scaluq gate internals.
 [[nodiscard]] std::string write_qasm2_op(const OpenQasm2Op& op) {
     if (op.kind == OpenQasm2Op::Kind::Measure) {
+        if (!op.classical_bit) {
+            throw std::runtime_error("measure operation is missing a classical bit");
+        }
         return "measure " + q(op.qubits[0]) + " -> " + c(*op.classical_bit) + ";";
     }
     std::ostringstream out;

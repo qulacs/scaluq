@@ -88,6 +88,10 @@ public:
                   std::uint64_t control_value_mask,
                   Float<Prec> param_coef = 1);
     virtual ~ParamGateBase() = default;
+    ParamGateBase(const ParamGateBase&) = delete;
+    ParamGateBase(ParamGateBase&&) = delete;
+    ParamGateBase& operator=(const ParamGateBase&) = delete;
+    ParamGateBase& operator=(ParamGateBase&&) = delete;
 
     [[nodiscard]] double param_coef() const { return _pcoef; }
 
@@ -317,7 +321,8 @@ public:
         } else {
             // downcast
             _param_gate_type = get_param_gate_type<T, Prec>();
-            if (!(_param_gate_ptr = std::dynamic_pointer_cast<const T>(param_gate_ptr))) {
+            _param_gate_ptr = std::dynamic_pointer_cast<const T>(param_gate_ptr);
+            if (!_param_gate_ptr) {
                 throw std::runtime_error("invalid gate cast");
             }
         }
@@ -366,6 +371,7 @@ public:
         else if (type == "ParamRZ") gate = GetParamGateFromJson<ParamRZGateImpl<Prec>>::get(j);
         else if (type == "ParamPauliRotation") gate = GetParamGateFromJson<ParamPauliRotationGateImpl<Prec>>::get(j);
         else if (type == "ParamProbabilistic") gate = GetParamGateFromJson<ParamProbabilisticGateImpl<Prec>>::get(j);
+        else throw std::runtime_error("ParamGatePtr::from_json: unsupported param gate type: " + type);
         // clang-format on
     }
 };

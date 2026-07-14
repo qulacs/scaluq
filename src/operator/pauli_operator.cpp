@@ -134,7 +134,7 @@ StdComplex PauliOperator<Prec>::get_expectation_value(
     std::uint64_t bit_flip_mask = _bit_flip_mask;
     std::uint64_t phase_flip_mask = _phase_flip_mask;
     if (bit_flip_mask == 0) {
-        FloatType res;
+        FloatType res{0};
         Kokkos::parallel_reduce(
             "get_expectation_value",
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector.dim()),
@@ -151,7 +151,7 @@ StdComplex PauliOperator<Prec>::get_expectation_value(
     std::uint64_t pivot = std::bit_width(bit_flip_mask) - 1;
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
-    FloatType res;
+    FloatType res{0};
     Kokkos::parallel_reduce(
         "get_expectation_value",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector.dim() >> 1),

@@ -138,6 +138,14 @@ TYPED_TEST(ParamGateTest, ParamGateJsonRoundtripPreservesControlValue) {
     test_param_gate_json_roundtrip_preserves_control_value<Prec, Space>(&gate::ParamRZ<Prec>);
 }
 
+TYPED_TEST(ParamGateTest, ParamGateJsonRejectsUnsupportedType) {
+    constexpr Precision Prec = TestFixture::Prec;
+
+    const Json j = {{"type", "UnsupportedParamGate"}};
+
+    EXPECT_THROW({ (void)j.template get<ParamGate<Prec>>(); }, std::runtime_error);
+}
+
 TYPED_TEST(ParamGateTest, ApplyParamPauliRotationGate) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;

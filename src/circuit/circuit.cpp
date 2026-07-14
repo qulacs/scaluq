@@ -108,8 +108,8 @@ void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
     std::uint64_t unreset_measured_qubit_mask = 0ULL;
     internal::ExecutionContext<Prec, Space> context{state, classical_register, random_engine};
     for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
-        if (_classical_conditions[idx].has_value() &&
-            !_classical_conditions[idx].value()(classical_register)) {
+        const auto& classical_condition = _classical_conditions[idx];
+        if (classical_condition && !(*classical_condition)(classical_register)) {
             continue;
         }
         auto&& gate = _gate_list[idx];

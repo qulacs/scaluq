@@ -46,35 +46,35 @@ bool apply_measurement_update(StateVector<Prec, Space>& state,
     template <Precision Prec>                                                                    \
     void MeasurementGateImpl<Prec>::update_quantum_state(ExecutionContext<Prec, Space>& context) \
         const {                                                                                  \
-        this->check_qubit_mask_within_bounds(context.state);                                     \
-        if (context.classical_register.register_size() <= _classical_bit_index) {                \
+        this->check_qubit_mask_within_bounds(*context.state);                                    \
+        if (context.classical_register->register_size() <= _classical_bit_index) {               \
             throw std::runtime_error(                                                            \
                 "MeasurementGate::update_quantum_state(): classical register size is too "       \
                 "small for the requested classical bit index.");                                 \
         }                                                                                        \
         const bool measured_zero = apply_measurement_update(                                     \
-            context.state, context.random_engine, this->_target_mask, _reset);                   \
-        context.classical_register[_classical_bit_index] = !measured_zero;                       \
+            *context.state, *context.random_engine, this->_target_mask, _reset);                 \
+        (*context.classical_register)[_classical_bit_index] = !measured_zero;                    \
     }                                                                                            \
     template <Precision Prec>                                                                    \
     void MeasurementGateImpl<Prec>::update_quantum_state(                                        \
         ExecutionContextBatched<Prec, Space>& context) const {                                   \
-        this->check_qubit_mask_within_bounds(context.states);                                    \
-        if (context.classical_register.batch_size() != context.states.batch_size()) {            \
+        this->check_qubit_mask_within_bounds(*context.states);                                   \
+        if (context.classical_register->batch_size() != context.states->batch_size()) {          \
             throw std::runtime_error(                                                            \
                 "MeasurementGate::update_quantum_state(): batch size mismatch.");                \
         }                                                                                        \
-        if (context.classical_register.register_size() <= _classical_bit_index) {                \
+        if (context.classical_register->register_size() <= _classical_bit_index) {               \
             throw std::runtime_error(                                                            \
                 "MeasurementGate::update_quantum_state(): classical register size is too "       \
                 "small for the requested classical bit index.");                                 \
         }                                                                                        \
-        for (std::uint64_t batch_index = 0; batch_index < context.states.batch_size();           \
+        for (std::uint64_t batch_index = 0; batch_index < context.states->batch_size();          \
              ++batch_index) {                                                                    \
-            auto state = context.states.view_state_vector_at(batch_index);                       \
+            auto state = context.states->view_state_vector_at(batch_index);                      \
             const bool measured_zero = apply_measurement_update(                                 \
-                state, context.random_engine, this->_target_mask, _reset);                       \
-            context.classical_register[batch_index][_classical_bit_index] = !measured_zero;      \
+                state, *context.random_engine, this->_target_mask, _reset);                      \
+            (*context.classical_register)[batch_index][_classical_bit_index] = !measured_zero;   \
         }                                                                                        \
     }
 DEFINE_MEASUREMENT_GATE_UPDATE(ExecutionSpace::Host)

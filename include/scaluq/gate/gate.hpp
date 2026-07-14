@@ -6,6 +6,7 @@
 
 #include "../classical_register/classical_register.hpp"
 #include "../classical_register/classical_register_batched.hpp"
+#include "../state/density_matrix.hpp"
 #include "../state/state_vector.hpp"
 #include "../state/state_vector_batched.hpp"
 #include "../types.hpp"
@@ -203,26 +204,44 @@ constexpr GateType get_gate_type() {
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 struct ExecutionContext {
-    StateVector<Prec, Space>& state;
-    ClassicalRegister& classical_register;
-    std::mt19937_64& random_engine;
+    StateVector<Prec, Space>* state;
+    ClassicalRegister* classical_register;
+    std::mt19937_64* random_engine;
 
     ExecutionContext(StateVector<Prec, Space>& state_,
                      ClassicalRegister& classical_register_,
                      std::mt19937_64& random_engine_)
-        : state(state_), classical_register(classical_register_), random_engine(random_engine_) {}
+        : state(&state_),
+          classical_register(&classical_register_),
+          random_engine(&random_engine_) {}
 };
 
 template <Precision Prec, ExecutionSpace Space>
 struct ExecutionContextBatched {
-    StateVectorBatched<Prec, Space>& states;
-    ClassicalRegisterBatched& classical_register;
-    std::mt19937_64& random_engine;
+    StateVectorBatched<Prec, Space>* states;
+    ClassicalRegisterBatched* classical_register;
+    std::mt19937_64* random_engine;
 
     ExecutionContextBatched(StateVectorBatched<Prec, Space>& states_,
                             ClassicalRegisterBatched& classical_register_,
                             std::mt19937_64& random_engine_)
-        : states(states_), classical_register(classical_register_), random_engine(random_engine_) {}
+        : states(&states_),
+          classical_register(&classical_register_),
+          random_engine(&random_engine_) {}
+};
+
+template <Precision Prec, ExecutionSpace Space>
+struct ExecutionContextDensityMatrix {
+    DensityMatrix<Prec, Space>* state;
+    ClassicalRegister* classical_register;
+    std::mt19937_64* random_engine;
+
+    ExecutionContextDensityMatrix(DensityMatrix<Prec, Space>& state_,
+                                  ClassicalRegister& classical_register_,
+                                  std::mt19937_64& random_engine_)
+        : state(&state_),
+          classical_register(&classical_register_),
+          random_engine(&random_engine_) {}
 };
 
 // GateBase テンプレートクラス
@@ -250,6 +269,13 @@ protected:
     void check_qubit_mask_within_bounds(
         const StateVectorBatched<Prec, ExecutionSpace::Default>& states) const;
 #endif  // SCALUQ_USE_DEVICE
+    void check_qubit_mask_within_bounds(const DensityMatrix<Prec, ExecutionSpace::Host>& dm) const;
+    void check_qubit_mask_within_bounds(
+        const DensityMatrix<Prec, ExecutionSpace::HostSerial>& dm) const;
+#ifdef SCALUQ_USE_DEVICE
+    void check_qubit_mask_within_bounds(
+        const DensityMatrix<Prec, ExecutionSpace::Default>& dm) const;
+#endif  // SCALUQ_USE_DEVICE
 
     std::string get_qubit_info_as_string(const std::string& indent) const;
 
@@ -258,6 +284,10 @@ public:
              std::uint64_t control_mask,
              std::uint64_t control_value_mask);
     virtual ~GateBase() = default;
+    GateBase(const GateBase&) = delete;
+    GateBase(GateBase&&) = delete;
+    GateBase& operator=(const GateBase&) = delete;
+    GateBase& operator=(GateBase&&) = delete;
 
     [[nodiscard]] virtual std::vector<std::uint64_t> target_qubit_list() const {
         return mask_to_vector(_target_mask);
@@ -403,6 +433,71 @@ public:
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const = 0;
 #endif
 
+    void update_quantum_state(DensityMatrix<Prec, ExecutionSpace::Host>& state) const {
+        ClassicalRegister classical_register(0);
+        std::mt19937_64 random_engine(std::random_device{}());
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host> context{
+            state, classical_register, random_engine};
+        update_quantum_state(context);
+    }
+    void update_quantum_state(DensityMatrix<Prec, ExecutionSpace::Host>& state,
+                              ClassicalRegister& classical_register,
+                              std::optional<std::uint64_t> seed = std::nullopt) const {
+        std::mt19937_64 random_engine(resolve_seed(seed));
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host> context{
+            state, classical_register, random_engine};
+        update_quantum_state(context);
+    }
+    void update_quantum_state(DensityMatrix<Prec, ExecutionSpace::HostSerial>& state) const {
+        ClassicalRegister classical_register(0);
+        std::mt19937_64 random_engine(std::random_device{}());
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial> context{
+            state, classical_register, random_engine};
+        update_quantum_state(context);
+    }
+    void update_quantum_state(DensityMatrix<Prec, ExecutionSpace::HostSerial>& state,
+                              ClassicalRegister& classical_register,
+                              std::optional<std::uint64_t> seed = std::nullopt) const {
+        std::mt19937_64 random_engine(resolve_seed(seed));
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial> context{
+            state, classical_register, random_engine};
+        update_quantum_state(context);
+    }
+#ifdef SCALUQ_USE_CUDA
+    void update_quantum_state(DensityMatrix<Prec, ExecutionSpace::Default>& state) const {
+        ClassicalRegister classical_register(0);
+        std::mt19937_64 random_engine(std::random_device{}());
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default> context{
+            state, classical_register, random_engine};
+        update_quantum_state(context);
+    }
+    void update_quantum_state(DensityMatrix<Prec, ExecutionSpace::Default>& state,
+                              ClassicalRegister& classical_register,
+                              std::optional<std::uint64_t> seed = std::nullopt) const {
+        std::mt19937_64 random_engine(resolve_seed(seed));
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default> context{
+            state, classical_register, random_engine};
+        update_quantum_state(context);
+    }
+#endif  // SCALUQ_USE_CUDA
+    virtual void update_quantum_state(
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>&) const {
+        throw std::runtime_error(
+            "update_quantum_state for DensityMatrix is not implemented for this gate.");
+    }
+    virtual void update_quantum_state(
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>&) const {
+        throw std::runtime_error(
+            "update_quantum_state for DensityMatrix is not implemented for this gate.");
+    }
+#ifdef SCALUQ_USE_CUDA
+    virtual void update_quantum_state(
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>&) const {
+        throw std::runtime_error(
+            "update_quantum_state for DensityMatrix is not implemented for this gate.");
+    }
+#endif  // SCALUQ_USE_CUDA
+
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 
     virtual void get_as_json(Json& j) const { j = Json{{"type", "Unknown"}}; }
@@ -488,7 +583,8 @@ public:
         } else {
             // downcast
             _gate_type = get_gate_type<T, Prec>();
-            if (!(_gate_ptr = std::dynamic_pointer_cast<const T>(gate_ptr))) {
+            _gate_ptr = std::dynamic_pointer_cast<const T>(gate_ptr);
+            if (!_gate_ptr) {
                 throw std::runtime_error("invalid gate cast");
             }
         }
@@ -559,6 +655,7 @@ public:
         else if (type == "Pauli") gate = GetGateFromJson<PauliGateImpl<Prec>>::get(j);
         else if (type == "PauliRotation") gate = GetGateFromJson<PauliRotationGateImpl<Prec>>::get(j);
         else if (type == "Probabilistic") gate = GetGateFromJson<ProbabilisticGateImpl<Prec>>::get(j);
+        else throw std::runtime_error("GatePtr::from_json: unsupported gate type: " + type);
         // clang-format on
     }
 };

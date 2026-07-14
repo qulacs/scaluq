@@ -302,7 +302,7 @@ double DensityMatrix<Prec, Space>::get_purity() const {
             "DensityMatrix::get_purity: Purity is only defined for hermitian "
             "density matrices.");
     }
-    FloatType purity;
+    FloatType purity{0};
     Kokkos::parallel_reduce(
         "get_purity",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(

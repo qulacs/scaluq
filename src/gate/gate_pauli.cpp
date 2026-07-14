@@ -24,7 +24,7 @@ std::string PauliGateImpl<Prec>::to_string(const std::string& indent) const {
                     bit_flip_mask,                                                             \
                     phase_flip_mask,                                                           \
                     Complex<Prec>(_pauli.coef()),                                              \
-                    context.state_member);                                                     \
+                    *context.state_member);                                                    \
     }
 DEFINE_PAULI_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_PAULI_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -71,7 +71,7 @@ std::string PauliRotationGateImpl<Prec>::to_string(const std::string& indent) co
                              phase_flip_mask,                                                  \
                              Complex<Prec>(_pauli.coef()),                                     \
                              _angle,                                                           \
-                             context.state_member);                                            \
+                             *context.state_member);                                           \
     }
 DEFINE_PAULI_ROTATION_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_PAULI_ROTATION_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
