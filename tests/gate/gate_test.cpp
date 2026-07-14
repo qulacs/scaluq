@@ -924,6 +924,14 @@ TYPED_TEST(GateTest, UGateJsonRoundTrip) {
     }
 }
 
+TYPED_TEST(GateTest, GateJsonRejectsUnsupportedType) {
+    constexpr Precision Prec = TestFixture::Prec;
+
+    const Json j = {{"type", "UnsupportedGate"}};
+
+    EXPECT_THROW({ (void)j.template get<Gate<Prec>>(); }, std::runtime_error);
+}
+
 TYPED_TEST(GateTest, FlattenNestedProbabilisticGate) {
     constexpr Precision Prec = TestFixture::Prec;
     Gate<Prec> nested_gate = gate::Probabilistic<Prec>(
