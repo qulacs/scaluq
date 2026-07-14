@@ -371,6 +371,7 @@ public:
         else if (type == "ParamRZ") gate = GetParamGateFromJson<ParamRZGateImpl<Prec>>::get(j);
         else if (type == "ParamPauliRotation") gate = GetParamGateFromJson<ParamPauliRotationGateImpl<Prec>>::get(j);
         else if (type == "ParamProbabilistic") gate = GetParamGateFromJson<ParamProbabilisticGateImpl<Prec>>::get(j);
+        else throw std::runtime_error("ParamGatePtr::from_json: unsupported param gate type: " + type);
         // clang-format on
     }
 };
