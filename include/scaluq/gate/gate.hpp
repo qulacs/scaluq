@@ -223,14 +223,16 @@ struct ExecutionContextBatched {
 
 template <Precision Prec, ExecutionSpace Space>
 struct ExecutionContextDensityMatrix {
-    DensityMatrix<Prec, Space>& state;
-    ClassicalRegister& classical_register;
-    std::mt19937_64& random_engine;
+    DensityMatrix<Prec, Space>* state;
+    ClassicalRegister* classical_register;
+    std::mt19937_64* random_engine;
 
     ExecutionContextDensityMatrix(DensityMatrix<Prec, Space>& state_,
                                   ClassicalRegister& classical_register_,
                                   std::mt19937_64& random_engine_)
-        : state(state_), classical_register(classical_register_), random_engine(random_engine_) {}
+        : state(&state_),
+          classical_register(&classical_register_),
+          random_engine(&random_engine_) {}
 };
 
 // GateBase テンプレートクラス
