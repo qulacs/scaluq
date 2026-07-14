@@ -24,16 +24,9 @@ public:
          std::is_same_v<Scalar2, int>)KOKKOS_INLINE_FUNCTION Complex(Scalar1 real, Scalar2 imag)
         : _real(static_cast<FloatType>(real)),
     _imag(static_cast<FloatType>(imag)) {}
-    KOKKOS_INLINE_FUNCTION Complex(const Complex& other)
-        : _real(other.real()), _imag(other.imag()) {}
     KOKKOS_INLINE_FUNCTION Complex(const std::complex<double>& c)
         : _real(static_cast<FloatType>(c.real())), _imag(static_cast<FloatType>(c.imag())) {}
 
-    KOKKOS_INLINE_FUNCTION Complex& operator=(const Complex& other) {
-        _real = other._real;
-        _imag = other._imag;
-        return *this;
-    }
     KOKKOS_INLINE_FUNCTION Complex& operator=(const std::complex<double>& c) {
         _real = static_cast<FloatType>(c.real());
         _imag = static_cast<FloatType>(c.imag());
