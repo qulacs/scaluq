@@ -3,6 +3,8 @@
 #include <scaluq/prec_space.hpp>
 #include <scaluq/util/math.hpp>
 
+#include <limits>
+
 namespace scaluq {
 template <>
 Operator<internal::Prec, internal::Space>::Operator(
@@ -506,6 +508,7 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
     krylov_space_basis.reserve(iter_count + 1);
     krylov_space_basis.push_back(initial_state.copy());
     ComplexMatrix hessenberg_matrix = ComplexMatrix::Zero(iter_count, iter_count);
+    std::uint64_t effective_iter_count = iter_count;
     for (std::uint64_t i = 0; i < iter_count; i++) {
         // |state> <- (A-muI)|state>
         auto state = krylov_space_basis.back().copy();
@@ -520,13 +523,19 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
         }
         // normalize |state>
         double norm = std::sqrt(state.get_squared_norm());
+        if (norm <= 100 * std::numeric_limits<FloatType>::epsilon()) {
+            effective_iter_count = i + 1;
+            break;
+        }
         if (i + 1 < iter_count) {
             hessenberg_matrix(i + 1, i) = norm;
         }
         state.multiply_coef(1. / norm);
         krylov_space_basis.push_back(state);
     }
-    Eigen::ComplexEigenSolver<ComplexMatrix> solver(hessenberg_matrix);
+    ComplexMatrix effective_hessenberg_matrix =
+        hessenberg_matrix.topLeftCorner(effective_iter_count, effective_iter_count);
+    Eigen::ComplexEigenSolver<ComplexMatrix> solver(effective_hessenberg_matrix);
     if (solver.info() == Eigen::ComputationInfo::NoConvergence) {
         throw std::runtime_error(
             "Operator::solve_ground_state_eigenvalue_by_arnoldi_method: "
@@ -546,7 +555,7 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
         eigenvalues.begin();
     auto ground_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(nqubits);
     ground_state.set_zero_norm_state();
-    for (std::uint64_t i = 0; i < iter_count; i++) {
+    for (std::uint64_t i = 0; i < effective_iter_count; i++) {
         ground_state.add_state_vector_with_coef(eigenvectors(i, minimum_eigenvalue_index),
                                                 krylov_space_basis[i]);
     }
