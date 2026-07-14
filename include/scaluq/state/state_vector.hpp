@@ -16,8 +16,8 @@ namespace scaluq {
 
 template <Precision Prec, ExecutionSpace Space>
 class StateVector {
-    std::uint64_t _n_qubits;
-    std::uint64_t _dim;
+    std::uint64_t _n_qubits = 0;
+    std::uint64_t _dim = 0;
     using FloatType = internal::Float<Prec>;
     using ComplexType = internal::Complex<Prec>;
     using ExecutionSpaceType = internal::SpaceType<Space>;
@@ -486,9 +486,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
             "sampling",
             [](const StateVector<Prec, Space>& state,
                std::uint64_t sampling_count,
-               std::optional<std::uint64_t> seed) {
-                return state.sampling(sampling_count, seed);
-            },
+               std::optional<std::uint64_t> seed) { return state.sampling(sampling_count, seed); },
             "sampling_count"_a,
             "seed"_a = std::nullopt,
             DocString()
@@ -544,6 +542,12 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                      "amplitudes with len $2^{\\mathrm{n\\_qubits}}$ or source state vector")
                 .build_as_google_style()
                 .c_str())
+        .def("copy",
+             &StateVector<Prec, Space>::copy,
+             DocString()
+                 .desc("Return a deep copy in the same execution space.")
+                 .build_as_google_style()
+                 .c_str())
         .def("copy_to_default_space",
              &StateVector<Prec, Space>::copy_to_default_space,
              DocString()

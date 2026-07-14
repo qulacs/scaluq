@@ -10,7 +10,7 @@ namespace scaluq {
 namespace internal {
 template <Precision Prec>
 class ParamPauliRotationGateImpl : public ParamGateBase<Prec> {
-    const PauliOperator<Prec> _pauli;
+    PauliOperator<Prec> _pauli;
 
 public:
     ParamPauliRotationGateImpl(std::uint64_t control_mask,
@@ -35,20 +35,16 @@ public:
     ComplexMatrix get_matrix(double param) const override;
     void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host>& context,
                               double param) const override;
-    void update_quantum_state(
-        ExecutionContextBatched<Prec, ExecutionSpace::Host>& context,
+    void update_quantum_state(ExecutionContextBatched<Prec, ExecutionSpace::Host>& context,
                               const std::vector<double>& params) const override;
-    void update_quantum_state(
-        ExecutionContext<Prec, ExecutionSpace::HostSerial>& context,
+    void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::HostSerial>& context,
                               double param) const override;
-    void update_quantum_state(
-        ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context,
+    void update_quantum_state(ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context,
                               const std::vector<double>& params) const override;
 #ifdef SCALUQ_USE_CUDA
     void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Default>& context,
                               double param) const override;
-    void update_quantum_state(
-        ExecutionContextBatched<Prec, ExecutionSpace::Default>& context,
+    void update_quantum_state(ExecutionContextBatched<Prec, ExecutionSpace::Default>& context,
                               const std::vector<double>& params) const override;
 #endif  // SCALUQ_USE_CUDA
     std::string to_string(const std::string& indent) const override;
@@ -76,7 +72,15 @@ void bind_gate_param_gate_pauli_hpp(nb::module_& m,
         param_gate_base_def,
         "ParamPauliRotationGate",
         "Parametric multi-qubit pauli-rotation gate, represented as $e^{-i\\frac{\\theta}{2}P}$. "
-        "`theta` is given as `param * param_coef`.");
+        "`theta` is given as `param * param_coef`.")
+        .def(
+            "pauli",
+            [](ParamPauliRotationGate<Prec>& gate) { return gate->pauli(); },
+            nb::rv_policy::reference)
+        .def(
+            "pauli_id_list",
+            [](ParamPauliRotationGate<Prec>& gate) { return gate->pauli_id_list(); },
+            nb::rv_policy::reference);
 }
 }  // namespace internal
 #endif

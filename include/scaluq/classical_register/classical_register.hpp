@@ -47,6 +47,7 @@ inline void bind_classical_register_hpp(nb::module_& m) {
     nb::class_<ClassicalRegister>(m, "ClassicalRegister", "Classical register.")
         .def(nb::init<std::uint64_t>(), "register_size"_a, "Initialize classical register.")
         .def("register_size", &ClassicalRegister::register_size, "Get register size.")
+        .def("empty", &ClassicalRegister::empty, "Get register binary.")
         .def("__len__", &ClassicalRegister::register_size, "Get register size.")
         .def(
             "__getitem__",

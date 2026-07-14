@@ -229,14 +229,12 @@ inline SparseComplexMatrix transform_sparse_matrix_by_order(
 
 template <Precision Prec>
 constexpr double get_epsilon() {
-    if constexpr (Prec == Precision::F16)
+    if constexpr (Prec == Precision::F16 || Prec == Precision::BF16)
         return 1.;
     else if constexpr (Prec == Precision::F32)
         return 1e-4;
     else if constexpr (Prec == Precision::F64)
         return 1e-12;
-    else if constexpr (Prec == Precision::BF16)
-        return 1.;
     else
         static_assert(internal::lazy_false_v<internal::Float<Prec>>, "unknown Precision");
 }

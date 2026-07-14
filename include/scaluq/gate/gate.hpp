@@ -203,26 +203,28 @@ constexpr GateType get_gate_type() {
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 struct ExecutionContext {
-    StateVector<Prec, Space>& state;
-    ClassicalRegister& classical_register;
-    std::mt19937_64& random_engine;
+    StateVector<Prec, Space>* state;
+    ClassicalRegister* classical_register;
+    std::mt19937_64* random_engine;
 
     ExecutionContext(StateVector<Prec, Space>& state_,
                      ClassicalRegister& classical_register_,
                      std::mt19937_64& random_engine_)
-        : state(state_), classical_register(classical_register_), random_engine(random_engine_) {}
+        : state(&state_), classical_register(&classical_register_), random_engine(&random_engine_) {}
 };
 
 template <Precision Prec, ExecutionSpace Space>
 struct ExecutionContextBatched {
-    StateVectorBatched<Prec, Space>& states;
-    ClassicalRegisterBatched& classical_register;
-    std::mt19937_64& random_engine;
+    StateVectorBatched<Prec, Space>* states;
+    ClassicalRegisterBatched* classical_register;
+    std::mt19937_64* random_engine;
 
     ExecutionContextBatched(StateVectorBatched<Prec, Space>& states_,
                             ClassicalRegisterBatched& classical_register_,
                             std::mt19937_64& random_engine_)
-        : states(states_), classical_register(classical_register_), random_engine(random_engine_) {}
+        : states(&states_),
+          classical_register(&classical_register_),
+          random_engine(&random_engine_) {}
 };
 
 // GateBase テンプレートクラス
@@ -258,6 +260,10 @@ public:
              std::uint64_t control_mask,
              std::uint64_t control_value_mask);
     virtual ~GateBase() = default;
+    GateBase(const GateBase&) = delete;
+    GateBase(GateBase&&) = delete;
+    GateBase& operator=(const GateBase&) = delete;
+    GateBase& operator=(GateBase&&) = delete;
 
     [[nodiscard]] virtual std::vector<std::uint64_t> target_qubit_list() const {
         return mask_to_vector(_target_mask);
@@ -488,7 +494,8 @@ public:
         } else {
             // downcast
             _gate_type = get_gate_type<T, Prec>();
-            if (!(_gate_ptr = std::dynamic_pointer_cast<const T>(gate_ptr))) {
+            _gate_ptr = std::dynamic_pointer_cast<const T>(gate_ptr);
+            if (!_gate_ptr) {
                 throw std::runtime_error("invalid gate cast");
             }
         }

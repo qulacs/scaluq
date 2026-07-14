@@ -88,6 +88,10 @@ public:
                   std::uint64_t control_value_mask,
                   Float<Prec> param_coef = 1);
     virtual ~ParamGateBase() = default;
+    ParamGateBase(const ParamGateBase&) = delete;
+    ParamGateBase(ParamGateBase&&) = delete;
+    ParamGateBase& operator=(const ParamGateBase&) = delete;
+    ParamGateBase& operator=(ParamGateBase&&) = delete;
 
     [[nodiscard]] double param_coef() const { return _pcoef; }
 
@@ -317,7 +321,8 @@ public:
         } else {
             // downcast
             _param_gate_type = get_param_gate_type<T, Prec>();
-            if (!(_param_gate_ptr = std::dynamic_pointer_cast<const T>(param_gate_ptr))) {
+            _param_gate_ptr = std::dynamic_pointer_cast<const T>(param_gate_ptr);
+            if (!_param_gate_ptr) {
                 throw std::runtime_error("invalid gate cast");
             }
         }
@@ -464,6 +469,10 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
             [](const GateT& gate) { return gate->control_qubit_list(); },
             "Get control qubits as `list[int]`.")
         .def(
+            "control_value_list",
+            [](const GateT& gate) { return gate->control_value_list(); },
+            "Get control value as `list[int]`.")
+        .def(
             "operand_qubit_list",
             [](const GateT& gate) { return gate->operand_qubit_list(); },
             "Get target and control qubits as `list[int]`.")
@@ -475,6 +484,10 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
             "control_qubit_mask",
             [](const GateT& gate) { return gate->control_qubit_mask(); },
             "Get control qubits as mask.")
+        .def(
+            "control_value_mask",
+            [](const GateT& gate) { return gate->control_value_mask(); },
+            "Get control value as mask.")
         .def(
             "operand_qubit_mask",
             [](const GateT& gate) { return gate->operand_qubit_mask(); },

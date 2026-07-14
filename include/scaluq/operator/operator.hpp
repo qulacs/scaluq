@@ -157,6 +157,9 @@ void bind_operator_operator_hpp(nb::module_& m) {
         .def("is_hermitian",
              &Operator<Prec, Space>::is_hermitian,
              "Check if the operator is Hermitian.")
+        .def("force_hermitian",
+             &Operator<Prec, Space>::force_hermitian,
+             "Operator is_hermitian is true forcibly.")
         .def("load",
              &Operator<Prec, Space>::load,
              "terms"_a,
@@ -223,7 +226,7 @@ void bind_operator_operator_hpp(nb::module_& m) {
             "states_source"_a,
             "states_target"_a,
             "Get the transition amplitudes of the operator for a batch of state vectors.")
-        .def("get_matrix",
+        .def("get_full_matrix",
              &Operator<Prec, Space>::get_full_matrix,
              "Get matrix representation of the Operator. Tensor product is applied from "
              "n_qubits-1 to 0.")
@@ -318,6 +321,12 @@ void bind_operator_operator_hpp(nb::module_& m) {
              DocString()
                  .desc("Calculate a default shift value `mu` for ground state solvers.")
                  .ret("complex", "Calculated shift value `mu`.")
+                 .build_as_google_style()
+                 .c_str())
+        .def("copy",
+             &Operator<Prec, Space>::copy,
+             DocString()
+                 .desc("Return a deep copy in the same execution space.")
                  .build_as_google_style()
                  .c_str())
         .def("copy_to_default_space",
