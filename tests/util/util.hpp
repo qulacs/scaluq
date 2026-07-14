@@ -242,6 +242,30 @@ inline ComplexMatrix get_eigen_matrix_full_qubit_Ecr(std::uint64_t physical_cont
     return (alpha - beta) / std::sqrt(2);
 }
 
+// Controlled-ECR: identity when ext_ctrl=0, ECR on (phys_ctrl,phys_tgt) when ext_ctrl=1.
+inline ComplexMatrix get_eigen_matrix_full_qubit_controlled_Ecr(
+    std::uint64_t ext_ctrl_qubit_index,
+    std::uint64_t physical_control_qubit_index,
+    std::uint64_t physical_target_qubit_index,
+    std::uint64_t qubit_count) {
+    std::uint64_t dim = 1ULL << qubit_count;
+    ComplexMatrix ecr_full =
+        get_eigen_matrix_full_qubit_Ecr(physical_control_qubit_index,
+                                        physical_target_qubit_index,
+                                        qubit_count);
+    ComplexMatrix result = ComplexMatrix::Zero(dim, dim);
+    for (std::uint64_t i = 0; i < dim; ++i)
+        if (!(i & (1ULL << ext_ctrl_qubit_index))) result(i, i) = 1;
+    for (std::uint64_t y = 0; y < dim; ++y) {
+        if (!(y & (1ULL << ext_ctrl_qubit_index))) continue;
+        for (std::uint64_t x = 0; x < dim; ++x) {
+            if (!(x & (1ULL << ext_ctrl_qubit_index))) continue;
+            result(y, x) = ecr_full(y, x);
+        }
+    }
+    return result;
+}
+
 inline ComplexMatrix make_2x2_matrix(const StdComplex& a00,
                                      const StdComplex& a01,
                                      const StdComplex& a10,

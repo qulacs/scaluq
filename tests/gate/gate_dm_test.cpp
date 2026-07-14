@@ -383,3 +383,23 @@ TYPED_TEST(DMGateTest, ApplyControlledZ) {
         run_dm_gate_apply<Prec, Space>(n, gate_obj, U);
     }
 }
+
+TYPED_TEST(DMGateTest, ApplyControlledEcr) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    const std::uint64_t n = 4;
+    Random random;
+    for (int rep = 0; rep < 5; rep++) {
+        std::uint64_t ext_ctrl, phys_ctrl, phys_tgt;
+        ext_ctrl = random.int64() % n;
+        do {
+            phys_ctrl = random.int64() % n;
+        } while (phys_ctrl == ext_ctrl);
+        do {
+            phys_tgt = random.int64() % n;
+        } while (phys_tgt == ext_ctrl || phys_tgt == phys_ctrl);
+        auto gate_obj = gate::Ecr<Prec>(phys_ctrl, phys_tgt, {ext_ctrl}, {1});
+        ComplexMatrix U = get_eigen_matrix_full_qubit_controlled_Ecr(ext_ctrl, phys_ctrl, phys_tgt, n);
+        run_dm_gate_apply<Prec, Space>(n, gate_obj, U);
+    }
+}
