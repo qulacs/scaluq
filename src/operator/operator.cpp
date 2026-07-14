@@ -523,7 +523,7 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
         }
         // normalize |state>
         double norm = std::sqrt(state.get_squared_norm());
-        if (norm <= 100 * std::numeric_limits<FloatType>::epsilon()) {
+        if (norm <= 100.0 * static_cast<double>(std::numeric_limits<FloatType>::epsilon())) {
             effective_iter_count = i + 1;
             break;
         }
