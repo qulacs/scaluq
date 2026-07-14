@@ -1,12 +1,12 @@
 # Batched Execution 
-In many quantum algorithms, such as VQE or quantum machine learning, processing multiple quantum states or operators simultaneously can significantly improve performance. Scaluq provides the {class}`StateVectorBatched <scaluq.default.f64.StateVectorBatched>` and {class}`OperatorBatched <scaluq.default.f64.OperatorBatched>` classes to handle these operations efficiently in a single batch.
+In many quantum algorithms, such as VQE or quantum machine learning, processing multiple quantum states or operators simultaneously can significantly improve performance. Scaluq provides the {class}`scaluq.StateVectorBatched` and {class}`scaluq.OperatorBatched` classes to handle these operations efficiently in a single batch.
 
 ## Create Batched State
 
 To begin with, you can initialize a batched state vector by specifying the number of `batch_size` and `n_qubits`.
 
 ```py
-from scaluq.default.f64 import StateVectorBatched
+from scaluq import StateVectorBatched
 
 batch_size = 3
 n_qubits = 2
@@ -44,15 +44,15 @@ State vector :
 
 ## Apply Circuit to Batched States
 
-You can apply a {class}`Circuit <scaluq.default.f64.Circuit>` to a {class}`StateVectorBatched <scaluq.default.f64.StateVectorBatched>`. This allows you to apply the same gate operations to multiple states simultaneously.
+You can apply a {class}`scaluq.Circuit` to a {class}`scaluq.StateVectorBatched`. This allows you to apply the same gate operations to multiple states simultaneously.
 
 ### Set Different States
 
-You can prepare different initial states for each batch index using {func}`set_state_vector_at <scaluq.default.f64.StateVectorBatched>`.
+You can prepare different initial states for each batch index using {func}`set_state_vector_at <scaluq.StateVectorBatched>`.
 
 ```py
-from scaluq.default.f64 import Circuit, StateVectorBatched, StateVector
-from scaluq.default.f64.gate import H
+from scaluq import Circuit, StateVectorBatched, StateVector
+from scaluq.gate import H
 
 n_qubits = 2
 states = StateVectorBatched(batch_size=2, n_qubits=n_qubits)
@@ -62,7 +62,7 @@ states.set_state_vector_at(0, StateVector.Haar_random_state(n_qubits)) # Batch 0
 states.set_state_vector_at(1, StateVector.Haar_random_state(n_qubits)) # Batch 1: Another random state
 
 # Define a non-parametric circuit
-circuit = Circuit(n_qubits)
+circuit = Circuit()
 circuit.add_gate(H(0))
 
 # Apply the same circuit to both different random states
@@ -93,13 +93,13 @@ State vector :
 When the circuit is parametric, you can execute circuits with different parameter values across the batch.
 
 ```py
-from scaluq.default.f64 import Circuit, StateVectorBatched
-from scaluq.default.f64.gate import ParamRX
+from scaluq import Circuit, StateVectorBatched
+from scaluq.gate import ParamRX
 import math
 
 states = StateVectorBatched(batch_size=2, n_qubits=1)
 
-circuit = Circuit(1)
+circuit = Circuit()
 # set a parameterized RX gate on qubit 0 with parameter name "theta"
 circuit.add_param_gate(ParamRX(0), "theta")
 
@@ -127,10 +127,10 @@ State vector :
 
 ## Batched Operators
 
-The {class}`OperatorBatched <scaluq.default.f64.OperatorBatched>` class allows you to calculate expectation values for multiple different operators against a state.
+The {class}`scaluq.OperatorBatched` class allows you to calculate expectation values for multiple different operators against a state.
 
 ```py
-from scaluq.default.f64 import OperatorBatched, PauliOperator, StateVector
+from scaluq import OperatorBatched, PauliOperator, StateVector
 
 # Initialize a random state vector using Haar measure
 state = StateVector.Haar_random_state(2)

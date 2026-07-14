@@ -1,12 +1,12 @@
 # バッチ実行
-数多くの量子アルゴリズム (VQE, quantum machine learningなど)では複数の量子状態または演算子の処理を同時に進めることでパフォーマンスが大幅に改善します。Scaluqは{class}`StateVectorBatched <scaluq.default.f64.StateVectorBatched>` および {class}`OperatorBatched <scaluq.default.f64.OperatorBatched>`でバッチ実行を提供し、これらの操作を効率的に扱うことが可能です。
+数多くの量子アルゴリズム (VQE, quantum machine learningなど)では複数の量子状態または演算子の処理を同時に進めることでパフォーマンスが大幅に改善します。Scaluqは{class}`scaluq.StateVectorBatched` および {class}`scaluq.OperatorBatched`でバッチ実行を提供し、これらの操作を効率的に扱うことが可能です。
 
 ## バッチ状態を作る
 
 バッチサイズと量子ビット数を指定することでバッチ状態ベクトルを初期化できます。
 
 ```py
-from scaluq.default.f64 import StateVectorBatched
+from scaluq import StateVectorBatched
 
 batch_size = 3
 n_qubits = 2
@@ -44,15 +44,15 @@ State vector :
 
 ## バッチ量子状態に回路を作用させる
 
-{class}`StateVectorBatched <scaluq.default.f64.StateVectorBatched>`に{class}`Circuit <scaluq.default.f64.Circuit>`を作用させることができます。これにより、同じゲート操作を複数の状態に同時に作用可能にします。
+{class}`scaluq.StateVectorBatched`に{class}`scaluq.Circuit`を作用させることができます。これにより、同じゲート操作を複数の状態に同時に作用可能にします。
 
 ### 異なる量子状態にセットする
 
-{func}`set_state_vector_at <scaluq.default.f64.StateVectorBatched>`を使って、バッチインデックスごとに異なる初期状態を準備することができます。
+{func}`set_state_vector_at <scaluq.StateVectorBatched.set_state_vector_at>`を使って、バッチインデックスごとに異なる初期状態を準備することができます。
 
 ```py
-from scaluq.default.f64 import Circuit, StateVectorBatched, StateVector
-from scaluq.default.f64.gate import H
+from scaluq import Circuit, StateVectorBatched, StateVector
+from scaluq.gate import H
 
 n_qubits = 2
 states = StateVectorBatched(batch_size=2, n_qubits=n_qubits)
@@ -62,7 +62,7 @@ states.set_state_vector_at(0, StateVector.Haar_random_state(n_qubits)) # Batch 0
 states.set_state_vector_at(1, StateVector.Haar_random_state(n_qubits)) # Batch 1: Another random state
 
 # パラメトリックでない回路を定義
-circuit = Circuit(n_qubits)
+circuit = Circuit()
 circuit.add_gate(H(0))
 
 # 異なるランダムな状態に同じ回路を作用
@@ -94,13 +94,13 @@ State vector :
 回路がパラメトリックである時、異なるパラメータをもつ回路をバッチ実行可能です。
 
 ```py
-from scaluq.default.f64 import Circuit, StateVectorBatched
-from scaluq.default.f64.gate import ParamRX
+from scaluq import Circuit, StateVectorBatched
+from scaluq.gate import ParamRX
 import math
 
 states = StateVectorBatched(batch_size=2, n_qubits=1)
 
-circuit = Circuit(1)
+circuit = Circuit()
 # パラメトリックRXゲートを量子ビットのインデックス0にthetaというパラメータを用いてセット
 circuit.add_param_gate(ParamRX(0), "theta")
 
@@ -128,10 +128,10 @@ State vector :
 
 ## 演算子のバッチ
 
-{class}`OperatorBatched <scaluq.default.f64.OperatorBatched>`では、単一の量子状態に対して、複数の異なる演算子で期待値の計算可能です。
+{class}`scaluq.OperatorBatched`では、単一の量子状態に対して、複数の異なる演算子で期待値の計算可能です。
 
 ```py
-from scaluq.default.f64 import OperatorBatched, PauliOperator, StateVector
+from scaluq import OperatorBatched, PauliOperator, StateVector
 
 # ハール測度を用いてランダムな状態ベクトルに初期化
 state = StateVector.Haar_random_state(2)

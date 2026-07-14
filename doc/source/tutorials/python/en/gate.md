@@ -1,17 +1,17 @@
 # Gate
 
-Quantum gate is expressed as {class}`Gate <scaluq.default.f64.Gate>`.
+Quantum gate is expressed as {class}`scaluq.Gate`.
 This holds indices of target and control qubits, types of Gate (ex: `X`, `H`, `RY`, `DenseMatrix`...), and other properties.
 Properties of a Gate differ by its type. To access these properties, down-casting to specific class is required. (See [Downcast to GateType-specific function](#downcast-to-gatetype-specific-function))
 
-Unlike Qulacs, {class}`Gate <scaluq.default.f64.Gate>` objects are immutable. You have to pass all properties when generating the gate. This change enables us to provide fast and safe copy.
+Unlike Qulacs, {class}`scaluq.Gate` objects are immutable. You have to pass all properties when generating the gate. This change enables us to provide fast and safe copy.
 
 ## Creating Gate
 
-{class}`Gate <scaluq.default.f64.Gate>` type instances are created from factory functions in {mod}`gate <scaluq.default.f64.gate>`.
+{class}`scaluq.Gate` type instances are created from factory functions in {mod}`scaluq.gate`.
 
 ```py
-from scaluq.default.f64.gate import X, Swap, RX, DenseMatrix
+from scaluq.gate import X, Swap, RX, DenseMatrix
 import math
 import numpy as np
 
@@ -24,13 +24,13 @@ mat = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
 mat_gate = DenseMatrix([1, 2], mat, is_unitary=True)
 ```
 
-For detail usage of creating each types of gate, see {mod}`API document of gate module <scaluq.default.f64.gate>`.
+For detail usage of creating each types of gate, see {mod}`API document of gate module <scaluq.gate>`.
 
 You can add arbitrary number of control qubits to almost all types of Gates.
 Control-values can be passed. All control-values are set to $1$ when omitted.
 
 ```py
-from scaluq.default.f64.gate import H
+from scaluq.gate import H
 
 ch = H(0, controls=[1]) # H(0) applied when 1st qubit is |1>
 cch = H(0, controls=[1, 2]) # H(0) applied when 1st qubit is |1> and 2nd qubit is |1>
@@ -38,10 +38,10 @@ cch = H(0, controls=[1, 2], control_values=[1, 0]) # H(0) applied when 1st qubit
 ```
 
 ## Getting properties of Gate.
-General properties are simply gotten by using methods of {class}`Gate <scaluq.default.f64.Gate>` class.
+General properties are simply gotten by using methods of {class}`scaluq.Gate` class.
 
 ```py
-from scaluq.default.f64.gate import H
+from scaluq.gate import H
 
 cch = H(0, controls=[1, 2], control_values=[1, 0])
 print(cch.target_qubit_list()) # [0]
@@ -49,10 +49,10 @@ print(cch.control_qubit_list()) # [1, 2]
 print(cch.control_value_list()) # [1, 0]
 ```
 
-Matrix representation is showed by {func}`get_matrix <scaluq.default.f64.Gate.get_matrix>`. Unlike Qulacs, control qubits are ignored.
+Matrix representation is showed by {func}`get_matrix <scaluq.Gate.get_matrix>`. Unlike Qulacs, control qubits are ignored.
 
 ```py
-from scaluq.default.f64.gate import H
+from scaluq.gate import H
 
 cch = H(0, controls=[1, 2], control_values=[1, 0])
 print(cch.get_matrix())
@@ -62,10 +62,10 @@ print(cch.get_matrix())
 '''
 ```
 
-Inverse gate is gotten by {func}`get_inverse <scaluq.default.f64.Gate.get_inverse>`.
+Inverse gate is gotten by {func}`get_inverse <scaluq.Gate.get_inverse>`.
 If inverse gate is completely same as the original gate, the gate is shallow-copied.
 ```py
-from scaluq.default.f64.gate import H, S
+from scaluq.gate import H, S
 
 h = H(0)
 h_inv = h.get_inverse()
@@ -90,14 +90,13 @@ Gate Type: Sdag
 ## Downcast to GateType-specific function
 To get GateType-specific properties, downcast to specific class is required.
 
-Scaluq Gate is implemented by tag-based polymorphism. Each Gate has detailed type as enum {class}`GateType <scaluq.GateType>`. You can get type of Gate by {func}`get_type <scaluq.default.f64.Gate.gate_type>`.
+Scaluq Gate is implemented by tag-based polymorphism. Each Gate has detailed type as enum {class}`scaluq.GateType`. You can get type of Gate by {func}`get_type <scaluq.Gate.gate_type>`.
 
 There is a specific Gate class for each type. You can use functions of these specific types by downcast.
 
 ```py
-from scaluq import GateType
-from scaluq.default.f64 import RXGate
-from scaluq.default.f64.gate import RX
+from scaluq import GateType, RXGate
+from scaluq.gate import RX
 import math
 
 rx = RX(0, math.pi/4)
@@ -106,11 +105,11 @@ rx = RXGate(rx) # convert to RXGate class
 print(rx.angle())
 ```
 
-Since this inheritance relation is not shown in language layer, explicit upcast is required when you pass the Gate as {class}`Gate <scaluq.default.f64.Gate>` type.
+Since this inheritance relation is not shown in language layer, explicit upcast is required when you pass the Gate as {class}`scaluq.Gate` type.
 
 ```py
-from scaluq.default.f64 import Gate, RXGate, Circuit
-from scaluq.default.f64.gate import RX
+from scaluq import Gate, RXGate, Circuit
+from scaluq.gate import RX
 import math
 
 rx = RXGate(RX(0, math.pi/4))
@@ -120,12 +119,12 @@ circuit.add_gate(rx)
 ```
 
 ## Apply to StateVector
-Gate can be applied to {class}`StateVector <scaluq.default.f64.StateVector>` object by function {func}`update_quantum_state <scaluq.default.f64.Gate.update_quantum_state>`.
+Gate can be applied to {class}`scaluq.StateVector` object by function {func}`update_quantum_state <scaluq.Gate.update_quantum_state>`.
 Indices of Target/control qubits of Gate are corresponded to that of StateVector.
 
 ```py
-from scaluq.default.f64 import StateVector
-from scaluq.default.f64.gate import H, CX
+from scaluq import StateVector
+from scaluq.gate import H, CX
 
 h0 = H(0)
 cx01 = CX(0, 1)
@@ -138,12 +137,12 @@ print(state.get_amplitudes()) # [(0.7071067811865476+0j), 0j, 0j, (0.70710678118
 ```
 
 ## Merge two Gates
-You can merge two Gates by {func}`merge_gate <scaluq.default.f64.gate.merge_gate>`.
+You can merge two Gates by {func}`merge_gate <scaluq.merge_gate>`.
 The type of result gate is flexible.
 
 ```py
-from scaluq.default.f64.gate import X, Y, RX, RY, RZ, S
-from scaluq.default.f64 import merge_gate
+from scaluq.gate import X, Y, RX, RY, RZ, S
+from scaluq import merge_gate
 import math
 
 def print_merge_result(gate1, gate2):
