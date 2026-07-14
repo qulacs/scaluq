@@ -5,6 +5,8 @@
 
 namespace scaluq {
 
+// バッチサイズが小さいときに view_state_vector_at を呼ぶと，Alignment
+// が崩れて実行時エラーになる．とりあえず AVX512 を想定して，8 の倍数に揃える
 static Kokkos::LayoutStride make_aligned_batched_layout(std::uint64_t batch_size,
                                                         std::uint64_t dim) {
     constexpr std::uint64_t min_stride = 8;
