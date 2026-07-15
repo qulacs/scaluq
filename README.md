@@ -67,7 +67,6 @@ Note (experimental): SYCL backend is checked on CPUs, not on Intel GPU and Nvidi
 - SYCL
     - intel-level-zero-gpu
     - intel-opencl-icd
-    - level-zero
 
 Note: It may work with lower versions, but this has not been verified.
 
@@ -112,8 +111,6 @@ sudo -E env "PATH=$PATH" ninja -C build install
 - `sudo` is used to install files to `/usr/local/`, but to preserve the user environment, we use `-E` and explicitly pass `PATH`.
 - If you want to build the CUDA-enabled version (when NVIDIA GPU and CUDA are available), set `SCALUQ_USE_CUDA=ON`. Example:  
   `SCALUQ_USE_CUDA=ON script/configure; sudo env -E "PATH=$PATH" ninja -C build install`
-- If you want to build the SYCL-enabled version (when Intel GPU and SYCL are available), set `SCALUQ_USE_SYCL=ON`. Example:  
-  `SCALUQ_USE_SYCL=ON script/configure; sudo env -E "PATH=$PATH" ninja -C build install`
 
 When changing options and rebuilding, make sure to clear the CMake cache by running:
 

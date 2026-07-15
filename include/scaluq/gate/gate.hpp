@@ -463,7 +463,7 @@ public:
             state, classical_register, random_engine};
         update_quantum_state(context);
     }
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(DensityMatrix<Prec, ExecutionSpace::Default>& state) const {
         ClassicalRegister classical_register(0);
         std::mt19937_64 random_engine(std::random_device{}());
@@ -479,7 +479,7 @@ public:
             state, classical_register, random_engine};
         update_quantum_state(context);
     }
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
     virtual void update_quantum_state(
         ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>&) const {
         throw std::runtime_error(
@@ -490,13 +490,13 @@ public:
         throw std::runtime_error(
             "update_quantum_state for DensityMatrix is not implemented for this gate.");
     }
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     virtual void update_quantum_state(
         ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>&) const {
         throw std::runtime_error(
             "update_quantum_state for DensityMatrix is not implemented for this gate.");
     }
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 

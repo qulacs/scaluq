@@ -67,7 +67,6 @@ CUDA を利用する場合は、使用する CUDA がサポートするホスト
 - SYCL
     - intel-level-zero-gpu
     - intel-opencl-icd
-    - level-zero
 
 ※これより低いバージョンでも動作する可能性はありますが確認していません
 
@@ -110,7 +109,6 @@ sudo -E env "PATH=$PATH" ninja -C build install
 - `CMAKE_INSTALL_PREFIX`を設定することで `/usr/local/`以外にインストールすることもできます。ユーザーローカルにインストールしたい場合や、別の設定でビルドしたKokkosと衝突させたくない場合は明示的に指定してください。例: `CMAKE_INSTALL_PREFIX=~/.local script/configure; ninja -C build install`
 - ビルドしたものを`/usr/local/`に配置するため`sudo`コマンドを用いていますが、ビルド時の環境変数をユーザーのものにするため例では`-E`と`env "PATH=$PATH"`を指定しています。
 - NVIDIA GPU と CUDA が利用可能ならば、`SCALUQ_USE_CUDA=ON`を設定してconfigureすることでCUDAを利用するライブラリとしてインストールできます。例: `SCALUQ_USE_CUDA=ON script/configure; sudo env -E "PATH=$PATH" ninja -C build install`
-- Intel GPU と SYCL が利用可能ならば、`SCALUQ_USE_SYCL=ON`を設定してconfigureすることでSYCLを利用するライブラリとしてインストールできます。例: `SCALUQ_USE_SYCL=ON script/configure; sudo env -E "PATH=$PATH" ninja -C build install`
 
 オプションを変更して再ビルドする際には、CMake にセットされたキャッシュ変数をクリアするため、必ず以下のコマンドを実行してください。
 
