@@ -108,7 +108,7 @@ template <Precision Prec, ExecutionSpace Space>
 }
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_squared_norm() const {
-    FloatType norm;
+    FloatType norm{0};
     Kokkos::parallel_reduce(
         "get_squared_norm",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),

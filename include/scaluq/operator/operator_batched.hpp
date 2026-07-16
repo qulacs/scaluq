@@ -136,8 +136,8 @@ public:
     }
 
 private:
-    Kokkos::View<PauliOperator<Prec>*, ExecutionSpaceType> _ops;
-    Kokkos::View<std::uint64_t*, Kokkos::SharedSpace> _row_ptr;
+    Kokkos::View<PauliOperator<Prec>*, ExecutionSpaceType> _ops{};
+    Kokkos::View<std::uint64_t*, Kokkos::SharedSpace> _row_ptr{};
 };
 
 #ifdef SCALUQ_USE_NANOBIND

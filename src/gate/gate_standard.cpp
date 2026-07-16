@@ -21,7 +21,7 @@ std::string IGateImpl<Prec>::to_string(const std::string& indent) const {
         i_gate(this->_target_mask,                                                         \
                this->_control_mask,                                                        \
                this->_control_value_mask,                                                  \
-               context.state_member);                                                      \
+               *context.state_member);                                                      \
     }
 DEFINE_I_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_I_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -32,6 +32,24 @@ DEFINE_I_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_I_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_I_GATE_UPDATE
+template <Precision Prec>
+void IGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    i_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void IGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    i_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void IGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    i_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class IGateImpl<Prec>;
 
 template <Precision Prec>
@@ -50,12 +68,12 @@ std::string GlobalPhaseGateImpl<Prec>::to_string(const std::string& indent) cons
     template <Precision Prec>                                                                \
     void GlobalPhaseGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) \
         const {                                                                              \
-        this->check_qubit_mask_within_bounds(context.state_member);                          \
+        this->check_qubit_mask_within_bounds(*context.state_member);                          \
         global_phase_gate(this->_target_mask,                                                \
                           this->_control_mask,                                               \
                           this->_control_value_mask,                                         \
                           this->_phase,                                                      \
-                          context.state_member);                                             \
+                          *context.state_member);                                             \
     }
 DEFINE_GLOBAL_PHASE_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_GLOBAL_PHASE_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -66,6 +84,27 @@ DEFINE_GLOBAL_PHASE_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default
 DEFINE_GLOBAL_PHASE_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_GLOBAL_PHASE_GATE_UPDATE
+template <Precision Prec>
+void GlobalPhaseGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    global_phase_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, this->_phase, *ctx.state);
+}
+template <Precision Prec>
+void GlobalPhaseGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    global_phase_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, this->_phase, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void GlobalPhaseGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    global_phase_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, this->_phase, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class GlobalPhaseGateImpl<Prec>;
 
 template <Precision Prec>
@@ -84,11 +123,11 @@ std::string XGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_X_GATE_UPDATE(ContextClass, state_member, Space)                            \
     template <Precision Prec>                                                              \
     void XGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                        \
+        this->check_qubit_mask_within_bounds(*context.state_member);                        \
         x_gate(this->_target_mask,                                                         \
                this->_control_mask,                                                        \
                this->_control_value_mask,                                                  \
-               context.state_member);                                                      \
+               *context.state_member);                                                      \
     }
 DEFINE_X_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_X_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -99,6 +138,27 @@ DEFINE_X_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_X_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_X_GATE_UPDATE
+template <Precision Prec>
+void XGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    x_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void XGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    x_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void XGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    x_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class XGateImpl<Prec>;
 
 template <Precision Prec>
@@ -117,11 +177,11 @@ std::string YGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_Y_GATE_UPDATE(ContextClass, state_member, Space)                            \
     template <Precision Prec>                                                              \
     void YGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                        \
+        this->check_qubit_mask_within_bounds(*context.state_member);                        \
         y_gate(this->_target_mask,                                                         \
                this->_control_mask,                                                        \
                this->_control_value_mask,                                                  \
-               context.state_member);                                                      \
+               *context.state_member);                                                      \
     }
 DEFINE_Y_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_Y_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -132,6 +192,27 @@ DEFINE_Y_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_Y_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_Y_GATE_UPDATE
+template <Precision Prec>
+void YGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    y_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void YGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    y_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void YGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    y_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class YGateImpl<Prec>;
 
 template <Precision Prec>
@@ -150,11 +231,11 @@ std::string ZGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_Z_GATE_UPDATE(ContextClass, state_member, Space)                            \
     template <Precision Prec>                                                              \
     void ZGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                        \
+        this->check_qubit_mask_within_bounds(*context.state_member);                        \
         z_gate(this->_target_mask,                                                         \
                this->_control_mask,                                                        \
                this->_control_value_mask,                                                  \
-               context.state_member);                                                      \
+               *context.state_member);                                                      \
     }
 DEFINE_Z_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_Z_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -165,6 +246,27 @@ DEFINE_Z_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_Z_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_Z_GATE_UPDATE
+template <Precision Prec>
+void ZGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    z_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void ZGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    z_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void ZGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    z_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class ZGateImpl<Prec>;
 
 template <Precision Prec>
@@ -184,11 +286,11 @@ std::string HGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_H_GATE_UPDATE(ContextClass, state_member, Space)                            \
     template <Precision Prec>                                                              \
     void HGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                        \
+        this->check_qubit_mask_within_bounds(*context.state_member);                        \
         h_gate(this->_target_mask,                                                         \
                this->_control_mask,                                                        \
                this->_control_value_mask,                                                  \
-               context.state_member);                                                      \
+               *context.state_member);                                                      \
     }
 DEFINE_H_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_H_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -199,6 +301,27 @@ DEFINE_H_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_H_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_H_GATE_UPDATE
+template <Precision Prec>
+void HGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    h_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void HGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    h_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void HGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    h_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class HGateImpl<Prec>;
 
 template <Precision Prec>
@@ -217,11 +340,11 @@ std::string SGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_S_GATE_UPDATE(ContextClass, state_member, Space)                            \
     template <Precision Prec>                                                              \
     void SGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                        \
+        this->check_qubit_mask_within_bounds(*context.state_member);                        \
         s_gate(this->_target_mask,                                                         \
                this->_control_mask,                                                        \
                this->_control_value_mask,                                                  \
-               context.state_member);                                                      \
+               *context.state_member);                                                      \
     }
 DEFINE_S_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_S_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -232,6 +355,27 @@ DEFINE_S_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_S_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_S_GATE_UPDATE
+template <Precision Prec>
+void SGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    s_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void SGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    s_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void SGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    s_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class SGateImpl<Prec>;
 
 template <Precision Prec>
@@ -250,11 +394,11 @@ std::string SdagGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_S_DAG_GATE_UPDATE(ContextClass, state_member, Space)                           \
     template <Precision Prec>                                                                 \
     void SdagGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                           \
+        this->check_qubit_mask_within_bounds(*context.state_member);                           \
         sdag_gate(this->_target_mask,                                                         \
                   this->_control_mask,                                                        \
                   this->_control_value_mask,                                                  \
-                  context.state_member);                                                      \
+                  *context.state_member);                                                      \
     }
 DEFINE_S_DAG_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_S_DAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -265,6 +409,27 @@ DEFINE_S_DAG_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_S_DAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_S_DAG_GATE_UPDATE
+template <Precision Prec>
+void SdagGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    sdag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void SdagGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    sdag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void SdagGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    sdag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class SdagGateImpl<Prec>;
 
 template <Precision Prec>
@@ -283,11 +448,11 @@ std::string TGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_T_GATE_UPDATE(ContextClass, state_member, Space)                            \
     template <Precision Prec>                                                              \
     void TGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                        \
+        this->check_qubit_mask_within_bounds(*context.state_member);                        \
         t_gate(this->_target_mask,                                                         \
                this->_control_mask,                                                        \
                this->_control_value_mask,                                                  \
-               context.state_member);                                                      \
+               *context.state_member);                                                      \
     }
 DEFINE_T_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_T_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -298,6 +463,27 @@ DEFINE_T_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_T_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_T_GATE_UPDATE
+template <Precision Prec>
+void TGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    t_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void TGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    t_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void TGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    t_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class TGateImpl<Prec>;
 
 template <Precision Prec>
@@ -316,11 +502,11 @@ std::string TdagGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_T_DAG_GATE_UPDATE(ContextClass, state_member, Space)                           \
     template <Precision Prec>                                                                 \
     void TdagGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                           \
+        this->check_qubit_mask_within_bounds(*context.state_member);                           \
         tdag_gate(this->_target_mask,                                                         \
                   this->_control_mask,                                                        \
                   this->_control_value_mask,                                                  \
-                  context.state_member);                                                      \
+                  *context.state_member);                                                      \
     }
 DEFINE_T_DAG_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_T_DAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -331,6 +517,27 @@ DEFINE_T_DAG_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_T_DAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_T_DAG_GATE_UPDATE
+template <Precision Prec>
+void TdagGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    tdag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void TdagGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    tdag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void TdagGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    tdag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class TdagGateImpl<Prec>;
 
 template <Precision Prec>
@@ -349,11 +556,11 @@ std::string SqrtXGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_SQRT_X_GATE_UPDATE(ContextClass, state_member, Space)                           \
     template <Precision Prec>                                                                  \
     void SqrtXGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                            \
+        this->check_qubit_mask_within_bounds(*context.state_member);                            \
         sqrtx_gate(this->_target_mask,                                                         \
                    this->_control_mask,                                                        \
                    this->_control_value_mask,                                                  \
-                   context.state_member);                                                      \
+                   *context.state_member);                                                      \
     }
 DEFINE_SQRT_X_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_SQRT_X_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -364,6 +571,27 @@ DEFINE_SQRT_X_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_SQRT_X_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_SQRT_X_GATE_UPDATE
+template <Precision Prec>
+void SqrtXGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    sqrtx_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void SqrtXGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    sqrtx_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void SqrtXGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    sqrtx_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class SqrtXGateImpl<Prec>;
 
 template <Precision Prec>
@@ -382,11 +610,11 @@ std::string SqrtXdagGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_SQRT_XDAG_GATE_UPDATE(ContextClass, state_member, Space)                           \
     template <Precision Prec>                                                                     \
     void SqrtXdagGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                               \
+        this->check_qubit_mask_within_bounds(*context.state_member);                               \
         sqrtxdag_gate(this->_target_mask,                                                         \
                       this->_control_mask,                                                        \
                       this->_control_value_mask,                                                  \
-                      context.state_member);                                                      \
+                      *context.state_member);                                                      \
     }
 DEFINE_SQRT_XDAG_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_SQRT_XDAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -397,6 +625,27 @@ DEFINE_SQRT_XDAG_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_SQRT_XDAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_SQRT_XDAG_GATE_UPDATE
+template <Precision Prec>
+void SqrtXdagGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    sqrtxdag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void SqrtXdagGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    sqrtxdag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void SqrtXdagGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    sqrtxdag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class SqrtXdagGateImpl<Prec>;
 
 template <Precision Prec>
@@ -415,11 +664,11 @@ std::string SqrtYGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_SQRT_Y_GATE_UPDATE(ContextClass, state_member, Space)                           \
     template <Precision Prec>                                                                  \
     void SqrtYGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                            \
+        this->check_qubit_mask_within_bounds(*context.state_member);                            \
         sqrty_gate(this->_target_mask,                                                         \
                    this->_control_mask,                                                        \
                    this->_control_value_mask,                                                  \
-                   context.state_member);                                                      \
+                   *context.state_member);                                                      \
     }
 DEFINE_SQRT_Y_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_SQRT_Y_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -430,6 +679,27 @@ DEFINE_SQRT_Y_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_SQRT_Y_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_SQRT_Y_GATE_UPDATE
+template <Precision Prec>
+void SqrtYGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    sqrty_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void SqrtYGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    sqrty_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void SqrtYGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    sqrty_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class SqrtYGateImpl<Prec>;
 
 template <Precision Prec>
@@ -448,11 +718,11 @@ std::string SqrtYdagGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_SQRT_YDAG_GATE_UPDATE(ContextClass, state_member, Space)                           \
     template <Precision Prec>                                                                     \
     void SqrtYdagGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                               \
+        this->check_qubit_mask_within_bounds(*context.state_member);                               \
         sqrtydag_gate(this->_target_mask,                                                         \
                       this->_control_mask,                                                        \
                       this->_control_value_mask,                                                  \
-                      context.state_member);                                                      \
+                      *context.state_member);                                                      \
     }
 DEFINE_SQRT_YDAG_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_SQRT_YDAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -463,6 +733,27 @@ DEFINE_SQRT_YDAG_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_SQRT_YDAG_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_SQRT_YDAG_GATE_UPDATE
+template <Precision Prec>
+void SqrtYdagGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    sqrtydag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void SqrtYdagGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    sqrtydag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void SqrtYdagGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    sqrtydag_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class SqrtYdagGateImpl<Prec>;
 
 template <Precision Prec>
@@ -481,11 +772,11 @@ std::string P0GateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_P0_GATE_UPDATE(ContextClass, state_member, Space)                            \
     template <Precision Prec>                                                               \
     void P0GateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                         \
+        this->check_qubit_mask_within_bounds(*context.state_member);                         \
         p0_gate(this->_target_mask,                                                         \
                 this->_control_mask,                                                        \
                 this->_control_value_mask,                                                  \
-                context.state_member);                                                      \
+                *context.state_member);                                                      \
     }
 DEFINE_P0_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_P0_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -496,6 +787,27 @@ DEFINE_P0_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_P0_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_P0_GATE_UPDATE
+template <Precision Prec>
+void P0GateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    p0_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void P0GateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    p0_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void P0GateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    p0_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class P0GateImpl<Prec>;
 
 template <Precision Prec>
@@ -514,11 +826,11 @@ std::string P1GateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_P1_GATE_UPDATE(ContextClass, state_member, Space)                            \
     template <Precision Prec>                                                               \
     void P1GateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                         \
+        this->check_qubit_mask_within_bounds(*context.state_member);                         \
         p1_gate(this->_target_mask,                                                         \
                 this->_control_mask,                                                        \
                 this->_control_value_mask,                                                  \
-                context.state_member);                                                      \
+                *context.state_member);                                                      \
     }
 DEFINE_P1_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_P1_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -529,6 +841,27 @@ DEFINE_P1_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_P1_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_P1_GATE_UPDATE
+template <Precision Prec>
+void P1GateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    p1_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void P1GateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    p1_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void P1GateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    p1_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class P1GateImpl<Prec>;
 
 template <Precision Prec>
@@ -550,12 +883,12 @@ std::string RXGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_RX_GATE_UPDATE(ContextClass, state_member, Space)                            \
     template <Precision Prec>                                                               \
     void RXGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                         \
+        this->check_qubit_mask_within_bounds(*context.state_member);                         \
         rx_gate(this->_target_mask,                                                         \
                 this->_control_mask,                                                        \
                 this->_control_value_mask,                                                  \
                 this->_angle,                                                               \
-                context.state_member);                                                      \
+                *context.state_member);                                                      \
     }
 DEFINE_RX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_RX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -566,6 +899,27 @@ DEFINE_RX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_RX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_RX_GATE_UPDATE
+template <Precision Prec>
+void RXGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    rx_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, this->_angle, *ctx.state);
+}
+template <Precision Prec>
+void RXGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    rx_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, this->_angle, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void RXGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    rx_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, this->_angle, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class RXGateImpl<Prec>;
 
 template <Precision Prec>
@@ -586,12 +940,12 @@ std::string RYGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_RY_GATE_UPDATE(ContextClass, state_member, Space)                            \
     template <Precision Prec>                                                               \
     void RYGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                         \
+        this->check_qubit_mask_within_bounds(*context.state_member);                         \
         ry_gate(this->_target_mask,                                                         \
                 this->_control_mask,                                                        \
                 this->_control_value_mask,                                                  \
                 this->_angle,                                                               \
-                context.state_member);                                                      \
+                *context.state_member);                                                      \
     }
 DEFINE_RY_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_RY_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -602,6 +956,27 @@ DEFINE_RY_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_RY_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_RY_GATE_UPDATE
+template <Precision Prec>
+void RYGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    ry_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, this->_angle, *ctx.state);
+}
+template <Precision Prec>
+void RYGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    ry_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, this->_angle, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void RYGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    ry_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, this->_angle, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class RYGateImpl<Prec>;
 
 template <Precision Prec>
@@ -622,12 +997,12 @@ std::string RZGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_RZ_GATE_UPDATE(ContextClass, state_member, Space)                            \
     template <Precision Prec>                                                               \
     void RZGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                         \
+        this->check_qubit_mask_within_bounds(*context.state_member);                         \
         rz_gate(this->_target_mask,                                                         \
                 this->_control_mask,                                                        \
                 this->_control_value_mask,                                                  \
                 this->_angle,                                                               \
-                context.state_member);                                                      \
+                *context.state_member);                                                      \
     }
 DEFINE_RZ_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_RZ_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -638,6 +1013,27 @@ DEFINE_RZ_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_RZ_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_RZ_GATE_UPDATE
+template <Precision Prec>
+void RZGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    rz_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, this->_angle, *ctx.state);
+}
+template <Precision Prec>
+void RZGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    rz_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, this->_angle, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void RZGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    rz_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, this->_angle, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class RZGateImpl<Prec>;
 
 template <Precision Prec>
@@ -657,12 +1053,12 @@ std::string U1GateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_U1_GATE_UPDATE(ContextClass, state_member, Space)                            \
     template <Precision Prec>                                                               \
     void U1GateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                         \
+        this->check_qubit_mask_within_bounds(*context.state_member);                         \
         u1_gate(this->_target_mask,                                                         \
                 this->_control_mask,                                                        \
                 this->_control_value_mask,                                                  \
                 this->_lambda,                                                              \
-                context.state_member);                                                      \
+                *context.state_member);                                                      \
     }
 DEFINE_U1_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_U1_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -673,6 +1069,27 @@ DEFINE_U1_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_U1_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_U1_GATE_UPDATE
+template <Precision Prec>
+void U1GateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    u1_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, this->_lambda, *ctx.state);
+}
+template <Precision Prec>
+void U1GateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    u1_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, this->_lambda, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void U1GateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    u1_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, this->_lambda, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class U1GateImpl<Prec>;
 
 template <Precision Prec>
@@ -698,13 +1115,13 @@ std::string U2GateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_U2_GATE_UPDATE(ContextClass, state_member, Space)                            \
     template <Precision Prec>                                                               \
     void U2GateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                         \
+        this->check_qubit_mask_within_bounds(*context.state_member);                         \
         u2_gate(this->_target_mask,                                                         \
                 this->_control_mask,                                                        \
                 this->_control_value_mask,                                                  \
                 this->_phi,                                                                 \
                 this->_lambda,                                                              \
-                context.state_member);                                                      \
+                *context.state_member);                                                      \
     }
 DEFINE_U2_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_U2_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -715,6 +1132,30 @@ DEFINE_U2_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_U2_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_U2_GATE_UPDATE
+template <Precision Prec>
+void U2GateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    u2_gate(this->_target_mask, this->_control_mask, this->_control_value_mask,
+            this->_phi, this->_lambda, *ctx.state);
+}
+template <Precision Prec>
+void U2GateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    u2_gate(this->_target_mask, this->_control_mask, this->_control_value_mask,
+            this->_phi, this->_lambda, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void U2GateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    u2_gate(this->_target_mask, this->_control_mask, this->_control_value_mask,
+            this->_phi, this->_lambda, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class U2GateImpl<Prec>;
 
 template <Precision Prec>
@@ -743,14 +1184,14 @@ std::string U3GateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_U3_GATE_UPDATE(ContextClass, state_member, Space)                            \
     template <Precision Prec>                                                               \
     void U3GateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                         \
+        this->check_qubit_mask_within_bounds(*context.state_member);                         \
         u3_gate(this->_target_mask,                                                         \
                 this->_control_mask,                                                        \
                 this->_control_value_mask,                                                  \
                 this->_theta,                                                               \
                 this->_phi,                                                                 \
                 this->_lambda,                                                              \
-                context.state_member);                                                      \
+                *context.state_member);                                                      \
     }
 DEFINE_U3_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_U3_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -761,6 +1202,30 @@ DEFINE_U3_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_U3_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_U3_GATE_UPDATE
+template <Precision Prec>
+void U3GateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    u3_gate(this->_target_mask, this->_control_mask, this->_control_value_mask,
+            this->_theta, this->_phi, this->_lambda, *ctx.state);
+}
+template <Precision Prec>
+void U3GateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    u3_gate(this->_target_mask, this->_control_mask, this->_control_value_mask,
+            this->_theta, this->_phi, this->_lambda, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void U3GateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    u3_gate(this->_target_mask, this->_control_mask, this->_control_value_mask,
+            this->_theta, this->_phi, this->_lambda, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class U3GateImpl<Prec>;
 
 template <Precision Prec>
@@ -779,11 +1244,11 @@ std::string SwapGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_SWAP_GATE_UPDATE(ContextClass, state_member, Space)                            \
     template <Precision Prec>                                                                 \
     void SwapGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                           \
+        this->check_qubit_mask_within_bounds(*context.state_member);                           \
         swap_gate(this->_target_mask,                                                         \
                   this->_control_mask,                                                        \
                   this->_control_value_mask,                                                  \
-                  context.state_member);                                                      \
+                  *context.state_member);                                                      \
     }
 DEFINE_SWAP_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_SWAP_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -794,6 +1259,27 @@ DEFINE_SWAP_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_SWAP_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_SWAP_GATE_UPDATE
+template <Precision Prec>
+void SwapGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    swap_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void SwapGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    swap_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void SwapGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    swap_gate(this->_target_mask, this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class SwapGateImpl<Prec>;
 
 template <Precision Prec>
@@ -848,12 +1334,12 @@ std::string EcrGateImpl<Prec>::to_string(const std::string& indent) const {
 #define DEFINE_ECR_GATE_UPDATE(ContextClass, state_member, Space)                            \
     template <Precision Prec>                                                                \
     void EcrGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) const { \
-        this->check_qubit_mask_within_bounds(context.state_member);                          \
+        this->check_qubit_mask_within_bounds(*context.state_member);                          \
         ecr_gate(this->_physical_target_mask,                                                \
                  this->_physical_control_mask,                                               \
                  this->_control_mask,                                                        \
                  this->_control_value_mask,                                                  \
-                 context.state_member);                                                      \
+                 *context.state_member);                                                      \
     }
 DEFINE_ECR_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_ECR_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
@@ -864,6 +1350,30 @@ DEFINE_ECR_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_ECR_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_CUDA
 #undef DEFINE_ECR_GATE_UPDATE
+template <Precision Prec>
+void EcrGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    ecr_gate(this->_physical_target_mask, this->_physical_control_mask,
+             this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+template <Precision Prec>
+void EcrGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    ecr_gate(this->_physical_target_mask, this->_physical_control_mask,
+             this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#ifdef SCALUQ_USE_CUDA
+template <Precision Prec>
+void EcrGateImpl<Prec>::update_quantum_state(
+    ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& ctx) const {
+    this->check_qubit_mask_within_bounds(*ctx.state);
+    ecr_gate(this->_physical_target_mask, this->_physical_control_mask,
+             this->_control_mask, this->_control_value_mask, *ctx.state);
+}
+#endif  // SCALUQ_USE_CUDA
+
 template class EcrGateImpl<Prec>;
 
 template <Precision Prec>
@@ -905,8 +1415,8 @@ std::string PermutationGateImpl<Prec>::to_string(const std::string& indent) cons
     template <Precision Prec>                                                                \
     void PermutationGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) \
         const {                                                                              \
-        this->check_qubit_mask_within_bounds(context.state_member);                          \
-        permutation_gate(this->_swap_schedule, context.state_member);                        \
+        this->check_qubit_mask_within_bounds(*context.state_member);                          \
+        permutation_gate(this->_swap_schedule, *context.state_member);                        \
     }
 DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)

@@ -448,7 +448,7 @@ Operator<internal::Prec, internal::Space>::copy_to_host_space() const {
 
 template <>
 StdComplex Operator<internal::Prec, internal::Space>::calculate_default_mu() const {
-    FloatType mu;
+    FloatType mu{0};
     std::uint64_t nterms = _terms.size();
     Kokkos::parallel_reduce(
         "calculate_default_mu",

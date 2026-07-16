@@ -16,8 +16,8 @@ namespace scaluq {
 
 template <Precision Prec, ExecutionSpace Space>
 class StateVector {
-    std::uint64_t _n_qubits;
-    std::uint64_t _dim;
+    std::uint64_t _n_qubits = 0;
+    std::uint64_t _dim = 0;
     using FloatType = internal::Float<Prec>;
     using ComplexType = internal::Complex<Prec>;
     using ExecutionSpaceType = internal::SpaceType<Space>;
@@ -28,9 +28,6 @@ public:
     StateVector() = default;
     StateVector(std::uint64_t n_qubits);
     StateVector(Kokkos::View<ComplexType*, ExecutionSpaceType> view);
-    StateVector(const StateVector& other) = default;
-
-    StateVector& operator=(const StateVector& other) = default;
 
     /**
      * @attention Very slow. You should use load() instead if you can.
