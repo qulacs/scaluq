@@ -17,7 +17,11 @@ class StateVectorBatched {
     using ExecutionSpaceType = internal::SpaceType<Space>;
 
 public:
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight, ExecutionSpaceType> _raw;
+    using RawView = Kokkos::View<ComplexType**,
+                                 Kokkos::LayoutStride,
+                                 ExecutionSpaceType,
+                                 Kokkos::MemoryTraits<Kokkos::Aligned>>;
+    RawView _raw;
     StateVectorBatched() = default;
     StateVectorBatched(std::uint64_t batch_size, std::uint64_t n_qubits);
 

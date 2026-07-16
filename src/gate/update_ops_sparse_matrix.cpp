@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
@@ -7,7 +9,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_value_mask,
                         const SparseMatrix<Prec, Space>& mat,
                         StateVector<Prec, Space>& state) {
-    Kokkos::View<Complex<Prec>*, SpaceType<Space>> update(
+    typename StateVector<Prec, Space>::RawView update(
         Kokkos::ViewAllocateWithoutInitializing("update"), state.dim());
     Kokkos::parallel_for(
         "sparse_matrix_gate (initialize)",
@@ -58,8 +60,10 @@ void sparse_matrix_gate(std::uint64_t target_mask,
                         std::uint64_t control_value_mask,
                         const SparseMatrix<Prec, Space>& mat,
                         StateVectorBatched<Prec, Space>& states) {
-    Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight, SpaceType<Space>> update(
-        Kokkos::ViewAllocateWithoutInitializing("update"), states.batch_size(), states.dim());
+    typename StateVectorBatched<Prec, Space>::RawView update(
+        Kokkos::ViewAllocateWithoutInitializing("update"),
+        Kokkos::LayoutStride(
+            states.batch_size(), std::max(states.dim(), std::uint64_t{8}), states.dim(), 1));
 
     Kokkos::parallel_for(
         "sparse_matrix_gate (initialize)",

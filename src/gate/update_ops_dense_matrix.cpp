@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
@@ -8,7 +10,7 @@ void multi_dense_matrix_gate(std::uint64_t target_mask,
                              const Matrix<Prec, Space>& matrix,
                              StateVector<Prec, Space>& state) {
     const std::uint64_t matrix_dim = 1ULL << std::popcount(target_mask);
-    Kokkos::View<Complex<Prec>*, SpaceType<Space>> update(
+    typename StateVector<Prec, Space>::RawView update(
         Kokkos::ViewAllocateWithoutInitializing("update"), state.dim());
     Kokkos::parallel_for(
         "multi_dense_matrix_gate (initialize)",
@@ -60,8 +62,10 @@ void multi_dense_matrix_gate(std::uint64_t target_mask,
                              StateVectorBatched<Prec, Space>& states) {
     const std::uint64_t matrix_dim = 1ULL << std::popcount(target_mask);
 
-    Kokkos::View<Complex<Prec>**, Kokkos::LayoutRight, SpaceType<Space>> update(
-        Kokkos::ViewAllocateWithoutInitializing("update"), states.batch_size(), states.dim());
+    typename StateVectorBatched<Prec, Space>::RawView update(
+        Kokkos::ViewAllocateWithoutInitializing("update"),
+        Kokkos::LayoutStride(
+            states.batch_size(), std::max(states.dim(), std::uint64_t{8}), states.dim(), 1));
 
     Kokkos::parallel_for(
         "multi_dense_matrix_gate (initialize)",

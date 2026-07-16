@@ -103,9 +103,8 @@ inline void resize_and_check_control_values(const std::vector<std::uint64_t>& co
     }
 }
 
-template <Precision Prec, ExecutionSpace Space>
-Complex<Prec> inner_product(const Kokkos::View<Complex<Prec>*, SpaceType<Space>>& a,
-                            const Kokkos::View<Complex<Prec>*, SpaceType<Space>>& b) {
+template <Precision Prec, ExecutionSpace Space, class ViewA, class ViewB>
+Complex<Prec> inner_product(const ViewA& a, const ViewB& b) {
     if (a.extent(0) != b.extent(0)) {
         throw std::runtime_error("Error: inner_product: dimension mismatch");
     }
@@ -164,8 +163,8 @@ Kokkos::View<T*, SpaceType<Space>> convert_vector_to_view(
 }
 
 // Device Kokkos::View を Host std::vector に変換する関数
-template <typename T, ExecutionSpace Space>
-std::vector<T> convert_view_to_vector(const Kokkos::View<T*, SpaceType<Space>>& device_view) {
+template <typename T, ExecutionSpace Space, class ViewType>
+std::vector<T> convert_view_to_vector(const ViewType& device_view) {
     std::vector<T> host_vector(device_view.extent(0));
     auto host_view = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), device_view);
     std::copy(host_view.data(), host_view.data() + host_view.size(), host_vector.begin());
