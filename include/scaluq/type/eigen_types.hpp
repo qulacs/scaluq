@@ -63,6 +63,7 @@ public:
     };
     Block block(int, int, int, int) { return {}; }
     Block block(int, int, int, int) const { return {}; }
+    Matrix topLeftCorner(int, int) const { return {}; }
 };
 
 template <class Scalar, int R, int C, int O>
@@ -123,6 +124,7 @@ public:
     };
     Block block(int, int, int, int) { return {}; }
     Block block(int, int, int, int) const { return {}; }
+    ComplexMatrix topLeftCorner(int, int) const { return {}; }
 
     SparseComplexMatrix sparseView() const;
 
