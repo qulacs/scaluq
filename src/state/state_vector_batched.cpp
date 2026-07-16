@@ -6,10 +6,12 @@
 namespace scaluq {
 
 // バッチサイズが小さいときに view_state_vector_at を呼ぶと，Alignment
-// が崩れて実行時エラーになる．とりあえず AVX512 を想定して，8 の倍数に揃える
+// が崩れて実行時エラーになる．各 batch の先頭を 64 byte 境界に揃える
+template <Precision Prec>
 static Kokkos::LayoutStride make_aligned_batched_layout(std::uint64_t batch_size,
                                                         std::uint64_t dim) {
-    constexpr std::uint64_t min_stride = 8;
+    constexpr std::uint64_t alignment_bytes = 64;
+    constexpr std::uint64_t min_stride = alignment_bytes / sizeof(internal::Complex<Prec>);
     const std::uint64_t stride = std::max(dim, min_stride);
     return Kokkos::LayoutStride(batch_size, stride, dim, 1);
 }
@@ -21,7 +23,7 @@ StateVectorBatched<Prec, Space>::StateVectorBatched(std::uint64_t batch_size,
       _n_qubits(n_qubits),
       _dim(1ULL << _n_qubits),
       _raw(Kokkos::ViewAllocateWithoutInitializing("states"),
-           make_aligned_batched_layout(_batch_size, _dim)) {
+           make_aligned_batched_layout<Prec>(_batch_size, _dim)) {
     set_zero_state();
 }
 
@@ -226,7 +228,7 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::uninitialized_s
     states._batch_size = batch_size;
     states._raw = typename StateVectorBatched<Prec, Space>::RawView(
         Kokkos::ViewAllocateWithoutInitializing("states"),
-        make_aligned_batched_layout(states._batch_size, states._dim));
+        make_aligned_batched_layout<Prec>(states._batch_size, states._dim));
     return states;
 }
 
