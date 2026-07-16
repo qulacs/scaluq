@@ -40,7 +40,14 @@ using DefaultHostExecutionSpace = OpenMP;
 using DefaultExecutionSpace = OpenMP;
 
 // ── Layout tags ────────────────────────────────────────────────────────────
-struct LayoutRight {};
+struct LayoutRight {
+    std::size_t dimension[8]{};
+    std::size_t stride{};
+    explicit LayoutRight(std::size_t n0 = 0, std::size_t n1 = 0, std::size_t n2 = 0,
+                         std::size_t n3 = 0, std::size_t n4 = 0, std::size_t n5 = 0,
+                         std::size_t n6 = 0, std::size_t n7 = 0)
+        : dimension{n0, n1, n2, n3, n4, n5, n6, n7} {}
+};
 struct LayoutLeft {};
 struct LayoutStride {
     template <class... Args>
