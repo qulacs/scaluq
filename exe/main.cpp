@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <iostream>
 #include <scaluq/all.hpp>
+#include <scaluq/type/complex.hpp>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -17,10 +18,10 @@
 namespace {
 using Space = std::integral_constant<scaluq::ExecutionSpace, scaluq::ExecutionSpace::Default>;
 
-constexpr std::uint64_t n_qubits = 10;
-constexpr std::uint64_t batch_size = 1000;
-int warmup_iterations = 1000;
-int measure_iterations = 10000;
+std::uint64_t min_qubits = 4;
+std::uint64_t max_qubits = 22;
+int warmup_iterations = 3;
+int measure_iterations = 10;
 bool include_extra_gates = false;
 bool show_quartiles = false;
 
@@ -31,7 +32,7 @@ struct Case {
     std::vector<std::uint64_t> control_values;
 };
 
-enum class GateKind { H, RX, U3 };
+enum class GateKind { X, Y, H, RX, U3 };
 
 struct Quartiles {
     double q1;
@@ -41,6 +42,10 @@ struct Quartiles {
 
 std::string gate_name(GateKind gate) {
     switch (gate) {
+        case GateKind::X:
+            return "X";
+        case GateKind::Y:
+            return "Y";
         case GateKind::H:
             return "H";
         case GateKind::RX:
@@ -53,6 +58,10 @@ std::string gate_name(GateKind gate) {
 
 std::string coef_pattern(GateKind gate) {
     switch (gate) {
+        case GateKind::X:
+            return "offdiag-real";
+        case GateKind::Y:
+            return "offdiag-imag";
         case GateKind::H:
             return "real-only";
         case GateKind::RX:
@@ -61,6 +70,20 @@ std::string coef_pattern(GateKind gate) {
             return "general";
     }
     return "unknown";
+}
+
+template <scaluq::Precision Prec>
+scaluq::internal::Matrix2x2<Prec> make_x_matrix() {
+    using Complex = scaluq::internal::Complex<Prec>;
+    return scaluq::internal::Matrix2x2<Prec>{
+        Complex(0.0, 0.0), Complex(1.0, 0.0), Complex(1.0, 0.0), Complex(0.0, 0.0)};
+}
+
+template <scaluq::Precision Prec>
+scaluq::internal::Matrix2x2<Prec> make_y_matrix() {
+    using Complex = scaluq::internal::Complex<Prec>;
+    return scaluq::internal::Matrix2x2<Prec>{
+        Complex(0.0, 0.0), Complex(0.0, -1.0), Complex(0.0, 1.0), Complex(0.0, 0.0)};
 }
 
 template <scaluq::Precision Prec>
@@ -98,6 +121,10 @@ scaluq::internal::Matrix2x2<Prec> make_u3_matrix(double theta, double phi, doubl
 template <scaluq::Precision Prec>
 scaluq::internal::Matrix2x2<Prec> make_internal_matrix(GateKind gate) {
     switch (gate) {
+        case GateKind::X:
+            return make_x_matrix<Prec>();
+        case GateKind::Y:
+            return make_y_matrix<Prec>();
         case GateKind::H:
             return make_h_matrix<Prec>();
         case GateKind::RX:
@@ -209,24 +236,17 @@ double max_abs_diff(const std::vector<scaluq::StdComplex>& a,
     return max_diff;
 }
 
-double max_abs_diff(const std::vector<std::vector<scaluq::StdComplex>>& a,
-                    const std::vector<std::vector<scaluq::StdComplex>>& b) {
-    double max_diff = 0.0;
-    for (std::size_t batch = 0; batch < a.size(); ++batch) {
-        max_diff = std::max(max_diff, max_abs_diff(a[batch], b[batch]));
-    }
-    return max_diff;
-}
-
 void print_row(GateKind gate,
                const Case& bench_case,
+               const char* path,
                const Quartiles& baseline_q,
                const Quartiles& simd_q,
                double simd_diff) {
     std::cout << "| " << std::left << std::setw(2) << gate_name(gate) << " | " << std::setw(22)
               << coef_pattern(gate) << " | " << std::setw(18) << bench_case.name << " | "
               << std::right << std::setw(2) << bench_case.target << " | " << std::setw(9)
-              << format_indices(bench_case.controls) << " | ";
+              << format_indices(bench_case.controls) << " | " << std::left << std::setw(17) << path
+              << " | " << std::right;
     if (show_quartiles) {
         std::cout << std::setw(12) << baseline_q.q1 << " | ";
     }
@@ -254,6 +274,12 @@ void run_case(GateKind gate,
     const std::uint64_t control_mask = mask_from(bench_case.controls);
     const std::uint64_t control_value_mask =
         value_mask_from(bench_case.controls, bench_case.control_values);
+    constexpr std::size_t complex_lanes =
+        scaluq::internal::SimdComplex<Prec>::complex_lanes;
+    const std::uint64_t inlane_mask = complex_lanes - 1;
+    const char* path = (target_mask & inlane_mask) != 0
+                           ? ((control_mask & inlane_mask) == 0 ? "in-lane" : "scalar")
+                           : ((control_mask & inlane_mask) == 0 ? "contiguous" : "scalar");
 
     State baseline_state = initial.copy();
     State simd_state = initial.copy();
@@ -286,58 +312,11 @@ void run_case(GateKind gate,
     const auto baseline_q = quartiles(std::move(baseline_samples));
     const auto simd_q = quartiles(std::move(simd_samples));
 
-    print_row(gate, bench_case, baseline_q, simd_q, simd_diff);
-}
-
-template <scaluq::Precision Prec>
-void run_batched_case(GateKind gate,
-                      const Case& bench_case,
-                      const scaluq::StateVectorBatched<Prec, Space::value>& initial,
-                      int iterations) {
-    using State = scaluq::StateVectorBatched<Prec, Space::value>;
-    const auto internal_matrix = make_internal_matrix<Prec>(gate);
-
-    const std::uint64_t target_mask = 1ULL << bench_case.target;
-    const std::uint64_t control_mask = mask_from(bench_case.controls);
-    const std::uint64_t control_value_mask =
-        value_mask_from(bench_case.controls, bench_case.control_values);
-
-    State baseline_state = initial.copy();
-    State simd_state = initial.copy();
-
-    baseline_one_target_dense_matrix<Prec>(
-        target_mask, control_mask, control_value_mask, internal_matrix, baseline_state);
-    scaluq::internal::one_target_dense_matrix_gate(
-        target_mask, control_mask, control_value_mask, internal_matrix, simd_state);
-    Kokkos::fence();
-
-    const auto baseline_amplitudes = baseline_state.get_amplitudes();
-    const double simd_diff = max_abs_diff(baseline_amplitudes, simd_state.get_amplitudes());
-
-    baseline_state.load(initial);
-    simd_state.load(initial);
-
-    auto baseline_samples = measure(
-        [&]() {
-            baseline_one_target_dense_matrix<Prec>(
-                target_mask, control_mask, control_value_mask, internal_matrix, baseline_state);
-        },
-        iterations);
-    auto simd_samples = measure(
-        [&]() {
-            scaluq::internal::one_target_dense_matrix_gate(
-                target_mask, control_mask, control_value_mask, internal_matrix, simd_state);
-        },
-        iterations);
-
-    const auto baseline_q = quartiles(std::move(baseline_samples));
-    const auto simd_q = quartiles(std::move(simd_samples));
-
-    print_row(gate, bench_case, baseline_q, simd_q, simd_diff);
+    print_row(gate, bench_case, path, baseline_q, simd_q, simd_diff);
 }
 
 void print_table_header() {
-    std::cout << "| gate | coef pattern          | case               | target | controls  | ";
+    std::cout << "| gate | coef pattern          | case               | target | controls  | path              | ";
     if (show_quartiles) {
         std::cout << "scalar q1 ns | ";
     }
@@ -351,7 +330,7 @@ void print_table_header() {
     }
     std::cout << "speedup | max diff    |\n";
 
-    std::cout << "| ---  | ---                   | ---                | ---:   | ---       | ";
+    std::cout << "| ---  | ---                   | ---                | ---:   | ---       | ---               | ";
     if (show_quartiles) {
         std::cout << "---:         | ";
     }
@@ -367,36 +346,26 @@ void print_table_header() {
 }
 
 template <scaluq::Precision Prec>
-void run_precision(const std::vector<Case>& cases, const char* label) {
+void run_precision(std::uint64_t n_qubits, const std::vector<Case>& cases, const char* label) {
     using Scalar = std::conditional_t<Prec == scaluq::Precision::F64, double, float>;
     using Simd = Kokkos::Experimental::simd<Scalar>;
     constexpr std::uint64_t seed = 314159;
 
     const auto initial = scaluq::StateVector<Prec, Space::value>::Haar_random_state(n_qubits, seed);
-    const auto batched_initial = scaluq::StateVectorBatched<Prec, Space::value>::Haar_random_state(
-        batch_size, n_qubits, false, seed);
-
     std::cout << "\nstate=StateVector precision=" << label << " simd_lanes=" << Simd::size()
               << " n_qubits=" << n_qubits << " samples=" << measure_iterations << "\n";
     print_table_header();
     const std::vector<GateKind> gates =
-        include_extra_gates ? std::vector<GateKind>{GateKind::H, GateKind::RX, GateKind::U3}
-                            : std::vector<GateKind>{GateKind::RX};
+        include_extra_gates
+            ? std::vector<GateKind>{
+                  GateKind::X, GateKind::Y, GateKind::H, GateKind::RX, GateKind::U3}
+            : std::vector<GateKind>{GateKind::X, GateKind::Y, GateKind::H, GateKind::RX};
     for (const auto gate : gates) {
         for (const auto& bench_case : cases) {
             run_case<Prec>(gate, bench_case, initial, measure_iterations);
         }
     }
 
-    std::cout << "\nstate=StateVectorBatched precision=" << label << " simd_lanes=" << Simd::size()
-              << " n_qubits=" << n_qubits << " batch_size=" << batch_size
-              << " samples=" << measure_iterations << "\n";
-    print_table_header();
-    for (const auto gate : gates) {
-        for (const auto& bench_case : cases) {
-            run_batched_case<Prec>(gate, bench_case, batched_initial, measure_iterations);
-        }
-    }
 }
 }  // namespace
 
@@ -408,6 +377,10 @@ int main(int argc, char** argv) {
             include_extra_gates = true;
         } else if (argument == "--quartiles") {
             show_quartiles = true;
+        } else if (argument == "--min-qubits" && i + 1 < argc) {
+            min_qubits = std::strtoull(argv[++i], nullptr, 10);
+        } else if (argument == "--max-qubits" && i + 1 < argc) {
+            max_qubits = std::strtoull(argv[++i], nullptr, 10);
         } else if (positional_count == 0) {
             warmup_iterations = std::atoi(argv[i]);
             ++positional_count;
@@ -418,17 +391,27 @@ int main(int argc, char** argv) {
     }
     scaluq::initialize();
     {
-        std::cout << "n_qubits=" << n_qubits << " warmup=" << warmup_iterations
-                  << " samples=" << measure_iterations << " batch_size=" << batch_size
-                  << " gates=" << (include_extra_gates ? "H,RX,U3" : "RX")
+        std::cout << "n_qubits=" << min_qubits << ".." << max_qubits
+                  << " warmup=" << warmup_iterations
+                  << " samples=" << measure_iterations
+                  << " gates=" << (include_extra_gates ? "X,Y,H,RX,U3" : "X,Y,H,RX")
                   << " quartiles=" << (show_quartiles ? "on" : "off") << "\n";
-        const std::vector<Case> cases{
-            {"target-4 indexed", 4, {}, {}},
-            {"target-8 indexed", 8, {}, {}},
-            {"target-4 control-8", 4, {8}, {1}},
-        };
-        run_precision<scaluq::Precision::F64>(cases, "f64");
-        run_precision<scaluq::Precision::F32>(cases, "f32");
+        for (std::uint64_t n_qubits = min_qubits; n_qubits <= max_qubits; ++n_qubits) {
+            std::vector<Case> cases{{"target-0 in-lane", 0, {}, {}}};
+            for (std::uint64_t target = 4; target < n_qubits; target += 4) {
+                cases.push_back(
+                    {"target-" + std::to_string(target) + " indexed", target, {}, {}});
+            }
+            if (n_qubits > 4) {
+                cases.push_back({"target-0 control-4", 0, {4}, {1}});
+                cases.push_back({"target-4 control-0", 4, {0}, {1}});
+            }
+            if (n_qubits > 8) {
+                cases.push_back({"target-4 control-8", 4, {8}, {1}});
+            }
+            run_precision<scaluq::Precision::F64>(n_qubits, cases, "f64");
+            run_precision<scaluq::Precision::F32>(n_qubits, cases, "f32");
+        }
     }
     scaluq::finalize();
 }

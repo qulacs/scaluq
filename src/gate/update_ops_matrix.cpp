@@ -1,59 +1,41 @@
 #include <cstdint>
-#include <scaluq/util/simd_complex.hpp>
 #include <utility>
 
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
 
-template <UpdatableStateVector State>
-void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
-                                     std::uint64_t control_mask,
-                                     std::uint64_t control_value_mask,
-                                     const DiagonalMatrix2x2<State::prec>& diag,
-                                     State& state) {
-    using ExecSpace = SpaceType<State::space>;
-    Kokkos::parallel_for(
-        "one_target_diagonal_matrix_gate",
-        Kokkos::RangePolicy<ExecSpace>(
-            0, state.flat_dim() >> std::popcount(target_mask | control_mask)),
-        KOKKOS_LAMBDA(std::uint64_t it) {
-            std::uint64_t basis =
-                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
-            state.at_unsafe(basis) *= diag[0];
-            state.at_unsafe(basis | target_mask) *= diag[1];
-        });
-}
-
-template <UpdatableStateVector State>
+template <CoefKind Kind, UpdatableStateVector State>
 void zero_target_dense_matrix_gate_simd(std::uint64_t control_mask,
                                         std::uint64_t control_value_mask,
                                         Complex<State::prec> matrix,
                                         State& state) {
-    using SimdComplex = internal::SimdComplex<State::prec>;
-    constexpr std::size_t complex_lanes = SimdComplex::complex_lanes;
-    const auto coef = SimdComplex::Coef::splat(matrix);
+    using SimdType = SimdComplex<State::prec>;
+    constexpr std::size_t complex_lanes = SimdType::complex_lanes;
+    using Coef = SimdCoef<State::prec, Kind>;
+    const auto coef = Coef::splat(matrix);
 
     using ExecSpace = SpaceType<State::space>;
     const std::uint64_t flat_span = state.flat_dim() >> std::popcount(control_mask);
-    const std::uint64_t total_work_items = flat_span / complex_lanes;
     Kokkos::parallel_for(
         "zero_target_dense_matrix_gate_simd",
-        Kokkos::RangePolicy<ExecSpace>(0, total_work_items),
+        Kokkos::RangePolicy<ExecSpace>(0, flat_span / complex_lanes),
         KOKKOS_LAMBDA(std::uint64_t g) {
             const std::uint64_t compressed_base = g * complex_lanes;
             const std::uint64_t basis =
                 insert_zero_at_mask_positions(compressed_base, control_mask) | control_value_mask;
-            auto v = SimdComplex::load_aligned(&state.at_unsafe(basis));
-            (coef * v).store_aligned(&state.at_unsafe(basis));
+            const auto value = SimdType::load_aligned(&state.at_unsafe(basis));
+            (coef * value).store_aligned(&state.at_unsafe(basis));
         });
 }
 
-template <UpdatableStateVector State>
+template <CoefKind Kind, UpdatableStateVector State>
 void zero_target_dense_matrix_gate_scalar(std::uint64_t control_mask,
                                           std::uint64_t control_value_mask,
                                           Complex<State::prec> matrix,
                                           State& state) {
+    using Coef = ScalarCoef<State::prec, Kind>;
+    const auto coef = Coef::splat(matrix);
     using ExecSpace = SpaceType<State::space>;
     Kokkos::parallel_for(
         "zero_target_dense_matrix_gate",
@@ -61,118 +43,221 @@ void zero_target_dense_matrix_gate_scalar(std::uint64_t control_mask,
         KOKKOS_LAMBDA(std::uint64_t i) {
             std::uint64_t basis =
                 insert_zero_at_mask_positions(i, control_mask) | control_value_mask;
-            state.at_unsafe(basis) *= matrix;
+            state.at_unsafe(basis) =
+                static_cast<Complex<State::prec>>(coef * state.at_unsafe(basis));
         });
 }
 
-template <UpdatableStateVector State>
+template <CoefKind Kind, UpdatableStateVector State>
 void zero_target_dense_matrix_gate(std::uint64_t control_mask,
                                    std::uint64_t control_value_mask,
                                    Complex<State::prec> matrix,
                                    State& state) {
-    if constexpr ((State::space == ExecutionSpace::Host ||
-                   State::space == ExecutionSpace::HostSerial) &&
-                  (State::prec == Precision::F64 || State::prec == Precision::F32)) {
-        constexpr std::size_t complex_lanes = internal::SimdComplex<State::prec>::complex_lanes;
-        if constexpr (complex_lanes > 0) {
-            const std::uint64_t span = state.dim() >> std::popcount(control_mask);
-            if (span >= complex_lanes && (control_mask & (complex_lanes - 1)) == 0) {
-                zero_target_dense_matrix_gate_simd(control_mask, control_value_mask, matrix, state);
-                return;
-            }
+    if constexpr (supports_gate_simd<State>) {
+        if (can_use_gate_simd(control_mask, state)) {
+            zero_target_dense_matrix_gate_simd<Kind>(
+                control_mask, control_value_mask, matrix, state);
+            return;
         }
     }
-    zero_target_dense_matrix_gate_scalar(control_mask, control_value_mask, matrix, state);
+    zero_target_dense_matrix_gate_scalar<Kind>(control_mask, control_value_mask, matrix, state);
 }
 
-template <UpdatableStateVector State>
+template <CoefKind M00, CoefKind M01, CoefKind M10, CoefKind M11, UpdatableStateVector State>
 void one_target_dense_matrix_gate_simd(std::uint64_t target_mask,
                                        std::uint64_t control_mask,
                                        std::uint64_t control_value_mask,
                                        const Matrix2x2<State::prec>& matrix,
                                        State& state) {
-    using SimdComplex = internal::SimdComplex<State::prec>;
-    using Coef = typename SimdComplex::Coef;
-    constexpr std::size_t complex_lanes = SimdComplex::complex_lanes;
+    using SimdType = SimdComplex<State::prec>;
+    using C00 = SimdCoef<State::prec, M00>;
+    using C01 = SimdCoef<State::prec, M01>;
+    using C10 = SimdCoef<State::prec, M10>;
+    using C11 = SimdCoef<State::prec, M11>;
+    constexpr std::size_t complex_lanes = SimdType::complex_lanes;
     const std::uint64_t skip_mask = target_mask | control_mask;
-    const Coef m00 = Coef::splat(matrix[0][0]);
-    const Coef m01 = Coef::splat(matrix[0][1]);
-    const Coef m10 = Coef::splat(matrix[1][0]);
-    const Coef m11 = Coef::splat(matrix[1][1]);
+    const C00 m00 = C00::splat(matrix[0][0]);
+    const C01 m01 = C01::splat(matrix[0][1]);
+    const C10 m10 = C10::splat(matrix[1][0]);
+    const C11 m11 = C11::splat(matrix[1][1]);
 
     using ExecSpace = SpaceType<State::space>;
     const std::uint64_t flat_span = state.flat_dim() >> std::popcount(skip_mask);
-    const std::uint64_t total_work_items = flat_span / complex_lanes;
     Kokkos::parallel_for(
         "one_target_dense_matrix_gate_simd",
-        Kokkos::RangePolicy<ExecSpace>(0, total_work_items),
+        Kokkos::RangePolicy<ExecSpace>(0, flat_span / complex_lanes),
         KOKKOS_LAMBDA(std::uint64_t g) {
             const std::uint64_t compressed_base = g * complex_lanes;
             const std::uint64_t basis0 =
                 insert_zero_at_mask_positions(compressed_base, skip_mask) | control_value_mask;
             const std::uint64_t basis1 = basis0 | target_mask;
-            const auto v0 = SimdComplex::load_aligned(&state.at_unsafe(basis0));
-            const auto v1 = SimdComplex::load_aligned(&state.at_unsafe(basis1));
-            (m00 * v0 + m01 * v1).store_aligned(&state.at_unsafe(basis0));
-            (m10 * v0 + m11 * v1).store_aligned(&state.at_unsafe(basis1));
+            const auto value0 = SimdType::load_aligned(&state.at_unsafe(basis0));
+            const auto value1 = SimdType::load_aligned(&state.at_unsafe(basis1));
+            (m00 * value0 + m01 * value1).store_aligned(&state.at_unsafe(basis0));
+            (m10 * value0 + m11 * value1).store_aligned(&state.at_unsafe(basis1));
         });
 }
 
-template <UpdatableStateVector State>
+template <typename DiagCoef,
+          typename OffDiagCoef,
+          std::size_t TargetBit,
+          UpdatableStateVector State>
+void one_target_dense_matrix_gate_simd_inlane(std::uint64_t control_mask,
+                                              std::uint64_t control_value_mask,
+                                              const Matrix2x2<State::prec>& matrix,
+                                              State& state) {
+    using SimdType = SimdComplex<State::prec>;
+    constexpr std::size_t complex_lanes = SimdType::complex_lanes;
+    static_assert((1ULL << TargetBit) < complex_lanes);
+    const DiagCoef diagonal =
+        DiagCoef::template select_complex_lane_bit<TargetBit>(matrix[0][0], matrix[1][1]);
+    const OffDiagCoef off_diagonal =
+        OffDiagCoef::template select_complex_lane_bit<TargetBit>(matrix[0][1], matrix[1][0]);
+
+    using ExecSpace = SpaceType<State::space>;
+    const std::uint64_t flat_span = state.flat_dim() >> std::popcount(control_mask);
+    Kokkos::parallel_for(
+        "one_target_dense_matrix_gate_simd_inlane",
+        Kokkos::RangePolicy<ExecSpace>(0, flat_span / complex_lanes),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t compressed_base = g * complex_lanes;
+            const std::uint64_t basis =
+                insert_zero_at_mask_positions(compressed_base, control_mask) | control_value_mask;
+            const auto value = SimdType::load_aligned(&state.at_unsafe(basis));
+            const auto paired = value.template permute_complex_lanes_xor<TargetBit>();
+            (diagonal * value + off_diagonal * paired).store_aligned(&state.at_unsafe(basis));
+        });
+}
+
+template <CoefKind M00, CoefKind M01, CoefKind M10, CoefKind M11, UpdatableStateVector State>
 void one_target_dense_matrix_gate_scalar(std::uint64_t target_mask,
                                          std::uint64_t control_mask,
                                          std::uint64_t control_value_mask,
                                          const Matrix2x2<State::prec>& matrix,
                                          State& state) {
+    using ComplexType = Complex<State::prec>;
+    using S00 = ScalarCoef<State::prec, M00>;
+    using S01 = ScalarCoef<State::prec, M01>;
+    using S10 = ScalarCoef<State::prec, M10>;
+    using S11 = ScalarCoef<State::prec, M11>;
+    const S00 m00 = S00::splat(matrix[0][0]);
+    const S01 m01 = S01::splat(matrix[0][1]);
+    const S10 m10 = S10::splat(matrix[1][0]);
+    const S11 m11 = S11::splat(matrix[1][1]);
+
     using ExecSpace = SpaceType<State::space>;
     Kokkos::parallel_for(
-        "one_target_dense_matrix_gate",
+        "one_target_dense_matrix_gate_scalar",
         Kokkos::RangePolicy<ExecSpace>(
             0, state.flat_dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(std::uint64_t it) {
-            std::uint64_t basis_0 =
+            const std::uint64_t basis0 =
                 insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
-            std::uint64_t basis_1 = basis_0 | target_mask;
-            Complex<State::prec> val0 = state.at_unsafe(basis_0);
-            Complex<State::prec> val1 = state.at_unsafe(basis_1);
-            Complex<State::prec> res0 = matrix[0][0] * val0 + matrix[0][1] * val1;
-            Complex<State::prec> res1 = matrix[1][0] * val0 + matrix[1][1] * val1;
-            state.at_unsafe(basis_0) = res0;
-            state.at_unsafe(basis_1) = res1;
+            const std::uint64_t basis1 = basis0 | target_mask;
+            const ComplexType value0 = state.at_unsafe(basis0);
+            const ComplexType value1 = state.at_unsafe(basis1);
+            const auto result0 = m00 * value0 + m01 * value1;
+            const auto result1 = m10 * value0 + m11 * value1;
+            state.at_unsafe(basis0) = static_cast<ComplexType>(result0);
+            state.at_unsafe(basis1) = static_cast<ComplexType>(result1);
         });
 }
 
-template <UpdatableStateVector State>
+template <CoefKind M00, CoefKind M01, CoefKind M10, CoefKind M11, UpdatableStateVector State>
 void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   std::uint64_t control_value_mask,
                                   const Matrix2x2<State::prec>& matrix,
                                   State& state) {
-    if constexpr ((State::space == ExecutionSpace::Host ||
-                   State::space == ExecutionSpace::HostSerial) &&
-                  (State::prec == Precision::F64 || State::prec == Precision::F32)) {
-        constexpr std::size_t complex_lanes = internal::SimdComplex<State::prec>::complex_lanes;
-        if constexpr (complex_lanes > 0) {
-            const std::uint64_t skip_mask = target_mask | control_mask;
-            const std::uint64_t span = state.dim() >> std::popcount(skip_mask);
-            if (span >= complex_lanes && (skip_mask & (complex_lanes - 1)) == 0) {
-                // TODO: (skip_mask & (complex_lanes - 1)) != 0 の場合についてもSIMDを使うようにする
-                one_target_dense_matrix_gate_simd(
-                    target_mask, control_mask, control_value_mask, matrix, state);
+    if constexpr (supports_gate_simd<State>) {
+        using DiagCoef = SimdCoef<State::prec, common_coef_kind(M00, M11)>;
+        using OffDiagCoef = SimdCoef<State::prec, common_coef_kind(M01, M10)>;
+        if (can_use_gate_simd(target_mask | control_mask, state)) {
+            one_target_dense_matrix_gate_simd<M00, M01, M10, M11>(
+                target_mask, control_mask, control_value_mask, matrix, state);
+            return;
+        }
+        constexpr std::size_t complex_lanes = SimdComplex<State::prec>::complex_lanes;
+        constexpr std::uint64_t inlane_mask = complex_lanes - 1;
+        const std::uint64_t span = state.flat_dim() >> std::popcount(control_mask);
+        if ((target_mask & inlane_mask) != 0 && (control_mask & inlane_mask) == 0 &&
+            span >= complex_lanes) {
+            if (target_mask == 0b1) {
+                one_target_dense_matrix_gate_simd_inlane<DiagCoef, OffDiagCoef, 0>(
+                    control_mask, control_value_mask, matrix, state);
                 return;
+            }
+            if constexpr (complex_lanes > 2) {
+                if (target_mask == 0b10) {
+                    one_target_dense_matrix_gate_simd_inlane<DiagCoef, OffDiagCoef, 1>(
+                        control_mask, control_value_mask, matrix, state);
+                    return;
+                }
             }
         }
     }
-    one_target_dense_matrix_gate_scalar(
+    one_target_dense_matrix_gate_scalar<M00, M01, M10, M11>(
         target_mask, control_mask, control_value_mask, matrix, state);
 }
 
 template <UpdatableStateVector State>
-void two_target_dense_matrix_gate(std::uint64_t target_mask,
-                                  std::uint64_t control_mask,
-                                  std::uint64_t control_value_mask,
-                                  const Matrix4x4<State::prec>& matrix,
-                                  State& state) {
+void two_target_dense_matrix_gate_simd(std::uint64_t target_mask,
+                                       std::uint64_t control_mask,
+                                       std::uint64_t control_value_mask,
+                                       const Matrix4x4<State::prec>& matrix,
+                                       State& state) {
+    using SimdType = SimdComplex<State::prec>;
+    using Coef = typename SimdType::Coef;
+    constexpr std::size_t complex_lanes = SimdType::complex_lanes;
+    const std::uint64_t lower_target_mask = -target_mask & target_mask;
+    const std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;
+    const std::uint64_t skip_mask = target_mask | control_mask;
+    const Coef m00 = Coef::splat(matrix[0][0]);
+    const Coef m01 = Coef::splat(matrix[0][1]);
+    const Coef m02 = Coef::splat(matrix[0][2]);
+    const Coef m03 = Coef::splat(matrix[0][3]);
+    const Coef m10 = Coef::splat(matrix[1][0]);
+    const Coef m11 = Coef::splat(matrix[1][1]);
+    const Coef m12 = Coef::splat(matrix[1][2]);
+    const Coef m13 = Coef::splat(matrix[1][3]);
+    const Coef m20 = Coef::splat(matrix[2][0]);
+    const Coef m21 = Coef::splat(matrix[2][1]);
+    const Coef m22 = Coef::splat(matrix[2][2]);
+    const Coef m23 = Coef::splat(matrix[2][3]);
+    const Coef m30 = Coef::splat(matrix[3][0]);
+    const Coef m31 = Coef::splat(matrix[3][1]);
+    const Coef m32 = Coef::splat(matrix[3][2]);
+    const Coef m33 = Coef::splat(matrix[3][3]);
+
+    using ExecSpace = SpaceType<State::space>;
+    const std::uint64_t flat_span = state.flat_dim() >> std::popcount(skip_mask);
+    Kokkos::parallel_for(
+        "two_target_dense_matrix_gate_simd",
+        Kokkos::RangePolicy<ExecSpace>(0, flat_span / complex_lanes),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t compressed_base = g * complex_lanes;
+            const std::uint64_t basis0 =
+                insert_zero_at_mask_positions(compressed_base, skip_mask) | control_value_mask;
+            const std::uint64_t basis1 = basis0 | lower_target_mask;
+            const std::uint64_t basis2 = basis0 | upper_target_mask;
+            const std::uint64_t basis3 = basis1 | upper_target_mask;
+            const auto v0 = SimdType::load_aligned(&state.at_unsafe(basis0));
+            const auto v1 = SimdType::load_aligned(&state.at_unsafe(basis1));
+            const auto v2 = SimdType::load_aligned(&state.at_unsafe(basis2));
+            const auto v3 = SimdType::load_aligned(&state.at_unsafe(basis3));
+            (m00 * v0 + m01 * v1 + m02 * v2 + m03 * v3).store_aligned(&state.at_unsafe(basis0));
+            (m10 * v0 + m11 * v1 + m12 * v2 + m13 * v3).store_aligned(&state.at_unsafe(basis1));
+            (m20 * v0 + m21 * v1 + m22 * v2 + m23 * v3).store_aligned(&state.at_unsafe(basis2));
+            (m30 * v0 + m31 * v1 + m32 * v2 + m33 * v3).store_aligned(&state.at_unsafe(basis3));
+        });
+}
+
+template <UpdatableStateVector State>
+void two_target_dense_matrix_gate_scalar(std::uint64_t target_mask,
+                                         std::uint64_t control_mask,
+                                         std::uint64_t control_value_mask,
+                                         const Matrix4x4<State::prec>& matrix,
+                                         State& state) {
     using ExecSpace = SpaceType<State::space>;
     std::uint64_t lower_target_mask = -target_mask & target_mask;
     std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;
@@ -203,6 +288,23 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
             state.at_unsafe(basis_2) = res2;
             state.at_unsafe(basis_3) = res3;
         });
+}
+
+template <UpdatableStateVector State>
+void two_target_dense_matrix_gate(std::uint64_t target_mask,
+                                  std::uint64_t control_mask,
+                                  std::uint64_t control_value_mask,
+                                  const Matrix4x4<State::prec>& matrix,
+                                  State& state) {
+    if constexpr (supports_gate_simd<State>) {
+        if (can_use_gate_simd(target_mask | control_mask, state)) {
+            two_target_dense_matrix_gate_simd(
+                target_mask, control_mask, control_value_mask, matrix, state);
+            return;
+        }
+    }
+    two_target_dense_matrix_gate_scalar(
+        target_mask, control_mask, control_value_mask, matrix, state);
 }
 
 template <UpdatableStateVector State>
@@ -325,14 +427,51 @@ void sparse_matrix_gate(std::uint64_t target_mask,
     template void Func<StateVectorBatched<Prec, Space>>(                                 \
         __VA_ARGS__, StateVectorBatched<Prec, Space>&)
 
-INSTANTIATE_FLAT_STATE_OVERLOADS(zero_target_dense_matrix_gate, std::uint64_t, std::uint64_t, Complex<Prec>);
-INSTANTIATE_FLAT_STATE_OVERLOADS(one_target_dense_matrix_gate,  std::uint64_t, std::uint64_t, std::uint64_t, const Matrix2x2<Prec>&);
 INSTANTIATE_FLAT_STATE_OVERLOADS(two_target_dense_matrix_gate,  std::uint64_t, std::uint64_t, std::uint64_t, const Matrix4x4<Prec>&);
-INSTANTIATE_FLAT_STATE_OVERLOADS(one_target_diagonal_matrix_gate, std::uint64_t, std::uint64_t, std::uint64_t, const DiagonalMatrix2x2<Prec>&);
 INSTANTIATE_FLAT_STATE_OVERLOADS(multi_dense_matrix_gate,       std::uint64_t, std::uint64_t, std::uint64_t, const Matrix<Prec, Space>&);
 INSTANTIATE_FLAT_STATE_OVERLOADS(sparse_matrix_gate,            std::uint64_t, std::uint64_t, std::uint64_t, const SparseMatrix<Prec, Space>&);
 
+#define INSTANTIATE_ZERO_TARGET_DENSE(Kind, StateType)                                \
+    template void zero_target_dense_matrix_gate<CoefKind::Kind, StateType<Prec, Space>>( \
+        std::uint64_t, std::uint64_t, Complex<Prec>, StateType<Prec, Space>&)
+
+#define INSTANTIATE_ZERO_TARGET_DENSE_FOR_STATES(Kind)               \
+    INSTANTIATE_ZERO_TARGET_DENSE(Kind, StateVector);                 \
+    INSTANTIATE_ZERO_TARGET_DENSE(Kind, StateVectorBatched)
+
+INSTANTIATE_ZERO_TARGET_DENSE_FOR_STATES(General);
+INSTANTIATE_ZERO_TARGET_DENSE_FOR_STATES(Real);
+INSTANTIATE_ZERO_TARGET_DENSE_FOR_STATES(Imag);
+INSTANTIATE_ZERO_TARGET_DENSE_FOR_STATES(Zero);
+INSTANTIATE_ZERO_TARGET_DENSE_FOR_STATES(One);
+
+#undef INSTANTIATE_ZERO_TARGET_DENSE_FOR_STATES
+#undef INSTANTIATE_ZERO_TARGET_DENSE
+
+#define INSTANTIATE_TAGGED_DENSE(M00, M01, M10, M11, StateType)                         \
+    template void one_target_dense_matrix_gate<                                         \
+        CoefKind::M00, CoefKind::M01, CoefKind::M10, CoefKind::M11,                     \
+        StateType<Prec, Space>>(std::uint64_t, std::uint64_t, std::uint64_t,             \
+                                const Matrix2x2<Prec>&, StateType<Prec, Space>&)
+
+#define INSTANTIATE_TAGGED_DENSE_FOR_STATES(M00, M01, M10, M11)                         \
+    INSTANTIATE_TAGGED_DENSE(M00, M01, M10, M11, StateVector);                           \
+    INSTANTIATE_TAGGED_DENSE(M00, M01, M10, M11, StateVectorBatched)
+
+INSTANTIATE_TAGGED_DENSE_FOR_STATES(General, General, General, General);
+INSTANTIATE_TAGGED_DENSE_FOR_STATES(General, Zero, Zero, General);
+INSTANTIATE_TAGGED_DENSE_FOR_STATES(Real, Real, Real, Real);
+INSTANTIATE_TAGGED_DENSE_FOR_STATES(Real, Imag, Imag, Real);
+INSTANTIATE_TAGGED_DENSE_FOR_STATES(Zero, Imag, Imag, Zero);
+INSTANTIATE_TAGGED_DENSE_FOR_STATES(One, Zero, Zero, Zero);
+INSTANTIATE_TAGGED_DENSE_FOR_STATES(Zero, Zero, Zero, One);
+INSTANTIATE_TAGGED_DENSE_FOR_STATES(Zero, One, One, Zero);
+
+#undef INSTANTIATE_TAGGED_DENSE_FOR_STATES
+#undef INSTANTIATE_TAGGED_DENSE
+
 #undef INSTANTIATE_FLAT_STATE_OVERLOADS
+
 // clang-format on
 
 }  // namespace scaluq::internal

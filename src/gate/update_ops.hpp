@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bit>
 #include <scaluq/operator/pauli_operator.hpp>
 #include <scaluq/state/density_matrix.hpp>
 #include <scaluq/state/state_vector.hpp>
@@ -9,13 +10,36 @@
 namespace scaluq {
 namespace internal {
 
-template <UpdatableStateVector State>
+template <typename State>
+inline constexpr bool supports_gate_simd = [] {
+    if constexpr ((State::space == ExecutionSpace::Host ||
+                   State::space == ExecutionSpace::HostSerial) &&
+                  (State::prec == Precision::F64 || State::prec == Precision::F32)) {
+        return SimdComplex<State::prec>::complex_lanes > 0;
+    } else {
+        return false;
+    }
+}();
+
+template <typename State>
+    requires supports_gate_simd<State>
+inline bool can_use_gate_simd(std::uint64_t skip_mask, const State& state) {
+    constexpr std::size_t complex_lanes = SimdComplex<State::prec>::complex_lanes;
+    const std::uint64_t span = state.dim() >> std::popcount(skip_mask);
+    return span >= complex_lanes && (skip_mask & (complex_lanes - 1)) == 0;
+}
+
+template <CoefKind Kind = CoefKind::General, UpdatableStateVector State>
 void zero_target_dense_matrix_gate(std::uint64_t control_mask,
                                    std::uint64_t control_value_mask,
                                    Complex<State::prec> matrix,
                                    State& state);
 
-template <UpdatableStateVector State>
+template <CoefKind M00 = CoefKind::General,
+          CoefKind M01 = CoefKind::General,
+          CoefKind M10 = CoefKind::General,
+          CoefKind M11 = CoefKind::General,
+          UpdatableStateVector State>
 void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   std::uint64_t control_value_mask,
@@ -43,12 +67,15 @@ void sparse_matrix_gate(std::uint64_t target_mask,
                         const SparseMatrix<State::prec, State::space>& mat,
                         State& state);
 
-template <UpdatableStateVector State>
-void one_target_diagonal_matrix_gate(std::uint64_t target_mask,
-                                     std::uint64_t control_mask,
-                                     std::uint64_t control_value_mask,
-                                     const DiagonalMatrix2x2<State::prec>& diag,
-                                     State& state);
+template <CoefKind Kind = CoefKind::General, UpdatableStateVector State>
+inline void one_target_phase_gate(std::uint64_t target_mask,
+                                  std::uint64_t control_mask,
+                                  std::uint64_t control_value_mask,
+                                  Complex<State::prec> phase,
+                                  State& state) {
+    zero_target_dense_matrix_gate<Kind>(
+        control_mask | target_mask, control_value_mask | target_mask, phase, state);
+}
 
 template <UpdatableStateVector State>
 inline void global_phase_gate(std::uint64_t,
@@ -63,33 +90,38 @@ inline void global_phase_gate(std::uint64_t,
 }
 
 template <UpdatableStateVector State>
-void one_target_phase_gate(std::uint64_t target_mask,
-                           std::uint64_t control_mask,
-                           std::uint64_t control_value_mask,
-                           Complex<State::prec> phase,
-                           State& state);
-
-template <UpdatableStateVector State>
 inline void i_gate(std::uint64_t, std::uint64_t, std::uint64_t, State&) {}
 
 template <UpdatableStateVector State>
-void x_gate(std::uint64_t target_mask,
-            std::uint64_t control_mask,
-            std::uint64_t control_value_mask,
-            State& state);
+inline void x_gate(std::uint64_t target_mask,
+                   std::uint64_t control_mask,
+                   std::uint64_t control_value_mask,
+                   State& state) {
+    one_target_dense_matrix_gate<CoefKind::Zero,
+                                 CoefKind::One,
+                                 CoefKind::One,
+                                 CoefKind::Zero>(
+        target_mask, control_mask, control_value_mask, X_GATE<State::prec>(), state);
+}
 
 template <UpdatableStateVector State>
-void y_gate(std::uint64_t target_mask,
-            std::uint64_t control_mask,
-            std::uint64_t control_value_mask,
-            State& state);
+inline void y_gate(std::uint64_t target_mask,
+                   std::uint64_t control_mask,
+                   std::uint64_t control_value_mask,
+                   State& state) {
+    one_target_dense_matrix_gate<CoefKind::Zero,
+                                 CoefKind::Imag,
+                                 CoefKind::Imag,
+                                 CoefKind::Zero>(
+        target_mask, control_mask, control_value_mask, Y_GATE<State::prec>(), state);
+}
 
 template <UpdatableStateVector State>
 inline void z_gate(std::uint64_t target_mask,
                    std::uint64_t control_mask,
                    std::uint64_t control_value_mask,
                    State& state) {
-    one_target_phase_gate(
+    one_target_phase_gate<CoefKind::Real>(
         target_mask, control_mask, control_value_mask, Complex<State::prec>(-1, 0), state);
 }
 
@@ -98,7 +130,7 @@ inline void h_gate(std::uint64_t target_mask,
                    std::uint64_t control_mask,
                    std::uint64_t control_value_mask,
                    State& state) {
-    one_target_dense_matrix_gate(
+    one_target_dense_matrix_gate<CoefKind::Real, CoefKind::Real, CoefKind::Real, CoefKind::Real>(
         target_mask, control_mask, control_value_mask, HADAMARD_MATRIX<State::prec>(), state);
 }
 
@@ -107,7 +139,7 @@ inline void s_gate(std::uint64_t target_mask,
                    std::uint64_t control_mask,
                    std::uint64_t control_value_mask,
                    State& state) {
-    one_target_phase_gate(
+    one_target_phase_gate<CoefKind::Imag>(
         target_mask, control_mask, control_value_mask, Complex<State::prec>(0, 1), state);
 }
 
@@ -116,7 +148,7 @@ inline void sdag_gate(std::uint64_t target_mask,
                       std::uint64_t control_mask,
                       std::uint64_t control_value_mask,
                       State& state) {
-    one_target_phase_gate(
+    one_target_phase_gate<CoefKind::Imag>(
         target_mask, control_mask, control_value_mask, Complex<State::prec>(0, -1), state);
 }
 
@@ -191,7 +223,7 @@ inline void p0_gate(std::uint64_t target_mask,
                     std::uint64_t control_mask,
                     std::uint64_t control_value_mask,
                     State& state) {
-    one_target_dense_matrix_gate(
+    one_target_dense_matrix_gate<CoefKind::One, CoefKind::Zero, CoefKind::Zero, CoefKind::Zero>(
         target_mask, control_mask, control_value_mask, PROJ_0_MATRIX<State::prec>(), state);
 }
 
@@ -200,16 +232,27 @@ inline void p1_gate(std::uint64_t target_mask,
                     std::uint64_t control_mask,
                     std::uint64_t control_value_mask,
                     State& state) {
-    one_target_dense_matrix_gate(
+    one_target_dense_matrix_gate<CoefKind::Zero, CoefKind::Zero, CoefKind::Zero, CoefKind::One>(
         target_mask, control_mask, control_value_mask, PROJ_1_MATRIX<State::prec>(), state);
 }
 
 template <UpdatableStateVector State>
-void rx_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<State::prec> angle,
-             State& state);
+inline void rx_gate(std::uint64_t target_mask,
+                    std::uint64_t control_mask,
+                    std::uint64_t control_value_mask,
+                    Float<State::prec> angle,
+                    State& state) {
+    using ComplexType = Complex<State::prec>;
+    const Float<State::prec> cosval = internal::cos(angle / Float<State::prec>{2});
+    const Float<State::prec> sinval = internal::sin(angle / Float<State::prec>{2});
+    const Matrix2x2<State::prec> matrix = {
+        {{{cosval, ComplexType(0, -sinval)}}, {{ComplexType(0, -sinval), cosval}}}};
+    one_target_dense_matrix_gate<CoefKind::Real,
+                                 CoefKind::Imag,
+                                 CoefKind::Imag,
+                                 CoefKind::Real>(
+        target_mask, control_mask, control_value_mask, matrix, state);
+}
 template <Precision Prec, ExecutionSpace Space>
 void rx_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
@@ -219,11 +262,17 @@ void rx_gate(std::uint64_t target_mask,
              StateVectorBatched<Prec, Space>& states);
 
 template <UpdatableStateVector State>
-void ry_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<State::prec> angle,
-             State& state);
+inline void ry_gate(std::uint64_t target_mask,
+                    std::uint64_t control_mask,
+                    std::uint64_t control_value_mask,
+                    Float<State::prec> angle,
+                    State& state) {
+    const Float<State::prec> cosval = internal::cos(angle / Float<State::prec>{2});
+    const Float<State::prec> sinval = internal::sin(angle / Float<State::prec>{2});
+    const Matrix2x2<State::prec> matrix = {{{{cosval, -sinval}}, {{sinval, cosval}}}};
+    one_target_dense_matrix_gate<CoefKind::Real, CoefKind::Real, CoefKind::Real, CoefKind::Real>(
+        target_mask, control_mask, control_value_mask, matrix, state);
+}
 template <Precision Prec, ExecutionSpace Space>
 void ry_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
@@ -233,11 +282,23 @@ void ry_gate(std::uint64_t target_mask,
              StateVectorBatched<Prec, Space>& states);
 
 template <UpdatableStateVector State>
-void rz_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<State::prec> angle,
-             State& state);
+inline void rz_gate(std::uint64_t target_mask,
+                    std::uint64_t control_mask,
+                    std::uint64_t control_value_mask,
+                    Float<State::prec> angle,
+                    State& state) {
+    using ComplexType = Complex<State::prec>;
+    const Float<State::prec> cosval = internal::cos(angle / Float<State::prec>{2});
+    const Float<State::prec> sinval = internal::sin(angle / Float<State::prec>{2});
+    const Matrix2x2<State::prec> matrix =
+        {{{{ComplexType(cosval, -sinval), ComplexType{}}},
+          {{ComplexType{}, ComplexType(cosval, sinval)}}}};
+    one_target_dense_matrix_gate<CoefKind::General,
+                                 CoefKind::Zero,
+                                 CoefKind::Zero,
+                                 CoefKind::General>(
+        target_mask, control_mask, control_value_mask, matrix, state);
+}
 template <Precision Prec, ExecutionSpace Space>
 void rz_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
@@ -245,6 +306,18 @@ void rz_gate(std::uint64_t target_mask,
              Float<Prec> pcoef,
              const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
              StateVectorBatched<Prec, Space>& states);
+
+template <Precision Prec>
+KOKKOS_INLINE_FUNCTION Matrix2x2<Prec> get_IBMQ_matrix(Float<Prec> theta,
+                                                       Float<Prec> phi,
+                                                       Float<Prec> lambda) {
+    const Complex<Prec> exp_val1 = internal::exp(Complex<Prec>(0, phi));
+    const Complex<Prec> exp_val2 = internal::exp(Complex<Prec>(0, lambda));
+    const Complex<Prec> cos_val = internal::cos(theta / Float<Prec>{2});
+    const Complex<Prec> sin_val = internal::sin(theta / Float<Prec>{2});
+    return {
+        {{{cos_val, -exp_val2 * sin_val}}, {{exp_val1 * sin_val, exp_val1 * exp_val2 * cos_val}}}};
+}
 
 template <UpdatableStateVector State>
 inline void u1_gate(std::uint64_t target_mask,
@@ -260,21 +333,35 @@ inline void u1_gate(std::uint64_t target_mask,
 }
 
 template <UpdatableStateVector State>
-void u2_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<State::prec> phi,
-             Float<State::prec> lambda,
-             State& state);
+inline void u2_gate(std::uint64_t target_mask,
+                    std::uint64_t control_mask,
+                    std::uint64_t control_value_mask,
+                    Float<State::prec> phi,
+                    Float<State::prec> lambda,
+                    State& state) {
+    one_target_dense_matrix_gate(
+        target_mask,
+        control_mask,
+        control_value_mask,
+        get_IBMQ_matrix<State::prec>(
+            static_cast<Float<State::prec>>(Kokkos::numbers::pi / 2), phi, lambda),
+        state);
+}
 
 template <UpdatableStateVector State>
-void u3_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<State::prec> theta,
-             Float<State::prec> phi,
-             Float<State::prec> lambda,
-             State& state);
+inline void u3_gate(std::uint64_t target_mask,
+                    std::uint64_t control_mask,
+                    std::uint64_t control_value_mask,
+                    Float<State::prec> theta,
+                    Float<State::prec> phi,
+                    Float<State::prec> lambda,
+                    State& state) {
+    one_target_dense_matrix_gate(target_mask,
+                                 control_mask,
+                                 control_value_mask,
+                                 get_IBMQ_matrix<State::prec>(theta, phi, lambda),
+                                 state);
+}
 
 template <UpdatableStateVector State>
 void swap_gate(std::uint64_t target_mask,
@@ -362,28 +449,45 @@ void rz_gate(std::uint64_t target_mask,
              DensityMatrix<Prec, Space>& dm);
 
 template <Precision Prec, ExecutionSpace Space>
-void u1_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<Prec> lambda,
-             DensityMatrix<Prec, Space>& dm);
+inline void u1_gate(std::uint64_t target_mask,
+                    std::uint64_t control_mask,
+                    std::uint64_t control_value_mask,
+                    Float<Prec> lambda,
+                    DensityMatrix<Prec, Space>& dm) {
+    const DiagonalMatrix2x2<Prec> diag = {
+        Complex<Prec>(1, 0), internal::exp(Complex<Prec>(0, lambda))};
+    one_target_diagonal_matrix_gate(target_mask, control_mask, control_value_mask, diag, dm);
+}
 
 template <Precision Prec, ExecutionSpace Space>
-void u2_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<Prec> phi,
-             Float<Prec> lambda,
-             DensityMatrix<Prec, Space>& dm);
+inline void u2_gate(std::uint64_t target_mask,
+                    std::uint64_t control_mask,
+                    std::uint64_t control_value_mask,
+                    Float<Prec> phi,
+                    Float<Prec> lambda,
+                    DensityMatrix<Prec, Space>& dm) {
+    one_target_dense_matrix_gate(
+        target_mask,
+        control_mask,
+        control_value_mask,
+        get_IBMQ_matrix<Prec>(static_cast<Float<Prec>>(Kokkos::numbers::pi / 2), phi, lambda),
+        dm);
+}
 
 template <Precision Prec, ExecutionSpace Space>
-void u3_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<Prec> theta,
-             Float<Prec> phi,
-             Float<Prec> lambda,
-             DensityMatrix<Prec, Space>& dm);
+inline void u3_gate(std::uint64_t target_mask,
+                    std::uint64_t control_mask,
+                    std::uint64_t control_value_mask,
+                    Float<Prec> theta,
+                    Float<Prec> phi,
+                    Float<Prec> lambda,
+                    DensityMatrix<Prec, Space>& dm) {
+    one_target_dense_matrix_gate(target_mask,
+                                 control_mask,
+                                 control_value_mask,
+                                 get_IBMQ_matrix<Prec>(theta, phi, lambda),
+                                 dm);
+}
 
 template <Precision Prec, ExecutionSpace Space>
 void swap_gate(std::uint64_t target_mask,

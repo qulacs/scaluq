@@ -2,85 +2,6 @@
 
 namespace scaluq::internal {
 
-template <Precision Prec>
-static Matrix2x2<Prec> get_IBMQ_matrix(Float<Prec> _theta, Float<Prec> _phi, Float<Prec> _lambda) {
-    Complex<Prec> exp_val1 = internal::exp(Complex<Prec>(0, _phi));
-    Complex<Prec> exp_val2 = internal::exp(Complex<Prec>(0, _lambda));
-    Complex<Prec> cos_val = internal::cos(_theta / Float<Prec>{2});
-    Complex<Prec> sin_val = internal::sin(_theta / Float<Prec>{2});
-    return {
-        {{{cos_val, -exp_val2 * sin_val}}, {{exp_val1 * sin_val, exp_val1 * exp_val2 * cos_val}}}};
-}
-
-template <UpdatableStateVector State>
-void one_target_phase_gate(std::uint64_t target_mask,
-                           std::uint64_t control_mask,
-                           std::uint64_t control_value_mask,
-                           Complex<State::prec> phase,
-                           State& state) {
-    using ExecSpace = SpaceType<State::space>;
-    Kokkos::parallel_for(
-        "one_target_phase_gate",
-        Kokkos::RangePolicy<ExecSpace>(
-            0, state.flat_dim() >> std::popcount(target_mask | control_mask)),
-        KOKKOS_LAMBDA(std::uint64_t it) {
-            std::uint64_t i =
-                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
-            state.at_unsafe(i | target_mask) *= phase;
-        });
-}
-
-template <UpdatableStateVector State>
-void x_gate(std::uint64_t target_mask,
-            std::uint64_t control_mask,
-            std::uint64_t control_value_mask,
-            State& state) {
-    using ExecSpace = SpaceType<State::space>;
-    Kokkos::parallel_for(
-        "x_gate",
-        Kokkos::RangePolicy<ExecSpace>(
-            0, state.flat_dim() >> std::popcount(target_mask | control_mask)),
-        KOKKOS_LAMBDA(std::uint64_t it) {
-            std::uint64_t i =
-                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
-            Kokkos::kokkos_swap(state.at_unsafe(i), state.at_unsafe(i | target_mask));
-        });
-}
-
-template <UpdatableStateVector State>
-void y_gate(std::uint64_t target_mask,
-            std::uint64_t control_mask,
-            std::uint64_t control_value_mask,
-            State& state) {
-    using ExecSpace = SpaceType<State::space>;
-    using ComplexType = Complex<State::prec>;
-    Kokkos::parallel_for(
-        "y_gate",
-        Kokkos::RangePolicy<ExecSpace>(
-            0, state.flat_dim() >> std::popcount(target_mask | control_mask)),
-        KOKKOS_LAMBDA(std::uint64_t it) {
-            std::uint64_t i =
-                insert_zero_at_mask_positions(it, control_mask | target_mask) | control_value_mask;
-            state.at_unsafe(i) *= ComplexType(0, 1);
-            state.at_unsafe(i | target_mask) *= ComplexType(0, -1);
-            Kokkos::kokkos_swap(state.at_unsafe(i), state.at_unsafe(i | target_mask));
-        });
-}
-
-template <UpdatableStateVector State>
-void rx_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<State::prec> angle,
-             State& state) {
-    using ComplexType = Complex<State::prec>;
-    const Float<State::prec> cosval = internal::cos(angle / Float<State::prec>{2});
-    const Float<State::prec> sinval = internal::sin(angle / Float<State::prec>{2});
-    Matrix2x2<State::prec> matrix = {
-        {{{cosval, ComplexType(0, -sinval)}}, {{ComplexType(0, -sinval), cosval}}}};
-    one_target_dense_matrix_gate(target_mask, control_mask, control_value_mask, matrix, state);
-}
-
 template <>
 void rx_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
@@ -116,18 +37,6 @@ void rx_gate(std::uint64_t target_mask,
                     states.at_unsafe(batch_id, basis_1) = res1;
                 });
         });
-}
-
-template <UpdatableStateVector State>
-void ry_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<State::prec> angle,
-             State& state) {
-    const Float<State::prec> cosval = internal::cos(angle / Float<State::prec>{2});
-    const Float<State::prec> sinval = internal::sin(angle / Float<State::prec>{2});
-    Matrix2x2<State::prec> matrix = {{{{cosval, -sinval}}, {{sinval, cosval}}}};
-    one_target_dense_matrix_gate(target_mask, control_mask, control_value_mask, matrix, state);
 }
 
 template <>
@@ -166,20 +75,6 @@ void ry_gate(std::uint64_t target_mask,
         });
 }
 
-template <UpdatableStateVector State>
-void rz_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<State::prec> angle,
-             State& state) {
-    using ComplexType = Complex<State::prec>;
-    const Float<State::prec> cosval = internal::cos(angle / Float<State::prec>{2});
-    const Float<State::prec> sinval = internal::sin(angle / Float<State::prec>{2});
-    DiagonalMatrix2x2<State::prec> diag = {ComplexType(cosval, -sinval),
-                                           ComplexType(cosval, sinval)};
-    one_target_diagonal_matrix_gate(target_mask, control_mask, control_value_mask, diag, state);
-}
-
 template <>
 void rz_gate(std::uint64_t target_mask,
              std::uint64_t control_mask,
@@ -214,34 +109,31 @@ void rz_gate(std::uint64_t target_mask,
 }
 
 template <UpdatableStateVector State>
-void u2_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<State::prec> phi,
-             Float<State::prec> lambda,
-             State& state) {
-    one_target_dense_matrix_gate(
-        target_mask,
-        control_mask,
-        control_value_mask,
-        get_IBMQ_matrix<State::prec>(
-            static_cast<Float<State::prec>>(Kokkos::numbers::pi / 2), phi, lambda),
-        state);
-}
-
-template <UpdatableStateVector State>
-void u3_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<State::prec> theta,
-             Float<State::prec> phi,
-             Float<State::prec> lambda,
-             State& state) {
-    one_target_dense_matrix_gate(target_mask,
-                                 control_mask,
-                                 control_value_mask,
-                                 get_IBMQ_matrix<State::prec>(theta, phi, lambda),
-                                 state);
+void swap_gate_simd(std::uint64_t target_mask,
+                    std::uint64_t control_mask,
+                    std::uint64_t control_value_mask,
+                    State& state) {
+    using SimdType = SimdComplex<State::prec>;
+    constexpr std::size_t complex_lanes = SimdType::complex_lanes;
+    const std::uint64_t lower_target_mask = target_mask & -target_mask;
+    const std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;
+    const std::uint64_t skip_mask = target_mask | control_mask;
+    using ExecSpace = SpaceType<State::space>;
+    const std::uint64_t flat_span = state.flat_dim() >> std::popcount(skip_mask);
+    Kokkos::parallel_for(
+        "swap_gate_simd",
+        Kokkos::RangePolicy<ExecSpace>(0, flat_span / complex_lanes),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t compressed_base = g * complex_lanes;
+            const std::uint64_t basis =
+                insert_zero_at_mask_positions(compressed_base, skip_mask) | control_value_mask;
+            const std::uint64_t basis1 = basis | lower_target_mask;
+            const std::uint64_t basis2 = basis | upper_target_mask;
+            const auto v1 = SimdType::load_aligned(&state.at_unsafe(basis1));
+            const auto v2 = SimdType::load_aligned(&state.at_unsafe(basis2));
+            v2.store_aligned(&state.at_unsafe(basis1));
+            v1.store_aligned(&state.at_unsafe(basis2));
+        });
 }
 
 template <UpdatableStateVector State>
@@ -249,6 +141,12 @@ void swap_gate(std::uint64_t target_mask,
                std::uint64_t control_mask,
                std::uint64_t control_value_mask,
                State& state) {
+    if constexpr (supports_gate_simd<State>) {
+        if (can_use_gate_simd(target_mask | control_mask, state)) {
+            swap_gate_simd(target_mask, control_mask, control_value_mask, state);
+            return;
+        }
+    }
     std::uint64_t lower_target_mask = target_mask & -target_mask;
     std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;
     using ExecSpace = SpaceType<State::space>;
@@ -265,11 +163,57 @@ void swap_gate(std::uint64_t target_mask,
 }
 
 template <UpdatableStateVector State>
+void ecr_gate_simd(std::uint64_t physical_target_mask,
+                   std::uint64_t physical_control_mask,
+                   std::uint64_t control_mask,
+                   std::uint64_t control_value_mask,
+                   State& state) {
+    using SimdType = SimdComplex<State::prec>;
+    constexpr std::size_t complex_lanes = SimdType::complex_lanes;
+    const auto inv_sqrt2 = SimdType::RCoef::splat(Float<State::prec>(INVERSE_SQRT2()));
+    const auto plus_i = SimdType::ICoef::splat(Float<State::prec>(1));
+    const auto minus_i = SimdType::ICoef::splat(Float<State::prec>(-1));
+    const std::uint64_t skip_mask = physical_target_mask | physical_control_mask | control_mask;
+    using ExecSpace = SpaceType<State::space>;
+    const std::uint64_t flat_span = state.flat_dim() >> std::popcount(skip_mask);
+    Kokkos::parallel_for(
+        "ecr_gate_simd",
+        Kokkos::RangePolicy<ExecSpace>(0, flat_span / complex_lanes),
+        KOKKOS_LAMBDA(std::uint64_t g) {
+            const std::uint64_t compressed_base = g * complex_lanes;
+            const std::uint64_t basis0 =
+                insert_zero_at_mask_positions(compressed_base, skip_mask) | control_value_mask;
+            const std::uint64_t basis1 = basis0 | physical_control_mask;
+            const std::uint64_t basis2 = basis0 | physical_target_mask;
+            const std::uint64_t basis3 = basis1 | physical_target_mask;
+            const auto v0 = SimdType::load_aligned(&state.at_unsafe(basis0));
+            const auto v1 = SimdType::load_aligned(&state.at_unsafe(basis1));
+            const auto v2 = SimdType::load_aligned(&state.at_unsafe(basis2));
+            const auto v3 = SimdType::load_aligned(&state.at_unsafe(basis3));
+            (inv_sqrt2 * (v1 + plus_i * v3)).store_aligned(&state.at_unsafe(basis0));
+            (inv_sqrt2 * (v0 + minus_i * v2)).store_aligned(&state.at_unsafe(basis1));
+            (inv_sqrt2 * (plus_i * v1 + v3)).store_aligned(&state.at_unsafe(basis2));
+            (inv_sqrt2 * (minus_i * v0 + v2)).store_aligned(&state.at_unsafe(basis3));
+        });
+}
+
+template <UpdatableStateVector State>
 void ecr_gate(std::uint64_t physical_target_mask,
               std::uint64_t physical_control_mask,
               std::uint64_t control_mask,
               std::uint64_t control_value_mask,
               State& state) {
+    if constexpr (supports_gate_simd<State>) {
+        const std::uint64_t skip_mask = physical_target_mask | physical_control_mask | control_mask;
+        if (can_use_gate_simd(skip_mask, state)) {
+            ecr_gate_simd(physical_target_mask,
+                          physical_control_mask,
+                          control_mask,
+                          control_value_mask,
+                          state);
+            return;
+        }
+    }
     using ExecSpace = SpaceType<State::space>;
     using ComplexType = Complex<State::prec>;
     Kokkos::parallel_for(
@@ -329,14 +273,6 @@ void permutation_gate(const std::vector<std::pair<std::uint64_t, std::uint64_t>>
     template void Func<StateVectorBatched<Prec, Space>>(                                 \
         __VA_ARGS__, StateVectorBatched<Prec, Space>&)
 
-INSTANTIATE_FLAT_STATE_OVERLOADS(one_target_phase_gate,          std::uint64_t, std::uint64_t, std::uint64_t, Complex<Prec>);
-INSTANTIATE_FLAT_STATE_OVERLOADS(x_gate,                         std::uint64_t, std::uint64_t, std::uint64_t);
-INSTANTIATE_FLAT_STATE_OVERLOADS(y_gate,                         std::uint64_t, std::uint64_t, std::uint64_t);
-INSTANTIATE_FLAT_STATE_OVERLOADS(rx_gate,                        std::uint64_t, std::uint64_t, std::uint64_t, Float<Prec>);
-INSTANTIATE_FLAT_STATE_OVERLOADS(ry_gate,                        std::uint64_t, std::uint64_t, std::uint64_t, Float<Prec>);
-INSTANTIATE_FLAT_STATE_OVERLOADS(rz_gate,                        std::uint64_t, std::uint64_t, std::uint64_t, Float<Prec>);
-INSTANTIATE_FLAT_STATE_OVERLOADS(u2_gate,                        std::uint64_t, std::uint64_t, std::uint64_t, Float<Prec>, Float<Prec>);
-INSTANTIATE_FLAT_STATE_OVERLOADS(u3_gate,                        std::uint64_t, std::uint64_t, std::uint64_t, Float<Prec>, Float<Prec>, Float<Prec>);
 INSTANTIATE_FLAT_STATE_OVERLOADS(swap_gate,                      std::uint64_t, std::uint64_t, std::uint64_t);
 INSTANTIATE_FLAT_STATE_OVERLOADS(ecr_gate,                       std::uint64_t, std::uint64_t, std::uint64_t, std::uint64_t);
 INSTANTIATE_FLAT_STATE_OVERLOADS(permutation_gate,               const std::vector<std::pair<std::uint64_t, std::uint64_t>>&);
