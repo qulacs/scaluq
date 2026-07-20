@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <scaluq/util/simd_complex.hpp>
+#include <utility>
 
 #include "update_ops.hpp"
 
@@ -76,8 +77,7 @@ void zero_target_dense_matrix_gate(std::uint64_t control_mask,
         if constexpr (complex_lanes > 0) {
             const std::uint64_t span = state.dim() >> std::popcount(control_mask);
             if (span >= complex_lanes && (control_mask & (complex_lanes - 1)) == 0) {
-                zero_target_dense_matrix_gate_simd(
-                    control_mask, control_value_mask, matrix, state);
+                zero_target_dense_matrix_gate_simd(control_mask, control_value_mask, matrix, state);
                 return;
             }
         }
@@ -214,7 +214,12 @@ void multi_dense_matrix_gate(std::uint64_t target_mask,
     using ExecSpace = SpaceType<State::space>;
     using ComplexType = Complex<State::prec>;
     const std::uint64_t matrix_dim = 1ULL << std::popcount(target_mask);
-    auto update = state.copy();
+    State update;
+    if constexpr (std::same_as<State, StateVector<State::prec, State::space>>) {
+        update = State::uninitialized_state(state.n_qubits());
+    } else {
+        update = State::uninitialized_state(state.batch_size(), state.n_qubits());
+    }
 
     Kokkos::parallel_for(
         "multi_dense_matrix_gate (initialize)",
@@ -254,7 +259,7 @@ void multi_dense_matrix_gate(std::uint64_t target_mask,
             team.team_barrier();
         });
 
-    state.load(update);
+    std::swap(state._raw, update._raw);
 }
 
 template <UpdatableStateVector State>
@@ -265,7 +270,12 @@ void sparse_matrix_gate(std::uint64_t target_mask,
                         State& state) {
     using ExecSpace = SpaceType<State::space>;
     using ComplexType = Complex<State::prec>;
-    auto update = state.copy();
+    State update;
+    if constexpr (std::same_as<State, StateVector<State::prec, State::space>>) {
+        update = State::uninitialized_state(state.n_qubits());
+    } else {
+        update = State::uninitialized_state(state.batch_size(), state.n_qubits());
+    }
 
     Kokkos::parallel_for(
         "sparse_matrix_gate (initialize)",
@@ -306,7 +316,7 @@ void sparse_matrix_gate(std::uint64_t target_mask,
             team.team_barrier();
         });
 
-    state.load(update);
+    std::swap(state._raw, update._raw);
 }
 
 // clang-format off
