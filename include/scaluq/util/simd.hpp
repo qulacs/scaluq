@@ -39,7 +39,9 @@ KOKKOS_INLINE_FUNCTION Simd<Scalar> permute(const Simd<Scalar>& value,
     }
 #elif defined(KOKKOS_ARCH_AVX512XEON)
     if constexpr (std::is_same_v<Scalar, double>) {
-        const __m512i indices = _mm512_setr_epi64(static_cast<long long>(Indices)...);
+        constexpr std::array<long long, sizeof...(Indices)> index_values{
+            static_cast<long long>(Indices)...};
+        const __m512i indices = _mm512_loadu_si512(index_values.data());
         return Simd<Scalar>(_mm512_permutexvar_pd(indices, static_cast<__m512d>(value)));
     } else if constexpr (std::is_same_v<Scalar, float>) {
         const __m256i indices = _mm256_setr_epi32(static_cast<int>(Indices)...);
@@ -66,7 +68,9 @@ KOKKOS_INLINE_FUNCTION Simd<Scalar> negate(const Simd<Scalar>& value,
     }
 #elif defined(KOKKOS_ARCH_AVX512XEON)
     if constexpr (std::is_same_v<Scalar, double>) {
-        const __m512d sign = _mm512_setr_pd((Selectors == 1 ? -0.0 : 0.0)...);
+        constexpr std::array<double, sizeof...(Selectors)> sign_values{
+            (Selectors == 1 ? -0.0 : 0.0)...};
+        const __m512d sign = _mm512_loadu_pd(sign_values.data());
         return Simd<Scalar>(_mm512_xor_pd(static_cast<__m512d>(value), sign));
     } else if constexpr (std::is_same_v<Scalar, float>) {
         const __m256 sign = _mm256_setr_ps((Selectors == 1 ? -0.0F : 0.0F)...);

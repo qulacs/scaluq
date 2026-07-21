@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - main  # For badge updates only. Actual checks are done via merge queue.
+    tags:
+      - "v*"
   workflow_dispatch:
 
 jobs:
@@ -15,11 +17,14 @@ jobs:
       matrix:
         os: ["linux", "macos"]
         arch: ["x86_64", "arm64"]
+        simd: ["scalar", "avx2"]
         cibw-python: ["cp310", "cp311", "cp312", "cp313", "cp314"]
         exclude:
           # currently ARM runner is not supported
           - os: "linux"
             arch: "arm64"
+          - arch: "arm64"
+            simd: "avx2"
         include:
           - os: "linux"
             arch: "x86_64"
@@ -38,6 +43,10 @@ jobs:
       CMAKE_C_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/gcc-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/gcc-15' || '/usr/lib/ccache/gcc') }}
       CMAKE_CXX_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/g++-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/g++-15' || '/usr/lib/ccache/g++') }}
       SCALUQ_CPU_NATIVE: 'OFF'
+      SCALUQ_CPU_ARCH: ${{ matrix.simd == 'avx2' && 'HSW' || '' }}
+      CIBW_ENVIRONMENT: >-
+        SCALUQ_CPU_NATIVE=OFF
+        SCALUQ_CPU_ARCH=${{ matrix.simd == 'avx2' && 'HSW' || '' }}
       CIBW_ARCHS: ${{ matrix.arch }}
       CIBW_BUILD: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}
       CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
@@ -67,7 +76,7 @@ jobs:
       - name: Upload wheel to GitHub
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}
+          name: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}-${{ matrix.simd }}
           path: ./wheels/*.whl
 
   wheel-build-passed:
@@ -120,34 +129,34 @@ jobs:
 
       - uses: actions/download-artifact@v7
         with:
-          name: cp310-${{ matrix.cibw-os-arch }}
+          name: cp310-${{ matrix.cibw-os-arch }}-scalar
           path: ./cp310
       - uses: actions/download-artifact@v7
         with:
-          name: cp311-${{ matrix.cibw-os-arch }}
+          name: cp311-${{ matrix.cibw-os-arch }}-scalar
           path: ./cp311
       - uses: actions/download-artifact@v7
         with:
-          name: cp312-${{ matrix.cibw-os-arch }}
+          name: cp312-${{ matrix.cibw-os-arch }}-scalar
           path: ./cp312
       - uses: actions/download-artifact@v7
         with:
-          name: cp313-${{ matrix.cibw-os-arch }}
+          name: cp313-${{ matrix.cibw-os-arch }}-scalar
           path: ./cp313
       - uses: actions/download-artifact@v7
         with:
-          name: cp314-${{ matrix.cibw-os-arch }}
+          name: cp314-${{ matrix.cibw-os-arch }}-scalar
           path: ./cp314
 
       - name: Upload wheel data to PyPI if the Git tag is set
-        run: for path in cp39 cp310 cp311 cp312 cp313; do python -m twine upload --skip-existing $path/*.whl; done
+        run: for path in cp310 cp311 cp312 cp313 cp314; do python -m twine upload --skip-existing $path/*.whl; done
         if: ${{ contains(github.ref, 'tags/') }}
         env:
           TWINE_USERNAME: "__token__"
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN_SCALUQ }}
 
       - name: Upload wheel data to TestPyPI when workflow_dispatch
-        run: for path in cp39 cp310 cp311 cp312 cp313; do python -m twine upload --repository testpypi --skip-existing $path/*.whl; done
+        run: for path in cp310 cp311 cp312 cp313 cp314; do python -m twine upload --repository testpypi --skip-existing $path/*.whl; done
         if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
           TWINE_USERNAME: "__token__"
