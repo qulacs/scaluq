@@ -30,5 +30,5 @@ for var in $variables; do
   fi
 done
 
-mkdir -p ./build
+mkdir -p ${BUILD:-build}
 cmake -B ${BUILD:-build} -G Ninja ${CMAKE_OPS}
