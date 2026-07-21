@@ -909,6 +909,7 @@ template <Precision Prec>
         throw std::runtime_error("unsupported controlled gate for OpenQASM 2.0 export");
     }
     std::vector<std::string> params;
+    params.reserve(op.params.size());
     for (double param : op.params) params.push_back(format_angle(param));
     if (op.controls.empty()) {
         return {OpenQasm2Op::Kind::Gate, std::string(op.name), params, {op.target}, std::nullopt};
