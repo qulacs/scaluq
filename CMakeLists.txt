@@ -318,11 +318,18 @@ if(CLANG_TIDY)
     file(GLOB_RECURSE ALL_CXX_TIDY_SOURCE_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
     )
+    # clang-tidy may not use the same default header search paths as the
+    # configured compiler. Pass the paths detected by CMake explicitly so that
+    # clang-tidy can find the toolchain's C++ standard library headers.
+    set(_tidy_args -p=${CMAKE_BINARY_DIR})
+    foreach(_include_dir IN LISTS CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES)
+        list(APPEND _tidy_args "--extra-arg=-isystem${_include_dir}")
+    endforeach()
     set(_tidy_commands "")
     foreach(_src ${ALL_CXX_TIDY_SOURCE_FILES})
         list(APPEND _tidy_commands
             COMMAND ${CMAKE_COMMAND} -E echo "[clang-tidy] ${_src}"
-            COMMAND ${CLANG_TIDY} -p=${CMAKE_BINARY_DIR} ${_src}
+            COMMAND ${CLANG_TIDY} ${_tidy_args} ${_src}
         )
     endforeach()
     add_custom_target(

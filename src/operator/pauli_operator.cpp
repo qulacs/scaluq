@@ -9,8 +9,8 @@ template <Precision Prec>
 PauliOperator<Prec>::PauliOperator(std::string_view pauli_string, StdComplex coef) : _coef(coef) {
     auto ss = std::stringstream(std::string(pauli_string));
     while (1) {
-        char pauli;
-        std::uint64_t target;
+        char pauli{};
+        std::uint64_t target{};
         ss >> pauli;
         if (ss.fail()) break;
         ss >> target;

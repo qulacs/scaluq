@@ -243,10 +243,10 @@ struct ExecutionContextDensityMatrix {
 };
 
 // GateBase テンプレートクラス
-template <Precision _Prec>
-class GateBase : public std::enable_shared_from_this<GateBase<_Prec>> {
+template <Precision PrecVal>
+class GateBase : public std::enable_shared_from_this<GateBase<PrecVal>> {
 public:
-    constexpr static Precision Prec = _Prec;
+    constexpr static Precision Prec = PrecVal;
     using FloatType = Float<Prec>;
     using ComplexType = Complex<Prec>;
 

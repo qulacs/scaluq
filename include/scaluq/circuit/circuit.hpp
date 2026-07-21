@@ -123,6 +123,8 @@ public:
     }
 
     void add_circuit(const Circuit<Prec>& circuit);
+    // The circuit is consumed by moving its elements individually.
+    // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
     void add_circuit(Circuit<Prec>&& circuit);
 
     template <ExecutionSpace Space>
