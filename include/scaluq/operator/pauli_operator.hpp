@@ -51,8 +51,7 @@ public:
 
     template <ExecutionSpace Space>
     void apply_to_state(StateVector<Prec, Space>& state_vector) const {
-        internal::apply_pauli<Prec, Space>(
-            0ULL, 0LL, _bit_flip_mask, _phase_flip_mask, _coef, state_vector);
+        internal::apply_pauli(0ULL, 0LL, _bit_flip_mask, _phase_flip_mask, _coef, state_vector);
     }
 
     template <ExecutionSpace Space>
