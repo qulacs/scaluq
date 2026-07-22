@@ -24,6 +24,10 @@ constexpr CoefKind common_coef_kind(CoefKind lhs, CoefKind rhs) {
     return CoefKind::General;
 }
 
+constexpr CoefKind common_coef_kind(CoefKind a, CoefKind b, CoefKind c, CoefKind d) {
+    return common_coef_kind(common_coef_kind(a, b), common_coef_kind(c, d));
+}
+
 template <Precision Prec>
 class Complex {
     using FloatType = Float<Prec>;
@@ -238,12 +242,12 @@ using EvenLaneSelection = decltype(make_even_lane_selection(std::make_index_sequ
 
 }  // namespace simd_complex_detail
 
-template <Precision P>
+template <Precision P, std::size_t ScalarLanes = P == Precision::F32 ? 8 : 0>
 class SimdComplex {
     static_assert(P == Precision::F32 || P == Precision::F64);
 
     using Scalar = std::conditional_t<P == Precision::F64, double, float>;
-    using Simd = Kokkos::Experimental::simd<Scalar>;
+    using Simd = simd_ops::Simd<Scalar, ScalarLanes>;
     Simd _data;
 
 public:
@@ -275,6 +279,39 @@ public:
                         }));
         }
 
+        template <std::size_t ComplexLaneBit0, std::size_t ComplexLaneBit1>
+        KOKKOS_INLINE_FUNCTION static Coef select_complex_lane_bits(const Complex<P>& zero_zero,
+                                                                    const Complex<P>& zero_one,
+                                                                    const Complex<P>& one_zero,
+                                                                    const Complex<P>& one_one) {
+            constexpr std::size_t complex_lane_mask0 = 1ULL << ComplexLaneBit0;
+            constexpr std::size_t complex_lane_mask1 = 1ULL << ComplexLaneBit1;
+            static_assert(ComplexLaneBit0 != ComplexLaneBit1);
+            static_assert(complex_lane_mask0 < complex_lanes);
+            static_assert(complex_lane_mask1 < complex_lanes);
+            const Scalar real[4] = {static_cast<Scalar>(zero_zero.real()),
+                                    static_cast<Scalar>(zero_one.real()),
+                                    static_cast<Scalar>(one_zero.real()),
+                                    static_cast<Scalar>(one_one.real())};
+            const Scalar imag[4] = {static_cast<Scalar>(zero_zero.imag()),
+                                    static_cast<Scalar>(zero_one.imag()),
+                                    static_cast<Scalar>(one_zero.imag()),
+                                    static_cast<Scalar>(one_one.imag())};
+            return Coef(
+                Simd(KOKKOS_LAMBDA(std::size_t lane) {
+                    const std::size_t complex_lane = lane >> 1;
+                    const std::size_t index = ((complex_lane & complex_lane_mask0) != 0 ? 1 : 0) |
+                                              ((complex_lane & complex_lane_mask1) != 0 ? 2 : 0);
+                    return real[index];
+                }),
+                Simd(KOKKOS_LAMBDA(std::size_t lane) {
+                    const std::size_t complex_lane = lane >> 1;
+                    const std::size_t index = ((complex_lane & complex_lane_mask0) != 0 ? 1 : 0) |
+                                              ((complex_lane & complex_lane_mask1) != 0 ? 2 : 0);
+                    return imag[index];
+                }));
+        }
+
         KOKKOS_INLINE_FUNCTION SimdComplex operator*(const SimdComplex& value) const {
             return SimdComplex(_real * value._data + _imag * value.multiply_by_i()._data);
         }
@@ -299,6 +336,28 @@ public:
             const Scalar one_real = static_cast<Scalar>(one.real());
             return RCoef(Simd(KOKKOS_LAMBDA(std::size_t lane) {
                 return ((lane >> 1) & complex_lane_mask) == 0 ? zero_real : one_real;
+            }));
+        }
+
+        template <std::size_t ComplexLaneBit0, std::size_t ComplexLaneBit1>
+        KOKKOS_INLINE_FUNCTION static RCoef select_complex_lane_bits(const Complex<P>& c00,
+                                                                     const Complex<P>& c01,
+                                                                     const Complex<P>& c10,
+                                                                     const Complex<P>& c11) {
+            constexpr std::size_t mask0 = 1ULL << ComplexLaneBit0;
+            constexpr std::size_t mask1 = 1ULL << ComplexLaneBit1;
+            static_assert(ComplexLaneBit0 != ComplexLaneBit1);
+            static_assert(mask0 < complex_lanes);
+            static_assert(mask1 < complex_lanes);
+            const Scalar values[4] = {static_cast<Scalar>(c00.real()),
+                                      static_cast<Scalar>(c01.real()),
+                                      static_cast<Scalar>(c10.real()),
+                                      static_cast<Scalar>(c11.real())};
+            return RCoef(Simd(KOKKOS_LAMBDA(std::size_t lane) {
+                const std::size_t complex_lane = lane >> 1;
+                const std::size_t index =
+                    ((complex_lane & mask0) != 0 ? 1 : 0) | ((complex_lane & mask1) != 0 ? 2 : 0);
+                return values[index];
             }));
         }
 
@@ -329,6 +388,28 @@ public:
             }));
         }
 
+        template <std::size_t ComplexLaneBit0, std::size_t ComplexLaneBit1>
+        KOKKOS_INLINE_FUNCTION static ICoef select_complex_lane_bits(const Complex<P>& c00,
+                                                                     const Complex<P>& c01,
+                                                                     const Complex<P>& c10,
+                                                                     const Complex<P>& c11) {
+            constexpr std::size_t mask0 = 1ULL << ComplexLaneBit0;
+            constexpr std::size_t mask1 = 1ULL << ComplexLaneBit1;
+            static_assert(ComplexLaneBit0 != ComplexLaneBit1);
+            static_assert(mask0 < complex_lanes);
+            static_assert(mask1 < complex_lanes);
+            const Scalar values[4] = {static_cast<Scalar>(c00.imag()),
+                                      static_cast<Scalar>(c01.imag()),
+                                      static_cast<Scalar>(c10.imag()),
+                                      static_cast<Scalar>(c11.imag())};
+            return ICoef(Simd(KOKKOS_LAMBDA(std::size_t lane) {
+                const std::size_t complex_lane = lane >> 1;
+                const std::size_t index =
+                    ((complex_lane & mask0) != 0 ? 1 : 0) | ((complex_lane & mask1) != 0 ? 2 : 0);
+                return values[index];
+            }));
+        }
+
         KOKKOS_INLINE_FUNCTION SimdComplex operator*(const SimdComplex& value) const {
             return SimdComplex(_value * value.multiply_by_i()._data);
         }
@@ -351,6 +432,13 @@ public:
                                                                        const Complex<P>&) {
             return {};
         }
+        template <std::size_t ComplexLaneBit0, std::size_t ComplexLaneBit1>
+        KOKKOS_INLINE_FUNCTION static ZeroCoef select_complex_lane_bits(const Complex<P>&,
+                                                                        const Complex<P>&,
+                                                                        const Complex<P>&,
+                                                                        const Complex<P>&) {
+            return {};
+        }
         KOKKOS_INLINE_FUNCTION ZeroExpression operator*(const SimdComplex&) const { return {}; }
     };
 
@@ -360,6 +448,13 @@ public:
         template <std::size_t ComplexLaneBit>
         KOKKOS_INLINE_FUNCTION static OneCoef select_complex_lane_bit(const Complex<P>&,
                                                                       const Complex<P>&) {
+            return {};
+        }
+        template <std::size_t ComplexLaneBit0, std::size_t ComplexLaneBit1>
+        KOKKOS_INLINE_FUNCTION static OneCoef select_complex_lane_bits(const Complex<P>&,
+                                                                       const Complex<P>&,
+                                                                       const Complex<P>&,
+                                                                       const Complex<P>&) {
             return {};
         }
         KOKKOS_INLINE_FUNCTION SimdComplex operator*(const SimdComplex& value) const {
@@ -384,17 +479,17 @@ public:
     KOKKOS_INLINE_FUNCTION SimdComplex multiply_by_i() const {
         using Permutation = simd_complex_detail::XorPermutation<1, scalar_lanes>;
         using NegatedLanes = simd_complex_detail::EvenLaneSelection<scalar_lanes>;
-        return SimdComplex(
-            simd_ops::negate(simd_ops::permute(_data, Permutation{}), NegatedLanes{}));
+        return SimdComplex(simd_ops::negate<Scalar, ScalarLanes>(
+            simd_ops::permute<Scalar, ScalarLanes>(_data, Permutation{}), NegatedLanes{}));
     }
 
-    template <std::size_t ComplexLaneBit>
+    template <std::size_t ComplexLaneMask>
     KOKKOS_INLINE_FUNCTION SimdComplex permute_complex_lanes_xor() const {
-        constexpr std::size_t complex_lane_mask = 1ULL << ComplexLaneBit;
-        static_assert(complex_lane_mask < complex_lanes);
+        static_assert(ComplexLaneMask != 0);
+        static_assert(ComplexLaneMask < complex_lanes);
         using Permutation =
-            simd_complex_detail::XorPermutation<(complex_lane_mask << 1), scalar_lanes>;
-        return SimdComplex(simd_ops::permute(_data, Permutation{}));
+            simd_complex_detail::XorPermutation<(ComplexLaneMask << 1), scalar_lanes>;
+        return SimdComplex(simd_ops::permute<Scalar, ScalarLanes>(_data, Permutation{}));
     }
 
     KOKKOS_INLINE_FUNCTION friend SimdComplex operator+(const SimdComplex& lhs,
@@ -447,4 +542,8 @@ using ScalarCoef = typename CoefType<Complex<P>, Kind>::type;
 
 template <Precision P, CoefKind Kind>
 using SimdCoef = typename CoefType<SimdComplex<P>, Kind>::type;
+
+template <typename SimdType, CoefKind Kind>
+using SimdCoefFor = typename CoefType<SimdType, Kind>::type;
+
 }  // namespace scaluq::internal

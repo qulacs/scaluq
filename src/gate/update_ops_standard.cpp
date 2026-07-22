@@ -1,4 +1,5 @@
 #include "update_ops.hpp"
+#include "update_ops_matrix_4x4.hpp"
 
 namespace scaluq::internal {
 
@@ -109,7 +110,7 @@ void rz_gate(std::uint64_t target_mask,
 }
 
 template <UpdatableStateVector State>
-void swap_gate_simd(std::uint64_t target_mask,
+void swap_gate_simd_high(std::uint64_t target_mask,
                     std::uint64_t control_mask,
                     std::uint64_t control_value_mask,
                     State& state) {
@@ -121,7 +122,7 @@ void swap_gate_simd(std::uint64_t target_mask,
     using ExecSpace = SpaceType<State::space>;
     const std::uint64_t flat_span = state.flat_dim() >> std::popcount(skip_mask);
     Kokkos::parallel_for(
-        "swap_gate_simd",
+        "swap_gate_simd_high",
         Kokkos::RangePolicy<ExecSpace>(0, flat_span / complex_lanes),
         KOKKOS_LAMBDA(std::uint64_t g) {
             const std::uint64_t compressed_base = g * complex_lanes;
@@ -137,25 +138,19 @@ void swap_gate_simd(std::uint64_t target_mask,
 }
 
 template <UpdatableStateVector State>
-void swap_gate(std::uint64_t target_mask,
+void swap_gate_scalar(std::uint64_t target_mask,
                std::uint64_t control_mask,
                std::uint64_t control_value_mask,
                State& state) {
-    if constexpr (supports_gate_simd<State>) {
-        if (can_use_gate_simd(target_mask | control_mask, state)) {
-            swap_gate_simd(target_mask, control_mask, control_value_mask, state);
-            return;
-        }
-    }
-    std::uint64_t lower_target_mask = target_mask & -target_mask;
-    std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;
+    const std::uint64_t lower_target_mask = target_mask & -target_mask;
+    const std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;
     using ExecSpace = SpaceType<State::space>;
     Kokkos::parallel_for(
-        "swap_gate",
+        "swap_gate_scalar",
         Kokkos::RangePolicy<ExecSpace>(
             0, state.flat_dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(std::uint64_t it) {
-            std::uint64_t basis =
+            const std::uint64_t basis =
                 insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
             Kokkos::kokkos_swap(state.at_unsafe(basis | lower_target_mask),
                                 state.at_unsafe(basis | upper_target_mask));
@@ -163,38 +158,20 @@ void swap_gate(std::uint64_t target_mask,
 }
 
 template <UpdatableStateVector State>
-void ecr_gate_simd(std::uint64_t physical_target_mask,
-                   std::uint64_t physical_control_mask,
+void swap_gate(std::uint64_t target_mask,
                    std::uint64_t control_mask,
                    std::uint64_t control_value_mask,
                    State& state) {
-    using SimdType = SimdComplex<State::prec>;
-    constexpr std::size_t complex_lanes = SimdType::complex_lanes;
-    const auto inv_sqrt2 = SimdType::RCoef::splat(Float<State::prec>(INVERSE_SQRT2()));
-    const auto plus_i = SimdType::ICoef::splat(Float<State::prec>(1));
-    const auto minus_i = SimdType::ICoef::splat(Float<State::prec>(-1));
-    const std::uint64_t skip_mask = physical_target_mask | physical_control_mask | control_mask;
-    using ExecSpace = SpaceType<State::space>;
-    const std::uint64_t flat_span = state.flat_dim() >> std::popcount(skip_mask);
-    Kokkos::parallel_for(
-        "ecr_gate_simd",
-        Kokkos::RangePolicy<ExecSpace>(0, flat_span / complex_lanes),
-        KOKKOS_LAMBDA(std::uint64_t g) {
-            const std::uint64_t compressed_base = g * complex_lanes;
-            const std::uint64_t basis0 =
-                insert_zero_at_mask_positions(compressed_base, skip_mask) | control_value_mask;
-            const std::uint64_t basis1 = basis0 | physical_control_mask;
-            const std::uint64_t basis2 = basis0 | physical_target_mask;
-            const std::uint64_t basis3 = basis1 | physical_target_mask;
-            const auto v0 = SimdType::load_aligned(&state.at_unsafe(basis0));
-            const auto v1 = SimdType::load_aligned(&state.at_unsafe(basis1));
-            const auto v2 = SimdType::load_aligned(&state.at_unsafe(basis2));
-            const auto v3 = SimdType::load_aligned(&state.at_unsafe(basis3));
-            (inv_sqrt2 * (v1 + plus_i * v3)).store_aligned(&state.at_unsafe(basis0));
-            (inv_sqrt2 * (v0 + minus_i * v2)).store_aligned(&state.at_unsafe(basis1));
-            (inv_sqrt2 * (plus_i * v1 + v3)).store_aligned(&state.at_unsafe(basis2));
-            (inv_sqrt2 * (minus_i * v0 + v2)).store_aligned(&state.at_unsafe(basis3));
-        });
+    if constexpr (supports_gate_simd<State>) {
+        constexpr std::size_t complex_lanes = SimdComplex<State::prec>::complex_lanes;
+        constexpr std::uint64_t inlane_mask = complex_lanes - 1;
+        const std::uint64_t inlane_targets = target_mask & inlane_mask;
+        if (inlane_targets == 0 && can_use_gate_simd(control_mask, state)) {
+            swap_gate_simd_high(target_mask, control_mask, control_value_mask, state);
+            return;
+        }
+    }
+    swap_gate_scalar(target_mask, control_mask, control_value_mask, state);
 }
 
 template <UpdatableStateVector State>
@@ -203,49 +180,38 @@ void ecr_gate(std::uint64_t physical_target_mask,
               std::uint64_t control_mask,
               std::uint64_t control_value_mask,
               State& state) {
-    if constexpr (supports_gate_simd<State>) {
-        const std::uint64_t skip_mask = physical_target_mask | physical_control_mask | control_mask;
-        if (can_use_gate_simd(skip_mask, state)) {
-            ecr_gate_simd(physical_target_mask,
-                          physical_control_mask,
-                          control_mask,
-                          control_value_mask,
-                          state);
-            return;
-        }
+    const Complex<State::prec> zero(0);
+    const Complex<State::prec> real(INVERSE_SQRT2(), 0);
+    const Complex<State::prec> plus_i(0, INVERSE_SQRT2());
+    const Complex<State::prec> minus_i(0, -INVERSE_SQRT2());
+    const std::uint64_t target_mask = physical_target_mask | physical_control_mask;
+    if (physical_control_mask < physical_target_mask) {
+        const Matrix4x4<State::prec> matrix = {{{{zero, real, zero, plus_i}},
+                                                {{real, zero, minus_i, zero}},
+                                                {{zero, plus_i, zero, real}},
+                                                {{minus_i, zero, real, zero}}}};
+        // clang-format off
+        two_target_dense_matrix_gate<
+            CoefKind::Zero, CoefKind::Real, CoefKind::Zero, CoefKind::Imag,
+            CoefKind::Real, CoefKind::Zero, CoefKind::Imag, CoefKind::Zero,
+            CoefKind::Zero, CoefKind::Imag, CoefKind::Zero, CoefKind::Real,
+            CoefKind::Imag, CoefKind::Zero, CoefKind::Real, CoefKind::Zero>(
+            target_mask, control_mask, control_value_mask, matrix, state);
+        // clang-format on
+    } else {
+        const Matrix4x4<State::prec> matrix = {{{{zero, zero, real, plus_i}},
+                                                {{zero, zero, plus_i, real}},
+                                                {{real, minus_i, zero, zero}},
+                                                {{minus_i, real, zero, zero}}}};
+        // clang-format off
+        two_target_dense_matrix_gate<
+            CoefKind::Zero, CoefKind::Zero, CoefKind::Real, CoefKind::Imag,
+            CoefKind::Zero, CoefKind::Zero, CoefKind::Imag, CoefKind::Real,
+            CoefKind::Real, CoefKind::Imag, CoefKind::Zero, CoefKind::Zero,
+            CoefKind::Imag, CoefKind::Real, CoefKind::Zero, CoefKind::Zero>(
+            target_mask, control_mask, control_value_mask, matrix, state);
+        // clang-format on
     }
-    using ExecSpace = SpaceType<State::space>;
-    using ComplexType = Complex<State::prec>;
-    Kokkos::parallel_for(
-        "ecr_gate",
-        Kokkos::RangePolicy<ExecSpace>(
-            0,
-            state.flat_dim() >>
-                std::popcount(physical_target_mask | physical_control_mask | control_mask)),
-        KOKKOS_LAMBDA(std::uint64_t it) {
-            std::uint64_t basis_0 =
-                insert_zero_at_mask_positions(
-                    it, physical_target_mask | physical_control_mask | control_mask) |
-                control_value_mask;
-            std::uint64_t basis_1 = basis_0 | physical_control_mask;
-            std::uint64_t basis_2 = basis_0 | physical_target_mask;
-            std::uint64_t basis_3 = basis_1 | physical_target_mask;
-
-            ComplexType val0 = state.at_unsafe(basis_0);
-            ComplexType val1 = state.at_unsafe(basis_1);
-            ComplexType val2 = state.at_unsafe(basis_2);
-            ComplexType val3 = state.at_unsafe(basis_3);
-
-            ComplexType res0 = (val1 + val3 * ComplexType(0, 1)) * ComplexType(INVERSE_SQRT2());
-            ComplexType res1 = (val0 + val2 * ComplexType(0, -1)) * ComplexType(INVERSE_SQRT2());
-            ComplexType res2 = (val1 * ComplexType(0, 1) + val3) * ComplexType(INVERSE_SQRT2());
-            ComplexType res3 = (val0 * ComplexType(0, -1) + val2) * ComplexType(INVERSE_SQRT2());
-
-            state.at_unsafe(basis_0) = res0;
-            state.at_unsafe(basis_1) = res1;
-            state.at_unsafe(basis_2) = res2;
-            state.at_unsafe(basis_3) = res3;
-        });
 }
 
 template <UpdatableStateVector State>

@@ -21,12 +21,18 @@ inline constexpr bool supports_gate_simd = [] {
     }
 }();
 
+template <typename SimdType, typename State>
+    requires supports_gate_simd<State>
+inline bool can_use_gate_simd_for(std::uint64_t skip_mask, const State& state) {
+    constexpr std::size_t complex_lanes = SimdType::complex_lanes;
+    const std::uint64_t span = state.dim() >> std::popcount(skip_mask);
+    return span >= complex_lanes && (skip_mask & (complex_lanes - 1)) == 0;
+}
+
 template <typename State>
     requires supports_gate_simd<State>
 inline bool can_use_gate_simd(std::uint64_t skip_mask, const State& state) {
-    constexpr std::size_t complex_lanes = SimdComplex<State::prec>::complex_lanes;
-    const std::uint64_t span = state.dim() >> std::popcount(skip_mask);
-    return span >= complex_lanes && (skip_mask & (complex_lanes - 1)) == 0;
+    return can_use_gate_simd_for<SimdComplex<State::prec>>(skip_mask, state);
 }
 
 template <CoefKind Kind = CoefKind::General, UpdatableStateVector State>
@@ -46,7 +52,13 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
                                   const Matrix2x2<State::prec>& matrix,
                                   State& state);
 
-template <UpdatableStateVector State>
+// clang-format off
+template <CoefKind M00 = CoefKind::General, CoefKind M01 = CoefKind::General, CoefKind M02 = CoefKind::General, CoefKind M03 = CoefKind::General,
+          CoefKind M10 = CoefKind::General, CoefKind M11 = CoefKind::General, CoefKind M12 = CoefKind::General, CoefKind M13 = CoefKind::General,
+          CoefKind M20 = CoefKind::General, CoefKind M21 = CoefKind::General, CoefKind M22 = CoefKind::General, CoefKind M23 = CoefKind::General,
+          CoefKind M30 = CoefKind::General, CoefKind M31 = CoefKind::General, CoefKind M32 = CoefKind::General, CoefKind M33 = CoefKind::General,
+          UpdatableStateVector State>
+// clang-format on
 void two_target_dense_matrix_gate(std::uint64_t target_mask,
                                   std::uint64_t control_mask,
                                   std::uint64_t control_value_mask,
@@ -97,10 +109,7 @@ inline void x_gate(std::uint64_t target_mask,
                    std::uint64_t control_mask,
                    std::uint64_t control_value_mask,
                    State& state) {
-    one_target_dense_matrix_gate<CoefKind::Zero,
-                                 CoefKind::One,
-                                 CoefKind::One,
-                                 CoefKind::Zero>(
+    one_target_dense_matrix_gate<CoefKind::Zero, CoefKind::One, CoefKind::One, CoefKind::Zero>(
         target_mask, control_mask, control_value_mask, X_GATE<State::prec>(), state);
 }
 
@@ -109,10 +118,7 @@ inline void y_gate(std::uint64_t target_mask,
                    std::uint64_t control_mask,
                    std::uint64_t control_value_mask,
                    State& state) {
-    one_target_dense_matrix_gate<CoefKind::Zero,
-                                 CoefKind::Imag,
-                                 CoefKind::Imag,
-                                 CoefKind::Zero>(
+    one_target_dense_matrix_gate<CoefKind::Zero, CoefKind::Imag, CoefKind::Imag, CoefKind::Zero>(
         target_mask, control_mask, control_value_mask, Y_GATE<State::prec>(), state);
 }
 
@@ -247,10 +253,7 @@ inline void rx_gate(std::uint64_t target_mask,
     const Float<State::prec> sinval = internal::sin(angle / Float<State::prec>{2});
     const Matrix2x2<State::prec> matrix = {
         {{{cosval, ComplexType(0, -sinval)}}, {{ComplexType(0, -sinval), cosval}}}};
-    one_target_dense_matrix_gate<CoefKind::Real,
-                                 CoefKind::Imag,
-                                 CoefKind::Imag,
-                                 CoefKind::Real>(
+    one_target_dense_matrix_gate<CoefKind::Real, CoefKind::Imag, CoefKind::Imag, CoefKind::Real>(
         target_mask, control_mask, control_value_mask, matrix, state);
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -290,8 +293,7 @@ inline void rz_gate(std::uint64_t target_mask,
     using ComplexType = Complex<State::prec>;
     const Float<State::prec> cosval = internal::cos(angle / Float<State::prec>{2});
     const Float<State::prec> sinval = internal::sin(angle / Float<State::prec>{2});
-    const Matrix2x2<State::prec> matrix =
-        {{{{ComplexType(cosval, -sinval), ComplexType{}}},
+    const Matrix2x2<State::prec> matrix = {{{{ComplexType(cosval, -sinval), ComplexType{}}},
           {{ComplexType{}, ComplexType(cosval, sinval)}}}};
     one_target_dense_matrix_gate<CoefKind::General,
                                  CoefKind::Zero,
@@ -454,8 +456,8 @@ inline void u1_gate(std::uint64_t target_mask,
                     std::uint64_t control_value_mask,
                     Float<Prec> lambda,
                     DensityMatrix<Prec, Space>& dm) {
-    const DiagonalMatrix2x2<Prec> diag = {
-        Complex<Prec>(1, 0), internal::exp(Complex<Prec>(0, lambda))};
+    const DiagonalMatrix2x2<Prec> diag = {Complex<Prec>(1, 0),
+                                          internal::exp(Complex<Prec>(0, lambda))};
     one_target_diagonal_matrix_gate(target_mask, control_mask, control_value_mask, diag, dm);
 }
 
