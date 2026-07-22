@@ -128,11 +128,6 @@ std::string PauliOperator<Prec>::get_pauli_string() const {
 }
 
 template <Precision Prec>
-PauliOperator<Prec> PauliOperator<Prec>::get_dagger() const {
-    return PauliOperator(_bit_flip_mask, _phase_flip_mask, scaluq::internal::conj(_coef));
-}
-
-template <Precision Prec>
 template <ExecutionSpace Space>
 StdComplex PauliOperator<Prec>::get_expectation_value(
     const StateVector<Prec, Space>& state_vector) const {
@@ -379,7 +374,7 @@ template StdComplex PauliOperator<internal::Prec>::get_transition_amplitude(
 template std::vector<StdComplex> PauliOperator<internal::Prec>::get_transition_amplitude(
     const StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states_bra,
     const StateVectorBatched<internal::Prec, ExecutionSpace::Host>& states_ket) const;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 template StdComplex PauliOperator<internal::Prec>::get_expectation_value(
     const StateVector<internal::Prec, ExecutionSpace::Default>& state_vector) const;
 template std::vector<StdComplex> PauliOperator<internal::Prec>::get_expectation_value(

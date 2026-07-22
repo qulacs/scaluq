@@ -95,7 +95,7 @@ void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
                          params_view,
                          *context.states);
 }
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 template <Precision Prec>
 void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
     ExecutionContext<Prec, ExecutionSpace::Default>& context, double param) const {

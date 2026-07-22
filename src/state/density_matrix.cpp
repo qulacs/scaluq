@@ -75,8 +75,7 @@ void DensityMatrix<Prec, Space>::set_coherence_pair_at(std::uint64_t row_index,
 
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix DensityMatrix<Prec, Space>::get_matrix() const {
-    Kokkos::View<ComplexType**, Kokkos::HostSpace> host_view("host_view", this->_dim, this->_dim);
-    Kokkos::deep_copy(host_view, this->_raw);
+    auto host_view = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), this->_raw);
     ComplexMatrix matrix(this->_dim, this->_dim);
     matrix.setZero();
     for (std::uint64_t i = 0; i < this->_dim; i++) {
@@ -100,7 +99,9 @@ DensityMatrix<Prec, ExecutionSpace::Default> DensityMatrix<Prec, Space>::copy_to
     auto new_state =
         DensityMatrix<Prec, ExecutionSpace::Default>::uninitialized_state(this->_n_qubits);
     new_state._is_hermitian = this->_is_hermitian;
-    Kokkos::deep_copy(new_state._raw, this->_raw);
+    auto mirror = Kokkos::create_mirror_view(new_state._raw);
+    Kokkos::deep_copy(mirror, this->_raw);
+    Kokkos::deep_copy(new_state._raw, mirror);
     return new_state;
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -108,7 +109,9 @@ DensityMatrix<Prec, ExecutionSpace::Host> DensityMatrix<Prec, Space>::copy_to_ho
     auto new_state =
         DensityMatrix<Prec, ExecutionSpace::Host>::uninitialized_state(this->_n_qubits);
     new_state._is_hermitian = this->_is_hermitian;
-    Kokkos::deep_copy(new_state._raw, this->_raw);
+    auto mirror = Kokkos::create_mirror_view(this->_raw);
+    Kokkos::deep_copy(mirror, this->_raw);
+    Kokkos::deep_copy(new_state._raw, mirror);
     return new_state;
 }
 
@@ -121,7 +124,7 @@ void DensityMatrix<Prec, Space>::load(const ComplexMatrix& other, bool is_hermit
             "does not match density matrix size.");
     }
     _is_hermitian = is_hermitian;
-    Kokkos::View<ComplexType**, Kokkos::HostSpace> host_view("host_view", _dim, _dim);
+    auto host_view = Kokkos::create_mirror_view(this->_raw);
 
     for (std::uint64_t i = 0; i < _dim; i++) {
         for (std::uint64_t j = 0; j < _dim; j++) {

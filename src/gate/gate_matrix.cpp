@@ -50,55 +50,66 @@ std::shared_ptr<const GateBase<Prec>> DenseMatrixGateImpl<Prec, Space>::get_inve
 }
 template <Precision Prec, ExecutionSpace Space>
 Matrix<Prec, Space> DenseMatrixGateImpl<Prec, Space>::get_matrix_internal() const {
-    return std::visit(
-        [](const auto& matrix) -> Matrix<Prec, Space> {
-            using T = std::decay_t<decltype(matrix)>;
-            if constexpr (std::is_same_v<T, Matrix<Prec, Space>>) {
-                Matrix<Prec, Space> ret("return matrix", matrix.extent(0), matrix.extent(1));
-                Kokkos::deep_copy(ret, matrix);
-                return ret;
-            } else {
-                ComplexMatrix external;
-                if constexpr (std::is_same_v<T, Complex<Prec>>) {
-                    external.resize(1, 1);
-                    external(0, 0) = static_cast<StdComplex>(matrix);
-                } else {
-                    const std::uint64_t dim = matrix.size();
-                    external.resize(dim, dim);
-                    for (std::uint64_t i = 0; i < dim; ++i) {
-                        for (std::uint64_t j = 0; j < dim; ++j) {
-                            external(i, j) = static_cast<StdComplex>(matrix[i][j]);
-                        }
-                    }
-                }
-                return convert_external_matrix_to_internal_matrix<Prec, Space>(external);
+    if (std::holds_alternative<Matrix<Prec, Space>>(_matrix)) {
+        const auto& matrix = std::get<Matrix<Prec, Space>>(_matrix);
+        Matrix<Prec, Space> ret("return matrix", matrix.extent(0), matrix.extent(1));
+        Kokkos::deep_copy(ret, matrix);
+        return ret;
+    }
+
+    ComplexMatrix external;
+    if (std::holds_alternative<Complex<Prec>>(_matrix)) {
+        const auto& matrix = std::get<Complex<Prec>>(_matrix);
+        external.resize(1, 1);
+        external(0, 0) = static_cast<StdComplex>(matrix);
+    } else if (std::holds_alternative<Matrix2x2<Prec>>(_matrix)) {
+        const auto& matrix = std::get<Matrix2x2<Prec>>(_matrix);
+        external.resize(2, 2);
+        for (std::uint64_t i = 0; i < 2; ++i) {
+            for (std::uint64_t j = 0; j < 2; ++j) {
+                external(i, j) = static_cast<StdComplex>(matrix[i][j]);
             }
-        },
-        _matrix);
+        }
+    } else if (std::holds_alternative<Matrix4x4<Prec>>(_matrix)) {
+        const auto& matrix = std::get<Matrix4x4<Prec>>(_matrix);
+        external.resize(4, 4);
+        for (std::uint64_t i = 0; i < 4; ++i) {
+            for (std::uint64_t j = 0; j < 4; ++j) {
+                external(i, j) = static_cast<StdComplex>(matrix[i][j]);
+            }
+        }
+    }
+    return convert_external_matrix_to_internal_matrix<Prec, Space>(external);
 }
 template <Precision Prec, ExecutionSpace Space>
 ComplexMatrix DenseMatrixGateImpl<Prec, Space>::get_matrix() const {
-    return std::visit(
-        [](const auto& matrix) -> ComplexMatrix {
-            using T = std::decay_t<decltype(matrix)>;
-            if constexpr (std::is_same_v<T, Matrix<Prec, Space>>) {
-                return convert_internal_matrix_to_external_matrix<Prec, Space>(matrix);
-            } else if constexpr (std::is_same_v<T, Complex<Prec>>) {
-                ComplexMatrix ret(1, 1);
-                ret(0, 0) = static_cast<StdComplex>(matrix);
-                return ret;
-            } else {
-                const std::uint64_t dim = matrix.size();
-                ComplexMatrix ret(dim, dim);
-                for (std::uint64_t i = 0; i < dim; ++i) {
-                    for (std::uint64_t j = 0; j < dim; ++j) {
-                        ret(i, j) = static_cast<StdComplex>(matrix[i][j]);
-                    }
-                }
-                return ret;
+    if (std::holds_alternative<Matrix<Prec, Space>>(_matrix)) {
+        const auto& matrix = std::get<Matrix<Prec, Space>>(_matrix);
+        return convert_internal_matrix_to_external_matrix<Prec, Space>(matrix);
+    } else if (std::holds_alternative<Complex<Prec>>(_matrix)) {
+        const auto& matrix = std::get<Complex<Prec>>(_matrix);
+        ComplexMatrix ret(1, 1);
+        ret(0, 0) = static_cast<StdComplex>(matrix);
+        return ret;
+    } else if (std::holds_alternative<Matrix2x2<Prec>>(_matrix)) {
+        const auto& matrix = std::get<Matrix2x2<Prec>>(_matrix);
+        ComplexMatrix ret(2, 2);
+        for (std::uint64_t i = 0; i < 2; ++i) {
+            for (std::uint64_t j = 0; j < 2; ++j) {
+                ret(i, j) = static_cast<StdComplex>(matrix[i][j]);
             }
-        },
-        _matrix);
+        }
+        return ret;
+    } else {
+        const auto& matrix = std::get<Matrix4x4<Prec>>(_matrix);
+        ComplexMatrix ret(4, 4);
+        for (std::uint64_t i = 0; i < 4; ++i) {
+            for (std::uint64_t j = 0; j < 4; ++j) {
+                ret(i, j) = static_cast<StdComplex>(matrix[i][j]);
+            }
+        }
+        return ret;
+    }
 }
 template <Precision Prec, ExecutionSpace Space>
 std::string DenseMatrixGateImpl<Prec, Space>::to_string(const std::string& indent) const {
@@ -113,35 +124,30 @@ std::string DenseMatrixGateImpl<Prec, Space>::to_string(const std::string& inden
         ContextClass<Prec, TargetSpace>& context) const {                                   \
         if constexpr (GateSpace == TargetSpace) {                                           \
             this->check_qubit_mask_within_bounds(*context.state_member);                    \
-            std::visit(                                                                     \
-                [&](const auto& matrix) {                                                   \
-                    using T = std::decay_t<decltype(matrix)>;                               \
-                    if constexpr (std::is_same_v<T, Complex<Prec>>) {                       \
-                        zero_target_dense_matrix_gate(this->_control_mask,                  \
-                                                      this->_control_value_mask,            \
-                                                      matrix,                               \
-                                                      *context.state_member);               \
-                    } else if constexpr (std::is_same_v<T, Matrix2x2<Prec>>) {              \
-                        one_target_dense_matrix_gate(this->_target_mask,                    \
-                                                     this->_control_mask,                   \
-                                                     this->_control_value_mask,             \
-                                                     matrix,                                \
-                                                     *context.state_member);                \
-                    } else if constexpr (std::is_same_v<T, Matrix4x4<Prec>>) {              \
-                        two_target_dense_matrix_gate(this->_target_mask,                    \
-                                                     this->_control_mask,                   \
-                                                     this->_control_value_mask,             \
-                                                     matrix,                                \
-                                                     *context.state_member);                \
-                    } else {                                                                \
-                        multi_dense_matrix_gate(this->_target_mask,                         \
-                                                this->_control_mask,                        \
-                                                this->_control_value_mask,                  \
-                                                matrix,                                     \
-                                                *context.state_member);                     \
-                    }                                                                       \
-                },                                                                          \
-                _matrix);                                                                   \
+            if (std::holds_alternative<Complex<Prec>>(_matrix)) {                           \
+                zero_target_dense_matrix_gate(this->_control_mask,                          \
+                                              this->_control_value_mask,                    \
+                                              std::get<Complex<Prec>>(_matrix),             \
+                                              *context.state_member);                       \
+            } else if (std::holds_alternative<Matrix2x2<Prec>>(_matrix)) {                  \
+                one_target_dense_matrix_gate(this->_target_mask,                            \
+                                             this->_control_mask,                           \
+                                             this->_control_value_mask,                     \
+                                             std::get<Matrix2x2<Prec>>(_matrix),            \
+                                             *context.state_member);                        \
+            } else if (std::holds_alternative<Matrix4x4<Prec>>(_matrix)) {                  \
+                two_target_dense_matrix_gate(this->_target_mask,                            \
+                                             this->_control_mask,                           \
+                                             this->_control_value_mask,                     \
+                                             std::get<Matrix4x4<Prec>>(_matrix),            \
+                                             *context.state_member);                        \
+            } else {                                                                        \
+                multi_dense_matrix_gate(this->_target_mask,                                 \
+                                        this->_control_mask,                                \
+                                        this->_control_value_mask,                          \
+                                        std::get<Matrix<Prec, GateSpace>>(_matrix),         \
+                                        *context.state_member);                             \
+            }                                                                               \
         } else {                                                                            \
             throw std::runtime_error(                                                       \
                 "Error: DenseMatrixGateImpl::update_quantum_state(" #ContextClass           \
@@ -153,7 +159,7 @@ DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
 DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::HostSerial)
 DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial)
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif
@@ -205,12 +211,12 @@ std::string SparseMatrixGateImpl<Prec, Space>::to_string(const std::string& inde
     void SparseMatrixGateImpl<Prec, GateSpace>::update_quantum_state(                       \
         ContextClass<Prec, TargetSpace>& context) const {                                   \
         if constexpr (GateSpace == TargetSpace) {                                           \
-            this->check_qubit_mask_within_bounds(*context.state_member);                     \
+            this->check_qubit_mask_within_bounds(*context.state_member);                    \
             sparse_matrix_gate(this->_target_mask,                                          \
                                this->_control_mask,                                         \
                                this->_control_value_mask,                                   \
                                _matrix,                                                     \
-                               *context.state_member);                                       \
+                               *context.state_member);                                      \
         } else {                                                                            \
             throw std::runtime_error(                                                       \
                 "Error: SparseMatrixGateImpl::update_quantum_state(" #ContextClass          \
@@ -222,7 +228,7 @@ DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
 DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::HostSerial)
 DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial)
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif

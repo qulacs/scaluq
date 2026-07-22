@@ -211,7 +211,9 @@ struct ExecutionContext {
     ExecutionContext(StateVector<Prec, Space>& state_,
                      ClassicalRegister& classical_register_,
                      std::mt19937_64& random_engine_)
-        : state(&state_), classical_register(&classical_register_), random_engine(&random_engine_) {}
+        : state(&state_),
+          classical_register(&classical_register_),
+          random_engine(&random_engine_) {}
 };
 
 template <Precision Prec, ExecutionSpace Space>
@@ -261,20 +263,19 @@ protected:
         const StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const;
     void check_qubit_mask_within_bounds(
         const StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states) const;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void check_qubit_mask_within_bounds(
         const StateVector<Prec, ExecutionSpace::Default>& state_vector) const;
     void check_qubit_mask_within_bounds(
         const StateVectorBatched<Prec, ExecutionSpace::Default>& states) const;
-#endif  // SCALUQ_USE_CUDA
-    void check_qubit_mask_within_bounds(
-        const DensityMatrix<Prec, ExecutionSpace::Host>& dm) const;
+#endif  // SCALUQ_USE_DEVICE
+    void check_qubit_mask_within_bounds(const DensityMatrix<Prec, ExecutionSpace::Host>& dm) const;
     void check_qubit_mask_within_bounds(
         const DensityMatrix<Prec, ExecutionSpace::HostSerial>& dm) const;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void check_qubit_mask_within_bounds(
         const DensityMatrix<Prec, ExecutionSpace::Default>& dm) const;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string get_qubit_info_as_string(const std::string& indent) const;
 
@@ -380,7 +381,7 @@ public:
             states, classical_register, random_engine};
         update_quantum_state(context);
     }
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector) const {
         ClassicalRegister classical_register(0);
         std::mt19937_64 random_engine(std::random_device{}());
@@ -416,7 +417,7 @@ public:
             states, classical_register, random_engine};
         update_quantum_state(context);
     }
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
     virtual void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Host>& context) const = 0;
     virtual void update_quantum_state(
@@ -425,7 +426,7 @@ public:
         ExecutionContext<Prec, ExecutionSpace::HostSerial>& context) const = 0;
     virtual void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context) const = 0;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     virtual void update_quantum_state(
         ExecutionContext<Prec, ExecutionSpace::Default>& context) const = 0;
     virtual void update_quantum_state(
@@ -462,7 +463,7 @@ public:
             state, classical_register, random_engine};
         update_quantum_state(context);
     }
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(DensityMatrix<Prec, ExecutionSpace::Default>& state) const {
         ClassicalRegister classical_register(0);
         std::mt19937_64 random_engine(std::random_device{}());
@@ -478,7 +479,7 @@ public:
             state, classical_register, random_engine};
         update_quantum_state(context);
     }
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
     virtual void update_quantum_state(
         ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>&) const {
         throw std::runtime_error(
@@ -489,13 +490,13 @@ public:
         throw std::runtime_error(
             "update_quantum_state for DensityMatrix is not implemented for this gate.");
     }
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     virtual void update_quantum_state(
         ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>&) const {
         throw std::runtime_error(
             "update_quantum_state for DensityMatrix is not implemented for this gate.");
     }
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 
@@ -681,7 +682,7 @@ using GateStateVariant = std::variant<StateVector<Prec, ExecutionSpace::Host>*,
                                       StateVectorBatched<Prec, ExecutionSpace::Host>*,
                                       StateVector<Prec, ExecutionSpace::HostSerial>*,
                                       StateVectorBatched<Prec, ExecutionSpace::HostSerial>*
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
                                       ,
                                       StateVector<Prec, ExecutionSpace::Default>*,
                                       StateVectorBatched<Prec, ExecutionSpace::Default>*

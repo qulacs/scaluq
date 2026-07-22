@@ -42,7 +42,7 @@ void GateBase<Prec>::check_qubit_mask_within_bounds(
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 template <Precision Prec>
 void GateBase<Prec>::check_qubit_mask_within_bounds(
     const StateVector<Prec, ExecutionSpace::Default>& state_vector) const {
@@ -63,7 +63,7 @@ void GateBase<Prec>::check_qubit_mask_within_bounds(
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 template <Precision Prec>
 void GateBase<Prec>::check_qubit_mask_within_bounds(
     const DensityMatrix<Prec, ExecutionSpace::Host>& dm) const {
@@ -84,7 +84,7 @@ void GateBase<Prec>::check_qubit_mask_within_bounds(
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 template <Precision Prec>
 void GateBase<Prec>::check_qubit_mask_within_bounds(
     const DensityMatrix<Prec, ExecutionSpace::Default>& dm) const {
@@ -95,7 +95,7 @@ void GateBase<Prec>::check_qubit_mask_within_bounds(
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
 }
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
 template <Precision Prec>
 std::string GateBase<Prec>::get_qubit_info_as_string(const std::string& indent) const {

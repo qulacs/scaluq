@@ -1,0 +1,80 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.209.6/containers/cpp
+{
+	"name": "GPU(SYCL NVIDIA) Environment",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"runArgs": [
+		"--cap-add=SYS_PTRACE",
+		"--security-opt",
+		"seccomp=unconfined",
+		"--gpus=all"
+	],
+	"containerEnv": {
+		"CC": "clang",
+		"CXX": "clang++",
+		"ONEAPI_DEVICE_SELECTOR": "cuda:*"
+	},
+
+	// Set *default* container specific settings.json values on container create.
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"editor.formatOnSave": true,
+				"editor.codeActionsOnSave": {
+					"source.organizeImports": true
+				},
+				"editor.defaultFormatter": "xaver.clang-format",
+				"files.insertFinalNewline": true,
+				"python.analysis.exclude": ["."],
+				"python.linting.enabled": true,
+				"python.linting.pylintEnabled": false,
+				"python.linting.flake8Enabled": true,
+				"python.linting.mypyEnabled": true,
+				"python.formatting.provider": "black",
+				"python.terminal.activateEnvironment": false,
+				// CAVEAT: you need to restart after building scaluq to take effect.
+				"C_Cpp.default.includePath": [
+					"include",
+					"/usr/local/include/kokkos",
+					"build/_deps/eigen-src",
+					"build/_deps/googletest-src/googletest/include",
+					"build/_deps/json-src/include",
+					"/usr/local/lib/python3.12/dist-packages/nanobind/include/",
+					"/usr/include/python3.12"
+				],
+				"C_Cpp.default.cppStandard": "c++23",
+				"C_Cpp.default.defines": ["SCALUQ_FLOAT16", "SCALUQ_FLOAT32", "SCALUQ_FLOAT64", "SCALUQ_BFLOAT16", "SCALUQ_USE_NANOBIND"],
+				"cSpell.customDictionaries": {
+					"scaluq": {
+						"name": "scaluq",
+						"path": "${workspaceFolder}/code-spell-checker-dictionary.txt"
+					}
+				},
+				"terminal.integrated.defaultProfile.linux": "bash",
+				"terminal.integrated.profiles.linux": {
+					"bash": {
+						"path": "/bin/bash"
+					}
+				}
+			},
+			"extensions": [
+				"ms-vscode.cpptools-extension-pack",
+				"ms-vscode.cmake-tools",
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"xaver.clang-format",
+				"streetsidesoftware.code-spell-checker"
+			]
+		}
+	},
+
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/scaluq,type=bind,consistency=cached",
+	"workspaceFolder": "/workspaces/scaluq",
+	"mounts": [
+		"source=${localWorkspaceFolderBasename}-build,target=${containerWorkspaceFolder}/build,type=volume"
+	],
+	"postStartCommand": "/usr/bin/git config --global gpg.program /usr/bin/gpg && git config --global safe.directory /workspaces/scaluq && sudo chown ubuntu build",
+	"remoteUser": "ubuntu"
+}

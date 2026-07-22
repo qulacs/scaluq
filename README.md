@@ -51,15 +51,22 @@ See [the benchmark repository](https://github.com/Qulacs-Osaka/benchmark-scaluq)
   - if you enable CUDA, GCC ≥ 11 is OK, but you cannot use Clang.
 - CMake ≥ 3.24
 - CUDA ≥ 12.8 (only when using CUDA)
+- IntelLLVM (only when using SYCL)
+  - Intel oneAPI DPC++/C++ Compiler (CC=icx/CXX=icpx)
 - Python ≥ 3.10 (only when using Python)
 
 When using CUDA, use a host compiler version supported by your CUDA toolkit (see the CUDA Installation Guide Host Compiler Support Policy).
 
 Note: It may work with lower versions, but this has not been verified.
 
+Note (experimental): SYCL backend is checked on CPUs and Nvidia GPU, not on Intel GPU.
+
 ## Runtime Requirements
 
 - CUDA ≥ 12.8 (only when using CUDA)
+- SYCL
+    - intel-level-zero-gpu
+    - intel-opencl-icd
 
 Note: It may work with lower versions, but this has not been verified.
 
@@ -75,9 +82,11 @@ Build options can be specified using environment variables when running `script/
 | `CMAKE_INSTALL_PREFIX` | -           | See [CMake Documentation](https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html) |
 | `SCALUQ_USE_OMP`       | `ON`        | Use OpenMP for parallel computation on CPU |
 | `SCALUQ_USE_CUDA`      | `OFF`       | Enable parallel computation using GPU (CUDA) |
+| `SCALUQ_USE_SYCL`      | `OFF`       | `Experimental` Enable parallel computation using GPU (SYCL) |
 | `SCALUQ_CPU_NATIVE`    | `ON`        | Build for native CPU architecture of builder's |
 | `SCALUQ_CPU_ARCH`      | -           | Target CPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_CPU_ARCH=SKX`) |
 | `SCALUQ_CUDA_ARCH`     | (auto)      | Target Nvidia GPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_CUDA_ARCH=AMPERE80`) |
+| `SCALUQ_SYCL_ARCH`     | (auto)      | Target Intel GPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_SYCL_ARCH=INTEL_PVC`) |
 | `SCALUQ_USE_TEST`      | `OFF`        | Include `test/` in build targets. You can build and run tests with `ctest --test-dir build/` |
 | `SCALUQ_USE_EXE`       | `OFF`        | Include `exe/` in build targets. You can try running without installing by building with `ninja -C build` and running `build/exe/main` |
 | `SCALUQ_FLOAT16`       | `OFF`       | Enable `f16` precision |
@@ -248,7 +257,7 @@ Execution spaces determine whether computation is performed on CPU or GPU:
 
 | Execution Space  | C++ Template Argument        | Python keyword (`space=`)  | Description                                   |
 |------------------|------------------------------|----------------------------|-----------------------------------------------|
-| `default`        | `ExecutionSpace::Default`    | `'default'`                | Runs on GPU if CUDA is enabled, otherwise CPU |
+| `default`        | `ExecutionSpace::Default`    | `'default'`                | Runs on GPU if CUDA or SYCL is enabled, otherwise CPU |
 | `host`           | `ExecutionSpace::Host`       | `'host'`                   | Always runs on CPU                            |
 | `host_serial`    | `ExecutionSpace::HostSerial` | `'host_serial'`            | Always runs sequentially on CPU               |
 

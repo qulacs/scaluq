@@ -724,9 +724,9 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
     register_circuit_update_quantum_state<Prec>(c);
     register_circuit_space_bindings<Prec, ExecutionSpace::Host>(c);
     register_circuit_space_bindings<Prec, ExecutionSpace::HostSerial>(c);
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     register_circuit_space_bindings<Prec, ExecutionSpace::Default>(c);
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 }
 }  // namespace internal
 #endif
