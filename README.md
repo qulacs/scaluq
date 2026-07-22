@@ -59,7 +59,7 @@ When using CUDA, use a host compiler version supported by your CUDA toolkit (see
 
 Note: It may work with lower versions, but this has not been verified.
 
-Note (experimental): SYCL backend is checked on CPUs, not on Intel GPU and Nvidia GPU.
+Note (experimental): SYCL backend is checked on CPUs and Nvidia GPU, not on Intel GPU.
 
 ## Runtime Requirements
 
