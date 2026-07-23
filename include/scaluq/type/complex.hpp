@@ -242,7 +242,7 @@ using EvenLaneSelection = decltype(make_even_lane_selection(std::make_index_sequ
 
 }  // namespace simd_complex_detail
 
-template <Precision P, std::size_t ScalarLanes = P == Precision::F32 ? 8 : 0>
+template <Precision P, std::size_t ScalarLanes = P == Precision::F32 ? 8 : 4>
 class SimdComplex {
     static_assert(P == Precision::F32 || P == Precision::F64);
 
