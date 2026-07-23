@@ -469,6 +469,51 @@ void run_specialized_dense_matrix_gate_apply(std::uint64_t n_qubits) {
 }
 
 template <Precision Prec, ExecutionSpace Space>
+void run_two_target_dense_matrix_simd_placements(std::uint64_t n_qubits) {
+    ComplexMatrix matrix(4, 4);
+    for (std::uint64_t row = 0; row < 4; ++row) {
+        for (std::uint64_t col = 0; col < 4; ++col) {
+            matrix(row, col) =
+                StdComplex(0.03125 * static_cast<double>(1 + row * 4 + col),
+                           0.015625 * (static_cast<double>(row) - static_cast<double>(col)));
+        }
+    }
+
+    // FP32 AVX2: high, middle, low respectively.
+    for (const std::vector<std::uint64_t>& targets : {std::vector<std::uint64_t>{2, 3},
+                                                      std::vector<std::uint64_t>{0, 3},
+                                                      std::vector<std::uint64_t>{0, 1}}) {
+        auto state = StateVector<Prec, Space>::Haar_random_state(n_qubits);
+        auto expected = state.get_amplitudes();
+        const std::uint64_t target0_mask = 1ULL << targets[0];
+        const std::uint64_t target1_mask = 1ULL << targets[1];
+        const std::uint64_t target_mask = target0_mask | target1_mask;
+        for (std::uint64_t compressed = 0; compressed < (1ULL << (n_qubits - 2)); ++compressed) {
+            const std::uint64_t basis0 =
+                internal::insert_zero_at_mask_positions(compressed, target_mask);
+            const std::uint64_t basis[4] = {
+                basis0, basis0 | target0_mask, basis0 | target1_mask, basis0 | target_mask};
+            const auto values = {
+                expected[basis[0]], expected[basis[1]], expected[basis[2]], expected[basis[3]]};
+            for (std::uint64_t row = 0; row < 4; ++row) {
+                StdComplex result = 0;
+                std::uint64_t col = 0;
+                for (const auto& value : values) {
+                    result += matrix(row, col++) * value;
+                }
+                expected[basis[row]] = result;
+            }
+        }
+
+        gate::DenseMatrix<Prec, Space>(targets, matrix)->update_quantum_state(state);
+        const auto actual = state.get_amplitudes();
+        for (std::uint64_t i = 0; i < actual.size(); ++i) {
+            check_near<Prec>(actual[i], expected[i]);
+        }
+    }
+}
+
+template <Precision Prec, ExecutionSpace Space>
 void run_random_gate_apply_sparse(std::uint64_t n_qubits) {
     const std::uint64_t dim = 1ULL << n_qubits;
     const std::uint64_t max_repeat = 10;
@@ -762,6 +807,7 @@ TYPED_TEST(GateTest, ApplyDenseMatrixGate) {
     run_random_gate_apply_single_dense<Prec, Space>(6);
     run_random_gate_apply_general_dense<Prec, Space>(6);
     run_specialized_dense_matrix_gate_apply<Prec, Space>(6);
+    run_two_target_dense_matrix_simd_placements<Prec, Space>(6);
 }
 
 TYPED_TEST(GateTest, ApplyPermutationGate) {

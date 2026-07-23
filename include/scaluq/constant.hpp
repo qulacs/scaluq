@@ -25,22 +25,22 @@ constexpr double SINPI8() { return 0.382683432365090; }
 //! identity matrix
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Matrix2x2<Prec> I_GATE() {
-    return {{{1, 0}}, {{0, 1}}};
+    return {{{{1, 0}}, {{0, 1}}}};
 }
 //! Pauli matrix X
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Matrix2x2<Prec> X_GATE() {
-    return {{{0, 1}}, {{1, 0}}};
+    return {{{{0, 1}}, {{1, 0}}}};
 }
 //! Pauli matrix Y
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Matrix2x2<Prec> Y_GATE() {
-    return {{{0, Complex<Prec>(0, -1)}}, {{Complex<Prec>(0, 1), 0}}};
+    return {{{{0, Complex<Prec>(0, -1)}}, {{Complex<Prec>(0, 1), 0}}}};
 }
 //! Pauli matrix Z
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Matrix2x2<Prec> Z_GATE() {
-    return {{{1, 0}}, {{0, -1}}};
+    return {{{{1, 0}}, {{0, -1}}}};
 }
 
 //! list of Pauli matrix I,X,Y,Z
@@ -50,12 +50,12 @@ KOKKOS_INLINE_FUNCTION Matrix2x2<Prec> Z_GATE() {
 //! S-gate
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Matrix2x2<Prec> S_GATE_MATRIX() {
-    return {{{1, 0}}, {{0, Complex<Prec>(0, 1)}}};
+    return {{{{1, 0}}, {{0, Complex<Prec>(0, 1)}}}};
 }
 //! Sdag-gate
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Matrix2x2<Prec> S_DAG_GATE_MATRIX() {
-    return {{{1, 0}}, {{0, Complex<Prec>(0, -1)}}};
+    return {{{{1, 0}}, {{0, Complex<Prec>(0, -1)}}}};
 }
 //! T-gate
 template <Precision Prec>
