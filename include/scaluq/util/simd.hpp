@@ -19,21 +19,21 @@ using Simd = Kokkos::Experimental::simd<Scalar, Lanes>;
 // Reorders SIMD lanes according to the source index of each output lane.
 template <typename Scalar, std::size_t Lanes, std::size_t... Indices>
 KOKKOS_INLINE_FUNCTION Simd<Scalar, Lanes> permute(const Simd<Scalar, Lanes>& value,
-                                            std::index_sequence<Indices...>) {
+                                                   std::index_sequence<Indices...>) {
     constexpr std::size_t simd_lanes = Simd<Scalar, Lanes>::size();
     static_assert(sizeof...(Indices) == simd_lanes);
     static_assert(((Indices < simd_lanes) && ...));
 #if defined(KOKKOS_ARCH_AVX2)
     if constexpr (std::is_same_v<Scalar, double> && simd_lanes == 4) {
-    constexpr int control = [] {
-        constexpr std::size_t bits_per_lane = std::bit_width(std::size_t{4} - 1);
-        constexpr std::array<std::size_t, sizeof...(Indices)> indices{Indices...};
-        int result = 0;
-        for (std::size_t lane = 0; lane < indices.size(); ++lane) {
-            result |= static_cast<int>(indices[lane] << (bits_per_lane * lane));
-        }
-        return result;
-    }();
+        constexpr int control = [] {
+            constexpr std::size_t bits_per_lane = std::bit_width(std::size_t{4} - 1);
+            constexpr std::array<std::size_t, sizeof...(Indices)> indices{Indices...};
+            int result = 0;
+            for (std::size_t lane = 0; lane < indices.size(); ++lane) {
+                result |= static_cast<int>(indices[lane] << (bits_per_lane * lane));
+            }
+            return result;
+        }();
         return Simd<Scalar>(_mm256_permute4x64_pd(static_cast<__m256d>(value), control));
     } else if constexpr (std::is_same_v<Scalar, float> && simd_lanes == 8) {
         const __m256i indices = _mm256_setr_epi32(static_cast<int>(Indices)...);
@@ -57,7 +57,7 @@ KOKKOS_INLINE_FUNCTION Simd<Scalar, Lanes> permute(const Simd<Scalar, Lanes>& va
 // Negates each SIMD lane whose selector is one.
 template <typename Scalar, std::size_t Lanes, std::size_t... Selectors>
 KOKKOS_INLINE_FUNCTION Simd<Scalar, Lanes> negate(const Simd<Scalar, Lanes>& value,
-                                           std::index_sequence<Selectors...>) {
+                                                  std::index_sequence<Selectors...>) {
     constexpr std::size_t simd_lanes = Simd<Scalar, Lanes>::size();
     static_assert(sizeof...(Selectors) == simd_lanes);
     static_assert(((Selectors < 2) && ...));

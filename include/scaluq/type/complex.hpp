@@ -162,7 +162,7 @@ public:
         return *this * Complex(rhs);
     }
     KOKKOS_INLINE_FUNCTION friend Complex operator*(const std::complex<double>& lhs,
-                                                     const Complex& rhs) {
+                                                    const Complex& rhs) {
         return Complex(lhs) * rhs;
     }
     template <typename Scalar>
@@ -251,6 +251,8 @@ class SimdComplex {
     Simd _data;
 
 public:
+    class ZeroExpression;
+
     class Coef {
         Simd _real, _imag;
         KOKKOS_INLINE_FUNCTION Coef(Scalar real, Scalar imag) : _real(real), _imag(imag) {}
@@ -315,6 +317,17 @@ public:
         KOKKOS_INLINE_FUNCTION SimdComplex operator*(const SimdComplex& value) const {
             return SimdComplex(_real * value._data + _imag * value.multiply_by_i()._data);
         }
+
+        KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value,
+                                               const SimdComplex& accumulator) const {
+            const auto real_part = Kokkos::Experimental::fma(_real, value._data, accumulator._data);
+            return SimdComplex(
+                Kokkos::Experimental::fma(_imag, value.multiply_by_i()._data, real_part));
+        }
+
+        KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value, ZeroExpression) const {
+            return *this * value;
+        }
     };
 
     class RCoef {
@@ -363,6 +376,15 @@ public:
 
         KOKKOS_INLINE_FUNCTION SimdComplex operator*(const SimdComplex& value) const {
             return SimdComplex(_value * value._data);
+        }
+
+        KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value,
+                                               const SimdComplex& accumulator) const {
+            return SimdComplex(Kokkos::Experimental::fma(_value, value._data, accumulator._data));
+        }
+
+        KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value, ZeroExpression) const {
+            return *this * value;
         }
     };
 
@@ -413,6 +435,16 @@ public:
         KOKKOS_INLINE_FUNCTION SimdComplex operator*(const SimdComplex& value) const {
             return SimdComplex(_value * value.multiply_by_i()._data);
         }
+
+        KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value,
+                                               const SimdComplex& accumulator) const {
+            return SimdComplex(
+                Kokkos::Experimental::fma(_value, value.multiply_by_i()._data, accumulator._data));
+        }
+
+        KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value, ZeroExpression) const {
+            return *this * value;
+        }
     };
 
     class ZeroExpression {
@@ -440,6 +472,13 @@ public:
             return {};
         }
         KOKKOS_INLINE_FUNCTION ZeroExpression operator*(const SimdComplex&) const { return {}; }
+        KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex&,
+                                               const SimdComplex& accumulator) const {
+            return accumulator;
+        }
+        KOKKOS_INLINE_FUNCTION ZeroExpression fma(const SimdComplex&, ZeroExpression) const {
+            return {};
+        }
     };
 
     class OneCoef {
@@ -458,6 +497,13 @@ public:
             return {};
         }
         KOKKOS_INLINE_FUNCTION SimdComplex operator*(const SimdComplex& value) const {
+            return value;
+        }
+        KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value,
+                                               const SimdComplex& accumulator) const {
+            return value + accumulator;
+        }
+        KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value, ZeroExpression) const {
             return value;
         }
     };
