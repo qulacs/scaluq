@@ -90,6 +90,22 @@ public:
     ComputationInfo info() const { return ComputationInfo::Success; }
 };
 
+template <class MatrixType>
+class SelfAdjointEigenSolver {
+public:
+    using EigenvalueType = std::vector<double>;
+    explicit SelfAdjointEigenSolver(const MatrixType&) {}
+    const EigenvalueType& eigenvalues() const {
+        static EigenvalueType v;
+        return v;
+    }
+    const MatrixType& eigenvectors() const {
+        static MatrixType m;
+        return m;
+    }
+    ComputationInfo info() const { return ComputationInfo::Success; }
+};
+
 }  // namespace Eigen
 
 namespace scaluq {
