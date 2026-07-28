@@ -67,6 +67,22 @@ TYPED_TEST(OperatorTest, Hermitian) {
     EXPECT_TRUE(op.is_hermitian());
 }
 
+TYPED_TEST(OperatorTest, ArnoldiGroundStateRejectsNonHermitianOperator) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Operator<Prec, Space> op({PauliOperator<Prec>("X 0", 1.)});
+    op *= StdComplex(0, 1);
+    StateVector<Prec, Space> initial_state = StateVector<Prec, Space>::Haar_random_state(1, 0);
+
+    ASSERT_THROW(
+        {
+            [[maybe_unused]] auto ground_state =
+                op.solve_ground_state_by_arnoldi_method(initial_state, 2);
+        },
+        std::runtime_error);
+}
+
 TYPED_TEST(OperatorTest, GetMatrix) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;

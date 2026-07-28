@@ -499,8 +499,13 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
     std::optional<StdComplex> mu) const {
     if (_terms.size() == 0) {
         throw std::runtime_error(
-            "Operator::solve_ground_state_eigenvalue_by_power_method: At least one PauliOperator "
+            "Operator::solve_ground_state_eigenvalue_by_arnoldi_method: At least one PauliOperator "
             "is required.");
+    }
+    if (!this->is_hermitian()) {
+        throw std::runtime_error(
+            "Operator::solve_ground_state_eigenvalue_by_arnoldi_method: The operator must be "
+            "Hermitian.");
     }
     std::uint64_t nqubits = initial_state.n_qubits();
     StdComplex mu_realized = mu.value_or(calculate_default_mu());
@@ -535,7 +540,7 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
     }
     ComplexMatrix effective_hessenberg_matrix =
         hessenberg_matrix.topLeftCorner(effective_iter_count, effective_iter_count);
-    Eigen::ComplexEigenSolver<ComplexMatrix> solver(effective_hessenberg_matrix);
+    Eigen::SelfAdjointEigenSolver<ComplexMatrix> solver(effective_hessenberg_matrix);
     if (solver.info() == Eigen::ComputationInfo::NoConvergence) {
         throw std::runtime_error(
             "Operator::solve_ground_state_eigenvalue_by_arnoldi_method: "
@@ -549,9 +554,7 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
     auto eigenvalues = solver.eigenvalues();
     auto eigenvectors = solver.eigenvectors();
     auto minimum_eigenvalue_index =
-        std::ranges::min_element(
-            eigenvalues,
-            [](const StdComplex& a, const StdComplex& b) { return a.real() < b.real(); }) -
+        std::ranges::min_element(eigenvalues, [](const double& a, const double& b) { return a < b; }) -
         eigenvalues.begin();
     auto ground_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(nqubits);
     ground_state.set_zero_norm_state();
@@ -560,7 +563,7 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
                                                 krylov_space_basis[i]);
     }
     ground_state.normalize();
-    return {eigenvalues[minimum_eigenvalue_index] + mu_realized, ground_state};
+    return {StdComplex(eigenvalues[minimum_eigenvalue_index]) + mu_realized, ground_state};
 }
 
 template <>
