@@ -13,7 +13,7 @@ StateVector<Prec, Space>::StateVector(std::uint64_t n_qubits)
     set_zero_state();
 }
 template <Precision Prec, ExecutionSpace Space>
-StateVector<Prec, Space>::StateVector(Kokkos::View<ComplexType*, internal::SpaceType<Space>> view)
+StateVector<Prec, Space>::StateVector(typename StateVector<Prec, Space>::RawView view)
     : _n_qubits(std::bit_width(view.extent(0)) - 1), _dim(view.extent(0)), _raw(view) {}
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::set_amplitude_at(std::uint64_t index, StdComplex c) {
@@ -40,7 +40,7 @@ StateVector<Prec, Space> StateVector<Prec, Space>::uninitialized_state(std::uint
     StateVector<Prec, Space> state;
     state._n_qubits = n_qubits;
     state._dim = 1ULL << n_qubits;
-    state._raw = Kokkos::View<ComplexType*, internal::SpaceType<Space>>(
+    state._raw = typename StateVector<Prec, Space>::RawView(
         Kokkos::ViewAllocateWithoutInitializing("state"), state._dim);
     return state;
 }

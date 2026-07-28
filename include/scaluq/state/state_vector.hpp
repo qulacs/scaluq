@@ -23,11 +23,18 @@ class StateVector {
     using ExecutionSpaceType = internal::SpaceType<Space>;
 
 public:
+    static constexpr Precision prec = Prec;
+    static constexpr ExecutionSpace space = Space;
+    using RawView =
+        Kokkos::View<ComplexType*, ExecutionSpaceType, Kokkos::MemoryTraits<Kokkos::Aligned>>;
     static constexpr std::uint64_t UNMEASURED = 2;
-    Kokkos::View<ComplexType*, ExecutionSpaceType> _raw;
+    RawView _raw;
     StateVector() = default;
     StateVector(std::uint64_t n_qubits);
-    StateVector(Kokkos::View<ComplexType*, ExecutionSpaceType> view);
+    StateVector(RawView view);
+    StateVector(const StateVector& other) = default;
+
+    StateVector& operator=(const StateVector& other) = default;
 
     /**
      * @attention Very slow. You should use load() instead if you can.
@@ -54,6 +61,12 @@ public:
     [[nodiscard]] std::uint64_t n_qubits() const { return this->_n_qubits; }
 
     [[nodiscard]] std::uint64_t dim() const { return this->_dim; }
+
+    [[nodiscard]] std::uint64_t flat_dim() const { return this->_dim; }
+
+    KOKKOS_INLINE_FUNCTION decltype(auto) at_unsafe(std::uint64_t index) const {
+        return _raw(index);
+    }
 
     [[nodiscard]] std::vector<StdComplex> get_amplitudes() const;
 
