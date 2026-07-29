@@ -58,8 +58,8 @@ n_qubits = 2
 states = StateVectorBatched(batch_size=2, n_qubits=n_qubits)
 
 # バッチごとに異なるランダムな初期状態にセット
-states.set_state_vector_at(0, StateVector.Haar_random_state(n_qubits)) # Batch 0: Random state
-states.set_state_vector_at(1, StateVector.Haar_random_state(n_qubits)) # Batch 1: Another random state
+states.set_state_vector_at(0, StateVector.Haar_random_state(n_qubits)) # バッチ 0: ランダム状態
+states.set_state_vector_at(1, StateVector.Haar_random_state(n_qubits)) # バッチ 1: バッチ0とは異なるランダム状態
 
 # パラメトリックでない回路を定義
 circuit = Circuit()
@@ -104,7 +104,7 @@ circuit = Circuit()
 # パラメトリックRXゲートを量子ビットのインデックス0にthetaというパラメータを用いてセット
 circuit.add_param_gate(ParamRX(0), "theta")
 
-# Batch 0: theta=0.0, Batch 1: theta=pi/2 
+# バッチ 0: theta=0.0, バッチ 1: theta=pi/2 
 circuit.update_quantum_state(states, theta=[0.0, math.pi / 2])
 
 print(states)

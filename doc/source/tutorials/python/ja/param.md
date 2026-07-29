@@ -51,7 +51,7 @@ import math
 
 n_qubits = 2
 circuit = Circuit()
-state = StateVector(n_qubits) # Initial state |00>
+state = StateVector(n_qubits) # 初期状態 |00>
 
 circuit.add_param_gate(ParamRX(0,0.5), "angle_x") # coef 0.5
 circuit.add_param_gate(ParamRY(1), "angle_y")
@@ -60,11 +60,11 @@ params_1 = {
     "angle_y": math.pi/2
 }
 
-#method 1: using a parameter dictionary
+# 方法1: パラメータの辞書を使う
 circuit.update_quantum_state(state, params_1)
 print(state.get_amplitudes())
 
-#method 2: using keyword arguments
+# 方法2: キーワード引数を使う
 state2 = StateVector(n_qubits)
 circuit.update_quantum_state(state2, angle_x = math.pi, angle_y = math.pi/2)
 print(state2.get_amplitudes())
