@@ -17,18 +17,17 @@ void one_target_dense_matrix_gate_simd_high(std::uint64_t target_mask,
     using C01 = SimdCoefFor<SimdType, M01>;
     using C10 = SimdCoefFor<SimdType, M10>;
     using C11 = SimdCoefFor<SimdType, M11>;
+
     constexpr std::size_t complex_lanes = SimdType::complex_lanes;
     const std::uint64_t skip_mask = target_mask | control_mask;
     const C00 m00 = C00::splat(matrix[0][0]);
     const C01 m01 = C01::splat(matrix[0][1]);
     const C10 m10 = C10::splat(matrix[1][0]);
     const C11 m11 = C11::splat(matrix[1][1]);
-
-    using ExecSpace = SpaceType<State::space>;
     const std::uint64_t flat_span = state.flat_dim() >> std::popcount(skip_mask);
     Kokkos::parallel_for(
         "one_target_dense_matrix_gate_simd_high",
-        Kokkos::RangePolicy<ExecSpace>(0, flat_span / complex_lanes),
+        Kokkos::RangePolicy<SpaceType<State::space>>(0, flat_span / complex_lanes),
         KOKKOS_LAMBDA(std::uint64_t g) {
             const std::uint64_t compressed_base = g * complex_lanes;
             const std::uint64_t basis0 =
@@ -36,13 +35,15 @@ void one_target_dense_matrix_gate_simd_high(std::uint64_t target_mask,
             const std::uint64_t basis1 = basis0 | target_mask;
             const auto v0 = SimdType::load_aligned(&state.at_unsafe(basis0));
             const auto v1 = SimdType::load_aligned(&state.at_unsafe(basis1));
-            (m00 * v0 + m01 * v1).store_aligned(&state.at_unsafe(basis0));
-            (m10 * v0 + m11 * v1).store_aligned(&state.at_unsafe(basis1));
+            m01.fma(v1, m00 * v0).store_aligned(&state.at_unsafe(basis0));
+            m11.fma(v1, m10 * v0).store_aligned(&state.at_unsafe(basis1));
         });
 }
 
-template <CoefKind DiagKind,
-          CoefKind OffDiagKind,
+template <CoefKind M00,
+          CoefKind M01,
+          CoefKind M10,
+          CoefKind M11,
           std::size_t TargetBit,
           UpdatableStateVector State>
 void one_target_dense_matrix_gate_simd_low(std::uint64_t control_mask,
@@ -50,27 +51,24 @@ void one_target_dense_matrix_gate_simd_low(std::uint64_t control_mask,
                                            const Matrix2x2<State::prec>& matrix,
                                            State& state) {
     using SimdType = SimdComplex<State::prec>;
-    using DiagCoef = SimdCoefFor<SimdType, DiagKind>;
-    using OffDiagCoef = SimdCoefFor<SimdType, OffDiagKind>;
+    using C00 = SimdCoefFor<SimdType, common_coef_kind(M00, M11)>;
+    using C01 = SimdCoefFor<SimdType, common_coef_kind(M01, M10)>;
     constexpr std::size_t complex_lanes = SimdType::complex_lanes;
     static_assert((1ULL << TargetBit) < complex_lanes);
-    const DiagCoef diagonal =
-        DiagCoef::template select_complex_lane_bit<TargetBit>(matrix[0][0], matrix[1][1]);
-    const OffDiagCoef off_diagonal =
-        OffDiagCoef::template select_complex_lane_bit<TargetBit>(matrix[0][1], matrix[1][0]);
 
-    using ExecSpace = SpaceType<State::space>;
+    const auto m00 = C00::template select_complex_lane_bit<TargetBit>(matrix[0][0], matrix[1][1]);
+    const auto m01 = C01::template select_complex_lane_bit<TargetBit>(matrix[0][1], matrix[1][0]);
     const std::uint64_t flat_span = state.flat_dim() >> std::popcount(control_mask);
     Kokkos::parallel_for(
         "one_target_dense_matrix_gate_simd_low",
-        Kokkos::RangePolicy<ExecSpace>(0, flat_span / complex_lanes),
+        Kokkos::RangePolicy<SpaceType<State::space>>(0, flat_span / complex_lanes),
         KOKKOS_LAMBDA(std::uint64_t g) {
             const std::uint64_t compressed_base = g * complex_lanes;
             const std::uint64_t basis =
                 insert_zero_at_mask_positions(compressed_base, control_mask) | control_value_mask;
-            const auto value = SimdType::load_aligned(&state.at_unsafe(basis));
-            const auto paired = value.template permute_complex_lanes_xor<(1ULL << TargetBit)>();
-            (diagonal * value + off_diagonal * paired).store_aligned(&state.at_unsafe(basis));
+            const auto v0 = SimdType::load_aligned(&state.at_unsafe(basis));
+            const auto v1 = v0.template permute_complex_lanes_xor<(1ULL << TargetBit)>();
+            m01.fma(v1, m00 * v0).store_aligned(&state.at_unsafe(basis));
         });
 }
 
@@ -81,19 +79,14 @@ void one_target_dense_matrix_gate_scalar(std::uint64_t target_mask,
                                          const Matrix2x2<State::prec>& matrix,
                                          State& state) {
     using ComplexType = Complex<State::prec>;
-    using S00 = ScalarCoef<State::prec, M00>;
-    using S01 = ScalarCoef<State::prec, M01>;
-    using S10 = ScalarCoef<State::prec, M10>;
-    using S11 = ScalarCoef<State::prec, M11>;
-    const S00 m00 = S00::splat(matrix[0][0]);
-    const S01 m01 = S01::splat(matrix[0][1]);
-    const S10 m10 = S10::splat(matrix[1][0]);
-    const S11 m11 = S11::splat(matrix[1][1]);
 
-    using ExecSpace = SpaceType<State::space>;
+    const auto m00 = ScalarCoef<State::prec, M00>::splat(matrix[0][0]);
+    const auto m01 = ScalarCoef<State::prec, M01>::splat(matrix[0][1]);
+    const auto m10 = ScalarCoef<State::prec, M10>::splat(matrix[1][0]);
+    const auto m11 = ScalarCoef<State::prec, M11>::splat(matrix[1][1]);
     Kokkos::parallel_for(
         "one_target_dense_matrix_gate_scalar",
-        Kokkos::RangePolicy<ExecSpace>(
+        Kokkos::RangePolicy<SpaceType<State::space>>(
             0, state.flat_dim() >> std::popcount(target_mask | control_mask)),
         KOKKOS_LAMBDA(std::uint64_t it) {
             const std::uint64_t basis0 =
@@ -129,17 +122,13 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
                 return;
             }
             if (inlane_target == 0b1) {
-                one_target_dense_matrix_gate_simd_low<common_coef_kind(M00, M11),
-                                                      common_coef_kind(M01, M10),
-                                                      0>(
+                one_target_dense_matrix_gate_simd_low<M00, M01, M10, M11, 0>(
                     control_mask, control_value_mask, matrix, state);
                 return;
             }
             if constexpr (complex_lanes > 2) {
                 if (inlane_target == 0b10) {
-                    one_target_dense_matrix_gate_simd_low<common_coef_kind(M00, M11),
-                                                          common_coef_kind(M01, M10),
-                                                          1>(
+                    one_target_dense_matrix_gate_simd_low<M00, M01, M10, M11, 1>(
                         control_mask, control_value_mask, matrix, state);
                     return;
                 }
