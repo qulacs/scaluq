@@ -55,10 +55,10 @@ constexpr ParamGateType get_param_gate_type() {
 }
 
 namespace internal {
-template <Precision _Prec>
-class ParamGateBase : public std::enable_shared_from_this<ParamGateBase<_Prec>> {
+template <Precision PrecVal>
+class ParamGateBase : public std::enable_shared_from_this<ParamGateBase<PrecVal>> {
 public:
-    constexpr static Precision Prec = _Prec;
+    constexpr static Precision Prec = PrecVal;
     using FloatType = Float<Prec>;
     using ComplexType = Complex<Prec>;
 

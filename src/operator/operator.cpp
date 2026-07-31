@@ -46,7 +46,7 @@ void Operator<internal::Prec, internal::Space>::load(
     auto host_view = internal::wrapped_host_view(terms);
     Kokkos::deep_copy(_terms, host_view);
     _is_hermitian = true;
-    for (auto& term : terms) {
+    for (const auto& term : terms) {
         if (term.coef().imag() != 0) {
             _is_hermitian = false;
             break;

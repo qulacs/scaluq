@@ -61,6 +61,8 @@ void Circuit<Prec>::add_circuit(const Circuit<Prec>& circuit) {
     }
 }
 template <Precision Prec>
+// The circuit is consumed by moving its elements individually.
+// NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
 void Circuit<Prec>::add_circuit(Circuit<Prec>&& circuit) {
     _gate_list.reserve(_gate_list.size() + circuit._gate_list.size());
     _classical_conditions.reserve(_classical_conditions.size() +
