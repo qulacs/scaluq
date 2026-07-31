@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -25,6 +26,7 @@ namespace {
 struct Options {
     std::uint64_t min_qubits = 4;
     std::uint64_t max_qubits = 24;
+    std::uint64_t parallel_nqubit_threshold = 13;
     int warmups = 5;
     int iterations = 20;
     std::string output = "benchmark-results/simd-path-comparison.csv";
@@ -37,9 +39,25 @@ struct PathCase {
     bool supports_f64;
 };
 
-struct Samples {
-    std::vector<double> scaluq_us;
-    std::vector<double> qulacs_us;
+struct CaseResult {
+    double scaluq_ascending_us = 0.0;
+    double scaluq_descending_us = 0.0;
+    double qulacs_ascending_us = 0.0;
+    double qulacs_descending_us = 0.0;
+    double max_error = 0.0;
+};
+
+struct QulacsState {
+    struct Free {
+        void operator()(CTYPE* pointer) const { std::free(pointer); }
+    };
+
+    std::unique_ptr<CTYPE, Free> storage;
+    std::uint64_t dim;
+
+    CTYPE* data() { return storage.get(); }
+    const CTYPE& operator[](std::uint64_t index) const { return storage.get()[index]; }
+    std::uint64_t size() const { return dim; }
 };
 
 constexpr PathCase path_cases[] = {
@@ -59,6 +77,15 @@ std::uint64_t parse_u64(const char* text, std::string_view option) {
 
 Options parse_options(int argc, char** argv) {
     Options options;
+    if (const char* threshold = std::getenv("QULACS_PARALLEL_NQUBIT_THRESHOLD")) {
+        options.parallel_nqubit_threshold =
+            parse_u64(threshold, "QULACS_PARALLEL_NQUBIT_THRESHOLD");
+        if (options.parallel_nqubit_threshold == 0 ||
+            options.parallel_nqubit_threshold > 64) {
+            throw std::runtime_error(
+                "QULACS_PARALLEL_NQUBIT_THRESHOLD must be between 1 and 64");
+        }
+    }
     for (int i = 1; i < argc; ++i) {
         const std::string argument = argv[i];
         auto value = [&]() -> const char* {
@@ -80,18 +107,21 @@ Options parse_options(int argc, char** argv) {
                 << "Usage: " << argv[0] << " [options]\n"
                 << "  --min-qubits N   first qubit count (default: 4)\n"
                 << "  --max-qubits N   last qubit count (default: 24)\n"
-                << "  --warmup N       alternating warm-up pairs (default: 5)\n"
-                << "  --iterations N   measured pairs; positive and even (default: 20)\n"
-                << "  --output PATH    output CSV\n";
+                << "  --warmup N       warm-up updates per case (default: 5)\n"
+                << "  --iterations N   measured updates per case (default: 20)\n"
+                << "  --output PATH    output CSV\n"
+                << "Environment:\n"
+                << "  QULACS_PARALLEL_NQUBIT_THRESHOLD=N\n"
+                << "                    shared Scaluq/Qulacs parallel threshold (default: 13)\n";
             std::exit(0);
         } else {
             throw std::runtime_error("unknown option: " + argument);
         }
     }
     if (options.min_qubits < 4 || options.min_qubits > options.max_qubits ||
-        options.warmups < 0 || options.iterations <= 0 || (options.iterations & 1) != 0) {
+        options.warmups < 0 || options.iterations <= 0) {
         throw std::runtime_error(
-            "require 4 <= min-qubits <= max-qubits and a positive, even iteration count");
+            "require 4 <= min-qubits <= max-qubits and a positive iteration count");
     }
     return options;
 }
@@ -145,6 +175,18 @@ double median(std::vector<double> values) {
     return (values[middle - 1] + values[middle]) * 0.5;
 }
 
+QulacsState make_qulacs_state_parallel(const std::vector<CTYPE>& initial) {
+    auto* raw = static_cast<CTYPE*>(std::malloc(initial.size() * sizeof(CTYPE)));
+    if (raw == nullptr) throw std::bad_alloc();
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
+    for (std::uint64_t i = 0; i < initial.size(); ++i) {
+        raw[i] = initial[i];
+    }
+    return {std::unique_ptr<CTYPE, QulacsState::Free>(raw), initial.size()};
+}
+
 template <class Function>
 double time_us(Function&& function) {
     const auto start = std::chrono::steady_clock::now();
@@ -153,63 +195,49 @@ double time_us(Function&& function) {
     return std::chrono::duration<double, std::micro>(end - start).count();
 }
 
-template <class ScaluqUpdate, class QulacsUpdate>
-Samples measure_alternating(const Options& options,
-                            ScaluqUpdate&& update_scaluq,
-                            QulacsUpdate&& update_qulacs) {
-    auto run_scaluq = [&] {
-        const auto elapsed = time_us([&] {
-            update_scaluq();
-            Kokkos::fence();
-        });
-        return elapsed;
-    };
-    auto run_qulacs = [&] { return time_us(update_qulacs); };
-
+template <class Function>
+double measure_one(const Options& options, Function&& function, bool needs_fence) {
     for (int i = 0; i < options.warmups; ++i) {
-        if ((i & 1) == 0) {
-            run_scaluq();
-            run_qulacs();
-        } else {
-            run_qulacs();
-            run_scaluq();
-        }
+        function();
+        if (needs_fence) Kokkos::fence();
     }
 
-    Samples samples;
-    samples.scaluq_us.reserve(options.iterations);
-    samples.qulacs_us.reserve(options.iterations);
+    std::vector<double> samples;
+    samples.reserve(options.iterations);
     for (int i = 0; i < options.iterations; ++i) {
-        if (((options.warmups + i) & 1) == 0) {
-            samples.scaluq_us.push_back(run_scaluq());
-            samples.qulacs_us.push_back(run_qulacs());
-        } else {
-            samples.qulacs_us.push_back(run_qulacs());
-            samples.scaluq_us.push_back(run_scaluq());
-        }
+        samples.push_back(time_us([&] {
+            function();
+            if (needs_fence) Kokkos::fence();
+        }));
     }
-    return samples;
+    return median(std::move(samples));
 }
 
 template <scaluq::Precision Prec, scaluq::ExecutionSpace Space>
-void benchmark_case(std::ofstream& csv,
-                    const Options& options,
-                    const PathCase& path,
-                    std::uint64_t n_qubits,
-                    const std::vector<CTYPE>& qulacs_matrix) {
+double measure_scaluq_case(const Options& options,
+                           const PathCase& path,
+                           std::uint64_t n_qubits,
+                           const std::vector<CTYPE>& qulacs_matrix) {
     using State = scaluq::StateVector<Prec, Space>;
     const auto initial = make_initial_state(n_qubits);
     State scaluq_state(n_qubits);
     scaluq_state.load(std::vector<scaluq::StdComplex>(initial.begin(), initial.end()));
-    std::vector<CTYPE> qulacs_state = initial;
     const auto scaluq_matrix = make_scaluq_matrix<Prec>(qulacs_matrix);
-    const std::uint64_t target_mask =
-        (1ULL << path.target0) | (1ULL << path.target1);
+    const std::uint64_t target_mask = (1ULL << path.target0) | (1ULL << path.target1);
 
     auto update_scaluq = [&] {
         scaluq::internal::two_target_dense_matrix_gate(
             target_mask, 0, 0, scaluq_matrix, scaluq_state);
     };
+    return measure_one(options, update_scaluq, true);
+}
+
+double measure_qulacs_case(const Options& options,
+                           const PathCase& path,
+                           std::uint64_t n_qubits,
+                           const std::vector<CTYPE>& qulacs_matrix) {
+    const auto initial = make_initial_state(n_qubits);
+    auto qulacs_state = make_qulacs_state_parallel(initial);
     auto update_qulacs = [&] {
         double_qubit_dense_matrix_gate_c(path.target0,
                                          path.target1,
@@ -217,10 +245,29 @@ void benchmark_case(std::ofstream& csv,
                                          qulacs_state.data(),
                                          qulacs_state.size());
     };
+    return measure_one(options, update_qulacs, false);
+}
 
-    update_scaluq();
+template <scaluq::Precision Prec, scaluq::ExecutionSpace Space>
+double validate_case(const PathCase& path,
+                     std::uint64_t n_qubits,
+                     const std::vector<CTYPE>& qulacs_matrix) {
+    using State = scaluq::StateVector<Prec, Space>;
+    const auto initial = make_initial_state(n_qubits);
+    State scaluq_state(n_qubits);
+    scaluq_state.load(std::vector<scaluq::StdComplex>(initial.begin(), initial.end()));
+    auto qulacs_state = make_qulacs_state_parallel(initial);
+    const auto scaluq_matrix = make_scaluq_matrix<Prec>(qulacs_matrix);
+    const std::uint64_t target_mask = (1ULL << path.target0) | (1ULL << path.target1);
+
+    scaluq::internal::two_target_dense_matrix_gate(
+        target_mask, 0, 0, scaluq_matrix, scaluq_state);
     Kokkos::fence();
-    update_qulacs();
+    double_qubit_dense_matrix_gate_c(path.target0,
+                                     path.target1,
+                                     qulacs_matrix.data(),
+                                     qulacs_state.data(),
+                                     qulacs_state.size());
     const auto scaluq_values = scaluq_state.get_amplitudes();
     double max_error = 0.0;
     for (std::size_t i = 0; i < initial.size(); ++i) {
@@ -230,36 +277,107 @@ void benchmark_case(std::ofstream& csv,
     if (max_error > tolerance) {
         throw std::runtime_error("state mismatch in " + std::string(path.name));
     }
-
-    scaluq_state.load(std::vector<scaluq::StdComplex>(initial.begin(), initial.end()));
-    qulacs_state = initial;
-    const Samples samples = measure_alternating(options, update_scaluq, update_qulacs);
-    const double scaluq_median = median(samples.scaluq_us);
-    const double qulacs_median = median(samples.qulacs_us);
-    const char* precision = Prec == scaluq::Precision::F32 ? "f32" : "f64";
-
-    csv << n_qubits << ',' << path.name << ',' << precision << ",\"{" << path.target0 << ';'
-        << path.target1 << "}\"," << scaluq_median << ',' << qulacs_median << ','
-        << qulacs_median / scaluq_median << ',' << max_error << '\n';
-    std::cout << std::setw(6) << path.name << " " << precision << " q=" << std::setw(2)
-              << n_qubits << " Scaluq=" << std::setw(11) << scaluq_median
-              << " us Qulacs=" << std::setw(11) << qulacs_median
-              << " us speedup=" << qulacs_median / scaluq_median << "x\n";
+    return max_error;
 }
 
 template <scaluq::Precision Prec>
-void dispatch_space(std::ofstream& csv,
+double dispatch_scaluq(const Options& options,
+                       const PathCase& path,
+                       std::uint64_t n_qubits,
+                       const std::vector<CTYPE>& matrix) {
+    if (n_qubits < options.parallel_nqubit_threshold) {
+        return measure_scaluq_case<Prec, scaluq::ExecutionSpace::HostSerial>(
+            options, path, n_qubits, matrix);
+    }
+    return measure_scaluq_case<Prec, scaluq::ExecutionSpace::Default>(
+        options, path, n_qubits, matrix);
+}
+
+template <scaluq::Precision Prec>
+double dispatch_validation(const Options& options,
+                           const PathCase& path,
+                           std::uint64_t n_qubits,
+                           const std::vector<CTYPE>& matrix) {
+    if (n_qubits < options.parallel_nqubit_threshold) {
+        return validate_case<Prec, scaluq::ExecutionSpace::HostSerial>(
+            path, n_qubits, matrix);
+    }
+    return validate_case<Prec, scaluq::ExecutionSpace::Default>(path, n_qubits, matrix);
+}
+
+template <class Function>
+void sweep_qubits(const Options& options, bool ascending, Function&& function) {
+    if (ascending) {
+        for (std::uint64_t n = options.min_qubits; n <= options.max_qubits; ++n) {
+            function(n, static_cast<std::size_t>(n - options.min_qubits));
+        }
+        return;
+    }
+    for (std::uint64_t n = options.max_qubits;; --n) {
+        function(n, static_cast<std::size_t>(n - options.min_qubits));
+        if (n == options.min_qubits) break;
+    }
+}
+
+template <scaluq::Precision Prec>
+void benchmark_path(std::ofstream& csv,
                     const Options& options,
                     const PathCase& path,
-                    std::uint64_t n_qubits,
                     const std::vector<CTYPE>& matrix) {
-    if (n_qubits < 13) {
-        benchmark_case<Prec, scaluq::ExecutionSpace::HostSerial>(
-            csv, options, path, n_qubits, matrix);
-    } else {
-        benchmark_case<Prec, scaluq::ExecutionSpace::Default>(
-            csv, options, path, n_qubits, matrix);
-    }
+    const char* precision = Prec == scaluq::Precision::F32 ? "f32" : "f64";
+    const std::size_t case_count =
+        static_cast<std::size_t>(options.max_qubits - options.min_qubits + 1);
+    std::vector<CaseResult> results(case_count);
+
+    std::cout << "\n[validate " << precision << ' ' << path.name << "]\n";
+    sweep_qubits(options, true, [&](std::uint64_t n, std::size_t index) {
+        results[index].max_error = dispatch_validation<Prec>(options, path, n, matrix);
+    });
+
+    std::cout << "[Scaluq ascending " << precision << ' ' << path.name << "]\n";
+    sweep_qubits(options, true, [&](std::uint64_t n, std::size_t index) {
+        results[index].scaluq_ascending_us = dispatch_scaluq<Prec>(options, path, n, matrix);
+        std::cout << "q=" << std::setw(2) << n
+                  << " median_us=" << results[index].scaluq_ascending_us << '\n';
+    });
+
+    std::cout << "[Qulacs ascending f64 " << path.name << "]\n";
+    sweep_qubits(options, true, [&](std::uint64_t n, std::size_t index) {
+        results[index].qulacs_ascending_us =
+            measure_qulacs_case(options, path, n, matrix);
+        std::cout << "q=" << std::setw(2) << n
+                  << " median_us=" << results[index].qulacs_ascending_us << '\n';
+    });
+
+    std::cout << "[Qulacs descending f64 " << path.name << "]\n";
+    sweep_qubits(options, false, [&](std::uint64_t n, std::size_t index) {
+        results[index].qulacs_descending_us =
+            measure_qulacs_case(options, path, n, matrix);
+        std::cout << "q=" << std::setw(2) << n
+                  << " median_us=" << results[index].qulacs_descending_us << '\n';
+    });
+
+    std::cout << "[Scaluq descending " << precision << ' ' << path.name << "]\n";
+    sweep_qubits(options, false, [&](std::uint64_t n, std::size_t index) {
+        results[index].scaluq_descending_us = dispatch_scaluq<Prec>(options, path, n, matrix);
+        std::cout << "q=" << std::setw(2) << n
+                  << " median_us=" << results[index].scaluq_descending_us << '\n';
+    });
+
+    std::cout << "[balanced " << precision << ' ' << path.name << "]\n";
+    sweep_qubits(options, true, [&](std::uint64_t n, std::size_t index) {
+        const auto& result = results[index];
+        const double scaluq_median =
+            median({result.scaluq_ascending_us, result.scaluq_descending_us});
+        const double qulacs_median =
+            median({result.qulacs_ascending_us, result.qulacs_descending_us});
+        csv << n << ',' << path.name << ',' << precision << ",\"{" << path.target0 << ';'
+            << path.target1 << "}\"," << scaluq_median << ',' << qulacs_median << ','
+            << qulacs_median / scaluq_median << ',' << result.max_error << '\n';
+        std::cout << "q=" << std::setw(2) << n << " Scaluq=" << std::setw(11)
+                  << scaluq_median << " us Qulacs=" << std::setw(11) << qulacs_median
+                  << " us speedup=" << qulacs_median / scaluq_median << "x\n";
+    });
 }
 
 void run(const Options& options) {
@@ -272,25 +390,16 @@ void run(const Options& options) {
     csv << "qubits,path,precision,targets,scaluq_median_us,qulacs_median_us,"
            "speedup,max_error\n";
     const auto matrix = make_qulacs_matrix();
+    std::cout << "parallel_nqubit_threshold=" << options.parallel_nqubit_threshold << '\n';
 
-    std::cout << "\n[f32]\n";
+    std::cout << "\n[f32 Scaluq versus f64 Qulacs]\n";
     for (const auto& path : path_cases) {
-        std::cout << "\n[" << path.name << " targets={" << path.target0 << ',' << path.target1
-                  << "}]\n";
-        for (std::uint64_t n_qubits = options.min_qubits; n_qubits <= options.max_qubits;
-             ++n_qubits) {
-            dispatch_space<scaluq::Precision::F32>(csv, options, path, n_qubits, matrix);
-        }
+        benchmark_path<scaluq::Precision::F32>(csv, options, path, matrix);
     }
-    std::cout << "\n[f64]\n";
+    std::cout << "\n[f64 Scaluq versus f64 Qulacs]\n";
     for (const auto& path : path_cases) {
         if (!path.supports_f64) continue;
-        std::cout << "\n[" << path.name << " targets={" << path.target0 << ',' << path.target1
-                  << "}]\n";
-        for (std::uint64_t n_qubits = options.min_qubits; n_qubits <= options.max_qubits;
-             ++n_qubits) {
-            dispatch_space<scaluq::Precision::F64>(csv, options, path, n_qubits, matrix);
-        }
+        benchmark_path<scaluq::Precision::F64>(csv, options, path, matrix);
     }
 }
 

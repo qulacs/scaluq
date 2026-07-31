@@ -8,6 +8,17 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
+plt.rcParams.update(
+    {
+        "font.size": 14,
+        "axes.titlesize": 16,
+        "axes.labelsize": 14,
+        "xtick.labelsize": 14,
+        "ytick.labelsize": 14,
+        "legend.fontsize": 14,
+    }
+)
+
 
 def read_rows(path):
     grouped = defaultdict(lambda: defaultdict(list))
@@ -26,60 +37,42 @@ def read_rows(path):
 
 
 def plot_path(path_name, precision_rows, output):
-    figure, (timing_axis, speedup_axis) = plt.subplots(
-        2, 1, figsize=(9, 8), sharex=True, gridspec_kw={"height_ratios": [2, 1]}
-    )
-    colors = {"f32": "tab:blue", "f64": "tab:orange"}
+    figure, timing_axis = plt.subplots(figsize=(9, 6))
+    precision_linestyles = {"f32": "--", "f64": "-"}
     for precision in ("f32", "f64"):
         rows = sorted(precision_rows.get(precision, []), key=lambda row: row["qubits"])
         if not rows:
             continue
         qubits = [row["qubits"] for row in rows]
         targets = rows[0]["targets"]
-        color = colors[precision]
+        linestyle = precision_linestyles[precision]
         timing_axis.plot(
             qubits,
-            [row["scaluq"] for row in rows],
-            marker="o",
-            color=color,
+            [row["scaluq"] / 1000.0 for row in rows],
+            marker="P",
+            linestyle=linestyle,
+            color="tab:red",
             label=f"Scaluq {precision.upper()} targets={targets}",
         )
+    qulacs_rows = precision_rows.get("f64") or precision_rows.get("f32")
+    if qulacs_rows:
+        qulacs_rows = sorted(qulacs_rows, key=lambda row: row["qubits"])
         timing_axis.plot(
-            qubits,
-            [row["qulacs"] for row in rows],
-            marker="s",
-            linestyle="--",
-            color=color,
-            alpha=0.7,
-            label=f"Qulacs F64 targets={targets} ({precision.upper()} pair)",
-        )
-        speedup_axis.plot(
-            qubits,
-            [row["speedup"] for row in rows],
+            [row["qubits"] for row in qulacs_rows],
+            [row["qulacs"] / 1000.0 for row in qulacs_rows],
             marker="o",
-            color=color,
-            label=f"Qulacs / Scaluq {precision.upper()}",
+            linestyle="-",
+            color="tab:blue",
+            label=f"Qulacs F64 targets={qulacs_rows[0]['targets']}",
         )
 
     timing_axis.set_yscale("log")
-    timing_axis.set_ylabel("Median time per gate [us]")
+    timing_axis.set_xlabel("Number of qubits")
+    timing_axis.set_ylabel("Execution time per gate [ms]")
     timing_axis.set_title(f"4x4 dense SIMD {path_name} path: Scaluq vs Qulacs")
     timing_axis.grid(True, which="both", alpha=0.3)
     timing_axis.legend()
-    speedup_axis.axhline(1.0, color="black", linewidth=1)
-    speedup_axis.set_xlabel("Number of qubits")
-    speedup_axis.set_ylabel("Qulacs / Scaluq [x]")
-    speedup_axis.grid(True, alpha=0.3)
-    speedup_axis.legend()
-    if path_name == "low":
-        figure.text(
-            0.5,
-            0.01,
-            "Note: Scaluq's 4x4 low path exists only for F32; Qulacs uses F64.",
-            ha="center",
-            fontsize=9,
-        )
-    figure.tight_layout(rect=(0, 0.03, 1, 1))
+    figure.tight_layout()
     figure.savefig(output, dpi=160)
     plt.close(figure)
 

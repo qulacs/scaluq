@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "../src/gate/update_ops.hpp"
+#include "../src/gate/update_ops_matrix_2x2.hpp"
 
 namespace {
 using Space = std::integral_constant<scaluq::ExecutionSpace, scaluq::ExecutionSpace::Default>;

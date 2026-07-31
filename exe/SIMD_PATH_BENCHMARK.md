@@ -26,7 +26,8 @@ Run and plot:
 
 ```sh
 mkdir -p benchmark-results
-OMP_NUM_THREADS=1 OMP_PROC_BIND=close OMP_PLACES=cores \
+OMP_NUM_THREADS=16 OMP_PROC_BIND=close OMP_PLACES=cores \
+QULACS_PARALLEL_NQUBIT_THRESHOLD=13 \
   ./build/exe/simd_path_qulacs_benchmark \
   --min-qubits 4 --max-qubits 24 \
   --warmup 5 --iterations 20 \
@@ -43,7 +44,23 @@ The generated images are:
 - `benchmark-results/comparison-middle.png`
 - `benchmark-results/comparison-high.png`
 
-Each measured iteration is paired, and the implementation that executes first
-alternates. Scaluq uses `HostSerial` below 13 qubits and `Default` from 13
-qubits onward, matching Qulacs' internal OpenMP threshold. Speedup is
-`Qulacs median / Scaluq median`, so values above one mean Scaluq is faster.
+For each precision and SIMD path, the benchmark runs four complete
+`min-qubits` through `max-qubits` sections:
+
+1. Scaluq in ascending qubit order
+2. Qulacs in ascending qubit order
+3. Qulacs in descending qubit order
+4. Scaluq in descending qubit order
+
+The reported value for each implementation is the median of its ascending and
+descending section results. Qulacs state storage is first-touched in parallel
+with the same OpenMP placement used by its kernel, avoiding a serial
+first-touch NUMA bias at large state sizes.
+
+Scaluq uses `HostSerial` below 13 qubits and `Default` from 13 qubits onward,
+matching Qulacs' internal OpenMP threshold. Set
+`QULACS_PARALLEL_NQUBIT_THRESHOLD` to change this threshold for both
+implementations. Speedup is `Qulacs median / Scaluq median`, so values above
+one mean Scaluq is faster. The F64 rows compare equal precision; F32 rows
+compare Scaluq F32 against Qulacs F64 and should be treated as a
+mixed-precision reference.

@@ -34,6 +34,7 @@ if(SCALUQ_BUILD_QULACS_SIMD_PATH_BENCHMARK)
 
     add_library(qulacs_simd_path_kernels STATIC
         ${qulacs_simd_path_benchmark_SOURCE_DIR}/src/csim/update_ops_matrix_dense_double.cpp
+        ${qulacs_simd_path_benchmark_SOURCE_DIR}/src/csim/update_ops_matrix_dense_single.cpp
         ${qulacs_simd_path_benchmark_SOURCE_DIR}/src/csim/utility.cpp
     )
     target_include_directories(qulacs_simd_path_kernels PUBLIC
