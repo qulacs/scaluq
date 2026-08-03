@@ -41,7 +41,7 @@ https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
 ## GPU: 単一状態ベクトル更新 (2026年8月)
 
 | GPU |
-| --- |
+| :--- |
 | <img src="https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/gpu/image/circuit_gpu.png" width="50%"> |
 
 ## バッチ状態ベクトル更新 (2026年6月)

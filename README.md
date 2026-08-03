@@ -41,7 +41,7 @@ See [the benchmark repository](https://github.com/Qulacs-Osaka/benchmark-scaluq)
 ## GPU: Single State Vector Update (August 2026)
 
 | GPU |
-| --- |
+| :--- |
 | <img src="https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/gpu/image/circuit_gpu.png" width="50%"> |
 
 ## Batched State Vector Update (June 2026)
