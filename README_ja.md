@@ -44,7 +44,7 @@ https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
 | --- |
 | <img src="https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/gpu/image/circuit_gpu.png" width="50%"> |
 
-## バッチ状態ベクトル更新 (2026年5月)
+## バッチ状態ベクトル更新 (2026年6月)
 
 | バッチサイズを変化させた場合 (#qubits=16) | 量子ビット数を変化させた場合 (batch size=100) |
 | -------------------------------------- | ------------------------------------------- |

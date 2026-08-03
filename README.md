@@ -44,7 +44,7 @@ See [the benchmark repository](https://github.com/Qulacs-Osaka/benchmark-scaluq)
 | --- |
 | <img src="https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/gpu/image/circuit_gpu.png" width="50%"> |
 
-## Batched State Vector Update (May 2026)
+## Batched State Vector Update (June 2026)
 
 | Varying batch size (#qubits=16) | Varying #qubits (batch size=100) |
 | ------------------------------- | -------------------------------- |
