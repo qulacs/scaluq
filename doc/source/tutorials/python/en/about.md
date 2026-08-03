@@ -21,11 +21,17 @@ In this benchmark, a circuit consisting of CX, RX, and RZ gates applied sequenti
 
 See [the benchmark repository](https://github.com/Qulacs-Osaka/benchmark-scaluq).
 
-### Single State Vector Update (January 2026)
+### CPU: Single State Vector Update (June 2026)
 
-| CPU result | GPU result |
-| ---------- | ---------- |
-| ![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/multithread/image/circuit.png) | ![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/gpu/image/circuit.png) |
+| CPU single thread | CPU multi thread |
+| ----------------- | ---------------- |
+| ![Single State Vector Update (CPU single thread)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/multithread/image/circuit_singlethread.png) | ![Single State Vector Update (CPU multi thread)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/multithread/image/circuit_multithread.png) |
+
+### GPU: Single State Vector Update (August 2026)
+
+| GPU |
+| --- |
+| <img src="https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/gpu/image/circuit_gpu.png" width="50%"> |
 
 ### Batched State Vector Update (May 2026)
 

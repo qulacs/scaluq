@@ -32,11 +32,17 @@ https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
 
 [ベンチマークのリポジトリ](https://github.com/Qulacs-Osaka/benchmark-scaluq) をご確認ください。
 
-## 単一状態ベクトル更新 (2026年1月)
+## CPU: 単一状態ベクトル更新 (2026年6月)
 
-| CPU 結果 | GPU 結果 |
-| ------- | --------|
-| ![Single State Vector Update (CPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/multithread/image/circuit.png) | ![Single State Vector Update (GPU)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/gpu/image/circuit.png) |
+| CPU シングルスレッド | CPU マルチスレッド |
+| ----------------- | ---------------- |
+| ![Single State Vector Update (CPU single thread)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/multithread/image/circuit_singlethread.png) | ![Single State Vector Update (CPU multi thread)](https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/multithread/image/circuit_multithread.png) |
+
+## GPU: 単一状態ベクトル更新 (2026年8月)
+
+| GPU |
+| --- |
+| <img src="https://github.com/Qulacs-Osaka/benchmark-scaluq/raw/main/benchmark/multiple-gate/gpu/image/circuit_gpu.png" width="50%"> |
 
 ## バッチ状態ベクトル更新 (2026年5月)
 
