@@ -462,13 +462,25 @@ void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComp
         }
     }
 
-    auto view_h = Kokkos::create_mirror_view(Kokkos::HostSpace(), _raw);
+    using ContiguousView =
+        Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<Space>>;
+    ContiguousView contiguous_view(
+        Kokkos::ViewAllocateWithoutInitializing("states_contiguous"), _batch_size, _dim);
+    auto view_h = Kokkos::create_mirror_view(Kokkos::HostSpace(), contiguous_view);
     for (std::uint64_t b = 0; b < states.size(); ++b) {
         for (std::uint64_t i = 0; i < states[0].size(); ++i) {
             view_h(b, i) = states[b][i];
         }
     }
-    Kokkos::deep_copy(_raw, view_h);
+    Kokkos::deep_copy(contiguous_view, view_h);
+    Kokkos::parallel_for(
+        "load_state_vector_batched",
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
+                                                                           {_batch_size, _dim}),
+        KOKKOS_CLASS_LAMBDA(std::uint64_t b, std::uint64_t i) {
+            _raw(b, i) = contiguous_view(b, i);
+        });
+    Kokkos::fence("load_state_vector_batched");
 }
 
 template <Precision Prec, ExecutionSpace Space>
