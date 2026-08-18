@@ -23,8 +23,10 @@ jobs:
         include:
           - os-arch: "linux-x86_64"
             runs-on: "ubuntu-24.04"
+            cpu-arch: "HSW"
           - os-arch: "macos-arm64"
             runs-on: "macos-15"
+            cpu-arch: ""
           - os-arch: "linux-x86_64"
             compiler: "gcc"
             c-compiler: "/usr/lib/ccache/gcc"
@@ -49,6 +51,7 @@ jobs:
       SCALUQ_USE_TEST: "ON"
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
       SCALUQ_CPU_NATIVE: "OFF"
+      SCALUQ_CPU_ARCH: ${{ matrix.cpu-arch }}
       SCALUQ_CUDA_ARCH: "TURING75"
       SCALUQ_FLOAT16: ${{ matrix.compiler == 'clang' && 'OFF' || 'ON' }}
       SCALUQ_FLOAT32: "ON"

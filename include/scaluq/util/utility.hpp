@@ -7,6 +7,10 @@
 #include <ranges>
 #include <vector>
 
+#if defined(KOKKOS_ARCH_AVX2)
+#include <immintrin.h>
+#endif
+
 // #include "../operator/pauli_operator.hpp"
 #include "../types.hpp"
 
@@ -33,6 +37,9 @@ KOKKOS_INLINE_FUNCTION std::uint64_t insert_zero_to_basis_index(std::uint64_t ba
  */
 KOKKOS_INLINE_FUNCTION std::uint64_t insert_zero_at_mask_positions(std::uint64_t basis_index,
                                                                    std::uint64_t insert_mask) {
+#if defined(KOKKOS_ARCH_AVX2)
+    return _pdep_u64(basis_index, ~insert_mask);
+#else
     for (std::uint64_t bit_mask = insert_mask; bit_mask;
          bit_mask &= (bit_mask - 1)) {  // loop through set bits
         std::uint64_t lower_mask = ~bit_mask & (bit_mask - 1);
@@ -40,6 +47,7 @@ KOKKOS_INLINE_FUNCTION std::uint64_t insert_zero_at_mask_positions(std::uint64_t
         basis_index = ((basis_index & upper_mask) << 1) | (basis_index & lower_mask);
     }
     return basis_index;
+#endif
 }
 
 // Converts a vector of indices to a bitmask.
@@ -112,7 +120,7 @@ Complex<Prec> inner_product(const ViewA& a, const ViewB& b) {
     Kokkos::parallel_reduce(
         "inner_product",
         Kokkos::RangePolicy<SpaceType<Space>>(0, a.extent(0)),
-        KOKKOS_LAMBDA(std::uint64_t i, Complex<Prec>& lsum) {
+        KOKKOS_LAMBDA(std::uint64_t i, Complex<Prec> & lsum) {
             lsum += internal::conj(a(i)) * b(i);
         },
         result);
