@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.25.2)
 
 project(scaluq)
 
@@ -124,7 +124,7 @@ endif(SCALUQ_USE_SYCL)
 FetchContent_Declare(
     kokkos
     GIT_REPOSITORY https://github.com/kokkos/kokkos
-    GIT_TAG 1b1383c6001f3bfe9fe309ca923c2d786600cc79 # 4.6.01
+    GIT_TAG 267ebc25fc5c8b96bb321f34d78f97b1c30f8830 # 5.1.1
 )
 FetchContent_MakeAvailable(kokkos)
 set_property(TARGET kokkoscore PROPERTY POSITION_INDEPENDENT_CODE ON)
