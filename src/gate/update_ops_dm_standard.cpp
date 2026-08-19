@@ -2,16 +2,6 @@
 
 namespace scaluq::internal {
 
-template <Precision Prec>
-static Matrix2x2<Prec> ibmq_matrix(Float<Prec> _theta, Float<Prec> _phi, Float<Prec> _lambda) {
-    Complex<Prec> exp_val1 = internal::exp(Complex<Prec>(0, _phi));
-    Complex<Prec> exp_val2 = internal::exp(Complex<Prec>(0, _lambda));
-    Complex<Prec> cos_val = internal::cos(_theta / Float<Prec>{2});
-    Complex<Prec> sin_val = internal::sin(_theta / Float<Prec>{2});
-    return {
-        {{{cos_val, -exp_val2 * sin_val}}, {{exp_val1 * sin_val, exp_val1 * exp_val2 * cos_val}}}};
-}
-
 // Dense 1-qubit gate: ρ → U ρ U†.
 //
 // Uncontrolled (control_mask==0): single-pass block approach (Qulacs-style).
@@ -513,44 +503,6 @@ void rz_gate(std::uint64_t target_mask,
     const Float<Prec> sinval = internal::sin(angle / Float<Prec>{2});
     DiagonalMatrix2x2<Prec> diag = {Complex<Prec>(cosval, -sinval), Complex<Prec>(cosval, sinval)};
     one_target_diagonal_matrix_gate(target_mask, control_mask, control_value_mask, diag, dm);
-}
-
-template <>
-void u1_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<Prec> lambda,
-             DensityMatrix<Prec, Space>& dm) {
-    Complex<Prec> exp_val = internal::exp(Complex<Prec>(0, lambda));
-    DiagonalMatrix2x2<Prec> diag = {Complex<Prec>(1, 0), exp_val};
-    one_target_diagonal_matrix_gate(target_mask, control_mask, control_value_mask, diag, dm);
-}
-
-template <>
-void u2_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<Prec> phi,
-             Float<Prec> lambda,
-             DensityMatrix<Prec, Space>& dm) {
-    one_target_dense_matrix_gate(
-        target_mask,
-        control_mask,
-        control_value_mask,
-        ibmq_matrix<Prec>(static_cast<Float<Prec>>(Kokkos::numbers::pi / 2), phi, lambda),
-        dm);
-}
-
-template <>
-void u3_gate(std::uint64_t target_mask,
-             std::uint64_t control_mask,
-             std::uint64_t control_value_mask,
-             Float<Prec> theta,
-             Float<Prec> phi,
-             Float<Prec> lambda,
-             DensityMatrix<Prec, Space>& dm) {
-    one_target_dense_matrix_gate(
-        target_mask, control_mask, control_value_mask, ibmq_matrix<Prec>(theta, phi, lambda), dm);
 }
 
 // SWAP = SWAP†. Two-pass: swap lower/upper target rows, then swap lower/upper target cols.
