@@ -14,7 +14,7 @@ namespace scaluq {
 using StdComplex = std::complex<double>;
 using Json = nlohmann::json;
 
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 enum class ExecutionSpace { Host, HostSerial, Default };
 #else
 enum class ExecutionSpace { Host, HostSerial, Default = Host };
@@ -31,7 +31,7 @@ template <>
 struct SpaceTypeImpl<ExecutionSpace::HostSerial> {
     using Type = Kokkos::Serial;
 };
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
 template <>
 struct SpaceTypeImpl<ExecutionSpace::Default> {
     using Type = Kokkos::DefaultExecutionSpace;
@@ -139,13 +139,11 @@ struct adl_serializer<::scaluq::SparseComplexMatrix> {
         j["rows"] = value.rows();
         j["cols"] = value.cols();
         json triplets = json::array();
-        for (std::uint64_t row_idx = 0;
-             row_idx < static_cast<std::uint64_t>(value.outerSize());
+        for (std::uint64_t row_idx = 0; row_idx < static_cast<std::uint64_t>(value.outerSize());
              ++row_idx) {
-            for (typename ::scaluq::SparseComplexMatrix::InnerIterator it(value, row_idx);
-                 it; ++it) {
-                triplets.push_back(
-                    {{"row", it.row()}, {"col", it.col()}, {"val", it.value()}});
+            for (typename ::scaluq::SparseComplexMatrix::InnerIterator it(value, row_idx); it;
+                 ++it) {
+                triplets.push_back({{"row", it.row()}, {"col", it.col()}, {"val", it.value()}});
             }
         }
         j["triplets"] = triplets;

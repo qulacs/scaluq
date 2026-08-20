@@ -6,6 +6,8 @@
 #ifdef SCALUQ_USE_CUDA
 #include <cuda_bf16.h>
 #include <cuda_fp16.h>
+#elif defined(SCALUQ_USE_SYCL)
+#include <sycl/sycl.hpp>
 #elif __has_include(<stdfloat>)
 #include <stdfloat>
 #define STDFLOAT_ENABLED 1
@@ -26,6 +28,8 @@ struct IsFloatingPoint : public std::false_type {};
 #ifdef SCALUQ_FLOAT16
 #if defined(SCALUQ_USE_CUDA)
 using F16 = __half;
+#elif defined(SCALUQ_USE_SYCL)
+using F16 = sycl::half;
 #elif STDFLOAT_ENABLED && defined(__STDCPP_FLOAT16_T__)
 using F16 = std::float16_t;
 #else
@@ -41,7 +45,7 @@ struct FloatTypeImpl<Precision::F16> {
 #endif
 
 #ifdef SCALUQ_FLOAT32
-#if defined(SCALUQ_USE_CUDA)
+#ifdef SCALUQ_USE_DEVICE
 using F32 = float;
 #elif STDFLOAT_ENABLED && defined(__STDCPP_FLOAT32_T__)
 using F32 = std::float32_t;
@@ -60,7 +64,7 @@ struct FloatTypeImpl<Precision::F32> {
 #endif
 
 #ifdef SCALUQ_FLOAT64
-#if defined(SCALUQ_USE_CUDA)
+#ifdef SCALUQ_USE_DEVICE
 using F64 = double;
 #elif STDFLOAT_ENABLED && defined(__STDCPP_FLOAT64_T__)
 using F64 = std::float64_t;
@@ -81,6 +85,8 @@ struct FloatTypeImpl<Precision::F64> {
 #ifdef SCALUQ_BFLOAT16
 #if defined(SCALUQ_USE_CUDA)
 using BF16 = __nv_bfloat16;
+#elif defined(SCALUQ_USE_SYCL)
+using BF16 = sycl::ext::oneapi::bfloat16;
 #elif STDFLOAT_ENABLED && defined(__STDCPP_BFLOAT16_T__)
 using BF16 = std::bfloat16_t;
 #else

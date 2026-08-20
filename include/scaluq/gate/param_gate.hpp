@@ -73,12 +73,12 @@ protected:
         const StateVector<Prec, ExecutionSpace::HostSerial>& state_vector) const;
     void check_qubit_mask_within_bounds(
         const StateVectorBatched<Prec, ExecutionSpace::HostSerial>& states) const;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void check_qubit_mask_within_bounds(
         const StateVector<Prec, ExecutionSpace::Default>& state_vector) const;
     void check_qubit_mask_within_bounds(
         const StateVectorBatched<Prec, ExecutionSpace::Default>& states) const;
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     std::string get_qubit_info_as_string(const std::string& indent) const;
 
@@ -205,7 +205,7 @@ public:
             states, classical_register, random_engine};
         update_quantum_state(context, params);
     }
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     void update_quantum_state(StateVector<Prec, ExecutionSpace::Default>& state_vector,
                               double param) const {
         ClassicalRegister classical_register(0);
@@ -250,7 +250,7 @@ public:
             states, classical_register, random_engine};
         update_quantum_state(context, params);
     }
-#endif  // SCALUQ_USE_CUDA
+#endif  // SCALUQ_USE_DEVICE
 
     virtual void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Host>& context,
                                       double param) const = 0;
@@ -261,7 +261,7 @@ public:
     virtual void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::HostSerial>& context,
         const std::vector<double>& params) const = 0;
-#ifdef SCALUQ_USE_CUDA
+#ifdef SCALUQ_USE_DEVICE
     virtual void update_quantum_state(ExecutionContext<Prec, ExecutionSpace::Default>& context,
                                       double param) const = 0;
     virtual void update_quantum_state(
