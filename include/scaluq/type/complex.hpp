@@ -320,9 +320,8 @@ public:
 
         KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value,
                                                const SimdComplex& accumulator) const {
-            const auto real_part = Kokkos::Experimental::fma(_real, value._data, accumulator._data);
-            return SimdComplex(
-                Kokkos::Experimental::fma(_imag, value.multiply_by_i()._data, real_part));
+            const auto real_part = Kokkos::fma(_real, value._data, accumulator._data);
+            return SimdComplex(Kokkos::fma(_imag, value.multiply_by_i()._data, real_part));
         }
 
         KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value, ZeroExpression) const {
@@ -380,7 +379,7 @@ public:
 
         KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value,
                                                const SimdComplex& accumulator) const {
-            return SimdComplex(Kokkos::Experimental::fma(_value, value._data, accumulator._data));
+            return SimdComplex(Kokkos::fma(_value, value._data, accumulator._data));
         }
 
         KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value, ZeroExpression) const {
@@ -438,8 +437,7 @@ public:
 
         KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value,
                                                const SimdComplex& accumulator) const {
-            return SimdComplex(
-                Kokkos::Experimental::fma(_value, value.multiply_by_i()._data, accumulator._data));
+            return SimdComplex(Kokkos::fma(_value, value.multiply_by_i()._data, accumulator._data));
         }
 
         KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value, ZeroExpression) const {
