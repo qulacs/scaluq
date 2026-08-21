@@ -56,8 +56,9 @@ print(state.get_amplitudes())
 [(0.7071067811865476+0j), 0j, 0j, (0.7071067811865476+0j)]
 ```
 
-## Get properties of Circuit
-You can get some properties of `Circuit`.
+## 回路のプロパティを取得する
+`Circuit`のプロパティを取得することができます。
+
 ```py
 from scaluq import Circuit
 from scaluq.gate import H, X

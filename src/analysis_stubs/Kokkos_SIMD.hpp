@@ -7,7 +7,7 @@ namespace Kokkos::Experimental {
 
 struct vector_aligned_tag {};
 
-template <class T>
+template <class T, std::size_t = 0>
 class simd {
 public:
     using value_type = T;
@@ -36,5 +36,10 @@ public:
 private:
     T _value{};
 };
+
+template <class T, std::size_t N>
+simd<T, N> fma(const simd<T, N>& x, const simd<T, N>& y, const simd<T, N>& z) {
+    return x * y + z;
+}
 
 }  // namespace Kokkos::Experimental
