@@ -166,6 +166,8 @@ NB_MODULE(scaluq_core, m) {
         []() -> std::string {
 #if defined(SCALUQ_USE_CUDA)
             return "cuda";
+#elif defined(SCALUQ_USE_HIP)
+            return "hip";
 #elif defined(SCALUQ_USE_SYCL)
             return "sycl";
 #else

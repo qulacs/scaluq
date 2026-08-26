@@ -106,6 +106,7 @@ qubit
 qubits
 qulacs
 revcircuit
+rocm
 SABI
 scaluq
 scikit
