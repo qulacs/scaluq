@@ -23,7 +23,7 @@ pip install scaluq
 - Ninja ≥ 1.10
 - GCC ≥ 13 or LLVM Clang ≥ 18
   - CUDAを有効化した場合、GCC ≥ 11は利用できますが、Clangは使用できません。
-- CMake ≥ 3.24
+- CMake ≥ 3.25.2
 - CUDA ≥ 12.8 (CUDA利用時のみ)
 - IntelLLVM (SYCL利用時のみ)
   - Intel oneAPI DPC++/C++ Compiler (CC=icx/CXX=icpx)
@@ -33,8 +33,6 @@ CUDAの利用時には、お使いのCUDA toolkitでサポートされている�
 詳しくはCUDA Installation Guide Host Compiler Support Policyをご確認ください。
 
 注意：提示したビルド要件よりも低いバージョンでも動作する可能性はありますが、動作確認は行われていないためビルドの要件に記載のバージョンでビルドすることを推奨します。
-
-注意：SYCLはCPUおよびNvidia GPU上での動作は確認できていますが、Intel GPUでの動作確認を行っていません。
 
 ビルドオプションは以下のとおりです。
 
@@ -50,7 +48,7 @@ CUDAの利用時には、お使いのCUDA toolkitでサポートされている�
 |`SCALUQ_CPU_NATIVE`|`ON`| ビルダーのCPUアーキテクチャでビルドするか|
 |`SCALUQ_CPU_ARCH`|-| ターゲットとなるCPUアーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CPU_ARCH=SKX`)|
 |`SCALUQ_CUDA_ARCH`|(自動識別)|`SCALUQ_USE_CUDA=ON`の場合、ターゲットとなるNvidia GPU アーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CUDA_ARCH=AMPERE80`)|
-|`SCALUQ_SYCL_ARCH`|(自動識別)|`SCALUQ_USE_SYCL=ON`の場合、ターゲットとなるIntel GPU アーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_SYCL_ARCH=INTEL_PVC`)|
+|`SCALUQ_SYCL_ARCH`|-|SYCLのターゲットアーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、Intel GPUの例: `SCALUQ_SYCL_ARCH=INTEL_GEN`)|
 |`SCALUQ_USE_TEST`|`OFF`|`test/`をビルドターゲットに含める。`ctest --test-dir build/`でテストのビルド・実行ができます|
 |`SCALUQ_USE_EXE`|`OFF`|`exe/`をビルドターゲットに含める。`ninja -C build`でビルドしたあと、`build/exe/main` を実行してインストールなしで試せます|
 |`SCALUQ_FLOAT16`|`OFF`|`f16`精度を有効にする|
@@ -64,6 +62,24 @@ Scaluqをインストールするには、まずgithubのリポジトリをク�
 git clone https://github.com/qulacs/scaluq
 cd scaluq
 ```
+
+### Intel GPU (SYCL)
+
+Intel oneAPI DPC++/C++ CompilerとLevel ZeroなどのIntel GPUランタイムをインストールします。
+oneAPI環境を初期化した後、SYCLを有効化してKokkosの汎用Intel GPUターゲットを明示します。
+
+```
+source /opt/intel/oneapi/setvars.sh
+CMAKE_C_COMPILER=icx \
+CMAKE_CXX_COMPILER=icpx \
+SCALUQ_USE_SYCL=ON \
+SCALUQ_SYCL_ARCH=INTEL_GEN \
+pip install .
+```
+
+SYCLはCPUをターゲットにする場合もあるため、アーキテクチャは明示指定しています。
+複数のSYCLデバイスがある環境では、実行時に
+`ONEAPI_DEVICE_SELECTOR=level_zero:gpu`を指定するとIntel GPUを選択できます。
 
 そして、環境変数によって設定を行い、Scaluqをインストールしてください。
 
