@@ -46,10 +46,12 @@ CUDAの利用時には、お使いのCUDA toolkitでサポートされている�
 |`CMAKE_INSTALL_PREFIX`|-|See [CMake Document](https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html)|
 |`SCALUQ_USE_OMP`|`ON`|CPUでの並列処理にOpenMPを利用するか|
 |`SCALUQ_USE_CUDA`|`OFF`|GPU (CUDA)での並列処理を行うか|
+|`SCALUQ_USE_HIP`|`OFF`|`実験的機能` GPU (HIP)での並列処理を行うか|
 |`SCALUQ_USE_SYCL`|`OFF`|`実験的機能` GPU (SYCL)での並列処理を行うか|
 |`SCALUQ_CPU_NATIVE`|`ON`| ビルダーのCPUアーキテクチャでビルドするか|
 |`SCALUQ_CPU_ARCH`|-| ターゲットとなるCPUアーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CPU_ARCH=SKX`)|
 |`SCALUQ_CUDA_ARCH`|(自動識別)|`SCALUQ_USE_CUDA=ON`の場合、ターゲットとなるNvidia GPU アーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CUDA_ARCH=AMPERE80`)|
+|`SCALUQ_HIP_ARCH`|-|`SCALUQ_USE_HIP=ON`の場合、ターゲットとなるAMD GPU アーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_HIP_ARCH=AMD_GPU`)|
 |`SCALUQ_SYCL_ARCH`|(自動識別)|`SCALUQ_USE_SYCL=ON`の場合、ターゲットとなるIntel GPU アーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_SYCL_ARCH=INTEL_PVC`)|
 |`SCALUQ_USE_TEST`|`OFF`|`test/`をビルドターゲットに含める。`ctest --test-dir build/`でテストのビルド・実行ができます|
 |`SCALUQ_USE_EXE`|`OFF`|`exe/`をビルドターゲットに含める。`ninja -C build`でビルドしたあと、`build/exe/main` を実行してインストールなしで試せます|
