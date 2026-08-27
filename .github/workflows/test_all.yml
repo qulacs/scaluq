@@ -37,6 +37,13 @@ jobs:
           - os-arch: "linux-x86_64"
             runs-on: "ubuntu-24.04"
             cpu-arch: "HSW"
+            compiler: "hipcc"
+            device: "hip"
+            c-compiler: "hipcc"
+            cxx-compiler: "hipcc"
+          - os-arch: "linux-x86_64"
+            runs-on: "ubuntu-24.04"
+            cpu-arch: "HSW"
             compiler: "intelllvm"
             device: "sycl"
             c-compiler: "icx"
@@ -59,20 +66,22 @@ jobs:
     env:
       CMAKE_C_COMPILER: ${{ matrix.c-compiler }}
       CMAKE_CXX_COMPILER: ${{ matrix.cxx-compiler }}
-      CMAKE_BUILD_TYPE: ${{ (matrix.device == 'cuda' || matrix.device == 'sycl') || 'Debug' }}
+      CMAKE_BUILD_TYPE: ${{ (matrix.device == 'cuda' || matrix.device == 'hip' || matrix.device == 'sycl') || 'Debug' }}
       SCALUQ_USE_TEST: "ON"
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
+      SCALUQ_USE_HIP: ${{ matrix.device == 'hip' && 'ON' || 'OFF' }}
       SCALUQ_USE_SYCL: ${{ matrix.device == 'sycl' && 'ON' || 'OFF' }}
       SCALUQ_CPU_NATIVE: "OFF"
       SCALUQ_CPU_ARCH: ${{ matrix.cpu-arch }}
       SCALUQ_CUDA_ARCH: "TURING75"
-      SCALUQ_FLOAT16: ${{ (matrix.compiler == 'clang' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
+      SCALUQ_HIP_ARCH: "VEGA90A"
+      SCALUQ_FLOAT16: ${{ (matrix.compiler == 'clang' || matrix.device == 'hip' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
       SCALUQ_FLOAT32: ${{ matrix.device == 'sycl' && 'OFF' || 'ON' }}
       SCALUQ_FLOAT64: "ON"
-      SCALUQ_BFLOAT16: ${{ (matrix.compiler == 'clang' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
+      SCALUQ_BFLOAT16: ${{ (matrix.compiler == 'clang' || matrix.device == 'hip' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
     steps:
       - name: Free Disk Space (gpu)
-        if: ${{ matrix.device == 'cuda' || matrix.device == 'sycl' }}
+        if: ${{ matrix.device == 'cuda' || matrix.device == 'hip' || matrix.device == 'sycl' }}
         run: |
           df -h
           echo "Remove Android library"
@@ -125,6 +134,17 @@ jobs:
           linux-local-args: '["--toolkit"]'
           log-file-suffix: '${{ github.job }}-${{ matrix.os-arch }}-${{ matrix.device }}'
 
+      - name: Install HIP toolkit
+        if: ${{ matrix.device == 'hip' && (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') }}
+        run: |
+          sudo mkdir --parents --mode=0755 /etc/apt/keyrings
+          wget https://repo.radeon.com/rocm/rocm.gpg.key -O - | gpg --dearmor | sudo tee /etc/apt/keyrings/rocm.gpg > /dev/null
+          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/7.0.3 noble main" | sudo tee /etc/apt/sources.list.d/rocm.list
+
+          sudo apt-get update
+          sudo apt-get install -y hipcc rocm-dev
+          echo "/opt/rocm/bin" >> $GITHUB_PATH
+
       - name: Install SYCL toolkit
         if: ${{ matrix.device == 'sycl' }}
         uses: rscohn2/setup-oneapi@v0.2.0
@@ -137,6 +157,9 @@ jobs:
         run: |
           if [ "$SCALUQ_USE_CUDA" = 'ON' ]; then
             nvcc --version
+          fi
+          if [ "$SCALUQ_USE_HIP" = 'ON' ]; then
+            hipcc --version
           fi
           if [ "$SCALUQ_USE_SYCL" = "ON" ]; then
             source /opt/intel/oneapi/setvars.sh --force
