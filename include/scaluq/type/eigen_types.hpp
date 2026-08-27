@@ -193,6 +193,13 @@ inline SparseComplexMatrix ComplexMatrix::sparseView() const { return {}; }
 
 #else  // ── Real Eigen ──────────────────────────────────────────────────────────
 
+// For hipcc
+#include <algorithm>
+#if defined(SCALUQ_USE_HIP)
+using std::fill_n;
+#endif
+// For hipcc
+
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 

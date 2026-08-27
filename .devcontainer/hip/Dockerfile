@@ -1,4 +1,4 @@
-FROM rocm/dev-ubuntu24.04
+FROM rocm/dev-ubuntu-24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
