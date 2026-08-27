@@ -64,10 +64,10 @@ jobs:
       SCALUQ_CPU_NATIVE: "OFF"
       SCALUQ_CUDA_ARCH: "TURING75"
       SCALUQ_HIP_ARCH: "VEGA90A"
-      SCALUQ_FLOAT16: ${{ (matrix.compiler == 'clang' || matrix.device == 'hip' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
+      SCALUQ_FLOAT16: ${{ (matrix.compiler == 'clang' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
       SCALUQ_FLOAT32: ${{ matrix.device == 'sycl' && 'OFF' || 'ON' }}
       SCALUQ_FLOAT64: "ON"
-      SCALUQ_BFLOAT16: ${{ (matrix.compiler == 'clang' || matrix.device == 'hip' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
+      SCALUQ_BFLOAT16: ${{ (matrix.compiler == 'clang' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
     steps:
       - name: Free Disk Space (gpu)
         if: ${{ matrix.device == 'cuda' || matrix.device == 'hip' || matrix.device == 'sycl' }}

@@ -150,7 +150,7 @@ StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
                 FloatType tmp =
                     scaluq::internal::real(state_vector._raw[basis_0] *
                                            scaluq::internal::conj(state_vector._raw[basis_1]) *
-                                           global_phase * FloatType(2));
+                                           global_phase * FloatType(2.0f));
                 if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
                 res_lcl += coef * tmp;
             }
@@ -218,7 +218,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
                         FloatType tmp = scaluq::internal::real(
                             state_vector._raw[basis_0] *
                             scaluq::internal::conj(state_vector._raw[basis_1]) * global_phase *
-                            FloatType(2));
+                            FloatType(2.0f));
 
                         if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
 
@@ -283,7 +283,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
                         FloatType tmp = scaluq::internal::real(
                             states._raw(batch_id, basis_0) *
                             scaluq::internal::conj(states._raw(batch_id, basis_1)) * global_phase *
-                            FloatType(2));
+                            FloatType(2.0f));
                         if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
                         res_lcl += coef * tmp;
                     }
@@ -446,7 +446,7 @@ Operator<internal::Prec, internal::Space>::copy_to_host_space() const {
 
 template <>
 StdComplex Operator<internal::Prec, internal::Space>::calculate_default_mu() const {
-    FloatType mu{0};
+    FloatType mu{0.0f};
     std::uint64_t nterms = _terms.size();
     Kokkos::parallel_reduce(
         "calculate_default_mu",

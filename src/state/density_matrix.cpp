@@ -302,7 +302,7 @@ double DensityMatrix<Prec, Space>::get_purity() const {
             "DensityMatrix::get_purity: Purity is only defined for hermitian "
             "density matrices.");
     }
-    FloatType purity{0};
+    FloatType purity{0.0f};
     Kokkos::parallel_reduce(
         "get_purity",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
@@ -325,7 +325,7 @@ double DensityMatrix<Prec, Space>::get_zero_probability(std::uint64_t target_qub
             "DensityMatrix::get_zero_probability: Zero probability is only defined for hermitian "
             "density matrices.");
     }
-    FloatType zero_prob{0};
+    FloatType zero_prob{0.0f};
     Kokkos::parallel_reduce(
         "get_zero_probability",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> 1),
@@ -365,7 +365,7 @@ double DensityMatrix<Prec, Space>::get_marginal_probability(
         }
     }
 
-    FloatType sum = 0;
+    FloatType sum{0.0f};
     auto d_target_index = internal::convert_vector_to_view<std::uint64_t, Space>(target_index);
     auto d_target_value = internal::convert_vector_to_view<std::uint64_t, Space>(target_value);
 
@@ -455,13 +455,13 @@ double DensityMatrix<Prec, Space>::get_computational_basis_entropy() const {
             "DensityMatrix::get_computational_basis_entropy: Computational basis entropy is only "
             "defined for hermitian density matrices.");
     }
-    FloatType entropy = 0;
+    FloatType entropy{0.0f};
     Kokkos::parallel_reduce(
         "computational_basis_entropy",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & lsum) {
             FloatType prob = _raw(i, i).real();
-            if (prob > FloatType(0)) {
+            if (prob > FloatType(0.0f)) {
                 lsum += -prob * internal::log2(prob);
             }
         },

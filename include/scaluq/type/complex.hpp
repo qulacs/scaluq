@@ -109,7 +109,7 @@ public:
     template <typename Scalar>
     KOKKOS_INLINE_FUNCTION Complex& operator=(Scalar real) {
         _real = static_cast<FloatType>(real);
-        _imag = FloatType{0};
+        _imag = FloatType{0.0f};
         return *this;
     }
 

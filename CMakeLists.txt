@@ -302,6 +302,9 @@ endif()
 if(SCALUQ_USE_HIP)
     enable_language(HIP)
     target_compile_definitions(scaluq_base PUBLIC SCALUQ_USE_HIP)
+    target_compile_options(scaluq_base PUBLIC
+        -Wno-deprecated-attributes
+    )
 endif()
 
 if(SCALUQ_USE_SYCL)

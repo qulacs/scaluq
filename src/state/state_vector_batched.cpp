@@ -128,10 +128,11 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_scan(Kokkos::TeamThreadRange(team, _dim),
-                                  [&](std::uint64_t i, FloatType& update, const bool final) {
+                                  [&](std::uint64_t i, float& update, const bool final) {
                                       update += internal::squared_norm(this->_raw(batch_id, i));
                                       if (final) {
-                                          stacked_prob(batch_id, i + 1) = update;
+                                          stacked_prob(batch_id, i + 1) =
+                                              static_cast<FloatType>(update);
                                       }
                                   });
         });
@@ -257,7 +258,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_squared_norm() const {
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
-            FloatType nrm = 0;
+            FloatType nrm{0.0f};
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim),
@@ -283,7 +284,7 @@ void StateVectorBatched<Prec, Space>::normalize() {
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
-            FloatType nrm = 0;
+            FloatType nrm{0.0f};
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim),
@@ -313,7 +314,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_zero_probability(
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
-            FloatType sum = 0;
+            FloatType sum{0.0f};
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim >> 1),
@@ -367,7 +368,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_marginal_probability(
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
-            FloatType sum = 0;
+            FloatType sum{0.0f};
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim >> target_index_d.size()),
@@ -401,7 +402,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_computational_basis_ent
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
-            FloatType sum = 0;
+            FloatType sum{0.0f};
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim),
