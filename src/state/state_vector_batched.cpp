@@ -16,6 +16,18 @@ static Kokkos::LayoutStride make_aligned_batched_layout(std::uint64_t batch_size
     return Kokkos::LayoutStride(batch_size, stride, dim, 1);
 }
 
+template <class DstView, class SrcView>
+static void deep_copy_batched_span(const DstView& dst, const SrcView& src) {
+    using ValueType = typename DstView::non_const_value_type;
+    using DstFlatView = Kokkos::View<ValueType*,
+                                     typename DstView::memory_space,
+                                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    using SrcFlatView = Kokkos::View<const ValueType*,
+                                     typename SrcView::memory_space,
+                                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    Kokkos::deep_copy(DstFlatView(dst.data(), dst.span()), SrcFlatView(src.data(), src.span()));
+}
+
 template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, Space>::StateVectorBatched(std::uint64_t batch_size,
                                                     std::uint64_t n_qubits)
@@ -234,7 +246,8 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::uninitialized_s
 
 template <Precision Prec, ExecutionSpace Space>
 std::vector<std::vector<StdComplex>> StateVectorBatched<Prec, Space>::get_amplitudes() const {
-    auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), _raw);
+    auto view_h = Kokkos::create_mirror_view(Kokkos::HostSpace(), _raw);
+    deep_copy_batched_span(view_h, _raw);
     std::vector vv(_raw.extent(0), std::vector(_raw.extent(1), StdComplex(0.)));
     for (size_t i = 0; i < view_h.extent(0); ++i) {
         for (size_t j = 0; j < view_h.extent(1); ++j) {
@@ -468,7 +481,7 @@ void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComp
             view_h(b, i) = states[b][i];
         }
     }
-    Kokkos::deep_copy(_raw, view_h);
+    deep_copy_batched_span(_raw, view_h);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -500,7 +513,7 @@ StateVectorBatched<Prec, ExecutionSpace::Default>
 StateVectorBatched<Prec, Space>::copy_to_default_space() const {
     auto cp = StateVectorBatched<Prec, ExecutionSpace::Default>::uninitialized_state(_batch_size,
                                                                                      _n_qubits);
-    Kokkos::deep_copy(cp._raw, _raw);
+    deep_copy_batched_span(cp._raw, _raw);
     return cp;
 }
 
@@ -509,7 +522,7 @@ StateVectorBatched<Prec, ExecutionSpace::Host> StateVectorBatched<Prec, Space>::
     const {
     auto cp =
         StateVectorBatched<Prec, ExecutionSpace::Host>::uninitialized_state(_batch_size, _n_qubits);
-    Kokkos::deep_copy(cp._raw, _raw);
+    deep_copy_batched_span(cp._raw, _raw);
     return cp;
 }
 

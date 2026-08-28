@@ -101,7 +101,7 @@ endif(SCALUQ_USE_CUDA)
 FetchContent_Declare(
     kokkos
     GIT_REPOSITORY https://github.com/kokkos/kokkos
-    GIT_TAG 1b1383c6001f3bfe9fe309ca923c2d786600cc79 # 4.6.01
+    GIT_TAG d9397f95a04a0334d327647e64ab7f1882ca0664 # 5.2.0
 )
 FetchContent_MakeAvailable(kokkos)
 set_property(TARGET kokkoscore PROPERTY POSITION_INDEPENDENT_CODE ON)

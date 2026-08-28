@@ -166,12 +166,12 @@ std::string format_indices(const std::vector<std::uint64_t>& indices) {
     return result;
 }
 
-template <scaluq::Precision Prec>
+template <scaluq::Precision Prec, typename State>
 void baseline_one_target_dense_matrix(std::uint64_t target_mask,
                                       std::uint64_t control_mask,
                                       std::uint64_t control_value_mask,
                                       const scaluq::internal::Matrix2x2<Prec>& matrix,
-                                      auto& state) {
+                                      State& state) {
     using Complex = scaluq::internal::Complex<Prec>;
     Kokkos::parallel_for(
         "benchmark_baseline_one_target_dense_matrix",
