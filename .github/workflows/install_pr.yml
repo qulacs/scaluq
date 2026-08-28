@@ -148,7 +148,7 @@ jobs:
           log-file-suffix: '${{ github.job }}-${{ matrix.os-arch }}-${{ matrix.device }}'
 
       - name: Install HIP toolkit
-        if: ${{ matrix.device == 'hip' && (steps.check-build-files.outputs.any_changed == 'true' || steps.check-source-files.outputs.any_changed == 'true') }}
+        if: ${{ matrix.device == 'hip' }}
         run: |
           sudo mkdir --parents --mode=0755 /etc/apt/keyrings
           wget https://repo.radeon.com/rocm/rocm.gpg.key -O - | gpg --dearmor | sudo tee /etc/apt/keyrings/rocm.gpg > /dev/null
