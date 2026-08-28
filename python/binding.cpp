@@ -1,3 +1,7 @@
+#include <algorithm>
+#if defined(SCALUQ_USE_HIP)
+using std::fill_n;
+#endif
 #include <nanobind/eigen/dense.h>
 #include <nanobind/eigen/sparse.h>
 #include <nanobind/nanobind.h>
@@ -40,18 +44,18 @@ void cleanup() {
 
 template <Precision Prec, ExecutionSpace Space>
 void bind_on_precision_and_space(nb::module_& mp, nb::class_<Gate<Prec>>& gate_base_def) {
-    internal::bind_state_state_vector_hpp<Prec, Space>(mp);
-    internal::bind_state_state_vector_batched_hpp<Prec, Space>(mp);
-    internal::bind_state_density_matrix_hpp<Prec, Space>(mp);
+    scaluq::internal::bind_state_state_vector_hpp<Prec, Space>(mp);
+    scaluq::internal::bind_state_state_vector_batched_hpp<Prec, Space>(mp);
+    scaluq::internal::bind_state_density_matrix_hpp<Prec, Space>(mp);
 
     auto mgate = mp.def_submodule("gate", "Define gates.");
-    internal::bind_gate_gate_matrix_hpp<Prec, Space>(mp, gate_base_def);
-    internal::bind_gate_gate_factory_hpp<Prec, Space>(mgate);
+    scaluq::internal::bind_gate_gate_matrix_hpp<Prec, Space>(mp, gate_base_def);
+    scaluq::internal::bind_gate_gate_factory_hpp<Prec, Space>(mgate);
 
-    internal::bind_gate_merge_gate_hpp<Prec, Space>(mp);
+    scaluq::internal::bind_gate_merge_gate_hpp<Prec, Space>(mp);
 
-    internal::bind_operator_operator_hpp<Prec, Space>(mp);
-    internal::bind_operator_operator_batched_hpp<Prec, Space>(mp);
+    scaluq::internal::bind_operator_operator_hpp<Prec, Space>(mp);
+    scaluq::internal::bind_operator_operator_batched_hpp<Prec, Space>(mp);
 }
 
 template <Precision Prec>
@@ -59,28 +63,28 @@ void bind_on_precision(nb::module_& mp,
                        nb::class_<Gate<Prec>>& gate_base_def,
                        nb::class_<ParamGate<Prec>>& param_gate_base_def) {
     auto mgate = mp.def_submodule("gate", "Define gates.");
-    internal::bind_gate_gate_standard_hpp<Prec>(mp, gate_base_def);
-    internal::bind_gate_gate_measurement_hpp<Prec>(mp, gate_base_def);
-    internal::bind_gate_gate_pauli_hpp<Prec>(mp, gate_base_def);
-    internal::bind_gate_gate_factory_hpp<Prec>(mgate);
+    scaluq::internal::bind_gate_gate_standard_hpp<Prec>(mp, gate_base_def);
+    scaluq::internal::bind_gate_gate_measurement_hpp<Prec>(mp, gate_base_def);
+    scaluq::internal::bind_gate_gate_pauli_hpp<Prec>(mp, gate_base_def);
+    scaluq::internal::bind_gate_gate_factory_hpp<Prec>(mgate);
 
-    internal::bind_gate_param_gate_standard_hpp<Prec>(mp, param_gate_base_def);
-    internal::bind_gate_param_gate_pauli_hpp<Prec>(mp, param_gate_base_def);
-    internal::bind_gate_param_gate_probabilistic_hpp<Prec>(mp, param_gate_base_def);
-    internal::bind_gate_param_gate_factory<Prec>(mgate);
+    scaluq::internal::bind_gate_param_gate_standard_hpp<Prec>(mp, param_gate_base_def);
+    scaluq::internal::bind_gate_param_gate_pauli_hpp<Prec>(mp, param_gate_base_def);
+    scaluq::internal::bind_gate_param_gate_probabilistic_hpp<Prec>(mp, param_gate_base_def);
+    scaluq::internal::bind_gate_param_gate_factory<Prec>(mgate);
 
-    internal::bind_circuit_circuit_hpp<Prec>(mp);
-    internal::bind_qasm2_hpp<Prec>(mp);
+    scaluq::internal::bind_circuit_circuit_hpp<Prec>(mp);
+    scaluq::internal::bind_qasm2_hpp<Prec>(mp);
 
-    internal::bind_operator_pauli_operator_hpp<Prec>(mp);
+    scaluq::internal::bind_operator_pauli_operator_hpp<Prec>(mp);
 }
 
 NB_MODULE(scaluq_core, m) {
-    internal::bind_kokkos_hpp(m);
-    internal::bind_classical_register_hpp(m);
-    internal::bind_classical_register_batched_hpp(m);
-    internal::bind_gate_gate_hpp_without_precision_and_space(m);
-    internal::bind_gate_param_gate_hpp_without_precision_and_space(m);
+    scaluq::internal::bind_kokkos_hpp(m);
+    scaluq::internal::bind_classical_register_hpp(m);
+    scaluq::internal::bind_classical_register_batched_hpp(m);
+    scaluq::internal::bind_gate_gate_hpp_without_precision_and_space(m);
+    scaluq::internal::bind_gate_param_gate_hpp_without_precision_and_space(m);
 
     auto mdefault = m.def_submodule("default", "module for default execution space");
 #ifdef SCALUQ_USE_DEVICE
@@ -91,8 +95,8 @@ NB_MODULE(scaluq_core, m) {
 #ifdef SCALUQ_FLOAT16
     {
         auto mp = mdefault.def_submodule("f16", "module for f16 precision");
-        auto gate_def = internal::bind_gate_gate_hpp<Precision::F16>(mp);
-        auto param_gate_def = internal::bind_gate_param_gate_hpp<Precision::F16>(mp);
+        auto gate_def = scaluq::internal::bind_gate_gate_hpp<Precision::F16>(mp);
+        auto param_gate_def = scaluq::internal::bind_gate_param_gate_hpp<Precision::F16>(mp);
 
         bind_on_precision_and_space<Precision::F16, ExecutionSpace::Default>(mp, gate_def);
         bind_on_precision<Precision::F16>(mp, gate_def, param_gate_def);
@@ -109,8 +113,8 @@ NB_MODULE(scaluq_core, m) {
 #ifdef SCALUQ_FLOAT32
     {
         auto mp = mdefault.def_submodule("f32", "module for f32 precision");
-        auto gate_def = internal::bind_gate_gate_hpp<Precision::F32>(mp);
-        auto param_gate_def = internal::bind_gate_param_gate_hpp<Precision::F32>(mp);
+        auto gate_def = scaluq::internal::bind_gate_gate_hpp<Precision::F32>(mp);
+        auto param_gate_def = scaluq::internal::bind_gate_param_gate_hpp<Precision::F32>(mp);
 
         bind_on_precision_and_space<Precision::F32, ExecutionSpace::Default>(mp, gate_def);
         bind_on_precision<Precision::F32>(mp, gate_def, param_gate_def);
@@ -127,8 +131,8 @@ NB_MODULE(scaluq_core, m) {
 #ifdef SCALUQ_FLOAT64
     {
         auto mp = mdefault.def_submodule("f64", "module for f64 precision");
-        auto gate_def = internal::bind_gate_gate_hpp<Precision::F64>(mp);
-        auto param_gate_def = internal::bind_gate_param_gate_hpp<Precision::F64>(mp);
+        auto gate_def = scaluq::internal::bind_gate_gate_hpp<Precision::F64>(mp);
+        auto param_gate_def = scaluq::internal::bind_gate_param_gate_hpp<Precision::F64>(mp);
 
         bind_on_precision_and_space<Precision::F64, ExecutionSpace::Default>(mp, gate_def);
         bind_on_precision<Precision::F64>(mp, gate_def, param_gate_def);
@@ -145,8 +149,8 @@ NB_MODULE(scaluq_core, m) {
 #ifdef SCALUQ_BFLOAT16
     {
         auto mp = mdefault.def_submodule("bf16", "module for bf16 precision");
-        auto gate_def = internal::bind_gate_gate_hpp<Precision::BF16>(mp);
-        auto param_gate_def = internal::bind_gate_param_gate_hpp<Precision::BF16>(mp);
+        auto gate_def = scaluq::internal::bind_gate_gate_hpp<Precision::BF16>(mp);
+        auto param_gate_def = scaluq::internal::bind_gate_param_gate_hpp<Precision::BF16>(mp);
 
         bind_on_precision_and_space<Precision::BF16, ExecutionSpace::Default>(mp, gate_def);
         bind_on_precision<Precision::BF16>(mp, gate_def, param_gate_def);

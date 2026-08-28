@@ -351,6 +351,9 @@ jobs:
 
       - name: Install to system
         run: |
+          if [ "$SCALUQ_USE_HIP" = "ON" ]; then
+            export LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/llvm/lib:$LD_LIBRARY_PATH
+          fi
           if [ "$SCALUQ_USE_SYCL" = "ON" ]; then
             source /opt/intel/oneapi/setvars.sh --force
           fi
