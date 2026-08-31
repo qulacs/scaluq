@@ -234,7 +234,10 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::uninitialized_s
 
 template <Precision Prec, ExecutionSpace Space>
 std::vector<std::vector<StdComplex>> StateVectorBatched<Prec, Space>::get_amplitudes() const {
-    auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), _raw);
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<Space>> device_contiguous(
+        "device_contiguous", _batch_size, _dim);
+    Kokkos::deep_copy(device_contiguous, _raw);
+    auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), device_contiguous);
     std::vector vv(_raw.extent(0), std::vector(_raw.extent(1), StdComplex(0.)));
     for (size_t i = 0; i < view_h.extent(0); ++i) {
         for (size_t j = 0; j < view_h.extent(1); ++j) {
@@ -462,13 +465,17 @@ void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComp
         }
     }
 
-    auto view_h = Kokkos::create_mirror_view(Kokkos::HostSpace(), _raw);
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight, Kokkos::HostSpace> host_contiguous(
+        "host_contiguous", _batch_size, _dim);
     for (std::uint64_t b = 0; b < states.size(); ++b) {
         for (std::uint64_t i = 0; i < states[0].size(); ++i) {
-            view_h(b, i) = states[b][i];
+            host_contiguous(b, i) = states[b][i];
         }
     }
-    Kokkos::deep_copy(_raw, view_h);
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<Space>> device_contiguous(
+        "device_contiguous", _batch_size, _dim);
+    Kokkos::deep_copy(device_contiguous, host_contiguous);
+    Kokkos::deep_copy(_raw, device_contiguous);
 }
 
 template <Precision Prec, ExecutionSpace Space>
