@@ -565,17 +565,18 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
         [](const GateT& gate,
            GateStateVariant<Prec> state,
            ParamValueVariant param,
-           ClassicalRegisterVariant classical_register,
+           nb::handle classical_register,
            std::optional<std::uint64_t> seed) {
+            auto classical_register_variant = parse_classical_register(classical_register);
             visit_gate_state<Prec>(state, [&](auto* state_ptr) {
                 update_param_gate_state<GateT, Prec>(
-                    gate, state_ptr, param, classical_register, seed);
+                    gate, state_ptr, param, classical_register_variant, seed);
             });
         },
         "state"_a,
         nb::kw_only(),
         "param"_a,
-        "classical_register"_a = std::monostate{},
+        "classical_register"_a = nb::none(),
         "seed"_a = std::nullopt,
         nb::sig(update_signature),
         update_doc_str.c_str());
