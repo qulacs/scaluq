@@ -677,6 +677,19 @@ Overloaded(Ts...) -> Overloaded<Ts...>;
 using ClassicalRegisterVariant =
     std::variant<std::monostate, ClassicalRegister*, ClassicalRegisterBatched*>;
 
+inline ClassicalRegisterVariant parse_classical_register(nb::handle classical_register) {
+    if (classical_register.is_none()) {
+        return std::monostate{};
+    }
+    if (nb::isinstance<ClassicalRegister>(classical_register)) {
+        return nb::cast<ClassicalRegister*>(classical_register);
+    }
+    if (nb::isinstance<ClassicalRegisterBatched>(classical_register)) {
+        return nb::cast<ClassicalRegisterBatched*>(classical_register);
+    }
+    throw nb::type_error("Expected a ClassicalRegister or ClassicalRegisterBatched.");
+}
+
 template <Precision>
 using GateStateVariant = nb::handle;
 
@@ -1023,15 +1036,17 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
         "update_quantum_state",
         [](const GateT& gate,
            GateStateVariant<Prec> state,
-           ClassicalRegisterVariant classical_register,
+           nb::handle classical_register,
            std::optional<std::uint64_t> seed) {
+            auto classical_register_variant = parse_classical_register(classical_register);
             visit_gate_state<Prec>(state, [&](auto* state_ptr) {
-                update_gate_state<GateT, Prec>(gate, state_ptr, classical_register, seed);
+                update_gate_state<GateT, Prec>(
+                    gate, state_ptr, classical_register_variant, seed);
             });
         },
         "state"_a,
         nb::kw_only(),
-        "classical_register"_a = std::monostate{},
+        "classical_register"_a = nb::none(),
         "seed"_a = std::nullopt,
         nb::sig(update_signature),
         update_doc_str.c_str());
