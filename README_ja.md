@@ -55,7 +55,7 @@ https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
 - Ninja 1.10 以上
 - GCC 13 以上 または LLVM Clang 13 以上
   - CUDA 利用時はGCC 11以上が利用できるが、Clangは利用不可
-- CMake 3.24 以上
+- CMake 3.25.2 以上
 - CUDA 12.8 以上（CUDA利用時のみ）
 - IntelLLVM (SYCL利用時のみ)
   - Intel oneAPI DPC++/C++ Compiler (CC=icx/CXX=icpx)
@@ -64,8 +64,6 @@ https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
 CUDA を利用する場合は、使用する CUDA がサポートするホストコンパイラのバージョンを使用してください（CUDA Installation Guide の Host Compiler Support Policy を参照）。
 
 ※これより低いバージョンでも動作する可能性はありますが確認していません
-
-※SYCLはCPUおよびNvidia GPU上での動作は確認できていますが、Intel GPUでの動作確認を行っていません。
 
 ## 実行時要件
 
@@ -92,13 +90,47 @@ CUDA を利用する場合は、使用する CUDA がサポートするホスト
 |`SCALUQ_CPU_NATIVE`|`ON`| ビルダーのCPUアーキテクチャでビルドするか|
 |`SCALUQ_CPU_ARCH`|-| ターゲットとなるCPUアーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CPU_ARCH=SKX`)|
 |`SCALUQ_CUDA_ARCH`|(自動識別)|`SCALUQ_USE_CUDA=ON`の場合、ターゲットとなるNvidia GPU アーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CUDA_ARCH=AMPERE80`)|
-|`SCALUQ_SYCL_ARCH`|(自動識別)|`SCALUQ_USE_SYCL=ON`の場合、ターゲットとなるIntel GPU アーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_SYCL_ARCH=INTEL_PVC`)|
+|`SCALUQ_SYCL_ARCH`|-|SYCLのターゲットアーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、Intel GPUの例: `SCALUQ_SYCL_ARCH=INTEL_GEN`)|
 |`SCALUQ_USE_TEST`|`OFF`|`test/`をビルドターゲットに含める。`ctest --test-dir build/`でテストのビルド・実行ができます|
 |`SCALUQ_USE_EXE`|`OFF`|`exe/`をビルドターゲットに含める。`ninja -C build`でビルドしたあと、`build/exe/main` を実行してインストールなしで試せます|
 |`SCALUQ_FLOAT16`|`OFF`|`f16`精度を有効にする|
 |`SCALUQ_FLOAT32`|`ON`|`f32`精度を有効にする|
 |`SCALUQ_FLOAT64`|`ON`|`f64`精度を有効にする|
 |`SCALUQ_BFLOAT16`|`OFF`|`bf16`精度を有効にする|
+
+## Intel GPU向けビルド (SYCL)
+
+Intel oneAPI DPC++/C++ CompilerとLevel ZeroなどのIntel GPUランタイムをインストールし、
+oneAPI環境を初期化します。デフォルトのインストール先では次のように実行します。
+
+```sh
+source /opt/intel/oneapi/setvars.sh
+```
+
+IntelLLVMをコンパイラに指定してSYCLを有効化し、Kokkosの汎用Intel GPUターゲットを選択します。
+SYCLはCPUをターゲットにする場合もあるため、アーキテクチャは意図的に明示指定します。
+
+```sh
+CMAKE_C_COMPILER=icx \
+CMAKE_CXX_COMPILER=icpx \
+SCALUQ_USE_SYCL=ON \
+SCALUQ_SYCL_ARCH=INTEL_GEN \
+script/configure
+ninja -C build
+```
+
+Pythonパッケージをビルドしてインストールする場合も、同じ変数を`pip`に渡します。
+
+```sh
+CMAKE_C_COMPILER=icx \
+CMAKE_CXX_COMPILER=icpx \
+SCALUQ_USE_SYCL=ON \
+SCALUQ_SYCL_ARCH=INTEL_GEN \
+pip install .
+```
+
+複数のSYCLデバイスがある環境では、実行時に
+`ONEAPI_DEVICE_SELECTOR=level_zero:gpu`を指定するとIntel GPUを選択できます。
 
 ## C++ ライブラリとしてインストール
 

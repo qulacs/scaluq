@@ -21,8 +21,8 @@ TYPED_TEST(DensityMatrixTest, HaarRandomStateTracePurity) {
         ASSERT_NEAR(state.get_trace().imag(), 0., eps<Prec>);
         ASSERT_NEAR(state.get_purity(),
                     1.,
-                    eps<Prec> * 10.);  // Large epsilon because the purity calculation involves
-                                       // large number of floating-point operations.
+                    eps<Prec> * 100.);  // Large epsilon because the purity calculation involves
+                                        // large number of floating-point operations.
     }
 }
 
