@@ -34,6 +34,7 @@ errorlevel
 expt-relaxed-constexpr
 fopenmp
 fsanitize
+fsycl
 genindex
 googletest
 GROUPNAME
@@ -47,6 +48,8 @@ IBMQ
 IBMQ's
 icircuit
 icoef
+icpx
+intelllvm
 ipcircuit
 isort
 Jimver
@@ -79,6 +82,7 @@ nqubits
 nshot
 numpy
 nvcc
+oneapi
 OPENMP
 paulis
 pcircuit
@@ -97,6 +101,7 @@ pylance
 pylint
 PYPI
 PYTHONPATH
+qopenmp
 qubit
 qubits
 qulacs
@@ -122,6 +127,7 @@ sqrty
 sqrtydag
 STREQUAL
 stubgen
+sycl
 Tdag
 toctree
 Toffoli
