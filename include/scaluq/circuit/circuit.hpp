@@ -339,12 +339,10 @@ void register_circuit_update_quantum_state(nb::class_<Circuit<Prec>>& c) {
            ClassicalRegisterVariant classical_register,
            std::optional<std::uint64_t> seed,
            nb::kwargs kwargs) {
-            std::visit(
-                [&](auto* state_ptr) {
-                    update_circuit_state<Prec>(
-                        circuit, state_ptr, classical_register, parameters, seed, kwargs);
-                },
-                state);
+            visit_gate_state<Prec>(state, [&](auto* state_ptr) {
+                update_circuit_state<Prec>(
+                    circuit, state_ptr, classical_register, parameters, seed, kwargs);
+            });
         },
         "state"_a,
         nb::kw_only(),

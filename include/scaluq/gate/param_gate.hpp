@@ -567,12 +567,10 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
            ParamValueVariant param,
            ClassicalRegisterVariant classical_register,
            std::optional<std::uint64_t> seed) {
-            std::visit(
-                [&](auto* state_ptr) {
-                    update_param_gate_state<GateT, Prec>(
-                        gate, state_ptr, param, classical_register, seed);
-                },
-                state);
+            visit_gate_state<Prec>(state, [&](auto* state_ptr) {
+                update_param_gate_state<GateT, Prec>(
+                    gate, state_ptr, param, classical_register, seed);
+            });
         },
         "state"_a,
         nb::kw_only(),

@@ -677,20 +677,8 @@ Overloaded(Ts...) -> Overloaded<Ts...>;
 using ClassicalRegisterVariant =
     std::variant<std::monostate, ClassicalRegister*, ClassicalRegisterBatched*>;
 
-template <Precision Prec>
-#ifdef SCALUQ_USE_DEVICE
-using GateStateVariant = std::variant<StateVector<Prec, ExecutionSpace::Host>*,
-                                      StateVectorBatched<Prec, ExecutionSpace::Host>*,
-                                      StateVector<Prec, ExecutionSpace::HostSerial>*,
-                                      StateVectorBatched<Prec, ExecutionSpace::HostSerial>*,
-                                      StateVector<Prec, ExecutionSpace::Default>*,
-                                      StateVectorBatched<Prec, ExecutionSpace::Default>*>;
-#else
-using GateStateVariant = std::variant<StateVector<Prec, ExecutionSpace::Default>*,
-                                      StateVectorBatched<Prec, ExecutionSpace::Default>*,
-                                      StateVector<Prec, ExecutionSpace::HostSerial>*,
-                                      StateVectorBatched<Prec, ExecutionSpace::HostSerial>*>;
-#endif
+template <Precision>
+using GateStateVariant = nb::handle;
 
 template <typename GateT, Precision Prec, ExecutionSpace Space>
 void update_gate_state(const GateT& gate,
@@ -742,6 +730,27 @@ void update_gate_state(const GateT& gate,
                            *states, *reg, seed.value_or(std::random_device{}()));
                    }},
         classical_register);
+}
+
+template <Precision Prec, typename F>
+void visit_gate_state(nb::handle state, F&& function) {
+    if (nb::isinstance<StateVector<Prec, ExecutionSpace::Host>>(state)) {
+        function(nb::cast<StateVector<Prec, ExecutionSpace::Host>*>(state));
+    } else if (nb::isinstance<StateVectorBatched<Prec, ExecutionSpace::Host>>(state)) {
+        function(nb::cast<StateVectorBatched<Prec, ExecutionSpace::Host>*>(state));
+    } else if (nb::isinstance<StateVector<Prec, ExecutionSpace::HostSerial>>(state)) {
+        function(nb::cast<StateVector<Prec, ExecutionSpace::HostSerial>*>(state));
+    } else if (nb::isinstance<StateVectorBatched<Prec, ExecutionSpace::HostSerial>>(state)) {
+        function(nb::cast<StateVectorBatched<Prec, ExecutionSpace::HostSerial>*>(state));
+#ifdef SCALUQ_USE_DEVICE
+    } else if (nb::isinstance<StateVector<Prec, ExecutionSpace::Default>>(state)) {
+        function(nb::cast<StateVector<Prec, ExecutionSpace::Default>*>(state));
+    } else if (nb::isinstance<StateVectorBatched<Prec, ExecutionSpace::Default>>(state)) {
+        function(nb::cast<StateVectorBatched<Prec, ExecutionSpace::Default>*>(state));
+#endif
+    } else {
+        throw nb::type_error("Expected a StateVector or StateVectorBatched.");
+    }
 }
 
 template <typename GateT, Precision Prec>
@@ -1016,11 +1025,9 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
            GateStateVariant<Prec> state,
            ClassicalRegisterVariant classical_register,
            std::optional<std::uint64_t> seed) {
-            std::visit(
-                [&](auto* state_ptr) {
-                    update_gate_state<GateT, Prec>(gate, state_ptr, classical_register, seed);
-                },
-                state);
+            visit_gate_state<Prec>(state, [&](auto* state_ptr) {
+                update_gate_state<GateT, Prec>(gate, state_ptr, classical_register, seed);
+            });
         },
         "state"_a,
         nb::kw_only(),
