@@ -320,9 +320,8 @@ public:
 
         KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value,
                                                const SimdComplex& accumulator) const {
-            const auto real_part = Kokkos::Experimental::fma(_real, value._data, accumulator._data);
-            return SimdComplex(
-                Kokkos::Experimental::fma(_imag, value.multiply_by_i()._data, real_part));
+            const auto real_part = Kokkos::fma(_real, value._data, accumulator._data);
+            return SimdComplex(Kokkos::fma(_imag, value.multiply_by_i()._data, real_part));
         }
 
         KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value, ZeroExpression) const {
@@ -380,7 +379,7 @@ public:
 
         KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value,
                                                const SimdComplex& accumulator) const {
-            return SimdComplex(Kokkos::Experimental::fma(_value, value._data, accumulator._data));
+            return SimdComplex(Kokkos::fma(_value, value._data, accumulator._data));
         }
 
         KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value, ZeroExpression) const {
@@ -438,8 +437,7 @@ public:
 
         KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value,
                                                const SimdComplex& accumulator) const {
-            return SimdComplex(
-                Kokkos::Experimental::fma(_value, value.multiply_by_i()._data, accumulator._data));
+            return SimdComplex(Kokkos::fma(_value, value.multiply_by_i()._data, accumulator._data));
         }
 
         KOKKOS_INLINE_FUNCTION SimdComplex fma(const SimdComplex& value, ZeroExpression) const {
@@ -451,8 +449,9 @@ public:
     public:
         // 項がすべて ZeroExpression のときに呼ばれうる
         KOKKOS_INLINE_FUNCTION void store_aligned(Complex<P>* ptr) const {
-            Simd(Scalar{0}).copy_to(reinterpret_cast<Scalar*>(ptr),
-                                    Kokkos::Experimental::vector_aligned_tag{});
+            Kokkos::Experimental::simd_unchecked_store(
+                Simd(Scalar{0}), reinterpret_cast<Scalar*>(ptr),
+                Kokkos::Experimental::simd_flag_aligned);
         }
     };
 
@@ -514,12 +513,13 @@ public:
     KOKKOS_INLINE_FUNCTION explicit SimdComplex(const Simd& data) : _data(data) {}
 
     KOKKOS_INLINE_FUNCTION static SimdComplex load_aligned(const Complex<P>* ptr) {
-        return SimdComplex(
-            Simd(reinterpret_cast<const Scalar*>(ptr), Kokkos::Experimental::vector_aligned_tag{}));
+        return SimdComplex(Kokkos::Experimental::simd_unchecked_load<Simd>(
+            reinterpret_cast<const Scalar*>(ptr), Kokkos::Experimental::simd_flag_aligned));
     }
 
     KOKKOS_INLINE_FUNCTION void store_aligned(Complex<P>* ptr) const {
-        _data.copy_to(reinterpret_cast<Scalar*>(ptr), Kokkos::Experimental::vector_aligned_tag{});
+        Kokkos::Experimental::simd_unchecked_store(
+            _data, reinterpret_cast<Scalar*>(ptr), Kokkos::Experimental::simd_flag_aligned);
     }
 
     KOKKOS_INLINE_FUNCTION SimdComplex multiply_by_i() const {
