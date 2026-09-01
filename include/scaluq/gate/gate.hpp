@@ -678,16 +678,19 @@ using ClassicalRegisterVariant =
     std::variant<std::monostate, ClassicalRegister*, ClassicalRegisterBatched*>;
 
 template <Precision Prec>
+#ifdef SCALUQ_USE_DEVICE
 using GateStateVariant = std::variant<StateVector<Prec, ExecutionSpace::Host>*,
                                       StateVectorBatched<Prec, ExecutionSpace::Host>*,
                                       StateVector<Prec, ExecutionSpace::HostSerial>*,
-                                      StateVectorBatched<Prec, ExecutionSpace::HostSerial>*
-#ifdef SCALUQ_USE_DEVICE
-                                      ,
+                                      StateVectorBatched<Prec, ExecutionSpace::HostSerial>*,
                                       StateVector<Prec, ExecutionSpace::Default>*,
-                                      StateVectorBatched<Prec, ExecutionSpace::Default>*
+                                      StateVectorBatched<Prec, ExecutionSpace::Default>*>;
+#else
+using GateStateVariant = std::variant<StateVector<Prec, ExecutionSpace::Default>*,
+                                      StateVectorBatched<Prec, ExecutionSpace::Default>*,
+                                      StateVector<Prec, ExecutionSpace::HostSerial>*,
+                                      StateVectorBatched<Prec, ExecutionSpace::HostSerial>*>;
 #endif
-                                      >;
 
 template <typename GateT, Precision Prec, ExecutionSpace Space>
 void update_gate_state(const GateT& gate,
