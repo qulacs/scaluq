@@ -181,6 +181,9 @@ jobs:
       - name: List related test files
         if: ${{ steps.check-build-files.outputs.any_changed == 'false' && steps.check-source-files.outputs.any_changed == 'true' }}
         run: |
+          if [ "$SCALUQ_USE_SYCL" = "ON" ]; then
+            source /opt/intel/oneapi/setvars.sh --force
+          fi
           RELATED_TEST_FILES=$(./script/related-test-files ${{ steps.check-source-files.outputs.changed_files }})
           if [ -z "$RELATED_TEST_FILES" ]; then
             echo "No related test files found. Skipping tests."
