@@ -16,18 +16,6 @@ static Kokkos::LayoutStride make_aligned_batched_layout(std::uint64_t batch_size
     return Kokkos::LayoutStride(batch_size, stride, dim, 1);
 }
 
-template <class DstView, class SrcView>
-static void deep_copy_batched_span(const DstView& dst, const SrcView& src) {
-    using ValueType = typename DstView::non_const_value_type;
-    using DstFlatView = Kokkos::View<ValueType*,
-                                     typename DstView::memory_space,
-                                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using SrcFlatView = Kokkos::View<const ValueType*,
-                                     typename SrcView::memory_space,
-                                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    Kokkos::deep_copy(DstFlatView(dst.data(), dst.span()), SrcFlatView(src.data(), src.span()));
-}
-
 template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, Space>::StateVectorBatched(std::uint64_t batch_size,
                                                     std::uint64_t n_qubits)
@@ -519,7 +507,11 @@ StateVectorBatched<Prec, ExecutionSpace::Default>
 StateVectorBatched<Prec, Space>::copy_to_default_space() const {
     auto cp = StateVectorBatched<Prec, ExecutionSpace::Default>::uninitialized_state(_batch_size,
                                                                                      _n_qubits);
-    deep_copy_batched_span(cp._raw, _raw);
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight,
+                 internal::SpaceType<ExecutionSpace::Default>>
+        contiguous("contiguous", _batch_size, _dim);
+    Kokkos::deep_copy(contiguous, _raw);
+    Kokkos::deep_copy(cp._raw, contiguous);
     return cp;
 }
 
@@ -528,7 +520,10 @@ StateVectorBatched<Prec, ExecutionSpace::Host> StateVectorBatched<Prec, Space>::
     const {
     auto cp =
         StateVectorBatched<Prec, ExecutionSpace::Host>::uninitialized_state(_batch_size, _n_qubits);
-    deep_copy_batched_span(cp._raw, _raw);
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<ExecutionSpace::Host>>
+        contiguous("contiguous", _batch_size, _dim);
+    Kokkos::deep_copy(contiguous, _raw);
+    Kokkos::deep_copy(cp._raw, contiguous);
     return cp;
 }
 
