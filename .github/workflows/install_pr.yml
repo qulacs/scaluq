@@ -152,8 +152,19 @@ jobs:
         run: |
           sudo mkdir --parents --mode=0755 /etc/apt/keyrings
           wget https://repo.radeon.com/rocm/rocm.gpg.key -O - | gpg --dearmor | sudo tee /etc/apt/keyrings/rocm.gpg > /dev/null
-          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/7.0.3 noble main" | sudo tee /etc/apt/sources.list.d/rocm.list
 
+          sudo tee /etc/apt/sources.list.d/amdrocm-stable.sources << EOF
+          X-Repo-Id: amdrocm-stable
+          Types: deb
+          URIs: https://stable.repo.amd.com/rocm/core/packages/ubuntu2404/
+          Suites: stable
+          Components: main
+          Architectures: amd64
+          Signed-By: /etc/apt/keyrings/amdrocm.gpg
+          Enabled: yes
+          EOF
+
+          echo -e "Package: *\nPin: origin repo.radeon.com\nPin-Priority: 900" | sudo tee /etc/apt/preferences.d/rocm-pin-900
           sudo apt-get update
           sudo apt-get install -y hipcc rocm-dev
           echo "/opt/rocm/bin" >> $GITHUB_PATH
