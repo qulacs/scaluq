@@ -164,7 +164,7 @@ jobs:
           Enabled: yes
           EOF
 
-          echo -e "Package: *\nPin: origin stable.repo.amd.com\nPin-Priority: 900" | sudo tee /etc/apt/preferences.d/rocm-pin-900
+          echo -e "Package: *\nPin: origin stable.repo.amd.com\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/rocm-pin-1001
           sudo apt-get update
           sudo apt-get install -y hipcc libamdhip64-dev
           echo "/opt/rocm/bin" >> $GITHUB_PATH
