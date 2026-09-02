@@ -127,14 +127,14 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
-            Kokkos::parallel_scan(Kokkos::TeamThreadRange(team, _dim),
-                                  [&](std::uint64_t i, float& update, const bool final) {
-                                      update += internal::squared_norm(this->_raw(batch_id, i));
-                                      if (final) {
-                                          stacked_prob(batch_id, i + 1) =
-                                              static_cast<FloatType>(update);
-                                      }
-                                  });
+            Kokkos::parallel_scan(
+                Kokkos::TeamThreadRange(team, _dim),
+                [&](std::uint64_t i, float& update, const bool final) {
+                    update += static_cast<float>(internal::squared_norm(this->_raw(batch_id, i)));
+                    if (final) {
+                        stacked_prob(batch_id, i + 1) = static_cast<FloatType>(update);
+                    }
+                });
         });
 
     std::vector result(_batch_size, std::vector<std::uint64_t>(sampling_count));
@@ -508,11 +508,10 @@ StateVectorBatched<Prec, ExecutionSpace::Default>
 StateVectorBatched<Prec, Space>::copy_to_default_space() const {
     auto cp = StateVectorBatched<Prec, ExecutionSpace::Default>::uninitialized_state(_batch_size,
                                                                                      _n_qubits);
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<Space>>
-        source_contiguous("source_contiguous", _batch_size, _dim);
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<Space>> source_contiguous(
+        "source_contiguous", _batch_size, _dim);
     Kokkos::deep_copy(source_contiguous, _raw);
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight,
-                 internal::SpaceType<ExecutionSpace::Default>>
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<ExecutionSpace::Default>>
         destination_contiguous("destination_contiguous", _batch_size, _dim);
     Kokkos::deep_copy(destination_contiguous, source_contiguous);
     Kokkos::deep_copy(cp._raw, destination_contiguous);
@@ -524,11 +523,10 @@ StateVectorBatched<Prec, ExecutionSpace::Host> StateVectorBatched<Prec, Space>::
     const {
     auto cp =
         StateVectorBatched<Prec, ExecutionSpace::Host>::uninitialized_state(_batch_size, _n_qubits);
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<Space>>
-        source_contiguous("source_contiguous", _batch_size, _dim);
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<Space>> source_contiguous(
+        "source_contiguous", _batch_size, _dim);
     Kokkos::deep_copy(source_contiguous, _raw);
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight,
-                 internal::SpaceType<ExecutionSpace::Host>>
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<ExecutionSpace::Host>>
         destination_contiguous("destination_contiguous", _batch_size, _dim);
     Kokkos::deep_copy(destination_contiguous, source_contiguous);
     Kokkos::deep_copy(cp._raw, destination_contiguous);
