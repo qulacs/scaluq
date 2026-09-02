@@ -23,7 +23,7 @@ The build requirements are below.
 - Ninja ≥ 1.10
 - GCC ≥ 13 or LLVM Clang ≥ 18
   - if you enable CUDA, GCC ≥ 11 is OK, but you cannot use Clang.
-- CMake ≥ 3.24
+- CMake ≥ 3.25.2
 - CUDA ≥ 12.8 (only when using CUDA)
 - IntelLLVM (only when using SYCL)
   - Intel oneAPI DPC++/C++ Compiler (CC=icx/CXX=icpx)
@@ -32,8 +32,6 @@ The build requirements are below.
 When using CUDA, use a host compiler version supported by your CUDA toolkit (see the CUDA Installation Guide Host Compiler Support Policy).
 
 Note: It may work with lower versions, but this has not been verified.
-
-Note (experimental): SYCL backend is checked on CPUs and Nvidia GPU, not on Intel GPU.
 
 The build options are below.
 
@@ -51,7 +49,7 @@ The build options are below.
 | `SCALUQ_CPU_ARCH`      | -           | Target CPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_CPU_ARCH=SKX`) |
 | `SCALUQ_CUDA_ARCH`     | (auto)      | Target Nvidia GPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_CUDA_ARCH=AMPERE80`) |
 | `SCALUQ_HIP_ARCH`      | -           | Target AMD GPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_HIP_ARCH=AMD_GPU`) |
-| `SCALUQ_SYCL_ARCH`     | (auto)      | Target Intel GPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_SYCL_ARCH=INTEL_PVC`) |
+| `SCALUQ_SYCL_ARCH`     | -           | Target SYCL device architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_SYCL_ARCH=INTEL_GEN` for Intel GPUs) |
 | `SCALUQ_USE_TEST`      | `OFF`        | Include `test/` in build targets. You can build and run tests with `ctest --test-dir build/` |
 | `SCALUQ_USE_EXE`       | `OFF`        | Include `exe/` in build targets. You can try running without installing by building with `ninja -C build` and running `build/exe/main` |
 | `SCALUQ_FLOAT16`       | `OFF`       | Enable `f16` precision |
@@ -65,6 +63,24 @@ To install Scaluq, clone the git repository first and enter.
 git clone https://github.com/qulacs/scaluq
 cd scaluq
 ```
+
+### Intel GPU (SYCL)
+
+Install the Intel oneAPI DPC++/C++ Compiler and an Intel GPU runtime such as Level Zero. Initialize
+the oneAPI environment, then enable SYCL and explicitly select Kokkos's generic Intel GPU target:
+
+```
+source /opt/intel/oneapi/setvars.sh
+CMAKE_C_COMPILER=icx \
+CMAKE_CXX_COMPILER=icpx \
+SCALUQ_USE_SYCL=ON \
+SCALUQ_SYCL_ARCH=INTEL_GEN \
+pip install .
+```
+
+The architecture is explicit because a SYCL build may instead target a CPU. If the machine has
+multiple SYCL devices, select the Intel GPU at runtime with
+`ONEAPI_DEVICE_SELECTOR=level_zero:gpu`.
 
 Then, install Scaluq with passing configuration by environment variable.
 

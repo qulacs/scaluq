@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.24)
-
 include(GoogleTest)
 
 file(GLOB_RECURSE ALL_TEST_SOURCES

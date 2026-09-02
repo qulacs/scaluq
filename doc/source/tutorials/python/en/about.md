@@ -43,7 +43,7 @@ See [the benchmark repository](https://github.com/Qulacs-Osaka/benchmark-scaluq)
 
 - Ninja ≥ 1.10
 - GCC ≥ 11 (≥ 13 if not using CUDA)
-- CMake ≥ 3.24
+- CMake ≥ 3.25.2
 - CUDA ≥ 12.6 (only when using CUDA)
 - Python ≥ 3.10 (only when using Python)
 
