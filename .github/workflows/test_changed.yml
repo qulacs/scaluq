@@ -182,7 +182,7 @@ jobs:
 
           echo -e "Package: *\nPin: origin stable.repo.amd.com\nPin-Priority: 900" | sudo tee /etc/apt/preferences.d/rocm-pin-900
           sudo apt-get update
-          sudo apt-get install -y hipcc hip-dev
+          sudo apt-get install -y hipcc libamdhip64-dev
           echo "/opt/rocm/bin" >> $GITHUB_PATH
 
       - name: Install SYCL toolkit
