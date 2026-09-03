@@ -38,16 +38,6 @@ private:
     T _value{};
 };
 
-template <class Simd>
-Simd simd_unchecked_load(const typename Simd::value_type* ptr, vector_aligned_tag) {
-    return Simd(ptr, vector_aligned_tag{});
-}
-
-template <class T, std::size_t N>
-void simd_unchecked_store(const simd<T, N>& value, T* ptr, vector_aligned_tag) {
-    value.copy_to(ptr, vector_aligned_tag{});
-}
-
 template <class SimdType>
 SimdType simd_unchecked_load(const typename SimdType::value_type* ptr,
                              vector_aligned_tag flag = {}) {
