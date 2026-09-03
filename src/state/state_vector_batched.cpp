@@ -2,6 +2,7 @@
 #include <scaluq/prec_space.hpp>
 #include <scaluq/state/state_vector_batched.hpp>
 #include <scaluq/util/math.hpp>
+#include <type_traits>
 
 namespace scaluq {
 
@@ -127,10 +128,16 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
+            using AccumType =
+                std::conditional_t<(sizeof(FloatType) < sizeof(float)), float, FloatType>;
             Kokkos::parallel_scan(
                 Kokkos::TeamThreadRange(team, _dim),
-                [&](std::uint64_t i, float& update, const bool final) {
-                    update += static_cast<float>(internal::squared_norm(this->_raw(batch_id, i)));
+                [&](std::uint64_t i, AccumType& update, const bool final) {
+                    // hip_bfloat16 has explicit constructor and cannot cast int
+                    // (native) to hip_bfloat16 (Non-native). So update must be
+                    // f64, f32.
+                    update +=
+                        static_cast<AccumType>(internal::squared_norm(this->_raw(batch_id, i)));
                     if (final) {
                         stacked_prob(batch_id, i + 1) = static_cast<FloatType>(update);
                     }
