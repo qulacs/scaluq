@@ -99,9 +99,7 @@ DensityMatrix<Prec, ExecutionSpace::Default> DensityMatrix<Prec, Space>::copy_to
     auto new_state =
         DensityMatrix<Prec, ExecutionSpace::Default>::uninitialized_state(this->_n_qubits);
     new_state._is_hermitian = this->_is_hermitian;
-    auto mirror = Kokkos::create_mirror_view(new_state._raw);
-    Kokkos::deep_copy(mirror, this->_raw);
-    Kokkos::deep_copy(new_state._raw, mirror);
+    Kokkos::deep_copy(new_state._raw, this->_raw);
     return new_state;
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -109,9 +107,7 @@ DensityMatrix<Prec, ExecutionSpace::Host> DensityMatrix<Prec, Space>::copy_to_ho
     auto new_state =
         DensityMatrix<Prec, ExecutionSpace::Host>::uninitialized_state(this->_n_qubits);
     new_state._is_hermitian = this->_is_hermitian;
-    auto mirror = Kokkos::create_mirror_view(this->_raw);
-    Kokkos::deep_copy(mirror, this->_raw);
-    Kokkos::deep_copy(new_state._raw, mirror);
+    Kokkos::deep_copy(new_state._raw, this->_raw);
     return new_state;
 }
 
