@@ -215,7 +215,6 @@ jobs:
     name: Install Python package
     strategy:
       matrix:
-        python-version: ["3.13"]
         include:
           - os-arch: "linux-x86_64"
             runs-on: "ubuntu-24.04"
@@ -287,7 +286,7 @@ jobs:
 
       - uses: actions/setup-python@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.13"
 
       - name: Setup LLVM Clang (macOS clang)
         if: ${{ matrix.os-arch == 'macos-arm64' && matrix.compiler == 'clang' }}
