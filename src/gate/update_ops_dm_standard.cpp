@@ -2,6 +2,46 @@
 
 namespace scaluq::internal {
 
+template <Precision P, ExecutionSpace S>
+struct DensityMatrixSwapRowsFunctor {
+    Kokkos::View<Complex<P>**, SpaceType<S>> raw;
+    std::uint64_t dim;
+    std::uint64_t target_mask;
+    std::uint64_t control_mask;
+    std::uint64_t control_value_mask;
+    std::uint64_t lower_target_mask;
+    std::uint64_t upper_target_mask;
+
+    KOKKOS_FUNCTION void operator()(std::uint64_t g) const {
+        const std::uint64_t it = g / dim;
+        const std::uint64_t col = g % dim;
+        const std::uint64_t basis =
+            insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
+        Kokkos::kokkos_swap(raw(basis | lower_target_mask, col),
+                            raw(basis | upper_target_mask, col));
+    }
+};
+
+template <Precision P, ExecutionSpace S>
+struct DensityMatrixSwapColumnsFunctor {
+    Kokkos::View<Complex<P>**, SpaceType<S>> raw;
+    std::uint64_t n_quads;
+    std::uint64_t target_mask;
+    std::uint64_t control_mask;
+    std::uint64_t control_value_mask;
+    std::uint64_t lower_target_mask;
+    std::uint64_t upper_target_mask;
+
+    KOKKOS_FUNCTION void operator()(std::uint64_t g) const {
+        const std::uint64_t row = g / n_quads;
+        const std::uint64_t it = g % n_quads;
+        const std::uint64_t basis =
+            insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
+        Kokkos::kokkos_swap(raw(row, basis | lower_target_mask),
+                            raw(row, basis | upper_target_mask));
+    }
+};
+
 // Dense 1-qubit gate: ρ → U ρ U†.
 //
 // Uncontrolled (control_mask==0): single-pass block approach (Qulacs-style).
@@ -514,28 +554,24 @@ void swap_gate(std::uint64_t target_mask,
     std::uint64_t lower_target_mask = target_mask & -target_mask;
     std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;
     const std::uint64_t n_quads = dm.dim() >> std::popcount(target_mask | control_mask);
-    Kokkos::parallel_for(
-        "swap_gate_dm_left",
-        Kokkos::RangePolicy<SpaceType<Space>>(0, n_quads * dm.dim()),
-        KOKKOS_LAMBDA(std::uint64_t g) {
-            std::uint64_t it = g / dm.dim();
-            std::uint64_t col = g % dm.dim();
-            std::uint64_t basis =
-                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
-            Kokkos::kokkos_swap(dm._raw(basis | lower_target_mask, col),
-                                dm._raw(basis | upper_target_mask, col));
-        });
-    Kokkos::parallel_for(
-        "swap_gate_dm_right",
-        Kokkos::RangePolicy<SpaceType<Space>>(0, dm.dim() * n_quads),
-        KOKKOS_LAMBDA(std::uint64_t g) {
-            std::uint64_t row = g / n_quads;
-            std::uint64_t it = g % n_quads;
-            std::uint64_t basis =
-                insert_zero_at_mask_positions(it, target_mask | control_mask) | control_value_mask;
-            Kokkos::kokkos_swap(dm._raw(row, basis | lower_target_mask),
-                                dm._raw(row, basis | upper_target_mask));
-        });
+    Kokkos::parallel_for("swap_gate_dm_left",
+                         Kokkos::RangePolicy<SpaceType<Space>>(0, n_quads * dm.dim()),
+                         DensityMatrixSwapRowsFunctor<Prec, Space>{dm._raw,
+                                                                   dm.dim(),
+                                                                   target_mask,
+                                                                   control_mask,
+                                                                   control_value_mask,
+                                                                   lower_target_mask,
+                                                                   upper_target_mask});
+    Kokkos::parallel_for("swap_gate_dm_right",
+                         Kokkos::RangePolicy<SpaceType<Space>>(0, dm.dim() * n_quads),
+                         DensityMatrixSwapColumnsFunctor<Prec, Space>{dm._raw,
+                                                                      n_quads,
+                                                                      target_mask,
+                                                                      control_mask,
+                                                                      control_value_mask,
+                                                                      lower_target_mask,
+                                                                      upper_target_mask});
 }
 
 // ECR: Hermitian 2-qubit gate.
@@ -606,59 +642,54 @@ void ecr_gate(std::uint64_t physical_target_mask,
                 }
             });
     } else {
-        // Flatten ECR and conj(ECR) into Kokkos::Array for lambda capture.
-        Kokkos::Array<C, 16> ecr_flat, conj_ecr_flat;
-        for (int i = 0; i < 4; ++i)
-            for (int j = 0; j < 4; ++j) {
-                ecr_flat[i * 4 + j] = ecr[i][j];
-                conj_ecr_flat[i * 4 + j] = conj(ecr[i][j]);
-            }
-
+        const auto raw = dm._raw;
+        const std::uint64_t dim = dm.dim();
+        const C is(0, s);
         // Left pass: for each (active-row-base, col), apply ECR to the 4-element row group.
         Kokkos::parallel_for(
             "ecr_gate_dm_left",
-            Kokkos::RangePolicy<SpaceType<Space>>(0, n_quads * dm.dim()),
+            Kokkos::RangePolicy<SpaceType<Space>>(0, n_quads * dim),
             KOKKOS_LAMBDA(std::uint64_t g) {
-                std::uint64_t it = g / dm.dim();
-                std::uint64_t col = g % dm.dim();
+                std::uint64_t it = g / dim;
+                std::uint64_t col = g % dim;
                 std::uint64_t base =
                     insert_zero_at_mask_positions(it, all_mask) | control_value_mask;
-                std::uint64_t r[4] = {
-                    base,
-                    base | physical_control_mask,
-                    base | physical_target_mask,
-                    base | physical_control_mask | physical_target_mask};
-                C v[4];
-                for (int i = 0; i < 4; ++i) v[i] = dm._raw(r[i], col);
-                for (int y = 0; y < 4; ++y) {
-                    C sum(0);
-                    for (int x = 0; x < 4; ++x) sum += ecr_flat[y * 4 + x] * v[x];
-                    dm._raw(r[y], col) = sum;
-                }
+                const std::uint64_t r0 = base;
+                const std::uint64_t r1 = base | physical_control_mask;
+                const std::uint64_t r2 = base | physical_target_mask;
+                const std::uint64_t r3 = base | physical_control_mask | physical_target_mask;
+                const C v0 = raw(r0, col);
+                const C v1 = raw(r1, col);
+                const C v2 = raw(r2, col);
+                const C v3 = raw(r3, col);
+                raw(r0, col) = s * v1 + is * v3;
+                raw(r1, col) = s * v0 - is * v2;
+                raw(r2, col) = is * v1 + s * v3;
+                raw(r3, col) = -is * v0 + s * v2;
             });
 
         // Right pass: for each (row, active-col-base), apply conj(ECR) to the 4-element col group.
         // new[row, c[y]] = Σ_x old[row, c[x]] * conj(ECR[y][x])
         Kokkos::parallel_for(
             "ecr_gate_dm_right",
-            Kokkos::RangePolicy<SpaceType<Space>>(0, dm.dim() * n_quads),
+            Kokkos::RangePolicy<SpaceType<Space>>(0, dim * n_quads),
             KOKKOS_LAMBDA(std::uint64_t g) {
                 std::uint64_t row = g / n_quads;
                 std::uint64_t it = g % n_quads;
                 std::uint64_t base =
                     insert_zero_at_mask_positions(it, all_mask) | control_value_mask;
-                std::uint64_t c[4] = {
-                    base,
-                    base | physical_control_mask,
-                    base | physical_target_mask,
-                    base | physical_control_mask | physical_target_mask};
-                C v[4];
-                for (int j = 0; j < 4; ++j) v[j] = dm._raw(row, c[j]);
-                for (int y = 0; y < 4; ++y) {
-                    C sum(0);
-                    for (int x = 0; x < 4; ++x) sum += conj_ecr_flat[y * 4 + x] * v[x];
-                    dm._raw(row, c[y]) = sum;
-                }
+                const std::uint64_t c0 = base;
+                const std::uint64_t c1 = base | physical_control_mask;
+                const std::uint64_t c2 = base | physical_target_mask;
+                const std::uint64_t c3 = base | physical_control_mask | physical_target_mask;
+                const C v0 = raw(row, c0);
+                const C v1 = raw(row, c1);
+                const C v2 = raw(row, c2);
+                const C v3 = raw(row, c3);
+                raw(row, c0) = s * v1 - is * v3;
+                raw(row, c1) = s * v0 + is * v2;
+                raw(row, c2) = -is * v1 + s * v3;
+                raw(row, c3) = is * v0 + s * v2;
             });
     }
 }
