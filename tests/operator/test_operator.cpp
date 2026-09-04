@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <cmath>
 #include <Eigen/Eigenvalues>
 #include <scaluq/operator/operator.hpp>
 
@@ -64,6 +65,22 @@ TYPED_TEST(OperatorTest, Hermitian) {
     op *= StdComplex(0, -1);
     op.force_hermitian();
     EXPECT_TRUE(op.is_hermitian());
+}
+
+TYPED_TEST(OperatorTest, ArnoldiGroundStateRejectsNonHermitianOperator) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Operator<Prec, Space> op({PauliOperator<Prec>("X 0", 1.)});
+    op *= StdComplex(0, 1);
+    StateVector<Prec, Space> initial_state = StateVector<Prec, Space>::Haar_random_state(1, 0);
+
+    ASSERT_THROW(
+        {
+            [[maybe_unused]] auto ground_state =
+                op.solve_ground_state_by_arnoldi_method(initial_state, 2);
+        },
+        std::runtime_error);
 }
 
 TYPED_TEST(OperatorTest, GetMatrix) {
@@ -390,5 +407,28 @@ TYPED_TEST(OperatorTest, GroundState) {
                 ASSERT_NEAR(std::pow(std::abs(amp1[i] - amp2[i]), 5), 0, eps<Prec>);
             }
         }
+    }
+}
+
+TYPED_TEST(OperatorTest, ArnoldiGroundStateHandlesKrylovBreakdown) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    Operator<Prec, Space> op({PauliOperator<Prec>("Z 0", 1.), PauliOperator<Prec>("Z 1", 1.)});
+    StateVector<Prec, Space> initial_state = StateVector<Prec, Space>::Haar_random_state(2, 0);
+    auto ground_state = op.solve_ground_state_by_arnoldi_method(initial_state, 20);
+
+    ASSERT_TRUE(std::isfinite(ground_state.eigenvalue.real()));
+    ASSERT_TRUE(std::isfinite(ground_state.eigenvalue.imag()));
+    ASSERT_NEAR(std::abs(ground_state.eigenvalue - StdComplex(-2.)), 0, eps<Prec>);
+
+    StateVector<Prec, Space> eigenvector1 = ground_state.state.copy();
+    StateVector<Prec, Space> eigenvector2 = ground_state.state.copy();
+    op.apply_to_state(eigenvector1);
+    eigenvector2.multiply_coef(ground_state.eigenvalue);
+    auto amp1 = eigenvector1.get_amplitudes();
+    auto amp2 = eigenvector2.get_amplitudes();
+    for (std::uint64_t i : std::views::iota(0ULL, eigenvector1.dim())) {
+        ASSERT_NEAR(std::abs(amp1[i] - amp2[i]), 0, eps<Prec>);
     }
 }
