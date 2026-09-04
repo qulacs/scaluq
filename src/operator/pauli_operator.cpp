@@ -134,7 +134,7 @@ StdComplex PauliOperator<Prec>::get_expectation_value(
     std::uint64_t bit_flip_mask = _bit_flip_mask;
     std::uint64_t phase_flip_mask = _phase_flip_mask;
     if (bit_flip_mask == 0) {
-        FloatType res{0};
+        FloatType res{0.0f};
         Kokkos::parallel_reduce(
             "get_expectation_value",
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector.dim()),
@@ -151,7 +151,7 @@ StdComplex PauliOperator<Prec>::get_expectation_value(
     std::uint64_t pivot = std::bit_width(bit_flip_mask) - 1;
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
-    FloatType res{0};
+    FloatType res{0.0f};
     Kokkos::parallel_reduce(
         "get_expectation_value",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector.dim() >> 1),
@@ -160,7 +160,7 @@ StdComplex PauliOperator<Prec>::get_expectation_value(
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
             FloatType tmp = scaluq::internal::real(
                 state_vector._raw[basis_0] * scaluq::internal::conj(state_vector._raw[basis_1]) *
-                global_phase * FloatType{2});
+                global_phase * FloatType{2.0f});
             if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
             sum += tmp;
         },
@@ -183,7 +183,7 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
             Kokkos::TeamPolicy(internal::SpaceType<Space>(), states.batch_size(), Kokkos::AUTO),
             KOKKOS_CLASS_LAMBDA(
                 const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
-                FloatType res = 0;
+                FloatType res{0.0f};
                 std::uint64_t batch_id = team.league_rank();
                 Kokkos::parallel_reduce(
                     Kokkos::TeamThreadRange(team, dim),
@@ -214,7 +214,7 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
         Kokkos::TeamPolicy(internal::SpaceType<Space>(), states.batch_size(), Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
-            FloatType res = 0;
+            FloatType res{0.0f};
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, dim >> 1),
@@ -224,7 +224,7 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
                     FloatType tmp = scaluq::internal::real(
                         states._raw(batch_id, basis_0) *
                         scaluq::internal::conj(states._raw(batch_id, basis_1)) * global_phase *
-                        FloatType{2});
+                        FloatType{2.0f});
                     if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
                     sum += tmp;
                 },
@@ -303,7 +303,7 @@ std::vector<StdComplex> PauliOperator<Prec>::get_transition_amplitude(
                 internal::SpaceType<Space>(), states_bra.batch_size(), Kokkos::AUTO),
             KOKKOS_CLASS_LAMBDA(
                 const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
-                FloatType res = 0;
+                FloatType res{0.0f};
                 std::uint64_t batch_id = team.league_rank();
                 Kokkos::parallel_reduce(
                     Kokkos::TeamThreadRange(team, states_bra.dim()),
@@ -333,7 +333,7 @@ std::vector<StdComplex> PauliOperator<Prec>::get_transition_amplitude(
             internal::SpaceType<Space>(), states_bra.batch_size(), Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
-            FloatType res = 0;
+            FloatType res{0.0f};
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, states_bra.dim() >> 1),
@@ -343,12 +343,12 @@ std::vector<StdComplex> PauliOperator<Prec>::get_transition_amplitude(
                     FloatType tmp1 = scaluq::internal::real(
                         states_bra._raw(batch_id, basis_0) *
                         scaluq::internal::conj(states_ket._raw(batch_id, basis_1)) * global_phase *
-                        FloatType{2});
+                        FloatType{2.0f});
                     if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
                     FloatType tmp2 = scaluq::internal::real(
                         states_bra._raw(batch_id, basis_1) *
                         scaluq::internal::conj(states_ket._raw(batch_id, basis_0)) * global_phase *
-                        FloatType{2});
+                        FloatType{2.0f});
                     if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
                     sum += tmp1 + tmp2;
                 },

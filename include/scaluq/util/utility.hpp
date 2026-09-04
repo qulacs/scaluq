@@ -37,7 +37,8 @@ KOKKOS_INLINE_FUNCTION std::uint64_t insert_zero_to_basis_index(std::uint64_t ba
  */
 KOKKOS_INLINE_FUNCTION std::uint64_t insert_zero_at_mask_positions(std::uint64_t basis_index,
                                                                    std::uint64_t insert_mask) {
-#if defined(__SYCL_DEVICE_ONLY__) || !defined(KOKKOS_ARCH_AVX2) || defined(__CUDA_ARCH__)
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__) || defined(__SYCL_DEVICE_ONLY__) || \
+    !defined(KOKKOS_ARCH_AVX2)
     for (std::uint64_t bit_mask = insert_mask; bit_mask;
          bit_mask &= (bit_mask - 1)) {  // loop through set bits
         std::uint64_t lower_mask = ~bit_mask & (bit_mask - 1);
