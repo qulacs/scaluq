@@ -43,6 +43,35 @@ void run_dm_single_qubit_gate(std::uint64_t n_qubits,
     run_dm_gate_apply<Prec, Space>(n_qubits, gate, U);
 }
 
+template <Precision Prec, ExecutionSpace Space>
+void run_dm_gate_apply_against_state_vector(std::uint64_t n_qubits, const Gate<Prec>& gate) {
+    constexpr double weight1 = 0.4;
+    constexpr double weight2 = 0.6;
+    auto state1 = StateVector<Prec, Space>::Haar_random_state(n_qubits);
+    auto state2 = StateVector<Prec, Space>::Haar_random_state(n_qubits);
+    DensityMatrix<Prec, Space> dm1(state1);
+    DensityMatrix<Prec, Space> dm2(state2);
+    dm1.multiply_coef(weight1);
+    dm1.add_density_matrix_with_coef(weight2, dm2);
+
+    gate->update_quantum_state(dm1);
+    gate->update_quantum_state(state1);
+    gate->update_quantum_state(state2);
+
+    DensityMatrix<Prec, Space> expected1(state1);
+    DensityMatrix<Prec, Space> expected2(state2);
+    expected1.multiply_coef(weight1);
+    expected1.add_density_matrix_with_coef(weight2, expected2);
+    const auto actual = dm1.get_matrix();
+    const auto expected = expected1.get_matrix();
+    for (std::uint64_t row = 0; row < dm1.dim(); ++row) {
+        for (std::uint64_t col = 0; col < dm1.dim(); ++col) {
+            ASSERT_NEAR(std::abs(actual(row, col) - expected(row, col)), 0., eps<Prec> * 10)
+                << "at (" << row << ", " << col << ")";
+        }
+    }
+}
+
 TYPED_TEST(DMGateTest, ApplyI) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
@@ -402,4 +431,37 @@ TYPED_TEST(DMGateTest, ApplyControlledEcr) {
         ComplexMatrix U = get_eigen_matrix_full_qubit_controlled_Ecr(ext_ctrl, phys_ctrl, phys_tgt, n);
         run_dm_gate_apply<Prec, Space>(n, gate_obj, U);
     }
+}
+
+TYPED_TEST(DMGateTest, ApplyPauli) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    constexpr std::uint64_t n = 4;
+
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n, gate::Pauli<Prec>(PauliOperator<Prec>("Z 0 Z 2")));
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n, gate::Pauli<Prec>(PauliOperator<Prec>("X 0 Y 2 Z 3", StdComplex(0.6, 0.8))));
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n, gate::Pauli<Prec>(PauliOperator<Prec>("X 0 Y 2"), {1}, {0}));
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n, gate::Pauli<Prec>(PauliOperator<Prec>("Y 0 X 2"), {1, 3}, {0, 1}));
+}
+
+TYPED_TEST(DMGateTest, ApplyPauliRotation) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    constexpr std::uint64_t n = 4;
+    constexpr double angle = 0.37;
+
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n, gate::PauliRotation<Prec>(PauliOperator<Prec>("Z 0 Z 2"), angle));
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n, gate::PauliRotation<Prec>(PauliOperator<Prec>("X 0 Y 2 Z 3", 0.7), angle));
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n, gate::PauliRotation<Prec>(PauliOperator<Prec>("X 0 Y 2"), angle, {1}, {0}));
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n,
+        gate::PauliRotation<Prec>(
+            PauliOperator<Prec>("Y 0 X 2"), angle, {1, 3}, {0, 1}));
 }
