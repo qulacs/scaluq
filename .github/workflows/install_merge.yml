@@ -64,10 +64,11 @@ jobs:
       SCALUQ_CPU_NATIVE: "OFF"
       SCALUQ_CUDA_ARCH: "TURING75"
       SCALUQ_HIP_ARCH: "VEGA90A"
-      SCALUQ_FLOAT16: ${{ (matrix.compiler == 'clang' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
-      SCALUQ_FLOAT32: ${{ matrix.device == 'sycl' && 'OFF' || 'ON' }}
+      SCALUQ_SYCL_ARCH: "INTEL_PVC"
+      SCALUQ_FLOAT16: ${{ matrix.compiler == 'clang' && 'OFF' || 'ON' }}
+      SCALUQ_FLOAT32: "ON"
       SCALUQ_FLOAT64: "ON"
-      SCALUQ_BFLOAT16: ${{ (matrix.compiler == 'clang' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
+      SCALUQ_BFLOAT16: ${{ matrix.compiler == 'clang' && 'OFF' || 'ON' }}
     steps:
       - name: Free Disk Space (gpu)
         if: ${{ matrix.device == 'cuda' || matrix.device == 'hip' || matrix.device == 'sycl' }}
@@ -203,9 +204,9 @@ jobs:
             sycl-ls
           fi
           cd example_project/
-          cmake -B build/ -D "CMAKE_C_COMPILER=$CMAKE_C_COMPILER" -D "CMAKE_CXX_COMPILER=$CMAKE_CXX_COMPILER" -D "SCALUQ_USE_CUDA=$SCALUQ_USE_CUDA" -D "SCALUQ_USE_SYCL=$SCALUQ_USE_SYCL"
+          cmake -B build/ -D "CMAKE_C_COMPILER=$CMAKE_C_COMPILER" -D "CMAKE_CXX_COMPILER=$CMAKE_CXX_COMPILER" -D "SCALUQ_USE_CUDA=$SCALUQ_USE_CUDA" -D "SCALUQ_USE_HIP=$SCALUQ_USE_HIP" -D "SCALUQ_USE_SYCL=$SCALUQ_USE_SYCL"
           make -C build
-          if [ "$SCALUQ_USE_CUDA" == 'ON' ] || [ "$SCALUQ_USE_HIP" == 'ON' ]; then
+          if [ "$SCALUQ_USE_CUDA" == 'ON' ] || [ "$SCALUQ_USE_HIP" == "ON" ] || [ "$SCALUQ_USE_SYCL" == 'ON' ]; then
             echo "SKIP"
           else
             build/main
@@ -268,6 +269,7 @@ jobs:
       SCALUQ_CPU_NATIVE: "OFF"
       SCALUQ_CUDA_ARCH: "TURING75"
       SCALUQ_HIP_ARCH: "VEGA90A"
+      SCALUQ_SYCL_ARCH: "INTEL_PVC"
     steps:
       - name: Free Disk Space (gpu)
         if: ${{ matrix.device == 'cuda' || matrix.device == 'hip' || matrix.device == 'sycl' }}
