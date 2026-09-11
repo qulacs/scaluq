@@ -164,6 +164,14 @@ jobs:
             icx
             dpl
 
+      - name: Install ocloc tool for SYCL AoT Compilation
+        if: ${{ matrix.device == 'sycl' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository -y ppa:kobuk-team/intel-graphics
+          sudo apt-get install -y libze-dev intel-ocloc
+
       - name: Show installed Compiler version
         run: |
           if [ "$SCALUQ_USE_CUDA" = 'ON' ]; then
