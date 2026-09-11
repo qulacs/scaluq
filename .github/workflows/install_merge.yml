@@ -64,7 +64,7 @@ jobs:
       SCALUQ_CPU_NATIVE: "OFF"
       SCALUQ_CUDA_ARCH: "TURING75"
       SCALUQ_HIP_ARCH: "VEGA90A"
-      SCALUQ_SYCL_ARCH: "INTEL_PVC"
+      SCALUQ_SYCL_ARCH: "INTEL_GEN"
       SCALUQ_FLOAT16: ${{ matrix.compiler == 'clang' && 'OFF' || 'ON' }}
       SCALUQ_FLOAT32: "ON"
       SCALUQ_FLOAT64: "ON"
@@ -156,14 +156,6 @@ jobs:
           components: |
             icx
             dpl
-
-      - name: Install ocloc tool for SYCL AoT Compilation
-        if: ${{ matrix.device == 'sycl' }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y software-properties-common
-          sudo add-apt-repository -y ppa:kobuk-team/intel-graphics
-          sudo apt-get install -y libze-dev intel-ocloc
 
       - name: Disk usage after GPU toolkit install
         if: ${{ matrix.device == 'cuda' || matrix.device == 'hip' || matrix.device == 'sycl' }}
@@ -277,7 +269,7 @@ jobs:
       SCALUQ_CPU_NATIVE: "OFF"
       SCALUQ_CUDA_ARCH: "TURING75"
       SCALUQ_HIP_ARCH: "VEGA90A"
-      SCALUQ_SYCL_ARCH: "INTEL_PVC"
+      SCALUQ_SYCL_ARCH: "INTEL_GEN"
     steps:
       - name: Free Disk Space (gpu)
         if: ${{ matrix.device == 'cuda' || matrix.device == 'hip' || matrix.device == 'sycl' }}
@@ -358,14 +350,6 @@ jobs:
           components: |
             icx
             dpl
-
-      - name: Install ocloc tool for SYCL AoT Compilation
-        if: ${{ matrix.device == 'sycl' }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y software-properties-common
-          sudo add-apt-repository -y ppa:kobuk-team/intel-graphics
-          sudo apt-get install -y libze-dev intel-ocloc
 
       - name: Show installed Compiler version
         run: |
