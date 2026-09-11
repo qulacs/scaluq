@@ -30,9 +30,12 @@ DEFINE_PAULI_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_PAULI_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
 DEFINE_PAULI_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::HostSerial)
 DEFINE_PAULI_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial)
+DEFINE_PAULI_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_PAULI_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_DEVICE
 DEFINE_PAULI_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_PAULI_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
+DEFINE_PAULI_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_DEVICE
 #undef DEFINE_PAULI_GATE_UPDATE
 template class PauliGateImpl<Prec>;
@@ -77,9 +80,12 @@ DEFINE_PAULI_ROTATION_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_PAULI_ROTATION_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
 DEFINE_PAULI_ROTATION_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::HostSerial)
 DEFINE_PAULI_ROTATION_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial)
+DEFINE_PAULI_ROTATION_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_PAULI_ROTATION_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_DEVICE
 DEFINE_PAULI_ROTATION_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_PAULI_ROTATION_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
+DEFINE_PAULI_ROTATION_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
 #endif  // SCALUQ_USE_DEVICE
 #undef DEFINE_PAULI_ROTATION_GATE_UPDATE
 template class PauliRotationGateImpl<Prec>;
