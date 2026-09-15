@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.24)
-
 message(STATUS "Building library for python...")
 
 nanobind_add_module(scaluq_core STABLE_ABI binding.cpp)

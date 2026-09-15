@@ -7,7 +7,7 @@
 #include "../type/complex.hpp"
 #include "../type/floating_point.hpp"
 
-#ifndef SCALUQ_USE_CUDA
+#if !defined(SCALUQ_USE_CUDA) && !defined(SCALUQ_USE_HIP)
 #define DEFINE_NORMAL(FUNC, FLOAT) \
     KOKKOS_INLINE_FUNCTION FLOAT FUNC(FLOAT x) { return std::FUNC(x); }
 
@@ -58,37 +58,50 @@ DEFINE_NORMAL(cosh, BF16)
 #else
 #define DEFINE_NORMAL(FUNC, FLOAT) \
     KOKKOS_INLINE_FUNCTION FLOAT FUNC(FLOAT x) { return std::FUNC(x); }
-#ifdef __CUDA_ARCH__
+#define DEFINE_HALF(FUNC, FLOAT)                                     \
+    KOKKOS_INLINE_FUNCTION FLOAT FUNC(FLOAT x) {                     \
+        return static_cast<FLOAT>(std::FUNC(static_cast<float>(x))); \
+    }
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
 #define DEFINE_F16(FUNC) \
     KOKKOS_INLINE_FUNCTION F16 FUNC(F16 x) { return h##FUNC(x); }
 #else
 #define DEFINE_F16(FUNC) \
     KOKKOS_INLINE_FUNCTION F16 FUNC(F16 x) { return __float2half(std::FUNC(__half2float(x))); }
 #endif
-#ifdef __CUDA_ARCH__
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
 #define DEFINE_BF16(FUNC) \
     KOKKOS_INLINE_FUNCTION BF16 FUNC(BF16 x) { return h##FUNC(x); }
+#else
+#if defined(SCALUQ_USE_HIP)
+#define DEFINE_BF16(FUNC)                                           \
+    KOKKOS_INLINE_FUNCTION BF16 FUNC(BF16 x) {                      \
+        return static_cast<BF16>(std::FUNC(static_cast<float>(x))); \
+    }
 #else
 #define DEFINE_BF16(FUNC)                                        \
     KOKKOS_INLINE_FUNCTION BF16 FUNC(BF16 x) {                   \
         return __float2bfloat16(std::FUNC(__bfloat162float(x))); \
     }
 #endif
+#endif
 #define DEFINE_HYPERBOLIC(FLOAT)                                                         \
     KOKKOS_INLINE_FUNCTION FLOAT sinh(FLOAT x) { return (exp(x) - exp(-x)) / FLOAT{2}; } \
     KOKKOS_INLINE_FUNCTION FLOAT cosh(FLOAT x) { return (exp(x) + exp(-x)) / FLOAT{2}; }
 namespace scaluq::internal {
 #ifdef SCALUQ_FLOAT16
-#ifdef __CUDA_ARCH__
+#if defined(__CUDA_ARCH__)
 KOKKOS_INLINE_FUNCTION F16 abs(F16 x) { return __habs(x); }
+#elif defined(__HIP_DEVICE_COMPILE__)
+KOKKOS_INLINE_FUNCTION F16 abs(F16 x) { return static_cast<F16>(__habs(static_cast<__half>(x))); }
 #else
 KOKKOS_INLINE_FUNCTION F16 abs(F16 x) { return __float2half(std::abs(__half2float(x))); }
 #endif
-DEFINE_F16(sqrt)
-DEFINE_F16(sin)
-DEFINE_F16(cos)
-DEFINE_F16(exp)
-DEFINE_F16(log2)
+DEFINE_HALF(sqrt, F16)
+DEFINE_HALF(sin, F16)
+DEFINE_HALF(cos, F16)
+DEFINE_HALF(exp, F16)
+DEFINE_HALF(log2, F16)
 DEFINE_HYPERBOLIC(F16)
 #endif
 #ifdef SCALUQ_FLOAT32
@@ -112,20 +125,31 @@ DEFINE_NORMAL(sinh, F64)
 DEFINE_NORMAL(cosh, F64)
 #endif
 #ifdef SCALUQ_BFLOAT16
-#ifdef __CUDA_ARCH__
+#if defined(__CUDA_ARCH__)
 KOKKOS_INLINE_FUNCTION BF16 abs(BF16 x) { return __habs(x); }
+#elif defined(__HIP_DEVICE_COMPILE__)
+KOKKOS_INLINE_FUNCTION BF16 abs(BF16 x) {
+    return static_cast<BF16>(__habs(static_cast<__hip_bfloat16>(x)));
+}
+#else
+#if defined(SCALUQ_USE_HIP)
+KOKKOS_INLINE_FUNCTION BF16 abs(BF16 x) {
+    return static_cast<BF16>(std::abs(static_cast<float>(x)));
+}
 #else
 KOKKOS_INLINE_FUNCTION BF16 abs(BF16 x) { return __float2bfloat16(std::abs(__bfloat162float(x))); }
 #endif
-DEFINE_BF16(sqrt)
-DEFINE_BF16(sin)
-DEFINE_BF16(cos)
-DEFINE_BF16(exp)
-DEFINE_BF16(log2)
+#endif
+DEFINE_HALF(sqrt, BF16)
+DEFINE_HALF(sin, BF16)
+DEFINE_HALF(cos, BF16)
+DEFINE_HALF(exp, BF16)
+DEFINE_HALF(log2, BF16)
 DEFINE_HYPERBOLIC(BF16)
 #endif
 
 #undef DEFINE_NORMAL
+#undef DEFINE_HALF
 #undef DEFINE_F16
 #undef DEFINE_BF16
 #undef DEFINE_HYPERBOLIC

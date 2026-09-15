@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.24)
-
 foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
     target_link_libraries(${LIBRARY} PUBLIC
         Kokkos::kokkos

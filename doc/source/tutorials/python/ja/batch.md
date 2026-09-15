@@ -104,7 +104,7 @@ circuit = Circuit()
 # パラメトリックRXゲートを量子ビットのインデックス0にthetaというパラメータを用いてセット
 circuit.add_param_gate(ParamRX(0), "theta")
 
-# バッチ 0: theta=0.0, バッチ 1: theta=pi/2 
+# バッチ 0: theta=0.0, バッチ 1: theta=pi/2
 circuit.update_quantum_state(states, theta=[0.0, math.pi / 2])
 
 print(states)

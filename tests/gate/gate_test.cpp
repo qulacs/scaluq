@@ -379,7 +379,7 @@ void run_random_gate_apply_general_dense(std::uint64_t n_qubits) {
             std::shuffle(index_list.begin(), index_list.end(), engine);
             targets[0] = index_list[0];
             targets[1] = index_list[1];
-            Umerge = internal::kronecker_product(U2, U1);
+            Umerge = scaluq::internal::kronecker_product(U2, U1);
             test_state = get_expanded_eigen_matrix_with_identity(targets[1], U2, n_qubits) *
                          get_expanded_eigen_matrix_with_identity(targets[0], U1, n_qubits) *
                          test_state;
@@ -411,7 +411,8 @@ void run_random_gate_apply_general_dense(std::uint64_t n_qubits) {
             targets[0] = index_list[0];
             targets[1] = index_list[1];
             targets[2] = index_list[2];
-            Umerge = internal::kronecker_product(U3, internal::kronecker_product(U2, U1));
+            Umerge = scaluq::internal::kronecker_product(
+                U3, scaluq::internal::kronecker_product(U2, U1));
 
             test_state = get_expanded_eigen_matrix_with_identity(targets[2], U3, n_qubits) *
                          get_expanded_eigen_matrix_with_identity(targets[1], U2, n_qubits) *
@@ -455,7 +456,7 @@ void run_specialized_dense_matrix_gate_apply(std::uint64_t n_qubits) {
 
         auto matrix0 = get_eigen_matrix_random_one_target_unitary();
         auto matrix1 = get_eigen_matrix_random_one_target_unitary();
-        ComplexMatrix matrix = internal::kronecker_product(matrix1, matrix0);
+        ComplexMatrix matrix = scaluq::internal::kronecker_product(matrix1, matrix0);
         auto dense_gate = gate::DenseMatrix<Prec, Space>({3, 1}, matrix);
         auto specialized_gate = gate::DenseMatrix<Prec, Space>({3, 1}, matrix);
         dense_gate->update_quantum_state(state);
@@ -490,7 +491,7 @@ void run_two_target_dense_matrix_simd_placements(std::uint64_t n_qubits) {
         const std::uint64_t target_mask = target0_mask | target1_mask;
         for (std::uint64_t compressed = 0; compressed < (1ULL << (n_qubits - 2)); ++compressed) {
             const std::uint64_t basis0 =
-                internal::insert_zero_at_mask_positions(compressed, target_mask);
+                scaluq::internal::insert_zero_at_mask_positions(compressed, target_mask);
             const std::uint64_t basis[4] = {
                 basis0, basis0 | target0_mask, basis0 | target1_mask, basis0 | target_mask};
             const auto values = {
@@ -550,7 +551,8 @@ void run_random_gate_apply_sparse(std::uint64_t n_qubits) {
                      get_expanded_eigen_matrix_with_identity(target_list[0], u1, n_qubits) *
                      test_state;
 
-        Umerge = internal::kronecker_product(u3, internal::kronecker_product(u2, u1));
+        Umerge =
+            scaluq::internal::kronecker_product(u3, scaluq::internal::kronecker_product(u2, u1));
         mat = Umerge.sparseView();
         Gate<Prec> sparse_gate = gate::SparseMatrix<Prec, Space>(target_list, mat, control_list);
         sparse_gate->update_quantum_state(state);
@@ -595,13 +597,13 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
         }
         for (int i = 1; i < (int)n_qubits; i++) {
             if (pauli_id_vec[i] == 0) {
-                matrix = internal::kronecker_product(make_I(), matrix);
+                matrix = scaluq::internal::kronecker_product(make_I(), matrix);
             } else if (pauli_id_vec[i] == 1) {
-                matrix = internal::kronecker_product(make_X(), matrix);
+                matrix = scaluq::internal::kronecker_product(make_X(), matrix);
             } else if (pauli_id_vec[i] == 2) {
-                matrix = internal::kronecker_product(make_Y(), matrix);
+                matrix = scaluq::internal::kronecker_product(make_Y(), matrix);
             } else if (pauli_id_vec[i] == 3) {
-                matrix = internal::kronecker_product(make_Z(), matrix);
+                matrix = scaluq::internal::kronecker_product(make_Z(), matrix);
             }
         }
 
@@ -655,13 +657,13 @@ void run_random_gate_apply_pauli(std::uint64_t n_qubits) {
         }
         for (int i = 1; i < (int)n_qubits; i++) {
             if (pauli_id_vec[i] == 0) {
-                matrix = internal::kronecker_product(make_I(), matrix);
+                matrix = scaluq::internal::kronecker_product(make_I(), matrix);
             } else if (pauli_id_vec[i] == 1) {
-                matrix = internal::kronecker_product(make_X(), matrix);
+                matrix = scaluq::internal::kronecker_product(make_X(), matrix);
             } else if (pauli_id_vec[i] == 2) {
-                matrix = internal::kronecker_product(make_Y(), matrix);
+                matrix = scaluq::internal::kronecker_product(make_Y(), matrix);
             } else if (pauli_id_vec[i] == 3) {
-                matrix = internal::kronecker_product(make_Z(), matrix);
+                matrix = scaluq::internal::kronecker_product(make_Z(), matrix);
             }
         }
         matrix = std::cos(angle / 2) * ComplexMatrix::Identity(dim, dim) -
@@ -1023,7 +1025,7 @@ void test_gate(Gate<Prec> gate_control,
     std::vector<StdComplex> amplitudes_controlled(state_controlled.dim());
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
         amplitudes_controlled[i] =
-            amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) |
+            amplitudes[scaluq::internal::insert_zero_at_mask_positions(i, control_mask) |
                        control_value_mask];
     }
     state_controlled.load(amplitudes_controlled);
@@ -1032,9 +1034,10 @@ void test_gate(Gate<Prec> gate_control,
     amplitudes = state.get_amplitudes();
     amplitudes_controlled = state_controlled.get_amplitudes();
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
-        check_near<Prec>(amplitudes_controlled[i],
-                         amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) |
-                                    control_value_mask]);
+        check_near<Prec>(
+            amplitudes_controlled[i],
+            amplitudes[scaluq::internal::insert_zero_at_mask_positions(i, control_mask) |
+                       control_value_mask]);
     }
 }
 
@@ -1208,7 +1211,7 @@ void test_matrix_control(std::uint64_t n_qubits) {
             get_eigen_matrix_random_one_target_unitary();
         Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> U2 =
             get_eigen_matrix_random_one_target_unitary();
-        auto U = internal::kronecker_product(U2, U1);
+        auto U = scaluq::internal::kronecker_product(U2, U1);
         ComplexMatrix mat = ComplexMatrix::Zero(U.rows(), U.cols());
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
@@ -1229,7 +1232,8 @@ void test_matrix_control(std::uint64_t n_qubits) {
             get_eigen_matrix_random_one_target_unitary();
         Eigen::Matrix<StdComplex, 2, 2, Eigen::RowMajor> U3 =
             get_eigen_matrix_random_one_target_unitary();
-        auto U = internal::kronecker_product(U3, internal::kronecker_product(U2, U1));
+        auto U =
+            scaluq::internal::kronecker_product(U3, scaluq::internal::kronecker_product(U2, U1));
         ComplexMatrix mat = ComplexMatrix::Zero(U.rows(), U.cols());
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {

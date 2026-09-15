@@ -21,7 +21,8 @@ constexpr double eps_() {
     else if constexpr (Prec == Precision::BF16)
         return 1.;
     else
-        static_assert(internal::lazy_false_v<internal::Float<Prec>>, "unknown Precision");
+        static_assert(scaluq::internal::lazy_false_v<scaluq::internal::Float<Prec>>,
+                      "unknown Precision");
 }
 template <Precision Prec>
 constexpr double eps = eps_<Prec>();
@@ -139,8 +140,8 @@ inline ComplexMatrix get_expanded_eigen_matrix_with_identity(std::uint64_t targe
     const std::uint64_t right_dim = 1ULL << (qubit_count - target_qubit_index - 1);
     auto left_identity = ComplexMatrix::Identity(left_dim, left_dim);
     auto right_identity = ComplexMatrix::Identity(right_dim, right_dim);
-    return internal::kronecker_product(
-        internal::kronecker_product(right_identity, one_target_matrix), left_identity);
+    return scaluq::internal::kronecker_product(
+        scaluq::internal::kronecker_product(right_identity, one_target_matrix), left_identity);
 }
 
 // get expanded matrix
@@ -148,7 +149,8 @@ inline ComplexMatrix get_eigen_matrix_full_qubit_pauli(std::vector<std::uint64_t
     ComplexMatrix result = ComplexMatrix::Identity(1, 1);
     for (std::uint64_t i = 0; i < pauli_ids.size(); ++i) {
         result =
-            internal::kronecker_product(get_eigen_matrix_single_Pauli(pauli_ids[i]), result).eval();
+            scaluq::internal::kronecker_product(get_eigen_matrix_single_Pauli(pauli_ids[i]), result)
+                .eval();
     }
     return result;
 }
@@ -243,15 +245,15 @@ inline ComplexMatrix get_eigen_matrix_full_qubit_Ecr(std::uint64_t physical_cont
         if (i == physical_control_qubit_index) {
             ComplexMatrix cmatrix;
             cmatrix = get_eigen_matrix_single_Pauli(2);
-            beta = internal::kronecker_product(cmatrix, beta).eval();
+            beta = scaluq::internal::kronecker_product(cmatrix, beta).eval();
         } else if (i == physical_target_qubit_index) {
             ComplexMatrix tmatrix;
             tmatrix = get_eigen_matrix_single_Pauli(1);
-            beta = internal::kronecker_product(tmatrix, beta).eval();
+            beta = scaluq::internal::kronecker_product(tmatrix, beta).eval();
         } else {
             ComplexMatrix matrix;
             matrix = get_eigen_matrix_single_Pauli(0);
-            beta = internal::kronecker_product(matrix, beta).eval();
+            beta = scaluq::internal::kronecker_product(matrix, beta).eval();
         }
     }  // Ecr gate matrix representation (IX-XY)/sqrt(2)
     return (alpha - beta) / std::sqrt(2);
@@ -264,10 +266,8 @@ inline ComplexMatrix get_eigen_matrix_full_qubit_controlled_Ecr(
     std::uint64_t physical_target_qubit_index,
     std::uint64_t qubit_count) {
     std::uint64_t dim = 1ULL << qubit_count;
-    ComplexMatrix ecr_full =
-        get_eigen_matrix_full_qubit_Ecr(physical_control_qubit_index,
-                                        physical_target_qubit_index,
-                                        qubit_count);
+    ComplexMatrix ecr_full = get_eigen_matrix_full_qubit_Ecr(
+        physical_control_qubit_index, physical_target_qubit_index, qubit_count);
     ComplexMatrix result = ComplexMatrix::Zero(dim, dim);
     for (std::uint64_t i = 0; i < dim; ++i)
         if (!(i & (1ULL << ext_ctrl_qubit_index))) result(i, i) = 1;

@@ -5,6 +5,19 @@
 
 namespace scaluq {
 
+namespace {
+template <class OpsView, class RowPtrView>
+std::vector<std::vector<PauliOperator<internal::Prec>>> copy_terms_to_host(
+    const OpsView& ops, const RowPtrView& row_ptr) {
+    auto ops_host = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), ops);
+    std::vector<std::vector<PauliOperator<internal::Prec>>> terms(row_ptr.extent(0) - 1);
+    for (std::uint64_t i = 0; i < terms.size(); ++i) {
+        terms[i].assign(ops_host.data() + row_ptr(i), ops_host.data() + row_ptr(i + 1));
+    }
+    return terms;
+}
+}  // namespace
+
 template <>
 OperatorBatched<internal::Prec, internal::Space>
 OperatorBatched<internal::Prec, internal::Space>::copy() const {
@@ -370,17 +383,19 @@ OperatorBatched<internal::Prec, internal::Space>::get_operator_at(std::uint64_t 
     std::uint64_t begin = _row_ptr(index);
     std::uint64_t end = _row_ptr(index + 1);
     auto ops_subview = Kokkos::subview(_ops, std::make_pair(begin, end));
-    Operator<internal::Prec, internal::Space> res(end - begin);
-    Kokkos::deep_copy(res._terms, ops_subview);
-    return res;
+    auto host_view = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), ops_subview);
+    std::vector<Pauli> terms(host_view.data(), host_view.data() + host_view.extent(0));
+    return Operator<internal::Prec, internal::Space>(std::move(terms));
 }
 
 template <>
 std::vector<Operator<internal::Prec, internal::Space>>
 OperatorBatched<internal::Prec, internal::Space>::get_operators() const {
-    std::vector<Operator<internal::Prec, internal::Space>> res(_row_ptr.extent(0) - 1);
-    for (std::uint64_t i = 0; i < _row_ptr.extent(0) - 1; ++i) {
-        res[i] = get_operator_at(i);
+    auto terms = copy_terms_to_host(_ops, _row_ptr);
+    std::vector<Operator<internal::Prec, internal::Space>> res;
+    res.reserve(terms.size());
+    for (auto& operator_terms : terms) {
+        res.emplace_back(std::move(operator_terms));
     }
     return res;
 }
@@ -388,27 +403,15 @@ OperatorBatched<internal::Prec, internal::Space>::get_operators() const {
 template <>
 OperatorBatched<internal::Prec, ExecutionSpace::Default>
 OperatorBatched<internal::Prec, internal::Space>::copy_to_default_space() const {
-    OperatorBatched<internal::Prec, ExecutionSpace::Default> res;
-    res._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
-        Kokkos::ViewAllocateWithoutInitializing("row_ptr"), _row_ptr.extent(0));
-    res._ops = Kokkos::View<Pauli*, internal::SpaceType<ExecutionSpace::Default>>(
-        Kokkos::ViewAllocateWithoutInitializing("operator_ops"), _ops.extent(0));
-    Kokkos::deep_copy(res._row_ptr, _row_ptr);
-    Kokkos::deep_copy(res._ops, _ops);
-    return res;
+    return OperatorBatched<internal::Prec, ExecutionSpace::Default>(
+        copy_terms_to_host(_ops, _row_ptr));
 }
 
 template <>
 OperatorBatched<internal::Prec, ExecutionSpace::Host>
 OperatorBatched<internal::Prec, internal::Space>::copy_to_host_space() const {
-    OperatorBatched<internal::Prec, ExecutionSpace::Host> res;
-    res._row_ptr = Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>(
-        Kokkos::ViewAllocateWithoutInitializing("row_ptr"), _row_ptr.extent(0));
-    res._ops = Kokkos::View<Pauli*, internal::SpaceType<ExecutionSpace::Host>>(
-        Kokkos::ViewAllocateWithoutInitializing("operator_ops"), _ops.extent(0));
-    Kokkos::deep_copy(res._row_ptr, _row_ptr);
-    Kokkos::deep_copy(res._ops, _ops);
-    return res;
+    return OperatorBatched<internal::Prec, ExecutionSpace::Host>(
+        copy_terms_to_host(_ops, _row_ptr));
 }
 
 template <>

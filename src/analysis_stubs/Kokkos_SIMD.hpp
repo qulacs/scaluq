@@ -6,6 +6,7 @@
 namespace Kokkos::Experimental {
 
 struct vector_aligned_tag {};
+inline constexpr vector_aligned_tag simd_flag_aligned{};
 
 template <class T, std::size_t = 0>
 class simd {
@@ -37,9 +38,26 @@ private:
     T _value{};
 };
 
+template <class SimdType>
+SimdType simd_unchecked_load(const typename SimdType::value_type* ptr,
+                             vector_aligned_tag flag = {}) {
+    return SimdType(ptr, flag);
+}
+
 template <class T, std::size_t N>
-simd<T, N> fma(const simd<T, N>& x, const simd<T, N>& y, const simd<T, N>& z) {
-    return x * y + z;
+void simd_unchecked_store(const simd<T, N>& value, T* ptr, vector_aligned_tag flag = {}) {
+    value.copy_to(ptr, flag);
 }
 
 }  // namespace Kokkos::Experimental
+
+namespace Kokkos {
+
+template <class T, std::size_t N>
+Experimental::simd<T, N> fma(const Experimental::simd<T, N>& x,
+                             const Experimental::simd<T, N>& y,
+                             const Experimental::simd<T, N>& z) {
+    return x * y + z;
+}
+
+}  // namespace Kokkos

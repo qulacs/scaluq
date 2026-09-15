@@ -36,7 +36,8 @@ TYPED_TEST(CircuitOptimizeTest, Basic) {
         auto perm = random.permutation(N);
         ComplexMatrix mat = ComplexMatrix::Identity(1, 1);
         for ([[maybe_unused]] std::uint64_t _ : std::views::iota(std::uint64_t{0}, num_targets)) {
-            mat = internal::kronecker_product(mat, get_eigen_matrix_random_one_target_unitary());
+            mat = scaluq::internal::kronecker_product(mat,
+                                                      get_eigen_matrix_random_one_target_unitary());
         }
         std::vector<std::uint64_t> control_values(num_controls);
         for (std::uint64_t& val : control_values) val = random.int32() & 1;
