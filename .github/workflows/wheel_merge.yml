@@ -17,14 +17,18 @@ jobs:
       matrix:
         os: ["linux", "macos"]
         arch: ["x86_64", "arm64"]
-        simd: ["scalar", "avx2"]
+        simd: ["OFF", "AVX2", "AVX512"]
         cibw-python: ["cp310", "cp311", "cp312", "cp313", "cp314"]
         exclude:
           # currently ARM runner is not supported
           - os: "linux"
             arch: "arm64"
           - arch: "arm64"
-            simd: "avx2"
+            simd: "AVX2"
+          - arch: "arm64"
+            simd: "AVX512"
+          - os: "macos"
+            simd: "AVX512"
         include:
           - os: "linux"
             arch: "x86_64"
@@ -42,11 +46,11 @@ jobs:
     env:
       CMAKE_C_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/gcc-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/gcc-15' || '/usr/lib/ccache/gcc') }}
       CMAKE_CXX_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/g++-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/g++-15' || '/usr/lib/ccache/g++') }}
-      SCALUQ_CPU_NATIVE: 'OFF'
-      SCALUQ_CPU_ARCH: ${{ matrix.simd == 'avx2' && 'HSW' || '' }}
+      SCALUQ_SIMD: ${{ matrix.simd }}
       CIBW_ENVIRONMENT: >-
-        SCALUQ_CPU_NATIVE=OFF
-        SCALUQ_CPU_ARCH=${{ matrix.simd == 'avx2' && 'HSW' || '' }}
+        SCALUQ_SIMD=${{ matrix.simd }}
+        CMAKE_CROSSCOMPILING_EMULATOR="${{ matrix.simd == 'AVX512' && '/tmp/scaluq-sde/sde64;-skx;--' || '' }}"
+      CIBW_BEFORE_ALL_LINUX: ${{ matrix.simd == 'AVX512' && 'bash {package}/script/install_sde' || '' }}
       CIBW_ARCHS: ${{ matrix.arch }}
       CIBW_BUILD: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}
       CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
@@ -63,15 +67,18 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2.21
         with:
-          key: "${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.runs-on }}"
+          key: "${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.runs-on }}-${{ matrix.simd }}"
           save: false
           verbose: 2
 
       - name: Install Python dependencies
-        run: python -m pip install cibuildwheel
+        run: python -m pip install cibuildwheel twine
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheels
+
+      - name: Check wheel metadata
+        run: python -m twine check wheels/*.whl
 
       - name: Upload wheel to GitHub
         uses: actions/upload-artifact@v7
@@ -129,23 +136,23 @@ jobs:
 
       - uses: actions/download-artifact@v7
         with:
-          name: cp310-${{ matrix.cibw-os-arch }}-scalar
+          name: cp310-${{ matrix.cibw-os-arch }}-OFF
           path: ./cp310
       - uses: actions/download-artifact@v7
         with:
-          name: cp311-${{ matrix.cibw-os-arch }}-scalar
+          name: cp311-${{ matrix.cibw-os-arch }}-OFF
           path: ./cp311
       - uses: actions/download-artifact@v7
         with:
-          name: cp312-${{ matrix.cibw-os-arch }}-scalar
+          name: cp312-${{ matrix.cibw-os-arch }}-OFF
           path: ./cp312
       - uses: actions/download-artifact@v7
         with:
-          name: cp313-${{ matrix.cibw-os-arch }}-scalar
+          name: cp313-${{ matrix.cibw-os-arch }}-OFF
           path: ./cp313
       - uses: actions/download-artifact@v7
         with:
-          name: cp314-${{ matrix.cibw-os-arch }}-scalar
+          name: cp314-${{ matrix.cibw-os-arch }}-OFF
           path: ./cp314
 
       - name: Upload wheel data to PyPI if the Git tag is set

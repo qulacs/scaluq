@@ -28,6 +28,9 @@ jobs:
             script/configure
             python/**
             example_project/**
+            pyproject.toml
+            .github/workflows/install_pr.yml
+            .github/workflows/install_merge.yml
 
   library:
     name: Install Library
@@ -78,7 +81,7 @@ jobs:
       CMAKE_CXX_COMPILER: ${{ matrix.cxx-compiler }}
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
       SCALUQ_USE_SYCL: ${{ matrix.device == 'sycl' && 'ON' || 'OFF' }}
-      SCALUQ_CPU_NATIVE: "OFF"
+      SCALUQ_SIMD: "OFF"
       SCALUQ_CUDA_ARCH: "TURING75"
       SCALUQ_FLOAT16: ${{ (matrix.device == 'cpu' || matrix.compiler == 'clang' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
       SCALUQ_FLOAT32: ${{ (matrix.device == 'cpu' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
@@ -226,7 +229,7 @@ jobs:
       CMAKE_C_COMPILER: ${{ matrix.c-compiler }}
       CMAKE_CXX_COMPILER: ${{ matrix.cxx-compiler }}
       SCALUQ_USE_CUDA: "OFF"
-      SCALUQ_CPU_NATIVE: "OFF"
+      SCALUQ_SIMD: "OFF"
       SCALUQ_CUDA_ARCH: "TURING75"
       SCALUQ_FLOAT32: "OFF"
       SCALUQ_FLOAT64: "ON"

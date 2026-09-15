@@ -87,8 +87,7 @@ CUDA を利用する場合は、使用する CUDA がサポートするホスト
 |`SCALUQ_USE_OMP`|`ON`|CPUでの並列処理にOpenMPを利用するか|
 |`SCALUQ_USE_CUDA`|`OFF`|GPU (CUDA)での並列処理を行うか|
 |`SCALUQ_USE_SYCL`|`OFF`|`実験的機能` GPU (SYCL)での並列処理を行うか|
-|`SCALUQ_CPU_NATIVE`|`ON`| ビルダーのCPUアーキテクチャでビルドするか|
-|`SCALUQ_CPU_ARCH`|-| ターゲットとなるCPUアーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CPU_ARCH=SKX`)|
+|`SCALUQ_SIMD`|`OFF`| CPU対象を`OFF`（汎用・既定）、`AVX2`（Haswell）、`AVX512`（Skylake Xeon）から選択する。|
 |`SCALUQ_CUDA_ARCH`|(自動識別)|`SCALUQ_USE_CUDA=ON`の場合、ターゲットとなるNvidia GPU アーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、例: `SCALUQ_CUDA_ARCH=AMPERE80`)|
 |`SCALUQ_SYCL_ARCH`|-|SYCLのターゲットアーキテクチャ (名前は[Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html)を参照、Intel GPUの例: `SCALUQ_SYCL_ARCH=INTEL_GEN`)|
 |`SCALUQ_USE_TEST`|`OFF`|`test/`をビルドターゲットに含める。`ctest --test-dir build/`でテストのビルド・実行ができます|
@@ -97,6 +96,16 @@ CUDA を利用する場合は、使用する CUDA がサポートするホスト
 |`SCALUQ_FLOAT32`|`ON`|`f32`精度を有効にする|
 |`SCALUQ_FLOAT64`|`ON`|`f64`精度を有効にする|
 |`SCALUQ_BFLOAT16`|`OFF`|`bf16`精度を有効にする|
+
+CMakeでは`-DSCALUQ_SIMD=AVX2`、`script/configure`や`pip install .`では環境変数で指定します。
+ScaluqとKokkosの両方に適用され、`OFF`ではx86-64のBMI2を無効化します（SSE2などの標準SIMDは使用され得ます）。
+AVX設定はBMI2を含む対象CPUの命令セットに対応したx86-64環境が必要で、実行時の自動切り替えはありません。
+ARMでは`OFF`を使用してください。
+旧`SCALUQ_CPU_NATIVE`・`SCALUQ_CPU_ARCH`・`SCALUQ_USE_AVX512`は削除し、新しいビルドディレクトリで移行してください。
+既定値はnative対象から汎用対象に変わります。
+PyPIには`OFF`版のみを公開し、AVX版は別々のGitHub成果物として保持します。
+AVX512のエミュレーションには`bash script/install_sde`を実行し、
+`CMAKE_CROSSCOMPILING_EMULATOR='/tmp/scaluq-sde/sde64;-skx;--'`を指定します。
 
 ## Intel GPU向けビルド (SYCL)
 

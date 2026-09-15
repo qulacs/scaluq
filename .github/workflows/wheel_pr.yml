@@ -27,6 +27,9 @@ jobs:
             CMakeLists.txt
             python/**
             pyproject.toml
+            script/install_sde
+            .github/workflows/wheel_pr.yml
+            .github/workflows/wheel_merge.yml
 
   wheel-build:
     name: Python wheel build
@@ -41,47 +44,48 @@ jobs:
             runs-on: "ubuntu-24.04"
             cibw-os-arch: "manylinux_x86_64"
             cibw-python: "cp314"
-            simd: "scalar"
-            cpu-arch: ""
+            simd: "OFF"
           - os: "linux"
             arch: "x86_64"
             runs-on: "ubuntu-24.04"
             cibw-os-arch: "manylinux_x86_64"
             cibw-python: "cp314"
-            simd: "avx2"
-            cpu-arch: "HSW"
+            simd: "AVX2"
+          - os: "linux"
+            arch: "x86_64"
+            runs-on: "ubuntu-24.04"
+            cibw-os-arch: "manylinux_x86_64"
+            cibw-python: "cp314"
+            simd: "AVX512"
           - os: "macos"
             arch: "x86_64"
             runs-on: "macos-15-intel"
             cibw-os-arch: "macosx_x86_64"
             cibw-python: "cp314"
-            simd: "scalar"
-            cpu-arch: ""
+            simd: "OFF"
           - os: "macos"
             arch: "x86_64"
             runs-on: "macos-15-intel"
             cibw-os-arch: "macosx_x86_64"
             cibw-python: "cp314"
-            simd: "avx2"
-            cpu-arch: "HSW"
+            simd: "AVX2"
           - os: "macos"
             arch: "arm64"
             runs-on: "macos-15"
             cibw-os-arch: "macosx_arm64"
             cibw-python: "cp314"
-            simd: "scalar"
-            cpu-arch: ""
+            simd: "OFF"
     runs-on: ${{ matrix.runs-on }}
     env:
       CMAKE_C_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/gcc-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/gcc-15' || '/usr/lib/ccache/gcc') }}
       CMAKE_CXX_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/g++-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/g++-15' || '/usr/lib/ccache/g++') }}
-      SCALUQ_CPU_NATIVE: 'OFF'
-      SCALUQ_CPU_ARCH: ${{ matrix.cpu-arch }}
+      SCALUQ_SIMD: ${{ matrix.simd }}
       CIBW_ENVIRONMENT: >-
-        SCALUQ_CPU_NATIVE=OFF
-        SCALUQ_CPU_ARCH=${{ matrix.cpu-arch }}
+        SCALUQ_SIMD=${{ matrix.simd }}
+        CMAKE_CROSSCOMPILING_EMULATOR="${{ matrix.simd == 'AVX512' && '/tmp/scaluq-sde/sde64;-skx;--' || '' }}"
         SCALUQ_FLOAT32=OFF
         SCALUQ_FLOAT64=ON
+      CIBW_BEFORE_ALL_LINUX: ${{ matrix.simd == 'AVX512' && 'bash {package}/script/install_sde' || '' }}
       CIBW_ARCHS: ${{ matrix.arch }}
       CIBW_BUILD: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}
       CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
@@ -98,15 +102,18 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2.21
         with:
-          key: "${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.runs-on }}"
+          key: "${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.runs-on }}-${{ matrix.simd }}"
           save: false
           verbose: 2
 
       - name: Install Python dependencies
-        run: python -m pip install cibuildwheel
+        run: python -m pip install cibuildwheel twine
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheels
+
+      - name: Check wheel metadata
+        run: python -m twine check wheels/*.whl
 
   wheel-build-passed:
     name: Wheel Build Passed

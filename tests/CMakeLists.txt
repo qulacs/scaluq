@@ -1,5 +1,8 @@
 include(GoogleTest)
 
+add_test(NAME ScaluqCPUConfig
+    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpu_arch_test.cmake)
+
 file(GLOB_RECURSE ALL_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/*.[ch]pp
 )
