@@ -3,6 +3,7 @@
 #include <scaluq/prec_space.hpp>
 #include <scaluq/util/math.hpp>
 
+#include <cmath>
 #include <limits>
 
 namespace scaluq {
@@ -514,6 +515,16 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
     krylov_space_basis.push_back(initial_state.copy());
     ComplexMatrix hessenberg_matrix = ComplexMatrix::Zero(iter_count, iter_count);
     std::uint64_t effective_iter_count = iter_count;
+    // 100 * epsilon(BF16) is 0.78125 and discards independent vectors.
+    // For low-precision states only an exactly zero residual is safe to
+    // classify as breakdown; keep the near-zero guard for F32/F64.
+    constexpr double breakdown_threshold = [] {
+        if constexpr (internal::Prec == Precision::F32 || internal::Prec == Precision::F64) {
+            return 100.0 * static_cast<double>(std::numeric_limits<FloatType>::epsilon());
+        } else {
+            return 0.0;
+        }
+    }();
     for (std::uint64_t i = 0; i < iter_count; i++) {
         // |state> <- (A-muI)|state>
         auto state = krylov_space_basis.back().copy();
@@ -528,7 +539,11 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
         }
         // normalize |state>
         double norm = std::sqrt(state.get_squared_norm());
-        if (norm <= 100.0 * static_cast<double>(std::numeric_limits<FloatType>::epsilon())) {
+        if (!std::isfinite(norm)) {
+            throw std::runtime_error(
+                "Operator::solve_ground_state_by_arnoldi_method: Non-finite Krylov norm.");
+        }
+        if (norm <= breakdown_threshold) {
             effective_iter_count = i + 1;
             break;
         }
