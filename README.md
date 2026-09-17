@@ -87,7 +87,8 @@ Build options can be specified using environment variables when running `script/
 | `SCALUQ_USE_OMP`       | `ON`        | Use OpenMP for parallel computation on CPU |
 | `SCALUQ_USE_CUDA`      | `OFF`       | Enable parallel computation using GPU (CUDA) |
 | `SCALUQ_USE_SYCL`      | `OFF`       | `Experimental` Enable parallel computation using GPU (SYCL) |
-| `SCALUQ_SIMD` | `OFF` | CPU target: `OFF` (portable default), `AVX2` (Haswell), or `AVX512` (Skylake Xeon). |
+| `SCALUQ_CPU_NATIVE`    | `ON`        | Build for native CPU architecture of builder's |
+| `SCALUQ_CPU_ARCH`      | -           | Target CPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_CPU_ARCH=SKX`) |
 | `SCALUQ_CUDA_ARCH`     | (auto)      | Target Nvidia GPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_CUDA_ARCH=AMPERE80`) |
 | `SCALUQ_SYCL_ARCH`     | -           | Target SYCL device architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_SYCL_ARCH=INTEL_GEN` for Intel GPUs) |
 | `SCALUQ_USE_TEST`      | `OFF`        | Include `test/` in build targets. You can build and run tests with `ctest --test-dir build/` |
@@ -97,14 +98,14 @@ Build options can be specified using environment variables when running `script/
 | `SCALUQ_FLOAT64`       | `ON`        | Enable `f64` precision |
 | `SCALUQ_BFLOAT16`      | `OFF`       | Enable `bf16` precision |
 
-Use `SCALUQ_SIMD` with CMake (`-DSCALUQ_SIMD=AVX2`) or as an environment
-variable for `script/configure` and `pip install .`. It applies to Scaluq and Kokkos.
-`OFF` disables BMI2 on x86-64, but allows baseline SIMD such as SSE2.
-AVX modes require x86-64 CPUs supporting the selected CPU target (including BMI2);
-there is no runtime dispatch. ARM builds must use `OFF`.
-This replaces `SCALUQ_CPU_NATIVE`, `SCALUQ_CPU_ARCH`, and `SCALUQ_USE_AVX512`:
-remove old settings and use a fresh build directory. The default is now portable, not native.
-Only `OFF` wheels are published to PyPI; AVX variants are separate GitHub artifacts.
+`SCALUQ_CPU_NATIVE=ON` remains the default. An explicit `SCALUQ_CPU_ARCH`
+takes precedence: use `-DSCALUQ_CPU_ARCH=HSW` for AVX2 or
+`-DSCALUQ_CPU_ARCH=SKX` for AVX512. For a baseline build, use
+`-DSCALUQ_CPU_NATIVE=OFF -DSCALUQ_CPU_ARCH=`. These options also accept
+environment variables through `script/configure` and `pip install .`.
+No extra BMI2 restriction is applied; compiler flags determine the baseline ISA.
+AVX builds require a compatible x86-64 CPU at runtime; there is no runtime dispatch.
+Only `scalar` wheels are published to PyPI; AVX variants are separate GitHub artifacts.
 For AVX512 emulation, run `bash script/install_sde` and set
 `CMAKE_CROSSCOMPILING_EMULATOR='/tmp/scaluq-sde/sde64;-skx;--'`.
 

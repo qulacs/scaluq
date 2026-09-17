@@ -17,18 +17,18 @@ jobs:
       matrix:
         os: ["linux", "macos"]
         arch: ["x86_64", "arm64"]
-        simd: ["OFF", "AVX2", "AVX512"]
+        simd: ["scalar", "avx2", "avx512"]
         cibw-python: ["cp310", "cp311", "cp312", "cp313", "cp314"]
         exclude:
           # currently ARM runner is not supported
           - os: "linux"
             arch: "arm64"
           - arch: "arm64"
-            simd: "AVX2"
+            simd: "avx2"
           - arch: "arm64"
-            simd: "AVX512"
+            simd: "avx512"
           - os: "macos"
-            simd: "AVX512"
+            simd: "avx512"
         include:
           - os: "linux"
             arch: "x86_64"
@@ -46,11 +46,13 @@ jobs:
     env:
       CMAKE_C_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/gcc-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/gcc-15' || '/usr/lib/ccache/gcc') }}
       CMAKE_CXX_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/g++-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/g++-15' || '/usr/lib/ccache/g++') }}
-      SCALUQ_SIMD: ${{ matrix.simd }}
+      SCALUQ_CPU_NATIVE: "OFF"
+      SCALUQ_CPU_ARCH: ${{ matrix.simd == 'avx2' && 'HSW' || matrix.simd == 'avx512' && 'SKX' || '' }}
       CIBW_ENVIRONMENT: >-
-        SCALUQ_SIMD=${{ matrix.simd }}
-        CMAKE_CROSSCOMPILING_EMULATOR="${{ matrix.simd == 'AVX512' && '/tmp/scaluq-sde/sde64;-skx;--' || '' }}"
-      CIBW_BEFORE_ALL_LINUX: ${{ matrix.simd == 'AVX512' && 'bash {package}/script/install_sde' || '' }}
+        SCALUQ_CPU_NATIVE=OFF
+        SCALUQ_CPU_ARCH="${{ matrix.simd == 'avx2' && 'HSW' || matrix.simd == 'avx512' && 'SKX' || '' }}"
+        CMAKE_CROSSCOMPILING_EMULATOR="${{ matrix.simd == 'avx512' && '/tmp/scaluq-sde/sde64;-skx;--' || '' }}"
+      CIBW_BEFORE_ALL_LINUX: ${{ matrix.simd == 'avx512' && 'bash {package}/script/install_sde' || '' }}
       CIBW_ARCHS: ${{ matrix.arch }}
       CIBW_BUILD: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}
       CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
@@ -136,23 +138,23 @@ jobs:
 
       - uses: actions/download-artifact@v7
         with:
-          name: cp310-${{ matrix.cibw-os-arch }}-OFF
+          name: cp310-${{ matrix.cibw-os-arch }}-scalar
           path: ./cp310
       - uses: actions/download-artifact@v7
         with:
-          name: cp311-${{ matrix.cibw-os-arch }}-OFF
+          name: cp311-${{ matrix.cibw-os-arch }}-scalar
           path: ./cp311
       - uses: actions/download-artifact@v7
         with:
-          name: cp312-${{ matrix.cibw-os-arch }}-OFF
+          name: cp312-${{ matrix.cibw-os-arch }}-scalar
           path: ./cp312
       - uses: actions/download-artifact@v7
         with:
-          name: cp313-${{ matrix.cibw-os-arch }}-OFF
+          name: cp313-${{ matrix.cibw-os-arch }}-scalar
           path: ./cp313
       - uses: actions/download-artifact@v7
         with:
-          name: cp314-${{ matrix.cibw-os-arch }}-OFF
+          name: cp314-${{ matrix.cibw-os-arch }}-scalar
           path: ./cp314
 
       - name: Upload wheel data to PyPI if the Git tag is set

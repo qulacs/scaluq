@@ -44,7 +44,8 @@ The build options are below.
 | `SCALUQ_USE_OMP`       | `ON`        | Use OpenMP for parallel computation on CPU |
 | `SCALUQ_USE_CUDA`      | `OFF`       | Enable parallel computation using GPU (CUDA) |
 | `SCALUQ_USE_SYCL`      | `OFF`       | `Experimental` Enable parallel computation using GPU (SYCL) |
-| `SCALUQ_SIMD` | `OFF` | CPU target: `OFF` (portable), `AVX2` (Haswell), or `AVX512` (Skylake Xeon). AVX modes require x86-64 and a compatible runtime CPU. |
+| `SCALUQ_CPU_NATIVE`    | `ON`        | Build for native CPU architecture of builder's |
+| `SCALUQ_CPU_ARCH`      | -           | Target CPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_CPU_ARCH=SKX`) |
 | `SCALUQ_CUDA_ARCH`     | (auto)      | Target Nvidia GPU architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_CUDA_ARCH=AMPERE80`) |
 | `SCALUQ_SYCL_ARCH`     | -           | Target SYCL device architecture (see [Kokkos CMake Keywords](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html), e.g., `SCALUQ_SYCL_ARCH=INTEL_GEN` for Intel GPUs) |
 | `SCALUQ_USE_TEST`      | `OFF`        | Include `test/` in build targets. You can build and run tests with `ctest --test-dir build/` |
