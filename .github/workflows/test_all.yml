@@ -48,6 +48,15 @@ jobs:
             device: "sycl"
             c-compiler: "icx"
             cxx-compiler: "icpx"
+            context: "sycl-f64-f32-bf16"
+          - os-arch: "linux-x86_64"
+            runs-on: "ubuntu-24.04"
+            cpu-arch: "HSW"
+            compiler: "intelllvm"
+            device: "sycl"
+            c-compiler: "icx"
+            cxx-compiler: "icpx"
+            context: "sycl-f16"
           - os-arch: "macos-arm64"
             runs-on: "macos-15"
             cpu-arch: ""
@@ -76,10 +85,10 @@ jobs:
       SCALUQ_CUDA_ARCH: "TURING75"
       SCALUQ_HIP_ARCH: "VEGA90A"
       SCALUQ_SYCL_ARCH: "INTEL_GEN"
-      SCALUQ_FLOAT16: ${{ (matrix.compiler == 'clang' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
-      SCALUQ_FLOAT32: "ON"
-      SCALUQ_FLOAT64: "ON"
-      SCALUQ_BFLOAT16: ${{ matrix.compiler == 'clang' && 'OFF' || 'ON' }}
+      SCALUQ_FLOAT16: ${{ (matrix.compiler == 'clang' || matrix.context == 'sycl-f64-f32-bf16') && 'OFF' || 'ON' }}
+      SCALUQ_FLOAT32: ${{ matrix.context == 'sycl-f16' && 'OFF' || 'ON' }}
+      SCALUQ_FLOAT64: ${{ matrix.context == 'sycl-f16' && 'OFF' || 'ON' }}
+      SCALUQ_BFLOAT16: ${{ (matrix.compiler == 'clang' || matrix.context == 'sycl-f16') && 'OFF' || 'ON' }}
     steps:
       - name: Free Disk Space (gpu)
         if: ${{ matrix.device == 'cuda' || matrix.device == 'hip' || matrix.device == 'sycl' }}
