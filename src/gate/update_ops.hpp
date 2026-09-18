@@ -508,6 +508,11 @@ void ecr_gate(std::uint64_t physical_target_mask,
               DensityMatrix<Prec, Space>& dm);
 
 template <Precision Prec, ExecutionSpace Space>
+void permutation_gate(
+    const std::vector<std::pair<std::uint64_t, std::uint64_t>>& swap_schedule,
+    DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
 void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t control_value_mask,
                  std::uint64_t bit_flip_mask,

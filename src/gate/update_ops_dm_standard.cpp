@@ -739,6 +739,15 @@ void swap_gate(std::uint64_t target_mask,
                                                                       upper_target_mask});
 }
 
+template <>
+void permutation_gate(
+    const std::vector<std::pair<std::uint64_t, std::uint64_t>>& swap_schedule,
+    DensityMatrix<Prec, Space>& dm) {
+    for (const auto& [src, dst] : swap_schedule) {
+        swap_gate((1ULL << src) | (1ULL << dst), 0, 0, dm);
+    }
+}
+
 // ECR: Hermitian 2-qubit gate.
 // Uncontrolled (control_mask==0): single-pass block update over n_quads² blocks.
 //   E[y*16+x] = ECR[y>>2][x>>2] * conj(ECR[y&3][x&3]). Each 4×4 submatrix updated atomically.
