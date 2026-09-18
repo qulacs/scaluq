@@ -167,6 +167,32 @@ DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default
 DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif
 #undef DEFINE_DENSE_MATRIX_GATE_UPDATE
+
+#define DEFINE_DENSE_MATRIX_GATE_DM_UPDATE(TargetSpace)                                 \
+    template <Precision Prec, ExecutionSpace GateSpace>                                 \
+    void DenseMatrixGateImpl<Prec, GateSpace>::update_quantum_state(                    \
+        ExecutionContextDensityMatrix<Prec, TargetSpace>& context) const {              \
+        if constexpr (GateSpace == TargetSpace) {                                       \
+            this->check_qubit_mask_within_bounds(*context.state);                       \
+            multi_dense_matrix_gate(this->_target_mask,                                 \
+                                    this->_control_mask,                                \
+                                    this->_control_value_mask,                          \
+                                    this->get_matrix_internal(),                        \
+                                    *context.state);                                    \
+        } else {                                                                        \
+            throw std::runtime_error(                                                   \
+                "Error: DenseMatrixGateImpl::update_quantum_state("                     \
+                "ExecutionContextDensityMatrix& state): Trying to run on " #TargetSpace \
+                " execution space, but the gate is defined on different execution "     \
+                "space.");                                                              \
+        }                                                                               \
+    }
+DEFINE_DENSE_MATRIX_GATE_DM_UPDATE(ExecutionSpace::Host)
+DEFINE_DENSE_MATRIX_GATE_DM_UPDATE(ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_DEVICE
+DEFINE_DENSE_MATRIX_GATE_DM_UPDATE(ExecutionSpace::Default)
+#endif
+#undef DEFINE_DENSE_MATRIX_GATE_DM_UPDATE
 template class DenseMatrixGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>
