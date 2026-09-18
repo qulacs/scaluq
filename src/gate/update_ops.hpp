@@ -508,6 +508,23 @@ void ecr_gate(std::uint64_t physical_target_mask,
               DensityMatrix<Prec, Space>& dm);
 
 template <Precision Prec, ExecutionSpace Space>
+void apply_pauli(std::uint64_t control_mask,
+                 std::uint64_t control_value_mask,
+                 std::uint64_t bit_flip_mask,
+                 std::uint64_t phase_flip_mask,
+                 Complex<Prec> coef,
+                 DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void apply_pauli_rotation(std::uint64_t control_mask,
+                          std::uint64_t control_value_mask,
+                          std::uint64_t bit_flip_mask,
+                          std::uint64_t phase_flip_mask,
+                          Complex<Prec> coef,
+                          Float<Prec> angle,
+                          DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
 inline void i_gate(std::uint64_t, std::uint64_t, std::uint64_t, DensityMatrix<Prec, Space>&) {}
 
 template <Precision Prec, ExecutionSpace Space>
