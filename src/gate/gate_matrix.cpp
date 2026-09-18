@@ -174,11 +174,30 @@ DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace:
         ExecutionContextDensityMatrix<Prec, TargetSpace>& context) const {              \
         if constexpr (GateSpace == TargetSpace) {                                       \
             this->check_qubit_mask_within_bounds(*context.state);                       \
-            multi_dense_matrix_gate(this->_target_mask,                                 \
-                                    this->_control_mask,                                \
-                                    this->_control_value_mask,                          \
-                                    this->get_matrix_internal(),                        \
-                                    *context.state);                                    \
+            if (std::holds_alternative<Complex<Prec>>(_matrix)) {                       \
+                zero_target_dense_matrix_gate(this->_control_mask,                      \
+                                              this->_control_value_mask,                \
+                                              std::get<Complex<Prec>>(_matrix),         \
+                                              *context.state);                          \
+            } else if (std::holds_alternative<Matrix2x2<Prec>>(_matrix)) {              \
+                one_target_dense_matrix_gate(this->_target_mask,                        \
+                                             this->_control_mask,                       \
+                                             this->_control_value_mask,                 \
+                                             std::get<Matrix2x2<Prec>>(_matrix),        \
+                                             *context.state);                           \
+            } else if (std::holds_alternative<Matrix4x4<Prec>>(_matrix)) {              \
+                two_target_dense_matrix_gate(this->_target_mask,                        \
+                                             this->_control_mask,                       \
+                                             this->_control_value_mask,                 \
+                                             std::get<Matrix4x4<Prec>>(_matrix),        \
+                                             *context.state);                           \
+            } else {                                                                    \
+                multi_dense_matrix_gate(this->_target_mask,                             \
+                                        this->_control_mask,                            \
+                                        this->_control_value_mask,                      \
+                                        std::get<Matrix<Prec, GateSpace>>(_matrix),     \
+                                        *context.state);                                \
+            }                                                                           \
         } else {                                                                        \
             throw std::runtime_error(                                                   \
                 "Error: DenseMatrixGateImpl::update_quantum_state("                     \

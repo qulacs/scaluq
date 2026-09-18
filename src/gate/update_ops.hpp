@@ -387,6 +387,19 @@ void permutation_gate(const std::vector<std::pair<std::uint64_t, std::uint64_t>>
 // DensityMatrix overloads
 
 template <Precision Prec, ExecutionSpace Space>
+void zero_target_dense_matrix_gate(std::uint64_t control_mask,
+                                   std::uint64_t control_value_mask,
+                                   Complex<Prec> matrix,
+                                   DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void two_target_dense_matrix_gate(std::uint64_t target_mask,
+                                  std::uint64_t control_mask,
+                                  std::uint64_t control_value_mask,
+                                  const Matrix4x4<Prec>& matrix,
+                                  DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
 void multi_dense_matrix_gate(std::uint64_t target_mask,
                              std::uint64_t control_mask,
                              std::uint64_t control_value_mask,

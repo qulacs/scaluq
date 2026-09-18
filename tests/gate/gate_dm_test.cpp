@@ -441,6 +441,8 @@ TYPED_TEST(DMGateTest, ApplyDenseMatrix) {
     ComplexMatrix scalar(1, 1);
     scalar << StdComplex(0.3, -0.2);
     run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n, gate::DenseMatrix<Prec, Space>({}, scalar));
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
         n, gate::DenseMatrix<Prec, Space>({}, scalar, {1, 4}, {0, 1}));
 
     ComplexMatrix one_target(2, 2);
@@ -454,6 +456,8 @@ TYPED_TEST(DMGateTest, ApplyDenseMatrix) {
     ComplexMatrix two_target = ComplexMatrix::Zero(4, 4);
     two_target << 1., 0., 0., StdComplex(0., 0.5), 0., StdComplex(0.2, -0.1), 0.3, 0., 0., -0.4,
         StdComplex(0.1, 0.2), 0., StdComplex(-0.2, 0.3), 0., 0., 0.7;
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n, gate::DenseMatrix<Prec, Space>({1, 3}, two_target));
     run_dm_gate_apply_against_state_vector<Prec, Space>(
         n, gate::DenseMatrix<Prec, Space>({3, 1}, two_target, {4}, {1}));
 
