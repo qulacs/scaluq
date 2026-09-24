@@ -22,25 +22,33 @@ else()
     message(FATAL_ERROR "No precision enabled for python bindings.")
 endif()
 
-# Stub generation imports the target extension. Honor the same emulator used
-# by C++ tests when building AVX512 wheels on a non-AVX512 host.
-foreach(stub root main gate)
-    set(module scaluq.scaluq_core)
-    if(NOT stub STREQUAL "root")
-        string(APPEND module ".default.${MAIN_PRECISION}")
-    endif()
-    if(stub STREQUAL "gate")
-        string(APPEND module ".gate")
-    endif()
-    install(CODE "
-        set(stub_command \"${CMAKE_CROSSCOMPILING_EMULATOR}\")
-        list(APPEND stub_command \"${Python_EXECUTABLE}\" -m nanobind.stubgen
-            -m \"${module}\" -o \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/${stub}.pyi\")
-        execute_process(COMMAND \${stub_command}
-            WORKING_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}\"
-            COMMAND_ERROR_IS_FATAL ANY)
-    ")
-endforeach()
+# Stub generation imports the target extension.
+if(SCALUQ_CPU_ARCH STREQUAL "SKX")
+    # SKX extensions cannot be imported on baseline wheel builders.
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated-stubs")
+    foreach(stub root main gate)
+        configure_file("${CMAKE_CURRENT_SOURCE_DIR}/stubs/${stub}.pyi"
+            "${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/${stub}.pyi" COPYONLY)
+    endforeach()
+else()
+    foreach(stub root main gate)
+        set(module scaluq.scaluq_core)
+        if(NOT stub STREQUAL "root")
+            string(APPEND module ".default.${MAIN_PRECISION}")
+        endif()
+        if(stub STREQUAL "gate")
+            string(APPEND module ".gate")
+        endif()
+        install(CODE "
+            set(stub_command \"${CMAKE_CROSSCOMPILING_EMULATOR}\")
+            list(APPEND stub_command \"${Python_EXECUTABLE}\" -m nanobind.stubgen
+                -m \"${module}\" -o \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/${stub}.pyi\")
+            execute_process(COMMAND \${stub_command}
+                WORKING_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}\"
+                COMMAND_ERROR_IS_FATAL ANY)
+        ")
+    endforeach()
+endif()
 install(CODE "
     execute_process(
         COMMAND

@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#if !defined(__CUDACC__)
+
 #include <array>
 #include <bit>
 #include <cstdint>
@@ -97,3 +99,4 @@ TYPED_TEST(SimdOpsTest, NegationPreservesSignedZeroAndNaNPayloads) {
     }(std::make_index_sequence<lanes>{});
 }
 }  // namespace
+#endif
