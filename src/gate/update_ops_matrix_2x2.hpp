@@ -175,6 +175,13 @@ void one_target_dense_matrix_gate(std::uint64_t target_mask,
                     return;
                 }
             }
+            if constexpr (complex_lanes > 4) {
+                if (inlane_target == 0b100) {
+                    one_target_dense_matrix_gate_simd_low<M00, M01, M10, M11, 2>(
+                        control_mask, control_value_mask, matrix, state);
+                    return;
+                }
+            }
         }
     }
     one_target_dense_matrix_gate_scalar<M00, M01, M10, M11>(

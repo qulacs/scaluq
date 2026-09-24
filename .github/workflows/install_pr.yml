@@ -28,6 +28,9 @@ jobs:
             script/configure
             python/**
             example_project/**
+            pyproject.toml
+            .github/workflows/install_pr.yml
+            .github/workflows/install_merge.yml
 
   library:
     name: Install Library

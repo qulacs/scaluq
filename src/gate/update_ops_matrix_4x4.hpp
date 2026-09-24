@@ -246,14 +246,14 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
                 // clang-format on
                 return;
             }
+            // Call directly: NVCC can duplicate template defaults with templated lambdas.
             if (inlane_targets == 0b1) {
                 // clang-format off
                 two_target_dense_matrix_gate_simd_middle<
                     M00, M01, M02, M03,
                     M10, M11, M12, M13,
                     M20, M21, M22, M23,
-                    M30, M31, M32, M33,
-                    0>(
+                    M30, M31, M32, M33, 0>(
                     target_mask, control_mask, control_value_mask, matrix, state);
                 // clang-format on
                 return;
@@ -265,22 +265,57 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
                         M00, M01, M02, M03,
                         M10, M11, M12, M13,
                         M20, M21, M22, M23,
-                        M30, M31, M32, M33,
-                        1>(
+                        M30, M31, M32, M33, 1>(
                         target_mask, control_mask, control_value_mask, matrix, state);
                     // clang-format on
                     return;
                 }
-                // clang-format off
-                two_target_dense_matrix_gate_simd_low<
-                    M00, M01, M02, M03,
-                    M10, M11, M12, M13,
-                    M20, M21, M22, M23,
-                    M30, M31, M32, M33,
-                    0, 1>(
-                    control_mask, control_value_mask, matrix, state);
-                // clang-format on
-                return;
+                if (inlane_targets == 0b11) {
+                    // clang-format off
+                    two_target_dense_matrix_gate_simd_low<
+                        M00, M01, M02, M03,
+                        M10, M11, M12, M13,
+                        M20, M21, M22, M23,
+                        M30, M31, M32, M33, 0, 1>(
+                        control_mask, control_value_mask, matrix, state);
+                    // clang-format on
+                    return;
+                }
+            }
+            if constexpr (complex_lanes > 4) {
+                if (inlane_targets == 0b100) {
+                    // clang-format off
+                    two_target_dense_matrix_gate_simd_middle<
+                        M00, M01, M02, M03,
+                        M10, M11, M12, M13,
+                        M20, M21, M22, M23,
+                        M30, M31, M32, M33, 2>(
+                        target_mask, control_mask, control_value_mask, matrix, state);
+                    // clang-format on
+                    return;
+                }
+                if (inlane_targets == 0b101) {
+                    // clang-format off
+                    two_target_dense_matrix_gate_simd_low<
+                        M00, M01, M02, M03,
+                        M10, M11, M12, M13,
+                        M20, M21, M22, M23,
+                        M30, M31, M32, M33, 0, 2>(
+                        control_mask, control_value_mask, matrix, state);
+                    // clang-format on
+                    return;
+                }
+                if (inlane_targets == 0b110) {
+                    // clang-format off
+                    two_target_dense_matrix_gate_simd_low<
+                        M00, M01, M02, M03,
+                        M10, M11, M12, M13,
+                        M20, M21, M22, M23,
+                        M30, M31, M32, M33, 1, 2>(
+                        control_mask, control_value_mask, matrix, state);
+                    // clang-format on
+                    return;
+                }
             }
         }
     }

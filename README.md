@@ -100,6 +100,17 @@ Build options can be specified using environment variables when running `script/
 | `SCALUQ_FLOAT64`       | `ON`        | Enable `f64` precision |
 | `SCALUQ_BFLOAT16`      | `OFF`       | Enable `bf16` precision |
 
+`SCALUQ_CPU_NATIVE=ON` remains the default. An explicit `SCALUQ_CPU_ARCH`
+takes precedence: use `-DSCALUQ_CPU_ARCH=HSW` for AVX2 or
+`-DSCALUQ_CPU_ARCH=SKX` for AVX512. For a baseline build, use
+`-DSCALUQ_CPU_NATIVE=OFF -DSCALUQ_CPU_ARCH=`. These options also accept
+environment variables through `script/configure` and `pip install .`.
+No extra BMI2 restriction is applied; compiler flags determine the baseline ISA.
+AVX builds require a compatible x86-64 CPU at runtime; there is no runtime dispatch.
+Only `scalar` wheels are published to PyPI; AVX variants are separate GitHub artifacts.
+For AVX512 emulation, run `bash script/install_sde` and set
+`CMAKE_CROSSCOMPILING_EMULATOR='/tmp/scaluq-sde/sde64;-skx;--'`.
+
 ## Building for an Intel GPU (SYCL)
 
 Install the Intel oneAPI DPC++/C++ Compiler and an Intel GPU runtime such as Level Zero, then

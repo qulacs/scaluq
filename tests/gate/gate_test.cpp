@@ -480,9 +480,13 @@ void run_two_target_dense_matrix_simd_placements(std::uint64_t n_qubits) {
         }
     }
 
-    // FP32 AVX2: high, middle, low respectively.
-    for (const std::vector<std::uint64_t>& targets : {std::vector<std::uint64_t>{2, 3},
+    // Include the third in-register target bit used by FP32 AVX512.
+    for (const std::vector<std::uint64_t>& targets : {std::vector<std::uint64_t>{3, 4},
+                                                      std::vector<std::uint64_t>{2, 3},
                                                       std::vector<std::uint64_t>{0, 3},
+                                                      std::vector<std::uint64_t>{1, 3},
+                                                      std::vector<std::uint64_t>{0, 2},
+                                                      std::vector<std::uint64_t>{1, 2},
                                                       std::vector<std::uint64_t>{0, 1}}) {
         auto state = StateVector<Prec, Space>::Haar_random_state(n_qubits);
         auto expected = state.get_amplitudes();
