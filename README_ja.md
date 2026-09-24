@@ -57,6 +57,10 @@ https://scaluq.readthedocs.io/en/latest/index.html をご確認ください。
   - CUDA 利用時はGCC 11以上が利用できるが、Clangは利用不可
 - CMake 3.25.2 以上
 - CUDA 12.8 以上（CUDA利用時のみ）
+- HIP (HIP利用時のみ)
+  - HIP version: 7.15
+  - libamdhip64.so.7
+  - libomp.so
 - IntelLLVM (SYCL利用時のみ)
   - Intel oneAPI DPC++/C++ Compiler (CC=icx/CXX=icpx)
 - Python 3.10 以上 (Python利用時のみ)
@@ -68,7 +72,10 @@ CUDA を利用する場合は、使用する CUDA がサポートするホスト
 ## 実行時要件
 
 - CUDA 12.8 以上（CUDA利用時のみ）
-- SYCL
+- HIP (HIP利用時のみ)
+    - libamdhip64.so.7
+    - libomp.so
+- SYCL (SYCL利用時のみ)
     - intel-level-zero-gpu
     - intel-opencl-icd
 
@@ -99,6 +106,41 @@ CUDA を利用する場合は、使用する CUDA がサポートするホスト
 |`SCALUQ_FLOAT32`|`ON`|`f32`精度を有効にする|
 |`SCALUQ_FLOAT64`|`ON`|`f64`精度を有効にする|
 |`SCALUQ_BFLOAT16`|`OFF`|`bf16`精度を有効にする|
+
+## AMD GPU向けビルド (HIP)
+
+ROCmをインストールします (ROCm 10.0.0で検証済み)。  
+C++ビルドやPythonパッケージをインストールする前に`LD_LIBRARY_PATH`に
+- `libamdhip64.so.7`
+- `libomp.so`
+
+を以下の例のように設定してください。
+
+```sh
+export LD_LIBRARY_PATH=/opt/rocm/core-10.0/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/opt/rocm/core-10.0/lib/llvm/lib:$LD_LIBRARY_PATH
+```
+
+hipccをコンパイラに指定して、KokkosのAMD GPUターゲットを選択します。
+
+```sh
+CMAKE_C_COMPILER=hipcc \
+CMAKE_CXX_COMPILER=hipcc \
+SCALUQ_USE_HIP=ON \
+SCALUQ_HIP_ARCH=AMD_GFX942 \
+script/configure
+ninja -C build
+```
+
+Pythonパッケージをビルドしてインストールする場合も、同じ変数を`pip`に渡します。
+
+```sh
+CMAKE_C_COMPILER=hipcc \
+CMAKE_CXX_COMPILER=hipcc \
+SCALUQ_USE_HIP=ON \
+SCALUQ_HIP_ARCH=AMD_GFX942 \
+pip install .
+```
 
 ## Intel GPU向けビルド (SYCL)
 
@@ -299,7 +341,7 @@ Scaluqでは、計算に使用する浮動小数点数のサイズとして`f16`
 
 |実行スペース|C++で指定するテンプレート引数|Pythonのキーワード引数 (`space=`)|内容|
 |-|-|-|-|
-|`default`|`ExecutionSpace::Default`|`'default'`|CUDA、SYCL が有効なら GPU、そうでなければ CPU で実行|
+|`default`|`ExecutionSpace::Default`|`'default'`|CUDA、HIP、SYCL が有効なら GPU、そうでなければ CPU で実行|
 |`host`|`ExecutionSpace::Host`|`'host'`|常に CPU で実行|
 |`host_serial`|`ExecutionSpace::HostSerial`|`'host_serial'`|常に CPU で逐次実行|
 

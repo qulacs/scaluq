@@ -25,6 +25,10 @@ The build requirements are below.
   - if you enable CUDA, GCC ≥ 11 is OK, but you cannot use Clang.
 - CMake ≥ 3.25.2
 - CUDA ≥ 12.8 (only when using CUDA)
+- HIP (only when using HIP)
+  - HIP version: 7.15
+  - libamdhip64.so.7
+  - libomp.so
 - IntelLLVM (only when using SYCL)
   - Intel oneAPI DPC++/C++ Compiler (CC=icx/CXX=icpx)
 - Python ≥ 3.10 (only when using Python)
@@ -64,6 +68,36 @@ git clone https://github.com/qulacs/scaluq
 cd scaluq
 ```
 
+Then, install Scaluq with passing configuration by environment variable.
+
+```
+SCALUQ_USE_CUDA=ON SCALUQ_FLOAT32=OFF pip install .
+```
+
+### Building for an AMD GPU (HIP)
+
+Install ROCm (Validated with ROCm 10.0.0).  
+Set `LD_LIBRARY_PATH` to
+- `libamdhip64.so.7`
+- `libomp.so`
+
+as in the example below before Python package installation.  
+
+```sh
+export LD_LIBRARY_PATH=/opt/rocm/core-10.0/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/opt/rocm/core-10.0/lib/llvm/lib:$LD_LIBRARY_PATH
+```
+
+Configure Scaluq with hipcc and select Kokkos's AMD GPU target.
+
+```sh
+CMAKE_C_COMPILER=hipcc \
+CMAKE_CXX_COMPILER=hipcc \
+SCALUQ_USE_HIP=ON \
+SCALUQ_HIP_ARCH=AMD_GFX942 \
+pip install .
+```
+
 ### Intel GPU (SYCL)
 
 Install the Intel oneAPI DPC++/C++ Compiler and an Intel GPU runtime such as Level Zero. Initialize
@@ -81,9 +115,3 @@ pip install .
 The architecture is explicit because a SYCL build may instead target a CPU. If the machine has
 multiple SYCL devices, select the Intel GPU at runtime with
 `ONEAPI_DEVICE_SELECTOR=level_zero:gpu`.
-
-Then, install Scaluq with passing configuration by environment variable.
-
-```
-SCALUQ_USE_CUDA=ON SCALUQ_FLOAT32=OFF pip install .
-```
