@@ -98,16 +98,6 @@ CUDA を利用する場合は、使用する CUDA がサポートするホスト
 |`SCALUQ_FLOAT64`|`ON`|`f64`精度を有効にする|
 |`SCALUQ_BFLOAT16`|`OFF`|`bf16`精度を有効にする|
 
-従来どおり`SCALUQ_CPU_NATIVE=ON`が既定です。`SCALUQ_CPU_ARCH`の明示指定が優先され、
-AVX2には`-DSCALUQ_CPU_ARCH=HSW`、AVX512には`-DSCALUQ_CPU_ARCH=SKX`を指定します。
-汎用ビルドには`-DSCALUQ_CPU_NATIVE=OFF -DSCALUQ_CPU_ARCH=`を指定します。
-`script/configure`や`pip install .`では同名の環境変数を使用できます。
-BMI2の追加制限は行わず、使用命令はコンパイラ設定に従います。
-AVX版は対応する命令セットを持つx86-64 CPUが必要で、実行時の自動切り替えはありません。
-PyPIには`scalar`版のみを公開し、AVX版は別々のGitHub成果物として保持します。
-AVX512のエミュレーションには`bash script/install_sde`を実行し、
-`CMAKE_CROSSCOMPILING_EMULATOR='/tmp/scaluq-sde/sde64;-skx;--'`を指定します。
-
 ## Intel GPU向けビルド (SYCL)
 
 Intel oneAPI DPC++/C++ CompilerとLevel ZeroなどのIntel GPUランタイムをインストールし、
