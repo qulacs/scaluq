@@ -60,7 +60,7 @@ public:
 
     [[nodiscard]] std::uint64_t n_qubits() const { return this->_n_qubits; }
 
-    [[nodiscard]] std::uint64_t dim() const { return this->_dim; }
+    [[nodiscard]] KOKKOS_INLINE_FUNCTION std::uint64_t dim() const { return this->_dim; }
 
     [[nodiscard]] std::uint64_t flat_dim() const { return this->_dim; }
 

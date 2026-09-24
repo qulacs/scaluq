@@ -108,7 +108,7 @@ template <Precision Prec, ExecutionSpace Space>
 }
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_squared_norm() const {
-    FloatType norm{0};
+    FloatType norm{0.0f};
     Kokkos::parallel_reduce(
         "get_squared_norm",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
@@ -133,7 +133,7 @@ double StateVector<Prec, Space>::get_zero_probability(std::uint64_t target_qubit
             "Error: StateVector::get_zero_probability(std::uint64_t): index "
             "of target qubit must be smaller than qubit_count");
     }
-    FloatType sum = 0;
+    FloatType sum{0.0f};
     Kokkos::parallel_reduce(
         "zero_prob",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> 1),
@@ -168,7 +168,7 @@ double StateVector<Prec, Space>::get_marginal_probability(
         }
     }
 
-    FloatType sum = 0;
+    FloatType sum{0.0f};
     auto d_target_index = internal::convert_vector_to_view<std::uint64_t, Space>(target_index);
     auto d_target_value = internal::convert_vector_to_view<std::uint64_t, Space>(target_value);
 
@@ -190,13 +190,13 @@ double StateVector<Prec, Space>::get_marginal_probability(
 }
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_computational_basis_entropy() const {
-    FloatType ent = 0;
+    FloatType ent{0.0f};
     Kokkos::parallel_reduce(
         "get_computational_basis_entropy",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t idx, FloatType & lsum) {
             FloatType prob = internal::squared_norm(_raw[idx]);
-            if (prob > FloatType{0}) {
+            if (prob > FloatType{0.0f}) {
                 lsum += -prob * internal::log2(prob);
             }
         },

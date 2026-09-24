@@ -86,7 +86,7 @@ public:
     ParamGateBase(std::uint64_t target_mask,
                   std::uint64_t control_mask,
                   std::uint64_t control_value_mask,
-                  Float<Prec> param_coef = 1);
+                  Float<Prec> param_coef = static_cast<Float<Prec>>(1.0f));
     virtual ~ParamGateBase() = default;
     ParamGateBase(const ParamGateBase&) = delete;
     ParamGateBase(ParamGateBase&&) = delete;

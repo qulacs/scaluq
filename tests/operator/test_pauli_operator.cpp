@@ -257,13 +257,13 @@ TYPED_TEST(PauliOperatorTest, GetExpectationValueTest) {
     }
     for (int i = 1; i < (int)n_qubits; i++) {
         if (pauli_id_vec[i] == 0) {
-            matrix = internal::kronecker_product(make_I(), matrix);
+            matrix = scaluq::internal::kronecker_product(make_I(), matrix);
         } else if (pauli_id_vec[i] == 1) {
-            matrix = internal::kronecker_product(make_X(), matrix);
+            matrix = scaluq::internal::kronecker_product(make_X(), matrix);
         } else if (pauli_id_vec[i] == 2) {
-            matrix = internal::kronecker_product(make_Y(), matrix);
+            matrix = scaluq::internal::kronecker_product(make_Y(), matrix);
         } else if (pauli_id_vec[i] == 3) {
-            matrix = internal::kronecker_product(make_Z(), matrix);
+            matrix = scaluq::internal::kronecker_product(make_Z(), matrix);
         }
     }
 

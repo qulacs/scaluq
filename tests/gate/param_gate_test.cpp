@@ -230,7 +230,7 @@ void test_gate(ParamGate<Prec> gate_control,
     std::vector<StdComplex> amplitudes_controlled(state_controlled.dim());
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
         amplitudes_controlled[i] =
-            amplitudes[internal::insert_zero_at_mask_positions(i, control_mask) |
+            amplitudes[scaluq::internal::insert_zero_at_mask_positions(i, control_mask) |
                        control_value_mask];
     }
     state_controlled.load(amplitudes_controlled);
@@ -239,9 +239,10 @@ void test_gate(ParamGate<Prec> gate_control,
     amplitudes = state.get_amplitudes();
     amplitudes_controlled = state_controlled.get_amplitudes();
     for (std::uint64_t i : std::views::iota(0ULL, state_controlled.dim())) {
-        check_near<Prec>(amplitudes.at(internal::insert_zero_at_mask_positions(i, control_mask) |
-                                       control_value_mask),
-                         amplitudes_controlled.at(i));
+        check_near<Prec>(
+            amplitudes.at(scaluq::internal::insert_zero_at_mask_positions(i, control_mask) |
+                          control_value_mask),
+            amplitudes_controlled.at(i));
     }
 }
 

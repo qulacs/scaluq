@@ -303,12 +303,12 @@ void circuit_suzuki_trotter_test() {
     Operator<Prec, Space> observable(terms);
     circuit.add_observable_rotation_gate(observable, angle, num_repeats);
 
-    ComplexMatrix test_observable = coef[0] * internal::kronecker_product(I, Z);
-    test_observable += coef[1] * internal::kronecker_product(Y, X);
-    test_observable += coef[2] * internal::kronecker_product(Z, Z);
-    test_observable += coef[3] * internal::kronecker_product(X, Z);
-    test_observable += coef[4] * internal::kronecker_product(X, Y);
-    test_observable += coef[5] * internal::kronecker_product(Z, I);
+    ComplexMatrix test_observable = coef[0] * scaluq::internal::kronecker_product(I, Z);
+    test_observable += coef[1] * scaluq::internal::kronecker_product(Y, X);
+    test_observable += coef[2] * scaluq::internal::kronecker_product(Z, Z);
+    test_observable += coef[3] * scaluq::internal::kronecker_product(X, Z);
+    test_observable += coef[4] * scaluq::internal::kronecker_product(X, Y);
+    test_observable += coef[5] * scaluq::internal::kronecker_product(Z, I);
 
     ComplexMatrix test_circuit = StdComplex(0, -1) * angle * 0.5 * test_observable;
     test_circuit = test_circuit.eval().exp();

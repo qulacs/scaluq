@@ -27,7 +27,7 @@ public:
 
     [[nodiscard]] std::uint64_t n_qubits() const { return this->_n_qubits; }
 
-    [[nodiscard]] std::uint64_t dim() const { return this->_dim; }
+    [[nodiscard]] KOKKOS_INLINE_FUNCTION std::uint64_t dim() const { return this->_dim; }
 
     [[nodiscard]] bool is_hermitian() const { return this->_is_hermitian; }
     void force_hermitian() { this->_is_hermitian = true; }
@@ -414,35 +414,34 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
                 .ret("DensityMatrix", "an uninitialized density matrix")
                 .build_as_google_style()
                 .c_str())
-        .def_static(
-            "Haar_random_state",
-            &DensityMatrix<Prec, Space>::Haar_random_state,
-            "n_qubits"_a,
-            "seed"_a = std::nullopt,
-            DocString()
-                .desc("Create a density matrix representing a Haar random state.")
-                .arg("n_qubits", "int", "number of qubits")
-                .arg("seed",
-                     "int | None",
-                     true,
-                     "random seed",
-                     "If not specified, the value from random device is used.")
-                .ret("DensityMatrix", "a density matrix representing a Haar random state")
-                .ex(DocString::Code(
-                    {">>> state = DensityMatrix.Haar_random_state(1)",
-                     ">>> print(state.get_matrix()) # doctest: +SKIP",
-                     "[[ 0.35920411+8.30722924e-18j -0.29205502-3.80631554e-01j]",
-                     " [-0.29205502+3.80631554e-01j  0.64079589+5.48595618e-18j]]",
-                     ">>> state1 = DensityMatrix.Haar_random_state(1, seed=42)",
-                     ">>> state2 = DensityMatrix.Haar_random_state(1, seed=42)",
-                     ">>> print(state1.get_matrix()) # doctest: +SKIP",
-                     "[[ 0.7662367 -2.34701458e-17j -0.35360255-2.32558070e-01j]",
-                     " [-0.35360255+2.32558070e-01j  0.2337633 -7.47914693e-19j]]",
-                     ">>> print(state2.get_matrix()) # doctest: +SKIP",
-                     "[[ 0.7662367 -2.34701458e-17j -0.35360255-2.32558070e-01j]",
-                     " [-0.35360255+2.32558070e-01j  0.2337633 -7.47914693e-19j]]"}))
-                .build_as_google_style()
-                .c_str())
+        .def_static("Haar_random_state",
+                    &DensityMatrix<Prec, Space>::Haar_random_state,
+                    "n_qubits"_a,
+                    "seed"_a = std::nullopt,
+                    DocString()
+                        .desc("Create a density matrix representing a Haar random state.")
+                        .arg("n_qubits", "int", "number of qubits")
+                        .arg("seed",
+                             "int | None",
+                             true,
+                             "random seed",
+                             "If not specified, the value from random device is used.")
+                        .ret("DensityMatrix", "a density matrix representing a Haar random state")
+                        .ex(DocString::Code(
+                            {">>> state = DensityMatrix.Haar_random_state(1)",
+                             ">>> print(state.get_matrix()) # doctest: +SKIP",
+                             "[[ 0.35920411+8.30722924e-18j -0.29205502-3.80631554e-01j]",
+                             " [-0.29205502+3.80631554e-01j  0.64079589+5.48595618e-18j]]",
+                             ">>> state1 = DensityMatrix.Haar_random_state(1, seed=42)",
+                             ">>> state2 = DensityMatrix.Haar_random_state(1, seed=42)",
+                             ">>> print(state1.get_matrix()) # doctest: +SKIP",
+                             "[[ 0.7662367 -2.34701458e-17j -0.35360255-2.32558070e-01j]",
+                             " [-0.35360255+2.32558070e-01j  0.2337633 -7.47914693e-19j]]",
+                             ">>> print(state2.get_matrix()) # doctest: +SKIP",
+                             "[[ 0.7662367 -2.34701458e-17j -0.35360255-2.32558070e-01j]",
+                             " [-0.35360255+2.32558070e-01j  0.2337633 -7.47914693e-19j]]"}))
+                        .build_as_google_style()
+                        .c_str())
         .def("set_zero_state",
              &DensityMatrix<Prec, Space>::set_zero_state,
              DocString()
@@ -621,9 +620,7 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
             "sampling",
             [](const DensityMatrix<Prec, Space>& self,
                std::uint64_t sampling_count,
-               std::optional<std::uint64_t> seed) {
-                return self.sampling(sampling_count, seed);
-            },
+               std::optional<std::uint64_t> seed) { return self.sampling(sampling_count, seed); },
             "sampling_count"_a,
             "seed"_a = std::nullopt,
             DocString()

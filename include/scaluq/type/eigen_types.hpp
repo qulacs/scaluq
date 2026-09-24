@@ -63,6 +63,7 @@ public:
     };
     Block block(int, int, int, int) { return {}; }
     Block block(int, int, int, int) const { return {}; }
+    Matrix topLeftCorner(int, int) const { return {}; }
 };
 
 template <class Scalar, int R, int C, int O>
@@ -78,6 +79,22 @@ public:
     using Scalar = typename MatrixType::Scalar;
     using EigenvalueType = std::vector<Scalar>;
     explicit ComplexEigenSolver(const MatrixType&) {}
+    const EigenvalueType& eigenvalues() const {
+        static EigenvalueType v;
+        return v;
+    }
+    const MatrixType& eigenvectors() const {
+        static MatrixType m;
+        return m;
+    }
+    ComputationInfo info() const { return ComputationInfo::Success; }
+};
+
+template <class MatrixType>
+class SelfAdjointEigenSolver {
+public:
+    using EigenvalueType = std::vector<double>;
+    explicit SelfAdjointEigenSolver(const MatrixType&) {}
     const EigenvalueType& eigenvalues() const {
         static EigenvalueType v;
         return v;
@@ -123,6 +140,7 @@ public:
     };
     Block block(int, int, int, int) { return {}; }
     Block block(int, int, int, int) const { return {}; }
+    ComplexMatrix topLeftCorner(int, int) const { return {}; }
 
     SparseComplexMatrix sparseView() const;
 
@@ -192,6 +210,13 @@ inline SparseComplexMatrix ComplexMatrix::sparseView() const { return {}; }
 // NOLINTEND
 
 #else  // ── Real Eigen ──────────────────────────────────────────────────────────
+
+// For hipcc
+#include <algorithm>
+#if defined(SCALUQ_USE_HIP)
+using std::fill_n;
+#endif
+// For hipcc
 
 #include <Eigen/Core>
 #include <Eigen/Sparse>
