@@ -48,10 +48,11 @@ jobs:
       CMAKE_CXX_COMPILER: ${{ matrix.runs-on == 'macos-15-intel' && '/usr/local/opt/ccache/libexec/g++-15' || (matrix.runs-on == 'macos-15' && '/opt/homebrew/opt/ccache/libexec/g++-15' || '/usr/lib/ccache/g++') }}
       SCALUQ_CPU_NATIVE: "OFF"
       SCALUQ_CPU_ARCH: ${{ matrix.simd == 'avx2' && 'HSW' || matrix.simd == 'avx512' && 'SKX' || '' }}
+      # Disable Pin analysis inlining for Python stub generation under SDE.
       CIBW_ENVIRONMENT: >-
         SCALUQ_CPU_NATIVE=OFF
         SCALUQ_CPU_ARCH="${{ matrix.simd == 'avx2' && 'HSW' || matrix.simd == 'avx512' && 'SKX' || '' }}"
-        CMAKE_CROSSCOMPILING_EMULATOR="${{ matrix.simd == 'avx512' && '/tmp/scaluq-sde/sde64;-skx;--' || '' }}"
+        CMAKE_CROSSCOMPILING_EMULATOR="${{ matrix.simd == 'avx512' && '/tmp/scaluq-sde/sde64;-skx;-p;-inline;-p;0;--' || '' }}"
       CIBW_BEFORE_ALL_LINUX: ${{ matrix.simd == 'avx512' && 'bash {package}/script/install_sde' || '' }}
       CIBW_ARCHS: ${{ matrix.arch }}
       CIBW_BUILD: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}
