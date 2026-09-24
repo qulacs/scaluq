@@ -246,54 +246,74 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
                 // clang-format on
                 return;
             }
-            // Keep coefficient forwarding in one place for each placement.
-            const auto apply_middle = [&]<std::size_t TargetBit>() {
+            // Call directly: NVCC can duplicate template defaults with templated lambdas.
+            if (inlane_targets == 0b1) {
                 // clang-format off
                 two_target_dense_matrix_gate_simd_middle<
                     M00, M01, M02, M03,
                     M10, M11, M12, M13,
                     M20, M21, M22, M23,
-                    M30, M31, M32, M33,
-                    TargetBit>(
+                    M30, M31, M32, M33, 0>(
                     target_mask, control_mask, control_value_mask, matrix, state);
                 // clang-format on
-            };
-            const auto apply_low = [&]<std::size_t TargetBit0, std::size_t TargetBit1>() {
-                // clang-format off
-                two_target_dense_matrix_gate_simd_low<
-                    M00, M01, M02, M03,
-                    M10, M11, M12, M13,
-                    M20, M21, M22, M23,
-                    M30, M31, M32, M33,
-                    TargetBit0, TargetBit1>(
-                    control_mask, control_value_mask, matrix, state);
-                // clang-format on
-            };
-            if (inlane_targets == 0b1) {
-                apply_middle.template operator()<0>();
                 return;
             }
             if constexpr (complex_lanes > 2) {
                 if (inlane_targets == 0b10) {
-                    apply_middle.template operator()<1>();
+                    // clang-format off
+                    two_target_dense_matrix_gate_simd_middle<
+                        M00, M01, M02, M03,
+                        M10, M11, M12, M13,
+                        M20, M21, M22, M23,
+                        M30, M31, M32, M33, 1>(
+                        target_mask, control_mask, control_value_mask, matrix, state);
+                    // clang-format on
                     return;
                 }
                 if (inlane_targets == 0b11) {
-                    apply_low.template operator()<0, 1>();
+                    // clang-format off
+                    two_target_dense_matrix_gate_simd_low<
+                        M00, M01, M02, M03,
+                        M10, M11, M12, M13,
+                        M20, M21, M22, M23,
+                        M30, M31, M32, M33, 0, 1>(
+                        control_mask, control_value_mask, matrix, state);
+                    // clang-format on
                     return;
                 }
             }
             if constexpr (complex_lanes > 4) {
                 if (inlane_targets == 0b100) {
-                    apply_middle.template operator()<2>();
+                    // clang-format off
+                    two_target_dense_matrix_gate_simd_middle<
+                        M00, M01, M02, M03,
+                        M10, M11, M12, M13,
+                        M20, M21, M22, M23,
+                        M30, M31, M32, M33, 2>(
+                        target_mask, control_mask, control_value_mask, matrix, state);
+                    // clang-format on
                     return;
                 }
                 if (inlane_targets == 0b101) {
-                    apply_low.template operator()<0, 2>();
+                    // clang-format off
+                    two_target_dense_matrix_gate_simd_low<
+                        M00, M01, M02, M03,
+                        M10, M11, M12, M13,
+                        M20, M21, M22, M23,
+                        M30, M31, M32, M33, 0, 2>(
+                        control_mask, control_value_mask, matrix, state);
+                    // clang-format on
                     return;
                 }
                 if (inlane_targets == 0b110) {
-                    apply_low.template operator()<1, 2>();
+                    // clang-format off
+                    two_target_dense_matrix_gate_simd_low<
+                        M00, M01, M02, M03,
+                        M10, M11, M12, M13,
+                        M20, M21, M22, M23,
+                        M30, M31, M32, M33, 1, 2>(
+                        control_mask, control_value_mask, matrix, state);
+                    // clang-format on
                     return;
                 }
             }
