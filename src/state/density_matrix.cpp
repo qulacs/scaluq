@@ -93,18 +93,24 @@ DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::copy() const {
     Kokkos::deep_copy(new_state._raw, this->_raw);
     return new_state;
 }
-// copy_to_default_space and copy_to_host_space:
-// If use Kokkos::deep_copy on different execution space, source and destination must be contiguous
-// and have the same layout. In this case Kokkos::create_mirror_view as relay view specially.
+// Cross-space deep_copy requires contiguous views with the same layout. Relay through
+// LayoutRight views in each memory space because DensityMatrix::_raw may use different
+// default layouts for host and device execution spaces.
 template <Precision Prec, ExecutionSpace Space>
 DensityMatrix<Prec, ExecutionSpace::Default> DensityMatrix<Prec, Space>::copy_to_default_space()
     const {
     auto new_state =
         DensityMatrix<Prec, ExecutionSpace::Default>::uninitialized_state(this->_n_qubits);
     new_state._is_hermitian = this->_is_hermitian;
-    auto mirror = Kokkos::create_mirror_view(new_state._raw);
-    Kokkos::deep_copy(mirror, this->_raw);
-    Kokkos::deep_copy(new_state._raw, mirror);
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<Space>>
+        source_contiguous("source_contiguous", this->_dim, this->_dim);
+    Kokkos::deep_copy(source_contiguous, this->_raw);
+    Kokkos::View<ComplexType**,
+                 Kokkos::LayoutRight,
+                 internal::SpaceType<ExecutionSpace::Default>>
+        destination_contiguous("destination_contiguous", this->_dim, this->_dim);
+    Kokkos::deep_copy(destination_contiguous, source_contiguous);
+    Kokkos::deep_copy(new_state._raw, destination_contiguous);
     return new_state;
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -112,9 +118,15 @@ DensityMatrix<Prec, ExecutionSpace::Host> DensityMatrix<Prec, Space>::copy_to_ho
     auto new_state =
         DensityMatrix<Prec, ExecutionSpace::Host>::uninitialized_state(this->_n_qubits);
     new_state._is_hermitian = this->_is_hermitian;
-    auto mirror = Kokkos::create_mirror_view(this->_raw);
-    Kokkos::deep_copy(mirror, this->_raw);
-    Kokkos::deep_copy(new_state._raw, mirror);
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<Space>>
+        source_contiguous("source_contiguous", this->_dim, this->_dim);
+    Kokkos::deep_copy(source_contiguous, this->_raw);
+    Kokkos::View<ComplexType**,
+                 Kokkos::LayoutRight,
+                 internal::SpaceType<ExecutionSpace::Host>>
+        destination_contiguous("destination_contiguous", this->_dim, this->_dim);
+    Kokkos::deep_copy(destination_contiguous, source_contiguous);
+    Kokkos::deep_copy(new_state._raw, destination_contiguous);
     return new_state;
 }
 
