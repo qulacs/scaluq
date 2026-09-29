@@ -433,6 +433,43 @@ TYPED_TEST(DMGateTest, ApplyControlledEcr) {
     }
 }
 
+TYPED_TEST(DMGateTest, ApplyDenseMatrix) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    constexpr std::uint64_t n = 5;
+
+    ComplexMatrix scalar(1, 1);
+    scalar << StdComplex(0.3, -0.2);
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n, gate::DenseMatrix<Prec, Space>({}, scalar));
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n, gate::DenseMatrix<Prec, Space>({}, scalar, {1, 4}, {0, 1}));
+
+    ComplexMatrix one_target(2, 2);
+    one_target << StdComplex(0.2, 0.1), StdComplex(-0.3, 0.4), StdComplex(0.5, -0.2),
+        StdComplex(0.1, 0.6);
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n, gate::DenseMatrix<Prec, Space>({2}, one_target));
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n, gate::DenseMatrix<Prec, Space>({2}, one_target, {0, 4}, {1, 0}));
+
+    ComplexMatrix two_target = ComplexMatrix::Zero(4, 4);
+    two_target << 1., 0., 0., StdComplex(0., 0.5), 0., StdComplex(0.2, -0.1), 0.3, 0., 0., -0.4,
+        StdComplex(0.1, 0.2), 0., StdComplex(-0.2, 0.3), 0., 0., 0.7;
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n, gate::DenseMatrix<Prec, Space>({1, 3}, two_target));
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n, gate::DenseMatrix<Prec, Space>({3, 1}, two_target, {4}, {1}));
+
+    ComplexMatrix three_target = ComplexMatrix::Zero(8, 8);
+    for (std::uint64_t row = 0; row < 8; ++row) {
+        three_target(row, row) = StdComplex(0.1 * (row + 1), -0.03 * row);
+        three_target(row, (row + 3) % 8) = StdComplex(-0.02 * row, 0.05 * (row + 1));
+    }
+    run_dm_gate_apply_against_state_vector<Prec, Space>(
+        n, gate::DenseMatrix<Prec, Space>({4, 0, 2}, three_target, {1}, {0}));
+}
+
 TYPED_TEST(DMGateTest, ApplyPauli) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
