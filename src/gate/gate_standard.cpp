@@ -1520,9 +1520,12 @@ DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)
 DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::HostSerial)
 DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::HostSerial)
+DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Host)
+DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::HostSerial)
 #ifdef SCALUQ_USE_DEVICE
 DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Default)
 DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
+DEFINE_PERMUTATION_GATE_UPDATE(ExecutionContextDensityMatrix, state, ExecutionSpace::Default)
 #endif
 #undef DEFINE_PERMUTATION_GATE_UPDATE
 template class PermutationGateImpl<Prec>;

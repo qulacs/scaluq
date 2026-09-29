@@ -433,6 +433,21 @@ TYPED_TEST(DMGateTest, ApplyControlledEcr) {
     }
 }
 
+TYPED_TEST(DMGateTest, ApplyPermutation) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    constexpr std::uint64_t n = 4;
+
+    for (const std::vector<std::uint64_t>& destination_indices :
+         {std::vector<std::uint64_t>{0, 1, 2, 3},
+          std::vector<std::uint64_t>{2, 0, 3, 1},
+          std::vector<std::uint64_t>{3, 2, 1, 0}}) {
+        const auto gate_obj = gate::Permutation<Prec, Space>(destination_indices);
+        const auto matrix = get_eigen_matrix_full_qubit_reorder(destination_indices);
+        run_dm_gate_apply<Prec, Space>(n, gate_obj, matrix);
+    }
+}
+
 TYPED_TEST(DMGateTest, ApplyPauli) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
