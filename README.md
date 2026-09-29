@@ -57,6 +57,10 @@ See [the benchmark repository](https://github.com/Qulacs-Osaka/benchmark-scaluq)
   - if you enable CUDA, GCC ≥ 11 is OK, but you cannot use Clang.
 - CMake ≥ 3.25.2
 - CUDA ≥ 12.8 (only when using CUDA)
+- HIP (only when using HIP)
+  - HIP version: 7.15
+  - libamdhip64.so.7
+  - libomp.so
 - IntelLLVM (only when using SYCL)
   - Intel oneAPI DPC++/C++ Compiler (CC=icx/CXX=icpx)
 - Python ≥ 3.10 (only when using Python)
@@ -68,7 +72,10 @@ Note: It may work with lower versions, but this has not been verified.
 ## Runtime Requirements
 
 - CUDA ≥ 12.8 (only when using CUDA)
-- SYCL
+- HIP (only when using HIP)
+    - libamdhip64.so.7
+    - libomp.so
+- SYCL (only when using SYCL)
     - intel-level-zero-gpu
     - intel-opencl-icd
 
@@ -99,6 +106,41 @@ Build options can be specified using environment variables when running `script/
 | `SCALUQ_FLOAT32`       | `ON`        | Enable `f32` precision |
 | `SCALUQ_FLOAT64`       | `ON`        | Enable `f64` precision |
 | `SCALUQ_BFLOAT16`      | `OFF`       | Enable `bf16` precision |
+
+## Building for an AMD GPU (HIP)
+
+Install ROCm (Validated with ROCm 10.0.0).  
+Set `LD_LIBRARY_PATH` to
+- `libamdhip64.so.7`
+- `libomp.so`
+
+as in the example below before C++ build and Python package installation.  
+
+```sh
+export LD_LIBRARY_PATH=/opt/rocm/core-10.0/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/opt/rocm/core-10.0/lib/llvm/lib:$LD_LIBRARY_PATH
+```
+
+Configure Scaluq with hipcc and select Kokkos's AMD GPU target.
+
+```sh
+CMAKE_C_COMPILER=hipcc \
+CMAKE_CXX_COMPILER=hipcc \
+SCALUQ_USE_HIP=ON \
+SCALUQ_HIP_ARCH=AMD_GFX942 \
+script/configure
+ninja -C build
+```
+
+To build and install the Python package, pass the same variables to `pip`:
+
+```sh
+CMAKE_C_COMPILER=hipcc \
+CMAKE_CXX_COMPILER=hipcc \
+SCALUQ_USE_HIP=ON \
+SCALUQ_HIP_ARCH=AMD_GFX942 \
+pip install .
+```
 
 ## Building for an Intel GPU (SYCL)
 
@@ -297,7 +339,7 @@ Execution spaces determine whether computation is performed on CPU or GPU:
 
 | Execution Space  | C++ Template Argument        | Python keyword (`space=`)  | Description                                   |
 |------------------|------------------------------|----------------------------|-----------------------------------------------|
-| `default`        | `ExecutionSpace::Default`    | `'default'`                | Runs on GPU if CUDA or SYCL is enabled, otherwise CPU |
+| `default`        | `ExecutionSpace::Default`    | `'default'`                | Runs on GPU if CUDA or HIP or SYCL is enabled, otherwise CPU |
 | `host`           | `ExecutionSpace::Host`       | `'host'`                   | Always runs on CPU                            |
 | `host_serial`    | `ExecutionSpace::HostSerial` | `'host_serial'`            | Always runs sequentially on CPU               |
 
