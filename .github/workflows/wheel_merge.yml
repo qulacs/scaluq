@@ -10,8 +10,12 @@ on:
   workflow_dispatch:
 
 jobs:
+  wheel-stubs:
+    uses: ./.github/workflows/wheel_stubs.yml
+
   wheel-build:
     name: Python wheel build
+    needs: [wheel-stubs]
     strategy:
       fail-fast: false
       matrix:
@@ -51,6 +55,7 @@ jobs:
       CIBW_ENVIRONMENT: >-
         SCALUQ_CPU_NATIVE=OFF
         SCALUQ_CPU_ARCH="${{ matrix.simd == 'avx2' && 'HSW' || matrix.simd == 'avx512' && 'SKX' || '' }}"
+        SCALUQ_STUB_DIR="${{ matrix.os == 'linux' && '/project/wheel-stubs' || format('{0}/wheel-stubs', github.workspace) }}"
       CIBW_ARCHS: ${{ matrix.arch }}
       CIBW_BUILD: ${{ matrix.cibw-python }}-${{ matrix.cibw-os-arch }}
       CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
@@ -59,6 +64,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: wheel-stubs
+          path: wheel-stubs
 
       - uses: actions/setup-python@v6
         with:
@@ -88,7 +98,7 @@ jobs:
 
   wheel-build-passed:
     name: Wheel Build Passed
-    needs: [wheel-build]
+    needs: [wheel-stubs, wheel-build]
     if: always()
     runs-on: ubuntu-24.04
     steps:

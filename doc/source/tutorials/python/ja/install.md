@@ -25,6 +25,10 @@ pip install scaluq
   - CUDAを有効化した場合、GCC ≥ 11は利用できますが、Clangは使用できません。
 - CMake ≥ 3.25.2
 - CUDA ≥ 12.8 (CUDA利用時のみ)
+- HIP (HIP利用時のみ)
+  - HIP version: 7.15
+  - libamdhip64.so.7
+  - libomp.so
 - IntelLLVM (SYCL利用時のみ)
   - Intel oneAPI DPC++/C++ Compiler (CC=icx/CXX=icpx)
 - Python ≥ 3.10 (Python利用時のみ)
@@ -65,6 +69,36 @@ git clone https://github.com/qulacs/scaluq
 cd scaluq
 ```
 
+そして、環境変数によって設定を行い、Scaluqをインストールしてください。
+
+```
+SCALUQ_USE_CUDA=ON SCALUQ_FLOAT32=OFF pip install .
+```
+
+### AMD GPU向けビルド (HIP)
+
+ROCmをインストールします (ROCm 10.0.0で検証済み)。  
+Pythonパッケージをインストールする前に`LD_LIBRARY_PATH`に
+- `libamdhip64.so.7`
+- `libomp.so`
+
+を以下の例のように設定してください。  
+
+```sh
+export LD_LIBRARY_PATH=/opt/rocm/core-10.0/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/opt/rocm/core-10.0/lib/llvm/lib:$LD_LIBRARY_PATH
+```
+
+hipccをコンパイラに指定して、KokkosのAMD GPUターゲットを選択します。
+
+```sh
+CMAKE_C_COMPILER=hipcc \
+CMAKE_CXX_COMPILER=hipcc \
+SCALUQ_USE_HIP=ON \
+SCALUQ_HIP_ARCH=AMD_GFX942 \
+pip install .
+```
+
 ### Intel GPU (SYCL)
 
 Intel oneAPI DPC++/C++ CompilerとLevel ZeroなどのIntel GPUランタイムをインストールします。
@@ -82,9 +116,3 @@ pip install .
 SYCLはCPUをターゲットにする場合もあるため、アーキテクチャは明示指定しています。
 複数のSYCLデバイスがある環境では、実行時に
 `ONEAPI_DEVICE_SELECTOR=level_zero:gpu`を指定するとIntel GPUを選択できます。
-
-そして、環境変数によって設定を行い、Scaluqをインストールしてください。
-
-```
-SCALUQ_USE_CUDA=ON SCALUQ_FLOAT32=OFF pip install .
-```

@@ -39,8 +39,7 @@ __pycache__/
 /.mypy_cache
 /.vscode
 /bin
-/build
-/build-tidy
+/build*
 /typings
 /dist
 /doc/source/autoapi/

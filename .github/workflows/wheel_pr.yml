@@ -27,14 +27,21 @@ jobs:
             CMakeLists.txt
             python/**
             pyproject.toml
-            script/install_sde
+            script/generate_wheel_stubs.py
+            .github/workflows/wheel_stubs.yml
             .github/workflows/wheel_pr.yml
             .github/workflows/wheel_merge.yml
 
-  wheel-build:
-    name: Python wheel build
+  wheel-stubs:
     needs: [check-changed]
     if: ${{ needs.check-changed.outputs.any_changed == 'true' }}
+    uses: ./.github/workflows/wheel_stubs.yml
+    with:
+      float32: "OFF"
+
+  wheel-build:
+    name: Python wheel build
+    needs: [wheel-stubs]
     strategy:
       fail-fast: false
       matrix:
@@ -90,6 +97,7 @@ jobs:
       CIBW_ENVIRONMENT: >-
         SCALUQ_CPU_NATIVE=OFF
         SCALUQ_CPU_ARCH="${{ matrix.cpu-arch }}"
+        SCALUQ_STUB_DIR="${{ matrix.os == 'linux' && '/project/wheel-stubs' || format('{0}/wheel-stubs', github.workspace) }}"
         SCALUQ_FLOAT32=OFF
         SCALUQ_FLOAT64=ON
       CIBW_ARCHS: ${{ matrix.arch }}
@@ -100,6 +108,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: wheel-stubs
+          path: wheel-stubs
 
       - uses: actions/setup-python@v6
         with:
@@ -123,7 +136,7 @@ jobs:
 
   wheel-build-passed:
     name: Wheel Build Passed
-    needs: [check-changed, wheel-build]
+    needs: [check-changed, wheel-stubs, wheel-build]
     if: always()
     runs-on: ubuntu-24.04
     steps:

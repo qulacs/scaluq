@@ -57,6 +57,10 @@ See [the benchmark repository](https://github.com/Qulacs-Osaka/benchmark-scaluq)
   - if you enable CUDA, GCC ≥ 11 is OK, but you cannot use Clang.
 - CMake ≥ 3.25.2
 - CUDA ≥ 12.8 (only when using CUDA)
+- HIP (only when using HIP)
+  - HIP version: 7.15
+  - libamdhip64.so.7
+  - libomp.so
 - IntelLLVM (only when using SYCL)
   - Intel oneAPI DPC++/C++ Compiler (CC=icx/CXX=icpx)
 - Python ≥ 3.10 (only when using Python)
@@ -68,7 +72,10 @@ Note: It may work with lower versions, but this has not been verified.
 ## Runtime Requirements
 
 - CUDA ≥ 12.8 (only when using CUDA)
-- SYCL
+- HIP (only when using HIP)
+    - libamdhip64.so.7
+    - libomp.so
+- SYCL (only when using SYCL)
     - intel-level-zero-gpu
     - intel-opencl-icd
 
@@ -100,16 +107,40 @@ Build options can be specified using environment variables when running `script/
 | `SCALUQ_FLOAT64`       | `ON`        | Enable `f64` precision |
 | `SCALUQ_BFLOAT16`      | `OFF`       | Enable `bf16` precision |
 
-`SCALUQ_CPU_NATIVE=ON` remains the default. An explicit `SCALUQ_CPU_ARCH`
-takes precedence: use `-DSCALUQ_CPU_ARCH=HSW` for AVX2 or
-`-DSCALUQ_CPU_ARCH=SKX` for AVX512. For a baseline build, use
-`-DSCALUQ_CPU_NATIVE=OFF -DSCALUQ_CPU_ARCH=`. These options also accept
-environment variables through `script/configure` and `pip install .`.
-No extra BMI2 restriction is applied; compiler flags determine the baseline ISA.
-AVX builds require a compatible x86-64 CPU at runtime; there is no runtime dispatch.
-Only `scalar` wheels are published to PyPI; AVX variants are separate GitHub artifacts.
-For AVX512 emulation, run `bash script/install_sde` and set
-`CMAKE_CROSSCOMPILING_EMULATOR='/tmp/scaluq-sde/sde64;-skx;--'`.
+## Building for an AMD GPU (HIP)
+
+Install ROCm (Validated with ROCm 10.0.0).  
+Set `LD_LIBRARY_PATH` to
+- `libamdhip64.so.7`
+- `libomp.so`
+
+as in the example below before C++ build and Python package installation.  
+
+```sh
+export LD_LIBRARY_PATH=/opt/rocm/core-10.0/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/opt/rocm/core-10.0/lib/llvm/lib:$LD_LIBRARY_PATH
+```
+
+Configure Scaluq with hipcc and select Kokkos's AMD GPU target.
+
+```sh
+CMAKE_C_COMPILER=hipcc \
+CMAKE_CXX_COMPILER=hipcc \
+SCALUQ_USE_HIP=ON \
+SCALUQ_HIP_ARCH=AMD_GFX942 \
+script/configure
+ninja -C build
+```
+
+To build and install the Python package, pass the same variables to `pip`:
+
+```sh
+CMAKE_C_COMPILER=hipcc \
+CMAKE_CXX_COMPILER=hipcc \
+SCALUQ_USE_HIP=ON \
+SCALUQ_HIP_ARCH=AMD_GFX942 \
+pip install .
+```
 
 ## Building for an Intel GPU (SYCL)
 
@@ -308,7 +339,7 @@ Execution spaces determine whether computation is performed on CPU or GPU:
 
 | Execution Space  | C++ Template Argument        | Python keyword (`space=`)  | Description                                   |
 |------------------|------------------------------|----------------------------|-----------------------------------------------|
-| `default`        | `ExecutionSpace::Default`    | `'default'`                | Runs on GPU if CUDA or SYCL is enabled, otherwise CPU |
+| `default`        | `ExecutionSpace::Default`    | `'default'`                | Runs on GPU if CUDA or HIP or SYCL is enabled, otherwise CPU |
 | `host`           | `ExecutionSpace::Host`       | `'host'`                   | Always runs on CPU                            |
 | `host_serial`    | `ExecutionSpace::HostSerial` | `'host_serial'`            | Always runs sequentially on CPU               |
 

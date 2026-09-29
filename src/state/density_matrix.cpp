@@ -93,13 +93,18 @@ DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::copy() const {
     Kokkos::deep_copy(new_state._raw, this->_raw);
     return new_state;
 }
+// copy_to_default_space and copy_to_host_space:
+// If use Kokkos::deep_copy on different execution space, source and destination must be contiguous
+// and have the same layout. In this case Kokkos::create_mirror_view as relay view specially.
 template <Precision Prec, ExecutionSpace Space>
 DensityMatrix<Prec, ExecutionSpace::Default> DensityMatrix<Prec, Space>::copy_to_default_space()
     const {
     auto new_state =
         DensityMatrix<Prec, ExecutionSpace::Default>::uninitialized_state(this->_n_qubits);
     new_state._is_hermitian = this->_is_hermitian;
-    Kokkos::deep_copy(new_state._raw, this->_raw);
+    auto mirror = Kokkos::create_mirror_view(new_state._raw);
+    Kokkos::deep_copy(mirror, this->_raw);
+    Kokkos::deep_copy(new_state._raw, mirror);
     return new_state;
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -107,7 +112,9 @@ DensityMatrix<Prec, ExecutionSpace::Host> DensityMatrix<Prec, Space>::copy_to_ho
     auto new_state =
         DensityMatrix<Prec, ExecutionSpace::Host>::uninitialized_state(this->_n_qubits);
     new_state._is_hermitian = this->_is_hermitian;
-    Kokkos::deep_copy(new_state._raw, this->_raw);
+    auto mirror = Kokkos::create_mirror_view(this->_raw);
+    Kokkos::deep_copy(mirror, this->_raw);
+    Kokkos::deep_copy(new_state._raw, mirror);
     return new_state;
 }
 

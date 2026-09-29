@@ -22,33 +22,30 @@ else()
     message(FATAL_ERROR "No precision enabled for python bindings.")
 endif()
 
-# Stub generation imports the target extension.
-if(SCALUQ_CPU_ARCH STREQUAL "SKX")
-    # SKX extensions cannot be imported on baseline wheel builders.
-    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated-stubs")
-    foreach(stub root main gate)
-        configure_file("${CMAKE_CURRENT_SOURCE_DIR}/stubs/${stub}.pyi"
+# Wheel CI shares stubs from a baseline build across all architectures.
+# Local builds generate stubs by importing their own extension.
+foreach(stub root main gate)
+    if(NOT "$ENV{SCALUQ_STUB_DIR}" STREQUAL "")
+        configure_file("$ENV{SCALUQ_STUB_DIR}/${stub}.pyi"
             "${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/${stub}.pyi" COPYONLY)
-    endforeach()
-else()
-    foreach(stub root main gate)
-        set(module scaluq.scaluq_core)
-        if(NOT stub STREQUAL "root")
-            string(APPEND module ".default.${MAIN_PRECISION}")
-        endif()
-        if(stub STREQUAL "gate")
-            string(APPEND module ".gate")
-        endif()
-        install(CODE "
-            set(stub_command \"${CMAKE_CROSSCOMPILING_EMULATOR}\")
-            list(APPEND stub_command \"${Python_EXECUTABLE}\" -m nanobind.stubgen
-                -m \"${module}\" -o \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/${stub}.pyi\")
-            execute_process(COMMAND \${stub_command}
-                WORKING_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}\"
-                COMMAND_ERROR_IS_FATAL ANY)
-        ")
-    endforeach()
-endif()
+        continue()
+    endif()
+    set(module scaluq.scaluq_core)
+    if(NOT stub STREQUAL "root")
+        string(APPEND module ".default.${MAIN_PRECISION}")
+    endif()
+    if(stub STREQUAL "gate")
+        string(APPEND module ".gate")
+    endif()
+    install(CODE "
+        set(stub_command \"${CMAKE_CROSSCOMPILING_EMULATOR}\")
+        list(APPEND stub_command \"${Python_EXECUTABLE}\" -m nanobind.stubgen
+            -m \"${module}\" -o \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/${stub}.pyi\")
+        execute_process(COMMAND \${stub_command}
+            WORKING_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}\"
+            COMMAND_ERROR_IS_FATAL ANY)
+    ")
+endforeach()
 install(CODE "
     execute_process(
         COMMAND
