@@ -94,12 +94,7 @@ endif()
 
 ### Kokkos options ###
 set(Kokkos_ENABLE_SERIAL ON CACHE BOOL "Enable Kokkos Serial backend")
-if(SCALUQ_CPU_NATIVE AND NOT SCALUQ_CPU_ARCH)
-    set(Kokkos_ARCH_NATIVE ON)
-endif()
-if(SCALUQ_CPU_ARCH)
-    set(Kokkos_ARCH_${SCALUQ_CPU_ARCH} ON)
-endif()
+include(ScaluqCPU)
 if(SCALUQ_USE_OMP)
     set(Kokkos_ENABLE_OPENMP ON CACHE BOOL "Enable Kokkos OpenMP backend")
 endif(SCALUQ_USE_OMP)

@@ -22,27 +22,30 @@ else()
     message(FATAL_ERROR "No precision enabled for python bindings.")
 endif()
 
-nanobind_add_stub(
-    scaluq_stub_root
-    INSTALL_TIME
-    MODULE scaluq.scaluq_core
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/root.pyi
-    VERBOSE
-)
-nanobind_add_stub(
-    scaluq_stub_main
-    INSTALL_TIME
-    MODULE scaluq.scaluq_core.default.${MAIN_PRECISION}
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/main.pyi
-    VERBOSE
-)
-nanobind_add_stub(
-    scaluq_stub_gate
-    INSTALL_TIME
-    MODULE scaluq.scaluq_core.default.${MAIN_PRECISION}.gate
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/gate.pyi
-    VERBOSE
-)
+# Wheel CI shares stubs from a baseline build across all architectures.
+# Local builds generate stubs by importing their own extension.
+foreach(stub root main gate)
+    if(NOT "$ENV{SCALUQ_STUB_DIR}" STREQUAL "")
+        configure_file("$ENV{SCALUQ_STUB_DIR}/${stub}.pyi"
+            "${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/${stub}.pyi" COPYONLY)
+        continue()
+    endif()
+    set(module scaluq.scaluq_core)
+    if(NOT stub STREQUAL "root")
+        string(APPEND module ".default.${MAIN_PRECISION}")
+    endif()
+    if(stub STREQUAL "gate")
+        string(APPEND module ".gate")
+    endif()
+    install(CODE "
+        set(stub_command \"${CMAKE_CROSSCOMPILING_EMULATOR}\")
+        list(APPEND stub_command \"${Python_EXECUTABLE}\" -m nanobind.stubgen
+            -m \"${module}\" -o \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/${stub}.pyi\")
+        execute_process(COMMAND \${stub_command}
+            WORKING_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}\"
+            COMMAND_ERROR_IS_FATAL ANY)
+    ")
+endforeach()
 install(CODE "
     execute_process(
         COMMAND
@@ -52,5 +55,6 @@ install(CODE "
             \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/main.pyi\"
             \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/gate.pyi\"
             \"${MAIN_PRECISION}\"
-            \"${CMAKE_INSTALL_PREFIX}\")
+            \"\${CMAKE_INSTALL_PREFIX}\"
+        COMMAND_ERROR_IS_FATAL ANY)
 ")
