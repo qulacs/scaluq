@@ -27,4 +27,8 @@ target_link_libraries(scaluq_test PUBLIC
 target_include_directories(scaluq_test PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
 target_include_directories(scaluq_test PRIVATE ${eigen_SOURCE_DIR})
 
-gtest_discover_tests(scaluq_test DISCOVERY_MODE PRE_TEST)
+# SDE startup and instrumentation can exceed the default five-second discovery limit.
+gtest_discover_tests(scaluq_test
+    DISCOVERY_MODE PRE_TEST
+    DISCOVERY_TIMEOUT 120
+)
