@@ -180,7 +180,7 @@ NB_MODULE(scaluq_core, m) {
         },
         DocString()
             .desc("Get the default execution space.")
-            .ret("str", "the default execution space, `cuda` or `host`")
+            .ret("str", "the default execution space, one of `cuda`, 'hip', 'sycl' or `host`")
             .ex(DocString::Code{">>> get_default_execution_space() # doctest: +SKIP", "'cuda'"})
             .build_as_google_style()
             .c_str());
