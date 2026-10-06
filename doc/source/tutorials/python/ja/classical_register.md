@@ -1,9 +1,9 @@
-# Classical Register
+# 古典レジスタ
 
-Classical Register is expressed as {class}`scaluq.ClassicalRegister`.
+古典レジスタは {class}`scaluq.ClassicalRegister` で表されています。
 
-## Create Classical Register
-Classical Register is created with register size.
+## 古典レジスタを作る
+古典レジスタはレジスタサイズを基に構築されます。
 
 ```py
 from scaluq import ClassicalRegister
@@ -13,8 +13,8 @@ classical_register = ClassicalRegister(register_size)
 print(classical_register.register_size()) # 2
 ```
 
-## Get classical bit from Quantum Circuit
-You can get classical bit by applying Measurement Gate.
+## 古典ビットを量子回路から取得する
+測定ゲートを作用させることで古典ビットを取得できます。
 
 ```py
 from scaluq import StateVector, Circuit, ClassicalRegister
@@ -31,8 +31,8 @@ circuit.update_quantum_state(state, classical_register)
 print("classical_register[1]: ", classical_register[1]) # True
 ```
 
-## Reset Classical Register 
-You can reset Classical Register by {func}`reset <scaluq.ClassicalRegister.reset>`.
+## 古典レジスタをリセットする
+古典レジスタは {func}`reset <scaluq.ClassicalRegister.reset>` によってリセットできます。
 
 ```py
 from scaluq import StateVector, Circuit, ClassicalRegister
