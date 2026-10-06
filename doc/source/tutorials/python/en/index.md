@@ -12,4 +12,5 @@ param.md
 operator.md
 batch.md
 classical_register.md
+qasm.md
 ```
