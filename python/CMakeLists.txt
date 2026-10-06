@@ -41,7 +41,7 @@ foreach(stub root main gate)
         set(stub_command \"${CMAKE_CROSSCOMPILING_EMULATOR}\")
         list(APPEND stub_command \"${Python_EXECUTABLE}\" -m nanobind.stubgen
             -m \"${module}\" -o \"${CMAKE_CURRENT_BINARY_DIR}/generated-stubs/${stub}.pyi\")
-        execute_process(COMMAND \${stub_command}
+        execute_process(COMMAND \"${CMAKE_COMMAND}\" -E env NB_STUBGEN=1 \${stub_command}
             WORKING_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}\"
             COMMAND_ERROR_IS_FATAL ANY)
     ")
