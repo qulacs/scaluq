@@ -1,8 +1,18 @@
 import ast
 import doctest
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import scaluq
+
+assert scaluq.is_initialized()
+subprocess.run(
+    [sys.executable, "-c", "import scaluq; assert not scaluq.is_initialized()"],
+    env={**os.environ, "NB_STUBGEN": "1"},
+    check=True,
+)
 
 
 def add_to_globs(globs, module):

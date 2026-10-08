@@ -1,5 +1,8 @@
 include(GoogleTest)
 
+add_test(NAME ScaluqCPUConfig
+    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpu_arch_test.cmake)
+
 file(GLOB_RECURSE ALL_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/*.[ch]pp
 )
@@ -24,4 +27,8 @@ target_link_libraries(scaluq_test PUBLIC
 target_include_directories(scaluq_test PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
 target_include_directories(scaluq_test PRIVATE ${eigen_SOURCE_DIR})
 
-gtest_discover_tests(scaluq_test DISCOVERY_MODE PRE_TEST)
+# SDE startup and instrumentation can exceed the default five-second discovery limit.
+gtest_discover_tests(scaluq_test
+    DISCOVERY_MODE PRE_TEST
+    DISCOVERY_TIMEOUT 120
+)

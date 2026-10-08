@@ -22,6 +22,20 @@ jobs:
             cxx-compiler: "/usr/lib/ccache/g++"
           - os-arch: "linux-x86_64"
             runs-on: "ubuntu-24.04"
+            cpu-arch: ""
+            compiler: "gcc"
+            device: "cpu"
+            c-compiler: "/usr/lib/ccache/gcc"
+            cxx-compiler: "/usr/lib/ccache/g++"
+          - os-arch: "linux-x86_64"
+            runs-on: "ubuntu-24.04"
+            cpu-arch: "SKX"
+            compiler: "gcc"
+            device: "cpu"
+            c-compiler: "/usr/lib/ccache/gcc"
+            cxx-compiler: "/usr/lib/ccache/g++"
+          - os-arch: "linux-x86_64"
+            runs-on: "ubuntu-24.04"
             cpu-arch: "HSW"
             compiler: "gcc"
             device: "cuda"
@@ -66,13 +80,14 @@ jobs:
     env:
       CMAKE_C_COMPILER: ${{ matrix.c-compiler }}
       CMAKE_CXX_COMPILER: ${{ matrix.cxx-compiler }}
-      CMAKE_BUILD_TYPE: ${{ (matrix.device == 'cuda' || matrix.device == 'hip' || matrix.device == 'sycl') || 'Debug' }}
+      CMAKE_BUILD_TYPE: ${{ (matrix.device == 'cuda' || matrix.device == 'hip' || matrix.device == 'sycl' || matrix.cpu-arch == 'SKX') && 'Release' || 'Debug' }}
       SCALUQ_USE_TEST: "ON"
       SCALUQ_USE_CUDA: ${{ matrix.device == 'cuda' && 'ON' || 'OFF' }}
       SCALUQ_USE_HIP: ${{ matrix.device == 'hip' && 'ON' || 'OFF' }}
       SCALUQ_USE_SYCL: ${{ matrix.device == 'sycl' && 'ON' || 'OFF' }}
       SCALUQ_CPU_NATIVE: "OFF"
       SCALUQ_CPU_ARCH: ${{ matrix.cpu-arch }}
+      CMAKE_CROSSCOMPILING_EMULATOR: ${{ matrix.cpu-arch == 'SKX' && '/tmp/scaluq-sde/sde64;-skx;--' || '' }}
       SCALUQ_CUDA_ARCH: "TURING75"
       SCALUQ_HIP_ARCH: "VEGA90A"
       SCALUQ_SYCL_ARCH: "INTEL_GEN"
@@ -123,7 +138,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2.21
         with:
-          key: "${{ matrix.os-arch }}-${{ matrix.compiler }}-${{ matrix.device }}"
+          key: "${{ matrix.os-arch }}-${{ matrix.compiler }}-${{ matrix.device }}-${{ matrix.cpu-arch }}"
           verbose: 2
 
       - name: Install CUDA toolkit
@@ -181,6 +196,10 @@ jobs:
           $CMAKE_CXX_COMPILER --version
           cmake --version
           ninja --version
+
+      - name: Install AVX512 emulator
+        if: ${{ matrix.cpu-arch == 'SKX' }}
+        run: bash script/install_sde
 
       - name: Configure & Build
         run: |

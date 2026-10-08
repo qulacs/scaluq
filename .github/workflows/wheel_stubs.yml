@@ -1,0 +1,30 @@
+name: Generate wheel stubs
+
+on:
+  workflow_call:
+    inputs:
+      float32:
+        type: string
+        default: "ON"
+
+jobs:
+  generate:
+    runs-on: ubuntu-24.04
+    env:
+      SCALUQ_STUB_DIR: ${{ github.workspace }}/wheel-stubs
+      SCALUQ_FLOAT32: ${{ inputs.float32 }}
+      SCALUQ_FLOAT64: "ON"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+      - name: Install build tools
+        run: python -m pip install cmake ninja
+      - name: Generate stubs from baseline bindings
+        run: python script/generate_wheel_stubs.py .
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheel-stubs
+          path: wheel-stubs/*.pyi
+          if-no-files-found: error

@@ -32,6 +32,7 @@ done
 
 # generate compile_flags.json
 variables="CMAKE_C_COMPILER \
+  CMAKE_CROSSCOMPILING_EMULATOR \
   CMAKE_CXX_COMPILER \
   CMAKE_BUILD_TYPE \
   CMAKE_INSTALL_PREFIX \

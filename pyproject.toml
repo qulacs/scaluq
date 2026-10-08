@@ -40,6 +40,7 @@ sdist.include = ["python/scaluq/_version.py"]
 [tool.scikit-build.cmake.define]
 CMAKE_C_COMPILER = {env="CMAKE_C_COMPILER"}
 CMAKE_CXX_COMPILER = {env="CMAKE_CXX_COMPILER"}
+CMAKE_CROSSCOMPILING_EMULATOR = {env="CMAKE_CROSSCOMPILING_EMULATOR", default=""}
 SCALUQ_USE_OMP = {env="SCALUQ_USE_OMP"}
 SCALUQ_USE_CUDA = {env="SCALUQ_USE_CUDA"}
 SCALUQ_USE_HIP = {env="SCALUQ_USE_HIP"}
