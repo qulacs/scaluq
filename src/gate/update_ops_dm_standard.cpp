@@ -17,22 +17,24 @@ void apply_pauli(std::uint64_t control_mask,
                  Complex<Prec> coef,
                  DensityMatrix<Prec, Space>& dm) {
     const std::uint64_t dim = dm.dim();
+    const auto raw = dm._raw;
+    SpaceType<Space> exec;
     if (bit_flip_mask == 0) {
         const std::uint64_t active_dim = dim >> std::popcount(control_mask);
         Kokkos::parallel_for(
             "apply_pauli_dm_left",
-            Kokkos::RangePolicy<SpaceType<Space>>(0, active_dim * dim),
+            Kokkos::RangePolicy<SpaceType<Space>>(exec, 0, active_dim * dim),
             KOKKOS_LAMBDA(std::uint64_t g) {
                 const std::uint64_t row =
                     insert_zero_at_mask_positions(g / dim, control_mask) | control_value_mask;
                 const std::uint64_t col = g % dim;
                 const Complex<Prec> phase =
                     (Kokkos::popcount(row & phase_flip_mask) & 1) ? -coef : coef;
-                dm._raw(row, col) *= phase;
+                raw(row, col) *= phase;
             });
         Kokkos::parallel_for(
             "apply_pauli_dm_right",
-            Kokkos::RangePolicy<SpaceType<Space>>(0, dim * active_dim),
+            Kokkos::RangePolicy<SpaceType<Space>>(exec, 0, dim * active_dim),
             KOKKOS_LAMBDA(std::uint64_t g) {
                 const std::uint64_t row = g / active_dim;
                 const std::uint64_t col =
@@ -40,7 +42,7 @@ void apply_pauli(std::uint64_t control_mask,
                     control_value_mask;
                 const Complex<Prec> phase =
                     (Kokkos::popcount(col & phase_flip_mask) & 1) ? -coef : coef;
-                dm._raw(row, col) *= conj(phase);
+                raw(row, col) *= conj(phase);
             });
         return;
     }
@@ -52,32 +54,32 @@ void apply_pauli(std::uint64_t control_mask,
         PHASE_M90ROT<Prec>()[std::popcount(bit_flip_mask & phase_flip_mask) % 4];
     Kokkos::parallel_for(
         "apply_pauli_dm_left",
-        Kokkos::RangePolicy<SpaceType<Space>>(0, pair_count * dim),
+        Kokkos::RangePolicy<SpaceType<Space>>(exec, 0, pair_count * dim),
         KOKKOS_LAMBDA(std::uint64_t g) {
             const std::uint64_t row0 =
                 insert_zero_at_mask_positions(g / dim, skip_mask) | control_value_mask;
             const std::uint64_t row1 = row0 ^ bit_flip_mask;
             const std::uint64_t col = g % dim;
-            const Complex<Prec> val0 = dm._raw(row0, col);
-            const Complex<Prec> val1 = dm._raw(row1, col);
-            dm._raw(row0, col) =
+            const Complex<Prec> val0 = raw(row0, col);
+            const Complex<Prec> val1 = raw(row1, col);
+            raw(row0, col) =
                 val1 * pauli_phase<Prec, Space>(row0, phase_flip_mask, global_phase) * coef;
-            dm._raw(row1, col) =
+            raw(row1, col) =
                 val0 * pauli_phase<Prec, Space>(row1, phase_flip_mask, global_phase) * coef;
         });
     Kokkos::parallel_for(
         "apply_pauli_dm_right",
-        Kokkos::RangePolicy<SpaceType<Space>>(0, dim * pair_count),
+        Kokkos::RangePolicy<SpaceType<Space>>(exec, 0, dim * pair_count),
         KOKKOS_LAMBDA(std::uint64_t g) {
             const std::uint64_t row = g / pair_count;
             const std::uint64_t col0 =
                 insert_zero_at_mask_positions(g % pair_count, skip_mask) | control_value_mask;
             const std::uint64_t col1 = col0 ^ bit_flip_mask;
-            const Complex<Prec> val0 = dm._raw(row, col0);
-            const Complex<Prec> val1 = dm._raw(row, col1);
-            dm._raw(row, col0) =
+            const Complex<Prec> val0 = raw(row, col0);
+            const Complex<Prec> val1 = raw(row, col1);
+            raw(row, col0) =
                 val1 * conj(pauli_phase<Prec, Space>(col0, phase_flip_mask, global_phase) * coef);
-            dm._raw(row, col1) =
+            raw(row, col1) =
                 val0 * conj(pauli_phase<Prec, Space>(col1, phase_flip_mask, global_phase) * coef);
         });
 }
@@ -91,6 +93,8 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                           Float<Prec> angle,
                           DensityMatrix<Prec, Space>& dm) {
     const std::uint64_t dim = dm.dim();
+    const auto raw = dm._raw;
+    SpaceType<Space> exec;
     const Complex<Prec> half_angle = angle * coef / Float<Prec>{2};
     const Complex<Prec> cosval = internal::cos(-half_angle);
     const Complex<Prec> sinval = internal::sin(-half_angle);
@@ -100,7 +104,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         const std::uint64_t active_dim = dim >> std::popcount(control_mask);
         Kokkos::parallel_for(
             "apply_pauli_rotation_dm_left",
-            Kokkos::RangePolicy<SpaceType<Space>>(0, active_dim * dim),
+            Kokkos::RangePolicy<SpaceType<Space>>(exec, 0, active_dim * dim),
             KOKKOS_LAMBDA(std::uint64_t g) {
                 const std::uint64_t row =
                     insert_zero_at_mask_positions(g / dim, control_mask) | control_value_mask;
@@ -108,11 +112,11 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                 const Complex<Prec> factor = (Kokkos::popcount(row & phase_flip_mask) & 1)
                                                  ? cosval - imag_sin
                                                  : cosval + imag_sin;
-                dm._raw(row, col) *= factor;
+                raw(row, col) *= factor;
             });
         Kokkos::parallel_for(
             "apply_pauli_rotation_dm_right",
-            Kokkos::RangePolicy<SpaceType<Space>>(0, dim * active_dim),
+            Kokkos::RangePolicy<SpaceType<Space>>(exec, 0, dim * active_dim),
             KOKKOS_LAMBDA(std::uint64_t g) {
                 const std::uint64_t row = g / active_dim;
                 const std::uint64_t col =
@@ -121,7 +125,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                 const Complex<Prec> factor = (Kokkos::popcount(col & phase_flip_mask) & 1)
                                                  ? cosval - imag_sin
                                                  : cosval + imag_sin;
-                dm._raw(row, col) *= conj(factor);
+                raw(row, col) *= conj(factor);
             });
         return;
     }
@@ -133,37 +137,37 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         PHASE_M90ROT<Prec>()[std::popcount(bit_flip_mask & phase_flip_mask) % 4];
     Kokkos::parallel_for(
         "apply_pauli_rotation_dm_left",
-        Kokkos::RangePolicy<SpaceType<Space>>(0, pair_count * dim),
+        Kokkos::RangePolicy<SpaceType<Space>>(exec, 0, pair_count * dim),
         KOKKOS_LAMBDA(std::uint64_t g) {
             const std::uint64_t row0 =
                 insert_zero_at_mask_positions(g / dim, skip_mask) | control_value_mask;
             const std::uint64_t row1 = row0 ^ bit_flip_mask;
             const std::uint64_t col = g % dim;
-            const Complex<Prec> val0 = dm._raw(row0, col);
-            const Complex<Prec> val1 = dm._raw(row1, col);
+            const Complex<Prec> val0 = raw(row0, col);
+            const Complex<Prec> val1 = raw(row1, col);
             const Complex<Prec> off0 =
                 imag_sin * pauli_phase<Prec, Space>(row0, phase_flip_mask, global_phase);
             const Complex<Prec> off1 =
                 imag_sin * pauli_phase<Prec, Space>(row1, phase_flip_mask, global_phase);
-            dm._raw(row0, col) = cosval * val0 + off0 * val1;
-            dm._raw(row1, col) = cosval * val1 + off1 * val0;
+            raw(row0, col) = cosval * val0 + off0 * val1;
+            raw(row1, col) = cosval * val1 + off1 * val0;
         });
     Kokkos::parallel_for(
         "apply_pauli_rotation_dm_right",
-        Kokkos::RangePolicy<SpaceType<Space>>(0, dim * pair_count),
+        Kokkos::RangePolicy<SpaceType<Space>>(exec, 0, dim * pair_count),
         KOKKOS_LAMBDA(std::uint64_t g) {
             const std::uint64_t row = g / pair_count;
             const std::uint64_t col0 =
                 insert_zero_at_mask_positions(g % pair_count, skip_mask) | control_value_mask;
             const std::uint64_t col1 = col0 ^ bit_flip_mask;
-            const Complex<Prec> val0 = dm._raw(row, col0);
-            const Complex<Prec> val1 = dm._raw(row, col1);
+            const Complex<Prec> val0 = raw(row, col0);
+            const Complex<Prec> val1 = raw(row, col1);
             const Complex<Prec> off0 =
                 imag_sin * pauli_phase<Prec, Space>(col0, phase_flip_mask, global_phase);
             const Complex<Prec> off1 =
                 imag_sin * pauli_phase<Prec, Space>(col1, phase_flip_mask, global_phase);
-            dm._raw(row, col0) = conj(cosval) * val0 + conj(off0) * val1;
-            dm._raw(row, col1) = conj(cosval) * val1 + conj(off1) * val0;
+            raw(row, col0) = conj(cosval) * val0 + conj(off0) * val1;
+            raw(row, col1) = conj(cosval) * val1 + conj(off1) * val0;
         });
 }
 

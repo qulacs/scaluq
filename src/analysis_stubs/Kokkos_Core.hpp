@@ -219,6 +219,7 @@ public:
 template <class ExecSpace = DefaultExecutionSpace>
 struct RangePolicy {
     RangePolicy(std::size_t, std::size_t) {}
+    RangePolicy(const ExecSpace&, std::size_t, std::size_t) {}
 };
 
 template <class... Properties>
