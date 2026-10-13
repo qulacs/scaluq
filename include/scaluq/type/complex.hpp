@@ -28,6 +28,17 @@ constexpr CoefKind common_coef_kind(CoefKind a, CoefKind b, CoefKind c, CoefKind
     return common_coef_kind(common_coef_kind(a, b), common_coef_kind(c, d));
 }
 
+constexpr CoefKind common_coef_kind(CoefKind a,
+                                    CoefKind b,
+                                    CoefKind c,
+                                    CoefKind d,
+                                    CoefKind e,
+                                    CoefKind f,
+                                    CoefKind g,
+                                    CoefKind h) {
+    return common_coef_kind(common_coef_kind(a, b, c, d), common_coef_kind(e, f, g, h));
+}
+
 template <Precision Prec>
 class Complex {
     using FloatType = Float<Prec>;
@@ -260,6 +271,47 @@ public:
             : _real(real), _imag(imag) {}
 
     public:
+        template <std::size_t Bit0, std::size_t Bit1, std::size_t Bit2>
+        KOKKOS_INLINE_FUNCTION static Coef select_complex_lane_bits(const Complex<P>& c0,
+                                                                    const Complex<P>& c1,
+                                                                    const Complex<P>& c2,
+                                                                    const Complex<P>& c3,
+                                                                    const Complex<P>& c4,
+                                                                    const Complex<P>& c5,
+                                                                    const Complex<P>& c6,
+                                                                    const Complex<P>& c7) {
+            static_assert(Bit0 < Bit1 && Bit1 < Bit2);
+            static_assert((1ULL << Bit2) < complex_lanes);
+            const Scalar real[8] = {static_cast<Scalar>(c0.real()),
+                                    static_cast<Scalar>(c1.real()),
+                                    static_cast<Scalar>(c2.real()),
+                                    static_cast<Scalar>(c3.real()),
+                                    static_cast<Scalar>(c4.real()),
+                                    static_cast<Scalar>(c5.real()),
+                                    static_cast<Scalar>(c6.real()),
+                                    static_cast<Scalar>(c7.real())};
+            const Scalar imag[8] = {static_cast<Scalar>(c0.imag()),
+                                    static_cast<Scalar>(c1.imag()),
+                                    static_cast<Scalar>(c2.imag()),
+                                    static_cast<Scalar>(c3.imag()),
+                                    static_cast<Scalar>(c4.imag()),
+                                    static_cast<Scalar>(c5.imag()),
+                                    static_cast<Scalar>(c6.imag()),
+                                    static_cast<Scalar>(c7.imag())};
+            return Coef(Simd(KOKKOS_LAMBDA(std::size_t lane) {
+                            const std::size_t index = ((lane >> (Bit0 + 1)) & 1) |
+                                                      (((lane >> (Bit1 + 1)) & 1) << 1) |
+                                                      (((lane >> (Bit2 + 1)) & 1) << 2);
+                            return real[index];
+                        }),
+                        Simd(KOKKOS_LAMBDA(std::size_t lane) {
+                            const std::size_t index = ((lane >> (Bit0 + 1)) & 1) |
+                                                      (((lane >> (Bit1 + 1)) & 1) << 1) |
+                                                      (((lane >> (Bit2 + 1)) & 1) << 2);
+                            return imag[index];
+                        }));
+        }
+
         KOKKOS_INLINE_FUNCTION static Coef splat(const Complex<P>& coef) {
             return Coef(static_cast<Scalar>(coef.real()), static_cast<Scalar>(coef.imag()));
         }
@@ -335,6 +387,33 @@ public:
         KOKKOS_INLINE_FUNCTION explicit RCoef(const Simd& value) : _value(value) {}
 
     public:
+        template <std::size_t Bit0, std::size_t Bit1, std::size_t Bit2>
+        KOKKOS_INLINE_FUNCTION static RCoef select_complex_lane_bits(const Complex<P>& c0,
+                                                                     const Complex<P>& c1,
+                                                                     const Complex<P>& c2,
+                                                                     const Complex<P>& c3,
+                                                                     const Complex<P>& c4,
+                                                                     const Complex<P>& c5,
+                                                                     const Complex<P>& c6,
+                                                                     const Complex<P>& c7) {
+            static_assert(Bit0 < Bit1 && Bit1 < Bit2);
+            static_assert((1ULL << Bit2) < complex_lanes);
+            const Scalar real[8] = {static_cast<Scalar>(c0.real()),
+                                    static_cast<Scalar>(c1.real()),
+                                    static_cast<Scalar>(c2.real()),
+                                    static_cast<Scalar>(c3.real()),
+                                    static_cast<Scalar>(c4.real()),
+                                    static_cast<Scalar>(c5.real()),
+                                    static_cast<Scalar>(c6.real()),
+                                    static_cast<Scalar>(c7.real())};
+            return RCoef(Simd(KOKKOS_LAMBDA(std::size_t lane) {
+                const std::size_t index = ((lane >> (Bit0 + 1)) & 1) |
+                                          (((lane >> (Bit1 + 1)) & 1) << 1) |
+                                          (((lane >> (Bit2 + 1)) & 1) << 2);
+                return real[index];
+            }));
+        }
+
         KOKKOS_INLINE_FUNCTION static RCoef splat(const Complex<P>& coef) {
             return RCoef(static_cast<Scalar>(coef.real()));
         }
@@ -393,6 +472,33 @@ public:
         KOKKOS_INLINE_FUNCTION explicit ICoef(const Simd& value) : _value(value) {}
 
     public:
+        template <std::size_t Bit0, std::size_t Bit1, std::size_t Bit2>
+        KOKKOS_INLINE_FUNCTION static ICoef select_complex_lane_bits(const Complex<P>& c0,
+                                                                     const Complex<P>& c1,
+                                                                     const Complex<P>& c2,
+                                                                     const Complex<P>& c3,
+                                                                     const Complex<P>& c4,
+                                                                     const Complex<P>& c5,
+                                                                     const Complex<P>& c6,
+                                                                     const Complex<P>& c7) {
+            static_assert(Bit0 < Bit1 && Bit1 < Bit2);
+            static_assert((1ULL << Bit2) < complex_lanes);
+            const Scalar imag[8] = {static_cast<Scalar>(c0.imag()),
+                                    static_cast<Scalar>(c1.imag()),
+                                    static_cast<Scalar>(c2.imag()),
+                                    static_cast<Scalar>(c3.imag()),
+                                    static_cast<Scalar>(c4.imag()),
+                                    static_cast<Scalar>(c5.imag()),
+                                    static_cast<Scalar>(c6.imag()),
+                                    static_cast<Scalar>(c7.imag())};
+            return ICoef(Simd(KOKKOS_LAMBDA(std::size_t lane) {
+                const std::size_t index = ((lane >> (Bit0 + 1)) & 1) |
+                                          (((lane >> (Bit1 + 1)) & 1) << 1) |
+                                          (((lane >> (Bit2 + 1)) & 1) << 2);
+                return imag[index];
+            }));
+        }
+
         KOKKOS_INLINE_FUNCTION static ICoef splat(const Complex<P>& coef) {
             return ICoef(static_cast<Scalar>(coef.imag()));
         }
@@ -457,6 +563,20 @@ public:
 
     class ZeroCoef {
     public:
+        template <std::size_t Bit0, std::size_t Bit1, std::size_t Bit2>
+        KOKKOS_INLINE_FUNCTION static ZeroCoef select_complex_lane_bits(const Complex<P>&,
+                                                                        const Complex<P>&,
+                                                                        const Complex<P>&,
+                                                                        const Complex<P>&,
+                                                                        const Complex<P>&,
+                                                                        const Complex<P>&,
+                                                                        const Complex<P>&,
+                                                                        const Complex<P>&) {
+            static_assert(Bit0 < Bit1 && Bit1 < Bit2);
+            static_assert((1ULL << Bit2) < complex_lanes);
+            return {};
+        }
+
         KOKKOS_INLINE_FUNCTION static ZeroCoef splat(const Complex<P>&) { return {}; }
         template <std::size_t ComplexLaneBit>
         KOKKOS_INLINE_FUNCTION static ZeroCoef select_complex_lane_bit(const Complex<P>&,
@@ -482,6 +602,20 @@ public:
 
     class OneCoef {
     public:
+        template <std::size_t Bit0, std::size_t Bit1, std::size_t Bit2>
+        KOKKOS_INLINE_FUNCTION static OneCoef select_complex_lane_bits(const Complex<P>&,
+                                                                       const Complex<P>&,
+                                                                       const Complex<P>&,
+                                                                       const Complex<P>&,
+                                                                       const Complex<P>&,
+                                                                       const Complex<P>&,
+                                                                       const Complex<P>&,
+                                                                       const Complex<P>&) {
+            static_assert(Bit0 < Bit1 && Bit1 < Bit2);
+            static_assert((1ULL << Bit2) < complex_lanes);
+            return {};
+        }
+
         KOKKOS_INLINE_FUNCTION static OneCoef splat(const Complex<P>&) { return {}; }
         template <std::size_t ComplexLaneBit>
         KOKKOS_INLINE_FUNCTION static OneCoef select_complex_lane_bit(const Complex<P>&,

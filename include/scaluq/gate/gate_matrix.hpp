@@ -12,8 +12,11 @@ namespace scaluq {
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 class DenseMatrixGateImpl : public GateBase<Prec> {
-    using MatrixVariant =
-        std::variant<Complex<Prec>, Matrix2x2<Prec>, Matrix4x4<Prec>, Matrix<Prec, Space>>;
+    using MatrixVariant = std::variant<Complex<Prec>,
+                                       Matrix2x2<Prec>,
+                                       Matrix4x4<Prec>,
+                                       Matrix8x8<Prec>,
+                                       Matrix<Prec, Space>>;
 
     MatrixVariant _matrix;
     bool _is_unitary;
