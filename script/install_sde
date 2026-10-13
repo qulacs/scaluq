@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Shared by the C++ jobs and the wheel build containers. No root access required.
+destination=${SCALUQ_SDE_DIR:-/tmp/scaluq-sde}
+version=sde-external-10.13.1-2026-07-28-lin
+if [[ ! -x "$destination/$version/sde64" ]]; then
+    mkdir -p "$destination"
+    archive="$destination/$version.tar.xz"
+    curl --fail --location --retry 3 \
+        "https://downloadmirror.intel.com/924984/$version.tar.xz" -o "$archive"
+    echo "94e97d623fec54385686e1e7ba65ebc9941748c05ee451423948334892bf2b50  $archive" | sha256sum --check
+    tar -xJf "$archive" -C "$destination"
+fi
+ln -sfn "$version/sde64" "$destination/sde64"

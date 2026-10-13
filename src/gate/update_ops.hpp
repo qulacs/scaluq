@@ -11,7 +11,7 @@ namespace scaluq {
 namespace internal {
 
 template <typename State>
-#if defined(KOKKOS_ARCH_AVX2)
+#if (defined(KOKKOS_ARCH_AVX2) || defined(KOKKOS_ARCH_AVX512XEON)) && !defined(__CUDACC__)
 inline constexpr bool supports_gate_simd = [] {
     if constexpr ((State::space == ExecutionSpace::Host ||
                    State::space == ExecutionSpace::HostSerial) &&

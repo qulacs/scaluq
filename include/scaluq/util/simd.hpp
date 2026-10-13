@@ -4,16 +4,18 @@
 #include <array>
 #include <bit>
 #include <cstddef>
+#include <cstdint>
 #include <type_traits>
 #include <utility>
 
-#if defined(KOKKOS_ARCH_AVX2)
+#if defined(KOKKOS_ARCH_AVX2) || defined(KOKKOS_ARCH_AVX512XEON)
 #include <immintrin.h>
 #endif
 
 namespace scaluq::internal::simd_ops {
 
-template <typename Scalar, std::size_t Lanes = std::is_same_v<Scalar, float> ? 8 : 0>
+// A zero lane count selects the native register width in Kokkos.
+template <typename Scalar, std::size_t Lanes = 0>
 using Simd = Kokkos::Experimental::simd<Scalar, Lanes>;
 
 // Reorders SIMD lanes according to the source index of each output lane.
@@ -23,6 +25,18 @@ KOKKOS_INLINE_FUNCTION Simd<Scalar, Lanes> permute(const Simd<Scalar, Lanes>& va
     constexpr std::size_t simd_lanes = Simd<Scalar, Lanes>::size();
     static_assert(sizeof...(Indices) == simd_lanes);
     static_assert(((Indices < simd_lanes) && ...));
+#if defined(KOKKOS_ARCH_AVX512XEON)
+    // Avoid extracting and reconstructing every lane through simd::operator[].
+    if constexpr (std::is_same_v<Scalar, double> && simd_lanes == 8) {
+        constexpr std::array<std::int64_t, simd_lanes> indices{static_cast<std::int64_t>(Indices)...};
+        return Simd<Scalar, Lanes>(
+            _mm512_permutexvar_pd(_mm512_loadu_si512(indices.data()), static_cast<__m512d>(value)));
+    } else if constexpr (std::is_same_v<Scalar, float> && simd_lanes == 16) {
+        constexpr std::array<std::int32_t, simd_lanes> indices{static_cast<std::int32_t>(Indices)...};
+        return Simd<Scalar, Lanes>(
+            _mm512_permutexvar_ps(_mm512_loadu_si512(indices.data()), static_cast<__m512>(value)));
+    }
+#endif
 #if defined(KOKKOS_ARCH_AVX2)
     if constexpr (std::is_same_v<Scalar, double> && simd_lanes == 4) {
         constexpr int control = [] {
@@ -34,7 +48,7 @@ KOKKOS_INLINE_FUNCTION Simd<Scalar, Lanes> permute(const Simd<Scalar, Lanes>& va
             }
             return result;
         }();
-        return Simd<Scalar>(_mm256_permute4x64_pd(static_cast<__m256d>(value), control));
+        return Simd<Scalar, Lanes>(_mm256_permute4x64_pd(static_cast<__m256d>(value), control));
     } else if constexpr (std::is_same_v<Scalar, float> && simd_lanes == 8) {
         const __m256i indices = _mm256_setr_epi32(static_cast<int>(Indices)...);
         return Simd<Scalar, Lanes>(_mm256_permutevar8x32_ps(static_cast<__m256>(value), indices));
@@ -61,10 +75,22 @@ KOKKOS_INLINE_FUNCTION Simd<Scalar, Lanes> negate(const Simd<Scalar, Lanes>& val
     constexpr std::size_t simd_lanes = Simd<Scalar, Lanes>::size();
     static_assert(sizeof...(Selectors) == simd_lanes);
     static_assert(((Selectors < 2) && ...));
+#if defined(KOKKOS_ARCH_AVX512XEON)
+    // Flip only the sign bits, preserving signed zero and NaN payloads.
+    if constexpr (std::is_same_v<Scalar, double> && simd_lanes == 8) {
+        constexpr std::array<double, simd_lanes> sign{(Selectors == 1 ? -0.0 : 0.0)...};
+        return Simd<Scalar, Lanes>(
+            _mm512_xor_pd(static_cast<__m512d>(value), _mm512_loadu_pd(sign.data())));
+    } else if constexpr (std::is_same_v<Scalar, float> && simd_lanes == 16) {
+        constexpr std::array<float, simd_lanes> sign{(Selectors == 1 ? -0.0F : 0.0F)...};
+        return Simd<Scalar, Lanes>(
+            _mm512_xor_ps(static_cast<__m512>(value), _mm512_loadu_ps(sign.data())));
+    }
+#endif
 #if defined(KOKKOS_ARCH_AVX2)
     if constexpr (std::is_same_v<Scalar, double> && simd_lanes == 4) {
         const __m256d sign = _mm256_setr_pd((Selectors == 1 ? -0.0 : 0.0)...);
-        return Simd<Scalar>(_mm256_xor_pd(static_cast<__m256d>(value), sign));
+        return Simd<Scalar, Lanes>(_mm256_xor_pd(static_cast<__m256d>(value), sign));
     } else if constexpr (std::is_same_v<Scalar, float> && simd_lanes == 8) {
         const __m256 sign = _mm256_setr_ps((Selectors == 1 ? -0.0F : 0.0F)...);
         return Simd<Scalar, Lanes>(_mm256_xor_ps(static_cast<__m256>(value), sign));

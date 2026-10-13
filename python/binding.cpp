@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstdlib>
 #if defined(SCALUQ_USE_HIP)
 using std::fill_n;
 #endif
@@ -232,6 +233,9 @@ NB_MODULE(scaluq_core, m) {
             .build_as_google_style()
             .c_str());
 
-    initialize();
-    std::atexit(&cleanup);
+    // Stub generation only inspects bindings and does not need a GPU/runtime.
+    if (const char* stubgen = std::getenv("NB_STUBGEN"); !stubgen || stubgen[0] != '1') {
+        initialize();
+        std::atexit(&cleanup);
+    }
 }

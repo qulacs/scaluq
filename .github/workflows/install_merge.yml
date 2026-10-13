@@ -372,6 +372,11 @@ jobs:
 
       - name: Install to system
         run: |
+          if [ "$SCALUQ_USE_CUDA" = "ON" ]; then
+            mkdir -p "$RUNNER_TEMP/cuda-stubs"
+            ln -s "$CUDA_PATH/lib64/stubs/libcuda.so" "$RUNNER_TEMP/cuda-stubs/libcuda.so.1"
+            export LD_LIBRARY_PATH="$RUNNER_TEMP/cuda-stubs:$LD_LIBRARY_PATH"
+          fi
           if [ "$SCALUQ_USE_HIP" = "ON" ]; then
             export LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/llvm/lib:$LD_LIBRARY_PATH
           fi
