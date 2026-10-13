@@ -54,3 +54,22 @@ print(f"classical_register[0]: {classical_register[0]}, classical_register[1]: {
 classical_register.reset()
 print(f"classical_register[0]: {classical_register[0]}, classical_register[1]: {classical_register[1]}") # False
 ```
+
+## 古典分岐する
+{func}`add_conditional_gate <scaluq.Circuit.add_conditional_gate>` で古典分岐を行うことができます。
+
+```py
+from scaluq import StateVector, Circuit, ClassicalRegister
+from scaluq.gate import X, Measurement
+
+state = StateVector(2) # |00>
+classical_register = ClassicalRegister(1)
+
+circuit = Circuit()
+circuit.add_gate(Measurement(0, 0, True)) # classical_register[0] = False
+circuit.add_conditional_gate(X(0), 0, False) # 作用する
+circuit.add_conditional_gate(X(1), 0, True) # 作用しない
+circuit.update_quantum_state(state, classical_register, {}, 0)
+
+print(state) # |01>
+```
