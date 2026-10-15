@@ -85,7 +85,7 @@ void apply_pauli(std::uint64_t control_mask,
 
             if (bit_flip_mask == 0) {
                 Kokkos::parallel_for(
-                    Kokkos::TeamThreadRange(team, dim >> std::popcount(control_mask)),
+                    Kokkos::TeamThreadRange(team, dim >> Kokkos::popcount(control_mask)),
                     [&](const std::uint64_t i) {
                         std::uint64_t state_idx =
                             insert_zero_at_mask_positions(i, control_mask) | control_value_mask;
@@ -269,7 +269,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                 const Complex<Prec> cval_min = cosval - Complex<Prec>(0, 1) * sinval;
                 const Complex<Prec> cval_pls = cosval + Complex<Prec>(0, 1) * sinval;
                 Kokkos::parallel_for(
-                    Kokkos::TeamThreadRange(team, states.dim() >> std::popcount(control_mask)),
+                    Kokkos::TeamThreadRange(team, states.dim() >> Kokkos::popcount(control_mask)),
                     [&](const std::uint64_t i) {
                         std::uint64_t state_idx =
                             insert_zero_at_mask_positions(i, control_mask) | control_value_mask;
@@ -283,7 +283,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                 std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
                 Kokkos::parallel_for(
                     Kokkos::TeamThreadRange(team,
-                                            states.dim() >> (std::popcount(control_mask) + 1)),
+                                            states.dim() >> (Kokkos::popcount(control_mask) + 1)),
                     [&](const std::uint64_t i) {
                         std::uint64_t basis_0 =
                             insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
