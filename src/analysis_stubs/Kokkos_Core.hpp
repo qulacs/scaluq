@@ -22,16 +22,23 @@ namespace Kokkos {
 // Forward-declare HostSpace so Serial/OpenMP can reference it in memory_space.
 struct HostSpace;
 struct SharedSpace;
+struct ScratchMemorySpace {
+    void* get_shmem_aligned(std::size_t, std::size_t) const { return nullptr; }
+};
 
 struct Serial {
     using memory_space = HostSpace;
     using execution_space = Serial;
+    using scratch_memory_space = ScratchMemorySpace;
     Serial() = default;
+    static int concurrency() { return 1; }
 };
 struct OpenMP {
     using memory_space = HostSpace;
     using execution_space = OpenMP;
+    using scratch_memory_space = ScratchMemorySpace;
     OpenMP() = default;
+    static int concurrency() { return 1; }
 };
 struct HostSpace {};
 struct SharedSpace {};
@@ -188,6 +195,7 @@ public:
     View(ViewAllocateWithoutInitializing, Layout) {}
     explicit View(pointer, size_type = 0, size_type = 0) {}
     explicit View(const value_type*, size_type = 0, size_type = 0) {}
+    explicit View(const ScratchMemorySpace&, size_type = 0, size_type = 0) {}
     // Cross-space converting constructor: allows View<T*, HostSpace> to convert to View<T*, OpenMP>
     template <class... OtherProps>
     View(const View<DataType, OtherProps...>&) {}
@@ -195,6 +203,7 @@ public:
     pointer data() const { return nullptr; }
     size_type extent(int) const { return 0; }
     size_type size() const { return 0; }
+    static size_type shmem_size(size_type n) { return sizeof(value_type) * n; }
     bool is_null() const { return true; }
 
     value_type& operator()() const {
@@ -216,6 +225,9 @@ public:
 };
 
 // ── Policies ───────────────────────────────────────────────────────────────
+struct PerTeam;
+struct ParallelForTag {};
+
 template <class ExecSpace = DefaultExecutionSpace>
 struct RangePolicy {
     RangePolicy(std::size_t, std::size_t) {}
@@ -237,9 +249,17 @@ struct TeamPolicy {
         int team_rank() const { return 0; }
         int team_size() const { return 1; }
         void team_barrier() const {}
+        ScratchMemorySpace team_scratch(int) const { return {}; }
     };
     TeamPolicy(ExecSpace, std::size_t, AUTO_t) {}
     TeamPolicy(std::size_t, AUTO_t) {}
+    TeamPolicy(std::size_t, int) {}
+    static int scratch_size_max(int) { return 0; }
+    TeamPolicy& set_scratch_size(int, const PerTeam&) { return *this; }
+    template <class Functor>
+    int team_size_recommended(const Functor&, ParallelForTag) const { return 1; }
+    template <class Functor>
+    int team_size_max(const Functor&, ParallelForTag) const { return 1; }
 };
 
 // ── Thread-range helpers ───────────────────────────────────────────────────

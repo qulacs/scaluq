@@ -59,6 +59,8 @@ using Matrix2x2 = Kokkos::Array<Kokkos::Array<Complex<Prec>, 2>, 2>;
 template <Precision Prec>
 using Matrix4x4 = Kokkos::Array<Kokkos::Array<Complex<Prec>, 4>, 4>;
 template <Precision Prec>
+using Matrix8x8 = Kokkos::Array<Kokkos::Array<Complex<Prec>, 8>, 8>;
+template <Precision Prec>
 using DiagonalMatrix2x2 = Kokkos::Array<Complex<Prec>, 2>;
 
 template <Precision Prec, ExecutionSpace Space>
