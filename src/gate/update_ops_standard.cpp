@@ -24,7 +24,7 @@ void rx_gate(std::uint64_t target_mask,
                 {{{cosval, Complex<Prec>(0, -sinval)}}, {{Complex<Prec>(0, -sinval), cosval}}}};
             Kokkos::parallel_for(
                 Kokkos::TeamThreadRange(team_member,
-                                        states.dim() >> std::popcount(target_mask | control_mask)),
+                                        states.dim() >> Kokkos::popcount(target_mask | control_mask)),
                 [&](std::uint64_t it) {
                     std::uint64_t basis_0 =
                         insert_zero_at_mask_positions(it, control_mask | target_mask) |
@@ -60,7 +60,7 @@ void ry_gate(std::uint64_t target_mask,
             Matrix2x2<Prec> matrix = {{{{cosval, -sinval}}, {{sinval, cosval}}}};
             Kokkos::parallel_for(
                 Kokkos::TeamThreadRange(team_member,
-                                        states.dim() >> std::popcount(target_mask | control_mask)),
+                                        states.dim() >> Kokkos::popcount(target_mask | control_mask)),
                 [&](std::uint64_t it) {
                     std::uint64_t basis_0 =
                         insert_zero_at_mask_positions(it, control_mask | target_mask) |
@@ -97,7 +97,7 @@ void rz_gate(std::uint64_t target_mask,
                                             Complex<Prec>(cosval, sinval)};
             Kokkos::parallel_for(
                 Kokkos::TeamThreadRange(team_member,
-                                        states.dim() >> std::popcount(target_mask | control_mask)),
+                                        states.dim() >> Kokkos::popcount(target_mask | control_mask)),
                 [&](std::uint64_t it) {
                     std::uint64_t basis_0 =
                         insert_zero_at_mask_positions(it, control_mask | target_mask) |
