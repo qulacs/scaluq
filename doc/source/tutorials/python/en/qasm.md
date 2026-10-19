@@ -2,6 +2,14 @@
 
 `scaluq.qasm2` is for importing and exporting OpenQASM 2.0 programs.
 
+```{note}
+Not supported:
+- User-defined gates
+- variable definition
+- reset
+- Classical instructions such as If-else statements
+```
+
 ## Create Circuit from OpenQASM 2.0
 
 You can loads {class}`scaluq.Circuit` from OPENQASM 2.0 program.
@@ -14,6 +22,7 @@ print(result.n_qubits) # 1
 print(result.circuit.n_gates()) # 1
 print(result.n_clbits) # 0
 print(result.circuit.to_json()) # {"gate_list":[{"gate":{"control":[],"control_value":[],"target":[0],"type":"H"}}]}
+print(result.warnings) # []
 ```
 
 ## Circuit to OpenQASM 2.0

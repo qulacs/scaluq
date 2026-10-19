@@ -2,6 +2,14 @@
 
 `scaluq.qasm2` は OpenQASM 2.0 のプログラムをインポートあるいはエクスポートするためのものです。
 
+```{note}
+- ユーザー定義ゲート
+- 変数定義
+- リセット
+- If-else文のような古典命令
+には対応していません。
+```
+
 ## OpenQASM 2.0 から量子回路を作成する
 
 OpenQASM 2.0のプログラムから {class}`scaluq.Circuit` をロードできます。
@@ -14,6 +22,7 @@ print(result.n_qubits) # 1
 print(result.circuit.n_gates()) # 1
 print(result.n_clbits) # 0
 print(result.circuit.to_json()) # {"gate_list":[{"gate":{"control":[],"control_value":[],"target":[0],"type":"H"}}]}
+print(result.warnings) # []
 ```
 
 ## 量子回路を OpenQASM 2.0 へ変換する
