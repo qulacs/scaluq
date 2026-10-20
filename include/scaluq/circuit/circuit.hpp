@@ -50,6 +50,14 @@ public:
         if (gate.index() == 0) return std::nullopt;
         return std::get<1>(gate).second;
     }
+    [[nodiscard]] inline std::optional<ClassicalCondition> get_classical_condition_at(
+        std::uint64_t idx) const {
+        if (idx >= _gate_list.size()) {
+            throw std::runtime_error(
+                "Circuit::get_classical_condition_at(std::uint64_t): index out of bounds");
+        }
+        return _classical_conditions[idx];
+    }
 
     [[nodiscard]] std::uint64_t calculate_depth() const;
 
@@ -607,6 +615,16 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
                                      "\'theta\'",
                                      ">>> circuit.get_param_key_at(1) is None",
                                      "True"})
+                 .build_as_google_style()
+                 .c_str())
+        .def("get_classical_condition_at",
+             &Circuit<Prec>::get_classical_condition_at,
+             "index"_a,
+             DocString()
+                 .desc("Get classical register condition.")
+                 .arg("index", "int", "index of classical register")
+                 .ret("Callable[[ClassicalRegister], bool] | None",
+                      "Classical condition callable, or None if absent")
                  .build_as_google_style()
                  .c_str())
         .def("calculate_depth",
