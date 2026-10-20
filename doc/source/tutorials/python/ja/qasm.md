@@ -12,7 +12,7 @@
 
 ## OpenQASM 2.0 から量子回路を作成する
 
-OpenQASM 2.0のプログラムから {class}`scaluq.Circuit` をロードできます。
+OpenQASM 2.0 のプログラムから {class}`scaluq.Circuit` をロードできます。
 
 ```py
 from scaluq import qasm2
@@ -27,7 +27,7 @@ print(result.warnings) # []
 
 ## 量子回路を OpenQASM 2.0 へ変換する
 
-OpenQASM 2.0 のプログラムを {class}`scaluq.Circuit` に変換することができます。
+{class}`scaluq.Circuit` を OpenQASM 2.0 のプログラムに変換することができます。
 
 ```py
 from scaluq import Circuit

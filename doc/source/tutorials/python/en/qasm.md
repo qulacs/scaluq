@@ -12,7 +12,7 @@ Not supported:
 
 ## Create Circuit from OpenQASM 2.0
 
-You can loads {class}`scaluq.Circuit` from OPENQASM 2.0 program.
+You can load {class}`scaluq.Circuit` from OPENQASM 2.0 program.
 
 ```py
 from scaluq import qasm2
