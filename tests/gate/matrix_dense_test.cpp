@@ -8,7 +8,8 @@
 
 namespace {
 using namespace scaluq;
-using namespace scaluq::internal;
+using scaluq::internal::convert_external_matrix_to_internal_matrix;
+using scaluq::internal::multi_dense_matrix_gate;
 
 template <typename T>
 class GeneralDenseMatrixTest : public FixtureBase<T> {};

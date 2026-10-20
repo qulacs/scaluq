@@ -10,7 +10,14 @@
 
 namespace {
 using namespace scaluq;
-using namespace scaluq::internal;
+using scaluq::internal::CoefKind;
+using scaluq::internal::Complex;
+using scaluq::internal::convert_internal_matrix_to_external_matrix;
+using scaluq::internal::DenseMatrixGateImpl;
+using scaluq::internal::GatePtr;
+using scaluq::internal::Matrix8x8;
+using scaluq::internal::three_target_dense_matrix_gate;
+using scaluq::internal::three_target_dense_matrix_gate_scalar;
 
 template <typename T>
 class Matrix8x8Test : public FixtureBase<T> {};
