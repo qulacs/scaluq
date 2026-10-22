@@ -693,9 +693,9 @@ inline ClassicalRegisterVariant parse_classical_register(nb::handle classical_re
 template <Precision>
 using GateStateVariant = nb::handle;
 
-template <typename GateT, Precision Prec, ExecutionSpace Space>
+template <typename GateT, Precision Prec, typename State>
 void update_gate_state(const GateT& gate,
-                       StateVector<Prec, Space>* state,
+                       State* state,
                        ClassicalRegisterVariant classical_register,
                        std::optional<std::uint64_t> seed) {
     std::visit(
@@ -714,7 +714,7 @@ void update_gate_state(const GateT& gate,
                    [&](ClassicalRegisterBatched*) {
                        throw std::runtime_error(
                            "Gate::update_quantum_state(): ClassicalRegisterBatched cannot be "
-                           "used with StateVector.");
+                           "used with StateVector or DensityMatrix.");
                    }},
         classical_register);
 }
@@ -745,7 +745,7 @@ void update_gate_state(const GateT& gate,
         classical_register);
 }
 
-template <Precision Prec, typename F>
+template <Precision Prec, bool include_density = false, typename F>
 void visit_gate_state(nb::handle state, F&& function) {
     if (nb::isinstance<StateVector<Prec, ExecutionSpace::Host>>(state)) {
         function(nb::cast<StateVector<Prec, ExecutionSpace::Host>*>(state));
@@ -762,7 +762,25 @@ void visit_gate_state(nb::handle state, F&& function) {
         function(nb::cast<StateVectorBatched<Prec, ExecutionSpace::Default>*>(state));
 #endif
     } else {
-        throw nb::type_error("Expected a StateVector or StateVectorBatched.");
+        if constexpr (include_density) {
+            if (nb::isinstance<DensityMatrix<Prec, ExecutionSpace::Host>>(state)) {
+                function(nb::cast<DensityMatrix<Prec, ExecutionSpace::Host>*>(state));
+                return;
+            }
+            if (nb::isinstance<DensityMatrix<Prec, ExecutionSpace::HostSerial>>(state)) {
+                function(nb::cast<DensityMatrix<Prec, ExecutionSpace::HostSerial>*>(state));
+                return;
+            }
+#ifdef SCALUQ_USE_DEVICE
+            if (nb::isinstance<DensityMatrix<Prec, ExecutionSpace::Default>>(state)) {
+                function(nb::cast<DensityMatrix<Prec, ExecutionSpace::Default>*>(state));
+                return;
+            }
+#endif
+            throw nb::type_error("Expected a StateVector, StateVectorBatched, or DensityMatrix.");
+        } else {
+            throw nb::type_error("Expected a StateVector or StateVectorBatched.");
+        }
     }
 }
 
@@ -898,7 +916,7 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
             },
             ([]() {
                 auto ds = DocString().desc(
-                    "Generate inverse gate as `Gate` type. If not exists, return None.");
+                    "Return the inverse gate. Raises RuntimeError if no inverse is available.");
                 if constexpr (is_base_gate) {
                     ds.ex(DocString::Code({">>> s = S(0)",
                                            ">>> print(s.get_inverse())",
@@ -979,26 +997,26 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
             "Read an object from the JSON representation of the gate.");
 
     constexpr const char* update_signature =
-        "def update_quantum_state(self, state: StateVector | StateVectorBatched, "
+        "def update_quantum_state(self, state: StateVector | StateVectorBatched | DensityMatrix, "
         "*, classical_register: scaluq.scaluq_core.ClassicalRegister | "
         "scaluq.scaluq_core.ClassicalRegisterBatched | None = None, seed: int | None = "
         "None) -> None";
     auto update_doc_str = ([]() {
-        auto ds =
-            DocString()
-                .desc("Apply gate to `state`. `state` in args is directly updated.")
-                .desc("Optionally pass a matching classical register and seed.")
-                .arg("state",
-                     "StateVector | StateVectorBatched",
-                     "State vector to be updated. Can be `StateVector` or `StateVectorBatched`.")
-                .arg("classical_register",
-                     "ClassicalRegister | ClassicalRegisterBatched | None",
-                     "Classical register to be used in the gate. If not provided, a new register "
-                     "with appropriate size is created and used internally.")
-                .arg("seed",
-                     "int | None",
-                     "Seed for random number generator. If not provided, a random seed is "
-                     "generated using `std::random_device`.");
+        auto ds = DocString()
+                      .desc("Apply gate to `state`. `state` in args is directly updated.")
+                      .desc("Optionally pass a matching classical register and seed.")
+                      .arg("state",
+                           "StateVector | StateVectorBatched | DensityMatrix",
+                           "Quantum state to be updated.")
+                      .arg("classical_register",
+                           "ClassicalRegister | ClassicalRegisterBatched | None",
+                           "Use ClassicalRegister for a single state and ClassicalRegisterBatched "
+                           "for batched states. Measurement gates require a register large enough "
+                           "for their destination bit.")
+                      .arg("seed",
+                           "int | None",
+                           "Seed for random number generator. If not provided, a random seed is "
+                           "generated using `std::random_device`.");
         if constexpr (is_base_gate) {
             ds.ex(DocString::Code({">>> state = StateVector(2)",
                                    ">>> state.set_computational_basis(0)",
@@ -1039,7 +1057,7 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
            nb::handle classical_register,
            std::optional<std::uint64_t> seed) {
             auto classical_register_variant = parse_classical_register(classical_register);
-            visit_gate_state<Prec>(state, [&](auto* state_ptr) {
+            visit_gate_state<Prec, true>(state, [&](auto* state_ptr) {
                 update_gate_state<GateT, Prec>(
                     gate, state_ptr, classical_register_variant, seed);
             });

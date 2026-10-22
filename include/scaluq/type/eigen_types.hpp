@@ -74,6 +74,14 @@ inline Matrix<Scalar, R, C, O> operator*(const Scalar&, const Matrix<Scalar, R, 
 enum class ComputationInfo { Success, NumericalIssue, NoConvergence, InvalidInput };
 
 template <class MatrixType>
+class FullPivLU {
+public:
+    explicit FullPivLU(const MatrixType&) {}
+    bool isInvertible() const { return true; }
+    MatrixType inverse() const { return {}; }
+};
+
+template <class MatrixType>
 class ComplexEigenSolver {
 public:
     using Scalar = typename MatrixType::Scalar;
