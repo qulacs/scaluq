@@ -98,6 +98,105 @@ TYPED_TEST(ParamCircuitTest, ApplyParamCircuit) {
     param_circuit_test<Prec, Space>();
 }
 
+template <Precision Prec, ExecutionSpace Space>
+void param_circuit_batched_test() {
+    std::uint64_t n_qubits = 5;
+    constexpr std::uint64_t batch_size = 2;
+    constexpr std::uint64_t n_params = 5;
+    Random random;
+    for ([[maybe_unused]] std::uint64_t repeat : std::views::iota(0, 10)) {
+        std::array<Circuit<Prec>, batch_size> circuits;
+        Circuit<Prec> pcircuit;
+        std::vector<std::string> pkeys(n_params);
+        for (std::uint64_t pidx : std::views::iota(std::uint64_t{0}, n_params))
+            pkeys[pidx] = "p" + std::to_string(pidx);
+        std::array<std::vector<double>, batch_size> params;
+        std::map<std::string, std::vector<double>> batched_pmap;
+        for (std::uint64_t b = 0; b < batch_size; ++b) {
+            params[b].resize(n_params);
+            for (std::uint64_t pidx : std::views::iota(std::uint64_t{0}, n_params)) {
+                params[b][pidx] = random.uniform() * std::numbers::pi * 2;
+                batched_pmap[pkeys[pidx]].push_back(params[b][pidx]);
+            }
+        }
+        auto add_random_rotation_or_cnot = [&] {
+            if (random.int32() & 1) {
+                std::uint64_t param_gate_kind = random.int32() % 4;
+                double coef = random.uniform() * 2 - 1;
+                std::uint64_t pidx = random.int32() % n_params;
+                if (param_gate_kind == 0) {
+                    std::uint64_t target = random.int32() % n_qubits;
+                    for (std::uint64_t b = 0; b < batch_size; ++b)
+                        circuits[b].add_gate(gate::RX<Prec>(target, coef * params[b][pidx]));
+                    pcircuit.add_param_gate(gate::ParamRX<Prec>(target, coef), pkeys[pidx]);
+                } else if (param_gate_kind == 1) {
+                    std::uint64_t target = random.int32() % n_qubits;
+                    for (std::uint64_t b = 0; b < batch_size; ++b)
+                        circuits[b].add_gate(gate::RY<Prec>(target, coef * params[b][pidx]));
+                    pcircuit.add_param_gate(gate::ParamRY<Prec>(target, coef), pkeys[pidx]);
+                } else if (param_gate_kind == 2) {
+                    std::uint64_t target = random.int32() % n_qubits;
+                    for (std::uint64_t b = 0; b < batch_size; ++b)
+                        circuits[b].add_gate(gate::RZ<Prec>(target, coef * params[b][pidx]));
+                    pcircuit.add_param_gate(gate::ParamRZ<Prec>(target, coef), pkeys[pidx]);
+                } else {
+                    std::vector<std::uint64_t> target_vec, pauli_id_vec;
+                    for (std::uint64_t target = 0; target < n_qubits; target++) {
+                        target_vec.emplace_back(target);
+                        pauli_id_vec.emplace_back(random.int64() % 4);
+                    }
+                    PauliOperator<Prec> pauli(target_vec, pauli_id_vec, 1.0);
+                    for (std::uint64_t b = 0; b < batch_size; ++b)
+                        circuits[b].add_gate(
+                            gate::PauliRotation<Prec>(pauli, coef * params[b][pidx]));
+                    pcircuit.add_param_gate(gate::ParamPauliRotation<Prec>(pauli, coef),
+                                            pkeys[pidx]);
+                }
+            } else {
+                std::uint64_t control = random.int32() % n_qubits;
+                std::uint64_t target = random.int32() % (n_qubits - 1);
+                if (target == control) target = n_qubits - 1;
+                for (auto& circuit : circuits)
+                    circuit.add_gate(gate::CX<Prec>(control, target));
+                pcircuit.add_gate(gate::CX<Prec>(control, target));
+            }
+        };
+        for ([[maybe_unused]] std::uint64_t _ : std::views::iota(0ULL, 20ULL)) {
+            add_random_rotation_or_cnot();
+        }
+        auto states =
+            StateVectorBatched<Prec, Space>::Haar_random_state(batch_size, n_qubits, false);
+        auto states_base = states.copy();
+        pcircuit.update_quantum_state(states, batched_pmap);
+        auto amplitudes_batched = states.get_amplitudes();
+        auto ipcircuit = pcircuit.get_inverse();
+        ipcircuit.update_quantum_state(states, batched_pmap);
+        auto amplitudes_batched_inverse = states.get_amplitudes();
+        for (std::uint64_t b = 0; b < batch_size; ++b) {
+            StateVector state = states_base.get_state_vector_at(b);
+            auto amplitudes_base = state.get_amplitudes();
+            circuits[b].update_quantum_state(state);
+            auto amplitudes = state.get_amplitudes();
+            for (std::uint64_t idx : std::views::iota(std::uint64_t{0}, 1ULL << n_qubits)) {
+                check_near<Prec>(amplitudes[idx], amplitudes_batched[b][idx]);
+            }
+            auto icircuit = circuits[b].get_inverse();
+            icircuit.update_quantum_state(state);
+            amplitudes = state.get_amplitudes();
+            for (std::uint64_t idx : std::views::iota(std::uint64_t{0}, 1ULL << n_qubits)) {
+                check_near<Prec>(amplitudes[idx], amplitudes_base[idx]);
+                check_near<Prec>(amplitudes_batched_inverse[b][idx], amplitudes_base[idx]);
+            }
+        }
+    }
+}
+
+TYPED_TEST(ParamCircuitTest, ApplyParamCircuitBatched) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    param_circuit_batched_test<Prec, Space>();
+}
+
 TYPED_TEST(ParamCircuitTest, InsufficientParameterGiven) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
