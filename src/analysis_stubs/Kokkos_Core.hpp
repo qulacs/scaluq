@@ -4,6 +4,7 @@
 #endif
 // Minimal Kokkos stub for clang-tidy static analysis.
 
+#include <cmath>
 #include <complex>
 #include <cstddef>
 #include <cstdint>
@@ -343,6 +344,24 @@ inline std::uint64_t popcount(std::uint64_t x) {
 inline std::uint64_t bit_width(std::uint64_t x) {
     return x == 0 ? 0 : static_cast<std::uint64_t>(64 - __builtin_clzll(x));
 }
+
+// ── Mathematical functions ──────────────────────────────────────────────────────────────
+#define KOKKOS_STUB_UNARY_MATH_FUNCTION(FUNC)         \
+    template <class T>                                \
+    inline auto FUNC(T x) -> decltype(std::FUNC(x)) { \
+        return std::FUNC(x);                          \
+    }
+
+KOKKOS_STUB_UNARY_MATH_FUNCTION(abs)
+KOKKOS_STUB_UNARY_MATH_FUNCTION(sqrt)
+KOKKOS_STUB_UNARY_MATH_FUNCTION(sin)
+KOKKOS_STUB_UNARY_MATH_FUNCTION(cos)
+KOKKOS_STUB_UNARY_MATH_FUNCTION(exp)
+KOKKOS_STUB_UNARY_MATH_FUNCTION(log2)
+KOKKOS_STUB_UNARY_MATH_FUNCTION(sinh)
+KOKKOS_STUB_UNARY_MATH_FUNCTION(cosh)
+
+#undef KOKKOS_STUB_UNARY_MATH_FUNCTION
 
 // ── Math constants ─────────────────────────────────────────────────────────
 namespace numbers {
