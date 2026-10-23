@@ -623,7 +623,8 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
              DocString()
                  .desc("Get classical register condition.")
                  .arg("index", "int", "index of classical register")
-                 .ret("bool", "classical bit")
+                 .ret("Callable[[ClassicalRegister], bool] | None",
+                      "Classical condition callable, or None if absent")
                  .build_as_google_style()
                  .c_str())
         .def("calculate_depth",
