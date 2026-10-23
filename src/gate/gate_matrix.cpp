@@ -4,6 +4,7 @@
 #include "update_ops_matrix_1x1.hpp"
 #include "update_ops_matrix_2x2.hpp"
 #include "update_ops_matrix_4x4.hpp"
+#include "update_ops_matrix_8x8.hpp"
 
 namespace scaluq::internal {
 template <Precision Prec, ExecutionSpace Space>
@@ -29,6 +30,15 @@ DenseMatrixGateImpl<Prec, Space>::DenseMatrixGateImpl(std::uint64_t target_mask,
         Matrix4x4<Prec> matrix;
         for (std::uint64_t i = 0; i < 4; ++i) {
             for (std::uint64_t j = 0; j < 4; ++j) {
+                matrix[i][j] = Complex<Prec>(static_cast<Float<Prec>>(mat(i, j).real()),
+                                             static_cast<Float<Prec>>(mat(i, j).imag()));
+            }
+        }
+        _matrix = matrix;
+    } else if (mat.rows() == 8 && mat.cols() == 8) {
+        Matrix8x8<Prec> matrix;
+        for (std::uint64_t i = 0; i < 8; ++i) {
+            for (std::uint64_t j = 0; j < 8; ++j) {
                 matrix[i][j] = Complex<Prec>(static_cast<Float<Prec>>(mat(i, j).real()),
                                              static_cast<Float<Prec>>(mat(i, j).imag()));
             }
@@ -81,6 +91,14 @@ Matrix<Prec, Space> DenseMatrixGateImpl<Prec, Space>::get_matrix_internal() cons
                 external(i, j) = static_cast<StdComplex>(matrix[i][j]);
             }
         }
+    } else if (std::holds_alternative<Matrix8x8<Prec>>(_matrix)) {
+        const auto& matrix = std::get<Matrix8x8<Prec>>(_matrix);
+        external.resize(8, 8);
+        for (std::uint64_t i = 0; i < 8; ++i) {
+            for (std::uint64_t j = 0; j < 8; ++j) {
+                external(i, j) = static_cast<StdComplex>(matrix[i][j]);
+            }
+        }
     }
     return convert_external_matrix_to_internal_matrix<Prec, Space>(external);
 }
@@ -103,11 +121,20 @@ ComplexMatrix DenseMatrixGateImpl<Prec, Space>::get_matrix() const {
             }
         }
         return ret;
-    } else {
+    } else if (std::holds_alternative<Matrix4x4<Prec>>(_matrix)) {
         const auto& matrix = std::get<Matrix4x4<Prec>>(_matrix);
         ComplexMatrix ret(4, 4);
         for (std::uint64_t i = 0; i < 4; ++i) {
             for (std::uint64_t j = 0; j < 4; ++j) {
+                ret(i, j) = static_cast<StdComplex>(matrix[i][j]);
+            }
+        }
+        return ret;
+    } else {
+        const auto& matrix = std::get<Matrix8x8<Prec>>(_matrix);
+        ComplexMatrix ret(8, 8);
+        for (std::uint64_t i = 0; i < 8; ++i) {
+            for (std::uint64_t j = 0; j < 8; ++j) {
                 ret(i, j) = static_cast<StdComplex>(matrix[i][j]);
             }
         }
@@ -144,6 +171,12 @@ std::string DenseMatrixGateImpl<Prec, Space>::to_string(const std::string& inden
                                              this->_control_value_mask,                     \
                                              std::get<Matrix4x4<Prec>>(_matrix),            \
                                              *context.state_member);                        \
+            } else if (std::holds_alternative<Matrix8x8<Prec>>(_matrix)) {                  \
+                three_target_dense_matrix_gate(this->_target_mask,                          \
+                                               this->_control_mask,                         \
+                                               this->_control_value_mask,                   \
+                                               std::get<Matrix8x8<Prec>>(_matrix),          \
+                                               *context.state_member);                      \
             } else {                                                                        \
                 multi_dense_matrix_gate(this->_target_mask,                                 \
                                         this->_control_mask,                                \
@@ -191,6 +224,12 @@ DEFINE_DENSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace:
                                              this->_control_value_mask,                 \
                                              std::get<Matrix4x4<Prec>>(_matrix),        \
                                              *context.state);                           \
+            } else if (std::holds_alternative<Matrix8x8<Prec>>(_matrix)) {              \
+                multi_dense_matrix_gate(this->_target_mask,                             \
+                                        this->_control_mask,                            \
+                                        this->_control_value_mask,                      \
+                                        get_matrix_internal(),                          \
+                                        *context.state);                                \
             } else {                                                                    \
                 multi_dense_matrix_gate(this->_target_mask,                             \
                                         this->_control_mask,                            \

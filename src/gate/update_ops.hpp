@@ -68,6 +68,23 @@ void two_target_dense_matrix_gate(std::uint64_t target_mask,
                                   const Matrix4x4<State::prec>& matrix,
                                   State& state);
 
+// clang-format off
+template <CoefKind M00 = CoefKind::General, CoefKind M01 = CoefKind::General, CoefKind M02 = CoefKind::General, CoefKind M03 = CoefKind::General, CoefKind M04 = CoefKind::General, CoefKind M05 = CoefKind::General, CoefKind M06 = CoefKind::General, CoefKind M07 = CoefKind::General,
+          CoefKind M10 = CoefKind::General, CoefKind M11 = CoefKind::General, CoefKind M12 = CoefKind::General, CoefKind M13 = CoefKind::General, CoefKind M14 = CoefKind::General, CoefKind M15 = CoefKind::General, CoefKind M16 = CoefKind::General, CoefKind M17 = CoefKind::General,
+          CoefKind M20 = CoefKind::General, CoefKind M21 = CoefKind::General, CoefKind M22 = CoefKind::General, CoefKind M23 = CoefKind::General, CoefKind M24 = CoefKind::General, CoefKind M25 = CoefKind::General, CoefKind M26 = CoefKind::General, CoefKind M27 = CoefKind::General,
+          CoefKind M30 = CoefKind::General, CoefKind M31 = CoefKind::General, CoefKind M32 = CoefKind::General, CoefKind M33 = CoefKind::General, CoefKind M34 = CoefKind::General, CoefKind M35 = CoefKind::General, CoefKind M36 = CoefKind::General, CoefKind M37 = CoefKind::General,
+          CoefKind M40 = CoefKind::General, CoefKind M41 = CoefKind::General, CoefKind M42 = CoefKind::General, CoefKind M43 = CoefKind::General, CoefKind M44 = CoefKind::General, CoefKind M45 = CoefKind::General, CoefKind M46 = CoefKind::General, CoefKind M47 = CoefKind::General,
+          CoefKind M50 = CoefKind::General, CoefKind M51 = CoefKind::General, CoefKind M52 = CoefKind::General, CoefKind M53 = CoefKind::General, CoefKind M54 = CoefKind::General, CoefKind M55 = CoefKind::General, CoefKind M56 = CoefKind::General, CoefKind M57 = CoefKind::General,
+          CoefKind M60 = CoefKind::General, CoefKind M61 = CoefKind::General, CoefKind M62 = CoefKind::General, CoefKind M63 = CoefKind::General, CoefKind M64 = CoefKind::General, CoefKind M65 = CoefKind::General, CoefKind M66 = CoefKind::General, CoefKind M67 = CoefKind::General,
+          CoefKind M70 = CoefKind::General, CoefKind M71 = CoefKind::General, CoefKind M72 = CoefKind::General, CoefKind M73 = CoefKind::General, CoefKind M74 = CoefKind::General, CoefKind M75 = CoefKind::General, CoefKind M76 = CoefKind::General, CoefKind M77 = CoefKind::General,
+          UpdatableStateVector State>
+// clang-format on
+void three_target_dense_matrix_gate(std::uint64_t target_mask,
+                                    std::uint64_t control_mask,
+                                    std::uint64_t control_value_mask,
+                                    const Matrix8x8<State::prec>& matrix,
+                                  State& state);
+
 template <UpdatableStateVector State>
 void multi_dense_matrix_gate(std::uint64_t target_mask,
                              std::uint64_t control_mask,
