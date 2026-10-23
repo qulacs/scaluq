@@ -60,7 +60,8 @@ inline void bind_classical_register_batched_hpp(nb::module_& m) {
         .def(nb::init<std::uint64_t, std::uint64_t>(),
              "register_size"_a,
              "batch_size"_a,
-             "Initialize batched classical register.")
+             "Create classical registers. Use register_size= for the number of bits and "
+             "batch_size= for the number of registers.")
         .def("register_size", &ClassicalRegisterBatched::register_size, "Get register size.")
         .def("batch_size", &ClassicalRegisterBatched::batch_size, "Get batch size.")
         .def("__len__", &ClassicalRegisterBatched::batch_size, "Get batch size.")

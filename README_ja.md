@@ -345,12 +345,22 @@ Scaluqでは、計算に使用する浮動小数点数のサイズとして`f16`
 |`host`|`ExecutionSpace::Host`|`'host'`|常に CPU で実行|
 |`host_serial`|`ExecutionSpace::HostSerial`|`'host_serial'`|常に CPU で逐次実行|
 
-同じ精度、実行スペースのオブジェクト同士でしか演算を行うことができません。
-例えば32bit用に作成したゲートでは64bitの`StateVector`を更新できず、同じ精度でもhost用に作成したゲートではdefault用に作成した`StateVector`を更新できません。
+一緒に演算するオブジェクトは精度を合わせてください。状態ベクトル、密度行列、演算子、行列ゲートは実行スペースも合わせる必要があります。`X`、`RX`、`CX`などの名前付きゲートと回路は、更新する状態の実行スペースで動作します。
 
-C++の場合、状態、ゲート、演算子、回路のクラスやゲートを生成する関数が、テンプレート引数を取るようになっており、そこに`Precision`型の値と`ExecutionSpace`型の値を指定します。
+C++では`StateVector`、`DensityMatrix`、`Operator`に精度と実行スペースのテンプレート引数を指定します。`Circuit`と名前付きゲートに指定するのは精度のみです。回路を最適化するときは、`circuit.optimize<ExecutionSpace::Default>()`のように実行スペースを指定します。
 
-Pythonの場合、`StateVector`や`Circuit`などのトップレベルのクラス、および`scaluq.gate`のゲートファクトリ関数は、`precision`と`space`のキーワード引数を受け取ります（デフォルトはそれぞれ`'f64'`と`'default'`）。
+Pythonでは`StateVector`、`DensityMatrix`、`Operator`とそのバッチ版に`precision`と`space`を指定できます。既定値はそれぞれ`'f64'`と`'default'`です。`Circuit`と名前付きゲートのファクトリに指定するのは`precision`のみで、`DenseMatrix`と`SparseMatrix`は`space`も受け取ります。CPUの状態で実行する回路を最適化するときは`circuit.optimize(space='host')`を使います。最適化の既定値は`space='default'`です。
+
+GPUビルドでは、CPUで実行する状態を`host`で作成できます。CPUビルドではCPU実行に`default`、逐次実行に`host_serial`を指定します。
+
+バッチ実行では、状態と古典レジスタのサイズをキーワード引数で指定すると対応が明確になります。
+
+```py
+from scaluq import StateVectorBatched, ClassicalRegisterBatched
+
+states = StateVectorBatched(batch_size=8, n_qubits=3)
+registers = ClassicalRegisterBatched(batch_size=8, register_size=3)
+```
 
 ```py
 from scaluq import StateVector, Circuit

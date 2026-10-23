@@ -1253,7 +1253,8 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
                  "bool",
                  true,
                  "Whether the matrix is unitary. When the flag indicating that the gate is "
-                 "unitary is set to True, a more efficient implementation is used.")
+                 "unitary is set to True, its inverse is computed using the adjoint. Otherwise, "
+                 "get_inverse() computes a matrix inverse and rejects singular matrices.")
             .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .arg("space", "str", true, "Execution space of the gate. Default is 'default'.")
             .ret("Gate", "DenseMatrix gate instance")
