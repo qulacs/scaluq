@@ -343,22 +343,11 @@ Execution spaces determine whether computation is performed on CPU or GPU:
 | `host`           | `ExecutionSpace::Host`       | `'host'`                   | Always runs on CPU                            |
 | `host_serial`    | `ExecutionSpace::HostSerial` | `'host_serial'`            | Always runs sequentially on CPU               |
 
-Objects used together must have the same precision. State vectors, density matrices, operators, and matrix gates also have an execution space, which must match. Named gates such as `X`, `RX`, and `CX`, and circuits, use the execution space of the state they update.
+Note: You can only perform operations between objects with the same precision and execution space. For example, a gate created for 32-bit precision cannot be used with a 64-bit StateVector, even if both are CPU-based.
 
-In C++, `StateVector`, `DensityMatrix`, and `Operator` take precision and execution-space template arguments. `Circuit` and named gates take only precision. Choose the execution space when optimizing a circuit with `circuit.optimize<ExecutionSpace::Default>()`.
+In C++, classes like StateVector, Circuit, Gate, and Operator accept `Precision` and `ExecutionSpace` as template arguments.
 
-In Python, `StateVector`, `DensityMatrix`, `Operator`, and their batched variants accept `precision` and `space`, defaulting to `'f64'` and `'default'`. `Circuit` and named gate factories accept `precision`; `DenseMatrix` and `SparseMatrix` also accept `space`. Use `circuit.optimize(space='host')` when preparing a circuit for a host state; the default is `space='default'`.
-
-GPU builds provide `host` for CPU execution. In a CPU build, use `default` for the host backend or `host_serial` for sequential execution.
-
-For batched execution, keyword arguments make the state and classical-register sizes explicit:
-
-```python
-from scaluq import StateVectorBatched, ClassicalRegisterBatched
-
-states = StateVectorBatched(batch_size=8, n_qubits=3)
-registers = ClassicalRegisterBatched(batch_size=8, register_size=3)
-```
+In Python, top-level classes such as `StateVector` and `Circuit`, as well as gate factories in `scaluq.gate`, accept `precision` and `space` keyword arguments, defaulting to `'f64'` and `'default'` respectively.
 
 ```python
 from scaluq import StateVector, Circuit

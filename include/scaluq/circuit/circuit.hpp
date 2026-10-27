@@ -574,7 +574,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
                  .desc("Get set of keys of parameters.")
                  .ret("set[str]", "Set of keys.")
                  .ex(DocString::Code{">>> circuit = Circuit()",
-                                     ">>> circuit.add_param_gate(gate.ParamRX(0), \"theta\")",
+                                     ">>> circuit.add_param_gate(gate.ParamRX(0, 0.0), \"theta\")",
                                      ">>> circuit.add_param_gate(gate.ParamRY(1, 2.0), \"phi\")",
                                      ">>> print(sorted(circuit.key_set()))",
                                      "[\'phi\', \'theta\']"})
@@ -604,7 +604,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
                  .arg("index", "int", "Index of gate")
                  .ret("str | None", "Parameter key")
                  .ex(DocString::Code{">>> circuit = Circuit()",
-                                     ">>> circuit.add_param_gate(gate.ParamRX(0), \"theta\")",
+                                     ">>> circuit.add_param_gate(gate.ParamRX(0, 0.0), \"theta\")",
                                      ">>> circuit.add_gate(gate.X(1))",
                                      ">>> circuit.get_param_key_at(0)",
                                      "\'theta\'",
@@ -666,7 +666,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
                  .arg("param_gate", "ParamGate", "Parametric gate to add")
                  .arg("param_key", "str", "Parameter key")
                  .ex(DocString::Code{">>> circuit = Circuit()",
-                                     ">>> circuit.add_param_gate(gate.ParamRX(0), \"theta\")"})
+                                     ">>> circuit.add_param_gate(gate.ParamRX(0, 0.0), \"theta\")"})
                  .build_as_google_style()
                  .c_str())
         .def("add_conditional_param_gate",

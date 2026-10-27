@@ -91,5 +91,5 @@ TYPED_TEST(CircuitOptimizeTest, Basic) {
     circuit.update_quantum_state(state0, params);
     circuit.template optimize<Space>();
     circuit.update_quantum_state(state1, params);
-    EXPECT_TRUE(same_state(state0, state1));
+    assert(same_state(state0, state1));
 }

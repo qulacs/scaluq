@@ -1002,21 +1002,21 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
         "scaluq.scaluq_core.ClassicalRegisterBatched | None = None, seed: int | None = "
         "None) -> None";
     auto update_doc_str = ([]() {
-        auto ds = DocString()
-                      .desc("Apply gate to `state`. `state` in args is directly updated.")
-                      .desc("Optionally pass a matching classical register and seed.")
-                      .arg("state",
-                           "StateVector | StateVectorBatched | DensityMatrix",
-                           "Quantum state to be updated.")
-                      .arg("classical_register",
-                           "ClassicalRegister | ClassicalRegisterBatched | None",
-                           "Use ClassicalRegister for a single state and ClassicalRegisterBatched "
-                           "for batched states. Measurement gates require a register large enough "
-                           "for their destination bit.")
-                      .arg("seed",
-                           "int | None",
-                           "Seed for random number generator. If not provided, a random seed is "
-                           "generated using `std::random_device`.");
+        auto ds =
+            DocString()
+                .desc("Apply gate to `state`. `state` in args is directly updated.")
+                .desc("Optionally pass a matching classical register and seed.")
+                .arg("state",
+                     "StateVector | StateVectorBatched | DensityMatrix",
+                     "Quantum state to be updated.")
+                .arg("classical_register",
+                     "ClassicalRegister | ClassicalRegisterBatched | None",
+                     "Classical register to be used in the gate. If not provided, a new register "
+                     "with appropriate size is created and used internally.")
+                .arg("seed",
+                     "int | None",
+                     "Seed for random number generator. If not provided, a random seed is "
+                     "generated using `std::random_device`.");
         if constexpr (is_base_gate) {
             ds.ex(DocString::Code({">>> state = StateVector(2)",
                                    ">>> state.set_computational_basis(0)",
