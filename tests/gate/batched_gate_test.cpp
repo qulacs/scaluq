@@ -794,12 +794,13 @@ TYPED_TEST(BatchedGateTest, ApplyProbabilisticGate) {
     {
         auto probgate = gate::Probabilistic<Prec>({.1, .9}, {gate::X<Prec>(0), gate::I<Prec>()});
         StateVectorBatched<Prec, Space> states(BATCH_SIZE, 1);
+        ClassicalRegisterBatched classical_register(0, BATCH_SIZE);
         std::vector<std::vector<std::uint64_t>> befores, afters;
         std::vector<std::uint64_t> x_counts(BATCH_SIZE), i_counts(BATCH_SIZE);
-        for ([[maybe_unused]] auto _ : std::views::iota(0, 100)) {
-            befores = states.sampling(1);
-            probgate->update_quantum_state(states);
-            afters = states.sampling(1);
+        for (std::uint64_t seed : std::views::iota(0ULL, 100ULL)) {
+            befores = states.sampling(1, seed);
+            probgate->update_quantum_state(states, classical_register, seed);
+            afters = states.sampling(1, seed);
             for (std::size_t i = 0; i < BATCH_SIZE; i++) {
                 if (befores[i][0] != afters[i][0]) {
                     x_counts[i]++;
@@ -808,7 +809,6 @@ TYPED_TEST(BatchedGateTest, ApplyProbabilisticGate) {
                 }
             }
         }
-        // These test is probabilistic, but pass at least 99.9% cases.
         for (std::size_t i = 0; i < BATCH_SIZE; i++) {
             ASSERT_GT(x_counts[i], 0);
             ASSERT_GT(i_counts[i], 0);

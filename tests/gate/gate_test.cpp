@@ -854,17 +854,17 @@ TYPED_TEST(GateTest, ApplyProbabilisticGate) {
         auto probgate = gate::Probabilistic<Prec>({.1, .9}, {gate::X<Prec>(0), gate::I<Prec>()});
         std::uint64_t x_cnt = 0, i_cnt = 0;
         StateVector<Prec, Space> state(1);
-        for ([[maybe_unused]] auto _ : std::views::iota(0, 100)) {
-            std::uint64_t before = state.sampling(1)[0];
-            probgate->update_quantum_state(state);
-            std::uint64_t after = state.sampling(1)[0];
+        ClassicalRegister classical_register(0);
+        for (std::uint64_t seed : std::views::iota(0ULL, 100ULL)) {
+            std::uint64_t before = state.sampling(1, seed)[0];
+            probgate->update_quantum_state(state, classical_register, seed);
+            std::uint64_t after = state.sampling(1, seed)[0];
             if (before != after) {
                 x_cnt++;
             } else {
                 i_cnt++;
             }
         }
-        // These test is probabilistic, but pass at least 99.99% cases.
         ASSERT_GT(x_cnt, 0);
         ASSERT_GT(i_cnt, 0);
         ASSERT_LT(x_cnt, i_cnt);
