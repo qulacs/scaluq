@@ -809,6 +809,7 @@ TYPED_TEST(BatchedGateTest, ApplyProbabilisticGate) {
                 }
             }
         }
+        // These test is probabilistic, but pass at least 99.9% cases.
         for (std::size_t i = 0; i < BATCH_SIZE; i++) {
             ASSERT_GT(x_counts[i], 0);
             ASSERT_GT(i_counts[i], 0);

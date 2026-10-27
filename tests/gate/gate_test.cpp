@@ -865,6 +865,7 @@ TYPED_TEST(GateTest, ApplyProbabilisticGate) {
                 i_cnt++;
             }
         }
+        // These test is probabilistic, but pass at least 99.99% cases.
         ASSERT_GT(x_cnt, 0);
         ASSERT_GT(i_cnt, 0);
         ASSERT_LT(x_cnt, i_cnt);
