@@ -13,6 +13,24 @@ template <typename T>
 class CircuitOptimizeTest : public FixtureBase<T> {};
 TYPED_TEST_SUITE(CircuitOptimizeTest, TestTypes, NameGenerator);
 
+TYPED_TEST(CircuitOptimizeTest, RemovesCancelledOperandsFromWaitingGates) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    std::vector<Circuit<Prec>> circuits(2);
+    circuits[0].add_gate(gate::CX<Prec>(0, 1));
+    circuits[0].add_gate(gate::CX<Prec>(0, 1));
+    circuits[1].add_gate(gate::Pauli<Prec>(PauliOperator<Prec>("X 0 X 1")));
+    circuits[1].add_gate(gate::X<Prec>(0));
+    for (auto& circuit : circuits) {
+        auto expected = StateVector<Prec, Space>::Haar_random_state(2, 17);
+        auto actual = expected.copy();
+        circuit.update_quantum_state(expected);
+        circuit.template optimize<Space>();
+        circuit.update_quantum_state(actual);
+        EXPECT_TRUE(same_state(expected, actual));
+    }
+}
+
 TYPED_TEST(CircuitOptimizeTest, Basic) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;

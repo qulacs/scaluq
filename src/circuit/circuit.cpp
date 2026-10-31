@@ -107,7 +107,6 @@ void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
         }
     }
     std::mt19937_64 random_engine(internal::resolve_seed(seed));
-    std::uint64_t unreset_measured_qubit_mask = 0ULL;
     internal::ExecutionContext<Prec, Space> context{state, classical_register, random_engine};
     for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
         const auto& classical_condition = _classical_conditions[idx];
@@ -117,25 +116,9 @@ void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
         auto&& gate = _gate_list[idx];
         if (gate.index() == 0) {
             const auto& fixed_gate = std::get<0>(gate);
-            if ((unreset_measured_qubit_mask & fixed_gate->operand_qubit_mask()) != 0ULL) {
-                throw std::runtime_error(
-                    "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
-                    "and has not been reset.");
-            }
             fixed_gate->update_quantum_state(context);
-            if (fixed_gate.gate_type() == GateType::Measurement) {
-                const auto measurement_gate = MeasurementGate<Prec>(fixed_gate);
-                if (!measurement_gate->reset()) {
-                    unreset_measured_qubit_mask |= measurement_gate->target_qubit_mask();
-                }
-            }
         } else {
             const auto& [param_gate, key] = std::get<1>(gate);
-            if ((unreset_measured_qubit_mask & param_gate->operand_qubit_mask()) != 0ULL) {
-                throw std::runtime_error(
-                    "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
-                    "and has not been reset.");
-            }
             param_gate->update_quantum_state(context, parameters.at(key));
         }
     }
@@ -186,7 +169,6 @@ void Circuit<Prec>::update_quantum_state(
         }
     }
     std::mt19937_64 random_engine(internal::resolve_seed(seed));
-    std::uint64_t unreset_measured_qubit_mask = 0ULL;
     internal::ExecutionContextBatched<Prec, Space> context{
         states, classical_register, random_engine};
     for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
@@ -209,25 +191,9 @@ void Circuit<Prec>::update_quantum_state(
         }
         if (gate.index() == 0) {
             const auto& fixed_gate = std::get<0>(gate);
-            if ((unreset_measured_qubit_mask & fixed_gate->operand_qubit_mask()) != 0ULL) {
-                throw std::runtime_error(
-                    "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
-                    "and has not been reset.");
-            }
             fixed_gate->update_quantum_state(context);
-            if (fixed_gate.gate_type() == GateType::Measurement) {
-                const auto measurement_gate = MeasurementGate<Prec>(fixed_gate);
-                if (!measurement_gate->reset()) {
-                    unreset_measured_qubit_mask |= measurement_gate->target_qubit_mask();
-                }
-            }
         } else {
             const auto& [param_gate, key] = std::get<1>(gate);
-            if ((unreset_measured_qubit_mask & param_gate->operand_qubit_mask()) != 0ULL) {
-                throw std::runtime_error(
-                    "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
-                    "and has not been reset.");
-            }
             param_gate->update_quantum_state(context, parameters.at(key));
         }
     }
@@ -456,6 +422,10 @@ void Circuit<Prec>::optimize(std::uint64_t max_block_size) {
                     merge_gate<Prec, Space>(gate_pool[idx], merged_gate);
                 merged_gate = new_merged_gate;
                 global_phase += phase;
+                // Cancellation can remove operands from the merged gate.
+                for (std::uint64_t operand : gate_pool[idx]->operand_qubit_list()) {
+                    waiting_gate_idx_at_qubit[operand] = NO_GATES;
+                }
             }
 
             // wait

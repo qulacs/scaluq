@@ -480,11 +480,6 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
             "Apply gate to the StateVectorBatched with classical register. If the circuit "
             "contains parametric gate, give parameter values as "
             "\"name=[value1, value2, ...]\" in kwargs.")
-        .def("optimize",
-             nb::overload_cast<std::uint64_t>(&Circuit<Prec>::template optimize<Space>),
-             "max_block_size"_a = 3,
-             "Optimize circuit. Create qubit dependency tree and merge neighboring gates if the "
-             "new gate has less than or equal to `max_block_size` or the new gate is Pauli.")
         .def(
             "simulate_noise",
             [](const Circuit<Prec>& circuit,
@@ -708,6 +703,25 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
         .def("copy",
              &Circuit<Prec>::copy,
              "Copy circuit. Returns a new circuit instance with all gates copied by reference.")
+        .def(
+            "optimize",
+            [](Circuit<Prec>& circuit, std::uint64_t max_block_size, const std::string& space) {
+                if (space == "default") {
+                    circuit.template optimize<ExecutionSpace::Default>(max_block_size);
+                } else if (space == "host") {
+                    circuit.template optimize<ExecutionSpace::Host>(max_block_size);
+                } else if (space == "host_serial") {
+                    circuit.template optimize<ExecutionSpace::HostSerial>(max_block_size);
+                } else {
+                    throw std::invalid_argument("Unsupported execution space: " + space);
+                }
+            },
+            "max_block_size"_a = 3,
+            nb::kw_only(),
+            "space"_a = "default",
+            "Merge neighboring gates, limiting matrix blocks to max_block_size qubits. "
+            "Choose space to match the state that will execute the optimized circuit: "
+            "'default', 'host', or 'host_serial'.")
         .def("get_inverse",
              &Circuit<Prec>::get_inverse,
              "Get inverse of circuit. All the gates are newly created.")
