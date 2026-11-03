@@ -331,6 +331,52 @@ struct DmPermutationBlockOp {
     }
 };
 
+// Superoperator acting on the vectorized N×N block: vec(B) → S vec(B), with vec index i*N+j.
+// Used for uncontrolled CPTP maps such as mixtures Σ p_k U_k ρ U_k†. S is stored row-compressed
+// because typical channels (Pauli noise, permutation-like gates) are very sparse.
+template <Precision Prec, ExecutionSpace Space, int N>
+struct DmSuperoperatorBlockOp {
+    using C = Complex<Prec>;
+    static constexpr int M = N * N;
+    typename DensityMatrix<Prec, Space>::RawView raw;
+    Kokkos::Array<std::uint64_t, N> off;
+    Kokkos::Array<C, M * M> val;
+    Kokkos::Array<std::uint8_t, M * M> col;
+    Kokkos::Array<std::uint16_t, M + 1> ptr;
+
+    // `dense(y, x)` returns S(y, x).
+    template <class Dense>
+    DmSuperoperatorBlockOp(typename DensityMatrix<Prec, Space>::RawView raw_,
+                           std::uint64_t group_mask,
+                           const Dense& dense)
+        : raw(raw_), off(dm_group_offsets<N>(group_mask)) {
+        int nnz = 0;
+        for (int y = 0; y < M; ++y) {
+            ptr[y] = static_cast<std::uint16_t>(nnz);
+            for (int x = 0; x < M; ++x) {
+                const C v = dense(y, x);
+                if (v.real() != Float<Prec>{0} || v.imag() != Float<Prec>{0}) {
+                    val[nnz] = v;
+                    col[nnz] = static_cast<std::uint8_t>(x);
+                    ++nnz;
+                }
+            }
+        }
+        ptr[M] = static_cast<std::uint16_t>(nnz);
+    }
+
+    KOKKOS_INLINE_FUNCTION void operator()(std::uint64_t rb, std::uint64_t cb, bool, bool) const {
+        C v[M];
+        for (int i = 0; i < N; ++i)
+            for (int j = 0; j < N; ++j) v[i * N + j] = raw(rb ^ off[i], cb ^ off[j]);
+        for (int y = 0; y < M; ++y) {
+            C acc(0);
+            for (int e = ptr[y]; e < ptr[y + 1]; ++e) acc += val[e] * v[col[e]];
+            raw(rb ^ off[y / N], cb ^ off[y % N]) = acc;
+        }
+    }
+};
+
 // ---------------------------------------------------------------------------------------------
 // Convenience entry points
 // ---------------------------------------------------------------------------------------------
