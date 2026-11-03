@@ -137,6 +137,15 @@ public:
                               const std::map<std::string, double>& parameters = {},
                               std::optional<std::uint64_t> seed = std::nullopt) const;
     template <ExecutionSpace Space>
+    void update_quantum_state(DensityMatrix<Prec, Space>& state,
+                              const std::map<std::string, double>& parameters = {},
+                              std::optional<std::uint64_t> seed = std::nullopt) const;
+    template <ExecutionSpace Space>
+    void update_quantum_state(DensityMatrix<Prec, Space>& state,
+                              ClassicalRegister& classical_register,
+                              const std::map<std::string, double>& parameters = {},
+                              std::optional<std::uint64_t> seed = std::nullopt) const;
+    template <ExecutionSpace Space>
     void update_quantum_state(StateVectorBatched<Prec, Space>& states,
                               const std::map<std::string, std::vector<double>>& parameters = {},
                               std::optional<std::uint64_t> seed = std::nullopt) const;
@@ -263,6 +272,49 @@ void update_circuit_state(const Circuit<Prec>& circuit,
 
 template <Precision Prec, ExecutionSpace Space>
 void update_circuit_state(const Circuit<Prec>& circuit,
+                          DensityMatrix<Prec, Space>* state,
+                          ClassicalRegisterVariant classical_register,
+                          const CircuitParameterVariant& parameter_arg,
+                          std::optional<std::uint64_t> seed,
+                          const nb::kwargs& kwargs) {
+    CircuitSingleParameters parameters;
+    if (const auto* value = std::get_if<CircuitSingleParameters>(&parameter_arg)) {
+        parameters = *value;
+    } else if (const auto* value = std::get_if<CircuitBatchedParameters>(&parameter_arg)) {
+        if (!value->empty()) {
+            throw std::runtime_error(
+                "Circuit::update_quantum_state(): DensityMatrix requires dict[str, float] "
+                "parameters.");
+        }
+    }
+    for (auto&& [key, param] : kwargs) {
+        if (!std::holds_alternative<std::monostate>(parameter_arg)) {
+            throw std::runtime_error(
+                "Circuit::update_quantum_state(): parameters were specified both as dict and "
+                "kwargs.");
+        }
+        parameters[nb::cast<std::string>(key)] = nb::cast<double>(param);
+    }
+
+    std::visit(
+        Overloaded{[&](std::monostate) {
+                       circuit.template update_quantum_state<Space>(
+                           *state, parameters, seed.value_or(std::random_device{}()));
+                   },
+                   [&](ClassicalRegister* reg) {
+                       circuit.template update_quantum_state<Space>(
+                           *state, *reg, parameters, seed.value_or(std::random_device{}()));
+                   },
+                   [&](ClassicalRegisterBatched*) {
+                       throw std::runtime_error(
+                           "Circuit::update_quantum_state(): ClassicalRegisterBatched cannot be "
+                           "used with DensityMatrix.");
+                   }},
+        classical_register);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+void update_circuit_state(const Circuit<Prec>& circuit,
                           StateVectorBatched<Prec, Space>* states,
                           ClassicalRegisterVariant classical_register,
                           const CircuitParameterVariant& parameter_arg,
@@ -309,7 +361,7 @@ void register_circuit_update_quantum_state(nb::class_<Circuit<Prec>>& c) {
     using namespace nb::literals;
 
     constexpr const char* update_signature =
-        "def update_quantum_state(self, state: StateVector | StateVectorBatched, "
+        "def update_quantum_state(self, state: StateVector | StateVectorBatched | DensityMatrix, "
         "*, params: Mapping[str, float] | Mapping[str, Sequence[float]] | None = None, "
         "classical_register: scaluq.scaluq_core.ClassicalRegister | "
         "scaluq.scaluq_core.ClassicalRegisterBatched | None = None, seed: int | None = "
@@ -320,7 +372,10 @@ void register_circuit_update_quantum_state(nb::class_<Circuit<Prec>>& c) {
             .desc(
                 "Parameters can be passed as a dict or keyword arguments. For batched states, "
                 "parameter values must be sequences with length equal to batch size.")
-            .arg("state", "StateVector | StateVectorBatched", "State vector to be updated.")
+            .arg("state",
+                 "StateVector | StateVectorBatched | DensityMatrix",
+                 "State to be updated. A DensityMatrix is updated as ρ → UρU†; probabilistic "
+                 "gates act as the corresponding mixture.")
             .arg("params",
                  "Mapping[str, float] | Mapping[str, Sequence[float]] | None",
                  "Parameter dictionary. Use float values for `StateVector` and sequences for "
