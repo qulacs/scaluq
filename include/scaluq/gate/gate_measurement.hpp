@@ -40,6 +40,15 @@ public:
     void update_quantum_state(
         ExecutionContextBatched<Prec, ExecutionSpace::Default>& context) const override;
 #endif  // SCALUQ_USE_DEVICE
+    // Samples an outcome, projects ρ onto it (renormalized) and records it, like StateVector.
+    void update_quantum_state(
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>& context) const override;
+    void update_quantum_state(
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>& context) const override;
+#ifdef SCALUQ_USE_DEVICE
+    void update_quantum_state(
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>& context) const override;
+#endif  // SCALUQ_USE_DEVICE
 
     std::string to_string(const std::string& indent) const override;
 
