@@ -22,8 +22,8 @@
 
 namespace scaluq::internal {
 
-// Inverse of insert_zero_at_mask_positions restricted to `mask`: deposits the low bits of
-// `value` into the set bits of `mask` (pdep).
+// Deposits the low bits of `value` into the set bits of `mask`, lowest first (software pdep).
+// Complements insert_zero_at_mask_positions, which fills the clear bits of the mask instead.
 KOKKOS_INLINE_FUNCTION std::uint64_t deposit_bits(std::uint64_t value, std::uint64_t mask) {
     std::uint64_t result = 0;
     for (std::uint64_t m = mask; m; m &= m - 1) {
@@ -33,6 +33,8 @@ KOKKOS_INLINE_FUNCTION std::uint64_t deposit_bits(std::uint64_t value, std::uint
     return result;
 }
 
+// Gathers the bits of `value` at the set bits of `mask` into the low bits of the result
+// (software pext); the inverse of deposit_bits.
 inline std::uint64_t extract_bits(std::uint64_t value, std::uint64_t mask) {
     std::uint64_t result = 0;
     std::uint64_t out_bit = 1;
