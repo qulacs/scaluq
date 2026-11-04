@@ -1,5 +1,6 @@
 #include <scaluq/gate/param_gate_probabilistic.hpp>
 
+#include "dm_mixture.hpp"
 #include "update_ops.hpp"
 
 namespace scaluq::internal {
@@ -192,6 +193,74 @@ void ParamProbabilisticGateImpl<Prec>::update_quantum_state(
     }
 }
 #endif
+namespace {
+template <Precision Prec, ExecutionSpace Space, class GateVariant>
+void update_param_probabilistic_dm(const std::vector<double>& distribution,
+                                   const std::vector<GateVariant>& gate_list,
+                                   double param,
+                                   ExecutionContextDensityMatrix<Prec, Space>& context) {
+    std::uint64_t operand_mask = 0;
+    for (const auto& gate : gate_list)
+        operand_mask |= std::visit([](const auto& g) { return g->operand_qubit_mask(); }, gate);
+    if (operand_mask >> context.state->n_qubits()) {
+        throw std::runtime_error(
+            "Error: ParamProbabilisticGate::update_quantum_state(DensityMatrix& dm): "
+            "Target/Control qubit exceeds the number of qubits in the system.");
+    }
+    std::optional<std::vector<DmMixtureTerm>> terms;
+    try {
+        std::vector<DmMixtureTerm> t;
+        t.reserve(gate_list.size());
+        for (std::size_t i = 0; i < gate_list.size(); ++i) {
+            const auto& gate = gate_list[i];
+            if (gate.index() == 0) {
+                const auto& g = std::get<0>(gate);
+                t.push_back({distribution[i],
+                             g->target_qubit_mask(),
+                             g->control_qubit_mask(),
+                             g->control_value_mask(),
+                             g->get_matrix()});
+            } else {
+                const auto& g = std::get<1>(gate);
+                t.push_back({distribution[i],
+                             g->target_qubit_mask(),
+                             g->control_qubit_mask(),
+                             g->control_value_mask(),
+                             g->get_matrix(param)});
+            }
+        }
+        terms = std::move(t);
+    } catch (const std::runtime_error&) {
+        // Some term has no matrix representation; fall back to the general path.
+    }
+    if (terms && apply_mixture_superoperator(*terms, *context.state)) return;
+    apply_mixture_general(
+        distribution,
+        [&](std::size_t i, DensityMatrix<Prec, Space>& state) {
+            ExecutionContextDensityMatrix<Prec, Space> sub{
+                state, *context.classical_register, *context.random_engine};
+            const auto& gate = gate_list[i];
+            if (gate.index() == 0) {
+                std::get<0>(gate)->update_quantum_state(sub);
+            } else {
+                std::get<1>(gate)->update_quantum_state(sub, param);
+            }
+        },
+        *context.state);
+}
+}  // namespace
+#define DEFINE_PARAM_PROBABILISTIC_DM_UPDATE(Space)                                \
+    template <Precision Prec>                                                      \
+    void ParamProbabilisticGateImpl<Prec>::update_quantum_state(                   \
+        ExecutionContextDensityMatrix<Prec, Space>& context, double param) const { \
+        update_param_probabilistic_dm(_distribution, _gate_list, param, context);  \
+    }
+DEFINE_PARAM_PROBABILISTIC_DM_UPDATE(ExecutionSpace::Host)
+DEFINE_PARAM_PROBABILISTIC_DM_UPDATE(ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_DEVICE
+DEFINE_PARAM_PROBABILISTIC_DM_UPDATE(ExecutionSpace::Default)
+#endif
+#undef DEFINE_PARAM_PROBABILISTIC_DM_UPDATE
 template class ParamProbabilisticGateImpl<Prec>;
 
 template <Precision Prec>

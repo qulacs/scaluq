@@ -1,11 +1,14 @@
 // Density-matrix coverage for every gate kind, every control pattern and the gates that
-// previously had no DensityMatrix support (SparseMatrix, Probabilistic, Measurement).
+// previously had no DensityMatrix support (SparseMatrix, Probabilistic, Measurement,
+// ParamGate, Circuit).
 
 #include <gtest/gtest.h>
 
 #include <Eigen/QR>
 #include <random>
+#include <scaluq/circuit/circuit.hpp>
 #include <scaluq/gate/gate_factory.hpp>
+#include <scaluq/gate/param_gate_factory.hpp>
 #include <scaluq/state/density_matrix.hpp>
 
 #include "../test_environment.hpp"
@@ -326,4 +329,89 @@ TYPED_TEST(DMExtendedTest, MeasurementProjectsAndRecords) {
             expect_matrix_near<Prec>(dm.get_matrix(), expected, eps<Prec> * 10, "Measurement");
         }
     }
+}
+
+TYPED_TEST(DMExtendedTest, ParamGatesMatchFixedGates) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    constexpr std::uint64_t n = 5;
+    const double coef = 1.5, param = 0.37;
+    const std::vector<std::pair<ParamGate<Prec>, Gate<Prec>>> cases = {
+        {gate::ParamRX<Prec>(2, coef), gate::RX<Prec>(2, coef * param)},
+        {gate::ParamRY<Prec>(0, coef, {3}, {0}), gate::RY<Prec>(0, coef * param, {3}, {0})},
+        {gate::ParamRZ<Prec>(4, coef, {1, 2}), gate::RZ<Prec>(4, coef * param, {1, 2})},
+        {gate::ParamPauliRotation<Prec>(PauliOperator<Prec>("X 0 Y 3"), coef, {2}),
+         gate::PauliRotation<Prec>(PauliOperator<Prec>("X 0 Y 3"), coef * param, {2})},
+    };
+    for (const auto& [pg, g] : cases) {
+        auto dm1 = DensityMatrix<Prec, Space>::Haar_random_state(n);
+        auto dm2 = dm1.copy();
+        pg->update_quantum_state(dm1, param);
+        g->update_quantum_state(dm2);
+        expect_matrix_near<Prec>(dm1.get_matrix(), dm2.get_matrix(), eps<Prec> * 10, "ParamGate");
+    }
+
+    // ParamProbabilistic mixes fixed and parametric gates.
+    auto pp = gate::ParamProbabilistic<Prec>({0.3, 0.7},
+                                             {gate::X<Prec>(1), gate::ParamRY<Prec>(1, coef)});
+    check_mixture<Prec, Space>(
+        n,
+        gate::Probabilistic<Prec>({0.3, 0.7}, {gate::X<Prec>(1), gate::RY<Prec>(1, coef * param)}),
+        {0.3, 0.7},
+        {gate::X<Prec>(1), gate::RY<Prec>(1, coef * param)},
+        "reference mixture");
+    auto dm1 = DensityMatrix<Prec, Space>::Haar_random_state(n);
+    auto dm2 = dm1.copy();
+    pp->update_quantum_state(dm1, param);
+    gate::Probabilistic<Prec>({0.3, 0.7}, {gate::X<Prec>(1), gate::RY<Prec>(1, coef * param)})
+        ->update_quantum_state(dm2);
+    expect_matrix_near<Prec>(
+        dm1.get_matrix(), dm2.get_matrix(), eps<Prec> * 10, "ParamProbabilistic");
+}
+
+TYPED_TEST(DMExtendedTest, CircuitOnPureStateMatchesStateVector) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    constexpr std::uint64_t n = 5;
+    std::mt19937_64 rng(3);
+    Circuit<Prec> circuit;
+    circuit.add_gate(gate::H<Prec>(0));
+    circuit.add_gate(gate::CX<Prec>(0, 3));
+    circuit.add_param_gate(gate::ParamRX<Prec>(2, 1.), "a");
+    circuit.add_gate(gate::DenseMatrix<Prec, Space>({1, 2, 4}, random_unitary(3, rng), {0}));
+    circuit.add_gate(gate::SparseMatrix<Prec, Space>({3, 4}, random_unitary(2, rng).sparseView()));
+    circuit.add_param_gate(gate::ParamPauliRotation<Prec>(PauliOperator<Prec>("Z 1 X 4")), "b");
+    circuit.add_gate(gate::Swap<Prec>(1, 4, {2}, {0}));
+    const std::map<std::string, double> params = {{"a", 0.3}, {"b", -0.8}};
+
+    auto sv = StateVector<Prec, Space>::Haar_random_state(n);
+    DensityMatrix<Prec, Space> dm(sv);
+    circuit.update_quantum_state(sv, params);
+    circuit.update_quantum_state(dm, params);
+    expect_matrix_near<Prec>(
+        dm.get_matrix(), DensityMatrix<Prec, Space>(sv).get_matrix(), eps<Prec> * 10, "Circuit");
+}
+
+TYPED_TEST(DMExtendedTest, CircuitWithNoiseAndMeasurement) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    constexpr std::uint64_t n = 3;
+    Circuit<Prec> circuit;
+    circuit.add_gate(gate::H<Prec>(0));
+    circuit.add_gate(gate::DepolarizingNoise<Prec>(0, 0.2));
+    circuit.add_gate(gate::CX<Prec>(0, 1));
+    circuit.add_gate(gate::Measurement<Prec>(1, 0, true));
+
+    DensityMatrix<Prec, Space> dm(n);
+    ClassicalRegister reg(1);
+    circuit.update_quantum_state(dm, reg, {}, 1234);
+    ASSERT_NEAR(dm.get_trace().real(), 1., eps<Prec> * 10);
+    // After measuring qubit 1 with reset, qubit 1 is |0> and qubit 0 collapsed to `reg[0]`.
+    const ComplexMatrix m = dm.get_matrix();
+    const std::uint64_t basis = reg[0] ? 0b001 : 0b000;
+    ASSERT_NEAR(m(basis, basis).real(), 1., eps<Prec> * 10);
+
+    // A circuit with a measurement needs a classical register.
+    DensityMatrix<Prec, Space> dm2(n);
+    ASSERT_THROW(circuit.update_quantum_state(dm2), std::runtime_error);
 }

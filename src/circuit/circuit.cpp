@@ -143,6 +143,73 @@ void Circuit<Prec>::update_quantum_state(StateVector<Prec, Space>& state,
 
 template <Precision Prec>
 template <ExecutionSpace Space>
+void Circuit<Prec>::update_quantum_state(DensityMatrix<Prec, Space>& state,
+                                         const std::map<std::string, double>& parameters,
+                                         std::optional<std::uint64_t> seed) const {
+    if (has_classical_instructions()) {
+        throw std::runtime_error(
+            "Circuit::update_quantum_state(DensityMatrix&, ...): a classical register is required "
+            "when the circuit contains measurement or classically controlled instructions.");
+    }
+    ClassicalRegister classical_register(0);
+    update_quantum_state(state, classical_register, parameters, seed);
+}
+
+template <Precision Prec>
+template <ExecutionSpace Space>
+void Circuit<Prec>::update_quantum_state(DensityMatrix<Prec, Space>& state,
+                                         ClassicalRegister& classical_register,
+                                         const std::map<std::string, double>& parameters,
+                                         std::optional<std::uint64_t> seed) const {
+    check_state_vector_n_qubits(state.n_qubits());
+    for (auto&& gate : _gate_list) {
+        if (gate.index() == 0) continue;
+        const auto& key = std::get<1>(gate).second;
+        if (!parameters.contains(key)) {
+            using namespace std::string_literals;
+            throw std::runtime_error(
+                "Circuit::update_quantum_state(DensityMatrix&, const std::map<std::string, double>&) const: parameter named "s +
+                std::string(key) + "is not given.");
+        }
+    }
+    std::mt19937_64 random_engine(internal::resolve_seed(seed));
+    std::uint64_t unreset_measured_qubit_mask = 0ULL;
+    internal::ExecutionContextDensityMatrix<Prec, Space> context{
+        state, classical_register, random_engine};
+    for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
+        const auto& classical_condition = _classical_conditions[idx];
+        if (classical_condition && !(*classical_condition)(classical_register)) {
+            continue;
+        }
+        auto&& gate = _gate_list[idx];
+        if (gate.index() == 0) {
+            const auto& fixed_gate = std::get<0>(gate);
+            if ((unreset_measured_qubit_mask & fixed_gate->operand_qubit_mask()) != 0ULL) {
+                throw std::runtime_error(
+                    "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
+                    "and has not been reset.");
+            }
+            fixed_gate->update_quantum_state(context);
+            if (fixed_gate.gate_type() == GateType::Measurement) {
+                const auto measurement_gate = MeasurementGate<Prec>(fixed_gate);
+                if (!measurement_gate->reset()) {
+                    unreset_measured_qubit_mask |= measurement_gate->target_qubit_mask();
+                }
+            }
+        } else {
+            const auto& [param_gate, key] = std::get<1>(gate);
+            if ((unreset_measured_qubit_mask & param_gate->operand_qubit_mask()) != 0ULL) {
+                throw std::runtime_error(
+                    "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
+                    "and has not been reset.");
+            }
+            param_gate->update_quantum_state(context, parameters.at(key));
+        }
+    }
+}
+
+template <Precision Prec>
+template <ExecutionSpace Space>
 void Circuit<Prec>::update_quantum_state(
     StateVectorBatched<Prec, Space>& states,
     const std::map<std::string, std::vector<double>>& parameters,
@@ -289,6 +356,38 @@ template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Defa
     StateVectorBatched<internal::Prec, ExecutionSpace::Default>& states,
     ClassicalRegisterBatched& classical_register,
     const std::map<std::string, std::vector<double>>& parameters,
+    std::optional<std::uint64_t> seed) const;
+#endif  // SCALUQ_USE_DEVICE
+
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
+    DensityMatrix<internal::Prec, ExecutionSpace::Host>& state,
+    const std::map<std::string, double>& parameters,
+    std::optional<std::uint64_t> seed) const;
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Host>(
+    DensityMatrix<internal::Prec, ExecutionSpace::Host>& state,
+    ClassicalRegister& classical_register,
+    const std::map<std::string, double>& parameters,
+    std::optional<std::uint64_t> seed) const;
+
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
+    DensityMatrix<internal::Prec, ExecutionSpace::HostSerial>& state,
+    const std::map<std::string, double>& parameters,
+    std::optional<std::uint64_t> seed) const;
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::HostSerial>(
+    DensityMatrix<internal::Prec, ExecutionSpace::HostSerial>& state,
+    ClassicalRegister& classical_register,
+    const std::map<std::string, double>& parameters,
+    std::optional<std::uint64_t> seed) const;
+
+#ifdef SCALUQ_USE_DEVICE
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
+    DensityMatrix<internal::Prec, ExecutionSpace::Default>& state,
+    const std::map<std::string, double>& parameters,
+    std::optional<std::uint64_t> seed) const;
+template void Circuit<internal::Prec>::update_quantum_state<ExecutionSpace::Default>(
+    DensityMatrix<internal::Prec, ExecutionSpace::Default>& state,
+    ClassicalRegister& classical_register,
+    const std::map<std::string, double>& parameters,
     std::optional<std::uint64_t> seed) const;
 #endif  // SCALUQ_USE_DEVICE
 
