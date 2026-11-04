@@ -1,6 +1,7 @@
 #pragma once
 
 #include <complex>
+#include <cstddef>
 #include <vector>
 
 #ifdef SCALUQ_STATIC_ANALYSIS
@@ -9,6 +10,7 @@
 
 namespace Eigen {
 
+using Index = std::ptrdiff_t;
 constexpr int Dynamic = -1;
 constexpr int RowMajor = 1;
 
