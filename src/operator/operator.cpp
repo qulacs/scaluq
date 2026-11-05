@@ -594,7 +594,7 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
     }
     Eigen::SelfAdjointEigenSolver<ComplexMatrix> solver(
         hessenberg.topLeftCorner(effective_count, effective_count));
-    if (solver.info() != Eigen::Success)
+    if (solver.info() != Eigen::ComputationInfo::Success)
         throw std::runtime_error("Krylov eigenvalue solver failed.");
     auto state =
         StateVector<internal::Prec, internal::Space>::uninitialized_state(initial_state.n_qubits());
