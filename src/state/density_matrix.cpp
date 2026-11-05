@@ -358,7 +358,7 @@ double DensityMatrix<Prec, Space>::get_zero_probability(std::uint64_t target_qub
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> 1),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, double& internal_sum) {
             std::uint64_t basis = internal::insert_zero_to_basis_index(i, target_qubit_index);
-            internal_sum += _raw(basis, basis).real();
+            internal_sum += static_cast<double>(_raw(basis, basis).real());
         },
         zero_prob);
     return static_cast<double>(zero_prob);
@@ -406,7 +406,7 @@ double DensityMatrix<Prec, Space>::get_marginal_probability(
                 basis = internal::insert_zero_to_basis_index(basis, insert_index);
                 basis |= d_target_value(cursor) << insert_index;
             }
-            lsum += _raw(basis, basis).real();
+            lsum += static_cast<double>(_raw(basis, basis).real());
         },
         sum);
 
