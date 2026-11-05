@@ -6,6 +6,105 @@
 #include <scaluq/util/utility.hpp>
 
 namespace scaluq {
+namespace {
+template <Precision Prec>
+void check_gradient_circuit(const Circuit<Prec>& circuit,
+                            const std::map<std::string, double>& parameters) {
+    constexpr double tolerance = Prec == Precision::F64   ? 1e-12
+                                 : Prec == Precision::F32 ? 1e-5
+                                 : Prec == Precision::F16 ? 0.005
+                                                          : 0.02;
+    for (std::uint64_t i = 0; i < circuit.n_gates(); ++i) {
+        if (circuit.get_classical_condition_at(i)) {
+            throw std::invalid_argument(
+                "Expectation gradient does not support classical conditions.");
+        }
+        const auto& entry = circuit.get_gate_at(i);
+        if (entry.index() == 1) {
+            const auto& [gate, key] = std::get<1>(entry);
+            const auto value = parameters.find(key);
+            if (value == parameters.end() || !std::isfinite(value->second) ||
+                !std::isfinite(gate->param_coef()) ||
+                !std::isfinite(gate->param_coef() * value->second)) {
+                throw std::invalid_argument(
+                    "Expectation gradient requires finite parameters and coefficients.");
+            }
+            switch (gate.param_gate_type()) {
+                case ParamGateType::ParamRX:
+                case ParamGateType::ParamRY:
+                case ParamGateType::ParamRZ:
+                    break;
+                case ParamGateType::ParamPauliRotation: {
+                    const auto coef = ParamPauliRotationGate<Prec>(gate)->pauli().coef();
+                    if (!std::isfinite(coef.real()) || coef.imag() != 0.) {
+                        throw std::invalid_argument(
+                            "Expectation gradient requires Hermitian rotation generators.");
+                    }
+                    break;
+                }
+                default:
+                    throw std::invalid_argument(
+                        "Expectation gradient requires deterministic unitary gates.");
+            }
+            continue;
+        }
+        const auto& gate = std::get<0>(entry);
+        switch (gate.gate_type()) {
+            case GateType::Pauli: {
+                const double norm = std::norm(PauliGate<Prec>(gate)->pauli().coef());
+                if (!std::isfinite(norm) || std::abs(norm - 1.) > tolerance) {
+                    throw std::invalid_argument(
+                        "Expectation gradient requires unitary Pauli gates.");
+                }
+                continue;
+            }
+            case GateType::PauliRotation: {
+                const auto rotation = PauliRotationGate<Prec>(gate);
+                const auto coef = rotation->pauli().coef();
+                if (!std::isfinite(coef.real()) || coef.imag() != 0. ||
+                    !std::isfinite(rotation->angle())) {
+                    throw std::invalid_argument(
+                        "Expectation gradient requires unitary Pauli rotations.");
+                }
+                continue;
+            }
+            case GateType::P0:
+            case GateType::P1:
+            case GateType::Measurement:
+            case GateType::Probabilistic:
+            case GateType::SparseMatrix:
+                throw std::invalid_argument(
+                    "Expectation gradient requires deterministic gates with unitary inverses.");
+            case GateType::DenseMatrix:
+            case GateType::Unknown:
+            case GateType::GlobalPhase:
+            case GateType::RX:
+            case GateType::RY:
+            case GateType::RZ:
+            case GateType::U1:
+            case GateType::U2:
+            case GateType::U3:
+                break;
+            default:
+                continue;
+        }
+        const auto matrix = gate->get_matrix();
+        if (matrix.rows() != matrix.cols()) {
+            throw std::invalid_argument("Expectation gradient requires square unitary matrices.");
+        }
+        const auto gram = (matrix.adjoint() * matrix).eval();
+        for (decltype(gram.rows()) row = 0; row < gram.rows(); ++row) {
+            for (decltype(gram.cols()) col = 0; col < gram.cols(); ++col) {
+                const double error = std::abs(gram(row, col) - StdComplex(row == col ? 1. : 0.));
+                if (!std::isfinite(error) || error > tolerance) {
+                    throw std::invalid_argument("Expectation gradient requires unitary matrices.");
+                }
+            }
+        }
+    }
+}
+}  // namespace
+
 template <Precision Prec>
 std::set<std::string> Circuit<Prec>::key_set() const {
     std::set<std::string> key_set;
@@ -634,6 +733,7 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
     StateVector<Prec, Space>& state,
     StateVector<Prec, Space>& bistate,
     const std::map<std::string, double>& parameters) {
+    check_gradient_circuit(*this, parameters);
     if (state.n_qubits() != bistate.n_qubits()) {
         throw std::invalid_argument("Expectation gradient: state dimensions must match.");
     }

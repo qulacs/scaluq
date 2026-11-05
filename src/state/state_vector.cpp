@@ -212,6 +212,9 @@ double StateVector<Prec, Space>::get_computational_basis_entropy() const {
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::add_state_vector_with_coef(StdComplex coef,
                                                           const StateVector& state) {
+    if (dim() != state.dim()) {
+        throw std::invalid_argument("Cannot add state vectors with different dimensions.");
+    }
     Kokkos::parallel_for(
         "add_state_vector_with_coef",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
