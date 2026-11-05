@@ -19,6 +19,9 @@ public:
     struct GroundState {
         StdComplex eigenvalue;
         StateVector<Prec, Space> state;
+        double residual_norm;
+        std::uint64_t iterations;
+        bool converged;
     };
 
     Operator() = default;
@@ -66,16 +69,18 @@ public:
         const StateVectorBatched<Prec, Space>& states_bra,
         const StateVectorBatched<Prec, Space>& states_ket) const;
 
-    // not implemented yet
+    // Convergence means a small residual, not proof of the global minimum.
+    // Residual tolerance is relative to the sum of absolute Pauli coefficients (or 1 for zero).
     [[nodiscard]] GroundState solve_ground_state_by_power_method(
         const StateVector<Prec, Space>& initial_state,
         std::uint64_t iter_count,
-        std::optional<StdComplex> mu = std::nullopt) const;
-    // not implemented yet
+        std::optional<StdComplex> mu = std::nullopt,
+        std::optional<double> tolerance = std::nullopt) const;
     [[nodiscard]] GroundState solve_ground_state_by_arnoldi_method(
         const StateVector<Prec, Space>& initial_state,
         std::uint64_t iter_count,
-        std::optional<StdComplex> mu = std::nullopt) const;
+        std::optional<StdComplex> mu = std::nullopt,
+        std::optional<double> tolerance = std::nullopt) const;
 
     Operator operator*(StdComplex coef) const;
     Operator& operator*=(StdComplex coef);
@@ -230,92 +235,104 @@ void bind_operator_operator_hpp(nb::module_& m) {
              &Operator<Prec, Space>::get_full_matrix,
              "Get matrix representation of the Operator. Tensor product is applied from "
              "n_qubits-1 to 0.")
-        .def(
-            "solve_ground_state_by_power_method",
-            &Operator<Prec, Space>::solve_ground_state_by_power_method,
-            "initial_state"_a,
-            "iter_count"_a,
-            "mu"_a = std::nullopt,
-            DocString()
-                .desc("Solve for the ground state using the power method.")
-                .arg("initial_state",
-                     ":class:`StateVector`",
-                     "Initial state vector for the iteration. Passing Haar_random_state is often "
-                     "nice.")
-                .arg("iter_count", "int", "Number of iterations to perform.")
-                .arg("mu",
-                     "complex",
-                     true,
-                     "Shift value to accelerate convergence. The value must be larger than largest "
-                     "eigenvalue. If not provided, a default value is calculated internally.")
-                .ret(":class:`Operator.GroundState`",
-                     "The ground state information including eigenvalue and ground state vector.")
-                .ex(DocString::Code(
-                    {">>> terms = [PauliOperator(\"\", -3.8505), PauliOperator(\"X 1\", -0.2288), "
-                     "PauliOperator(\"Z 1\", -1.0466), PauliOperator(\"X 0\", -0.2288), "
-                     "PauliOperator(\"X 0 X 1\", 0.2613), PauliOperator(\"X 0 Z 1\", 0.2288), "
-                     "PauliOperator(\"Z 0\", -1.0466), PauliOperator(\"Z 0 X 1\", 0.2288), "
-                     "PauliOperator(\"Z 0 Z 1\", 0.2356)]",
-                     ">>> op = Operator(terms)",
-                     ">>> op *= .5",
-                     ">>> ground_state = "
-                     "op.solve_ground_state_by_power_method(StateVector.Haar_random_state(2, "
-                     "seed=0), 200)",
-                     ">>> ground_state.eigenvalue.real # doctest: +ELLIPSIS",
-                     "-2.862620764...",
-                     ">>> print(ground_state.state.get_amplitudes()) # doctest: +SKIP",
-                     "[(0.593378420...-0.801949191...j), "
-                     "(-0.00937288681...+0.0126674290...j), "
-                     "(-0.00937288706...+0.0126674292...j), "
-                     "(-0.0389261878...+0.0526086285...j)]"}))
-                .build_as_google_style()
-                .c_str())
-        .def(
-            "solve_ground_state_by_arnoldi_method",
-            &Operator<Prec, Space>::solve_ground_state_by_arnoldi_method,
-            "initial_state"_a,
-            "iter_count"_a,
-            "mu"_a = std::nullopt,
-            DocString()
-                .desc("Solve for the ground state using the Arnoldi method.")
-                .note("This works even if it is not Hermitian. An eigenvalue with the smallest "
-                      "real part is returned as the ground state.")
-                .arg("initial_state",
-                     ":class:`StateVector`",
-                     "Initial state vector for the iteration. Passing Haar_random_state is often "
-                     "nice.")
-                .arg("iter_count",
-                     "int",
-                     "Number of iterations to perform. Too large value causes error on calculating "
-                     "eigenvalue of Hessenberg matrix.")
-                .arg("mu",
-                     "complex",
-                     true,
-                     "Shift value to accelerate convergence. The value must be larger than largest "
-                     "eigenvalue. If not provided, a default value is calculated internally.")
-                .ret(":class:`Operator.GroundState`",
-                     "The ground state information including eigenvalue and ground state vector.")
-                .ex(DocString::Code(
-                    {">>> terms = [PauliOperator(\"\", -3.8505), PauliOperator(\"X 1\", -0.2288), "
-                     "PauliOperator(\"Z 1\", -1.0466), PauliOperator(\"X 0\", -0.2288), "
-                     "PauliOperator(\"X 0 X 1\", 0.2613), PauliOperator(\"X 0 Z 1\", 0.2288), "
-                     "PauliOperator(\"Z 0\", -1.0466), PauliOperator(\"Z 0 X 1\", 0.2288), "
-                     "PauliOperator(\"Z 0 Z 1\", 0.2356)]",
-                     ">>> op = Operator(terms)",
-                     ">>> op *= .5",
-                     ">>> ground_state = "
-                     "op.solve_ground_state_by_arnoldi_method(StateVector.Haar_random_state(2, "
-                     "seed=0), "
-                     "40)",
-                     ">>> ground_state.eigenvalue.real # doctest: +ELLIPSIS",
-                     "-2.862620764...",
-                     ">>> ground_state.state.get_amplitudes() # doctest: +SKIP",
-                     "[(0.593378420...-0.801949191...j), "
-                     "(-0.00937288693...+0.0126674291...j), "
-                     "(-0.00937288693...+0.0126674291...j), "
-                     "(-0.0389261878...+0.0526086285...j)]"}))
-                .build_as_google_style()
-                .c_str())
+        .def("solve_ground_state_by_power_method",
+             &Operator<Prec, Space>::solve_ground_state_by_power_method,
+             "initial_state"_a,
+             "iter_count"_a,
+             "mu"_a = std::nullopt,
+             "tolerance"_a = std::nullopt,
+             DocString()
+                 .desc("Solve for the ground state using the power method.")
+                 .arg("initial_state",
+                      ":class:`StateVector`",
+                      "Initial state vector for the iteration. Passing Haar_random_state is often "
+                      "nice.")
+                 .arg("iter_count", "int", "Number of iterations to perform.")
+                 .arg("mu",
+                      "complex",
+                      true,
+                      "Real shift. For the power method it must be large enough to make the "
+                      "ground-state eigenvalue dominant in magnitude after shifting.")
+                 .arg("tolerance",
+                      "float",
+                      true,
+                      "Residual norm divided by the sum of absolute coefficients (or 1 for a zero "
+                      "operator). Defaults: F64 1e-10, F32 1e-5, F16/BF16 0.05.")
+                 .ret(":class:`Operator.GroundState`",
+                      "Approximate eigenpair and its residual, iteration count and convergence "
+                      "status. "
+                      "A small residual does not prove this is the global ground state.")
+                 .ex(DocString::Code(
+                     {">>> terms = [PauliOperator(\"\", -3.8505), PauliOperator(\"X 1\", -0.2288), "
+                      "PauliOperator(\"Z 1\", -1.0466), PauliOperator(\"X 0\", -0.2288), "
+                      "PauliOperator(\"X 0 X 1\", 0.2613), PauliOperator(\"X 0 Z 1\", 0.2288), "
+                      "PauliOperator(\"Z 0\", -1.0466), PauliOperator(\"Z 0 X 1\", 0.2288), "
+                      "PauliOperator(\"Z 0 Z 1\", 0.2356)]",
+                      ">>> op = Operator(terms)",
+                      ">>> op *= .5",
+                      ">>> ground_state = "
+                      "op.solve_ground_state_by_power_method(StateVector.Haar_random_state(2, "
+                      "seed=0), 200)",
+                      ">>> ground_state.eigenvalue.real # doctest: +ELLIPSIS",
+                      "-2.862620764...",
+                      ">>> print(ground_state.state.get_amplitudes()) # doctest: +SKIP",
+                      "[(0.593378420...-0.801949191...j), "
+                      "(-0.00937288681...+0.0126674290...j), "
+                      "(-0.00937288706...+0.0126674292...j), "
+                      "(-0.0389261878...+0.0526086285...j)]"}))
+                 .build_as_google_style()
+                 .c_str())
+        .def("solve_ground_state_by_arnoldi_method",
+             &Operator<Prec, Space>::solve_ground_state_by_arnoldi_method,
+             "initial_state"_a,
+             "iter_count"_a,
+             "mu"_a = std::nullopt,
+             "tolerance"_a = std::nullopt,
+             DocString()
+                 .desc("Solve for the ground state using the Arnoldi method.")
+                 .note("The operator must be Hermitian.")
+                 .arg("initial_state",
+                      ":class:`StateVector`",
+                      "Initial state vector for the iteration. Passing Haar_random_state is often "
+                      "nice.")
+                 .arg("iter_count",
+                      "int",
+                      "Maximum Krylov dimension, limited to the state dimension.")
+                 .arg("mu",
+                      "complex",
+                      true,
+                      "Optional real shift, accepted for compatibility; a real shift does not "
+                      "change the Krylov space and is omitted from the computation.")
+                 .arg("tolerance",
+                      "float",
+                      true,
+                      "Residual norm divided by the sum of absolute coefficients (or 1 for a zero "
+                      "operator). Defaults: F64 1e-10, F32 1e-5, F16/BF16 0.05.")
+                 .ret(":class:`Operator.GroundState`",
+                      "Approximate eigenpair and its residual, iteration count and convergence "
+                      "status. "
+                      "A small residual does not prove this is the global ground state.")
+                 .ex(DocString::Code(
+                     {">>> terms = [PauliOperator(\"\", -3.8505), PauliOperator(\"X 1\", -0.2288), "
+                      "PauliOperator(\"Z 1\", -1.0466), PauliOperator(\"X 0\", -0.2288), "
+                      "PauliOperator(\"X 0 X 1\", 0.2613), PauliOperator(\"X 0 Z 1\", 0.2288), "
+                      "PauliOperator(\"Z 0\", -1.0466), PauliOperator(\"Z 0 X 1\", 0.2288), "
+                      "PauliOperator(\"Z 0 Z 1\", 0.2356)]",
+                      ">>> op = Operator(terms)",
+                      ">>> op *= .5",
+                      ">>> ground_state = "
+                      "op.solve_ground_state_by_arnoldi_method(StateVector.Haar_random_state(2, "
+                      "seed=0), "
+                      "40)",
+                      ">>> ground_state.eigenvalue.real # doctest: +ELLIPSIS",
+                      "-2.862620764...",
+                      ">>> ground_state.state.get_amplitudes() # doctest: +SKIP",
+                      "[(0.593378420...-0.801949191...j), "
+                      "(-0.00937288693...+0.0126674291...j), "
+                      "(-0.00937288693...+0.0126674291...j), "
+                      "(-0.0389261878...+0.0526086285...j)]"}))
+                 .build_as_google_style()
+                 .c_str())
         .def("calculate_default_mu",
              &Operator<Prec, Space>::calculate_default_mu,
              DocString()
@@ -402,7 +419,10 @@ void bind_operator_operator_hpp(nb::module_& m) {
              &Operator<Prec, Space>::to_string,
              "Get string representation of the operator.");
     ground_state.def_ro("eigenvalue", &Operator<Prec, Space>::GroundState::eigenvalue)
-        .def_ro("state", &Operator<Prec, Space>::GroundState::state);
+        .def_ro("state", &Operator<Prec, Space>::GroundState::state)
+        .def_ro("residual_norm", &Operator<Prec, Space>::GroundState::residual_norm)
+        .def_ro("iterations", &Operator<Prec, Space>::GroundState::iterations)
+        .def_ro("converged", &Operator<Prec, Space>::GroundState::converged);
 }
 }  // namespace internal
 #endif

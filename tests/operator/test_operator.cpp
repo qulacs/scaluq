@@ -1,11 +1,10 @@
 #include <gtest/gtest.h>
 
-#include <cmath>
-#include <cstdlib>
-#include <random>
-#include <string>
 #include <Eigen/Eigenvalues>
+#include <cmath>
+#include <limits>
 #include <scaluq/operator/operator.hpp>
+#include <string>
 
 #include "../test_environment.hpp"
 #include "../util/util.hpp"
@@ -369,135 +368,129 @@ TYPED_TEST(OperatorTest, Optimize) {
     }
 }
 
-// Keep randomized coverage while making a failure reproducible with its reported seed.
-inline std::uint64_t ground_state_test_seed() {
-    if (const char* value = std::getenv("SCALUQ_GROUND_STATE_TEST_SEED")) {
-        return std::stoull(value);
-    }
-    return std::random_device{}();
+template <Precision Prec, ExecutionSpace Space>
+void expect_ground_state(const Operator<Prec, Space>& op,
+                         const typename Operator<Prec, Space>::GroundState& result,
+                         double expected,
+                         double tolerance) {
+    EXPECT_TRUE(result.converged);
+    EXPECT_NEAR(result.eigenvalue.real(), expected, tolerance);
+    EXPECT_NEAR(result.eigenvalue.imag(), 0., tolerance);
+    EXPECT_NEAR(result.state.get_squared_norm(), 1., tolerance);
+    auto residual = result.state.copy();
+    op.apply_to_state(residual);
+    residual.add_state_vector_with_coef(-result.eigenvalue, result.state);
+    EXPECT_NEAR(std::sqrt(residual.get_squared_norm()), result.residual_norm, tolerance);
+    EXPECT_LE(result.residual_norm, tolerance);
 }
 
-template <Precision Prec, ExecutionSpace Space, typename Solve>
-void check_random_ground_state(Solve solve) {
-    const std::uint64_t seed = ground_state_test_seed();
-    Random random(seed);
-    for (std::uint64_t repeat = 0; repeat < 10; ++repeat) {
-        SCOPED_TRACE(::testing::Message() << "seed=" << seed << ", repeat=" << repeat);
-        std::uint64_t n = random.int32() % 4 + 3;
-        auto [op, eigen] = generate_random_observable_with_eigen<Prec, Space>(n, random);
-        Eigen::ComplexEigenSolver<ComplexMatrix> solver(eigen);
-        ASSERT_EQ(solver.info(), Eigen::ComputationInfo::Success);
-        auto eigenvalues = solver.eigenvalues();
-        StdComplex minimum_eigenvalue = *std::ranges::min_element(
-            eigenvalues, [](const auto& l, const auto& r) { return l.real() < r.real(); });
-        StateVector<Prec, Space> initial_state =
-            StateVector<Prec, Space>::Haar_random_state(n, random.int64());
-        auto ground_state = solve(op, initial_state);
-        ASSERT_NEAR(
-            std::pow(std::abs(ground_state.eigenvalue - minimum_eigenvalue), 5), 0, eps<Prec>);
-        StateVector<Prec, Space> eigenvector1 = ground_state.state.copy();
-        StateVector<Prec, Space> eigenvector2 = ground_state.state.copy();
-        op.apply_to_state(eigenvector1);
-        eigenvector2.multiply_coef(ground_state.eigenvalue);
-        auto amp1 = eigenvector1.get_amplitudes();
-        auto amp2 = eigenvector2.get_amplitudes();
-        for (std::uint64_t i : std::views::iota(0ULL, eigenvector1.dim())) {
-            ASSERT_NEAR(std::pow(std::abs(amp1[i] - amp2[i]), 5), 0, eps<Prec>);
+TYPED_TEST(OperatorTest, GroundStateKnownSpectrum) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    if constexpr (Prec == Precision::F16 || Prec == Precision::BF16) {
+        GTEST_SKIP() << "Accuracy checks require F32 or F64.";
+    } else {
+        Operator<Prec, Space> op({{"Z 0", 1.}, {"Z 1", 0.25}});
+        StateVector<Prec, Space> state(2);
+        state.load(std::vector<StdComplex>{1., 1., 1., 1.});  // Deliberately unnormalized.
+        const double tolerance = Prec == Precision::F64 ? 1e-8 : 1e-4;
+        auto power = op.solve_ground_state_by_power_method(state, 1000);
+        auto arnoldi = op.solve_ground_state_by_arnoldi_method(state, 20);
+        expect_ground_state(op, power, -1.25, tolerance);
+        expect_ground_state(op, arnoldi, -1.25, tolerance);
+        const auto shifted = op.solve_ground_state_by_arnoldi_method(state, 20, 1e8);
+        expect_ground_state(op, shifted, -1.25, tolerance);
+        EXPECT_LE(arnoldi.iterations, state.dim());
+        EXPECT_FALSE(op.solve_ground_state_by_power_method(state, 1).converged);
+        EXPECT_FALSE(op.solve_ground_state_by_arnoldi_method(state, 1).converged);
+    }
+}
+
+TYPED_TEST(OperatorTest, GroundStateInputAndBreakdown) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    Operator<Prec, Space> identity({{"", 1.}});
+    Operator<Prec, Space> z({{"Z 0", 1.}});
+    Operator<Prec, Space> out_of_range({{"Z 1", 1.}});
+    StateVector<Prec, Space> state(1);
+    state.load(std::vector<StdComplex>{1., 1.});
+    const auto arnoldi = z.solve_ground_state_by_arnoldi_method(state, 2);
+    EXPECT_TRUE(std::isfinite(arnoldi.eigenvalue.real()));
+    EXPECT_NEAR(arnoldi.eigenvalue.real(), -1., 0.1);
+    const auto power = identity.solve_ground_state_by_power_method(state, 10);
+    EXPECT_TRUE(power.converged);
+    EXPECT_TRUE(std::isfinite(power.eigenvalue.real()));
+    EXPECT_NEAR(power.eigenvalue.real(),
+                1.,
+                Prec == Precision::F16 || Prec == Precision::BF16 ? 0.05 : 1e-5);
+    EXPECT_THROW((void)z.solve_ground_state_by_power_method(state, 0), std::invalid_argument);
+    EXPECT_THROW((void)z.solve_ground_state_by_arnoldi_method(state, 0), std::invalid_argument);
+    EXPECT_THROW((void)z.solve_ground_state_by_power_method(state, 1, StdComplex(0., 1.)),
+                 std::invalid_argument);
+    EXPECT_THROW((void)z.solve_ground_state_by_arnoldi_method(state, 1, StdComplex(0., 1.)),
+                 std::invalid_argument);
+    EXPECT_THROW((void)out_of_range.solve_ground_state_by_power_method(state, 1),
+                 std::invalid_argument);
+    EXPECT_THROW((void)out_of_range.solve_ground_state_by_arnoldi_method(state, 1),
+                 std::invalid_argument);
+    EXPECT_THROW((void)z.solve_ground_state_by_power_method(state, 1, std::nullopt, 0.),
+                 std::invalid_argument);
+    state.set_zero_norm_state();
+    EXPECT_THROW((void)z.solve_ground_state_by_power_method(state, 1), std::invalid_argument);
+    EXPECT_THROW((void)z.solve_ground_state_by_arnoldi_method(state, 1), std::invalid_argument);
+    if constexpr (Prec == Precision::F32 || Prec == Precision::F64) {
+        state.load(std::vector<StdComplex>{std::numeric_limits<double>::quiet_NaN(), 1.});
+        EXPECT_THROW((void)z.solve_ground_state_by_power_method(state, 1), std::invalid_argument);
+        EXPECT_THROW((void)z.solve_ground_state_by_arnoldi_method(state, 1), std::invalid_argument);
+    }
+}
+
+TYPED_TEST(OperatorTest, ArnoldiScaleAndDegeneracy) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    if constexpr (Prec != Precision::F64) {
+        GTEST_SKIP() << "Small-scale test requires F64.";
+    } else {
+        StateVector<Prec, Space> state(2);
+        state.load(std::vector<StdComplex>{1., 1., 1., 1.});
+        Operator<Prec, Space> tiny({{"Z 0", 1e-16}});
+        const auto result = tiny.solve_ground_state_by_arnoldi_method(state, 20);
+        EXPECT_TRUE(result.converged);
+        EXPECT_NEAR(result.eigenvalue.real(), -1e-16, 1e-25);
+        EXPECT_LT(result.residual_norm, 1e-25);
+        EXPECT_LE(result.iterations, 2);
+    }
+}
+
+TYPED_TEST(OperatorTest, ArnoldiRandomHermitianMatrices) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    if constexpr (Prec == Precision::F16 || Prec == Precision::BF16) {
+        GTEST_SKIP() << "Accuracy checks require F32 or F64.";
+    } else {
+        Random random(314159);
+        for (std::uint64_t repeat = 0; repeat < 10; ++repeat) {
+            SCOPED_TRACE(repeat);
+            auto [op, unused] = generate_random_observable_with_eigen<Prec, Space>(3, random);
+            Eigen::SelfAdjointEigenSolver<ComplexMatrix> exact(op.get_full_matrix(3));
+            ASSERT_EQ(exact.info(), Eigen::Success);
+            auto state = StateVector<Prec, Space>::Haar_random_state(3, random.int64());
+            auto result = op.solve_ground_state_by_arnoldi_method(state, state.dim());
+            const double tolerance = Prec == Precision::F64 ? 1e-8 : 1e-3;
+            expect_ground_state(op, result, exact.eigenvalues()[0], tolerance);
         }
     }
 }
 
-TYPED_TEST(OperatorTest, GroundStatePowerMethod) {
+TYPED_TEST(OperatorTest, GroundStateConvergenceDoesNotProveGlobalMinimum) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
-    if constexpr (Prec == Precision::F16 || Prec == Precision::BF16) {
-        // Ground-state accuracy is not guaranteed in the performance-oriented low-precision modes.
-        GTEST_SKIP() << "Randomized ground-state accuracy is not tested for F16/BF16.";
-    } else {
-        check_random_ground_state<Prec, Space>([](const auto& op, const auto& state) {
-            return op.solve_ground_state_by_power_method(state, 1000);
-        });
+    Operator<Prec, Space> op({{"Z 0", 1.}});
+    StateVector<Prec, Space> state(1);  // |0> is an excited eigenstate.
+    for (const auto& result : {op.solve_ground_state_by_power_method(state, 4),
+                               op.solve_ground_state_by_arnoldi_method(state, 4)}) {
+        EXPECT_TRUE(result.converged);
+        EXPECT_NEAR(result.eigenvalue.real(), 1., 0.01);
+        EXPECT_LT(result.residual_norm, 0.01);
     }
-}
-
-TYPED_TEST(OperatorTest, GroundStateArnoldiMethod) {
-    constexpr Precision Prec = TestFixture::Prec;
-    constexpr ExecutionSpace Space = TestFixture::Space;
-    if constexpr (Prec == Precision::F16 || Prec == Precision::BF16) {
-        // Safety, including Krylov breakdown, is checked separately for all precisions below.
-        GTEST_SKIP() << "Randomized ground-state accuracy is not tested for F16/BF16.";
-    } else {
-        check_random_ground_state<Prec, Space>([](const auto& op, const auto& state) {
-            return op.solve_ground_state_by_arnoldi_method(
-                state, Prec == Precision::F64 ? 60 : 20);
-        });
-    }
-}
-
-TYPED_TEST(OperatorTest, PowerMethodProducesFiniteState) {
-    constexpr Precision Prec = TestFixture::Prec;
-    constexpr ExecutionSpace Space = TestFixture::Space;
-    Operator<Prec, Space> op({PauliOperator<Prec>("Z 0", 0.5)});
-    StateVector<Prec, Space> initial_state(1);
-    initial_state.load(std::vector<StdComplex>{1., 1.});
-    initial_state.normalize();
-    const auto ground_state = op.solve_ground_state_by_power_method(initial_state, 10);
-    ASSERT_TRUE(std::isfinite(ground_state.eigenvalue.real()));
-    ASSERT_TRUE(std::isfinite(ground_state.eigenvalue.imag()));
-    const auto squared_norm = ground_state.state.get_squared_norm();
-    ASSERT_TRUE(std::isfinite(squared_norm));
-    ASSERT_GT(squared_norm, 0.0);
-    for (const auto& amplitude : ground_state.state.get_amplitudes()) {
-        ASSERT_TRUE(std::isfinite(amplitude.real()));
-        ASSERT_TRUE(std::isfinite(amplitude.imag()));
-    }
-}
-
-TYPED_TEST(OperatorTest, ArnoldiGroundStateHandlesKrylovBreakdown) {
-    constexpr Precision Prec = TestFixture::Prec;
-    constexpr ExecutionSpace Space = TestFixture::Space;
-
-    Operator<Prec, Space> op({PauliOperator<Prec>("Z 0", 1.), PauliOperator<Prec>("Z 1", 1.)});
-    StateVector<Prec, Space> initial_state = StateVector<Prec, Space>::Haar_random_state(2, 0);
-    auto ground_state = op.solve_ground_state_by_arnoldi_method(initial_state, 20);
-
-    ASSERT_TRUE(std::isfinite(ground_state.eigenvalue.real()));
-    ASSERT_TRUE(std::isfinite(ground_state.eigenvalue.imag()));
-    const auto squared_norm = ground_state.state.get_squared_norm();
-    ASSERT_TRUE(std::isfinite(squared_norm));
-    ASSERT_GT(squared_norm, 0.0);
-    for (const auto& amplitude : ground_state.state.get_amplitudes()) {
-        ASSERT_TRUE(std::isfinite(amplitude.real()));
-        ASSERT_TRUE(std::isfinite(amplitude.imag()));
-    }
-    if constexpr (Prec == Precision::F32 || Prec == Precision::F64) {
-        ASSERT_NEAR(std::abs(ground_state.eigenvalue - StdComplex(-2.)), 0, eps<Prec>);
-    }
-
-    if constexpr (Prec == Precision::F32 || Prec == Precision::F64) {
-        StateVector<Prec, Space> eigenvector1 = ground_state.state.copy();
-        StateVector<Prec, Space> eigenvector2 = ground_state.state.copy();
-        op.apply_to_state(eigenvector1);
-        eigenvector2.multiply_coef(ground_state.eigenvalue);
-        auto amp1 = eigenvector1.get_amplitudes();
-        auto amp2 = eigenvector2.get_amplitudes();
-        for (std::uint64_t i : std::views::iota(0ULL, eigenvector1.dim())) {
-            ASSERT_NEAR(std::abs(amp1[i] - amp2[i]), 0, eps<Prec>);
-        }
-    }
-}
-
-TYPED_TEST(OperatorTest, ArnoldiDoesNotBreakDownOnNonzeroResidual) {
-    constexpr Precision Prec = TestFixture::Prec;
-    constexpr ExecutionSpace Space = TestFixture::Space;
-
-    // The first orthogonalized residual has norm 0.5. In BF16, the former
-    // 100 * epsilon threshold (0.78125) incorrectly stopped after one basis vector.
-    Operator<Prec, Space> op({PauliOperator<Prec>("Z 0", 0.5)});
-    StateVector<Prec, Space> initial_state(1);
-    initial_state.load(std::vector<StdComplex>{1., 1.});
-    initial_state.normalize();
-    const auto ground_state = op.solve_ground_state_by_arnoldi_method(initial_state, 2);
-    ASSERT_TRUE(std::isfinite(ground_state.eigenvalue.real()));
-    ASSERT_NEAR(ground_state.eigenvalue.real(), -0.5, 0.1);
 }

@@ -1,10 +1,9 @@
 #include <Eigen/Eigenvalues>
+#include <cmath>
+#include <limits>
 #include <scaluq/operator/operator.hpp>
 #include <scaluq/prec_space.hpp>
 #include <scaluq/util/math.hpp>
-
-#include <cmath>
-#include <limits>
 
 namespace scaluq {
 template <>
@@ -449,47 +448,102 @@ Operator<internal::Prec, internal::Space>::copy_to_host_space() const {
 
 template <>
 StdComplex Operator<internal::Prec, internal::Space>::calculate_default_mu() const {
-    FloatType mu{0.0f};
-    std::uint64_t nterms = _terms.size();
-    Kokkos::parallel_reduce(
-        "calculate_default_mu",
-        Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(0, nterms),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & res_lcl) {
-            res_lcl += internal::abs(_terms(i)._coef.real());
-        },
-        mu);
-    Kokkos::fence();
-    return StdComplex(static_cast<double>(mu));
+    double mu = 0.;
+    for (const auto& term : get_terms()) mu += std::abs(term.coef().real());
+    return StdComplex(mu);
 }
+
+namespace {
+template <Precision Prec, ExecutionSpace Space>
+double validate_ground_state_input(const Operator<Prec, Space>& op,
+                                   const StateVector<Prec, Space>& initial_state,
+                                   std::uint64_t iter_count,
+                                   std::optional<StdComplex> mu,
+                                   std::optional<double> tolerance) {
+    if (!op.n_terms() || !op.is_hermitian()) {
+        throw std::runtime_error("Ground state solver requires a nonempty Hermitian operator.");
+    }
+    if (!iter_count) throw std::invalid_argument("Ground state solver requires iterations > 0.");
+    if (mu && (!std::isfinite(mu->real()) || !std::isfinite(mu->imag()) || mu->imag() != 0.)) {
+        throw std::invalid_argument("Ground state solver requires a finite real shift.");
+    }
+    if (tolerance && (!std::isfinite(*tolerance) || *tolerance <= 0.)) {
+        throw std::invalid_argument("Ground state solver requires a positive finite tolerance.");
+    }
+    double bound = 0.;
+    for (const auto& term : op.get_terms()) {
+        const auto [x, z] = term.get_XZ_mask_representation();
+        if (initial_state.n_qubits() < 64 && ((x | z) >> initial_state.n_qubits())) {
+            throw std::invalid_argument("Operator acts on a qubit outside the initial state.");
+        }
+        const auto coef = term.coef();
+        if (!std::isfinite(coef.real()) || !std::isfinite(coef.imag())) {
+            throw std::invalid_argument("Ground state solver requires finite coefficients.");
+        }
+        bound += std::abs(coef.real());
+    }
+    const double norm = initial_state.get_squared_norm();
+    if (!std::isfinite(bound) || !std::isfinite(norm) || norm <= 0.) {
+        throw std::invalid_argument(
+            "Ground state solver requires a finite nonzero initial state and operator.");
+    }
+    return bound;
+}
+
+template <Precision Prec>
+constexpr double ground_state_default_tolerance() {
+    if constexpr (Prec == Precision::F64) return 1e-10;
+    if constexpr (Prec == Precision::F32) return 1e-5;
+    return 0.05;
+}
+
+template <Precision Prec, ExecutionSpace Space>
+typename Operator<Prec, Space>::GroundState ground_state_result(const Operator<Prec, Space>& op,
+                                                                StateVector<Prec, Space> state,
+                                                                std::uint64_t iterations,
+                                                                double bound,
+                                                                double tolerance) {
+    const auto eigenvalue = op.get_expectation_value(state);
+    auto residual = state.copy();
+    op.apply_to_state(residual);
+    residual.add_state_vector_with_coef(-eigenvalue, state);
+    const double residual_norm = std::sqrt(residual.get_squared_norm());
+    const bool converged =
+        std::isfinite(residual_norm) && residual_norm <= tolerance * (bound > 0. ? bound : 1.);
+    return {eigenvalue, state, residual_norm, iterations, converged};
+}
+}  // namespace
 
 template <>
 Operator<internal::Prec, internal::Space>::GroundState
 Operator<internal::Prec, internal::Space>::solve_ground_state_by_power_method(
     const StateVector<internal::Prec, internal::Space>& initial_state,
     std::uint64_t iter_count,
-    std::optional<StdComplex> mu) const {
-    if (_terms.size() == 0) {
-        throw std::runtime_error(
-            "Operator::solve_ground_state_eigenvalue_by_power_method: At least one PauliOperator "
-            "is required.");
+    std::optional<StdComplex> mu,
+    std::optional<double> tolerance) const {
+    const double bound =
+        validate_ground_state_input(*this, initial_state, iter_count, mu, tolerance);
+    const double tol = tolerance.value_or(ground_state_default_tolerance<internal::Prec>());
+    const StdComplex shift = mu.value_or(StdComplex(bound));
+    if (!std::isfinite(shift.real()) || !std::isfinite(shift.imag())) {
+        throw std::invalid_argument("Ground state solver requires a finite shift.");
     }
-    if (!this->is_hermitian()) {
-        throw std::runtime_error(
-            "Operator::solve_ground_state_eigenvalue_by_power_method: The operator must be "
-            "Hermitian.");
-    }
-    std::uint64_t nqubits = initial_state.n_qubits();
-    StdComplex mu_realized = mu.value_or(calculate_default_mu());
     auto state = initial_state.copy();
-    auto tmp_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(nqubits);
-    for (std::uint64_t i = 0; i < iter_count; i++) {
-        // |state> <- (A-mu I)|state>
-        tmp_state.load(state);
-        apply_to_state(state);
-        state.add_state_vector_with_coef(-mu_realized, tmp_state);
-        state.normalize();
+    state.normalize();
+    for (std::uint64_t i = 0; i < iter_count; ++i) {
+        auto result = ground_state_result(*this, state, i, bound, tol);
+        if (result.converged) return result;
+        auto next = state.copy();
+        apply_to_state(next);
+        next.add_state_vector_with_coef(-shift, state);
+        const double norm = next.get_squared_norm();
+        if (!std::isfinite(norm) || norm <= 0.) {
+            throw std::runtime_error("Power method encountered a non-finite or zero iterate.");
+        }
+        next.normalize();
+        state = next;
     }
-    return {get_expectation_value(state), state};
+    return ground_state_result(*this, state, iter_count, bound, tol);
 }
 
 template <>
@@ -497,88 +551,59 @@ Operator<internal::Prec, internal::Space>::GroundState
 Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
     const StateVector<internal::Prec, internal::Space>& initial_state,
     std::uint64_t iter_count,
-    std::optional<StdComplex> mu) const {
-    if (_terms.size() == 0) {
-        throw std::runtime_error(
-            "Operator::solve_ground_state_eigenvalue_by_arnoldi_method: At least one PauliOperator "
-            "is required.");
-    }
-    if (!this->is_hermitian()) {
-        throw std::runtime_error(
-            "Operator::solve_ground_state_eigenvalue_by_arnoldi_method: The operator must be "
-            "Hermitian.");
-    }
-    std::uint64_t nqubits = initial_state.n_qubits();
-    StdComplex mu_realized = mu.value_or(calculate_default_mu());
-    std::vector<StateVector<internal::Prec, internal::Space>> krylov_space_basis;
-    krylov_space_basis.reserve(iter_count + 1);
-    krylov_space_basis.push_back(initial_state.copy());
-    ComplexMatrix hessenberg_matrix = ComplexMatrix::Zero(iter_count, iter_count);
-    std::uint64_t effective_iter_count = iter_count;
-    // 100 * epsilon(BF16) is 0.78125 and discards independent vectors.
-    // For low-precision states only an exactly zero residual is safe to
-    // classify as breakdown; keep the near-zero guard for F32/F64.
-    constexpr double breakdown_threshold = [] {
-        if constexpr (internal::Prec == Precision::F32 || internal::Prec == Precision::F64) {
-            return 100.0 * static_cast<double>(std::numeric_limits<FloatType>::epsilon());
-        } else {
-            return 0.0;
-        }
+    std::optional<StdComplex> mu,
+    std::optional<double> tolerance) const {
+    const double bound =
+        validate_ground_state_input(*this, initial_state, iter_count, mu, tolerance);
+    const double tol = tolerance.value_or(ground_state_default_tolerance<internal::Prec>());
+    const std::uint64_t count = std::min(iter_count, initial_state.dim());
+    std::vector<StateVector<internal::Prec, internal::Space>> basis;
+    basis.reserve(count);
+    basis.push_back(initial_state.copy());
+    basis.back().normalize();
+    ComplexMatrix hessenberg = ComplexMatrix::Zero(count, count);
+    std::uint64_t effective_count = count;
+    constexpr double epsilon = [] {
+        if constexpr (internal::Prec == Precision::F64)
+            return std::numeric_limits<double>::epsilon();
+        if constexpr (internal::Prec == Precision::F32)
+            return static_cast<double>(std::numeric_limits<float>::epsilon());
+        return 0.;
     }();
-    for (std::uint64_t i = 0; i < iter_count; i++) {
-        // |state> <- (A-muI)|state>
-        auto state = krylov_space_basis.back().copy();
+    for (std::uint64_t i = 0; i < count; ++i) {
+        auto state = basis.back().copy();
+        // A real shift does not change the Krylov space; omitting it avoids cancellation.
         apply_to_state(state);
-        state.add_state_vector_with_coef(-mu_realized, krylov_space_basis.back());
-        // make |state> orthogonal to others
-        for (std::uint64_t j = 0; j <= i; j++) {
-            auto coef = internal::inner_product<internal::Prec, internal::Space>(
-                krylov_space_basis[j]._raw, state._raw);
-            hessenberg_matrix(j, i) = static_cast<StdComplex>(coef);
-            state.add_state_vector_with_coef(-coef, krylov_space_basis[j]);
+        for (int pass = 0; pass < 2; ++pass) {
+            for (std::uint64_t j = 0; j <= i; ++j) {
+                const auto coef = internal::inner_product<internal::Prec, internal::Space>(
+                    basis[j]._raw, state._raw);
+                hessenberg(j, i) += static_cast<StdComplex>(coef);
+                state.add_state_vector_with_coef(-coef, basis[j]);
+            }
         }
-        // normalize |state>
-        double norm = std::sqrt(state.get_squared_norm());
-        if (!std::isfinite(norm)) {
-            throw std::runtime_error(
-                "Operator::solve_ground_state_by_arnoldi_method: Non-finite Krylov norm.");
-        }
-        if (norm <= breakdown_threshold) {
-            effective_iter_count = i + 1;
+        const double norm = std::sqrt(state.get_squared_norm());
+        if (!std::isfinite(norm)) throw std::runtime_error("Non-finite Krylov norm.");
+        if (i + 1 == count || norm <= 10. * epsilon * bound) {
+            effective_count = i + 1;
             break;
         }
-        if (i + 1 < iter_count) {
-            hessenberg_matrix(i + 1, i) = norm;
-        }
+        hessenberg(i + 1, i) = norm;
         state.multiply_coef(1. / norm);
-        krylov_space_basis.push_back(state);
+        basis.push_back(state);
     }
-    ComplexMatrix effective_hessenberg_matrix =
-        hessenberg_matrix.topLeftCorner(effective_iter_count, effective_iter_count);
-    Eigen::SelfAdjointEigenSolver<ComplexMatrix> solver(effective_hessenberg_matrix);
-    if (solver.info() == Eigen::ComputationInfo::NoConvergence) {
-        throw std::runtime_error(
-            "Operator::solve_ground_state_eigenvalue_by_arnoldi_method: "
-            "Eigenvalue solver did not converge. Please specify smaller iter_count.");
+    Eigen::SelfAdjointEigenSolver<ComplexMatrix> solver(
+        hessenberg.topLeftCorner(effective_count, effective_count));
+    if (solver.info() != Eigen::Success)
+        throw std::runtime_error("Krylov eigenvalue solver failed.");
+    auto state =
+        StateVector<internal::Prec, internal::Space>::uninitialized_state(initial_state.n_qubits());
+    state.set_zero_norm_state();
+    for (std::uint64_t i = 0; i < effective_count; ++i) {
+        state.add_state_vector_with_coef(solver.eigenvectors()(i, 0), basis[i]);
     }
-    if (solver.info() != Eigen::ComputationInfo::Success) {
-        throw std::runtime_error(
-            "Operator::solve_ground_state_eigenvalue_by_arnoldi_method: "
-            "Eigenvalue solver failed.");
-    }
-    auto eigenvalues = solver.eigenvalues();
-    auto eigenvectors = solver.eigenvectors();
-    auto minimum_eigenvalue_index =
-        std::ranges::min_element(eigenvalues, [](const double& a, const double& b) { return a < b; }) -
-        eigenvalues.begin();
-    auto ground_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(nqubits);
-    ground_state.set_zero_norm_state();
-    for (std::uint64_t i = 0; i < effective_iter_count; i++) {
-        ground_state.add_state_vector_with_coef(eigenvectors(i, minimum_eigenvalue_index),
-                                                krylov_space_basis[i]);
-    }
-    ground_state.normalize();
-    return {StdComplex(eigenvalues[minimum_eigenvalue_index]) + mu_realized, ground_state};
+    state.normalize();
+    return ground_state_result(*this, state, effective_count, bound, tol);
 }
 
 template <>
