@@ -192,6 +192,7 @@ public:
         const std::map<std::string, double>& parameters = {},
         std::optional<std::uint64_t> seed = std::nullopt) const;
 
+    // Gradients require deterministic unitary gates and Hermitian rotation generators.
     template <ExecutionSpace Space>
     std::unordered_map<std::string, double> compute_expectation_gradient_backprop(
         StateVector<Prec, Space>& state,
@@ -507,7 +508,8 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
              &Circuit<Prec>::template compute_expectation_gradient<Space>,
              "observable"_a,
              "parameters"_a,
-             "Compute gradient of expectation value of observable using back propagation.")
+             "Compute gradient of expectation value using back propagation. Requires "
+             "deterministic unitary gates and Hermitian rotation generators.")
         .def("add_observable_rotation_gate",
              nb::overload_cast<const Operator<Prec, Space>&, double, std::int64_t>(
                  &Circuit<Prec>::template add_observable_rotation_gate<Space>),

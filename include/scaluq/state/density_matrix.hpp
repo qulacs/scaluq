@@ -625,7 +625,8 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
             "seed"_a = std::nullopt,
             DocString()
                 .desc("Sampling density matrix independently and get list of computational basis")
-                .note("The matrix must be hermitian and normalized")
+                .note("The matrix must be hermitian with finite nonnegative diagonal entries and a "
+                      "positive trace.")
                 .arg("sampling_count", "int", "number of samples to draw")
                 .arg("seed",
                      "int | None",

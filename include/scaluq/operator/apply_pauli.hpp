@@ -125,6 +125,8 @@ void apply_pauli(std::uint64_t control_mask,
                  const Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>& row_ptr,
                  StateVectorBatched<Prec, Space>& states,
                  std::uint64_t batch_size) {
+    if (!batch_size)
+        throw std::invalid_argument("Operator application batch_size must be positive.");
     using Sp = SpaceType<Space>;
     if (states.batch_size() + 1 != row_ptr.extent(0)) {
         throw std::runtime_error(
@@ -143,7 +145,8 @@ void apply_pauli(std::uint64_t control_mask,
             KOKKOS_LAMBDA(const Kokkos::TeamPolicy<Sp>::member_type& team) {
                 std::uint64_t batch_id = team.league_rank() + b;
                 Kokkos::parallel_for(
-                    Kokkos::TeamThreadRange(team, dim >> (Kokkos::popcount(control_mask) + 1)),
+                    Kokkos::TeamThreadRange(team,
+                                            (dim + 1) >> (Kokkos::popcount(control_mask) + 1)),
                     [&](const std::uint64_t i) {
                         for (std::uint64_t j = row_ptr(batch_id); j < row_ptr(batch_id + 1); ++j) {
                             auto bit_flip_mask = ops(j)._bit_flip_mask;
@@ -152,6 +155,7 @@ void apply_pauli(std::uint64_t control_mask,
 
                             if (bit_flip_mask == 0) {
                                 for (std::uint64_t ii : {2 * i, 2 * i + 1}) {
+                                    if (ii >= dim) continue;
                                     std::uint64_t state_idx =
                                         insert_zero_at_mask_positions(ii, control_mask) |
                                         control_value_mask;
