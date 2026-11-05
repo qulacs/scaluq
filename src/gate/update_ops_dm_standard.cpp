@@ -173,7 +173,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
 
 template <Precision P, ExecutionSpace S>
 struct DensityMatrixSwapRowsFunctor {
-    Kokkos::View<Complex<P>**, SpaceType<S>> raw;
+    typename DensityMatrix<P, S>::RawView raw;
     std::uint64_t dim;
     std::uint64_t target_mask;
     std::uint64_t control_mask;
@@ -193,7 +193,7 @@ struct DensityMatrixSwapRowsFunctor {
 
 template <Precision P, ExecutionSpace S>
 struct DensityMatrixSwapColumnsFunctor {
-    Kokkos::View<Complex<P>**, SpaceType<S>> raw;
+    typename DensityMatrix<P, S>::RawView raw;
     std::uint64_t n_quads;
     std::uint64_t target_mask;
     std::uint64_t control_mask;
