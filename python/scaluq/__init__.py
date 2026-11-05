@@ -5,6 +5,7 @@ except AttributeError:
     gate = None
 
 import inspect
+from abc import ABCMeta as _ABCMeta
 
 _PRECISIONS = ['f64', 'f32', 'f16', 'bf16']
 _SPACES = ['default', 'host', 'host_serial']
@@ -37,7 +38,7 @@ def _key_for_object(obj):
     mod = inspect.getmodule(obj)
     return _mod_id_to_key.get(id(mod)) if mod is not None else None
 
-class StateVector:
+class StateVector(metaclass=_ABCMeta):
     UNMEASURED = _get_module(_DEFAULT_PRECISION, 'default').StateVector.UNMEASURED
 
     def __new__(cls, n_qubits, precision=_DEFAULT_PRECISION, space='default'):
@@ -60,7 +61,7 @@ class StateVector:
             raise ValueError(f"Unsupported state vector type: {type(state1)}")
         return _modules[key].StateVector.inner_product(state1, state2)
 
-class StateVectorBatched:
+class StateVectorBatched(metaclass=_ABCMeta):
     def __new__(cls, batch_size, n_qubits, precision=_DEFAULT_PRECISION, space='default'):
         return _get_module(precision, space).StateVectorBatched(batch_size, n_qubits)
 
@@ -72,7 +73,7 @@ class StateVectorBatched:
     def uninitialized_state(batch_size, n_qubits, precision=_DEFAULT_PRECISION, space='default'):
         return _get_module(precision, space).StateVectorBatched.uninitialized_state(batch_size, n_qubits)
 
-class DensityMatrix:
+class DensityMatrix(metaclass=_ABCMeta):
     UNMEASURED = _get_module(_DEFAULT_PRECISION, 'default').DensityMatrix.UNMEASURED
 
     def __new__(cls, n_qubits, precision=_DEFAULT_PRECISION, space='default'):
@@ -146,7 +147,7 @@ def merge_gate(gate1, gate2):
         raise ValueError(f"merge_gate is not available in space={space} with precision={precision}")
     return mod.merge_gate(gate1, gate2)
 
-class PauliOperator:
+class PauliOperator(metaclass=_ABCMeta):
     @staticmethod
     def from_targets_and_pauli_ids(target_qubit_list, pauli_id_list, coef=1.0, precision=_DEFAULT_PRECISION):
         return _get_module(precision, 'default').PauliOperator(target_qubit_list, pauli_id_list, coef=coef)
@@ -167,17 +168,23 @@ class PauliOperator:
         return PauliOperator.from_pauli_string(pauli_string, coef=coef, precision=precision)
 
 
-class Operator:
+class Operator(metaclass=_ABCMeta):
     def __new__(cls, terms, precision=_DEFAULT_PRECISION, space='default'):
         return _get_module(precision, space).Operator(terms)
 
-class OperatorBatched:
+class OperatorBatched(metaclass=_ABCMeta):
     def __new__(cls, terms, precision=_DEFAULT_PRECISION, space='default'):
         return _get_module(precision, space).OperatorBatched(terms)
 
-class Circuit:
+class Circuit(metaclass=_ABCMeta):
     def __new__(cls, precision=_DEFAULT_PRECISION):
         return _get_module(precision, 'default').Circuit()
+
+for _factory in (StateVector, StateVectorBatched, DensityMatrix, PauliOperator, Operator, OperatorBatched, Circuit):
+    for _mod in _modules.values():
+        _native_cls = getattr(_mod, _factory.__name__, None)
+        if _native_cls is not None:
+            _factory.register(_native_cls)
 
 class qasm2:
     @staticmethod

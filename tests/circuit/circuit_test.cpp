@@ -453,19 +453,36 @@ TYPED_TEST(CircuitTest, UpdateQuantumStateBatchedStoresMeasurementInClassicalReg
     EXPECT_TRUE(classical_register[1][1]);
 }
 
-TYPED_TEST(CircuitTest, ThrowsWhenGateTouchesMeasuredQubitWithoutReset) {
+TYPED_TEST(CircuitTest, ReusesMeasuredQubitForGatesAndRepeatedMeasurements) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
 
     Circuit<Prec> circuit;
     circuit.add_gate(gate::Measurement<Prec>(0, 0));
     circuit.add_gate(gate::X<Prec>(0));
+    circuit.add_gate(gate::Measurement<Prec>(0, 1));
+    circuit.add_conditional_param_gate(gate::ParamRX<Prec>(0), "theta", 1, true);
+    circuit.add_gate(gate::Measurement<Prec>(0, 2));
 
     StateVector<Prec, Space> state(1);
-    ClassicalRegister classical_register(1);
+    ClassicalRegister classical_register(3);
 
-    ASSERT_THROW(circuit.update_quantum_state(state, classical_register, {}, 0),
-                 std::runtime_error);
+    circuit.update_quantum_state(state, classical_register, {{"theta", std::numbers::pi}}, 0);
+    EXPECT_FALSE(classical_register[0]);
+    EXPECT_TRUE(classical_register[1]);
+    EXPECT_FALSE(classical_register[2]);
+    EXPECT_NEAR(std::abs(state.get_amplitudes()[0]), 1., eps<Prec>);
+
+    StateVectorBatched<Prec, Space> states(2, 1);
+    ClassicalRegisterBatched registers(3, 2);
+    circuit.update_quantum_state(
+        states, registers, {{"theta", {std::numbers::pi, std::numbers::pi}}}, 0);
+    for (std::uint64_t i = 0; i < 2; ++i) {
+        EXPECT_FALSE(registers[i][0]);
+        EXPECT_TRUE(registers[i][1]);
+        EXPECT_FALSE(registers[i][2]);
+        EXPECT_NEAR(std::abs(states.get_amplitudes()[i][0]), 1., eps<Prec>);
+    }
 }
 
 TYPED_TEST(CircuitTest, AllowsReusingQubitAfterResettingMeasurement) {
