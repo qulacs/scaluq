@@ -131,6 +131,8 @@ template <Precision Prec>
 template <ExecutionSpace Space>
 StdComplex PauliOperator<Prec>::get_expectation_value(
     const StateVector<Prec, Space>& state_vector) const {
+    check_qubit_count(state_vector.n_qubits());
+
     std::uint64_t bit_flip_mask = _bit_flip_mask;
     std::uint64_t phase_flip_mask = _phase_flip_mask;
     if (bit_flip_mask == 0) {
@@ -172,6 +174,8 @@ template <Precision Prec>
 template <ExecutionSpace Space>
 std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
     const StateVectorBatched<Prec, Space>& states) const {
+    check_qubit_count(states.n_qubits());
+
     std::uint64_t bit_flip_mask = _bit_flip_mask;
     std::uint64_t phase_flip_mask = _phase_flip_mask;
     const std::uint64_t dim = states.dim();
@@ -243,6 +247,11 @@ template <ExecutionSpace Space>
 StdComplex PauliOperator<Prec>::get_transition_amplitude(
     const StateVector<Prec, Space>& state_vector_bra,
     const StateVector<Prec, Space>& state_vector_ket) const {
+    check_qubit_count(state_vector_bra.n_qubits());
+    if (state_vector_bra.n_qubits() != state_vector_ket.n_qubits()) {
+        throw std::invalid_argument("Transition amplitude state dimensions must match.");
+    }
+
     std::uint64_t bit_flip_mask = _bit_flip_mask;
     std::uint64_t phase_flip_mask = _phase_flip_mask;
     if (bit_flip_mask == 0) {
@@ -286,6 +295,13 @@ template <ExecutionSpace Space>
 std::vector<StdComplex> PauliOperator<Prec>::get_transition_amplitude(
     const StateVectorBatched<Prec, Space>& states_bra,
     const StateVectorBatched<Prec, Space>& states_ket) const {
+    check_qubit_count(states_bra.n_qubits());
+    if (states_bra.n_qubits() != states_ket.n_qubits() ||
+        states_bra.batch_size() != states_ket.batch_size()) {
+        throw std::invalid_argument(
+            "Transition amplitude state dimensions and batch sizes must match.");
+    }
+
     if (states_bra.n_qubits() != states_ket.n_qubits()) {
         throw std::runtime_error("state_vector_bra must have same n_qubits to state_vector_ket.");
     }
@@ -414,6 +430,9 @@ std::vector<Eigen::Triplet<StdComplex>> PauliOperator<Prec>::get_matrix_triplets
 template <Precision Prec>
 std::vector<Eigen::Triplet<StdComplex>> PauliOperator<Prec>::get_full_matrix_triplets_ignoring_coef(
     std::uint64_t n_qubits) const {
+    if (n_qubits >= 64) throw std::invalid_argument("Matrix qubit count must be less than 64.");
+    check_qubit_count(n_qubits);
+
     std::uint64_t rot90_count = std::popcount(_bit_flip_mask & _phase_flip_mask);
     StdComplex rot =
         std::vector<StdComplex>{1., StdComplex(0, -1), -1., StdComplex(0, 1)}[rot90_count % 4];
@@ -447,7 +466,8 @@ ComplexMatrix PauliOperator<Prec>::get_full_matrix(std::uint64_t n_qubits) const
     ComplexMatrix mat(dim, dim);
     mat.setZero();
     for (std::size_t i = 0; i < triplets.size(); i++) {
-        mat(triplets[i].row(), triplets[i].col()) = triplets[i].value();
+        mat(triplets[i].row(), triplets[i].col()) =
+            triplets[i].value() * static_cast<StdComplex>(_coef);
     }
     return mat;
 }

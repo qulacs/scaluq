@@ -92,8 +92,25 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
 }
 
 template <>
+void Operator<internal::Prec, internal::Space>::check_qubit_count(std::uint64_t n_qubits) const {
+    std::uint64_t invalid_count = 0;
+    Kokkos::parallel_reduce(
+        "check_operator_qubits",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, _terms.size()),
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t & count) {
+            const auto mask = _terms(i)._bit_flip_mask | _terms(i)._phase_flip_mask;
+            if (n_qubits < 64 && (mask >> n_qubits)) ++count;
+        },
+        invalid_count);
+    if (invalid_count) throw std::invalid_argument("Operator acts on a qubit outside the state.");
+}
+
+template <>
 ComplexMatrix Operator<internal::Prec, internal::Space>::get_full_matrix(
     std::uint64_t n_qubits) const {
+    if (n_qubits >= 64) throw std::invalid_argument("Matrix qubit count must be less than 64.");
+    check_qubit_count(n_qubits);
+
     std::uint64_t dim = 1ULL << n_qubits;
     ComplexMatrix mat(dim, dim);
     mat.setZero();
@@ -109,6 +126,8 @@ ComplexMatrix Operator<internal::Prec, internal::Space>::get_full_matrix(
 template <>
 void Operator<internal::Prec, internal::Space>::apply_to_state(
     StateVector<internal::Prec, internal::Space>& state_vector) const {
+    check_qubit_count(state_vector.n_qubits());
+
     auto states = StateVectorBatched<internal::Prec, internal::Space>::uninitialized_state(
         _terms.size(), state_vector.n_qubits());
     states.set_state_vector(state_vector);
@@ -119,6 +138,8 @@ void Operator<internal::Prec, internal::Space>::apply_to_state(
 template <>
 StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
     const StateVector<internal::Prec, internal::Space>& state_vector) const {
+    check_qubit_count(state_vector.n_qubits());
+
     std::uint64_t nterms = _terms.size();
     std::uint64_t dim = state_vector.dim();
     ComplexType res;
@@ -166,6 +187,8 @@ StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
 template <>
 std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectation_values(
     const StateVector<internal::Prec, internal::Space>& state_vector) const {
+    check_qubit_count(state_vector.n_qubits());
+
     const std::uint64_t nterms = _terms.size();
     const std::uint64_t dim = state_vector.dim();
 
@@ -241,6 +264,8 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
 template <>
 std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectation_value(
     const StateVectorBatched<internal::Prec, internal::Space>& states) const {
+    check_qubit_count(states.n_qubits());
+
     std::uint64_t nterms = _terms.size();
     std::uint64_t dim = states.dim();
     Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<internal::Space>> res(
@@ -304,6 +329,8 @@ template <>
 StdComplex Operator<internal::Prec, internal::Space>::get_transition_amplitude(
     const StateVector<internal::Prec, internal::Space>& state_vector_bra,
     const StateVector<internal::Prec, internal::Space>& state_vector_ket) const {
+    check_qubit_count(state_vector_bra.n_qubits());
+
     if (state_vector_bra.n_qubits() != state_vector_ket.n_qubits()) {
         throw std::runtime_error(
             "Operator::get_transition_amplitude: n_qubits of state_vector_bra and "
@@ -355,6 +382,8 @@ template <>
 std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transition_amplitude(
     const StateVectorBatched<internal::Prec, internal::Space>& states_bra,
     const StateVectorBatched<internal::Prec, internal::Space>& states_ket) const {
+    check_qubit_count(states_bra.n_qubits());
+
     if (states_bra.n_qubits() != states_ket.n_qubits()) {
         throw std::runtime_error(
             "Operator::get_transition_amplitude: n_qubits of state_vector_bra and "
@@ -610,7 +639,7 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
             {0, 0}, {_terms.size(), target._terms.size()}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j, std::uint64_t & nnz_lcl) {
             ret._terms(i * target._terms.size() + j) = _terms(i) * target._terms(j);
-            if (static_cast<double>(ret._terms(i * target._terms.size() + j)._coef.imag()) == 0.)
+            if (static_cast<double>(ret._terms(i * target._terms.size() + j)._coef.imag()) != 0.)
                 ++nnz_lcl;
         },
         nnz_count);
@@ -622,11 +651,16 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
 template <>
 Operator<internal::Prec, internal::Space>& Operator<internal::Prec, internal::Space>::operator*=(
     const PauliOperator<internal::Prec>& target) {
-    Kokkos::parallel_for(
+    std::uint64_t non_real_count = 0;
+    Kokkos::parallel_reduce(
         "operator*=",
         Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(0, _terms.size()),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _terms(i) *= target; });
-    _is_hermitian &= (target.coef().imag() == 0);
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t & count) {
+            _terms(i) *= target;
+            if (static_cast<double>(_terms(i)._coef.imag()) != 0.) ++count;
+        },
+        non_real_count);
+    _is_hermitian = (non_real_count == 0);
     return *this;
 }
 

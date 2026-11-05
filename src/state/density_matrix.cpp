@@ -2,6 +2,8 @@
 #include <scaluq/state/density_matrix.hpp>
 #include <scaluq/util/math.hpp>
 
+#include "sampling.hpp"
+
 namespace scaluq {
 template <Precision Prec, ExecutionSpace Space>
 DensityMatrix<Prec, Space>::DensityMatrix(std::uint64_t n_qubits)
@@ -302,7 +304,11 @@ DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::get_partial_trace(
 
 template <Precision Prec, ExecutionSpace Space>
 void DensityMatrix<Prec, Space>::normalize() {
-    const ComplexType trace(this->get_trace());
+    const auto value = get_trace();
+    if (!std::isfinite(value.real()) || !std::isfinite(value.imag()) || value == StdComplex(0.)) {
+        throw std::invalid_argument("Cannot normalize a matrix with non-finite or zero trace.");
+    }
+    const ComplexType trace(value);
     Kokkos::parallel_for(
         "normalize",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
@@ -409,58 +415,11 @@ std::vector<std::uint64_t> DensityMatrix<Prec, Space>::sampling(
             "DensityMatrix::sampling: Sampling is only defined for hermitian density matrices.");
     }
 
-    Kokkos::View<FloatType*, internal::SpaceType<Space>> stacked_prob("prob", _dim + 1);
-    Kokkos::parallel_scan(
-        "sampling (compute stacked prob)",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & update, const bool final) {
-            update += this->_raw(i, i).real();
-            if (final) {
-                stacked_prob[i + 1] = update;
-            }
-        });
-
-    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(
-        internal::resolve_seed(seed));
-    std::vector<std::uint64_t> result(sampling_count);
-    std::vector<std::uint64_t> todo(sampling_count);
-    std::iota(todo.begin(), todo.end(), 0);
-    while (!todo.empty()) {
-        std::size_t todo_count = todo.size();
-        Kokkos::View<std::uint64_t*, internal::SpaceType<Space>> result_buf(
-            Kokkos::ViewAllocateWithoutInitializing("result_buf"), todo_count);
-        Kokkos::parallel_for(
-            "sampling (choose)",
-            Kokkos::RangePolicy<internal::SpaceType<Space>>(0, todo_count),
-            KOKKOS_LAMBDA(std::uint64_t i) {
-                auto rand_gen = rand_pool.get_state();
-                FloatType r = static_cast<FloatType>(rand_gen.drand(0., 1.));
-                std::uint64_t lo = 0, hi = stacked_prob.size();
-                while (hi - lo > 1) {
-                    std::uint64_t mid = (lo + hi) / 2;
-                    if (stacked_prob[mid] > r) {
-                        hi = mid;
-                    } else {
-                        lo = mid;
-                    }
-                }
-                result_buf[i] = lo;
-                rand_pool.free_state(rand_gen);
-            });
-        auto result_buf_host = internal::convert_view_to_vector<std::uint64_t, Space>(result_buf);
-        // Especially for F16 and BF16, sampling sometimes fails with result == _dim.
-        // In this case, re-sampling is performed.
-        std::vector<std::uint64_t> next_todo;
-        for (std::size_t i = 0; i < todo_count; i++) {
-            if (result_buf_host[i] == _dim) {
-                next_todo.push_back(todo[i]);
-            } else {
-                result[todo[i]] = result_buf_host[i];
-            }
-        }
-        todo.swap(next_todo);
-    }
-    return result;
+    const auto matrix = _raw;
+    return internal::sample_probabilities<Space>(
+        1, _dim, sampling_count, seed, KOKKOS_LAMBDA(std::uint64_t, std::uint64_t i) {
+            return static_cast<double>(matrix(i, i).real());
+        })[0];
 }
 
 template <Precision Prec, ExecutionSpace Space>

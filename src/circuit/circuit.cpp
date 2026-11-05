@@ -477,6 +477,11 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
     std::optional<std::uint64_t> seed) const {
+    if (has_classical_instructions()) {
+        throw std::runtime_error(
+            "Circuit::simulate_noise: Measurement and classically controlled instructions are "
+            "not supported.");
+    }
     check_state_vector_n_qubits(initial_state.n_qubits());
     std::mt19937 mt(internal::resolve_seed(seed));
     StateVectorBatched<Prec, Space> states(1, initial_state.n_qubits()), new_states;
@@ -494,9 +499,6 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
                 for (const auto& tmp : gate_list) {
                     gates.push_back(tmp);
                 }
-            } else if (gate.gate_type() == GateType::Measurement) {
-                throw std::runtime_error(
-                    "Circuit::simulate_noise: Measurement gate is not supported.");
             } else {
                 probs = std::vector<double>{1.0};
                 gates.push_back(gate);
@@ -632,7 +634,10 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
     StateVector<Prec, Space>& state,
     StateVector<Prec, Space>& bistate,
     const std::map<std::string, double>& parameters) {
-    const auto eps = internal::get_epsilon<Prec>();
+    if (state.n_qubits() != bistate.n_qubits()) {
+        throw std::invalid_argument("Expectation gradient: state dimensions must match.");
+    }
+    check_state_vector_n_qubits(state.n_qubits());
     const std::uint64_t n_gates = this->n_gates();
 
     std::unordered_map<std::string, double> gradient;
@@ -650,37 +655,58 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
         if (cur_gate.index() == 1) {
             const auto& [pgate, key] = std::get<1>(cur_gate);
 
-            Astate = state.copy();
-            double pauli_coef = 1.0;
-            if (pgate.param_gate_type() == ParamGateType::ParamPauliRotation) {
-                internal::ParamGatePtr<internal::ParamPauliRotationGateImpl<Prec>> ppr(pgate);
-
-                const auto c = ppr->pauli().coef();
-                const double cre = static_cast<double>(std::real(c));
-                const double cim = static_cast<double>(std::imag(c));
-                if (std::abs(cim) >= eps) {
-                    throw std::runtime_error(
-                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be "
-                        "real.");
+            std::uint64_t x_mask = 0, z_mask = 0;
+            double pauli_coef = 1.;
+            switch (pgate.param_gate_type()) {
+                case ParamGateType::ParamRX:
+                    x_mask = pgate->target_qubit_mask();
+                    break;
+                case ParamGateType::ParamRY:
+                    x_mask = z_mask = pgate->target_qubit_mask();
+                    break;
+                case ParamGateType::ParamRZ:
+                    z_mask = pgate->target_qubit_mask();
+                    break;
+                case ParamGateType::ParamPauliRotation: {
+                    internal::ParamGatePtr<internal::ParamPauliRotationGateImpl<Prec>> ppr(pgate);
+                    const auto pauli = ppr->pauli();
+                    const auto coef = pauli.coef();
+                    if (!std::isfinite(coef.real()) || coef.imag() != 0.) {
+                        throw std::invalid_argument(
+                            "Expectation gradient requires a finite real Pauli coefficient.");
+                    }
+                    std::tie(x_mask, z_mask) = pauli.get_XZ_mask_representation();
+                    pauli_coef = coef.real();
+                    break;
                 }
-                if (std::abs(cre) < std::numeric_limits<double>::epsilon()) {
-                    throw std::runtime_error(
-                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be "
-                        "nonzero.");
-                }
-                pauli_coef = cre;
+                default:
+                    throw std::invalid_argument(
+                        "Expectation gradient does not support this parameterized gate.");
             }
             const double scale = pgate->param_coef() * pauli_coef;
-            if (std::abs(scale) < std::numeric_limits<double>::epsilon()) {
-                throw std::runtime_error(
-                    "Circuit::compute_expectation_gradient_backprop: param_coef * pauli_coef must "
-                    "be nonzero.");
+            if (!std::isfinite(scale)) {
+                throw std::invalid_argument(
+                    "Expectation gradient requires finite gate coefficients.");
             }
-            pgate->update_quantum_state(Astate, -M_PI / scale);
-            const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
-            const double contrib = -scale * static_cast<double>(ip.real());
-
-            gradient[key] += contrib;
+            if (scale != 0.) {
+                Astate = state.copy();
+                internal::apply_pauli(
+                    0ULL, 0ULL, x_mask, z_mask, internal::Complex<Prec>(1.), Astate);
+                const auto control_mask = pgate->control_qubit_mask();
+                const auto control_values = pgate->control_value_mask();
+                if (control_mask) {
+                    const auto amplitudes = Astate._raw;
+                    Kokkos::parallel_for(
+                        "gradient_control_projection",
+                        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, Astate.dim()),
+                        KOKKOS_LAMBDA(std::uint64_t basis) {
+                            if ((basis & control_mask) != control_values) amplitudes(basis) = 0.;
+                        });
+                }
+                // d<E>/dt = scale * Im(<bistate| control_projector * Pauli |state>).
+                const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
+                gradient[key] += scale * static_cast<double>(ip.imag());
+            }
         }
 
         if (cur_gate.index() == 0) {
