@@ -556,6 +556,9 @@ DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION_WITH_SPACE(DenseMatrixGateImpl)
 #undef DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION
 #undef DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION_WITH_SPACE
 
+template <Precision Prec>
+GateType get_runtime_gate_type(const GateBase<Prec>& gate);
+
 template <GateImpl T>
 class GatePtr {
     friend class GateFactory;
@@ -576,6 +579,9 @@ public:
         if constexpr (std::is_same_v<T, U>) {
             _gate_type = get_gate_type<T, Prec>();
             _gate_ptr = gate_ptr;
+            if constexpr (std::is_same_v<T, GateBase<Prec>>) {
+                if (gate_ptr) _gate_type = get_runtime_gate_type(*gate_ptr);
+            }
         } else if constexpr (std::is_same_v<T, GateBase<Prec>>) {
             // upcast
             _gate_type = get_gate_type<U, Prec>();

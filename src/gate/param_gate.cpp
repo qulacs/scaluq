@@ -1,7 +1,19 @@
-#include <scaluq/gate/param_gate.hpp>
+#include <scaluq/gate/param_gate_factory.hpp>
 #include <scaluq/prec_space.hpp>
 
 namespace scaluq::internal {
+template <Precision Prec>
+ParamGateType get_runtime_param_gate_type(const ParamGateBase<Prec>& gate) {
+    const auto& type = typeid(gate);
+    if (type == typeid(ParamRXGateImpl<Prec>)) return ParamGateType::ParamRX;
+    if (type == typeid(ParamRYGateImpl<Prec>)) return ParamGateType::ParamRY;
+    if (type == typeid(ParamRZGateImpl<Prec>)) return ParamGateType::ParamRZ;
+    if (type == typeid(ParamPauliRotationGateImpl<Prec>)) return ParamGateType::ParamPauliRotation;
+    if (type == typeid(ParamProbabilisticGateImpl<Prec>)) return ParamGateType::ParamProbabilistic;
+    return ParamGateType::Unknown;
+}
+template ParamGateType get_runtime_param_gate_type<Prec>(const ParamGateBase<Prec>& gate);
+
 template <Precision Prec>
 void ParamGateBase<Prec>::check_qubit_mask_within_bounds(
     const StateVector<Prec, ExecutionSpace::Host>& state_vector) const {
