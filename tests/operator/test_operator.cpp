@@ -437,11 +437,14 @@ TYPED_TEST(OperatorTest, GroundStateArnoldiMethod) {
 TYPED_TEST(OperatorTest, PowerMethodProducesFiniteState) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
-    Operator<Prec, Space> op({PauliOperator<Prec>("Z 0", 0.5)});
+    // The default shift makes the shifted identity zero.
+    Operator<Prec, Space> op({PauliOperator<Prec>("", 1.)});
     StateVector<Prec, Space> initial_state(1);
-    initial_state.load(std::vector<StdComplex>{1., 1.});
-    initial_state.normalize();
+    initial_state.load(std::vector<StdComplex>{2., 0.});
     const auto ground_state = op.solve_ground_state_by_power_method(initial_state, 10);
+    EXPECT_TRUE(ground_state.converged);
+    EXPECT_EQ(ground_state.iterations, 0);
+    EXPECT_EQ(ground_state.residual_norm, 0.);
     ASSERT_TRUE(std::isfinite(ground_state.eigenvalue.real()));
     ASSERT_TRUE(std::isfinite(ground_state.eigenvalue.imag()));
     const auto squared_norm = ground_state.state.get_squared_norm();
@@ -493,11 +496,13 @@ TYPED_TEST(OperatorTest, ArnoldiDoesNotBreakDownOnNonzeroResidual) {
 
     // The first orthogonalized residual has norm 0.5. In BF16, the former
     // 100 * epsilon threshold (0.78125) incorrectly stopped after one basis vector.
-    Operator<Prec, Space> op({PauliOperator<Prec>("Z 0", 0.5)});
+    // In F64, also exercise a residual below the former absolute threshold.
+    constexpr double coefficient = Prec == Precision::F64 ? 1e-16 : 0.5;
+    Operator<Prec, Space> op({PauliOperator<Prec>("Z 0", coefficient)});
     StateVector<Prec, Space> initial_state(1);
     initial_state.load(std::vector<StdComplex>{1., 1.});
     initial_state.normalize();
     const auto ground_state = op.solve_ground_state_by_arnoldi_method(initial_state, 2);
     ASSERT_TRUE(std::isfinite(ground_state.eigenvalue.real()));
-    ASSERT_NEAR(ground_state.eigenvalue.real(), -0.5, 0.1);
+    ASSERT_NEAR(ground_state.eigenvalue.real(), -coefficient, coefficient * 0.2);
 }
