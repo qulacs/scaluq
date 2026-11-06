@@ -79,7 +79,8 @@ public:
             Kokkos::parallel_for(
                 "GroupedPauliOperator::cache",
                 Kokkos::MDRangePolicy<Exec, Kokkos::Rank<2>, Kokkos::IndexType<std::uint64_t>>(
-                    {0, 0}, {groups.size(), dim_}),
+                    {0, 0},
+                    {static_cast<std::int64_t>(groups.size()), static_cast<std::int64_t>(dim_)}),
                 KOKKOS_LAMBDA(std::uint64_t g, std::uint64_t b) {
                     Complex sum = 0.;
                     for (auto t = gs(g).begin; t < gs(g).end; ++t) {
