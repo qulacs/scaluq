@@ -551,11 +551,17 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
                  .ret("list", "List of gates.")
                  .ex(DocString::Code{">>> circuit = Circuit()",
                                      ">>> circuit.add_gate(gate.X(0))",
-                                     ">>> len(circuit.gate_list())",
-                                     "1"})
+                                     ">>> gates = circuit.gate_list()",
+                                     ">>> del circuit",
+                                     ">>> len(gates)",
+                                     "1",
+                                     ">>> print(gates[0])",
+                                     "Gate Type: X",
+                                     "  Target Qubits: {0}",
+                                     "  Control Qubits: {}",
+                                     "  Control Value: {}"})
                  .build_as_google_style()
-                 .c_str(),
-             nb::rv_policy::reference)
+                 .c_str())
         .def("n_gates",
              &Circuit<Prec>::n_gates,
              DocString()

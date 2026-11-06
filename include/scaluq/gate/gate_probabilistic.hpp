@@ -102,14 +102,9 @@ void bind_gate_gate_probabilistic(nb::module_& m, nb::class_<Gate<Prec>>& gate_b
         "ProbabilisticGate",
         "Specific class of probabilistic gate. The gate to apply is picked from a certain "
         "distribution.")
-        .def(
-            "gate_list",
-            [](const ProbabilisticGate<Prec>& gate) { return gate->gate_list(); },
-            nb::rv_policy::reference)
-        .def(
-            "distribution",
-            [](const ProbabilisticGate<Prec>& gate) { return gate->distribution(); },
-            nb::rv_policy::reference);
+        .def("gate_list", [](const ProbabilisticGate<Prec>& gate) { return gate->gate_list(); })
+        .def("distribution",
+             [](const ProbabilisticGate<Prec>& gate) { return gate->distribution(); });
 }
 }  // namespace internal
 #endif
