@@ -1,6 +1,7 @@
 #include <scaluq/gate/gate_pauli.hpp>
 
 #include "update_ops.hpp"
+#include "update_ops_matrix_2x2.hpp"
 
 namespace scaluq::internal {
 template <Precision Prec>
