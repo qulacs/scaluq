@@ -56,7 +56,8 @@ public:
         dim_ = 1ULL << n_qubits;
         std::map<std::uint64_t, std::vector<Term>> grouped;
         for (const auto& p : input) {
-            if (std::bit_width(p._bit_flip_mask | p._phase_flip_mask) > n_qubits)
+            if (static_cast<std::uint64_t>(std::bit_width(p._bit_flip_mask | p._phase_flip_mask)) >
+                n_qubits)
                 throw std::runtime_error("GroupedPauliOperator: insufficient qubits");
             auto [x, z] = p.get_XZ_mask_representation();
             grouped[x].push_back(
