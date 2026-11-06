@@ -202,11 +202,11 @@ public:
         return Complex(*this) /= static_cast<FloatType>(rhs);
     }
     KOKKOS_INLINE_FUNCTION Complex& operator/=(const Complex& rhs) {
-        FloatType denominator = rhs._real * rhs._real + rhs._imag * rhs._imag;
-        FloatType real_part = _real * rhs._real + _imag * rhs._imag;
-        FloatType imag_part = _imag * rhs._real - _real * rhs._imag;
-        _real = real_part / denominator;
-        _imag = imag_part / denominator;
+        const auto quotient =
+            Kokkos::complex<double>(static_cast<double>(_real), static_cast<double>(_imag)) /
+            Kokkos::complex<double>(static_cast<double>(rhs._real), static_cast<double>(rhs._imag));
+        _real = static_cast<FloatType>(quotient.real());
+        _imag = static_cast<FloatType>(quotient.imag());
         return *this;
     }
     KOKKOS_INLINE_FUNCTION Complex operator/(const Complex& rhs) const {

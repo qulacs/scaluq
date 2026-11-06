@@ -112,20 +112,32 @@ inline void resize_and_check_control_values(const std::vector<std::uint64_t>& co
     }
 }
 
+template <Precision Prec>
+KOKKOS_INLINE_FUNCTION Kokkos::complex<double> to_complex_double(const Complex<Prec>& value) {
+    return {static_cast<double>(value.real()), static_cast<double>(value.imag())};
+}
+
+template <Precision Prec>
+KOKKOS_INLINE_FUNCTION double squared_norm_double(const Complex<Prec>& value) {
+    const double real = static_cast<double>(value.real());
+    const double imag = static_cast<double>(value.imag());
+    return real * real + imag * imag;
+}
+
 template <Precision Prec, ExecutionSpace Space, class ViewA, class ViewB>
-Complex<Prec> inner_product(const ViewA& a, const ViewB& b) {
+StdComplex inner_product(const ViewA& a, const ViewB& b) {
     if (a.extent(0) != b.extent(0)) {
         throw std::runtime_error("Error: inner_product: dimension mismatch");
     }
-    Complex<Prec> result;
+    Kokkos::complex<double> result;
     Kokkos::parallel_reduce(
         "inner_product",
         Kokkos::RangePolicy<SpaceType<Space>>(0, a.extent(0)),
-        KOKKOS_LAMBDA(std::uint64_t i, Complex<Prec> & lsum) {
-            lsum += internal::conj(a(i)) * b(i);
+        KOKKOS_LAMBDA(std::uint64_t i, Kokkos::complex<double> & lsum) {
+            lsum += Kokkos::conj(to_complex_double(a(i))) * to_complex_double(b(i));
         },
         result);
-    return result;
+    return StdComplex(result.real(), result.imag());
 }
 
 template <Precision Prec>

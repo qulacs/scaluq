@@ -146,6 +146,35 @@ inline complex<T> operator-(complex<T> a, const complex<T>& b) {
     return a -= b;
 }
 
+template <class T>
+inline complex<T> operator-(const complex<T>& value) {
+    return {-value.real(), -value.imag()};
+}
+template <class T>
+inline complex<T> operator*(const complex<T>& value, std::type_identity_t<T> scalar) {
+    return {value.real() * scalar, value.imag() * scalar};
+}
+template <class T>
+inline complex<T> operator*(std::type_identity_t<T> scalar, const complex<T>& value) {
+    return value * scalar;
+}
+template <class T>
+inline complex<T> operator/(const complex<T>& a, const complex<T>& b) {
+    return complex<T>(static_cast<std::complex<T>>(a) / static_cast<std::complex<T>>(b));
+}
+template <class T>
+inline complex<T> operator/(const complex<T>& value, std::type_identity_t<T> scalar) {
+    return {value.real() / scalar, value.imag() / scalar};
+}
+template <class T>
+inline complex<T> conj(const complex<T>& value) {
+    return {value.real(), -value.imag()};
+}
+template <class T>
+inline T real(const complex<T>& value) {
+    return value.real();
+}
+
 // ── Array ──────────────────────────────────────────────────────────────────
 template <class T, std::size_t N>
 struct Array {

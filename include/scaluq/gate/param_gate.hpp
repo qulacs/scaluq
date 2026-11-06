@@ -294,6 +294,9 @@ DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamRZGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamPauliRotationGateImpl)
 DECLARE_GET_FROM_JSON_PARTIAL_SPECIALIZATION(ParamProbabilisticGateImpl)
 
+template <Precision Prec>
+ParamGateType get_runtime_param_gate_type(const ParamGateBase<Prec>& gate);
+
 template <ParamGateImpl T>
 class ParamGatePtr {
     friend class ParamGateFactory;
@@ -314,6 +317,9 @@ public:
         if constexpr (std::is_same_v<T, U>) {
             _param_gate_type = get_param_gate_type<T, Prec>();
             _param_gate_ptr = param_gate_ptr;
+            if constexpr (std::is_same_v<T, ParamGateBase<Prec>>) {
+                if (param_gate_ptr) _param_gate_type = get_runtime_param_gate_type(*param_gate_ptr);
+            }
         } else if constexpr (std::is_same_v<T, ParamGateBase<Prec>>) {
             // upcast
             _param_gate_type = get_param_gate_type<U, Prec>();
