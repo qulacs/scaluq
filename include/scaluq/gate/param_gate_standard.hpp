@@ -13,6 +13,7 @@ public:
     using ParamGateBase<Prec>::ParamGateBase;
     using ParamGateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] ParamGateType param_gate_type() const override { return ParamGateType::ParamRX; }
     std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const override {
         return std::make_shared<const ParamRXGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_pcoef);
@@ -51,6 +52,7 @@ public:
     using ParamGateBase<Prec>::ParamGateBase;
     using ParamGateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] ParamGateType param_gate_type() const override { return ParamGateType::ParamRY; }
     std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const override {
         return std::make_shared<const ParamRYGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_pcoef);
@@ -89,6 +91,7 @@ public:
     using ParamGateBase<Prec>::ParamGateBase;
     using ParamGateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] ParamGateType param_gate_type() const override { return ParamGateType::ParamRZ; }
     std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const override {
         return std::make_shared<const ParamRZGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_pcoef);

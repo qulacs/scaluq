@@ -30,6 +30,7 @@ public:
 
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::DenseMatrix; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override;
 
     Matrix<Prec, Space> get_matrix_internal() const;
@@ -80,6 +81,7 @@ public:
 
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::SparseMatrix; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override;
 
     Matrix<Prec, Space> get_matrix_internal() const;
