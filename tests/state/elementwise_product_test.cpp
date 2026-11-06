@@ -48,3 +48,28 @@ TYPED_TEST(ElementwiseProductTest, ScalarAndInvalidDimensions) {
     EXPECT_THROW(scalar.multiply_elementwise(wrong), std::invalid_argument);
     EXPECT_NEAR(std::abs(scalar.get_amplitudes()[0] - StdComplex(1., -1.)), 0., eps<Prec>);
 }
+
+TYPED_TEST(ElementwiseProductTest, PartiallyOverlappingViews) {
+    constexpr auto Prec = TestFixture::Prec;
+    constexpr auto Space = TestFixture::Space;
+    using State = StateVector<Prec, Space>;
+    typename State::RawView storage("overlapping_states", 48);
+    auto host = Kokkos::create_mirror_view(storage);
+    for (std::uint64_t i = 0; i < 48; ++i) {
+        host(i) = internal::Complex<Prec>(.125 * (1 + i % 4), .25);
+    }
+    for (bool reversed : {false, true}) {
+        Kokkos::deep_copy(storage, host);
+        State left(Kokkos::subview(storage, std::make_pair(0ULL, 32ULL)));
+        State right(Kokkos::subview(storage, std::make_pair(16ULL, 48ULL)));
+        auto& output = reversed ? right : left;
+        auto& diagonal = reversed ? left : right;
+        const auto original = output.get_amplitudes();
+        const auto weights = diagonal.get_amplitudes();
+        output.multiply_elementwise(diagonal);
+        const auto result = output.get_amplitudes();
+        for (std::size_t i = 0; i < result.size(); ++i) {
+            EXPECT_NEAR(std::abs(result[i] - original[i] * weights[i]), 0., eps<Prec>);
+        }
+    }
+}

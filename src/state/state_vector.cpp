@@ -1,3 +1,4 @@
+#include <functional>
 #include <scaluq/prec_space.hpp>
 #include <scaluq/state/state_vector.hpp>
 #include <scaluq/util/math.hpp>
@@ -226,7 +227,15 @@ void StateVector<Prec, Space>::multiply_elementwise(const StateVector& other) {
         throw std::invalid_argument("multiply_elementwise: state dimensions must match");
     }
     auto output = _raw;
-    auto diagonal = other._raw;
+    auto source = other;
+    // Distinct overlapping views need a snapshot; exact aliases are pointwise safe.
+    std::less<const ComplexType*> before;
+    if (_dim != 0 && output.data() != source._raw.data() &&
+        before(output.data(), source._raw.data() + _dim) &&
+        before(source._raw.data(), output.data() + _dim)) {
+        source = other.copy();
+    }
+    auto diagonal = source._raw;
     Kokkos::parallel_for(
         "multiply_elementwise",
         Kokkos::RangePolicy<ExecutionSpaceType>(0, _dim),
