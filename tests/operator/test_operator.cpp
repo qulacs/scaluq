@@ -501,3 +501,27 @@ TYPED_TEST(OperatorTest, ArnoldiDoesNotBreakDownOnNonzeroResidual) {
     ASSERT_TRUE(std::isfinite(ground_state.eigenvalue.real()));
     ASSERT_NEAR(ground_state.eigenvalue.real(), -0.5, 0.1);
 }
+
+TYPED_TEST(OperatorTest, ApplyToOutputAndAlias) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    StateVector<Prec, Space> input(2);
+    input.load(std::vector<StdComplex>{1., 2., 3., 4.});
+    std::vector<PauliOperator<Prec>> terms = {
+        PauliOperator<Prec>("Y 0", StdComplex(2., 1.)),
+        PauliOperator<Prec>("Z 1", StdComplex(-1., 0.5)),
+        PauliOperator<Prec>("", StdComplex(0.25, -0.5))};
+    Operator<Prec, Space> op(terms);
+    auto expected = input.copy();
+    expected.set_zero_norm_state();
+    for (const auto& term : terms) term.apply_add(input, expected);
+    auto output = input.copy();
+    op.apply_to_state(input, output);
+    auto alias = input.copy();
+    op.apply_to_state(alias, alias);
+    auto a = expected.get_amplitudes(), b = output.get_amplitudes(), c = alias.get_amplitudes();
+    for (std::size_t i = 0; i < a.size(); ++i) {
+        EXPECT_NEAR(std::abs(a[i] - b[i]), 0., 1e-5);
+        EXPECT_NEAR(std::abs(a[i] - c[i]), 0., 1e-5);
+    }
+}

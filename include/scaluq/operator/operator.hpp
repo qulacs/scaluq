@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <random>
 #include <vector>
 
@@ -49,6 +50,7 @@ public:
     [[nodiscard]] ComplexMatrix get_full_matrix(std::uint64_t n_qubits) const;
 
     void apply_to_state(StateVector<Prec, Space>& state_vector) const;
+    void apply_to_state(const StateVector<Prec, Space>& input, StateVector<Prec, Space>& output) const;
 
     [[nodiscard]] StdComplex get_expectation_value(
         const StateVector<Prec, Space>& state_vector) const;
@@ -182,9 +184,13 @@ void bind_operator_operator_hpp(nb::module_& m) {
              &Operator<Prec, Space>::get_dagger,
              "Get the adjoint (Hermitian conjugate) of the operator.")
         .def("apply_to_state",
-             &Operator<Prec, Space>::apply_to_state,
+             nb::overload_cast<StateVector<Prec, Space>&>(&Operator<Prec, Space>::apply_to_state, nb::const_),
              "state"_a,
              "Apply the operator to a state vector.")
+        .def("apply_to_state",
+             nb::overload_cast<const StateVector<Prec, Space>&, StateVector<Prec, Space>&>(
+                 &Operator<Prec, Space>::apply_to_state, nb::const_),
+             "input"_a, "output"_a, "Apply the operator into output; aliasing is supported.")
         .def(
             "get_expectation_value",
             [](const Operator<Prec, Space>& op, const StateVector<Prec, Space>& state) {

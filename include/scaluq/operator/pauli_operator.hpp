@@ -45,13 +45,34 @@ public:
     [[nodiscard]] KOKKOS_INLINE_FUNCTION PauliOperator get_dagger() const {
         return PauliOperator(_bit_flip_mask, _phase_flip_mask, scaluq::internal::conj(_coef));
     };
-    [[nodiscard]] std::uint64_t get_qubit_count() const;
+    [[nodiscard]] std::uint64_t get_qubit_count() const {
+        return std::bit_width(_bit_flip_mask | _phase_flip_mask);
+    }
 
     void add_single_pauli(std::uint64_t target_qubit, std::uint64_t pauli_id);
 
     template <ExecutionSpace Space>
     void apply_to_state(StateVector<Prec, Space>& state_vector) const {
         internal::apply_pauli(0ULL, 0LL, _bit_flip_mask, _phase_flip_mask, _coef, state_vector);
+    }
+
+    // Add coef times this Pauli operator applied to input. Input and output may alias.
+    template <ExecutionSpace Space>
+    void apply_add(const StateVector<Prec, Space>& input, StateVector<Prec, Space>& output,
+                   StdComplex coef = 1.) const {
+        if (input.n_qubits() != output.n_qubits() || get_qubit_count() > input.n_qubits())
+            throw std::runtime_error("PauliOperator::apply_add: incompatible qubit counts");
+        auto source = input._raw.data() == output._raw.data() ? input.copy() : input;
+        auto x = _bit_flip_mask, z = _phase_flip_mask;
+        ComplexType factor = _coef * ComplexType(coef) *
+            internal::PHASE_90ROT<Prec>()[std::popcount(x & z) % 4];
+        Kokkos::parallel_for("PauliOperator::apply_add",
+            Kokkos::RangePolicy<internal::SpaceType<Space>>(0, input.dim()),
+            KOKKOS_LAMBDA(std::uint64_t i) {
+                auto b = i ^ x;
+                auto value = factor * source.at_unsafe(b);
+                output.at_unsafe(i) += (Kokkos::popcount(b & z) & 1) ? -value : value;
+            });
     }
 
     template <ExecutionSpace Space>
@@ -183,6 +204,12 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
                  &PauliOperator<Prec>::template apply_to_state<ExecutionSpace::Host>, nb::const_),
              "state"_a,
              "Apply pauli to state vector.")
+        .def("apply_add", &PauliOperator<Prec>::template apply_add<ExecutionSpace::HostSerial>,
+             "input"_a, "output"_a, "coef"_a = 1.,
+             "Add coef times this Pauli operator applied to input to output; aliasing is supported.")
+        .def("apply_add", &PauliOperator<Prec>::template apply_add<ExecutionSpace::Host>,
+             "input"_a, "output"_a, "coef"_a = 1.,
+             "Add coef times this Pauli operator applied to input to output; aliasing is supported.")
         .def("get_expectation_value",
              nb::overload_cast<const StateVector<Prec, ExecutionSpace::Host>&>(
                  &PauliOperator<Prec>::template get_expectation_value<ExecutionSpace::Host>,
@@ -212,6 +239,9 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "states_target"_a,
              "Get transition amplitude of measuring state vectors. $\\bra{\\chi}P\\ket{\\psi}$.")
 #ifdef SCALUQ_USE_DEVICE
+        .def("apply_add", &PauliOperator<Prec>::template apply_add<ExecutionSpace::Default>,
+             "input"_a, "output"_a, "coef"_a = 1., "Add the applied Pauli to output.")
+
         .def("get_expectation_value",
              nb::overload_cast<const StateVector<Prec, ExecutionSpace::Default>&>(
                  &PauliOperator<Prec>::template get_expectation_value<ExecutionSpace::Default>,
