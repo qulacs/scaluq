@@ -58,6 +58,7 @@ public:
         return ret;
     }
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::Probabilistic; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override;
     ComplexMatrix get_matrix() const override {
         throw std::runtime_error(
