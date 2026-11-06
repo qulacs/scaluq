@@ -231,6 +231,19 @@ void circuit_rev_test() {
     if (target_sub >= target) target_sub++;
     circuit.add_gate(gate::Swap<Prec>(target, target_sub));
 
+    target = random.int32() % n;
+    target_sub = random.int32() % (n - 1);
+    if (target_sub >= target) target_sub++;
+    ComplexMatrix dense_mat = get_eigen_matrix_random_one_target_unitary();
+    circuit.add_gate(gate::DenseMatrix<Prec, Space>({target}, dense_mat, {target_sub}));
+
+    target = random.int32() % n;
+    target_sub = random.int32() % (n - 1);
+    if (target_sub >= target) target_sub++;
+    ComplexMatrix sparse_mat = get_eigen_matrix_random_one_target_unitary();
+    circuit.add_gate(
+        gate::SparseMatrix<Prec, Space>({target}, sparse_mat.sparseView(), {target_sub}));
+
     circuit.update_quantum_state(state);
 
     auto revcircuit = circuit.get_inverse();
