@@ -79,7 +79,7 @@ public:
             auto cache = cache_;
             Kokkos::parallel_for(
                 "GroupedPauliOperator::cache",
-                Kokkos::MDRangePolicy<Exec, Kokkos::Rank<2>, Kokkos::IndexType<std::uint64_t>>(
+                Kokkos::MDRangePolicy<Exec, Kokkos::Rank<2>>(
                     {0, 0},
                     {static_cast<std::int64_t>(groups.size()), static_cast<std::int64_t>(dim_)}),
                 KOKKOS_LAMBDA(std::uint64_t g, std::uint64_t b) {
