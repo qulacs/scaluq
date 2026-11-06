@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bit>
+#include <scaluq/operator/apply_pauli.hpp>
 #include <scaluq/operator/pauli_operator.hpp>
 #include <scaluq/state/density_matrix.hpp>
 #include <scaluq/state/state_vector.hpp>
@@ -328,6 +329,77 @@ void rz_gate(std::uint64_t target_mask,
              Float<Prec> pcoef,
              const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
              StateVectorBatched<Prec, Space>& states);
+
+template <Precision Prec, typename State>
+inline void apply_pauli_rotation_optimized(std::uint64_t control_mask,
+                                           std::uint64_t control_value_mask,
+                                           std::uint64_t bit_flip_mask,
+                                           std::uint64_t phase_flip_mask,
+                                           Complex<Prec> coef,
+                                           Float<Prec> angle,
+                                           State& state) {
+    if constexpr (UpdatableStateVector<State>) {
+        const std::uint64_t target_mask = bit_flip_mask | phase_flip_mask;
+        if (std::popcount(target_mask) == 1 && coef.imag() == 0) {
+            const Float<Prec> true_angle = angle * coef.real();
+            if (bit_flip_mask == 0) {
+                rz_gate(target_mask, control_mask, control_value_mask, true_angle, state);
+                return;
+            }
+            if (phase_flip_mask == 0) {
+                rx_gate(target_mask, control_mask, control_value_mask, true_angle, state);
+                return;
+            }
+            if (phase_flip_mask == bit_flip_mask) {
+                ry_gate(target_mask, control_mask, control_value_mask, true_angle, state);
+                return;
+            }
+        }
+    }
+    apply_pauli_rotation(control_mask,
+                         control_value_mask,
+                         bit_flip_mask,
+                         phase_flip_mask,
+                         coef,
+                         angle,
+                         state);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+inline void apply_param_pauli_rotation_optimized(
+    std::uint64_t control_mask,
+    std::uint64_t control_value_mask,
+    std::uint64_t bit_flip_mask,
+    std::uint64_t phase_flip_mask,
+    Complex<Prec> coef,
+    Float<Prec> pcoef,
+    const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
+    StateVectorBatched<Prec, Space>& states) {
+    const std::uint64_t target_mask = bit_flip_mask | phase_flip_mask;
+    if (std::popcount(target_mask) == 1 && coef.imag() == 0) {
+        const Float<Prec> true_pcoef = pcoef * coef.real();
+        if (bit_flip_mask == 0) {
+            rz_gate(target_mask, control_mask, control_value_mask, true_pcoef, params, states);
+            return;
+        }
+        if (phase_flip_mask == 0) {
+            rx_gate(target_mask, control_mask, control_value_mask, true_pcoef, params, states);
+            return;
+        }
+        if (phase_flip_mask == bit_flip_mask) {
+            ry_gate(target_mask, control_mask, control_value_mask, true_pcoef, params, states);
+            return;
+        }
+    }
+    apply_pauli_rotation(control_mask,
+                         control_value_mask,
+                         bit_flip_mask,
+                         phase_flip_mask,
+                         coef,
+                         pcoef,
+                         params,
+                         states);
+}
 
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Matrix2x2<Prec> get_IBMQ_matrix(Float<Prec> theta,
