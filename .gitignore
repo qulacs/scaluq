@@ -49,3 +49,5 @@ __pycache__/
 /kokkos-tools
 /example_project/build/
 /Testing/
+
+/ref/

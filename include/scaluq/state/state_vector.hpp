@@ -7,6 +7,9 @@
 #include <stdexcept>
 #include <variant>
 #include <vector>
+#ifdef SCALUQ_USE_NANOBIND
+#include <nanobind/ndarray.h>
+#endif
 
 #include "../types.hpp"
 #include "../util/random.hpp"
@@ -69,6 +72,11 @@ public:
     }
 
     [[nodiscard]] std::vector<StdComplex> get_amplitudes() const;
+    [[nodiscard]] std::vector<StdComplex> get_amplitudes(std::uint64_t start,
+                                                         std::uint64_t count) const;
+    [[nodiscard]] StateVector extract_substate(const std::vector<std::uint64_t>& fixed_qubits,
+                                               const std::vector<std::uint64_t>& values) const;
+    void embed_substate(const StateVector& state, const std::vector<std::uint64_t>& target_qubits);
 
     [[nodiscard]] double get_squared_norm() const;
 
@@ -330,7 +338,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("get_amplitudes",
-             &StateVector<Prec, Space>::get_amplitudes,
+             nb::overload_cast<>(&StateVector<Prec, Space>::get_amplitudes, nb::const_),
              DocString()
                  .desc("Get all amplitudes as `list[complex]`.")
                  .ret("list[complex]", "amplitudes of list with len $2^{\\mathrm{n\\_qubits}}$")
@@ -339,6 +347,85 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                                      "[(1+0j), 0j, 0j, 0j]"})
                  .build_as_google_style()
                  .c_str())
+        .def("get_amplitudes",
+             nb::overload_cast<std::uint64_t, std::uint64_t>(
+                 &StateVector<Prec, Space>::get_amplitudes, nb::const_),
+             "start"_a,
+             "count"_a,
+             "Read a contiguous range of amplitudes.")
+        .def("extract_substate",
+             &StateVector<Prec, Space>::extract_substate,
+             "fixed_qubits"_a,
+             "values"_a,
+             "Project fixed qubits; remaining qubits retain ascending order. The result is not "
+             "normalized.")
+        .def("embed_substate",
+             &StateVector<Prec, Space>::embed_substate,
+             "state"_a,
+             "target_qubits"_a,
+             "Replace this state with state embedded on target qubits; all other qubits are zero.")
+        .def(
+            "get_amplitudes_numpy",
+            [](const StateVector<Prec, Space>& state) {
+                using Float = internal::Float<Prec>;
+                if constexpr (Prec == Precision::F32 || Prec == Precision::F64) {
+                    using Value = std::complex<Float>;
+                    using Raw = internal::Complex<Prec>;
+                    static_assert(
+                        sizeof(Value) == sizeof(Raw) && std::is_trivially_copyable_v<Raw> &&
+                        std::is_standard_layout_v<Raw> && sizeof(Raw) == 2 * sizeof(Float));
+                    nb::object array = nb::module_::import_("numpy").attr("empty")(
+                        state.dim(),
+                        nb::arg("dtype") = (Prec == Precision::F32 ? "complex64" : "complex128"));
+                    auto data =
+                        nb::cast<nb::ndarray<nb::numpy, Value, nb::ndim<1>, nb::c_contig>>(array);
+                    using HostBytes = Kokkos::View<unsigned char*,
+                                                   Kokkos::HostSpace,
+                                                   Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+                    using DeviceBytes = Kokkos::View<const unsigned char*,
+                                                     internal::SpaceType<Space>,
+                                                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+                    auto size = state.dim() * sizeof(Raw);
+                    Kokkos::deep_copy(
+                        HostBytes(reinterpret_cast<unsigned char*>(data.data()), size),
+                        DeviceBytes(reinterpret_cast<const unsigned char*>(state._raw.data()),
+                                    size));
+                    return array;
+                } else {
+                    throw std::invalid_argument("NumPy transfer supports f32 and f64 states");
+                }
+            },
+            "Return an independent NumPy array with the state's native complex dtype.")
+        .def(
+            "load_numpy",
+            [](StateVector<Prec, Space>& state, nb::object array) {
+                using Float = internal::Float<Prec>;
+                if constexpr (Prec == Precision::F32 || Prec == Precision::F64) {
+                    using Value = std::complex<Float>;
+                    using Raw = internal::Complex<Prec>;
+                    static_assert(
+                        sizeof(Value) == sizeof(Raw) && std::is_trivially_copyable_v<Raw> &&
+                        std::is_standard_layout_v<Raw> && sizeof(Raw) == 2 * sizeof(Float));
+                    using Array = nb::ndarray<nb::numpy, const Value, nb::ndim<1>, nb::c_contig>;
+                    auto data = nb::cast<Array>(array, false);
+                    if (data.shape(0) != state.dim())
+                        throw std::invalid_argument("array length must equal state dimension");
+                    using HostBytes = Kokkos::View<const unsigned char*,
+                                                   Kokkos::HostSpace,
+                                                   Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+                    using DeviceBytes = Kokkos::View<unsigned char*,
+                                                     internal::SpaceType<Space>,
+                                                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+                    auto size = state.dim() * sizeof(Raw);
+                    Kokkos::deep_copy(
+                        DeviceBytes(reinterpret_cast<unsigned char*>(state._raw.data()), size),
+                        HostBytes(reinterpret_cast<const unsigned char*>(data.data()), size));
+                } else {
+                    throw std::invalid_argument("NumPy transfer supports f32 and f64 states");
+                }
+            },
+            "array"_a,
+            "Load a contiguous NumPy array of the state's native complex dtype.")
         .def("n_qubits",
              &StateVector<Prec, Space>::n_qubits,
              DocString()
