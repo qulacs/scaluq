@@ -108,12 +108,39 @@ ComplexMatrix Operator<internal::Prec, internal::Space>::get_full_matrix(
 
 template <>
 void Operator<internal::Prec, internal::Space>::apply_to_state(
+    const StateVector<internal::Prec, internal::Space>& input,
+    StateVector<internal::Prec, internal::Space>& output) const {
+    if (input.n_qubits() != output.n_qubits())
+        throw std::runtime_error("Operator::apply_to_state: incompatible qubit counts");
+    for (const auto& term : get_terms()) {
+        if (term.get_qubit_count() > input.n_qubits())
+            throw std::runtime_error("Operator::apply_to_state: insufficient qubits");
+    }
+    auto source = input._raw.data() == output._raw.data() ? input.copy() : input;
+    auto terms = _terms;
+    auto nterms = _terms.size();
+    Kokkos::parallel_for(
+        "Operator::apply_to_state",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, input.dim()),
+        KOKKOS_LAMBDA(std::uint64_t i) {
+            ComplexType sum = 0.;
+            for (std::uint64_t t = 0; t < nterms; ++t) {
+                const auto term = terms(t);
+                auto b = i ^ term._bit_flip_mask;
+                auto phase = internal::PHASE_90ROT<internal::Prec>()
+                    [Kokkos::popcount(term._bit_flip_mask & term._phase_flip_mask) % 4];
+                auto value = term._coef * phase * source.at_unsafe(b);
+                sum += (Kokkos::popcount(b & term._phase_flip_mask) & 1) ? -value : value;
+            }
+            output.at_unsafe(i) = sum;
+        });
+}
+
+template <>
+void Operator<internal::Prec, internal::Space>::apply_to_state(
     StateVector<internal::Prec, internal::Space>& state_vector) const {
-    auto states = StateVectorBatched<internal::Prec, internal::Space>::uninitialized_state(
-        _terms.size(), state_vector.n_qubits());
-    states.set_state_vector(state_vector);
-    internal::apply_pauli<internal::Prec, internal::Space>(0, 0, _terms, states);
-    state_vector = states.get_reduced_state();
+    auto input = state_vector.copy();
+    apply_to_state(input, state_vector);
 }
 
 template <>

@@ -299,3 +299,25 @@ TYPED_TEST(PauliOperatorTest, GetExpectationValueTest) {
         check_near<Prec>(results[i], res_eigen);
     }
 }
+
+TYPED_TEST(PauliOperatorTest, ApplyAdd) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    StateVector<Prec, Space> input(2);
+    input.load(std::vector<StdComplex>{1., 2., 3., 4.});
+    PauliOperator<Prec> op("Y 0 Z 1", StdComplex(2., 1.));
+    const StdComplex factor(0.5, -0.25);
+    auto expected = input.copy();
+    auto applied = input.copy();
+    op.apply_to_state(applied);
+    expected.add_state_vector_with_coef(factor, applied);
+    auto output = input.copy();
+    op.apply_add(input, output, factor);
+    auto alias = input.copy();
+    op.apply_add(alias, alias, factor);
+    auto a = expected.get_amplitudes(), b = output.get_amplitudes(), c = alias.get_amplitudes();
+    for (std::size_t i = 0; i < a.size(); ++i) {
+        EXPECT_NEAR(std::abs(a[i] - b[i]), 0., 1e-5);
+        EXPECT_NEAR(std::abs(a[i] - c[i]), 0., 1e-5);
+    }
+}
