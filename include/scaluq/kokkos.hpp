@@ -1,11 +1,17 @@
 #pragma once
 
+#include <cstdint>
+
 namespace scaluq {
 void initialize();
 void finalize();
 bool is_initialized();
 bool is_finalized();
 void synchronize();
+// Maximum number of amplitudes in a host state eligible for serial gate kernels.
+// Zero disables serial dispatch (the default).
+void set_small_state_serial_threshold(std::uint64_t max_amplitudes);
+std::uint64_t get_small_state_serial_threshold();
 }  // namespace scaluq
 
 #ifdef SCALUQ_USE_NANOBIND
@@ -40,6 +46,14 @@ void bind_kokkos_hpp(nb::module_& m) {
         .def("is_finalized",
              &is_finalized,
              "Return true if :func:`~scaluq.finalize()` is already called.")
+        .def("set_small_state_serial_threshold",
+             &set_small_state_serial_threshold,
+             nb::arg("max_amplitudes"),
+             "Set the maximum host-state amplitude count for selected serial gate kernels; zero "
+             "disables dispatch.")
+        .def("get_small_state_serial_threshold",
+             &get_small_state_serial_threshold,
+             "Get the maximum host-state amplitude count for serial gate kernels.")
         .def("synchronize",
              &synchronize,
              DocString()
