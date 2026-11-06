@@ -221,6 +221,18 @@ void StateVector<Prec, Space>::multiply_coef(StdComplex coef) {
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { this->_raw[i] *= coef; });
 }
 template <Precision Prec, ExecutionSpace Space>
+void StateVector<Prec, Space>::multiply_elementwise(const StateVector& other) {
+    if (_dim != other.dim()) {
+        throw std::invalid_argument("multiply_elementwise: state dimensions must match");
+    }
+    auto output = _raw;
+    auto diagonal = other._raw;
+    Kokkos::parallel_for(
+        "multiply_elementwise",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, _dim),
+        KOKKOS_LAMBDA(std::uint64_t i) { output(i) *= diagonal(i); });
+}
+template <Precision Prec, ExecutionSpace Space>
 std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(
     std::uint64_t sampling_count, std::optional<std::uint64_t> seed) const {
     std::uint64_t actual_seed = internal::resolve_seed(seed);
