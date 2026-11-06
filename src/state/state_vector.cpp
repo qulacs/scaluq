@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <scaluq/prec_space.hpp>
 #include <scaluq/state/state_vector.hpp>
 #include <scaluq/util/math.hpp>
@@ -106,13 +107,87 @@ template <Precision Prec, ExecutionSpace Space>
     });
     return ret;
 }
+namespace {
+void validate_qubits(const std::vector<std::uint64_t>& qubits, std::uint64_t n) {
+    std::uint64_t seen = 0;
+    for (auto q : qubits) {
+        if (q >= n || (seen & (1ULL << q)))
+            throw std::invalid_argument("qubits must be distinct and in range");
+        seen |= 1ULL << q;
+    }
+}
+}  // namespace
+template <Precision Prec, ExecutionSpace Space>
+std::vector<StdComplex> StateVector<Prec, Space>::get_amplitudes(std::uint64_t start,
+                                                                 std::uint64_t count) const {
+    if (start > _dim || count > _dim - start)
+        throw std::out_of_range("amplitude range out of bounds");
+    auto view = Kokkos::subview(_raw, std::make_pair(start, start + count));
+    auto host = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), view);
+    std::vector<StdComplex> result(count);
+    for (std::uint64_t i = 0; i < count; ++i)
+        result[i] = StdComplex(host(i).real(), host(i).imag());
+    return result;
+}
+template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, Space> StateVector<Prec, Space>::extract_substate(
+    const std::vector<std::uint64_t>& fixed, const std::vector<std::uint64_t>& values) const {
+    validate_qubits(fixed, _n_qubits);
+    if (fixed.size() != values.size())
+        throw std::invalid_argument("fixed qubits and values must have equal length");
+    std::uint64_t mask = 0, bits = 0;
+    for (std::size_t i = 0; i < fixed.size(); ++i) {
+        if (values[i] > 1) throw std::invalid_argument("fixed values must be 0 or 1");
+        mask |= 1ULL << fixed[i];
+        bits |= values[i] << fixed[i];
+    }
+    auto out = uninitialized_state(_n_qubits - fixed.size());
+    auto dst = out._raw;
+    auto src = _raw;
+    auto n = _n_qubits;
+    Kokkos::parallel_for(
+        "extract_substate",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, out.dim()),
+        KOKKOS_LAMBDA(std::uint64_t i) {
+            std::uint64_t index = bits, j = 0;
+            for (std::uint64_t q = 0; q < n; ++q)
+                if (!(mask & (1ULL << q))) index |= ((i >> j++) & 1ULL) << q;
+            dst(i) = src(index);
+        });
+    return out;
+}
+template <Precision Prec, ExecutionSpace Space>
+void StateVector<Prec, Space>::embed_substate(const StateVector& state,
+                                              const std::vector<std::uint64_t>& targets) {
+    validate_qubits(targets, _n_qubits);
+    if (targets.size() != state.n_qubits())
+        throw std::invalid_argument("target count must equal source qubit count");
+    // Copy first to allow embedding a state into itself.
+    auto source = state._raw.data() == _raw.data() ? state.copy() : state;
+    auto src = source._raw;
+    auto dst = _raw;
+    Kokkos::View<std::uint64_t*, ExecutionSpaceType> qs("targets", targets.size());
+    auto hq = Kokkos::create_mirror_view(qs);
+    for (std::size_t i = 0; i < targets.size(); ++i) hq(i) = targets[i];
+    Kokkos::deep_copy(qs, hq);
+    set_zero_norm_state();
+    auto k = targets.size();
+    Kokkos::parallel_for(
+        "embed_substate",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, state.dim()),
+        KOKKOS_LAMBDA(std::uint64_t i) {
+            std::uint64_t index = 0;
+            for (std::uint64_t j = 0; j < k; ++j) index |= ((i >> j) & 1ULL) << qs(j);
+            dst(index) = src(i);
+        });
+}
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_squared_norm() const {
     FloatType norm{0.0f};
     Kokkos::parallel_reduce(
         "get_squared_norm",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t it, FloatType & tmp) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t it, FloatType& tmp) {
             tmp += internal::squared_norm<Prec>(this->_raw[it]);
         },
         norm);
@@ -137,7 +212,7 @@ double StateVector<Prec, Space>::get_zero_probability(std::uint64_t target_qubit
     Kokkos::parallel_reduce(
         "zero_prob",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> 1),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & lsum) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType& lsum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(i, target_qubit_index);
             lsum += internal::squared_norm(this->_raw[basis_0]);
         },
@@ -175,7 +250,7 @@ double StateVector<Prec, Space>::get_marginal_probability(
     Kokkos::parallel_reduce(
         "marginal_prob",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> target_index.size()),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & lsum) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType& lsum) {
             std::uint64_t basis = i;
             for (std::uint64_t cursor = 0; cursor < d_target_index.size(); cursor++) {
                 std::uint64_t insert_index = d_target_index(cursor);
@@ -194,7 +269,7 @@ double StateVector<Prec, Space>::get_computational_basis_entropy() const {
     Kokkos::parallel_reduce(
         "get_computational_basis_entropy",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t idx, FloatType & lsum) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t idx, FloatType& lsum) {
             FloatType prob = internal::squared_norm(_raw[idx]);
             if (prob > FloatType{0.0f}) {
                 lsum += -prob * internal::log2(prob);
@@ -228,7 +303,7 @@ std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(
     Kokkos::parallel_scan(
         "sampling (compute stacked prob)",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & update, const bool final) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType& update, const bool final) {
             update += internal::squared_norm(this->_raw(i));
             if (final) {
                 stacked_prob[i + 1] = update;

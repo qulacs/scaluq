@@ -312,3 +312,30 @@ TYPED_TEST(StateVectorTest, SamplingComputationalBasis) {
         ASSERT_EQ(res[i], 100);
     }
 }
+
+TYPED_TEST(StateVectorTest, DataAccessAndSubstates) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    StateVector<Prec, Space> state(3);
+    state.load(
+        std::vector<StdComplex>{{0, 0}, {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}});
+    EXPECT_EQ(state.get_amplitudes(2, 3), (std::vector<StdComplex>{{2, 0}, {3, 0}, {4, 0}}));
+    EXPECT_THROW(state.get_amplitudes(8, 1), std::out_of_range);
+    EXPECT_TRUE(state.get_amplitudes(8, 0).empty());
+    EXPECT_EQ(state.extract_substate({}, {}).get_amplitudes(), state.get_amplitudes());
+    EXPECT_EQ(state.extract_substate({2, 0, 1}, {1, 0, 1}).get_amplitudes(),
+              (std::vector<StdComplex>{{6, 0}}));
+    EXPECT_THROW(state.extract_substate({1}, {2}), std::invalid_argument);
+    EXPECT_THROW(state.extract_substate({3}, {0}), std::invalid_argument);
+    EXPECT_THROW(state.extract_substate({1}, {}), std::invalid_argument);
+    auto sub = state.extract_substate({1}, {1});
+    EXPECT_EQ(sub.get_amplitudes(), (std::vector<StdComplex>{{2, 0}, {3, 0}, {6, 0}, {7, 0}}));
+    EXPECT_THROW(state.extract_substate({1, 1}, {0, 1}), std::invalid_argument);
+    StateVector<Prec, Space> embedded(3);
+    EXPECT_THROW(embedded.embed_substate(sub, {0, 0}), std::invalid_argument);
+    EXPECT_THROW(embedded.embed_substate(sub, {0}), std::invalid_argument);
+    embedded.embed_substate(sub, {2, 0});
+    EXPECT_EQ(
+        embedded.get_amplitudes(),
+        (std::vector<StdComplex>{{2, 0}, {6, 0}, {0, 0}, {0, 0}, {3, 0}, {7, 0}, {0, 0}, {0, 0}}));
+}
