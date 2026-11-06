@@ -320,5 +320,4 @@ TYPED_TEST(PauliOperatorTest, ApplyAdd) {
         EXPECT_NEAR(std::abs(a[i] - b[i]), 0., 1e-5);
         EXPECT_NEAR(std::abs(a[i] - c[i]), 0., 1e-5);
     }
-
 }

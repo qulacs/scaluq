@@ -119,15 +119,16 @@ void Operator<internal::Prec, internal::Space>::apply_to_state(
     auto source = input._raw.data() == output._raw.data() ? input.copy() : input;
     auto terms = _terms;
     auto nterms = _terms.size();
-    Kokkos::parallel_for("Operator::apply_to_state",
+    Kokkos::parallel_for(
+        "Operator::apply_to_state",
         Kokkos::RangePolicy<ExecutionSpaceType>(0, input.dim()),
         KOKKOS_LAMBDA(std::uint64_t i) {
             ComplexType sum = 0.;
             for (std::uint64_t t = 0; t < nterms; ++t) {
                 const auto term = terms(t);
                 auto b = i ^ term._bit_flip_mask;
-                auto phase = internal::PHASE_90ROT<internal::Prec>()[
-                    Kokkos::popcount(term._bit_flip_mask & term._phase_flip_mask) % 4];
+                auto phase = internal::PHASE_90ROT<internal::Prec>()
+                    [Kokkos::popcount(term._bit_flip_mask & term._phase_flip_mask) % 4];
                 auto value = term._coef * phase * source.at_unsafe(b);
                 sum += (Kokkos::popcount(b & term._phase_flip_mask) & 1) ? -value : value;
             }
@@ -141,7 +142,6 @@ void Operator<internal::Prec, internal::Space>::apply_to_state(
     auto input = state_vector.copy();
     apply_to_state(input, state_vector);
 }
-
 
 template <>
 StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(

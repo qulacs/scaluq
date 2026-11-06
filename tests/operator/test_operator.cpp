@@ -507,10 +507,9 @@ TYPED_TEST(OperatorTest, ApplyToOutputAndAlias) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     StateVector<Prec, Space> input(2);
     input.load(std::vector<StdComplex>{1., 2., 3., 4.});
-    std::vector<PauliOperator<Prec>> terms = {
-        PauliOperator<Prec>("Y 0", StdComplex(2., 1.)),
-        PauliOperator<Prec>("Z 1", StdComplex(-1., 0.5)),
-        PauliOperator<Prec>("", StdComplex(0.25, -0.5))};
+    std::vector<PauliOperator<Prec>> terms = {PauliOperator<Prec>("Y 0", StdComplex(2., 1.)),
+                                              PauliOperator<Prec>("Z 1", StdComplex(-1., 0.5)),
+                                              PauliOperator<Prec>("", StdComplex(0.25, -0.5))};
     Operator<Prec, Space> op(terms);
     auto expected = input.copy();
     expected.set_zero_norm_state();
