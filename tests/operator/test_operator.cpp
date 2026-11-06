@@ -534,11 +534,18 @@ TYPED_TEST(OperatorTest, GroupedPauliCachedAndStreaming) {
             EXPECT_NEAR(std::abs(a[i] - b[i]), 0., 1e-5);
             EXPECT_NEAR(std::abs(a[i] + initial[i] - c[i]), 0., 1e-5);
         }
-        StdComplex transition = 0.;
-        for (const auto& term : terms) transition += term.get_transition_amplitude(bra, ket);
+        StdComplex transition = 0., expectation = 0.;
+        auto bra_values = bra.get_amplitudes();
+        for (const auto& term : terms) {
+            auto applied = ket.copy();
+            term.apply_to_state(applied);
+            auto values = applied.get_amplitudes();
+            for (std::size_t i = 0; i < values.size(); ++i) {
+                transition += std::conj(bra_values[i]) * values[i];
+                expectation += std::conj(initial[i]) * values[i];
+            }
+        }
         EXPECT_NEAR(std::abs(grouped.get_transition_amplitude(bra, ket) - transition), 0., 1e-5);
-        StdComplex expectation = 0.;
-        for (const auto& term : terms) expectation += term.get_expectation_value(ket);
         EXPECT_NEAR(std::abs(grouped.get_expectation_value(ket) - expectation), 0., 1e-5);
     }
 }
