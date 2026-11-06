@@ -270,7 +270,13 @@ SparseMatrixGateImpl<Prec, Space>::SparseMatrixGateImpl(std::uint64_t target_mas
       num_nnz(mat.nonZeros()) {}
 template <Precision Prec, ExecutionSpace Space>
 std::shared_ptr<const GateBase<Prec>> SparseMatrixGateImpl<Prec, Space>::get_inverse() const {
-    throw std::runtime_error("inverse of sparse matrix gate is currently not available.");
+    const Eigen::FullPivLU<ComplexMatrix> decomposition(get_matrix());
+    if (!decomposition.isInvertible()) {
+        throw std::runtime_error("SparseMatrixGate::get_inverse(): matrix is singular.");
+    }
+    const SparseComplexMatrix inv_eigen = decomposition.inverse().sparseView();
+    return std::make_shared<const SparseMatrixGateImpl>(
+        this->_target_mask, this->_control_mask, this->_control_value_mask, inv_eigen);
 }
 template <Precision Prec, ExecutionSpace Space>
 Matrix<Prec, Space> SparseMatrixGateImpl<Prec, Space>::get_matrix_internal() const {

@@ -33,6 +33,7 @@ TYPED_TEST(GateTest, DenseMatrixInverseChecksInvertibility) {
                  std::runtime_error);
 }
 
+<<<<<<< HEAD
 TYPED_TEST(GateTest, GetInversePreservesGateTypeAndDowncast) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
@@ -97,6 +98,26 @@ TYPED_TEST(GateTest, GetInversePreservesGateTypeAndDowncast) {
                              ->get_inverse())
                   .gate_type(),
               GateType::Probabilistic);
+}
+
+TYPED_TEST(GateTest, SparseMatrixInverseChecksInvertibility) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    ComplexMatrix matrix(2, 2);
+    matrix << StdComplex(1, 1), StdComplex(0, 1), 0., 2.;
+    auto sparse_gate = gate::SparseMatrix<Prec, Space>({1}, matrix.sparseView(), {0});
+    auto state = StateVector<Prec, Space>::Haar_random_state(2, 17);
+    const auto initial = state.get_amplitudes();
+    sparse_gate->update_quantum_state(state);
+    sparse_gate->get_inverse()->update_quantum_state(state);
+    const auto actual = state.get_amplitudes();
+    for (std::uint64_t i = 0; i < actual.size(); ++i) {
+        check_near<Prec>(actual[i], initial[i]);
+    }
+    matrix << 1., 2., 2., 4.;
+    EXPECT_THROW(
+        static_cast<void>(gate::SparseMatrix<Prec, Space>({0}, matrix.sparseView())->get_inverse()),
+        std::runtime_error);
 }
 
 template <Precision Prec, ExecutionSpace Space, Gate<Prec> (*QuantumGateConstructor)()>
