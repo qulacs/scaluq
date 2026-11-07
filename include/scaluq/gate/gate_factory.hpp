@@ -1133,6 +1133,8 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
               DocString()
                   .desc("Generate general :class:`~scaluq.Gate` class instance of "
                         ":class:`~scaluq.PauliRotationGate`. Performs Pauli rotation operation.")
+                  .desc("The Pauli operator coefficient multiplies the rotation angle in "
+                        "$e^{-i\\theta P/2}$.")
                   .note("If you need to use functions specific to the "
                         ":class:`~scaluq.PauliRotationGate` "
                         "class, please downcast it.")
