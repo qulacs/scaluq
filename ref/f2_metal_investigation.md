@@ -101,8 +101,8 @@ OS を再起動して GPU を空にし、第 3 版で準備した測定（P1・P
 | P1 | 乱数状態の割り当てを、ロックを取り合わない方式にする（暴走カーネルの根本対策） |
 | P2 | f32 の既存テスト全体（229 件）を、乱数の修正のあとで流し直す |
 | P2 | reduce の固定コストの内訳を調べる |
-| 上流 | scaluq: `get_expectation_value` の性能、f32 の HostSerial/OpenMP の正規化精度。issue にするかは人の判断を待つ |
-| 上流 | AdaptiveCpp・Kokkos への報告（下書きは `ref/f2_metal/upstream/`）。提出の承認待ち。乱数プールの件を Kokkos 側の下書きに加えるか検討する |
+| 上流 | scaluq に issue を出した: #471（`get_expectation_value` の性能）、#472（f32 の正規化精度）。どちらも上流 main の OpenMP ビルドで再現を確認した |
+| 上流 | AdaptiveCpp に #2310〜#2313、Kokkos に #9750 を出した（乱数プールの件と性能結果を含む）。一覧は `ref/f2_metal/upstream/README.md`。返答を見て、Kokkos パッチの分割と PR 化を進める |
 
 ## 更新（2026-11-07 第 3 版）: f32 の既存テストが Metal GPU で 229/229 成功
 
