@@ -447,7 +447,8 @@ ComplexMatrix PauliOperator<Prec>::get_full_matrix(std::uint64_t n_qubits) const
     ComplexMatrix mat(dim, dim);
     mat.setZero();
     for (std::size_t i = 0; i < triplets.size(); i++) {
-        mat(triplets[i].row(), triplets[i].col()) = triplets[i].value();
+        mat(triplets[i].row(), triplets[i].col()) =
+            triplets[i].value() * static_cast<StdComplex>(_coef);
     }
     return mat;
 }
