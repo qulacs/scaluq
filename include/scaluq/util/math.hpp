@@ -221,7 +221,11 @@ public:
     using value_type = std::remove_cv_t<Scalar>;
     static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
-    using result_view_type = Kokkos::View<value_type, SpaceType<Space>, Kokkos::MemoryUnmanaged>;
+    // The result is a host scalar, as with Kokkos::Sum<T>. Declaring it in the
+    // device memory space made Kokkos write the final value from inside the
+    // kernel to a host stack address; on devices that cannot reach host memory
+    // (Apple GPUs through AdaptiveCpp's Metal backend) the result stayed 0.
+    using result_view_type = Kokkos::View<value_type, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
 
 private:
     result_view_type value;
