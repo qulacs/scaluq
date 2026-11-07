@@ -322,5 +322,9 @@ TYPED_TEST(StateVectorBatchedTest, WeightedSumAccumulatesAtLeastInFloat) {
         StateVectorBatched<Prec, Space> states(4096, 0);
         auto sum = states.linear_combination(std::vector<StdComplex>(4096, 1.));
         ASSERT_EQ(sum.get_amplitude_at(0), StdComplex(4096., 0.));
+        StateVectorBatched<Prec, Space> vector(1, 12);
+        vector.load({std::vector<StdComplex>(4096, 1.)});
+        ASSERT_EQ((StateVectorBatched<Prec, Space>::inner_product(vector, vector)[0]),
+                  StdComplex(4096., 0.));
     }
 }
