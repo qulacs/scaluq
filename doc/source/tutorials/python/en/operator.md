@@ -68,3 +68,13 @@ target_state = StateVector.Haar_random_state(2)
 trans_amp = op.get_transition_amplitude(target_state, state) 
 print(f"Transition amplitude: {trans_amp}") # e.g., (0.2589420813971237+0.355705558096908j)
 ```
+
+`PauliOperator.apply_to_state` also accepts a `StateVectorBatched` and applies
+the same Pauli string and its coefficient independently to each state. It
+raises an error if the Pauli string references a qubit outside the states.
+
+```python
+states = scaluq.StateVectorBatched(3, 2)
+pauli = scaluq.PauliOperator("Y 0 Z 1", coef=0.5)
+pauli.apply_to_state(states)
+```

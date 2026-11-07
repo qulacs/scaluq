@@ -299,3 +299,47 @@ TYPED_TEST(PauliOperatorTest, GetExpectationValueTest) {
         check_near<Prec>(results[i], res_eigen);
     }
 }
+
+TYPED_TEST(PauliOperatorTest, ApplyToBatchedStates) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    const std::vector<std::vector<StdComplex>> values = {
+        {{1., 0.}, {0., 1.}, {2., -1.}, {-.5, .25}},
+        {{-1., 1.}, {2., 0.}, {0., -2.}, {1., .5}},
+        {{.25, .5}, {-.5, 0.}, {1., -1.}, {3., 2.}}};
+    const std::vector<std::string> strings = {"", "X 0", "Y 0", "Z 1", "Y 0 X 1"};
+    for (const auto& str : strings) {
+        PauliOperator<Prec> op(str, StdComplex(.5, -.25));
+        auto matrix = op.get_full_matrix(2);
+        StateVectorBatched<Prec, Space> states(values.size(), 2);
+        states.load(values);
+        op.apply_to_state(states);
+        auto result = states.get_amplitudes();
+        for (std::size_t b = 0; b < values.size(); ++b) {
+            for (std::size_t i = 0; i < values[b].size(); ++i) {
+                StdComplex expected = 0.;
+                for (std::size_t j = 0; j < values[b].size(); ++j)
+                    expected += matrix(i, j) * values[b][j];
+                EXPECT_NEAR(std::abs(result[b][i] - expected), 0., eps<Prec>);
+            }
+        }
+    }
+}
+
+TYPED_TEST(PauliOperatorTest, ApplyToBatchedScalarAndInvalidMasks) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    StateVectorBatched<Prec, Space> states(3, 0);
+    states.load(std::vector<std::vector<StdComplex>>{{1.}, {StdComplex(0., 1.)}, {2.}});
+    PauliOperator<Prec>("", StdComplex(0., 2.)).apply_to_state(states);
+    auto result = states.get_amplitudes();
+    EXPECT_NEAR(std::abs(result[0][0] - StdComplex(0., 2.)), 0., eps<Prec>);
+    EXPECT_NEAR(std::abs(result[1][0] - StdComplex(-2., 0.)), 0., eps<Prec>);
+    EXPECT_NEAR(std::abs(result[2][0] - StdComplex(0., 4.)), 0., eps<Prec>);
+    EXPECT_THROW(PauliOperator<Prec>("X 0").apply_to_state(states), std::runtime_error);
+    EXPECT_THROW(PauliOperator<Prec>("Z 0").apply_to_state(states), std::runtime_error);
+    EXPECT_EQ(states.get_amplitudes(), result);
+    StateVectorBatched<Prec, Space> empty(0, 1);
+    EXPECT_NO_THROW(PauliOperator<Prec>("Y 0").apply_to_state(empty));
+    EXPECT_THROW(PauliOperator<Prec>("X 1").apply_to_state(empty), std::runtime_error);
+}
