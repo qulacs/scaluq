@@ -73,6 +73,15 @@ class StateVectorBatched(metaclass=_ABCMeta):
     def uninitialized_state(batch_size, n_qubits, precision=_DEFAULT_PRECISION, space='default'):
         return _get_module(precision, space).StateVectorBatched.uninitialized_state(batch_size, n_qubits)
 
+    @staticmethod
+    def inner_product(bra, ket):
+        if type(bra) is not type(ket):
+            raise ValueError("Batched state vectors must be of the same type for inner product.")
+        key = _key_for_object(bra)
+        if key is None:
+            raise ValueError(f"Unsupported batched state vector type: {type(bra)}")
+        return _modules[key].StateVectorBatched.inner_product(bra, ket)
+
 class DensityMatrix(metaclass=_ABCMeta):
     UNMEASURED = _get_module(_DEFAULT_PRECISION, 'default').DensityMatrix.UNMEASURED
 

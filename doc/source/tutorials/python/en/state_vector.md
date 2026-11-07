@@ -190,3 +190,17 @@ zero probability of 0: 0.25
 zero probability of 1: 0.25
 marginal probability of [1, UNMEASURED]: 0.7499999999999999
 ```
+
+### Weighted operations on batches
+
+For a `StateVectorBatched`, `linear_combination(coefs)` returns a new state
+`sum_b coefs[b] * states[b]`, without normalization. An empty batch returns a
+zero state with the same number of qubits. `multiply_coef(coefs)` scales each
+batch entry by its corresponding coefficient; `add_state_vector_with_coef(coefs,
+other)` adds the corresponding weighted entries of `other`. The coefficient
+count must match the batch size and both batches must have matching dimensions.
+
+`StateVectorBatched.inner_product(bra, ket)` returns one complex inner product
+per batch entry, with the first argument conjugated. Both batches must have the
+same precision, execution space, batch size, and number of qubits. Reductions
+use at least single precision even for lower-precision states.
