@@ -58,7 +58,8 @@ public:
     // Apply the same Pauli operator (including its coefficient) to every row.
     template <ExecutionSpace Space>
     void apply_to_state(StateVectorBatched<Prec, Space>& states) const {
-        if (std::bit_width(_bit_flip_mask | _phase_flip_mask) > states.n_qubits()) {
+        if (static_cast<std::uint64_t>(std::bit_width(_bit_flip_mask | _phase_flip_mask)) >
+            states.n_qubits()) {
             throw std::runtime_error("PauliOperator::apply_to_state: insufficient qubits");
         }
         internal::apply_pauli(0ULL, 0ULL, _bit_flip_mask, _phase_flip_mask, _coef, states);
