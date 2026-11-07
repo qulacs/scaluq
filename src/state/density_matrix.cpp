@@ -421,20 +421,20 @@ std::vector<std::uint64_t> DensityMatrix<Prec, Space>::sampling(
             }
         });
 
-    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(
-        internal::resolve_seed(seed));
+    internal::RandomSource<internal::SpaceType<Space>> rand_src(internal::resolve_seed(seed));
     std::vector<std::uint64_t> result(sampling_count);
     std::vector<std::uint64_t> todo(sampling_count);
     std::iota(todo.begin(), todo.end(), 0);
-    while (!todo.empty()) {
+    for (std::uint32_t round = 0; !todo.empty(); ++round) {
         std::size_t todo_count = todo.size();
+        const std::uint32_t stream = internal::random_stream_sampling(round);
         Kokkos::View<std::uint64_t*, internal::SpaceType<Space>> result_buf(
             Kokkos::ViewAllocateWithoutInitializing("result_buf"), todo_count);
         Kokkos::parallel_for(
             "sampling (choose)",
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, todo_count),
             KOKKOS_LAMBDA(std::uint64_t i) {
-                auto rand_gen = rand_pool.get_state();
+                auto rand_gen = rand_src.get(i, stream);
                 FloatType r = internal::uniform01<FloatType>(rand_gen);
                 std::uint64_t lo = 0, hi = stacked_prob.size();
                 while (hi - lo > 1) {
@@ -446,7 +446,7 @@ std::vector<std::uint64_t> DensityMatrix<Prec, Space>::sampling(
                     }
                 }
                 result_buf[i] = lo;
-                rand_pool.free_state(rand_gen);
+                rand_src.release(rand_gen);
             });
         auto result_buf_host = internal::convert_view_to_vector<std::uint64_t, Space>(result_buf);
         // Especially for F16 and BF16, sampling sometimes fails with result == _dim.

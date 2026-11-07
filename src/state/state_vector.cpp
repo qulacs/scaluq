@@ -72,28 +72,28 @@ template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::set_Haar_random_state(std::optional<std::uint64_t> seed) {
     std::uint64_t actual_seed = internal::resolve_seed(seed);
     if constexpr (Space == ExecutionSpace::HostSerial) {
-        Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> rand_pool(actual_seed);
+        internal::RandomSource<Kokkos::DefaultHostExecutionSpace> rand_src(actual_seed);
         Kokkos::View<ComplexType*, Kokkos::HostSpace> host_raw("host_raw", _dim);
         Kokkos::parallel_for(
             "Haar_random_state_host",
             Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, _dim),
             KOKKOS_LAMBDA(std::uint64_t i) {
-                auto rand_gen = rand_pool.get_state();
+                auto rand_gen = rand_src.get(i, internal::RANDOM_STREAM_HAAR);
                 host_raw(i) = ComplexType(internal::standard_normal<FloatType>(rand_gen),
                                           internal::standard_normal<FloatType>(rand_gen));
-                rand_pool.free_state(rand_gen);
+                rand_src.release(rand_gen);
             });
         Kokkos::deep_copy(_raw, host_raw);
     } else {
-        Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(actual_seed);
+        internal::RandomSource<internal::SpaceType<Space>> rand_src(actual_seed);
         Kokkos::parallel_for(
             "Haar_random_state",
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
             KOKKOS_CLASS_LAMBDA(std::uint64_t i) {
-                auto rand_gen = rand_pool.get_state();
+                auto rand_gen = rand_src.get(i, internal::RANDOM_STREAM_HAAR);
                 _raw(i) = ComplexType(internal::standard_normal<FloatType>(rand_gen),
                                       internal::standard_normal<FloatType>(rand_gen));
-                rand_pool.free_state(rand_gen);
+                rand_src.release(rand_gen);
             });
     }
     this->normalize();
@@ -239,19 +239,20 @@ std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(
             }
         });
 
-    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(actual_seed);
+    internal::RandomSource<internal::SpaceType<Space>> rand_src(actual_seed);
     std::vector<std::uint64_t> result(sampling_count);
     std::vector<std::uint64_t> todo(sampling_count);
     std::iota(todo.begin(), todo.end(), 0);
-    while (!todo.empty()) {
+    for (std::uint32_t round = 0; !todo.empty(); ++round) {
         std::size_t todo_count = todo.size();
+        const std::uint32_t stream = internal::random_stream_sampling(round);
         Kokkos::View<std::uint64_t*, internal::SpaceType<Space>> result_buf(
             Kokkos::ViewAllocateWithoutInitializing("result_buf"), todo_count);
         Kokkos::parallel_for(
             "sampling (choose)",
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, todo_count),
             KOKKOS_LAMBDA(std::uint64_t i) {
-                auto rand_gen = rand_pool.get_state();
+                auto rand_gen = rand_src.get(i, stream);
                 FloatType r = internal::uniform01<FloatType>(rand_gen);
                 std::uint64_t lo = 0, hi = stacked_prob.size();
                 while (hi - lo > 1) {
@@ -263,7 +264,7 @@ std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(
                     }
                 }
                 result_buf[i] = lo;
-                rand_pool.free_state(rand_gen);
+                rand_src.release(rand_gen);
             });
         auto result_buf_host = internal::convert_view_to_vector<std::uint64_t, Space>(result_buf);
         // Especially for F16 and BF16, sampling sometimes fails with result == _dim.

@@ -146,8 +146,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
         });
 
     std::vector result(_batch_size, std::vector<std::uint64_t>(sampling_count));
-    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(
-        internal::resolve_seed(seed));
+    internal::RandomSource<internal::SpaceType<Space>> rand_src(internal::resolve_seed(seed));
     std::vector<std::uint64_t> batch_todo(_batch_size * sampling_count);
     std::vector<std::uint64_t> sample_todo(_batch_size * sampling_count);
     for (std::uint64_t i = 0; i < _batch_size; i++) {
@@ -157,8 +156,9 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
             sample_todo[idx] = j;
         }
     }
-    while (!batch_todo.empty()) {
+    for (std::uint32_t round = 0; !batch_todo.empty(); ++round) {
         std::size_t todo_count = batch_todo.size();
+        const std::uint32_t stream = internal::random_stream_sampling(round);
         Kokkos::View<std::uint64_t*, internal::SpaceType<Space>> batch_ids =
             internal::convert_vector_to_view<std::uint64_t, Space>(batch_todo);
         Kokkos::View<std::uint64_t*, internal::SpaceType<Space>> result_buf(
@@ -168,7 +168,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, todo_count),
             KOKKOS_CLASS_LAMBDA(std::uint64_t idx) {
                 std::uint64_t batch_id = batch_ids[idx];
-                auto rand_gen = rand_pool.get_state();
+                auto rand_gen = rand_src.get(idx, stream);
                 FloatType r = internal::uniform01<FloatType>(rand_gen);
                 std::uint64_t lo = 0, hi = stacked_prob.extent(1);
                 while (hi - lo > 1) {
@@ -180,7 +180,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
                     }
                 }
                 result_buf(idx) = lo;
-                rand_pool.free_state(rand_gen);
+                rand_src.release(rand_gen);
             });
         auto result_buf_host = internal::convert_view_to_vector<std::uint64_t, Space>(result_buf);
         // Especially for F16 and BF16, sampling sometimes fails with result == _dim.
@@ -208,7 +208,7 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::Haar_random_sta
     bool set_same_state,
     std::optional<std::uint64_t> seed) {
     std::uint64_t actual_seed = internal::resolve_seed(seed);
-    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(actual_seed);
+    internal::RandomSource<internal::SpaceType<Space>> rand_src(actual_seed);
     auto states(StateVectorBatched<Prec, Space>::uninitialized_state(batch_size, n_qubits));
     if (set_same_state) {
         states.set_state_vector(StateVector<Prec, Space>::Haar_random_state(n_qubits, actual_seed));
@@ -218,10 +218,10 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::Haar_random_sta
             Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
                 {0, 0}, {states.batch_size(), states.dim()}),
             KOKKOS_LAMBDA(std::uint64_t b, std::uint64_t i) {
-                auto rand_gen = rand_pool.get_state();
+                auto rand_gen = rand_src.get(b * states.dim() + i, internal::RANDOM_STREAM_HAAR);
                 states._raw(b, i) = ComplexType(internal::standard_normal<FloatType>(rand_gen),
                                                 internal::standard_normal<FloatType>(rand_gen));
-                rand_pool.free_state(rand_gen);
+                rand_src.release(rand_gen);
             });
         states.normalize();
     }
