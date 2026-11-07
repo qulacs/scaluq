@@ -488,8 +488,8 @@ void StateVectorBatched<Prec, Space>::add_state_vector_with_coef(
     const bool overlap = src_addr <= dst_addr
                              ? dst_addr - src_addr < states._raw.span() * sizeof(ComplexType)
                              : src_addr - dst_addr < _raw.span() * sizeof(ComplexType);
-    const bool exact = src_addr == dst_addr && _raw.stride_0() == states._raw.stride_0() &&
-                       _raw.stride_1() == states._raw.stride_1();
+    const bool exact = src_addr == dst_addr && _raw.stride(0) == states._raw.stride(0) &&
+                       _raw.stride(1) == states._raw.stride(1);
     auto source = overlap && !exact ? states.copy() : states;
     auto input = source._raw;
     Kokkos::parallel_for(
@@ -562,7 +562,7 @@ std::vector<StdComplex> StateVectorBatched<Prec, Space>::inner_product(
                                      static_cast<AccFloat>(x.imag()));
                     AccComplex y_acc(static_cast<AccFloat>(y.real()),
                                      static_cast<AccFloat>(y.imag()));
-                    local += Kokkos::conj(x_acc) * y_acc;
+                    local += AccComplex(x_acc.real(), -x_acc.imag()) * y_acc;
                 },
                 internal::Sum<AccComplex, Space>(sum));
             Kokkos::single(Kokkos::PerTeam(team), [&] { result(b) = sum; });
