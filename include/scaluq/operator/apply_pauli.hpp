@@ -1,5 +1,7 @@
 #pragma once
 
+#include <scaluq/util/small_state_dispatch.hpp>
+
 #include "../constant.hpp"
 #include "../state/state_vector.hpp"
 #include "../state/state_vector_batched.hpp"
@@ -58,15 +60,16 @@ void apply_pauli(std::uint64_t control_mask,
         PHASE_M90ROT<State::prec>()[global_phase_90rot_count % 4];
     const std::uint64_t range_size =
         flat_dim >> (std::popcount(control_mask) + (bit_flip_mask != 0));
-    Kokkos::parallel_for("apply_pauli",
-                         Kokkos::RangePolicy<SpaceType<State::space>>(0, range_size),
-                         ApplyPauliFunctor<State>{state,
-                                                  control_mask,
-                                                  control_value_mask,
-                                                  bit_flip_mask,
-                                                  phase_flip_mask,
-                                                  coef,
-                                                  global_phase});
+    parallel_for_small_state(state,
+                             "apply_pauli",
+                             Kokkos::RangePolicy<SpaceType<State::space>>(0, range_size),
+                             ApplyPauliFunctor<State>{state,
+                                                      control_mask,
+                                                      control_value_mask,
+                                                      bit_flip_mask,
+                                                      phase_flip_mask,
+                                                      coef,
+                                                      global_phase});
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -201,7 +204,8 @@ void apply_pauli_rotation(std::uint64_t control_mask,
     if (bit_flip_mask == 0) {
         const Complex<State::prec> cval_min = cosval - Complex<State::prec>(0, 1) * sinval;
         const Complex<State::prec> cval_pls = cosval + Complex<State::prec>(0, 1) * sinval;
-        Kokkos::parallel_for(
+        parallel_for_small_state(
+            state,
             "apply_pauli_rotation",
             Kokkos::RangePolicy<SpaceType<State::space>>(0,
                                                          flat_dim >> std::popcount(control_mask)),
@@ -217,7 +221,8 @@ void apply_pauli_rotation(std::uint64_t control_mask,
         return;
     }
     std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
-    Kokkos::parallel_for(
+    parallel_for_small_state(
+        state,
         "apply_pauli_rotation",
         Kokkos::RangePolicy<SpaceType<State::space>>(0,
                                                      flat_dim >> (std::popcount(control_mask) + 1)),
