@@ -4,7 +4,95 @@
 対象: `ref/scaluq_improvements.md`（統合ブランチ側）の F2・F3 の手順 1〜2 と、手順 3 の机上評価
 結論の扱い: 実機で確認した事実と、コードを読んで推定した事項は分けて書く。性能値は参考値（後述の理由で再測定が必要）。
 
-## 結論
+## 更新（2026-11-07 第 2 版）: 2 パス reduce で reduce が正しくなった
+
+レビューを受けて判断を改めた。**F2 は継続する。** 基本ゲートは Kokkos の `parallel_for` のまま使い、Metal で問題になる処理だけを個別に直す。
+
+- Kokkos の SYCL リダクションを、AdaptiveCpp 向けだけ 2 パス方式に変更した。
+  - 1 パス目: 各ワークグループは部分和を書くだけにする。「最後のグループが集計する」処理はワークグループが 1 個のときだけ使う。
+  - 2 パス目: ワークグループが複数あれば、単一ワークグループの集計カーネルを同じ in-order キューに投入する。
+- 対象は Range・MDRange・TeamPolicy の 3 つ。共通ヘルパー `two_pass_final_reduction` にまとめ、約 100 行を追加した（`ref/f2_metal/patches/kokkos-5.2.0-acpp-metal.patch` に含む）。
+- Metal GPU 上の結果:
+
+| テスト | 第 1 版 | 2 パス化後 |
+|---|---|---|
+| `parallel_reduce` float / int（n = 32〜2^20、`red.cpp`） | 257 以上で誤り | すべて正しい |
+| `parallel_reduce` `complex<float>` の二乗和と、float の `norm` の和（n = 2^8〜2^26 × 20 回 = 160 ケース、`red2.cpp`。CPU の倍精度の参照値と比較） | — | **160/160 正しい**（相対誤差は最大 1.2e-6） |
+| MDRange reduce（1024×1024） | 誤り | 正しい |
+| TeamPolicy + `TeamThreadRange` の入れ子 reduce（チームサイズ 32/64/128/256） | 誤り | 正しい |
+| `parallel_scan` | 誤り | 誤り（未対応。複数パス化は P3） |
+
+- 2 パス化はとりあえずの回避策というより、Metal に合った方式と考える。理由は次の 2 つ（下記「原因の追加調査」も参照）。
+  - AdaptiveCpp の Metal バックエンドは、RMW アトミックの memory_order を常に relaxed で出力している。
+  - 明示的な device スコープのフェンスを入れても、通常のストアがほかのスレッドグループから見えない。
+- 2 パス化で、1 回の reduce につきカーネル起動が 1 回増える。性能への影響は、GPU が空いているときに測る（P1）。
+
+### 原因の追加調査（レビューの A 点）
+
+- AdaptiveCpp は SYCL 2020 のクエリ `atomic_memory_order_capabilities`、`atomic_memory_scope_capabilities`、`atomic_fence_order_capabilities`、`atomic_fence_scope_capabilities` を実装していない。コンパイルエラーになるため、デバイスが報告する対応範囲は確認できなかった。
+- Metal 用 libkernel（`src/libkernel/sscp/metal/atomic.cpp`）の実装:
+  - load と store は、relaxed のアトミック操作の前後に、order に応じた `atomic_thread_fence` を入れている。
+  - **`fetch_add` などの RMW（23 種類）は、order とスコープの引数を無視して常に `memory_order_relaxed` で出力し、フェンスも入れていない**。Kokkos が使う `atomic_ref<..., acq_rel, device>` の `++` は、実際には relaxed になる。
+  - これは AdaptiveCpp に報告すべき不具合。
+- 一方、明示的な `atomic_fence(seq_cst, device)` は、`atomic_thread_fence(mem_flags::mem_device, memory_order_seq_cst, thread_scope_device)` に変換されている（`barrier.cpp`）。それでも、ほかのグループの通常ストアは見えなかった。アトミックの load/store で読み書きした場合だけ正しかった。
+  - 推定: Metal では、アトミックでない device メモリは、同じディスパッチ内のスレッドグループ間で一貫性を持たない。保証されるのはカーネルの境界か、アトミック操作を使った場合だけと考えられる。MSL 3.2 の `coherent(device)` 修飾との関係は、MSL 仕様書で要確認。
+  - したがって、RMW を直しても 1 パス方式が正しくなるとは限らない。2 パス方式が安全側。
+- グループ内のバリアは、木構造リダクションと `reduce_over_group` の結果が正しいことから、正しく動いていると判断した。
+- M1 や M3 Max など 1 ダイのチップで再現するかは、手元に機材が無いため未確認。2 ダイ構成が原因かどうかは断定しない。
+
+### scaluq f32 版を Metal GPU で実行（P0・P1 の途中経過）
+
+- 作業ブランチは `exp/f2-metal-scaluq`（upstream/main 起点）。scaluq 側の変更は次の 2 つ（約 40 行）。
+  - CMake: `SCALUQ_SYCL_ACPP=ON` のとき、`-fsycl` を付けない。同時に `SCALUQ_NO_DEVICE_DOUBLE` を定義し、Kokkos に `Kokkos_IMPL_SYCL_ACPP=ON` と `Kokkos_ENABLE_ONEDPL=OFF` を渡す。
+  - デバイス内の double の除去（一部）
+    - 乱数: `util/device_random.hpp` を追加。`SCALUQ_NO_DEVICE_DOUBLE` のときだけ、f32 以下は `frand` と float の Box–Muller を使う。それ以外のビルドは従来どおり `drand`/`normal`（double）で、シード付きの結果は変わらない。
+    - 係数: `add_state_vector_with_coef` と `multiply_coef` で、係数をホスト側で `Complex<Prec>` に変換してからキャプチャする。対象は StateVector、StateVectorBatched、DensityMatrix。
+- ビルド: `-DSCALUQ_USE_OMP=OFF -DSCALUQ_USE_SYCL=ON -DSCALUQ_SYCL_ACPP=ON -DSCALUQ_FLOAT64=OFF -DFETCHCONTENT_SOURCE_DIR_KOKKOS=<パッチ済み Kokkos>`。C++ テストは acpp でビルドできた（Python バインディングは未試行）。
+- テストの実行方法: `KOKKOS_DEVICE_ID=1` を指定し、`F32DefaultSpace`（= Metal GPU）の 229 件を 1 件ずつ実行した。1 件ずつにしたのは、1 件の JIT エラーでプロセスごと落ちるため。全件の結果は `ref/f2_metal/scaluq_f32_metal_tests.tsv`。
+
+| 結果 | 件数 | 内容 |
+|---|---|---|
+| 成功 | 182 | |
+| 成功（ただし終了時に SIGSEGV） | 22 | テスト本体は `[ OK ]`。プロセス終了時に落ちる。batched 系、疎行列ゲート、`Operator::apply_to_state` など、TeamPolicy や atomic を使うテストに多い。原因は未調査（Kokkos の終了処理と Metal の資源解放の順序を疑っている） |
+| デバイス内 double で JIT 不可 | 17 | `Operator` / `OperatorBatched` / `PauliOperator` の batched 版の期待値・遷移振幅（`View<Kokkos::complex<double>>` にカーネルから書く）、`Operator` の Hermitian 判定、`get_matrix`（`utility.cpp` の `StdComplex` View）。監査で挙がっていた箇所のとおり |
+| Metal のコード生成エラー | 2 | `MergeGate`、`GeneralDenseMatrix`（4 量子ビット以上の密行列ゲート）。threadgroup と device のポインタを `select` で選ぶ IR を MSL に変換できない（AdaptiveCpp の制約） |
+| 失敗 | 2 | `HaarRandomStateSameSeed`。同じシードで同じ状態にならない。Kokkos パッチの乱数状態の割り当て（0 番から順に空きを探す）が非決定的なため。直すにはスレッド番号を得る手段が必要 |
+| タイムアウト（300 秒） | 4 | サンプリング。単一状態の `parallel_scan` が未対応なので累積確率が誤る（P3） |
+
+テストスイート別（成功と終了時 SIGSEGV を成功に含める）:
+
+| スイート | 成功/全体 | スイート | 成功/全体 |
+|---|---|---|---|
+| GateTest | 35/35 | StateVectorTest | 13/16 |
+| BatchedGateTest | 27/27 | StateVectorBatchedTest | 11/11 |
+| DMGateTest | 31/31 | DensityMatrixTest | 13/15 |
+| ParamGateTest | 9/9 | PauliOperatorTest | 9/10 |
+| CircuitTest | 13/13 | OperatorTest | 11/20 |
+| ParamCircuitTest | 5/5 | OperatorBatchedTest | 6/13 |
+| CircuitOptimizeTest | 2/2 | Matrix8x8Test | 1/2 |
+| CircuitExpectationGradientTest | 3/3 | GeneralDenseMatrixTest / MergeGateTest | 0/1、0/1 |
+| Qasm2Test | 15/15 | | |
+
+**レビューの P1 の完了条件（H・X・CX・回転ゲート、ノルム・内積・期待値が CPU の参照値と一致）は、既存テストの範囲で満たした。** 単一状態のゲートは GateTest で、単一 `PauliOperator` / `Operator` の期待値はそれぞれのテストで確認した。
+
+テストの所要時間は、初回 JIT を含めて 1 件あたり数秒〜数十秒（2 回目以降は JIT キャッシュが効く）。性能の評価には使っていない。
+
+### 次の作業（第 2 版時点）
+
+| 優先度 | 作業 | 状態 |
+|---|---|---|
+| P0 | 2 パス `parallel_reduce` | **完了**（Range・MDRange・Team） |
+| P0 | デバイス内 double の除去 | 乱数・係数は完了。残りは Operator 系の batched の期待値・遷移振幅、Hermitian 判定、`get_matrix` |
+| P1 | f32 単一 StateVector の統合 | **既存テストで確認済み**（上表） |
+| P1 | 起動遅延と帯域の再測定 | 未実施。GPU が空いている時間が必要 |
+| P1 | 終了時の SIGSEGV | 未調査 |
+| P2 | ネイティブ Metal との性能比較 | 未実施 |
+| P3 | `parallel_scan` の複数パス化、サンプリング | 未実施 |
+| P3 | 乱数の再現性（シード） | 未実施。Kokkos の `Random_UniqueIndex` の代替が必要 |
+| 上流 | AdaptiveCpp への報告 | 未提出。RMW の memory_order 無視、`__acpp_sscp_get_num_subgroups` の欠落、threadgroup/device ポインタの `select`、SYCL 2020 の capabilities クエリの未実装 |
+| 上流 | Kokkos への相談 | 未提出。AdaptiveCpp 対応（`__SYCL_DEVICE_ONLY__`、DPC++ フラグ、`kernel_bundle`、oneAPI 拡張）と 2 パス reduce |
+
+## 結論（第 1 版。上の更新を優先）
 
 1. AdaptiveCpp（develop）の Metal バックエンドは、この Mac（M3 Ultra、macOS 26.7.1）で動いた。単純な SYCL カーネル、`sycl::reduction`、ローカルメモリ、group/sub_group 演算は正しい結果を返した。
 2. Kokkos 5.2.0（scaluq が固定している版）の SYCL バックエンドは、**そのままでは acpp でビルドできない**。19 ファイル・約 120 行のローカルパッチでビルドは通った。

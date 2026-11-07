@@ -180,11 +180,82 @@ index c316f3c35..bd295a08d 100644
        auto final_vector_size = std::min<int>(m_vector_size, max_sg_size);
        // FIXME_SYCL For some reason, explicitly enforcing the kernel bundle to
        // be used gives a runtime error.
+diff --git a/core/src/SYCL/Kokkos_SYCL_ParallelReduce_MDRange.hpp b/core/src/SYCL/Kokkos_SYCL_ParallelReduce_MDRange.hpp
+index 8c84d6fb5..574e52891 100644
+--- a/core/src/SYCL/Kokkos_SYCL_ParallelReduce_MDRange.hpp
++++ b/core/src/SYCL/Kokkos_SYCL_ParallelReduce_MDRange.hpp
+@@ -224,7 +224,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
+                                    sycl::memory_scope::device,
+                                    sycl::access::address_space::global_space>
+                       scratch_flags_ref(*scratch_flags);
+-                  num_teams_done[0] = ++scratch_flags_ref;
++                  if constexpr (SYCLReduction::use_two_pass_reduction)
++                    num_teams_done[0] = (n_wgroups == 1) ? 1u : 0u;
++                  else
++                    num_teams_done[0] = ++scratch_flags_ref;
+                 }
+                 sycl::group_barrier(item.get_group());
+                 if (num_teams_done[0] == n_wgroups) {
+@@ -270,7 +273,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
+                                    sycl::memory_scope::device,
+                                    sycl::access::address_space::global_space>
+                       scratch_flags_ref(*scratch_flags);
+-                  num_teams_done[0] = ++scratch_flags_ref;
++                  if constexpr (SYCLReduction::use_two_pass_reduction)
++                    num_teams_done[0] = (n_wgroups == 1) ? 1u : 0u;
++                  else
++                    num_teams_done[0] = ++scratch_flags_ref;
+                 }
+                 sycl::group_barrier(item.get_group());
+                 if (num_teams_done[0] == n_wgroups) {
+@@ -300,6 +306,12 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
+ #endif
+       {
+         last_reduction_event = q.submit(cgh_lambda);
++        if constexpr (SYCLReduction::use_two_pass_reduction) {
++          if (n_wgroups > 1)
++            last_reduction_event = SYCLReduction::two_pass_final_reduction(
++                q, functor_reducer_wrapper, results_ptr, device_accessible_result_ptr, value_count,
++                n_wgroups);
++        }
+ #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+         q.ext_oneapi_submit_barrier(
+             std::vector<sycl::event>{last_reduction_event});
 diff --git a/core/src/SYCL/Kokkos_SYCL_ParallelReduce_Range.hpp b/core/src/SYCL/Kokkos_SYCL_ParallelReduce_Range.hpp
-index 1aa2df6c4..1f284e5b8 100644
+index 1aa2df6c4..929bdf206 100644
 --- a/core/src/SYCL/Kokkos_SYCL_ParallelReduce_Range.hpp
 +++ b/core/src/SYCL/Kokkos_SYCL_ParallelReduce_Range.hpp
-@@ -238,6 +238,7 @@ class Kokkos::Impl::ParallelReduce<
+@@ -165,7 +165,10 @@ class Kokkos::Impl::ParallelReduce<
+                                    sycl::memory_scope::device,
+                                    sycl::access::address_space::global_space>
+                       scratch_flags_ref(*scratch_flags);
+-                  num_teams_done[0] = ++scratch_flags_ref;
++                  if constexpr (SYCLReduction::use_two_pass_reduction)
++                    num_teams_done[0] = (n_wgroups == 1) ? 1u : 0u;
++                  else
++                    num_teams_done[0] = ++scratch_flags_ref;
+                 }
+                 sycl::group_barrier(item.get_group());
+                 if (num_teams_done[0] == n_wgroups) {
+@@ -208,7 +211,10 @@ class Kokkos::Impl::ParallelReduce<
+                                    sycl::memory_scope::device,
+                                    sycl::access::address_space::global_space>
+                       scratch_flags_ref(*scratch_flags);
+-                  num_teams_done[0] = ++scratch_flags_ref;
++                  if constexpr (SYCLReduction::use_two_pass_reduction)
++                    num_teams_done[0] = (n_wgroups == 1) ? 1u : 0u;
++                  else
++                    num_teams_done[0] = ++scratch_flags_ref;
+                 }
+                 sycl::group_barrier(item.get_group());
+                 if (num_teams_done[0] == n_wgroups) {
+@@ -233,11 +239,13 @@ class Kokkos::Impl::ParallelReduce<
+             return lambda;
+           };
+ 
++      std::size_t two_pass_n_wgroups = 0;  // F2 experiment
+       auto cgh_lambda = [&](sycl::handler& cgh) {
+         sycl::local_accessor<unsigned int> num_teams_done(1, cgh);
  
          auto dummy_reduction_lambda =
              reduction_lambda_factory({1, cgh}, num_teams_done, nullptr, 1);
@@ -192,7 +263,7 @@ index 1aa2df6c4..1f284e5b8 100644
  
          static sycl::kernel kernel = [&] {
            sycl::kernel_id functor_kernel_id =
-@@ -247,6 +248,11 @@ class Kokkos::Impl::ParallelReduce<
+@@ -247,6 +255,11 @@ class Kokkos::Impl::ParallelReduce<
                    q.get_context(), std::vector{functor_kernel_id});
            return kernel_bundle.get_kernel(functor_kernel_id);
          }();
@@ -204,7 +275,7 @@ index 1aa2df6c4..1f284e5b8 100644
          auto multiple = kernel.get_info<sycl::info::kernel_device_specific::
                                              preferred_work_group_size_multiple>(
              q.get_device());
-@@ -254,6 +260,7 @@ class Kokkos::Impl::ParallelReduce<
+@@ -254,6 +267,7 @@ class Kokkos::Impl::ParallelReduce<
              kernel
                  .get_info<sycl::info::kernel_device_specific::work_group_size>(
                      q.get_device());
@@ -212,11 +283,60 @@ index 1aa2df6c4..1f284e5b8 100644
  
          auto max_local_memory =
              q.get_device().get_info<sycl::info::device::local_mem_size>();
+@@ -284,6 +298,7 @@ class Kokkos::Impl::ParallelReduce<
+                       wgroup_size;
+         }
+ 
++        two_pass_n_wgroups = n_wgroups;
+         results_ptr =
+             static_cast<sycl::global_ptr<value_type>>(instance.scratch_space(
+                 sizeof(value_type) * value_count * n_wgroups));
+@@ -312,6 +327,12 @@ class Kokkos::Impl::ParallelReduce<
+ #endif
+       {
+         last_reduction_event = q.submit(cgh_lambda);
++        if constexpr (SYCLReduction::use_two_pass_reduction) {
++          if (two_pass_n_wgroups > 1)
++            last_reduction_event = SYCLReduction::two_pass_final_reduction(
++                q, functor_reducer_wrapper, results_ptr, device_accessible_result_ptr, value_count,
++                two_pass_n_wgroups);
++        }
+ #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+         q.ext_oneapi_submit_barrier(
+             std::vector<sycl::event>{last_reduction_event});
 diff --git a/core/src/SYCL/Kokkos_SYCL_ParallelReduce_Team.hpp b/core/src/SYCL/Kokkos_SYCL_ParallelReduce_Team.hpp
-index 501ca88d1..820e292c4 100644
+index 501ca88d1..55d461855 100644
 --- a/core/src/SYCL/Kokkos_SYCL_ParallelReduce_Team.hpp
 +++ b/core/src/SYCL/Kokkos_SYCL_ParallelReduce_Team.hpp
-@@ -294,6 +294,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
+@@ -146,6 +146,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
+       // workgroup does the reduction and thus gets the final value.
+       auto scratch_flags = static_cast<sycl::global_ptr<unsigned int>>(
+           instance.scratch_flags(sizeof(unsigned int)));
++      std::size_t two_pass_n_wgroups = 0;  // F2 experiment
+       auto cgh_lambda = [&](sycl::handler& cgh) {
+         // FIXME_SYCL accessors seem to need a size greater than zero at least
+         // for host queues
+@@ -213,6 +214,9 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
+                                      sycl::memory_scope::device,
+                                      sycl::access::address_space::global_space>
+                         scratch_flags_ref(*scratch_flags);
++                    if constexpr (SYCLReduction::use_two_pass_reduction)
++                    num_teams_done[0] = (n_wgroups == 1) ? 1u : 0u;
++                  else
+                     num_teams_done[0] = ++scratch_flags_ref;
+                   }
+                   sycl::group_barrier(item.get_group());
+@@ -267,6 +271,9 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
+                                      sycl::memory_scope::device,
+                                      sycl::access::address_space::global_space>
+                         scratch_flags_ref(*scratch_flags);
++                    if constexpr (SYCLReduction::use_two_pass_reduction)
++                    num_teams_done[0] = (n_wgroups == 1) ? 1u : 0u;
++                  else
+                     num_teams_done[0] = ++scratch_flags_ref;
+                   }
+                   sycl::group_barrier(item.get_group());
+@@ -294,6 +301,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
              };
  
          auto dummy_reduction_lambda = team_reduction_factory({1, cgh}, nullptr);
@@ -224,7 +344,7 @@ index 501ca88d1..820e292c4 100644
  
          static sycl::kernel kernel = [&] {
            sycl::kernel_id functor_kernel_id =
-@@ -303,9 +304,14 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
+@@ -303,9 +311,14 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                    q.get_context(), std::vector{functor_kernel_id});
            return kernel_bundle.get_kernel(functor_kernel_id);
          }();
@@ -239,6 +359,31 @@ index 501ca88d1..820e292c4 100644
          auto final_vector_size = std::min<int>(m_vector_size, max_sg_size);
          // FIXME_SYCL For some reason, explicitly enforcing the kernel bundle to
          // be used gives a runtime error.
+@@ -337,6 +350,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
+               wgroup_size;
+         }
+ 
++        two_pass_n_wgroups = n_wgroups;  // F2 experiment
+         auto reduction_lambda = team_reduction_factory(local_mem, results_ptr);
+ 
+ #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+@@ -356,6 +370,16 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
+ #endif
+       {
+         last_reduction_event = q.submit(cgh_lambda);
++        if constexpr (SYCLReduction::use_two_pass_reduction) {
++          if (two_pass_n_wgroups > 1)
++            last_reduction_event = SYCLReduction::two_pass_final_reduction(
++                q, functor_reducer_wrapper,
++                static_cast<sycl::global_ptr<value_type>>(results_ptr),
++                m_result_ptr_device_accessible
++                    ? static_cast<sycl::global_ptr<value_type>>(m_result_ptr)
++                    : static_cast<sycl::global_ptr<value_type>>(host_result_ptr),
++                value_count, two_pass_n_wgroups);
++        }
+ #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+         q.ext_oneapi_submit_barrier(
+             std::vector<sycl::event>{last_reduction_event});
 diff --git a/core/src/SYCL/Kokkos_SYCL_ParallelScan_Range.hpp b/core/src/SYCL/Kokkos_SYCL_ParallelScan_Range.hpp
 index 4d47c2705..8367dbfb7 100644
 --- a/core/src/SYCL/Kokkos_SYCL_ParallelScan_Range.hpp
@@ -308,6 +453,69 @@ index 75a49de23..51d83ac10 100644
    }
  
   public:
+diff --git a/core/src/SYCL/Kokkos_SYCL_WorkgroupReduction.hpp b/core/src/SYCL/Kokkos_SYCL_WorkgroupReduction.hpp
+index 49f2dfa6e..3b1d4d645 100644
+--- a/core/src/SYCL/Kokkos_SYCL_WorkgroupReduction.hpp
++++ b/core/src/SYCL/Kokkos_SYCL_WorkgroupReduction.hpp
+@@ -237,6 +237,58 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
+   }
+ }
+ 
++
++// F2 experiment: two-pass reduction for AdaptiveCpp's Metal backend.
++// The default single-pass scheme lets the last work-group read the partial
++// results of the other work-groups after a device-scope acq_rel atomic. On
++// AdaptiveCpp + Metal those plain stores are not reliably visible, so we only
++// let a work-group finish the reduction when it is the only one, and combine
++// the partial results of several work-groups in a second kernel. The kernel
++// boundary on the in-order queue makes the partial results visible.
++#if defined(__ACPP__)
++inline constexpr bool use_two_pass_reduction = true;
++#else
++inline constexpr bool use_two_pass_reduction = false;
++#endif
++
++template <typename ValueType, typename FunctorReducerWrapper>
++sycl::event two_pass_final_reduction(
++    sycl::queue& q, const FunctorReducerWrapper& functor_reducer_wrapper,
++    sycl::global_ptr<ValueType> results_ptr,
++    sycl::global_ptr<ValueType> device_accessible_result_ptr,
++    unsigned int value_count_, std::size_t n_wgroups) {
++  constexpr std::size_t wgroup_size = 256;
++  const unsigned int value_count    = std::max(value_count_, 1u);
++  return q.submit([&](sycl::handler& cgh) {
++    sycl::local_accessor<ValueType> local_mem(
++        sycl::range<1>(wgroup_size) * value_count, cgh);
++    cgh.parallel_for(
++        sycl::nd_range<1>(wgroup_size, wgroup_size),
++        [=](sycl::nd_item<1> item) {
++          const auto& fr_raw = functor_reducer_wrapper.get_functor();
++          using FR =
++              std::unwrap_reference_t<std::decay_t<decltype(fr_raw)>>;
++          const FR& fr        = fr_raw;
++          const auto& reducer = fr.get_reducer();
++          const std::size_t local_id = item.get_local_linear_id();
++          auto* mine = &local_mem[local_id * value_count];
++          if (local_id >= n_wgroups)
++            reducer.init(mine);
++          else {
++            reducer.copy(mine, &results_ptr[local_id * value_count]);
++            for (std::size_t id = local_id + wgroup_size; id < n_wgroups;
++                 id += wgroup_size)
++              reducer.join(mine, &results_ptr[id * value_count]);
++          }
++          sycl::group_barrier(item.get_group());
++          workgroup_reduction<>(item, local_mem, results_ptr,
++                                device_accessible_result_ptr, value_count,
++                                reducer, true,
++                                std::min<std::size_t>(n_wgroups, wgroup_size));
++        });
++  });
++}
++
+ }  // namespace Kokkos::Impl::SYCLReduction
+ 
+ #endif /* KOKKOS_SYCL_WORKGROUP_REDUCTION_HPP */
 diff --git a/core/src/impl/Kokkos_Half_MathematicalFunctions.hpp b/core/src/impl/Kokkos_Half_MathematicalFunctions.hpp
 index 2154ba5f6..e94806365 100644
 --- a/core/src/impl/Kokkos_Half_MathematicalFunctions.hpp
