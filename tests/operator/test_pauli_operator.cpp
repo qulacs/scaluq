@@ -343,3 +343,26 @@ TYPED_TEST(PauliOperatorTest, ApplyToBatchedScalarAndInvalidMasks) {
     EXPECT_NO_THROW(PauliOperator<Prec>("Y 0").apply_to_state(empty));
     EXPECT_THROW(PauliOperator<Prec>("X 1").apply_to_state(empty), std::runtime_error);
 }
+
+TYPED_TEST(PauliOperatorTest, ApplyToBatchedPreservesPadding) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    using Complex = internal::Complex<Prec>;
+    StateVectorBatched<Prec, Space> states(3, 1);
+    auto raw = states._raw;
+    const auto span = raw.span();
+    const auto stride = raw.stride(0);
+    Kokkos::parallel_for(
+        "initialize_padding",
+        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, span),
+        KOKKOS_LAMBDA(std::uint64_t i) { raw.data()[i] = Complex(7., -3.); });
+    states.load(std::vector<std::vector<StdComplex>>{{1., 2.}, {3., 4.}, {5., 6.}});
+    PauliOperator<Prec>("Y 0", StdComplex(.5, -.25)).apply_to_state(states);
+    auto host = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), raw);
+    for (std::uint64_t b = 0; b < 3; ++b)
+        for (std::uint64_t j = 2; j < stride && b * stride + j < span; ++j)
+            EXPECT_NEAR(std::abs(static_cast<StdComplex>(host.data()[b * stride + j]) -
+                                 StdComplex(7., -3.)),
+                        0.,
+                        eps<Prec>);
+}
