@@ -34,7 +34,13 @@ int main(int argc, char** argv) {
     for (int n : sizes) {
         const double bytes = 8.0 * static_cast<double>(1ULL << n);  // complex<float> state
         const int reps = n <= 20 ? 200 : (n <= 24 ? 50 : 20);
-        State state = State::Haar_random_state(n, 1);
+        // Haar init on the host: the device Random_XorShift64_Pool spins on its state locks
+        // when dim >> pool size and can leave a runaway kernel on Metal (seen at n=24).
+        State state(n);
+        state.load(StateVector<Prec, ExecutionSpace::HostSerial>::Haar_random_state(n, 1)
+                       .get_amplitudes());
+        state.normalize();  // HostSerial f32 normalizes with a serial float sum (~2% off at n=24)
+        std::fprintf(stderr, "# n=%d init squared_norm=%.7g\n", n, state.get_squared_norm());
         auto report = [&](const char* op, double ms, double traffic, double check) {
             std::printf(
                 "%s\t%d\t%.4f\t%.1f\t%.6g\n", op, n, ms, traffic / (ms * 1e-3) / 1e9, check);
