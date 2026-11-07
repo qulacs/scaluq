@@ -172,6 +172,10 @@ class Operator(metaclass=_ABCMeta):
     def __new__(cls, terms, precision=_DEFAULT_PRECISION, space='default'):
         return _get_module(precision, space).Operator(terms)
 
+class GroupedPauliOperator(metaclass=_ABCMeta):
+    def __new__(cls, n_qubits, terms, cache_budget=0, precision=_DEFAULT_PRECISION, space='default'):
+        return _get_module(precision, space).GroupedPauliOperator(n_qubits, terms, cache_budget)
+
 class OperatorBatched(metaclass=_ABCMeta):
     def __new__(cls, terms, precision=_DEFAULT_PRECISION, space='default'):
         return _get_module(precision, space).OperatorBatched(terms)
@@ -180,7 +184,7 @@ class Circuit(metaclass=_ABCMeta):
     def __new__(cls, precision=_DEFAULT_PRECISION):
         return _get_module(precision, 'default').Circuit()
 
-for _factory in (StateVector, StateVectorBatched, DensityMatrix, PauliOperator, Operator, OperatorBatched, Circuit):
+for _factory in (StateVector, StateVectorBatched, DensityMatrix, PauliOperator, Operator, GroupedPauliOperator, OperatorBatched, Circuit):
     for _mod in _modules.values():
         _native_cls = getattr(_mod, _factory.__name__, None)
         if _native_cls is not None:
