@@ -22,7 +22,11 @@ struct PauliOperator {
 public:
     enum PauliID : std::uint64_t { I, X, Y, Z };
 
-    KOKKOS_FUNCTION explicit PauliOperator(StdComplex coef = 1.)
+    // Device code must not convert through StdComplex (double), so the default constructor and
+    // the internal constructor below take the coefficient in the working precision.
+    KOKKOS_FUNCTION PauliOperator()
+        : _coef(static_cast<FloatType>(1)), _bit_flip_mask(0), _phase_flip_mask(0) {}
+    KOKKOS_FUNCTION explicit PauliOperator(StdComplex coef)
         : _coef(coef), _bit_flip_mask(0), _phase_flip_mask(0) {}
     PauliOperator(std::string_view pauli_string, StdComplex coef = 1.);
     PauliOperator(const std::vector<std::uint64_t>& target_qubit_list,
@@ -34,6 +38,15 @@ public:
                                   StdComplex coef = 1.)
         : _coef(coef), _bit_flip_mask(bit_flip_mask), _phase_flip_mask(phase_flip_mask) {}
 
+private:
+    struct InternalCoefTag {};
+    KOKKOS_FUNCTION PauliOperator(std::uint64_t bit_flip_mask,
+                                  std::uint64_t phase_flip_mask,
+                                  ComplexType coef,
+                                  InternalCoefTag)
+        : _coef(coef), _bit_flip_mask(bit_flip_mask), _phase_flip_mask(phase_flip_mask) {}
+
+public:
     void set_coef(StdComplex c) { _coef = c; }
     [[nodiscard]] StdComplex coef() const { return _coef; }
     [[nodiscard]] std::vector<std::uint64_t> target_qubit_list() const;
@@ -43,7 +56,8 @@ public:
     }
     [[nodiscard]] std::string get_pauli_string() const;
     [[nodiscard]] KOKKOS_INLINE_FUNCTION PauliOperator get_dagger() const {
-        return PauliOperator(_bit_flip_mask, _phase_flip_mask, scaluq::internal::conj(_coef));
+        return PauliOperator(
+            _bit_flip_mask, _phase_flip_mask, scaluq::internal::conj(_coef), InternalCoefTag{});
     };
     [[nodiscard]] std::uint64_t get_qubit_count() const;
 
@@ -96,7 +110,8 @@ public:
         if (extra_90rot_cnt < 0) extra_90rot_cnt += 4;
         return PauliOperator(_bit_flip_mask ^ target._bit_flip_mask,
                              _phase_flip_mask ^ target._phase_flip_mask,
-                             _coef * target._coef * internal::PHASE_90ROT<Prec>()[extra_90rot_cnt]);
+                             _coef * target._coef * internal::PHASE_90ROT<Prec>()[extra_90rot_cnt],
+                             InternalCoefTag{});
     }
     [[nodiscard]] KOKKOS_INLINE_FUNCTION PauliOperator operator*(StdComplex coef) const {
         return PauliOperator(_bit_flip_mask, _phase_flip_mask, _coef * coef);

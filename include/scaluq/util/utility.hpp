@@ -248,6 +248,21 @@ constexpr double get_epsilon() {
         static_assert(internal::lazy_false_v<internal::Float<Prec>>, "unknown Precision");
 }
 
+/**
+ * Copies a device view of complex values to the host and widens each element to StdComplex.
+ * Kernels write results in the working precision so that no double is needed on the device.
+ */
+template <class ViewType>
+std::vector<StdComplex> complex_view_to_std_vector(const ViewType& view) {
+    auto host = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), view);
+    std::vector<StdComplex> out(host.extent(0));
+    for (std::size_t i = 0; i < out.size(); ++i) {
+        out[i] =
+            StdComplex(static_cast<double>(host(i).real()), static_cast<double>(host(i).imag()));
+    }
+    return out;
+}
+
 }  // namespace internal
 
 }  // namespace scaluq

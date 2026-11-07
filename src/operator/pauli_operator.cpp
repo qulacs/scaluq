@@ -176,8 +176,8 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
     std::uint64_t phase_flip_mask = _phase_flip_mask;
     const std::uint64_t dim = states.dim();
     if (bit_flip_mask == 0) {
-        Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<Space>> results(
-            "results", states.batch_size());
+        Kokkos::View<ComplexType*, internal::SpaceType<Space>> results("results",
+                                                                       states.batch_size());
         Kokkos::parallel_for(
             "get_expectation_value",
             Kokkos::TeamPolicy(internal::SpaceType<Space>(), states.batch_size(), Kokkos::AUTO),
@@ -197,15 +197,13 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
                     res);
                 Kokkos::single(Kokkos::PerTeam(team), [&]() {
                     ComplexType cres = _coef * res;
-                    results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
+                    results(batch_id) = cres;
                 });
             });
-        auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
-        return std::vector<StdComplex>(results_h.data(), results_h.data() + results_h.size());
+        return internal::complex_view_to_std_vector(results);
     }
 
-    Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<Space>> results("results",
-                                                                               states.batch_size());
+    Kokkos::View<ComplexType*, internal::SpaceType<Space>> results("results", states.batch_size());
     std::uint64_t pivot = std::bit_width(bit_flip_mask) - 1;
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
@@ -231,11 +229,10 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
                 res);
             Kokkos::single(Kokkos::PerTeam(team), [&]() {
                 ComplexType cres = _coef * res;
-                results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
+                results(batch_id) = cres;
             });
         });
-    auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
-    return std::vector<StdComplex>(results_h.data(), results_h.data() + results_h.size());
+    return internal::complex_view_to_std_vector(results);
 }
 
 template <Precision Prec>
@@ -295,8 +292,8 @@ std::vector<StdComplex> PauliOperator<Prec>::get_transition_amplitude(
     std::uint64_t bit_flip_mask = _bit_flip_mask;
     std::uint64_t phase_flip_mask = _phase_flip_mask;
     if (bit_flip_mask == 0) {
-        Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<Space>> results(
-            "results", states_bra.batch_size());
+        Kokkos::View<ComplexType*, internal::SpaceType<Space>> results("results",
+                                                                       states_bra.batch_size());
         Kokkos::parallel_for(
             "get_transition_amplitude",
             Kokkos::TeamPolicy<internal::SpaceType<Space>>(
@@ -317,16 +314,15 @@ std::vector<StdComplex> PauliOperator<Prec>::get_transition_amplitude(
                     },
                     internal::Sum<FloatType, Space>(res));
                 ComplexType cres = _coef * res;
-                results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
+                results(batch_id) = cres;
             });
-        auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
-        return std::vector<StdComplex>(results_h.data(), results_h.data() + results_h.size());
+        return internal::complex_view_to_std_vector(results);
     }
     std::uint64_t pivot = std::bit_width(bit_flip_mask) - 1;
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
-    Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<Space>> results(
-        "results", states_bra.batch_size());
+    Kokkos::View<ComplexType*, internal::SpaceType<Space>> results("results",
+                                                                   states_bra.batch_size());
     Kokkos::parallel_for(
         "get_transition_amplitude",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
@@ -354,10 +350,9 @@ std::vector<StdComplex> PauliOperator<Prec>::get_transition_amplitude(
                 },
                 internal::Sum<FloatType, Space>(res));
             ComplexType cres = _coef * res;
-            results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
+            results(batch_id) = cres;
         });
-    auto results_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
-    return std::vector<StdComplex>(results_h.data(), results_h.data() + results_h.size());
+    return internal::complex_view_to_std_vector(results);
 }
 
 template StdComplex PauliOperator<internal::Prec>::get_expectation_value(
