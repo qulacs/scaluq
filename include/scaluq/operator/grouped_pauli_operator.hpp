@@ -29,6 +29,21 @@ class GroupedPauliOperator {
     Kokkos::View<Complex**, Exec> cache_;
     std::uint64_t n_qubits_, dim_;
 
+    struct CacheWeights {
+        decltype(groups_) groups;
+        decltype(terms_) terms;
+        decltype(cache_) cache;
+
+        KOKKOS_INLINE_FUNCTION void operator()(std::uint64_t g, std::uint64_t b) const {
+            Complex sum = 0.;
+            for (auto t = groups(g).begin; t < groups(g).end; ++t) {
+                auto term = terms(t);
+                sum += (Kokkos::popcount(b & term.z) & 1) ? -term.factor : term.factor;
+            }
+            cache(g, b) = sum;
+        }
+    };
+
     KOKKOS_INLINE_FUNCTION static Complex weight(std::uint64_t g,
                                                  std::uint64_t b,
                                                  decltype(groups_) groups,
@@ -74,22 +89,12 @@ public:
         terms_ = internal::convert_vector_to_view<Term, Space>(terms);
         if (!groups.empty() && dim_ <= cache_budget / sizeof(Complex) / groups.size()) {
             cache_ = decltype(cache_)("grouped_pauli_cache", groups.size(), dim_);
-            auto gs = groups_;
-            auto ts = terms_;
-            auto cache = cache_;
             Kokkos::parallel_for(
                 "GroupedPauliOperator::cache",
                 Kokkos::MDRangePolicy<Exec, Kokkos::Rank<2>>(
                     {0, 0},
                     {static_cast<std::int64_t>(groups.size()), static_cast<std::int64_t>(dim_)}),
-                KOKKOS_LAMBDA(std::uint64_t g, std::uint64_t b) {
-                    Complex sum = 0.;
-                    for (auto t = gs(g).begin; t < gs(g).end; ++t) {
-                        auto term = ts(t);
-                        sum += (Kokkos::popcount(b & term.z) & 1) ? -term.factor : term.factor;
-                    }
-                    cache(g, b) = sum;
-                });
+                CacheWeights{groups_, terms_, cache_});
         }
     }
     [[nodiscard]] std::uint64_t n_groups() const { return groups_.extent(0); }
