@@ -1,3 +1,4 @@
+#include <functional>
 #include <scaluq/prec_space.hpp>
 #include <scaluq/state/state_vector.hpp>
 #include <scaluq/util/math.hpp>
@@ -219,6 +220,26 @@ void StateVector<Prec, Space>::multiply_coef(StdComplex coef) {
         "multiply_coef",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) { this->_raw[i] *= coef; });
+}
+template <Precision Prec, ExecutionSpace Space>
+void StateVector<Prec, Space>::multiply_elementwise(const StateVector& other) {
+    if (_dim != other.dim()) {
+        throw std::invalid_argument("multiply_elementwise: state dimensions must match");
+    }
+    auto output = _raw;
+    auto source = other;
+    // Distinct overlapping views need a snapshot; exact aliases are pointwise safe.
+    std::less<const ComplexType*> before;
+    if (_dim != 0 && output.data() != source._raw.data() &&
+        before(output.data(), source._raw.data() + _dim) &&
+        before(source._raw.data(), output.data() + _dim)) {
+        source = other.copy();
+    }
+    auto diagonal = source._raw;
+    Kokkos::parallel_for(
+        "multiply_elementwise",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, _dim),
+        KOKKOS_LAMBDA(std::uint64_t i) { output(i) *= diagonal(i); });
 }
 template <Precision Prec, ExecutionSpace Space>
 std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(
