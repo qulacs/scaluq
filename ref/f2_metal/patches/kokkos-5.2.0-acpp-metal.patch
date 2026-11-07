@@ -1,22 +1,41 @@
 diff --git a/algorithms/src/Kokkos_Random.hpp b/algorithms/src/Kokkos_Random.hpp
-index 262d7ccd6..f7db8b9d0 100644
+index 262d7ccd6..83ac937c0 100644
 --- a/algorithms/src/Kokkos_Random.hpp
 +++ b/algorithms/src/Kokkos_Random.hpp
-@@ -785,6 +785,13 @@ struct Random_UniqueIndex<Kokkos::Device<Kokkos::SYCL, MemorySpace>> {
+@@ -785,6 +785,32 @@ struct Random_UniqueIndex<Kokkos::Device<Kokkos::SYCL, MemorySpace>> {
        View<int**, Kokkos::Device<Kokkos::SYCL, MemorySpace>>;
    KOKKOS_FUNCTION
    static uint64_t get_state_idx(const locks_view_type& locks_) {
-+#if defined(__ACPP__)  // F2 experiment: linear probe from 0 (slow, correct)
-+    uint64_t i = 0;
++#if defined(__ACPP__)
++    // F2 experiment: AdaptiveCpp has no free-function nd_item query, so take
++    // the work-item ids from the SSCP builtins. Starting from the global
++    // linear id (as the other backends do) keeps the state assignment, and
++    // therefore seeded results, deterministic.
++    const uint64_t n_locks = locks_.extent(0);
++    uint64_t i = 0, i_offset = 0, block_size = 1;
++    KOKKOS_IF_ON_DEVICE((
++        const uint64_t bx = __acpp_sscp_get_local_size_x();
++        const uint64_t by = __acpp_sscp_get_local_size_y();
++        const uint64_t bz = __acpp_sscp_get_local_size_z();
++        block_size        = bx * by * bz;
++        i_offset = (__acpp_sscp_get_local_id_z() * by +
++                    __acpp_sscp_get_local_id_y()) * bx +
++                   __acpp_sscp_get_local_id_x();
++        const uint64_t group =
++            (__acpp_sscp_get_group_id_z() * __acpp_sscp_get_num_groups_y() +
++             __acpp_sscp_get_group_id_y()) * __acpp_sscp_get_num_groups_x() +
++            __acpp_sscp_get_group_id_x();
++        i = (group * block_size + i_offset) % n_locks;))
 +    while (Kokkos::atomic_compare_exchange(&locks_(i, 0), 0, 1)) {
-+      i = (i + 1) % static_cast<uint64_t>(locks_.extent(0));
++      i += block_size;
++      if (i >= n_locks) i = i_offset % n_locks;
 +    }
 +    return i;
 +#else
  #if defined(KOKKOS_COMPILER_INTEL_LLVM) && \
      KOKKOS_COMPILER_INTEL_LLVM >= 20250000
      auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
-@@ -816,6 +823,7 @@ struct Random_UniqueIndex<Kokkos::Device<Kokkos::SYCL, MemorySpace>> {
+@@ -816,6 +842,7 @@ struct Random_UniqueIndex<Kokkos::Device<Kokkos::SYCL, MemorySpace>> {
        }
      }
      return i;
@@ -152,6 +171,21 @@ index 8c88a4723..ac54b824e 100644
  // Exponential functions
  KOKKOS_SYCL_HALF_UNARY_FUNCTION(exp)
  KOKKOS_SYCL_HALF_UNARY_FUNCTION(exp2)
+diff --git a/core/src/SYCL/Kokkos_SYCL_Instance.cpp b/core/src/SYCL/Kokkos_SYCL_Instance.cpp
+index 82a97d5c0..2043f381a 100644
+--- a/core/src/SYCL/Kokkos_SYCL_Instance.cpp
++++ b/core/src/SYCL/Kokkos_SYCL_Instance.cpp
+@@ -182,6 +182,10 @@ SYCLInternal::~SYCLInternal() {
+   }
+ 
+   for (auto& usm_mem : m_indirectKernelMem) usm_mem.reset();
++  // m_queue is declared after m_team_scratch_event and is therefore destroyed
++  // first. AdaptiveCpp crashes when an event outlives its in-order queue, so
++  // release the events while the queue is still alive.
++  for (auto& event : m_team_scratch_event) event = sycl::event{};
+   // guard erasing from all_queues
+   {
+     std::scoped_lock lock(mutex);
 diff --git a/core/src/SYCL/Kokkos_SYCL_ParallelFor_Team.hpp b/core/src/SYCL/Kokkos_SYCL_ParallelFor_Team.hpp
 index c316f3c35..bd295a08d 100644
 --- a/core/src/SYCL/Kokkos_SYCL_ParallelFor_Team.hpp
@@ -385,10 +419,27 @@ index 501ca88d1..55d461855 100644
          q.ext_oneapi_submit_barrier(
              std::vector<sycl::event>{last_reduction_event});
 diff --git a/core/src/SYCL/Kokkos_SYCL_ParallelScan_Range.hpp b/core/src/SYCL/Kokkos_SYCL_ParallelScan_Range.hpp
-index 4d47c2705..8367dbfb7 100644
+index 4d47c2705..e04ee8b49 100644
 --- a/core/src/SYCL/Kokkos_SYCL_ParallelScan_Range.hpp
 +++ b/core/src/SYCL/Kokkos_SYCL_ParallelScan_Range.hpp
-@@ -252,6 +252,9 @@ class ParallelScanSYCLBase {
+@@ -207,7 +207,16 @@ class ParallelScanSYCLBase {
+                                sycl::memory_scope::device,
+                                sycl::access::address_space::global_space>
+                   scratch_flags_ref(*scratch_flags);
++#if defined(__ACPP__)
++              // F2 experiment: the "last work-group" scheme relies on
++              // cross-work-group visibility of plain stores, which the
++              // AdaptiveCpp Metal backend does not give. The scan of the
++              // work-group totals runs as a separate kernel instead.
++              (void)scratch_flags_ref;
++              num_teams_done[0] = (n_wgroups == 1) ? 1u : 0u;
++#else
+               num_teams_done[0] = ++scratch_flags_ref;
++#endif
+             }
+             sycl::group_barrier(item.get_group());
+             if (num_teams_done[0] == n_wgroups) {
+@@ -252,6 +261,9 @@ class ParallelScanSYCLBase {
  
        auto dummy_scan_lambda =
            scan_lambda_factory({1, cgh}, num_teams_done, nullptr, nullptr);
@@ -398,7 +449,7 @@ index 4d47c2705..8367dbfb7 100644
  
        static sycl::kernel kernel = [&] {
          sycl::kernel_id functor_kernel_id =
-@@ -267,6 +270,7 @@ class ParallelScanSYCLBase {
+@@ -267,6 +279,7 @@ class ParallelScanSYCLBase {
        auto max =
            kernel.get_info<sycl::info::kernel_device_specific::work_group_size>(
                q.get_device());
@@ -406,6 +457,66 @@ index 4d47c2705..8367dbfb7 100644
  
        wgroup_size = static_cast<size_t>(max / multiple) * multiple;
        n_wgroups   = (size + wgroup_size - 1) / wgroup_size;
+@@ -307,6 +320,59 @@ class ParallelScanSYCLBase {
+                        scan_lambda);
+     });
+ 
++#if defined(__ACPP__)
++    // F2 experiment: second pass, an exclusive scan of the work-group totals in
++    // a single work-group (same algorithm as the "last work-group" branch).
++    if (n_wgroups > 1) {
++      const auto min_sg_size =
++          q.get_device()
++              .template get_info<sycl::info::device::sub_group_sizes>()
++              .front();
++      q.submit([&](sycl::handler& cgh) {
++        sycl::local_accessor<value_type> local_mem(
++            sycl::range<1>((wgroup_size + min_sg_size - 1) / min_sg_size),
++            cgh);
++        const auto group_results_ = group_results;
++        const unsigned int n_wgroups_ = n_wgroups;
++        cgh.parallel_for(
++            sycl::nd_range<1>(wgroup_size, wgroup_size),
++            [=](sycl::nd_item<1> item) {
++              auto group_results = group_results_;
++              const CombinedFunctorReducer<
++                  FunctorType, typename Analysis::Reducer>& functor_reducer =
++                  functor_wrapper.get_functor();
++              const typename Analysis::Reducer& reducer =
++                  functor_reducer.get_reducer();
++              const int wgroup_size_ = item.get_local_range()[0];
++              const int local_id     = item.get_local_linear_id();
++              value_type total;
++              reducer.init(&total);
++              value_type local_value;
++              for (unsigned int offset = 0; offset < n_wgroups_;
++                   offset += wgroup_size_) {
++                index_type id = local_id + offset;
++                if (id < static_cast<index_type>(n_wgroups_))
++                  local_value = group_results[id];
++                else
++                  reducer.init(&local_value);
++                workgroup_scan<>(
++                    item, reducer, local_mem, local_value,
++                    std::min<index_type>(n_wgroups_ - offset, wgroup_size_));
++                if (id < static_cast<index_type>(n_wgroups_)) {
++                  reducer.join(&local_value, &total);
++                  group_results[id] = local_value;
++                }
++                reducer.join(
++                    &total,
++                    &local_mem[item.get_sub_group().get_group_range()[0] - 1]);
++                if (offset + wgroup_size_ < n_wgroups_)
++                  sycl::group_barrier(item.get_group());
++              }
++            });
++      });
++    }
++#endif
++
+     // Write results to global memory
+     auto update_global_results = q.submit([&](sycl::handler& cgh) {
+       // The compiler failed with CL_INVALID_ARG_VALUE if using m_result_ptr
 diff --git a/core/src/SYCL/Kokkos_SYCL_Team.hpp b/core/src/SYCL/Kokkos_SYCL_Team.hpp
 index ebfa11b5e..e97c436ca 100644
 --- a/core/src/SYCL/Kokkos_SYCL_Team.hpp

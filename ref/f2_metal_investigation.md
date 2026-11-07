@@ -4,6 +4,90 @@
 対象: `ref/scaluq_improvements.md`（統合ブランチ側）の F2・F3 の手順 1〜2 と、手順 3 の机上評価
 結論の扱い: 実機で確認した事実と、コードを読んで推定した事項は分けて書く。性能値は参考値（後述の理由で再測定が必要）。
 
+## 更新（2026-11-07 第 3 版）: f32 の既存テストが Metal GPU で 229/229 成功
+
+第 2 版の「次の作業」を優先度順に進めた。**f32 の既存テスト 229 件がすべて Metal GPU 上で成功した。** OpenMP（f32/f64）の既存テスト 968 件もすべて成功し、既存の CPU ビルドを壊していないことを確認した。性能の測定はまだしていない（後述）。
+
+| 優先度 | 作業 | 結果 |
+|---|---|---|
+| P0 | デバイス内 double の除去（残り） | **完了**。17 件が成功に変わった |
+| P1 | 終了時の SIGSEGV | **原因を特定して回避**。22 件が正常終了するようになった |
+| P3 | `parallel_scan` の 2 パス化 | **完了**。サンプリング 4 件が成功に変わった |
+| P3 | 乱数の再現性（シード） | **完了**。`HaarRandomStateSameSeed` 2 件が成功に変わった |
+| — | threadgroup/device ポインタの `select` | **scaluq 側で回避**。2 件が成功に変わった |
+| P1 / P2 | 起動遅延・帯域の再測定、ネイティブ Metal との比較 | 測定プログラムは用意した。GPU がほかの処理で使用率 100% のため、測定は未実施 |
+
+### scaluq 側の変更（`exp/f2-metal-scaluq`、PR #464 の 2 コミット目）
+
+- Operator 系の double の除去:
+  - `Operator`、`OperatorBatched`、`PauliOperator` の batched 版の期待値・遷移振幅は、`View<Kokkos::complex<double>>` にデバイスから書いていた。作業精度の `View<ComplexType>` に書き、ホストで `StdComplex` に広げるように変えた（共通関数 `internal::complex_view_to_std_vector`）。
+  - `convert_internal_matrix_to_external_matrix`（`get_matrix` が使う）も、ホストにコピーしてから double に広げるようにした。
+  - `PauliOperator` に、デバイス用の既定コンストラクタと、作業精度の係数を受け取る内部コンストラクタを追加した。`get_dagger`、`operator*`、`Operator::operator*=` は、デバイス上で `StdComplex`（double）を経由しなくなった。
+- threadgroup/device ポインタの `select`:
+  - 原因は `multi_dense_matrix_gate_scalar` だった。スクラッチのレベル（0 = threadgroup、1 = device）を実行時に選んでいるため、2 種類のアドレス空間のポインタを `select` で選ぶ IR になる。Metal には汎用アドレス空間が無いので、MSL に変換できない。
+  - `SCALUQ_SYCL_ACPP` のときだけ、レベルをコンパイル時定数（`std::integral_constant`）にした。ほかのビルドは従来どおり `int` を渡すので、生成されるコードは変わらない。
+- 変更量は 7 ファイル、+134/−90 行。
+
+### Kokkos パッチの追加（`ref/f2_metal/patches/kokkos-5.2.0-acpp-metal.patch`）
+
+- **終了時の SIGSEGV**:
+  - 原因: `SYCLInternal` では `m_queue` が `m_team_scratch_event[]` より後に宣言されている。そのため、デストラクタはキューを先に破棄し、イベントを後で破棄する。AdaptiveCpp は、in-order キューの破棄後にそのイベント（`dag_node`）を破棄すると落ちる。
+  - 調べ方: デバッガは権限が無く使えなかったため、SIGSEGV ハンドラを `DYLD_INSERT_LIBRARIES` で注入して、バックトレースを取った（`Kokkos::finalize` → `~SYCLInternal` → `hipsycl::rt::dag_node::~dag_node`）。
+  - 回避: デストラクタ内で、キューがまだ有効なうちにイベントを解放する（1 行）。
+  - SYCL では、イベントがキューより長く生きてもよいはず。したがって、本来は AdaptiveCpp 側の不具合と考える。
+- **`parallel_scan` の 2 パス化**:
+  - 1 パス目では、「最後のワークグループがグループ合計を走査する」処理を、ワークグループが 1 個のときだけ使う。
+  - ワークグループが複数あれば、グループ合計の走査を単一ワークグループのカーネルとして投入し、そのあと既存の結果更新カーネルを流す。
+  - 新しいテスト `scan.cpp`（64 ビット整数と float、n = 32〜2^24、2 のべき乗でない長さを含む、10 回ずつ）で 90/90 正しい。
+- **乱数の再現性**:
+  - `Random_UniqueIndex` は、乱数状態の割り当てを、ほかのバックエンドと同じくグローバルなスレッド番号から探すようにした。スレッド番号は AdaptiveCpp の SSCP 組み込み関数（`__acpp_sscp_get_local_id_x` など）から計算する。
+  - 新しいテスト `rnd.cpp` で、プールの状態数以下の並列度では同じシードで同じ乱数列になることを確認した（n ≤ 65536）。
+  - n = 2^20 のように状態数を超えると、乱数列は一致しない。複数のスレッドが同じ状態を取り合うためで、CUDA など他のバックエンドでも同じ性質。
+- `UniqueToken` は、0 番から空きを探すまま。scaluq は使っていない。
+- Kokkos への変更は、合計 22 ファイル、+306 行になった。
+
+### Metal 上のテスト結果（第 3 版）
+
+| 結果 | 第 2 版 | 第 3 版 |
+|---|---|---|
+| 成功 | 182 | **229** |
+| 成功（終了時 SIGSEGV） | 22 | 0 |
+| double で JIT 不可 | 17 | 0 |
+| コード生成エラー | 2 | 0 |
+| 失敗 | 2 | 0 |
+| タイムアウト | 4 | 0 |
+
+- 注意: `MergeGateTest` は成功するが、1 件で 606 秒かかった（300 秒の打ち切りでは TIMEOUT になる）。
+  - 測定中、GPU はほかの処理で使用率 100% だった。小さなカーネルの起動と同期を多数繰り返すテストなので、待ち時間が積み上がったと推定している。
+  - 性能測定のときに、あわせて確認する。
+- 全件の結果は `ref/f2_metal/scaluq_f32_metal_tests.tsv`。
+
+### 性能測定の準備（P1・P2）
+
+- `ref/f2_metal/bench/metal_bench.cpp`: scaluq の公開 API で f32 の H、X、CX、RX、ノルム、期待値の時間と実効帯域を測る。
+  - Metal ビルドと OpenMP ビルドの両方で、同じプログラムを使う。
+  - `exe/` に置き、`exe(metal_bench)` を追加してビルドする。PR には含めていない。
+- `ref/f2_metal/native/`: ネイティブ Metal の比較用プログラム（Objective-C++、MSL は実行時にコンパイル）。
+  - 測る項目: 空カーネルの起動遅延（1 コマンドバッファ 1 回と、まとめて投入の 2 通り）、triad 帯域、H、CNOT、2 パスのノルム。
+  - 小さいサイズでの正しさの確認（H と CNOT を CPU 参照と比較、ノルムの相対誤差 1e-7 程度）は通った。
+- GPU の使用率が 100% のときの値は使わない。GPU が空いている時間に、Metal ビルド・OpenMP ビルド・ネイティブ Metal の 3 つを続けて測る。
+
+### その他（上流 scaluq の既存コードで見つけた点）
+
+- `OperatorBatched::operator*(const std::vector<StdComplex>&)` と `operator*=`:
+  - 係数の配列はバッチ数の長さなのに、ループは全項（`_ops` の要素数）を回り、項の番号で配列を引いている。項の数がバッチ数より多いと、範囲外を読む。
+  - テストが無く、今回の変更とは無関係なので直していない。別の issue にするのがよい。
+
+### 次の作業（第 3 版時点）
+
+| 優先度 | 作業 | 状態 |
+|---|---|---|
+| P1 / P2 | 起動遅延・帯域、scaluq の各操作、ネイティブ Metal の比較測定 | 準備済み。GPU が空くのを待つ |
+| P2 | 遅い部分だけネイティブ Metal に置き換える | 測定結果を見て判断 |
+| P3 | TeamPolicy / batched の性能 | 未着手 |
+| 上流 | AdaptiveCpp への報告 | 下書き予定。RMW の memory_order 無視、`__acpp_sscp_get_num_subgroups` の欠落、キュー破棄後のイベント破棄で落ちる件、capabilities クエリの未実装、汎用アドレス空間の `select` が変換できない件（制約として明記を依頼） |
+| 上流 | Kokkos への相談 | 下書き予定。AdaptiveCpp 対応一式、2 パス reduce/scan、`~SYCLInternal` の破棄順 |
+
 ## 更新（2026-11-07 第 2 版）: 2 パス reduce で reduce が正しくなった
 
 レビューを受けて判断を改めた。**F2 は継続する。** 基本ゲートは Kokkos の `parallel_for` のまま使い、Metal で問題になる処理だけを個別に直す。
