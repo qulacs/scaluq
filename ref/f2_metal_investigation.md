@@ -4,6 +4,20 @@
 対象: `ref/scaluq_improvements.md`（統合ブランチ側）の F2・F3 の手順 1〜2 と、手順 3 の机上評価
 結論の扱い: 実機で確認した事実と、コードを読んで推定した事項は分けて書く。性能値は参考値（後述の理由で再測定が必要）。
 
+## 更新（2026-11-07 第 7 版）: 統合検証ブランチで Metal の全テストが成功
+
+F2 の変更（PR #464）を、統合検証ブランチ `test/batched-operator-improvements` に取り込んで検証した。このブランチには、レビュー待ちの PR #460〜#462、#465〜#470 が入っている。
+
+- 統合した状態の Metal ビルドで、最初は 250 件中 2 件が失敗した。どちらも C5（`GroupedPauliOperator`、PR #462）の遷移振幅と期待値で、GPU では常に 0 を返していた。
+- 原因は C5 ではなく、scaluq の既存のリデューサ `internal::Sum<Scalar, Space>` だった。
+  - `internal::Sum` はホストのスカラーを指すのに、結果の View をデバイス側のメモリ空間（`SpaceType<Space>`）と宣言していた。
+  - Kokkos の SYCL の reduce は、結果の置き場所が「デバイスからアクセス可能」と判定されると、最終結果をカーネルの中から直接そのアドレスに書く（`device_accessible_result_ptr`）。
+  - 実際の置き場所はホストのスタック上の変数なので、Metal の GPU からは届かない。書き込みが失われ、結果が 0 のまま残った。
+  - Kokkos 標準の `Kokkos::Sum<T>` は、スカラーを受け取るとき HostSpace の View を使う。
+- 修正: `internal::Sum` の結果 View を `Kokkos::HostSpace` にした（PR #464 の 5 コミット目、`277f1363`）。呼び出し側はすべてスカラーを渡しているので、ほかの変更は要らない。CPU ビルドの動作は変わらない。
+- 同じ書き方の `PauliOperator::get_transition_amplitude` が、修正前でも Metal で通っていた理由は、まだ分かっていない。
+- 統合した状態の結果: Metal の f32 250/250、OpenMP（f32/f64）1052/1052、構成テスト `ScaluqCPUConfig` 成功。OpenMP の 1052 件には、A4（PR #470）の C++ 回帰テストも含まれる。
+
 ## 更新（2026-11-07 第 6 版）: 乱数をカウンタ方式にして、暴走カーネルをなくした
 
 第 4 版で見つけた「GPU 上の大きな Haar ランダム状態でカーネルが暴走して残る」問題を、scaluq 側で根本から直した（PR #464 の 4 コミット目、`c13da24e`）。
