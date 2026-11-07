@@ -157,6 +157,62 @@ index b58c12c7c..fc611a114 100644
         << "] " << device.get_info<sycl::info::device::name>();
      if (counter == active_device)
        os << " : Selected";
+diff --git a/core/src/SYCL/Kokkos_SYCL.hpp b/core/src/SYCL/Kokkos_SYCL.hpp
+index 26a695c56..2af596cb7 100644
+--- a/core/src/SYCL/Kokkos_SYCL.hpp
++++ b/core/src/SYCL/Kokkos_SYCL.hpp
+@@ -13,6 +13,7 @@ static_assert(false,
+ 
+ #ifdef KOKKOS_ENABLE_SYCL
+ #include <sycl/sycl.hpp>
++#include <cstdlib>
+ #include <SYCL/Kokkos_SYCL_Space.hpp>
+ #include <Kokkos_Layout.hpp>
+ #include <Kokkos_ScratchSpace.hpp>
+@@ -114,6 +115,28 @@ struct DeviceTypeTraits<Kokkos::SYCL> {
+ }  // namespace Experimental
+ }  // namespace Tools
+ 
++namespace Impl {
++// Queue properties used for every queue Kokkos creates. With AdaptiveCpp,
++// KOKKOS_IMPL_ACPP_COARSE_EVENTS=1 also requests coarse-grained events. This is
++// opt-in: on the Metal backend, waiting on a coarse-grained event waits for the
++// whole queue, and the indirect-kernel buffers wait on old kernel events, so
++// small kernels became about 4x slower in our measurements.
++inline sycl::property_list sycl_queue_properties() {
++#ifdef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
++#ifdef __ACPP__
++  const char* coarse = std::getenv("KOKKOS_IMPL_ACPP_COARSE_EVENTS");
++  if (coarse && coarse[0] == '1')
++    return sycl::property_list{
++        sycl::property::queue::in_order(),
++        sycl::property::queue::AdaptiveCpp_coarse_grained_events()};
++#endif
++  return sycl::property_list{sycl::property::queue::in_order()};
++#else
++  return sycl::property_list{};
++#endif
++}
++}  // namespace Impl
++
+ namespace Experimental::Impl {
+ // For each space in partition, create new queue on the same device as
+ // base_instance, ignoring weights
+@@ -127,12 +150,8 @@ std::vector<SYCL> impl_partition_space(const SYCL& base_instance,
+   instances.reserve(weights.size());
+   std::generate_n(std::back_inserter(instances), weights.size(),
+                   [&context, &device]() {
+-                    return SYCL(sycl::queue(context, device
+-#ifdef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+-                                            ,
+-                                            sycl::property::queue::in_order()
+-#endif
+-                                                ));
++                    return SYCL(sycl::queue(context, device,
++                                            Kokkos::Impl::sycl_queue_properties()));
+                   });
+ 
+   return instances;
 diff --git a/core/src/SYCL/Kokkos_SYCL_Half_MathematicalFunctions.hpp b/core/src/SYCL/Kokkos_SYCL_Half_MathematicalFunctions.hpp
 index 8c88a4723..ac54b824e 100644
 --- a/core/src/SYCL/Kokkos_SYCL_Half_MathematicalFunctions.hpp
@@ -172,10 +228,26 @@ index 8c88a4723..ac54b824e 100644
  KOKKOS_SYCL_HALF_UNARY_FUNCTION(exp)
  KOKKOS_SYCL_HALF_UNARY_FUNCTION(exp2)
 diff --git a/core/src/SYCL/Kokkos_SYCL_Instance.cpp b/core/src/SYCL/Kokkos_SYCL_Instance.cpp
-index 82a97d5c0..2043f381a 100644
+index 82a97d5c0..2d3a7307a 100644
 --- a/core/src/SYCL/Kokkos_SYCL_Instance.cpp
 +++ b/core/src/SYCL/Kokkos_SYCL_Instance.cpp
-@@ -182,6 +182,10 @@ SYCLInternal::~SYCLInternal() {
+@@ -64,13 +64,8 @@ SYCLInternal::SYCLInternal(const sycl::device& d)
+             if (asynchronous_error)
+               Kokkos::Impl::throw_runtime_exception(
+                   "There was an asynchronous SYCL error!\n");
+-          }
+-#ifdef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+-
+-          ,
+-          sycl::property::queue::in_order()
+-#endif
+-      }) {
++          },
++          sycl_queue_properties()}) {
+ }
+ 
+ SYCLInternal::SYCLInternal(const sycl::queue& q) : m_queue(q) {
+@@ -182,6 +177,10 @@ SYCLInternal::~SYCLInternal() {
    }
  
    for (auto& usm_mem : m_indirectKernelMem) usm_mem.reset();
@@ -186,6 +258,30 @@ index 82a97d5c0..2043f381a 100644
    // guard erasing from all_queues
    {
      std::scoped_lock lock(mutex);
+diff --git a/core/src/SYCL/Kokkos_SYCL_Instance.hpp b/core/src/SYCL/Kokkos_SYCL_Instance.hpp
+index 19c491e5e..44a05ca43 100644
+--- a/core/src/SYCL/Kokkos_SYCL_Instance.hpp
++++ b/core/src/SYCL/Kokkos_SYCL_Instance.hpp
+@@ -189,7 +189,18 @@ class SYCLInternal {
+   static void fence_helper(WAT& wat, const std::string& name,
+                            uint32_t instance_id);
+ 
+-  const static size_t m_usm_pool_size = 4;
++  // Each indirect kernel launch reuses one of these buffers and first waits
++  // for the last kernel that used it. With only 4 buffers the host waits on
++  // the kernel launched 4 launches ago, which limits launches to about 4 per
++  // command-buffer round trip on AdaptiveCpp's Metal backend.
++#ifndef KOKKOS_IMPL_SYCL_USM_POOL_SIZE
++#ifdef __ACPP__
++#define KOKKOS_IMPL_SYCL_USM_POOL_SIZE 256
++#else
++#define KOKKOS_IMPL_SYCL_USM_POOL_SIZE 4
++#endif
++#endif
++  const static size_t m_usm_pool_size = KOKKOS_IMPL_SYCL_USM_POOL_SIZE;
+   std::vector<IndirectKernelMem> m_indirectKernelMem{m_usm_pool_size};
+ 
+   size_t m_pool_next{0};
 diff --git a/core/src/SYCL/Kokkos_SYCL_ParallelFor_Team.hpp b/core/src/SYCL/Kokkos_SYCL_ParallelFor_Team.hpp
 index c316f3c35..bd295a08d 100644
 --- a/core/src/SYCL/Kokkos_SYCL_ParallelFor_Team.hpp

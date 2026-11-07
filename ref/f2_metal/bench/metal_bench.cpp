@@ -30,6 +30,14 @@ int main(int argc, char** argv) {
     for (int i = 1; i < argc; ++i)
         if (argv[i][0] != '-') sizes.push_back(std::atoi(argv[i]));
     if (sizes.empty()) sizes = {16, 20, 24, 26, 28};
+    {
+        // Warm up: the first launches allocate Kokkos' indirect-kernel buffers
+        // (256 of them with AdaptiveCpp) and JIT-compile the kernels.
+        State warm(10);
+        auto x = gate::X<Prec>(0);
+        for (int i = 0; i < 600; ++i) x->update_quantum_state(warm);
+        Kokkos::fence();
+    }
     std::printf("op\tn_qubits\tms_per_op\tGBps\tcheck\n");
     for (int n : sizes) {
         const double bytes = 8.0 * static_cast<double>(1ULL << n);  // complex<float> state
