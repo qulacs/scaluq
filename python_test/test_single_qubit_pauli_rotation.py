@@ -46,6 +46,6 @@ def test_param_pauli_rotation_batch_matches_matrix(precision, space, pauli, coef
     for b, param in enumerate(params):
         matrix = np.asarray(gate.get_matrix(param))
         expected[b, [0, 2]] = matrix @ initial[b, [0, 2]]
-    gate.update_quantum_state(states, params)
+    gate.update_quantum_state(states, param=params)
     tolerance = 1e-5 if precision == "f32" else 1e-12
     np.testing.assert_allclose(states.get_amplitudes(), expected, rtol=tolerance, atol=tolerance)
