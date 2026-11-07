@@ -310,7 +310,7 @@ TYPED_TEST(PauliOperatorTest, ApplyToBatchedStates) {
     const std::vector<std::string> strings = {"", "X 0", "Y 0", "Z 1", "Y 0 X 1"};
     for (const auto& str : strings) {
         PauliOperator<Prec> op(str, StdComplex(.5, -.25));
-        auto matrix = op.get_full_matrix(2);
+        auto matrix = op.get_full_matrix_ignoring_coef(2) * op.coef();
         StateVectorBatched<Prec, Space> states(values.size(), 2);
         states.load(values);
         op.apply_to_state(states);

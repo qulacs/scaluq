@@ -16,7 +16,7 @@ def test_batched_pauli_matches_dense_matrix(space, pauli):
     states.load(values.tolist())
     op = scaluq.PauliOperator(pauli, coef=.5 - .25j, precision=precision)
     op.apply_to_state(states)
-    np.testing.assert_allclose(states.get_amplitudes(), values @ np.asarray(op.get_full_matrix(2)).T)
+    np.testing.assert_allclose(states.get_amplitudes(), values @ np.asarray(op.get_full_matrix_ignoring_coef(2)).T * op.coef())
 
 
 @pytest.mark.parametrize("space", ["default", "host", "host_serial"])
