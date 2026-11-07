@@ -1,4 +1,5 @@
 #include <scaluq/prec_space.hpp>
+#include <scaluq/util/device_random.hpp>
 #include <scaluq/state/state_vector.hpp>
 #include <scaluq/util/math.hpp>
 #include <scaluq/util/utility.hpp>
@@ -78,8 +79,8 @@ void StateVector<Prec, Space>::set_Haar_random_state(std::optional<std::uint64_t
             Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, _dim),
             KOKKOS_LAMBDA(std::uint64_t i) {
                 auto rand_gen = rand_pool.get_state();
-                host_raw(i) = ComplexType(static_cast<FloatType>(rand_gen.normal(0.0, 1.0)),
-                                          static_cast<FloatType>(rand_gen.normal(0.0, 1.0)));
+                host_raw(i) = ComplexType(internal::standard_normal<FloatType>(rand_gen),
+                                          internal::standard_normal<FloatType>(rand_gen));
                 rand_pool.free_state(rand_gen);
             });
         Kokkos::deep_copy(_raw, host_raw);
@@ -90,8 +91,8 @@ void StateVector<Prec, Space>::set_Haar_random_state(std::optional<std::uint64_t
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
             KOKKOS_CLASS_LAMBDA(std::uint64_t i) {
                 auto rand_gen = rand_pool.get_state();
-                _raw(i) = ComplexType(static_cast<FloatType>(rand_gen.normal(0.0, 1.0)),
-                                      static_cast<FloatType>(rand_gen.normal(0.0, 1.0)));
+                _raw(i) = ComplexType(internal::standard_normal<FloatType>(rand_gen),
+                                      internal::standard_normal<FloatType>(rand_gen));
                 rand_pool.free_state(rand_gen);
             });
     }
@@ -206,19 +207,22 @@ double StateVector<Prec, Space>::get_computational_basis_entropy() const {
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::add_state_vector_with_coef(StdComplex coef,
                                                           const StateVector& state) {
+    // Convert on the host so that no double arithmetic runs in the kernel.
+    const ComplexType c(coef);
     Kokkos::parallel_for(
         "add_state_vector_with_coef",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i) {
-            this->_raw[i] += ComplexType(coef) * state._raw[i];
+            this->_raw[i] += c * state._raw[i];
         });
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::multiply_coef(StdComplex coef) {
+    const ComplexType c(coef);
     Kokkos::parallel_for(
         "multiply_coef",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { this->_raw[i] *= coef; });
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { this->_raw[i] *= c; });
 }
 template <Precision Prec, ExecutionSpace Space>
 std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(
@@ -248,7 +252,7 @@ std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, todo_count),
             KOKKOS_LAMBDA(std::uint64_t i) {
                 auto rand_gen = rand_pool.get_state();
-                FloatType r = static_cast<FloatType>(rand_gen.drand(0., 1.));
+                FloatType r = internal::uniform01<FloatType>(rand_gen);
                 std::uint64_t lo = 0, hi = stacked_prob.size();
                 while (hi - lo > 1) {
                     std::uint64_t mid = (lo + hi) / 2;

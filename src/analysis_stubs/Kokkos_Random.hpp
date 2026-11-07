@@ -14,6 +14,7 @@ public:
         T normal(T = T{}, T = T{1}) { return {}; }
         template<class T = double>
         T drand(T = T{}, T = T{1}) { return {}; }
+        float frand(float = 0.f, float = 1.f) { return 0.f; }
         unsigned long long urand64() { return 0; }
     };
 

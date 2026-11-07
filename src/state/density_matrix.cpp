@@ -1,4 +1,5 @@
 #include <scaluq/prec_space.hpp>
+#include <scaluq/util/device_random.hpp>
 #include <scaluq/state/density_matrix.hpp>
 #include <scaluq/util/math.hpp>
 
@@ -434,7 +435,7 @@ std::vector<std::uint64_t> DensityMatrix<Prec, Space>::sampling(
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, todo_count),
             KOKKOS_LAMBDA(std::uint64_t i) {
                 auto rand_gen = rand_pool.get_state();
-                FloatType r = static_cast<FloatType>(rand_gen.drand(0., 1.));
+                FloatType r = internal::uniform01<FloatType>(rand_gen);
                 std::uint64_t lo = 0, hi = stacked_prob.size();
                 while (hi - lo > 1) {
                     std::uint64_t mid = (lo + hi) / 2;
@@ -495,12 +496,13 @@ void DensityMatrix<Prec, Space>::add_density_matrix_with_coef(StdComplex coef,
     if (!other._is_hermitian || coef.imag() != 0) {
         this->_is_hermitian = false;
     }
+    const ComplexType c(coef);
     Kokkos::parallel_for(
         "add_density_matrix_with_coef",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) {
-            _raw(i, j) += ComplexType(coef) * other._raw(i, j);
+            _raw(i, j) += c * other._raw(i, j);
         });
 }
 
@@ -509,11 +511,12 @@ void DensityMatrix<Prec, Space>::multiply_coef(StdComplex coef) {
     if (coef.imag() != 0) {
         this->_is_hermitian = false;
     }
+    const ComplexType c(coef);
     Kokkos::parallel_for(
         "multiply_coef",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
             {0, 0}, {this->_dim, this->_dim}),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) { _raw(i, j) *= ComplexType(coef); });
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) { _raw(i, j) *= c; });
 }
 
 template <Precision Prec, ExecutionSpace Space>

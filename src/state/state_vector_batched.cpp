@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <scaluq/prec_space.hpp>
+#include <scaluq/util/device_random.hpp>
 #include <scaluq/state/state_vector_batched.hpp>
 #include <scaluq/util/math.hpp>
 #include <type_traits>
@@ -168,7 +169,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
             KOKKOS_CLASS_LAMBDA(std::uint64_t idx) {
                 std::uint64_t batch_id = batch_ids[idx];
                 auto rand_gen = rand_pool.get_state();
-                FloatType r = static_cast<FloatType>(rand_gen.drand(0., 1.));
+                FloatType r = internal::uniform01<FloatType>(rand_gen);
                 std::uint64_t lo = 0, hi = stacked_prob.extent(1);
                 while (hi - lo > 1) {
                     std::uint64_t mid = (lo + hi) / 2;
@@ -218,8 +219,8 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::Haar_random_sta
                 {0, 0}, {states.batch_size(), states.dim()}),
             KOKKOS_LAMBDA(std::uint64_t b, std::uint64_t i) {
                 auto rand_gen = rand_pool.get_state();
-                states._raw(b, i) =
-                    ComplexType(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
+                states._raw(b, i) = ComplexType(internal::standard_normal<FloatType>(rand_gen),
+                                                internal::standard_normal<FloatType>(rand_gen));
                 rand_pool.free_state(rand_gen);
             });
         states.normalize();
@@ -437,23 +438,25 @@ void StateVectorBatched<Prec, Space>::add_state_vector_with_coef(const StdComple
             "Error: StateVectorBatched::add_state_vector(const StateVectorBatched&): invalid "
             "states");
     }
+    const ComplexType c(coef);
     Kokkos::parallel_for(
         "add_state_vector_with_coef",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
                                                                            {_batch_size, _dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
-            _raw(batch_id, i) += ComplexType(coef) * states._raw(batch_id, i);
+            _raw(batch_id, i) += c * states._raw(batch_id, i);
         });
 }
 
 template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::multiply_coef(const StdComplex& coef) {
+    const ComplexType c(coef);
     Kokkos::parallel_for(
         "multiply_coef",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
                                                                            {_batch_size, _dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t batch_id, std::uint64_t i) {
-            _raw(batch_id, i) *= ComplexType(coef);
+            _raw(batch_id, i) *= c;
         });
 }
 
