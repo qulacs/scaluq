@@ -242,3 +242,85 @@ TYPED_TEST(StateVectorBatchedTest, Sampling) {
     ASSERT_EQ(cnt[1][3], 0);
     ASSERT_EQ(cnt[1][4], 0);
 }
+
+TYPED_TEST(StateVectorBatchedTest, WeightedBatchAlgebra) {
+    constexpr auto Prec = TestFixture::Prec;
+    constexpr auto Space = TestFixture::Space;
+    using Batch = StateVectorBatched<Prec, Space>;
+    const std::vector<StdComplex> coefs{{0.5, -0.25}, {-0.25, 0.5}, {0., 0.}};
+    const std::vector<std::vector<StdComplex>> input{
+        {{0.25, 0.5}, {-0.5, 0.25}}, {{-0.25, 0.25}, {0.5, -0.5}}, {{0.5, 0.}, {0., 0.5}}};
+    Batch states(3, 1);
+    states.load(input);
+    const auto combined = states.linear_combination(coefs).get_amplitudes();
+    for (std::size_t i = 0; i < 2; ++i) {
+        StdComplex expected = 0.;
+        for (std::size_t b = 0; b < 3; ++b) expected += coefs[b] * input[b][i];
+        ASSERT_NEAR(std::abs(combined[i] - expected), 0., eps<Prec>);
+    }
+    auto scaled = states.copy();
+    scaled.multiply_coef(coefs);
+    auto products = Batch::inner_product(states, scaled);
+    auto scaled_amp = scaled.get_amplitudes();
+    for (std::size_t b = 0; b < 3; ++b) {
+        StdComplex expected_product = 0.;
+        for (std::size_t i = 0; i < 2; ++i) {
+            ASSERT_NEAR(std::abs(scaled_amp[b][i] - coefs[b] * input[b][i]), 0., eps<Prec>);
+            expected_product += std::conj(input[b][i]) * coefs[b] * input[b][i];
+        }
+        ASSERT_NEAR(std::abs(products[b] - expected_product), 0., eps<Prec>);
+    }
+    states.add_state_vector_with_coef(coefs, states);
+    auto self_added = states.get_amplitudes();
+    for (std::size_t b = 0; b < 3; ++b) {
+        for (std::size_t i = 0; i < 2; ++i) {
+            ASSERT_NEAR(std::abs(self_added[b][i] - (1. + coefs[b]) * input[b][i]), 0., eps<Prec>);
+        }
+    }
+    EXPECT_THROW(states.multiply_coef(std::vector<StdComplex>{}), std::invalid_argument);
+    EXPECT_THROW((void)states.linear_combination(std::vector<StdComplex>{}), std::invalid_argument);
+    Batch wrong_batch(2, 1), wrong_dim(3, 2);
+    EXPECT_THROW(states.add_state_vector_with_coef(coefs, wrong_batch), std::invalid_argument);
+    EXPECT_THROW((void)Batch::inner_product(states, wrong_dim), std::invalid_argument);
+    Batch empty(0, 1);
+    auto zero = empty.linear_combination({}).get_amplitudes();
+    EXPECT_EQ(zero, std::vector<StdComplex>(2, 0.));
+    EXPECT_TRUE(Batch::inner_product(empty, empty).empty());
+}
+
+TYPED_TEST(StateVectorBatchedTest, WeightedPartialOverlapAndZeroQubits) {
+    constexpr auto Prec = TestFixture::Prec;
+    constexpr auto Space = TestFixture::Space;
+    using Batch = StateVectorBatched<Prec, Space>;
+    Batch storage(3, 0);
+    storage.load({{{1., 0.}}, {{2., 0.}}, {{3., 0.}}});
+    Batch src(2, 0), dst(2, 0);
+    src._raw = Kokkos::subview(storage._raw, std::make_pair(0, 2), Kokkos::ALL());
+    dst._raw = Kokkos::subview(storage._raw, std::make_pair(1, 3), Kokkos::ALL());
+    dst.add_state_vector_with_coef(std::vector<StdComplex>{1., 1.}, src);
+    auto actual = storage.get_amplitudes();
+    EXPECT_EQ(actual[0][0], StdComplex(1, 0));
+    EXPECT_EQ(actual[1][0], StdComplex(3, 0));
+    EXPECT_EQ(actual[2][0], StdComplex(5, 0));
+    auto before = dst.get_amplitudes();
+    EXPECT_THROW(dst.multiply_coef(std::vector<StdComplex>{1.}), std::invalid_argument);
+    EXPECT_EQ(dst.get_amplitudes(), before);
+    EXPECT_THROW(dst.add_state_vector_with_coef(std::vector<StdComplex>{1.}, src),
+                 std::invalid_argument);
+    EXPECT_EQ(dst.get_amplitudes(), before);
+    Batch empty(0, 0);
+    EXPECT_EQ(empty.linear_combination({}).get_amplitudes(), (std::vector<StdComplex>{0.}));
+    EXPECT_TRUE(Batch::inner_product(empty, empty).empty());
+}
+
+TYPED_TEST(StateVectorBatchedTest, WeightedSumAccumulatesAtLeastInFloat) {
+    constexpr auto Prec = TestFixture::Prec;
+    constexpr auto Space = TestFixture::Space;
+    if constexpr (Prec == Precision::F16 || Prec == Precision::BF16) {
+        // The final value is representable in both formats; low-precision accumulation
+        // would stop changing well before all 4096 terms have been added.
+        StateVectorBatched<Prec, Space> states(4096, 0);
+        auto sum = states.linear_combination(std::vector<StdComplex>(4096, 1.));
+        ASSERT_EQ(sum.get_amplitude_at(0), StdComplex(4096., 0.));
+    }
+}
