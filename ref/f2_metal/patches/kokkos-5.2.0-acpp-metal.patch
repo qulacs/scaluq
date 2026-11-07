@@ -1,0 +1,497 @@
+diff --git a/algorithms/src/Kokkos_Random.hpp b/algorithms/src/Kokkos_Random.hpp
+index 262d7ccd6..f7db8b9d0 100644
+--- a/algorithms/src/Kokkos_Random.hpp
++++ b/algorithms/src/Kokkos_Random.hpp
+@@ -785,6 +785,13 @@ struct Random_UniqueIndex<Kokkos::Device<Kokkos::SYCL, MemorySpace>> {
+       View<int**, Kokkos::Device<Kokkos::SYCL, MemorySpace>>;
+   KOKKOS_FUNCTION
+   static uint64_t get_state_idx(const locks_view_type& locks_) {
++#if defined(__ACPP__)  // F2 experiment: linear probe from 0 (slow, correct)
++    uint64_t i = 0;
++    while (Kokkos::atomic_compare_exchange(&locks_(i, 0), 0, 1)) {
++      i = (i + 1) % static_cast<uint64_t>(locks_.extent(0));
++    }
++    return i;
++#else
+ #if defined(KOKKOS_COMPILER_INTEL_LLVM) && \
+     KOKKOS_COMPILER_INTEL_LLVM >= 20250000
+     auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+@@ -816,6 +823,7 @@ struct Random_UniqueIndex<Kokkos::Device<Kokkos::SYCL, MemorySpace>> {
+       }
+     }
+     return i;
++#endif
+   }
+ };
+ #endif
+diff --git a/cmake/kokkos_arch.cmake b/cmake/kokkos_arch.cmake
+index 2d6195843..e92759cfc 100644
+--- a/cmake/kokkos_arch.cmake
++++ b/cmake/kokkos_arch.cmake
+@@ -931,7 +931,9 @@ if(KOKKOS_ENABLE_HIP)
+   endif()
+ endif()
+ 
+-if(KOKKOS_ENABLE_SYCL)
++if(KOKKOS_ENABLE_SYCL AND Kokkos_IMPL_SYCL_ACPP)
++  # F2 experiment: AdaptiveCpp needs none of the DPC++ driver flags
++elseif(KOKKOS_ENABLE_SYCL)
+   compiler_specific_flags(DEFAULT -fsycl -fno-sycl-id-queries-fit-in-int -fsycl-dead-args-optimization)
+   compiler_specific_options(DEFAULT -fsycl-unnamed-lambda)
+   if(KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 2024.1.0)
+diff --git a/core/src/Kokkos_BitManipulation.hpp b/core/src/Kokkos_BitManipulation.hpp
+index a19e107fd..8bc627a5f 100644
+--- a/core/src/Kokkos_BitManipulation.hpp
++++ b/core/src/Kokkos_BitManipulation.hpp
+@@ -21,8 +21,9 @@ namespace Kokkos::Impl {
+ template <template <bool /*constant_evaluated*/, bool /*device*/> class Op,
+           class T>
+ KOKKOS_FUNCTION constexpr auto dispatch_helper(T x) noexcept {
+-#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
+-  // __builtin_is_device_code() is non-constexpr
++#if (defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)) || \
++    (defined(KOKKOS_ENABLE_SYCL) && defined(__ACPP_ENABLE_LLVM_SSCP_TARGET__))
++  // __builtin_is_device_code() is non-constexpr (F2: also __acpp_sscp_is_device)
+   return Op<true, true>::do_compute(x);
+ #else
+ #if defined(__cpp_if_consteval)  // since C++23
+diff --git a/core/src/Kokkos_Macros.hpp b/core/src/Kokkos_Macros.hpp
+index 5734f3509..6b8a48dab 100644
+--- a/core/src/Kokkos_Macros.hpp
++++ b/core/src/Kokkos_Macros.hpp
+@@ -545,6 +545,17 @@
+   }
+ #endif
+ 
++#if defined(KOKKOS_ENABLE_SYCL) && defined(__ACPP__) && \
++    defined(__ACPP_ENABLE_LLVM_SSCP_TARGET__)
++// F2 experiment: AdaptiveCpp SSCP compiles host and device in one pass;
++// __SYCL_DEVICE_ONLY__ is never defined. Use the S1 IR constants instead.
++extern "C" int __acpp_sscp_is_device;
++extern "C" int __acpp_sscp_is_host;
++#define KOKKOS_IF_ON_DEVICE(CODE) \
++  if (__acpp_sscp_is_device) { KOKKOS_IMPL_STRIP_PARENS(CODE) }
++#define KOKKOS_IF_ON_HOST(CODE) \
++  if (__acpp_sscp_is_host) { KOKKOS_IMPL_STRIP_PARENS(CODE) }
++#endif
+ #if !defined(KOKKOS_IF_ON_HOST) && !defined(KOKKOS_IF_ON_DEVICE)
+ #if (defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)) ||         \
+     (defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)) || \
+diff --git a/core/src/Kokkos_MathematicalFunctions.hpp b/core/src/Kokkos_MathematicalFunctions.hpp
+index 7c9af8860..dc6638164 100644
+--- a/core/src/Kokkos_MathematicalFunctions.hpp
++++ b/core/src/Kokkos_MathematicalFunctions.hpp
+@@ -520,7 +520,9 @@ inline long double abs(long double x) {
+ KOKKOS_IMPL_MATH_UNARY_FUNCTION(fabs)
+ KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmod)
+ KOKKOS_IMPL_MATH_BINARY_FUNCTION(remainder)
++#if !defined(__ACPP__)
+ KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION(remquo)
++#endif
+ KOKKOS_IMPL_MATH_TERNARY_FUNCTION(fma)
+ KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmax)
+ KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmin)
+@@ -534,10 +536,18 @@ KOKKOS_INLINE_FUNCTION double nan(char const* arg) { return ::nan(arg); }
+ // integer as argument.  The current implementation does not attempt to convert
+ // the character string arg into the quiet NaN value.
+ KOKKOS_INLINE_FUNCTION float nanf(char const*) {
++#if defined(__ACPP__)
++  return __builtin_nanf("");
++#else
+   return sycl::nan(std::uint32_t(0));
++#endif
+ }
+ KOKKOS_INLINE_FUNCTION double nan(char const*) {
++#if defined(__ACPP__)
++  return __builtin_nan("");
++#else
+   return sycl::nan(std::uint64_t(0));
++#endif
+ }
+ #endif
+ inline long double nanl(char const* arg) { return ::nanl(arg); }
+diff --git a/core/src/Kokkos_Printf.hpp b/core/src/Kokkos_Printf.hpp
+index 283322c72..550bd3f4b 100644
+--- a/core/src/Kokkos_Printf.hpp
++++ b/core/src/Kokkos_Printf.hpp
+@@ -21,7 +21,9 @@ namespace Kokkos {
+ // don't ask for the return value.
+ template <typename... Args>
+ KOKKOS_FORCEINLINE_FUNCTION void printf(const char* format, Args... args) {
+-#ifdef KOKKOS_ENABLE_SYCL
++#if defined(KOKKOS_ENABLE_SYCL) && defined(__ACPP__)
++  (void)format; ((void)args, ...);  // F2 experiment: no device printf on AdaptiveCpp Metal
++#elif defined(KOKKOS_ENABLE_SYCL)
+   // Some compilers warn if "args" is empty and format is not a string literal
+   if constexpr (sizeof...(Args) == 0)
+     sycl::ext::oneapi::experimental::printf("%s", format);
+diff --git a/core/src/SYCL/Kokkos_SYCL.cpp b/core/src/SYCL/Kokkos_SYCL.cpp
+index b58c12c7c..fc611a114 100644
+--- a/core/src/SYCL/Kokkos_SYCL.cpp
++++ b/core/src/SYCL/Kokkos_SYCL.cpp
+@@ -152,7 +152,7 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
+       case sycl::info::device_type::host: device_type = "host"; break;
+       case sycl::info::device_type::all: device_type = "all"; break;
+     }
+-    os << "[" << device.get_backend() << "]:" << device_type << ':' << counter
++    os << "[" << static_cast<int>(device.get_backend()) << "]:" << device_type << ':' << counter
+        << "] " << device.get_info<sycl::info::device::name>();
+     if (counter == active_device)
+       os << " : Selected";
+diff --git a/core/src/SYCL/Kokkos_SYCL_Half_MathematicalFunctions.hpp b/core/src/SYCL/Kokkos_SYCL_Half_MathematicalFunctions.hpp
+index 8c88a4723..ac54b824e 100644
+--- a/core/src/SYCL/Kokkos_SYCL_Half_MathematicalFunctions.hpp
++++ b/core/src/SYCL/Kokkos_SYCL_Half_MathematicalFunctions.hpp
+@@ -49,7 +49,9 @@ KOKKOS_SYCL_HALF_BINARY_FUNCTION(remainder)
+ KOKKOS_SYCL_HALF_BINARY_FUNCTION(fmax)
+ KOKKOS_SYCL_HALF_BINARY_FUNCTION(fmin)
+ KOKKOS_SYCL_HALF_BINARY_FUNCTION(fdim)
++#if !defined(__ACPP__)
+ KOKKOS_SYCL_HALF_TERNARY_INT_PTR_FUNCTION(remquo)
++#endif
+ // Exponential functions
+ KOKKOS_SYCL_HALF_UNARY_FUNCTION(exp)
+ KOKKOS_SYCL_HALF_UNARY_FUNCTION(exp2)
+diff --git a/core/src/SYCL/Kokkos_SYCL_ParallelFor_Team.hpp b/core/src/SYCL/Kokkos_SYCL_ParallelFor_Team.hpp
+index c316f3c35..bd295a08d 100644
+--- a/core/src/SYCL/Kokkos_SYCL_ParallelFor_Team.hpp
++++ b/core/src/SYCL/Kokkos_SYCL_ParallelFor_Team.hpp
+@@ -70,6 +70,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
+         else
+           functor_wrapper.get_functor()(work_tag(), team_member);
+       };
++#if !defined(__ACPP__)
+ 
+       static sycl::kernel kernel = [&] {
+         sycl::kernel_id functor_kernel_id =
+@@ -79,10 +80,15 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
+                 q.get_context(), std::vector{functor_kernel_id});
+         return kernel_bundle.get_kernel(functor_kernel_id);
+       }();
++#endif
++#if defined(__ACPP__)
++      int max_sg_size = 32;  // F2 experiment: Apple GPU SIMD width
++#else
+       auto max_sg_size =
+           kernel
+               .get_info<sycl::info::kernel_device_specific::max_sub_group_size>(
+                   q.get_device());
++#endif
+       auto final_vector_size = std::min<int>(m_vector_size, max_sg_size);
+       // FIXME_SYCL For some reason, explicitly enforcing the kernel bundle to
+       // be used gives a runtime error.
+diff --git a/core/src/SYCL/Kokkos_SYCL_ParallelReduce_Range.hpp b/core/src/SYCL/Kokkos_SYCL_ParallelReduce_Range.hpp
+index 1aa2df6c4..1f284e5b8 100644
+--- a/core/src/SYCL/Kokkos_SYCL_ParallelReduce_Range.hpp
++++ b/core/src/SYCL/Kokkos_SYCL_ParallelReduce_Range.hpp
+@@ -238,6 +238,7 @@ class Kokkos::Impl::ParallelReduce<
+ 
+         auto dummy_reduction_lambda =
+             reduction_lambda_factory({1, cgh}, num_teams_done, nullptr, 1);
++#if !defined(__ACPP__)
+ 
+         static sycl::kernel kernel = [&] {
+           sycl::kernel_id functor_kernel_id =
+@@ -247,6 +248,11 @@ class Kokkos::Impl::ParallelReduce<
+                   q.get_context(), std::vector{functor_kernel_id});
+           return kernel_bundle.get_kernel(functor_kernel_id);
+         }();
++#endif
++#if defined(__ACPP__)  // F2 experiment: no kernel_bundle in AdaptiveCpp
++        size_t multiple = 32;
++        size_t max = 256;
++#else
+         auto multiple = kernel.get_info<sycl::info::kernel_device_specific::
+                                             preferred_work_group_size_multiple>(
+             q.get_device());
+@@ -254,6 +260,7 @@ class Kokkos::Impl::ParallelReduce<
+             kernel
+                 .get_info<sycl::info::kernel_device_specific::work_group_size>(
+                     q.get_device());
++#endif
+ 
+         auto max_local_memory =
+             q.get_device().get_info<sycl::info::device::local_mem_size>();
+diff --git a/core/src/SYCL/Kokkos_SYCL_ParallelReduce_Team.hpp b/core/src/SYCL/Kokkos_SYCL_ParallelReduce_Team.hpp
+index 501ca88d1..820e292c4 100644
+--- a/core/src/SYCL/Kokkos_SYCL_ParallelReduce_Team.hpp
++++ b/core/src/SYCL/Kokkos_SYCL_ParallelReduce_Team.hpp
+@@ -294,6 +294,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
+             };
+ 
+         auto dummy_reduction_lambda = team_reduction_factory({1, cgh}, nullptr);
++#if !defined(__ACPP__)
+ 
+         static sycl::kernel kernel = [&] {
+           sycl::kernel_id functor_kernel_id =
+@@ -303,9 +304,14 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
+                   q.get_context(), std::vector{functor_kernel_id});
+           return kernel_bundle.get_kernel(functor_kernel_id);
+         }();
++#endif
++#if defined(__ACPP__)
++        int max_sg_size = 32;  // F2 experiment: Apple GPU SIMD width
++#else
+         auto max_sg_size = kernel.get_info<
+             sycl::info::kernel_device_specific::max_sub_group_size>(
+             q.get_device());
++#endif
+         auto final_vector_size = std::min<int>(m_vector_size, max_sg_size);
+         // FIXME_SYCL For some reason, explicitly enforcing the kernel bundle to
+         // be used gives a runtime error.
+diff --git a/core/src/SYCL/Kokkos_SYCL_ParallelScan_Range.hpp b/core/src/SYCL/Kokkos_SYCL_ParallelScan_Range.hpp
+index 4d47c2705..8367dbfb7 100644
+--- a/core/src/SYCL/Kokkos_SYCL_ParallelScan_Range.hpp
++++ b/core/src/SYCL/Kokkos_SYCL_ParallelScan_Range.hpp
+@@ -252,6 +252,9 @@ class ParallelScanSYCLBase {
+ 
+       auto dummy_scan_lambda =
+           scan_lambda_factory({1, cgh}, num_teams_done, nullptr, nullptr);
++#if defined(__ACPP__)  // F2 experiment
++      size_t multiple = 32, max = 256;
++#else
+ 
+       static sycl::kernel kernel = [&] {
+         sycl::kernel_id functor_kernel_id =
+@@ -267,6 +270,7 @@ class ParallelScanSYCLBase {
+       auto max =
+           kernel.get_info<sycl::info::kernel_device_specific::work_group_size>(
+               q.get_device());
++#endif
+ 
+       wgroup_size = static_cast<size_t>(max / multiple) * multiple;
+       n_wgroups   = (size + wgroup_size - 1) / wgroup_size;
+diff --git a/core/src/SYCL/Kokkos_SYCL_Team.hpp b/core/src/SYCL/Kokkos_SYCL_Team.hpp
+index ebfa11b5e..e97c436ca 100644
+--- a/core/src/SYCL/Kokkos_SYCL_Team.hpp
++++ b/core/src/SYCL/Kokkos_SYCL_Team.hpp
+@@ -158,9 +158,14 @@ class SYCLTeamMember {
+     // rounds for loading values into the reduction_array, and 16 redundant
+     // reduction steps executed by every thread.
+     constexpr int step_width = 16;
++#if defined(__ACPP__)  // F2 experiment: reuse team reduce scratch
++    value_type* reduction_array =
++        static_cast<sycl::local_ptr<value_type>>(m_team_reduce).get();
++#else
+     auto tmp_alloc = sycl::ext::oneapi::group_local_memory_for_overwrite<
+         value_type[step_width]>(m_item.get_group());
+     auto& reduction_array = *tmp_alloc;
++#endif
+ 
+     const auto id_in_sg = sg.get_local_id()[0];
+ 
+diff --git a/core/src/SYCL/Kokkos_SYCL_UniqueToken.hpp b/core/src/SYCL/Kokkos_SYCL_UniqueToken.hpp
+index 75a49de23..51d83ac10 100644
+--- a/core/src/SYCL/Kokkos_SYCL_UniqueToken.hpp
++++ b/core/src/SYCL/Kokkos_SYCL_UniqueToken.hpp
+@@ -49,6 +49,15 @@ class UniqueToken<SYCL, UniqueTokenScope::Global> {
+  private:
+   /// \brief acquire value such that 0 <= value < size()
+   size_type impl_acquire() const {
++#if defined(__ACPP__)  // F2 experiment: no free-function nd_item query
++    int idx = 0;
++    while (Kokkos::atomic_compare_exchange(&m_locks(idx), 0, 1) == 1) {
++      idx = (idx + 1) % size();
++    }
++    desul::atomic_thread_fence(desul::MemoryOrderAcquire(),
++                               desul::MemoryScopeDevice());
++    return idx;
++#else
+ #if defined(KOKKOS_COMPILER_INTEL_LLVM) && \
+     KOKKOS_COMPILER_INTEL_LLVM >= 20250000
+     auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+@@ -75,6 +84,7 @@ class UniqueToken<SYCL, UniqueTokenScope::Global> {
+     desul::atomic_thread_fence(desul::MemoryOrderAcquire(),
+                                desul::MemoryScopeDevice());
+     return idx;
++#endif
+   }
+ 
+  public:
+diff --git a/core/src/impl/Kokkos_Half_MathematicalFunctions.hpp b/core/src/impl/Kokkos_Half_MathematicalFunctions.hpp
+index 2154ba5f6..e94806365 100644
+--- a/core/src/impl/Kokkos_Half_MathematicalFunctions.hpp
++++ b/core/src/impl/Kokkos_Half_MathematicalFunctions.hpp
+@@ -191,7 +191,9 @@ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE, ab
+ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE, fabs)
+ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, fmod)
+ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, remainder)
++#if !defined(__ACPP__)
+ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION_HALF, remquo)
++#endif
+ // fma
+ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, fmax)
+ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, fmin)
+diff --git a/tpls/desul/include/desul/atomics/Compare_Exchange_SYCL.hpp b/tpls/desul/include/desul/atomics/Compare_Exchange_SYCL.hpp
+index f02d2ff5e..f4cf4e1da 100644
+--- a/tpls/desul/include/desul/atomics/Compare_Exchange_SYCL.hpp
++++ b/tpls/desul/include/desul/atomics/Compare_Exchange_SYCL.hpp
+@@ -83,6 +83,9 @@ std::enable_if_t<!device_atomic_always_lock_free<T>, T> device_atomic_compare_ex
+   // This is a way to avoid deadlock in a subgroup
+   T return_val;
+   int done = 0;
++#if defined(__ACPP__)  // F2 experiment: no oneAPI sub_group_mask
++  while (!done) {
++#else
+ #if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20250000
+   auto sg = sycl::ext::oneapi::this_work_item::get_sub_group();
+ #else
+@@ -93,6 +96,7 @@ std::enable_if_t<!device_atomic_always_lock_free<T>, T> device_atomic_compare_ex
+   sub_group_mask active = group_ballot(sg, 1);
+   sub_group_mask done_active = group_ballot(sg, 0);
+   while (active != done_active) {
++#endif
+     if (!done) {
+       if (lock_address_sycl((void*)dest, scope)) {
+         if (std::is_same<MemoryOrder, MemoryOrderSeqCst>::value)
+@@ -107,7 +111,9 @@ std::enable_if_t<!device_atomic_always_lock_free<T>, T> device_atomic_compare_ex
+         done = 1;
+       }
+     }
++#if !defined(__ACPP__)
+     done_active = group_ballot(sg, done);
++#endif
+   }
+   return return_val;
+ }
+@@ -118,6 +124,9 @@ std::enable_if_t<!device_atomic_always_lock_free<T>, T> device_atomic_exchange(
+   // This is a way to avoid deadlock in a subgroup
+   T return_val;
+   int done = 0;
++#if defined(__ACPP__)  // F2 experiment: no oneAPI sub_group_mask
++  while (!done) {
++#else
+ #if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20250000
+   auto sg = sycl::ext::oneapi::this_work_item::get_sub_group();
+ #else
+@@ -128,6 +137,7 @@ std::enable_if_t<!device_atomic_always_lock_free<T>, T> device_atomic_exchange(
+   sub_group_mask active = group_ballot(sg, 1);
+   sub_group_mask done_active = group_ballot(sg, 0);
+   while (active != done_active) {
++#endif
+     if (!done) {
+       if (lock_address_sycl((void*)dest, scope)) {
+         if (std::is_same<MemoryOrder, MemoryOrderSeqCst>::value)
+@@ -140,7 +150,9 @@ std::enable_if_t<!device_atomic_always_lock_free<T>, T> device_atomic_exchange(
+         done = 1;
+       }
+     }
++#if !defined(__ACPP__)
+     done_active = group_ballot(sg, done);
++#endif
+   }
+   return return_val;
+ }
+diff --git a/tpls/desul/include/desul/atomics/Load_And_Store_SYCL.hpp b/tpls/desul/include/desul/atomics/Load_And_Store_SYCL.hpp
+index 84fa4b122..b747d4be0 100644
+--- a/tpls/desul/include/desul/atomics/Load_And_Store_SYCL.hpp
++++ b/tpls/desul/include/desul/atomics/Load_And_Store_SYCL.hpp
+@@ -32,6 +32,9 @@ void device_atomic_store(T* ptr, T val, MemoryOrder, MemoryScope scope) {
+   } else {
+     // This is a way to avoid deadlock in a subgroup
+     int done = 0;
++#if defined(__ACPP__)  // F2 experiment: no oneAPI sub_group_mask
++  while (!done) {
++#else
+ #if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20250000
+     auto sg = sycl::ext::oneapi::this_work_item::get_sub_group();
+ #else
+@@ -42,6 +45,7 @@ void device_atomic_store(T* ptr, T val, MemoryOrder, MemoryScope scope) {
+     sub_group_mask active = group_ballot(sg, 1);
+     sub_group_mask done_active = group_ballot(sg, 0);
+     while (active != done_active) {
++#endif
+       if (!done) {
+         if (lock_address_sycl((void*)ptr, scope)) {
+           if (std::is_same<MemoryOrder, MemoryOrderSeqCst>::value)
+@@ -52,7 +56,9 @@ void device_atomic_store(T* ptr, T val, MemoryOrder, MemoryScope scope) {
+           done = 1;
+         }
+       }
++#if !defined(__ACPP__)
+       done_active = group_ballot(sg, done);
++#endif
+     }
+   }
+ }
+@@ -77,6 +83,9 @@ T device_atomic_load(const T* ptr, MemoryOrder, MemoryScope scope) {
+     // This is a way to avoid deadlock in a subgroup
+     T ret;
+     int done = 0;
++#if defined(__ACPP__)  // F2 experiment: no oneAPI sub_group_mask
++  while (!done) {
++#else
+ #if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20250000
+     auto sg = sycl::ext::oneapi::this_work_item::get_sub_group();
+ #else
+@@ -87,6 +96,7 @@ T device_atomic_load(const T* ptr, MemoryOrder, MemoryScope scope) {
+     sub_group_mask active = group_ballot(sg, 1);
+     sub_group_mask done_active = group_ballot(sg, 0);
+     while (active != done_active) {
++#endif
+       if (!done) {
+         if (lock_address_sycl((void*)ptr, scope)) {
+           if (std::is_same<MemoryOrder, MemoryOrderSeqCst>::value)
+@@ -97,7 +107,9 @@ T device_atomic_load(const T* ptr, MemoryOrder, MemoryScope scope) {
+           done = 1;
+         }
+       }
++#if !defined(__ACPP__)
+       done_active = group_ballot(sg, done);
++#endif
+     }
+     return ret;
+   }
+diff --git a/tpls/desul/include/desul/atomics/Lock_Based_Fetch_Op_SYCL.hpp b/tpls/desul/include/desul/atomics/Lock_Based_Fetch_Op_SYCL.hpp
+index c5fe5c83d..dc98b90a6 100644
+--- a/tpls/desul/include/desul/atomics/Lock_Based_Fetch_Op_SYCL.hpp
++++ b/tpls/desul/include/desul/atomics/Lock_Based_Fetch_Op_SYCL.hpp
+@@ -32,6 +32,9 @@ T device_atomic_fetch_oper(const Oper& op,
+   // This is a way to avoid deadlock in a subgroup
+   T return_val{};
+   int done = 0;
++#if defined(__ACPP__)  // F2 experiment: no oneAPI sub_group_mask
++  while (!done) {
++#else
+ #if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20250000
+   auto sg = sycl::ext::oneapi::this_work_item::get_sub_group();
+ #else
+@@ -42,6 +45,7 @@ T device_atomic_fetch_oper(const Oper& op,
+   sub_group_mask active = group_ballot(sg, 1);
+   sub_group_mask done_active = group_ballot(sg, 0);
+   while (active != done_active) {
++#endif
+     if (!done) {
+       if (lock_address_sycl((void*)dest, scope)) {
+         device_atomic_thread_fence(MemoryOrderAcquire(), scope);
+@@ -53,7 +57,9 @@ T device_atomic_fetch_oper(const Oper& op,
+         done = 1;
+       }
+     }
++#if !defined(__ACPP__)
+     done_active = group_ballot(sg, done);
++#endif
+   }
+   return return_val;
+ }
+diff --git a/tpls/desul/include/desul/atomics/Macros.hpp b/tpls/desul/include/desul/atomics/Macros.hpp
+index a7641d998..d74bdffe7 100644
+--- a/tpls/desul/include/desul/atomics/Macros.hpp
++++ b/tpls/desul/include/desul/atomics/Macros.hpp
+@@ -151,6 +151,16 @@ static constexpr bool desul_impl_omp_on_host() { return false; }
+ #define DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
+ #endif
+ 
++#if defined(DESUL_ATOMICS_ENABLE_SYCL) && defined(__ACPP__) && \
++    defined(__ACPP_ENABLE_LLVM_SSCP_TARGET__)
++// F2 experiment: see Kokkos_Macros.hpp
++extern "C" int __acpp_sscp_is_device;
++extern "C" int __acpp_sscp_is_host;
++#define DESUL_IF_ON_DEVICE(CODE) \
++  if (__acpp_sscp_is_device) { DESUL_IMPL_STRIP_PARENS(CODE) }
++#define DESUL_IF_ON_HOST(CODE) \
++  if (__acpp_sscp_is_host) { DESUL_IMPL_STRIP_PARENS(CODE) }
++#endif
+ #if !defined(DESUL_IF_ON_HOST) && !defined(DESUL_IF_ON_DEVICE)
+ #if (defined(DESUL_ATOMICS_ENABLE_CUDA) && defined(__CUDA_ARCH__)) ||         \
+     (defined(DESUL_ATOMICS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)) || \
