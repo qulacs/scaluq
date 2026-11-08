@@ -152,7 +152,9 @@ FetchContent_MakeAvailable(eigen)
 # nlohmann_json
 FetchContent_Declare(
     json
+    # The official tagged source archive provides a fallback if release assets are unavailable.
     URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+        https://codeload.github.com/nlohmann/json/tar.gz/refs/tags/v3.11.3
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_MakeAvailable(json)
