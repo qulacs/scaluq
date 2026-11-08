@@ -31,7 +31,7 @@
 統合検証ブランチ（`db94d63b`）から Metal 版の Python wheel を作り、Metal GPU 上で動くことを確かめた。詳しい結果と注意点は、上の「前提: Metal で scaluq を使うには f32（単精度）が必要」に書いた。
 
 - wheel: `scaluq-0.2.1.dev206+gdb94d63bd-cp312-abi3-macosx_26_0_arm64.whl`（Python 3.12 以上の安定 ABI、f32 だけ）。
-  - AdaptiveCpp のランタイムライブラリを、絶対パスの rpath で参照する。そのため、ビルドしたマシンでしか動かない。配布するには、ライブラリを同梱する（delocate など）必要がある。未対応。
+  - AdaptiveCpp のライブラリを絶対パスで参照するので、ビルドしたマシンでしか動かない（下の「残件: wheel の配布」）。
   - 起動時に AdaptiveCpp の JIT が `warning: linking module flags 'SDK Version'` を数行出す。動作には影響しない。
 - 簡単な動作確認: Haar 状態（n = 26 のノルム² = 1.0）、ゲート、`Operator` の期待値、サンプリングが Metal 上で動いた。
 - テスト: f32 に置き換えた `python_test` は 93/93 件、doctest は 407/412 件が成功した。失敗した 5 件は、期待値が f64 の桁数で書かれているためだけ。
@@ -47,6 +47,24 @@ export CMAKE_ARGS="-DFETCHCONTENT_SOURCE_DIR_KOKKOS=$HOME/tools/metal-f2/kokkos"
 uv build --wheel -p 3.12 -o dist
 # 実行時: KOKKOS_DEVICE_ID=1
 ```
+
+### 残件: wheel の配布（AdaptiveCpp のライブラリ、未対応）
+
+今の wheel は、ビルドしたマシン（AdaptiveCpp を `~/tools/metal-f2/acpp` に入れたマシン）でしか動かない。ほかのマシンや利用者に配るには、次の対応が要る。
+
+- 現状:
+  - `scaluq_core.abi3.so` は `@rpath/libacpp-rt.dylib` と `@rpath/libacpp-common.dylib` にリンクしている。rpath は絶対パスの `~/tools/metal-f2/acpp/lib/`（ビルド時に acpp が埋め込む）。
+  - さらに AdaptiveCpp は、実行時に次のファイルを `libacpp-rt.dylib` からの相対位置（`lib/hipSYCL/`）で探して読み込む。
+    - Metal バックエンド `librt-backend-metal.dylib`
+    - JIT 用の `llvm-to-backend/`（`libllvm-to-metal.dylib` など）
+    - `bitcode/*.bc`
+  - JIT 用のライブラリは、Homebrew の LLVM 21（`/opt/homebrew/opt/llvm@21/lib/libLLVM.dylib`）にも絶対パスで依存している。
+- 必要な対応（未検証の見込み）:
+  - `delocate` で `libacpp-rt`・`libacpp-common` を wheel に同梱するだけでは足りない。`lib/hipSYCL/` 以下のバックエンド・JIT・bitcode も、ランタイムが探す相対位置に入れる必要がある。
+  - `libLLVM.dylib`（数百 MB）を同梱するか、利用者に Homebrew の `llvm@21` を入れてもらうかを決める。
+  - 代わりに、利用者が AdaptiveCpp を自分で入れて、`DYLD_LIBRARY_PATH` などで指す方式もある。手軽だが、手順が増える。
+  - ほかに、パッチ済みの AdaptiveCpp と Kokkos が要る点は変わらない。上流に取り込まれるまでは、配布は同じパッチを当てたビルド環境に限られる。
+- 優先度: SKIPPER など同じマシンで使う間は不要。ほかのマシンで使うとき、または配布するときに対応する。
 
 ## 更新（2026-11-07 第 7 版）: 統合検証ブランチで Metal の全テストが成功
 
