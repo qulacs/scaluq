@@ -4,6 +4,50 @@
 対象: `ref/scaluq_improvements.md`（統合ブランチ側）の F2・F3 の手順 1〜2 と、手順 3 の机上評価
 結論の扱い: 実機で確認した事実と、コードを読んで推定した事項は分けて書く。性能値は参考値（後述の理由で再測定が必要）。
 
+## 前提: Metal で scaluq を使うには f32（単精度）が必要
+
+**Metal（Apple Silicon GPU）で動かせる精度は f32 だけ。f64（倍精度）は使えない。**
+
+- 理由: Apple の GPU は double を扱えない。Metal Shading Language に double 型がなく、AdaptiveCpp の Metal バックエンドも double を含むカーネルを JIT でコンパイルできない。第 2 版では、デバイス内に double が残っていた 17 件のテストが、この理由で失敗した。
+- ビルドの指定:
+  - `SCALUQ_FLOAT32=ON`、`SCALUQ_FLOAT64=OFF` にする。
+  - `SCALUQ_USE_SYCL=ON`、`SCALUQ_SYCL_ACPP=ON` を指定すると、`SCALUQ_NO_DEVICE_DOUBLE` が自動で定義される。このとき scaluq は、デバイスのカーネルで double を使わない経路を選ぶ（乱数は Philox と float の Box–Muller、係数は作業精度に変換してから渡す、など）。
+  - f16・bf16 は Metal で試していない。
+- f32 で動かすときの注意:
+  - 有効数字は約 7 桁。f64 の結果と比べるテストや doctest は、許容誤差を f32 向け（`1e-5` 程度）にしないと失敗する。
+  - f64 の精度が必要な計算は、CPU（OpenMP）ビルドで行う。Metal 版と CPU 版は別ビルドになる。
+  - 乱数の値は CPU ビルドと異なる。Metal 版は Philox を使うので、同じシードでも CPU ビルドの結果とは一致しない。
+- Python から使う場合（2026-11-08 確認、統合ブランチ `db94d63b` から作った wheel）:
+  - 使えるのは `scaluq.default.f32`（Metal）と `scaluq.host.f32`・`scaluq.host_serial.f32` だけ。`get_available_precisions()` は `['f32']` を返す。
+  - `f64` を指定すると `ValueError: Precision f64 is not available.` になる。
+  - wheel のビルドには、上の指定に加えて `SCALUQ_USE_OMP=OFF` が必要。pyproject は既定で OpenMP を有効にするので、指定しないと設定の段階で失敗する。`SCALUQ_SYCL_ACPP` は pyproject の受け渡しの一覧にないので、`CMAKE_ARGS` で渡す。
+  - 結果:
+    - `python_test` をそのまま流すと、39 件成功、31 件失敗。失敗は、すべてテストが f64 を直接指定しているため。
+    - f64 を f32 に置き換え、許容誤差を `1e-5` にした写しでは、93/93 件成功した。
+    - doctest は 407/412 件成功。失敗した 5 件は、期待値が f64 の桁数で書かれているため。
+
+## 更新（2026-11-08 第 8 版）: Python バインディングも Metal で動いた
+
+統合検証ブランチ（`db94d63b`）から Metal 版の Python wheel を作り、Metal GPU 上で動くことを確かめた。詳しい結果と注意点は、上の「前提: Metal で scaluq を使うには f32（単精度）が必要」に書いた。
+
+- wheel: `scaluq-0.2.1.dev206+gdb94d63bd-cp312-abi3-macosx_26_0_arm64.whl`（Python 3.12 以上の安定 ABI、f32 だけ）。
+  - AdaptiveCpp のランタイムライブラリを、絶対パスの rpath で参照する。そのため、ビルドしたマシンでしか動かない。配布するには、ライブラリを同梱する（delocate など）必要がある。未対応。
+  - 起動時に AdaptiveCpp の JIT が `warning: linking module flags 'SDK Version'` を数行出す。動作には影響しない。
+- 簡単な動作確認: Haar 状態（n = 26 のノルム² = 1.0）、ゲート、`Operator` の期待値、サンプリングが Metal 上で動いた。
+- テスト: f32 に置き換えた `python_test` は 93/93 件、doctest は 407/412 件が成功した。失敗した 5 件は、期待値が f64 の桁数で書かれているためだけ。
+- PR #464 の `pyproject.toml` に `SCALUQ_SYCL_ACPP` の受け渡しを追加した（6 コミット目、`8e388834`）。環境変数で指定できるようになり、`CMAKE_ARGS` で渡す必要がなくなった。ビルド手順:
+
+```sh
+export SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk
+export CMAKE_C_COMPILER=/opt/homebrew/opt/llvm@21/bin/clang   # acpp と同じ Clang 系
+export CMAKE_CXX_COMPILER=$HOME/tools/metal-f2/acpp/bin/acpp
+export SCALUQ_USE_OMP=OFF SCALUQ_USE_SYCL=ON SCALUQ_SYCL_ACPP=ON
+export SCALUQ_FLOAT32=ON SCALUQ_FLOAT64=OFF
+export CMAKE_ARGS="-DFETCHCONTENT_SOURCE_DIR_KOKKOS=$HOME/tools/metal-f2/kokkos"   # パッチ済み Kokkos
+uv build --wheel -p 3.12 -o dist
+# 実行時: KOKKOS_DEVICE_ID=1
+```
+
 ## 更新（2026-11-07 第 7 版）: 統合検証ブランチで Metal の全テストが成功
 
 F2 の変更（PR #464）を、統合検証ブランチ `test/batched-operator-improvements` に取り込んで検証した。このブランチには、レビュー待ちの PR #460〜#462、#465〜#470 が入っている。
