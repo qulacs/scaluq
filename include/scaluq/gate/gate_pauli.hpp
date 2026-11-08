@@ -137,32 +137,18 @@ void bind_gate_gate_pauli_hpp(nb::module_& m, nb::class_<Gate<Prec>>& gate_base_
         "Specific class of multi-qubit pauli gate, which applies single-qubit Pauli "
         "gate to "
         "each of qubit.")
-        .def(
-            "pauli",
-            [](const PauliGate<Prec>& gate) { return gate->pauli(); },
-            nb::rv_policy::reference)
-        .def(
-            "pauli_id_list",
-            [](const PauliGate<Prec>& gate) { return gate->pauli_id_list(); },
-            nb::rv_policy::reference);
+        .def("pauli", [](const PauliGate<Prec>& gate) { return gate->pauli(); })
+        .def("pauli_id_list", [](const PauliGate<Prec>& gate) { return gate->pauli_id_list(); });
     bind_specific_gate<PauliRotationGate<Prec>, Prec>(
         m,
         gate_base_def,
         "PauliRotationGate",
         "Specific class of multi-qubit pauli-rotation gate, represented as "
         "$e^{-i\\frac{\\theta}{2}P}$.")
-        .def(
-            "pauli",
-            [](const PauliRotationGate<Prec>& gate) { return gate->pauli(); },
-            nb::rv_policy::reference)
-        .def(
-            "pauli_id_list",
-            [](const PauliRotationGate<Prec>& gate) { return gate->pauli_id_list(); },
-            nb::rv_policy::reference)
-        .def(
-            "angle",
-            [](const PauliRotationGate<Prec>& gate) { return gate->angle(); },
-            nb::rv_policy::reference);
+        .def("pauli", [](const PauliRotationGate<Prec>& gate) { return gate->pauli(); })
+        .def("pauli_id_list",
+             [](const PauliRotationGate<Prec>& gate) { return gate->pauli_id_list(); })
+        .def("angle", [](const PauliRotationGate<Prec>& gate) { return gate->angle(); });
 }
 }  // namespace internal
 #endif

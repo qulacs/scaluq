@@ -73,14 +73,9 @@ void bind_gate_param_gate_pauli_hpp(nb::module_& m,
         "ParamPauliRotationGate",
         "Parametric multi-qubit pauli-rotation gate, represented as $e^{-i\\frac{\\theta}{2}P}$. "
         "`theta` is given as `param * param_coef`.")
-        .def(
-            "pauli",
-            [](ParamPauliRotationGate<Prec>& gate) { return gate->pauli(); },
-            nb::rv_policy::reference)
-        .def(
-            "pauli_id_list",
-            [](ParamPauliRotationGate<Prec>& gate) { return gate->pauli_id_list(); },
-            nb::rv_policy::reference);
+        .def("pauli", [](ParamPauliRotationGate<Prec>& gate) { return gate->pauli(); })
+        .def("pauli_id_list",
+             [](ParamPauliRotationGate<Prec>& gate) { return gate->pauli_id_list(); });
 }
 }  // namespace internal
 #endif
