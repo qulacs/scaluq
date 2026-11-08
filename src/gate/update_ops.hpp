@@ -340,7 +340,7 @@ inline void apply_pauli_rotation_optimized(std::uint64_t control_mask,
                                            State& state) {
     if constexpr (UpdatableStateVector<State>) {
         const std::uint64_t target_mask = bit_flip_mask | phase_flip_mask;
-        if (std::popcount(target_mask) == 1 && coef.imag() == 0) {
+        if (std::popcount(target_mask) == 1 && static_cast<double>(coef.imag()) == 0.) {
             const Float<Prec> true_angle = angle * coef.real();
             if (bit_flip_mask == 0) {
                 rz_gate(target_mask, control_mask, control_value_mask, true_angle, state);
@@ -376,7 +376,7 @@ inline void apply_param_pauli_rotation_optimized(
     const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
     StateVectorBatched<Prec, Space>& states) {
     const std::uint64_t target_mask = bit_flip_mask | phase_flip_mask;
-    if (std::popcount(target_mask) == 1 && coef.imag() == 0) {
+    if (std::popcount(target_mask) == 1 && static_cast<double>(coef.imag()) == 0.) {
         const Float<Prec> true_pcoef = pcoef * coef.real();
         if (bit_flip_mask == 0) {
             rz_gate(target_mask, control_mask, control_value_mask, true_pcoef, params, states);
