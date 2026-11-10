@@ -2,12 +2,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import TwoSlopeNorm
 
-def plot_heatmap(data, spaces, group, omp_threads, output_path):
+def plot_heatmap(speedup_data, spaces, precision, group, omp_threads, output_path):
     if 'host_serial' not in spaces:
         print("host_serial baseline is missing")
         return
 
-    nqubits_list = sorted(list(data[group]["nqubits"].keys()))
+    nqubits_list = sorted(list(speedup_data[group][precision]["nqubits"].keys()))
 
     values = np.full(
         (len(spaces), len(nqubits_list)),
@@ -16,11 +16,11 @@ def plot_heatmap(data, spaces, group, omp_threads, output_path):
 
     for i, space in enumerate(spaces):
         for j, nqubits in enumerate(nqubits_list):
-            if 'host_serial' not in data[group]["nqubits"][nqubits]['speedup']:
+            if 'host_serial' not in speedup_data[group][precision]["nqubits"][nqubits]['speedup']:
                 continue
 
             values[i, j] = (
-                data[group]["nqubits"][nqubits]['speedup'][space]
+                speedup_data[group][precision]["nqubits"][nqubits]['speedup'][space]
             )
 
     valid = values[np.isfinite(values)]
@@ -63,7 +63,7 @@ def plot_heatmap(data, spaces, group, omp_threads, output_path):
 
     ax.set_xlabel("Number of qubits")
     ax.set_ylabel("Execution Space")
-    ax.set_title(f"{group}: Speedup vs host_serial")
+    ax.set_title(f"{group}: Speedup vs host_serial({precision})")
 
     for i in range(len(spaces)):
         for j in range(len(nqubits_list)):
@@ -83,13 +83,13 @@ def plot_heatmap(data, spaces, group, omp_threads, output_path):
     )
 
     fig.tight_layout()
-    fig.savefig(output_path / f"{group}_speedup.png", dpi=300)
+    fig.savefig(output_path / f"{group}_speedup_{precision}.png", dpi=300)
     plt.close(fig)
     plt.clf()
 
 
 
-def plot_graph(data, group, omp_threads, output_path):
+def plot_graph(time_data, precision, group, omp_threads, output_path):
 
     styles = {
         "default(cuda)": ("tab:green", "P"),
@@ -104,7 +104,7 @@ def plot_graph(data, group, omp_threads, output_path):
     plt.figure(figsize=(7, 5))
 
     assert len(group) > 0
-    data_group = data[group]
+    data_group = time_data[group]
     spaces = list(data_group.keys())
     for space in spaces:
         style = styles[space]
@@ -123,11 +123,13 @@ def plot_graph(data, group, omp_threads, output_path):
     plt.grid(which='major', color='black', linestyle='-', alpha=0.3)
     plt.grid(which='minor', color='black', linestyle='-', alpha=0.1)
     plt.xlabel("Number of qubits", fontsize=16)
-    plt.ylabel("Execution time per gate [ms]", fontsize=16)
+    if(group == "Single-StateVector-Circuit"):
+        plt.title(f"{group}: {precision}")
+        plt.ylabel("Execution time per gate [ms]", fontsize=16)
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
 
     plt.legend(fontsize=14, loc='upper left')
     plt.tight_layout()
-    plt.savefig(output_path / f"{group}_time.png", dpi=300)
+    plt.savefig(output_path / f"{group}_time_{precision}.png", dpi=300)
     plt.clf()

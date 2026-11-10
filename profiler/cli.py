@@ -9,7 +9,7 @@ import detector as detector_module
 import analyzer as analyzer_module
 import plot as plot_module
 
-def run_benchmark(space: str, precision: str, omp_threads: int, min_nqubits: int, max_nqubits: int, result_dir: Path):
+def run_benchmark(benchmark_type:str, space: str, precision: str, omp_threads: int, min_nqubits: int, max_nqubits: int, result_dir: Path):
     env = os.environ.copy()
     env["SCALUQ_SPACE"] = space
     env["SCALUQ_PRECISION"] = precision
@@ -31,7 +31,7 @@ def run_benchmark(space: str, precision: str, omp_threads: int, min_nqubits: int
 
     command = [
         sys.executable, "-m", "pytest",
-        str(Path(__file__).with_name("benchmark.py")),
+        str(Path(__file__).parent / "benchmark_fleets" / f"{benchmark_type}.py"),
         f"--benchmark-json={json_path}",
         "--benchmark-min-rounds=5",
         "-q",
@@ -56,13 +56,16 @@ def run_benchmark(space: str, precision: str, omp_threads: int, min_nqubits: int
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--precision', default='f64')
-    parser.add_argument('--omp-threads', type=int, default=None)
-    parser.add_argument("--min-nqubits", type=int, default=4)
-    parser.add_argument("--max-nqubits", type=int, default=21)
+    parser.add_argument('--precision', default='f64', help="Set one of f64, f32, f16 or bf16")
+    parser.add_argument('--omp-threads', type=int, default=None, help="Set number of threads (1 or more)")
+    parser.add_argument("--min-nqubits", type=int, default=4, help="Set minimum qubits number (2 or more)")
+    parser.add_argument("--max-nqubits", type=int, default=21, help="Set maximum qubits number")
+    parser.add_argument("--benchmark-type", type=str, default="Single-StateVector-Circuit", help="Set benchmark type")
     args = parser.parse_args()
 
-    if(args.omp_threads and args.omp_threads < 1):
+    benchmark_types = ("Single-StateVector-Circuit")
+
+    if(args.omp_threads is None or args.omp_threads < 1):
         print("--omp-threads must be 1 or more")
         sys.exit(1)
     if(args.min_nqubits <= 1):
@@ -71,12 +74,15 @@ if __name__ == "__main__":
     if(args.min_nqubits > args.max_nqubits):
         print("--min-nqubits must be smaller than --max-nqubits")
         sys.exit(1)
+    if(args.benchmark_type not in benchmark_types):
+        print("Unknown benchmark type")
+        sys.exit(1)
 
     try:
         detector = detector_module.Detector(args.precision)
         profile_spaces = detector.detect()
     except detector_module.UnsupportedPrecisionError as e:
-        print("precision must be one of f64, f32, f16 or fb16")
+        print("precision must be one of f64, f32, f16 or bf16")
         sys.exit(1)
     except detector_module.UnsupportedSyclError as e:
         print(f"SYCL(f16) is not supported")
@@ -88,22 +94,25 @@ if __name__ == "__main__":
         or os.cpu_count()
         or 1
     )
+    group = args.benchmark_type
+    precision = args.precision
+
 
     result_dir = Path(__file__).parent / "result"
     result_dir.mkdir(parents=True, exist_ok=True)
 
 
     for space in profile_spaces:
-        print(f"Benchmarking {space} ({args.precision})...")
-        if(run_benchmark(space, args.precision, omp_threads, args.min_nqubits, args.max_nqubits, result_dir) is False):
+        print(f"Benchmarking {group}-{space}-{precision}...")
+        if(run_benchmark(group, space, precision, omp_threads, args.min_nqubits, args.max_nqubits, result_dir) is False):
             sys.exit(1)
     
 
-    analyzer = analyzer_module.Analyzer(result_dir)
-    analyzer.load(profile_spaces, args.precision)
+    analyzer = analyzer_module.Analyzer(result_dir, profile_spaces, precision, omp_threads)
+    analyzer.load()
     best_spaces = analyzer.get_best_spaces()
 
-    for group in best_spaces:
-        plot_module.plot_heatmap(best_spaces, profile_spaces, group, omp_threads, result_dir)
-        plot_module.plot_graph(analyzer.data, group, omp_threads, result_dir)
+
+    plot_module.plot_heatmap(best_spaces, profile_spaces, precision, group, omp_threads, result_dir)
+    plot_module.plot_graph(analyzer.data, precision, group, omp_threads, result_dir)
 

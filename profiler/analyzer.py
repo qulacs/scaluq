@@ -3,14 +3,17 @@ from collections import defaultdict
 from pathlib import Path
 
 class Analyzer:
-    def __init__(self, result_dir: Path):
+    def __init__(self, result_dir: Path, spaces: list[str], precision: str, threads: int):
         self.result_dir = result_dir
+        self.spaces = spaces
+        self.precision = precision
         self.data = defaultdict(lambda: defaultdict(dict))
+        self.threads = threads
 
 
-    def load(self, spaces: list[str], precision: str):
-        for space in spaces:
-            filepath = self.result_dir / f"{space}-{precision}.json"
+    def load(self):
+        for space in self.spaces:
+            filepath = self.result_dir / f"{space}-{self.precision}.json"
 
             with filepath.open() as f:
                 result = json.load(f)
@@ -20,12 +23,13 @@ class Analyzer:
                 nqubits = int(item["params"]["nqubits"])
                 niter = item["extra_info"]["niter"]
 
-                gate_count = nqubits * 3
-                elapsed = item["stats"]["median"]
-
-                # time_per_gate (ms)
-                time_per_gate = elapsed / (niter * gate_count) * 1000
-                self.data[group][space][nqubits] = time_per_gate
+                if(group == "Single-StateVector-Circuit"):
+                    # time_per_gate (ms)
+                    gate_count = nqubits * 3
+                    elapsed = item["stats"]["median"]
+                    time = elapsed / (niter * gate_count) * 1000
+                
+                self.data[group][space][nqubits] = time
 
         return self.data
 
@@ -39,9 +43,12 @@ class Analyzer:
                 qubit_counts.update(results.keys())
 
             best_spaces[group] = {}
-            best_spaces[group]["min_nqubits"] = min(qubit_counts)
-            best_spaces[group]["max_nqubits"] = max(qubit_counts)
-            best_spaces[group]["nqubits"] = {}
+            best_spaces[group][self.precision] = {}
+            best_spaces[group][self.precision]["metadata"] = {}
+            best_spaces[group][self.precision]["metadata"]["threads"] = self.threads
+            best_spaces[group][self.precision]["min_nqubits"] = min(qubit_counts)
+            best_spaces[group][self.precision]["max_nqubits"] = max(qubit_counts)
+            best_spaces[group][self.precision]["nqubits"] = {}
 
             for nqubits in sorted(qubit_counts):
                 candidates = {
@@ -50,21 +57,34 @@ class Analyzer:
                 }
 
                 
-                best_spaces[group]["nqubits"][nqubits] = {}
-                best_spaces[group]["nqubits"][nqubits]['recommended'] = min(
+                best_spaces[group][self.precision]["nqubits"][nqubits] = {}
+                best_spaces[group][self.precision]["nqubits"][nqubits]['recommended'] = min(
                     candidates,
                     key=candidates.get,
                 )
 
-                best_spaces[group]["nqubits"][nqubits]['speedup'] = {
+                best_spaces[group][self.precision]["nqubits"][nqubits]['speedup'] = {
                     space: (candidates['host_serial'] / results[nqubits]) for space, results in spaces.items()
                     if nqubits in results
                 }
 
-
-        profile_path = self.result_dir / "profile.json"
-        profile_path.unlink(missing_ok=True)
-        with open(profile_path, mode="w") as f:
-            json.dump(best_spaces, f, indent=4)
+            self.write_to_json(best_spaces, group, self.precision)
 
         return best_spaces
+
+    def write_to_json(self, best_spaces, group, precision):
+
+        profile_path = self.result_dir / "profile.json"
+        if profile_path.exists():
+            with open(profile_path, "r") as f:
+                data = json.load(f)
+        else:
+            data = {}
+
+        if(group not in data):
+            data[group] = best_spaces
+        else:
+            data[group][precision] = best_spaces[group][precision]
+
+        with open(profile_path, mode="w") as f:
+            json.dump(data, f, indent=4)
