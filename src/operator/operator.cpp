@@ -91,16 +91,27 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
     return copy_operator;
 }
 
+namespace internal {
+// CUDA requires the kernel functor to be visible outside the private member function.
+template <typename TermsView>
+struct CountInvalidOperatorTerms {
+    TermsView terms;
+    std::uint64_t n_qubits;
+
+    KOKKOS_INLINE_FUNCTION void operator()(std::uint64_t i, std::uint64_t& count) const {
+        const auto mask = terms(i)._bit_flip_mask | terms(i)._phase_flip_mask;
+        if (n_qubits < 64 && (mask >> n_qubits)) ++count;
+    }
+};
+}  // namespace internal
+
 template <>
 void Operator<internal::Prec, internal::Space>::check_qubit_count(std::uint64_t n_qubits) const {
     std::uint64_t invalid_count = 0;
     Kokkos::parallel_reduce(
         "check_operator_qubits",
         Kokkos::RangePolicy<ExecutionSpaceType>(0, _terms.size()),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t & count) {
-            const auto mask = _terms(i)._bit_flip_mask | _terms(i)._phase_flip_mask;
-            if (n_qubits < 64 && (mask >> n_qubits)) ++count;
-        },
+        internal::CountInvalidOperatorTerms{_terms, n_qubits},
         invalid_count);
     if (invalid_count) throw std::invalid_argument("Operator acts on a qubit outside the state.");
 }
