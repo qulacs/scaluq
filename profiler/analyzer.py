@@ -3,7 +3,8 @@ from collections import defaultdict
 from pathlib import Path
 
 class Analyzer:
-    def __init__(self, result_dir: Path, spaces: list[str], precision: str, threads: int):
+    def __init__(self, group: str, result_dir: Path, spaces: list[str], precision: str, threads: int):
+        self.group = group
         self.result_dir = result_dir
         self.spaces = spaces
         self.precision = precision
@@ -13,7 +14,7 @@ class Analyzer:
 
     def load(self):
         for space in self.spaces:
-            filepath = self.result_dir / f"{space}-{self.precision}.json"
+            filepath = self.result_dir / f"{self.group}-{space}-{self.precision}.json"
 
             with filepath.open() as f:
                 result = json.load(f)
@@ -82,7 +83,7 @@ class Analyzer:
             data = {}
 
         if(group not in data):
-            data[group] = best_spaces
+            data[group] = best_spaces[group]
         else:
             data[group][precision] = best_spaces[group][precision]
 

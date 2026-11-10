@@ -22,7 +22,7 @@ def run_benchmark(benchmark_type:str, space: str, precision: str, omp_threads: i
     env["MAX_NQUBITS"] = f"{max_nqubits}"
 
 
-    stem = f"{space}-{precision}"
+    stem = f"{benchmark_type}-{space}-{precision}"
     json_path = result_dir / f"{stem}.json"
     log_path = result_dir / f"{stem}.log"
 
@@ -63,9 +63,11 @@ if __name__ == "__main__":
     parser.add_argument("--benchmark-type", type=str, default="Single-StateVector-Circuit", help="Set benchmark type")
     args = parser.parse_args()
 
-    benchmark_types = ("Single-StateVector-Circuit")
+    benchmark_types = {
+        "Single-StateVector-Circuit",
+    }
 
-    if(args.omp_threads is None or args.omp_threads < 1):
+    if(args.omp_threads is not None and args.omp_threads < 1):
         print("--omp-threads must be 1 or more")
         sys.exit(1)
     if(args.min_nqubits <= 1):
@@ -108,7 +110,7 @@ if __name__ == "__main__":
             sys.exit(1)
     
 
-    analyzer = analyzer_module.Analyzer(result_dir, profile_spaces, precision, omp_threads)
+    analyzer = analyzer_module.Analyzer(group, result_dir, profile_spaces, precision, omp_threads)
     analyzer.load()
     best_spaces = analyzer.get_best_spaces()
 
