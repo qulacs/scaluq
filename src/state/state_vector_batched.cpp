@@ -481,17 +481,7 @@ void StateVectorBatched<Prec, Space>::add_state_vector_with_coef(
     if (_batch_size == 0) return;
     auto weights = internal::convert_vector_to_view<ComplexType, Space>(
         std::vector<ComplexType>(coefs.begin(), coefs.end()));
-    // Kokkos views may refer to shifted or differently-strided slices of the same allocation.
-    // Exact element-for-element aliases are safe; other overlapping views require a snapshot.
-    auto src_addr = reinterpret_cast<std::uintptr_t>(states._raw.data());
-    auto dst_addr = reinterpret_cast<std::uintptr_t>(_raw.data());
-    const bool overlap = src_addr <= dst_addr
-                             ? dst_addr - src_addr < states._raw.span() * sizeof(ComplexType)
-                             : src_addr - dst_addr < _raw.span() * sizeof(ComplexType);
-    const bool exact = src_addr == dst_addr && _raw.stride(0) == states._raw.stride(0) &&
-                       _raw.stride(1) == states._raw.stride(1);
-    auto source = overlap && !exact ? states.copy() : states;
-    auto input = source._raw;
+    auto input = states._raw;
     Kokkos::parallel_for(
         "add_batch_coefs",
         Kokkos::MDRangePolicy<ExecutionSpaceType, Kokkos::Rank<2>>({0, 0}, {_batch_size, _dim}),
@@ -501,10 +491,11 @@ void StateVectorBatched<Prec, Space>::add_state_vector_with_coef(
 }
 
 template <Precision Prec, ExecutionSpace Space>
-StateVector<Prec, Space> StateVectorBatched<Prec, Space>::linear_combination(
+StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_linear_combination(
     const std::vector<StdComplex>& coefs) const {
     if (coefs.size() != _batch_size) {
-        throw std::invalid_argument("linear_combination: coefficient count must equal batch size");
+        throw std::invalid_argument(
+            "get_linear_combination: coefficient count must equal batch size");
     }
     auto result = StateVector<Prec, Space>::uninitialized_state(_n_qubits);
     if (_batch_size == 0) {

@@ -193,7 +193,7 @@ marginal probability of [1, UNMEASURED]: 0.7499999999999999
 
 ### Weighted operations on batches
 
-For a `StateVectorBatched`, `linear_combination(coefs)` returns a new state
+For a `StateVectorBatched`, `get_linear_combination(coefs)` returns a new state
 `sum_b coefs[b] * states[b]`, without normalization. An empty batch returns a
 zero state with the same number of qubits. `multiply_coef(coefs)` scales each
 batch entry by its corresponding coefficient; `add_state_vector_with_coef(coefs,

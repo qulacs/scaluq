@@ -252,7 +252,7 @@ TYPED_TEST(StateVectorBatchedTest, WeightedBatchAlgebra) {
         {{0.25, 0.5}, {-0.5, 0.25}}, {{-0.25, 0.25}, {0.5, -0.5}}, {{0.5, 0.}, {0., 0.5}}};
     Batch states(3, 1);
     states.load(input);
-    const auto combined = states.linear_combination(coefs).get_amplitudes();
+    const auto combined = states.get_linear_combination(coefs).get_amplitudes();
     for (std::size_t i = 0; i < 2; ++i) {
         StdComplex expected = 0.;
         for (std::size_t b = 0; b < 3; ++b) expected += coefs[b] * input[b][i];
@@ -278,38 +278,36 @@ TYPED_TEST(StateVectorBatchedTest, WeightedBatchAlgebra) {
         }
     }
     EXPECT_THROW(states.multiply_coef(std::vector<StdComplex>{}), std::invalid_argument);
-    EXPECT_THROW((void)states.linear_combination(std::vector<StdComplex>{}), std::invalid_argument);
+    EXPECT_THROW((void)states.get_linear_combination(std::vector<StdComplex>{}),
+                 std::invalid_argument);
     Batch wrong_batch(2, 1), wrong_dim(3, 2);
     EXPECT_THROW(states.add_state_vector_with_coef(coefs, wrong_batch), std::invalid_argument);
     EXPECT_THROW((void)Batch::inner_product(states, wrong_dim), std::invalid_argument);
     Batch empty(0, 1);
-    auto zero = empty.linear_combination({}).get_amplitudes();
+    auto zero = empty.get_linear_combination({}).get_amplitudes();
     EXPECT_EQ(zero, std::vector<StdComplex>(2, 0.));
     EXPECT_TRUE(Batch::inner_product(empty, empty).empty());
 }
 
-TYPED_TEST(StateVectorBatchedTest, WeightedPartialOverlapAndZeroQubits) {
+TYPED_TEST(StateVectorBatchedTest, WeightedValidationAndZeroQubits) {
     constexpr auto Prec = TestFixture::Prec;
     constexpr auto Space = TestFixture::Space;
     using Batch = StateVectorBatched<Prec, Space>;
-    Batch storage(3, 0);
-    storage.load({{{1., 0.}}, {{2., 0.}}, {{3., 0.}}});
     Batch src(2, 0), dst(2, 0);
-    src._raw = Kokkos::subview(storage._raw, std::make_pair(0, 2), Kokkos::ALL());
-    dst._raw = Kokkos::subview(storage._raw, std::make_pair(1, 3), Kokkos::ALL());
-    dst.add_state_vector_with_coef(std::vector<StdComplex>{1., 1.}, src);
-    auto actual = storage.get_amplitudes();
-    EXPECT_EQ(actual[0][0], StdComplex(1, 0));
-    EXPECT_EQ(actual[1][0], StdComplex(3, 0));
-    EXPECT_EQ(actual[2][0], StdComplex(5, 0));
+    src.load({{{1., 0.}}, {{2., 0.}}});
+    dst.load({{{2., 0.}}, {{3., 0.}}});
     auto before = dst.get_amplitudes();
     EXPECT_THROW(dst.multiply_coef(std::vector<StdComplex>{1.}), std::invalid_argument);
     EXPECT_EQ(dst.get_amplitudes(), before);
     EXPECT_THROW(dst.add_state_vector_with_coef(std::vector<StdComplex>{1.}, src),
                  std::invalid_argument);
     EXPECT_EQ(dst.get_amplitudes(), before);
+    dst.add_state_vector_with_coef(std::vector<StdComplex>{1., 1.}, src);
+    auto actual = dst.get_amplitudes();
+    EXPECT_EQ(actual[0][0], StdComplex(3, 0));
+    EXPECT_EQ(actual[1][0], StdComplex(5, 0));
     Batch empty(0, 0);
-    EXPECT_EQ(empty.linear_combination({}).get_amplitudes(), (std::vector<StdComplex>{0.}));
+    EXPECT_EQ(empty.get_linear_combination({}).get_amplitudes(), (std::vector<StdComplex>{0.}));
     EXPECT_TRUE(Batch::inner_product(empty, empty).empty());
 }
 
@@ -320,7 +318,7 @@ TYPED_TEST(StateVectorBatchedTest, WeightedSumAccumulatesAtLeastInFloat) {
         // The final value is representable in both formats; low-precision accumulation
         // would stop changing well before all 4096 terms have been added.
         StateVectorBatched<Prec, Space> states(4096, 0);
-        auto sum = states.linear_combination(std::vector<StdComplex>(4096, 1.));
+        auto sum = states.get_linear_combination(std::vector<StdComplex>(4096, 1.));
         ASSERT_EQ(sum.get_amplitude_at(0), StdComplex(4096., 0.));
         StateVectorBatched<Prec, Space> vector(1, 12);
         vector.load({std::vector<StdComplex>(4096, 1.)});

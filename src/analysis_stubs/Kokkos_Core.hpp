@@ -204,8 +204,6 @@ public:
     pointer data() const { return nullptr; }
     size_type extent(int) const { return 0; }
     size_type size() const { return 0; }
-    size_type span() const { return 0; }
-    size_type stride(unsigned) const { return 0; }
     static size_type shmem_size(size_type n) { return sizeof(value_type) * n; }
     bool is_null() const { return true; }
 

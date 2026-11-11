@@ -94,7 +94,7 @@ public:
     void multiply_coef(const std::vector<StdComplex>& coefs);
     void add_state_vector_with_coef(const std::vector<StdComplex>& coefs,
                                     const StateVectorBatched& states);
-    [[nodiscard]] StateVector<Prec, Space> linear_combination(
+    [[nodiscard]] StateVector<Prec, Space> get_linear_combination(
         const std::vector<StdComplex>& coefs) const;
     [[nodiscard]] static std::vector<StdComplex> inner_product(const StateVectorBatched& bra,
                                                                const StateVectorBatched& ket);
@@ -435,9 +435,10 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  &StateVectorBatched<Prec, Space>::add_state_vector_with_coef),
              "coefs"_a,
              "states"_a,
-             "Add coefs[b] * states[b] to each batch state. Aliasing is supported.")
-        .def("linear_combination",
-             &StateVectorBatched<Prec, Space>::linear_combination,
+             "Add coefs[b] * states[b] to each batch state. Passing the same batch as states is "
+             "supported; partially overlapping storage is not.")
+        .def("get_linear_combination",
+             &StateVectorBatched<Prec, Space>::get_linear_combination,
              "coefs"_a,
              "Return sum_b coefs[b] * states[b] without normalization. "
              "An empty batch returns the zero vector.")
