@@ -320,6 +320,62 @@ DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Defaul
 DEFINE_SPARSE_MATRIX_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Default)
 #endif
 #undef DEFINE_SPARSE_MATRIX_GATE_UPDATE
+
+// ≤2 targets: densify so the register-resident block kernels are used.
+// More targets: CSR-based team kernel that only visits stored entries.
+#define DEFINE_SPARSE_MATRIX_GATE_DM_UPDATE(TargetSpace)                                           \
+    template <Precision Prec, ExecutionSpace GateSpace>                                            \
+    void SparseMatrixGateImpl<Prec, GateSpace>::update_quantum_state(                              \
+        ExecutionContextDensityMatrix<Prec, TargetSpace>& context) const {                         \
+        if constexpr (GateSpace == TargetSpace) {                                                  \
+            this->check_qubit_mask_within_bounds(*context.state);                                  \
+            const auto n_targets = std::popcount(this->_target_mask);                              \
+            if (n_targets <= 2) {                                                                  \
+                const ComplexMatrix dense = get_matrix();                                          \
+                auto at = [&](int r, int c) {                                                      \
+                    return Complex<Prec>(static_cast<Float<Prec>>(dense(r, c).real()),             \
+                                         static_cast<Float<Prec>>(dense(r, c).imag()));            \
+                };                                                                                 \
+                if (n_targets == 0) {                                                              \
+                    zero_target_dense_matrix_gate(                                                 \
+                        this->_control_mask, this->_control_value_mask, at(0, 0), *context.state); \
+                } else if (n_targets == 1) {                                                       \
+                    Matrix2x2<Prec> m = {{{{at(0, 0), at(0, 1)}}, {{at(1, 0), at(1, 1)}}}};        \
+                    one_target_dense_matrix_gate(this->_target_mask,                               \
+                                                 this->_control_mask,                              \
+                                                 this->_control_value_mask,                        \
+                                                 m,                                                \
+                                                 *context.state);                                  \
+                } else {                                                                           \
+                    Matrix4x4<Prec> m;                                                             \
+                    for (int r = 0; r < 4; ++r)                                                    \
+                        for (int c = 0; c < 4; ++c) m[r][c] = at(r, c);                            \
+                    two_target_dense_matrix_gate(this->_target_mask,                               \
+                                                 this->_control_mask,                              \
+                                                 this->_control_value_mask,                        \
+                                                 m,                                                \
+                                                 *context.state);                                  \
+                }                                                                                  \
+            } else {                                                                               \
+                sparse_matrix_gate(this->_target_mask,                                             \
+                                   this->_control_mask,                                            \
+                                   this->_control_value_mask,                                      \
+                                   _matrix,                                                        \
+                                   *context.state);                                                \
+            }                                                                                      \
+        } else {                                                                                   \
+            throw std::runtime_error(                                                              \
+                "Error: SparseMatrixGateImpl::update_quantum_state("                               \
+                "ExecutionContextDensityMatrix& state): Trying to run on " #TargetSpace            \
+                " execution space, but the gate is defined on different execution space.");        \
+        }                                                                                          \
+    }
+DEFINE_SPARSE_MATRIX_GATE_DM_UPDATE(ExecutionSpace::Host)
+DEFINE_SPARSE_MATRIX_GATE_DM_UPDATE(ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_DEVICE
+DEFINE_SPARSE_MATRIX_GATE_DM_UPDATE(ExecutionSpace::Default)
+#endif
+#undef DEFINE_SPARSE_MATRIX_GATE_DM_UPDATE
 template class SparseMatrixGateImpl<Prec, Space>;
 
 template <Precision Prec, ExecutionSpace Space>

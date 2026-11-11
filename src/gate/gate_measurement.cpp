@@ -84,6 +84,32 @@ DEFINE_MEASUREMENT_GATE_UPDATE(ExecutionSpace::HostSerial)
 DEFINE_MEASUREMENT_GATE_UPDATE(ExecutionSpace::Default)
 #endif  // SCALUQ_USE_DEVICE
 #undef DEFINE_MEASUREMENT_GATE_UPDATE
+
+#define DEFINE_MEASUREMENT_GATE_DM_UPDATE(Space)                                             \
+    template <Precision Prec>                                                                \
+    void MeasurementGateImpl<Prec>::update_quantum_state(                                    \
+        ExecutionContextDensityMatrix<Prec, Space>& context) const {                         \
+        this->check_qubit_mask_within_bounds(*context.state);                                \
+        if (context.classical_register->register_size() <= _classical_bit_index) {           \
+            throw std::runtime_error(                                                        \
+                "MeasurementGate::update_quantum_state(): classical register size is too "   \
+                "small for the requested classical bit index.");                             \
+        }                                                                                    \
+        auto& dm = *context.state;                                                           \
+        const double zero_probability =                                                      \
+            dm.get_zero_probability(std::countr_zero(this->_target_mask));                   \
+        const bool measured_zero =                                                           \
+            std::bernoulli_distribution(zero_probability)(*context.random_engine);           \
+        const double probability = measured_zero ? zero_probability : 1. - zero_probability; \
+        measurement_projection(this->_target_mask, !measured_zero, _reset, probability, dm); \
+        (*context.classical_register)[_classical_bit_index] = !measured_zero;                \
+    }
+DEFINE_MEASUREMENT_GATE_DM_UPDATE(ExecutionSpace::Host)
+DEFINE_MEASUREMENT_GATE_DM_UPDATE(ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_DEVICE
+DEFINE_MEASUREMENT_GATE_DM_UPDATE(ExecutionSpace::Default)
+#endif  // SCALUQ_USE_DEVICE
+#undef DEFINE_MEASUREMENT_GATE_DM_UPDATE
 template class MeasurementGateImpl<Prec>;
 
 template <Precision Prec>

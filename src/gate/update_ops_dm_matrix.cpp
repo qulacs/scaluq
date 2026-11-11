@@ -1,8 +1,8 @@
-// Density-matrix updates for multi-qubit matrix gates.
+// Density-matrix updates for matrix gates, superoperators and measurement projections.
 //
 // K ≤ 2 targets use register-resident N×N blocks (update_ops_dm_block.hpp).
-// K ≥ 3 targets use Kokkos teams that stage visited blocks in team scratch: still a single
-// in-place pass over ρ with no full-size temporaries.
+// K ≥ 3 targets (and mixtures on 3..6 qubits) use Kokkos teams that stage visited blocks in
+// team scratch: still a single in-place pass over ρ with no full-size temporaries.
 
 #include "update_ops.hpp"
 #include "update_ops_dm_block.hpp"
@@ -25,6 +25,20 @@ struct DenseRows {
     KOKKOS_INLINE_FUNCTION C row_dot(std::uint64_t row, const Get& get) const {
         C s = 0;
         for (std::uint64_t k = 0; k < n; ++k) s += (Conj ? conj(m(row, k)) : m(row, k)) * get(k);
+        return s;
+    }
+};
+
+// Row-wise access to a CSR matrix: only stored entries are visited.
+struct SparseRows {
+    SparseMatrix<Prec, Space> m;
+    template <bool Conj, class Get>
+    KOKKOS_INLINE_FUNCTION C row_dot(std::uint64_t row, const Get& get) const {
+        C s = 0;
+        for (std::uint32_t idx = m._row_ptr[row]; idx < m._row_ptr[row + 1]; ++idx) {
+            const C v = m._vals[idx];
+            s += (Conj ? conj(v) : v) * get(m._col_idx[idx]);
+        }
         return s;
     }
 };
@@ -258,6 +272,96 @@ void dm_apply_large_matrix(const char* label,
         });
 }
 
+// ρ → c·ρ + Σ_k K_k ρ K_k†, all blocks of the operand qubits (uncontrolled). The block, one
+// intermediate product and the accumulator live in team scratch, so ρ is read and written
+// exactly once regardless of the number of operators.
+void dm_apply_kraus_mixture(std::uint64_t target_mask,
+                            Float<Prec> identity_coef,
+                            const Kokkos::View<C**, Kokkos::LayoutRight, ExecSpace>& kraus,
+                            DensityMatrix<Prec, Space>& dm) {
+    const std::uint64_t log_n = std::popcount(target_mask);
+    const std::uint64_t n = 1ULL << log_n;
+    const std::uint64_t nn = n * n;
+    const std::uint64_t r = kraus.extent(0) / n;
+    const DmBlockIndexer idx(dm.n_qubits(), target_mask, 0, 0);
+    const DmTeamLayout lay(nn, idx.total, 3);
+    const std::uint64_t lb = lay.log_bpt, nm = n - 1;
+    const int level = lay.level;
+    const auto off = dm_block_offsets(target_mask);
+    const RawView raw = dm._raw;
+    Kokkos::parallel_for(
+        "kraus_mixture_gate_dm",
+        TeamPolicy(lay.league, Kokkos::AUTO)
+            .set_scratch_size(level, Kokkos::PerTeam(lay.total_bytes)),
+        KOKKOS_LAMBDA(const Member& team) {
+            Scratch1D cur(team.team_scratch(level), nn << lb);
+            Scratch1D tmp(team.team_scratch(level), nn << lb);
+            Scratch1D acc(team.team_scratch(level), nn << lb);
+            const DmTeamBlocks blk(team, level, idx, lb);
+            const std::uint64_t L = kPackBlocks ? lb : 0, bm = (1ULL << L) - 1;
+            const std::uint64_t nb = blk.nb, work = nn << L;
+            team.team_barrier();
+
+            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, work), [&](std::uint64_t e) {
+                const std::uint64_t b = e & bm;
+                if (b >= nb) return;
+                const std::uint64_t j = (e >> L) & nm, i = e >> (L + log_n);
+                const C v = raw(blk.rb(b) ^ off(i), blk.cb(b) ^ off(j));
+                cur(e) = v;
+                acc(e) = v * identity_coef;
+            });
+            team.team_barrier();
+            for (std::uint64_t k = 0; k < r; ++k) {
+                const std::uint64_t base = k * n;
+                // tmp = K_k · cur
+                Kokkos::parallel_for(Kokkos::TeamThreadRange(team, work), [&](std::uint64_t e) {
+                    const std::uint64_t b = e & bm;
+                    if (b >= nb) return;
+                    const std::uint64_t j = (e >> L) & nm, i = e >> (L + log_n);
+                    C s = 0;
+                    for (std::uint64_t l = 0; l < n; ++l)
+                        s += kraus(base + i, l) * cur((((l << log_n) | j) << L) | b);
+                    tmp(e) = s;
+                });
+                team.team_barrier();
+                // acc += tmp · K_k†
+                Kokkos::parallel_for(Kokkos::TeamThreadRange(team, work), [&](std::uint64_t e) {
+                    const std::uint64_t b = e & bm;
+                    if (b >= nb) return;
+                    const std::uint64_t j = (e >> L) & nm, i = e >> (L + log_n);
+                    C s = 0;
+                    for (std::uint64_t l = 0; l < n; ++l)
+                        s += tmp((((i << log_n) | l) << L) | b) * conj(kraus(base + j, l));
+                    acc(e) += s;
+                });
+                team.team_barrier();
+            }
+            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, work), [&](std::uint64_t e) {
+                const std::uint64_t b = e & bm;
+                if (b >= nb) return;
+                const std::uint64_t j = (e >> L) & nm, i = e >> (L + log_n);
+                raw(blk.rb(b) ^ off(i), blk.cb(b) ^ off(j)) = acc(e);
+            });
+        });
+}
+
+// Functors used inside device lambdas must not be function-local (nvcc extended lambdas).
+struct DmMeasurementProjectionOp {
+    RawView raw;
+    std::uint64_t t;
+    int src;  // which diagonal block survives (0 or 1)
+    int dst;  // where it is stored
+    Float<Prec> scale;
+    KOKKOS_INLINE_FUNCTION void operator()(std::uint64_t rb, std::uint64_t cb, bool, bool) const {
+        const std::uint64_t so = src ? t : 0, d = dst ? t : 0;
+        const C v = raw(rb | so, cb | so) * scale;
+        raw(rb, cb) = C(0);
+        raw(rb, cb | t) = C(0);
+        raw(rb | t, cb) = C(0);
+        raw(rb | t, cb | t) = C(0);
+        raw(rb | d, cb | d) = v;
+    }
+};
 }  // namespace
 
 template <>
@@ -294,6 +398,90 @@ void multi_dense_matrix_gate(std::uint64_t target_mask,
                           control_value_mask,
                           DenseRows{matrix, matrix.extent(0)},
                           dm);
+}
+
+template <>
+void sparse_matrix_gate(std::uint64_t target_mask,
+                        std::uint64_t control_mask,
+                        std::uint64_t control_value_mask,
+                        const SparseMatrix<Prec, Space>& matrix,
+                        DensityMatrix<Prec, Space>& dm) {
+    dm_apply_large_matrix("sparse_matrix_gate_dm",
+                          target_mask,
+                          control_mask,
+                          control_value_mask,
+                          SparseRows{matrix},
+                          dm);
+}
+
+template <>
+void superoperator_gate(std::uint64_t target_mask,
+                        const ComplexMatrix& superop,
+                        DensityMatrix<Prec, Space>& dm) {
+    const int k = std::popcount(target_mask);
+    auto dense = [&](int y, int x) {
+        return C(static_cast<Float<Prec>>(superop(y, x).real()),
+                 static_cast<Float<Prec>>(superop(y, x).imag()));
+    };
+    if (k == 0) {
+        const C s(static_cast<Float<Prec>>(superop(0, 0).real()),
+                  static_cast<Float<Prec>>(superop(0, 0).imag()));
+        if (s.real() == Float<Prec>{1} && s.imag() == Float<Prec>{0}) return;
+        const RawView raw = dm._raw;
+        const std::uint64_t n = dm.n_qubits(), mask = dm.dim() - 1;
+        Kokkos::parallel_for(
+            "superoperator_gate_dm",
+            Kokkos::RangePolicy<ExecSpace>(0, dm.dim() * dm.dim()),
+            KOKKOS_LAMBDA(std::uint64_t g) { raw(g >> n, g & mask) *= s; });
+        return;
+    }
+    if (k == 1) {
+        DmSuperoperatorBlockOp<Prec, Space, 2> op(dm._raw, target_mask, dense);
+        dm_for_each_block<Space>("superoperator_gate_dm", dm.n_qubits(), target_mask, 0, 0, op);
+    } else if (k == 2) {
+        DmSuperoperatorBlockOp<Prec, Space, 4> op(dm._raw, target_mask, dense);
+        dm_for_each_block<Space>("superoperator_gate_dm", dm.n_qubits(), target_mask, 0, 0, op);
+    } else {
+        throw std::runtime_error("superoperator_gate: only up to 2 target qubits are supported.");
+    }
+}
+
+template <>
+void kraus_mixture_gate(std::uint64_t target_mask,
+                        double identity_coef,
+                        const ComplexMatrix& kraus,
+                        DensityMatrix<Prec, Space>& dm) {
+    Kokkos::View<C**, Kokkos::LayoutRight, ExecSpace> kv(
+        Kokkos::ViewAllocateWithoutInitializing("kraus_mixture_operators"),
+        kraus.rows(),
+        kraus.cols());
+    auto kh = Kokkos::create_mirror_view(kv);
+    for (Eigen::Index i = 0; i < kraus.rows(); ++i)
+        for (Eigen::Index j = 0; j < kraus.cols(); ++j)
+            kh(i, j) = C(static_cast<Float<Prec>>(kraus(i, j).real()),
+                         static_cast<Float<Prec>>(kraus(i, j).imag()));
+    Kokkos::deep_copy(kv, kh);
+    dm_apply_kraus_mixture(target_mask, static_cast<Float<Prec>>(identity_coef), kv, dm);
+}
+
+// Projective measurement of the qubit in `target_mask` with outcome `outcome_one`, followed by
+// renormalization (1 / probability) and optionally a reset to |0>. One pass over ρ.
+template <>
+void measurement_projection(std::uint64_t target_mask,
+                            bool outcome_one,
+                            bool reset,
+                            double probability,
+                            DensityMatrix<Prec, Space>& dm) {
+    const int src = outcome_one ? 1 : 0;
+    const int dst = (outcome_one && !reset) ? 1 : 0;
+    dm_for_each_block<Space>(
+        "measurement_projection_dm",
+        dm.n_qubits(),
+        target_mask,
+        0,
+        0,
+        DmMeasurementProjectionOp{
+            dm._raw, target_mask, src, dst, static_cast<Float<Prec>>(1.0 / probability)});
 }
 
 }  // namespace scaluq::internal
