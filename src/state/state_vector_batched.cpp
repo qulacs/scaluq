@@ -4,6 +4,8 @@
 #include <scaluq/util/math.hpp>
 #include <type_traits>
 
+#include "sampling.hpp"
+
 namespace scaluq {
 
 // バッチサイズが小さいときに view_state_vector_at を呼ぶと，Alignment
@@ -118,86 +120,13 @@ void StateVectorBatched<Prec, Space>::set_Haar_random_state(bool set_same_state,
 template <Precision Prec, ExecutionSpace Space>
 std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::sampling(
     std::uint64_t sampling_count, std::optional<std::uint64_t> seed) const {
-    Kokkos::View<FloatType**, internal::SpaceType<Space>> stacked_prob(
-        "prob", _batch_size, _dim + 1);
-
-    Kokkos::parallel_for(
-        "sampling (compute stacked prob)",
-        Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-            internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
-        KOKKOS_CLASS_LAMBDA(
-            const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
-            std::uint64_t batch_id = team.league_rank();
-            using AccumType =
-                std::conditional_t<(sizeof(FloatType) < sizeof(float)), float, FloatType>;
-            Kokkos::parallel_scan(
-                Kokkos::TeamThreadRange(team, _dim),
-                [&](std::uint64_t i, AccumType& update, const bool final) {
-                    // hip_bfloat16 has explicit constructor and cannot cast int
-                    // (native) to hip_bfloat16 (Non-native). So update must be
-                    // f64, f32.
-                    update +=
-                        static_cast<AccumType>(internal::squared_norm(this->_raw(batch_id, i)));
-                    if (final) {
-                        stacked_prob(batch_id, i + 1) = static_cast<FloatType>(update);
-                    }
-                });
+    const auto amplitudes = _raw;
+    return internal::sample_probabilities<Space>(
+        _batch_size, _dim, sampling_count, seed, KOKKOS_LAMBDA(std::uint64_t b, std::uint64_t i) {
+            const double re = static_cast<double>(amplitudes(b, i).real());
+            const double im = static_cast<double>(amplitudes(b, i).imag());
+            return re * re + im * im;
         });
-
-    std::vector result(_batch_size, std::vector<std::uint64_t>(sampling_count));
-    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(
-        internal::resolve_seed(seed));
-    std::vector<std::uint64_t> batch_todo(_batch_size * sampling_count);
-    std::vector<std::uint64_t> sample_todo(_batch_size * sampling_count);
-    for (std::uint64_t i = 0; i < _batch_size; i++) {
-        for (std::uint64_t j = 0; j < sampling_count; j++) {
-            std::uint64_t idx = i * sampling_count + j;
-            batch_todo[idx] = i;
-            sample_todo[idx] = j;
-        }
-    }
-    while (!batch_todo.empty()) {
-        std::size_t todo_count = batch_todo.size();
-        Kokkos::View<std::uint64_t*, internal::SpaceType<Space>> batch_ids =
-            internal::convert_vector_to_view<std::uint64_t, Space>(batch_todo);
-        Kokkos::View<std::uint64_t*, internal::SpaceType<Space>> result_buf(
-            Kokkos::ViewAllocateWithoutInitializing("result_buf"), todo_count);
-        Kokkos::parallel_for(
-            "sampling (choose)",
-            Kokkos::RangePolicy<internal::SpaceType<Space>>(0, todo_count),
-            KOKKOS_CLASS_LAMBDA(std::uint64_t idx) {
-                std::uint64_t batch_id = batch_ids[idx];
-                auto rand_gen = rand_pool.get_state();
-                FloatType r = static_cast<FloatType>(rand_gen.drand(0., 1.));
-                std::uint64_t lo = 0, hi = stacked_prob.extent(1);
-                while (hi - lo > 1) {
-                    std::uint64_t mid = (lo + hi) / 2;
-                    if (stacked_prob(batch_id, mid) > r) {
-                        hi = mid;
-                    } else {
-                        lo = mid;
-                    }
-                }
-                result_buf(idx) = lo;
-                rand_pool.free_state(rand_gen);
-            });
-        auto result_buf_host = internal::convert_view_to_vector<std::uint64_t, Space>(result_buf);
-        // Especially for F16 and BF16, sampling sometimes fails with result == _dim.
-        // In this case, re-sampling is performed.
-        std::vector<std::uint64_t> next_batch_todo;
-        std::vector<std::uint64_t> next_sample_todo;
-        for (std::size_t i = 0; i < todo_count; i++) {
-            if (result_buf_host[i] == _dim) {
-                next_batch_todo.push_back(batch_todo[i]);
-                next_sample_todo.push_back(sample_todo[i]);
-            } else {
-                result[batch_todo[i]][sample_todo[i]] = result_buf_host[i];
-            }
-        }
-        batch_todo.swap(next_batch_todo);
-        sample_todo.swap(next_sample_todo);
-    }
-    return result;
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -285,6 +214,13 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_squared_norm() const {
 
 template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::normalize() {
+    for (const double norm : get_squared_norm()) {
+        if (!std::isfinite(norm) || norm <= 0.) {
+            throw std::invalid_argument(
+                "Cannot normalize a batch containing non-finite or zero norm.");
+        }
+    }
+
     Kokkos::parallel_for(
         "normalize",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(

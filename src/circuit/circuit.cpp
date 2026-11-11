@@ -6,6 +6,105 @@
 #include <scaluq/util/utility.hpp>
 
 namespace scaluq {
+namespace {
+template <Precision Prec>
+void check_gradient_circuit(const Circuit<Prec>& circuit,
+                            const std::map<std::string, double>& parameters) {
+    constexpr double tolerance = Prec == Precision::F64   ? 1e-12
+                                 : Prec == Precision::F32 ? 1e-5
+                                 : Prec == Precision::F16 ? 0.005
+                                                          : 0.02;
+    for (std::uint64_t i = 0; i < circuit.n_gates(); ++i) {
+        if (circuit.get_classical_condition_at(i)) {
+            throw std::invalid_argument(
+                "Expectation gradient does not support classical conditions.");
+        }
+        const auto& entry = circuit.get_gate_at(i);
+        if (entry.index() == 1) {
+            const auto& [gate, key] = std::get<1>(entry);
+            const auto value = parameters.find(key);
+            if (value == parameters.end() || !std::isfinite(value->second) ||
+                !std::isfinite(gate->param_coef()) ||
+                !std::isfinite(gate->param_coef() * value->second)) {
+                throw std::invalid_argument(
+                    "Expectation gradient requires finite parameters and coefficients.");
+            }
+            switch (gate.param_gate_type()) {
+                case ParamGateType::ParamRX:
+                case ParamGateType::ParamRY:
+                case ParamGateType::ParamRZ:
+                    break;
+                case ParamGateType::ParamPauliRotation: {
+                    const auto coef = ParamPauliRotationGate<Prec>(gate)->pauli().coef();
+                    if (!std::isfinite(coef.real()) || coef.imag() != 0.) {
+                        throw std::invalid_argument(
+                            "Expectation gradient requires Hermitian rotation generators.");
+                    }
+                    break;
+                }
+                default:
+                    throw std::invalid_argument(
+                        "Expectation gradient requires deterministic unitary gates.");
+            }
+            continue;
+        }
+        const auto& gate = std::get<0>(entry);
+        switch (gate.gate_type()) {
+            case GateType::Pauli: {
+                const double norm = std::norm(PauliGate<Prec>(gate)->pauli().coef());
+                if (!std::isfinite(norm) || std::abs(norm - 1.) > tolerance) {
+                    throw std::invalid_argument(
+                        "Expectation gradient requires unitary Pauli gates.");
+                }
+                continue;
+            }
+            case GateType::PauliRotation: {
+                const auto rotation = PauliRotationGate<Prec>(gate);
+                const auto coef = rotation->pauli().coef();
+                if (!std::isfinite(coef.real()) || coef.imag() != 0. ||
+                    !std::isfinite(rotation->angle())) {
+                    throw std::invalid_argument(
+                        "Expectation gradient requires unitary Pauli rotations.");
+                }
+                continue;
+            }
+            case GateType::P0:
+            case GateType::P1:
+            case GateType::Measurement:
+            case GateType::Probabilistic:
+            case GateType::SparseMatrix:
+                throw std::invalid_argument(
+                    "Expectation gradient requires deterministic gates with unitary inverses.");
+            case GateType::DenseMatrix:
+            case GateType::Unknown:
+            case GateType::GlobalPhase:
+            case GateType::RX:
+            case GateType::RY:
+            case GateType::RZ:
+            case GateType::U1:
+            case GateType::U2:
+            case GateType::U3:
+                break;
+            default:
+                continue;
+        }
+        const auto matrix = gate->get_matrix();
+        if (matrix.rows() != matrix.cols()) {
+            throw std::invalid_argument("Expectation gradient requires square unitary matrices.");
+        }
+        const auto gram = (matrix.adjoint() * matrix).eval();
+        for (decltype(gram.rows()) row = 0; row < gram.rows(); ++row) {
+            for (decltype(gram.cols()) col = 0; col < gram.cols(); ++col) {
+                const double error = std::abs(gram(row, col) - StdComplex(row == col ? 1. : 0.));
+                if (!std::isfinite(error) || error > tolerance) {
+                    throw std::invalid_argument("Expectation gradient requires unitary matrices.");
+                }
+            }
+        }
+    }
+}
+}  // namespace
+
 template <Precision Prec>
 std::set<std::string> Circuit<Prec>::key_set() const {
     std::set<std::string> key_set;
@@ -477,6 +576,11 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
     std::optional<std::uint64_t> seed) const {
+    if (has_classical_instructions()) {
+        throw std::runtime_error(
+            "Circuit::simulate_noise: Measurement and classically controlled instructions are "
+            "not supported.");
+    }
     check_state_vector_n_qubits(initial_state.n_qubits());
     std::mt19937 mt(internal::resolve_seed(seed));
     StateVectorBatched<Prec, Space> states(1, initial_state.n_qubits()), new_states;
@@ -494,9 +598,6 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
                 for (const auto& tmp : gate_list) {
                     gates.push_back(tmp);
                 }
-            } else if (gate.gate_type() == GateType::Measurement) {
-                throw std::runtime_error(
-                    "Circuit::simulate_noise: Measurement gate is not supported.");
             } else {
                 probs = std::vector<double>{1.0};
                 gates.push_back(gate);
@@ -632,7 +733,11 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
     StateVector<Prec, Space>& state,
     StateVector<Prec, Space>& bistate,
     const std::map<std::string, double>& parameters) {
-    const auto eps = internal::get_epsilon<Prec>();
+    check_gradient_circuit(*this, parameters);
+    if (state.n_qubits() != bistate.n_qubits()) {
+        throw std::invalid_argument("Expectation gradient: state dimensions must match.");
+    }
+    check_state_vector_n_qubits(state.n_qubits());
     const std::uint64_t n_gates = this->n_gates();
 
     std::unordered_map<std::string, double> gradient;
@@ -650,37 +755,58 @@ std::unordered_map<std::string, double> Circuit<Prec>::compute_expectation_gradi
         if (cur_gate.index() == 1) {
             const auto& [pgate, key] = std::get<1>(cur_gate);
 
-            Astate = state.copy();
-            double pauli_coef = 1.0;
-            if (pgate.param_gate_type() == ParamGateType::ParamPauliRotation) {
-                internal::ParamGatePtr<internal::ParamPauliRotationGateImpl<Prec>> ppr(pgate);
-
-                const auto c = ppr->pauli().coef();
-                const double cre = static_cast<double>(std::real(c));
-                const double cim = static_cast<double>(std::imag(c));
-                if (std::abs(cim) >= eps) {
-                    throw std::runtime_error(
-                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be "
-                        "real.");
+            std::uint64_t x_mask = 0, z_mask = 0;
+            double pauli_coef = 1.;
+            switch (pgate.param_gate_type()) {
+                case ParamGateType::ParamRX:
+                    x_mask = pgate->target_qubit_mask();
+                    break;
+                case ParamGateType::ParamRY:
+                    x_mask = z_mask = pgate->target_qubit_mask();
+                    break;
+                case ParamGateType::ParamRZ:
+                    z_mask = pgate->target_qubit_mask();
+                    break;
+                case ParamGateType::ParamPauliRotation: {
+                    internal::ParamGatePtr<internal::ParamPauliRotationGateImpl<Prec>> ppr(pgate);
+                    const auto pauli = ppr->pauli();
+                    const auto coef = pauli.coef();
+                    if (!std::isfinite(coef.real()) || coef.imag() != 0.) {
+                        throw std::invalid_argument(
+                            "Expectation gradient requires a finite real Pauli coefficient.");
+                    }
+                    std::tie(x_mask, z_mask) = pauli.get_XZ_mask_representation();
+                    pauli_coef = coef.real();
+                    break;
                 }
-                if (std::abs(cre) < std::numeric_limits<double>::epsilon()) {
-                    throw std::runtime_error(
-                        "Circuit::compute_expectation_gradient_backprop: pauli coefficient must be "
-                        "nonzero.");
-                }
-                pauli_coef = cre;
+                default:
+                    throw std::invalid_argument(
+                        "Expectation gradient does not support this parameterized gate.");
             }
             const double scale = pgate->param_coef() * pauli_coef;
-            if (std::abs(scale) < std::numeric_limits<double>::epsilon()) {
-                throw std::runtime_error(
-                    "Circuit::compute_expectation_gradient_backprop: param_coef * pauli_coef must "
-                    "be nonzero.");
+            if (!std::isfinite(scale)) {
+                throw std::invalid_argument(
+                    "Expectation gradient requires finite gate coefficients.");
             }
-            pgate->update_quantum_state(Astate, -M_PI / scale);
-            const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
-            const double contrib = -scale * static_cast<double>(ip.real());
-
-            gradient[key] += contrib;
+            if (scale != 0.) {
+                Astate = state.copy();
+                internal::apply_pauli(
+                    0ULL, 0ULL, x_mask, z_mask, internal::Complex<Prec>(1.), Astate);
+                const auto control_mask = pgate->control_qubit_mask();
+                const auto control_values = pgate->control_value_mask();
+                if (control_mask) {
+                    const auto amplitudes = Astate._raw;
+                    Kokkos::parallel_for(
+                        "gradient_control_projection",
+                        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, Astate.dim()),
+                        KOKKOS_LAMBDA(std::uint64_t basis) {
+                            if ((basis & control_mask) != control_values) amplitudes(basis) = 0.;
+                        });
+                }
+                // d<E>/dt = scale * Im(<bistate| control_projector * Pauli |state>).
+                const auto ip = internal::inner_product<Prec, Space>(bistate._raw, Astate._raw);
+                gradient[key] += scale * static_cast<double>(ip.imag());
+            }
         }
 
         if (cur_gate.index() == 0) {
