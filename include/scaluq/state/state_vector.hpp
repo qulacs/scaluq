@@ -7,6 +7,9 @@
 #include <stdexcept>
 #include <variant>
 #include <vector>
+#ifdef SCALUQ_USE_NANOBIND
+#include <nanobind/ndarray.h>
+#endif
 
 #include "../types.hpp"
 #include "../util/random.hpp"
@@ -69,6 +72,11 @@ public:
     }
 
     [[nodiscard]] std::vector<StdComplex> get_amplitudes() const;
+    [[nodiscard]] std::vector<StdComplex> get_amplitudes(std::uint64_t start,
+                                                         std::uint64_t count) const;
+    [[nodiscard]] StateVector extract_substate(const std::vector<std::uint64_t>& fixed_qubits,
+                                               const std::vector<std::uint64_t>& values) const;
+    void embed_substate(const StateVector& state, const std::vector<std::uint64_t>& target_qubits);
 
     [[nodiscard]] double get_squared_norm() const;
 
@@ -116,6 +124,17 @@ public:
 namespace internal {
 template <Precision Prec, ExecutionSpace Space>
 void bind_state_state_vector_hpp(nb::module_& m) {
+    // NumPy arrays are tried first so that they take the direct-copy path in `load`.
+    constexpr bool numpy_native = Prec == Precision::F32 || Prec == Precision::F64;
+    using NumpyArray =
+        nb::ndarray<nb::numpy,
+                    const std::complex<std::conditional_t<Prec == Precision::F32, float, double>>,
+                    nb::ndim<1>,
+                    nb::c_contig>;
+    using LoadSource = std::conditional_t<
+        numpy_native,
+        std::variant<NumpyArray, std::vector<StdComplex>, StateVector<Prec, Space>*>,
+        std::variant<std::vector<StdComplex>, StateVector<Prec, Space>*>>;
     nb::class_<StateVector<Prec, Space>>(
         m,
         "StateVector",
@@ -330,7 +349,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("get_amplitudes",
-             &StateVector<Prec, Space>::get_amplitudes,
+             nb::overload_cast<>(&StateVector<Prec, Space>::get_amplitudes, nb::const_),
              DocString()
                  .desc("Get all amplitudes as `list[complex]`.")
                  .ret("list[complex]", "amplitudes of list with len $2^{\\mathrm{n\\_qubits}}$")
@@ -339,6 +358,55 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                                      "[(1+0j), 0j, 0j, 0j]"})
                  .build_as_google_style()
                  .c_str())
+        .def("get_amplitudes",
+             nb::overload_cast<std::uint64_t, std::uint64_t>(
+                 &StateVector<Prec, Space>::get_amplitudes, nb::const_),
+             "start"_a,
+             "count"_a,
+             "Read a contiguous range of amplitudes.")
+        .def("extract_substate",
+             &StateVector<Prec, Space>::extract_substate,
+             "fixed_qubits"_a,
+             "values"_a,
+             "Project fixed qubits; remaining qubits retain ascending order. The result is not "
+             "normalized.")
+        .def("embed_substate",
+             &StateVector<Prec, Space>::embed_substate,
+             "state"_a,
+             "target_qubits"_a,
+             "Replace this state with state embedded on target qubits; all other qubits are zero.")
+        .def(
+            "get_amplitudes_numpy",
+            [](const StateVector<Prec, Space>& state) {
+                using Float = internal::Float<Prec>;
+                if constexpr (Prec == Precision::F32 || Prec == Precision::F64) {
+                    using Value = std::complex<Float>;
+                    using Raw = internal::Complex<Prec>;
+                    static_assert(
+                        sizeof(Value) == sizeof(Raw) && std::is_trivially_copyable_v<Raw> &&
+                        std::is_standard_layout_v<Raw> && sizeof(Raw) == 2 * sizeof(Float));
+                    nb::object array = nb::module_::import_("numpy").attr("empty")(
+                        state.dim(),
+                        nb::arg("dtype") = (Prec == Precision::F32 ? "complex64" : "complex128"));
+                    auto data =
+                        nb::cast<nb::ndarray<nb::numpy, Value, nb::ndim<1>, nb::c_contig>>(array);
+                    using HostBytes = Kokkos::View<unsigned char*,
+                                                   Kokkos::HostSpace,
+                                                   Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+                    using DeviceBytes = Kokkos::View<const unsigned char*,
+                                                     internal::SpaceType<Space>,
+                                                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+                    auto size = state.dim() * sizeof(Raw);
+                    Kokkos::deep_copy(
+                        HostBytes(reinterpret_cast<unsigned char*>(data.data()), size),
+                        DeviceBytes(reinterpret_cast<const unsigned char*>(state._raw.data()),
+                                    size));
+                    return array;
+                } else {
+                    throw std::invalid_argument("NumPy transfer supports f32 and f64 states");
+                }
+            },
+            "Return an independent NumPy array with the state's native complex dtype.")
         .def("n_qubits",
              &StateVector<Prec, Space>::n_qubits,
              DocString()
@@ -529,12 +597,33 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                 .c_str())
         .def(
             "load",
-            [](StateVector<Prec, Space>& state,
-               const std::variant<std::vector<StdComplex>, StateVector<Prec, Space>*>& other) {
+            [](StateVector<Prec, Space>& state, const LoadSource& other) {
                 std::visit(
                     [&](const auto& value) {
                         using T = std::decay_t<decltype(value)>;
-                        if constexpr (std::is_same_v<T, std::vector<StdComplex>>) {
+                        if constexpr (std::is_same_v<T, NumpyArray>) {
+                            // Fast path: copy the native complex buffer directly.
+                            using Raw = internal::Complex<Prec>;
+                            static_assert(sizeof(typename NumpyArray::Scalar) == sizeof(Raw) &&
+                                          std::is_trivially_copyable_v<Raw> &&
+                                          std::is_standard_layout_v<Raw>);
+                            if (value.shape(0) != state.dim())
+                                throw std::invalid_argument(
+                                    "array length must equal state dimension");
+                            using HostBytes = Kokkos::View<const unsigned char*,
+                                                           Kokkos::HostSpace,
+                                                           Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+                            using DeviceBytes =
+                                Kokkos::View<unsigned char*,
+                                             internal::SpaceType<Space>,
+                                             Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+                            auto size = state.dim() * sizeof(Raw);
+                            Kokkos::deep_copy(
+                                DeviceBytes(reinterpret_cast<unsigned char*>(state._raw.data()),
+                                            size),
+                                HostBytes(reinterpret_cast<const unsigned char*>(value.data()),
+                                          size));
+                        } else if constexpr (std::is_same_v<T, std::vector<StdComplex>>) {
                             state.load(value);
                         } else {
                             state.load(*value);
@@ -544,9 +633,12 @@ void bind_state_state_vector_hpp(nb::module_& m) {
             },
             "other"_a,
             DocString()
-                .desc("Load amplitudes from a sequence or another :class:`StateVector`.")
+                .desc("Load amplitudes from a NumPy array, a sequence or another "
+                      ":class:`StateVector`.")
+                .desc("For `f32` and `f64` states, a one-dimensional NumPy array is copied "
+                      "directly after being converted to the native complex dtype if needed.")
                 .arg("other",
-                     "collections.abc.Sequence[complex] | StateVector",
+                     "numpy.ndarray | collections.abc.Sequence[complex] | StateVector",
                      "amplitudes with len $2^{\\mathrm{n\\_qubits}}$ or source state vector")
                 .build_as_google_style()
                 .c_str())

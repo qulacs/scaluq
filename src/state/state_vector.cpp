@@ -107,6 +107,62 @@ template <Precision Prec, ExecutionSpace Space>
     return ret;
 }
 template <Precision Prec, ExecutionSpace Space>
+std::vector<StdComplex> StateVector<Prec, Space>::get_amplitudes(std::uint64_t start,
+                                                                 std::uint64_t count) const {
+    if (start > _dim || count > _dim - start)
+        throw std::out_of_range("amplitude range out of bounds");
+    auto view = Kokkos::subview(_raw, std::make_pair(start, start + count));
+    auto host = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), view);
+    std::vector<StdComplex> result(count);
+    for (std::uint64_t i = 0; i < count; ++i)
+        result[i] = StdComplex(host(i).real(), host(i).imag());
+    return result;
+}
+template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, Space> StateVector<Prec, Space>::extract_substate(
+    const std::vector<std::uint64_t>& fixed, const std::vector<std::uint64_t>& values) const {
+    if (fixed.size() != values.size())
+        throw std::invalid_argument("fixed qubits and values must have equal length");
+    const auto fixed_mask = internal::vector_to_mask(fixed);
+    if (static_cast<std::uint64_t>(std::bit_width(fixed_mask)) > _n_qubits)
+        throw std::invalid_argument("fixed qubits must be in range");
+    const auto fixed_bits = internal::vector_to_mask(fixed, values);
+    auto out = uninitialized_state(_n_qubits - fixed.size());
+    auto dst = out._raw;
+    auto src = _raw;
+    Kokkos::parallel_for(
+        "extract_substate",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, out.dim()),
+        KOKKOS_LAMBDA(std::uint64_t i) {
+            const auto index = internal::insert_zero_at_mask_positions(i, fixed_mask) | fixed_bits;
+            dst(i) = src(index);
+        });
+    return out;
+}
+template <Precision Prec, ExecutionSpace Space>
+void StateVector<Prec, Space>::embed_substate(const StateVector& state,
+                                              const std::vector<std::uint64_t>& targets) {
+    if (static_cast<std::uint64_t>(std::bit_width(internal::vector_to_mask(targets))) > _n_qubits)
+        throw std::invalid_argument("target qubits must be in range");
+    if (targets.size() != state.n_qubits())
+        throw std::invalid_argument("target count must equal source qubit count");
+    // Copy first to allow embedding a state into itself.
+    auto source = state._raw.data() == _raw.data() ? state.copy() : state;
+    auto src = source._raw;
+    auto dst = _raw;
+    auto qs = internal::convert_vector_to_view<std::uint64_t, Space>(targets);
+    set_zero_norm_state();
+    auto k = targets.size();
+    Kokkos::parallel_for(
+        "embed_substate",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, state.dim()),
+        KOKKOS_LAMBDA(std::uint64_t i) {
+            std::uint64_t index = 0;
+            for (std::uint64_t j = 0; j < k; ++j) index |= ((i >> j) & 1ULL) << qs(j);
+            dst(index) = src(i);
+        });
+}
+template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_squared_norm() const {
     FloatType norm{0.0f};
     Kokkos::parallel_reduce(

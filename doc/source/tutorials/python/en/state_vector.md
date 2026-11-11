@@ -190,3 +190,20 @@ zero probability of 0: 0.25
 zero probability of 1: 0.25
 marginal probability of [1, UNMEASURED]: 0.7499999999999999
 ```
+
+### Transferring and selecting amplitudes
+
+For `f32` and `f64` states, `get_amplitudes_numpy()` returns an independent,
+contiguous NumPy array with the native `complex64` or `complex128` dtype.
+`load(array)` also accepts a one-dimensional NumPy array of the state dimension
+and copies it directly into the state, converting it to the native dtype and
+C-contiguous layout first if needed. These paths avoid creating Python complex
+objects for every amplitude.
+
+`get_amplitudes(start, count)` reads a contiguous range within the state dimension.
+
+`extract_substate(fixed_qubits, values)` fixes the listed qubits to 0 or 1 and
+returns the remaining qubits in ascending original index order. It does not
+normalize the result. Conversely, `embed_substate(small, target_qubits)`
+replaces the state with `small` mapped onto the listed qubits, where entry `j`
+of the list is qubit `j` of `small`; all other qubits are zero.
