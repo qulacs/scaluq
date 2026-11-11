@@ -195,9 +195,10 @@ marginal probability of [1, UNMEASURED]: 0.7499999999999999
 
 For `f32` and `f64` states, `get_amplitudes_numpy()` returns an independent,
 contiguous NumPy array with the native `complex64` or `complex128` dtype.
-`load_numpy(array)` accepts a one-dimensional, C-contiguous array of that exact
-native dtype and state dimension; it copies the array into the state. These
-methods avoid creating Python complex objects for every amplitude.
+`load(array)` also accepts a one-dimensional NumPy array of the state dimension
+and copies it directly into the state, converting it to the native dtype and
+C-contiguous layout first if needed. These paths avoid creating Python complex
+objects for every amplitude.
 
 `get_amplitudes(start, count)` reads a contiguous range within the state dimension.
 

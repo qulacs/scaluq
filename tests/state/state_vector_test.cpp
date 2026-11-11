@@ -325,14 +325,15 @@ TYPED_TEST(StateVectorTest, DataAccessAndSubstates) {
     EXPECT_EQ(state.extract_substate({}, {}).get_amplitudes(), state.get_amplitudes());
     EXPECT_EQ(state.extract_substate({2, 0, 1}, {1, 0, 1}).get_amplitudes(),
               (std::vector<StdComplex>{{6, 0}}));
-    EXPECT_THROW((void)state.extract_substate({1}, {2}), std::invalid_argument);
+    EXPECT_THROW((void)state.extract_substate({1}, {2}), std::runtime_error);
     EXPECT_THROW((void)state.extract_substate({3}, {0}), std::invalid_argument);
     EXPECT_THROW((void)state.extract_substate({1}, {}), std::invalid_argument);
     auto sub = state.extract_substate({1}, {1});
     EXPECT_EQ(sub.get_amplitudes(), (std::vector<StdComplex>{{2, 0}, {3, 0}, {6, 0}, {7, 0}}));
-    EXPECT_THROW((void)state.extract_substate({1, 1}, {0, 1}), std::invalid_argument);
+    EXPECT_THROW((void)state.extract_substate({1, 1}, {0, 1}), std::runtime_error);
     StateVector<Prec, Space> embedded(3);
-    EXPECT_THROW(embedded.embed_substate(sub, {0, 0}), std::invalid_argument);
+    EXPECT_THROW(embedded.embed_substate(sub, {0, 0}), std::runtime_error);
+    EXPECT_THROW(embedded.embed_substate(sub, {0, 3}), std::invalid_argument);
     EXPECT_THROW(embedded.embed_substate(sub, {0}), std::invalid_argument);
     embedded.embed_substate(sub, {2, 0});
     EXPECT_EQ(
