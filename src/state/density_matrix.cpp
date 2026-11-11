@@ -13,8 +13,7 @@ DensityMatrix<Prec, Space>::DensityMatrix(std::uint64_t n_qubits)
 }
 
 template <Precision Prec, ExecutionSpace Space>
-DensityMatrix<Prec, Space>::DensityMatrix(Kokkos::View<ComplexType**, ExecutionSpaceType> view,
-                                          bool is_hermitian)
+DensityMatrix<Prec, Space>::DensityMatrix(RawView view, bool is_hermitian)
     : _n_qubits(std::bit_width(view.extent(0)) - 1),
       _dim(view.extent(0)),
       _is_hermitian(is_hermitian),
@@ -93,24 +92,14 @@ DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::copy() const {
     Kokkos::deep_copy(new_state._raw, this->_raw);
     return new_state;
 }
-// Cross-space deep_copy requires contiguous views with the same layout. Relay through
-// LayoutRight views in each memory space because DensityMatrix::_raw may use different
-// default layouts for host and device execution spaces.
 template <Precision Prec, ExecutionSpace Space>
 DensityMatrix<Prec, ExecutionSpace::Default> DensityMatrix<Prec, Space>::copy_to_default_space()
     const {
     auto new_state =
         DensityMatrix<Prec, ExecutionSpace::Default>::uninitialized_state(this->_n_qubits);
     new_state._is_hermitian = this->_is_hermitian;
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<Space>>
-        source_contiguous("source_contiguous", this->_dim, this->_dim);
-    Kokkos::deep_copy(source_contiguous, this->_raw);
-    Kokkos::View<ComplexType**,
-                 Kokkos::LayoutRight,
-                 internal::SpaceType<ExecutionSpace::Default>>
-        destination_contiguous("destination_contiguous", this->_dim, this->_dim);
-    Kokkos::deep_copy(destination_contiguous, source_contiguous);
-    Kokkos::deep_copy(new_state._raw, destination_contiguous);
+    // _raw is LayoutRight in every space, so a direct cross-space deep_copy is valid.
+    Kokkos::deep_copy(new_state._raw, this->_raw);
     return new_state;
 }
 template <Precision Prec, ExecutionSpace Space>
@@ -118,15 +107,7 @@ DensityMatrix<Prec, ExecutionSpace::Host> DensityMatrix<Prec, Space>::copy_to_ho
     auto new_state =
         DensityMatrix<Prec, ExecutionSpace::Host>::uninitialized_state(this->_n_qubits);
     new_state._is_hermitian = this->_is_hermitian;
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<Space>>
-        source_contiguous("source_contiguous", this->_dim, this->_dim);
-    Kokkos::deep_copy(source_contiguous, this->_raw);
-    Kokkos::View<ComplexType**,
-                 Kokkos::LayoutRight,
-                 internal::SpaceType<ExecutionSpace::Host>>
-        destination_contiguous("destination_contiguous", this->_dim, this->_dim);
-    Kokkos::deep_copy(destination_contiguous, source_contiguous);
-    Kokkos::deep_copy(new_state._raw, destination_contiguous);
+    Kokkos::deep_copy(new_state._raw, this->_raw);
     return new_state;
 }
 
@@ -172,7 +153,8 @@ void DensityMatrix<Prec, Space>::load(const StateVector<Prec, Space>& other) {
     this->_is_hermitian = true;
     Kokkos::parallel_for(
         "load_from_StateVector",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>,
+                              Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) {
             _raw(i, j) = other._raw(i) * internal::conj(other._raw(j));
@@ -186,8 +168,7 @@ template <Precision Prec, ExecutionSpace Space>
     state._n_qubits = n_qubits;
     state._dim = 1ULL << n_qubits;
     state._is_hermitian = false;
-    state._raw = Kokkos::View<ComplexType**, ExecutionSpaceType>(
-        Kokkos::ViewAllocateWithoutInitializing("state"), state._dim, state._dim);
+    state._raw = RawView(Kokkos::ViewAllocateWithoutInitializing("state"), state._dim, state._dim);
     return state;
 }
 
@@ -204,7 +185,8 @@ void DensityMatrix<Prec, Space>::set_zero_state() {
     this->_is_hermitian = true;
     Kokkos::parallel_for(
         "set_zero_state",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>,
+                              Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) { _raw(i, j) = (i == 0 && j == 0); });
 }
@@ -224,7 +206,8 @@ void DensityMatrix<Prec, Space>::set_computational_basis(std::uint64_t basis) {
     this->_is_hermitian = true;
     Kokkos::parallel_for(
         "set_computational_basis",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>,
+                              Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) {
             _raw(i, j) = (i == basis && j == basis);
@@ -305,7 +288,8 @@ void DensityMatrix<Prec, Space>::normalize() {
     const ComplexType trace(this->get_trace());
     Kokkos::parallel_for(
         "normalize",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>,
+                              Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) { _raw(i, j) /= trace; });
 }
@@ -320,7 +304,8 @@ double DensityMatrix<Prec, Space>::get_purity() const {
     FloatType purity{0.0f};
     Kokkos::parallel_reduce(
         "get_purity",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>,
+                              Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j, FloatType & tmp) {
             tmp += internal::squared_norm(_raw(i, j));
@@ -497,7 +482,8 @@ void DensityMatrix<Prec, Space>::add_density_matrix_with_coef(StdComplex coef,
     }
     Kokkos::parallel_for(
         "add_density_matrix_with_coef",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>,
+                              Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) {
             _raw(i, j) += ComplexType(coef) * other._raw(i, j);
@@ -511,7 +497,8 @@ void DensityMatrix<Prec, Space>::multiply_coef(StdComplex coef) {
     }
     Kokkos::parallel_for(
         "multiply_coef",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>,
+                              Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) { _raw(i, j) *= ComplexType(coef); });
 }

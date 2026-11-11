@@ -14,15 +14,21 @@ class DensityMatrix {
     using ComplexType = internal::Complex<Prec>;
     using ExecutionSpaceType = internal::SpaceType<Space>;
 
+public:
+    // Row-major on every backend so that (row, col) with consecutive col is contiguous.
+    // Update kernels iterate with col innermost, which keeps accesses coalesced on GPUs.
+    using RawView = Kokkos::View<ComplexType**, Kokkos::LayoutRight, ExecutionSpaceType>;
+
+private:
     template <Precision P, ExecutionSpace S>
     friend class DensityMatrix;
 
 public:
     static constexpr std::uint64_t UNMEASURED = 2;
-    Kokkos::View<ComplexType**, ExecutionSpaceType> _raw;
+    RawView _raw;
     DensityMatrix() = default;
     DensityMatrix(std::uint64_t n_qubits);
-    DensityMatrix(Kokkos::View<ComplexType**, ExecutionSpaceType> view, bool is_hermitian = false);
+    DensityMatrix(RawView view, bool is_hermitian = false);
     DensityMatrix(const StateVector<Prec, Space>& other);
 
     [[nodiscard]] std::uint64_t n_qubits() const { return this->_n_qubits; }
