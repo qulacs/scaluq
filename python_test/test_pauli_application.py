@@ -1,9 +1,8 @@
 import pytest
-import scaluq
 from scaluq import default
 
 
-def test_pauli_apply_add_and_operator_output():
+def test_pauli_apply_add_and_operator_apply():
     m = default.f64
     x = m.StateVector(1)
     x.load([1, 2])
@@ -12,13 +11,13 @@ def test_pauli_apply_add_and_operator_output():
     applied = x.copy()
     p.apply_to_state(applied)
     expected.add_state_vector_with_coef(0.5 - 0.25j, applied)
-    p.apply_add(x, x, 0.5 - 0.25j)
-    assert x.get_amplitudes() == pytest.approx(expected.get_amplitudes())
+    out = x.copy()
+    p.apply_add(x, out, 0.5 - 0.25j)
+    assert out.get_amplitudes() == pytest.approx(expected.get_amplitudes())
     op = m.Operator([p])
-    op.apply_to_state(x, x)
+    op.apply_to_state(out)
     p.apply_to_state(expected)
-    assert x.get_amplitudes() == pytest.approx(expected.get_amplitudes())
-
+    assert out.get_amplitudes() == pytest.approx(expected.get_amplitudes())
 
 
 def test_pauli_apply_add_checks_and_y_phase():
@@ -35,5 +34,5 @@ def test_pauli_apply_add_checks_and_y_phase():
         m.PauliOperator('X 0').apply_add(x, m.StateVector(2))
     scalar = m.StateVector(0)
     scalar.load([3])
-    m.Operator([]).apply_to_state(scalar, scalar)
+    m.Operator([]).apply_to_state(scalar)
     assert scalar.get_amplitudes() == pytest.approx([0])

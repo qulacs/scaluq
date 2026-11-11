@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 
+#include <Eigen/Eigenvalues>
 #include <cmath>
 #include <cstdlib>
 #include <random>
-#include <string>
-#include <Eigen/Eigenvalues>
 #include <scaluq/operator/operator.hpp>
+#include <string>
 
 #include "../test_environment.hpp"
 #include "../util/util.hpp"
@@ -428,8 +428,7 @@ TYPED_TEST(OperatorTest, GroundStateArnoldiMethod) {
         GTEST_SKIP() << "Randomized ground-state accuracy is not tested for F16/BF16.";
     } else {
         check_random_ground_state<Prec, Space>([](const auto& op, const auto& state) {
-            return op.solve_ground_state_by_arnoldi_method(
-                state, Prec == Precision::F64 ? 60 : 20);
+            return op.solve_ground_state_by_arnoldi_method(state, Prec == Precision::F64 ? 60 : 20);
         });
     }
 }
@@ -502,7 +501,7 @@ TYPED_TEST(OperatorTest, ArnoldiDoesNotBreakDownOnNonzeroResidual) {
     ASSERT_NEAR(ground_state.eigenvalue.real(), -0.5, 0.1);
 }
 
-TYPED_TEST(OperatorTest, ApplyToOutputAndAlias) {
+TYPED_TEST(OperatorTest, ApplyToStateMatchesTermSum) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     StateVector<Prec, Space> input(2);
@@ -514,13 +513,10 @@ TYPED_TEST(OperatorTest, ApplyToOutputAndAlias) {
     auto expected = input.copy();
     expected.set_zero_norm_state();
     for (const auto& term : terms) term.apply_add(input, expected);
-    auto output = input.copy();
-    op.apply_to_state(input, output);
-    auto alias = input.copy();
-    op.apply_to_state(alias, alias);
-    auto a = expected.get_amplitudes(), b = output.get_amplitudes(), c = alias.get_amplitudes();
+    auto state = input.copy();
+    op.apply_to_state(state);
+    auto a = expected.get_amplitudes(), b = state.get_amplitudes();
     for (std::size_t i = 0; i < a.size(); ++i) {
         EXPECT_NEAR(std::abs(a[i] - b[i]), 0., 1e-5);
-        EXPECT_NEAR(std::abs(a[i] - c[i]), 0., 1e-5);
     }
 }

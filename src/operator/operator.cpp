@@ -1,10 +1,9 @@
 #include <Eigen/Eigenvalues>
+#include <cmath>
+#include <limits>
 #include <scaluq/operator/operator.hpp>
 #include <scaluq/prec_space.hpp>
 #include <scaluq/util/math.hpp>
-
-#include <cmath>
-#include <limits>
 
 namespace scaluq {
 template <>
@@ -108,15 +107,12 @@ ComplexMatrix Operator<internal::Prec, internal::Space>::get_full_matrix(
 
 template <>
 void Operator<internal::Prec, internal::Space>::apply_to_state(
-    const StateVector<internal::Prec, internal::Space>& input,
-    StateVector<internal::Prec, internal::Space>& output) const {
-    if (input.n_qubits() != output.n_qubits())
-        throw std::runtime_error("Operator::apply_to_state: incompatible qubit counts");
+    StateVector<internal::Prec, internal::Space>& state_vector) const {
     for (const auto& term : get_terms()) {
-        if (term.get_qubit_count() > input.n_qubits())
+        if (std::bit_width(term._bit_flip_mask | term._phase_flip_mask) > state_vector.n_qubits())
             throw std::runtime_error("Operator::apply_to_state: insufficient qubits");
     }
-    auto source = input._raw.data() == output._raw.data() ? input.copy() : input;
+    auto input = state_vector.copy();
     auto terms = _terms;
     auto nterms = _terms.size();
     Kokkos::parallel_for(
@@ -129,18 +125,11 @@ void Operator<internal::Prec, internal::Space>::apply_to_state(
                 auto b = i ^ term._bit_flip_mask;
                 auto phase = internal::PHASE_90ROT<internal::Prec>()
                     [Kokkos::popcount(term._bit_flip_mask & term._phase_flip_mask) % 4];
-                auto value = term._coef * phase * source.at_unsafe(b);
+                auto value = term._coef * phase * input.at_unsafe(b);
                 sum += (Kokkos::popcount(b & term._phase_flip_mask) & 1) ? -value : value;
             }
-            output.at_unsafe(i) = sum;
+            state_vector.at_unsafe(i) = sum;
         });
-}
-
-template <>
-void Operator<internal::Prec, internal::Space>::apply_to_state(
-    StateVector<internal::Prec, internal::Space>& state_vector) const {
-    auto input = state_vector.copy();
-    apply_to_state(input, state_vector);
 }
 
 template <>
@@ -596,7 +585,8 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
     auto eigenvalues = solver.eigenvalues();
     auto eigenvectors = solver.eigenvectors();
     auto minimum_eigenvalue_index =
-        std::ranges::min_element(eigenvalues, [](const double& a, const double& b) { return a < b; }) -
+        std::ranges::min_element(eigenvalues,
+                                 [](const double& a, const double& b) { return a < b; }) -
         eigenvalues.begin();
     auto ground_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(nqubits);
     ground_state.set_zero_norm_state();
