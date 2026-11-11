@@ -1,0 +1,79 @@
+name: GPU Simulator
+
+# Optional, non-required check. The hosted runners have no GPU, so this builds
+# the C++ tests with the Kokkos HIP backend for gfx90a and runs them on a
+# simulated AMD Instinct MI250X (https://github.com/pantheongpu/pantheonsim).
+# A simulator cannot reproduce hardware-specific behavior or timing, so it
+# complements real-GPU testing and does not replace it.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "include/**"
+      - "src/**"
+      - "tests/**"
+      - "CMakeLists.txt"
+      - "script/configure"
+      - ".github/workflows/gpu-sim.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: C++ tests (ROCm 7.1 and simulated MI250X)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 330
+
+    env:
+      CMAKE_C_COMPILER: hipcc
+      CMAKE_CXX_COMPILER: hipcc
+      CMAKE_BUILD_TYPE: Release
+      SCALUQ_USE_TEST: "ON"
+      SCALUQ_USE_HIP: "ON"
+      # Same Kokkos architecture as the HIP row of test_all.yml (gfx90a).
+      SCALUQ_HIP_ARCH: "VEGA90A"
+      SCALUQ_FLOAT16: "ON"
+      SCALUQ_FLOAT32: "ON"
+      SCALUQ_FLOAT64: "ON"
+      SCALUQ_BFLOAT16: "ON"
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+
+      - name: Set up the simulated GPU and ROCm
+        uses: pantheongpu/setup-pantheonsim@ca87fe3143b29166822b923d6050945c5179408c # v0.1.5
+        with:
+          gpu: amd/mi250x
+          cuda-toolkit: none
+          rocm: "7.1"
+
+      # The action installs only the compiler side of ROCm. Kokkos HIP also
+      # needs comgr (for hip-config.cmake), rocPRIM and rocThrust.
+      - name: Install Ninja and the ROCm libraries Kokkos needs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build comgr rocprim-dev rocthrust-dev
+
+      - name: Configure
+        run: ./script/configure
+
+      - name: Build
+        run: ninja -C build -j3
+
+      # DMGateTest/F32DefaultSpace.ApplyY aborts the simulator: the compiled
+      # kernel uses `v_pk_add_f32 ... 0 neg_lo:[1,1] neg_hi:[1,1]`, which the
+      # simulator reports as unsupported. The other 30 tests of that suite pass.
+      # Tests skipped by the test code itself (F16 and BF16 Suzuki-Trotter and
+      # ground-state tests) show as SKIPPED. ScaluqCPUConfig (a CMake script
+      # check) is not run here.
+      - name: Test
+        run: OMP_PROC_BIND=false vgpu run ./build/tests/scaluq_test --gtest_filter=-DMGateTest/F32DefaultSpace.ApplyY
