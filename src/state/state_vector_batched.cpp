@@ -458,6 +458,114 @@ void StateVectorBatched<Prec, Space>::multiply_coef(const StdComplex& coef) {
 }
 
 template <Precision Prec, ExecutionSpace Space>
+void StateVectorBatched<Prec, Space>::multiply_coef(const std::vector<StdComplex>& coefs) {
+    if (coefs.size() != _batch_size) {
+        throw std::invalid_argument("multiply_coef: coefficient count must equal batch size");
+    }
+    if (_batch_size == 0) return;
+    auto weights = internal::convert_vector_to_view<ComplexType, Space>(
+        std::vector<ComplexType>(coefs.begin(), coefs.end()));
+    Kokkos::parallel_for(
+        "multiply_batch_coefs",
+        Kokkos::MDRangePolicy<ExecutionSpaceType, Kokkos::Rank<2>>({0, 0}, {_batch_size, _dim}),
+        KOKKOS_CLASS_LAMBDA(std::uint64_t b, std::uint64_t i) { _raw(b, i) *= weights(b); });
+}
+
+template <Precision Prec, ExecutionSpace Space>
+void StateVectorBatched<Prec, Space>::add_state_vector_with_coef(
+    const std::vector<StdComplex>& coefs, const StateVectorBatched& states) {
+    if (coefs.size() != _batch_size || states.batch_size() != _batch_size ||
+        states.n_qubits() != _n_qubits) {
+        throw std::invalid_argument("add_state_vector_with_coef: batch dimensions must match");
+    }
+    if (_batch_size == 0) return;
+    auto weights = internal::convert_vector_to_view<ComplexType, Space>(
+        std::vector<ComplexType>(coefs.begin(), coefs.end()));
+    auto input = states._raw;
+    Kokkos::parallel_for(
+        "add_batch_coefs",
+        Kokkos::MDRangePolicy<ExecutionSpaceType, Kokkos::Rank<2>>({0, 0}, {_batch_size, _dim}),
+        KOKKOS_CLASS_LAMBDA(std::uint64_t b, std::uint64_t i) {
+            _raw(b, i) += weights(b) * input(b, i);
+        });
+}
+
+template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_linear_combination(
+    const std::vector<StdComplex>& coefs) const {
+    if (coefs.size() != _batch_size) {
+        throw std::invalid_argument(
+            "get_linear_combination: coefficient count must equal batch size");
+    }
+    auto result = StateVector<Prec, Space>::uninitialized_state(_n_qubits);
+    if (_batch_size == 0) {
+        result.set_zero_norm_state();
+        return result;
+    }
+    using AccFloat = std::conditional_t<Prec == Precision::F64, double, float>;
+    using AccComplex = Kokkos::complex<AccFloat>;
+    std::vector<AccComplex> host_weights;
+    host_weights.reserve(coefs.size());
+    for (const auto& coef : coefs) host_weights.emplace_back(coef.real(), coef.imag());
+    auto weights = internal::convert_vector_to_view<AccComplex, Space>(host_weights);
+    auto raw = _raw;
+    const auto batch_size = _batch_size;
+    Kokkos::parallel_for(
+        "batch_linear_combination",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, _dim),
+        KOKKOS_LAMBDA(std::uint64_t i) {
+            AccComplex sum(0, 0);
+            for (std::uint64_t b = 0; b < batch_size; ++b) {
+                const auto value = raw(b, i);
+                sum += weights(b) * AccComplex(static_cast<AccFloat>(value.real()),
+                                               static_cast<AccFloat>(value.imag()));
+            }
+            result._raw(i) = ComplexType(sum.real(), sum.imag());
+        });
+    return result;
+}
+
+template <Precision Prec, ExecutionSpace Space>
+std::vector<StdComplex> StateVectorBatched<Prec, Space>::inner_product(
+    const StateVectorBatched& bra, const StateVectorBatched& ket) {
+    if (bra.batch_size() != ket.batch_size() || bra.n_qubits() != ket.n_qubits()) {
+        throw std::invalid_argument("inner_product: batch dimensions must match");
+    }
+    if (bra.batch_size() == 0) return {};
+    using AccFloat = std::conditional_t<Prec == Precision::F64, double, float>;
+    using AccComplex = Kokkos::complex<AccFloat>;
+    Kokkos::View<AccComplex*, ExecutionSpaceType> result("batch_inner_products", bra.batch_size());
+    const auto dim = bra.dim();
+    auto bra_raw = bra._raw;
+    auto ket_raw = ket._raw;
+    Kokkos::parallel_for(
+        "batch_inner_product",
+        Kokkos::TeamPolicy<ExecutionSpaceType>(bra.batch_size(), Kokkos::AUTO),
+        KOKKOS_LAMBDA(const typename Kokkos::TeamPolicy<ExecutionSpaceType>::member_type& team) {
+            const auto b = team.league_rank();
+            AccComplex sum(0, 0);
+            Kokkos::parallel_reduce(
+                Kokkos::TeamThreadRange(team, dim),
+                [&](std::uint64_t i, AccComplex& local) {
+                    auto x = bra_raw(b, i);
+                    auto y = ket_raw(b, i);
+                    AccComplex x_acc(static_cast<AccFloat>(x.real()),
+                                     static_cast<AccFloat>(x.imag()));
+                    AccComplex y_acc(static_cast<AccFloat>(y.real()),
+                                     static_cast<AccFloat>(y.imag()));
+                    local += AccComplex(x_acc.real(), -x_acc.imag()) * y_acc;
+                },
+                internal::Sum<AccComplex, Space>(sum));
+            Kokkos::single(Kokkos::PerTeam(team), [&] { result(b) = sum; });
+        });
+    auto host = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), result);
+    std::vector<StdComplex> output(bra.batch_size());
+    for (std::size_t b = 0; b < output.size(); ++b)
+        output[b] = StdComplex(host(b).real(), host(b).imag());
+    return output;
+}
+
+template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComplex>>& states) {
     if (states.size() != _batch_size) {
         throw std::runtime_error(
