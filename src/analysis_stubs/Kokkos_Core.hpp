@@ -86,7 +86,9 @@ struct ViewAllocateWithoutInitializing {
 };
 
 // ── Rank tag ───────────────────────────────────────────────────────────────
-template <int N, class Iter = void, class Work = void>
+enum class Iterate { Default, Left, Right };
+
+template <int N, Iterate Outer = Iterate::Default, Iterate Inner = Iterate::Default>
 struct Rank {};
 
 // ── Sentinel tags ──────────────────────────────────────────────────────────

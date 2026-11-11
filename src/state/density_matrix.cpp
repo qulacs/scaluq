@@ -153,7 +153,8 @@ void DensityMatrix<Prec, Space>::load(const StateVector<Prec, Space>& other) {
     this->_is_hermitian = true;
     Kokkos::parallel_for(
         "load_from_StateVector",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>,
+                              Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) {
             _raw(i, j) = other._raw(i) * internal::conj(other._raw(j));
@@ -184,7 +185,8 @@ void DensityMatrix<Prec, Space>::set_zero_state() {
     this->_is_hermitian = true;
     Kokkos::parallel_for(
         "set_zero_state",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>,
+                              Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) { _raw(i, j) = (i == 0 && j == 0); });
 }
@@ -204,7 +206,8 @@ void DensityMatrix<Prec, Space>::set_computational_basis(std::uint64_t basis) {
     this->_is_hermitian = true;
     Kokkos::parallel_for(
         "set_computational_basis",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>,
+                              Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) {
             _raw(i, j) = (i == basis && j == basis);
@@ -285,7 +288,8 @@ void DensityMatrix<Prec, Space>::normalize() {
     const ComplexType trace(this->get_trace());
     Kokkos::parallel_for(
         "normalize",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>,
+                              Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) { _raw(i, j) /= trace; });
 }
@@ -300,7 +304,8 @@ double DensityMatrix<Prec, Space>::get_purity() const {
     FloatType purity{0.0f};
     Kokkos::parallel_reduce(
         "get_purity",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>,
+                              Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j, FloatType & tmp) {
             tmp += internal::squared_norm(_raw(i, j));
@@ -477,7 +482,8 @@ void DensityMatrix<Prec, Space>::add_density_matrix_with_coef(StdComplex coef,
     }
     Kokkos::parallel_for(
         "add_density_matrix_with_coef",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>,
+                              Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) {
             _raw(i, j) += ComplexType(coef) * other._raw(i, j);
@@ -491,7 +497,8 @@ void DensityMatrix<Prec, Space>::multiply_coef(StdComplex coef) {
     }
     Kokkos::parallel_for(
         "multiply_coef",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<internal::SpaceType<Space>,
+                              Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) { _raw(i, j) *= ComplexType(coef); });
 }
