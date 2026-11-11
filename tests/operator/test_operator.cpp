@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 
-#include <Eigen/Eigenvalues>
 #include <cmath>
 #include <cstdlib>
 #include <random>
-#include <scaluq/operator/operator.hpp>
 #include <string>
+#include <Eigen/Eigenvalues>
+#include <scaluq/operator/operator.hpp>
 
 #include "../test_environment.hpp"
 #include "../util/util.hpp"
@@ -428,7 +428,8 @@ TYPED_TEST(OperatorTest, GroundStateArnoldiMethod) {
         GTEST_SKIP() << "Randomized ground-state accuracy is not tested for F16/BF16.";
     } else {
         check_random_ground_state<Prec, Space>([](const auto& op, const auto& state) {
-            return op.solve_ground_state_by_arnoldi_method(state, Prec == Precision::F64 ? 60 : 20);
+            return op.solve_ground_state_by_arnoldi_method(
+                state, Prec == Precision::F64 ? 60 : 20);
         });
     }
 }

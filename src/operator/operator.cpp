@@ -1,9 +1,10 @@
 #include <Eigen/Eigenvalues>
-#include <cmath>
-#include <limits>
 #include <scaluq/operator/operator.hpp>
 #include <scaluq/prec_space.hpp>
 #include <scaluq/util/math.hpp>
+
+#include <cmath>
+#include <limits>
 
 namespace scaluq {
 template <>
@@ -585,8 +586,7 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
     auto eigenvalues = solver.eigenvalues();
     auto eigenvectors = solver.eigenvectors();
     auto minimum_eigenvalue_index =
-        std::ranges::min_element(eigenvalues,
-                                 [](const double& a, const double& b) { return a < b; }) -
+        std::ranges::min_element(eigenvalues, [](const double& a, const double& b) { return a < b; }) -
         eigenvalues.begin();
     auto ground_state = StateVector<internal::Prec, internal::Space>::uninitialized_state(nqubits);
     ground_state.set_zero_norm_state();
