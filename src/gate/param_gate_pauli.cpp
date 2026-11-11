@@ -1,9 +1,6 @@
 #include <scaluq/gate/param_gate_pauli.hpp>
 #include <scaluq/operator/apply_pauli.hpp>
 
-#include "update_ops.hpp"
-#include "update_ops_matrix_2x2.hpp"
-
 namespace scaluq::internal {
 template <Precision Prec>
 ComplexMatrix ParamPauliRotationGateImpl<Prec>::get_matrix(double param) const {
@@ -33,13 +30,13 @@ void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
     ExecutionContext<Prec, ExecutionSpace::Host>& context, double param) const {
     this->check_qubit_mask_within_bounds(*context.state);
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
-    apply_pauli_rotation_optimized(this->_control_mask,
-                                   this->_control_value_mask,
-                                   bit_flip_mask,
-                                   phase_flip_mask,
-                                   Complex<Prec>(_pauli.coef()),
-                                   this->_pcoef * static_cast<Float<Prec>>(param),
-                                   *context.state);
+    apply_pauli_rotation(this->_control_mask,
+                         this->_control_value_mask,
+                         bit_flip_mask,
+                         phase_flip_mask,
+                         Complex<Prec>(_pauli.coef()),
+                         this->_pcoef * static_cast<Float<Prec>>(param),
+                         *context.state);
 }
 template <Precision Prec>
 void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
@@ -54,27 +51,27 @@ void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
         params_prec.data(), params_prec.size());
     Kokkos::View<Float<Prec>*, Kokkos::HostSpace> params_view("params_view", params.size());
     Kokkos::deep_copy(params_view, params_view_host);
-    apply_param_pauli_rotation_optimized(this->_control_mask,
-                                         this->_control_value_mask,
-                                         bit_flip_mask,
-                                         phase_flip_mask,
-                                         Complex<Prec>(_pauli.coef()),
-                                         this->_pcoef,
-                                         params_view,
-                                         *context.states);
+    apply_pauli_rotation(this->_control_mask,
+                         this->_control_value_mask,
+                         bit_flip_mask,
+                         phase_flip_mask,
+                         Complex<Prec>(_pauli.coef()),
+                         this->_pcoef,
+                         params_view,
+                         *context.states);
 }
 template <Precision Prec>
 void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
     ExecutionContext<Prec, ExecutionSpace::HostSerial>& context, double param) const {
     this->check_qubit_mask_within_bounds(*context.state);
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
-    apply_pauli_rotation_optimized(this->_control_mask,
-                                   this->_control_value_mask,
-                                   bit_flip_mask,
-                                   phase_flip_mask,
-                                   Complex<Prec>(_pauli.coef()),
-                                   this->_pcoef * static_cast<Float<Prec>>(param),
-                                   *context.state);
+    apply_pauli_rotation(this->_control_mask,
+                         this->_control_value_mask,
+                         bit_flip_mask,
+                         phase_flip_mask,
+                         Complex<Prec>(_pauli.coef()),
+                         this->_pcoef * static_cast<Float<Prec>>(param),
+                         *context.state);
 }
 template <Precision Prec>
 void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
@@ -89,14 +86,14 @@ void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
         params_prec.data(), params_prec.size());
     Kokkos::View<Float<Prec>*, Kokkos::HostSpace> params_view("params_view", params.size());
     Kokkos::deep_copy(params_view, params_view_host);
-    apply_param_pauli_rotation_optimized(this->_control_mask,
-                                         this->_control_value_mask,
-                                         bit_flip_mask,
-                                         phase_flip_mask,
-                                         Complex<Prec>(_pauli.coef()),
-                                         this->_pcoef,
-                                         params_view,
-                                         *context.states);
+    apply_pauli_rotation(this->_control_mask,
+                         this->_control_value_mask,
+                         bit_flip_mask,
+                         phase_flip_mask,
+                         Complex<Prec>(_pauli.coef()),
+                         this->_pcoef,
+                         params_view,
+                         *context.states);
 }
 #ifdef SCALUQ_USE_DEVICE
 template <Precision Prec>
@@ -104,13 +101,13 @@ void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
     ExecutionContext<Prec, ExecutionSpace::Default>& context, double param) const {
     this->check_qubit_mask_within_bounds(*context.state);
     auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();
-    apply_pauli_rotation_optimized(this->_control_mask,
-                                   this->_control_value_mask,
-                                   bit_flip_mask,
-                                   phase_flip_mask,
-                                   Complex<Prec>(_pauli.coef()),
-                                   this->_pcoef * static_cast<Float<Prec>>(param),
-                                   *context.state);
+    apply_pauli_rotation(this->_control_mask,
+                         this->_control_value_mask,
+                         bit_flip_mask,
+                         phase_flip_mask,
+                         Complex<Prec>(_pauli.coef()),
+                         this->_pcoef * static_cast<Float<Prec>>(param),
+                         *context.state);
 }
 template <Precision Prec>
 void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
@@ -126,14 +123,14 @@ void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
     Kokkos::View<Float<Prec>*, Kokkos::DefaultExecutionSpace> params_view("params_view",
                                                                           params.size());
     Kokkos::deep_copy(params_view, params_view_host);
-    apply_param_pauli_rotation_optimized(this->_control_mask,
-                                         this->_control_value_mask,
-                                         bit_flip_mask,
-                                         phase_flip_mask,
-                                         Complex<Prec>(_pauli.coef()),
-                                         this->_pcoef,
-                                         params_view,
-                                         *context.states);
+    apply_pauli_rotation(this->_control_mask,
+                         this->_control_value_mask,
+                         bit_flip_mask,
+                         phase_flip_mask,
+                         Complex<Prec>(_pauli.coef()),
+                         this->_pcoef,
+                         params_view,
+                         *context.states);
 }
 #endif
 template class ParamPauliRotationGateImpl<Prec>;

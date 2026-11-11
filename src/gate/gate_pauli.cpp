@@ -1,7 +1,6 @@
 #include <scaluq/gate/gate_pauli.hpp>
 
 #include "update_ops.hpp"
-#include "update_ops_matrix_2x2.hpp"
 
 namespace scaluq::internal {
 template <Precision Prec>
@@ -69,13 +68,13 @@ std::string PauliRotationGateImpl<Prec>::to_string(const std::string& indent) co
     void PauliRotationGateImpl<Prec>::update_quantum_state(ContextClass<Prec, Space>& context) \
         const {                                                                                \
         auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation();           \
-        apply_pauli_rotation_optimized(this->_control_mask,                                    \
-                                       this->_control_value_mask,                              \
-                                       bit_flip_mask,                                          \
-                                       phase_flip_mask,                                        \
-                                       Complex<Prec>(_pauli.coef()),                           \
-                                       _angle,                                                 \
-                                       *context.state_member);                                 \
+        apply_pauli_rotation(this->_control_mask,                                              \
+                             this->_control_value_mask,                                        \
+                             bit_flip_mask,                                                    \
+                             phase_flip_mask,                                                  \
+                             Complex<Prec>(_pauli.coef()),                                     \
+                             _angle,                                                           \
+                             *context.state_member);                                           \
     }
 DEFINE_PAULI_ROTATION_GATE_UPDATE(ExecutionContext, state, ExecutionSpace::Host)
 DEFINE_PAULI_ROTATION_GATE_UPDATE(ExecutionContextBatched, states, ExecutionSpace::Host)

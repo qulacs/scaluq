@@ -184,6 +184,28 @@ void apply_pauli(std::uint64_t control_mask,
             });
     states = results;
 }
+
+// Applies a single-qubit Pauli rotation with a real coefficient through the specialized
+// RX/RY/RZ kernels and returns true. Returns false without touching the state otherwise.
+// Defined in src/gate/update_ops_standard.cpp.
+template <UpdatableStateVector State>
+bool apply_single_qubit_pauli_rotation(std::uint64_t control_mask,
+                                       std::uint64_t control_value_mask,
+                                       std::uint64_t bit_flip_mask,
+                                       std::uint64_t phase_flip_mask,
+                                       Complex<State::prec> coef,
+                                       Float<State::prec> angle,
+                                       State& state);
+template <Precision Prec, ExecutionSpace Space>
+bool apply_single_qubit_pauli_rotation(std::uint64_t control_mask,
+                                       std::uint64_t control_value_mask,
+                                       std::uint64_t bit_flip_mask,
+                                       std::uint64_t phase_flip_mask,
+                                       Complex<Prec> coef,
+                                       Float<Prec> pcoef,
+                                       const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
+                                       StateVectorBatched<Prec, Space>& states);
+
 template <UpdatableStateVector State>
 void apply_pauli_rotation(std::uint64_t control_mask,
                           std::uint64_t control_value_mask,
@@ -192,6 +214,10 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                           Complex<State::prec> coef,
                           Float<State::prec> angle,
                           State& state) {
+    if (apply_single_qubit_pauli_rotation(
+            control_mask, control_value_mask, bit_flip_mask, phase_flip_mask, coef, angle, state)) {
+        return;
+    }
     const std::uint64_t flat_dim = state.flat_dim();
     std::uint64_t global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     Complex<State::prec> true_angle = angle * coef;
@@ -253,6 +279,16 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                           Float<Prec> pcoef,
                           const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
                           StateVectorBatched<Prec, Space>& states) {
+    if (apply_single_qubit_pauli_rotation(control_mask,
+                                          control_value_mask,
+                                          bit_flip_mask,
+                                          phase_flip_mask,
+                                          coef,
+                                          pcoef,
+                                          params,
+                                          states)) {
+        return;
+    }
     std::uint64_t global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     auto team_policy =
         Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), states.batch_size(), Kokkos::AUTO);
