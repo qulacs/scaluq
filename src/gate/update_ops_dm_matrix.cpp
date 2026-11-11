@@ -114,6 +114,82 @@ inline Kokkos::View<std::uint64_t*, ExecSpace> dm_block_offsets(std::uint64_t ta
     return off;
 }
 
+// Fallback for blocks that exceed the backend's per-team scratch limit.  Transform a bounded
+// batch of row vectors at a time, then do the same for columns.  The workspace is reused between
+// batches, so peak auxiliary memory is independent of the density-matrix size.
+template <class Rows>
+void dm_apply_large_matrix_batched(std::uint64_t target_mask,
+                                   std::uint64_t control_mask,
+                                   std::uint64_t control_value_mask,
+                                   const Rows& rows,
+                                   DensityMatrix<Prec, Space>& dm) {
+    constexpr std::size_t workspace_budget = 32ULL * 1024 * 1024;
+    const std::uint64_t n = 1ULL << std::popcount(target_mask);
+    const std::uint64_t dim = dm.dim();
+    const std::uint64_t groups = 1ULL
+                                 << (dm.n_qubits() - std::popcount(target_mask | control_mask));
+    const std::uint64_t n_vectors = groups * dim;
+    const std::uint64_t batch_capacity =
+        std::max<std::uint64_t>(1, workspace_budget / (sizeof(C) * n));
+    Kokkos::View<C**, Kokkos::LayoutRight, ExecSpace> workspace(
+        Kokkos::ViewAllocateWithoutInitializing("dm_large_matrix_workspace"), batch_capacity, n);
+    const auto off = dm_block_offsets(target_mask);
+    const RawView raw = dm._raw;
+    const std::uint64_t active_value = control_value_mask & control_mask;
+    const std::uint64_t skip = target_mask | control_mask;
+
+    for (std::uint64_t first = 0; first < n_vectors; first += batch_capacity) {
+        const std::uint64_t batch = std::min(batch_capacity, n_vectors - first);
+        Kokkos::parallel_for(
+            "multi_dense_matrix_gate_dm_fallback_gather_left",
+            Kokkos::RangePolicy<ExecSpace>(0, batch * n),
+            KOKKOS_LAMBDA(std::uint64_t e) {
+                const std::uint64_t v = e / n, k = e % n;
+                const std::uint64_t g = first + v;
+                const std::uint64_t base =
+                    insert_zero_at_mask_positions(g / dim, skip) | active_value;
+                workspace(v, k) = raw(base ^ off(k), g % dim);
+            });
+        Kokkos::parallel_for(
+            "multi_dense_matrix_gate_dm_fallback_apply_left",
+            Kokkos::RangePolicy<ExecSpace>(0, batch * n),
+            KOKKOS_LAMBDA(std::uint64_t e) {
+                const std::uint64_t v = e / n, i = e % n;
+                const std::uint64_t g = first + v;
+                const std::uint64_t base =
+                    insert_zero_at_mask_positions(g / dim, skip) | active_value;
+                raw(base ^ off(i), g % dim) = rows.template row_dot<false>(
+                    i, [&](std::uint64_t k) { return workspace(v, k); });
+            });
+    }
+
+    for (std::uint64_t first = 0; first < n_vectors; first += batch_capacity) {
+        const std::uint64_t batch = std::min(batch_capacity, n_vectors - first);
+        Kokkos::parallel_for(
+            "multi_dense_matrix_gate_dm_fallback_gather_right",
+            Kokkos::RangePolicy<ExecSpace>(0, batch * n),
+            KOKKOS_LAMBDA(std::uint64_t e) {
+                const std::uint64_t v = e / n, k = e % n;
+                const std::uint64_t g = first + v;
+                const std::uint64_t base =
+                    insert_zero_at_mask_positions(g % groups, skip) | active_value;
+                workspace(v, k) = raw(g / groups, base ^ off(k));
+            });
+        Kokkos::parallel_for(
+            "multi_dense_matrix_gate_dm_fallback_apply_right",
+            Kokkos::RangePolicy<ExecSpace>(0, batch * n),
+            KOKKOS_LAMBDA(std::uint64_t e) {
+                const std::uint64_t v = e / n, j = e % n;
+                const std::uint64_t g = first + v;
+                const std::uint64_t base =
+                    insert_zero_at_mask_positions(g % groups, skip) | active_value;
+                raw(g / groups, base ^ off(j)) = rows.template row_dot<true>(
+                    j, [&](std::uint64_t k) { return workspace(v, k); });
+            });
+    }
+    Kokkos::fence();
+}
+
 template <class Rows>
 void dm_apply_large_matrix(const char* label,
                            std::uint64_t target_mask,
@@ -126,6 +202,10 @@ void dm_apply_large_matrix(const char* label,
     const std::uint64_t nn = n * n;
     const DmBlockIndexer idx(dm.n_qubits(), target_mask, control_mask, control_value_mask);
     const DmTeamLayout lay(nn, idx.total, 2);
+    if (lay.total_bytes > static_cast<std::size_t>(TeamPolicy::scratch_size_max(lay.level))) {
+        dm_apply_large_matrix_batched(target_mask, control_mask, control_value_mask, rows, dm);
+        return;
+    }
     const std::uint64_t lb = lay.log_bpt, nm = n - 1;
     const int level = lay.level;
     const auto off = dm_block_offsets(target_mask);

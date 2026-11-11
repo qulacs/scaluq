@@ -335,50 +335,14 @@ void swap_gate(std::uint64_t target_mask,
         "swap_gate_dm", target_mask, control_mask, control_value_mask, {0, 2, 1, 3}, dm);
 }
 
-// A sequence of k swaps would cost k passes; instead gather ρ'(r, c) = ρ(σ⁻¹(r), σ⁻¹(c)) in
-// one pass into a fresh buffer, where σ⁻¹ applies the swaps in reverse order.
 template <>
 void permutation_gate(const std::vector<std::pair<std::uint64_t, std::uint64_t>>& swap_schedule,
                       DensityMatrix<Prec, Space>& dm) {
-    if (swap_schedule.empty()) return;
-    if (swap_schedule.size() == 1) {
-        const auto& [a, b] = swap_schedule.front();
-        swap_gate((1ULL << a) | (1ULL << b), 0, 0, dm);
-        return;
+    // Keep the operation in place.  This costs one pass per swap, but avoids allocating another
+    // full density matrix and therefore preserves the maximum problem size that can be executed.
+    for (const auto& [src, dst] : swap_schedule) {
+        swap_gate((1ULL << src) | (1ULL << dst), 0, 0, dm);
     }
-    const std::uint64_t dim = dm.dim();
-    const std::uint64_t n_qubits = dm.n_qubits();
-    const std::uint64_t n_swaps = swap_schedule.size();
-    Kokkos::View<std::uint64_t*, Kokkos::HostSpace> schedule_host("swap_schedule", 2 * n_swaps);
-    for (std::uint64_t i = 0; i < n_swaps; ++i) {
-        schedule_host(2 * i) = swap_schedule[i].first;
-        schedule_host(2 * i + 1) = swap_schedule[i].second;
-    }
-    auto schedule = Kokkos::create_mirror_view_and_copy(SpaceType<Space>(), schedule_host);
-    Kokkos::View<std::uint64_t*, SpaceType<Space>> inverse(
-        Kokkos::ViewAllocateWithoutInitializing("permutation_inverse"), dim);
-    Kokkos::parallel_for(
-        "permutation_gate_dm_table",
-        Kokkos::RangePolicy<SpaceType<Space>>(0, dim),
-        KOKKOS_LAMBDA(std::uint64_t r) {
-            std::uint64_t x = r;
-            for (std::uint64_t i = n_swaps; i-- > 0;) {
-                const std::uint64_t a = schedule(2 * i), b = schedule(2 * i + 1);
-                const std::uint64_t diff = ((x >> a) ^ (x >> b)) & 1;
-                x ^= (diff << a) | (diff << b);
-            }
-            inverse(r) = x;
-        });
-    RawView updated(Kokkos::ViewAllocateWithoutInitializing("state"), dim, dim);
-    const RawView src = dm._raw;
-    Kokkos::parallel_for(
-        "permutation_gate_dm",
-        Kokkos::RangePolicy<SpaceType<Space>>(0, dim * dim),
-        KOKKOS_LAMBDA(std::uint64_t g) {
-            const std::uint64_t r = g >> n_qubits, c = g & (dim - 1);
-            updated(r, c) = src(inverse(r), inverse(c));
-        });
-    dm._raw = updated;
 }
 
 // ECR in the basis {0, pc, pt, pc|pt} (pc: physical control, pt: physical target).
