@@ -377,8 +377,31 @@ inline std::uint64_t ground_state_test_seed() {
     return std::random_device{}();
 }
 
-template <Precision Prec, ExecutionSpace Space, typename Solve>
-void check_random_ground_state(Solve solve) {
+template <Precision Prec, ExecutionSpace Space>
+void check_ground_state(const Operator<Prec, Space>& op,
+                        const typename Operator<Prec, Space>::GroundState& ground_state,
+                        StdComplex minimum_eigenvalue) {
+    const double scale = op.calculate_default_mu().real();
+    const double residual_tolerance = (Prec == Precision::F64 ? 1e-10 : 1e-5) * scale;
+    ASSERT_TRUE(ground_state.converged);
+    ASSERT_LE(std::abs(ground_state.eigenvalue - minimum_eigenvalue), residual_tolerance);
+    ASSERT_NEAR(ground_state.state.get_squared_norm(), 1., eps<Prec>);
+    auto applied = ground_state.state.copy();
+    op.apply_to_state(applied);
+    const auto applied_amplitudes = applied.get_amplitudes();
+    const auto amplitudes = ground_state.state.get_amplitudes();
+    double squared_residual = 0.;
+    for (std::uint64_t i = 0; i < applied.dim(); ++i) {
+        squared_residual +=
+            std::norm(applied_amplitudes[i] - ground_state.eigenvalue * amplitudes[i]);
+    }
+    const double residual = std::sqrt(squared_residual);
+    ASSERT_LE(residual, residual_tolerance);
+    ASSERT_NEAR(ground_state.residual_norm, residual, eps<Prec> * scale);
+}
+
+template <Precision Prec, ExecutionSpace Space>
+void check_random_arnoldi_ground_state() {
     const std::uint64_t seed = ground_state_test_seed();
     Random random(seed);
     for (std::uint64_t repeat = 0; repeat < 10; ++repeat) {
@@ -392,18 +415,9 @@ void check_random_ground_state(Solve solve) {
             eigenvalues, [](const auto& l, const auto& r) { return l.real() < r.real(); });
         StateVector<Prec, Space> initial_state =
             StateVector<Prec, Space>::Haar_random_state(n, random.int64());
-        auto ground_state = solve(op, initial_state);
-        ASSERT_NEAR(
-            std::pow(std::abs(ground_state.eigenvalue - minimum_eigenvalue), 5), 0, eps<Prec>);
-        StateVector<Prec, Space> eigenvector1 = ground_state.state.copy();
-        StateVector<Prec, Space> eigenvector2 = ground_state.state.copy();
-        op.apply_to_state(eigenvector1);
-        eigenvector2.multiply_coef(ground_state.eigenvalue);
-        auto amp1 = eigenvector1.get_amplitudes();
-        auto amp2 = eigenvector2.get_amplitudes();
-        for (std::uint64_t i : std::views::iota(0ULL, eigenvector1.dim())) {
-            ASSERT_NEAR(std::pow(std::abs(amp1[i] - amp2[i]), 5), 0, eps<Prec>);
-        }
+        const auto ground_state = op.solve_ground_state_by_arnoldi_method(
+            initial_state, initial_state.dim());
+        ASSERT_NO_FATAL_FAILURE(check_ground_state(op, ground_state, minimum_eigenvalue));
     }
 }
 
@@ -412,11 +426,13 @@ TYPED_TEST(OperatorTest, GroundStatePowerMethod) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     if constexpr (Prec == Precision::F16 || Prec == Precision::BF16) {
         // Ground-state accuracy is not guaranteed in the performance-oriented low-precision modes.
-        GTEST_SKIP() << "Randomized ground-state accuracy is not tested for F16/BF16.";
+        GTEST_SKIP() << "Ground-state accuracy is not tested for F16/BF16.";
     } else {
-        check_random_ground_state<Prec, Space>([](const auto& op, const auto& state) {
-            return op.solve_ground_state_by_power_method(state, 1000);
-        });
+        // The ground-state eigenvalue is -1.75 and the spectral gap is 0.5.
+        const Operator<Prec, Space> op({{"X 0", 1.}, {"Z 1", 0.5}, {"Y 2", -0.25}});
+        StateVector<Prec, Space> state(3);
+        state.load(std::vector<StdComplex>{1., 0., 1., 0., 0., 0., 0., 0.});
+        check_ground_state(op, op.solve_ground_state_by_power_method(state, 1000), -1.75);
     }
 }
 
@@ -427,10 +443,7 @@ TYPED_TEST(OperatorTest, GroundStateArnoldiMethod) {
         // Safety, including Krylov breakdown, is checked separately for all precisions below.
         GTEST_SKIP() << "Randomized ground-state accuracy is not tested for F16/BF16.";
     } else {
-        check_random_ground_state<Prec, Space>([](const auto& op, const auto& state) {
-            return op.solve_ground_state_by_arnoldi_method(
-                state, Prec == Precision::F64 ? 60 : 20);
-        });
+        check_random_arnoldi_ground_state<Prec, Space>();
     }
 }
 
