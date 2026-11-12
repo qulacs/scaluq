@@ -234,8 +234,29 @@ void circuit_rev_test() {
     circuit.update_quantum_state(state);
 
     auto revcircuit = circuit.get_inverse();
+    for (const auto& gate_with_key : revcircuit.gate_list()) {
+        std::visit(
+            [](const auto& g) {
+                using GateT = std::decay_t<decltype(g)>;
+                if constexpr (std::is_same_v<GateT, Gate<Prec>>) {
+                    EXPECT_NE(g.gate_type(), GateType::Unknown);
+                } else {
+                    EXPECT_NE(g.first.param_gate_type(), ParamGateType::Unknown);
+                }
+            },
+            gate_with_key);
+    }
 
     revcircuit.update_quantum_state(state);
+    state_cp = state.get_amplitudes();
+    for (std::uint64_t i = 0; i < dim; ++i) {
+        check_near<Prec>(state_eigen[i], state_cp[i]);
+    }
+
+    auto revcircuit_opt = circuit.get_inverse();
+    revcircuit_opt.template optimize<Space>();
+    circuit.update_quantum_state(state);
+    revcircuit_opt.update_quantum_state(state);
     state_cp = state.get_amplitudes();
     for (std::uint64_t i = 0; i < dim; ++i) {
         check_near<Prec>(state_eigen[i], state_cp[i]);

@@ -64,6 +64,9 @@ public:
         return ret;
     }
 
+    [[nodiscard]] ParamGateType param_gate_type() const override {
+        return ParamGateType::ParamProbabilistic;
+    }
     std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const override;
     ComplexMatrix get_matrix(double) const override {
         throw std::runtime_error(

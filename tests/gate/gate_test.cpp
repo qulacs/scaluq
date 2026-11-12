@@ -33,6 +33,72 @@ TYPED_TEST(GateTest, DenseMatrixInverseChecksInvertibility) {
                  std::runtime_error);
 }
 
+TYPED_TEST(GateTest, GetInversePreservesGateTypeAndDowncast) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+
+    EXPECT_EQ(Gate<Prec>(gate::I<Prec>()->get_inverse()).gate_type(), GateType::I);
+    EXPECT_EQ(Gate<Prec>(gate::GlobalPhase<Prec>(0.5)->get_inverse()).gate_type(),
+              GateType::GlobalPhase);
+    EXPECT_EQ(Gate<Prec>(gate::X<Prec>(0)->get_inverse()).gate_type(), GateType::X);
+    EXPECT_EQ(Gate<Prec>(gate::Y<Prec>(0)->get_inverse()).gate_type(), GateType::Y);
+    EXPECT_EQ(Gate<Prec>(gate::Z<Prec>(0)->get_inverse()).gate_type(), GateType::Z);
+    EXPECT_EQ(Gate<Prec>(gate::H<Prec>(0)->get_inverse()).gate_type(), GateType::H);
+
+    Gate<Prec> s_inv = gate::S<Prec>(0)->get_inverse();
+    EXPECT_EQ(s_inv.gate_type(), GateType::Sdag);
+    EXPECT_NO_THROW(static_cast<void>(SdagGate<Prec>(s_inv)));
+
+    Gate<Prec> sdag_inv = gate::Sdag<Prec>(0)->get_inverse();
+    EXPECT_EQ(sdag_inv.gate_type(), GateType::S);
+    EXPECT_NO_THROW(static_cast<void>(SGate<Prec>(sdag_inv)));
+
+    Gate<Prec> t_inv = gate::T<Prec>(0)->get_inverse();
+    EXPECT_EQ(t_inv.gate_type(), GateType::Tdag);
+    EXPECT_NO_THROW(static_cast<void>(TdagGate<Prec>(t_inv)));
+
+    Gate<Prec> tdag_inv = gate::Tdag<Prec>(0)->get_inverse();
+    EXPECT_EQ(tdag_inv.gate_type(), GateType::T);
+    EXPECT_NO_THROW(static_cast<void>(TGate<Prec>(tdag_inv)));
+
+    EXPECT_EQ(Gate<Prec>(gate::SqrtX<Prec>(0)->get_inverse()).gate_type(), GateType::SqrtXdag);
+    EXPECT_EQ(Gate<Prec>(gate::SqrtXdag<Prec>(0)->get_inverse()).gate_type(), GateType::SqrtX);
+    EXPECT_EQ(Gate<Prec>(gate::SqrtY<Prec>(0)->get_inverse()).gate_type(), GateType::SqrtYdag);
+    EXPECT_EQ(Gate<Prec>(gate::SqrtYdag<Prec>(0)->get_inverse()).gate_type(), GateType::SqrtY);
+
+    Gate<Prec> rx_inv = gate::RX<Prec>(0, 0.25)->get_inverse();
+    EXPECT_EQ(rx_inv.gate_type(), GateType::RX);
+    EXPECT_NEAR(RXGate<Prec>(rx_inv)->angle(), -0.25, eps<Prec>);
+
+    EXPECT_EQ(Gate<Prec>(gate::RY<Prec>(0, 0.25)->get_inverse()).gate_type(), GateType::RY);
+    EXPECT_EQ(Gate<Prec>(gate::RZ<Prec>(0, 0.25)->get_inverse()).gate_type(), GateType::RZ);
+    EXPECT_EQ(Gate<Prec>(gate::U1<Prec>(0, 0.25)->get_inverse()).gate_type(), GateType::U1);
+    EXPECT_EQ(Gate<Prec>(gate::U2<Prec>(0, 0.25, 0.5)->get_inverse()).gate_type(), GateType::U2);
+    EXPECT_EQ(Gate<Prec>(gate::U3<Prec>(0, 0.25, 0.5, 0.75)->get_inverse()).gate_type(),
+              GateType::U3);
+    EXPECT_EQ(Gate<Prec>(gate::CX<Prec>(0, 1)->get_inverse()).gate_type(), GateType::X);
+    EXPECT_EQ(Gate<Prec>(gate::CZ<Prec>(0, 1)->get_inverse()).gate_type(), GateType::Z);
+    EXPECT_EQ(Gate<Prec>(gate::Swap<Prec>(0, 1)->get_inverse()).gate_type(), GateType::Swap);
+    EXPECT_EQ(Gate<Prec>(gate::Ecr<Prec>(0, 1)->get_inverse()).gate_type(), GateType::Ecr);
+    if constexpr (Prec == Precision::F32 || Prec == Precision::F64) {
+        EXPECT_EQ(Gate<Prec>(gate::Permutation<Prec, Space>({1, 0})->get_inverse()).gate_type(),
+                  GateType::Permutation);
+    }
+    EXPECT_EQ(
+        Gate<Prec>(gate::Pauli<Prec>(PauliOperator<Prec>("X 0 Z 1"))->get_inverse()).gate_type(),
+        GateType::Pauli);
+    EXPECT_EQ(
+        Gate<Prec>(gate::PauliRotation<Prec>(PauliOperator<Prec>("X 0 Z 1"), 0.5)->get_inverse())
+            .gate_type(),
+        GateType::PauliRotation);
+    EXPECT_EQ(Gate<Prec>(gate::DenseMatrix<Prec, Space>({0}, make_H())->get_inverse()).gate_type(),
+              GateType::DenseMatrix);
+    EXPECT_EQ(Gate<Prec>(gate::Probabilistic<Prec>({0.5, 0.5}, {gate::X<Prec>(0), gate::S<Prec>(0)})
+                             ->get_inverse())
+                  .gate_type(),
+              GateType::Probabilistic);
+}
+
 template <Precision Prec, ExecutionSpace Space, Gate<Prec> (*QuantumGateConstructor)()>
 void run_random_gate_apply(std::uint64_t n_qubits) {
     const int dim = 1ULL << n_qubits;

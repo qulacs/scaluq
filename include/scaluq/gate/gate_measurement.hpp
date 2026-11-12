@@ -21,6 +21,7 @@ public:
     [[nodiscard]] std::uint64_t classical_bit_index() const { return _classical_bit_index; }
     [[nodiscard]] bool reset() const { return _reset; }
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::Measurement; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         throw std::runtime_error(
             "Measurement::get_inverse: Measurement gate doesn't have inverse gate");
