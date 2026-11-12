@@ -223,11 +223,13 @@ void DensityMatrix<Prec, Space>::set_Haar_random_state(std::optional<std::uint64
 
 template <Precision Prec, ExecutionSpace Space>
 StdComplex DensityMatrix<Prec, Space>::get_trace() const {
-    ComplexType trace;
+    Kokkos::complex<double> trace;
     Kokkos::parallel_reduce(
         "get_trace",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, ComplexType & tmp) { tmp += _raw(i, i); },
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, Kokkos::complex<double> & tmp) {
+            tmp += internal::to_complex_double(_raw(i, i));
+        },
         trace);
     return StdComplex(static_cast<double>(trace.real()), static_cast<double>(trace.imag()));
 }
@@ -301,14 +303,14 @@ double DensityMatrix<Prec, Space>::get_purity() const {
             "DensityMatrix::get_purity: Purity is only defined for hermitian "
             "density matrices.");
     }
-    FloatType purity{0.0f};
+    double purity{0.0f};
     Kokkos::parallel_reduce(
         "get_purity",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>,
                               Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>(
             {0, 0}, {this->_dim, this->_dim}),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j, FloatType & tmp) {
-            tmp += internal::squared_norm(_raw(i, j));
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j, double& tmp) {
+            tmp += static_cast<double>(internal::squared_norm(_raw(i, j)));
         },
         purity);
     return static_cast<double>(purity);
@@ -325,13 +327,13 @@ double DensityMatrix<Prec, Space>::get_zero_probability(std::uint64_t target_qub
             "DensityMatrix::get_zero_probability: Zero probability is only defined for hermitian "
             "density matrices.");
     }
-    FloatType zero_prob{0.0f};
+    double zero_prob{0.0f};
     Kokkos::parallel_reduce(
         "get_zero_probability",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> 1),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & internal_sum) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, double& internal_sum) {
             std::uint64_t basis = internal::insert_zero_to_basis_index(i, target_qubit_index);
-            internal_sum += _raw(basis, basis).real();
+            internal_sum += static_cast<double>(_raw(basis, basis).real());
         },
         zero_prob);
     return static_cast<double>(zero_prob);
@@ -365,21 +367,21 @@ double DensityMatrix<Prec, Space>::get_marginal_probability(
         }
     }
 
-    FloatType sum{0.0f};
+    double sum{0.0f};
     auto d_target_index = internal::convert_vector_to_view<std::uint64_t, Space>(target_index);
     auto d_target_value = internal::convert_vector_to_view<std::uint64_t, Space>(target_value);
 
     Kokkos::parallel_reduce(
         "marginal_prob",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> target_index.size()),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & lsum) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, double& lsum) {
             std::uint64_t basis = i;
             for (std::uint64_t cursor = 0; cursor < d_target_index.size(); cursor++) {
                 std::uint64_t insert_index = d_target_index(cursor);
                 basis = internal::insert_zero_to_basis_index(basis, insert_index);
                 basis |= d_target_value(cursor) << insert_index;
             }
-            lsum += _raw(basis, basis).real();
+            lsum += static_cast<double>(_raw(basis, basis).real());
         },
         sum);
 
@@ -455,14 +457,14 @@ double DensityMatrix<Prec, Space>::get_computational_basis_entropy() const {
             "DensityMatrix::get_computational_basis_entropy: Computational basis entropy is only "
             "defined for hermitian density matrices.");
     }
-    FloatType entropy{0.0f};
+    double entropy{0.0f};
     Kokkos::parallel_reduce(
         "computational_basis_entropy",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & lsum) {
-            FloatType prob = _raw(i, i).real();
-            if (prob > FloatType(0.0f)) {
-                lsum += -prob * internal::log2(prob);
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, double& lsum) {
+            const FloatType prob = _raw(i, i).real();
+            if (prob > FloatType{0.0f}) {
+                lsum += static_cast<double>(-prob * internal::log2(prob));
             }
         },
         entropy);

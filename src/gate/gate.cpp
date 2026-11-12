@@ -1,7 +1,59 @@
-#include <scaluq/gate/gate.hpp>
+#include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/prec_space.hpp>
 
 namespace scaluq::internal {
+template <Precision Prec>
+GateType get_runtime_gate_type(const GateBase<Prec>& gate) {
+    const auto& type = typeid(gate);
+    if (type == typeid(IGateImpl<Prec>)) return GateType::I;
+    if (type == typeid(GlobalPhaseGateImpl<Prec>)) return GateType::GlobalPhase;
+    if (type == typeid(XGateImpl<Prec>)) return GateType::X;
+    if (type == typeid(YGateImpl<Prec>)) return GateType::Y;
+    if (type == typeid(ZGateImpl<Prec>)) return GateType::Z;
+    if (type == typeid(HGateImpl<Prec>)) return GateType::H;
+    if (type == typeid(SGateImpl<Prec>)) return GateType::S;
+    if (type == typeid(SdagGateImpl<Prec>)) return GateType::Sdag;
+    if (type == typeid(TGateImpl<Prec>)) return GateType::T;
+    if (type == typeid(TdagGateImpl<Prec>)) return GateType::Tdag;
+    if (type == typeid(SqrtXGateImpl<Prec>)) return GateType::SqrtX;
+    if (type == typeid(SqrtXdagGateImpl<Prec>)) return GateType::SqrtXdag;
+    if (type == typeid(SqrtYGateImpl<Prec>)) return GateType::SqrtY;
+    if (type == typeid(SqrtYdagGateImpl<Prec>)) return GateType::SqrtYdag;
+    if (type == typeid(P0GateImpl<Prec>)) return GateType::P0;
+    if (type == typeid(P1GateImpl<Prec>)) return GateType::P1;
+    if (type == typeid(MeasurementGateImpl<Prec>)) return GateType::Measurement;
+    if (type == typeid(RXGateImpl<Prec>)) return GateType::RX;
+    if (type == typeid(RYGateImpl<Prec>)) return GateType::RY;
+    if (type == typeid(RZGateImpl<Prec>)) return GateType::RZ;
+    if (type == typeid(U1GateImpl<Prec>)) return GateType::U1;
+    if (type == typeid(U2GateImpl<Prec>)) return GateType::U2;
+    if (type == typeid(U3GateImpl<Prec>)) return GateType::U3;
+    if (type == typeid(SwapGateImpl<Prec>)) return GateType::Swap;
+    if (type == typeid(EcrGateImpl<Prec>)) return GateType::Ecr;
+    if (type == typeid(PermutationGateImpl<Prec>)) return GateType::Permutation;
+    if (type == typeid(PauliGateImpl<Prec>)) return GateType::Pauli;
+    if (type == typeid(PauliRotationGateImpl<Prec>)) return GateType::PauliRotation;
+    if (type == typeid(ProbabilisticGateImpl<Prec>)) return GateType::Probabilistic;
+    if (type == typeid(DenseMatrixGateImpl<Prec, ExecutionSpace::Host>))
+        return GateType::DenseMatrix;
+    if (type == typeid(DenseMatrixGateImpl<Prec, ExecutionSpace::HostSerial>))
+        return GateType::DenseMatrix;
+#ifdef SCALUQ_USE_DEVICE
+    if (type == typeid(DenseMatrixGateImpl<Prec, ExecutionSpace::Default>))
+        return GateType::DenseMatrix;
+#endif
+    if (type == typeid(SparseMatrixGateImpl<Prec, ExecutionSpace::Host>))
+        return GateType::SparseMatrix;
+    if (type == typeid(SparseMatrixGateImpl<Prec, ExecutionSpace::HostSerial>))
+        return GateType::SparseMatrix;
+#ifdef SCALUQ_USE_DEVICE
+    if (type == typeid(SparseMatrixGateImpl<Prec, ExecutionSpace::Default>))
+        return GateType::SparseMatrix;
+#endif
+    return GateType::Unknown;
+}
+template GateType get_runtime_gate_type<Prec>(const GateBase<Prec>& gate);
+
 template <Precision Prec>
 void GateBase<Prec>::check_qubit_mask_within_bounds(
     const StateVector<Prec, ExecutionSpace::Host>& state_vector) const {
