@@ -1,10 +1,9 @@
 #include <Eigen/Eigenvalues>
+#include <cmath>
+#include <limits>
 #include <scaluq/operator/operator.hpp>
 #include <scaluq/prec_space.hpp>
 #include <scaluq/util/math.hpp>
-
-#include <cmath>
-#include <limits>
 
 namespace scaluq {
 template <>
@@ -131,29 +130,28 @@ StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
             std::uint64_t term_id, std::uint64_t state_idx, AccumComplex & res_lcl) {
             auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
             auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
-            AccumComplex coef = internal::to_complex_double(_terms[term_id]._coef);
+            ComplexType coef = _terms[term_id]._coef;
             if (bit_flip_mask == 0) {
                 std::uint64_t state_idx1 = state_idx << 1;
-                double tmp1 = internal::squared_norm_double(state_vector._raw[state_idx1]);
+                FloatType tmp1 = internal::squared_norm(state_vector._raw[state_idx1]);
                 if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
                 std::uint64_t state_idx2 = state_idx1 | 1;
-                double tmp2 = internal::squared_norm_double(state_vector._raw[state_idx2]);
+                FloatType tmp2 = internal::squared_norm(state_vector._raw[state_idx2]);
                 if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
-                res_lcl += coef * (tmp1 + tmp2);
+                res_lcl += internal::to_complex_double(coef * (tmp1 + tmp2));
             } else {
                 std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
                 std::uint64_t global_phase_90rot_count =
                     Kokkos::popcount(bit_flip_mask & phase_flip_mask);
-                AccumComplex global_phase = internal::to_complex_double(
-                    internal::PHASE_90ROT<internal::Prec>()[global_phase_90rot_count % 4]);
+                ComplexType global_phase =
+                    internal::PHASE_90ROT<internal::Prec>()[global_phase_90rot_count % 4];
                 std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
                 std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-                double tmp = Kokkos::real(
-                    internal::to_complex_double(state_vector._raw[basis_0]) *
-                    Kokkos::conj(internal::to_complex_double(state_vector._raw[basis_1])) *
-                    global_phase * double(2.0));
+                FloatType tmp = internal::real(state_vector._raw[basis_0] *
+                                               internal::conj(state_vector._raw[basis_1]) *
+                                               global_phase * FloatType{2.0f});
                 if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
-                res_lcl += coef * tmp;
+                res_lcl += internal::to_complex_double(coef * tmp);
             }
         },
         res);
@@ -183,43 +181,41 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
 
             const auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
             const auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
-            const AccumComplex coef = internal::to_complex_double(_terms[term_id]._coef);
+            const ComplexType coef = _terms[term_id]._coef;
 
             AccumComplex sum = AccumComplex(0.0, 0.0);
 
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, dim >> 1),
                 [&](const std::uint64_t state_idx, AccumComplex& lsum) {
-
                     if (bit_flip_mask == 0) {
                         const std::uint64_t state_idx1 = state_idx << 1;
-                        double tmp1 = internal::squared_norm_double(state_vector._raw[state_idx1]);
+                        FloatType tmp1 = internal::squared_norm(state_vector._raw[state_idx1]);
                         if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
 
                         const std::uint64_t state_idx2 = state_idx1 | 1;
-                        double tmp2 = internal::squared_norm_double(state_vector._raw[state_idx2]);
+                        FloatType tmp2 = internal::squared_norm(state_vector._raw[state_idx2]);
                         if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
 
-                        lsum += coef * (tmp1 + tmp2);
+                        lsum += internal::to_complex_double(coef * (tmp1 + tmp2));
                     } else {
                         const std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
                         const std::uint64_t global_phase_90rot_count =
                             Kokkos::popcount(bit_flip_mask & phase_flip_mask);
-                        const AccumComplex global_phase = internal::to_complex_double(
-                            internal::PHASE_90ROT<internal::Prec>()[global_phase_90rot_count % 4]);
+                        const ComplexType global_phase =
+                            internal::PHASE_90ROT<internal::Prec>()[global_phase_90rot_count % 4];
 
                         const std::uint64_t basis_0 =
                             internal::insert_zero_to_basis_index(state_idx, pivot);
                         const std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
 
-                        double tmp = Kokkos::real(
-                            internal::to_complex_double(state_vector._raw[basis_0]) *
-                            Kokkos::conj(internal::to_complex_double(state_vector._raw[basis_1])) *
-                            global_phase * double(2.0));
+                        FloatType tmp = internal::real(state_vector._raw[basis_0] *
+                                                       internal::conj(state_vector._raw[basis_1]) *
+                                                       global_phase * FloatType{2.0f});
 
                         if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
 
-                        lsum += coef * tmp;
+                        lsum += internal::to_complex_double(coef * tmp);
                     }
                 },
                 sum);
@@ -254,33 +250,30 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
                 [&](std::uint64_t term_id, std::uint64_t state_idx, AccumComplex& res_lcl) {
                     auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
                     auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
-                    AccumComplex coef = internal::to_complex_double(_terms[term_id]._coef);
+                    ComplexType coef = _terms[term_id]._coef;
                     if (bit_flip_mask == 0) {
                         std::uint64_t state_idx1 = state_idx << 1;
-                        double tmp1 =
-                            internal::squared_norm_double(states._raw(batch_id, state_idx1));
+                        FloatType tmp1 = internal::squared_norm(states._raw(batch_id, state_idx1));
                         if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
                         std::uint64_t state_idx2 = state_idx1 | 1;
-                        double tmp2 =
-                            internal::squared_norm_double(states._raw(batch_id, state_idx2));
+                        FloatType tmp2 = internal::squared_norm(states._raw(batch_id, state_idx2));
                         if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
-                        res_lcl += coef * (tmp1 + tmp2);
+                        res_lcl += internal::to_complex_double(coef * (tmp1 + tmp2));
                     } else {
                         std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
                         std::uint64_t global_phase_90rot_count =
                             Kokkos::popcount(bit_flip_mask & phase_flip_mask);
-                        AccumComplex global_phase = internal::to_complex_double(
-                            internal::PHASE_90ROT<internal::Prec>()[global_phase_90rot_count % 4]);
+                        ComplexType global_phase =
+                            internal::PHASE_90ROT<internal::Prec>()[global_phase_90rot_count % 4];
                         std::uint64_t basis_0 =
                             internal::insert_zero_to_basis_index(state_idx, pivot);
                         std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-                        double tmp = Kokkos::real(
-                            internal::to_complex_double(states._raw(batch_id, basis_0)) *
-                            Kokkos::conj(
-                                internal::to_complex_double(states._raw(batch_id, basis_1))) *
-                            global_phase * double(2.0));
+                        FloatType tmp =
+                            internal::real(states._raw(batch_id, basis_0) *
+                                           internal::conj(states._raw(batch_id, basis_1)) *
+                                           global_phase * FloatType{2.0f});
                         if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
-                        res_lcl += coef * tmp;
+                        res_lcl += internal::to_complex_double(coef * tmp);
                     }
                 },
                 sum);
@@ -313,36 +306,32 @@ StdComplex Operator<internal::Prec, internal::Space>::get_transition_amplitude(
             std::uint64_t term_id, std::uint64_t state_idx, AccumComplex & res_lcl) {
             auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
             auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
-            AccumComplex coef = internal::to_complex_double(_terms[term_id]._coef);
+            ComplexType coef = _terms[term_id]._coef;
             if (bit_flip_mask == 0) {
                 std::uint64_t state_idx1 = state_idx << 1;
-                AccumComplex tmp1 =
-                    (Kokkos::conj(internal::to_complex_double(state_vector_bra._raw[state_idx1])) *
-                     internal::to_complex_double(state_vector_ket._raw[state_idx1]));
+                ComplexType tmp1 = (scaluq::internal::conj(state_vector_bra._raw[state_idx1]) *
+                                    state_vector_ket._raw[state_idx1]);
                 if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
                 std::uint64_t state_idx2 = state_idx1 | 1;
-                AccumComplex tmp2 =
-                    (Kokkos::conj(internal::to_complex_double(state_vector_bra._raw[state_idx2])) *
-                     internal::to_complex_double(state_vector_ket._raw[state_idx2]));
+                ComplexType tmp2 = (scaluq::internal::conj(state_vector_bra._raw[state_idx2]) *
+                                    state_vector_ket._raw[state_idx2]);
                 if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
-                res_lcl += coef * (tmp1 + tmp2);
+                res_lcl += internal::to_complex_double(coef * (tmp1 + tmp2));
             } else {
                 std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
                 std::uint64_t global_phase_90rot_count =
                     Kokkos::popcount(bit_flip_mask & phase_flip_mask);
-                AccumComplex global_phase = internal::to_complex_double(
-                    internal::PHASE_90ROT<internal::Prec>()[global_phase_90rot_count % 4]);
+                ComplexType global_phase =
+                    internal::PHASE_90ROT<internal::Prec>()[global_phase_90rot_count % 4];
                 std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
                 std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-                AccumComplex tmp1 =
-                    Kokkos::conj(internal::to_complex_double(state_vector_bra._raw[basis_1])) *
-                    internal::to_complex_double(state_vector_ket._raw[basis_0]) * global_phase;
+                ComplexType tmp1 = scaluq::internal::conj(state_vector_bra._raw[basis_1]) *
+                                   state_vector_ket._raw[basis_0] * global_phase;
                 if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
-                AccumComplex tmp2 =
-                    Kokkos::conj(internal::to_complex_double(state_vector_bra._raw[basis_0])) *
-                    internal::to_complex_double(state_vector_ket._raw[basis_1]) * global_phase;
+                ComplexType tmp2 = scaluq::internal::conj(state_vector_bra._raw[basis_0]) *
+                                   state_vector_ket._raw[basis_1] * global_phase;
                 if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
-                res_lcl += coef * (tmp1 + tmp2);
+                res_lcl += internal::to_complex_double(coef * (tmp1 + tmp2));
             }
         },
         res);
@@ -382,43 +371,37 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transitio
                 [&](std::uint64_t term_id, std::uint64_t state_idx, AccumComplex& res_lcl) {
                     auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
                     auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
-                    AccumComplex coef = internal::to_complex_double(_terms[term_id]._coef);
+                    ComplexType coef = _terms[term_id]._coef;
                     if (bit_flip_mask == 0) {
                         std::uint64_t state_idx1 = state_idx << 1;
-                        AccumComplex tmp1 =
-                            (Kokkos::conj(internal::to_complex_double(
-                                 states_bra._raw(batch_id, state_idx1))) *
-                             internal::to_complex_double(states_ket._raw(batch_id, state_idx1)));
+                        ComplexType tmp1 =
+                            (scaluq::internal::conj(states_bra._raw(batch_id, state_idx1)) *
+                             states_ket._raw(batch_id, state_idx1));
                         if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
                         std::uint64_t state_idx2 = state_idx1 | 1;
-                        AccumComplex tmp2 =
-                            (Kokkos::conj(internal::to_complex_double(
-                                 states_bra._raw(batch_id, state_idx2))) *
-                             internal::to_complex_double(states_ket._raw(batch_id, state_idx2)));
+                        ComplexType tmp2 =
+                            (scaluq::internal::conj(states_bra._raw(batch_id, state_idx2)) *
+                             states_ket._raw(batch_id, state_idx2));
                         if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
-                        res_lcl += coef * (tmp1 + tmp2);
+                        res_lcl += internal::to_complex_double(coef * (tmp1 + tmp2));
                     } else {
                         std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
                         std::uint64_t global_phase_90rot_count =
                             Kokkos::popcount(bit_flip_mask & phase_flip_mask);
-                        AccumComplex global_phase = internal::to_complex_double(
-                            internal::PHASE_90ROT<internal::Prec>()[global_phase_90rot_count % 4]);
+                        ComplexType global_phase =
+                            internal::PHASE_90ROT<internal::Prec>()[global_phase_90rot_count % 4];
                         std::uint64_t basis_0 =
                             internal::insert_zero_to_basis_index(state_idx, pivot);
                         std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-                        AccumComplex tmp1 =
-                            Kokkos::conj(
-                                internal::to_complex_double(states_bra._raw(batch_id, basis_1))) *
-                            internal::to_complex_double(states_ket._raw(batch_id, basis_0)) *
-                            global_phase;
+                        ComplexType tmp1 =
+                            scaluq::internal::conj(states_bra._raw(batch_id, basis_1)) *
+                            states_ket._raw(batch_id, basis_0) * global_phase;
                         if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp1 = -tmp1;
-                        AccumComplex tmp2 =
-                            Kokkos::conj(
-                                internal::to_complex_double(states_bra._raw(batch_id, basis_0))) *
-                            internal::to_complex_double(states_ket._raw(batch_id, basis_1)) *
-                            global_phase;
+                        ComplexType tmp2 =
+                            scaluq::internal::conj(states_bra._raw(batch_id, basis_0)) *
+                            states_ket._raw(batch_id, basis_1) * global_phase;
                         if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
-                        res_lcl += coef * (tmp1 + tmp2);
+                        res_lcl += internal::to_complex_double(coef * (tmp1 + tmp2));
                     }
                 },
                 res);

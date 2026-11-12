@@ -117,13 +117,6 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<double> to_complex_double(const Complex<P
     return {static_cast<double>(value.real()), static_cast<double>(value.imag())};
 }
 
-template <Precision Prec>
-KOKKOS_INLINE_FUNCTION double squared_norm_double(const Complex<Prec>& value) {
-    const double real = static_cast<double>(value.real());
-    const double imag = static_cast<double>(value.imag());
-    return real * real + imag * imag;
-}
-
 template <Precision Prec, ExecutionSpace Space, class ViewA, class ViewB>
 StdComplex inner_product(const ViewA& a, const ViewB& b) {
     if (a.extent(0) != b.extent(0)) {
@@ -134,7 +127,7 @@ StdComplex inner_product(const ViewA& a, const ViewB& b) {
         "inner_product",
         Kokkos::RangePolicy<SpaceType<Space>>(0, a.extent(0)),
         KOKKOS_LAMBDA(std::uint64_t i, Kokkos::complex<double> & lsum) {
-            lsum += Kokkos::conj(to_complex_double(a(i))) * to_complex_double(b(i));
+            lsum += to_complex_double(internal::conj(a(i)) * b(i));
         },
         result);
     return StdComplex(result.real(), result.imag());

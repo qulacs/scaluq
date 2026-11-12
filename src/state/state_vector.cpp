@@ -113,25 +113,18 @@ double StateVector<Prec, Space>::get_squared_norm() const {
         "get_squared_norm",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t it, double& tmp) {
-            tmp += internal::squared_norm_double(this->_raw[it]);
+            tmp += static_cast<double>(internal::squared_norm(this->_raw[it]));
         },
         norm);
     return static_cast<double>(norm);
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::normalize() {
-    const double squared_norm = get_squared_norm();
-    if (!(squared_norm > 0.) || !std::isfinite(squared_norm)) {
-        throw std::invalid_argument("Cannot normalize a non-finite or zero norm state.");
-    }
-    const double norm = std::sqrt(squared_norm);
+    const FloatType norm = static_cast<FloatType>(std::sqrt(this->get_squared_norm()));
     Kokkos::parallel_for(
         "normalize",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t it) {
-            const auto value = internal::to_complex_double(_raw(it)) / norm;
-            _raw(it) = ComplexType(value.real(), value.imag());
-        });
+        KOKKOS_CLASS_LAMBDA(std::uint64_t it) { this->_raw[it] /= norm; });
 }
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_zero_probability(std::uint64_t target_qubit_index) const {
@@ -146,7 +139,7 @@ double StateVector<Prec, Space>::get_zero_probability(std::uint64_t target_qubit
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> 1),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, double& lsum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(i, target_qubit_index);
-            lsum += internal::squared_norm_double(this->_raw[basis_0]);
+            lsum += static_cast<double>(internal::squared_norm(this->_raw[basis_0]));
         },
         sum);
     return static_cast<double>(sum);
@@ -189,7 +182,7 @@ double StateVector<Prec, Space>::get_marginal_probability(
                 basis = internal::insert_zero_to_basis_index(basis, insert_index);
                 basis |= d_target_value(cursor) << insert_index;
             }
-            lsum += internal::squared_norm_double(this->_raw[basis]);
+            lsum += static_cast<double>(internal::squared_norm(this->_raw[basis]));
         },
         sum);
 
@@ -202,9 +195,9 @@ double StateVector<Prec, Space>::get_computational_basis_entropy() const {
         "get_computational_basis_entropy",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t idx, double& lsum) {
-            double prob = internal::squared_norm_double(_raw[idx]);
-            if (prob > double{0.0}) {
-                lsum += -prob * Kokkos::log2(prob);
+            const FloatType prob = internal::squared_norm(_raw[idx]);
+            if (prob > FloatType{0.0f}) {
+                lsum += static_cast<double>(-prob * internal::log2(prob));
             }
         },
         ent);

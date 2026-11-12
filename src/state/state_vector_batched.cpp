@@ -270,7 +270,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_squared_norm() const {
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim),
                 [&](const std::uint64_t& i, double& lcl) {
-                    lcl += internal::squared_norm_double(_raw(batch_id, i));
+                    lcl += static_cast<double>(internal::squared_norm(_raw(batch_id, i)));
                 },
                 internal::Sum<double, Space>(nrm));
             team.team_barrier();
@@ -281,22 +281,24 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_squared_norm() const {
 
 template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::normalize() {
-    auto norms = get_squared_norm();
-    for (auto& norm : norms) {
-        if (!(norm > 0.) || !std::isfinite(norm)) {
-            throw std::invalid_argument(
-                "Cannot normalize a batch containing non-finite or zero norm.");
-        }
-        norm = std::sqrt(norm);
-    }
-    const auto norm_view = internal::convert_vector_to_view<double, Space>(norms);
     Kokkos::parallel_for(
         "normalize",
-        Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>({0, 0},
-                                                                           {_batch_size, _dim}),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t batch, std::uint64_t i) {
-            const auto value = internal::to_complex_double(_raw(batch, i)) / norm_view(batch);
-            _raw(batch, i) = ComplexType(value.real(), value.imag());
+        Kokkos::TeamPolicy<internal::SpaceType<Space>>(
+            internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
+        KOKKOS_CLASS_LAMBDA(
+            const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
+            double nrm{0.0f};
+            std::uint64_t batch_id = team.league_rank();
+            Kokkos::parallel_reduce(
+                Kokkos::TeamThreadRange(team, _dim),
+                [&](const std::uint64_t& i, double& lcl) {
+                    lcl += static_cast<double>(internal::squared_norm(_raw(batch_id, i)));
+                },
+                internal::Sum<double, Space>(nrm));
+            team.team_barrier();
+            const auto norm = static_cast<FloatType>(Kokkos::sqrt(nrm));
+            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, _dim),
+                                 [&](const std::uint64_t& i) { _raw(batch_id, i) /= norm; });
         });
 }
 
@@ -322,7 +324,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_zero_probability(
                 [&](std::uint64_t i, double& lsum) {
                     std::uint64_t basis_0 =
                         internal::insert_zero_to_basis_index(i, target_qubit_index);
-                    lsum += internal::squared_norm_double(_raw(batch_id, basis_0));
+                    lsum += static_cast<double>(internal::squared_norm(_raw(batch_id, basis_0)));
                 },
                 internal::Sum<double, Space>(sum));
             team.team_barrier();
@@ -376,7 +378,7 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_marginal_probability(
                         basis = internal::insert_zero_to_basis_index(basis, insert_index);
                         basis ^= target_value_d[cursor] << insert_index;
                     }
-                    lsum += internal::squared_norm_double(_raw(batch_id, basis));
+                    lsum += static_cast<double>(internal::squared_norm(_raw(batch_id, basis)));
                 },
                 internal::Sum<double, Space>(sum));
             team.team_barrier();
@@ -399,8 +401,9 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_computational_basis_ent
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim),
                 [&](std::uint64_t idx, double& lsum) {
-                    double prob = internal::squared_norm_double(_raw(batch_id, idx));
-                    if (prob > 0.) lsum += -prob * Kokkos::log2(prob);
+                    const FloatType prob = internal::squared_norm(_raw(batch_id, idx));
+                    if (prob > FloatType{0.0f})
+                        lsum += static_cast<double>(-prob * internal::log2(prob));
                 },
                 internal::Sum<double, Space>(sum));
             team.team_barrier();

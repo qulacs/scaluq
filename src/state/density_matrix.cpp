@@ -305,21 +305,12 @@ DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::get_partial_trace(
 
 template <Precision Prec, ExecutionSpace Space>
 void DensityMatrix<Prec, Space>::normalize() {
-    const auto host_trace = get_trace();
-    if (!std::isfinite(host_trace.real()) || !std::isfinite(host_trace.imag()) ||
-        host_trace == StdComplex{}) {
-        throw std::invalid_argument(
-            "Cannot normalize a density matrix with non-finite or zero trace.");
-    }
-    const Kokkos::complex<double> trace(host_trace);
+    const ComplexType trace(this->get_trace());
     Kokkos::parallel_for(
         "normalize",
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
             {0, 0}, {this->_dim, this->_dim}),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) {
-            const auto value = internal::to_complex_double(_raw(i, j)) / trace;
-            _raw(i, j) = ComplexType(value.real(), value.imag());
-        });
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j) { _raw(i, j) /= trace; });
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -335,7 +326,7 @@ double DensityMatrix<Prec, Space>::get_purity() const {
         Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
             {0, 0}, {this->_dim, this->_dim}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j, double& tmp) {
-            tmp += internal::squared_norm_double(_raw(i, j));
+            tmp += static_cast<double>(internal::squared_norm(_raw(i, j)));
         },
         purity);
     return static_cast<double>(purity);
@@ -487,9 +478,9 @@ double DensityMatrix<Prec, Space>::get_computational_basis_entropy() const {
         "computational_basis_entropy",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, double& lsum) {
-            double prob = _raw(i, i).real();
-            if (prob > double(0.0f)) {
-                lsum += -prob * Kokkos::log2(prob);
+            const FloatType prob = _raw(i, i).real();
+            if (prob > FloatType{0.0f}) {
+                lsum += static_cast<double>(-prob * internal::log2(prob));
             }
         },
         entropy);
