@@ -286,19 +286,18 @@ DensityMatrix<Prec, Space> DensityMatrix<Prec, Space>::get_partial_trace(
             std::uint64_t j = team.league_rank() & (remaining_dim - 1);
             std::uint64_t row_base = internal::insert_zero_at_mask_positions(i, traced_out_mask);
             std::uint64_t col_base = internal::insert_zero_at_mask_positions(j, traced_out_mask);
-            Kokkos::complex<double> sum = 0.;
+            ComplexType sum = 0;
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, traced_out_dim),
-                [&](std::uint64_t k, Kokkos::complex<double>& internal_sum) {
+                [&](std::uint64_t k, ComplexType& internal_sum) {
                     std::uint64_t row_index =
                         row_base | internal::insert_zero_at_mask_positions(k, ~traced_out_mask);
                     std::uint64_t col_index =
                         col_base | internal::insert_zero_at_mask_positions(k, ~traced_out_mask);
-                    internal_sum += internal::to_complex_double(_raw(row_index, col_index));
+                    internal_sum += _raw(row_index, col_index);
                 },
                 sum);
-            Kokkos::single(Kokkos::PerTeam(team),
-                           [&] { result._raw(i, j) = ComplexType(sum.real(), sum.imag()); });
+            result._raw(i, j) = sum;
         });
     return result;
 }

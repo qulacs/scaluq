@@ -5,6 +5,7 @@
 #include <algorithm>  // For std::copy
 #include <iostream>
 #include <ranges>
+#include <type_traits>
 #include <vector>
 
 #if defined(__BMI2__)
@@ -112,9 +113,22 @@ inline void resize_and_check_control_values(const std::vector<std::uint64_t>& co
     }
 }
 
+template <Precision Prec, ExecutionSpace Space>
+using SingleStateReductionFloat =
+#if defined(SCALUQ_USE_CUDA) && defined(SCALUQ_CUDA_F32_FAST_REDUCTIONS)
+    std::conditional_t<Prec == Precision::F32 && Space == ExecutionSpace::Default, float, double>;
+#else
+    double;
+#endif
+
+template <typename Accum, Precision Prec>
+KOKKOS_INLINE_FUNCTION Kokkos::complex<Accum> to_reduction_complex(const Complex<Prec>& value) {
+    return {static_cast<Accum>(value.real()), static_cast<Accum>(value.imag())};
+}
+
 template <Precision Prec>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<double> to_complex_double(const Complex<Prec>& value) {
-    return {static_cast<double>(value.real()), static_cast<double>(value.imag())};
+    return to_reduction_complex<double>(value);
 }
 
 template <Precision Prec, ExecutionSpace Space, class ViewA, class ViewB>
@@ -122,12 +136,13 @@ StdComplex inner_product(const ViewA& a, const ViewB& b) {
     if (a.extent(0) != b.extent(0)) {
         throw std::runtime_error("Error: inner_product: dimension mismatch");
     }
-    Kokkos::complex<double> result;
+    using Accum = SingleStateReductionFloat<Prec, Space>;
+    Kokkos::complex<Accum> result;
     Kokkos::parallel_reduce(
         "inner_product",
         Kokkos::RangePolicy<SpaceType<Space>>(0, a.extent(0)),
-        KOKKOS_LAMBDA(std::uint64_t i, Kokkos::complex<double> & lsum) {
-            lsum += to_complex_double(internal::conj(a(i)) * b(i));
+        KOKKOS_LAMBDA(std::uint64_t i, Kokkos::complex<Accum> & lsum) {
+            lsum += to_reduction_complex<Accum>(internal::conj(a(i)) * b(i));
         },
         result);
     return StdComplex(result.real(), result.imag());

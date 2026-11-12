@@ -108,12 +108,13 @@ template <Precision Prec, ExecutionSpace Space>
 }
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_squared_norm() const {
-    double norm{0.0f};
+    using Accum = internal::SingleStateReductionFloat<Prec, Space>;
+    Accum norm{0.0f};
     Kokkos::parallel_reduce(
         "get_squared_norm",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t it, double& tmp) {
-            tmp += static_cast<double>(internal::squared_norm(this->_raw[it]));
+        KOKKOS_CLASS_LAMBDA(std::uint64_t it, Accum& tmp) {
+            tmp += static_cast<Accum>(internal::squared_norm(this->_raw[it]));
         },
         norm);
     return static_cast<double>(norm);
@@ -128,18 +129,19 @@ void StateVector<Prec, Space>::normalize() {
 }
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_zero_probability(std::uint64_t target_qubit_index) const {
+    using Accum = internal::SingleStateReductionFloat<Prec, Space>;
     if (target_qubit_index >= _n_qubits) {
         throw std::runtime_error(
             "Error: StateVector::get_zero_probability(std::uint64_t): index "
             "of target qubit must be smaller than qubit_count");
     }
-    double sum{0.0f};
+    Accum sum{0.0f};
     Kokkos::parallel_reduce(
         "zero_prob",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> 1),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, double& lsum) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, Accum& lsum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(i, target_qubit_index);
-            lsum += static_cast<double>(internal::squared_norm(this->_raw[basis_0]));
+            lsum += static_cast<Accum>(internal::squared_norm(this->_raw[basis_0]));
         },
         sum);
     return static_cast<double>(sum);
@@ -147,6 +149,7 @@ double StateVector<Prec, Space>::get_zero_probability(std::uint64_t target_qubit
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_marginal_probability(
     const std::vector<std::uint64_t>& measured_values) const {
+    using Accum = internal::SingleStateReductionFloat<Prec, Space>;
     if (measured_values.size() != _n_qubits) {
         throw std::runtime_error(
             "Error: StateVector::get_marginal_probability(const vector<std::uint64_t>&): "
@@ -168,21 +171,21 @@ double StateVector<Prec, Space>::get_marginal_probability(
         }
     }
 
-    double sum{0.0f};
+    Accum sum{0.0f};
     auto d_target_index = internal::convert_vector_to_view<std::uint64_t, Space>(target_index);
     auto d_target_value = internal::convert_vector_to_view<std::uint64_t, Space>(target_value);
 
     Kokkos::parallel_reduce(
         "marginal_prob",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> target_index.size()),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, double& lsum) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, Accum& lsum) {
             std::uint64_t basis = i;
             for (std::uint64_t cursor = 0; cursor < d_target_index.size(); cursor++) {
                 std::uint64_t insert_index = d_target_index(cursor);
                 basis = internal::insert_zero_to_basis_index(basis, insert_index);
                 basis |= d_target_value(cursor) << insert_index;
             }
-            lsum += static_cast<double>(internal::squared_norm(this->_raw[basis]));
+            lsum += static_cast<Accum>(internal::squared_norm(this->_raw[basis]));
         },
         sum);
 
@@ -190,14 +193,15 @@ double StateVector<Prec, Space>::get_marginal_probability(
 }
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_computational_basis_entropy() const {
-    double ent{0.0f};
+    using Accum = internal::SingleStateReductionFloat<Prec, Space>;
+    Accum ent{0.0f};
     Kokkos::parallel_reduce(
         "get_computational_basis_entropy",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t idx, double& lsum) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t idx, Accum& lsum) {
             const FloatType prob = internal::squared_norm(_raw[idx]);
             if (prob > FloatType{0.0f}) {
-                lsum += static_cast<double>(-prob * internal::log2(prob));
+                lsum += static_cast<Accum>(-prob * internal::log2(prob));
             }
         },
         ent);

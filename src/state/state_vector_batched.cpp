@@ -534,15 +534,12 @@ StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_reduced_state() co
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
             std::uint64_t i = team.league_rank();
-            Kokkos::complex<double> sum = 0.;
+            ComplexType sum = 0;
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _batch_size),
-                [&](std::uint64_t b, Kokkos::complex<double>& lsum) {
-                    lsum += internal::to_complex_double(_raw(b, i));
-                },
-                internal::Sum<Kokkos::complex<double>, Space>(sum));
-            Kokkos::single(Kokkos::PerTeam(team),
-                           [&] { reduced_state._raw(i) = ComplexType(sum.real(), sum.imag()); });
+                [&](std::uint64_t b, ComplexType& lsum) { lsum += _raw(b, i); },
+                internal::Sum<ComplexType, Space>(sum));
+            Kokkos::single(Kokkos::PerTeam(team), [&] { reduced_state._raw(i) = sum; });
         });
     return reduced_state;
 }
