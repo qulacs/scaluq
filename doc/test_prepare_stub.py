@@ -5,6 +5,101 @@ from source.prepare_stub import prepare_stub
 
 
 class PrepareStubTest(unittest.TestCase):
+    def test_overloads_share_an_intro_and_keep_each_explanation_and_example(self):
+        source = '''
+from typing import overload
+class State:
+    @overload
+    def load(self, value: int) -> None:
+        """Load a value.
+
+        Args:
+            value (int): An integer value.
+
+        Examples:
+            >>> state.load(1)
+        """
+    @overload
+    def load(self, value: str) -> None:
+        """Load a value.
+
+        Args:
+            value (str): A text value.
+
+        Examples:
+            >>> state.load('one')
+        """
+'''
+        result = prepare_stub(source)
+        methods = ast.parse(result).body[1].body
+        self.assertEqual(len(methods), 2)
+        for method in methods:
+            self.assertEqual(ast.unparse(method.decorator_list[0]), "overload")
+            doc = ast.get_docstring(method)
+            self.assertEqual(doc.count("Load a value."), 1)
+            self.assertIn("load(value: int)", doc)
+            self.assertIn("load(value: str)", doc)
+            self.assertIn("value (int): An integer value.", doc)
+            self.assertIn("value (str): A text value.", doc)
+            self.assertIn(">>> state.load(1)", doc)
+            self.assertIn(">>> state.load('one')", doc)
+        self.assertEqual(prepare_stub(result), result)
+
+    def test_duplicate_signatures_keep_all_distinct_documentation(self):
+        source = '''
+import typing
+@typing.overload
+def f(value: int) -> int:
+    """The first explanation."""
+@typing.overload
+def f(value: int) -> int:
+    """Another explanation for the same signature."""
+@typing.overload
+def f(value: str) -> str:
+    """The text explanation."""
+'''
+        functions = ast.parse(prepare_stub(source)).body[1:]
+        self.assertEqual(len(functions), 2)
+        for function in functions:
+            doc = ast.get_docstring(function)
+            self.assertIn("The first explanation.", doc)
+            self.assertIn("Another explanation for the same signature.", doc)
+            self.assertIn("The text explanation.", doc)
+
+    def test_identical_overload_explanations_are_not_repeated(self):
+        source = '''
+from typing import overload
+@overload
+def f(value: int) -> int:
+    """The common explanation."""
+@overload
+def f(value: str) -> str:
+    """The common explanation."""
+'''
+        functions = ast.parse(prepare_stub(source)).body[1:]
+        self.assertEqual(len(functions), 2)
+        for function in functions:
+            self.assertEqual(ast.get_docstring(function), "The common explanation.")
+
+    def test_unrelated_methods_and_properties_are_not_grouped(self):
+        source = '''
+class A:
+    def load(self, value: int):
+        """The first class."""
+class B:
+    def load(self, value: str):
+        """The second class."""
+    @property
+    def value(self):
+        """The getter."""
+    @value.setter
+    def value(self, new_value):
+        """The setter."""
+'''
+        self.assertEqual(
+            ast.dump(ast.parse(prepare_stub(source))), ast.dump(ast.parse(source))
+        )
+
     def test_backend_types_use_local_public_classes(self):
         for space in ["default", "host", "host_serial"]:
             for precision in ["f16", "f32", "f64", "bf16"]:

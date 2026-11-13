@@ -1,6 +1,7 @@
 """Prepare documentation copies of stubs without changing the installed types."""
 
 import ast
+import copy
 import re
 
 
@@ -78,6 +79,83 @@ class _AnnotationForDocs(ast.NodeTransformer):
         return ast.copy_location(node.slice.elts[0], node)
 
 
+def _signature_for_docs(node, is_method):
+    args = copy.deepcopy(node.args)
+    positional = args.posonlyargs or args.args
+    if is_method and positional and positional[0].arg in {"self", "cls"}:
+        positional.pop(0)
+    signature = f"{node.name}({ast.unparse(args)})"
+    if node.returns is not None:
+        signature += f" -> {ast.unparse(node.returns)}"
+    return signature
+
+
+def _merge_overload_docs(tree):
+    """Keep all calling forms and distinct documentation under one API item.
+
+    AutoAPI groups overloads but keeps only the last definition's docstring.
+    Give every definition the merged text so no explanation is overwritten.
+    This also makes preparing a documentation stub a second time idempotent.
+    """
+    for owner in ast.walk(tree):
+        if not isinstance(owner, (ast.Module, ast.ClassDef)):
+            continue
+        groups = {}
+        for node in owner.body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                groups.setdefault(node.name, []).append(node)
+        removed = set()
+        for group in groups.values():
+            if len(group) < 2 or not any(
+                ast.unparse(decorator) in {"overload", "typing.overload"}
+                for node in group for decorator in node.decorator_list
+            ):
+                continue
+            docs = {}
+            signatures = set()
+            for node in group:
+                signature = _signature_for_docs(node, isinstance(owner, ast.ClassDef))
+                doc = ast.get_docstring(node)
+                if doc:
+                    forms = docs.setdefault(doc, [])
+                    if signature not in forms:
+                        forms.append(signature)
+                key = (
+                    ast.dump(node.args),
+                    ast.dump(node.returns) if node.returns is not None else None,
+                    tuple(ast.dump(decorator) for decorator in node.decorator_list),
+                )
+                if key in signatures:
+                    removed.add(id(node))
+                signatures.add(key)
+            if len(docs) == 1:
+                merged = next(iter(docs))
+            elif docs:
+                common = next(iter(docs)).split("\n\n", 1)[0]
+                if not all(doc == common or doc.startswith(common + "\n\n") for doc in docs):
+                    common = ""
+                sections = [common] if common else []
+                for doc, forms in docs.items():
+                    detail = doc[len(common):].lstrip("\n") if common else doc
+                    if detail:
+                        sections.append(
+                            ".. rubric:: Calling forms\n\n.. code-block:: python\n\n"
+                            + "\n".join(f"    {form}" for form in forms)
+                            + "\n\n" + detail
+                        )
+                merged = "\n\n".join(sections)
+            else:
+                continue
+            for node in group:
+                docstring = ast.Expr(ast.Constant(merged))
+                if ast.get_docstring(node) is not None:
+                    node.body[0] = docstring
+                else:
+                    node.body.insert(0, docstring)
+        owner.body = [node for node in owner.body if id(node) not in removed]
+    return tree
+
+
 def prepare_stub(source, public_types=()):
     """Move Annotated metadata from type annotations into literal documentation.
 
@@ -117,4 +195,4 @@ def prepare_stub(source, public_types=()):
             node.body[0] = docstring
         else:
             node.body.insert(0, docstring)
-    return ast.unparse(ast.fix_missing_locations(tree)) + "\n"
+    return ast.unparse(ast.fix_missing_locations(_merge_overload_docs(tree))) + "\n"
