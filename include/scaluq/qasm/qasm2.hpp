@@ -96,7 +96,7 @@ void bind_qasm2_hpp(nb::module_& m) {
                          "names such as `cx`, `ccx`, `crz`, and `cswap`.")
                    .arg("circuit", "Circuit", "Circuit to serialize.")
                    .arg("n_qubits",
-                        "int, optional",
+                        "int",
                         true,
                         "Number of qubits to declare in the output `qreg`. If omitted, the "
                         "smallest value required by the circuit operands is used.")

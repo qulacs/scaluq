@@ -303,7 +303,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                 .arg("n_qubits", "int", "Number of qubits per state.")
                 .arg(
                     "set_same_state", "bool", "Whether to set all states to the same random state.")
-                .arg("seed", "int, optional", "Random seed (default: random).")
+                .arg("seed", "int", true, "Random seed (default: random).")
                 .build_as_google_style()
                 .c_str())
         .def_static(
@@ -325,7 +325,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                 .arg("n_qubits", "int", "Number of qubits per state.")
                 .arg(
                     "set_same_state", "bool", "Whether to set all states to the same random state.")
-                .arg("seed", "int, optional", "Random seed (default: random).")
+                .arg("seed", "int", true, "Random seed (default: random).")
                 .arg("precision", "str", true, "precision of the state vector")
                 .arg("space", "str", true, "execution space to allocate the state vector")
                 .ret("StateVectorBatched", "New batched state vector with random states.")
@@ -391,7 +391,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
             DocString()
                 .desc("Sample from the probability distribution of each state.")
                 .arg("sampling_count", "int", "Number of samples to take.")
-                .arg("seed", "int, optional", "Random seed (default: random).")
+                .arg("seed", "int", true, "Random seed (default: random).")
                 .ret("list[list[int]]", "Samples for each state in batch.")
                 .build_as_google_style()
                 .c_str())

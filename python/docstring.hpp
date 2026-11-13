@@ -82,8 +82,10 @@ public:
         if (!args.empty()) {
             out << "Args:\n";
             for (const auto& arg : args) {
-                out << "    " << arg.name << " (" << arg.type
-                    << (arg.is_optional ? ", optional):\n" : "):\n");
+                out << "    " << arg.name << " (" << arg.type << "):\n";
+                if (arg.is_optional) {
+                    output("This argument may be omitted.", "        ");
+                }
                 for (const auto& b : arg.description) {
                     output(b, "        ");
                 }
