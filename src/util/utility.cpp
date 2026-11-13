@@ -50,18 +50,14 @@ ComplexMatrix convert_internal_matrix_to_external_matrix<Prec, Space>(
             host_view(reinterpret_cast<Complex<Prec>*>(eigen_matrix.data()), rows, cols);
         Kokkos::deep_copy(host_view, matrix);
     } else {
-        Kokkos::View<StdComplex**, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-            host_view(reinterpret_cast<StdComplex*>(eigen_matrix.data()), rows, cols);
-        Kokkos::View<StdComplex**, Kokkos::LayoutRight, SpaceType<Space>> matrix_f64(
-            "internal_matrix", rows, cols);
-        Kokkos::parallel_for(
-            "convert_internal_matrix_to_external_matrix",
-            Kokkos::MDRangePolicy<Kokkos::Rank<2>, SpaceType<Space>>({0, 0}, {rows, cols}),
-            KOKKOS_LAMBDA(std::uint64_t r, std::uint64_t c) {
-                matrix_f64(r, c) = StdComplex(static_cast<double>(matrix(r, c).real()),
-                                              static_cast<double>(matrix(r, c).imag()));
-            });
-        Kokkos::deep_copy(host_view, matrix_f64);
+        // Widen on the host so that the device never handles double.
+        auto host_matrix = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), matrix);
+        for (int r = 0; r < rows; ++r) {
+            for (int c = 0; c < cols; ++c) {
+                eigen_matrix(r, c) = StdComplex(static_cast<double>(host_matrix(r, c).real()),
+                                                static_cast<double>(host_matrix(r, c).imag()));
+            }
+        }
     }
     return eigen_matrix;
 }

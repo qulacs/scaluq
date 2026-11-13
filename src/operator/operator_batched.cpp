@@ -84,7 +84,7 @@ template <>
 std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_expectation_value(
     const StateVector<internal::Prec, internal::Space>& state_vector) const {
     std::uint64_t dim = state_vector.dim();
-    Kokkos::View<Kokkos::complex<double>*, ExecutionSpaceType> res(
+    Kokkos::View<ComplexType*, ExecutionSpaceType> res(
         Kokkos::ViewAllocateWithoutInitializing("expectation_value"), _row_ptr.extent(0) - 1);
     Kokkos::parallel_for(
         "get_expectation_value",
@@ -129,13 +129,10 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_ex
                     }
                 },
                 res_lcl);
-            Kokkos::single(Kokkos::PerTeam(team), [&] {
-                res[batch_id] = Kokkos::complex<double>(res_lcl.real(), res_lcl.imag());
-            });
+            Kokkos::single(Kokkos::PerTeam(team), [&] { res[batch_id] = res_lcl; });
         });
     Kokkos::fence();
-    auto res_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), res);
-    return std::vector<StdComplex>(res_h.data(), res_h.data() + res_h.size());
+    return internal::complex_view_to_std_vector(res);
 }
 
 template <>
@@ -148,7 +145,7 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_ex
             "StateVectorBatched must be same");
     }
     std::uint64_t dim = states.dim();
-    Kokkos::View<Kokkos::complex<double>*, ExecutionSpaceType> res(
+    Kokkos::View<ComplexType*, ExecutionSpaceType> res(
         Kokkos::ViewAllocateWithoutInitializing("expectation_value"), _row_ptr.extent(0) - 1);
     Kokkos::parallel_for(
         "get_expectation_value",
@@ -195,13 +192,10 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_ex
                     }
                 },
                 res_lcl);
-            Kokkos::single(Kokkos::PerTeam(team), [&] {
-                res[batch_id] = Kokkos::complex<double>(res_lcl.real(), res_lcl.imag());
-            });
+            Kokkos::single(Kokkos::PerTeam(team), [&] { res[batch_id] = res_lcl; });
         });
     Kokkos::fence();
-    auto res_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), res);
-    return std::vector<StdComplex>(res_h.data(), res_h.data() + res_h.size());
+    return internal::complex_view_to_std_vector(res);
 }
 
 template <>
@@ -213,7 +207,7 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_tr
             "Operator::get_transition_amplitude: n_qubits of state_vector_bra and "
             "state_vector_ket must be same");
     }
-    Kokkos::View<Kokkos::complex<double>*, ExecutionSpaceType> res(
+    Kokkos::View<ComplexType*, ExecutionSpaceType> res(
         Kokkos::ViewAllocateWithoutInitializing("transition_amplitude"), _row_ptr.extent(0) - 1);
     std::uint64_t dim = state_vector_bra.dim();
 
@@ -262,12 +256,9 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_tr
                     }
                 },
                 res_lcl);
-            Kokkos::single(Kokkos::PerTeam(team), [&] {
-                res[batch_id] = Kokkos::complex<double>(res_lcl.real(), res_lcl.imag());
-            });
+            Kokkos::single(Kokkos::PerTeam(team), [&] { res[batch_id] = res_lcl; });
         });
-    auto res_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), res);
-    return std::vector<StdComplex>(res_h.data(), res_h.data() + res_h.size());
+    return internal::complex_view_to_std_vector(res);
 }
 
 template <>
@@ -290,7 +281,7 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_tr
             "Operator::get_transition_amplitude: batch_size of OperatorBatched and "
             "StateVectorBatched must be same");
     }
-    Kokkos::View<Kokkos::complex<double>*, ExecutionSpaceType> res(
+    Kokkos::View<ComplexType*, ExecutionSpaceType> res(
         Kokkos::ViewAllocateWithoutInitializing("transition_amplitude"), _row_ptr.extent(0) - 1);
     std::uint64_t dim = states_bra.dim();
 
@@ -341,12 +332,9 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_tr
                     }
                 },
                 res_lcl);
-            Kokkos::single(Kokkos::PerTeam(team), [&] {
-                res[batch_id] = Kokkos::complex<double>(res_lcl.real(), res_lcl.imag());
-            });
+            Kokkos::single(Kokkos::PerTeam(team), [&] { res[batch_id] = res_lcl; });
         });
-    auto res_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), res);
-    return std::vector<StdComplex>(res_h.data(), res_h.data() + res_h.size());
+    return internal::complex_view_to_std_vector(res);
 }
 
 template <>
@@ -439,7 +427,7 @@ OperatorBatched<internal::Prec, internal::Space>::operator*(
     Kokkos::parallel_for(
         "operator*",
         Kokkos::RangePolicy<ExecutionSpaceType>(0, res._ops.extent(0)),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { res._ops[i] *= coef_view[i]; });
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { res._ops[i]._coef *= coef_view[i]; });
     return res;
 }
 
@@ -455,7 +443,7 @@ OperatorBatched<internal::Prec, internal::Space>::operator*=(const std::vector<S
     Kokkos::parallel_for(
         "operator*=",
         Kokkos::RangePolicy<ExecutionSpaceType>(0, _ops.extent(0)),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _ops[i] *= coef_view[i]; });
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _ops[i]._coef *= coef_view[i]; });
     return *this;
 }
 

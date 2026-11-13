@@ -121,6 +121,11 @@ endif(SCALUQ_USE_HIP)
 if(SCALUQ_USE_SYCL)
     set(CMAKE_DISABLE_PRECOMPILE_HEADERS ON CACHE BOOL "Disable PCH to avoid icpx offload bundler error")
     set(Kokkos_ENABLE_SYCL ON CACHE BOOL "Enable Kokkos SYCL backend")
+    if(SCALUQ_SYCL_ACPP)
+        # Experimental: AdaptiveCpp (acpp) instead of Intel oneAPI, e.g. for Apple Metal
+        set(Kokkos_IMPL_SYCL_ACPP ON CACHE BOOL "Kokkos SYCL backend built with AdaptiveCpp")
+        set(Kokkos_ENABLE_ONEDPL OFF CACHE BOOL "oneDPL is not available with AdaptiveCpp")
+    endif()
     if(DEFINED SCALUQ_SYCL_ARCH)
         set(Kokkos_ARCH_${SCALUQ_SYCL_ARCH} ON)
     endif(DEFINED SCALUQ_SYCL_ARCH)
@@ -147,7 +152,9 @@ FetchContent_MakeAvailable(eigen)
 # nlohmann_json
 FetchContent_Declare(
     json
+    # The official tagged source archive provides a fallback if release assets are unavailable.
     URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+        https://codeload.github.com/nlohmann/json/tar.gz/refs/tags/v3.11.3
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_MakeAvailable(json)
@@ -304,8 +311,13 @@ endif()
 
 if(SCALUQ_USE_SYCL)
     target_compile_definitions(scaluq_base PUBLIC SCALUQ_USE_SYCL)
-    target_compile_options(scaluq_base PUBLIC -fsycl)
-    target_link_options(scaluq_base PUBLIC -fsycl)
+    if(SCALUQ_SYCL_ACPP)
+        # Apple GPUs (AdaptiveCpp Metal backend) cannot run double in kernels
+        target_compile_definitions(scaluq_base PUBLIC SCALUQ_SYCL_ACPP SCALUQ_NO_DEVICE_DOUBLE)
+    else()
+        target_compile_options(scaluq_base PUBLIC -fsycl)
+        target_link_options(scaluq_base PUBLIC -fsycl)
+    endif()
 endif()
 
 if(SCALUQ_USE_DEVICE)

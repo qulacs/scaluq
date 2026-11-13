@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <bit>
 #include <cstdint>
+#include <type_traits>
 #include <utility>
 
 #include "update_ops.hpp"
@@ -180,12 +181,15 @@ void dispatch_dense_matrix_simd(std::uint64_t target_mask,
     }
 }
 
-template <UpdatableStateVector State>
-void multi_dense_matrix_gate_scalar(std::uint64_t target_mask,
-                                    std::uint64_t control_mask,
-                                    std::uint64_t control_value_mask,
-                                    const Matrix<State::prec, State::space>& matrix,
-                                    State& state) {
+// ScratchLevel is int, or std::integral_constant<int, L> when the level must be a
+// compile-time constant (see multi_dense_matrix_gate_scalar).
+template <UpdatableStateVector State, class ScratchLevel>
+void multi_dense_matrix_gate_scalar_impl(std::uint64_t target_mask,
+                                         std::uint64_t control_mask,
+                                         std::uint64_t control_value_mask,
+                                         const Matrix<State::prec, State::space>& matrix,
+                                         State& state,
+                                         ScratchLevel scratch_level) {
     using ExecSpace = SpaceType<State::space>;
     using ComplexType = Complex<State::prec>;
     const std::uint64_t matrix_dim = 1ULL << std::popcount(target_mask);
@@ -198,8 +202,6 @@ void multi_dense_matrix_gate_scalar(std::uint64_t target_mask,
     const std::uint64_t outer_mask = ~target_mask & (state.dim() - 1);
     if (blocks == 0) return;
     const auto scratch_bytes = Scratch::shmem_size(matrix_dim);
-    const int scratch_level =
-        scratch_bytes <= static_cast<std::size_t>(Policy::scratch_size_max(0)) ? 0 : 1;
     auto policy = Policy(blocks, Kokkos::AUTO)
                       .set_scratch_size(scratch_level, Kokkos::PerTeam(scratch_bytes));
     const auto kernel = KOKKOS_LAMBDA(const typename Policy::member_type& team) {
@@ -242,6 +244,46 @@ void multi_dense_matrix_gate_scalar(std::uint64_t target_mask,
     policy =
         Policy(blocks, team_size).set_scratch_size(scratch_level, Kokkos::PerTeam(scratch_bytes));
     Kokkos::parallel_for("multi_dense_matrix_gate_scalar", policy, kernel);
+}
+
+template <UpdatableStateVector State>
+void multi_dense_matrix_gate_scalar(std::uint64_t target_mask,
+                                    std::uint64_t control_mask,
+                                    std::uint64_t control_value_mask,
+                                    const Matrix<State::prec, State::space>& matrix,
+                                    State& state) {
+    using Policy = Kokkos::TeamPolicy<SpaceType<State::space>>;
+    using Scratch = Kokkos::View<Complex<State::prec>*,
+                                 typename SpaceType<State::space>::scratch_memory_space,
+                                 Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    const std::uint64_t matrix_dim = 1ULL << std::popcount(target_mask);
+    const int scratch_level =
+        Scratch::shmem_size(matrix_dim) <= static_cast<std::size_t>(Policy::scratch_size_max(0))
+            ? 0
+            : 1;
+#ifdef SCALUQ_SYCL_ACPP
+    // Metal has no generic address space: a scratch pointer chosen at run time between
+    // threadgroup (level 0) and device (level 1) memory cannot be compiled, so fix the level
+    // at compile time.
+    if (scratch_level == 0) {
+        multi_dense_matrix_gate_scalar_impl(target_mask,
+                                            control_mask,
+                                            control_value_mask,
+                                            matrix,
+                                            state,
+                                            std::integral_constant<int, 0>{});
+    } else {
+        multi_dense_matrix_gate_scalar_impl(target_mask,
+                                            control_mask,
+                                            control_value_mask,
+                                            matrix,
+                                            state,
+                                            std::integral_constant<int, 1>{});
+    }
+#else
+    multi_dense_matrix_gate_scalar_impl(
+        target_mask, control_mask, control_value_mask, matrix, state, scratch_level);
+#endif
 }
 
 }  // namespace
