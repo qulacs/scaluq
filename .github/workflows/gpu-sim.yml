@@ -9,7 +9,7 @@ name: GPU Simulator
 on:
   workflow_dispatch:
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
       - "include/**"
       - "src/**"
@@ -50,7 +50,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up the simulated GPU and ROCm
-        uses: pantheongpu/setup-pantheonsim@ca87fe3143b29166822b923d6050945c5179408c # v0.1.5
+        uses: pantheongpu/setup-pantheonsim@68edfd58c091361dd6baf060b63de412e544d858 # v0.1.7
         with:
           gpu: amd/mi250x
           cuda-toolkit: none
@@ -69,11 +69,8 @@ jobs:
       - name: Build
         run: ninja -C build -j3
 
-      # DMGateTest/F32DefaultSpace.ApplyY aborts the simulator: the compiled
-      # kernel uses `v_pk_add_f32 ... 0 neg_lo:[1,1] neg_hi:[1,1]`, which the
-      # simulator reports as unsupported. The other 30 tests of that suite pass.
       # Tests skipped by the test code itself (F16 and BF16 Suzuki-Trotter and
       # ground-state tests) show as SKIPPED. ScaluqCPUConfig (a CMake script
       # check) is not run here.
       - name: Test
-        run: OMP_PROC_BIND=false vgpu run ./build/tests/scaluq_test --gtest_filter=-DMGateTest/F32DefaultSpace.ApplyY
+        run: OMP_PROC_BIND=false vgpu run ./build/tests/scaluq_test
