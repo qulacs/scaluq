@@ -5,6 +5,59 @@ from source.prepare_stub import prepare_stub
 
 
 class PrepareStubTest(unittest.TestCase):
+    def test_backend_types_use_local_public_classes(self):
+        for space in ["default", "host", "host_serial"]:
+            for precision in ["f16", "f32", "f64", "bf16"]:
+                with self.subTest(space=space, precision=precision):
+                    source = f'''
+import scaluq.scaluq_core.{space}.{precision}
+class StateVector: ...
+def apply(state: scaluq.scaluq_core.{space}.{precision}.StateVector) -> scaluq_core.GateType:
+    """Keep the example scaluq_core.GateType unchanged."""
+    ...
+'''
+                    result = ast.parse(prepare_stub(source, {"GateType"}))
+                    method = result.body[-1]
+                    self.assertEqual(ast.unparse(method.args.args[0].annotation), "StateVector")
+                    self.assertEqual(ast.unparse(method.returns), "scaluq.GateType")
+                    self.assertIn("import scaluq", ast.unparse(result))
+                    self.assertNotIn(f"import scaluq.scaluq_core.{space}", ast.unparse(result))
+                    self.assertIn("scaluq_core.GateType", ast.get_docstring(method))
+
+    def test_gate_stub_imports_the_public_package(self):
+        source = '''
+import scaluq.scaluq_core.default.f64
+def create() -> scaluq.scaluq_core.default.f64.Gate: ...
+'''
+        result = ast.parse(prepare_stub(source, {"Gate"}))
+        self.assertEqual(ast.unparse(result.body[0]), "import scaluq")
+        self.assertEqual(ast.unparse(result.body[1].returns), "scaluq.Gate")
+        self.assertEqual(
+            prepare_stub(ast.unparse(result), {"Gate"}), ast.unparse(result) + "\n"
+        )
+
+    def test_root_stub_does_not_import_itself(self):
+        source = '''
+import scaluq.scaluq_core
+class GateType: ...
+def gate_type() -> scaluq.scaluq_core.GateType: ...
+'''
+        result = ast.parse(prepare_stub(source))
+        self.assertFalse(any(isinstance(node, ast.Import) for node in result.body))
+        self.assertEqual(ast.unparse(result.body[-1].returns), "GateType")
+
+    def test_unknown_types_and_import_aliases_are_not_rewritten(self):
+        for source in [
+            "import scaluq.scaluq_core\ndef f() -> scaluq.scaluq_core.Unknown: ...\n",
+            "import scaluq.scaluq_core as backend\ndef f() -> backend.Gate: ...\n",
+            "import other.scaluq_core\ndef f() -> other.scaluq_core.Gate: ...\n",
+        ]:
+            with self.subTest(source=source):
+                self.assertEqual(
+                    ast.dump(ast.parse(prepare_stub(source, {"Gate"}))),
+                    ast.dump(ast.parse(source)),
+                )
+
     def test_array_metadata_is_documented_without_changing_call_signature(self):
         source = '''
 from typing import Annotated, overload
