@@ -325,7 +325,7 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
              &DensityMatrix<Prec, Space>::copy_to_default_space,
              DocString()
                  .desc("Get a copy of the density matrix in the default execution space.")
-                 .ret(std::string(":class:`scaluq.default.") + to_string(Prec) + ".DensityMatrix`",
+                 .ret(":class:`~scaluq.DensityMatrix`",
                       "a copy of the density matrix in the default execution space")
                  .ex(DocString::Code({">>> state_host = DensityMatrix(2)",
                                       ">>> state_default = state_host.copy_to_default_space()",
@@ -340,7 +340,7 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
              &DensityMatrix<Prec, Space>::copy_to_host_space,
              DocString()
                  .desc("Get a copy of the density matrix in the host execution space.")
-                 .ret(std::string(":class:`scaluq.host.") + to_string(Prec) + ".DensityMatrix`",
+                 .ret(":class:`~scaluq.DensityMatrix`",
                       "a copy of the density matrix in the host execution space")
                  .ex(DocString::Code({">>> state_default = DensityMatrix(2)",
                                       ">>> state_host = state_default.copy_to_host_space()",

@@ -35,7 +35,7 @@ State vector :
 
 {func}`get_amplitudes <scaluq.StateVector>` returns the content of StateVector as type `list[complex]`.
 
-{func}`get_squared_norm()` returns the squared norm of the state $\braket{\phi, \phi}$ which must be equal to $1$ with normalized states.
+{meth}`get_squared_norm <scaluq.StateVector.get_squared_norm>` returns the squared norm of the state $\braket{\phi, \phi}$ which must be equal to $1$ with normalized states.
 
 ## Initializing StateVector
 
@@ -167,7 +167,7 @@ The result is specified by a list of integer with length `n`. $i$-th value of el
 - `1`: $i$-th qubit is measured and the result is $1$.
 - {func}`StateVector.UNMEASURED <scaluq.StateVector.UNMEASURED>`: $i$-th qubit is not measured.
 
-{func}`get_entropy <scaluq.StateVector.get_entropy>` is used to get the entropy of the vector, which is calculated by $\sum_i -p_i \log_2 p_i$ ($p_i$ ($0\leq i<2^n$) is $|v_i|^2$ with $v_i$ is the $i$-th amplitude of the vector).
+{meth}`get_computational_basis_entropy <scaluq.StateVector.get_computational_basis_entropy>` is used to get the entropy of the vector, which is calculated by $\sum_i -p_i \log_2 p_i$ ($p_i$ ($0\leq i<2^n$) is $|v_i|^2$ with $v_i$ is the $i$-th amplitude of the vector).
 
 {func}`sampling <scaluq.StateVector.sampling>` is used to perform sampling on the vector.
 With passing the number of sampling as `sampling_count`, a list of integers with length `sampling_count` is returned.

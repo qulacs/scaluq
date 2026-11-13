@@ -36,7 +36,7 @@ State vector :
 
 {func}`get_amplitudes <scaluq.StateVector.get_amplitudes>` はStateVectorの確率振幅を `list[complex]` として返します。
 
-{func}`get_squared_norm()` は、状態のノルムの二乗 $\braket{\phi, \phi}$ を返します。状態が規格化されている場合、この値は $1$ になります。
+{meth}`get_squared_norm <scaluq.StateVector.get_squared_norm>` は、状態のノルムの二乗 $\braket{\phi, \phi}$ を返します。状態が規格化されている場合、この値は $1$ になります。
 
 ## StateVectorの初期化
 
@@ -169,7 +169,7 @@ phi after multiplied coef: [(0.7071067811865475+0j), 0j, 0j, 0.7071067811865475j
 - `1`： $i$ 番目の量子ビットが測定され、結果が $1$である。
 - {func}`StateVector.UNMEASURED <scaluq.StateVector.UNMEASURED>`： $i$ 番目の量子ビットが測定されていない。
 
-{func}`get_entropy <scaluq.StateVector.get_entropy>` は、状態ベクトルのエントロピーを返します。 $\sum_i -p_i \log_2 p_i$ ($0\leq i<2^n$) によって計算され、 $p_i$ は$i$番目の状態ベクトルの確率振幅である$v_i$を用いて$|v_i|^2$で与えられます。
+{meth}`get_computational_basis_entropy <scaluq.StateVector.get_computational_basis_entropy>` は、状態ベクトルのエントロピーを返します。 $\sum_i -p_i \log_2 p_i$ ($0\leq i<2^n$) によって計算され、 $p_i$ は$i$番目の状態ベクトルの確率振幅である$v_i$を用いて$|v_i|^2$で与えられます。
 
 {func}`sampling <scaluq.StateVector.sampling>` は、状態ベクトルからサンプリングを行います。
 サンプリング回数として、`sampling_count` を渡すことで、`sampling_count` 回のサンプリング結果を返します。

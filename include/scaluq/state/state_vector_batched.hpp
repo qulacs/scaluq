@@ -466,9 +466,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
              &StateVectorBatched<Prec, Space>::copy_to_default_space,
              DocString()
                  .desc("Return a deep copy in the default execution space.")
-                 .ret(std::string(":class:`scaluq.default.") + to_string(Prec) +
-                          ".StateVectorBatched`",
-                      "Copied batched state vector.")
+                 .ret(":class:`~scaluq.StateVectorBatched`", "Copied batched state vector.")
                  .build_as_google_style()
                  .c_str())
         .def(
@@ -476,8 +474,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
             &StateVectorBatched<Prec, Space>::copy_to_host_space,
             DocString()
                 .desc("Return a deep copy in the host execution space.")
-                .ret(std::string(":class:`scaluq.host.") + to_string(Prec) + ".StateVectorBatched`",
-                     "Copied batched state vector.")
+                .ret(":class:`~scaluq.StateVectorBatched`", "Copied batched state vector.")
                 .build_as_google_style()
                 .c_str())
         .def("to_string",
