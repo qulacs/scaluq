@@ -2,7 +2,8 @@ import subprocess
 from pathlib import Path
 import importlib.util
 import os
-import shutil
+
+from prepare_stub import prepare_stub
 
 current_dir = Path(__file__).parent.resolve()
 
@@ -19,9 +20,8 @@ def copy_stub_file(target):
         print(f"No stub file found for {target}")
         return
     os.makedirs(f"{stub_dir}/{target}", exist_ok=True)
-    shutil.copyfile(
-        f"{scaluq_path}/{target}/__init__.pyi",
-        f"{current_dir}/stub/scaluq/{target}/__init__.pyi",
+    Path(f"{stub_dir}/{target}/__init__.pyi").write_text(
+        prepare_stub(Path(f"{scaluq_path}/{target}/__init__.pyi").read_text()),
     )
     files.append(f"{current_dir}/stub/scaluq/{target}/__init__.pyi")
 
