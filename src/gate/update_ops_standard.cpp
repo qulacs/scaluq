@@ -121,7 +121,7 @@ void swap_gate_simd_high(std::uint64_t target_mask,
     const std::uint64_t skip_mask = target_mask | control_mask;
     using ExecSpace = SpaceType<State::space>;
     const std::uint64_t flat_span = state.flat_dim() >> std::popcount(skip_mask);
-    Kokkos::parallel_for(
+    parallel_for_small_state(state,
         "swap_gate_simd_high",
         Kokkos::RangePolicy<ExecSpace>(0, flat_span / complex_lanes),
         KOKKOS_LAMBDA(std::uint64_t g) {
@@ -145,7 +145,7 @@ void swap_gate_scalar(std::uint64_t target_mask,
     const std::uint64_t lower_target_mask = target_mask & -target_mask;
     const std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;
     using ExecSpace = SpaceType<State::space>;
-    Kokkos::parallel_for(
+    parallel_for_small_state(state,
         "swap_gate_scalar",
         Kokkos::RangePolicy<ExecSpace>(
             0, state.flat_dim() >> std::popcount(target_mask | control_mask)),
@@ -222,7 +222,7 @@ void permutation_gate(const std::vector<std::pair<std::uint64_t, std::uint64_t>>
         const std::uint64_t src = pair.first;
         const std::uint64_t dst = pair.second;
         const std::uint64_t target_mask = (1ULL << src) | (1ULL << dst);
-        Kokkos::parallel_for(
+        parallel_for_small_state(state,
             "permutation_gate",
             Kokkos::RangePolicy<ExecSpace>(0, state.flat_dim() >> 2),
             KOKKOS_LAMBDA(std::uint64_t it) {
