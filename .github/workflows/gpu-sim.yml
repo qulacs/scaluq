@@ -7,16 +7,10 @@ name: GPU Simulator
 # complements real-GPU testing and does not replace it.
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
-  pull_request:
-    branches: [main]
-    paths:
-      - "include/**"
-      - "src/**"
-      - "tests/**"
-      - "CMakeLists.txt"
-      - "script/configure"
-      - ".github/workflows/gpu-sim.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
