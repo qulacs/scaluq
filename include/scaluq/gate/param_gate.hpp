@@ -114,6 +114,7 @@ public:
         return _target_mask | _control_mask;
     }
 
+    [[nodiscard]] virtual ParamGateType param_gate_type() const = 0;
     [[nodiscard]] virtual std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const = 0;
     [[nodiscard]] virtual ComplexMatrix get_matrix(double param) const = 0;
 
@@ -311,13 +312,18 @@ public:
     ParamGatePtr() : _param_gate_ptr(nullptr), _param_gate_type(get_param_gate_type<T, Prec>()) {}
     template <ParamGateImpl U>
     ParamGatePtr(const std::shared_ptr<const U>& param_gate_ptr) {
-        if constexpr (std::is_same_v<T, U>) {
+        if constexpr (std::is_same_v<T, ParamGateBase<Prec>>) {
+            if constexpr (std::is_same_v<U, ParamGateBase<Prec>>) {
+                _param_gate_type =
+                    param_gate_ptr ? param_gate_ptr->param_gate_type() : ParamGateType::Unknown;
+            } else {
+                // upcast
+                _param_gate_type = get_param_gate_type<U, Prec>();
+            }
+            _param_gate_ptr = std::static_pointer_cast<const T>(param_gate_ptr);
+        } else if constexpr (std::is_same_v<T, U>) {
             _param_gate_type = get_param_gate_type<T, Prec>();
             _param_gate_ptr = param_gate_ptr;
-        } else if constexpr (std::is_same_v<T, ParamGateBase<Prec>>) {
-            // upcast
-            _param_gate_type = get_param_gate_type<U, Prec>();
-            _param_gate_ptr = std::static_pointer_cast<const T>(param_gate_ptr);
         } else {
             // downcast
             _param_gate_type = get_param_gate_type<T, Prec>();
@@ -609,7 +615,8 @@ void bind_gate_param_gate_hpp_without_precision_and_space(nb::module_& m) {
         .value("ParamRX", ParamGateType::ParamRX)
         .value("ParamRY", ParamGateType::ParamRY)
         .value("ParamRZ", ParamGateType::ParamRZ)
-        .value("ParamPauliRotation", ParamGateType::ParamPauliRotation);
+        .value("ParamPauliRotation", ParamGateType::ParamPauliRotation)
+        .value("ParamProbabilistic", ParamGateType::ParamProbabilistic);
 }
 
 template <Precision Prec>
