@@ -118,8 +118,7 @@ void StateVectorBatched<Prec, Space>::set_Haar_random_state(bool set_same_state,
 template <Precision Prec, ExecutionSpace Space>
 std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::sampling(
     std::uint64_t sampling_count, std::optional<std::uint64_t> seed) const {
-    Kokkos::View<FloatType**, internal::SpaceType<Space>> stacked_prob(
-        "prob", _batch_size, _dim + 1);
+    Kokkos::View<double**, internal::SpaceType<Space>> stacked_prob("prob", _batch_size, _dim + 1);
 
     Kokkos::parallel_for(
         "sampling (compute stacked prob)",
@@ -128,18 +127,12 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
-            using AccumType =
-                std::conditional_t<(sizeof(FloatType) < sizeof(float)), float, FloatType>;
             Kokkos::parallel_scan(
                 Kokkos::TeamThreadRange(team, _dim),
-                [&](std::uint64_t i, AccumType& update, const bool final) {
-                    // hip_bfloat16 has explicit constructor and cannot cast int
-                    // (native) to hip_bfloat16 (Non-native). So update must be
-                    // f64, f32.
-                    update +=
-                        static_cast<AccumType>(internal::squared_norm(this->_raw(batch_id, i)));
+                [&](std::uint64_t i, double& update, const bool final) {
+                    update += static_cast<double>(internal::squared_norm(this->_raw(batch_id, i)));
                     if (final) {
-                        stacked_prob(batch_id, i + 1) = static_cast<FloatType>(update);
+                        stacked_prob(batch_id, i + 1) = update;
                     }
                 });
         });
@@ -168,7 +161,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
             KOKKOS_CLASS_LAMBDA(std::uint64_t idx) {
                 std::uint64_t batch_id = batch_ids[idx];
                 auto rand_gen = rand_pool.get_state();
-                FloatType r = static_cast<FloatType>(rand_gen.drand(0., 1.));
+                double r = rand_gen.drand(0., 1.);
                 std::uint64_t lo = 0, hi = stacked_prob.extent(1);
                 while (hi - lo > 1) {
                     std::uint64_t mid = (lo + hi) / 2;
