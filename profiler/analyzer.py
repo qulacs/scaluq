@@ -24,11 +24,13 @@ class Analyzer:
                 nqubits = int(item["params"]["nqubits"])
                 niter = item["extra_info"]["niter"]
 
-                if(group == "Single-StateVector-Circuit"):
+                if group == "Single-StateVector-Circuit":
                     # time_per_gate (ms)
                     gate_count = nqubits * 3
                     elapsed = item["stats"]["median"]
                     time = elapsed / (niter * gate_count) * 1000
+                else:
+                    raise NotImplementedError(f"Unsupported benchmark group: {group}")
                 
                 self.data[group][space][nqubits] = time
 
@@ -38,6 +40,8 @@ class Analyzer:
         best_spaces = {}
 
         for group, spaces in self.data.items():
+            if "host_serial" not in spaces:
+                raise ValueError("host_serial is required as a speedup baseline")
             qubit_counts = set()
 
             for results in spaces.values():
@@ -69,12 +73,11 @@ class Analyzer:
                     if nqubits in results
                 }
 
-            self.write_to_json(best_spaces, group, self.precision)
-
         return best_spaces
 
-    def write_to_json(self, best_spaces, group, precision):
-
+    def write_to_json(self, best_spaces):
+        group = self.group
+        precision = self.precision
         profile_path = self.result_dir / "profile.json"
         if profile_path.exists():
             with open(profile_path, "r") as f:

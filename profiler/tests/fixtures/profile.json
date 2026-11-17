@@ -1,0 +1,139 @@
+{
+    "Single-StateVector-Circuit": {
+        "f64": {
+            "metadata": {
+                "threads": 16
+            },
+            "min_nqubits": 4,
+            "max_nqubits": 21,
+            "nqubits": {
+                "4": {
+                    "recommended": "host_serial",
+                    "speedup": {
+                        "default(host)": 0.06052404524739048,
+                        "host_serial": 1.0
+                    }
+                },
+                "5": {
+                    "recommended": "host_serial",
+                    "speedup": {
+                        "default(host)": 0.013127979992854965,
+                        "host_serial": 1.0
+                    }
+                },
+                "6": {
+                    "recommended": "host_serial",
+                    "speedup": {
+                        "default(host)": 0.05255446294738335,
+                        "host_serial": 1.0
+                    }
+                },
+                "7": {
+                    "recommended": "host_serial",
+                    "speedup": {
+                        "default(host)": 0.059236831806527564,
+                        "host_serial": 1.0
+                    }
+                },
+                "8": {
+                    "recommended": "host_serial",
+                    "speedup": {
+                        "default(host)": 0.07492406661081623,
+                        "host_serial": 1.0
+                    }
+                },
+                "9": {
+                    "recommended": "host_serial",
+                    "speedup": {
+                        "default(host)": 0.10362086565187775,
+                        "host_serial": 1.0
+                    }
+                },
+                "10": {
+                    "recommended": "host_serial",
+                    "speedup": {
+                        "default(host)": 0.1412619109208167,
+                        "host_serial": 1.0
+                    }
+                },
+                "11": {
+                    "recommended": "host_serial",
+                    "speedup": {
+                        "default(host)": 0.3090084796670985,
+                        "host_serial": 1.0
+                    }
+                },
+                "12": {
+                    "recommended": "host_serial",
+                    "speedup": {
+                        "default(host)": 0.5181835184670965,
+                        "host_serial": 1.0
+                    }
+                },
+                "13": {
+                    "recommended": "host_serial",
+                    "speedup": {
+                        "default(host)": 0.9022719011196805,
+                        "host_serial": 1.0
+                    }
+                },
+                "14": {
+                    "recommended": "default(host)",
+                    "speedup": {
+                        "default(host)": 1.5260013003078692,
+                        "host_serial": 1.0
+                    }
+                },
+                "15": {
+                    "recommended": "default(host)",
+                    "speedup": {
+                        "default(host)": 2.3371060813428555,
+                        "host_serial": 1.0
+                    }
+                },
+                "16": {
+                    "recommended": "default(host)",
+                    "speedup": {
+                        "default(host)": 2.6899333830330714,
+                        "host_serial": 1.0
+                    }
+                },
+                "17": {
+                    "recommended": "default(host)",
+                    "speedup": {
+                        "default(host)": 3.58573555428065,
+                        "host_serial": 1.0
+                    }
+                },
+                "18": {
+                    "recommended": "default(host)",
+                    "speedup": {
+                        "default(host)": 3.837069407603227,
+                        "host_serial": 1.0
+                    }
+                },
+                "19": {
+                    "recommended": "default(host)",
+                    "speedup": {
+                        "default(host)": 4.461267334996278,
+                        "host_serial": 1.0
+                    }
+                },
+                "20": {
+                    "recommended": "default(host)",
+                    "speedup": {
+                        "default(host)": 4.972612431967129,
+                        "host_serial": 1.0
+                    }
+                },
+                "21": {
+                    "recommended": "default(host)",
+                    "speedup": {
+                        "default(host)": 2.2791363271040885,
+                        "host_serial": 1.0
+                    }
+                }
+            }
+        }
+    }
+}

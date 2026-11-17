@@ -31,7 +31,7 @@ def run_benchmark(benchmark_type:str, space: str, precision: str, omp_threads: i
 
     command = [
         sys.executable, "-m", "pytest",
-        str(Path(__file__).parent / "benchmark_fleets" / f"{benchmark_type}.py"),
+        str(Path(__file__).parent / "benchmarks" / f"{benchmark_type}.py"),
         f"--benchmark-json={json_path}",
         "--benchmark-min-rounds=5",
         "-q",
@@ -111,8 +111,15 @@ if __name__ == "__main__":
     
 
     analyzer = analyzer_module.Analyzer(group, result_dir, profile_spaces, precision, omp_threads)
-    analyzer.load()
-    best_spaces = analyzer.get_best_spaces()
+    try:
+        analyzer.load()
+        best_spaces = analyzer.get_best_spaces()
+    except NotImplementedError as e:
+        sys.exit(1)
+    except ValueError as e:
+        sys.exit(1)
+
+    analyzer.write_to_json(best_spaces)
 
 
     plot_module.plot_heatmap(best_spaces, profile_spaces, precision, group, omp_threads, result_dir)
