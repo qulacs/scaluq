@@ -1,0 +1,17 @@
+diff --git a/src/libkernel/sscp/metal/subgroup.cpp b/src/libkernel/sscp/metal/subgroup.cpp
+index 129eeab..3b3da7a 100644
+--- a/src/libkernel/sscp/metal/subgroup.cpp
++++ b/src/libkernel/sscp/metal/subgroup.cpp
+@@ -49,3 +49,12 @@ HIPSYCL_SSCP_BUILTIN __acpp_uint32 __acpp_sscp_get_subgroup_max_size() {
+ HIPSYCL_SSCP_BUILTIN __acpp_uint32 __acpp_sscp_get_subgroup_id() {
+   return __acpp_sscp_metal_symbol_simd_id("__simd_group_id");
+ }
++
++// F2 experiment: missing in the Metal backend; Kokkos' SYCL reductions call
++// sub_group::get_group_range().
++HIPSYCL_SSCP_BUILTIN __acpp_uint32 __acpp_sscp_get_num_subgroups() {
++  const uint sg = __acpp_sscp_get_subgroup_max_size();
++  const uint wg = __acpp_sscp_get_local_size_x() * __acpp_sscp_get_local_size_y() *
++                  __acpp_sscp_get_local_size_z();
++  return (wg + sg - 1) / sg;
++}
