@@ -49,8 +49,17 @@ public:
 
     void add_single_pauli(std::uint64_t target_qubit, std::uint64_t pauli_id);
 
+private:
+    void check_qubit_count(std::uint64_t n_qubits) const {
+        if (n_qubits < 64 && ((_bit_flip_mask | _phase_flip_mask) >> n_qubits)) {
+            throw std::invalid_argument("Pauli operator acts on a qubit outside the state.");
+        }
+    }
+
+public:
     template <ExecutionSpace Space>
     void apply_to_state(StateVector<Prec, Space>& state_vector) const {
+        check_qubit_count(state_vector.n_qubits());
         internal::apply_pauli(0ULL, 0LL, _bit_flip_mask, _phase_flip_mask, _coef, state_vector);
     }
 

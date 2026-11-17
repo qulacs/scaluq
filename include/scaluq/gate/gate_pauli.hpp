@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <vector>
 
 #include "../operator/pauli_operator.hpp"
@@ -27,7 +28,18 @@ public:
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
 
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
-        return this->shared_from_this();
+        const auto coef = _pauli.coef();
+        if (!std::isfinite(coef.real()) || !std::isfinite(coef.imag()) || coef == StdComplex(0.)) {
+            throw std::runtime_error("Pauli gate inverse requires a finite nonzero coefficient.");
+        }
+        auto inverse_pauli = _pauli;
+        inverse_pauli.set_coef(1. / coef);
+        const auto inverse_coef = inverse_pauli.coef();
+        if (!std::isfinite(inverse_coef.real()) || !std::isfinite(inverse_coef.imag())) {
+            throw std::runtime_error("Pauli gate inverse coefficient is not representable.");
+        }
+        return std::make_shared<const PauliGateImpl<Prec>>(
+            this->_control_mask, this->_control_value_mask, inverse_pauli);
     }
     ComplexMatrix get_matrix() const override { return this->_pauli.get_matrix(); }
 

@@ -116,6 +116,9 @@ public:
 
     StdComplex calculate_default_mu() const;
 
+private:
+    void check_qubit_count(std::uint64_t n_qubits) const;
+
 public:
     Kokkos::View<PauliOperator<Prec>*, ExecutionSpaceType> _terms;
     bool _is_hermitian = true;
