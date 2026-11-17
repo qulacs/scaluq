@@ -14,6 +14,7 @@ endif(NOT DEFINED SCALUQ_USE_OMP)
 if(NOT DEFINED SCALUQ_USE_CUDA)
     set(SCALUQ_USE_CUDA OFF)
 endif(NOT DEFINED SCALUQ_USE_CUDA)
+option(SCALUQ_CUDA_F32_FAST_REDUCTIONS "Use FP32 accumulators for single-state CUDA F32 reductions" OFF)
 if(NOT DEFINED SCALUQ_USE_HIP)
     set(SCALUQ_USE_HIP OFF)
 endif(NOT DEFINED SCALUQ_USE_HIP)
@@ -281,6 +282,9 @@ target_compile_options(scaluq_base PUBLIC
 
 if(SCALUQ_USE_CUDA)
     target_compile_definitions(scaluq_base PUBLIC SCALUQ_USE_CUDA)
+    if(SCALUQ_CUDA_F32_FAST_REDUCTIONS)
+        target_compile_definitions(scaluq_base PUBLIC SCALUQ_CUDA_F32_FAST_REDUCTIONS)
+    endif()
     target_compile_definitions(scaluq_base PUBLIC JSON_HAS_RANGES=0) # cite: https://github.com/nlohmann/json/issues/3907
     # to remove tremendous warnings of Eigen
     target_compile_options(scaluq_base PUBLIC

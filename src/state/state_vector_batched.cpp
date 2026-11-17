@@ -118,8 +118,7 @@ void StateVectorBatched<Prec, Space>::set_Haar_random_state(bool set_same_state,
 template <Precision Prec, ExecutionSpace Space>
 std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::sampling(
     std::uint64_t sampling_count, std::optional<std::uint64_t> seed) const {
-    Kokkos::View<FloatType**, internal::SpaceType<Space>> stacked_prob(
-        "prob", _batch_size, _dim + 1);
+    Kokkos::View<double**, internal::SpaceType<Space>> stacked_prob("prob", _batch_size, _dim + 1);
 
     Kokkos::parallel_for(
         "sampling (compute stacked prob)",
@@ -128,18 +127,12 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
             std::uint64_t batch_id = team.league_rank();
-            using AccumType =
-                std::conditional_t<(sizeof(FloatType) < sizeof(float)), float, FloatType>;
             Kokkos::parallel_scan(
                 Kokkos::TeamThreadRange(team, _dim),
-                [&](std::uint64_t i, AccumType& update, const bool final) {
-                    // hip_bfloat16 has explicit constructor and cannot cast int
-                    // (native) to hip_bfloat16 (Non-native). So update must be
-                    // f64, f32.
-                    update +=
-                        static_cast<AccumType>(internal::squared_norm(this->_raw(batch_id, i)));
+                [&](std::uint64_t i, double& update, const bool final) {
+                    update += static_cast<double>(internal::squared_norm(this->_raw(batch_id, i)));
                     if (final) {
-                        stacked_prob(batch_id, i + 1) = static_cast<FloatType>(update);
+                        stacked_prob(batch_id, i + 1) = update;
                     }
                 });
         });
@@ -168,7 +161,7 @@ std::vector<std::vector<std::uint64_t>> StateVectorBatched<Prec, Space>::samplin
             KOKKOS_CLASS_LAMBDA(std::uint64_t idx) {
                 std::uint64_t batch_id = batch_ids[idx];
                 auto rand_gen = rand_pool.get_state();
-                FloatType r = static_cast<FloatType>(rand_gen.drand(0., 1.));
+                double r = rand_gen.drand(0., 1.);
                 std::uint64_t lo = 0, hi = stacked_prob.extent(1);
                 while (hi - lo > 1) {
                     std::uint64_t mid = (lo + hi) / 2;
@@ -257,7 +250,7 @@ std::vector<std::vector<StdComplex>> StateVectorBatched<Prec, Space>::get_amplit
 
 template <Precision Prec, ExecutionSpace Space>
 std::vector<double> StateVectorBatched<Prec, Space>::get_squared_norm() const {
-    Kokkos::View<FloatType*, internal::SpaceType<Space>> norms(
+    Kokkos::View<double*, internal::SpaceType<Space>> norms(
         Kokkos::ViewAllocateWithoutInitializing("norms"), _batch_size);
     Kokkos::parallel_for(
         "get_squared_norm",
@@ -265,22 +258,18 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_squared_norm() const {
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
-            FloatType nrm{0.0f};
+            double nrm{0.0f};
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim),
-                [&](const std::uint64_t& i, FloatType& lcl) {
-                    lcl += internal::squared_norm(_raw(batch_id, i));
+                [&](const std::uint64_t& i, double& lcl) {
+                    lcl += static_cast<double>(internal::squared_norm(_raw(batch_id, i)));
                 },
-                internal::Sum<FloatType, Space>(nrm));
+                internal::Sum<double, Space>(nrm));
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { norms[batch_id] = nrm; });
         });
-    std::vector<FloatType> norms_host_prec =
-        internal::convert_view_to_vector<FloatType, Space>(norms);
-    std::vector<double> norms_double(_batch_size);
-    std::ranges::copy(norms_host_prec, norms_double.begin());
-    return norms_double;
+    return internal::convert_view_to_vector<double, Space>(norms);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -291,18 +280,18 @@ void StateVectorBatched<Prec, Space>::normalize() {
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
-            FloatType nrm{0.0f};
+            double nrm{0.0f};
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim),
-                [&](const std::uint64_t& i, FloatType& lcl) {
-                    lcl += internal::squared_norm(_raw(batch_id, i));
+                [&](const std::uint64_t& i, double& lcl) {
+                    lcl += static_cast<double>(internal::squared_norm(_raw(batch_id, i)));
                 },
-                internal::Sum<FloatType, Space>(nrm));
+                internal::Sum<double, Space>(nrm));
             team.team_barrier();
-            nrm = internal::sqrt(nrm);
+            const auto norm = static_cast<FloatType>(Kokkos::sqrt(nrm));
             Kokkos::parallel_for(Kokkos::TeamThreadRange(team, _dim),
-                                 [&](const std::uint64_t& i) { _raw(batch_id, i) /= nrm; });
+                                 [&](const std::uint64_t& i) { _raw(batch_id, i) /= norm; });
         });
 }
 
@@ -314,31 +303,27 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_zero_probability(
             "Error: StateVectorBatched::get_zero_probability(std::uint64_t): index "
             "of target qubit must be smaller than qubit_count");
     }
-    Kokkos::View<FloatType*, internal::SpaceType<Space>> probs("probs", _batch_size);
+    Kokkos::View<double*, internal::SpaceType<Space>> probs("probs", _batch_size);
     Kokkos::parallel_for(
         "get_zero_probability",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
-            FloatType sum{0.0f};
+            double sum{0.0f};
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim >> 1),
-                [&](std::uint64_t i, FloatType& lsum) {
+                [&](std::uint64_t i, double& lsum) {
                     std::uint64_t basis_0 =
                         internal::insert_zero_to_basis_index(i, target_qubit_index);
-                    lsum += internal::squared_norm(_raw(batch_id, basis_0));
+                    lsum += static_cast<double>(internal::squared_norm(_raw(batch_id, basis_0)));
                 },
-                internal::Sum<FloatType, Space>(sum));
+                internal::Sum<double, Space>(sum));
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { probs[batch_id] = sum; });
         });
-    std::vector<FloatType> probs_host_prec =
-        internal::convert_view_to_vector<FloatType, Space>(probs);
-    std::vector<double> probs_double(_batch_size);
-    std::ranges::copy(probs_host_prec, probs_double.begin());
-    return probs_double;
+    return internal::convert_view_to_vector<double, Space>(probs);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -368,65 +353,56 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_marginal_probability(
 
     auto target_index_d = internal::convert_vector_to_view<std::uint64_t, Space>(target_index);
     auto target_value_d = internal::convert_vector_to_view<std::uint64_t, Space>(target_value);
-    Kokkos::View<FloatType*, internal::SpaceType<Space>> probs("probs", _batch_size);
+    Kokkos::View<double*, internal::SpaceType<Space>> probs("probs", _batch_size);
     Kokkos::parallel_for(
         "get_marginal_probability",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
-            FloatType sum{0.0f};
+            double sum{0.0f};
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim >> target_index_d.size()),
-                [&](std::uint64_t i, FloatType& lsum) {
+                [&](std::uint64_t i, double& lsum) {
                     std::uint64_t basis = i;
                     for (std::uint64_t cursor = 0; cursor < target_index_d.size(); cursor++) {
                         std::uint64_t insert_index = target_index_d[cursor];
                         basis = internal::insert_zero_to_basis_index(basis, insert_index);
                         basis ^= target_value_d[cursor] << insert_index;
                     }
-                    lsum += internal::squared_norm(_raw(batch_id, basis));
+                    lsum += static_cast<double>(internal::squared_norm(_raw(batch_id, basis)));
                 },
-                internal::Sum<FloatType, Space>(sum));
+                internal::Sum<double, Space>(sum));
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { probs[batch_id] = sum; });
         });
-    std::vector<FloatType> probs_host_prec =
-        internal::convert_view_to_vector<FloatType, Space>(probs);
-    std::vector<double> probs_double(_batch_size);
-    std::ranges::copy(probs_host_prec, probs_double.begin());
-    return probs_double;
+    return internal::convert_view_to_vector<double, Space>(probs);
 }
 
 template <Precision Prec, ExecutionSpace Space>
 std::vector<double> StateVectorBatched<Prec, Space>::get_computational_basis_entropy() const {
-    Kokkos::View<FloatType*, internal::SpaceType<Space>> ents("ents", _batch_size);
-    const FloatType eps = static_cast<FloatType>(1e-15);
+    Kokkos::View<double*, internal::SpaceType<Space>> ents("ents", _batch_size);
     Kokkos::parallel_for(
         "get_computational_basis_entropy",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
             internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
-            FloatType sum{0.0f};
+            double sum{0.0f};
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, _dim),
-                [&](std::uint64_t idx, FloatType& lsum) {
-                    FloatType prob = internal::squared_norm(_raw(batch_id, idx));
-                    prob = Kokkos::max(prob, eps);
-                    lsum += -prob * internal::log2(prob);
+                [&](std::uint64_t idx, double& lsum) {
+                    const FloatType prob = internal::squared_norm(_raw(batch_id, idx));
+                    if (prob > FloatType{0.0f})
+                        lsum += static_cast<double>(-prob * internal::log2(prob));
                 },
-                internal::Sum<FloatType, Space>(sum));
+                internal::Sum<double, Space>(sum));
             team.team_barrier();
             Kokkos::single(Kokkos::PerTeam(team), [&] { ents[batch_id] = sum; });
         });
-    std::vector<FloatType> ents_host_prec =
-        internal::convert_view_to_vector<FloatType, Space>(ents);
-    std::vector<double> ents_double(_batch_size);
-    std::ranges::copy(ents_host_prec, ents_double.begin());
-    return ents_double;
+    return internal::convert_view_to_vector<double, Space>(ents);
 }
 
 template <Precision Prec, ExecutionSpace Space>

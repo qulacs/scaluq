@@ -412,11 +412,21 @@ TYPED_TEST(OperatorTest, GroundStatePowerMethod) {
     constexpr ExecutionSpace Space = TestFixture::Space;
     if constexpr (Prec == Precision::F16 || Prec == Precision::BF16) {
         // Ground-state accuracy is not guaranteed in the performance-oriented low-precision modes.
-        GTEST_SKIP() << "Randomized ground-state accuracy is not tested for F16/BF16.";
+        GTEST_SKIP() << "Ground-state accuracy is not tested for F16/BF16.";
     } else {
-        check_random_ground_state<Prec, Space>([](const auto& op, const auto& state) {
-            return op.solve_ground_state_by_power_method(state, 1000);
-        });
+        // The ground-state eigenvalue is -1.75 and the spectral gap is 0.5.
+        const Operator<Prec, Space> op({{"X 0", 1.}, {"Z 1", 0.5}, {"Y 2", -0.25}});
+        StateVector<Prec, Space> state(3);
+        state.load(std::vector<StdComplex>{1., 0., 1., 0., 0., 0., 0., 0.});
+        const auto ground_state = op.solve_ground_state_by_power_method(state, 1000);
+        const double tolerance = (Prec == Precision::F64 ? 1e-10 : 1e-5) * 1.75;
+        EXPECT_LE(std::abs(ground_state.eigenvalue + 1.75), tolerance);
+        EXPECT_NEAR(ground_state.state.get_squared_norm(), 1., eps<Prec>);
+
+        auto residual = ground_state.state.copy();
+        op.apply_to_state(residual);
+        residual.add_state_vector_with_coef(-ground_state.eigenvalue, ground_state.state);
+        EXPECT_LE(std::sqrt(residual.get_squared_norm()), tolerance);
     }
 }
 

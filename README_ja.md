@@ -93,6 +93,7 @@ CUDA を利用する場合は、使用する CUDA がサポートするホスト
 |`CMAKE_INSTALL_PREFIX`|-|See [CMake Document](https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html)|
 |`SCALUQ_USE_OMP`|`ON`|CPUでの並列処理にOpenMPを利用するか|
 |`SCALUQ_USE_CUDA`|`OFF`|GPU (CUDA)での並列処理を行うか|
+|`SCALUQ_CUDA_F32_FAST_REDUCTIONS`|`OFF`|CUDA の単一状態向け FP32 集約で FP32 の累積値を使う|
 |`SCALUQ_USE_HIP`|`OFF`|`実験的機能` GPU (HIP)での並列処理を行うか|
 |`SCALUQ_USE_SYCL`|`OFF`|`実験的機能` GPU (SYCL)での並列処理を行うか|
 |`SCALUQ_CPU_NATIVE`|`ON`| ビルダーのCPUアーキテクチャでビルドするか|
