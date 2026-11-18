@@ -181,8 +181,31 @@ NB_MODULE(scaluq_core, m) {
         },
         DocString()
             .desc("Get the default execution space.")
-            .ret("str", "the default execution space, one of `cuda`, 'hip', 'sycl' or `host`")
+            .ret("str", "the default execution space, one of `cuda`, `hip`, `sycl` or `host`")
             .ex(DocString::Code{">>> get_default_execution_space() # doctest: +SKIP", "'cuda'"})
+            .build_as_google_style()
+            .c_str());
+
+    m.def(
+        "get_available_execution_spaces",
+        []() -> std::vector<std::string> {
+            std::vector<std::string> spaces;
+#if defined(SCALUQ_USE_CUDA)
+            spaces.emplace_back("cuda");
+#elif defined(SCALUQ_USE_HIP)
+            spaces.emplace_back("hip");
+#elif defined(SCALUQ_USE_SYCL)
+            spaces.emplace_back("sycl");
+#endif
+            spaces.emplace_back("host");
+            spaces.emplace_back("host_serial");
+            return spaces;
+        },
+        DocString()
+            .desc("Get the available execution spaces.")
+            .ret("list[str]", "the available execution spaces")
+            .ex(DocString::Code{">>> get_available_execution_spaces() # doctest: +SKIP",
+                                "['cuda', 'host', 'host_serial']"})
             .build_as_google_style()
             .c_str());
 
@@ -230,6 +253,32 @@ NB_MODULE(scaluq_core, m) {
                                 "True",
                                 ">>> precision_available('bf16') # doctest: +SKIP",
                                 "False"})
+            .build_as_google_style()
+            .c_str());
+
+    m.def(
+        "get_available_precisions",
+        []() -> std::vector<std::string> {
+            std::vector<std::string> precisions;
+#ifdef SCALUQ_FLOAT16
+            precisions.emplace_back("f16");
+#endif
+#ifdef SCALUQ_FLOAT32
+            precisions.emplace_back("f32");
+#endif
+#ifdef SCALUQ_FLOAT64
+            precisions.emplace_back("f64");
+#endif
+#ifdef SCALUQ_BFLOAT16
+            precisions.emplace_back("bf16");
+#endif
+            return precisions;
+        },
+        DocString()
+            .desc("Get the available precisions.")
+            .ret("list[str]", "the available precisions.")
+            .ex(DocString::Code{">>> get_available_precisions() # doctest: +SKIP",
+                                "['f32', 'f64']"})
             .build_as_google_style()
             .c_str());
 

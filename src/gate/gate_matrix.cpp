@@ -1,5 +1,9 @@
 #include <scaluq/gate/gate_matrix.hpp>
 
+#ifndef SCALUQ_STATIC_ANALYSIS
+#include <Eigen/LU>
+#endif
+
 #include "update_ops.hpp"
 #include "update_ops_matrix_1x1.hpp"
 #include "update_ops_matrix_2x2.hpp"
@@ -55,8 +59,11 @@ std::shared_ptr<const GateBase<Prec>> DenseMatrixGateImpl<Prec, Space>::get_inve
     if (_is_unitary) {
         inv_eigen = mat_eigen.adjoint();
     } else {
-        // inv_eigen = mat_eigen.inverse().eval();
-        throw std::runtime_error("inverse of non-unitary matrix gate is currently not available.");
+        const Eigen::FullPivLU<ComplexMatrix> decomposition(mat_eigen);
+        if (!decomposition.isInvertible()) {
+            throw std::runtime_error("DenseMatrixGate::get_inverse(): matrix is singular.");
+        }
+        inv_eigen = decomposition.inverse();
     }
     return std::make_shared<const DenseMatrixGateImpl>(
         this->_target_mask, this->_control_mask, this->_control_value_mask, inv_eigen, _is_unitary);
