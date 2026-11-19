@@ -1,13 +1,8 @@
-# python3 cli.py --precision f64 --omp-threads xx
 import os
 import sys
 import subprocess
 from pathlib import Path
 
-
-import detector as detector_module
-import analyzer as analyzer_module
-import plot as plot_module
 
 def run_benchmark(benchmark_type:str, space: str, precision: str, omp_threads: int, min_nqubits: int, max_nqubits: int, result_dir: Path):
     env = os.environ.copy()
@@ -54,6 +49,9 @@ def run_benchmark(benchmark_type:str, space: str, precision: str, omp_threads: i
     return True
 
 if __name__ == "__main__":
+    import detector as detector_module
+    import analyzer as analyzer_module
+    import plot as plot_module
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--precision', default='f64', help="Set one of f64, f32, f16 or bf16")
@@ -83,11 +81,8 @@ if __name__ == "__main__":
     try:
         detector = detector_module.Detector(args.precision)
         profile_spaces = detector.detect()
-    except detector_module.UnsupportedPrecisionError as e:
-        print("precision must be one of f64, f32, f16 or bf16")
-        sys.exit(1)
-    except detector_module.UnsupportedSyclError as e:
-        print(f"SYCL(f16) is not supported")
+    except (detector_module.UnsupportedPrecisionError, detector_module.UnsupportedSyclError) as e:
+        print(f"Detector failed: {e}", file=sys.stderr)
         sys.exit(1)
 
     omp_threads = (
@@ -114,14 +109,17 @@ if __name__ == "__main__":
     try:
         analyzer.load()
         best_spaces = analyzer.get_best_spaces()
-    except NotImplementedError as e:
-        sys.exit(1)
-    except ValueError as e:
+    except (NotImplementedError, ValueError) as e:
+        print(f"Analyzer failed: {e}", file=sys.stderr)
         sys.exit(1)
 
     analyzer.write_to_json(best_spaces)
 
 
-    plot_module.plot_heatmap(best_spaces, profile_spaces, precision, group, omp_threads, result_dir)
-    plot_module.plot_graph(analyzer.data, precision, group, omp_threads, result_dir)
+    try:
+        plot_module.plot_heatmap(best_spaces, profile_spaces, precision, group, omp_threads, result_dir)
+        plot_module.plot_graph(analyzer.data, precision, group, omp_threads, result_dir)
+    except (NotImplementedError, ValueError) as e:
+        print(f"Plot failed: {e}", file=sys.stderr)
+        sys.exit(1)
 

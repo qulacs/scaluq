@@ -11,7 +11,7 @@ class Detector:
 
     def __init__(self, precision: str):
         if(scaluqbase.precision_available(precision) is False):
-            raise UnsupportedPrecisionError()
+            raise UnsupportedPrecisionError("Precision must be one of f64, f32, f16 or bf16")
         self.precision = precision
 
     def detect(self):
@@ -21,5 +21,5 @@ class Detector:
 
         elif (default in self.gpu_backends):
             if(default == 'sycl' and self.precision == 'f16'):
-                raise UnsupportedSyclError()
+                raise UnsupportedSyclError("SYCL(f16) is not supported")
             return [f"default({default})", 'host', 'host_serial']

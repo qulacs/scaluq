@@ -25,4 +25,4 @@ Profiler create outcome in `result` directory.
 ## Example
 
 After profiling, get `profile.json` and use your project.
-See https://scaluq/profiler/example
+See [example/](example/main.py)

@@ -3,9 +3,8 @@ import numpy as np
 from matplotlib.colors import TwoSlopeNorm
 
 def plot_heatmap(speedup_data, spaces, precision, group, omp_threads, output_path):
-    if 'host_serial' not in spaces:
-        print("host_serial baseline is missing")
-        return
+    if "host_serial" not in spaces:
+        raise ValueError("host_serial baseline is missing")
 
     nqubits_list = sorted(list(speedup_data[group][precision]["nqubits"].keys()))
 
@@ -126,6 +125,8 @@ def plot_graph(time_data, precision, group, omp_threads, output_path):
     if(group == "Single-StateVector-Circuit"):
         plt.title(f"{group}: {precision}")
         plt.ylabel("Execution time per gate [ms]", fontsize=16)
+    else:
+        raise NotImplementedError(f"Unsupported benchmark group: {group}")
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
 

@@ -1,6 +1,7 @@
 import pytest
 import json
 from pathlib import Path
+from ..analyzer import Analyzer
 
 
 def test_load(analyzer):
@@ -68,3 +69,42 @@ def test_write_to_json(tmp_path, analyzer):
 
     assert data == expected_data
 
+def test_write_to_json_update(tmp_path, analyzer):
+    best_spaces = analyzer.get_best_spaces()
+    analyzer.write_to_json(best_spaces)
+
+    group = "Single-StateVector-Circuit"
+    spaces = ['default(host)', 'host_serial']
+    precision = "f32"
+    threads = 16
+    nqubits = 4
+    best_spaces_update = {}
+    best_spaces_update[group] = {}
+    best_spaces_update[group][precision] = {}
+    best_spaces_update[group][precision]["metadata"] = {}
+    best_spaces_update[group][precision]["metadata"]["threads"] = threads
+    best_spaces_update[group][precision]["min_nqubits"] = nqubits
+    best_spaces_update[group][precision]["max_nqubits"] = nqubits
+    best_spaces_update[group][precision]["nqubits"] = {}
+    best_spaces_update[group][precision]["nqubits"][str(nqubits)] = {}
+    best_spaces_update[group][precision]["nqubits"][str(nqubits)]["recommended"] = "host_serial"
+    best_spaces_update[group][precision]["nqubits"][str(nqubits)]["speedup"] = {"default(host)": 0.01, "host_serial": 1.0,}
+
+    analyzer_update = Analyzer(group, tmp_path, spaces, precision, threads)
+    analyzer_update.write_to_json(best_spaces_update)
+
+    target_file = tmp_path / "profile.json"
+    assert target_file.exists()
+
+    fixture_dir = Path(__file__).parent / "fixtures"
+    before_file = fixture_dir / "profile.json"
+
+    with open(target_file, "r") as target_f, open(before_file, "r") as before_f:
+        data = json.load(target_f)
+        before_data = json.load(before_f)
+
+    assert group in data
+    assert "f64" in data[group]
+    assert "f32" in data[group]
+    assert data[group]["f64"] == before_data[group]["f64"]
+    assert data[group]["f32"] == best_spaces_update[group]["f32"]
