@@ -202,5 +202,5 @@ count must match the batch size and both batches must have matching dimensions.
 
 `StateVectorBatched.inner_product(bra, ket)` returns one complex inner product
 per batch entry, with the first argument conjugated. Both batches must have the
-same precision, execution space, batch size, and number of qubits. Reductions
-use at least single precision even for lower-precision states.
+same precision, execution space, batch size, and number of qubits. Each complex
+product is computed in the state's precision and accumulated in double precision.

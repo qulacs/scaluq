@@ -311,6 +311,24 @@ TYPED_TEST(StateVectorBatchedTest, WeightedValidationAndZeroQubits) {
     EXPECT_TRUE(Batch::inner_product(empty, empty).empty());
 }
 
+TYPED_TEST(StateVectorBatchedTest, InnerProductUsesStatePrecisionAndDoubleAccumulator) {
+    constexpr auto Prec = TestFixture::Prec;
+    constexpr auto Space = TestFixture::Space;
+    if constexpr (Prec == Precision::F32) {
+        using Batch = StateVectorBatched<Prec, Space>;
+        constexpr double amplitude = 1. + 0x1p-23;
+        Batch bra(2, 1), ket(2, 1);
+        bra.load({{amplitude, 0.}, {1., 1.}});
+        ket.load({{amplitude, 0.}, {1., 0x1p-25}});
+
+        const auto products = Batch::inner_product(bra, ket);
+        // F32 rounds amplitude squared to 1 + 2^-22 before accumulation.
+        EXPECT_EQ(products[0], StdComplex(1. + 0x1p-22, 0.));
+        // The second term is too small to affect an F32 sum.
+        EXPECT_EQ(products[1], StdComplex(1. + 0x1p-25, 0.));
+    }
+}
+
 TYPED_TEST(StateVectorBatchedTest, WeightedSumAccumulatesAtLeastInFloat) {
     constexpr auto Prec = TestFixture::Prec;
     constexpr auto Space = TestFixture::Space;

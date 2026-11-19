@@ -532,8 +532,7 @@ std::vector<StdComplex> StateVectorBatched<Prec, Space>::inner_product(
         throw std::invalid_argument("inner_product: batch dimensions must match");
     }
     if (bra.batch_size() == 0) return {};
-    using AccFloat = std::conditional_t<Prec == Precision::F64, double, float>;
-    using AccComplex = Kokkos::complex<AccFloat>;
+    using AccComplex = Kokkos::complex<double>;
     Kokkos::View<AccComplex*, ExecutionSpaceType> result("batch_inner_products", bra.batch_size());
     const auto dim = bra.dim();
     auto bra_raw = bra._raw;
@@ -547,13 +546,9 @@ std::vector<StdComplex> StateVectorBatched<Prec, Space>::inner_product(
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, dim),
                 [&](std::uint64_t i, AccComplex& local) {
-                    auto x = bra_raw(b, i);
-                    auto y = ket_raw(b, i);
-                    AccComplex x_acc(static_cast<AccFloat>(x.real()),
-                                     static_cast<AccFloat>(x.imag()));
-                    AccComplex y_acc(static_cast<AccFloat>(y.real()),
-                                     static_cast<AccFloat>(y.imag()));
-                    local += AccComplex(x_acc.real(), -x_acc.imag()) * y_acc;
+                    const auto product = internal::conj(bra_raw(b, i)) * ket_raw(b, i);
+                    local += AccComplex(static_cast<double>(product.real()),
+                                        static_cast<double>(product.imag()));
                 },
                 internal::Sum<AccComplex, Space>(sum));
             Kokkos::single(Kokkos::PerTeam(team), [&] { result(b) = sum; });

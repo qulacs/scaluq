@@ -446,7 +446,8 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                     &StateVectorBatched<Prec, Space>::inner_product,
                     "bra"_a,
                     "ket"_a,
-                    "Return sum_i conj(bra[b, i]) * ket[b, i] for each batch index.")
+                    "Return sum_i conj(bra[b, i]) * ket[b, i] for each batch index. "
+                    "Products use the state precision and are accumulated in double precision.")
         // Data access methods
         .def(
             "load",
