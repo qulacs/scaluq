@@ -398,6 +398,14 @@ jobs:
           ( set -o pipefail; python python_test/run_doctest.py | tee /tmp/doctest.log )
           ! grep -q "Failed" /tmp/doctest.log
 
+      - name: Install requirement (profiler extension)
+        if: ${{ matrix.device == 'cpu' }}  # currently GPU runner is not supported
+        run: python -m pip install pytest-benchmark matplotlib
+
+      - name: Run pytest (profiler extension)
+        if: ${{ matrix.device == 'cpu' }}  # currently GPU runner is not supported
+        run: MPLBACKEND=Agg pytest profiler/ -v
+
   install-checks-passed:
     name: Install Checks Passed
     needs: [library, python]
