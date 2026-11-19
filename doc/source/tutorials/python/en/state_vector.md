@@ -193,16 +193,9 @@ marginal probability of [1, UNMEASURED]: 0.7499999999999999
 
 ### Applying diagonal operators
 
-`state.multiply_elementwise(diagonal)` multiplies each amplitude in place by the
-corresponding amplitude in another `StateVector`. Both vectors must have the same
-precision, execution space and dimension. Neither vector needs to be normalized;
-the result is not normalized automatically. Passing `state` itself squares its amplitudes.
-Ordinary distinct states and exact aliases use no scratch buffer; C++ views with
-partially overlapping storage snapshot the weights before modifying the state.
-
-For a sum of Z strings, precompute its diagonal once and load it into `diagonal`.
-Each ordinary application then takes one pass over the state without a
-state-sized scratch buffer or sparse-matrix index arrays:
+Precompute the diagonal of a sum of Z strings once and reuse it across states.
+`state.multiply_elementwise(diagonal)` applies the diagonal in place by
+multiplying each amplitude by its corresponding weight.
 
 ```python
 state = StateVector(2)
