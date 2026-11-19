@@ -37,7 +37,8 @@ void two_target_dense_matrix_gate_simd(std::uint64_t target_mask,
     const auto m33 = SimdCoefFor<SimdType, M33>::splat(matrix[3][3]);
 
     const std::uint64_t flat_span = state.flat_dim() >> std::popcount(skip_mask);
-    Kokkos::parallel_for(
+    parallel_for_small_state(
+        state,
         "two_target_dense_matrix_gate_simd",
         Kokkos::RangePolicy<SpaceType<State::space>>(0, flat_span / complex_lanes),
         KOKKOS_LAMBDA(std::uint64_t g) {
@@ -96,7 +97,8 @@ void two_target_dense_matrix_gate_simd_middle(std::uint64_t target_mask,
     const auto m23 = C23::template select_complex_lane_bit<TargetBit>(matrix[2][3], matrix[3][2]);
 
     const std::uint64_t flat_span = state.flat_dim() >> std::popcount(skip_mask);
-    Kokkos::parallel_for(
+    parallel_for_small_state(
+        state,
         "two_target_dense_matrix_gate_simd_middle",
         Kokkos::RangePolicy<SpaceType<State::space>>(0, flat_span / complex_lanes),
         KOKKOS_LAMBDA(std::uint64_t g) {
@@ -144,7 +146,8 @@ void two_target_dense_matrix_gate_simd_low(std::uint64_t control_mask,
         matrix[0][3], matrix[1][2], matrix[2][1], matrix[3][0]);
 
     const std::uint64_t flat_span = state.flat_dim() >> std::popcount(control_mask);
-    Kokkos::parallel_for(
+    parallel_for_small_state(
+        state,
         "two_target_dense_matrix_gate_simd_low",
         Kokkos::RangePolicy<SpaceType<State::space>>(0, flat_span / complex_lanes),
         KOKKOS_LAMBDA(std::uint64_t g) {
@@ -192,7 +195,8 @@ void two_target_dense_matrix_gate_scalar(std::uint64_t target_mask,
     const auto m33 = ScalarCoef<State::prec, M33>::splat(matrix[3][3]);
     const std::uint64_t lower_target_mask = -target_mask & target_mask;
     const std::uint64_t upper_target_mask = target_mask ^ lower_target_mask;
-    Kokkos::parallel_for(
+    parallel_for_small_state(
+        state,
         "two_target_dense_matrix_gate",
         Kokkos::RangePolicy<SpaceType<State::space>>(
             0, state.flat_dim() >> std::popcount(target_mask | control_mask)),
