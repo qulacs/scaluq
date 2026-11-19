@@ -130,6 +130,7 @@ void bind_state_state_vector_hpp(nb::module_& m) {
         nb::ndarray<nb::numpy,
                     const std::complex<std::conditional_t<Prec == Precision::F32, float, double>>,
                     nb::ndim<1>,
+                    nb::device::cpu,
                     nb::c_contig>;
     using LoadSource = std::conditional_t<
         numpy_native,
