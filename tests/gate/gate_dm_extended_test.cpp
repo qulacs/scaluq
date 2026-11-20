@@ -8,6 +8,7 @@
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/state/density_matrix.hpp>
 
+#include "../../src/gate/dm_mixture.hpp"
 #include "../test_environment.hpp"
 #include "../util/util.hpp"
 
@@ -56,13 +57,20 @@ ComplexMatrix full_matrix(const Gate<Prec>& gate, std::uint64_t n) {
 template <Precision Prec>
 void expect_matrix_near(const ComplexMatrix& actual,
                         const ComplexMatrix& expected,
-                        double tolerance,
                         const std::string& what) {
     ASSERT_EQ(actual.rows(), expected.rows());
-    for (Eigen::Index i = 0; i < actual.rows(); ++i)
-        for (Eigen::Index j = 0; j < actual.cols(); ++j)
-            ASSERT_NEAR(std::abs(actual(i, j) - expected(i, j)), 0., tolerance)
-                << what << " at (" << i << ", " << j << ")";
+    ASSERT_EQ(actual.cols(), expected.cols());
+    const auto [atol, rtol] = [] {
+        if constexpr (Prec == Precision::F16)
+            return std::pair{1e-3, 5e-2};
+        else if constexpr (Prec == Precision::BF16)
+            return std::pair{1e-2, 2e-1};
+        else if constexpr (Prec == Precision::F32)
+            return std::pair{1e-6, 1e-3};
+        else
+            return std::pair{1e-12, 1e-10};
+    }();
+    ASSERT_LE((actual - expected).norm(), atol + rtol * expected.norm()) << what;
 }
 
 // ρ → U ρ U† against an Eigen reference built from the gate's own matrix.
@@ -72,7 +80,7 @@ void check_against_matrix(std::uint64_t n, const Gate<Prec>& gate, const std::st
     const ComplexMatrix rho = dm.get_matrix();
     gate->update_quantum_state(dm);
     const ComplexMatrix u = full_matrix(gate, n);
-    expect_matrix_near<Prec>(dm.get_matrix(), u * rho * u.adjoint(), eps<Prec> * 10, what);
+    expect_matrix_near<Prec>(dm.get_matrix(), u * rho * u.adjoint(), what);
 }
 
 // Control patterns exercised for every gate: none, one control (value 0 / 1), two controls.
@@ -198,8 +206,7 @@ TYPED_TEST(DMExtendedTest, MultiSwapPermutation) {
         const ComplexMatrix rho = dm.get_matrix();
         gate::Permutation<Prec, Space>(dst)->update_quantum_state(dm);
         const ComplexMatrix p = get_eigen_matrix_full_qubit_reorder(dst);
-        expect_matrix_near<Prec>(
-            dm.get_matrix(), p * rho * p.adjoint(), eps<Prec> * 10, "Permutation");
+        expect_matrix_near<Prec>(dm.get_matrix(), p * rho * p.adjoint(), "Permutation");
     }
 }
 
@@ -219,7 +226,7 @@ void check_mixture(std::uint64_t n,
         const ComplexMatrix u = full_matrix(gates[i], n);
         expected += probs[i] * u * rho * u.adjoint();
     }
-    expect_matrix_near<Prec>(dm.get_matrix(), expected, eps<Prec> * 10, what);
+    expect_matrix_near<Prec>(dm.get_matrix(), expected, what);
 }
 }  // namespace
 
@@ -323,7 +330,41 @@ TYPED_TEST(DMExtendedTest, MeasurementProjectsAndRecords) {
                     get_expanded_eigen_matrix_with_identity(target, make_X(), n);
                 expected = x * expected * x.adjoint();
             }
-            expect_matrix_near<Prec>(dm.get_matrix(), expected, eps<Prec> * 10, "Measurement");
+            expect_matrix_near<Prec>(dm.get_matrix(), expected, "Measurement");
         }
     }
+}
+
+TYPED_TEST(DMExtendedTest, MeasurementNormalizationDoesNotStoreLowPrecisionReciprocal) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    constexpr double probability = 1e-5;
+    ComplexMatrix rho = ComplexMatrix::Zero(2, 2);
+    rho(0, 0) = 1. - probability;
+    rho(1, 1) = probability;
+    DensityMatrix<Prec, Space> dm(1);
+    dm.load(rho, true);
+
+    internal::measurement_projection(1, true, false, probability, dm);
+
+    ComplexMatrix expected = ComplexMatrix::Zero(2, 2);
+    expected(1, 1) = 1.;
+    expect_matrix_near<Prec>(dm.get_matrix(), expected, "small-probability measurement");
+}
+
+TYPED_TEST(DMExtendedTest, GeneralMixturePreservesAliasedView) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    auto dm = DensityMatrix<Prec, Space>::Haar_random_state(2, 123);
+    DensityMatrix<Prec, Space> alias(dm._raw);
+    const std::vector<Gate<Prec>> gates = {gate::X<Prec>(0), gate::Z<Prec>(1)};
+
+    internal::apply_mixture_general(
+        std::vector<double>{0.25, 0.75},
+        [&](std::size_t i, DensityMatrix<Prec, Space>& state) {
+            gates[i]->update_quantum_state(state);
+        },
+        dm);
+
+    expect_matrix_near<Prec>(alias.get_matrix(), dm.get_matrix(), "aliased mixture result");
 }

@@ -129,31 +129,31 @@ template <Precision Prec, ExecutionSpace Space>
 void update_probabilistic_dm(const std::vector<double>& distribution,
                              const std::vector<Gate<Prec>>& gate_list,
                              ExecutionContextDensityMatrix<Prec, Space>& context) {
-    std::optional<std::vector<DmMixtureTerm>> terms;
-    try {
-        std::vector<DmMixtureTerm> t;
-        t.reserve(gate_list.size());
-        for (std::size_t i = 0; i < gate_list.size(); ++i) {
-            const auto& g = gate_list[i];
-            t.push_back({distribution[i],
-                         g->target_qubit_mask(),
-                         g->control_qubit_mask(),
-                         g->control_value_mask(),
-                         g->get_matrix()});
-        }
-        terms = std::move(t);
-    } catch (const std::runtime_error&) {
-        // Some term has no matrix representation; fall back to the general path.
+    std::uint64_t operand_mask = 0;
+    for (const auto& g : gate_list) operand_mask |= g->operand_qubit_mask();
+    if (operand_mask >> context.state->n_qubits()) {
+        throw std::runtime_error(
+            "Error: ProbabilisticGate::update_quantum_state(DensityMatrix& dm): "
+            "Target/Control qubit exceeds the number of qubits in the system.");
     }
-    if (terms) {
-        std::uint64_t operand_mask = 0;
-        for (const auto& g : gate_list) operand_mask |= g->operand_qubit_mask();
-        if (operand_mask >> context.state->n_qubits()) {
-            throw std::runtime_error(
-                "Error: ProbabilisticGate::update_quantum_state(DensityMatrix& dm): "
-                "Target/Control qubit exceeds the number of qubits in the system.");
+    if (std::popcount(operand_mask) <= kMaxKrausMixtureQubits) {
+        std::optional<std::vector<DmMixtureTerm>> terms;
+        try {
+            std::vector<DmMixtureTerm> t;
+            t.reserve(gate_list.size());
+            for (std::size_t i = 0; i < gate_list.size(); ++i) {
+                const auto& g = gate_list[i];
+                t.push_back({distribution[i],
+                             g->target_qubit_mask(),
+                             g->control_qubit_mask(),
+                             g->control_value_mask(),
+                             g->get_matrix()});
+            }
+            terms = std::move(t);
+        } catch (const std::runtime_error&) {
+            // Some term has no matrix representation; fall back to the general path.
         }
-        if (apply_mixture_superoperator(*terms, *context.state)) return;
+        if (terms && apply_mixture_superoperator(*terms, *context.state)) return;
     }
     apply_mixture_general(
         distribution,

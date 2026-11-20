@@ -139,7 +139,8 @@ void apply_mixture_general(const std::vector<double>& probabilities,
     // Last term reuses ρ itself as the scratch buffer.
     apply(active.back(), dm);
     acc.add_density_matrix_with_coef(probabilities[active.back()], dm);
-    std::swap(dm._raw, acc._raw);
+    // Keep the original View allocation: another DensityMatrix may alias it.
+    dm.load(acc);
 }
 
 }  // namespace scaluq::internal
