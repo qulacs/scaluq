@@ -47,11 +47,11 @@ std::vector<std::uint64_t> all_qubits(std::uint64_t n) {
 template <Precision Prec>
 ComplexMatrix full_matrix(const Gate<Prec>& gate, std::uint64_t n) {
     auto qubits = all_qubits(n);
-    return internal::get_expanded_matrix(gate->get_matrix(),
-                                         gate->target_qubit_list(),
-                                         gate->control_qubit_mask(),
-                                         gate->control_value_mask(),
-                                         qubits);
+    return scaluq::internal::get_expanded_matrix(gate->get_matrix(),
+                                                 gate->target_qubit_list(),
+                                                 gate->control_qubit_mask(),
+                                                 gate->control_value_mask(),
+                                                 qubits);
 }
 
 template <Precision Prec>
@@ -345,7 +345,7 @@ TYPED_TEST(DMExtendedTest, MeasurementNormalizationDoesNotStoreLowPrecisionRecip
     DensityMatrix<Prec, Space> dm(1);
     dm.load(rho, true);
 
-    internal::measurement_projection(1, true, false, probability, dm);
+    scaluq::internal::measurement_projection(1, true, false, probability, dm);
 
     ComplexMatrix expected = ComplexMatrix::Zero(2, 2);
     expected(1, 1) = 1.;
@@ -359,7 +359,7 @@ TYPED_TEST(DMExtendedTest, GeneralMixturePreservesAliasedView) {
     DensityMatrix<Prec, Space> alias(dm._raw);
     const std::vector<Gate<Prec>> gates = {gate::X<Prec>(0), gate::Z<Prec>(1)};
 
-    internal::apply_mixture_general(
+    scaluq::internal::apply_mixture_general(
         std::vector<double>{0.25, 0.75},
         [&](std::size_t i, DensityMatrix<Prec, Space>& state) {
             gates[i]->update_quantum_state(state);
