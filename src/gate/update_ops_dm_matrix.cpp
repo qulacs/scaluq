@@ -351,10 +351,14 @@ struct DmMeasurementProjectionOp {
     std::uint64_t t;
     int src;  // which diagonal block survives (0 or 1)
     int dst;  // where it is stored
-    Float<Prec> scale;
+    double probability;
     KOKKOS_INLINE_FUNCTION void operator()(std::uint64_t rb, std::uint64_t cb, bool, bool) const {
         const std::uint64_t so = src ? t : 0, d = dst ? t : 0;
-        const C v = raw(rb | so, cb | so) * scale;
+        const C projected = raw(rb | so, cb | so);
+        // Do not materialize 1 / probability in Float<Prec>: it can overflow in F16 even when
+        // the normalized matrix element is representable.
+        const C v(static_cast<double>(projected.real()) / probability,
+                  static_cast<double>(projected.imag()) / probability);
         raw(rb, cb) = C(0);
         raw(rb, cb | t) = C(0);
         raw(rb | t, cb) = C(0);
@@ -480,8 +484,7 @@ void measurement_projection(std::uint64_t target_mask,
         target_mask,
         0,
         0,
-        DmMeasurementProjectionOp{
-            dm._raw, target_mask, src, dst, static_cast<Float<Prec>>(1.0 / probability)});
+        DmMeasurementProjectionOp{dm._raw, target_mask, src, dst, probability});
 }
 
 }  // namespace scaluq::internal
