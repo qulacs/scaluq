@@ -46,11 +46,11 @@ std::vector<std::uint64_t> all_qubits(std::uint64_t n) {
 template <Precision Prec>
 ComplexMatrix full_matrix(const Gate<Prec>& gate, std::uint64_t n) {
     auto qubits = all_qubits(n);
-    return internal::get_expanded_matrix(gate->get_matrix(),
-                                         gate->target_qubit_list(),
-                                         gate->control_qubit_mask(),
-                                         gate->control_value_mask(),
-                                         qubits);
+    return scaluq::internal::get_expanded_matrix(gate->get_matrix(),
+                                                 gate->target_qubit_list(),
+                                                 gate->control_qubit_mask(),
+                                                 gate->control_value_mask(),
+                                                 qubits);
 }
 
 template <Precision Prec>
