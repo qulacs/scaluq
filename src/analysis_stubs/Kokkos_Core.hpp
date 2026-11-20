@@ -44,6 +44,12 @@ struct OpenMP {
 struct HostSpace {};
 struct SharedSpace {};
 
+// Every stub space is host memory, so everything is accessible from the host.
+template <class AccessSpace, class MemorySpace>
+struct SpaceAccessibility {
+    static constexpr bool accessible = true;
+};
+
 using DefaultHostExecutionSpace = OpenMP;
 using DefaultExecutionSpace = OpenMP;
 
