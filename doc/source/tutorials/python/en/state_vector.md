@@ -190,3 +190,18 @@ zero probability of 0: 0.25
 zero probability of 1: 0.25
 marginal probability of [1, UNMEASURED]: 0.7499999999999999
 ```
+
+### Applying diagonal operators
+
+Precompute the diagonal of a sum of Z strings once and reuse it across states.
+`state.multiply_elementwise(diagonal)` applies the diagonal in place by
+multiplying each amplitude by its corresponding weight.
+
+```python
+state = StateVector(2)
+state.load([1, 2, 3, 4])
+diagonal = StateVector(2)
+# Diagonal of 0.5 Z0 + 0.25 Z1, in little-endian basis order.
+diagonal.load([0.75, -0.25, 0.25, -0.75])
+state.multiply_elementwise(diagonal)
+```

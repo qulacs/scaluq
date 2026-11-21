@@ -82,6 +82,8 @@ public:
 
     void add_state_vector_with_coef(StdComplex coef, const StateVector& state);
     void multiply_coef(StdComplex coef);
+    // Apply a diagonal given by another state vector's amplitudes; no normalization.
+    void multiply_elementwise(const StateVector& other);
 
     [[nodiscard]] std::vector<std::uint64_t> sampling(
         std::uint64_t sampling_count, std::optional<std::uint64_t> seed = std::nullopt) const;
@@ -488,6 +490,24 @@ void bind_state_state_vector_hpp(nb::module_& m) {
                                      ">>> state.multiply_coef(2j)",
                                      ">>> state.get_amplitudes()",
                                      "[2j, 4j]"})
+                 .build_as_google_style()
+                 .c_str())
+        .def("multiply_elementwise",
+             &StateVector<Prec, Space>::multiply_elementwise,
+             "other"_a,
+             DocString()
+                 .desc("Multiply each amplitude in place by the corresponding amplitude of other.")
+                 .desc("Both states must have the same dimension, precision and execution space. "
+                       "No normalization is performed. Passing this state itself squares its "
+                       "amplitudes.")
+                 .arg("other", "StateVector", "Diagonal weights; may be unnormalized.")
+                 .ex(DocString::Code{">>> state = StateVector(1)",
+                                     ">>> state.load([1+2j, 3-1j])",
+                                     ">>> diagonal = StateVector(1)",
+                                     ">>> diagonal.load([2, -1j])",
+                                     ">>> state.multiply_elementwise(diagonal)",
+                                     ">>> state.get_amplitudes()",
+                                     "[(2+4j), (-1-3j)]"})
                  .build_as_google_style()
                  .c_str())
         .def(
