@@ -314,7 +314,7 @@ inline void rz_gate(std::uint64_t target_mask,
     const Float<State::prec> cosval = internal::cos(angle / Float<State::prec>{2});
     const Float<State::prec> sinval = internal::sin(angle / Float<State::prec>{2});
     const Matrix2x2<State::prec> matrix = {{{{ComplexType(cosval, -sinval), ComplexType{}}},
-          {{ComplexType{}, ComplexType(cosval, sinval)}}}};
+                                            {{ComplexType{}, ComplexType(cosval, sinval)}}}};
     one_target_dense_matrix_gate<CoefKind::General,
                                  CoefKind::Zero,
                                  CoefKind::Zero,
@@ -422,6 +422,37 @@ void multi_dense_matrix_gate(std::uint64_t target_mask,
                              std::uint64_t control_value_mask,
                              const Matrix<Prec, Space>& matrix,
                              DensityMatrix<Prec, Space>& dm);
+
+template <Precision Prec, ExecutionSpace Space>
+void sparse_matrix_gate(std::uint64_t target_mask,
+                        std::uint64_t control_mask,
+                        std::uint64_t control_value_mask,
+                        const SparseMatrix<Prec, Space>& matrix,
+                        DensityMatrix<Prec, Space>& dm);
+
+// ρ → S(ρ) for an uncontrolled superoperator S on ≤2 qubits in `target_mask`.
+// `superop` is (N²)×(N²) acting on vec(B) with index i*N+j (B: N×N block, N = 2^#targets).
+template <Precision Prec, ExecutionSpace Space>
+void superoperator_gate(std::uint64_t target_mask,
+                        const ComplexMatrix& superop,
+                        DensityMatrix<Prec, Space>& dm);
+
+// ρ → c·ρ + Σ_k K_k ρ K_k† for uncontrolled operators K_k on the qubits in `target_mask`
+// (3..6 qubits), in one pass over ρ. `kraus` stacks the r operators vertically ((r·N)×N).
+template <Precision Prec, ExecutionSpace Space>
+void kraus_mixture_gate(std::uint64_t target_mask,
+                        double identity_coef,
+                        const ComplexMatrix& kraus,
+                        DensityMatrix<Prec, Space>& dm);
+
+// Projects onto the measured outcome, renormalizes by 1/probability and optionally resets
+// the measured qubit to |0>, all in one pass.
+template <Precision Prec, ExecutionSpace Space>
+void measurement_projection(std::uint64_t target_mask,
+                            bool outcome_one,
+                            bool reset,
+                            double probability,
+                            DensityMatrix<Prec, Space>& dm);
 
 template <Precision Prec, ExecutionSpace Space>
 void one_target_dense_matrix_gate(std::uint64_t target_mask,
@@ -545,9 +576,8 @@ void ecr_gate(std::uint64_t physical_target_mask,
               DensityMatrix<Prec, Space>& dm);
 
 template <Precision Prec, ExecutionSpace Space>
-void permutation_gate(
-    const std::vector<std::pair<std::uint64_t, std::uint64_t>>& swap_schedule,
-    DensityMatrix<Prec, Space>& dm);
+void permutation_gate(const std::vector<std::pair<std::uint64_t, std::uint64_t>>& swap_schedule,
+                      DensityMatrix<Prec, Space>& dm);
 
 template <Precision Prec, ExecutionSpace Space>
 void apply_pauli(std::uint64_t control_mask,

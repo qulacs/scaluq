@@ -1,5 +1,5 @@
-// Density-matrix coverage for every gate kind and every control pattern, checked against an
-// Eigen reference U ρ U†.
+// Density-matrix coverage for every gate kind, every control pattern and the gates that
+// previously had no DensityMatrix support (SparseMatrix, Probabilistic, Measurement).
 
 #include <gtest/gtest.h>
 
@@ -8,6 +8,7 @@
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/state/density_matrix.hpp>
 
+#include "../../src/gate/dm_mixture.hpp"
 #include "../test_environment.hpp"
 #include "../util/util.hpp"
 
@@ -56,13 +57,20 @@ ComplexMatrix full_matrix(const Gate<Prec>& gate, std::uint64_t n) {
 template <Precision Prec>
 void expect_matrix_near(const ComplexMatrix& actual,
                         const ComplexMatrix& expected,
-                        double tolerance,
                         const std::string& what) {
     ASSERT_EQ(actual.rows(), expected.rows());
-    for (Eigen::Index i = 0; i < actual.rows(); ++i)
-        for (Eigen::Index j = 0; j < actual.cols(); ++j)
-            ASSERT_NEAR(std::abs(actual(i, j) - expected(i, j)), 0., tolerance)
-                << what << " at (" << i << ", " << j << ")";
+    ASSERT_EQ(actual.cols(), expected.cols());
+    const auto [atol, rtol] = [] {
+        if constexpr (Prec == Precision::F16)
+            return std::pair{1e-3, 5e-2};
+        else if constexpr (Prec == Precision::BF16)
+            return std::pair{1e-2, 2e-1};
+        else if constexpr (Prec == Precision::F32)
+            return std::pair{1e-6, 1e-3};
+        else
+            return std::pair{1e-12, 1e-10};
+    }();
+    ASSERT_LE((actual - expected).norm(), atol + rtol * expected.norm()) << what;
 }
 
 // ρ → U ρ U† against an Eigen reference built from the gate's own matrix.
@@ -72,7 +80,7 @@ void check_against_matrix(std::uint64_t n, const Gate<Prec>& gate, const std::st
     const ComplexMatrix rho = dm.get_matrix();
     gate->update_quantum_state(dm);
     const ComplexMatrix u = full_matrix(gate, n);
-    expect_matrix_near<Prec>(dm.get_matrix(), u * rho * u.adjoint(), eps<Prec> * 10, what);
+    expect_matrix_near<Prec>(dm.get_matrix(), u * rho * u.adjoint(), what);
 }
 
 // Control patterns exercised for every gate: none, one control (value 0 / 1), two controls.
@@ -131,7 +139,7 @@ TYPED_TEST(DMExtendedTest, TwoQubitGatesAllControlPatterns) {
     }
 }
 
-TYPED_TEST(DMExtendedTest, DenseMatrixGates) {
+TYPED_TEST(DMExtendedTest, DenseAndSparseMatrixGates) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     constexpr std::uint64_t n = 6;
@@ -157,6 +165,15 @@ TYPED_TEST(DMExtendedTest, DenseMatrixGates) {
                 n,
                 gate::DenseMatrix<Prec, Space>(targets, random_matrix(k, rng), ctrl, val),
                 "Dense general " + what);
+            if (k == 0) continue;
+            ComplexMatrix sparse_src = random_matrix(k, rng);
+            for (Eigen::Index i = 0; i < sparse_src.rows(); ++i)
+                for (Eigen::Index j = 0; j < sparse_src.cols(); ++j)
+                    if ((i + 2 * j) % 3 == 0) sparse_src(i, j) = 0;
+            check_against_matrix<Prec, Space>(
+                n,
+                gate::SparseMatrix<Prec, Space>(targets, sparse_src.sparseView(), ctrl, val),
+                "Sparse " + what);
         }
     }
 }
@@ -189,7 +206,165 @@ TYPED_TEST(DMExtendedTest, MultiSwapPermutation) {
         const ComplexMatrix rho = dm.get_matrix();
         gate::Permutation<Prec, Space>(dst)->update_quantum_state(dm);
         const ComplexMatrix p = get_eigen_matrix_full_qubit_reorder(dst);
-        expect_matrix_near<Prec>(
-            dm.get_matrix(), p * rho * p.adjoint(), eps<Prec> * 10, "Permutation");
+        expect_matrix_near<Prec>(dm.get_matrix(), p * rho * p.adjoint(), "Permutation");
     }
+}
+
+namespace {
+// Σ p_k U_k ρ U_k† reference.
+template <Precision Prec, ExecutionSpace Space>
+void check_mixture(std::uint64_t n,
+                   const Gate<Prec>& gate,
+                   const std::vector<double>& probs,
+                   const std::vector<Gate<Prec>>& gates,
+                   const std::string& what) {
+    auto dm = DensityMatrix<Prec, Space>::Haar_random_state(n);
+    const ComplexMatrix rho = dm.get_matrix();
+    gate->update_quantum_state(dm);
+    ComplexMatrix expected = ComplexMatrix::Zero(rho.rows(), rho.cols());
+    for (std::size_t i = 0; i < probs.size(); ++i) {
+        const ComplexMatrix u = full_matrix(gates[i], n);
+        expected += probs[i] * u * rho * u.adjoint();
+    }
+    expect_matrix_near<Prec>(dm.get_matrix(), expected, what);
+}
+}  // namespace
+
+TYPED_TEST(DMExtendedTest, ProbabilisticGateIsAppliedAsMixture) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    constexpr std::uint64_t n = 5;
+    std::mt19937_64 rng(7);
+
+    // Single-qubit Pauli channels (superoperator fast path).
+    {
+        const double p = 0.12;
+        check_mixture<Prec, Space>(
+            n,
+            gate::DepolarizingNoise<Prec>(3, p),
+            {p / 3, p / 3, p / 3, 1 - p},
+            {gate::X<Prec>(3), gate::Y<Prec>(3), gate::Z<Prec>(3), gate::I<Prec>()},
+            "Depolarizing");
+        check_mixture<Prec, Space>(n,
+                                   gate::BitFlipNoise<Prec>(0, p),
+                                   {p, 1 - p},
+                                   {gate::X<Prec>(0), gate::I<Prec>()},
+                                   "BitFlip");
+    }
+    // Two-qubit union with controls and a global phase (fast path).
+    {
+        std::vector<Gate<Prec>> gates = {
+            gate::CX<Prec>(1, 4),
+            gate::H<Prec>(4, {1}, {0}),
+            gate::GlobalPhase<Prec>(0.3, {4}),
+            gate::DenseMatrix<Prec, Space>({1, 4}, random_unitary(2, rng))};
+        std::vector<double> probs = {0.1, 0.2, 0.3, 0.4};
+        check_mixture<Prec, Space>(
+            n, gate::Probabilistic<Prec>(probs, gates), probs, gates, "2q mixture");
+    }
+    // Union over more than two qubits and a zero-probability term (general path).
+    {
+        std::vector<Gate<Prec>> gates = {
+            gate::CCX<Prec>(0, 2, 4),
+            gate::Swap<Prec>(1, 3),
+            gate::RZ<Prec>(2, 0.5),
+            gate::DenseMatrix<Prec, Space>({0, 1, 3}, random_unitary(3, rng))};
+        std::vector<double> probs = {0.25, 0., 0.35, 0.4};
+        check_mixture<Prec, Space>(
+            n, gate::Probabilistic<Prec>(probs, gates), probs, gates, "5q mixture");
+    }
+    // 3-qubit union with identity / global-phase terms folded into a scalar (Kraus path).
+    {
+        std::vector<Gate<Prec>> gates = {
+            gate::DenseMatrix<Prec, Space>({0, 2, 3}, random_unitary(3, rng)),
+            gate::I<Prec>(),
+            gate::GlobalPhase<Prec>(0.7),
+            gate::X<Prec>(2, {0, 3}, {1, 0})};
+        std::vector<double> probs = {0.3, 0.4, 0.1, 0.2};
+        check_mixture<Prec, Space>(
+            n, gate::Probabilistic<Prec>(probs, gates), probs, gates, "3q mixture");
+    }
+    // Union over more than six qubits (general path).
+    {
+        constexpr std::uint64_t n7 = 7;
+        std::vector<Gate<Prec>> gates = {
+            gate::CCX<Prec>(0, 2, 6),
+            gate::DenseMatrix<Prec, Space>({1, 3, 5}, random_unitary(3, rng)),
+            gate::Swap<Prec>(4, 6)};
+        std::vector<double> probs = {0.25, 0.35, 0.4};
+        check_mixture<Prec, Space>(
+            n7, gate::Probabilistic<Prec>(probs, gates), probs, gates, "7q mixture");
+    }
+    // Nested probabilistic gates are flattened.
+    {
+        auto inner = gate::Probabilistic<Prec>({0.5, 0.5}, {gate::X<Prec>(1), gate::Z<Prec>(2)});
+        check_mixture<Prec, Space>(n,
+                                   gate::Probabilistic<Prec>({0.4, 0.6}, {inner, gate::H<Prec>(0)}),
+                                   {0.2, 0.2, 0.6},
+                                   {gate::X<Prec>(1), gate::Z<Prec>(2), gate::H<Prec>(0)},
+                                   "nested");
+    }
+}
+
+TYPED_TEST(DMExtendedTest, MeasurementProjectsAndRecords) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    constexpr std::uint64_t n = 4;
+    for (bool reset : {false, true}) {
+        for (std::uint64_t seed = 0; seed < 8; ++seed) {
+            const std::uint64_t target = seed % n;
+            auto dm = DensityMatrix<Prec, Space>::Haar_random_state(n, seed);
+            const ComplexMatrix rho = dm.get_matrix();
+            ClassicalRegister reg(2);
+            gate::Measurement<Prec>(target, 1, reset)->update_quantum_state(dm, reg, seed);
+            const bool one = reg[1];
+
+            const ComplexMatrix proj =
+                get_expanded_eigen_matrix_with_identity(target, one ? make_P1() : make_P0(), n);
+            ComplexMatrix expected = proj * rho * proj.adjoint();
+            const double p = expected.trace().real();
+            ASSERT_GT(p, 0.);
+            expected /= p;
+            if (reset && one) {
+                const ComplexMatrix x =
+                    get_expanded_eigen_matrix_with_identity(target, make_X(), n);
+                expected = x * expected * x.adjoint();
+            }
+            expect_matrix_near<Prec>(dm.get_matrix(), expected, "Measurement");
+        }
+    }
+}
+
+TYPED_TEST(DMExtendedTest, MeasurementNormalizationDoesNotStoreLowPrecisionReciprocal) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    constexpr double probability = 1e-5;
+    ComplexMatrix rho = ComplexMatrix::Zero(2, 2);
+    rho(0, 0) = 1. - probability;
+    rho(1, 1) = probability;
+    DensityMatrix<Prec, Space> dm(1);
+    dm.load(rho, true);
+
+    scaluq::internal::measurement_projection(1, true, false, probability, dm);
+
+    ComplexMatrix expected = ComplexMatrix::Zero(2, 2);
+    expected(1, 1) = 1.;
+    expect_matrix_near<Prec>(dm.get_matrix(), expected, "small-probability measurement");
+}
+
+TYPED_TEST(DMExtendedTest, GeneralMixturePreservesAliasedView) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    auto dm = DensityMatrix<Prec, Space>::Haar_random_state(2, 123);
+    DensityMatrix<Prec, Space> alias(dm._raw);
+    const std::vector<Gate<Prec>> gates = {gate::X<Prec>(0), gate::Z<Prec>(1)};
+
+    scaluq::internal::apply_mixture_general(
+        std::vector<double>{0.25, 0.75},
+        [&](std::size_t i, DensityMatrix<Prec, Space>& state) {
+            gates[i]->update_quantum_state(state);
+        },
+        dm);
+
+    expect_matrix_near<Prec>(alias.get_matrix(), dm.get_matrix(), "aliased mixture result");
 }
