@@ -275,7 +275,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
         // State initialization methods
         .def("set_zero_state",
              &StateVectorBatched<Prec, Space>::set_zero_state,
-             DocString().desc("Initialize all states to |0...0⟩.").build_as_google_style().c_str())
+             DocString().desc("Initialize all states to ``|0...0⟩``.").build_as_google_style().c_str())
         .def("set_computational_basis",
              &StateVectorBatched<Prec, Space>::set_computational_basis,
              "basis"_a,
@@ -303,7 +303,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                 .arg("n_qubits", "int", "Number of qubits per state.")
                 .arg(
                     "set_same_state", "bool", "Whether to set all states to the same random state.")
-                .arg("seed", "int, optional", "Random seed (default: random).")
+                .arg("seed", "int", true, "Random seed (default: random).")
                 .build_as_google_style()
                 .c_str())
         .def_static(
@@ -325,7 +325,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                 .arg("n_qubits", "int", "Number of qubits per state.")
                 .arg(
                     "set_same_state", "bool", "Whether to set all states to the same random state.")
-                .arg("seed", "int, optional", "Random seed (default: random).")
+                .arg("seed", "int", true, "Random seed (default: random).")
                 .arg("precision", "str", true, "precision of the state vector")
                 .arg("space", "str", true, "execution space to allocate the state vector")
                 .ret("StateVectorBatched", "New batched state vector with random states.")
@@ -358,7 +358,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
              &StateVectorBatched<Prec, Space>::get_zero_probability,
              "target_qubit_index"_a,
              DocString()
-                 .desc("Get probability of measuring |0⟩ on specified qubit for each state.")
+                 .desc("Get probability of measuring ``|0⟩`` on specified qubit for each state.")
                  .arg("target_qubit_index", "int", "Index of qubit to measure.")
                  .ret("list[float]", "Probabilities for each state in batch.")
                  .build_as_google_style()
@@ -391,7 +391,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
             DocString()
                 .desc("Sample from the probability distribution of each state.")
                 .arg("sampling_count", "int", "Number of samples to take.")
-                .arg("seed", "int, optional", "Random seed (default: random).")
+                .arg("seed", "int", true, "Random seed (default: random).")
                 .ret("list[list[int]]", "Samples for each state in batch.")
                 .build_as_google_style()
                 .c_str())
@@ -466,9 +466,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
              &StateVectorBatched<Prec, Space>::copy_to_default_space,
              DocString()
                  .desc("Return a deep copy in the default execution space.")
-                 .ret(std::string(":class:`scaluq.default.") + to_string(Prec) +
-                          ".StateVectorBatched`",
-                      "Copied batched state vector.")
+                 .ret(":class:`~scaluq.StateVectorBatched`", "Copied batched state vector.")
                  .build_as_google_style()
                  .c_str())
         .def(
@@ -476,8 +474,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
             &StateVectorBatched<Prec, Space>::copy_to_host_space,
             DocString()
                 .desc("Return a deep copy in the host execution space.")
-                .ret(std::string(":class:`scaluq.host.") + to_string(Prec) + ".StateVectorBatched`",
-                     "Copied batched state vector.")
+                .ret(":class:`~scaluq.StateVectorBatched`", "Copied batched state vector.")
                 .build_as_google_style()
                 .c_str())
         .def("to_string",

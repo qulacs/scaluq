@@ -73,7 +73,7 @@ void bind_gate_gate_measurement_hpp(nb::module_& m, nb::class_<Gate<Prec>>& gate
         .def(
             "reset",
             [](const MeasurementGate<Prec>& gate) { return gate->reset(); },
-            "Return whether this measurement resets the target qubit to |0>.");
+            "Return whether this measurement resets the target qubit to ``|0>``.");
 }
 }  // namespace internal
 #endif
