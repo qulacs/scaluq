@@ -85,6 +85,10 @@ DEFINE_MEASUREMENT_GATE_UPDATE(ExecutionSpace::Default)
 #endif  // SCALUQ_USE_DEVICE
 #undef DEFINE_MEASUREMENT_GATE_UPDATE
 
+// The density matrix is assumed to be normalized (trace 1). States whose trace has dropped
+// below 1, e.g. after applying a P0/P1 projection gate, are not supported here: the outcome
+// is sampled from the unnormalized zero probability and the result is renormalized by that
+// probability. Callers are expected to normalize such a state before applying a measurement.
 #define DEFINE_MEASUREMENT_GATE_DM_UPDATE(Space)                                             \
     template <Precision Prec>                                                                \
     void MeasurementGateImpl<Prec>::update_quantum_state(                                    \
