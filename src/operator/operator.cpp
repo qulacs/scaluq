@@ -137,13 +137,30 @@ ComplexMatrix Operator<internal::Prec, internal::Space>::get_full_matrix(
 template <>
 void Operator<internal::Prec, internal::Space>::apply_to_state(
     StateVector<internal::Prec, internal::Space>& state_vector) const {
-    check_qubit_count(state_vector.n_qubits());
+    const auto n_qubits = state_vector.n_qubits();
+    for (const auto& term : get_terms()) {
+        if (std::bit_width(term._bit_flip_mask | term._phase_flip_mask) > n_qubits)
+            throw std::invalid_argument("Operator acts on a qubit outside the state.");
+    }
 
-    auto states = StateVectorBatched<internal::Prec, internal::Space>::uninitialized_state(
-        _terms.size(), state_vector.n_qubits());
-    states.set_state_vector(state_vector);
-    internal::apply_pauli<internal::Prec, internal::Space>(0, 0, _terms, states);
-    state_vector = states.get_reduced_state();
+    auto input = state_vector.copy();
+    auto terms = _terms;
+    auto nterms = _terms.size();
+    Kokkos::parallel_for(
+        "Operator::apply_to_state",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, input.dim()),
+        KOKKOS_LAMBDA(std::uint64_t i) {
+            ComplexType sum = 0.;
+            for (std::uint64_t t = 0; t < nterms; ++t) {
+                const auto term = terms(t);
+                auto b = i ^ term._bit_flip_mask;
+                auto phase = internal::PHASE_90ROT<internal::Prec>()
+                    [Kokkos::popcount(term._bit_flip_mask & term._phase_flip_mask) % 4];
+                auto value = term._coef * phase * input.at_unsafe(b);
+                sum += (Kokkos::popcount(b & term._phase_flip_mask) & 1) ? -value : value;
+            }
+            state_vector.at_unsafe(i) = sum;
+        });
 }
 
 template <>
