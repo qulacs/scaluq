@@ -447,14 +447,40 @@ TYPED_TEST(OperatorTest, GroundStateArnoldiMethod) {
     }
 }
 
+TYPED_TEST(OperatorTest, PowerMethodUsesCustomTolerance) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    const Operator<Prec, Space> op({{"Z 0", 1.}});
+    StateVector<Prec, Space> state(1);
+    state.load(std::vector<StdComplex>{1., 1.});
+
+    // The shift keeps both components after one iteration.
+    const StdComplex shift = 2.;
+    EXPECT_FALSE(op.solve_ground_state_by_power_method(state, 1, shift, 0.25).converged);
+    EXPECT_TRUE(op.solve_ground_state_by_power_method(state, 1, shift, 1.5).converged);
+}
+
+TYPED_TEST(OperatorTest, ArnoldiMethodUsesCustomTolerance) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    const Operator<Prec, Space> op({{"Z 0", 1.}});
+    StateVector<Prec, Space> state(1);
+    state.load(std::vector<StdComplex>{1., 1.});
+
+    EXPECT_FALSE(op.solve_ground_state_by_arnoldi_method(state, 1, std::nullopt, 0.25).converged);
+    EXPECT_TRUE(op.solve_ground_state_by_arnoldi_method(state, 1, std::nullopt, 1.5).converged);
+}
+
 TYPED_TEST(OperatorTest, PowerMethodProducesFiniteState) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
     // The default shift makes the shifted identity zero.
     Operator<Prec, Space> op({PauliOperator<Prec>("", 1.)});
-    StateVector<Prec, Space> initial_state(1);
-    initial_state.load(std::vector<StdComplex>{2., 0.});
+    StateVector<Prec, Space> initial_state(0);
+    initial_state.load(std::vector<StdComplex>{2.});
+    EXPECT_EQ(op.get_expectation_value(initial_state), StdComplex(4.));
     const auto ground_state = op.solve_ground_state_by_power_method(initial_state, 10);
+    EXPECT_EQ(ground_state.eigenvalue, StdComplex(1.));
     EXPECT_TRUE(ground_state.converged);
     EXPECT_EQ(ground_state.iterations, 0);
     EXPECT_EQ(ground_state.residual_norm, 0.);
