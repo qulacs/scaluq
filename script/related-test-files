@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eu
+set -euo pipefail
 
 TAB=$(printf "\t")
 
@@ -63,7 +63,7 @@ for var in $variables; do
 done
 
 mkdir -p ./build
-cmake -B build -G Ninja ${CMAKE_OPS} > /dev/null
+cmake -B build -G Ninja ${CMAKE_OPS} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON > /dev/null
 
 # find related test files
 jq -r ".[] | select(.file | startswith(\"$(pwd)/tests\")) | [.directory, .file, .command] | @tsv" build/compile_commands.json | \

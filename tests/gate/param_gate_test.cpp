@@ -152,6 +152,35 @@ TYPED_TEST(ParamGateTest, ApplyParamPauliRotationGate) {
     test_apply_parametric_multi_pauli_rotation<Prec, Space>(5);
 }
 
+TYPED_TEST(ParamGateTest, SingleQubitParamPauliRotationMatchesMatrix) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    constexpr std::uint64_t n_qubits = 3;
+    const double param = -0.55;
+    const double param_coef = 1.4;
+    for (const char* pauli_name : {"X", "Y", "Z"}) {
+        StateVector<Prec, Space> state(n_qubits);
+        std::vector<StdComplex> initial(state.dim());
+        for (std::uint64_t i = 0; i < state.dim(); ++i)
+            initial[i] = StdComplex(0.11 * (i + 1), -0.08 * (i + 3));
+        state.load(initial);
+        PauliOperator<Prec> pauli(std::string(pauli_name) + " 2", StdComplex(0.65, 0.));
+        auto rotation = gate::ParamPauliRotation(pauli, param_coef, {0}, {1});
+        const auto matrix = rotation->get_matrix(param);
+        auto expected = initial;
+        for (std::uint64_t base = 0; base < state.dim(); ++base) {
+            if ((base & (1ULL << 2)) != 0 || (base & 1ULL) == 0) continue;
+            const std::uint64_t one = base | (1ULL << 2);
+            expected[base] = matrix(0, 0) * initial[base] + matrix(0, 1) * initial[one];
+            expected[one] = matrix(1, 0) * initial[base] + matrix(1, 1) * initial[one];
+        }
+        rotation->update_quantum_state(state, param);
+        const auto actual = state.get_amplitudes();
+        for (std::uint64_t i = 0; i < state.dim(); ++i)
+            check_near<Prec>(actual[i], expected[i]);
+    }
+}
+
 TYPED_TEST(ParamGateTest, ApplyParamProbabilisticGate) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;

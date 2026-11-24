@@ -44,6 +44,12 @@ struct OpenMP {
 struct HostSpace {};
 struct SharedSpace {};
 
+// Every stub space is host memory, so everything is accessible from the host.
+template <class AccessSpace, class MemorySpace>
+struct SpaceAccessibility {
+    static constexpr bool accessible = true;
+};
+
 using DefaultHostExecutionSpace = OpenMP;
 using DefaultExecutionSpace = OpenMP;
 
@@ -80,7 +86,9 @@ struct ViewAllocateWithoutInitializing {
 };
 
 // ── Rank tag ───────────────────────────────────────────────────────────────
-template <int N, class Iter = void, class Work = void>
+enum class Iterate { Default, Left, Right };
+
+template <int N, Iterate Outer = Iterate::Default, Iterate Inner = Iterate::Default>
 struct Rank {};
 
 // ── Sentinel tags ──────────────────────────────────────────────────────────

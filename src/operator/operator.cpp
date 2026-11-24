@@ -90,9 +90,37 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
     return copy_operator;
 }
 
+namespace internal {
+// CUDA requires the kernel functor to be visible outside the private member function.
+template <typename TermsView>
+struct CountInvalidOperatorTerms {
+    TermsView terms;
+    std::uint64_t n_qubits;
+
+    KOKKOS_INLINE_FUNCTION void operator()(std::uint64_t i, std::uint64_t& count) const {
+        const auto mask = terms(i)._bit_flip_mask | terms(i)._phase_flip_mask;
+        if (n_qubits < 64 && (mask >> n_qubits)) ++count;
+    }
+};
+}  // namespace internal
+
+template <>
+void Operator<internal::Prec, internal::Space>::check_qubit_count(std::uint64_t n_qubits) const {
+    std::uint64_t invalid_count = 0;
+    Kokkos::parallel_reduce(
+        "check_operator_qubits",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, _terms.size()),
+        internal::CountInvalidOperatorTerms{_terms, n_qubits},
+        invalid_count);
+    if (invalid_count) throw std::invalid_argument("Operator acts on a qubit outside the state.");
+}
+
 template <>
 ComplexMatrix Operator<internal::Prec, internal::Space>::get_full_matrix(
     std::uint64_t n_qubits) const {
+    if (n_qubits >= 64) throw std::invalid_argument("Matrix qubit count must be less than 64.");
+    check_qubit_count(n_qubits);
+
     std::uint64_t dim = 1ULL << n_qubits;
     ComplexMatrix mat(dim, dim);
     mat.setZero();
@@ -108,16 +136,37 @@ ComplexMatrix Operator<internal::Prec, internal::Space>::get_full_matrix(
 template <>
 void Operator<internal::Prec, internal::Space>::apply_to_state(
     StateVector<internal::Prec, internal::Space>& state_vector) const {
-    auto states = StateVectorBatched<internal::Prec, internal::Space>::uninitialized_state(
-        _terms.size(), state_vector.n_qubits());
-    states.set_state_vector(state_vector);
-    internal::apply_pauli<internal::Prec, internal::Space>(0, 0, _terms, states);
-    state_vector = states.get_reduced_state();
+    const auto n_qubits = state_vector.n_qubits();
+    for (const auto& term : get_terms()) {
+        if (std::bit_width(term._bit_flip_mask | term._phase_flip_mask) > n_qubits)
+            throw std::invalid_argument("Operator acts on a qubit outside the state.");
+    }
+
+    auto input = state_vector.copy();
+    auto terms = _terms;
+    auto nterms = _terms.size();
+    Kokkos::parallel_for(
+        "Operator::apply_to_state",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, input.dim()),
+        KOKKOS_LAMBDA(std::uint64_t i) {
+            ComplexType sum = 0.;
+            for (std::uint64_t t = 0; t < nterms; ++t) {
+                const auto term = terms(t);
+                auto b = i ^ term._bit_flip_mask;
+                auto phase = internal::PHASE_90ROT<internal::Prec>()
+                    [Kokkos::popcount(term._bit_flip_mask & term._phase_flip_mask) % 4];
+                auto value = term._coef * phase * input.at_unsafe(b);
+                sum += (Kokkos::popcount(b & term._phase_flip_mask) & 1) ? -value : value;
+            }
+            state_vector.at_unsafe(i) = sum;
+        });
 }
 
 template <>
 StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
     const StateVector<internal::Prec, internal::Space>& state_vector) const {
+    check_qubit_count(state_vector.n_qubits());
+
     using AccumComplex = Kokkos::complex<double>;
     std::uint64_t nterms = _terms.size();
     std::uint64_t dim = state_vector.dim();
@@ -125,13 +174,17 @@ StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
     Kokkos::parallel_reduce(
         "get_expectation_value",
         Kokkos::MDRangePolicy<internal::SpaceType<internal::Space>, Kokkos::Rank<2>>(
-            {0, 0}, {nterms, dim >> 1}),
-        KOKKOS_CLASS_LAMBDA(
-            std::uint64_t term_id, std::uint64_t state_idx, AccumComplex & res_lcl) {
+            {0, 0}, {nterms, (dim + 1) >> 1}),
+        KOKKOS_CLASS_LAMBDA(std::uint64_t term_id, std::uint64_t state_idx, AccumComplex & res_lcl) {
             auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
             auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
             ComplexType coef = _terms[term_id]._coef;
             if (bit_flip_mask == 0) {
+                if (dim == 1) {
+                    res_lcl += internal::to_complex_double(
+                        coef * internal::squared_norm(state_vector._raw[0]));
+                    return;
+                }
                 std::uint64_t state_idx1 = state_idx << 1;
                 FloatType tmp1 = internal::squared_norm(state_vector._raw[state_idx1]);
                 if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
@@ -162,6 +215,8 @@ StdComplex Operator<internal::Prec, internal::Space>::get_expectation_value(
 template <>
 std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectation_values(
     const StateVector<internal::Prec, internal::Space>& state_vector) const {
+    check_qubit_count(state_vector.n_qubits());
+
     using AccumComplex = Kokkos::complex<double>;
     const std::uint64_t nterms = _terms.size();
     const std::uint64_t dim = state_vector.dim();
@@ -175,7 +230,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
 
     Kokkos::parallel_for(
         "get_expectation_values",
-        TeamPolicy(nterms, Kokkos::AUTO),
+        TeamPolicy(static_cast<int>(nterms), Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(const Member& team) {
             const std::uint64_t term_id = static_cast<std::uint64_t>(team.league_rank());
 
@@ -186,9 +241,16 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
             AccumComplex sum = AccumComplex(0.0, 0.0);
 
             Kokkos::parallel_reduce(
-                Kokkos::TeamThreadRange(team, dim >> 1),
-                [&](const std::uint64_t state_idx, AccumComplex& lsum) {
+                Kokkos::TeamThreadRange(team, static_cast<int>((dim + 1) >> 1)),
+                [&](const int state_idx_i, AccumComplex& lsum) {
+                    const std::uint64_t state_idx = static_cast<std::uint64_t>(state_idx_i);
+
                     if (bit_flip_mask == 0) {
+                        if (dim == 1) {
+                            lsum += internal::to_complex_double(
+                                coef * internal::squared_norm(state_vector._raw[0]));
+                            return;
+                        }
                         const std::uint64_t state_idx1 = state_idx << 1;
                         FloatType tmp1 = internal::squared_norm(state_vector._raw[state_idx1]);
                         if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
@@ -231,6 +293,8 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
 template <>
 std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectation_value(
     const StateVectorBatched<internal::Prec, internal::Space>& states) const {
+    check_qubit_count(states.n_qubits());
+
     using AccumComplex = Kokkos::complex<double>;
     std::uint64_t nterms = _terms.size();
     std::uint64_t dim = states.dim();
@@ -246,12 +310,17 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
             AccumComplex sum = 0;
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
-                Kokkos::TeamThreadMDRange(team, nterms, dim >> 1),
+                Kokkos::TeamThreadMDRange(team, nterms, (dim + 1) >> 1),
                 [&](std::uint64_t term_id, std::uint64_t state_idx, AccumComplex& res_lcl) {
                     auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
                     auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
                     ComplexType coef = _terms[term_id]._coef;
                     if (bit_flip_mask == 0) {
+                        if (dim == 1) {
+                            res_lcl += internal::to_complex_double(
+                                coef * internal::squared_norm(states._raw(batch_id, 0)));
+                            return;
+                        }
                         std::uint64_t state_idx1 = state_idx << 1;
                         FloatType tmp1 = internal::squared_norm(states._raw(batch_id, state_idx1));
                         if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
@@ -289,6 +358,8 @@ template <>
 StdComplex Operator<internal::Prec, internal::Space>::get_transition_amplitude(
     const StateVector<internal::Prec, internal::Space>& state_vector_bra,
     const StateVector<internal::Prec, internal::Space>& state_vector_ket) const {
+    check_qubit_count(state_vector_bra.n_qubits());
+
     using AccumComplex = Kokkos::complex<double>;
     if (state_vector_bra.n_qubits() != state_vector_ket.n_qubits()) {
         throw std::runtime_error(
@@ -301,13 +372,17 @@ StdComplex Operator<internal::Prec, internal::Space>::get_transition_amplitude(
     Kokkos::parallel_reduce(
         "get_transition_amplitude",
         Kokkos::MDRangePolicy<internal::SpaceType<internal::Space>, Kokkos::Rank<2>>(
-            {0, 0}, {nterms, dim >> 1}),
-        KOKKOS_CLASS_LAMBDA(
-            std::uint64_t term_id, std::uint64_t state_idx, AccumComplex & res_lcl) {
+            {0, 0}, {nterms, (dim + 1) >> 1}),
+        KOKKOS_CLASS_LAMBDA(std::uint64_t term_id, std::uint64_t state_idx, AccumComplex & res_lcl) {
             auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
             auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
             ComplexType coef = _terms[term_id]._coef;
             if (bit_flip_mask == 0) {
+                if (dim == 1) {
+                    res_lcl += internal::to_complex_double(
+                        coef * internal::conj(state_vector_bra._raw[0]) * state_vector_ket._raw[0]);
+                    return;
+                }
                 std::uint64_t state_idx1 = state_idx << 1;
                 ComplexType tmp1 = (scaluq::internal::conj(state_vector_bra._raw[state_idx1]) *
                                     state_vector_ket._raw[state_idx1]);
@@ -342,6 +417,8 @@ template <>
 std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transition_amplitude(
     const StateVectorBatched<internal::Prec, internal::Space>& states_bra,
     const StateVectorBatched<internal::Prec, internal::Space>& states_ket) const {
+    check_qubit_count(states_bra.n_qubits());
+
     using AccumComplex = Kokkos::complex<double>;
     if (states_bra.n_qubits() != states_ket.n_qubits()) {
         throw std::runtime_error(
@@ -367,12 +444,18 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_transitio
             AccumComplex res = 0;
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
-                Kokkos::TeamThreadMDRange(team, nterms, (dim >> 1)),
+                Kokkos::TeamThreadMDRange(team, nterms, ((dim + 1) >> 1)),
                 [&](std::uint64_t term_id, std::uint64_t state_idx, AccumComplex& res_lcl) {
                     auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
                     auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
                     ComplexType coef = _terms[term_id]._coef;
                     if (bit_flip_mask == 0) {
+                        if (dim == 1) {
+                            res_lcl += internal::to_complex_double(
+                                coef * internal::conj(states_bra._raw(batch_id, 0)) *
+                                states_ket._raw(batch_id, 0));
+                            return;
+                        }
                         std::uint64_t state_idx1 = state_idx << 1;
                         ComplexType tmp1 =
                             (scaluq::internal::conj(states_bra._raw(batch_id, state_idx1)) *
@@ -598,7 +681,7 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
             {0, 0}, {_terms.size(), target._terms.size()}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j, std::uint64_t & nnz_lcl) {
             ret._terms(i * target._terms.size() + j) = _terms(i) * target._terms(j);
-            if (static_cast<double>(ret._terms(i * target._terms.size() + j)._coef.imag()) == 0.)
+            if (static_cast<double>(ret._terms(i * target._terms.size() + j)._coef.imag()) != 0.)
                 ++nnz_lcl;
         },
         nnz_count);
@@ -610,11 +693,16 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
 template <>
 Operator<internal::Prec, internal::Space>& Operator<internal::Prec, internal::Space>::operator*=(
     const PauliOperator<internal::Prec>& target) {
-    Kokkos::parallel_for(
+    std::uint64_t non_real_count = 0;
+    Kokkos::parallel_reduce(
         "operator*=",
         Kokkos::RangePolicy<internal::SpaceType<internal::Space>>(0, _terms.size()),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _terms(i) *= target; });
-    _is_hermitian &= (target.coef().imag() == 0);
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t & count) {
+            _terms(i) *= target;
+            if (static_cast<double>(_terms(i)._coef.imag()) != 0.) ++count;
+        },
+        non_real_count);
+    _is_hermitian = (non_real_count == 0);
     return *this;
 }
 
