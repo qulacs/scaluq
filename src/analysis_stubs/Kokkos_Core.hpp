@@ -85,6 +85,13 @@ struct ViewAllocateWithoutInitializing {
     explicit ViewAllocateWithoutInitializing(const std::string& s) : label(s.c_str()) {}
 };
 
+struct WithoutInitializing_t {};
+inline constexpr WithoutInitializing_t WithoutInitializing{};
+
+inline ViewAllocateWithoutInitializing view_alloc(WithoutInitializing_t, const char* label) {
+    return ViewAllocateWithoutInitializing(label);
+}
+
 // ── Rank tag ───────────────────────────────────────────────────────────────
 enum class Iterate { Default, Left, Right };
 
@@ -366,6 +373,11 @@ inline T max(T a, T b) {
     return a > b ? a : b;
 }
 
+template <class T>
+inline constexpr const T& min(const T& a, const T& b) {
+    return b < a ? b : a;
+}
+
 inline std::uint64_t popcount(std::uint64_t x) {
     return static_cast<std::uint64_t>(__builtin_popcountll(x));
 }
@@ -390,6 +402,8 @@ KOKKOS_STUB_UNARY_MATH_FUNCTION(sinh)
 KOKKOS_STUB_UNARY_MATH_FUNCTION(cosh)
 
 #undef KOKKOS_STUB_UNARY_MATH_FUNCTION
+
+using std::nextafter;
 
 // ── Math constants ─────────────────────────────────────────────────────────
 namespace numbers {
