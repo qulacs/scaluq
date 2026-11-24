@@ -27,6 +27,10 @@ std::vector<std::vector<std::uint64_t>> sample_probabilities(std::uint64_t batch
     using Sp = SpaceType<Space>;
     using Policy = Kokkos::TeamPolicy<Sp>;
     if (!count || !batch_size) return std::vector<std::vector<std::uint64_t>>(batch_size);
+    if (dim == 0) {
+        throw std::invalid_argument(
+            "Sampling requires finite nonnegative probabilities with a positive total.");
+    }
     // The result buffer also stores one validation flag per batch.
     if (count >= std::vector<std::uint64_t>().max_size() / batch_size) {
         throw std::length_error("Too many samples requested.");
