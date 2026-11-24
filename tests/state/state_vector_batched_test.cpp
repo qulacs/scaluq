@@ -259,7 +259,7 @@ TYPED_TEST(StateVectorBatchedTest, WeightedBatchAlgebra) {
         ASSERT_NEAR(std::abs(combined[i] - expected), 0., eps<Prec>);
     }
     auto scaled = states.copy();
-    scaled.multiply_coef(coefs);
+    scaled.multiply_coefs(coefs);
     auto products = Batch::inner_product(states, scaled);
     auto scaled_amp = scaled.get_amplitudes();
     for (std::size_t b = 0; b < 3; ++b) {
@@ -270,18 +270,18 @@ TYPED_TEST(StateVectorBatchedTest, WeightedBatchAlgebra) {
         }
         ASSERT_NEAR(std::abs(products[b] - expected_product), 0., eps<Prec>);
     }
-    states.add_state_vector_with_coef(coefs, states);
+    states.add_state_vector_with_coefs(coefs, states);
     auto self_added = states.get_amplitudes();
     for (std::size_t b = 0; b < 3; ++b) {
         for (std::size_t i = 0; i < 2; ++i) {
             ASSERT_NEAR(std::abs(self_added[b][i] - (1. + coefs[b]) * input[b][i]), 0., eps<Prec>);
         }
     }
-    EXPECT_THROW(states.multiply_coef(std::vector<StdComplex>{}), std::invalid_argument);
+    EXPECT_THROW(states.multiply_coefs(std::vector<StdComplex>{}), std::invalid_argument);
     EXPECT_THROW((void)states.get_linear_combination(std::vector<StdComplex>{}),
                  std::invalid_argument);
     Batch wrong_batch(2, 1), wrong_dim(3, 2);
-    EXPECT_THROW(states.add_state_vector_with_coef(coefs, wrong_batch), std::invalid_argument);
+    EXPECT_THROW(states.add_state_vector_with_coefs(coefs, wrong_batch), std::invalid_argument);
     EXPECT_THROW((void)Batch::inner_product(states, wrong_dim), std::invalid_argument);
     Batch empty(0, 1);
     auto zero = empty.get_linear_combination({}).get_amplitudes();
@@ -297,12 +297,12 @@ TYPED_TEST(StateVectorBatchedTest, WeightedValidationAndZeroQubits) {
     src.load({{{1., 0.}}, {{2., 0.}}});
     dst.load({{{2., 0.}}, {{3., 0.}}});
     auto before = dst.get_amplitudes();
-    EXPECT_THROW(dst.multiply_coef(std::vector<StdComplex>{1.}), std::invalid_argument);
+    EXPECT_THROW(dst.multiply_coefs(std::vector<StdComplex>{1.}), std::invalid_argument);
     EXPECT_EQ(dst.get_amplitudes(), before);
-    EXPECT_THROW(dst.add_state_vector_with_coef(std::vector<StdComplex>{1.}, src),
+    EXPECT_THROW(dst.add_state_vector_with_coefs(std::vector<StdComplex>{1.}, src),
                  std::invalid_argument);
     EXPECT_EQ(dst.get_amplitudes(), before);
-    dst.add_state_vector_with_coef(std::vector<StdComplex>{1., 1.}, src);
+    dst.add_state_vector_with_coefs(std::vector<StdComplex>{1., 1.}, src);
     auto actual = dst.get_amplitudes();
     EXPECT_EQ(actual[0][0], StdComplex(3, 0));
     EXPECT_EQ(actual[1][0], StdComplex(5, 0));

@@ -458,9 +458,9 @@ void StateVectorBatched<Prec, Space>::multiply_coef(const StdComplex& coef) {
 }
 
 template <Precision Prec, ExecutionSpace Space>
-void StateVectorBatched<Prec, Space>::multiply_coef(const std::vector<StdComplex>& coefs) {
+void StateVectorBatched<Prec, Space>::multiply_coefs(const std::vector<StdComplex>& coefs) {
     if (coefs.size() != _batch_size) {
-        throw std::invalid_argument("multiply_coef: coefficient count must equal batch size");
+        throw std::invalid_argument("multiply_coefs: coefficient count must equal batch size");
     }
     if (_batch_size == 0) return;
     auto weights = internal::convert_vector_to_view<ComplexType, Space>(
@@ -472,11 +472,11 @@ void StateVectorBatched<Prec, Space>::multiply_coef(const std::vector<StdComplex
 }
 
 template <Precision Prec, ExecutionSpace Space>
-void StateVectorBatched<Prec, Space>::add_state_vector_with_coef(
+void StateVectorBatched<Prec, Space>::add_state_vector_with_coefs(
     const std::vector<StdComplex>& coefs, const StateVectorBatched& states) {
     if (coefs.size() != _batch_size || states.batch_size() != _batch_size ||
         states.n_qubits() != _n_qubits) {
-        throw std::invalid_argument("add_state_vector_with_coef: batch dimensions must match");
+        throw std::invalid_argument("add_state_vector_with_coefs: batch dimensions must match");
     }
     if (_batch_size == 0) return;
     auto weights = internal::convert_vector_to_view<ComplexType, Space>(

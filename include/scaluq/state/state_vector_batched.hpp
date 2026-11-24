@@ -91,9 +91,9 @@ public:
     void multiply_coef(const StdComplex& coef);
 
     // Coefficients are ordered by batch index; no normalization is performed.
-    void multiply_coef(const std::vector<StdComplex>& coefs);
-    void add_state_vector_with_coef(const std::vector<StdComplex>& coefs,
-                                    const StateVectorBatched& states);
+    void multiply_coefs(const std::vector<StdComplex>& coefs);
+    void add_state_vector_with_coefs(const std::vector<StdComplex>& coefs,
+                                     const StateVectorBatched& states);
     [[nodiscard]] StateVector<Prec, Space> get_linear_combination(
         const std::vector<StdComplex>& coefs) const;
     [[nodiscard]] static std::vector<StdComplex> inner_product(const StateVectorBatched& bra,
@@ -406,8 +406,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                 .c_str())
         // State manipulation methods
         .def("add_state_vector_with_coef",
-             nb::overload_cast<const StdComplex&, const StateVectorBatched<Prec, Space>&>(
-                 &StateVectorBatched<Prec, Space>::add_state_vector_with_coef),
+             &StateVectorBatched<Prec, Space>::add_state_vector_with_coef,
              "coef"_a,
              "states"_a,
              DocString()
@@ -417,7 +416,7 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("multiply_coef",
-             nb::overload_cast<const StdComplex&>(&StateVectorBatched<Prec, Space>::multiply_coef),
+             &StateVectorBatched<Prec, Space>::multiply_coef,
              "coef"_a,
              DocString()
                  .desc("Multiply all states by a coefficient.")
@@ -425,14 +424,11 @@ void bind_state_state_vector_batched_hpp(nb::module_& m) {
                  .build_as_google_style()
                  .c_str())
         .def("multiply_coef",
-             nb::overload_cast<const std::vector<StdComplex>&>(
-                 &StateVectorBatched<Prec, Space>::multiply_coef),
+             &StateVectorBatched<Prec, Space>::multiply_coefs,
              "coefs"_a,
              "Multiply each batch state by its corresponding coefficient.")
         .def("add_state_vector_with_coef",
-             nb::overload_cast<const std::vector<StdComplex>&,
-                               const StateVectorBatched<Prec, Space>&>(
-                 &StateVectorBatched<Prec, Space>::add_state_vector_with_coef),
+             &StateVectorBatched<Prec, Space>::add_state_vector_with_coefs,
              "coefs"_a,
              "states"_a,
              "Add coefs[b] * states[b] to each batch state. Passing the same batch as states is "
