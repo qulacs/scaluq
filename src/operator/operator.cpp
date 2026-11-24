@@ -323,7 +323,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
     const auto tile_count = pair_count / tile_width;
     const auto partials_per_state = nterms * tile_count;
     Kokkos::View<ComplexType**, Kokkos::LayoutRight, ExecutionSpaceType> partials(
-        Kokkos::view_alloc(Kokkos::WithoutInitializing, "expectation_value_partials"),
+        Kokkos::ViewAllocateWithoutInitializing("expectation_value_partials"),
         batch_size,
         partials_per_state);
 
@@ -373,7 +373,7 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
         });
 
     Kokkos::View<Kokkos::complex<double>*, ExecutionSpaceType> res(
-        Kokkos::view_alloc(Kokkos::WithoutInitializing, "expectation_value_res"), batch_size);
+        Kokkos::ViewAllocateWithoutInitializing("expectation_value_res"), batch_size);
     Kokkos::parallel_for(
         "get_expectation_value",
         Kokkos::RangePolicy<ExecutionSpaceType>(0, batch_size),
