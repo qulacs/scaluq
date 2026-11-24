@@ -511,7 +511,7 @@ TYPED_TEST(OperatorTest, PowerMethodProducesFiniteState) {
     // The default shift makes the shifted identity zero.
     Operator<Prec, Space> op({PauliOperator<Prec>("", 1.)});
     StateVector<Prec, Space> initial_state(0);
-    initial_state.load(std::vector<StdComplex>{2.});
+    initial_state.load(std::vector<StdComplex>{StdComplex(2.)});
     EXPECT_EQ(op.get_expectation_value(initial_state), StdComplex(4.));
     const auto ground_state = op.solve_ground_state_by_power_method(initial_state, 10);
     EXPECT_EQ(ground_state.eigenvalue, StdComplex(1.));
