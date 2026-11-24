@@ -3,6 +3,8 @@
 #include <scaluq/prec_space.hpp>
 #include <scaluq/util/math.hpp>
 
+#include <algorithm>
+#include <bit>
 #include <cmath>
 #include <limits>
 
@@ -302,64 +304,85 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
     const StateVectorBatched<internal::Prec, internal::Space>& states) const {
     check_qubit_count(states.n_qubits());
 
-    std::uint64_t nterms = _terms.size();
-    std::uint64_t dim = states.dim();
-    Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<internal::Space>> res(
-        "expectation_value_res", states.batch_size());
+    using TeamPolicy = Kokkos::TeamPolicy<ExecutionSpaceType>;
+    const auto batch_size = states.batch_size();
+    const auto nterms = _terms.size();
+    const auto dim = states.dim();
+    const auto pair_count = (dim + 1) >> 1;
+    if (batch_size == 0 || nterms == 0 || pair_count == 0) {
+        return std::vector<StdComplex>(batch_size);
+    }
+
+    // Distribute each (state, Pauli term) across more teams when there are few such pairs.
+    constexpr std::uint64_t target_teams = 128;
+    const auto term_jobs = batch_size * nterms;
+    const auto desired_tiles = 1 + (target_teams - 1) / term_jobs;
+    const auto desired_width = 1 + (pair_count - 1) / desired_tiles;
+    const auto tile_width = std::min(
+        pair_count, std::bit_ceil(std::clamp<std::uint64_t>(desired_width, 1024, 16384)));
+    const auto tile_count = pair_count / tile_width;
+    const auto partials_per_state = nterms * tile_count;
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight, ExecutionSpaceType> partials(
+        Kokkos::view_alloc(Kokkos::WithoutInitializing, "expectation_value_partials"),
+        batch_size,
+        partials_per_state);
+
+    const auto terms = _terms;
+    const auto amplitudes = states._raw;
     Kokkos::parallel_for(
-        "get_expectation_value",
-        Kokkos::TeamPolicy<internal::SpaceType<internal::Space>>(
-            internal::SpaceType<internal::Space>(), states.batch_size(), Kokkos::AUTO),
-        KOKKOS_CLASS_LAMBDA(
-            const typename Kokkos::TeamPolicy<internal::SpaceType<internal::Space>>::member_type&
-                team) {
-            ComplexType sum = 0;
-            std::uint64_t batch_id = team.league_rank();
+        "get_expectation_value_partials",
+        TeamPolicy(batch_size * partials_per_state, Kokkos::AUTO),
+        KOKKOS_LAMBDA(const TeamPolicy::member_type& team) {
+            const auto batch_id = team.league_rank() / partials_per_state;
+            const auto partial_id = team.league_rank() % partials_per_state;
+            const auto begin = (partial_id % tile_count) * tile_width;
+            const auto& term = terms(partial_id / tile_count);
+            const auto bit_flip_mask = term._bit_flip_mask;
+            const auto phase_flip_mask = term._phase_flip_mask;
+            const auto coef = term._coef;
+            const auto pivot = bit_flip_mask ? Kokkos::bit_width(bit_flip_mask) - 1 : 0;
+            const auto phase = internal::PHASE_90ROT<internal::Prec>()[
+                Kokkos::popcount(bit_flip_mask & phase_flip_mask) % 4];
+            const auto row = Kokkos::subview(amplitudes, batch_id, Kokkos::ALL());
+
+            ComplexType sum;
             Kokkos::parallel_reduce(
-                Kokkos::TeamThreadMDRange(team, nterms, (dim + 1) >> 1),
-                [&](std::uint64_t term_id, std::uint64_t state_idx, ComplexType& res_lcl) {
-                    auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
-                    auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
-                    ComplexType coef = _terms[term_id]._coef;
-                    if (bit_flip_mask == 0) {
-                        if (dim == 1) {
-                            res_lcl += coef * internal::squared_norm(states._raw(batch_id, 0));
-                            return;
-                        }
-                        std::uint64_t state_idx1 = state_idx << 1;
-                        FloatType tmp1 =
-                            (scaluq::internal::conj(states._raw(batch_id, state_idx1)) *
-                             states._raw(batch_id, state_idx1))
-                                .real();
-                        if (Kokkos::popcount(state_idx1 & phase_flip_mask) & 1) tmp1 = -tmp1;
-                        std::uint64_t state_idx2 = state_idx1 | 1;
-                        FloatType tmp2 =
-                            (scaluq::internal::conj(states._raw(batch_id, state_idx2)) *
-                             states._raw(batch_id, state_idx2))
-                                .real();
-                        if (Kokkos::popcount(state_idx2 & phase_flip_mask) & 1) tmp2 = -tmp2;
-                        res_lcl += coef * (tmp1 + tmp2);
+                Kokkos::TeamThreadRange(team, begin, begin + tile_width),
+                [&](std::uint64_t state_idx, ComplexType& update) {
+                    if (dim == 1) {
+                        update += coef * internal::squared_norm(row(0));
+                    } else if (bit_flip_mask == 0) {
+                        const auto basis_0 = state_idx << 1;
+                        const auto basis_1 = basis_0 | 1;
+                        auto prob0 = internal::squared_norm(row(basis_0));
+                        auto prob1 = internal::squared_norm(row(basis_1));
+                        if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) prob0 = -prob0;
+                        if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) prob1 = -prob1;
+                        update += coef * (prob0 + prob1);
                     } else {
-                        std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
-                        std::uint64_t global_phase_90rot_count =
-                            Kokkos::popcount(bit_flip_mask & phase_flip_mask);
-                        ComplexType global_phase =
-                            internal::PHASE_90ROT<internal::Prec>()[global_phase_90rot_count % 4];
-                        std::uint64_t basis_0 =
-                            internal::insert_zero_to_basis_index(state_idx, pivot);
-                        std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-                        FloatType tmp = scaluq::internal::real(
-                            states._raw(batch_id, basis_0) *
-                            scaluq::internal::conj(states._raw(batch_id, basis_1)) * global_phase *
-                            FloatType(2.0f));
-                        if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
-                        res_lcl += coef * tmp;
+                        const auto basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
+                        const auto basis_1 = basis_0 ^ bit_flip_mask;
+                        auto value = internal::real(row(basis_0) * internal::conj(row(basis_1)) *
+                                                    phase * FloatType{2.0f});
+                        if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) value = -value;
+                        update += coef * value;
                     }
                 },
                 sum);
-            Kokkos::single(Kokkos::PerTeam(team), [&]() {
-                res(batch_id) = Kokkos::complex<double>(sum.real(), sum.imag());
-            });
+            Kokkos::single(Kokkos::PerTeam(team), [&] { partials(batch_id, partial_id) = sum; });
+        });
+
+    Kokkos::View<Kokkos::complex<double>*, ExecutionSpaceType> res(
+        Kokkos::view_alloc(Kokkos::WithoutInitializing, "expectation_value_res"), batch_size);
+    Kokkos::parallel_for(
+        "get_expectation_value",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, batch_size),
+        KOKKOS_LAMBDA(std::uint64_t batch_id) {
+            ComplexType sum = 0;
+            for (std::uint64_t partial_id = 0; partial_id < partials_per_state; ++partial_id) {
+                sum += partials(batch_id, partial_id);
+            }
+            res(batch_id) = Kokkos::complex<double>(sum.real(), sum.imag());
         });
     auto res_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), res);
     return std::vector<StdComplex>(res_h.data(), res_h.data() + res_h.size());
