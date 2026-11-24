@@ -1,15 +1,21 @@
 #pragma once
 
 #include <Kokkos_Core.hpp>
-#include <Kokkos_Random.hpp>
 #include <algorithm>
 #include <bit>
-#include <cmath>
 #include <limits>
+#include <stdexcept>
 #include <scaluq/util/random.hpp>
 #include <scaluq/util/utility.hpp>
 
 namespace scaluq::internal {
+// SplitMix64 finalizer used to derive a uniform draw for each shot.
+KOKKOS_INLINE_FUNCTION std::uint64_t mix_sampling_bits(std::uint64_t bits) {
+    bits = (bits ^ (bits >> 30)) * 0xbf58476d1ce4e5b9ULL;
+    bits = (bits ^ (bits >> 27)) * 0x94d049bb133111ebULL;
+    return bits ^ (bits >> 31);
+}
+
 // Accumulate and sample in double so low-precision rounding cannot produce an
 // out-of-range sample. A positive finite total also permits unnormalized states.
 template <ExecutionSpace Space, typename Probability>
@@ -20,8 +26,11 @@ std::vector<std::vector<std::uint64_t>> sample_probabilities(std::uint64_t batch
                                                              Probability probability) {
     using Sp = SpaceType<Space>;
     using Policy = Kokkos::TeamPolicy<Sp>;
-    std::vector result(batch_size, std::vector<std::uint64_t>(count));
-    if (!count || !batch_size) return result;
+    if (!count || !batch_size) return std::vector<std::vector<std::uint64_t>>(batch_size);
+    // The result buffer also stores one validation flag per batch.
+    if (count >= std::vector<std::uint64_t>().max_size() / batch_size) {
+        throw std::length_error("Too many samples requested.");
+    }
 
     // Aim for enough teams to parallelize large states even when the batch is small.
     constexpr std::uint64_t target_teams = 128;
@@ -50,14 +59,13 @@ std::vector<std::vector<std::uint64_t>> sample_probabilities(std::uint64_t batch
             Kokkos::parallel_scan(Kokkos::TeamThreadRange(team, begin, end),
                                   [&](std::uint64_t i, double& update, bool final) {
                                       const double p = probability(batch, i);
-                                      update += p >= 0. && p <= std::numeric_limits<double>::max()
-                                                    ? p
-                                                    : std::numeric_limits<double>::quiet_NaN();
+                                      update += p < 0. ? std::numeric_limits<double>::quiet_NaN() : p;
                                       if (final) cumulative(batch, i + 1) = update;
                                   });
         });
-    Kokkos::View<double*, Sp> totals(
-        Kokkos::view_alloc(Kokkos::WithoutInitializing, "sampling_totals"), batch_size);
+    const auto total_shots = batch_size * count;
+    Kokkos::View<std::uint64_t*, Sp> samples(
+        Kokkos::view_alloc(Kokkos::WithoutInitializing, "samples"), total_shots + batch_size);
     Kokkos::View<double*, Sp> limits(
         Kokkos::view_alloc(Kokkos::WithoutInitializing, "sampling_limits"), batch_size);
     Kokkos::parallel_for(
@@ -73,30 +81,24 @@ std::vector<std::vector<std::uint64_t>> sample_probabilities(std::uint64_t batch
                                       if (final) {
                                           block_offsets(batch, block) = offset;
                                           if (block + 1 == block_count) {
-                                              totals(batch) = update;
-                                              limits(batch) = Kokkos::nextafter(update, 0.);
+                                              const bool valid =
+                                                  update > 0. &&
+                                                  update <= std::numeric_limits<double>::max();
+                                              samples(total_shots + batch) = valid;
+                                              limits(batch) = valid ? Kokkos::nextafter(update, 0.) : 0.;
                                           }
                                       }
                                   });
         });
-    const auto host_totals = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, totals);
-    for (std::uint64_t batch = 0; batch < batch_size; ++batch) {
-        const double total = host_totals(batch);
-        if (!std::isfinite(total) || total <= 0.) {
-            throw std::invalid_argument(
-                "Sampling requires finite nonnegative probabilities with a positive total.");
-        }
-    }
-    Kokkos::View<std::uint64_t*, Sp> samples(
-        Kokkos::view_alloc(Kokkos::WithoutInitializing, "samples"), batch_size * count);
-    Kokkos::Random_XorShift64_Pool<Sp> pool(resolve_seed(seed));
+    constexpr std::uint64_t rng_stride = 0x9e3779b97f4a7c15ULL;
+    const auto key = mix_sampling_bits(resolve_seed(seed) + rng_stride);
     Kokkos::parallel_for(
         "sampling_choose",
         Kokkos::RangePolicy<Sp>(0, batch_size * count),
         KOKKOS_LAMBDA(std::uint64_t idx) {
             const auto batch = idx / count;
-            auto generator = pool.get_state();
-            const double r = generator.drand(0., limits(batch));
+            const auto random = mix_sampling_bits(key + rng_stride * (idx + 1));
+            const double r = static_cast<double>(random >> 11) * 0x1p-53 * limits(batch);
 
             std::uint64_t first_block = 0, last_block = block_count;
             while (last_block - first_block > 1) {
@@ -118,11 +120,19 @@ std::vector<std::vector<std::uint64_t>> sample_probabilities(std::uint64_t batch
                     lo = mid;
             }
             samples(idx) = lo;
-            pool.free_state(generator);
         });
     const auto host_samples = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, samples);
     for (std::uint64_t b = 0; b < batch_size; ++b) {
-        std::copy_n(host_samples.data() + b * count, count, result[b].begin());
+        if (!host_samples(total_shots + b)) {
+            throw std::invalid_argument(
+                "Sampling requires finite nonnegative probabilities with a positive total.");
+        }
+    }
+    std::vector<std::vector<std::uint64_t>> result;
+    result.reserve(batch_size);
+    for (std::uint64_t b = 0; b < batch_size; ++b) {
+        const auto begin = host_samples.data() + b * count;
+        result.emplace_back(begin, begin + count);
     }
     return result;
 }
