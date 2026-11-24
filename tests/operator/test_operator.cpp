@@ -149,6 +149,31 @@ TYPED_TEST(OperatorTest, CheckBatchedExpectationValue) {
     }
 }
 
+TYPED_TEST(OperatorTest, BatchedExpectationValueAcrossTiles) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    constexpr std::uint64_t n_qubits = 12;
+    constexpr auto dim = 1ULL << n_qubits;
+    constexpr auto half = dim / 2;
+    std::vector<std::vector<StdComplex>> amplitudes(2, std::vector<StdComplex>(dim));
+
+    // The first state has support in both tiles, the second only in the upper tile.
+    amplitudes[0][0] = amplitudes[0][1] = amplitudes[0][half] = amplitudes[0][half + 1] = 0.5;
+    amplitudes[1][half] = amplitudes[1][half + 2] = 0.5;
+    amplitudes[1][half + 1] = amplitudes[1][half + 3] = StdComplex{0., 0.5};
+
+    StateVectorBatched<Prec, Space> states(2, n_qubits);
+    states.load(amplitudes);
+    const Operator<Prec, Space> op(std::vector<PauliOperator<Prec>>{
+        PauliOperator<Prec>("X 0"), PauliOperator<Prec>("Y 0", StdComplex{0.5, 0.25}),
+        PauliOperator<Prec>("Z 11", 2.)});
+
+    const auto values = op.get_expectation_value(states);
+    ASSERT_EQ(values.size(), 2);
+    EXPECT_NEAR(std::abs(values[0] - StdComplex{1., 0.}), 0., eps<Prec>);
+    EXPECT_NEAR(std::abs(values[1] - StdComplex{-1.5, 0.25}), 0., eps<Prec>);
+}
+
 TYPED_TEST(OperatorTest, ParallelExpectationValue) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
