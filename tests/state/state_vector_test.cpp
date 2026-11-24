@@ -21,6 +21,24 @@ TYPED_TEST(StateVectorTest, HaarRandomStateNorm) {
     }
 }
 
+TYPED_TEST(StateVectorTest, RejectsInvalidStorage) {
+    using State = StateVector<TestFixture::Prec, TestFixture::Space>;
+    using RawView = typename State::RawView;
+    const RawView odd_length("odd_length", 3);
+    EXPECT_THROW(static_cast<void>(State(odd_length)), std::invalid_argument);
+
+#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+    if constexpr (std::is_same_v<typename RawView::memory_space, Kokkos::HostSpace>) {
+        using Value = typename RawView::value_type;
+        using UnmanagedView =
+            Kokkos::View<Value*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+        alignas(Kokkos::Impl::MEMORY_ALIGNMENT) Value amplitudes[3];
+        const RawView misaligned(UnmanagedView(amplitudes + 1, 2));
+        EXPECT_THROW(static_cast<void>(State(misaligned)), std::invalid_argument);
+    }
+#endif
+}
+
 TYPED_TEST(StateVectorTest, OperationAtIndex) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
@@ -30,6 +48,8 @@ TYPED_TEST(StateVectorTest, OperationAtIndex) {
         ASSERT_NEAR(state.get_amplitude_at(i).real(), 1., eps<Prec>);
         ASSERT_NEAR(state.get_amplitude_at(i).imag(), 0., eps<Prec>);
     }
+    EXPECT_THROW(state.set_amplitude_at(state.dim(), 0), std::out_of_range);
+    EXPECT_THROW(static_cast<void>(state.get_amplitude_at(state.dim())), std::out_of_range);
 }
 
 TYPED_TEST(StateVectorTest, CopyState) {

@@ -37,12 +37,12 @@ public:
     StateVector& operator=(const StateVector& other) = default;
 
     /**
-     * @attention Very slow. You should use load() instead if you can.
+     * @attention Prefer load() when setting multiple amplitudes on a device.
      */
     void set_amplitude_at(std::uint64_t index, StdComplex c);
 
     /**
-     * @attention Very slow. You should use get_amplitudes() instead if you can.
+     * @attention Prefer get_amplitudes() when reading multiple amplitudes from a device.
      */
     [[nodiscard]] StdComplex get_amplitude_at(std::uint64_t index);
 
@@ -107,8 +107,9 @@ public:
         j = Json{{"n_qubits", state._n_qubits}, {"amplitudes", state.get_amplitudes()}};
     }
     friend void from_json(const Json& j, StateVector& state) {
-        state = StateVector(j.at("n_qubits").get<std::uint64_t>());
-        state.load(j.at("amplitudes").get<std::vector<StdComplex>>());
+        auto loaded = StateVector::uninitialized_state(j.at("n_qubits").get<std::uint64_t>());
+        loaded.load(j.at("amplitudes").get<std::vector<StdComplex>>());
+        state = loaded;
     }
 };
 
