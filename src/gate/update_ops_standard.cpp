@@ -1,3 +1,5 @@
+#include <scaluq/util/batched_gate_tiles.hpp>
+
 #include "update_ops.hpp"
 #include "update_ops_matrix_4x4.hpp"
 
@@ -10,21 +12,23 @@ void rx_gate(std::uint64_t target_mask,
              Float<Prec> pcoef,
              const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
              StateVectorBatched<Prec, Space>& states) {
+    const BatchedGateTiles tiles(states.batch_size(),
+                                 states.dim() >> std::popcount(target_mask | control_mask));
     auto team_policy =
-        Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), states.batch_size(), Kokkos::AUTO);
+        Kokkos::TeamPolicy<SpaceType<Space>>(states.batch_size() * tiles.count, Kokkos::AUTO);
     Kokkos::parallel_for(
         "rx_gate",
         team_policy,
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team_member) {
-            const std::uint64_t batch_id = team_member.league_rank();
+            const auto batch_id = team_member.league_rank() / tiles.count;
+            const auto begin = team_member.league_rank() % tiles.count * tiles.width;
             const Float<Prec> angle = params(batch_id) * pcoef;
             const Float<Prec> cosval = internal::cos(angle / Float<Prec>{2});
             const Float<Prec> sinval = internal::sin(angle / Float<Prec>{2});
             Matrix2x2<Prec> matrix = {
                 {{{cosval, Complex<Prec>(0, -sinval)}}, {{Complex<Prec>(0, -sinval), cosval}}}};
             Kokkos::parallel_for(
-                Kokkos::TeamThreadRange(team_member,
-                                        states.dim() >> Kokkos::popcount(target_mask | control_mask)),
+                Kokkos::TeamThreadRange(team_member, begin, begin + tiles.width),
                 [&](std::uint64_t it) {
                     std::uint64_t basis_0 =
                         insert_zero_at_mask_positions(it, control_mask | target_mask) |
@@ -47,20 +51,22 @@ void ry_gate(std::uint64_t target_mask,
              Float<Prec> pcoef,
              const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
              StateVectorBatched<Prec, Space>& states) {
+    const BatchedGateTiles tiles(states.batch_size(),
+                                 states.dim() >> std::popcount(target_mask | control_mask));
     auto team_policy =
-        Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), states.batch_size(), Kokkos::AUTO);
+        Kokkos::TeamPolicy<SpaceType<Space>>(states.batch_size() * tiles.count, Kokkos::AUTO);
     Kokkos::parallel_for(
         "ry_gate",
         team_policy,
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team_member) {
-            const std::uint64_t batch_id = team_member.league_rank();
+            const auto batch_id = team_member.league_rank() / tiles.count;
+            const auto begin = team_member.league_rank() % tiles.count * tiles.width;
             const Float<Prec> angle = params(batch_id) * pcoef;
             const Float<Prec> cosval = internal::cos(angle / Float<Prec>{2});
             const Float<Prec> sinval = internal::sin(angle / Float<Prec>{2});
             Matrix2x2<Prec> matrix = {{{{cosval, -sinval}}, {{sinval, cosval}}}};
             Kokkos::parallel_for(
-                Kokkos::TeamThreadRange(team_member,
-                                        states.dim() >> Kokkos::popcount(target_mask | control_mask)),
+                Kokkos::TeamThreadRange(team_member, begin, begin + tiles.width),
                 [&](std::uint64_t it) {
                     std::uint64_t basis_0 =
                         insert_zero_at_mask_positions(it, control_mask | target_mask) |
@@ -83,21 +89,23 @@ void rz_gate(std::uint64_t target_mask,
              Float<Prec> pcoef,
              const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
              StateVectorBatched<Prec, Space>& states) {
+    const BatchedGateTiles tiles(states.batch_size(),
+                                 states.dim() >> std::popcount(target_mask | control_mask));
     auto team_policy =
-        Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), states.batch_size(), Kokkos::AUTO);
+        Kokkos::TeamPolicy<SpaceType<Space>>(states.batch_size() * tiles.count, Kokkos::AUTO);
     Kokkos::parallel_for(
         "rz_gate",
         team_policy,
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team_member) {
-            const std::uint64_t batch_id = team_member.league_rank();
+            const auto batch_id = team_member.league_rank() / tiles.count;
+            const auto begin = team_member.league_rank() % tiles.count * tiles.width;
             const Float<Prec> angle = params(batch_id) * pcoef;
             const Float<Prec> cosval = internal::cos(angle / Float<Prec>{2});
             const Float<Prec> sinval = internal::sin(angle / Float<Prec>{2});
             DiagonalMatrix2x2<Prec> diag = {Complex<Prec>(cosval, -sinval),
                                             Complex<Prec>(cosval, sinval)};
             Kokkos::parallel_for(
-                Kokkos::TeamThreadRange(team_member,
-                                        states.dim() >> Kokkos::popcount(target_mask | control_mask)),
+                Kokkos::TeamThreadRange(team_member, begin, begin + tiles.width),
                 [&](std::uint64_t it) {
                     std::uint64_t basis_0 =
                         insert_zero_at_mask_positions(it, control_mask | target_mask) |

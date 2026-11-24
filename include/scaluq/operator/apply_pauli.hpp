@@ -3,6 +3,7 @@
 #include "../constant.hpp"
 #include "../state/state_vector.hpp"
 #include "../state/state_vector_batched.hpp"
+#include "../util/batched_gate_tiles.hpp"
 #include "../util/math.hpp"
 
 namespace scaluq {
@@ -74,20 +75,21 @@ void apply_pauli(std::uint64_t control_mask,
                  std::uint64_t control_value_mask,
                  const Kokkos::View<PauliOperator<Prec>*, SpaceType<Space>>& ops,
                  StateVectorBatched<Prec, Space>& states) {
-    std::uint64_t dim = states.dim();
+    const BatchedGateTiles tiles(ops.extent(0), states.dim() >> std::popcount(control_mask));
     Kokkos::parallel_for(
         "apply_pauli",
-        Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), ops.extent(0), Kokkos::AUTO),
+        Kokkos::TeamPolicy<SpaceType<Space>>(ops.extent(0) * tiles.count, Kokkos::AUTO),
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team) {
-            std::uint64_t batch_id = team.league_rank();
+            const auto batch_id = team.league_rank() / tiles.count;
+            const auto begin = team.league_rank() % tiles.count * tiles.width;
+            const auto end = begin + tiles.width;
             auto bit_flip_mask = ops(batch_id)._bit_flip_mask;
             auto phase_flip_mask = ops(batch_id)._phase_flip_mask;
             Complex<Prec> coef = ops(batch_id)._coef;
 
             if (bit_flip_mask == 0) {
                 Kokkos::parallel_for(
-                    Kokkos::TeamThreadRange(team, dim >> Kokkos::popcount(control_mask)),
-                    [&](const std::uint64_t i) {
+                    Kokkos::TeamThreadRange(team, begin, end), [&](const std::uint64_t i) {
                         std::uint64_t state_idx =
                             insert_zero_at_mask_positions(i, control_mask) | control_value_mask;
                         if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
@@ -102,7 +104,7 @@ void apply_pauli(std::uint64_t control_mask,
                     Kokkos::popcount(bit_flip_mask & phase_flip_mask);
                 Complex<Prec> global_phase = PHASE_M90ROT<Prec>()[global_phase_90rot_count % 4];
                 Kokkos::parallel_for(
-                    Kokkos::TeamThreadRange(team, dim >> (Kokkos::popcount(control_mask) + 1)),
+                    Kokkos::TeamThreadRange(team, begin >> 1, end >> 1),
                     [&](const std::uint64_t i) {
                         std::uint64_t basis_0 =
                             insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
@@ -258,13 +260,17 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                           const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
                           StateVectorBatched<Prec, Space>& states) {
     std::uint64_t global_phase_90_rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
+    const BatchedGateTiles tiles(
+        states.batch_size(), states.dim() >> (std::popcount(control_mask) + (bit_flip_mask != 0)));
     auto team_policy =
-        Kokkos::TeamPolicy<SpaceType<Space>>(SpaceType<Space>(), states.batch_size(), Kokkos::AUTO);
+        Kokkos::TeamPolicy<SpaceType<Space>>(states.batch_size() * tiles.count, Kokkos::AUTO);
     Kokkos::parallel_for(
         "apply_pauli_rotation",
         team_policy,
         KOKKOS_LAMBDA(const Kokkos::TeamPolicy<SpaceType<Space>>::member_type& team) {
-            const std::uint64_t batch_id = team.league_rank();
+            const auto batch_id = team.league_rank() / tiles.count;
+            const auto begin = team.league_rank() % tiles.count * tiles.width;
+            const auto end = begin + tiles.width;
             const Float<Prec> angle = pcoef * params(batch_id);
             const Complex<Prec> true_angle = angle * coef;
             const Complex<Prec> cosval = internal::cos(-true_angle / Float<Prec>{2});
@@ -273,8 +279,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
                 const Complex<Prec> cval_min = cosval - Complex<Prec>(0, 1) * sinval;
                 const Complex<Prec> cval_pls = cosval + Complex<Prec>(0, 1) * sinval;
                 Kokkos::parallel_for(
-                    Kokkos::TeamThreadRange(team, states.dim() >> Kokkos::popcount(control_mask)),
-                    [&](const std::uint64_t i) {
+                    Kokkos::TeamThreadRange(team, begin, end), [&](const std::uint64_t i) {
                         std::uint64_t state_idx =
                             insert_zero_at_mask_positions(i, control_mask) | control_value_mask;
                         if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
@@ -286,9 +291,7 @@ void apply_pauli_rotation(std::uint64_t control_mask,
             } else {
                 std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
                 Kokkos::parallel_for(
-                    Kokkos::TeamThreadRange(team,
-                                            states.dim() >> (Kokkos::popcount(control_mask) + 1)),
-                    [&](const std::uint64_t i) {
+                    Kokkos::TeamThreadRange(team, begin, end), [&](const std::uint64_t i) {
                         std::uint64_t basis_0 =
                             insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
                             control_value_mask;
