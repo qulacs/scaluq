@@ -334,6 +334,11 @@ inline auto create_mirror_view_and_copy(Space, const V& v) {
     return v;
 }
 
+template <class V, class I>
+inline V subview(const V&, std::pair<I, I>, ALL_t) {
+    return {};
+}
+
 // subview strips one dimension: returns a 1D View of the element type.
 template <class V, class... Idx>
 inline auto subview(const V&, Idx...) {

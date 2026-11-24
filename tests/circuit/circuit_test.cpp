@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <array>
+#include <random>
 #include <scaluq/circuit/circuit.hpp>
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/gate/param_gate_factory.hpp>
@@ -512,4 +514,89 @@ TYPED_TEST(CircuitTest, OptimizeDoesNotMergeMeasurementGate) {
     ASSERT_EQ(circuit.n_gates(), 2);
     EXPECT_EQ(std::get<0>(circuit.get_gate_at(0)).gate_type(), GateType::X);
     EXPECT_EQ(std::get<0>(circuit.get_gate_at(1)).gate_type(), GateType::Measurement);
+}
+
+TYPED_TEST(CircuitTest, SimulateNoiseBatchedMatchesIndependentInputs) {
+    constexpr auto Prec = TestFixture::Prec;
+    constexpr auto Space = TestFixture::Space;
+    constexpr std::uint64_t shots = 128;
+    constexpr std::uint64_t seed = 17;
+    const std::vector<double> angles{0.27, 0.71};
+
+    StateVectorBatched<Prec, Space> inputs(2, 1);
+    StateVector<Prec, Space> one(1);
+    one.set_computational_basis(1);
+    inputs.set_state_vector_at(1, one);
+    const auto original = inputs.get_amplitudes();
+
+    Circuit<Prec> circuit;
+    circuit.add_gate(gate::X<Prec>(0));
+    circuit.add_param_gate(
+        gate::ParamProbabilistic<Prec>({0.4, 0.6}, {gate::I<Prec>(), gate::ParamRX<Prec>(0)}),
+        "angle");
+    // A sparse branch replaces its state allocation and must still update the packed output.
+    circuit.add_gate(gate::Probabilistic<Prec>(
+        {1.}, {gate::SparseMatrix<Prec, Space>({0}, make_X().sparseView())}));
+    const auto result = circuit.simulate_noise(inputs, shots, {{"angle", angles}}, seed);
+    ASSERT_EQ(result.input_indices.size(), result.states.batch_size());
+    ASSERT_EQ(result.counts.size(), result.states.batch_size());
+    const auto amplitudes = result.states.get_amplitudes();
+    for (std::uint64_t input = 0; input < inputs.batch_size(); ++input) {
+        auto scalar = circuit.simulate_noise(
+            inputs.view_state_vector_at(input), shots, {{"angle", angles[input]}}, seed + input);
+        std::mt19937 random_engine(seed + input);
+        const std::vector<double> deterministic{1.};
+        std::discrete_distribution<std::uint64_t> fixed(deterministic.begin(), deterministic.end());
+        for (std::uint64_t i = 0; i < shots; ++i) (void)fixed(random_engine);
+        const std::vector<double> probabilities{0.4, 0.6};
+        std::discrete_distribution<std::uint64_t> alternative(probabilities.begin(),
+                                                              probabilities.end());
+        std::array<std::uint64_t, 2> expected_counts{};
+        for (std::uint64_t i = 0; i < shots; ++i) ++expected_counts[alternative(random_engine)];
+
+        ASSERT_EQ(scalar.size(), expected_counts.size());
+        std::size_t branch = 0;
+        for (std::size_t i = 0; i < result.input_indices.size(); ++i) {
+            if (result.input_indices[i] != input) continue;
+            ASSERT_LT(branch, scalar.size());
+            EXPECT_EQ(result.counts[i], expected_counts[branch]);
+            EXPECT_EQ(scalar[branch].second, expected_counts[branch]);
+            const auto expected_amplitudes = scalar[branch].first.get_amplitudes();
+            for (std::size_t j = 0; j < expected_amplitudes.size(); ++j)
+                EXPECT_NEAR(std::abs(amplitudes[i][j] - expected_amplitudes[j]), 0., eps<Prec>);
+            ++branch;
+        }
+        EXPECT_EQ(branch, scalar.size());
+        const auto second = scalar[1].first.get_amplitudes();
+        scalar[0].first.set_zero_norm_state();
+        EXPECT_EQ(scalar[1].first.get_amplitudes(), second);
+    }
+    EXPECT_EQ(inputs.get_amplitudes(), original);
+}
+
+TYPED_TEST(CircuitTest, SimulateNoisePreservesZeroShotsAndParameterValidation) {
+    constexpr auto Prec = TestFixture::Prec;
+    constexpr auto Space = TestFixture::Space;
+    StateVector<Prec, Space> state(1);
+    StateVectorBatched<Prec, Space> states(2, 1);
+    Circuit<Prec> circuit;
+
+    const StateVector<Prec, Space> uninitialized;
+    EXPECT_THROW(circuit.simulate_noise(uninitialized, 0), std::runtime_error);
+    const auto unchanged = circuit.simulate_noise(state, 0);
+    ASSERT_EQ(unchanged.size(), 1);
+    EXPECT_EQ(unchanged.front().second, 0);
+    EXPECT_EQ(unchanged.front().first.get_amplitudes(), state.get_amplitudes());
+    EXPECT_EQ(circuit.simulate_noise(states, 0).states.batch_size(), 0);
+
+    circuit.add_gate(gate::X<Prec>(0));
+    EXPECT_TRUE(circuit.simulate_noise(state, 0).empty());
+    EXPECT_EQ(circuit.simulate_noise(states, 0).states.batch_size(), 0);
+
+    circuit.add_param_gate(
+        gate::ParamProbabilistic<Prec>({1., 0.}, {gate::I<Prec>(), gate::ParamRX<Prec>(0)}),
+        "angle");
+    EXPECT_THROW(circuit.simulate_noise(state, 1), std::out_of_range);
+    EXPECT_THROW(circuit.simulate_noise(states, 1), std::out_of_range);
+    EXPECT_THROW(circuit.simulate_noise(states, 1, {{"angle", {0.27}}}), std::invalid_argument);
 }

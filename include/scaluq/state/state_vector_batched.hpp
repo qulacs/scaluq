@@ -8,14 +8,26 @@
 
 namespace scaluq {
 
+template <Precision Prec>
+class Circuit;
+
 template <Precision Prec, ExecutionSpace Space>
 class StateVectorBatched {
+    friend class Circuit<Prec>;
+
     std::uint64_t _batch_size = 0;
     std::uint64_t _n_qubits = 0;
     std::uint64_t _dim = 0;
     using FloatType = internal::Float<Prec>;
     using ComplexType = internal::Complex<Prec>;
     using ExecutionSpaceType = internal::SpaceType<Space>;
+
+    [[nodiscard]] StateVectorBatched view_batch_range(std::uint64_t begin, std::uint64_t end) {
+        auto view = *this;
+        view._batch_size = end - begin;
+        view._raw = Kokkos::subview(_raw, std::pair{begin, end}, Kokkos::ALL());
+        return view;
+    }
 
 public:
     static constexpr Precision prec = Prec;
