@@ -86,6 +86,40 @@ TYPED_TEST(OperatorTest, ArnoldiGroundStateRejectsNonHermitianOperator) {
         std::runtime_error);
 }
 
+TYPED_TEST(OperatorTest, GroundStateSolversRejectInvalidInput) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    using Op = Operator<Prec, Space>;
+    using State = StateVector<Prec, Space>;
+
+    const auto expect_invalid = [](const char* input,
+                                   const Op& op,
+                                   const State& state,
+                                   std::uint64_t iterations,
+                                   std::optional<StdComplex> shift = std::nullopt,
+                                   std::optional<double> tolerance = std::nullopt) {
+        SCOPED_TRACE(input);
+        EXPECT_THROW(
+            (void)op.solve_ground_state_by_power_method(state, iterations, shift, tolerance),
+            std::invalid_argument);
+        EXPECT_THROW(
+            (void)op.solve_ground_state_by_arnoldi_method(state, iterations, shift, tolerance),
+            std::invalid_argument);
+    };
+
+    const Op op({PauliOperator<Prec>("Z 0", 1.)});
+    const Op out_of_range({PauliOperator<Prec>("Z 1", 1.)});
+    const State state(1);
+    State zero_state(1);
+    zero_state.set_zero_norm_state();
+
+    expect_invalid("zero iterations", op, state, 0);
+    expect_invalid("zero tolerance", op, state, 2, std::nullopt, 0.);
+    expect_invalid("complex shift", op, state, 2, StdComplex(0., 1.));
+    expect_invalid("qubit out of range", out_of_range, state, 2);
+    expect_invalid("zero initial state", op, zero_state, 2);
+}
+
 TYPED_TEST(OperatorTest, GetMatrix) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;

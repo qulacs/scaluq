@@ -1,10 +1,10 @@
 #include <Eigen/Eigenvalues>
+#include <cmath>
+#include <limits>
 #include <scaluq/operator/operator.hpp>
 #include <scaluq/prec_space.hpp>
 #include <scaluq/util/math.hpp>
-
-#include <cmath>
-#include <limits>
+#include <utility>
 
 namespace scaluq {
 template <>
@@ -578,14 +578,14 @@ constexpr double ground_state_default_tolerance() {
 }
 
 template <Precision Prec, ExecutionSpace Space>
-typename Operator<Prec, Space>::GroundState ground_state_result(const Operator<Prec, Space>& op,
-                                                                StateVector<Prec, Space> state,
-                                                                std::uint64_t iterations,
-                                                                double bound,
-                                                                double tolerance) {
+typename Operator<Prec, Space>::GroundState ground_state_result(
+    const Operator<Prec, Space>& op,
+    const StateVector<Prec, Space>& state,
+    StateVector<Prec, Space> residual,
+    std::uint64_t iterations,
+    double bound,
+    double tolerance) {
     const auto eigenvalue = op.get_expectation_value(state);
-    auto residual = state.copy();
-    op.apply_to_state(residual);
     residual.add_state_vector_with_coef(-eigenvalue, state);
     const double residual_norm = std::sqrt(residual.get_squared_norm());
     const bool converged =
@@ -607,11 +607,13 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_power_method(
     const StdComplex shift = mu.value_or(StdComplex(bound));
     auto state = initial_state.copy();
     state.normalize();
-    for (std::uint64_t i = 0; i < iter_count; ++i) {
-        auto result = ground_state_result(*this, state, i, bound, tol);
-        if (result.converged) return result;
+    for (std::uint64_t i = 0;; ++i) {
         auto next = state.copy();
         apply_to_state(next);
+        const bool exhausted = i == iter_count;
+        auto result = ground_state_result(
+            *this, state, exhausted ? std::move(next) : next.copy(), i, bound, tol);
+        if (result.converged || exhausted) return result;
         next.add_state_vector_with_coef(-shift, state);
         const double norm = next.get_squared_norm();
         if (!std::isfinite(norm) || norm <= 0.) {
@@ -620,7 +622,6 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_power_method(
         next.normalize();
         state = next;
     }
-    return ground_state_result(*this, state, iter_count, bound, tol);
 }
 
 template <>
@@ -680,7 +681,9 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
         state.add_state_vector_with_coef(solver.eigenvectors()(i, 0), krylov_space_basis[i]);
     }
     state.normalize();
-    return ground_state_result(*this, state, effective_iter_count, bound, tol);
+    auto applied = state.copy();
+    apply_to_state(applied);
+    return ground_state_result(*this, state, std::move(applied), effective_iter_count, bound, tol);
 }
 
 template <>
