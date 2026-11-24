@@ -49,14 +49,12 @@ std::vector<std::vector<std::uint64_t>> sample_probabilities(std::uint64_t batch
     const auto bins_per_block = 1 + (amplitudes_per_block - 1) / amplitudes_per_bin;
     const auto block_count = 1 + (bin_count - 1) / bins_per_block;
 
-    Kokkos::View<double**, Kokkos::LayoutRight, Sp> cumulative(
-        Kokkos::view_alloc(Kokkos::WithoutInitializing, "sampling_cumulative"),
+    const auto offsets_begin = bin_count + 1;
+    const auto limit_index = offsets_begin + block_count;
+    Kokkos::View<double**, Kokkos::LayoutRight, Sp> tables(
+        Kokkos::view_alloc(Kokkos::WithoutInitializing, "sampling_tables"),
         batch_size,
-        bin_count + 1);
-    Kokkos::View<double**, Kokkos::LayoutRight, Sp> block_offsets(
-        Kokkos::view_alloc(Kokkos::WithoutInitializing, "sampling_block_offsets"),
-        batch_size,
-        block_count);
+        limit_index + 1);
     Kokkos::parallel_for(
         "sampling_cumulative",
         Policy(batch_size * block_count, Kokkos::AUTO),
@@ -74,14 +72,12 @@ std::vector<std::vector<std::uint64_t>> sample_probabilities(std::uint64_t batch
                                           update += p < 0. ? std::numeric_limits<double>::quiet_NaN()
                                                            : p;
                                       }
-                                      if (final) cumulative(batch, bin + 1) = update;
+                                      if (final) tables(batch, bin + 1) = update;
                                   });
         });
     const auto total_shots = batch_size * count;
     Kokkos::View<std::uint64_t*, Sp> samples(
         Kokkos::view_alloc(Kokkos::WithoutInitializing, "samples"), total_shots + batch_size);
-    Kokkos::View<double*, Sp> limits(
-        Kokkos::view_alloc(Kokkos::WithoutInitializing, "sampling_limits"), batch_size);
     Kokkos::parallel_for(
         "sampling_block_offsets",
         Policy(batch_size, Kokkos::AUTO),
@@ -91,15 +87,15 @@ std::vector<std::vector<std::uint64_t>> sample_probabilities(std::uint64_t batch
                                   [&](std::uint64_t block, double& update, bool final) {
                                       const auto offset = update;
                                       const auto end = Kokkos::min((block + 1) * bins_per_block, bin_count);
-                                      update += cumulative(batch, end);
+                                      update += tables(batch, end);
                                       if (final) {
-                                          block_offsets(batch, block) = offset;
+                                          tables(batch, offsets_begin + block) = offset;
                                           if (block + 1 == block_count) {
                                               const bool valid =
                                                   update > 0. &&
                                                   update <= std::numeric_limits<double>::max();
                                               samples(total_shots + batch) = valid;
-                                              limits(batch) = valid ? Kokkos::nextafter(update, 0.) : 0.;
+                                              tables(batch, limit_index) = valid ? Kokkos::nextafter(update, 0.) : 0.;
                                           }
                                       }
                                   });
@@ -108,35 +104,35 @@ std::vector<std::vector<std::uint64_t>> sample_probabilities(std::uint64_t batch
     const auto key = mix_sampling_bits(resolve_seed(seed) + rng_stride);
     Kokkos::parallel_for(
         "sampling_choose",
-        Kokkos::RangePolicy<Sp>(0, batch_size * count),
+        Kokkos::RangePolicy<Sp>(0, total_shots),
         KOKKOS_LAMBDA(std::uint64_t idx) {
             const auto batch = idx / count;
             const auto random = mix_sampling_bits(key + rng_stride * (idx + 1));
-            const double r = static_cast<double>(random >> 11) * 0x1p-53 * limits(batch);
+            const double r = static_cast<double>(random >> 11) * 0x1p-53 * tables(batch, limit_index);
 
             std::uint64_t first_block = 0, last_block = block_count;
             while (last_block - first_block > 1) {
                 const auto mid = (first_block + last_block) / 2;
-                if (block_offsets(batch, mid) > r)
+                if (tables(batch, offsets_begin + mid) > r)
                     last_block = mid;
                 else
                     first_block = mid;
             }
 
-            const double offset = block_offsets(batch, first_block);
+            const double offset = tables(batch, offsets_begin + first_block);
             const auto block_begin = first_block * bins_per_block;
             auto lo = block_begin;
             auto hi = Kokkos::min(lo + bins_per_block, bin_count);
             while (hi - lo > 1) {
                 const auto mid = (lo + hi) / 2;
-                if (offset + cumulative(batch, mid) > r)
+                if (offset + tables(batch, mid) > r)
                     hi = mid;
                 else
                     lo = mid;
             }
             const auto first_basis = lo * amplitudes_per_bin;
             const auto last_basis = Kokkos::min(first_basis + amplitudes_per_bin, dim) - 1;
-            double local_cdf = lo == block_begin ? 0. : cumulative(batch, lo);
+            double local_cdf = lo == block_begin ? 0. : tables(batch, lo);
             auto basis = first_basis;
             for (; basis < last_basis; ++basis) {
                 local_cdf += probability(batch, basis);
