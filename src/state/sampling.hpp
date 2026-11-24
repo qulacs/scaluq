@@ -40,14 +40,19 @@ std::vector<std::vector<std::uint64_t>> sample_probabilities(std::uint64_t batch
     constexpr std::uint64_t target_teams = 128;
     const auto blocks_per_state = 1 + (target_teams - 1) / batch_size;
     const auto desired_width = 1 + (dim - 1) / blocks_per_state;
-    const auto block_width =
+    const auto amplitudes_per_block =
         std::min(dim, std::bit_ceil(std::clamp<std::uint64_t>(desired_width, 1024, 16384)));
-    const auto block_count = 1 + (dim - 1) / block_width;
+    // Reduce the prefix table when scanning many more amplitudes than we draw.
+    const auto amplitudes_per_bin =
+        std::clamp<std::uint64_t>(std::bit_floor(dim / count), 1, 16);
+    const auto bin_count = 1 + (dim - 1) / amplitudes_per_bin;
+    const auto bins_per_block = 1 + (amplitudes_per_block - 1) / amplitudes_per_bin;
+    const auto block_count = 1 + (bin_count - 1) / bins_per_block;
 
     Kokkos::View<double**, Kokkos::LayoutRight, Sp> cumulative(
         Kokkos::view_alloc(Kokkos::WithoutInitializing, "sampling_cumulative"),
         batch_size,
-        dim + 1);
+        bin_count + 1);
     Kokkos::View<double**, Kokkos::LayoutRight, Sp> block_offsets(
         Kokkos::view_alloc(Kokkos::WithoutInitializing, "sampling_block_offsets"),
         batch_size,
@@ -58,13 +63,18 @@ std::vector<std::vector<std::uint64_t>> sample_probabilities(std::uint64_t batch
         KOKKOS_LAMBDA(const typename Policy::member_type& team) {
             const auto batch = team.league_rank() / block_count;
             const auto block = team.league_rank() % block_count;
-            const auto begin = block * block_width;
-            const auto end = Kokkos::min(begin + block_width, dim);
+            const auto begin = block * bins_per_block;
+            const auto end = Kokkos::min(begin + bins_per_block, bin_count);
             Kokkos::parallel_scan(Kokkos::TeamThreadRange(team, begin, end),
-                                  [&](std::uint64_t i, double& update, bool final) {
-                                      const double p = probability(batch, i);
-                                      update += p < 0. ? std::numeric_limits<double>::quiet_NaN() : p;
-                                      if (final) cumulative(batch, i + 1) = update;
+                                  [&](std::uint64_t bin, double& update, bool final) {
+                                      const auto begin = bin * amplitudes_per_bin;
+                                      const auto end = Kokkos::min(begin + amplitudes_per_bin, dim);
+                                      for (auto i = begin; i < end; ++i) {
+                                          const double p = probability(batch, i);
+                                          update += p < 0. ? std::numeric_limits<double>::quiet_NaN()
+                                                           : p;
+                                      }
+                                      if (final) cumulative(batch, bin + 1) = update;
                                   });
         });
     const auto total_shots = batch_size * count;
@@ -80,7 +90,7 @@ std::vector<std::vector<std::uint64_t>> sample_probabilities(std::uint64_t batch
             Kokkos::parallel_scan(Kokkos::TeamThreadRange(team, block_count),
                                   [&](std::uint64_t block, double& update, bool final) {
                                       const auto offset = update;
-                                      const auto end = Kokkos::min((block + 1) * block_width, dim);
+                                      const auto end = Kokkos::min((block + 1) * bins_per_block, bin_count);
                                       update += cumulative(batch, end);
                                       if (final) {
                                           block_offsets(batch, block) = offset;
@@ -114,8 +124,9 @@ std::vector<std::vector<std::uint64_t>> sample_probabilities(std::uint64_t batch
             }
 
             const double offset = block_offsets(batch, first_block);
-            auto lo = first_block * block_width;
-            auto hi = Kokkos::min(lo + block_width, dim);
+            const auto block_begin = first_block * bins_per_block;
+            auto lo = block_begin;
+            auto hi = Kokkos::min(lo + bins_per_block, bin_count);
             while (hi - lo > 1) {
                 const auto mid = (lo + hi) / 2;
                 if (offset + cumulative(batch, mid) > r)
@@ -123,7 +134,19 @@ std::vector<std::vector<std::uint64_t>> sample_probabilities(std::uint64_t batch
                 else
                     lo = mid;
             }
-            samples(idx) = lo;
+            const auto first_basis = lo * amplitudes_per_bin;
+            const auto last_basis = Kokkos::min(first_basis + amplitudes_per_bin, dim) - 1;
+            double local_cdf = lo == block_begin ? 0. : cumulative(batch, lo);
+            auto basis = first_basis;
+            for (; basis < last_basis; ++basis) {
+                local_cdf += probability(batch, basis);
+                if (offset + local_cdf > r) break;
+            }
+            // Roundoff between bin prefixes and the local scan can leave a zero-weight tail.
+            if (basis == last_basis) {
+                while (basis > first_basis && probability(batch, basis) == 0.) --basis;
+            }
+            samples(idx) = basis;
         });
     const auto host_samples = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, samples);
     for (std::uint64_t b = 0; b < batch_size; ++b) {
