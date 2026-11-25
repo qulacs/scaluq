@@ -133,41 +133,40 @@ StdComplex PauliOperator<Prec>::get_expectation_value(
     const StateVector<Prec, Space>& state_vector) const {
     check_qubit_count(state_vector.n_qubits());
 
+    using Accum = internal::SingleStateReductionFloat<Prec, Space>;
     std::uint64_t bit_flip_mask = _bit_flip_mask;
     std::uint64_t phase_flip_mask = _phase_flip_mask;
     if (bit_flip_mask == 0) {
-        FloatType res{0.0f};
+        Accum res{0.0f};
         Kokkos::parallel_reduce(
             "get_expectation_value",
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector.dim()),
-            KOKKOS_LAMBDA(std::uint64_t state_idx, FloatType & sum) {
-                FloatType tmp = (scaluq::internal::conj(state_vector._raw[state_idx]) *
-                                 state_vector._raw[state_idx])
-                                    .real();
+            KOKKOS_LAMBDA(std::uint64_t state_idx, Accum& sum) {
+                FloatType tmp = internal::squared_norm(state_vector._raw[state_idx]);
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
-                sum += tmp;
+                sum += static_cast<Accum>(tmp);
             },
             res);
-        return _coef * res;
+        return internal::to_complex_double(_coef) * static_cast<double>(res);
     }
     std::uint64_t pivot = std::bit_width(bit_flip_mask) - 1;
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
-    FloatType res{0.0f};
+    Accum res{0.0f};
     Kokkos::parallel_reduce(
         "get_expectation_value",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector.dim() >> 1),
-        KOKKOS_LAMBDA(std::uint64_t state_idx, FloatType & sum) {
+        KOKKOS_LAMBDA(std::uint64_t state_idx, Accum& sum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
             FloatType tmp = scaluq::internal::real(
                 state_vector._raw[basis_0] * scaluq::internal::conj(state_vector._raw[basis_1]) *
                 global_phase * FloatType{2.0f});
             if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
-            sum += tmp;
+            sum += static_cast<Accum>(tmp);
         },
         res);
-    return static_cast<StdComplex>(_coef * res);
+    return static_cast<StdComplex>(internal::to_complex_double(_coef) * static_cast<double>(res));
 }
 
 template <Precision Prec>
@@ -176,6 +175,7 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
     const StateVectorBatched<Prec, Space>& states) const {
     check_qubit_count(states.n_qubits());
 
+    using AccumComplex = Kokkos::complex<double>;
     std::uint64_t bit_flip_mask = _bit_flip_mask;
     std::uint64_t phase_flip_mask = _phase_flip_mask;
     const std::uint64_t dim = states.dim();
@@ -187,20 +187,18 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
             Kokkos::TeamPolicy(internal::SpaceType<Space>(), states.batch_size(), Kokkos::AUTO),
             KOKKOS_CLASS_LAMBDA(
                 const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
-                FloatType res{0.0f};
+                double res{0.0f};
                 std::uint64_t batch_id = team.league_rank();
                 Kokkos::parallel_reduce(
                     Kokkos::TeamThreadRange(team, dim),
-                    [&](std::uint64_t state_idx, FloatType& sum) {
-                        FloatType tmp = (scaluq::internal::conj(states._raw(batch_id, state_idx)) *
-                                         states._raw(batch_id, state_idx))
-                                            .real();
+                    [&](std::uint64_t state_idx, double& sum) {
+                        FloatType tmp = internal::squared_norm(states._raw(batch_id, state_idx));
                         if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
-                        sum += tmp;
+                        sum += static_cast<double>(tmp);
                     },
                     res);
                 Kokkos::single(Kokkos::PerTeam(team), [&]() {
-                    ComplexType cres = _coef * res;
+                    AccumComplex cres = internal::to_complex_double(_coef) * res;
                     results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
                 });
             });
@@ -218,11 +216,11 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
         Kokkos::TeamPolicy(internal::SpaceType<Space>(), states.batch_size(), Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(
             const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
-            FloatType res{0.0f};
+            double res{0.0f};
             std::uint64_t batch_id = team.league_rank();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, dim >> 1),
-                [&](std::uint64_t state_idx, FloatType& sum) {
+                [&](std::uint64_t state_idx, double& sum) {
                     std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
                     std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
                     FloatType tmp = scaluq::internal::real(
@@ -230,11 +228,11 @@ std::vector<StdComplex> PauliOperator<Prec>::get_expectation_value(
                         scaluq::internal::conj(states._raw(batch_id, basis_1)) * global_phase *
                         FloatType{2.0f});
                     if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp = -tmp;
-                    sum += tmp;
+                    sum += static_cast<double>(tmp);
                 },
                 res);
             Kokkos::single(Kokkos::PerTeam(team), [&]() {
-                ComplexType cres = _coef * res;
+                AccumComplex cres = internal::to_complex_double(_coef) * res;
                 results(batch_id) = Kokkos::complex<double>(cres.real(), cres.imag());
             });
         });
@@ -252,30 +250,33 @@ StdComplex PauliOperator<Prec>::get_transition_amplitude(
         throw std::invalid_argument("Transition amplitude state dimensions must match.");
     }
 
+    using Accum = internal::SingleStateReductionFloat<Prec, Space>;
+    using AccumComplex = Kokkos::complex<Accum>;
     std::uint64_t bit_flip_mask = _bit_flip_mask;
     std::uint64_t phase_flip_mask = _phase_flip_mask;
     if (bit_flip_mask == 0) {
-        ComplexType res;
+        AccumComplex res;
         Kokkos::parallel_reduce(
             "get_transition_amplitude",
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector_bra.dim()),
-            KOKKOS_LAMBDA(std::uint64_t state_idx, ComplexType & sum) {
+            KOKKOS_LAMBDA(std::uint64_t state_idx, AccumComplex & sum) {
                 ComplexType tmp = scaluq::internal::conj(state_vector_bra._raw[state_idx]) *
                                   state_vector_ket._raw[state_idx];
                 if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) tmp = -tmp;
-                sum += tmp;
+                sum += internal::to_reduction_complex<Accum>(tmp);
             },
-            internal::Sum<ComplexType, Space>(res));
-        return _coef * res;
+            res);
+        return static_cast<StdComplex>(internal::to_complex_double(_coef) *
+                                       Kokkos::complex<double>(res.real(), res.imag()));
     }
     std::uint64_t pivot = std::bit_width(bit_flip_mask) - 1;
     std::uint64_t global_phase_90rot_count = std::popcount(bit_flip_mask & phase_flip_mask);
     ComplexType global_phase = internal::PHASE_90ROT<Prec>()[global_phase_90rot_count % 4];
-    ComplexType res;
+    AccumComplex res;
     Kokkos::parallel_reduce(
         "get_transition_amplitude",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, state_vector_bra.dim() >> 1),
-        KOKKOS_LAMBDA(std::uint64_t state_idx, ComplexType & sum) {
+        KOKKOS_LAMBDA(std::uint64_t state_idx, AccumComplex & sum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(state_idx, pivot);
             std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
             ComplexType tmp1 = scaluq::internal::conj(state_vector_bra._raw[basis_1]) *
@@ -284,10 +285,12 @@ StdComplex PauliOperator<Prec>::get_transition_amplitude(
             ComplexType tmp2 = scaluq::internal::conj(state_vector_bra._raw[basis_0]) *
                                state_vector_ket._raw[basis_1] * global_phase;
             if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp2 = -tmp2;
-            sum += tmp1 + tmp2;
+            sum += internal::to_reduction_complex<Accum>(tmp1);
+            sum += internal::to_reduction_complex<Accum>(tmp2);
         },
-        internal::Sum<ComplexType, Space>(res));
-    return static_cast<StdComplex>(_coef * res);
+        res);
+    return static_cast<StdComplex>(internal::to_complex_double(_coef) *
+                                   Kokkos::complex<double>(res.real(), res.imag()));
 }
 
 template <Precision Prec>
@@ -301,6 +304,7 @@ std::vector<StdComplex> PauliOperator<Prec>::get_transition_amplitude(
         throw std::invalid_argument(
             "Transition amplitude state dimensions and batch sizes must match.");
     }
+    using AccumComplex = Kokkos::complex<double>;
     const auto bit_flip_mask = _bit_flip_mask;
     const auto phase_flip_mask = _phase_flip_mask;
     const auto pivot = bit_flip_mask ? std::bit_width(bit_flip_mask) - 1 : 0;
@@ -315,16 +319,16 @@ std::vector<StdComplex> PauliOperator<Prec>::get_transition_amplitude(
         KOKKOS_CLASS_LAMBDA(
             const typename Kokkos::TeamPolicy<internal::SpaceType<Space>>::member_type& team) {
             const auto batch = team.league_rank();
-            ComplexType result{};
+            AccumComplex result{};
             const auto count = bit_flip_mask ? states_bra.dim() >> 1 : states_bra.dim();
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadRange(team, count),
-                [&](std::uint64_t i, ComplexType& sum) {
+                [&](std::uint64_t i, AccumComplex& sum) {
                     if (!bit_flip_mask) {
                         auto value =
                             internal::conj(states_bra._raw(batch, i)) * states_ket._raw(batch, i);
                         if (Kokkos::popcount(i & phase_flip_mask) & 1) value = -value;
-                        sum += value;
+                        sum += internal::to_complex_double(value);
                     } else {
                         const auto basis0 = internal::insert_zero_to_basis_index(i, pivot);
                         const auto basis1 = basis0 ^ bit_flip_mask;
@@ -334,12 +338,13 @@ std::vector<StdComplex> PauliOperator<Prec>::get_transition_amplitude(
                                       states_ket._raw(batch, basis1) * phase;
                         if (Kokkos::popcount(basis0 & phase_flip_mask) & 1) value0 = -value0;
                         if (Kokkos::popcount(basis1 & phase_flip_mask) & 1) value1 = -value1;
-                        sum += value0 + value1;
+                        sum += internal::to_complex_double(value0);
+                        sum += internal::to_complex_double(value1);
                     }
                 },
-                internal::Sum<ComplexType, Space>(result));
+                internal::Sum<AccumComplex, Space>(result));
             Kokkos::single(Kokkos::PerTeam(team), [&] {
-                const auto value = _coef * result;
+                const auto value = internal::to_complex_double(_coef) * result;
                 results(batch) = Kokkos::complex<double>(value.real(), value.imag());
             });
         });
