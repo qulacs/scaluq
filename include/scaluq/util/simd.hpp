@@ -50,6 +50,19 @@ KOKKOS_INLINE_FUNCTION Simd<Scalar, Lanes> permute(const Simd<Scalar, Lanes>& va
         }();
         return Simd<Scalar, Lanes>(_mm256_permute4x64_pd(static_cast<__m256d>(value), control));
     } else if constexpr (std::is_same_v<Scalar, float> && simd_lanes == 8) {
+        // An immediate shuffle suffices when both 128-bit halves use the same local mapping.
+        constexpr std::array<std::size_t, 8> lanes{Indices...};
+        constexpr bool repeated_local_shuffle = [&] {
+            for (std::size_t i = 0; i < 4; ++i) {
+                if (lanes[i] >= 4 || lanes[i + 4] != lanes[i] + 4) return false;
+            }
+            return true;
+        }();
+        if constexpr (repeated_local_shuffle) {
+            constexpr int control =
+                static_cast<int>(lanes[0] | (lanes[1] << 2) | (lanes[2] << 4) | (lanes[3] << 6));
+            return Simd<Scalar, Lanes>(_mm256_permute_ps(static_cast<__m256>(value), control));
+        }
         const __m256i indices = _mm256_setr_epi32(static_cast<int>(Indices)...);
         return Simd<Scalar, Lanes>(_mm256_permutevar8x32_ps(static_cast<__m256>(value), indices));
     } else if constexpr (std::is_same_v<Scalar, float> && simd_lanes == 4) {
