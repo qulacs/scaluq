@@ -21,5 +21,5 @@ def test_grouped_cached_and_streaming():
         assert op.is_cached() == bool(budget)
         out = x.copy()
         out.set_zero_norm_state()
-        op.apply_to_state(x, out)
+        op.apply_add(x, out)
         assert out.get_amplitudes() == pytest.approx(expected.get_amplitudes())

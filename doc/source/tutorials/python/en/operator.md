@@ -79,7 +79,7 @@ overlap; passing the same state vector as both is undefined behavior.
 
 `GroupedPauliOperator(n_qubits, terms, cache_budget=0)` takes a snapshot of a
 list of `PauliOperator`s and groups terms with the same X/Y bit-flip mask.
-`apply_to_state(input, output, coef=1)` **adds** `coef * H * input` to
+`apply_add(input, output, coef=1)` **adds** `coef * H * input` to
 `output`. `input` and `output` must not overlap; passing the same state vector
 as both is undefined behavior. The class also provides
 `get_expectation_value(state)` and `get_transition_amplitude(bra, ket)`, both

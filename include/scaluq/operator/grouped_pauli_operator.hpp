@@ -108,16 +108,16 @@ public:
     [[nodiscard]] bool is_cached() const { return weights_.cache.extent(0) != 0; }
     // Add coef * H * input to output. input and output must not overlap; any overlap,
     // including passing the same state vector twice, is undefined behavior.
-    void apply_to_state(const StateVector<Prec, Space>& input,
-                        StateVector<Prec, Space>& output,
-                        StdComplex coef = 1.) const {
+    void apply_add(const StateVector<Prec, Space>& input,
+                   StateVector<Prec, Space>& output,
+                   StdComplex coef = 1.) const {
         check(input);
         check(output);
         auto weights = weights_;
         auto ng = n_groups();
         internal::Complex<Prec> factor(coef);
         Kokkos::parallel_for(
-            "GroupedPauliOperator::apply",
+            "GroupedPauliOperator::apply_add",
             Kokkos::RangePolicy<Exec>(0, dim_),
             KOKKOS_LAMBDA(std::uint64_t i) {
                 Complex sum = 0.;

@@ -525,7 +525,7 @@ TYPED_TEST(OperatorTest, GroupedPauliCachedAndStreaming) {
         EXPECT_EQ(grouped.is_cached(), budget != 0);
         auto output = ket.copy();
         output.set_zero_norm_state();
-        grouped.apply_to_state(ket, output, StdComplex(.5, -.25));
+        grouped.apply_add(ket, output, StdComplex(.5, -.25));
         auto a = expected.get_amplitudes(), b = output.get_amplitudes();
         auto initial = ket.get_amplitudes();
         for (std::size_t i = 0; i < a.size(); ++i) {
@@ -567,7 +567,7 @@ TYPED_TEST(OperatorTest, GroupedPauliBoundaryCases) {
     StateVector<Prec, Space> input(2), out(2);
     input.load(std::vector<StdComplex>{0., 1., 0., 0.});
     out.set_zero_norm_state();
-    grouped.apply_to_state(input, out);
+    grouped.apply_add(input, out);
     EXPECT_NEAR(std::abs(out.get_amplitudes()[2] - StdComplex(2.)), 0., 1e-5);
 }
 

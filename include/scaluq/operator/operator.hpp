@@ -415,8 +415,8 @@ void bind_operator_operator_hpp(nb::module_& m) {
              "cache_budget"_a = 0)
         .def("n_groups", &GroupedPauliOperator<Prec, Space>::n_groups)
         .def("is_cached", &GroupedPauliOperator<Prec, Space>::is_cached)
-        .def("apply_to_state",
-             &GroupedPauliOperator<Prec, Space>::apply_to_state,
+        .def("apply_add",
+             &GroupedPauliOperator<Prec, Space>::apply_add,
              "input"_a,
              "output"_a,
              "coef"_a = 1.,
