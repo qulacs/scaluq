@@ -78,3 +78,9 @@ states = scaluq.StateVectorBatched(3, 2)
 pauli = scaluq.PauliOperator("Y 0 Z 1", coef=0.5)
 pauli.apply_to_state(states)
 ```
+
+### Applying Pauli sums
+
+`pauli.apply_add(input, output, coef)` adds `coef * P * input` to `output`,
+including the coefficient stored in `pauli`. `input` and `output` must not
+overlap; passing the same state vector as both is undefined behavior.

@@ -664,6 +664,40 @@ void run_random_batched_gate_apply_general_dense(std::uint64_t n_qubits) {
     }
 }
 
+TYPED_TEST(BatchedGateTest, SingleQubitPauliRotationBatchedControls) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    constexpr std::uint64_t n_qubits = 3;
+    std::vector<std::vector<StdComplex>> initial(2, std::vector<StdComplex>(1ULL << n_qubits));
+    for (std::uint64_t b = 0; b < initial.size(); ++b) {
+        for (std::uint64_t i = 0; i < initial[b].size(); ++i)
+            initial[b][i] = StdComplex(0.13 * (i + b + 1), -0.06 * (2 * i + b));
+    }
+
+    for (const char* pauli_name : {"X", "Y", "Z"}) {
+        StateVectorBatched<Prec, Space> states(2, n_qubits);
+        states.load(initial);
+        PauliOperator<Prec> pauli(std::string(pauli_name) + " 2", StdComplex(0.7, 0.));
+        auto rotation = gate::PauliRotation(pauli, -0.91, {0}, {1});
+        const auto matrix = rotation->get_matrix();
+        rotation->update_quantum_state(states);
+        const auto actual = states.get_amplitudes();
+        for (std::uint64_t b = 0; b < initial.size(); ++b) {
+            auto expected = initial[b];
+            for (std::uint64_t base = 0; base < expected.size(); ++base) {
+                if ((base & (1ULL << 2)) != 0 || (base & 1ULL) == 0) continue;
+                const std::uint64_t one = base | (1ULL << 2);
+                expected[base] = matrix(0, 0) * initial[b][base] +
+                                 matrix(0, 1) * initial[b][one];
+                expected[one] = matrix(1, 0) * initial[b][base] +
+                               matrix(1, 1) * initial[b][one];
+            }
+            for (std::uint64_t i = 0; i < expected.size(); ++i)
+                check_near<Prec>(actual[b][i], expected[i]);
+        }
+    }
+}
+
 TYPED_TEST(BatchedGateTest, ApplyI) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;

@@ -46,23 +46,50 @@ public:
     [[nodiscard]] KOKKOS_INLINE_FUNCTION PauliOperator get_dagger() const {
         return PauliOperator(_bit_flip_mask, _phase_flip_mask, scaluq::internal::conj(_coef));
     };
-    [[nodiscard]] std::uint64_t get_qubit_count() const;
-
     void add_single_pauli(std::uint64_t target_qubit, std::uint64_t pauli_id);
 
+private:
+    void check_qubit_count(std::uint64_t n_qubits) const {
+        if (n_qubits < 64 && ((_bit_flip_mask | _phase_flip_mask) >> n_qubits)) {
+            throw std::invalid_argument("Pauli operator acts on a qubit outside the state.");
+        }
+    }
+
+public:
     template <ExecutionSpace Space>
     void apply_to_state(StateVector<Prec, Space>& state_vector) const {
+        check_qubit_count(state_vector.n_qubits());
         internal::apply_pauli(0ULL, 0LL, _bit_flip_mask, _phase_flip_mask, _coef, state_vector);
     }
 
     // Apply the same Pauli operator (including its coefficient) to every row.
     template <ExecutionSpace Space>
     void apply_to_state(StateVectorBatched<Prec, Space>& states) const {
-        if (static_cast<std::uint64_t>(std::bit_width(_bit_flip_mask | _phase_flip_mask)) >
-            states.n_qubits()) {
-            throw std::runtime_error("PauliOperator::apply_to_state: insufficient qubits");
-        }
+        check_qubit_count(states.n_qubits());
         internal::apply_pauli(0ULL, 0ULL, _bit_flip_mask, _phase_flip_mask, _coef, states);
+    }
+
+    // Add coef times this Pauli operator applied to input to output.
+    // input and output must not overlap; passing overlapping buffers (including the same
+    // state vector twice) is undefined behavior.
+    template <ExecutionSpace Space>
+    void apply_add(const StateVector<Prec, Space>& input,
+                   StateVector<Prec, Space>& output,
+                   StdComplex coef = 1.) const {
+        if (input.n_qubits() != output.n_qubits() ||
+            std::bit_width(_bit_flip_mask | _phase_flip_mask) > input.n_qubits())
+            throw std::runtime_error("PauliOperator::apply_add: incompatible qubit counts");
+        auto x = _bit_flip_mask, z = _phase_flip_mask;
+        ComplexType factor =
+            _coef * ComplexType(coef) * internal::PHASE_90ROT<Prec>()[std::popcount(x & z) % 4];
+        Kokkos::parallel_for(
+            "PauliOperator::apply_add",
+            Kokkos::RangePolicy<internal::SpaceType<Space>>(0, input.dim()),
+            KOKKOS_LAMBDA(std::uint64_t i) {
+                auto b = i ^ x;
+                auto value = factor * input.at_unsafe(b);
+                output.at_unsafe(i) += (Kokkos::popcount(b & z) & 1) ? -value : value;
+            });
     }
 
     template <ExecutionSpace Space>
@@ -205,6 +232,20 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
                  nb::const_),
              "states"_a,
              "Apply this Pauli operator, including its coefficient, to every state in the batch.")
+        .def("apply_add",
+             &PauliOperator<Prec>::template apply_add<ExecutionSpace::HostSerial>,
+             "input"_a,
+             "output"_a,
+             "coef"_a = 1.,
+             "Add coef times this Pauli operator applied to input to output. input and output "
+             "must not overlap (passing the same state vector twice is undefined behavior).")
+        .def("apply_add",
+             &PauliOperator<Prec>::template apply_add<ExecutionSpace::Host>,
+             "input"_a,
+             "output"_a,
+             "coef"_a = 1.,
+             "Add coef times this Pauli operator applied to input to output. input and output "
+             "must not overlap (passing the same state vector twice is undefined behavior).")
         .def("get_expectation_value",
              nb::overload_cast<const StateVector<Prec, ExecutionSpace::Host>&>(
                  &PauliOperator<Prec>::template get_expectation_value<ExecutionSpace::Host>,
@@ -240,7 +281,13 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
                 &PauliOperator<Prec>::template apply_to_state<ExecutionSpace::Default>, nb::const_),
             "states"_a,
             "Apply this Pauli operator, including its coefficient, to every state in the batch.")
-
+        .def("apply_add",
+             &PauliOperator<Prec>::template apply_add<ExecutionSpace::Default>,
+             "input"_a,
+             "output"_a,
+             "coef"_a = 1.,
+             "Add coef times this Pauli operator applied to input to output. input and output "
+             "must not overlap (passing the same state vector twice is undefined behavior).")
         .def("get_expectation_value",
              nb::overload_cast<const StateVector<Prec, ExecutionSpace::Default>&>(
                  &PauliOperator<Prec>::template get_expectation_value<ExecutionSpace::Default>,

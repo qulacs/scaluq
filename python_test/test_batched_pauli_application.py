@@ -34,12 +34,12 @@ def test_batched_pauli_scalar_empty_and_invalid(space, precision):
     states.load([[1], [1j], [2]])
     scaluq.PauliOperator("", 2j, precision=precision).apply_to_state(states)
     np.testing.assert_allclose(states.get_amplitudes(), [[2j], [-2], [4j]])
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         scaluq.PauliOperator("X 0", precision=precision).apply_to_state(states)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         scaluq.PauliOperator("Z 0", precision=precision).apply_to_state(states)
     np.testing.assert_allclose(states.get_amplitudes(), [[2j], [-2], [4j]])
     empty = scaluq.StateVectorBatched(0, 1, precision=precision, space=space)
     scaluq.PauliOperator("Y 0", precision=precision).apply_to_state(empty)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         scaluq.PauliOperator("X 1", precision=precision).apply_to_state(empty)

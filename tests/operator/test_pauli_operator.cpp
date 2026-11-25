@@ -336,12 +336,12 @@ TYPED_TEST(PauliOperatorTest, ApplyToBatchedScalarAndInvalidMasks) {
     EXPECT_NEAR(std::abs(result[0][0] - StdComplex(0., 2.)), 0., eps<Prec>);
     EXPECT_NEAR(std::abs(result[1][0] - StdComplex(-2., 0.)), 0., eps<Prec>);
     EXPECT_NEAR(std::abs(result[2][0] - StdComplex(0., 4.)), 0., eps<Prec>);
-    EXPECT_THROW(PauliOperator<Prec>("X 0").apply_to_state(states), std::runtime_error);
-    EXPECT_THROW(PauliOperator<Prec>("Z 0").apply_to_state(states), std::runtime_error);
+    EXPECT_THROW(PauliOperator<Prec>("X 0").apply_to_state(states), std::invalid_argument);
+    EXPECT_THROW(PauliOperator<Prec>("Z 0").apply_to_state(states), std::invalid_argument);
     EXPECT_EQ(states.get_amplitudes(), result);
     StateVectorBatched<Prec, Space> empty(0, 1);
     EXPECT_NO_THROW(PauliOperator<Prec>("Y 0").apply_to_state(empty));
-    EXPECT_THROW(PauliOperator<Prec>("X 1").apply_to_state(empty), std::runtime_error);
+    EXPECT_THROW(PauliOperator<Prec>("X 1").apply_to_state(empty), std::invalid_argument);
 }
 
 TYPED_TEST(PauliOperatorTest, ApplyToBatchedPreservesPadding) {
@@ -367,4 +367,23 @@ TYPED_TEST(PauliOperatorTest, ApplyToBatchedPreservesPadding) {
                                  StdComplex(7., -3.)),
                         0.,
                         eps<Prec>);
+}
+
+TYPED_TEST(PauliOperatorTest, ApplyAdd) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    StateVector<Prec, Space> input(2);
+    input.load(std::vector<StdComplex>{1., 2., 3., 4.});
+    PauliOperator<Prec> op("Y 0 Z 1", StdComplex(2., 1.));
+    const StdComplex factor(0.5, -0.25);
+    auto expected = input.copy();
+    auto applied = input.copy();
+    op.apply_to_state(applied);
+    expected.add_state_vector_with_coef(factor, applied);
+    auto output = input.copy();
+    op.apply_add(input, output, factor);
+    auto a = expected.get_amplitudes(), b = output.get_amplitudes();
+    for (std::size_t i = 0; i < a.size(); ++i) {
+        EXPECT_NEAR(std::abs(a[i] - b[i]), 0., 1e-5);
+    }
 }
