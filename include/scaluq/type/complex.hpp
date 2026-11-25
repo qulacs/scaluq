@@ -644,6 +644,7 @@ public:
     static constexpr std::size_t scalar_lanes = Simd::size();
     static constexpr std::size_t complex_lanes = scalar_lanes / 2;
 
+    KOKKOS_INLINE_FUNCTION SimdComplex() : _data(Scalar{0}) {}
     KOKKOS_INLINE_FUNCTION explicit SimdComplex(const Simd& data) : _data(data) {}
 
     KOKKOS_INLINE_FUNCTION static SimdComplex load_aligned(const Complex<P>* ptr) {
@@ -655,6 +656,69 @@ public:
         Kokkos::Experimental::simd_unchecked_store(
             _data, reinterpret_cast<Scalar*>(ptr), Kokkos::Experimental::simd_flag_aligned);
     }
+
+    // One magnitude per complex lane, rounded at the original scalar precision.
+    template <typename Result = Scalar>
+    KOKKOS_INLINE_FUNCTION auto squared_norms() const {
+        using Permutation = simd_complex_detail::XorPermutation<1, scalar_lanes>;
+        const auto swapped = simd_ops::permute<Scalar, ScalarLanes>(_data, Permutation{});
+#if defined(__FMA__)
+        const auto values = Kokkos::fma(_data, _data, swapped * swapped);
+#else
+        const auto values = _data * _data + swapped * swapped;
+#endif
+        return simd_ops::convert_even_lanes<Result, Scalar, ScalarLanes>(values);
+    }
+
+#if (defined(KOKKOS_ARCH_AVX2) || defined(KOKKOS_ARCH_AVX512XEON)) && !defined(__CUDACC__)
+    // Compute each complex conjugate product at the original scalar precision.
+    KOKKOS_INLINE_FUNCTION SimdComplex conjugate_product(const SimdComplex& rhs) const {
+        const auto real = [&]<std::size_t... I>(std::index_sequence<I...>) {
+            return simd_ops::permute<Scalar, ScalarLanes>(
+                _data, std::index_sequence<(I & ~std::size_t{1})...>{});
+        }(std::make_index_sequence<scalar_lanes>{});
+        const auto imag = [&]<std::size_t... I>(std::index_sequence<I...>) {
+            return simd_ops::permute<Scalar, ScalarLanes>(
+                _data, std::index_sequence<(I | std::size_t{1})...>{});
+        }(std::make_index_sequence<scalar_lanes>{});
+        return SimdComplex(real * rhs._data - imag * rhs.multiply_by_i()._data);
+    }
+
+    // Local vector accumulator, reducing interleaved real and imaginary lanes
+    // at the end of a chunk. No native-vector type in Kokkos reduction scratch.
+    class DoubleAccumulator {
+        using Wide = simd_ops::Simd<double>;
+        Wide _low{0.}, _high{0.};
+
+    public:
+        KOKKOS_INLINE_FUNCTION void operator+=(const SimdComplex& value)
+            requires(scalar_lanes == simd_ops::Simd<Scalar>::size())
+        {
+            if constexpr (std::is_same_v<Scalar, double>) {
+                _low = _low + value._data;
+            } else {
+#if defined(KOKKOS_ARCH_AVX512XEON)
+                const auto data = static_cast<__m512>(value._data);
+                _low = _low + Wide(_mm512_cvtps_pd(_mm512_castps512_ps256(data)));
+                _high = _high + Wide(_mm512_cvtps_pd(_mm512_extractf32x8_ps(data, 1)));
+#elif defined(KOKKOS_ARCH_AVX2)
+                const auto data = static_cast<__m256>(value._data);
+                _low = _low + Wide(_mm256_cvtps_pd(_mm256_castps256_ps128(data)));
+                _high = _high + Wide(_mm256_cvtps_pd(_mm256_extractf128_ps(data, 1)));
+#endif
+            }
+        }
+        KOKKOS_INLINE_FUNCTION Kokkos::complex<double> result() const {
+            const auto total = _low + _high;
+            double real = 0., imag = 0.;
+            for (std::size_t i = 0; i < Wide::size(); i += 2) {
+                real += total[i];
+                imag += total[i + 1];
+            }
+            return {real, imag};
+        }
+    };
+#endif
 
     KOKKOS_INLINE_FUNCTION SimdComplex multiply_by_i() const {
         using Permutation = simd_complex_detail::XorPermutation<1, scalar_lanes>;

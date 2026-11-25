@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <bit>
 #include <cstdint>
 #include <scaluq/prec_space.hpp>
@@ -10,6 +11,49 @@
 #include "sampling.hpp"
 
 namespace scaluq {
+
+namespace {
+template <Precision Prec, ExecutionSpace Space, class View, class Basis>
+double sum_squared_magnitudes(
+    const char* label, const View& raw, std::uint64_t span, std::uint64_t mask, Basis basis) {
+    using Accum = internal::SingleStateReductionFloat<Prec, Space>;
+    if constexpr (internal::supports_simd<Prec, Space>) {
+        using Pack = internal::SimdComplex<Prec>;
+        constexpr auto lanes = Pack::complex_lanes;
+        if (span >= lanes && (mask & (lanes - 1)) == 0) {
+            using Wide = internal::simd_ops::Simd<double>;
+            constexpr std::uint64_t packs_per_tile = 64;
+            const auto packs = span / lanes;
+            double result{};
+            Kokkos::parallel_reduce(
+                label,
+                Kokkos::RangePolicy<internal::SpaceType<Space>>(0,
+                                                                1 + (packs - 1) / packs_per_tile),
+                KOKKOS_LAMBDA(std::uint64_t tile, double& sum) {
+                    Wide values(0.);
+                    const auto end = std::min((tile + 1) * packs_per_tile, packs);
+                    for (auto i = tile * packs_per_tile; i < end; ++i) {
+                        values = values + Pack::load_aligned(&raw(basis(i * lanes)))
+                                              .template squared_norms<double>();
+                    }
+                    for (std::size_t lane = 0; lane < lanes; ++lane) sum += values[lane];
+                },
+                result);
+            return result;
+        }
+    }
+    Accum result{};
+    Kokkos::parallel_reduce(
+        label,
+        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, span),
+        KOKKOS_LAMBDA(std::uint64_t i, Accum & sum) {
+            sum += static_cast<Accum>(internal::squared_norm(raw(basis(i))));
+        },
+        result);
+    return static_cast<double>(result);
+}
+}  // namespace
+
 template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space>::StateVector(std::uint64_t n_qubits)
     : _n_qubits(n_qubits),
@@ -128,16 +172,8 @@ template <Precision Prec, ExecutionSpace Space>
 }
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_squared_norm() const {
-    using Accum = internal::SingleStateReductionFloat<Prec, Space>;
-    Accum norm{0.0f};
-    Kokkos::parallel_reduce(
-        "get_squared_norm",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t it, Accum& tmp) {
-            tmp += static_cast<Accum>(internal::squared_norm(this->_raw[it]));
-        },
-        norm);
-    return static_cast<double>(norm);
+    return sum_squared_magnitudes<Prec, Space>(
+        "get_squared_norm", _raw, _dim, 0, KOKKOS_LAMBDA(std::uint64_t i) { return i; });
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::normalize() {
@@ -153,27 +189,19 @@ void StateVector<Prec, Space>::normalize() {
 }
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_zero_probability(std::uint64_t target_qubit_index) const {
-    using Accum = internal::SingleStateReductionFloat<Prec, Space>;
     if (target_qubit_index >= _n_qubits) {
         throw std::runtime_error(
             "Error: StateVector::get_zero_probability(std::uint64_t): index "
             "of target qubit must be smaller than qubit_count");
     }
-    Accum sum{0.0f};
-    Kokkos::parallel_reduce(
-        "zero_prob",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> 1),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, Accum& lsum) {
-            std::uint64_t basis_0 = internal::insert_zero_to_basis_index(i, target_qubit_index);
-            lsum += static_cast<Accum>(internal::squared_norm(this->_raw[basis_0]));
-        },
-        sum);
-    return static_cast<double>(sum);
+    return sum_squared_magnitudes<Prec, Space>(
+        "zero_prob", _raw, _dim >> 1, 1ULL << target_qubit_index, KOKKOS_LAMBDA(std::uint64_t i) {
+            return internal::insert_zero_to_basis_index(i, target_qubit_index);
+        });
 }
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_marginal_probability(
     const std::vector<std::uint64_t>& measured_values) const {
-    using Accum = internal::SingleStateReductionFloat<Prec, Space>;
     if (measured_values.size() != _n_qubits) {
         throw std::runtime_error(
             "Error: StateVector::get_marginal_probability(const vector<std::uint64_t>&): "
@@ -192,17 +220,14 @@ double StateVector<Prec, Space>::get_marginal_probability(
     const auto fixed_mask = internal::vector_to_mask<false>(fixed_indices);
     const auto fixed_bits = internal::vector_to_mask<false>(fixed_indices, fixed_values);
 
-    Accum sum{0.0f};
-    Kokkos::parallel_reduce(
+    return sum_squared_magnitudes<Prec, Space>(
         "marginal_prob",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim >> std::popcount(fixed_mask)),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, Accum& lsum) {
-            const auto basis = internal::insert_zero_at_mask_positions(i, fixed_mask) | fixed_bits;
-            lsum += static_cast<Accum>(internal::squared_norm(_raw[basis]));
-        },
-        sum);
-
-    return static_cast<double>(sum);
+        _raw,
+        _dim >> std::popcount(fixed_mask),
+        fixed_mask,
+        KOKKOS_LAMBDA(std::uint64_t i) {
+            return internal::insert_zero_at_mask_positions(i, fixed_mask) | fixed_bits;
+        });
 }
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_computational_basis_entropy() const {

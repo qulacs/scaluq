@@ -11,18 +11,7 @@ namespace scaluq {
 namespace internal {
 
 template <typename State>
-#if (defined(KOKKOS_ARCH_AVX2) || defined(KOKKOS_ARCH_AVX512XEON)) && !defined(__CUDACC__)
-inline constexpr bool supports_gate_simd = [] {
-    if constexpr ((State::space == ExecutionSpace::Host ||
-                   State::space == ExecutionSpace::HostSerial) &&
-                  (State::prec == Precision::F64 || State::prec == Precision::F32)) {
-        return SimdComplex<State::prec>::complex_lanes > 0;
-    }
-    return false;
-}();
-#else
-inline constexpr bool supports_gate_simd = false;
-#endif
+inline constexpr bool supports_gate_simd = supports_simd<State::prec, State::space>;
 
 template <typename SimdType, typename State>
     requires supports_gate_simd<State>
