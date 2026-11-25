@@ -5,6 +5,7 @@
 #include <algorithm>  // For std::copy
 #include <iostream>
 #include <ranges>
+#include <stdexcept>
 #include <type_traits>
 #include <vector>
 
@@ -71,15 +72,18 @@ inline std::uint64_t vector_to_mask(const std::vector<std::uint64_t>& indices) {
 }
 
 // Converts a vector of indices and values to a bitmask.
+template <bool enable_validate = true>
 inline std::uint64_t vector_to_mask(const std::vector<std::uint64_t>& indices,
                                     const std::vector<std::uint64_t>& values) {
     std::uint64_t mask = 0;
     for (std::size_t i = 0; i < indices.size(); ++i) {
         if (values[i] == 1) {
             mask |= 1ULL << indices[i];
-        } else if (values[i] != 0) {  // 必ず 0 または 1
-            throw std::runtime_error("Invalid value in vector_to_mask: " +
-                                     std::to_string(values[i]));
+        } else if constexpr (enable_validate) {
+            if (values[i] != 0) {  // 必ず 0 または 1
+                throw std::runtime_error("Invalid value in vector_to_mask: " +
+                                         std::to_string(values[i]));
+            }
         }
     }
     return mask;
@@ -180,14 +184,45 @@ wrapped_host_view(const std::vector<T>& vec) {
         vec.data(), vec.size());
 }
 
+// Copy a host vector to an existing one-dimensional view, converting elements if needed.
+template <typename Source, typename Value, class... Properties>
+    requires (!std::is_const_v<Value> && !std::is_pointer_v<Value> && !std::is_array_v<Value>)
+void convert_vector_to_view(const std::vector<Source>& source,
+                            const Kokkos::View<Value*, Properties...>& destination) {
+    const auto count = source.size();
+    if (count != destination.extent(0)) {
+        throw std::invalid_argument("Vector and destination view must have the same length.");
+    }
+
+    if constexpr (std::is_same_v<Source, Value>) {
+        Kokkos::deep_copy(destination, wrapped_host_view(source));
+    } else {
+        using ViewType = Kokkos::View<Value*, Properties...>;
+        const auto host_view = Kokkos::create_mirror_view(
+            Kokkos::WithoutInitializing, Kokkos::HostSpace{}, destination);
+        const auto convert = [host_view, values = source.data()](std::size_t i) {
+            host_view(i) = static_cast<Value>(values[i]);
+        };
+        if constexpr (std::is_same_v<typename ViewType::memory_space, Kokkos::HostSpace>) {
+            for (std::size_t i = 0; i < count; ++i) {
+                convert(i);
+            }
+        } else {
+            Kokkos::parallel_for("convert_host_vector",
+                                 Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, count),
+                                 convert);
+            Kokkos::deep_copy(destination, host_view);
+        }
+    }
+}
+
 // Host std::vector を Device Kokkos::View に変換する関数
-template <typename T, ExecutionSpace Space>
+template <typename T, ExecutionSpace Space, typename Source = T>
 Kokkos::View<T*, SpaceType<Space>> convert_vector_to_view(
-    const std::vector<T>& vec, const std::string& label = "vector_view") {
-    auto host_view = wrapped_host_view(vec);
+    const std::vector<Source>& vec, const std::string& label = "vector_view") {
     Kokkos::View<T*, SpaceType<Space>> device_view(Kokkos::ViewAllocateWithoutInitializing(label),
                                                    vec.size());
-    Kokkos::deep_copy(device_view, host_view);
+    convert_vector_to_view(vec, device_view);
     return device_view;
 }
 

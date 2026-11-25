@@ -1,8 +1,11 @@
+#include <bit>
+#include <cstdint>
 #include <scaluq/prec_space.hpp>
 #include <scaluq/state/state_vector.hpp>
 #include <scaluq/util/math.hpp>
 #include <scaluq/util/utility.hpp>
 #include <type_traits>
+#include <utility>
 
 #include "sampling.hpp"
 
@@ -16,19 +19,39 @@ StateVector<Prec, Space>::StateVector(std::uint64_t n_qubits)
 }
 template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space>::StateVector(typename StateVector<Prec, Space>::RawView view)
-    : _n_qubits(std::bit_width(view.extent(0)) - 1), _dim(view.extent(0)), _raw(view) {}
+    : _dim(view.extent(0)), _raw(view) {
+    if (!std::has_single_bit(_dim) || !view.data()) {
+        throw std::invalid_argument("StateVector requires a nonempty view with a power-of-two length.");
+    }
+    if (reinterpret_cast<std::uintptr_t>(view.data()) % Kokkos::Impl::MEMORY_ALIGNMENT != 0) {
+        throw std::invalid_argument("StateVector requires an aligned view.");
+    }
+    _n_qubits = std::bit_width(_dim) - 1;
+}
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::set_amplitude_at(std::uint64_t index, StdComplex c) {
-    Kokkos::View<ComplexType, Kokkos::HostSpace> host_view("single_value");
-    host_view() = c;
-    Kokkos::deep_copy(Kokkos::subview(_raw, index), host_view());
+    if (index >= _dim) {
+        throw std::out_of_range("StateVector amplitude index is out of range.");
+    }
+    const ComplexType value(c);
+    if constexpr (std::is_same_v<typename RawView::memory_space, Kokkos::HostSpace>) {
+        _raw(index) = value;
+    } else {
+        Kokkos::deep_copy(Kokkos::subview(_raw, index), value);
+    }
 }
 template <Precision Prec, ExecutionSpace Space>
 StdComplex StateVector<Prec, Space>::get_amplitude_at(std::uint64_t index) {
-    Kokkos::View<ComplexType, Kokkos::HostSpace> host_view("single_value");
-    Kokkos::deep_copy(host_view, Kokkos::subview(_raw, index));
-    ComplexType val = host_view();
-    return StdComplex(static_cast<double>(val.real()), static_cast<double>(val.imag()));
+    if (index >= _dim) {
+        throw std::out_of_range("StateVector amplitude index is out of range.");
+    }
+    ComplexType value;
+    if constexpr (std::is_same_v<typename RawView::memory_space, Kokkos::HostSpace>) {
+        value = _raw(index);
+    } else {
+        Kokkos::deep_copy(value, Kokkos::subview(_raw, index));
+    }
+    return static_cast<StdComplex>(value);
 }
 template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space> StateVector<Prec, Space>::Haar_random_state(
@@ -101,12 +124,7 @@ void StateVector<Prec, Space>::set_Haar_random_state(std::optional<std::uint64_t
 }
 template <Precision Prec, ExecutionSpace Space>
 [[nodiscard]] std::vector<StdComplex> StateVector<Prec, Space>::get_amplitudes() const {
-    std::vector<ComplexType> v = internal::convert_view_to_vector<ComplexType, Space>(_raw);
-    std::vector<StdComplex> ret(_dim);
-    std::ranges::transform(v, ret.begin(), [&](const ComplexType& c) {
-        return StdComplex(static_cast<double>(c.real()), static_cast<double>(c.imag()));
-    });
-    return ret;
+    return internal::convert_view_to_vector<StdComplex, Space>(_raw);
 }
 template <Precision Prec, ExecutionSpace Space>
 std::vector<StdComplex> StateVector<Prec, Space>::get_amplitudes(std::uint64_t start,
@@ -218,36 +236,25 @@ double StateVector<Prec, Space>::get_marginal_probability(
             "the length of measured_values must be equal to qubit_count");
     }
 
-    std::vector<std::uint64_t> target_index;
-    std::vector<std::uint64_t> target_value;
+    std::vector<std::uint64_t> fixed_indices, fixed_values;
+    fixed_indices.reserve(measured_values.size());
+    fixed_values.reserve(measured_values.size());
     for (std::uint64_t i = 0; i < measured_values.size(); ++i) {
-        std::uint64_t measured_value = measured_values[i];
-        if (measured_value == 0 || measured_value == 1) {
-            target_index.push_back(i);
-            target_value.push_back(measured_value);
-        } else if (measured_value != StateVector::UNMEASURED) {
-            throw std::runtime_error(
-                "Error: StateVector::get_marginal_probability(const vector<std::uint64_t>&): "
-                "Invalid qubit state specified. Each qubit state must be 0, 1, or "
-                "StateVector::UNMEASURED.");
+        if (measured_values[i] != UNMEASURED) {
+            fixed_indices.push_back(i);
+            fixed_values.push_back(measured_values[i]);
         }
     }
+    const auto fixed_mask = internal::vector_to_mask<false>(fixed_indices);
+    const auto fixed_bits = internal::vector_to_mask<false>(fixed_indices, fixed_values);
 
     Accum sum{0.0f};
-    auto d_target_index = internal::convert_vector_to_view<std::uint64_t, Space>(target_index);
-    auto d_target_value = internal::convert_vector_to_view<std::uint64_t, Space>(target_value);
-
     Kokkos::parallel_reduce(
         "marginal_prob",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> target_index.size()),
+        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim >> std::popcount(fixed_mask)),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, Accum& lsum) {
-            std::uint64_t basis = i;
-            for (std::uint64_t cursor = 0; cursor < d_target_index.size(); cursor++) {
-                std::uint64_t insert_index = d_target_index(cursor);
-                basis = internal::insert_zero_to_basis_index(basis, insert_index);
-                basis |= d_target_value(cursor) << insert_index;
-            }
-            lsum += static_cast<Accum>(internal::squared_norm(this->_raw[basis]));
+            const auto basis = internal::insert_zero_at_mask_positions(i, fixed_mask) | fixed_bits;
+            lsum += static_cast<Accum>(internal::squared_norm(_raw[basis]));
         },
         sum);
 
@@ -293,12 +300,13 @@ template <Precision Prec, ExecutionSpace Space>
 std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(
     std::uint64_t sampling_count, std::optional<std::uint64_t> seed) const {
     const auto amplitudes = _raw;
-    return internal::sample_probabilities<Space>(
+    auto samples = internal::sample_probabilities<Space>(
         1, _dim, sampling_count, seed, KOKKOS_LAMBDA(std::uint64_t, std::uint64_t i) {
             const double re = static_cast<double>(amplitudes(i).real());
             const double im = static_cast<double>(amplitudes(i).imag());
             return re * re + im * im;
-        })[0];
+        });
+    return std::move(samples.front());
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -308,12 +316,7 @@ void StateVector<Prec, Space>::load(const std::vector<StdComplex>& other) {
             "Error: StateVector::load(const vector<ComplexType>&): invalid "
             "length of state");
     }
-    std::vector<ComplexType> tmp(other.size());
-    std::ranges::transform(other, tmp.begin(), [](const StdComplex& c) {
-        return ComplexType(static_cast<FloatType>(c.real()), static_cast<FloatType>(c.imag()));
-    });
-    auto host_view = internal::wrapped_host_view(tmp);
-    Kokkos::deep_copy(_raw, host_view);
+    internal::convert_vector_to_view(other, _raw);
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::load(const StateVector<Prec, Space>& other) {

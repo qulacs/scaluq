@@ -78,6 +78,11 @@ template <unsigned Flags = 0>
 struct MemoryTraits {};
 using MemoryUnmanaged = MemoryTraits<Unmanaged>;
 
+namespace Impl {
+struct WithoutInitializing_t {};
+}
+inline constexpr Impl::WithoutInitializing_t WithoutInitializing{};
+
 // ── Allocation tag ─────────────────────────────────────────────────────────
 struct ViewAllocateWithoutInitializing {
     const char* label;
@@ -176,6 +181,8 @@ struct Array {
 
 // ── View ───────────────────────────────────────────────────────────────────
 namespace Impl {
+inline constexpr unsigned MEMORY_ALIGNMENT = 64;
+
 template <class T>
 struct StripPointer {
     using type = T;
@@ -205,6 +212,7 @@ public:
     using pointer = value_type*;
     using size_type = std::size_t;
     using HostMirror = View<DataType, HostSpace>;
+    using memory_space = HostSpace;
 
     View() = default;
     explicit View(const char*, size_type = 0, size_type = 0) {}
@@ -335,6 +343,11 @@ inline auto create_mirror_view(const V& v) {
 
 template <class Space, class V>
 inline auto create_mirror_view(Space, const V& v) {
+    return v;
+}
+
+template <class Space, class V>
+inline auto create_mirror_view(Impl::WithoutInitializing_t, Space, const V& v) {
     return v;
 }
 
