@@ -73,10 +73,37 @@ StateVectorBatched<internal::Prec, internal::Space>
 OperatorBatched<internal::Prec, internal::Space>::get_applied_states(
     const StateVector<internal::Prec, internal::Space>& state_vector,
     std::uint64_t batch_size) const {
-    auto res = StateVectorBatched<internal::Prec, internal::Space>::uninitialized_state(
-        _row_ptr.extent(0) - 1, state_vector.n_qubits());
-    res.set_state_vector(state_vector);
-    internal::apply_pauli<internal::Prec, internal::Space>(0, 0, _ops, _row_ptr, res, batch_size);
+    if (batch_size == 0)
+        throw std::invalid_argument("Operator application batch_size must be positive.");
+
+    const auto n_qubits = state_vector.n_qubits();
+    const auto dim = state_vector.dim();
+    const auto input = state_vector._raw;
+    if (n_qubits >= 64 || dim != (1ULL << n_qubits) || input.extent(0) != dim)
+        throw std::runtime_error("Operator application requires a valid input state dimension.");
+
+    const auto batches = _row_ptr.extent(0) == 0 ? 0 : _row_ptr.extent(0) - 1;
+    const auto terms = _ops;
+    internal::check_pauli_qubit_count<ExecutionSpaceType>(terms, n_qubits);
+    auto res =
+        StateVectorBatched<internal::Prec, internal::Space>::uninitialized_state(batches, n_qubits);
+    const auto rows = _row_ptr;
+    const auto output = res._raw;
+    using Policy = Kokkos::RangePolicy<ExecutionSpaceType, Kokkos::IndexType<std::uint64_t>>;
+    std::uint64_t first_batch = 0;
+    while (first_batch < batches) {
+        const auto chunk = std::min(batch_size, batches - first_batch);
+        Kokkos::parallel_for(
+            "OperatorBatched::get_applied_states",
+            Policy(0, chunk * dim),
+            KOKKOS_LAMBDA(std::uint64_t index) {
+                const auto batch = first_batch + (index >> n_qubits);
+                const auto basis = index & (dim - 1);
+                output(batch, basis) = internal::sum_pauli_at<internal::Prec>(
+                    terms, input, basis, rows(batch), rows(batch + 1));
+            });
+        first_batch += chunk;
+    }
     return res;
 }
 
