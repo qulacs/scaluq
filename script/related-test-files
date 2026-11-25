@@ -15,7 +15,7 @@ fi
 TARGETS_FILE=$(mktemp)
 trap 'rm -f "$TARGETS_FILE"' EXIT
 for arg in "$@"; do
-    arg_abs=$(realpath -m "$arg")
+    arg_abs=$(realpath "$arg")
     src_prefix="${CURRENT_DIR}/src/"
     if [[ "$arg_abs" == "$src_prefix"* ]]; then
         # cpp source file cannot be a direct dependency, convert to header file
@@ -26,11 +26,11 @@ for arg in "$@"; do
             echo "${CURRENT_DIR}/include/scaluq/${relative_path/.cpp/.hpp}" >> "$TARGETS_FILE"
         fi
     else
-        realpath -m "$arg" >> "$TARGETS_FILE"
+        printf '%s\n' "$arg_abs" >> "$TARGETS_FILE"
     fi
 done
 
-# generate compile_flags.json
+# configure the Ninja build
 variables="CMAKE_C_COMPILER \
   CMAKE_CROSSCOMPILING_EMULATOR \
   CMAKE_CXX_COMPILER \
@@ -63,16 +63,17 @@ for var in $variables; do
 done
 
 mkdir -p ./build
-cmake -B build -G Ninja ${CMAKE_OPS} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON > /dev/null
+cmake -B build -G Ninja ${CMAKE_OPS} > /dev/null
 
-# find related test files
-jq -r ".[] | select(.file | startswith(\"$(pwd)/tests\")) | [.directory, .file, .command] | @tsv" build/compile_commands.json | \
+# Read Ninja's actual commands to retain compiler launchers such as Kokkos's CUDA wrapper.
+ninja -C build -t compdb -x | \
+jq -r --arg prefix "$CURRENT_DIR/tests/" '.[] | select(.file | startswith($prefix)) | [.directory, .file, .command] | @tsv' | \
 while IFS="$TAB" read -r dir file command; do
-    command_enumerate_includes="cd $dir && $(echo "$command" | sed -E 's/-c\b/-M/g; s/-o\s+\S+//g') && cd $CURRENT_DIR"
+    command_enumerate_includes=$(printf '%s\n' "$command" | sed -E 's/ -MD / /g; s/ -(MT|MF|o) [^ ]+//g; s/ -c / -M /')
     deps_abs=$(cd "$dir" && eval "$command_enumerate_includes" | \
                sed 's/.*: //' | sed 's/\\//g' | tr -s '[:space:]' '\n' | \
                grep -E "${CURRENT_DIR}/include/scaluq/|${CURRENT_DIR}/tests/" | \
-               xargs -I {} realpath -m "{}")
+               xargs -I {} realpath "{}")
 
     if echo "$deps_abs" | grep -Fxf "$TARGETS_FILE" > /dev/null; then
         echo "$file"
