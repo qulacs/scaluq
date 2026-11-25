@@ -255,8 +255,8 @@ void bind_operator_operator_hpp(nb::module_& m) {
                 .arg("mu",
                      "complex",
                      true,
-                     "Real shift. For the power method it must be large enough to make the "
-                     "ground-state eigenvalue dominant in magnitude after shifting.")
+                     "Shift for the power method. Its real part must be large enough to make "
+                     "the ground-state eigenvalue dominant in magnitude after shifting.")
                 .arg("tolerance",
                      "float",
                      true,

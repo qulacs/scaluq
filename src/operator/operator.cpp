@@ -544,28 +544,25 @@ double validate_ground_state_input(const Operator<Prec, Space>& op,
         throw std::runtime_error("Ground state solver requires a nonempty Hermitian operator.");
     }
     if (!iter_count) throw std::invalid_argument("Ground state solver requires iterations > 0.");
-    if (mu && (!std::isfinite(mu->real()) || !std::isfinite(mu->imag()) || mu->imag() != 0.)) {
-        throw std::invalid_argument("Ground state solver requires a finite real shift.");
+    if (mu && (!std::isfinite(mu->real()) || !std::isfinite(mu->imag()))) {
+        throw std::invalid_argument("Ground state solver requires a finite shift.");
     }
     if (tolerance && (!std::isfinite(*tolerance) || *tolerance <= 0.)) {
         throw std::invalid_argument("Ground state solver requires a positive finite tolerance.");
     }
+    if (initial_state.dim() == 0) {
+        throw std::invalid_argument("Ground state solver requires an initialized state.");
+    }
     double bound = 0.;
     for (const auto& term : op.get_terms()) {
-        const auto [x, z] = term.get_XZ_mask_representation();
-        if (initial_state.n_qubits() < 64 && ((x | z) >> initial_state.n_qubits())) {
-            throw std::invalid_argument("Operator acts on a qubit outside the initial state.");
-        }
         const auto coef = term.coef();
         if (!std::isfinite(coef.real()) || !std::isfinite(coef.imag())) {
             throw std::invalid_argument("Ground state solver requires finite coefficients.");
         }
         bound += std::abs(coef.real());
     }
-    const double norm = initial_state.get_squared_norm();
-    if (!std::isfinite(bound) || !std::isfinite(norm) || norm <= 0.) {
-        throw std::invalid_argument(
-            "Ground state solver requires a finite nonzero initial state and operator.");
+    if (!std::isfinite(bound)) {
+        throw std::invalid_argument("Ground state solver requires a finite operator bound.");
     }
     return bound;
 }
@@ -594,7 +591,7 @@ typename Operator<Prec, Space>::GroundState ground_state_result(
         Kokkos::parallel_reduce(
             "ground_state_residual_squared_norm",
             Kokkos::RangePolicy<internal::SpaceType<Space>>(0, residual.dim()),
-            KOKKOS_LAMBDA(std::uint64_t i, float & sum) {
+            KOKKOS_LAMBDA(std::uint64_t i, float& sum) {
                 const auto amplitude = residual.at_unsafe(i);
                 const auto real = static_cast<float>(amplitude.real());
                 const auto imag = static_cast<float>(amplitude.imag());
@@ -633,10 +630,6 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_power_method(
             *this, state, exhausted ? std::move(next) : next.copy(), i, bound, tol);
         if (result.converged || exhausted) return result;
         next.add_state_vector_with_coef(-shift, state);
-        const double norm = next.get_squared_norm();
-        if (!std::isfinite(norm) || norm <= 0.) {
-            throw std::runtime_error("Power method encountered a non-finite or zero iterate.");
-        }
         next.normalize();
         state = next;
     }
@@ -651,6 +644,9 @@ Operator<internal::Prec, internal::Space>::solve_ground_state_by_arnoldi_method(
     std::optional<double> tolerance) const {
     const double bound =
         validate_ground_state_input(*this, initial_state, iter_count, mu, tolerance);
+    if (mu && mu->imag() != 0.) {
+        throw std::invalid_argument("Arnoldi method requires a real shift.");
+    }
     const double tol = tolerance.value_or(ground_state_default_tolerance<internal::Prec>());
     const std::uint64_t count = std::min(iter_count, initial_state.dim());
     std::vector<StateVector<internal::Prec, internal::Space>> krylov_space_basis;

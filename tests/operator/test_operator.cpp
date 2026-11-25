@@ -115,7 +115,8 @@ TYPED_TEST(OperatorTest, GroundStateSolversRejectInvalidInput) {
 
     expect_invalid("zero iterations", op, state, 0);
     expect_invalid("zero tolerance", op, state, 2, std::nullopt, 0.);
-    expect_invalid("complex shift", op, state, 2, StdComplex(0., 1.));
+    EXPECT_THROW((void)op.solve_ground_state_by_arnoldi_method(state, 2, StdComplex(0., 1.)),
+                 std::invalid_argument);
     expect_invalid("qubit out of range", out_of_range, state, 2);
     expect_invalid("zero initial state", op, zero_state, 2);
 }
@@ -488,9 +489,9 @@ TYPED_TEST(OperatorTest, PowerMethodUsesCustomTolerance) {
     StateVector<Prec, Space> state(1);
     state.load(std::vector<StdComplex>{1., 1.});
 
-    // The shift keeps both components after one iteration.
-    const StdComplex shift = 2.;
-    EXPECT_FALSE(op.solve_ground_state_by_power_method(state, 1, shift, 0.25).converged);
+    // After one iteration the residual is sqrt(5)/3, versus 0.6 if the imaginary part is dropped.
+    const StdComplex shift(2., 1.);
+    EXPECT_FALSE(op.solve_ground_state_by_power_method(state, 1, shift, 0.675).converged);
     EXPECT_TRUE(op.solve_ground_state_by_power_method(state, 1, shift, 1.5).converged);
 }
 
