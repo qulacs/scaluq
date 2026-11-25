@@ -1,5 +1,7 @@
 #include <Eigen/Eigenvalues>
+#include <algorithm>
 #include <array>
+#include <bit>
 #include <cmath>
 #include <limits>
 #include <scaluq/operator/apply_pauli.hpp>
@@ -200,20 +202,29 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
 
     using AccumComplex = Kokkos::complex<double>;
     const std::uint64_t nterms = _terms.size();
+    if (nterms == 0) return {};
     const std::uint64_t dim = state_vector.dim();
-
-    Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<internal::Space>> res("expvals",
-                                                                                     nterms);
+    const auto pairs = (dim + 1) >> 1;
+    constexpr std::uint64_t target_teams = 128;
+    const auto teams_per_term = 1 + (target_teams - 1) / nterms;
+    const auto width =
+        std::bit_ceil(std::max<std::uint64_t>(1024, (pairs + teams_per_term - 1) / teams_per_term));
+    const auto tiles = std::max<std::uint64_t>(1, (pairs + width - 1) / width);
 
     using ExecSpace = internal::SpaceType<internal::Space>;
     using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
     using Member = typename TeamPolicy::member_type;
+    Kokkos::View<AccumComplex*, ExecSpace> partials(
+        Kokkos::ViewAllocateWithoutInitializing("expval_tiles"), nterms * tiles);
 
     Kokkos::parallel_for(
         "get_expectation_values",
-        TeamPolicy(static_cast<int>(nterms), Kokkos::AUTO),
+        TeamPolicy(nterms * tiles, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(const Member& team) {
-            const std::uint64_t term_id = static_cast<std::uint64_t>(team.league_rank());
+            const auto rank = static_cast<std::uint64_t>(team.league_rank());
+            const auto term_id = rank / tiles;
+            const auto begin = rank % tiles * width;
+            const auto end = begin + (pairs - begin < width ? pairs - begin : width);
 
             const auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
             const auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
@@ -222,10 +233,8 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
             AccumComplex sum = AccumComplex(0.0, 0.0);
 
             Kokkos::parallel_reduce(
-                Kokkos::TeamThreadRange(team, static_cast<int>((dim + 1) >> 1)),
-                [&](const int state_idx_i, AccumComplex& lsum) {
-                    const std::uint64_t state_idx = static_cast<std::uint64_t>(state_idx_i);
-
+                Kokkos::TeamThreadRange(team, begin, end),
+                [&](std::uint64_t state_idx, AccumComplex& lsum) {
                     if (bit_flip_mask == 0) {
                         if (dim == 1) {
                             lsum += internal::to_complex_double(
@@ -263,12 +272,19 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
                 },
                 sum);
 
-            Kokkos::single(Kokkos::PerTeam(team),
-                           [&] { res(term_id) = Kokkos::complex<double>(sum.real(), sum.imag()); });
+            Kokkos::single(Kokkos::PerTeam(team), [&] { partials(rank) = sum; });
         });
 
-    auto res_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), res);
-    return std::vector<StdComplex>(res_h.data(), res_h.data() + res_h.size());
+    const auto host = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, partials);
+    std::vector<StdComplex> results(nterms);
+    for (std::uint64_t term = 0; term < nterms; ++term) {
+        AccumComplex sum = 0.;
+        for (std::uint64_t tile = 0; tile < tiles; ++tile) {
+            sum += host(term * tiles + tile);
+        }
+        results[term] = static_cast<StdComplex>(sum);
+    }
+    return results;
 }
 
 template <>
