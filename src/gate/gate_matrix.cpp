@@ -274,9 +274,11 @@ std::shared_ptr<const GateBase<Prec>> SparseMatrixGateImpl<Prec, Space>::get_inv
     if (!decomposition.isInvertible()) {
         throw std::runtime_error("SparseMatrixGate::get_inverse(): matrix is singular.");
     }
-    const SparseComplexMatrix inv_eigen = decomposition.inverse().sparseView();
-    return std::make_shared<const SparseMatrixGateImpl>(
-        this->_target_mask, this->_control_mask, this->_control_value_mask, inv_eigen);
+    // The inverse of a sparse matrix is generally dense, so return a dense matrix gate.
+    return std::make_shared<const DenseMatrixGateImpl<Prec, Space>>(this->_target_mask,
+                                                                    this->_control_mask,
+                                                                    this->_control_value_mask,
+                                                                    decomposition.inverse());
 }
 template <Precision Prec, ExecutionSpace Space>
 Matrix<Prec, Space> SparseMatrixGateImpl<Prec, Space>::get_matrix_internal() const {

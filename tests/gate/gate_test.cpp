@@ -109,7 +109,10 @@ TYPED_TEST(GateTest, SparseMatrixInverseChecksInvertibility) {
     auto state = StateVector<Prec, Space>::Haar_random_state(2, 17);
     const auto initial = state.get_amplitudes();
     sparse_gate->update_quantum_state(state);
-    sparse_gate->get_inverse()->update_quantum_state(state);
+    auto inverse = sparse_gate->get_inverse();
+    using DenseImpl = internal::DenseMatrixGateImpl<Prec, Space>;
+    EXPECT_NE(std::dynamic_pointer_cast<const DenseImpl>(inverse), nullptr);
+    inverse->update_quantum_state(state);
     const auto actual = state.get_amplitudes();
     for (std::uint64_t i = 0; i < actual.size(); ++i) {
         check_near<Prec>(actual[i], initial[i]);
