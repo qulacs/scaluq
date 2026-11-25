@@ -69,6 +69,12 @@ trans_amp = op.get_transition_amplitude(target_state, state)
 print(f"Transition amplitude: {trans_amp}") # e.g., (0.2589420813971237+0.355705558096908j)
 ```
 
+### Applying Pauli sums
+
+`pauli.apply_add(input, output, coef)` adds `coef * P * input` to `output`,
+including the coefficient stored in `pauli`. `input` and `output` must not
+overlap; passing the same state vector as both is undefined behavior.
+
 ### Grouped Pauli sums
 
 `GroupedPauliOperator(n_qubits, terms, cache_budget=0)` takes a snapshot of a

@@ -94,13 +94,17 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_ex
             ComplexType res_lcl = 0;
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadMDRange(
-                    team, _row_ptr[batch_id + 1] - _row_ptr[batch_id], dim >> 1),
+                    team, _row_ptr[batch_id + 1] - _row_ptr[batch_id], (dim + 1) >> 1),
                 [&](std::uint64_t term_id, std::uint64_t state_idx, ComplexType& res_lcl) {
                     term_id += _row_ptr[batch_id];
                     auto bit_flip_mask = _ops[term_id]._bit_flip_mask;
                     auto phase_flip_mask = _ops[term_id]._phase_flip_mask;
                     ComplexType coef = _ops[term_id]._coef;
                     if (bit_flip_mask == 0) {
+                        if (dim == 1) {
+                            res_lcl += coef * internal::squared_norm(state_vector._raw[0]);
+                            return;
+                        }
                         std::uint64_t state_idx1 = state_idx << 1;
                         ComplexType tmp1 = (scaluq::internal::conj(state_vector._raw[state_idx1]) *
                                             state_vector._raw[state_idx1]);
@@ -158,13 +162,17 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_ex
             ComplexType res_lcl = 0;
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadMDRange(
-                    team, _row_ptr[batch_id + 1] - _row_ptr[batch_id], dim >> 1),
+                    team, _row_ptr[batch_id + 1] - _row_ptr[batch_id], (dim + 1) >> 1),
                 [&](std::uint64_t term_id, std::uint64_t state_idx, ComplexType& res_lcl) {
                     term_id += _row_ptr[batch_id];
                     auto bit_flip_mask = _ops[term_id]._bit_flip_mask;
                     auto phase_flip_mask = _ops[term_id]._phase_flip_mask;
                     ComplexType coef = _ops[term_id]._coef;
                     if (bit_flip_mask == 0) {
+                        if (dim == 1) {
+                            res_lcl += coef * internal::squared_norm(states._raw(batch_id, 0));
+                            return;
+                        }
                         std::uint64_t state_idx1 = state_idx << 1;
                         ComplexType tmp1 =
                             (scaluq::internal::conj(states._raw(batch_id, state_idx1)) *
@@ -225,13 +233,18 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_tr
             ComplexType res_lcl = 0;
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadMDRange(
-                    team, _row_ptr[batch_id + 1] - _row_ptr[batch_id], dim >> 1),
+                    team, _row_ptr[batch_id + 1] - _row_ptr[batch_id], (dim + 1) >> 1),
                 [&](std::uint64_t term_id, std::uint64_t state_idx, ComplexType& res_lcl) {
                     term_id += _row_ptr[batch_id];
                     auto bit_flip_mask = _ops[term_id]._bit_flip_mask;
                     auto phase_flip_mask = _ops[term_id]._phase_flip_mask;
                     ComplexType coef = _ops[term_id]._coef;
                     if (bit_flip_mask == 0) {
+                        if (dim == 1) {
+                            res_lcl += coef * internal::conj(state_vector_bra._raw[0]) *
+                                       state_vector_ket._raw[0];
+                            return;
+                        }
                         std::uint64_t state_idx1 = state_idx << 1;
                         ComplexType tmp1 =
                             (scaluq::internal::conj(state_vector_bra._raw[state_idx1]) *
@@ -302,13 +315,18 @@ std::vector<StdComplex> OperatorBatched<internal::Prec, internal::Space>::get_tr
             ComplexType res_lcl = 0;
             Kokkos::parallel_reduce(
                 Kokkos::TeamThreadMDRange(
-                    team, _row_ptr[batch_id + 1] - _row_ptr[batch_id], dim >> 1),
+                    team, _row_ptr[batch_id + 1] - _row_ptr[batch_id], (dim + 1) >> 1),
                 [&](std::uint64_t term_id, std::uint64_t state_idx, ComplexType& res_lcl) {
                     term_id += _row_ptr[batch_id];
                     auto bit_flip_mask = _ops[term_id]._bit_flip_mask;
                     auto phase_flip_mask = _ops[term_id]._phase_flip_mask;
                     ComplexType coef = _ops[term_id]._coef;
                     if (bit_flip_mask == 0) {
+                        if (dim == 1) {
+                            res_lcl += coef * internal::conj(states_bra._raw(batch_id, 0)) *
+                                       states_ket._raw(batch_id, 0);
+                            return;
+                        }
                         std::uint64_t state_idx1 = state_idx << 1;
                         ComplexType tmp1 =
                             (scaluq::internal::conj(states_bra._raw(batch_id, state_idx1)) *

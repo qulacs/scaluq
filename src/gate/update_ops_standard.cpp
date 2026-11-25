@@ -1,4 +1,5 @@
 #include "update_ops.hpp"
+#include "update_ops_matrix_2x2.hpp"
 #include "update_ops_matrix_4x4.hpp"
 
 namespace scaluq::internal {
@@ -107,6 +108,65 @@ void rz_gate(std::uint64_t target_mask,
                     states.at_unsafe(batch_id, basis_1) *= diag[1];
                 });
         });
+}
+
+template <UpdatableStateVector State>
+bool apply_single_qubit_pauli_rotation(std::uint64_t control_mask,
+                                       std::uint64_t control_value_mask,
+                                       std::uint64_t bit_flip_mask,
+                                       std::uint64_t phase_flip_mask,
+                                       Complex<State::prec> coef,
+                                       Float<State::prec> angle,
+                                       State& state) {
+    const std::uint64_t target_mask = bit_flip_mask | phase_flip_mask;
+    if (std::popcount(target_mask) != 1 || static_cast<double>(coef.imag()) != 0.) return false;
+    const Float<State::prec> true_angle = angle * coef.real();
+    if (bit_flip_mask == 0) {
+        rz_gate(target_mask, control_mask, control_value_mask, true_angle, state);
+    } else if (phase_flip_mask == 0) {
+        rx_gate(target_mask, control_mask, control_value_mask, true_angle, state);
+    } else {
+        ry_gate(target_mask, control_mask, control_value_mask, true_angle, state);
+    }
+    return true;
+}
+template bool apply_single_qubit_pauli_rotation<StateVector<Prec, Space>>(
+    std::uint64_t,
+    std::uint64_t,
+    std::uint64_t,
+    std::uint64_t,
+    Complex<Prec>,
+    Float<Prec>,
+    StateVector<Prec, Space>&);
+template bool apply_single_qubit_pauli_rotation<StateVectorBatched<Prec, Space>>(
+    std::uint64_t,
+    std::uint64_t,
+    std::uint64_t,
+    std::uint64_t,
+    Complex<Prec>,
+    Float<Prec>,
+    StateVectorBatched<Prec, Space>&);
+
+template <>
+bool apply_single_qubit_pauli_rotation(std::uint64_t control_mask,
+                                       std::uint64_t control_value_mask,
+                                       std::uint64_t bit_flip_mask,
+                                       std::uint64_t phase_flip_mask,
+                                       Complex<Prec> coef,
+                                       Float<Prec> pcoef,
+                                       const Kokkos::View<Float<Prec>*, SpaceType<Space>>& params,
+                                       StateVectorBatched<Prec, Space>& states) {
+    const std::uint64_t target_mask = bit_flip_mask | phase_flip_mask;
+    if (std::popcount(target_mask) != 1 || static_cast<double>(coef.imag()) != 0.) return false;
+    const Float<Prec> true_pcoef = pcoef * coef.real();
+    if (bit_flip_mask == 0) {
+        rz_gate(target_mask, control_mask, control_value_mask, true_pcoef, params, states);
+    } else if (phase_flip_mask == 0) {
+        rx_gate(target_mask, control_mask, control_value_mask, true_pcoef, params, states);
+    } else {
+        ry_gate(target_mask, control_mask, control_value_mask, true_pcoef, params, states);
+    }
+    return true;
 }
 
 template <UpdatableStateVector State>
