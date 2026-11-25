@@ -587,7 +587,25 @@ typename Operator<Prec, Space>::GroundState ground_state_result(
     double tolerance) {
     const auto eigenvalue = op.get_expectation_value(state);
     residual.add_state_vector_with_coef(-eigenvalue, state);
-    const double residual_norm = std::sqrt(residual.get_squared_norm());
+    double residual_squared_norm = 0.;
+    if constexpr (Prec == Precision::F16 || Prec == Precision::BF16) {
+        // Squaring in the state precision can underflow before the sum.
+        float squared_norm = 0.f;
+        Kokkos::parallel_reduce(
+            "ground_state_residual_squared_norm",
+            Kokkos::RangePolicy<internal::SpaceType<Space>>(0, residual.dim()),
+            KOKKOS_LAMBDA(std::uint64_t i, float & sum) {
+                const auto amplitude = residual.at_unsafe(i);
+                const auto real = static_cast<float>(amplitude.real());
+                const auto imag = static_cast<float>(amplitude.imag());
+                sum += real * real + imag * imag;
+            },
+            squared_norm);
+        residual_squared_norm = static_cast<double>(squared_norm);
+    } else {
+        residual_squared_norm = residual.get_squared_norm();
+    }
+    const double residual_norm = std::sqrt(residual_squared_norm);
     const bool converged =
         std::isfinite(residual_norm) && residual_norm <= tolerance * (bound > 0. ? bound : 1.);
     return {eigenvalue, state, residual_norm, iterations, converged};
