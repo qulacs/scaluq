@@ -1,6 +1,10 @@
 #include <Eigen/Eigenvalues>
+#include <algorithm>
+#include <array>
+#include <bit>
 #include <cmath>
 #include <limits>
+#include <scaluq/operator/apply_pauli.hpp>
 #include <scaluq/operator/operator.hpp>
 #include <scaluq/prec_space.hpp>
 #include <scaluq/util/math.hpp>
@@ -21,7 +25,7 @@ Operator<internal::Prec, internal::Space>::Operator(
 
 template <>
 Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Space>::copy() const {
-    Operator<internal::Prec, internal::Space> copy_operator(_terms.size());
+    auto copy_operator = uninitialized_operator(_terms.size());
     Kokkos::deep_copy(copy_operator._terms, _terms);
     copy_operator._is_hermitian = _is_hermitian;
     copy_operator._is_view = false;
@@ -73,7 +77,7 @@ void Operator<internal::Prec, internal::Space>::optimize() {
         const auto& [x_mask, z_mask] = mask;
         terms_h.emplace_back(x_mask, z_mask, StdComplex(coef));
     }
-    *this = Operator<internal::Prec, internal::Space>(terms_h);
+    *this = Operator<internal::Prec, internal::Space>(std::move(terms_h));
 }
 
 template <>
@@ -90,44 +94,34 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
     return copy_operator;
 }
 
-namespace internal {
-// CUDA requires the kernel functor to be visible outside the private member function.
-template <typename TermsView>
-struct CountInvalidOperatorTerms {
-    TermsView terms;
-    std::uint64_t n_qubits;
-
-    KOKKOS_INLINE_FUNCTION void operator()(std::uint64_t i, std::uint64_t& count) const {
-        const auto mask = terms(i)._bit_flip_mask | terms(i)._phase_flip_mask;
-        if (n_qubits < 64 && (mask >> n_qubits)) ++count;
-    }
-};
-}  // namespace internal
-
 template <>
 void Operator<internal::Prec, internal::Space>::check_qubit_count(std::uint64_t n_qubits) const {
-    std::uint64_t invalid_count = 0;
-    Kokkos::parallel_reduce(
-        "check_operator_qubits",
-        Kokkos::RangePolicy<ExecutionSpaceType>(0, _terms.size()),
-        internal::CountInvalidOperatorTerms{_terms, n_qubits},
-        invalid_count);
-    if (invalid_count) throw std::invalid_argument("Operator acts on a qubit outside the state.");
+    internal::check_pauli_qubit_count<ExecutionSpaceType>(_terms, n_qubits);
 }
 
 template <>
 ComplexMatrix Operator<internal::Prec, internal::Space>::get_full_matrix(
     std::uint64_t n_qubits) const {
     if (n_qubits >= 64) throw std::invalid_argument("Matrix qubit count must be less than 64.");
-    check_qubit_count(n_qubits);
+    const auto terms = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, _terms);
+    for (std::uint64_t i = 0; i < terms.extent(0); ++i) {
+        if (std::bit_width(terms(i)._bit_flip_mask | terms(i)._phase_flip_mask) > n_qubits)
+            throw std::invalid_argument("Operator acts on a qubit outside the state.");
+    }
 
     std::uint64_t dim = 1ULL << n_qubits;
     ComplexMatrix mat(dim, dim);
     mat.setZero();
-    for (const auto& term : this->get_terms()) {
-        auto basic_triplets = term.get_full_matrix_triplets_ignoring_coef(n_qubits);
-        for (const auto& triplet : basic_triplets) {
-            mat(triplet.row(), triplet.col()) += triplet.value() * term.coef();
+    for (std::uint64_t i = 0; i < terms.extent(0); ++i) {
+        const auto& term = terms(i);
+        const auto [x, z] = term.get_XZ_mask_representation();
+        const auto phase = static_cast<StdComplex>(
+            internal::PHASE_M90ROT<internal::Prec>()[std::popcount(x & z) % 4]);
+        const auto coef = term.coef();
+        const std::array contributions{(phase * StdComplex(1.)) * coef,
+                                       (phase * StdComplex(-1.)) * coef};
+        for (std::uint64_t row = 0; row < dim; ++row) {
+            mat(row, row ^ x) += contributions[std::popcount(row & z) & 1];
         }
     }
     return mat;
@@ -136,29 +130,18 @@ ComplexMatrix Operator<internal::Prec, internal::Space>::get_full_matrix(
 template <>
 void Operator<internal::Prec, internal::Space>::apply_to_state(
     StateVector<internal::Prec, internal::Space>& state_vector) const {
-    const auto n_qubits = state_vector.n_qubits();
-    for (const auto& term : get_terms()) {
-        if (std::bit_width(term._bit_flip_mask | term._phase_flip_mask) > n_qubits)
-            throw std::invalid_argument("Operator acts on a qubit outside the state.");
-    }
+    check_qubit_count(state_vector.n_qubits());
 
     auto input = state_vector.copy();
-    auto terms = _terms;
-    auto nterms = _terms.size();
+    const auto terms = _terms;
+    const auto amplitudes = input._raw;
+    const auto nterms = terms.extent(0);
     Kokkos::parallel_for(
         "Operator::apply_to_state",
         Kokkos::RangePolicy<ExecutionSpaceType>(0, input.dim()),
         KOKKOS_LAMBDA(std::uint64_t i) {
-            ComplexType sum = 0.;
-            for (std::uint64_t t = 0; t < nterms; ++t) {
-                const auto term = terms(t);
-                auto b = i ^ term._bit_flip_mask;
-                auto phase = internal::PHASE_90ROT<internal::Prec>()
-                    [Kokkos::popcount(term._bit_flip_mask & term._phase_flip_mask) % 4];
-                auto value = term._coef * phase * input.at_unsafe(b);
-                sum += (Kokkos::popcount(b & term._phase_flip_mask) & 1) ? -value : value;
-            }
-            state_vector.at_unsafe(i) = sum;
+            state_vector.at_unsafe(i) =
+                internal::sum_pauli_at<internal::Prec>(terms, amplitudes, i, 0, nterms);
         });
 }
 
@@ -219,20 +202,29 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
 
     using AccumComplex = Kokkos::complex<double>;
     const std::uint64_t nterms = _terms.size();
+    if (nterms == 0) return {};
     const std::uint64_t dim = state_vector.dim();
-
-    Kokkos::View<Kokkos::complex<double>*, internal::SpaceType<internal::Space>> res("expvals",
-                                                                                     nterms);
+    const auto pairs = (dim + 1) >> 1;
+    constexpr std::uint64_t target_teams = 128;
+    const auto teams_per_term = 1 + (target_teams - 1) / nterms;
+    const auto width =
+        std::bit_ceil(std::max<std::uint64_t>(1024, (pairs + teams_per_term - 1) / teams_per_term));
+    const auto tiles = std::max<std::uint64_t>(1, (pairs + width - 1) / width);
 
     using ExecSpace = internal::SpaceType<internal::Space>;
     using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
     using Member = typename TeamPolicy::member_type;
+    Kokkos::View<AccumComplex*, ExecSpace> partials(
+        Kokkos::ViewAllocateWithoutInitializing("expval_tiles"), nterms * tiles);
 
     Kokkos::parallel_for(
         "get_expectation_values",
-        TeamPolicy(static_cast<int>(nterms), Kokkos::AUTO),
+        TeamPolicy(nterms * tiles, Kokkos::AUTO),
         KOKKOS_CLASS_LAMBDA(const Member& team) {
-            const std::uint64_t term_id = static_cast<std::uint64_t>(team.league_rank());
+            const auto rank = static_cast<std::uint64_t>(team.league_rank());
+            const auto term_id = rank / tiles;
+            const auto begin = rank % tiles * width;
+            const auto end = begin + (pairs - begin < width ? pairs - begin : width);
 
             const auto bit_flip_mask = _terms[term_id]._bit_flip_mask;
             const auto phase_flip_mask = _terms[term_id]._phase_flip_mask;
@@ -241,10 +233,8 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
             AccumComplex sum = AccumComplex(0.0, 0.0);
 
             Kokkos::parallel_reduce(
-                Kokkos::TeamThreadRange(team, static_cast<int>((dim + 1) >> 1)),
-                [&](const int state_idx_i, AccumComplex& lsum) {
-                    const std::uint64_t state_idx = static_cast<std::uint64_t>(state_idx_i);
-
+                Kokkos::TeamThreadRange(team, begin, end),
+                [&](std::uint64_t state_idx, AccumComplex& lsum) {
                     if (bit_flip_mask == 0) {
                         if (dim == 1) {
                             lsum += internal::to_complex_double(
@@ -282,12 +272,19 @@ std::vector<StdComplex> Operator<internal::Prec, internal::Space>::get_expectati
                 },
                 sum);
 
-            Kokkos::single(Kokkos::PerTeam(team),
-                           [&] { res(term_id) = Kokkos::complex<double>(sum.real(), sum.imag()); });
+            Kokkos::single(Kokkos::PerTeam(team), [&] { partials(rank) = sum; });
         });
 
-    auto res_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), res);
-    return std::vector<StdComplex>(res_h.data(), res_h.data() + res_h.size());
+    const auto host = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, partials);
+    std::vector<StdComplex> results(nterms);
+    for (std::uint64_t term = 0; term < nterms; ++term) {
+        AccumComplex sum = 0.;
+        for (std::uint64_t tile = 0; tile < tiles; ++tile) {
+            sum += host(term * tiles + tile);
+        }
+        results[term] = static_cast<StdComplex>(sum);
+    }
+    return results;
 }
 
 template <>
@@ -666,7 +663,18 @@ Operator<internal::Prec, internal::Space>& Operator<internal::Prec, internal::Sp
 template <>
 Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Space>::operator*(
     StdComplex coef) const {
-    return this->copy() *= coef;
+    auto result = uninitialized_operator(_terms.size());
+    const auto input = _terms;
+    const auto output = result._terms;
+    result._is_hermitian = _is_hermitian && coef.imag() == 0.;
+    Kokkos::parallel_for(
+        "operator*",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, input.size()),
+        KOKKOS_LAMBDA(std::uint64_t i) {
+            output(i) = input(i);
+            output(i)._coef *= coef;
+        });
+    return result;
 }
 
 template <>
@@ -677,7 +685,8 @@ Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Spa
     std::uint64_t nnz_count = 0;
     Kokkos::parallel_reduce(
         "operator*",
-        Kokkos::MDRangePolicy<internal::SpaceType<internal::Space>, Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<ExecutionSpaceType,
+                              Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>(
             {0, 0}, {_terms.size(), target._terms.size()}),
         KOKKOS_CLASS_LAMBDA(std::uint64_t i, std::uint64_t j, std::uint64_t & nnz_lcl) {
             ret._terms(i * target._terms.size() + j) = _terms(i) * target._terms(j);
@@ -709,7 +718,21 @@ Operator<internal::Prec, internal::Space>& Operator<internal::Prec, internal::Sp
 template <>
 Operator<internal::Prec, internal::Space> Operator<internal::Prec, internal::Space>::operator*(
     const PauliOperator<internal::Prec>& target) const {
-    return this->copy() *= target;
+    auto result = uninitialized_operator(_terms.size());
+    const auto input = _terms;
+    const auto output = result._terms;
+    std::uint64_t non_real_count = 0;
+    Kokkos::parallel_reduce(
+        "operator*",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, input.size()),
+        KOKKOS_LAMBDA(std::uint64_t i, std::uint64_t & count) {
+            const auto product = input(i) * target;
+            output(i) = product;
+            if (static_cast<double>(product._coef.imag()) != 0.) ++count;
+        },
+        non_real_count);
+    result._is_hermitian = non_real_count == 0;
+    return result;
 }
 
 template <>

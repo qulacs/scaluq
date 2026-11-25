@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 #include "../constant.hpp"
 #include "../state/state_vector.hpp"
 #include "../state/state_vector_batched.hpp"
@@ -118,75 +120,38 @@ void apply_pauli(std::uint64_t control_mask,
             }
         });
 }
-template <Precision Prec, ExecutionSpace Space>
-void apply_pauli(std::uint64_t control_mask,
-                 std::uint64_t control_value_mask,
-                 const Kokkos::View<PauliOperator<Prec>*, SpaceType<Space>>& ops,
-                 const Kokkos::View<std::uint64_t*, Kokkos::SharedSpace>& row_ptr,
-                 StateVectorBatched<Prec, Space>& states,
-                 std::uint64_t batch_size) {
-    if (!batch_size)
-        throw std::invalid_argument("Operator application batch_size must be positive.");
-    using Sp = SpaceType<Space>;
-    if (states.batch_size() + 1 != row_ptr.extent(0)) {
-        throw std::runtime_error(
-            "apply_pauli: batch size of states and ops must be same, and row_ptr extent must be "
-            "batch_size + 1");
-    }
-    auto results = StateVectorBatched<Prec, Space>::uninitialized_state(states.batch_size(),
-                                                                        states.n_qubits());
-    results.set_zero_norm_state();
-    std::uint64_t dim = states.dim();
-    std::uint64_t rsize = row_ptr.extent(0) - 1;
-    for (std::uint64_t b = 0; b < rsize; b += batch_size)
-        Kokkos::parallel_for(
-            "apply_pauli",
-            Kokkos::TeamPolicy<Sp>(Sp(), std::min(batch_size, rsize - b), Kokkos::AUTO),
-            KOKKOS_LAMBDA(const Kokkos::TeamPolicy<Sp>::member_type& team) {
-                std::uint64_t batch_id = team.league_rank() + b;
-                Kokkos::parallel_for(
-                    Kokkos::TeamThreadRange(team,
-                                            (dim + 1) >> (Kokkos::popcount(control_mask) + 1)),
-                    [&](const std::uint64_t i) {
-                        for (std::uint64_t j = row_ptr(batch_id); j < row_ptr(batch_id + 1); ++j) {
-                            auto bit_flip_mask = ops(j)._bit_flip_mask;
-                            auto phase_flip_mask = ops(j)._phase_flip_mask;
-                            Complex<Prec> coef = ops(j)._coef;
+template <class Execution, class Terms>
+void check_pauli_qubit_count(const Terms& terms, std::uint64_t n_qubits) {
+    if (terms.extent(0) == 0 || n_qubits >= 64) return;
+    std::uint64_t invalid_count = 0;
+    using Policy = Kokkos::RangePolicy<Execution, Kokkos::IndexType<std::uint64_t>>;
+    Kokkos::parallel_reduce(
+        "check_operator_qubits",
+        Policy(0, terms.extent(0)),
+        KOKKOS_LAMBDA(std::uint64_t index, std::uint64_t & count) {
+            const auto mask = terms(index)._bit_flip_mask | terms(index)._phase_flip_mask;
+            if (mask >> n_qubits) ++count;
+        },
+        invalid_count);
+    if (invalid_count) throw std::invalid_argument("Operator acts on a qubit outside the state.");
+}
 
-                            if (bit_flip_mask == 0) {
-                                for (std::uint64_t ii : {2 * i, 2 * i + 1}) {
-                                    if (ii >= dim) continue;
-                                    std::uint64_t state_idx =
-                                        insert_zero_at_mask_positions(ii, control_mask) |
-                                        control_value_mask;
-                                    Complex<Prec> ctr = coef * states._raw(batch_id, state_idx);
-                                    if (Kokkos::popcount(state_idx & phase_flip_mask) & 1) {
-                                        results._raw(batch_id, state_idx) -= ctr;
-                                    } else {
-                                        results._raw(batch_id, state_idx) += ctr;
-                                    }
-                                }
-                            } else {
-                                std::uint64_t pivot = Kokkos::bit_width(bit_flip_mask) - 1;
-                                std::uint64_t global_phase_90rot_count =
-                                    Kokkos::popcount(bit_flip_mask & phase_flip_mask);
-                                Complex<Prec> global_phase =
-                                    PHASE_M90ROT<Prec>()[global_phase_90rot_count % 4];
-                                std::uint64_t basis_0 =
-                                    insert_zero_at_mask_positions(i, control_mask | 1ULL << pivot) |
-                                    control_value_mask;
-                                std::uint64_t basis_1 = basis_0 ^ bit_flip_mask;
-                                Complex<Prec> tmp1 = states._raw(batch_id, basis_0) * global_phase;
-                                Complex<Prec> tmp2 = states._raw(batch_id, basis_1) * global_phase;
-                                if (Kokkos::popcount(basis_0 & phase_flip_mask) & 1) tmp2 = -tmp2;
-                                if (Kokkos::popcount(basis_1 & phase_flip_mask) & 1) tmp1 = -tmp1;
-                                Kokkos::atomic_add(&results._raw(batch_id, basis_0), tmp2 * coef);
-                                Kokkos::atomic_add(&results._raw(batch_id, basis_1), tmp1 * coef);
-                            }
-                        }
-                    });
-            });
-    states = results;
+template <Precision Prec, class Terms, class Input>
+KOKKOS_INLINE_FUNCTION Complex<Prec> sum_pauli_at(const Terms& terms,
+                                                  const Input& input,
+                                                  std::uint64_t basis,
+                                                  std::uint64_t first_term,
+                                                  std::uint64_t last_term) {
+    Complex<Prec> sum = 0.;
+    for (auto index = first_term; index < last_term; ++index) {
+        const auto& term = terms(index);
+        const auto from = basis ^ term._bit_flip_mask;
+        const auto phase =
+            PHASE_90ROT<Prec>()[Kokkos::popcount(term._bit_flip_mask & term._phase_flip_mask) % 4];
+        const auto value = term._coef * phase * input(from);
+        sum += (Kokkos::popcount(from & term._phase_flip_mask) & 1) ? -value : value;
+    }
+    return sum;
 }
 
 // Applies a single-qubit Pauli rotation with a real coefficient through the specialized
