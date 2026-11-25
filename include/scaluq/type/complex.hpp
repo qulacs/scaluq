@@ -644,6 +644,7 @@ public:
     static constexpr std::size_t scalar_lanes = Simd::size();
     static constexpr std::size_t complex_lanes = scalar_lanes / 2;
 
+    KOKKOS_INLINE_FUNCTION SimdComplex() : _data(Scalar{0}) {}
     KOKKOS_INLINE_FUNCTION explicit SimdComplex(const Simd& data) : _data(data) {}
 
     KOKKOS_INLINE_FUNCTION static SimdComplex load_aligned(const Complex<P>* ptr) {

@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <bit>
 #include <scaluq/prec_space.hpp>
 #include <scaluq/state/state_vector_batched.hpp>
@@ -190,7 +191,7 @@ std::vector<std::vector<StdComplex>> StateVectorBatched<Prec, Space>::get_amplit
 
 namespace {
 
-template <ExecutionSpace Space, class Contribution>
+template <ExecutionSpace Space, std::uint64_t Lanes = 1, class Accum = double, class Contribution>
 std::vector<double> reduce_state_batches(const char* label,
                                          std::uint64_t batch_size,
                                          std::uint64_t count,
@@ -217,12 +218,22 @@ std::vector<double> reduce_state_batches(const char* label,
             const auto rank = static_cast<std::uint64_t>(team.league_rank());
             const auto batch = rank / tile_count;
             const auto begin = rank % tile_count * width;
-            double sum = 0.;
+            Accum sum{0.};
             Kokkos::parallel_reduce(
-                Kokkos::TeamThreadRange(team, begin, begin + width),
-                [&](std::uint64_t i, double& local) { local += contribution(batch, i); },
-                internal::Sum<double, Space>(sum));
-            Kokkos::single(Kokkos::PerTeam(team), [&] { partials(rank) = sum; });
+                Kokkos::TeamThreadRange(team, begin / Lanes, (begin + width) / Lanes),
+                [&](std::uint64_t i, Accum& local) {
+                    local = local + contribution(batch, i * Lanes);
+                },
+                internal::Sum<Accum, Space>(sum));
+            Kokkos::single(Kokkos::PerTeam(team), [&] {
+                auto& partial = partials(rank);
+                if constexpr (std::is_same_v<Accum, double>)
+                    partial = sum;
+#if (defined(KOKKOS_ARCH_AVX2) || defined(KOKKOS_ARCH_AVX512XEON)) && !defined(__CUDACC__)
+                else
+                    partial = Kokkos::Experimental::reduce(sum);
+#endif
+            });
         });
 
     auto result = partials;
@@ -242,14 +253,39 @@ std::vector<double> reduce_state_batches(const char* label,
     return internal::convert_view_to_vector<double, Space>(result);
 }
 
+template <Precision Prec, ExecutionSpace Space, class RawView, class Basis>
+std::vector<double> reduce_batch_probabilities(const char* label,
+                                               std::uint64_t batch_size,
+                                               std::uint64_t count,
+                                               std::uint64_t fixed_mask,
+                                               RawView raw,
+                                               Basis basis_index) {
+    if constexpr (internal::supports_simd<Prec, Space>) {
+        using Pack = internal::SimdComplex<Prec>;
+        constexpr std::uint64_t lanes = Pack::complex_lanes;
+        if (count >= lanes && (fixed_mask & (lanes - 1)) == 0) {
+            using Accum = internal::simd_ops::Simd<double>;
+            return reduce_state_batches<Space, lanes, Accum>(
+                label, batch_size, count, KOKKOS_LAMBDA(std::uint64_t batch, std::uint64_t i) {
+                    return Pack::load_aligned(&raw(batch, basis_index(i)))
+                        .template squared_norms<double>();
+                });
+        }
+    }
+    return reduce_state_batches<Space>(
+        label, batch_size, count, KOKKOS_LAMBDA(std::uint64_t batch, std::uint64_t i) {
+            return static_cast<double>(internal::squared_norm(raw(batch, basis_index(i))));
+        });
+}
+
 }  // namespace
 
 template <Precision Prec, ExecutionSpace Space>
 std::vector<double> StateVectorBatched<Prec, Space>::get_squared_norm() const {
     const auto raw = _raw;
-    return reduce_state_batches<Space>(
-        "get_squared_norm", _batch_size, _dim, KOKKOS_LAMBDA(std::uint64_t batch, std::uint64_t i) {
-            return static_cast<double>(internal::squared_norm(raw(batch, i)));
+    return reduce_batch_probabilities<Prec, Space>(
+        "get_squared_norm", _batch_size, _dim, 0, raw, KOKKOS_LAMBDA(std::uint64_t i) {
+            return i;
         });
 }
 
@@ -292,13 +328,15 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_zero_probability(
             "of target qubit must be smaller than qubit_count");
     }
     const auto raw = _raw;
-    return reduce_state_batches<Space>(
+    const auto fixed_mask = 1ULL << target_qubit_index;
+    return reduce_batch_probabilities<Prec, Space>(
         "get_zero_probability",
         _batch_size,
         _dim >> 1,
-        KOKKOS_LAMBDA(std::uint64_t batch, std::uint64_t i) {
-            const auto basis = internal::insert_zero_to_basis_index(i, target_qubit_index);
-            return static_cast<double>(internal::squared_norm(raw(batch, basis)));
+        fixed_mask,
+        raw,
+        KOKKOS_LAMBDA(std::uint64_t i) {
+            return internal::insert_zero_to_basis_index(i, target_qubit_index);
         });
 }
 
@@ -325,13 +363,14 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_marginal_probability(
     const auto fixed_bits = internal::vector_to_mask<false>(fixed_indices, fixed_values);
 
     const auto raw = _raw;
-    return reduce_state_batches<Space>(
+    return reduce_batch_probabilities<Prec, Space>(
         "get_marginal_probability",
         _batch_size,
         _dim >> std::popcount(fixed_mask),
-        KOKKOS_LAMBDA(std::uint64_t batch, std::uint64_t i) {
-            const auto basis = internal::insert_zero_at_mask_positions(i, fixed_mask) | fixed_bits;
-            return static_cast<double>(internal::squared_norm(raw(batch, basis)));
+        fixed_mask,
+        raw,
+        KOKKOS_LAMBDA(std::uint64_t i) {
+            return internal::insert_zero_at_mask_positions(i, fixed_mask) | fixed_bits;
         });
 }
 
@@ -464,6 +503,33 @@ template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_reduced_state() const {
     StateVector<Prec, Space> reduced_state =
         StateVector<Prec, Space>::uninitialized_state(_n_qubits);
+    if constexpr (internal::supports_simd<Prec, Space>) {
+        using Simd = internal::SimdComplex<Prec>;
+        constexpr std::uint64_t lanes = Simd::complex_lanes;
+        constexpr std::uint64_t packs = 4;
+        constexpr auto width = packs * lanes;
+        if (_dim >= width) {
+            const auto src = _raw;
+            const auto dst = reduced_state._raw;
+            const auto batch_size = _batch_size;
+            Kokkos::parallel_for(
+                "get_reduced_state",
+                Kokkos::RangePolicy<ExecutionSpaceType>(0, _dim / width),
+                KOKKOS_LAMBDA(std::uint64_t group) {
+                    const auto i = group * width;
+                    std::array<Simd, packs> sums{};
+                    for (std::uint64_t b = 0; b < batch_size; ++b) {
+                        for (std::uint64_t p = 0; p < packs; ++p) {
+                            sums[p] = sums[p] + Simd::load_aligned(&src(b, i + p * lanes));
+                        }
+                    }
+                    for (std::uint64_t p = 0; p < packs; ++p) {
+                        sums[p].store_aligned(&dst(i + p * lanes));
+                    }
+                });
+            return reduced_state;
+        }
+    }
     Kokkos::parallel_for(
         "get_reduced_state",
         Kokkos::TeamPolicy<internal::SpaceType<Space>>(
