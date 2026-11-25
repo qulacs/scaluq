@@ -110,7 +110,7 @@ TYPED_TEST(GateTest, SparseMatrixInverseChecksInvertibility) {
     const auto initial = state.get_amplitudes();
     sparse_gate->update_quantum_state(state);
     auto inverse = sparse_gate->get_inverse();
-    using DenseImpl = internal::DenseMatrixGateImpl<Prec, Space>;
+    using DenseImpl = scaluq::internal::DenseMatrixGateImpl<Prec, Space>;
     EXPECT_NE(std::dynamic_pointer_cast<const DenseImpl>(inverse), nullptr);
     inverse->update_quantum_state(state);
     const auto actual = state.get_amplitudes();
