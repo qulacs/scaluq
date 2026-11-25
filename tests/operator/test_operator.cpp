@@ -556,8 +556,9 @@ TYPED_TEST(OperatorTest, GroupedPauliBoundaryCases) {
     EXPECT_EQ(empty.n_groups(), 0);
     EXPECT_EQ(empty.get_expectation_value(scalar), StdComplex(0.));
     std::vector<PauliOperator<Prec>> identity{PauliOperator<Prec>("", StdComplex(1., 2.))};
-    GroupedPauliOperator<Prec, Space> below(0, identity, sizeof(internal::Complex<Prec>) - 1);
-    GroupedPauliOperator<Prec, Space> exact(0, identity, sizeof(internal::Complex<Prec>));
+    GroupedPauliOperator<Prec, Space> below(
+        0, identity, sizeof(scaluq::internal::Complex<Prec>) - 1);
+    GroupedPauliOperator<Prec, Space> exact(0, identity, sizeof(scaluq::internal::Complex<Prec>));
     EXPECT_FALSE(below.is_cached());
     EXPECT_TRUE(exact.is_cached());
     EXPECT_NEAR(std::abs(exact.get_expectation_value(scalar) - StdComplex(5., 10.)), 0., 1e-5);
