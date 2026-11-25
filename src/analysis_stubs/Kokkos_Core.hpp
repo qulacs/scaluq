@@ -230,6 +230,7 @@ public:
     size_type extent(int) const { return 0; }
     size_type size() const { return 0; }
     static size_type shmem_size(size_type n) { return sizeof(value_type) * n; }
+    bool span_is_contiguous() const { return true; }
     bool is_null() const { return true; }
 
     value_type& operator()() const {
@@ -335,6 +336,9 @@ inline void single(Scope, Closure&&) {}
 // ── Memory / view utilities ────────────────────────────────────────────────
 template <class D, class S>
 inline void deep_copy(D&&, S&&) {}
+
+template <class Exec, class D, class S>
+inline void deep_copy(Exec&&, D&&, S&&) {}
 
 template <class V>
 inline auto create_mirror_view(const V& v) {
