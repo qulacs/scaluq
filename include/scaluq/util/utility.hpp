@@ -140,6 +140,36 @@ StdComplex inner_product(const ViewA& a, const ViewB& b) {
     if (a.extent(0) != b.extent(0)) {
         throw std::runtime_error("Error: inner_product: dimension mismatch");
     }
+#if (defined(KOKKOS_ARCH_AVX2) || defined(KOKKOS_ARCH_AVX512XEON)) && !defined(__CUDACC__)
+    if constexpr (supports_simd<Prec, Space> && ViewA::memory_traits::is_aligned &&
+                  ViewB::memory_traits::is_aligned) {
+        using Pack = SimdComplex<Prec>;
+        constexpr auto lanes = Pack::complex_lanes;
+        const auto count = a.extent(0);
+        if (count >= lanes && count % lanes == 0 && a.span_is_contiguous() &&
+            b.span_is_contiguous()) {
+            constexpr std::uint64_t packs_per_tile = 64;
+            const auto packs = count / lanes;
+            Kokkos::complex<double> result;
+            Kokkos::parallel_reduce(
+                "inner_product",
+                Kokkos::RangePolicy<SpaceType<Space>>(0, 1 + (packs - 1) / packs_per_tile),
+                KOKKOS_LAMBDA(std::uint64_t tile, Kokkos::complex<double> & sum) {
+                    typename Pack::DoubleAccumulator accumulator;
+                    const auto end = Kokkos::min((tile + 1) * packs_per_tile, packs);
+                    for (auto i = tile * packs_per_tile; i < end; ++i) {
+                        const auto product =
+                            Pack::load_aligned(a.data() + i * lanes)
+                                .conjugate_product(Pack::load_aligned(b.data() + i * lanes));
+                        accumulator += product;
+                    }
+                    sum += accumulator.result();
+                },
+                result);
+            return StdComplex(result.real(), result.imag());
+        }
+    }
+#endif
     using Accum = SingleStateReductionFloat<Prec, Space>;
     Kokkos::complex<Accum> result;
     Kokkos::parallel_reduce(

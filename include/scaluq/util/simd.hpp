@@ -105,4 +105,31 @@ KOKKOS_INLINE_FUNCTION Simd<Scalar, Lanes> negate(const Simd<Scalar, Lanes>& val
     });
 }
 
+// Select the real (even) lanes, converting directly to the native output pack.
+template <typename To, typename From, std::size_t Lanes>
+KOKKOS_INLINE_FUNCTION Simd<To> convert_even_lanes(const Simd<From, Lanes>& value) {
+    using Result = Simd<To>;
+    constexpr auto selected = Simd<From, Lanes>::size() / 2;
+    static_assert(Result::size() >= selected);
+#if defined(KOKKOS_ARCH_AVX512XEON)
+    if constexpr (std::is_same_v<From, float> && std::is_same_v<To, double> && selected == 8 &&
+                  Result::size() == 8) {
+        const auto even = _mm512_maskz_compress_ps(0x5555, static_cast<__m512>(value));
+        return Result(_mm512_cvtps_pd(_mm512_castps512_ps256(even)));
+    }
+#elif defined(KOKKOS_ARCH_AVX2)
+    if constexpr (std::is_same_v<From, float> && std::is_same_v<To, double> && selected == 4 &&
+                  Result::size() == 4) {
+        const auto packed = static_cast<__m256>(value);
+        const auto even = _mm_shuffle_ps(_mm256_castps256_ps128(packed),
+                                         _mm256_extractf128_ps(packed, 1),
+                                         _MM_SHUFFLE(2, 0, 2, 0));
+        return Result(_mm256_cvtps_pd(even));
+    }
+#endif
+    return Result(KOKKOS_LAMBDA(std::size_t i) {
+        return i < selected ? static_cast<To>(value[2 * i]) : To{};
+    });
+}
+
 }  // namespace scaluq::internal::simd_ops

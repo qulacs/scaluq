@@ -40,6 +40,19 @@ struct SpaceTypeImpl<ExecutionSpace::Default> {
 template <ExecutionSpace Space>
 using SpaceType = typename SpaceTypeImpl<Space>::Type;
 
+template <Precision Prec, ExecutionSpace Space>
+#if (defined(KOKKOS_ARCH_AVX2) || defined(KOKKOS_ARCH_AVX512XEON)) && !defined(__CUDACC__)
+inline constexpr bool supports_simd = [] {
+    if constexpr ((Space == ExecutionSpace::Host || Space == ExecutionSpace::HostSerial) &&
+                  (Prec == Precision::F64 || Prec == Precision::F32)) {
+        return SimdComplex<Prec>::complex_lanes > 0;
+    }
+    return false;
+}();
+#else
+inline constexpr bool supports_simd = false;
+#endif
+
 inline std::string to_string(Precision prec) {
     if (prec == Precision::F16) return "f16";
     if (prec == Precision::F32) return "f32";
