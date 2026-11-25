@@ -229,10 +229,18 @@ Kokkos::View<T*, SpaceType<Space>> convert_vector_to_view(
 // Device Kokkos::View を Host std::vector に変換する関数
 template <typename T, ExecutionSpace Space, class ViewType>
 std::vector<T> convert_view_to_vector(const ViewType& device_view) {
-    std::vector<T> host_vector(device_view.extent(0));
-    auto host_view = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), device_view);
-    std::copy(host_view.data(), host_view.data() + host_view.size(), host_vector.begin());
-    return host_vector;
+    if (device_view.size() == 0) return {};
+    if constexpr (std::is_same_v<T, std::remove_const_t<typename ViewType::value_type>> &&
+                  !std::is_same_v<typename SpaceType<Space>::memory_space, Kokkos::HostSpace>) {
+        std::vector<T> host_vector(device_view.extent(0));
+        Kokkos::View<T*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> host_view(
+            host_vector.data(), host_vector.size());
+        Kokkos::deep_copy(host_view, device_view);
+        return host_vector;
+    } else {
+        const auto host_view = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), device_view);
+        return std::vector<T>(host_view.data(), host_view.data() + host_view.size());
+    }
 }
 
 template <Precision Prec>

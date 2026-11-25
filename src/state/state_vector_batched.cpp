@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <bit>
 #include <scaluq/prec_space.hpp>
 #include <scaluq/state/state_vector_batched.hpp>
 #include <scaluq/util/math.hpp>
@@ -59,10 +60,9 @@ void StateVectorBatched<Prec, Space>::set_state_vector_at(std::uint64_t batch_id
             "Error: StateVectorBatched::set_state_vector(std::uint64_t, const StateVector&): "
             "Dimensions of source and destination views do not match.");
     }
-    Kokkos::parallel_for(
-        "set_state_vector_at",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { _raw(batch_id, i) = state._raw(i); });
+    Kokkos::deep_copy(ExecutionSpaceType{},
+                      Kokkos::subview(_raw, batch_id, Kokkos::ALL()),
+                      state._raw);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -85,10 +85,8 @@ StateVector<Prec, Space> StateVectorBatched<Prec, Space>::get_state_vector_at(
             "batch_id must be smaller than batch_size");
     }
     auto ret = StateVector<Prec, Space>::uninitialized_state(_n_qubits);
-    Kokkos::parallel_for(
-        "get_state_vector_at",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i) { ret._raw(i) = _raw(batch_id, i); });
+    Kokkos::deep_copy(ExecutionSpaceType{}, ret._raw,
+                      Kokkos::subview(_raw, batch_id, Kokkos::ALL()));
     return ret;
 }
 
@@ -114,7 +112,21 @@ void StateVectorBatched<Prec, Space>::set_zero_norm_state() {
 template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::set_Haar_random_state(bool set_same_state,
                                                             std::optional<std::uint64_t> seed) {
-    *this = Haar_random_state(_batch_size, _n_qubits, set_same_state, seed);
+    const auto actual_seed = internal::resolve_seed(seed);
+    if (set_same_state) {
+        set_state_vector(StateVector<Prec, Space>::Haar_random_state(_n_qubits, actual_seed));
+    } else {
+        Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(actual_seed);
+        const auto raw = _raw;
+        Kokkos::parallel_for(
+            "Haar_random_state",
+            Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+                {0, 0}, {_batch_size, _dim}),
+            KOKKOS_LAMBDA(std::uint64_t b, std::uint64_t i) {
+                raw(b, i) = internal::normal_complex<Prec>(rand_pool);
+            });
+        normalize();
+    }
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -135,24 +147,8 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::Haar_random_sta
     std::uint64_t n_qubits,
     bool set_same_state,
     std::optional<std::uint64_t> seed) {
-    std::uint64_t actual_seed = internal::resolve_seed(seed);
-    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(actual_seed);
-    auto states(StateVectorBatched<Prec, Space>::uninitialized_state(batch_size, n_qubits));
-    if (set_same_state) {
-        states.set_state_vector(StateVector<Prec, Space>::Haar_random_state(n_qubits, actual_seed));
-    } else {
-        Kokkos::parallel_for(
-            "Haar_random_state",
-            Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
-                {0, 0}, {states.batch_size(), states.dim()}),
-            KOKKOS_LAMBDA(std::uint64_t b, std::uint64_t i) {
-                auto rand_gen = rand_pool.get_state();
-                states._raw(b, i) =
-                    ComplexType(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
-                rand_pool.free_state(rand_gen);
-            });
-        states.normalize();
-    }
+    auto states = uninitialized_state(batch_size, n_qubits);
+    states.set_Haar_random_state(set_same_state, seed);
     return states;
 }
 
@@ -171,41 +167,90 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::uninitialized_s
 
 template <Precision Prec, ExecutionSpace Space>
 std::vector<std::vector<StdComplex>> StateVectorBatched<Prec, Space>::get_amplitudes() const {
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<Space>> device_contiguous(
-        "device_contiguous", _batch_size, _dim);
-    Kokkos::deep_copy(device_contiguous, _raw);
-    auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), device_contiguous);
-    std::vector vv(_raw.extent(0), std::vector(_raw.extent(1), StdComplex(0.)));
-    for (size_t i = 0; i < view_h.extent(0); ++i) {
-        for (size_t j = 0; j < view_h.extent(1); ++j) {
-            vv[i][j] = static_cast<StdComplex>(view_h(i, j));
+    const auto to_vector = [](const auto& host_view) {
+        std::vector<std::vector<StdComplex>> result;
+        result.reserve(host_view.extent(0));
+        for (std::uint64_t b = 0; b < host_view.extent(0); ++b) {
+            const auto row = Kokkos::subview(host_view, b, Kokkos::ALL());
+            result.emplace_back(row.data(), row.data() + row.extent(0));
         }
+        return result;
+    };
+
+    if (std::is_same_v<typename internal::SpaceType<Space>::memory_space, Kokkos::HostSpace> ||
+        _raw.span_is_contiguous()) {
+        return to_vector(Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, _raw));
     }
-    return vv;
+
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<Space>> device_view(
+        Kokkos::ViewAllocateWithoutInitializing("device_view"), _batch_size, _dim);
+    Kokkos::deep_copy(device_view, _raw);
+    return to_vector(Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, device_view));
 }
+
+namespace {
+
+template <ExecutionSpace Space, class Contribution>
+std::vector<double> reduce_state_batches(const char* label,
+                                         std::uint64_t batch_size,
+                                         std::uint64_t count,
+                                         Contribution contribution) {
+    if (batch_size == 0) return {};
+
+    constexpr std::uint64_t target_teams = 128;
+    const auto tiles_per_state = 1 + (target_teams - 1) / batch_size;
+    const auto desired_width = 1 + (count - 1) / tiles_per_state;
+    // The number of contributions is a power of two, so all tiles have the same width.
+    const auto width =
+        std::min(count, std::bit_ceil(std::clamp<std::uint64_t>(desired_width, 4096, 16384)));
+    const auto tile_count = count / width;
+
+    using ExecSpace = internal::SpaceType<Space>;
+    using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
+    using ResultView = Kokkos::View<double*, ExecSpace>;
+    const ResultView partials(Kokkos::ViewAllocateWithoutInitializing(label),
+                              batch_size * tile_count);
+    Kokkos::parallel_for(
+        label,
+        TeamPolicy(batch_size * tile_count, Kokkos::AUTO),
+        KOKKOS_LAMBDA(const typename TeamPolicy::member_type& team) {
+            const auto rank = static_cast<std::uint64_t>(team.league_rank());
+            const auto batch = rank / tile_count;
+            const auto begin = rank % tile_count * width;
+            double sum = 0.;
+            Kokkos::parallel_reduce(
+                Kokkos::TeamThreadRange(team, begin, begin + width),
+                [&](std::uint64_t i, double& local) { local += contribution(batch, i); },
+                internal::Sum<double, Space>(sum));
+            Kokkos::single(Kokkos::PerTeam(team), [&] { partials(rank) = sum; });
+        });
+
+    auto result = partials;
+    if (tile_count > 1) {
+        result = ResultView(Kokkos::ViewAllocateWithoutInitializing("batch_sums"), batch_size);
+        Kokkos::parallel_for(
+            "sum_batch_tiles",
+            Kokkos::RangePolicy<ExecSpace>(0, batch_size),
+            KOKKOS_LAMBDA(std::uint64_t batch) {
+                const auto begin = batch * tile_count;
+                double sum = 0.;
+                for (std::uint64_t tile = 0; tile < tile_count; ++tile)
+                    sum += partials(begin + tile);
+                result(batch) = sum;
+            });
+    }
+    return internal::convert_view_to_vector<double, Space>(result);
+}
+
+}  // namespace
 
 template <Precision Prec, ExecutionSpace Space>
 std::vector<double> StateVectorBatched<Prec, Space>::get_squared_norm() const {
-    Kokkos::View<double*, internal::SpaceType<Space>> norms(
-        Kokkos::ViewAllocateWithoutInitializing("norms"), _batch_size);
-    Kokkos::parallel_for(
-        "get_squared_norm",
-        Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-            internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
-        KOKKOS_CLASS_LAMBDA(
-            const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
-            double nrm{0.0f};
-            std::uint64_t batch_id = team.league_rank();
-            Kokkos::parallel_reduce(
-                Kokkos::TeamThreadRange(team, _dim),
-                [&](const std::uint64_t& i, double& lcl) {
-                    lcl += static_cast<double>(internal::squared_norm(_raw(batch_id, i)));
-                },
-                internal::Sum<double, Space>(nrm));
-            team.team_barrier();
-            Kokkos::single(Kokkos::PerTeam(team), [&] { norms[batch_id] = nrm; });
+    const auto raw = _raw;
+    return reduce_state_batches<Space>(
+        "get_squared_norm", _batch_size, _dim, KOKKOS_LAMBDA(std::uint64_t batch, std::uint64_t i) {
+            return static_cast<double>(internal::squared_norm(raw(batch, i)));
         });
-    return internal::convert_view_to_vector<double, Space>(norms);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -246,27 +291,15 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_zero_probability(
             "Error: StateVectorBatched::get_zero_probability(std::uint64_t): index "
             "of target qubit must be smaller than qubit_count");
     }
-    Kokkos::View<double*, internal::SpaceType<Space>> probs("probs", _batch_size);
-    Kokkos::parallel_for(
+    const auto raw = _raw;
+    return reduce_state_batches<Space>(
         "get_zero_probability",
-        Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-            internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
-        KOKKOS_CLASS_LAMBDA(
-            const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
-            double sum{0.0f};
-            std::uint64_t batch_id = team.league_rank();
-            Kokkos::parallel_reduce(
-                Kokkos::TeamThreadRange(team, _dim >> 1),
-                [&](std::uint64_t i, double& lsum) {
-                    std::uint64_t basis_0 =
-                        internal::insert_zero_to_basis_index(i, target_qubit_index);
-                    lsum += static_cast<double>(internal::squared_norm(_raw(batch_id, basis_0)));
-                },
-                internal::Sum<double, Space>(sum));
-            team.team_barrier();
-            Kokkos::single(Kokkos::PerTeam(team), [&] { probs[batch_id] = sum; });
+        _batch_size,
+        _dim >> 1,
+        KOKKOS_LAMBDA(std::uint64_t batch, std::uint64_t i) {
+            const auto basis = internal::insert_zero_to_basis_index(i, target_qubit_index);
+            return static_cast<double>(internal::squared_norm(raw(batch, basis)));
         });
-    return internal::convert_view_to_vector<double, Space>(probs);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -279,73 +312,40 @@ std::vector<double> StateVectorBatched<Prec, Space>::get_marginal_probability(
             "qubit_count");
     }
 
-    std::vector<std::uint64_t> target_index;
-    std::vector<std::uint64_t> target_value;
+    std::vector<std::uint64_t> fixed_indices, fixed_values;
+    fixed_indices.reserve(measured_values.size());
+    fixed_values.reserve(measured_values.size());
     for (std::uint64_t i = 0; i < measured_values.size(); ++i) {
-        std::uint64_t measured_value = measured_values[i];
-        if (measured_value == 0 || measured_value == 1) {
-            target_index.push_back(i);
-            target_value.push_back(measured_value);
-        } else if (measured_value != StateVector<Prec, Space>::UNMEASURED) {
-            throw std::runtime_error(
-                "Error:StateVectorBatched::get_marginal_probability(const "
-                "vector<std::uint64_t>&): Invalid qubit state specified. Each qubit state must "
-                "be 0, 1, or StateVector::UNMEASURED.");
+        if (measured_values[i] != StateVector<Prec, Space>::UNMEASURED) {
+            fixed_indices.push_back(i);
+            fixed_values.push_back(measured_values[i]);
         }
     }
+    const auto fixed_mask = internal::vector_to_mask<false>(fixed_indices);
+    const auto fixed_bits = internal::vector_to_mask<false>(fixed_indices, fixed_values);
 
-    auto target_index_d = internal::convert_vector_to_view<std::uint64_t, Space>(target_index);
-    auto target_value_d = internal::convert_vector_to_view<std::uint64_t, Space>(target_value);
-    Kokkos::View<double*, internal::SpaceType<Space>> probs("probs", _batch_size);
-    Kokkos::parallel_for(
+    const auto raw = _raw;
+    return reduce_state_batches<Space>(
         "get_marginal_probability",
-        Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-            internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
-        KOKKOS_CLASS_LAMBDA(
-            const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
-            double sum{0.0f};
-            std::uint64_t batch_id = team.league_rank();
-            Kokkos::parallel_reduce(
-                Kokkos::TeamThreadRange(team, _dim >> target_index_d.size()),
-                [&](std::uint64_t i, double& lsum) {
-                    std::uint64_t basis = i;
-                    for (std::uint64_t cursor = 0; cursor < target_index_d.size(); cursor++) {
-                        std::uint64_t insert_index = target_index_d[cursor];
-                        basis = internal::insert_zero_to_basis_index(basis, insert_index);
-                        basis ^= target_value_d[cursor] << insert_index;
-                    }
-                    lsum += static_cast<double>(internal::squared_norm(_raw(batch_id, basis)));
-                },
-                internal::Sum<double, Space>(sum));
-            team.team_barrier();
-            Kokkos::single(Kokkos::PerTeam(team), [&] { probs[batch_id] = sum; });
+        _batch_size,
+        _dim >> std::popcount(fixed_mask),
+        KOKKOS_LAMBDA(std::uint64_t batch, std::uint64_t i) {
+            const auto basis = internal::insert_zero_at_mask_positions(i, fixed_mask) | fixed_bits;
+            return static_cast<double>(internal::squared_norm(raw(batch, basis)));
         });
-    return internal::convert_view_to_vector<double, Space>(probs);
 }
 
 template <Precision Prec, ExecutionSpace Space>
 std::vector<double> StateVectorBatched<Prec, Space>::get_computational_basis_entropy() const {
-    Kokkos::View<double*, internal::SpaceType<Space>> ents("ents", _batch_size);
-    Kokkos::parallel_for(
+    const auto raw = _raw;
+    return reduce_state_batches<Space>(
         "get_computational_basis_entropy",
-        Kokkos::TeamPolicy<internal::SpaceType<Space>>(
-            internal::SpaceType<Space>(), _batch_size, Kokkos::AUTO),
-        KOKKOS_CLASS_LAMBDA(
-            const Kokkos::TeamPolicy<internal::SpaceType<Space>>::TeamPolicy::member_type& team) {
-            double sum{0.0f};
-            std::uint64_t batch_id = team.league_rank();
-            Kokkos::parallel_reduce(
-                Kokkos::TeamThreadRange(team, _dim),
-                [&](std::uint64_t idx, double& lsum) {
-                    const FloatType prob = internal::squared_norm(_raw(batch_id, idx));
-                    if (prob > FloatType{0.0f})
-                        lsum += static_cast<double>(-prob * internal::log2(prob));
-                },
-                internal::Sum<double, Space>(sum));
-            team.team_barrier();
-            Kokkos::single(Kokkos::PerTeam(team), [&] { ents[batch_id] = sum; });
+        _batch_size,
+        _dim,
+        KOKKOS_LAMBDA(std::uint64_t batch, std::uint64_t i) {
+            const FloatType prob = internal::squared_norm(raw(batch, i));
+            return prob > FloatType{0.0f} ? static_cast<double>(-prob * internal::log2(prob)) : 0.;
         });
-    return internal::convert_view_to_vector<double, Space>(ents);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -383,26 +383,21 @@ void StateVectorBatched<Prec, Space>::load(const std::vector<std::vector<StdComp
             "Error: StateVectorBatched::load(const std::vector<std::vector<Complex<Prec>>>&): "
             "invalid batch_size");
     }
-    for (std::uint64_t b = 0; b < states.size(); ++b) {
-        if (states[b].size() != _dim) {
-            throw std::runtime_error(
-                "Error: "
-                "StateVectorBatched::load(const std::vector<std::vector<Complex<Prec>>>&): "
-                "invalid length of state");
-        }
+    if (std::ranges::any_of(states, [this](const auto& state) { return state.size() != _dim; })) {
+        throw std::runtime_error(
+            "Error: "
+            "StateVectorBatched::load(const std::vector<std::vector<Complex<Prec>>>&): "
+            "invalid length of state");
     }
 
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight, Kokkos::HostSpace> host_contiguous(
-        "host_contiguous", _batch_size, _dim);
-    for (std::uint64_t b = 0; b < states.size(); ++b) {
-        for (std::uint64_t i = 0; i < states[0].size(); ++i) {
-            host_contiguous(b, i) = states[b][i];
-        }
+    Kokkos::View<ComplexType**, Kokkos::LayoutRight, Kokkos::HostSpace> host_view(
+        "host_view", _batch_size, _dim);
+    for (std::uint64_t b = 0; b < _batch_size; ++b) {
+        std::ranges::copy(states[b], Kokkos::subview(host_view, b, Kokkos::ALL()).data());
     }
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<Space>> device_contiguous(
-        "device_contiguous", _batch_size, _dim);
-    Kokkos::deep_copy(device_contiguous, host_contiguous);
-    Kokkos::deep_copy(_raw, device_contiguous);
+    auto device_view = Kokkos::create_mirror_view_and_copy(
+        typename internal::SpaceType<Space>::memory_space{}, host_view);
+    Kokkos::deep_copy(_raw, device_view);
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -422,41 +417,47 @@ void StateVectorBatched<Prec, Space>::load(const StateVectorBatched<Prec, Space>
     Kokkos::deep_copy(_raw, other._raw);
 }
 
+namespace {
+
+template <ExecutionSpace Target, Precision Prec, ExecutionSpace Source>
+auto copy_to_space(const StateVectorBatched<Prec, Source>& src) {
+    using SrcSpace = internal::SpaceType<Source>;
+    using DstSpace = internal::SpaceType<Target>;
+
+    auto dst = StateVectorBatched<Prec, Target>::uninitialized_state(
+        src.batch_size(), src.n_qubits());
+
+    if (std::is_same_v<typename SrcSpace::memory_space, typename DstSpace::memory_space> ||
+        src._raw.span_is_contiguous()) {
+        Kokkos::deep_copy(dst._raw, src._raw);
+    } else {
+        Kokkos::View<internal::Complex<Prec>**, Kokkos::LayoutRight, SrcSpace> src_view(
+            Kokkos::ViewAllocateWithoutInitializing("src_view"), src.batch_size(), src.dim());
+        Kokkos::deep_copy(src_view, src._raw);
+        auto dst_view = Kokkos::create_mirror_view_and_copy(
+            typename DstSpace::memory_space{}, src_view);
+        Kokkos::deep_copy(dst._raw, dst_view);
+    }
+    return dst;
+}
+
+}  // namespace
+
 template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::copy() const {
-    auto cp = StateVectorBatched<Prec, Space>::uninitialized_state(_batch_size, _n_qubits);
-    Kokkos::deep_copy(cp._raw, _raw);
-    return cp;
+    return copy_to_space<Space>(*this);
 }
 
 template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, ExecutionSpace::Default>
 StateVectorBatched<Prec, Space>::copy_to_default_space() const {
-    auto cp = StateVectorBatched<Prec, ExecutionSpace::Default>::uninitialized_state(_batch_size,
-                                                                                     _n_qubits);
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<Space>> source_contiguous(
-        "source_contiguous", _batch_size, _dim);
-    Kokkos::deep_copy(source_contiguous, _raw);
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<ExecutionSpace::Default>>
-        destination_contiguous("destination_contiguous", _batch_size, _dim);
-    Kokkos::deep_copy(destination_contiguous, source_contiguous);
-    Kokkos::deep_copy(cp._raw, destination_contiguous);
-    return cp;
+    return copy_to_space<ExecutionSpace::Default>(*this);
 }
 
 template <Precision Prec, ExecutionSpace Space>
 StateVectorBatched<Prec, ExecutionSpace::Host> StateVectorBatched<Prec, Space>::copy_to_host_space()
     const {
-    auto cp =
-        StateVectorBatched<Prec, ExecutionSpace::Host>::uninitialized_state(_batch_size, _n_qubits);
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<Space>> source_contiguous(
-        "source_contiguous", _batch_size, _dim);
-    Kokkos::deep_copy(source_contiguous, _raw);
-    Kokkos::View<ComplexType**, Kokkos::LayoutRight, internal::SpaceType<ExecutionSpace::Host>>
-        destination_contiguous("destination_contiguous", _batch_size, _dim);
-    Kokkos::deep_copy(destination_contiguous, source_contiguous);
-    Kokkos::deep_copy(cp._raw, destination_contiguous);
-    return cp;
+    return copy_to_space<ExecutionSpace::Host>(*this);
 }
 
 template <Precision Prec, ExecutionSpace Space>

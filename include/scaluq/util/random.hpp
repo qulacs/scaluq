@@ -14,6 +14,23 @@ inline std::uint64_t resolve_seed(std::optional<std::uint64_t> seed) {
     }
     return std::random_device{}();
 }
+
+// Draw both independent normal components with one Box–Muller transform.
+template <Precision Prec, class RandomPool>
+KOKKOS_INLINE_FUNCTION Complex<Prec> normal_complex(const RandomPool& pool) {
+    auto gen = pool.get_state();
+    double u;
+    do {
+        u = gen.drand();
+    } while (u <= 0.);
+    const double angle = gen.drand() * (2 * Kokkos::numbers::pi_v<double>);
+    pool.free_state(gen);
+
+    const double radius = Kokkos::sqrt(-2. * Kokkos::log(u));
+    return Complex<Prec>(static_cast<Float<Prec>>(radius * Kokkos::cos(angle)),
+                         static_cast<Float<Prec>>(radius * Kokkos::sin(angle)));
+}
+
 }  // namespace internal
 
 class Random {
