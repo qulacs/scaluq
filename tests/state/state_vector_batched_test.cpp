@@ -297,9 +297,9 @@ TYPED_TEST(StateVectorBatchedTest, WeightedValidationAndZeroQubits) {
     src.load({{{1., 0.}}, {{2., 0.}}});
     dst.load({{{2., 0.}}, {{3., 0.}}});
     auto before = dst.get_amplitudes();
-    EXPECT_THROW(dst.multiply_coef(std::vector<StdComplex>{1.}), std::invalid_argument);
+    EXPECT_THROW(dst.multiply_coef(std::vector<StdComplex>{StdComplex(1.)}), std::invalid_argument);
     EXPECT_EQ(dst.get_amplitudes(), before);
-    EXPECT_THROW(dst.add_state_vector_with_coef(std::vector<StdComplex>{1.}, src),
+    EXPECT_THROW(dst.add_state_vector_with_coef(std::vector<StdComplex>{StdComplex(1.)}, src),
                  std::invalid_argument);
     EXPECT_EQ(dst.get_amplitudes(), before);
     dst.add_state_vector_with_coef(std::vector<StdComplex>{1., 1.}, src);
@@ -307,7 +307,8 @@ TYPED_TEST(StateVectorBatchedTest, WeightedValidationAndZeroQubits) {
     EXPECT_EQ(actual[0][0], StdComplex(3, 0));
     EXPECT_EQ(actual[1][0], StdComplex(5, 0));
     Batch empty(0, 0);
-    EXPECT_EQ(empty.get_linear_combination({}).get_amplitudes(), (std::vector<StdComplex>{0.}));
+    EXPECT_EQ(empty.get_linear_combination({}).get_amplitudes(),
+              (std::vector<StdComplex>{StdComplex(0.)}));
     EXPECT_TRUE(Batch::inner_product(empty, empty).empty());
 }
 
