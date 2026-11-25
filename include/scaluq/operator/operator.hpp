@@ -420,7 +420,8 @@ void bind_operator_operator_hpp(nb::module_& m) {
              "input"_a,
              "output"_a,
              "coef"_a = 1.,
-             "Add coef times the operator applied to input to output.")
+             "Add coef times the operator applied to input to output. input and output must "
+             "not overlap; passing the same state vector as both is undefined behavior.")
         .def("get_expectation_value",
              &GroupedPauliOperator<Prec, Space>::get_expectation_value,
              "state"_a)

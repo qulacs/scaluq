@@ -526,13 +526,10 @@ TYPED_TEST(OperatorTest, GroupedPauliCachedAndStreaming) {
         auto output = ket.copy();
         output.set_zero_norm_state();
         grouped.apply_to_state(ket, output, StdComplex(.5, -.25));
-        auto alias = ket.copy();
-        grouped.apply_to_state(alias, alias, StdComplex(.5, -.25));
-        auto a = expected.get_amplitudes(), b = output.get_amplitudes(), c = alias.get_amplitudes();
+        auto a = expected.get_amplitudes(), b = output.get_amplitudes();
         auto initial = ket.get_amplitudes();
         for (std::size_t i = 0; i < a.size(); ++i) {
             EXPECT_NEAR(std::abs(a[i] - b[i]), 0., 1e-5);
-            EXPECT_NEAR(std::abs(a[i] + initial[i] - c[i]), 0., 1e-5);
         }
         StdComplex transition = 0., expectation = 0.;
         auto bra_values = bra.get_amplitudes();

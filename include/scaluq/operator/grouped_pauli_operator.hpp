@@ -106,13 +106,13 @@ public:
     }
     [[nodiscard]] std::uint64_t n_groups() const { return weights_.groups.extent(0); }
     [[nodiscard]] bool is_cached() const { return weights_.cache.extent(0) != 0; }
-    // Add coef * H * input to output. Aliased inputs are copied once.
+    // Add coef * H * input to output. input and output must not overlap; any overlap,
+    // including passing the same state vector twice, is undefined behavior.
     void apply_to_state(const StateVector<Prec, Space>& input,
                         StateVector<Prec, Space>& output,
                         StdComplex coef = 1.) const {
         check(input);
         check(output);
-        auto source = input._raw.data() == output._raw.data() ? input.copy() : input;
         auto weights = weights_;
         auto ng = n_groups();
         internal::Complex<Prec> factor(coef);
@@ -123,7 +123,7 @@ public:
                 Complex sum = 0.;
                 for (std::uint64_t g = 0; g < ng; ++g) {
                     auto b = i ^ weights.groups(g).x;
-                    sum += weights.get(g, b) * source.at_unsafe(b);
+                    sum += weights.get(g, b) * input.at_unsafe(b);
                 }
                 output.at_unsafe(i) += factor * sum;
             });

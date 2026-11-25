@@ -23,7 +23,3 @@ def test_grouped_cached_and_streaming():
         out.set_zero_norm_state()
         op.apply_to_state(x, out)
         assert out.get_amplitudes() == pytest.approx(expected.get_amplitudes())
-        before = x.get_amplitudes()
-        op.apply_to_state(x, x)
-        assert x.get_amplitudes() == pytest.approx([a + b for a, b in zip(before, expected.get_amplitudes())])
-        x.load(before)
