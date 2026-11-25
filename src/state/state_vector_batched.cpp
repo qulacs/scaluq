@@ -112,7 +112,21 @@ void StateVectorBatched<Prec, Space>::set_zero_norm_state() {
 template <Precision Prec, ExecutionSpace Space>
 void StateVectorBatched<Prec, Space>::set_Haar_random_state(bool set_same_state,
                                                             std::optional<std::uint64_t> seed) {
-    *this = Haar_random_state(_batch_size, _n_qubits, set_same_state, seed);
+    const auto actual_seed = internal::resolve_seed(seed);
+    if (set_same_state) {
+        set_state_vector(StateVector<Prec, Space>::Haar_random_state(_n_qubits, actual_seed));
+    } else {
+        Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(actual_seed);
+        const auto raw = _raw;
+        Kokkos::parallel_for(
+            "Haar_random_state",
+            Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
+                {0, 0}, {_batch_size, _dim}),
+            KOKKOS_LAMBDA(std::uint64_t b, std::uint64_t i) {
+                raw(b, i) = internal::normal_complex<Prec>(rand_pool);
+            });
+        normalize();
+    }
 }
 
 template <Precision Prec, ExecutionSpace Space>
@@ -133,24 +147,8 @@ StateVectorBatched<Prec, Space> StateVectorBatched<Prec, Space>::Haar_random_sta
     std::uint64_t n_qubits,
     bool set_same_state,
     std::optional<std::uint64_t> seed) {
-    std::uint64_t actual_seed = internal::resolve_seed(seed);
-    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(actual_seed);
-    auto states(StateVectorBatched<Prec, Space>::uninitialized_state(batch_size, n_qubits));
-    if (set_same_state) {
-        states.set_state_vector(StateVector<Prec, Space>::Haar_random_state(n_qubits, actual_seed));
-    } else {
-        Kokkos::parallel_for(
-            "Haar_random_state",
-            Kokkos::MDRangePolicy<internal::SpaceType<Space>, Kokkos::Rank<2>>(
-                {0, 0}, {states.batch_size(), states.dim()}),
-            KOKKOS_LAMBDA(std::uint64_t b, std::uint64_t i) {
-                auto rand_gen = rand_pool.get_state();
-                states._raw(b, i) =
-                    ComplexType(rand_gen.normal(0.0, 1.0), rand_gen.normal(0.0, 1.0));
-                rand_pool.free_state(rand_gen);
-            });
-        states.normalize();
-    }
+    auto states = uninitialized_state(batch_size, n_qubits);
+    states.set_Haar_random_state(set_same_state, seed);
     return states;
 }
 
