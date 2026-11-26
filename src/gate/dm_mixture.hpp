@@ -8,13 +8,14 @@
 //   S = Σ_k p_k U_k ⊗ conj(U_k)
 // on those qubits, applied in a single pass (e.g. depolarizing / bit-flip / dephasing noise).
 //
-// 3..6 qubits: the mixture is applied as Kraus operators √p_k U_k with scalar-identity terms
+// On devices, for 3..6 qubits the mixture is applied as Kraus operators √p_k U_k with scalar-identity terms
 // folded into a coefficient, again in a single pass (one team per block, block in scratch).
 //
-// General path: each term is applied to a scratch copy of ρ and accumulated. Two scratch
-// buffers are allocated regardless of the number of terms.
+// General path: apply terms separately and accumulate the results. This needs at most two
+// full-size temporary density matrices.
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <optional>
 
@@ -32,6 +33,16 @@ struct DmMixtureTerm {
 
 // Largest operand set handled by the one-pass Kraus kernel (block of 2^6 × 2^6 in scratch).
 inline constexpr int kMaxKrausMixtureQubits = 6;
+
+template <ExecutionSpace Space>
+bool can_fuse_dm_mixture(std::uint64_t active_mask, std::size_t active_count) {
+    // On CPU, dense Kraus expansion can outweigh applying each term directly.
+    constexpr bool host_accessible =
+        Kokkos::SpaceAccessibility<Kokkos::HostSpace,
+                                   typename SpaceType<Space>::memory_space>::accessible;
+    constexpr int max_fused_qubits = host_accessible ? 2 : kMaxKrausMixtureQubits;
+    return active_count > 1 && std::popcount(active_mask) <= max_fused_qubits;
+}
 
 // If u = λ·I, returns |λ|² (the term then contributes p|λ|²·ρ).
 inline std::optional<double> identity_weight(const ComplexMatrix& u) {

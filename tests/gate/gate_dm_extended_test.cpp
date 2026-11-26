@@ -424,8 +424,7 @@ TYPED_TEST(DMExtendedTest, ParamGatesMatchFixedGates) {
     pp->update_quantum_state(dm1, param);
     gate::Probabilistic<Prec>({0.3, 0.7}, {gate::X<Prec>(1), gate::RY<Prec>(1, coef * param)})
         ->update_quantum_state(dm2);
-    expect_matrix_near<Prec>(
-        dm1.get_matrix(), dm2.get_matrix(), "ParamProbabilistic");
+    expect_matrix_near<Prec>(dm1.get_matrix(), dm2.get_matrix(), "ParamProbabilistic");
 }
 
 TYPED_TEST(DMExtendedTest, CircuitOnPureStateMatchesStateVector) {
