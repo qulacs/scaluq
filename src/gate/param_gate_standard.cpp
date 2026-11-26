@@ -110,6 +110,29 @@ void ParamRXGateImpl<Prec>::update_quantum_state(
             *context.states);
 }
 #endif  // SCALUQ_USE_DEVICE
+
+#define DEFINE_PARAM_ROTATION_DM_UPDATE(Impl, func, Space)                                     \
+    template <Precision Prec>                                                                  \
+    void Impl<Prec>::update_quantum_state(ExecutionContextDensityMatrix<Prec, Space>& context, \
+                                          double param) const {                                \
+        this->check_qubit_mask_within_bounds(*context.state);                                  \
+        func(this->_target_mask,                                                               \
+             this->_control_mask,                                                              \
+             this->_control_value_mask,                                                        \
+             this->_pcoef* static_cast<Float<Prec>>(param),                                    \
+             *context.state);                                                                  \
+    }
+#ifdef SCALUQ_USE_DEVICE
+#define DEFINE_PARAM_ROTATION_DM_UPDATE_ALL(Impl, func)                     \
+    DEFINE_PARAM_ROTATION_DM_UPDATE(Impl, func, ExecutionSpace::Host)       \
+    DEFINE_PARAM_ROTATION_DM_UPDATE(Impl, func, ExecutionSpace::HostSerial) \
+    DEFINE_PARAM_ROTATION_DM_UPDATE(Impl, func, ExecutionSpace::Default)
+#else
+#define DEFINE_PARAM_ROTATION_DM_UPDATE_ALL(Impl, func)               \
+    DEFINE_PARAM_ROTATION_DM_UPDATE(Impl, func, ExecutionSpace::Host) \
+    DEFINE_PARAM_ROTATION_DM_UPDATE(Impl, func, ExecutionSpace::HostSerial)
+#endif
+DEFINE_PARAM_ROTATION_DM_UPDATE_ALL(ParamRXGateImpl, rx_gate)
 template class ParamRXGateImpl<Prec>;
 
 template <Precision Prec>
@@ -217,6 +240,7 @@ void ParamRYGateImpl<Prec>::update_quantum_state(
             *context.states);
 }
 #endif  // SCALUQ_USE_DEVICE
+DEFINE_PARAM_ROTATION_DM_UPDATE_ALL(ParamRYGateImpl, ry_gate)
 template class ParamRYGateImpl<Prec>;
 
 template <Precision Prec>
@@ -324,7 +348,10 @@ void ParamRZGateImpl<Prec>::update_quantum_state(
             *context.states);
 }
 #endif  // SCALUQ_USE_DEVICE
+DEFINE_PARAM_ROTATION_DM_UPDATE_ALL(ParamRZGateImpl, rz_gate)
 template class ParamRZGateImpl<Prec>;
+#undef DEFINE_PARAM_ROTATION_DM_UPDATE_ALL
+#undef DEFINE_PARAM_ROTATION_DM_UPDATE
 
 #define DECLARE_GET_FROM_JSON(Impl)                                                          \
     template <Precision Prec>                                                                \

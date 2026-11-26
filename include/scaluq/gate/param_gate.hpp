@@ -79,6 +79,15 @@ protected:
     void check_qubit_mask_within_bounds(
         const StateVectorBatched<Prec, ExecutionSpace::Default>& states) const;
 #endif  // SCALUQ_USE_DEVICE
+    template <ExecutionSpace Space>
+    void check_qubit_mask_within_bounds(const DensityMatrix<Prec, Space>& dm) const {
+        std::uint64_t full_mask = (1ULL << dm.n_qubits()) - 1;
+        if ((_target_mask | _control_mask) > full_mask) [[unlikely]] {
+            throw std::runtime_error(
+                "Error: ParamGate::update_quantum_state(DensityMatrix& dm): "
+                "Target/Control qubit exceeds the number of qubits in the system.");
+        }
+    }
 
     std::string get_qubit_info_as_string(const std::string& indent) const;
 
@@ -269,6 +278,43 @@ public:
         const std::vector<double>& params) const = 0;
 #endif
 
+    template <ExecutionSpace Space>
+    void update_quantum_state(DensityMatrix<Prec, Space>& state, double param) const {
+        ClassicalRegister classical_register(0);
+        std::mt19937_64 random_engine(std::random_device{}());
+        ExecutionContextDensityMatrix<Prec, Space> context{
+            state, classical_register, random_engine};
+        update_quantum_state(context, param);
+    }
+    template <ExecutionSpace Space>
+    void update_quantum_state(DensityMatrix<Prec, Space>& state,
+                              ClassicalRegister& classical_register,
+                              double param,
+                              std::optional<std::uint64_t> seed = std::nullopt) const {
+        std::mt19937_64 random_engine(resolve_seed(seed));
+        ExecutionContextDensityMatrix<Prec, Space> context{
+            state, classical_register, random_engine};
+        update_quantum_state(context, param);
+    }
+
+    virtual void update_quantum_state(ExecutionContextDensityMatrix<Prec, ExecutionSpace::Host>&,
+                                      double) const {
+        throw std::runtime_error(
+            "update_quantum_state for DensityMatrix is not implemented for this gate.");
+    }
+    virtual void update_quantum_state(
+        ExecutionContextDensityMatrix<Prec, ExecutionSpace::HostSerial>&, double) const {
+        throw std::runtime_error(
+            "update_quantum_state for DensityMatrix is not implemented for this gate.");
+    }
+#ifdef SCALUQ_USE_DEVICE
+    virtual void update_quantum_state(ExecutionContextDensityMatrix<Prec, ExecutionSpace::Default>&,
+                                      double) const {
+        throw std::runtime_error(
+            "update_quantum_state for DensityMatrix is not implemented for this gate.");
+    }
+#endif
+
     [[nodiscard]] virtual std::string to_string(const std::string& indent = "") const = 0;
 
     virtual void get_as_json(Json& j) const { j = Json{{"type", "Unknown"}}; }
@@ -418,6 +464,38 @@ void update_param_gate_state(const GateT& gate,
 
 template <typename GateT, Precision Prec, ExecutionSpace Space>
 void update_param_gate_state(const GateT& gate,
+                             DensityMatrix<Prec, Space>* state,
+                             const ParamValueVariant& param,
+                             ClassicalRegisterVariant classical_register,
+                             std::optional<std::uint64_t> seed) {
+    const auto* single_param = std::get_if<double>(&param);
+    if (!single_param) {
+        throw std::runtime_error(
+            "ParamGate::update_quantum_state(): DensityMatrix requires a float parameter.");
+    }
+    std::visit(
+        Overloaded{[&](std::monostate) {
+                       if (seed) {
+                           ClassicalRegister reg(0);
+                           gate->update_quantum_state(*state, reg, *single_param, *seed);
+                       } else {
+                           gate->update_quantum_state(*state, *single_param);
+                       }
+                   },
+                   [&](ClassicalRegister* reg) {
+                       gate->update_quantum_state(
+                           *state, *reg, *single_param, seed.value_or(std::random_device{}()));
+                   },
+                   [&](ClassicalRegisterBatched*) {
+                       throw std::runtime_error(
+                           "ParamGate::update_quantum_state(): ClassicalRegisterBatched cannot "
+                           "be used with DensityMatrix.");
+                   }},
+        classical_register);
+}
+
+template <typename GateT, Precision Prec, ExecutionSpace Space>
+void update_param_gate_state(const GateT& gate,
                              StateVectorBatched<Prec, Space>* states,
                              const ParamValueVariant& param,
                              ClassicalRegisterVariant classical_register,
@@ -502,7 +580,7 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
             },
             "Generate inverse parametric-gate as `ParamGate` type. If not exists, return None.");
     constexpr const char* update_signature =
-        "def update_quantum_state(self, state: StateVector | StateVectorBatched, "
+        "def update_quantum_state(self, state: StateVector | StateVectorBatched | DensityMatrix, "
         "*, param: float | Sequence[float], classical_register: ClassicalRegister | "
         "ClassicalRegisterBatched | None = None, seed: int | None = None) -> None";
     auto update_doc_str = ([]() {
@@ -511,11 +589,13 @@ void register_param_gate_common_methods(nb::class_<GateT>& c) {
                 .desc("Apply gate to `state`. `state` in args is directly updated.")
                 .desc("Optionally pass a matching classical register and seed.")
                 .arg("state",
-                     "StateVector | StateVectorBatched",
-                     "State vector to be updated. Can be `StateVector` or `StateVectorBatched`.")
+                     "StateVector | StateVectorBatched | DensityMatrix",
+                     "State to be updated. Can be `StateVector`, `StateVectorBatched` or "
+                     "`DensityMatrix` (probabilistic gates act as the mixture on it).")
                 .arg("param",
                      "float | Sequence[float]",
                      "Parameter value(s) for the gate. Should be a single float for `StateVector` "
+                     "/ `DensityMatrix` "
                      "and a sequence of floats (one for each batch) for `StateVectorBatched`.")
                 .arg("classical_register",
                      "ClassicalRegister | ClassicalRegisterBatched | None",

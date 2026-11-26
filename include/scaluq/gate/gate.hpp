@@ -721,6 +721,32 @@ void update_gate_state(const GateT& gate,
 
 template <typename GateT, Precision Prec, ExecutionSpace Space>
 void update_gate_state(const GateT& gate,
+                       DensityMatrix<Prec, Space>* state,
+                       ClassicalRegisterVariant classical_register,
+                       std::optional<std::uint64_t> seed) {
+    std::visit(
+        Overloaded{[&](std::monostate) {
+                       if (seed) {
+                           ClassicalRegister reg(0);
+                           gate->update_quantum_state(*state, reg, *seed);
+                       } else {
+                           gate->update_quantum_state(*state);
+                       }
+                   },
+                   [&](ClassicalRegister* reg) {
+                       gate->update_quantum_state(
+                           *state, *reg, seed.value_or(std::random_device{}()));
+                   },
+                   [&](ClassicalRegisterBatched*) {
+                       throw std::runtime_error(
+                           "Gate::update_quantum_state(): ClassicalRegisterBatched cannot be "
+                           "used with DensityMatrix.");
+                   }},
+        classical_register);
+}
+
+template <typename GateT, Precision Prec, ExecutionSpace Space>
+void update_gate_state(const GateT& gate,
                        StateVectorBatched<Prec, Space>* states,
                        ClassicalRegisterVariant classical_register,
                        std::optional<std::uint64_t> seed) {
@@ -745,7 +771,7 @@ void update_gate_state(const GateT& gate,
         classical_register);
 }
 
-template <Precision Prec, bool include_density = false, typename F>
+template <Precision Prec, typename F>
 void visit_gate_state(nb::handle state, F&& function) {
     if (nb::isinstance<StateVector<Prec, ExecutionSpace::Host>>(state)) {
         function(nb::cast<StateVector<Prec, ExecutionSpace::Host>*>(state));
@@ -755,32 +781,20 @@ void visit_gate_state(nb::handle state, F&& function) {
         function(nb::cast<StateVector<Prec, ExecutionSpace::HostSerial>*>(state));
     } else if (nb::isinstance<StateVectorBatched<Prec, ExecutionSpace::HostSerial>>(state)) {
         function(nb::cast<StateVectorBatched<Prec, ExecutionSpace::HostSerial>*>(state));
+    } else if (nb::isinstance<DensityMatrix<Prec, ExecutionSpace::Host>>(state)) {
+        function(nb::cast<DensityMatrix<Prec, ExecutionSpace::Host>*>(state));
+    } else if (nb::isinstance<DensityMatrix<Prec, ExecutionSpace::HostSerial>>(state)) {
+        function(nb::cast<DensityMatrix<Prec, ExecutionSpace::HostSerial>*>(state));
 #ifdef SCALUQ_USE_DEVICE
     } else if (nb::isinstance<StateVector<Prec, ExecutionSpace::Default>>(state)) {
         function(nb::cast<StateVector<Prec, ExecutionSpace::Default>*>(state));
     } else if (nb::isinstance<StateVectorBatched<Prec, ExecutionSpace::Default>>(state)) {
         function(nb::cast<StateVectorBatched<Prec, ExecutionSpace::Default>*>(state));
+    } else if (nb::isinstance<DensityMatrix<Prec, ExecutionSpace::Default>>(state)) {
+        function(nb::cast<DensityMatrix<Prec, ExecutionSpace::Default>*>(state));
 #endif
     } else {
-        if constexpr (include_density) {
-            if (nb::isinstance<DensityMatrix<Prec, ExecutionSpace::Host>>(state)) {
-                function(nb::cast<DensityMatrix<Prec, ExecutionSpace::Host>*>(state));
-                return;
-            }
-            if (nb::isinstance<DensityMatrix<Prec, ExecutionSpace::HostSerial>>(state)) {
-                function(nb::cast<DensityMatrix<Prec, ExecutionSpace::HostSerial>*>(state));
-                return;
-            }
-#ifdef SCALUQ_USE_DEVICE
-            if (nb::isinstance<DensityMatrix<Prec, ExecutionSpace::Default>>(state)) {
-                function(nb::cast<DensityMatrix<Prec, ExecutionSpace::Default>*>(state));
-                return;
-            }
-#endif
-            throw nb::type_error("Expected a StateVector, StateVectorBatched, or DensityMatrix.");
-        } else {
-            throw nb::type_error("Expected a StateVector or StateVectorBatched.");
-        }
+        throw nb::type_error("Expected a StateVector, StateVectorBatched or DensityMatrix.");
     }
 }
 
@@ -1008,7 +1022,8 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
                 .desc("Optionally pass a matching classical register and seed.")
                 .arg("state",
                      "StateVector | StateVectorBatched | DensityMatrix",
-                     "Quantum state to be updated.")
+                     "State to be updated. Can be `StateVector`, `StateVectorBatched` or "
+                     "`DensityMatrix` (probabilistic gates act as the mixture on it).")
                 .arg("classical_register",
                      "ClassicalRegister | ClassicalRegisterBatched | None",
                      "Classical register to be used in the gate. If not provided, a new register "
@@ -1057,9 +1072,8 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
            nb::handle classical_register,
            std::optional<std::uint64_t> seed) {
             auto classical_register_variant = parse_classical_register(classical_register);
-            visit_gate_state<Prec, true>(state, [&](auto* state_ptr) {
-                update_gate_state<GateT, Prec>(
-                    gate, state_ptr, classical_register_variant, seed);
+            visit_gate_state<Prec>(state, [&](auto* state_ptr) {
+                update_gate_state<GateT, Prec>(gate, state_ptr, classical_register_variant, seed);
             });
         },
         "state"_a,

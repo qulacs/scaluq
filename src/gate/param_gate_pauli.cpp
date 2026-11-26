@@ -1,6 +1,8 @@
 #include <scaluq/gate/param_gate_pauli.hpp>
 #include <scaluq/operator/apply_pauli.hpp>
 
+#include "update_ops.hpp"
+
 namespace scaluq::internal {
 template <Precision Prec>
 ComplexMatrix ParamPauliRotationGateImpl<Prec>::get_matrix(double param) const {
@@ -133,6 +135,26 @@ void ParamPauliRotationGateImpl<Prec>::update_quantum_state(
                          *context.states);
 }
 #endif
+#define DEFINE_PARAM_PAULI_ROTATION_DM_UPDATE(Space)                                 \
+    template <Precision Prec>                                                        \
+    void ParamPauliRotationGateImpl<Prec>::update_quantum_state(                     \
+        ExecutionContextDensityMatrix<Prec, Space>& context, double param) const {   \
+        this->check_qubit_mask_within_bounds(*context.state);                        \
+        auto [bit_flip_mask, phase_flip_mask] = _pauli.get_XZ_mask_representation(); \
+        apply_pauli_rotation(this->_control_mask,                                    \
+                             this->_control_value_mask,                              \
+                             bit_flip_mask,                                          \
+                             phase_flip_mask,                                        \
+                             Complex<Prec>(_pauli.coef()),                           \
+                             this->_pcoef* static_cast<Float<Prec>>(param),          \
+                             *context.state);                                        \
+    }
+DEFINE_PARAM_PAULI_ROTATION_DM_UPDATE(ExecutionSpace::Host)
+DEFINE_PARAM_PAULI_ROTATION_DM_UPDATE(ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_DEVICE
+DEFINE_PARAM_PAULI_ROTATION_DM_UPDATE(ExecutionSpace::Default)
+#endif
+#undef DEFINE_PARAM_PAULI_ROTATION_DM_UPDATE
 template class ParamPauliRotationGateImpl<Prec>;
 
 template <Precision Prec>

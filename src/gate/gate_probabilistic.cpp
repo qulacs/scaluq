@@ -143,14 +143,7 @@ void update_probabilistic_dm(const std::vector<double>& distribution,
         active_mask |= gate_list[i]->operand_qubit_mask();
         ++active_count;
     }
-    const int operand_count = std::popcount(active_mask);
-    // On CPU, dense Kraus expansion can cost more than applying each term directly,
-    // especially when small gates act on different qubits.
-    constexpr bool host_accessible =
-        Kokkos::SpaceAccessibility<Kokkos::HostSpace,
-                                   typename SpaceType<Space>::memory_space>::accessible;
-    constexpr int max_fused_qubits = host_accessible ? 2 : kMaxKrausMixtureQubits;
-    if (operand_count <= max_fused_qubits && active_count > 1) {
+    if (can_fuse_dm_mixture<Space>(active_mask, active_count)) {
         std::optional<std::vector<DmMixtureTerm>> terms;
         try {
             std::vector<DmMixtureTerm> t;
