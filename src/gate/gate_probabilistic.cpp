@@ -136,12 +136,27 @@ void update_probabilistic_dm(const std::vector<double>& distribution,
             "Error: ProbabilisticGate::update_quantum_state(DensityMatrix& dm): "
             "Target/Control qubit exceeds the number of qubits in the system.");
     }
-    if (std::popcount(operand_mask) <= kMaxKrausMixtureQubits) {
+    std::uint64_t active_mask = 0;
+    std::size_t active_count = 0;
+    for (std::size_t i = 0; i < gate_list.size(); ++i) {
+        if (distribution[i] == 0.) continue;
+        active_mask |= gate_list[i]->operand_qubit_mask();
+        ++active_count;
+    }
+    const int operand_count = std::popcount(active_mask);
+    // On CPU, dense Kraus expansion can cost more than applying each term directly,
+    // especially when small gates act on different qubits.
+    constexpr bool host_accessible =
+        Kokkos::SpaceAccessibility<Kokkos::HostSpace,
+                                   typename SpaceType<Space>::memory_space>::accessible;
+    constexpr int max_fused_qubits = host_accessible ? 2 : kMaxKrausMixtureQubits;
+    if (operand_count <= max_fused_qubits && active_count > 1) {
         std::optional<std::vector<DmMixtureTerm>> terms;
         try {
             std::vector<DmMixtureTerm> t;
-            t.reserve(gate_list.size());
+            t.reserve(active_count);
             for (std::size_t i = 0; i < gate_list.size(); ++i) {
+                if (distribution[i] == 0.) continue;
                 const auto& g = gate_list[i];
                 t.push_back({distribution[i],
                              g->target_qubit_mask(),
