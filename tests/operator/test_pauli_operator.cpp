@@ -344,6 +344,17 @@ TYPED_TEST(PauliOperatorTest, ApplyToBatchedScalarAndInvalidMasks) {
     EXPECT_THROW(PauliOperator<Prec>("X 1").apply_to_state(empty), std::invalid_argument);
 }
 
+template <Precision Prec, ExecutionSpace Space>
+void fill_batched_raw_storage(StateVectorBatched<Prec, Space>& states,
+                              scaluq::internal::Complex<Prec> value) {
+    auto raw = states._raw;
+    const auto span = raw.span();
+    Kokkos::parallel_for(
+        "initialize_padding",
+        Kokkos::RangePolicy<scaluq::internal::SpaceType<Space>>(0, span),
+        KOKKOS_LAMBDA(std::uint64_t i) { raw.data()[i] = value; });
+}
+
 TYPED_TEST(PauliOperatorTest, ApplyToBatchedPreservesPadding) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
@@ -352,10 +363,7 @@ TYPED_TEST(PauliOperatorTest, ApplyToBatchedPreservesPadding) {
     auto raw = states._raw;
     const auto span = raw.span();
     const auto stride = raw.stride(0);
-    Kokkos::parallel_for(
-        "initialize_padding",
-        Kokkos::RangePolicy<scaluq::internal::SpaceType<Space>>(0, span),
-        KOKKOS_LAMBDA(std::uint64_t i) { raw.data()[i] = Complex(7., -3.); });
+    fill_batched_raw_storage(states, Complex(7., -3.));
     states.load(std::vector<std::vector<StdComplex>>{{1., 2.}, {3., 4.}, {5., 6.}});
     PauliOperator<Prec>("Y 0", StdComplex(.5, -.25)).apply_to_state(states);
     Kokkos::View<Complex*, scaluq::internal::SpaceType<Space>, Kokkos::MemoryUnmanaged> physical(
