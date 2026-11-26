@@ -473,3 +473,19 @@ TYPED_TEST(DMExtendedTest, CircuitWithNoiseAndMeasurement) {
     DensityMatrix<Prec, Space> dm2(n);
     ASSERT_THROW(circuit.update_quantum_state(dm2), std::runtime_error);
 }
+
+TYPED_TEST(DMExtendedTest, CircuitReusesMeasuredQubitWithoutReset) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    Circuit<Prec> circuit;
+    circuit.add_gate(gate::Measurement<Prec>(0, 0));
+    circuit.add_gate(gate::X<Prec>(0));
+    circuit.add_param_gate(gate::ParamRZ<Prec>(0), "angle");
+    DensityMatrix<Prec, Space> dm(1);
+    ClassicalRegister reg(1);
+    circuit.update_quantum_state(dm, reg, {{"angle", 0.}}, 42);
+    EXPECT_EQ(reg[0], 0);
+    DensityMatrix<Prec, Space> expected(1);
+    expected.set_computational_basis(1);
+    expect_matrix_near<Prec>(dm.get_matrix(), expected.get_matrix(), "reuse measured qubit");
+}

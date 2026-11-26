@@ -255,7 +255,6 @@ void Circuit<Prec>::update_quantum_state(DensityMatrix<Prec, Space>& state,
         }
     }
     std::mt19937_64 random_engine(internal::resolve_seed(seed));
-    std::uint64_t unreset_measured_qubit_mask = 0ULL;
     internal::ExecutionContextDensityMatrix<Prec, Space> context{
         state, classical_register, random_engine};
     for (std::uint64_t idx = 0; idx < _gate_list.size(); ++idx) {
@@ -265,26 +264,9 @@ void Circuit<Prec>::update_quantum_state(DensityMatrix<Prec, Space>& state,
         }
         auto&& gate = _gate_list[idx];
         if (gate.index() == 0) {
-            const auto& fixed_gate = std::get<0>(gate);
-            if ((unreset_measured_qubit_mask & fixed_gate->operand_qubit_mask()) != 0ULL) {
-                throw std::runtime_error(
-                    "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
-                    "and has not been reset.");
-            }
-            fixed_gate->update_quantum_state(context);
-            if (fixed_gate.gate_type() == GateType::Measurement) {
-                const auto measurement_gate = MeasurementGate<Prec>(fixed_gate);
-                if (!measurement_gate->reset()) {
-                    unreset_measured_qubit_mask |= measurement_gate->target_qubit_mask();
-                }
-            }
+            std::get<0>(gate)->update_quantum_state(context);
         } else {
             const auto& [param_gate, key] = std::get<1>(gate);
-            if ((unreset_measured_qubit_mask & param_gate->operand_qubit_mask()) != 0ULL) {
-                throw std::runtime_error(
-                    "Circuit::update_quantum_state(...): gate touches a qubit that was measured "
-                    "and has not been reset.");
-            }
             param_gate->update_quantum_state(context, parameters.at(key));
         }
     }

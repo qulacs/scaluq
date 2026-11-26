@@ -476,6 +476,32 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
             "parametric gate, give parameter values as \"name=value\" in kwargs.")
         .def(
             "update_quantum_state",
+            [](const Circuit<Prec>& circuit,
+               DensityMatrix<Prec, Space>& state,
+               const std::map<std::string, double>& parameters,
+               std::optional<std::uint64_t> seed) {
+                circuit.update_quantum_state(state, parameters, seed);
+            },
+            "state"_a,
+            "params"_a,
+            "seed"_a = std::nullopt,
+            "Apply the circuit to a DensityMatrix with a parameter dictionary.")
+        .def(
+            "update_quantum_state",
+            [](const Circuit<Prec>& circuit,
+               DensityMatrix<Prec, Space>& state,
+               ClassicalRegister& classical_register,
+               const std::map<std::string, double>& parameters,
+               std::optional<std::uint64_t> seed) {
+                circuit.update_quantum_state(state, classical_register, parameters, seed);
+            },
+            "state"_a,
+            "classical_register"_a,
+            "params"_a = std::map<std::string, double>{},
+            "seed"_a = std::nullopt,
+            "Apply the circuit to a DensityMatrix with a classical register.")
+        .def(
+            "update_quantum_state",
             [&](const Circuit<Prec>& circuit,
                 StateVectorBatched<Prec, Space>& states,
                 nb::kwargs kwargs) {
