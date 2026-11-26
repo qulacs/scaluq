@@ -126,15 +126,17 @@ void apply_mixture_general(const std::vector<double>& probabilities,
     }
 
     auto acc = DensityMatrix<Prec, Space>::uninitialized_state(dm.n_qubits());
-    auto work = DensityMatrix<Prec, Space>::uninitialized_state(dm.n_qubits());
     // First term initializes the accumulator directly.
     acc.load(dm);
     apply(active[0], acc);
     acc.multiply_coef(probabilities[active[0]]);
-    for (std::size_t a = 1; a + 1 < active.size(); ++a) {
-        work.load(dm);
-        apply(active[a], work);
-        acc.add_density_matrix_with_coef(probabilities[active[a]], work);
+    if (active.size() > 2) {
+        auto work = DensityMatrix<Prec, Space>::uninitialized_state(dm.n_qubits());
+        for (std::size_t a = 1; a + 1 < active.size(); ++a) {
+            work.load(dm);
+            apply(active[a], work);
+            acc.add_density_matrix_with_coef(probabilities[active[a]], work);
+        }
     }
     // Last term reuses ρ itself as the scratch buffer.
     apply(active.back(), dm);

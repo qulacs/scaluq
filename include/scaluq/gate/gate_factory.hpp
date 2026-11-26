@@ -175,8 +175,8 @@ inline Gate<Prec> P1(std::uint64_t target,
         internal::vector_to_mask(controls, control_values));
 }
 /// Creates a computational-basis measurement gate.
-/// Normalize a DensityMatrix to trace 1 before applying this gate. For example, call
-/// normalize() after a P0 or P1 projection if the resulting trace is nonzero and differs from 1.
+/// For a DensityMatrix with positive finite trace, outcome probabilities are normalized by
+/// the trace. The selected outcome is normalized to trace 1.
 template <Precision Prec>
 inline Gate<Prec> Measurement(std::uint64_t target,
                               std::uint64_t classical_bit,
@@ -792,9 +792,8 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
             .note("Applying this gate requires a classical register whose size is greater than "
                   "`classical_bit`. If `reset` is true, the target qubit is reset to |0> after "
                   "the measurement.")
-            .note("When applying this gate to a DensityMatrix, the input must have trace 1. "
-                  "After a P0 or P1 projection, call normalize() before measuring if the "
-                  "resulting trace is nonzero and differs from 1.")
+            .note("For a DensityMatrix with positive finite trace, outcome probabilities are "
+                  "normalized by the trace. The selected outcome is normalized to trace 1.")
             .arg("target", "int", "Target qubit index")
             .arg("classical_bit", "int", "Destination classical bit index")
             .arg("reset", "bool", true, "Whether to reset the target qubit to |0>")

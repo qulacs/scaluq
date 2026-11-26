@@ -335,6 +335,24 @@ TYPED_TEST(DMExtendedTest, MeasurementProjectsAndRecords) {
     }
 }
 
+TYPED_TEST(DMExtendedTest, MeasurementUsesActualOutcomeWeights) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    DensityMatrix<Prec, Space> dm(1);
+    ClassicalRegister reg(1);
+    const auto measurement = gate::Measurement<Prec>(0, 0);
+    dm.multiply_coef(0.25);
+    const ComplexMatrix expected = DensityMatrix<Prec, Space>(1).get_matrix();
+    for (std::uint64_t seed = 0; seed < 8; ++seed) {
+        measurement->update_quantum_state(dm, reg, seed);
+        EXPECT_EQ(reg[0], 0);
+        expect_matrix_near<Prec>(dm.get_matrix(), expected, "normalized measurement");
+        dm.multiply_coef(0.25);
+    }
+    dm.set_zero_norm_state();
+    EXPECT_THROW(measurement->update_quantum_state(dm, reg, 0), std::runtime_error);
+}
+
 TYPED_TEST(DMExtendedTest, MeasurementNormalizationDoesNotStoreLowPrecisionReciprocal) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;

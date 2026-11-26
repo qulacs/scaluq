@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <bit>
+#include <cmath>
 #include <scaluq/gate/gate_measurement.hpp>
 
 #include "update_ops.hpp"
@@ -85,10 +87,35 @@ DEFINE_MEASUREMENT_GATE_UPDATE(ExecutionSpace::Default)
 #endif  // SCALUQ_USE_DEVICE
 #undef DEFINE_MEASUREMENT_GATE_UPDATE
 
-// The density matrix is assumed to be normalized (trace 1). States whose trace has dropped
-// below 1, e.g. after applying a P0/P1 projection gate, are not supported here: the outcome
-// is sampled from the unnormalized zero probability and the result is renormalized by that
-// probability. Callers are expected to normalize such a state before applying a measurement.
+struct MeasurementWeights {
+    double zero = 0.;
+    double one = 0.;
+
+    KOKKOS_INLINE_FUNCTION void operator+=(const MeasurementWeights& other) {
+        zero += other.zero;
+        one += other.one;
+    }
+};
+
+template <Precision Prec, ExecutionSpace Space>
+MeasurementWeights measurement_weights(const DensityMatrix<Prec, Space>& dm,
+                                       std::uint64_t target_mask) {
+    const auto raw = dm._raw;
+    MeasurementWeights weights;
+    Kokkos::parallel_reduce(
+        "density_matrix_measurement_weights",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, dm.dim()),
+        KOKKOS_LAMBDA(std::uint64_t i, MeasurementWeights & local) {
+            const double weight = static_cast<double>(raw(i, i).real());
+            if (i & target_mask)
+                local.one += weight;
+            else
+                local.zero += weight;
+        },
+        weights);
+    return weights;
+}
+
 #define DEFINE_MEASUREMENT_GATE_DM_UPDATE(Space)                                             \
     template <Precision Prec>                                                                \
     void MeasurementGateImpl<Prec>::update_quantum_state(                                    \
@@ -100,11 +127,17 @@ DEFINE_MEASUREMENT_GATE_UPDATE(ExecutionSpace::Default)
                 "small for the requested classical bit index.");                             \
         }                                                                                    \
         auto& dm = *context.state;                                                           \
-        const double zero_probability =                                                      \
-            dm.get_zero_probability(std::countr_zero(this->_target_mask));                   \
+        const auto [p0, p1] = measurement_weights(dm, this->_target_mask);                   \
+        const double total = p0 + p1;                                                        \
+        if (!std::isfinite(total) || total <= 0. || p0 < 0. || p1 < 0.) {                    \
+            throw std::runtime_error(                                                        \
+                "Measurement requires finite nonnegative outcome "                           \
+                "weights and a positive trace.");                                            \
+        }                                                                                    \
+        const double zero_probability = std::clamp(p0 / total, 0., 1.);                      \
         const bool measured_zero =                                                           \
             std::bernoulli_distribution(zero_probability)(*context.random_engine);           \
-        const double probability = measured_zero ? zero_probability : 1. - zero_probability; \
+        const double probability = measured_zero ? p0 : p1;                                  \
         measurement_projection(this->_target_mask, !measured_zero, _reset, probability, dm); \
         (*context.classical_register)[_classical_bit_index] = !measured_zero;                \
     }
