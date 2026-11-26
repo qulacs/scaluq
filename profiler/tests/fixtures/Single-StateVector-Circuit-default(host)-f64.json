@@ -1,0 +1,274 @@
+{
+    "benchmarks": [
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 4
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.0010175459997299185
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 5
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.005532610500267765
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 6
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.001675195499728943
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 7
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.001859484999840788
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 8
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.0020053769999321958
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 9
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.0024281209998662234
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 10
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.002685189499743501
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 11
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.0032052745000328287
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 12
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.0036865664999368164
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 13
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.004245079000156693
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 14
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.005371115999878384
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 15
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.007040668000172445
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 16
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.013028209999902174
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 17
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.023682147000045006
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 18
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.05183756699989317
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 19
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.09852028000022983
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 20
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 0.22077663100026257
+            }
+        },
+        {
+            "group": "Single-StateVector-Circuit",
+            "params": {
+                "nqubits": 21
+            },
+            "extra_info": {
+                "niter": 10,
+                "profile_space": "default(host)",
+                "precision": "f64",
+                "omp_threads": "16"
+            },
+            "stats": {
+                "median": 1.1081870969996999
+            }
+        }
+    ]
+}
