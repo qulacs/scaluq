@@ -4,6 +4,8 @@
 #include <scaluq/util/utility.hpp>
 #include <type_traits>
 
+#include "sampling.hpp"
+
 namespace scaluq {
 template <Precision Prec, ExecutionSpace Space>
 StateVector<Prec, Space>::StateVector(std::uint64_t n_qubits)
@@ -107,20 +109,81 @@ template <Precision Prec, ExecutionSpace Space>
     return ret;
 }
 template <Precision Prec, ExecutionSpace Space>
+std::vector<StdComplex> StateVector<Prec, Space>::get_amplitudes(std::uint64_t start,
+                                                                 std::uint64_t count) const {
+    if (start > _dim || count > _dim - start)
+        throw std::out_of_range("amplitude range out of bounds");
+    auto view = Kokkos::subview(_raw, std::make_pair(start, start + count));
+    auto host = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), view);
+    std::vector<StdComplex> result(count);
+    for (std::uint64_t i = 0; i < count; ++i)
+        result[i] = StdComplex(host(i).real(), host(i).imag());
+    return result;
+}
+template <Precision Prec, ExecutionSpace Space>
+StateVector<Prec, Space> StateVector<Prec, Space>::extract_substate(
+    const std::vector<std::uint64_t>& fixed, const std::vector<std::uint64_t>& values) const {
+    if (fixed.size() != values.size())
+        throw std::invalid_argument("fixed qubits and values must have equal length");
+    const auto fixed_mask = internal::vector_to_mask(fixed);
+    if (static_cast<std::uint64_t>(std::bit_width(fixed_mask)) > _n_qubits)
+        throw std::invalid_argument("fixed qubits must be in range");
+    const auto fixed_bits = internal::vector_to_mask(fixed, values);
+    auto out = uninitialized_state(_n_qubits - fixed.size());
+    auto dst = out._raw;
+    auto src = _raw;
+    Kokkos::parallel_for(
+        "extract_substate",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, out.dim()),
+        KOKKOS_LAMBDA(std::uint64_t i) {
+            const auto index = internal::insert_zero_at_mask_positions(i, fixed_mask) | fixed_bits;
+            dst(i) = src(index);
+        });
+    return out;
+}
+template <Precision Prec, ExecutionSpace Space>
+void StateVector<Prec, Space>::embed_substate(const StateVector& state,
+                                              const std::vector<std::uint64_t>& targets) {
+    if (static_cast<std::uint64_t>(std::bit_width(internal::vector_to_mask(targets))) > _n_qubits)
+        throw std::invalid_argument("target qubits must be in range");
+    if (targets.size() != state.n_qubits())
+        throw std::invalid_argument("target count must equal source qubit count");
+    // Copy first to allow embedding a state into itself.
+    auto source = state._raw.data() == _raw.data() ? state.copy() : state;
+    auto src = source._raw;
+    auto dst = _raw;
+    auto qs = internal::convert_vector_to_view<std::uint64_t, Space>(targets);
+    set_zero_norm_state();
+    auto k = targets.size();
+    Kokkos::parallel_for(
+        "embed_substate",
+        Kokkos::RangePolicy<ExecutionSpaceType>(0, state.dim()),
+        KOKKOS_LAMBDA(std::uint64_t i) {
+            std::uint64_t index = 0;
+            for (std::uint64_t j = 0; j < k; ++j) index |= ((i >> j) & 1ULL) << qs(j);
+            dst(index) = src(i);
+        });
+}
+template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_squared_norm() const {
-    FloatType norm{0.0f};
+    using Accum = internal::SingleStateReductionFloat<Prec, Space>;
+    Accum norm{0.0f};
     Kokkos::parallel_reduce(
         "get_squared_norm",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t it, FloatType & tmp) {
-            tmp += internal::squared_norm<Prec>(this->_raw[it]);
+        KOKKOS_CLASS_LAMBDA(std::uint64_t it, Accum& tmp) {
+            tmp += static_cast<Accum>(internal::squared_norm(this->_raw[it]));
         },
         norm);
     return static_cast<double>(norm);
 }
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::normalize() {
-    const FloatType norm = internal::sqrt(static_cast<FloatType>(this->get_squared_norm()));
+    const double squared_norm = get_squared_norm();
+    if (!std::isfinite(squared_norm) || squared_norm <= 0.) {
+        throw std::invalid_argument("Cannot normalize a state with non-finite or zero norm.");
+    }
+    const FloatType norm = static_cast<FloatType>(std::sqrt(squared_norm));
     Kokkos::parallel_for(
         "normalize",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
@@ -128,18 +191,19 @@ void StateVector<Prec, Space>::normalize() {
 }
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_zero_probability(std::uint64_t target_qubit_index) const {
+    using Accum = internal::SingleStateReductionFloat<Prec, Space>;
     if (target_qubit_index >= _n_qubits) {
         throw std::runtime_error(
             "Error: StateVector::get_zero_probability(std::uint64_t): index "
             "of target qubit must be smaller than qubit_count");
     }
-    FloatType sum{0.0f};
+    Accum sum{0.0f};
     Kokkos::parallel_reduce(
         "zero_prob",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> 1),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & lsum) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, Accum& lsum) {
             std::uint64_t basis_0 = internal::insert_zero_to_basis_index(i, target_qubit_index);
-            lsum += internal::squared_norm(this->_raw[basis_0]);
+            lsum += static_cast<Accum>(internal::squared_norm(this->_raw[basis_0]));
         },
         sum);
     return static_cast<double>(sum);
@@ -147,6 +211,7 @@ double StateVector<Prec, Space>::get_zero_probability(std::uint64_t target_qubit
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_marginal_probability(
     const std::vector<std::uint64_t>& measured_values) const {
+    using Accum = internal::SingleStateReductionFloat<Prec, Space>;
     if (measured_values.size() != _n_qubits) {
         throw std::runtime_error(
             "Error: StateVector::get_marginal_probability(const vector<std::uint64_t>&): "
@@ -168,21 +233,21 @@ double StateVector<Prec, Space>::get_marginal_probability(
         }
     }
 
-    FloatType sum{0.0f};
+    Accum sum{0.0f};
     auto d_target_index = internal::convert_vector_to_view<std::uint64_t, Space>(target_index);
     auto d_target_value = internal::convert_vector_to_view<std::uint64_t, Space>(target_value);
 
     Kokkos::parallel_reduce(
         "marginal_prob",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim >> target_index.size()),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & lsum) {
+        KOKKOS_CLASS_LAMBDA(std::uint64_t i, Accum& lsum) {
             std::uint64_t basis = i;
             for (std::uint64_t cursor = 0; cursor < d_target_index.size(); cursor++) {
                 std::uint64_t insert_index = d_target_index(cursor);
                 basis = internal::insert_zero_to_basis_index(basis, insert_index);
                 basis |= d_target_value(cursor) << insert_index;
             }
-            lsum += internal::squared_norm(this->_raw[basis]);
+            lsum += static_cast<Accum>(internal::squared_norm(this->_raw[basis]));
         },
         sum);
 
@@ -190,14 +255,15 @@ double StateVector<Prec, Space>::get_marginal_probability(
 }
 template <Precision Prec, ExecutionSpace Space>
 double StateVector<Prec, Space>::get_computational_basis_entropy() const {
-    FloatType ent{0.0f};
+    using Accum = internal::SingleStateReductionFloat<Prec, Space>;
+    Accum ent{0.0f};
     Kokkos::parallel_reduce(
         "get_computational_basis_entropy",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t idx, FloatType & lsum) {
-            FloatType prob = internal::squared_norm(_raw[idx]);
+        KOKKOS_CLASS_LAMBDA(std::uint64_t idx, Accum& lsum) {
+            const FloatType prob = internal::squared_norm(_raw[idx]);
             if (prob > FloatType{0.0f}) {
-                lsum += -prob * internal::log2(prob);
+                lsum += static_cast<Accum>(-prob * internal::log2(prob));
             }
         },
         ent);
@@ -206,6 +272,9 @@ double StateVector<Prec, Space>::get_computational_basis_entropy() const {
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::add_state_vector_with_coef(StdComplex coef,
                                                           const StateVector& state) {
+    if (dim() != state.dim()) {
+        throw std::invalid_argument("Cannot add state vectors with different dimensions.");
+    }
     Kokkos::parallel_for(
         "add_state_vector_with_coef",
         Kokkos::RangePolicy<internal::SpaceType<Space>>(0, this->_dim),
@@ -223,59 +292,15 @@ void StateVector<Prec, Space>::multiply_coef(StdComplex coef) {
 template <Precision Prec, ExecutionSpace Space>
 std::vector<std::uint64_t> StateVector<Prec, Space>::sampling(
     std::uint64_t sampling_count, std::optional<std::uint64_t> seed) const {
-    std::uint64_t actual_seed = internal::resolve_seed(seed);
-    Kokkos::View<FloatType*, internal::SpaceType<Space>> stacked_prob("prob", _dim + 1);
-    Kokkos::parallel_scan(
-        "sampling (compute stacked prob)",
-        Kokkos::RangePolicy<internal::SpaceType<Space>>(0, _dim),
-        KOKKOS_CLASS_LAMBDA(std::uint64_t i, FloatType & update, const bool final) {
-            update += internal::squared_norm(this->_raw(i));
-            if (final) {
-                stacked_prob[i + 1] = update;
-            }
-        });
-
-    Kokkos::Random_XorShift64_Pool<internal::SpaceType<Space>> rand_pool(actual_seed);
-    std::vector<std::uint64_t> result(sampling_count);
-    std::vector<std::uint64_t> todo(sampling_count);
-    std::iota(todo.begin(), todo.end(), 0);
-    while (!todo.empty()) {
-        std::size_t todo_count = todo.size();
-        Kokkos::View<std::uint64_t*, internal::SpaceType<Space>> result_buf(
-            Kokkos::ViewAllocateWithoutInitializing("result_buf"), todo_count);
-        Kokkos::parallel_for(
-            "sampling (choose)",
-            Kokkos::RangePolicy<internal::SpaceType<Space>>(0, todo_count),
-            KOKKOS_LAMBDA(std::uint64_t i) {
-                auto rand_gen = rand_pool.get_state();
-                FloatType r = static_cast<FloatType>(rand_gen.drand(0., 1.));
-                std::uint64_t lo = 0, hi = stacked_prob.size();
-                while (hi - lo > 1) {
-                    std::uint64_t mid = (lo + hi) / 2;
-                    if (stacked_prob[mid] > r) {
-                        hi = mid;
-                    } else {
-                        lo = mid;
-                    }
-                }
-                result_buf[i] = lo;
-                rand_pool.free_state(rand_gen);
-            });
-        auto result_buf_host = internal::convert_view_to_vector<std::uint64_t, Space>(result_buf);
-        // Especially for F16 and BF16, sampling sometimes fails with result == _dim.
-        // In this case, re-sampling is performed.
-        std::vector<std::uint64_t> next_todo;
-        for (std::size_t i = 0; i < todo_count; i++) {
-            if (result_buf_host[i] == _dim) {
-                next_todo.push_back(todo[i]);
-            } else {
-                result[todo[i]] = result_buf_host[i];
-            }
-        }
-        todo.swap(next_todo);
-    }
-    return result;
+    const auto amplitudes = _raw;
+    return internal::sample_probabilities<Space>(
+        1, _dim, sampling_count, seed, KOKKOS_LAMBDA(std::uint64_t, std::uint64_t i) {
+            const double re = static_cast<double>(amplitudes(i).real());
+            const double im = static_cast<double>(amplitudes(i).imag());
+            return re * re + im * im;
+        })[0];
 }
+
 template <Precision Prec, ExecutionSpace Space>
 void StateVector<Prec, Space>::load(const std::vector<StdComplex>& other) {
     if (other.size() != _dim) {

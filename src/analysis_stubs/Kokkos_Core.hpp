@@ -44,6 +44,12 @@ struct OpenMP {
 struct HostSpace {};
 struct SharedSpace {};
 
+// Every stub space is host memory, so everything is accessible from the host.
+template <class AccessSpace, class MemorySpace>
+struct SpaceAccessibility {
+    static constexpr bool accessible = true;
+};
+
 using DefaultHostExecutionSpace = OpenMP;
 using DefaultExecutionSpace = OpenMP;
 
@@ -80,7 +86,9 @@ struct ViewAllocateWithoutInitializing {
 };
 
 // ── Rank tag ───────────────────────────────────────────────────────────────
-template <int N, class Iter = void, class Work = void>
+enum class Iterate { Default, Left, Right };
+
+template <int N, Iterate Outer = Iterate::Default, Iterate Inner = Iterate::Default>
 struct Rank {};
 
 // ── Sentinel tags ──────────────────────────────────────────────────────────
@@ -144,6 +152,15 @@ inline complex<T> operator*(complex<T> a, const complex<T>& b) {
 template <class T>
 inline complex<T> operator-(complex<T> a, const complex<T>& b) {
     return a -= b;
+}
+
+template <class T>
+inline complex<T> operator*(const complex<T>& value, std::type_identity_t<T> scalar) {
+    return {value.real() * scalar, value.imag() * scalar};
+}
+template <class T>
+inline complex<T> operator*(std::type_identity_t<T> scalar, const complex<T>& value) {
+    return value * scalar;
 }
 
 // ── Array ──────────────────────────────────────────────────────────────────

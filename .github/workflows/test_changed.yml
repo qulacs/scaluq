@@ -89,7 +89,7 @@ jobs:
       SCALUQ_CPU_ARCH: ${{ matrix.cpu-arch }}
       CMAKE_CROSSCOMPILING_EMULATOR: ${{ matrix.cpu-arch == 'SKX' && '/tmp/scaluq-sde/sde64;-skx;--' || '' }}
       SCALUQ_CUDA_ARCH: "TURING75"
-      SCALUQ_HIP_ARCH: "VEGA90A"
+      SCALUQ_HIP_ARCH: "AMD_GFX942"
       SCALUQ_SYCL_ARCH: "INTEL_GEN"
       SCALUQ_FLOAT16: ${{ (matrix.device == 'cpu' || matrix.compiler == 'clang' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
       SCALUQ_FLOAT32: ${{ (matrix.device == 'cpu' || matrix.device == 'sycl') && 'OFF' || 'ON' }}
@@ -233,11 +233,14 @@ jobs:
 
       - name: List related test files
         if: ${{ steps.check-build-files.outputs.any_changed == 'false' && steps.check-source-files.outputs.any_changed == 'true' }}
+        env:
+          CHANGED_FILES: ${{ steps.check-source-files.outputs.all_changed_files }}
         run: |
           if [ "$SCALUQ_USE_SYCL" = "ON" ]; then
             source /opt/intel/oneapi/setvars.sh --force
           fi
-          RELATED_TEST_FILES=$(./script/related-test-files ${{ steps.check-source-files.outputs.changed_files }})
+          read -r -a changed_files <<< "$CHANGED_FILES"
+          RELATED_TEST_FILES=$(./script/related-test-files "${changed_files[@]}")
           if [ -z "$RELATED_TEST_FILES" ]; then
             echo "No related test files found. Skipping tests."
           else
