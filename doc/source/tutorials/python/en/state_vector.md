@@ -207,3 +207,17 @@ returns the remaining qubits in ascending original index order. It does not
 normalize the result. Conversely, `embed_substate(small, target_qubits)`
 replaces the state with `small` mapped onto the listed qubits, where entry `j`
 of the list is qubit `j` of `small`; all other qubits are zero.
+
+### Weighted operations on batches
+
+For a `StateVectorBatched`, `get_linear_combination(coefs)` returns a new state
+`sum_b coefs[b] * states[b]`, without normalization. An empty batch returns a
+zero state with the same number of qubits. `multiply_coef(coefs)` scales each
+batch entry by its corresponding coefficient; `add_state_vector_with_coef(coefs,
+other)` adds the corresponding weighted entries of `other`. The coefficient
+count must match the batch size and both batches must have matching dimensions.
+
+`StateVectorBatched.inner_product(bra, ket)` returns one complex inner product
+per batch entry, with the first argument conjugated. Both batches must have the
+same precision, execution space, batch size, and number of qubits. Each complex
+product is computed in the state's precision and accumulated in double precision.
