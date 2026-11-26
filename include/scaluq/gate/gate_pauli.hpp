@@ -27,6 +27,7 @@ public:
     PauliOperator<Prec> pauli() const { return _pauli; };
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::Pauli; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         const auto coef = _pauli.coef();
         if (!std::isfinite(coef.real()) || !std::isfinite(coef.imag()) || coef == StdComplex(0.)) {
@@ -94,6 +95,7 @@ public:
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
     double angle() const { return static_cast<double>(_angle); }
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::PauliRotation; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const PauliRotationGateImpl<Prec>>(
             this->_control_mask, this->_control_value_mask, _pauli, -_angle);

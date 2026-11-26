@@ -28,6 +28,9 @@ public:
     PauliOperator<Prec> pauli() const { return _pauli; }
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
 
+    [[nodiscard]] ParamGateType param_gate_type() const override {
+        return ParamGateType::ParamPauliRotation;
+    }
     std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const override {
         return std::make_shared<const ParamPauliRotationGateImpl<Prec>>(
             this->_control_mask, this->_control_value_mask, _pauli, -this->_pcoef);
