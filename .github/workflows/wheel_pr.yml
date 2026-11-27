@@ -2,6 +2,7 @@ name: Wheel build (PR)
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -10,6 +11,7 @@ concurrency:
 jobs:
   check-changed:
     name: Check Changed Files
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-24.04
     outputs:
       any_changed: ${{ steps.check.outputs.any_changed }}
@@ -137,7 +139,7 @@ jobs:
   wheel-build-passed:
     name: Wheel Build Passed
     needs: [check-changed, wheel-stubs, wheel-build]
-    if: always()
+    if: ${{ always() && !github.event.pull_request.draft }}
     runs-on: ubuntu-24.04
     steps:
       - name: All checks passed
