@@ -221,3 +221,27 @@ count must match the batch size and both batches must have matching dimensions.
 per batch entry, with the first argument conjugated. Both batches must have the
 same precision, execution space, batch size, and number of qubits. Each complex
 product is computed in the state's precision and accumulated in double precision.
+
+### Reducing launch overhead for small CPU states
+
+For an OpenMP build, selected host gate kernels can execute directly in a serial
+loop on the calling thread for small states. The threshold is a process-wide
+maximum **number of amplitudes** (for a batch, the total across all states). It
+defaults to zero, which disables this dispatch. For example:
+
+```python
+import scaluq
+
+scaluq.set_small_state_serial_threshold(1 << 16)
+# Run small host-state circuits here.
+scaluq.set_small_state_serial_threshold(0)
+```
+
+The setting applies to the scalar and SIMD kernels for zero-, one-, two-, and
+three-target gates, swap and permutation, and Pauli application and rotation.
+Other kernels continue to use their existing execution policies. Device states
+and explicitly selected `host_serial` states retain their own execution spaces.
+Choose a threshold by measuring your workload: serial execution avoids OpenMP
+launch overhead but can be slower for large states. This setting does not change
+the Kokkos OpenMP thread pool; configure its size before initialization, for
+example through `OMP_NUM_THREADS` before importing scaluq in Python.

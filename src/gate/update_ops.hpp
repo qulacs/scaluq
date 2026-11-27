@@ -6,6 +6,7 @@
 #include <scaluq/state/state_vector.hpp>
 #include <scaluq/state/state_vector_batched.hpp>
 #include <scaluq/types.hpp>
+#include <scaluq/util/small_state_dispatch.hpp>
 
 namespace scaluq {
 namespace internal {

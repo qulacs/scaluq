@@ -13,7 +13,8 @@ void zero_target_dense_matrix_gate_simd(std::uint64_t control_mask,
     const auto coef = Coef::splat(matrix);
 
     const std::uint64_t flat_span = state.flat_dim() >> std::popcount(control_mask);
-    Kokkos::parallel_for(
+    parallel_for_small_state(
+        state,
         "zero_target_dense_matrix_gate_simd",
         Kokkos::RangePolicy<SpaceType<State::space>>(0, flat_span / complex_lanes),
         KOKKOS_LAMBDA(std::uint64_t g) {
@@ -32,7 +33,8 @@ void zero_target_dense_matrix_gate_scalar(std::uint64_t control_mask,
                                           State& state) {
     using Coef = ScalarCoef<State::prec, Kind>;
     const auto coef = Coef::splat(matrix);
-    Kokkos::parallel_for(
+    parallel_for_small_state(
+        state,
         "zero_target_dense_matrix_gate",
         Kokkos::RangePolicy<SpaceType<State::space>>(
             0, state.flat_dim() >> std::popcount(control_mask)),

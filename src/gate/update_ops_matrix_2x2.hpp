@@ -91,7 +91,8 @@ void one_target_dense_matrix_gate_simd_high(std::uint64_t target_mask,
     const C10 m10 = C10::splat(matrix[1][0]);
     const C11 m11 = C11::splat(matrix[1][1]);
     const std::uint64_t flat_span = state.flat_dim() >> std::popcount(skip_mask);
-    Kokkos::parallel_for(
+    parallel_for_small_state(
+        state,
         "one_target_dense_matrix_gate_simd_high",
         Kokkos::RangePolicy<SpaceType<State::space>>(0, flat_span / complex_lanes),
         OneTargetDenseMatrixSimdHighFunctor<SimdType, State, C00, C01, C10, C11>{
@@ -117,10 +118,12 @@ void one_target_dense_matrix_gate_simd_low(std::uint64_t control_mask,
     const auto m00 = C00::template select_complex_lane_bit<TargetBit>(matrix[0][0], matrix[1][1]);
     const auto m01 = C01::template select_complex_lane_bit<TargetBit>(matrix[0][1], matrix[1][0]);
     const std::uint64_t flat_span = state.flat_dim() >> std::popcount(control_mask);
-    Kokkos::parallel_for("one_target_dense_matrix_gate_simd_low",
-                         Kokkos::RangePolicy<SpaceType<State::space>>(0, flat_span / complex_lanes),
-                         OneTargetDenseMatrixSimdLowFunctor<TargetBit, SimdType, State, C00, C01>{
-                             control_mask, control_value_mask, state, m00, m01});
+    parallel_for_small_state(
+        state,
+        "one_target_dense_matrix_gate_simd_low",
+        Kokkos::RangePolicy<SpaceType<State::space>>(0, flat_span / complex_lanes),
+        OneTargetDenseMatrixSimdLowFunctor<TargetBit, SimdType, State, C00, C01>{
+            control_mask, control_value_mask, state, m00, m01});
 }
 
 template <CoefKind M00, CoefKind M01, CoefKind M10, CoefKind M11, UpdatableStateVector State>
@@ -130,17 +133,18 @@ void one_target_dense_matrix_gate_scalar(std::uint64_t target_mask,
                                          const Matrix2x2<State::prec>& matrix,
                                          State& state) {
     const std::uint64_t skip_mask = target_mask | control_mask;
-    Kokkos::parallel_for("one_target_dense_matrix_gate_scalar",
-                         Kokkos::RangePolicy<SpaceType<State::space>>(
-                             0, state.flat_dim() >> std::popcount(skip_mask)),
-                         OneTargetDenseMatrixScalarFunctor<State>{target_mask,
-                                                                  skip_mask,
-                                                                  control_value_mask,
-                                                                  state,
-                                                                  matrix[0][0],
-                                                                  matrix[0][1],
-                                                                  matrix[1][0],
-                                                                  matrix[1][1]});
+    parallel_for_small_state(state,
+                             "one_target_dense_matrix_gate_scalar",
+                             Kokkos::RangePolicy<SpaceType<State::space>>(
+                                 0, state.flat_dim() >> std::popcount(skip_mask)),
+                             OneTargetDenseMatrixScalarFunctor<State>{target_mask,
+                                                                      skip_mask,
+                                                                      control_value_mask,
+                                                                      state,
+                                                                      matrix[0][0],
+                                                                      matrix[0][1],
+                                                                      matrix[1][0],
+                                                                      matrix[1][1]});
 }
 
 template <CoefKind M00, CoefKind M01, CoefKind M10, CoefKind M11, UpdatableStateVector State>
