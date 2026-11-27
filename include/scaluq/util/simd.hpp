@@ -18,6 +18,31 @@ namespace scaluq::internal::simd_ops {
 template <typename Scalar, std::size_t Lanes = 0>
 using Simd = Kokkos::Experimental::simd<Scalar, Lanes>;
 
+namespace detail {
+
+// Return -1 if the permutation cannot use an immediate 128-bit-lane shuffle.
+template <typename Scalar, std::size_t... Indices>
+constexpr int local_shuffle_control(std::index_sequence<Indices...>) {
+    constexpr std::size_t group = 16 / sizeof(Scalar);
+    constexpr std::size_t bits = std::bit_width(group - 1);
+    constexpr std::array<std::size_t, sizeof...(Indices)> indices{Indices...};
+    int control = 0;
+    for (std::size_t i = 0; i < indices.size(); ++i) {
+        if (indices[i] / group != i / group) return -1;
+        const auto source = indices[i] % group;
+        // FP32 repeats four selectors; FP64 has one selector per element.
+        if constexpr (std::is_same_v<Scalar, float>) {
+            if (source != indices[i % group]) return -1;
+            control |= static_cast<int>(source << (bits * (i % group)));
+        } else {
+            control |= static_cast<int>(source << (bits * i));
+        }
+    }
+    return control;
+}
+
+}  // namespace detail
+
 // Reorders SIMD lanes according to the source index of each output lane.
 template <typename Scalar, std::size_t Lanes, std::size_t... Indices>
 KOKKOS_INLINE_FUNCTION Simd<Scalar, Lanes> permute(const Simd<Scalar, Lanes>& value,
@@ -28,10 +53,20 @@ KOKKOS_INLINE_FUNCTION Simd<Scalar, Lanes> permute(const Simd<Scalar, Lanes>& va
 #if defined(KOKKOS_ARCH_AVX512XEON)
     // Avoid extracting and reconstructing every lane through simd::operator[].
     if constexpr (std::is_same_v<Scalar, double> && simd_lanes == 8) {
+        constexpr int local =
+            detail::local_shuffle_control<Scalar>(std::index_sequence<Indices...>{});
+        if constexpr (local >= 0) {
+            return Simd<Scalar, Lanes>(_mm512_permute_pd(static_cast<__m512d>(value), local));
+        }
         constexpr std::array<std::int64_t, simd_lanes> indices{static_cast<std::int64_t>(Indices)...};
         return Simd<Scalar, Lanes>(
             _mm512_permutexvar_pd(_mm512_loadu_si512(indices.data()), static_cast<__m512d>(value)));
     } else if constexpr (std::is_same_v<Scalar, float> && simd_lanes == 16) {
+        constexpr int local =
+            detail::local_shuffle_control<Scalar>(std::index_sequence<Indices...>{});
+        if constexpr (local >= 0) {
+            return Simd<Scalar, Lanes>(_mm512_permute_ps(static_cast<__m512>(value), local));
+        }
         constexpr std::array<std::int32_t, simd_lanes> indices{static_cast<std::int32_t>(Indices)...};
         return Simd<Scalar, Lanes>(
             _mm512_permutexvar_ps(_mm512_loadu_si512(indices.data()), static_cast<__m512>(value)));
@@ -50,6 +85,11 @@ KOKKOS_INLINE_FUNCTION Simd<Scalar, Lanes> permute(const Simd<Scalar, Lanes>& va
         }();
         return Simd<Scalar, Lanes>(_mm256_permute4x64_pd(static_cast<__m256d>(value), control));
     } else if constexpr (std::is_same_v<Scalar, float> && simd_lanes == 8) {
+        constexpr int local =
+            detail::local_shuffle_control<Scalar>(std::index_sequence<Indices...>{});
+        if constexpr (local >= 0) {
+            return Simd<Scalar, Lanes>(_mm256_permute_ps(static_cast<__m256>(value), local));
+        }
         const __m256i indices = _mm256_setr_epi32(static_cast<int>(Indices)...);
         return Simd<Scalar, Lanes>(_mm256_permutevar8x32_ps(static_cast<__m256>(value), indices));
     } else if constexpr (std::is_same_v<Scalar, float> && simd_lanes == 4) {
