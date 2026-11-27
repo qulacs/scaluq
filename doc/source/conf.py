@@ -17,6 +17,8 @@ extensions = [
 
 autoapi_type = "python"
 autoapi_keep_files = True
+autoapi_template_dir = "_templates"
+exclude_patterns = ["_templates"]
 
 autoapi_file_patterns = ["*.py", "*.pyi"]
 autoapi_dirs = ["./stub/scaluq"]

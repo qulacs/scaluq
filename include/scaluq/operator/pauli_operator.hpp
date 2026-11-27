@@ -2,6 +2,7 @@
 
 #include <bit>
 #include <string_view>
+#include <tuple>
 #include <vector>
 
 #include "../constant.hpp"
@@ -338,17 +339,32 @@ void bind_operator_pauli_operator_hpp(nb::module_& m) {
              "$(n-1)$ -th qubit to $0$ -th qubit.")
         .def("get_matrix_ignoring_coef",
              &PauliOperator<Prec>::get_matrix_ignoring_coef,
-             "Get matrix representation of the PauliOperator, but with forcing `coef=1.`Only "
-             "the "
-             "X, Y, and Z components are taken into account in the result.")
+             "Get matrix representation of the PauliOperator, but with forcing ``coef=1``. "
+             "Only the X, Y, and Z components are taken into account in the result.")
         .def("get_full_matrix_ignoring_coef",
              &PauliOperator<Prec>::get_full_matrix_ignoring_coef,
              "n_qubits"_a,
              "Get matrix representation of the PauliOperator, but with forcing `coef=1.`")
-        .def("get_matrix_triplets_ignoring_coef",
-             &PauliOperator<Prec>::get_matrix_triplets_ignoring_coef,
-             "Get matrix representation of the PauliOperator, but with forcing `coef=1.` and non "
-             "zero elements")
+        .def(
+            "get_matrix_triplets_ignoring_coef",
+            [](const PauliOperator<Prec>& pauli) {
+                const auto triplets = pauli.get_matrix_triplets_ignoring_coef();
+                std::vector<std::tuple<int, int, StdComplex>> result;
+                result.reserve(triplets.size());
+                for (const auto& triplet : triplets) {
+                    result.emplace_back(triplet.row(), triplet.col(), triplet.value());
+                }
+                return result;
+            },
+            DocString()
+                .desc("Return nonzero matrix entries with the coefficient set to one.")
+                .ret("list[tuple[int, int, complex]]",
+                     "Entries as ``(row, column, value)`` tuples.")
+                .ex(DocString::Code{">>> pauli = PauliOperator('X 0', 2j)",
+                                    ">>> pauli.get_matrix_triplets_ignoring_coef()",
+                                    "[(0, 1, (1+0j)), (1, 0, (1+0j))]"})
+                .build_as_google_style()
+                .c_str())
         .def(nb::self * nb::self)
         .def(nb::self * StdComplex())
         .def(

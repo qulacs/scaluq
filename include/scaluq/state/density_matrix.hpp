@@ -291,9 +291,8 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
              &DensityMatrix<Prec, Space>::get_matrix,
              DocString()
                  .desc("Get the density matrix as ndarray.")
-                 .ret("Annotated[numpy.typing.NDArray[numpy.complex128], dict(shape=(None, None), "
-                      "order=’C’)]",
-                      "density matrix as 2D array")
+                 .ret("numpy.typing.NDArray[numpy.complex128]",
+                      "Density matrix as a 2D array in C order.")
                  .ex(DocString::Code({">>> state = DensityMatrix(2)",
                                       ">>> print(state.get_matrix())",
                                       "[[1.+0.j 0.+0.j 0.+0.j 0.+0.j]",
@@ -325,7 +324,7 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
              &DensityMatrix<Prec, Space>::copy_to_default_space,
              DocString()
                  .desc("Get a copy of the density matrix in the default execution space.")
-                 .ret(std::string(":class:`scaluq.default.") + to_string(Prec) + ".DensityMatrix`",
+                 .ret(":class:`~scaluq.DensityMatrix`",
                       "a copy of the density matrix in the default execution space")
                  .ex(DocString::Code({">>> state_host = DensityMatrix(2)",
                                       ">>> state_default = state_host.copy_to_default_space()",
@@ -340,7 +339,7 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
              &DensityMatrix<Prec, Space>::copy_to_host_space,
              DocString()
                  .desc("Get a copy of the density matrix in the host execution space.")
-                 .ret(std::string(":class:`scaluq.host.") + to_string(Prec) + ".DensityMatrix`",
+                 .ret(":class:`~scaluq.DensityMatrix`",
                       "a copy of the density matrix in the host execution space")
                  .ex(DocString::Code({">>> state_default = DensityMatrix(2)",
                                       ">>> state_host = state_default.copy_to_host_space()",
@@ -358,9 +357,8 @@ void bind_state_density_matrix_hpp(nb::module_& m) {
              DocString()
                  .desc("Load the density matrix from a 2D array.")
                  .arg("matrix",
-                      "Annotated[numpy.typing.NDArray[numpy.complex128], dict(shape=(None, None), "
-                      "order=’C’)]",
-                      "2D array representing the density matrix")
+                      "numpy.typing.NDArray[numpy.complex128]",
+                      "2D array in C order representing the density matrix")
                  .arg("is_hermitian",
                       "bool",
                       "Whether the input matrix is guaranteed to be Hermitian.")

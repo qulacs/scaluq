@@ -787,11 +787,11 @@ void bind_gate_gate_factory_hpp(nb::module_& mgate) {
         DocString()
             .desc("Generate computational-basis measurement gate.")
             .note("Applying this gate requires a classical register whose size is greater than "
-                  "`classical_bit`. If `reset` is true, the target qubit is reset to |0> after "
+                  "`classical_bit`. If `reset` is true, the target qubit is reset to ``|0>`` after "
                   "the measurement.")
             .arg("target", "int", "Target qubit index")
             .arg("classical_bit", "int", "Destination classical bit index")
-            .arg("reset", "bool", true, "Whether to reset the target qubit to |0>")
+            .arg("reset", "bool", true, "Whether to reset the target qubit to ``|0>``")
             .arg("precision", "str", true, "Precision of the gate. Default is 'f64'.")
             .ret("Gate", "Measurement gate instance")
             .ex(DocString::Code({">>> gate = Measurement(0, 1)"}))

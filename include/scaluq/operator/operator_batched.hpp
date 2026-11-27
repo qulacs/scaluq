@@ -202,8 +202,9 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
              "batch_size"_a = 1,
              DocString()
                  .desc("Apply the batched operator to a state vector.")
-                 .arg("state_vector", "A state vector to be applied.")
+                 .arg("state_vector", "StateVector", "A state vector to be applied.")
                  .arg("batch_size",
+                      "int",
                       "In the update process, the batch size to be processed simultaneously.")
                  .build_as_google_style()
                  .c_str())
@@ -216,7 +217,7 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
             "state_vector"_a,
             DocString()
                 .desc("Return a vector of expectation values for each operator.")
-                .arg("state_vector", "A state vector to compute expectation values.")
+                .arg("state_vector", "StateVector", "A state vector to compute expectation values.")
                 .build_as_google_style()
                 .c_str())
         .def(
@@ -228,7 +229,9 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
             "states"_a,
             DocString()
                 .desc("Return a vector of expectation values for each operator.")
-                .arg("states", "State Vector Batched to compute expectation values.")
+                .arg("states",
+                     "StateVectorBatched",
+                     "Batched state vectors to compute expectation values.")
                 .build_as_google_style()
                 .c_str())
         .def(
@@ -242,8 +245,8 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
             "state_vector_ket"_a,
             DocString()
                 .desc("Return a vector of transition amplitudes for each operator.")
-                .arg("state_vector_bra", "A bra state vector.")
-                .arg("state_vector_ket", "A ket state vector.")
+                .arg("state_vector_bra", "StateVector", "A bra state vector.")
+                .arg("state_vector_ket", "StateVector", "A ket state vector.")
                 .build_as_google_style()
                 .c_str())
         .def(
@@ -257,8 +260,8 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
             "states_ket"_a,
             DocString()
                 .desc("Return a vector of transition amplitudes for each operator.")
-                .arg("states_bra", "Batched bra state vector.")
-                .arg("states_ket", "Batched ket state vector.")
+                .arg("states_bra", "StateVectorBatched", "Batched bra state vector.")
+                .arg("states_ket", "StateVectorBatched", "Batched ket state vector.")
                 .build_as_google_style()
                 .c_str())
         // .def("solve_ground_state_eigenvalue_by_arnoldi_method",
@@ -290,7 +293,7 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
              "index"_a,
              DocString()
                  .desc("Return the operator at the specified index.")
-                 .arg("index", "Index of the operator.")
+                 .arg("index", "int", "Index of the operator.")
                  .build_as_google_style()
                  .c_str())
         .def("view_operator_at",
@@ -298,7 +301,7 @@ void bind_operator_operator_batched_hpp(nb::module_& m) {
              "index"_a,
              DocString()
                  .desc("Return a view of the operator at the specified index.")
-                 .arg("index", "Index of the operator.")
+                 .arg("index", "int", "Index of the operator.")
                  .build_as_google_style()
                  .c_str())
         .def("get_operators",

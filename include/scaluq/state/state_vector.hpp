@@ -673,16 +673,14 @@ void bind_state_state_vector_hpp(nb::module_& m) {
              &StateVector<Prec, Space>::copy_to_default_space,
              DocString()
                  .desc("Return a deep copy in the default execution space.")
-                 .ret(std::string(":class:`scaluq.default.") + to_string(Prec) + ".StateVector`",
-                      "Copied state vector.")
+                 .ret(":class:`~scaluq.StateVector`", "Copied state vector.")
                  .build_as_google_style()
                  .c_str())
         .def("copy_to_host_space",
              &StateVector<Prec, Space>::copy_to_host_space,
              DocString()
                  .desc("Return a deep copy in the host execution space.")
-                 .ret(std::string(":class:`scaluq.host.") + to_string(Prec) + ".StateVector`",
-                      "Copied state vector.")
+                 .ret(":class:`~scaluq.StateVector`", "Copied state vector.")
                  .build_as_google_style()
                  .c_str())
         .def_static(
