@@ -556,8 +556,7 @@ void bind_circuit_circuit_hpp(nb::module_& m) {
                                      ">>> len(circuit.gate_list())",
                                      "1"})
                  .build_as_google_style()
-                 .c_str(),
-             nb::rv_policy::reference)
+                 .c_str())
         .def("n_gates",
              &Circuit<Prec>::n_gates,
              DocString()

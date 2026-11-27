@@ -64,6 +64,9 @@ public:
         return ret;
     }
 
+    [[nodiscard]] ParamGateType param_gate_type() const override {
+        return ParamGateType::ParamProbabilistic;
+    }
     std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const override;
     ComplexMatrix get_matrix(double) const override {
         throw std::runtime_error(
@@ -114,14 +117,10 @@ void bind_gate_param_gate_probabilistic_hpp(nb::module_& m,
         "ParamProbabilisticGate",
         "Specific class of parametric probabilistic gate. The gate to apply is picked from a "
         "certain distribution.")
-        .def(
-            "gate_list",
-            [](const ParamProbabilisticGate<Prec>& gate) { return gate->gate_list(); },
-            nb::rv_policy::reference)
-        .def(
-            "distribution",
-            [](const ParamProbabilisticGate<Prec>& gate) { return gate->distribution(); },
-            nb::rv_policy::reference);
+        .def("gate_list",
+             [](const ParamProbabilisticGate<Prec>& gate) { return gate->gate_list(); })
+        .def("distribution",
+             [](const ParamProbabilisticGate<Prec>& gate) { return gate->distribution(); });
 }
 }  // namespace internal
 #endif

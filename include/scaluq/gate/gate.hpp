@@ -308,6 +308,7 @@ public:
         return _target_mask | _control_mask;
     }
 
+    [[nodiscard]] virtual GateType gate_type() const = 0;
     [[nodiscard]] virtual std::shared_ptr<const GateBase<Prec>> get_inverse() const = 0;
     [[nodiscard]] virtual ComplexMatrix get_matrix() const = 0;
 
@@ -573,13 +574,17 @@ public:
     GatePtr() : _gate_ptr(nullptr), _gate_type(get_gate_type<T, Prec>()) {}
     template <GateImpl U>
     GatePtr(const std::shared_ptr<const U>& gate_ptr) {
-        if constexpr (std::is_same_v<T, U>) {
+        if constexpr (std::is_same_v<T, GateBase<Prec>>) {
+            if constexpr (std::is_same_v<U, GateBase<Prec>>) {
+                _gate_type = gate_ptr ? gate_ptr->gate_type() : GateType::Unknown;
+            } else {
+                // upcast
+                _gate_type = get_gate_type<U, Prec>();
+            }
+            _gate_ptr = std::static_pointer_cast<const T>(gate_ptr);
+        } else if constexpr (std::is_same_v<T, U>) {
             _gate_type = get_gate_type<T, Prec>();
             _gate_ptr = gate_ptr;
-        } else if constexpr (std::is_same_v<T, GateBase<Prec>>) {
-            // upcast
-            _gate_type = get_gate_type<U, Prec>();
-            _gate_ptr = std::static_pointer_cast<const T>(gate_ptr);
         } else {
             // downcast
             _gate_type = get_gate_type<T, Prec>();
@@ -1058,8 +1063,7 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
            std::optional<std::uint64_t> seed) {
             auto classical_register_variant = parse_classical_register(classical_register);
             visit_gate_state<Prec, true>(state, [&](auto* state_ptr) {
-                update_gate_state<GateT, Prec>(
-                    gate, state_ptr, classical_register_variant, seed);
+                update_gate_state<GateT, Prec>(gate, state_ptr, classical_register_variant, seed);
             });
         },
         "state"_a,
@@ -1097,6 +1101,7 @@ void bind_gate_gate_hpp_without_precision_and_space(nb::module_& m) {
         .value("U3", GateType::U3)
         .value("Swap", GateType::Swap)
         .value("Ecr", GateType::Ecr)
+        .value("Permutation", GateType::Permutation)
         .value("Pauli", GateType::Pauli)
         .value("PauliRotation", GateType::PauliRotation)
         .value("SparseMatrix", GateType::SparseMatrix)

@@ -28,6 +28,9 @@ public:
     PauliOperator<Prec> pauli() const { return _pauli; }
     std::vector<std::uint64_t> pauli_id_list() const { return _pauli.pauli_id_list(); }
 
+    [[nodiscard]] ParamGateType param_gate_type() const override {
+        return ParamGateType::ParamPauliRotation;
+    }
     std::shared_ptr<const ParamGateBase<Prec>> get_inverse() const override {
         return std::make_shared<const ParamPauliRotationGateImpl<Prec>>(
             this->_control_mask, this->_control_value_mask, _pauli, -this->_pcoef);
@@ -73,14 +76,9 @@ void bind_gate_param_gate_pauli_hpp(nb::module_& m,
         "ParamPauliRotationGate",
         "Parametric multi-qubit pauli-rotation gate, represented as $e^{-i\\frac{\\theta}{2}P}$. "
         "`theta` is given as `param * param_coef`.")
-        .def(
-            "pauli",
-            [](ParamPauliRotationGate<Prec>& gate) { return gate->pauli(); },
-            nb::rv_policy::reference)
-        .def(
-            "pauli_id_list",
-            [](ParamPauliRotationGate<Prec>& gate) { return gate->pauli_id_list(); },
-            nb::rv_policy::reference);
+        .def("pauli", [](ParamPauliRotationGate<Prec>& gate) { return gate->pauli(); })
+        .def("pauli_id_list",
+             [](ParamPauliRotationGate<Prec>& gate) { return gate->pauli_id_list(); });
 }
 }  // namespace internal
 #endif
