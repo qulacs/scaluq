@@ -331,6 +331,77 @@ struct DmPermutationBlockOp {
     }
 };
 
+// Superoperator acting on the vectorized N×N block: vec(B) → S vec(B), with vec index i*N+j.
+// Used for uncontrolled CPTP maps such as mixtures Σ p_k U_k ρ U_k†. S is stored row-compressed
+// because typical channels (Pauli noise, permutation-like gates) are very sparse.
+template <Precision Prec, ExecutionSpace Space, int N>
+struct DmSuperoperatorBlockOp {
+    using C = Complex<Prec>;
+    static constexpr int M = N * N;
+    struct Table {
+        Kokkos::Array<C, M * M> val;
+        Kokkos::Array<std::uint8_t, M * M> col;
+        Kokkos::Array<std::uint16_t, M + 1> ptr;
+    };
+    using ExecSpace = SpaceType<Space>;
+    static constexpr bool use_view =
+        N == 4 && !Kokkos::SpaceAccessibility<Kokkos::HostSpace,
+                                              typename ExecSpace::memory_space>::accessible;
+    typename DensityMatrix<Prec, Space>::RawView raw;
+    Kokkos::Array<std::uint64_t, N> off;
+    std::conditional_t<use_view, Kokkos::View<Table*, ExecSpace>, Table> table;
+
+    // `dense(y, x)` returns S(y, x).
+    template <class Dense>
+    DmSuperoperatorBlockOp(typename DensityMatrix<Prec, Space>::RawView raw_,
+                           std::uint64_t group_mask,
+                           const Dense& dense)
+        : raw(raw_), off(dm_group_offsets<N>(group_mask)) {
+        Table entries{};
+        int nnz = 0;
+        for (int y = 0; y < M; ++y) {
+            entries.ptr[y] = static_cast<std::uint16_t>(nnz);
+            for (int x = 0; x < M; ++x) {
+                const C v = dense(y, x);
+                if (v.real() != Float<Prec>{0} || v.imag() != Float<Prec>{0}) {
+                    entries.val[nnz] = v;
+                    entries.col[nnz] = static_cast<std::uint8_t>(x);
+                    ++nnz;
+                }
+            }
+        }
+        entries.ptr[M] = static_cast<std::uint16_t>(nnz);
+        if constexpr (use_view) {
+            table = Kokkos::View<Table*, ExecSpace>("dm_superoperator_table", 1);
+            auto host = Kokkos::create_mirror_view(table);
+            host(0) = entries;
+            Kokkos::deep_copy(table, host);
+        } else {
+            table = entries;
+        }
+    }
+
+    KOKKOS_INLINE_FUNCTION const Table& coefficients() const {
+        if constexpr (use_view)
+            return table(0);
+        else
+            return table;
+    }
+
+    KOKKOS_INLINE_FUNCTION void operator()(std::uint64_t rb, std::uint64_t cb, bool, bool) const {
+        const auto& entries = coefficients();
+        C v[M];
+        for (int i = 0; i < N; ++i)
+            for (int j = 0; j < N; ++j) v[i * N + j] = raw(rb ^ off[i], cb ^ off[j]);
+        for (int y = 0; y < M; ++y) {
+            C acc(0);
+            for (int e = entries.ptr[y]; e < entries.ptr[y + 1]; ++e)
+                acc += entries.val[e] * v[entries.col[e]];
+            raw(rb ^ off[y / N], cb ^ off[y % N]) = acc;
+        }
+    }
+};
+
 // ---------------------------------------------------------------------------------------------
 // Convenience entry points
 // ---------------------------------------------------------------------------------------------

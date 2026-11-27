@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <bit>
+#include <cmath>
 #include <scaluq/gate/gate_measurement.hpp>
 
 #include "update_ops.hpp"
@@ -84,6 +86,67 @@ DEFINE_MEASUREMENT_GATE_UPDATE(ExecutionSpace::HostSerial)
 DEFINE_MEASUREMENT_GATE_UPDATE(ExecutionSpace::Default)
 #endif  // SCALUQ_USE_DEVICE
 #undef DEFINE_MEASUREMENT_GATE_UPDATE
+
+struct MeasurementWeights {
+    double zero = 0.;
+    double one = 0.;
+
+    KOKKOS_INLINE_FUNCTION void operator+=(const MeasurementWeights& other) {
+        zero += other.zero;
+        one += other.one;
+    }
+};
+
+template <Precision Prec, ExecutionSpace Space>
+MeasurementWeights measurement_weights(const DensityMatrix<Prec, Space>& dm,
+                                       std::uint64_t target_mask) {
+    const auto raw = dm._raw;
+    MeasurementWeights weights;
+    Kokkos::parallel_reduce(
+        "density_matrix_measurement_weights",
+        Kokkos::RangePolicy<SpaceType<Space>>(0, dm.dim()),
+        KOKKOS_LAMBDA(std::uint64_t i, MeasurementWeights & local) {
+            const double weight = static_cast<double>(raw(i, i).real());
+            if (i & target_mask)
+                local.one += weight;
+            else
+                local.zero += weight;
+        },
+        weights);
+    return weights;
+}
+
+#define DEFINE_MEASUREMENT_GATE_DM_UPDATE(Space)                                             \
+    template <Precision Prec>                                                                \
+    void MeasurementGateImpl<Prec>::update_quantum_state(                                    \
+        ExecutionContextDensityMatrix<Prec, Space>& context) const {                         \
+        this->check_qubit_mask_within_bounds(*context.state);                                \
+        if (context.classical_register->register_size() <= _classical_bit_index) {           \
+            throw std::runtime_error(                                                        \
+                "MeasurementGate::update_quantum_state(): classical register size is too "   \
+                "small for the requested classical bit index.");                             \
+        }                                                                                    \
+        auto& dm = *context.state;                                                           \
+        const auto [p0, p1] = measurement_weights(dm, this->_target_mask);                   \
+        const double total = p0 + p1;                                                        \
+        if (!std::isfinite(total) || total <= 0. || p0 < 0. || p1 < 0.) {                    \
+            throw std::runtime_error(                                                        \
+                "Measurement requires finite nonnegative outcome "                           \
+                "weights and a positive trace.");                                            \
+        }                                                                                    \
+        const double zero_probability = std::clamp(p0 / total, 0., 1.);                      \
+        const bool measured_zero =                                                           \
+            std::bernoulli_distribution(zero_probability)(*context.random_engine);           \
+        const double probability = measured_zero ? p0 : p1;                                  \
+        measurement_projection(this->_target_mask, !measured_zero, _reset, probability, dm); \
+        (*context.classical_register)[_classical_bit_index] = !measured_zero;                \
+    }
+DEFINE_MEASUREMENT_GATE_DM_UPDATE(ExecutionSpace::Host)
+DEFINE_MEASUREMENT_GATE_DM_UPDATE(ExecutionSpace::HostSerial)
+#ifdef SCALUQ_USE_DEVICE
+DEFINE_MEASUREMENT_GATE_DM_UPDATE(ExecutionSpace::Default)
+#endif  // SCALUQ_USE_DEVICE
+#undef DEFINE_MEASUREMENT_GATE_DM_UPDATE
 template class MeasurementGateImpl<Prec>;
 
 template <Precision Prec>
