@@ -84,3 +84,19 @@ pauli.apply_to_state(states)
 `pauli.apply_add(input, output, coef)` adds `coef * P * input` to `output`,
 including the coefficient stored in `pauli`. `input` and `output` must not
 overlap; passing the same state vector as both is undefined behavior.
+
+### Grouped Pauli sums
+
+`GroupedPauliOperator(n_qubits, terms, cache_budget=0)` takes a snapshot of a
+list of `PauliOperator`s and groups terms with the same X/Y bit-flip mask.
+`apply_add(input, output, coef=1)` **adds** `coef * H * input` to
+`output`. `input` and `output` must not overlap; passing the same state vector
+as both is undefined behavior. The class also provides
+`get_expectation_value(state)` and `get_transition_amplitude(bra, ket)`, both
+of which retain complex coefficients. No symmetry-based terms are discarded.
+
+The cache budget is in bytes and covers the diagonal weight arrays, excluding
+term metadata. If all arrays fit, construction takes O(L 2^n) work and each
+application or transition takes O(G 2^n), for L terms and G groups. Otherwise,
+the class streams the terms, taking O(L 2^n) work per call. The default budget
+is zero. `n_groups()` and `is_cached()` expose the selected representation.

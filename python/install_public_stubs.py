@@ -230,6 +230,18 @@ def _patch_main_stub(source, default_precision):
     if replacement:
         replacements.append(replacement)
 
+    grouped_operator = _class(tree, "GroupedPauliOperator")
+    replacement = _methods_replacement(
+        grouped_operator,
+        "__init__",
+        [
+            f"    def __init__(self, n_qubits: int, terms, cache_budget: int = 0, precision: str = '{default_precision}', space: str = 'default') -> None:",
+            '        """Initialize an immutable grouped Pauli sum; cache_budget is in bytes."""',
+        ],
+    )
+    if replacement:
+        replacements.append(replacement)
+
     operator_batched = _class(tree, "OperatorBatched")
     replacement = _methods_replacement(
         operator_batched,

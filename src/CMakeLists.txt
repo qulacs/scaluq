@@ -32,6 +32,7 @@ foreach(LIBRARY IN LISTS SCALUQ_LIBRARIES)
             state/density_matrix.cpp
             operator/operator.cpp
             operator/operator_batched.cpp
+            operator/grouped_pauli_operator.cpp
             util/utility.cpp
             types.cpp
         )

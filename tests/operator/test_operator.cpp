@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 
+#include <Eigen/Eigenvalues>
 #include <cmath>
 #include <cstdlib>
 #include <random>
-#include <string>
-#include <Eigen/Eigenvalues>
 #include <scaluq/operator/operator.hpp>
+#include <string>
 
 #include "../test_environment.hpp"
 #include "../util/util.hpp"
@@ -579,6 +579,96 @@ TYPED_TEST(OperatorTest, ArnoldiDoesNotBreakDownOnNonzeroResidual) {
     const auto ground_state = op.solve_ground_state_by_arnoldi_method(initial_state, 2);
     ASSERT_TRUE(std::isfinite(ground_state.eigenvalue.real()));
     ASSERT_NEAR(ground_state.eigenvalue.real(), -coefficient, coefficient * 0.2);
+}
+
+TYPED_TEST(OperatorTest, GroupedPauliCachedAndStreaming) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    std::vector<PauliOperator<Prec>> terms = {PauliOperator<Prec>("Y 0", StdComplex(2., 1.)),
+                                              PauliOperator<Prec>("X 0 Z 1", StdComplex(-1., .5)),
+                                              PauliOperator<Prec>("Z 1", StdComplex(.25, -.5)),
+                                              PauliOperator<Prec>("", StdComplex(.5, .25))};
+    StateVector<Prec, Space> ket(2), bra(2);
+    ket.load(std::vector<StdComplex>{1., StdComplex(0., 1.), 3., 4.});
+    bra.load(std::vector<StdComplex>{StdComplex(1., 1.), 2., -1., 3.});
+    auto expected = ket.copy();
+    expected.set_zero_norm_state();
+    for (const auto& term : terms) {
+        auto applied = ket.copy();
+        term.apply_to_state(applied);
+        expected.add_state_vector_with_coef(StdComplex(.5, -.25), applied);
+    }
+    for (std::uint64_t budget : {0ULL, 4096ULL}) {
+        GroupedPauliOperator<Prec, Space> grouped(2, terms, budget);
+        EXPECT_EQ(grouped.n_groups(), 2);
+        EXPECT_EQ(grouped.is_cached(), budget != 0);
+        auto output = ket.copy();
+        output.set_zero_norm_state();
+        grouped.apply_add(ket, output, StdComplex(.5, -.25));
+        auto a = expected.get_amplitudes(), b = output.get_amplitudes();
+        auto initial = ket.get_amplitudes();
+        for (std::size_t i = 0; i < a.size(); ++i) {
+            check_near<Prec>(a[i], b[i]);
+        }
+        StdComplex transition = 0., expectation = 0.;
+        auto bra_values = bra.get_amplitudes();
+        for (const auto& term : terms) {
+            auto applied = ket.copy();
+            term.apply_to_state(applied);
+            auto values = applied.get_amplitudes();
+            for (std::size_t i = 0; i < values.size(); ++i) {
+                transition += std::conj(bra_values[i]) * values[i];
+                expectation += std::conj(initial[i]) * values[i];
+            }
+        }
+        check_near<Prec>(grouped.get_transition_amplitude(bra, ket), transition);
+        check_near<Prec>(grouped.get_expectation_value(ket), expectation);
+    }
+}
+
+TYPED_TEST(OperatorTest, GroupedPauliBoundaryCases) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    StateVector<Prec, Space> scalar(0);
+    scalar.load(std::vector<StdComplex>{StdComplex(2., 1.)});
+    GroupedPauliOperator<Prec, Space> empty(0, {}, 100);
+    EXPECT_EQ(empty.n_groups(), 0);
+    EXPECT_EQ(empty.get_expectation_value(scalar), StdComplex(0.));
+    auto empty_out = scalar.copy();
+    empty.apply_add(scalar, empty_out, StdComplex(3., -1.));
+    check_near<Prec>(empty_out.get_amplitudes()[0], StdComplex(2., 1.));
+
+    std::vector<PauliOperator<Prec>> identity{PauliOperator<Prec>("", StdComplex(1., 2.))};
+    GroupedPauliOperator<Prec, Space> below(
+        0, identity, sizeof(scaluq::internal::Complex<Prec>) - 1);
+    GroupedPauliOperator<Prec, Space> exact(0, identity, sizeof(scaluq::internal::Complex<Prec>));
+    EXPECT_FALSE(below.is_cached());
+    EXPECT_TRUE(exact.is_cached());
+    check_near<Prec>(exact.get_expectation_value(scalar), StdComplex(5., 10.));
+
+    std::vector<PauliOperator<Prec>> hopping{PauliOperator<Prec>("X 0 X 1"),
+                                             PauliOperator<Prec>("Y 0 Y 1")};
+    GroupedPauliOperator<Prec, Space> grouped(2, hopping, 0);
+    StateVector<Prec, Space> input(2), out(2);
+    input.load(std::vector<StdComplex>{0., 1., 0., 0.});
+    out.set_zero_norm_state();
+    grouped.apply_add(input, out);
+    check_near<Prec>(out.get_amplitudes()[2], StdComplex(2.));
+
+    using GroupedOp = GroupedPauliOperator<Prec, Space>;
+    EXPECT_THROW((GroupedOp(1, hopping, 0)), std::invalid_argument);
+    EXPECT_THROW(grouped.apply_add(scalar, out), std::invalid_argument);
+    EXPECT_THROW(grouped.apply_add(input, scalar), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(grouped.get_transition_amplitude(scalar, input)),
+                 std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(grouped.get_transition_amplitude(input, scalar)),
+                 std::invalid_argument);
+
+    // 1024 amplitudes of 1.0 would saturate at 256.0 in BF16 if accumulated in BF16.
+    StateVector<Prec, Space> ones(10);
+    ones.load(std::vector<StdComplex>(1024, StdComplex(1., 0.)));
+    GroupedPauliOperator<Prec, Space> large_id(10, {PauliOperator<Prec>("")}, 0);
+    check_near<Prec>(large_id.get_expectation_value(ones), StdComplex(1024., 0.));
 }
 
 TYPED_TEST(OperatorTest, ApplyToStateMatchesTermSum) {
