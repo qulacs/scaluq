@@ -1,9 +1,12 @@
+#include <array>
 #include <limits>
+#include <numeric>
 #include <scaluq/circuit/circuit.hpp>
 #include <scaluq/gate/gate_factory.hpp>
 #include <scaluq/gate/merge_gate.hpp>
 #include <scaluq/gate/param_gate_factory.hpp>
 #include <scaluq/util/utility.hpp>
+#include <span>
 
 namespace scaluq {
 namespace {
@@ -563,12 +566,152 @@ template void Circuit<internal::Prec>::optimize<ExecutionSpace::Default>(
     std::uint64_t max_block_size);
 #endif  // SCALUQ_USE_DEVICE
 
-// サンプリング回数について，下図のような木をBFSする
-//    1000　　　　 {X:p=0.1, I:p=0.9}
-//   X/ ＼I
-//  100   900     {Z:p=0.2, I:p=0.8}
-// Z/＼I  Z/＼I
-// 20 80  180 720
+namespace {
+template <Precision Prec>
+struct NoiseGate {
+    std::span<const double> probabilities;
+    std::vector<typename Circuit<Prec>::GateWithKey> alternatives;
+};
+
+template <Precision Prec>
+NoiseGate<Prec> get_noise_gate(const typename Circuit<Prec>::GateWithKey& item) {
+    if (const auto* gate = std::get_if<0>(&item)) {
+        if (gate->gate_type() != GateType::Probabilistic) return {};
+        const auto noise = ProbabilisticGate<Prec>(*gate);
+        return {noise->distribution(), {noise->gate_list().begin(), noise->gate_list().end()}};
+    }
+
+    const auto& [gate, key] = std::get<1>(item);
+    if (gate.param_gate_type() != ParamGateType::ParamProbabilistic) return {};
+    const auto noise = ParamProbabilisticGate<Prec>(gate);
+    NoiseGate<Prec> result{noise->distribution(), {}};
+    result.alternatives.reserve(noise->gate_list().size());
+    for (const auto& alternative : noise->gate_list()) {
+        if (const auto* fixed_gate = std::get_if<0>(&alternative))
+            result.alternatives.emplace_back(*fixed_gate);
+        else
+            result.alternatives.emplace_back(std::pair{std::get<1>(alternative), key});
+    }
+    return result;
+}
+
+struct NoiseBranch {
+    std::uint64_t parent_index;
+    std::uint64_t count;
+};
+
+struct NoiseSplit {
+    std::vector<std::vector<NoiseBranch>> alternatives;
+    std::size_t branch_count = 0;
+};
+
+template <class RandomEngineForRow>
+NoiseSplit sample_noise_split(std::span<const double> probabilities,
+                              std::span<const std::uint64_t> shot_counts,
+                              const RandomEngineForRow& random_engine_for_row) {
+    std::discrete_distribution<std::uint64_t> distribution(probabilities.begin(),
+                                                           probabilities.end());
+    NoiseSplit split{std::vector<std::vector<NoiseBranch>>(probabilities.size())};
+    std::vector<std::uint64_t> counts(probabilities.size());
+    for (std::uint64_t parent = 0; parent < shot_counts.size(); ++parent) {
+        auto& random_engine = random_engine_for_row(parent);
+        std::ranges::fill(counts, 0);
+        for (std::uint64_t shot = 0; shot < shot_counts[parent]; ++shot)
+            ++counts[distribution(random_engine)];
+        for (std::size_t gate = 0; gate < counts.size(); ++gate) {
+            if (counts[gate] == 0) continue;
+            split.alternatives[gate].push_back({parent, counts[gate]});
+            ++split.branch_count;
+        }
+    }
+    return split;
+}
+
+template <class RandomEngineForRow>
+void preserve_deterministic_draws(std::span<const std::uint64_t> shot_counts,
+                                  const RandomEngineForRow& random_engine_for_row) {
+    // Some standard libraries consume a random draw even with one possible result.
+    constexpr std::array probabilities{1.};
+    std::discrete_distribution<std::uint64_t> distribution(probabilities.begin(),
+                                                           probabilities.end());
+    for (std::uint64_t row = 0; row < shot_counts.size(); ++row) {
+        auto& random_engine = random_engine_for_row(row);
+        for (std::uint64_t shot = 0; shot < shot_counts[row]; ++shot)
+            (void)distribution(random_engine);
+    }
+}
+
+template <Precision Prec, ExecutionSpace Space>
+void apply_noise_gate(const typename Circuit<Prec>::GateWithKey& item,
+                      std::span<StateVector<Prec, Space>> states,
+                      const std::map<std::string, double>& parameters) {
+    if (const auto* fixed_gate = std::get_if<0>(&item)) {
+        for (auto& state : states) (*fixed_gate)->update_quantum_state(state);
+    } else {
+        const auto& [gate, key] = std::get<1>(item);
+        const auto parameter = parameters.at(key);
+        for (auto& state : states) gate->update_quantum_state(state, parameter);
+    }
+}
+
+template <Precision Prec, ExecutionSpace Space>
+void apply_noise_gate(const typename Circuit<Prec>::GateWithKey& item,
+                      StateVectorBatched<Prec, Space>& states,
+                      std::span<const std::uint64_t> input_indices,
+                      std::uint64_t input_size,
+                      const std::map<std::string, std::vector<double>>& parameters) {
+    if (const auto* fixed_gate = std::get_if<0>(&item)) {
+        if (!input_indices.empty()) (*fixed_gate)->update_quantum_state(states);
+    } else {
+        const auto& [gate, key] = std::get<1>(item);
+        const auto& input_parameters = parameters.at(key);
+        if (input_parameters.size() != input_size)
+            throw std::invalid_argument("Circuit::simulate_noise: parameter size mismatch.");
+        if (input_indices.empty()) return;
+        std::vector<double> branch_parameters;
+        branch_parameters.reserve(input_indices.size());
+        for (const auto index : input_indices) branch_parameters.push_back(input_parameters[index]);
+        gate->update_quantum_state(states, branch_parameters);
+    }
+}
+
+template <Precision Prec, ExecutionSpace Space>
+auto gather_noise_branches(const typename Circuit<Prec>::template BatchedNoiseResult<Space>& source,
+                           const NoiseSplit& split) ->
+    typename Circuit<Prec>::template BatchedNoiseResult<Space> {
+    using Batch = StateVectorBatched<Prec, Space>;
+    using ExecSpace = internal::SpaceType<Space>;
+    using GatherPolicy =
+        Kokkos::MDRangePolicy<ExecSpace,
+                              Kokkos::Rank<2, Kokkos::Iterate::Right, Kokkos::Iterate::Right>>;
+    typename Circuit<Prec>::template BatchedNoiseResult<Space> next{
+        Batch::uninitialized_state(split.branch_count, source.states.n_qubits()), {}, {}};
+    next.input_indices.reserve(split.branch_count);
+    next.counts.reserve(split.branch_count);
+    std::vector<std::uint64_t> parents;
+    parents.reserve(split.branch_count);
+    for (const auto& branches : split.alternatives) {
+        for (const auto& branch : branches) {
+            parents.push_back(branch.parent_index);
+            next.input_indices.push_back(source.input_indices[branch.parent_index]);
+            next.counts.push_back(branch.count);
+        }
+    }
+    if (!parents.empty()) {
+        const auto source_view = source.states._raw;
+        const auto target_view = next.states._raw;
+        const auto device_parents = internal::convert_vector_to_view<std::uint64_t, Space>(parents);
+        Kokkos::parallel_for(
+            "gather_noise_branches",
+            GatherPolicy({0, 0}, {split.branch_count, next.states.dim()}),
+            KOKKOS_LAMBDA(std::uint64_t branch, std::uint64_t i) {
+                target_view(branch, i) = source_view(device_parents(branch), i);
+            });
+    }
+    return next;
+}
+}  // namespace
+
 template <Precision Prec>
 template <ExecutionSpace Space>
 std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::simulate_noise(
@@ -582,101 +725,139 @@ std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> Circuit<Prec>::si
             "not supported.");
     }
     check_state_vector_n_qubits(initial_state.n_qubits());
-    std::mt19937 mt(internal::resolve_seed(seed));
-    StateVectorBatched<Prec, Space> states(1, initial_state.n_qubits()), new_states;
-    states.set_state_vector_at(0, initial_state);
-    std::vector<std::uint64_t> scounts{sampling_count}, new_scounts;
+    if (initial_state.dim() == 0)
+        throw std::runtime_error("Circuit::simulate_noise: initial state must be initialized.");
+    std::mt19937 random_engine(internal::resolve_seed(seed));
+    const auto random_engine_for_row =
+        [engine = std::ref(random_engine)](std::uint64_t) -> std::mt19937& { return engine.get(); };
 
-    for (auto& g : _gate_list) {
-        std::vector<double> probs;
-        std::vector<GateWithKey> gates;
-        if (g.index() == 0) {
-            const auto& gate = std::get<0>(g);
-            if (gate.gate_type() == GateType::Probabilistic) {
-                probs = ProbabilisticGate<Prec>(gate)->distribution();
-                const auto& gate_list = ProbabilisticGate<Prec>(gate)->gate_list();
-                for (const auto& tmp : gate_list) {
-                    gates.push_back(tmp);
-                }
-            } else {
-                probs = std::vector<double>{1.0};
-                gates.push_back(gate);
-            }
-        } else {
-            const auto& [gate, key] = std::get<1>(g);
-            if (gate.param_gate_type() == ParamGateType::ParamProbabilistic) {
-                probs = ParamProbabilisticGate<Prec>(gate)->distribution();
-                auto prob_gate_list = ParamProbabilisticGate<Prec>(gate)->gate_list();
-                for (const auto& tmp : prob_gate_list) {
-                    if (tmp.index() == 0) {
-                        gates.push_back(std::get<0>(tmp));
-                    } else {
-                        gates.push_back(
-                            std::pair<scaluq::ParamGate<Prec>, std::string>{std::get<1>(tmp), key});
-                    }
-                }
-            } else {
-                probs = std::vector<double>{1.0};
-                gates.push_back(g);
-            }
+    std::vector<StateVector<Prec, Space>> states;
+    if (sampling_count != 0 || _gate_list.empty()) states.push_back(initial_state.copy());
+    std::vector<std::uint64_t> shot_counts(states.size(), sampling_count);
+
+    for (const auto& item : _gate_list) {
+        const auto noise = get_noise_gate<Prec>(item);
+        if (noise.alternatives.empty()) {
+            preserve_deterministic_draws(shot_counts, random_engine_for_row);
+            apply_noise_gate<Prec, Space>(item, states, parameters);
+            continue;
         }
 
-        std::discrete_distribution<std::uint64_t> dist(probs.begin(), probs.end());
+        const auto split =
+            sample_noise_split(noise.probabilities, shot_counts, random_engine_for_row);
+        std::vector<std::size_t> remaining_children(states.size());
+        for (const auto& branches : split.alternatives)
+            for (const auto& branch : branches) ++remaining_children[branch.parent_index];
 
-        std::vector<std::vector<std::uint64_t>> gate_used_count(
-            states.batch_size(), std::vector<std::uint64_t>(probs.size(), 0));
-        std::uint64_t new_size = 0;
-        for (std::uint64_t i = 0; i < states.batch_size(); ++i) {
-            for (std::uint64_t _ = 0; _ < scounts[i]; ++_) {
-                std::uint64_t j = dist(mt);
-                if (j >= probs.size()) {
-                    throw std::runtime_error(
-                        "Circuit::simulate_noise: discrete_distribution returned out of "
-                        "range index.");
-                }
-                if (gate_used_count[i][j] == 0) {
-                    ++new_size;
-                }
-                ++gate_used_count[i][j];
+        std::vector<StateVector<Prec, Space>> next_states;
+        std::vector<std::uint64_t> next_counts;
+        next_states.reserve(split.branch_count);
+        next_counts.reserve(split.branch_count);
+        for (std::size_t gate = 0; gate < split.alternatives.size(); ++gate) {
+            const auto begin = next_states.size();
+            for (const auto& branch : split.alternatives[gate]) {
+                auto& parent = states[branch.parent_index];
+                // The last child can take over the parent's allocation.
+                if (--remaining_children[branch.parent_index] == 0)
+                    next_states.push_back(parent);
+                else
+                    next_states.push_back(parent.copy());
+                next_counts.push_back(branch.count);
             }
+            apply_noise_gate<Prec, Space>(
+                noise.alternatives[gate], std::span(next_states).subspan(begin), parameters);
         }
-
-        new_states = StateVectorBatched<Prec, Space>::uninitialized_state(new_size,
-                                                                          initial_state.n_qubits());
-        new_scounts.assign(new_size, 0);
-
-        std::int64_t insert_idx = 0;
-        for (std::uint64_t i = 0; i < probs.size(); ++i) {
-            StateVectorBatched<Prec, Space> tmp_states(states.copy());
-            if (gates[i].index() == 0) {
-                std::get<0>(gates[i])->update_quantum_state(tmp_states);
-            } else {
-                const auto& [param_gate, key] = std::get<1>(gates[i]);
-                param_gate->update_quantum_state(
-                    tmp_states, std::vector<double>(tmp_states.batch_size(), parameters.at(key)));
-            }
-            for (std::uint64_t j = 0; j < tmp_states.batch_size(); ++j) {
-                if (gate_used_count[j][i] == 0) continue;
-                new_states.set_state_vector_at(insert_idx, tmp_states.view_state_vector_at(j));
-                new_scounts[insert_idx] = gate_used_count[j][i];
-                ++insert_idx;
-            }
-        }
-        states = new_states;
-        scounts.swap(new_scounts);
+        states = std::move(next_states);
+        shot_counts = std::move(next_counts);
     }
+
     std::vector<std::pair<StateVector<Prec, Space>, std::int64_t>> result;
-    result.reserve(states.batch_size());
-    for (std::uint64_t i = 0; i < states.batch_size(); ++i) {
-        result.emplace_back(states.get_state_vector_at(i), scounts[i]);
+    result.reserve(states.size());
+    for (std::size_t i = 0; i < states.size(); ++i) result.emplace_back(states[i], shot_counts[i]);
+    return result;
+}
+
+template <Precision Prec>
+template <ExecutionSpace Space>
+auto Circuit<Prec>::simulate_noise(const StateVectorBatched<Prec, Space>& initial_states,
+                                   std::uint64_t sampling_count,
+                                   const std::map<std::string, std::vector<double>>& parameters,
+                                   std::optional<std::uint64_t> seed) const
+    -> BatchedNoiseResult<Space> {
+    if (has_classical_instructions()) {
+        throw std::runtime_error(
+            "Circuit::simulate_noise: Measurement and classically controlled instructions are "
+            "not supported.");
+    }
+    check_state_vector_n_qubits(initial_states.n_qubits());
+    using Batch = StateVectorBatched<Prec, Space>;
+    const auto input_size = initial_states.batch_size();
+    const auto n_qubits = initial_states.n_qubits();
+    const auto active_size = sampling_count == 0 ? 0 : input_size;
+    BatchedNoiseResult<Space> result{
+        active_size == 0 ? Batch::uninitialized_state(0, n_qubits) : initial_states.copy(),
+        std::vector<std::uint64_t>(active_size),
+        std::vector<std::uint64_t>(active_size, sampling_count)};
+    std::iota(result.input_indices.begin(), result.input_indices.end(), 0ULL);
+
+    const auto first_seed = internal::resolve_seed(seed);
+    std::vector<std::mt19937> random_engines;
+    random_engines.reserve(active_size);
+    for (std::uint64_t row = 0; row < active_size; ++row)
+        random_engines.emplace_back(first_seed + row);
+    const auto random_engine_for_row = [&](std::uint64_t row) -> auto& {
+        return random_engines[result.input_indices[row]];
+    };
+
+    for (const auto& item : _gate_list) {
+        const auto noise = get_noise_gate<Prec>(item);
+        if (noise.alternatives.empty()) {
+            preserve_deterministic_draws(result.counts, random_engine_for_row);
+            apply_noise_gate<Prec, Space>(
+                item, result.states, result.input_indices, input_size, parameters);
+            continue;
+        }
+
+        const auto split =
+            sample_noise_split(noise.probabilities, result.counts, random_engine_for_row);
+        auto next = gather_noise_branches<Prec, Space>(result, split);
+        std::size_t begin = 0;
+        for (std::size_t gate = 0; gate < split.alternatives.size(); ++gate) {
+            const auto size = split.alternatives[gate].size();
+            if (size == 0) {
+                // Preserve parameter validation for alternatives with no selected branches.
+                apply_noise_gate<Prec, Space>(
+                    noise.alternatives[gate], next.states, {}, input_size, parameters);
+            } else {
+                auto branches = next.states.view_batch_range(begin, begin + size);
+                const auto destination = branches._raw;
+                apply_noise_gate<Prec, Space>(noise.alternatives[gate],
+                                              branches,
+                                              std::span(next.input_indices).subspan(begin, size),
+                                              input_size,
+                                              parameters);
+                // Some gates, such as SparseMatrix, replace their state allocation.
+                if (branches._raw.data() != destination.data())
+                    Kokkos::deep_copy(destination, branches._raw);
+            }
+            begin += size;
+        }
+        result = std::move(next);
     }
     return result;
 }
+
 template std::vector<std::pair<StateVector<internal::Prec, ExecutionSpace::Host>, std::int64_t>>
 Circuit<internal::Prec>::simulate_noise<ExecutionSpace::Host>(
     const StateVector<internal::Prec, ExecutionSpace::Host>& initial_state,
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
+    std::optional<std::uint64_t> seed) const;
+template Circuit<internal::Prec>::BatchedNoiseResult<ExecutionSpace::Host>
+Circuit<internal::Prec>::simulate_noise<ExecutionSpace::Host>(
+    const StateVectorBatched<internal::Prec, ExecutionSpace::Host>& initial_states,
+    std::uint64_t sampling_count,
+    const std::map<std::string, std::vector<double>>& parameters,
     std::optional<std::uint64_t> seed) const;
 
 template std::vector<
@@ -686,12 +867,24 @@ Circuit<internal::Prec>::simulate_noise<ExecutionSpace::HostSerial>(
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
     std::optional<std::uint64_t> seed) const;
+template Circuit<internal::Prec>::BatchedNoiseResult<ExecutionSpace::HostSerial>
+Circuit<internal::Prec>::simulate_noise<ExecutionSpace::HostSerial>(
+    const StateVectorBatched<internal::Prec, ExecutionSpace::HostSerial>& initial_states,
+    std::uint64_t sampling_count,
+    const std::map<std::string, std::vector<double>>& parameters,
+    std::optional<std::uint64_t> seed) const;
 #ifdef SCALUQ_USE_DEVICE
 template std::vector<std::pair<StateVector<internal::Prec, ExecutionSpace::Default>, std::int64_t>>
 Circuit<internal::Prec>::simulate_noise<ExecutionSpace::Default>(
     const StateVector<internal::Prec, ExecutionSpace::Default>& initial_state,
     std::uint64_t sampling_count,
     const std::map<std::string, double>& parameters,
+    std::optional<std::uint64_t> seed) const;
+template Circuit<internal::Prec>::BatchedNoiseResult<ExecutionSpace::Default>
+Circuit<internal::Prec>::simulate_noise<ExecutionSpace::Default>(
+    const StateVectorBatched<internal::Prec, ExecutionSpace::Default>& initial_states,
+    std::uint64_t sampling_count,
+    const std::map<std::string, std::vector<double>>& parameters,
     std::optional<std::uint64_t> seed) const;
 #endif  // SCALUQ_USE_DEVICE
 

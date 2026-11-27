@@ -10,6 +10,7 @@
 #include <set>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <unordered_map>
 #include <variant>
 
@@ -190,6 +191,26 @@ public:
         const StateVector<Prec, Space>& initial_state,
         std::uint64_t sampling_count,
         const std::map<std::string, double>& parameters = {},
+        std::optional<std::uint64_t> seed = std::nullopt) const;
+
+    template <ExecutionSpace Space>
+    struct BatchedNoiseResult {
+        StateVectorBatched<Prec, Space> states;
+        std::vector<std::uint64_t> input_indices;
+        std::vector<std::uint64_t> counts;
+    };
+
+    /**
+     * @brief Simulate noise for each input row and return the selected states in one batch.
+     * Each output row has its original input index and shot count at the same position
+     * in the corresponding vectors. The shot count is per input, as are the parameter
+     * values. With a supplied seed, input row i uses seed + i. Zero shots return an empty batch.
+     */
+    template <ExecutionSpace Space>
+    BatchedNoiseResult<Space> simulate_noise(
+        const StateVectorBatched<Prec, Space>& initial_states,
+        std::uint64_t sampling_count,
+        const std::map<std::string, std::vector<double>>& parameters = {},
         std::optional<std::uint64_t> seed = std::nullopt) const;
 
     // Gradients require deterministic unitary gates and Hermitian rotation generators.
@@ -496,6 +517,25 @@ void register_circuit_space_bindings(nb::class_<Circuit<Prec>>& c) {
             "parameters"_a = std::map<std::string, double>{},
             "seed"_a = std::nullopt,
             "Simulate noise circuit. Return all the possible states and their counts.")
+        .def(
+            "simulate_noise",
+            [](const Circuit<Prec>& circuit,
+               const StateVectorBatched<Prec, Space>& initial_states,
+               std::uint64_t sampling_count,
+               const std::map<std::string, std::vector<double>>& parameters,
+               std::optional<std::uint64_t> seed) {
+                auto [states, input_indices, counts] = circuit.template simulate_noise<Space>(
+                    initial_states, sampling_count, parameters, seed);
+                return std::make_tuple(
+                    std::move(states), std::move(input_indices), std::move(counts));
+            },
+            "initial_states"_a,
+            "sampling_count"_a,
+            "parameters"_a = std::map<std::string, std::vector<double>>{},
+            "seed"_a = std::nullopt,
+            "Simulate noise for each input row. Return the packed states, original input indices, "
+            "and shot counts in matching row order. The shot count and parameters are per input "
+            "row. With a supplied seed, row i uses seed + i. Zero shots return an empty batch.")
         .def("compute_expectation_gradient_backprop",
              &Circuit<Prec>::template compute_expectation_gradient_backprop<Space>,
              "state"_a,
