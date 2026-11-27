@@ -13,6 +13,7 @@ public:
 
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::I; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
@@ -54,12 +55,13 @@ public:
     GlobalPhaseGateImpl(std::uint64_t control_mask,
                         std::uint64_t control_value_mask,
                         Float<Prec> phase)
-        : GateBase<Prec>(0, control_mask, control_value_mask), _phase(phase){};
+        : GateBase<Prec>(0, control_mask, control_value_mask), _phase(phase) {};
 
     using GateBase<Prec>::update_quantum_state;
 
     [[nodiscard]] double phase() const { return _phase; }
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::GlobalPhase; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const GlobalPhaseGateImpl<Prec>>(
             this->_control_mask, this->_control_value_mask, -_phase);
@@ -120,6 +122,7 @@ public:
     using GateBase<Prec>::GateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::X; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
@@ -163,6 +166,7 @@ public:
     using GateBase<Prec>::GateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::Y; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
@@ -206,6 +210,7 @@ public:
     using GateBase<Prec>::GateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::Z; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
@@ -249,6 +254,7 @@ public:
     using GateBase<Prec>::GateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::H; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
@@ -309,6 +315,7 @@ public:
     using GateBase<Prec>::GateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::S; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const SdagGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask);
@@ -353,6 +360,7 @@ public:
     using GateBase<Prec>::GateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::Sdag; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const SGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask);
@@ -397,6 +405,7 @@ public:
     using GateBase<Prec>::GateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::T; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const TdagGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask);
@@ -441,6 +450,7 @@ public:
     using GateBase<Prec>::GateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::Tdag; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const TGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask);
@@ -485,6 +495,7 @@ public:
     using GateBase<Prec>::GateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::SqrtX; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const SqrtXdagGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask);
@@ -530,6 +541,7 @@ public:
     using GateBase<Prec>::GateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::SqrtXdag; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const SqrtXGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask);
@@ -574,6 +586,7 @@ public:
     using GateBase<Prec>::GateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::SqrtY; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const SqrtYdagGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask);
@@ -619,6 +632,7 @@ public:
     using GateBase<Prec>::GateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::SqrtYdag; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const SqrtYGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask);
@@ -663,6 +677,7 @@ public:
     using GateBase<Prec>::GateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::P0; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         throw std::runtime_error("P0::get_inverse: Projection gate doesn't have inverse gate");
     }
@@ -706,6 +721,7 @@ public:
     using GateBase<Prec>::GateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::P1; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         throw std::runtime_error("P1::get_inverse: Projection gate doesn't have inverse gate");
     }
@@ -749,6 +765,7 @@ public:
     using RotationGateBase<Prec>::RotationGateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::RX; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const RXGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_angle);
@@ -794,6 +811,7 @@ public:
     using RotationGateBase<Prec>::RotationGateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::RY; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const RYGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_angle);
@@ -839,6 +857,7 @@ public:
     using RotationGateBase<Prec>::RotationGateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::RZ; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const RZGateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask, -this->_angle);
@@ -893,6 +912,7 @@ public:
 
     double lambda() const { return _lambda; }
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::U1; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const U1GateImpl<Prec>>(
             this->_target_mask, this->_control_mask, this->_control_value_mask, -_lambda);
@@ -950,6 +970,7 @@ public:
     double phi() const { return _phi; }
     double lambda() const { return _lambda; }
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::U2; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const U2GateImpl<Prec>>(
             this->_target_mask,
@@ -1016,6 +1037,7 @@ public:
     double phi() const { return _phi; }
     double lambda() const { return _lambda; }
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::U3; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const U3GateImpl<Prec>>(this->_target_mask,
                                                         this->_control_mask,
@@ -1067,6 +1089,7 @@ public:
     using GateBase<Prec>::GateBase;
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::Swap; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return this->shared_from_this();
     }
@@ -1127,6 +1150,7 @@ public:
         return mask_to_vector(_physical_target_mask);
     }
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::Ecr; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override {
         return std::make_shared<const EcrGateImpl<Prec>>(this->_target_mask,
                                                          this->_control_mask,
@@ -1198,6 +1222,7 @@ public:
 
     using GateBase<Prec>::update_quantum_state;
 
+    [[nodiscard]] GateType gate_type() const override { return GateType::Permutation; }
     std::shared_ptr<const GateBase<Prec>> get_inverse() const override;
 
     ComplexMatrix get_matrix() const override;

@@ -146,6 +146,29 @@ TYPED_TEST(ParamGateTest, ParamGateJsonRejectsUnsupportedType) {
     EXPECT_THROW({ (void)j.template get<ParamGate<Prec>>(); }, std::runtime_error);
 }
 
+TYPED_TEST(ParamGateTest, GetInversePreservesParamGateTypeAndDowncast) {
+    constexpr Precision Prec = TestFixture::Prec;
+
+    ParamGate<Prec> rx_inv = gate::ParamRX<Prec>(0, 0.5)->get_inverse();
+    EXPECT_EQ(rx_inv.param_gate_type(), ParamGateType::ParamRX);
+    EXPECT_NEAR(ParamRXGate<Prec>(rx_inv)->param_coef(), -0.5, eps<Prec>);
+
+    EXPECT_EQ(ParamGate<Prec>(gate::ParamRY<Prec>(0, 0.5)->get_inverse()).param_gate_type(),
+              ParamGateType::ParamRY);
+    EXPECT_EQ(ParamGate<Prec>(gate::ParamRZ<Prec>(0, 0.5)->get_inverse()).param_gate_type(),
+              ParamGateType::ParamRZ);
+    EXPECT_EQ(
+        ParamGate<Prec>(
+            gate::ParamPauliRotation<Prec>(PauliOperator<Prec>("X 0 Y 1"), 0.5)->get_inverse())
+            .param_gate_type(),
+        ParamGateType::ParamPauliRotation);
+    EXPECT_EQ(ParamGate<Prec>(gate::ParamProbabilistic<Prec>(
+                                  {0.5, 0.5}, {gate::ParamRX<Prec>(0), gate::S<Prec>(0)})
+                                  ->get_inverse())
+                  .param_gate_type(),
+              ParamGateType::ParamProbabilistic);
+}
+
 TYPED_TEST(ParamGateTest, ApplyParamPauliRotationGate) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;

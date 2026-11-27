@@ -208,12 +208,26 @@ normalize the result. Conversely, `embed_substate(small, target_qubits)`
 replaces the state with `small` mapped onto the listed qubits, where entry `j`
 of the list is qubit `j` of `small`; all other qubits are zero.
 
+### Weighted operations on batches
+
+For a `StateVectorBatched`, `get_linear_combination(coefs)` returns a new state
+`sum_b coefs[b] * states[b]`, without normalization. An empty batch returns a
+zero state with the same number of qubits. `multiply_coef(coefs)` scales each
+batch entry by its corresponding coefficient; `add_state_vector_with_coef(coefs,
+other)` adds the corresponding weighted entries of `other`. The coefficient
+count must match the batch size and both batches must have matching dimensions.
+
+`StateVectorBatched.inner_product(bra, ket)` returns one complex inner product
+per batch entry, with the first argument conjugated. Both batches must have the
+same precision, execution space, batch size, and number of qubits. Each complex
+product is computed in the state's precision and accumulated in double precision.
+
 ### Reducing launch overhead for small CPU states
 
-For an OpenMP build, selected host gate kernels can use Kokkos Serial for small
-states. The threshold is a process-wide maximum **number of amplitudes** (for a
-batch, the total across all states). It defaults to zero, which disables this
-dispatch. For example:
+For an OpenMP build, selected host gate kernels can execute directly in a serial
+loop on the calling thread for small states. The threshold is a process-wide
+maximum **number of amplitudes** (for a batch, the total across all states). It
+defaults to zero, which disables this dispatch. For example:
 
 ```python
 import scaluq
@@ -223,8 +237,8 @@ scaluq.set_small_state_serial_threshold(1 << 16)
 scaluq.set_small_state_serial_threshold(0)
 ```
 
-The setting applies to the scalar and SIMD kernels for zero-, one-, and
-two-target gates, swap and permutation, and Pauli application and rotation.
+The setting applies to the scalar and SIMD kernels for zero-, one-, two-, and
+three-target gates, swap and permutation, and Pauli application and rotation.
 Other kernels continue to use their existing execution policies. Device states
 and explicitly selected `host_serial` states retain their own execution spaces.
 Choose a threshold by measuring your workload: serial execution avoids OpenMP
