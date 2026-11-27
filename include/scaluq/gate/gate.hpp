@@ -921,7 +921,8 @@ void register_gate_common_methods(nb::class_<GateT>& c) {
             },
             ([]() {
                 auto ds = DocString().desc(
-                    "Return the inverse gate. Raises RuntimeError if no inverse is available.");
+                    "Return the inverse gate. SparseMatrixGate.get_inverse() returns a "
+                    "DenseMatrixGate. Raises RuntimeError if no inverse is available.");
                 if constexpr (is_base_gate) {
                     ds.ex(DocString::Code({">>> s = S(0)",
                                            ">>> print(s.get_inverse())",

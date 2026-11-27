@@ -270,15 +270,27 @@ SparseMatrixGateImpl<Prec, Space>::SparseMatrixGateImpl(std::uint64_t target_mas
       num_nnz(mat.nonZeros()) {}
 template <Precision Prec, ExecutionSpace Space>
 std::shared_ptr<const GateBase<Prec>> SparseMatrixGateImpl<Prec, Space>::get_inverse() const {
-    const Eigen::FullPivLU<ComplexMatrix> decomposition(get_matrix());
+    const ComplexMatrix mat = get_matrix();
+    if (mat.rows() <= 0 || mat.rows() != mat.cols()) {
+        throw std::runtime_error(
+            "SparseMatrixGate::get_inverse(): matrix must be non-empty and square.");
+    }
+    if (!mat.allFinite()) {
+        throw std::runtime_error(
+            "SparseMatrixGate::get_inverse(): matrix contains non-finite values.");
+    }
+    const Eigen::FullPivLU<ComplexMatrix> decomposition(mat);
     if (!decomposition.isInvertible()) {
         throw std::runtime_error("SparseMatrixGate::get_inverse(): matrix is singular.");
     }
+    const ComplexMatrix inverse = decomposition.inverse();
+    if (!inverse.allFinite()) {
+        throw std::runtime_error(
+            "SparseMatrixGate::get_inverse(): inverted matrix contains non-finite values.");
+    }
     // The inverse of a sparse matrix is generally dense, so return a dense matrix gate.
-    return std::make_shared<const DenseMatrixGateImpl<Prec, Space>>(this->_target_mask,
-                                                                    this->_control_mask,
-                                                                    this->_control_value_mask,
-                                                                    decomposition.inverse());
+    return std::make_shared<const DenseMatrixGateImpl<Prec, Space>>(
+        this->_target_mask, this->_control_mask, this->_control_value_mask, inverse);
 }
 template <Precision Prec, ExecutionSpace Space>
 Matrix<Prec, Space> SparseMatrixGateImpl<Prec, Space>::get_matrix_internal() const {

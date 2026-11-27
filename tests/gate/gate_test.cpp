@@ -33,7 +33,6 @@ TYPED_TEST(GateTest, DenseMatrixInverseChecksInvertibility) {
                  std::runtime_error);
 }
 
-<<<<<<< HEAD
 TYPED_TEST(GateTest, GetInversePreservesGateTypeAndDowncast) {
     constexpr Precision Prec = TestFixture::Prec;
     constexpr ExecutionSpace Space = TestFixture::Space;
@@ -110,6 +109,7 @@ TYPED_TEST(GateTest, SparseMatrixInverseChecksInvertibility) {
     const auto initial = state.get_amplitudes();
     sparse_gate->update_quantum_state(state);
     auto inverse = sparse_gate->get_inverse();
+    EXPECT_EQ(Gate<Prec>(inverse).gate_type(), GateType::DenseMatrix);
     using DenseImpl = scaluq::internal::DenseMatrixGateImpl<Prec, Space>;
     EXPECT_NE(std::dynamic_pointer_cast<const DenseImpl>(inverse), nullptr);
     inverse->update_quantum_state(state);
@@ -121,6 +121,24 @@ TYPED_TEST(GateTest, SparseMatrixInverseChecksInvertibility) {
     EXPECT_THROW(
         static_cast<void>(gate::SparseMatrix<Prec, Space>({0}, matrix.sparseView())->get_inverse()),
         std::runtime_error);
+    EXPECT_THROW(
+        static_cast<void>(
+            gate::SparseMatrix<Prec, Space>({0}, SparseComplexMatrix(0, 0))->get_inverse()),
+        std::runtime_error);
+    EXPECT_THROW(
+        static_cast<void>(
+            gate::SparseMatrix<Prec, Space>({0}, SparseComplexMatrix(2, 3))->get_inverse()),
+        std::runtime_error);
+    ComplexMatrix inf_matrix = ComplexMatrix::Identity(2, 2);
+    inf_matrix(0, 0) = std::numeric_limits<double>::infinity();
+    EXPECT_THROW(static_cast<void>(
+                     gate::SparseMatrix<Prec, Space>({0}, inf_matrix.sparseView())->get_inverse()),
+                 std::runtime_error);
+    ComplexMatrix nan_matrix = ComplexMatrix::Identity(2, 2);
+    nan_matrix(0, 0) = std::numeric_limits<double>::quiet_NaN();
+    EXPECT_THROW(static_cast<void>(
+                     gate::SparseMatrix<Prec, Space>({0}, nan_matrix.sparseView())->get_inverse()),
+                 std::runtime_error);
 }
 
 template <Precision Prec, ExecutionSpace Space, Gate<Prec> (*QuantumGateConstructor)()>
