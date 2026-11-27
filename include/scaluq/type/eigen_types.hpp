@@ -129,6 +129,7 @@ public:
 
     int rows() const { return 0; }
     int cols() const { return 0; }
+    bool allFinite() const { return true; }
     void resize(int, int) {}
     void setZero() {}
 
