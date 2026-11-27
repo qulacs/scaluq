@@ -29,6 +29,9 @@ TYPED_TEST(SmallStateDispatchTest, ThresholdMatchesRegularKernels) {
         ComplexMatrix matrix = ComplexMatrix::Identity(4, 4);
         matrix(0, 0) = -1.;
         gate::DenseMatrix<Prec, Space>({0, 2}, matrix, {4}, {1})->update_quantum_state(state);
+        ComplexMatrix matrix3 = ComplexMatrix::Identity(8, 8);
+        matrix3(0, 0) = -1.;
+        gate::DenseMatrix<Prec, Space>({0, 1, 2}, matrix3, {4}, {1})->update_quantum_state(state);
         PauliOperator<Prec> p({0, 3}, {1, 2}, 1.0);
         gate::Pauli(p, {4}, {1})->update_quantum_state(state);
         gate::PauliRotation(p, 0.31, {4}, {0})->update_quantum_state(state);

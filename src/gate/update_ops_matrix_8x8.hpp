@@ -96,7 +96,8 @@ void three_target_dense_matrix_gate_simd(std::uint64_t target_mask,
     const auto m77 = SimdCoefFor<SimdType, M77>::splat(matrix[7][7]);
 
     const std::uint64_t flat_span = state.flat_dim() >> std::popcount(skip_mask);
-    Kokkos::parallel_for(
+    parallel_for_small_state(
+        state,
         "three_target_dense_matrix_gate_simd",
         Kokkos::RangePolicy<SpaceType<State::space>>(0, flat_span / complex_lanes),
         KOKKOS_LAMBDA(std::uint64_t g) {
@@ -234,7 +235,8 @@ void three_target_dense_matrix_gate_simd_middle1(std::uint64_t target_mask,
     const auto m67 = C67::template select_complex_lane_bit<TargetBit0>(matrix[6][7], matrix[7][6]);
 
     const std::uint64_t flat_span = state.flat_dim() >> std::popcount(skip_mask);
-    Kokkos::parallel_for(
+    parallel_for_small_state(
+        state,
         "three_target_dense_matrix_gate_simd_middle1",
         Kokkos::RangePolicy<SpaceType<State::space>>(0, flat_span / complex_lanes),
         KOKKOS_LAMBDA(std::uint64_t g) {
@@ -341,7 +343,8 @@ void three_target_dense_matrix_gate_simd_middle2(std::uint64_t target_mask,
         matrix[4][7], matrix[5][6], matrix[6][5], matrix[7][4]);
 
     const std::uint64_t flat_span = state.flat_dim() >> std::popcount(skip_mask);
-    Kokkos::parallel_for(
+    parallel_for_small_state(
+        state,
         "three_target_dense_matrix_gate_simd_middle2",
         Kokkos::RangePolicy<SpaceType<State::space>>(0, flat_span / complex_lanes),
         KOKKOS_LAMBDA(std::uint64_t g) {
@@ -470,7 +473,8 @@ void three_target_dense_matrix_gate_simd_low(std::uint64_t control_mask,
                                                                                    matrix[7][0]);
 
     const std::uint64_t flat_span = state.flat_dim() >> std::popcount(skip_mask);
-    Kokkos::parallel_for(
+    parallel_for_small_state(
+        state,
         "three_target_dense_matrix_gate_simd_low",
         Kokkos::RangePolicy<SpaceType<State::space>>(0, flat_span / complex_lanes),
         KOKKOS_LAMBDA(std::uint64_t g) {
@@ -581,7 +585,8 @@ void three_target_dense_matrix_gate_scalar(std::uint64_t target_mask,
     const std::uint64_t target1 = -remaining & remaining;
     const std::uint64_t target2 = remaining ^ target1;
     const std::uint64_t skip_mask = target_mask | control_mask;
-    Kokkos::parallel_for(
+    parallel_for_small_state(
+        state,
         "three_target_dense_matrix_gate_scalar",
         Kokkos::RangePolicy<SpaceType<State::space>>(0,
                                                      state.flat_dim() >> std::popcount(skip_mask)),
