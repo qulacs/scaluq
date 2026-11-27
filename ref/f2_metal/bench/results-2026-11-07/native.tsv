@@ -1,0 +1,78 @@
+# device: Apple M3 Ultra
+kernel	n_qubits	variant	ms_per_op	GBps	note
+launch_empty	0	single_cb_wall	0.247512	-	per cb commit+wait; R=1000
+launch_empty	0	single_cb_gpu	0.004285	-	GPUEnd-GPUStart avg
+launch_empty	0	batched_wall	0.001423	-	R=1000 dispatches, one encoder, one wait
+launch_empty	0	batched_gpu	0.001041	-	GPUEnd-GPUStart
+# correctness H(t=0) n=20: PASS  maxerr=3.27e-10 cpu_norm=0.9999999 gpu_norm=0.9999999
+# correctness H(t=10) n=20: PASS  maxerr=3.29e-10 cpu_norm=0.9999999 gpu_norm=0.9999999
+# correctness H(t=19) n=20: PASS  maxerr=3.30e-10 cpu_norm=0.9999999 gpu_norm=0.9999999
+# correctness CNOT(c=19,t=0) n=20: PASS  maxerr=0.00e+00 cpu_norm=1.0000000 gpu_norm=0.9999999
+# correctness CNOT(c=0,t=19) n=20: PASS  maxerr=0.00e+00 cpu_norm=1.0000000 gpu_norm=0.9999999
+# correctness CNOT(c=1,t=10) n=20: PASS  maxerr=0.00e+00 cpu_norm=1.0000000 gpu_norm=0.9999999
+# correctness overall: PASS
+triad	16	batched_wall	0.004798	163.91	R=200 y=0.5x+y float, 12B/elem
+triad	16	batched_gpu	0.003767	208.74	R=200 y=0.5x+y float, 12B/elem
+H	16	batched_wall	0.004888	214.51	t=0 R=200 32B/pair
+H	16	batched_gpu	0.003827	274.00	t=0 R=200 32B/pair
+H	16	batched_wall	0.005590	187.59	t=15 R=200 32B/pair
+H	16	batched_gpu	0.003811	275.16	t=15 R=200 32B/pair
+CNOT	16	batched_wall	0.004477	117.10	c=15 t=0 R=200 32B per active pair (N/4 pairs)
+CNOT	16	batched_gpu	0.003441	152.35	c=15 t=0 R=200 32B per active pair (N/4 pairs)
+CNOT	16	batched_wall	0.004404	119.04	c=0 t=15 R=200 32B per active pair (N/4 pairs)
+CNOT	16	batched_gpu	0.003162	165.82	c=0 t=15 R=200 32B per active pair (N/4 pairs)
+norm	16	batched_wall	0.008011	65.45	R=200 two-pass; rel_err_vs_cpu=1.429e-07 (PASS)
+norm	16	batched_gpu	0.006647	78.88	R=200 two-pass; rel_err_vs_cpu=1.429e-07 (PASS)
+norm	16	single_cb_wall	0.223542	2.35	one cb per reduction
+triad	20	batched_wall	0.038741	324.80	R=200 y=0.5x+y float, 12B/elem
+triad	20	batched_gpu	0.037519	335.38	R=200 y=0.5x+y float, 12B/elem
+H	20	batched_wall	0.028726	584.04	t=0 R=200 32B/pair
+H	20	batched_gpu	0.027426	611.72	t=0 R=200 32B/pair
+H	20	batched_wall	0.028393	590.90	t=19 R=200 32B/pair
+H	20	batched_gpu	0.027205	616.70	t=19 R=200 32B/pair
+CNOT	20	batched_wall	0.015854	529.12	c=19 t=0 R=200 32B per active pair (N/4 pairs)
+CNOT	20	batched_gpu	0.014520	577.73	c=19 t=0 R=200 32B per active pair (N/4 pairs)
+CNOT	20	batched_wall	0.020651	406.20	c=0 t=19 R=200 32B per active pair (N/4 pairs)
+CNOT	20	batched_gpu	0.019374	432.97	c=0 t=19 R=200 32B per active pair (N/4 pairs)
+norm	20	batched_wall	0.025260	332.09	R=200 two-pass; rel_err_vs_cpu=4.623e-08 (PASS)
+norm	20	batched_gpu	0.023784	352.70	R=200 two-pass; rel_err_vs_cpu=4.623e-08 (PASS)
+norm	20	single_cb_wall	0.226550	37.03	one cb per reduction
+triad	24	batched_wall	0.605883	332.29	R=64 y=0.5x+y float, 12B/elem
+triad	24	batched_gpu	0.601196	334.88	R=64 y=0.5x+y float, 12B/elem
+H	24	batched_wall	0.388798	690.42	t=0 R=64 32B/pair
+H	24	batched_gpu	0.374457	716.87	t=0 R=64 32B/pair
+H	24	batched_wall	0.373786	718.15	t=23 R=64 32B/pair
+H	24	batched_gpu	0.368909	727.65	t=23 R=64 32B/pair
+CNOT	24	batched_wall	0.149980	894.90	c=23 t=0 R=64 32B per active pair (N/4 pairs)
+CNOT	24	batched_gpu	0.145738	920.95	c=23 t=0 R=64 32B per active pair (N/4 pairs)
+CNOT	24	batched_wall	0.370182	362.57	c=0 t=23 R=64 32B per active pair (N/4 pairs)
+CNOT	24	batched_gpu	0.365855	366.86	c=0 t=23 R=64 32B per active pair (N/4 pairs)
+norm	24	batched_wall	0.200571	669.18	R=64 two-pass; rel_err_vs_cpu=1.401e-07 (PASS)
+norm	24	batched_gpu	0.188618	711.59	R=64 two-pass; rel_err_vs_cpu=1.401e-07 (PASS)
+norm	24	single_cb_wall	0.413115	324.89	one cb per reduction
+triad	26	batched_wall	2.430143	331.38	R=16 y=0.5x+y float, 12B/elem
+triad	26	batched_gpu	2.412698	333.78	R=16 y=0.5x+y float, 12B/elem
+H	26	batched_wall	1.584409	677.69	t=0 R=16 32B/pair
+H	26	batched_gpu	1.563294	686.85	t=0 R=16 32B/pair
+H	26	batched_wall	1.561224	687.76	t=25 R=16 32B/pair
+H	26	batched_gpu	1.542432	696.14	t=25 R=16 32B/pair
+CNOT	26	batched_wall	0.803213	668.40	c=25 t=0 R=16 32B per active pair (N/4 pairs)
+CNOT	26	batched_gpu	0.775742	692.07	c=25 t=0 R=16 32B per active pair (N/4 pairs)
+CNOT	26	batched_wall	1.544031	347.71	c=0 t=25 R=16 32B per active pair (N/4 pairs)
+CNOT	26	batched_gpu	1.526023	351.81	c=0 t=25 R=16 32B per active pair (N/4 pairs)
+norm	26	batched_wall	0.804305	667.50	R=16 two-pass; rel_err_vs_cpu=1.377e-07 (PASS)
+norm	26	batched_gpu	0.753992	712.04	R=16 two-pass; rel_err_vs_cpu=1.377e-07 (PASS)
+norm	26	single_cb_wall	1.025339	523.60	one cb per reduction
+triad	28	batched_wall	9.656346	333.59	R=10 y=0.5x+y float, 12B/elem
+triad	28	batched_gpu	9.626088	334.63	R=10 y=0.5x+y float, 12B/elem
+H	28	batched_wall	6.163767	696.81	t=0 R=10 32B/pair
+H	28	batched_gpu	6.133175	700.28	t=0 R=10 32B/pair
+H	28	batched_wall	6.153313	697.99	t=27 R=10 32B/pair
+H	28	batched_gpu	6.124017	701.33	t=27 R=10 32B/pair
+CNOT	28	batched_wall	3.110346	690.43	c=27 t=0 R=10 32B per active pair (N/4 pairs)
+CNOT	28	batched_gpu	3.073463	698.72	c=27 t=0 R=10 32B per active pair (N/4 pairs)
+CNOT	28	batched_wall	6.125162	350.60	c=0 t=27 R=10 32B per active pair (N/4 pairs)
+CNOT	28	batched_gpu	6.092558	352.48	c=0 t=27 R=10 32B per active pair (N/4 pairs)
+norm	28	batched_wall	3.121187	688.03	R=10 two-pass; rel_err_vs_cpu=1.717e-07 (PASS)
+norm	28	batched_gpu	3.046563	704.89	R=10 two-pass; rel_err_vs_cpu=1.717e-07 (PASS)
+norm	28	single_cb_wall	3.338717	643.21	one cb per reduction

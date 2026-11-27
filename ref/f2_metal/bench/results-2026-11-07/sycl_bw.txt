@@ -1,0 +1,10 @@
+coarse=0 n=2^16: 0.152 ms/launch, 5.2 GB/s
+coarse=0 n=2^20: 0.041 ms/launch, 305.5 GB/s
+coarse=0 n=2^24: 0.593 ms/launch, 339.6 GB/s
+coarse=0 n=2^26: 2.349 ms/launch, 342.8 GB/s
+coarse=0 n=2^28: 9.291 ms/launch, 346.7 GB/s
+coarse=1 n=2^16: 0.009 ms/launch, 83.1 GB/s
+coarse=1 n=2^20: 0.048 ms/launch, 261.4 GB/s
+coarse=1 n=2^24: 0.590 ms/launch, 341.1 GB/s
+coarse=1 n=2^26: 2.341 ms/launch, 344.0 GB/s
+coarse=1 n=2^28: 9.272 ms/launch, 347.4 GB/s
