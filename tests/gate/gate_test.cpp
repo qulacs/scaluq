@@ -99,6 +99,48 @@ TYPED_TEST(GateTest, GetInversePreservesGateTypeAndDowncast) {
               GateType::Probabilistic);
 }
 
+TYPED_TEST(GateTest, SparseMatrixInverseChecksInvertibility) {
+    constexpr Precision Prec = TestFixture::Prec;
+    constexpr ExecutionSpace Space = TestFixture::Space;
+    ComplexMatrix matrix(2, 2);
+    matrix << StdComplex(1, 1), StdComplex(0, 1), 0., 2.;
+    auto sparse_gate = gate::SparseMatrix<Prec, Space>({1}, matrix.sparseView(), {0});
+    auto state = StateVector<Prec, Space>::Haar_random_state(2, 17);
+    const auto initial = state.get_amplitudes();
+    sparse_gate->update_quantum_state(state);
+    auto inverse = sparse_gate->get_inverse();
+    EXPECT_EQ(Gate<Prec>(inverse).gate_type(), GateType::DenseMatrix);
+    using DenseImpl = scaluq::internal::DenseMatrixGateImpl<Prec, Space>;
+    EXPECT_NE(std::dynamic_pointer_cast<const DenseImpl>(inverse), nullptr);
+    inverse->update_quantum_state(state);
+    const auto actual = state.get_amplitudes();
+    for (std::uint64_t i = 0; i < actual.size(); ++i) {
+        check_near<Prec>(actual[i], initial[i]);
+    }
+    matrix << 1., 2., 2., 4.;
+    EXPECT_THROW(
+        static_cast<void>(gate::SparseMatrix<Prec, Space>({0}, matrix.sparseView())->get_inverse()),
+        std::runtime_error);
+    EXPECT_THROW(
+        static_cast<void>(
+            gate::SparseMatrix<Prec, Space>({0}, SparseComplexMatrix(0, 0))->get_inverse()),
+        std::runtime_error);
+    EXPECT_THROW(
+        static_cast<void>(
+            gate::SparseMatrix<Prec, Space>({0}, SparseComplexMatrix(2, 3))->get_inverse()),
+        std::runtime_error);
+    ComplexMatrix inf_matrix = ComplexMatrix::Identity(2, 2);
+    inf_matrix(0, 0) = std::numeric_limits<double>::infinity();
+    EXPECT_THROW(static_cast<void>(
+                     gate::SparseMatrix<Prec, Space>({0}, inf_matrix.sparseView())->get_inverse()),
+                 std::runtime_error);
+    ComplexMatrix nan_matrix = ComplexMatrix::Identity(2, 2);
+    nan_matrix(0, 0) = std::numeric_limits<double>::quiet_NaN();
+    EXPECT_THROW(static_cast<void>(
+                     gate::SparseMatrix<Prec, Space>({0}, nan_matrix.sparseView())->get_inverse()),
+                 std::runtime_error);
+}
+
 template <Precision Prec, ExecutionSpace Space, Gate<Prec> (*QuantumGateConstructor)()>
 void run_random_gate_apply(std::uint64_t n_qubits) {
     const int dim = 1ULL << n_qubits;
